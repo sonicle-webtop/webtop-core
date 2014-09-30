@@ -1,0 +1,38 @@
+body {
+	background: #f8f8f8;
+}
+.full-width {
+	width: 100%;
+}
+.login {
+	margin: 2em 0;
+}
+.login img {
+	margin: 0 auto 2em;
+}
+.login .btn {
+	background: #eee;
+	-webkit-transition: all 0.2s ease-in-out;
+	-moz-transition: all 0.2s ease-in-out;
+	-o-transition: all 0.2s ease-in-out;
+	-ms-transition: all 0.2s ease-in-out;
+	transition: all 0.2s ease-in-out;
+}
+.login .btn:hover {
+	background: #156A8B;
+	color: #fff;
+}
+
+.login .box {
+	/*
+	background: #fff;
+	border: 1px solid #ececec;
+	border-radius: 0.5rem;
+	*/
+	padding: 2em;
+	
+}
+
+.login .form-group {
+	margin-bottom: 5px;
+}
