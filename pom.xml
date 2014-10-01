@@ -123,9 +123,9 @@
 					<!-- JDBC connection parameters -->
 					<jdbc>
 						<driver>org.postgresql.Driver</driver>
-						<url>jdbc:postgresql://localhost/webtop5</url>
-						<user>postgres</user>
-						<password>postgres</password>
+						<url>jdbc:postgresql://www.sonicle.com/webtop5</url>
+						<user>sonicle</user>
+						<password>sonicle</password>
 					</jdbc>
 					<!-- Generator parameters -->
 					<generator>

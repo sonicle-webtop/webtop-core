@@ -123,7 +123,7 @@ public class ConnectionManager {
 	 * @throws SQLException 
 	 */
 	public DataSource getDataSource(String poolName) throws SQLException {
-		return getPool(poolName).getDataSource();
+		return getPool(poolName);
 	}
 	
 	/**

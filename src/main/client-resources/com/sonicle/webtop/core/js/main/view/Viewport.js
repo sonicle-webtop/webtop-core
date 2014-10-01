@@ -31,52 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.webtop.core.Manager;
-import com.sonicle.webtop.core.WebTopApp;
-import freemarker.template.Template;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+Ext.define('com.sonicle.webtop.core.view.Viewport', {
+    extend: 'Ext.container.Viewport',
 
-/**
- *
- * @author malbinola
- */
-public class Start extends HttpServlet {
-	
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = ServletHelper.getWebTopApp(request);
-		Manager manager = wta.getManager();
-		
-		try {
-			ServletHelper.setPageContentType(response);
-			
-			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, wta);
-			
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
-		} finally {
-			WebTopApp.clearLoggerDC();
-		}
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-}
+    layout: 'border',
+    items: [
+        { title: 'North', region: 'north', border: 1 },
+        { title: 'South', region: 'south', border: 0 },
+        { title: 'East', region: 'east', width: 100, border: 0 },
+        { title: 'West', region: 'west', width: 100, border: 0 },
+        { title: 'Center', region: 'center', border: 0 },
+    ]
+});

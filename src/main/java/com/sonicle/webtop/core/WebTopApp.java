@@ -103,7 +103,7 @@ public class WebTopApp {
 		// Connection Manager
 		conManager = ConnectionManager.initialize(this);
 		try {
-			conManager.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "localhost", null, "webtop5", "postgres", "postgres");
+			conManager.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
