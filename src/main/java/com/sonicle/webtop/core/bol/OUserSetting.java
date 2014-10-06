@@ -33,13 +33,13 @@
  */
 package com.sonicle.webtop.core.bol;
 
-import com.sonicle.webtop.core.jooq.tables.pojos.SettingsUser;
+import com.sonicle.webtop.core.jooq.tables.pojos.UserSettings;
 
 /**
  *
  * @author malbinola
  */
-public class OUserSetting extends SettingsUser {
+public class OUserSetting extends UserSettings {
 	
 	public OUserSetting(String domainId, String userId, String serviceId, String key, String value) {
 		super(domainId, userId, serviceId, key, value);

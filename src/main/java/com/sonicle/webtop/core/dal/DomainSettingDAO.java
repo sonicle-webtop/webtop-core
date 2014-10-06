@@ -57,9 +57,9 @@ public class DomainSettingDAO {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(SETTINGS_DOMAIN)
-			.where(SETTINGS_DOMAIN.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_DOMAIN.SERVICE_ID.equal(serviceId))
+			.from(DOMAIN_SETTINGS)
+			.where(DOMAIN_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(DOMAIN_SETTINGS.SERVICE_ID.equal(serviceId))
 			)
 			.fetchInto(ODomainSetting.class);
 	}
@@ -68,32 +68,32 @@ public class DomainSettingDAO {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(SETTINGS_DOMAIN)
-			.where(SETTINGS_DOMAIN.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_DOMAIN.SERVICE_ID.equal(serviceId))
-				.and(SETTINGS_DOMAIN.KEY.equal(key))
+			.from(DOMAIN_SETTINGS)
+			.where(DOMAIN_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(DOMAIN_SETTINGS.SERVICE_ID.equal(serviceId))
+				.and(DOMAIN_SETTINGS.KEY.equal(key))
 			)
 			.fetchOneInto(ODomainSetting.class);
 	}
 	
 	public int insert(Connection con, ODomainSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		SettingsDomainRecord record = dsl.newRecord(SETTINGS_DOMAIN, item);
+		DomainSettingsRecord record = dsl.newRecord(DOMAIN_SETTINGS, item);
 		return dsl
-			.insertInto(SETTINGS_DOMAIN)
+			.insertInto(DOMAIN_SETTINGS)
 			.set(record)
 			.execute();
 	}
 	
 	public int update(Connection con, ODomainSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		SettingsDomainRecord record = dsl.newRecord(SETTINGS_DOMAIN, item);
+		DomainSettingsRecord record = dsl.newRecord(DOMAIN_SETTINGS, item);
 		return dsl
-			.update(SETTINGS_DOMAIN)
+			.update(DOMAIN_SETTINGS)
 			.set(record)
-			.where(SETTINGS_DOMAIN.DOMAIN_ID.equal(item.getDomainId())
-				.and(SETTINGS_DOMAIN.SERVICE_ID.equal(item.getServiceId()))
-				.and(SETTINGS_DOMAIN.KEY.equal(item.getKey()))
+			.where(DOMAIN_SETTINGS.DOMAIN_ID.equal(item.getDomainId())
+				.and(DOMAIN_SETTINGS.SERVICE_ID.equal(item.getServiceId()))
+				.and(DOMAIN_SETTINGS.KEY.equal(item.getKey()))
 			)
 			.execute();
 	}
@@ -101,10 +101,10 @@ public class DomainSettingDAO {
 	public int deleteByDomainServiceKey(Connection con, String domainId, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
-			.delete(SETTINGS_DOMAIN)
-			.where(SETTINGS_DOMAIN.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_DOMAIN.SERVICE_ID.equal(serviceId))
-				.and(SETTINGS_DOMAIN.KEY.equal(key))
+			.delete(DOMAIN_SETTINGS)
+			.where(DOMAIN_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(DOMAIN_SETTINGS.SERVICE_ID.equal(serviceId))
+				.and(DOMAIN_SETTINGS.KEY.equal(key))
 			)
 			.execute();
 	}

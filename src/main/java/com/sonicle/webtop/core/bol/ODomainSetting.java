@@ -33,13 +33,13 @@
  */
 package com.sonicle.webtop.core.bol;
 
-import com.sonicle.webtop.core.jooq.tables.pojos.SettingsDomain;
+import com.sonicle.webtop.core.jooq.tables.pojos.DomainSettings;
 
 /**
  *
  * @author malbinola
  */
-public class ODomainSetting extends SettingsDomain {
+public class ODomainSetting extends DomainSettings {
 	
 	public ODomainSetting(String domainId, String serviceId, String key, String value) {
 		super(domainId, serviceId, key, value);
