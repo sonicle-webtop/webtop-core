@@ -31,4 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+package com.sonicle.webtop.core.bol;
 
+import com.sonicle.webtop.core.jooq.tables.pojos.SettingsDomain;
+
+/**
+ *
+ * @author malbinola
+ */
+public class ODomainSetting extends SettingsDomain {
+	
+	public ODomainSetting(String domainId, String serviceId, String key, String value) {
+		super(domainId, serviceId, key, value);
+	}
+}

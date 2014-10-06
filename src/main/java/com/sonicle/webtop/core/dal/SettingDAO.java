@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.dal;
 
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OSetting;
 import java.sql.Connection;
 import org.jooq.DSLContext;
 import static com.sonicle.webtop.core.jooq.Tables.*;
@@ -46,54 +46,61 @@ import org.jooq.impl.DSL;
  *
  * @author malbinola
  */
-public class DomainDAO {
+public class SettingDAO {
 	
-	private final static DomainDAO INSTANCE = new DomainDAO();
-	public static DomainDAO getInstance() {
+	private final static SettingDAO INSTANCE = new SettingDAO();
+	public static SettingDAO getInstance() {
 		return INSTANCE;
 	}
 	
-	public List<ODomain> selectAll(Connection con) {
+	public List<OSetting> selectByService(Connection con, String serviceId) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(DOMAINS)
-			.fetchInto(ODomain.class);
+			.from(SETTINGS)
+			.where(SETTINGS.SERVICE_ID.equal(serviceId))
+			.fetchInto(OSetting.class);
 	}
 	
-	public ODomain selectById(Connection con, String domainId) {
+	public OSetting selectByServiceKey(Connection con, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.fetchOneInto(ODomain.class);
+			.from(SETTINGS)
+			.where(SETTINGS.SERVICE_ID.equal(serviceId)
+				.and(SETTINGS.KEY.equal(key))
+			)
+			.fetchOneInto(OSetting.class);
 	}
 	
-	public int insert(Connection con, ODomain item) {
+	public int insert(Connection con, OSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
+		SettingsRecord record = dsl.newRecord(SETTINGS, item);
 		return dsl
-			.insertInto(DOMAINS)
+			.insertInto(SETTINGS)
 			.set(record)
 			.execute();
 	}
 	
-	public int update(Connection con, ODomain item) {
+	public int update(Connection con, OSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
+		SettingsRecord record = dsl.newRecord(SETTINGS, item);
 		return dsl
-			.update(DOMAINS)
+			.update(SETTINGS)
 			.set(record)
-			.where(DOMAINS.DOMAIN_ID.equal(item.getDomainId()))
+			.where(SETTINGS.SERVICE_ID.equal(item.getServiceId())
+				.and(SETTINGS.KEY.equal(item.getKey()))
+			)
 			.execute();
 	}
 	
-	public int deleteById(Connection con, String domainId) {
+	public int deleteByServiceKey(Connection con, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
-			.delete(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
+			.delete(SETTINGS)
+			.where(SETTINGS.SERVICE_ID.equal(serviceId)
+				.and(SETTINGS.KEY.equal(key))
+			)
 			.execute();
 	}
 }

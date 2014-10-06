@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  */
 public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 
-	public final static Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
+	public static final Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
 	
 	@Override
 	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {

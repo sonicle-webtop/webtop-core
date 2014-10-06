@@ -47,7 +47,7 @@ import org.slf4j.Logger;
  */
 public class ConnectionManager {
 	
-	private final static Logger logger = WebTopApp.getLogger(ConnectionManager.class);
+	private static final Logger logger = WebTopApp.getLogger(ConnectionManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -58,10 +58,10 @@ public class ConnectionManager {
 	 */
 	public static synchronized ConnectionManager initialize(WebTopApp wta) {
 		if(initialized) throw new RuntimeException("Initialization already done");
-		ConnectionManager cm = new ConnectionManager(wta);
+		ConnectionManager conm = new ConnectionManager(wta);
 		initialized = true;
 		logger.info("ConnectionManager initialized.");
-		return cm;
+		return conm;
 	}
 	
 	private boolean shutdown = false;
@@ -78,9 +78,9 @@ public class ConnectionManager {
 	}
 	
 	/**
-	 * Performs shutdown process.
+	 * Performs cleanup process.
 	 */
-	public void shutdown() {
+	public void cleanup() {
 		synchronized(pools) {
 			shutdown = true;
 			for(HikariDataSource pool: pools.values()) {

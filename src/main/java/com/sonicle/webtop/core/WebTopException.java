@@ -31,16 +31,27 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+package com.sonicle.webtop.core;
 
-Ext.define('com.sonicle.webtop.core.view.Viewport', {
-    extend: 'Ext.container.Viewport',
-
-    layout: 'border',
-    items: [
-        { title: 'North', region: 'north', border: 1 },
-        { title: 'South', region: 'south', border: 0 },
-        { title: 'East', region: 'east', width: 100, border: 0 },
-        { title: 'West', region: 'west', width: 100, border: 0 },
-        { title: 'Center', region: 'center', border: 0 },
-    ]
-});
+/**
+ *
+ * @author malbinola
+ */
+public class WebTopException extends Exception {
+	
+	public WebTopException() {
+		super();
+	}
+	
+	public WebTopException(String message) {
+		super(message);
+	}
+	
+	public WebTopException(Throwable cause) {
+		super(cause);
+	}
+	
+	public WebTopException(String message, Throwable cause) {
+		super(message, cause);
+	}
+}
