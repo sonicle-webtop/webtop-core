@@ -55,6 +55,10 @@ public class WebTopAuthenticationInfo implements AuthenticationInfo {
 		principals.add(principal, realmName);
 	}
 
+	public Principal getSoniclePrincipal() {
+		return soniclePrincipal;
+	}
+
 	@Override
 	public PrincipalCollection getPrincipals() {
 		return principals;
