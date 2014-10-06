@@ -58,13 +58,13 @@ public class UserSettingDAO {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(SETTINGS_USER)
-			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_USER.USER_ID.equal(userId))
-				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
+			.from(USER_SETTINGS)
+			.where(USER_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(USER_SETTINGS.USER_ID.equal(userId))
+				.and(USER_SETTINGS.SERVICE_ID.equal(serviceId))
 			)
 			.orderBy(
-				SETTINGS_USER.KEY
+				USER_SETTINGS.KEY
 			)
 			.fetchInto(OUserSetting.class);
 	}
@@ -73,14 +73,14 @@ public class UserSettingDAO {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(SETTINGS_USER)
-			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_USER.USER_ID.equal(userId))
-				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
-				.and(SETTINGS_USER.KEY.like(keyLike))
+			.from(USER_SETTINGS)
+			.where(USER_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(USER_SETTINGS.USER_ID.equal(userId))
+				.and(USER_SETTINGS.SERVICE_ID.equal(serviceId))
+				.and(USER_SETTINGS.KEY.like(keyLike))
 			)
 			.orderBy(
-				SETTINGS_USER.KEY
+				USER_SETTINGS.KEY
 			)
 			.fetchInto(OUserSetting.class);
 	}
@@ -89,34 +89,34 @@ public class UserSettingDAO {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(SETTINGS_USER)
-			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_USER.USER_ID.equal(userId))
-				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
-				.and(SETTINGS_USER.KEY.equal(key))
+			.from(USER_SETTINGS)
+			.where(USER_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(USER_SETTINGS.USER_ID.equal(userId))
+				.and(USER_SETTINGS.SERVICE_ID.equal(serviceId))
+				.and(USER_SETTINGS.KEY.equal(key))
 			)
 			.fetchOneInto(OUserSetting.class);
 	}
 	
 	public int insert(Connection con, OUserSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		SettingsUserRecord record = dsl.newRecord(SETTINGS_USER, item);
+		UserSettingsRecord record = dsl.newRecord(USER_SETTINGS, item);
 		return dsl
-			.insertInto(SETTINGS_USER)
+			.insertInto(USER_SETTINGS)
 			.set(record)
 			.execute();
 	}
 	
 	public int update(Connection con, OUserSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		SettingsUserRecord record = dsl.newRecord(SETTINGS_USER, item);
+		UserSettingsRecord record = dsl.newRecord(USER_SETTINGS, item);
 		return dsl
-			.update(SETTINGS_USER)
+			.update(USER_SETTINGS)
 			.set(record)
-			.where(SETTINGS_USER.DOMAIN_ID.equal(item.getDomainId())
-				.and(SETTINGS_USER.USER_ID.equal(item.getUserId()))
-				.and(SETTINGS_USER.SERVICE_ID.equal(item.getServiceId()))
-				.and(SETTINGS_USER.KEY.equal(item.getKey()))
+			.where(USER_SETTINGS.DOMAIN_ID.equal(item.getDomainId())
+				.and(USER_SETTINGS.USER_ID.equal(item.getUserId()))
+				.and(USER_SETTINGS.SERVICE_ID.equal(item.getServiceId()))
+				.and(USER_SETTINGS.KEY.equal(item.getKey()))
 			)
 			.execute();
 	}
@@ -124,11 +124,11 @@ public class UserSettingDAO {
 	public int deleteByDomainServiceUserKey(Connection con, String domainId, String userId, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
-			.delete(SETTINGS_USER)
-			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
-				.and(SETTINGS_USER.USER_ID.equal(userId))
-				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
-				.and(SETTINGS_USER.KEY.equal(key))
+			.delete(USER_SETTINGS)
+			.where(USER_SETTINGS.DOMAIN_ID.equal(domainId)
+				.and(USER_SETTINGS.USER_ID.equal(userId))
+				.and(USER_SETTINGS.SERVICE_ID.equal(serviceId))
+				.and(USER_SETTINGS.KEY.equal(key))
 			)
 			.execute();
 	}
