@@ -33,6 +33,9 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.api.Environment;
+import com.sonicle.webtop.core.servlet.ServletHelper;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -42,6 +45,8 @@ import javax.servlet.http.HttpSession;
 public class WebTopSession {
 	
 	private HttpSession httpSession = null;
+	private Environment env = null;
+	private final Object lock = new Object();
 	
 	public WebTopSession(HttpSession session) {
 		httpSession = session;
@@ -49,5 +54,24 @@ public class WebTopSession {
 	
 	public void destroy() {
 		
+	}
+	
+	public Environment getEnvironment() {
+		synchronized(lock) {
+			return env;
+		}
+	}
+	
+	void checkEnvironment(HttpServletRequest request) {
+		WebTopApp wta = WebTopApp.getInstance();
+		String ua = ServletHelper.getUserAgent(request);
+		
+		if(getEnvironment() == null) {
+			
+			
+		} else {
+			
+			
+		}
 	}
 }

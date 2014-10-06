@@ -31,38 +31,30 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.api;
 
-import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.ServiceVersion;
+import com.sonicle.webtop.core.WebTopSession;
+import net.sf.uadetector.ReadableUserAgent;
 
 /**
  *
  * @author malbinola
  */
-public class Manifest extends ServiceManifest {
+public class Environment {
 	
-	public static final String ID = "com.sonicle.webtop.core";
-	public static final String CLASS_NAME = "com.sonicle.webtop.core.CoreService";
-	public static final String VERSION = "4.5.2";
-	public static final String BUILD_DATE = "09/09/2014";
-	public static final String COMPANY = "Sonicle S.r.l.";
-	public static final String COMPANY_EMAIL = "sonicle@sonicle.com";
-	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
-	public static final String SUPPORT_EMAIL = "sonicle@sonicle.com";
-	public static final String DATA_SOURCE_NAME = "webtop";
-	public static final String[] INIT_CHECK_TABLES = new String[]{"upgrade_statements"/*,"settings","domains"*/};
+	private final WebTopSession wts;
+	private final ReadableUserAgent userAgent;
 	
-	public Manifest() {
-		id = ID;
-		className = CLASS_NAME;
-		version = new ServiceVersion(VERSION);
-		buildDate = BUILD_DATE;
-		company = COMPANY;
-		companyEmail = COMPANY_EMAIL;
-		companyWebSite = COMPANY_WEBSITE;
-		supportEmail = SUPPORT_EMAIL;
-		dataSourceName = DATA_SOURCE_NAME;
-		initCheckTables = INIT_CHECK_TABLES;
+	Environment(WebTopSession wts, ReadableUserAgent userAgent) {
+		this.wts = wts;
+		this.userAgent = userAgent;
+	}
+
+	public WebTopSession getWebTopSession() {
+		return wts;
+	}
+
+	public ReadableUserAgent getUserAgent() {
+		return userAgent;
 	}
 }

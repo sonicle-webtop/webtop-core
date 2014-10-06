@@ -42,7 +42,9 @@ import org.jooq.tools.StringUtils;
 public class ServiceManifest {
 	
 	protected String id;
-	protected String classNamePrefix;
+	protected String className;
+	protected String publicClassName;
+	protected String deamonClassName;
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
@@ -63,14 +65,20 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
-	public ServiceManifest(String id, String classNamePrefix, ServiceVersion version, String buildDate, 
-			String company, String companyEmail, String companyWebSite, String supportEmail) throws Exception {
+	public ServiceManifest(String id, 
+		String className, String publicClassName, String deamonClassName, 
+		ServiceVersion version, String buildDate, String company, 
+		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
 		super();
 		
 		if(StringUtils.isEmpty(id)) throw new Exception("Invalid value for property [id]");
-		this.id = id;
-		if(StringUtils.isEmpty(classNamePrefix)) throw new Exception("Invalid value for property [classNamePrefix]");
-		this.classNamePrefix = classNamePrefix;
+		this.id = id.toLowerCase();
+		
+		boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
+		if(noclass) throw new Exception("You need to fill at least a service class");
+		this.className = className;
+		this.publicClassName = publicClassName;
+		this.deamonClassName = deamonClassName;
 		if(version.isUndefined()) throw new Exception("Invalid value for property [version]");
 		this.version = version;
 		if(!StringUtils.isEmpty(buildDate)) this.buildDate = buildDate;
@@ -83,9 +91,17 @@ public class ServiceManifest {
 	public String getId() {
 		return id;
 	}
-	
-	public String getClassNamePrefix() {
-		return classNamePrefix;
+
+	public String getClassName() {
+		return className;
+	}
+
+	public String getPublicClassName() {
+		return publicClassName;
+	}
+
+	public String getDeamonClassName() {
+		return deamonClassName;
 	}
 	
 	public ServiceVersion getVersion() {

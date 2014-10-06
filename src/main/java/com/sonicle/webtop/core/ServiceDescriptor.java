@@ -31,74 +31,75 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.service;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.ServiceManager;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.api.WebTopPublicService;
+import com.sonicle.webtop.core.api.WebTopService;
 import com.sonicle.webtop.core.api.ServiceManifest;
-import java.text.MessageFormat;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class ServiceDescriptor {
+class ServiceDescriptor {
 	
-	private static final Logger logger = WebTopApp.getLogger(ServiceManager.class);
-	public static final String PRIVATE_CLASSNAME = "Service";
-	public static final String PUBLIC_CLASSNAME = "PublicService";
-	public static final String BACKGROUND_CLASSNAME = "BackgroundService";
-	
+	private static final Logger logger = WebTopApp.getLogger(ServiceDescriptor.class);
 	protected ServiceManifest manifest = null;
-	protected String privateClassName = null;
-	protected Class privateClass = null;
-	protected String publicClassName = null;
+	protected Class defaultClass = null;
 	protected Class publicClass = null;
-	protected String backgroundClassName = null;
-	protected Class backgroundClass = null;
+	protected Class deamonClass = null;
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
-		
-		// Loads private(default) service class
+
+		// Loads default (private) service class
 		try {
-			privateClassName = buildClassName(manifest.getId(), PRIVATE_CLASSNAME, manifest.getClassNamePrefix());
-			privateClass = Class.forName(privateClassName);
+			defaultClass = Class.forName(manifest.getClassName());
+			if(!defaultClass.isAssignableFrom(WebTopService.class)) throw new ClassCastException();
+
 		} catch(ClassNotFoundException ex) {
-			logger.debug("Private service class not found [{}]", privateClassName);
+			logger.debug("Service class not found [{}]", manifest.getClassName());
+		} catch(ClassCastException ex) {
+			logger.warn("A valid Service class must extends 'com.sonicle.webtop.core.api.Service' class");
 		}
-		
+
 		// Loads public service class
 		try {
-			publicClassName = buildClassName(manifest.getId(), PUBLIC_CLASSNAME, manifest.getClassNamePrefix());
-			publicClass = Class.forName(publicClassName);
+			publicClass = Class.forName(manifest.getPublicClassName());
+			if(!publicClass.isAssignableFrom(WebTopPublicService.class)) throw new ClassCastException();
+
 		} catch(ClassNotFoundException ex) {
-			logger.debug("Public service class not found [{}]", publicClassName);
+			logger.debug("PublicService class not found [{}]", manifest.getPublicClassName());
+		} catch(ClassCastException ex) {
+			logger.warn("A valid PublicService class must extends 'com.sonicle.webtop.core.api.PublicService' class");
 		}
-		
-		// Loads background service class
+
+		// Loads deamon service class
 		try {
-			backgroundClassName = buildClassName(manifest.getId(), BACKGROUND_CLASSNAME, manifest.getClassNamePrefix());
-			backgroundClass = Class.forName(backgroundClassName);
+			deamonClass = Class.forName(manifest.getDeamonClassName());
+			if(!deamonClass.isAssignableFrom(WebTopPublicService.class)) throw new ClassCastException();
+
 		} catch(ClassNotFoundException ex) {
-			logger.debug("Background service class not found [{}]", backgroundClassName);
+			logger.debug("DeamonService class not found [{}]", manifest.getDeamonClassName());
+		} catch(ClassCastException ex) {
+			logger.warn("A valid DeamonService class must extends 'com.sonicle.webtop.core.api.DeamonService' class");
 		}
 	}
 
-	private String buildClassName(String pkg, String classNamePrefix, String className) {
-		return MessageFormat.format("{0}.{1}{2}", pkg, classNamePrefix, className);
+	public ServiceManifest getManifest() {
+		return manifest;
 	}
 
-	public boolean hasPrivate() {
-		return (privateClass == null);
+	public boolean hasDefaultService() {
+		return (defaultClass == null);
 	}
 
-	public boolean hasPublic() {
+	public boolean hasPublicService() {
 		return (publicClass == null);
 	}
 
-	public boolean hasBackground() {
-		return (backgroundClass == null);
+	public boolean hasDeamonService() {
+		return (deamonClass == null);
 	}
 }

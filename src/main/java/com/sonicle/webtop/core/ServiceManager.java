@@ -35,11 +35,14 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.api.ServiceManifest;
 import com.sonicle.webtop.core.api.ServiceVersion;
-import com.sonicle.webtop.core.service.ServiceDescriptor;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -71,6 +74,7 @@ public class ServiceManager {
 	
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
+	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap();
 	
 	/**
 	 * Private constructor.
@@ -86,7 +90,7 @@ public class ServiceManager {
 	 * Performs cleanup process.
 	 */
 	public void cleanup() {
-		
+		services.clear();
 	}
 	
 	private void init() {
@@ -95,11 +99,16 @@ public class ServiceManager {
 		// Progamatically add the core's manifest
 		initService(new Manifest());
 		
-		
 		// Loads services' manifest files from classpath
 		ArrayList<ServiceManifest> manifests = null;
 		try {
 			manifests = discoverServices();
+			Collections.sort(manifests, new Comparator<ServiceManifest>() {
+				@Override
+				public int compare(ServiceManifest o1, ServiceManifest o2) {
+					return o1.getId().compareTo(o2.getId());
+				}
+			});
 		} catch (IOException ex) {
 			throw new RuntimeException("Error during services discovery", ex);
 		}
@@ -108,8 +117,32 @@ public class ServiceManager {
 	}
 	
 	private void initService(ServiceManifest manifest) {
+		ServiceDescriptor descriptor = null;
 		
-		new ServiceDescriptor(manifest);
+		String serviceId = manifest.getId();
+		synchronized(services) {
+			if(services.containsKey(serviceId)) throw new RuntimeException("Service already registered");
+			descriptor = new ServiceDescriptor(manifest);
+			services.put(serviceId, descriptor);
+		}
+	}
+	
+	
+	/**
+	 * Returns the list of avaiable service IDs.
+	 * @return 
+	 */
+	public List<String> getServices() {
+		synchronized(services) {
+			return Arrays.asList(services.keySet().toArray(new String[0]));
+		}
+	}
+	
+	public ServiceManifest getManifest(String serviceId) {
+		synchronized(services) {
+			if(!services.containsKey(serviceId)) return null;
+			return services.get(serviceId).getManifest();
+		}
 	}
 	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {
@@ -145,16 +178,11 @@ public class ServiceManager {
 		List<HierarchicalConfiguration> services = config.configurationsAt("service");
 		for(HierarchicalConfiguration service : services) {
 			try {
-				/*
-				// id, classNamePrefix and version are required
-				if(!service.containsKey("id")) throw new ConfigurationException("Missing element [<id>]");
-				if(!service.containsKey("classNamePrefix")) throw new ConfigurationException("Missing element [<classNamePrefix>]");
-				if(!service.containsKey("version")) throw new ConfigurationException("Missing element [<version>]");
-				*/
-				
 				manifest = new ServiceManifest(
 					service.getString("id"),
-					service.getString("classNamePrefix"),
+					service.getString("className"),
+					service.getString("publicClassName"),
+					service.getString("deamonClassName"),
 					new ServiceVersion(service.getString("version")),
 					service.getString("buildDate"),
 					service.getString("company"),

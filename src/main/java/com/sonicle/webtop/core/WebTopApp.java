@@ -43,10 +43,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import javax.servlet.ServletContext;
+import net.sf.uadetector.ReadableUserAgent;
+import net.sf.uadetector.UserAgentStringParser;
+import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
@@ -78,7 +82,6 @@ public class WebTopApp {
 		}
 	}
 	
-	
 	private final ServletContext servletContext;
 	private final String webappName;
 	private final String systemInfo;
@@ -86,6 +89,7 @@ public class WebTopApp {
 	private ConnectionManager conMgr = null;
 	private SettingsManager setMgr = null;
 	private ServiceManager srvMgr = null;
+	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
 	private WebTopApp(ServletContext context) {
 		servletContext = context;
@@ -148,8 +152,46 @@ public class WebTopApp {
 		return freemarkerCfg.getTemplate(path);
 	}
 	
+	/**
+	 * Parses a User-Agent HTTP Header string looking for useful client information.
+	 * @param userAgentHeader HTTP Header string.
+	 * @return Object representation of the parsed string.
+	 */
+	public ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
+		synchronized(userAgentsCache) {
+			if(userAgentsCache.containsKey(userAgentHeader)) {
+				return userAgentsCache.get(userAgentHeader);
+			} else {
+				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
+				ReadableUserAgent rua = parser.parse(userAgentHeader);
+				userAgentsCache.put(userAgentHeader, rua);
+				return rua;
+			}
+		}
+	}
+	
+	/**
+	 * Returns the SettingsManager.
+	 * @return SettingsManager instance.
+	 */
+	public SettingsManager getSettingsManager() {
+		return setMgr;
+	}
+	
+	/**
+	 * Returns the ConnectionManager.
+	 * @return ConnectionManager instance.
+	 */
 	public ConnectionManager getConnectionManager() {
 		return conMgr;
+	}
+	
+	/**
+	 * Returns the ServiceManager.
+	 * @return ServiceManager instance.
+	 */
+	public ServiceManager getServiceManager() {
+		return srvMgr;
 	}
 	
 	public Manager getManager() {
@@ -176,6 +218,10 @@ public class WebTopApp {
 	public String lookupResource(String serviceId, Locale locale, String key, Object... arguments) {
 		String value = lookupResource(serviceId, locale, key);
 		return MessageFormat.format(value, arguments);
+	}
+	
+	public String getCustomProperty(String name) {
+		return "-----------------------------------------------------------";
 	}
 	
 	/**

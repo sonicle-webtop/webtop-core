@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.webtop.core.Manager;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.WebTopSession;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ public class Start extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = ServletHelper.getWebTopApp(request);
+		WebTopSession wts = ServletHelper.getWebTopSession(request);
 		Manager manager = wta.getManager();
 		
 		try {

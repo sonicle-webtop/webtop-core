@@ -33,8 +33,10 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.api.ServiceManifest;
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Locale;
@@ -43,7 +45,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.shiro.SecurityUtils;
 
 /**
  *
@@ -143,16 +144,22 @@ public class ServletHelper {
 		}
 	}
 	
+	public static boolean isPublic(HttpServletRequest request) {
+		return request.getServletPath().equals("/public");
+	}
+	
+	public static String getUserAgent(HttpServletRequest request) {
+		return request.getHeader("user-agent");
+	}
+	
 	public static void fillPageVars(Map tplMap, WebTopApp wta) {
-		/*
-		ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);
+		ServiceManifest manifest = wta.getServiceManager().getManifest(Manifest.ID);
 		String title = wta.getCustomProperty("webtop.title");
 		if (title == null) title = MessageFormat.format("WebTop {0}", manifest.getVersion().getMajor());
 		tplMap.put("pageTitle", title);
 		tplMap.put("version", manifest.getVersion().toString());
-		tplMap.put("version_major", manifest.getVersion().getMajor());
-		tplMap.put("version_minor", manifest.getVersion().getMinor());
-		*/
+		tplMap.put("majorVersion", manifest.getVersion().getMajor());
+		tplMap.put("minorVersion", manifest.getVersion().getMinor());
 	}
 	
 	public static void fillSystemInfoVars(Map tplMap, WebTopApp wta) {
