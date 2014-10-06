@@ -33,23 +33,26 @@
  */
 package com.sonicle.webtop.core.shiro;
 
+import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.security.auth.login.LoginException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.realm.AuthenticatingRealm;
+import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class WebTopRealm extends AuthenticatingRealm {
+public class WebTopRealm extends AuthorizingRealm {
 	
 	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
 	
@@ -72,7 +75,11 @@ public class WebTopRealm extends AuthenticatingRealm {
 			//logger.debug("isRememberMe={}",upt.isRememberMe());
 			char[] creds=(char[])at.getCredentials();
 			logger.debug("{}", (String)at.getPrincipal());
-			Principal p=(Principal)sonicleLogin.validateUser((String)at.getPrincipal()+"@"+upt.getDomain(), creds);
+			Principal p=sonicleLogin.validateUser((String)at.getPrincipal()+"@"+upt.getDomain(), creds);
+			ArrayList<GroupPrincipal> groups=p.getGroups();
+			for(GroupPrincipal group: groups) {
+				logger.debug("user "+p.getSubjectId()+" is in group "+group.getSubjectId());
+			}
 			WebTopAuthenticationInfo authinfo=new WebTopAuthenticationInfo(p,creds,this.getName());
 			return authinfo;
 		} catch(LoginException exc) {
@@ -82,6 +89,11 @@ public class WebTopRealm extends AuthenticatingRealm {
 			rexc.printStackTrace();
 		}
 		return null;
+	}
+
+	@Override
+	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection pc) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
 }

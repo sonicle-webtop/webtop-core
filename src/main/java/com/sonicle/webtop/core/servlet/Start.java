@@ -60,6 +60,9 @@ public class Start extends HttpServlet {
 			ServletHelper.setPageContentType(response);
 			
 			Map tplMap = new HashMap();
+			tplMap.put("theme","crisp");
+			tplMap.put("debug","false");
+			tplMap.put("rtl","false");
 			ServletHelper.fillPageVars(tplMap, wta);
 			
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");

@@ -108,7 +108,7 @@
 
     if (includeCSS) {
         document.write('<link rel="stylesheet" type="text/css" href="' +
-                            themePath + '-debug.css"/>');
+                            themePath + (useDebug?'-debug.css':'.css')+'"/>');
     }
 
     extPrefix = useDebug ? '/ext' : '/ext-all';

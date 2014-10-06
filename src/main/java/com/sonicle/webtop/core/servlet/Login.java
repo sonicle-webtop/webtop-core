@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.LocaleKey;
 import com.sonicle.webtop.core.Manager;
 import com.sonicle.webtop.core.WebTopApp;
@@ -62,14 +63,36 @@ public class Login extends HttpServlet {
 		Manager manager = wta.getManager();
 		
 		try {
+			//SettingsManager sm = wta.getSettingsManager();
+			//ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);
+			//boolean maintenance = LangUtils.value(sm.getServiceSetting(ServicesManager.MAIN_SERVICE_ID, Settings.MAINTENANCE), false);
+			boolean maintenance=false;
+			
 			ServletHelper.setCacheControl(response);
 			ServletHelper.setPageContentType(response);
 			Locale locale = ServletHelper.homogenizeLocale(request);
 			
+
 			Map tplMap = new HashMap();
 			ServletHelper.fillPageVars(tplMap, wta);
 			ServletHelper.fillSystemInfoVars(tplMap, wta);
+
+			// Defines messages...
+			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE) : "";
+			String failureMessage = "";
+			String failureAttribute = ServletUtils.getStringAttribute(request, "loginFailure");
+			WebTopApp.logger.debug("failureAttribute is null? {}", failureAttribute==null);
+			if(failureAttribute != null) {
+				WebTopApp.logger.debug("failureAttr: {}", failureAttribute);
+				if(failureAttribute.equals(Login.FAILURE_INVALID)) {
+					failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_FAILURE);
+				} else if(failureAttribute.equals(Login.FAILURE_MAINTENANCE)) {
+					failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_MAINTENANCE);
+				}
+			}
+			
 			tplMap.put("title", wta.lookupResource(WebTopApp.CORE_ID, locale, LocaleKey.LOGIN_TITLE, "5"));
+			tplMap.put("failureMessage",failureMessage);
 			tplMap.put("maintenanceEnabled", false);
 			tplMap.put("maintenanceMessage", wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE));
 			tplMap.put("domainLabel", wta.lookupResource(locale, LocaleKey.LOGIN_DOMAIN_LABEL));
