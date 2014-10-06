@@ -83,7 +83,9 @@ public class WebTopApp {
 	private final String webappName;
 	private final String systemInfo;
 	private Configuration freemarkerCfg = null;
-	private ConnectionManager conManager = null;
+	private ConnectionManager conMgr = null;
+	private SettingsManager setMgr = null;
+	private ServiceManager srvMgr = null;
 	
 	private WebTopApp(ServletContext context) {
 		servletContext = context;
@@ -101,12 +103,16 @@ public class WebTopApp {
 		freemarkerCfg.setDefaultEncoding("UTF-8");
 		
 		// Connection Manager
-		conManager = ConnectionManager.initialize(this);
+		conMgr = ConnectionManager.initialize(this);
 		try {
-			conManager.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+			conMgr.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
+		// Settings Manager
+		setMgr = SettingsManager.initialize(this);
+		// Service Manager
+		srvMgr = ServiceManager.initialize(this);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
@@ -115,8 +121,8 @@ public class WebTopApp {
 		logger.info("WTA shutdown started [{}]", webappName);
 		
 		// Connection Manager
-		conManager.shutdown();
-		conManager = null;
+		conMgr.cleanup();
+		conMgr = null;
 		logger.info("ConnectionManager destroyed.");
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
@@ -143,7 +149,7 @@ public class WebTopApp {
 	}
 	
 	public ConnectionManager getConnectionManager() {
-		return conManager;
+		return conMgr;
 	}
 	
 	public Manager getManager() {

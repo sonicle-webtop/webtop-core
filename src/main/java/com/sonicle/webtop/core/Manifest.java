@@ -31,69 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.dal;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.ODomain;
-import java.sql.Connection;
-import org.jooq.DSLContext;
-import static com.sonicle.webtop.core.jooq.Tables.*;
-import com.sonicle.webtop.core.jooq.tables.records.*;
-import java.util.List;
-import org.jooq.impl.DSL;
+import com.sonicle.webtop.core.api.ServiceManifest;
+import com.sonicle.webtop.core.api.ServiceVersion;
 
 /**
  *
  * @author malbinola
  */
-public class DomainDAO {
+public class Manifest extends ServiceManifest {
 	
-	private final static DomainDAO INSTANCE = new DomainDAO();
-	public static DomainDAO getInstance() {
-		return INSTANCE;
-	}
+	public static final String ID = "com.sonicle.webtop.core";
+	public static final String CLASS_NAME_PREFIX = "Core";
+	public static final String VERSION = "4.5.2";
+	public static final String BUILD_DATE = "09/09/2014";
+	public static final String COMPANY = "Sonicle S.r.l.";
+	public static final String COMPANY_EMAIL = "sonicle@sonicle.com";
+	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
+	public static final String SUPPORT_EMAIL = "sonicle@sonicle.com";
+	public static final String DATA_SOURCE_NAME = "webtop";
+	public static final String[] INIT_CHECK_TABLES = new String[]{"upgrade_statements"/*,"settings","domains"*/};
 	
-	public List<ODomain> selectAll(Connection con) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.select()
-			.from(DOMAINS)
-			.fetchInto(ODomain.class);
-	}
-	
-	public ODomain selectById(Connection con, String domainId) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.select()
-			.from(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.fetchOneInto(ODomain.class);
-	}
-	
-	public int insert(Connection con, ODomain item) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
-		return dsl
-			.insertInto(DOMAINS)
-			.set(record)
-			.execute();
-	}
-	
-	public int update(Connection con, ODomain item) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
-		return dsl
-			.update(DOMAINS)
-			.set(record)
-			.where(DOMAINS.DOMAIN_ID.equal(item.getDomainId()))
-			.execute();
-	}
-	
-	public int deleteById(Connection con, String domainId) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.delete(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.execute();
+	public Manifest() {
+		id = ID;
+		classNamePrefix = CLASS_NAME_PREFIX;
+		version = new ServiceVersion(VERSION);
+		buildDate = BUILD_DATE;
+		company = COMPANY;
+		companyEmail = COMPANY_EMAIL;
+		companyWebSite = COMPANY_WEBSITE;
+		supportEmail = SUPPORT_EMAIL;
+		dataSourceName = DATA_SOURCE_NAME;
+		initCheckTables = INIT_CHECK_TABLES;
 	}
 }

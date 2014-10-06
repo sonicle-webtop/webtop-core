@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.dal;
 
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OUserSetting;
 import java.sql.Connection;
 import org.jooq.DSLContext;
 import static com.sonicle.webtop.core.jooq.Tables.*;
@@ -46,54 +47,89 @@ import org.jooq.impl.DSL;
  *
  * @author malbinola
  */
-public class DomainDAO {
+public class UserSettingDAO {
 	
-	private final static DomainDAO INSTANCE = new DomainDAO();
-	public static DomainDAO getInstance() {
+	private final static UserSettingDAO INSTANCE = new UserSettingDAO();
+	public static UserSettingDAO getInstance() {
 		return INSTANCE;
 	}
 	
-	public List<ODomain> selectAll(Connection con) {
+	public List<OUserSetting> selectByDomainUserService(Connection con, String domainId, String userId, String serviceId) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(DOMAINS)
-			.fetchInto(ODomain.class);
+			.from(SETTINGS_USER)
+			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
+				.and(SETTINGS_USER.USER_ID.equal(userId))
+				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
+			)
+			.orderBy(
+				SETTINGS_USER.KEY
+			)
+			.fetchInto(OUserSetting.class);
 	}
 	
-	public ODomain selectById(Connection con, String domainId) {
+	public List<OUserSetting> selectByDomainServiceUserKeyLike(Connection con, String domainId, String userId, String serviceId, String keyLike) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
 			.select()
-			.from(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.fetchOneInto(ODomain.class);
+			.from(SETTINGS_USER)
+			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
+				.and(SETTINGS_USER.USER_ID.equal(userId))
+				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
+				.and(SETTINGS_USER.KEY.like(keyLike))
+			)
+			.orderBy(
+				SETTINGS_USER.KEY
+			)
+			.fetchInto(OUserSetting.class);
 	}
 	
-	public int insert(Connection con, ODomain item) {
+	public OUserSetting selectByDomainUserServiceKey(Connection con, String domainId, String userId, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
 		return dsl
-			.insertInto(DOMAINS)
+			.select()
+			.from(SETTINGS_USER)
+			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
+				.and(SETTINGS_USER.USER_ID.equal(userId))
+				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
+				.and(SETTINGS_USER.KEY.equal(key))
+			)
+			.fetchOneInto(OUserSetting.class);
+	}
+	
+	public int insert(Connection con, OUserSetting item) {
+		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
+		SettingsUserRecord record = dsl.newRecord(SETTINGS_USER, item);
+		return dsl
+			.insertInto(SETTINGS_USER)
 			.set(record)
 			.execute();
 	}
 	
-	public int update(Connection con, ODomain item) {
+	public int update(Connection con, OUserSetting item) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
+		SettingsUserRecord record = dsl.newRecord(SETTINGS_USER, item);
 		return dsl
-			.update(DOMAINS)
+			.update(SETTINGS_USER)
 			.set(record)
-			.where(DOMAINS.DOMAIN_ID.equal(item.getDomainId()))
+			.where(SETTINGS_USER.DOMAIN_ID.equal(item.getDomainId())
+				.and(SETTINGS_USER.USER_ID.equal(item.getUserId()))
+				.and(SETTINGS_USER.SERVICE_ID.equal(item.getServiceId()))
+				.and(SETTINGS_USER.KEY.equal(item.getKey()))
+			)
 			.execute();
 	}
 	
-	public int deleteById(Connection con, String domainId) {
+	public int deleteByDomainServiceUserKey(Connection con, String domainId, String userId, String serviceId, String key) {
 		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
 		return dsl
-			.delete(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
+			.delete(SETTINGS_USER)
+			.where(SETTINGS_USER.DOMAIN_ID.equal(domainId)
+				.and(SETTINGS_USER.USER_ID.equal(userId))
+				.and(SETTINGS_USER.SERVICE_ID.equal(serviceId))
+				.and(SETTINGS_USER.KEY.equal(key))
+			)
 			.execute();
 	}
 }

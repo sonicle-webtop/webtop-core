@@ -31,69 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.dal;
+package com.sonicle.webtop.core.bol;
 
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.ODomain;
-import java.sql.Connection;
-import org.jooq.DSLContext;
-import static com.sonicle.webtop.core.jooq.Tables.*;
-import com.sonicle.webtop.core.jooq.tables.records.*;
-import java.util.List;
-import org.jooq.impl.DSL;
+import com.sonicle.webtop.core.jooq.tables.pojos.Settings;
 
 /**
  *
  * @author malbinola
  */
-public class DomainDAO {
+public class OSetting extends Settings {
 	
-	private final static DomainDAO INSTANCE = new DomainDAO();
-	public static DomainDAO getInstance() {
-		return INSTANCE;
-	}
-	
-	public List<ODomain> selectAll(Connection con) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.select()
-			.from(DOMAINS)
-			.fetchInto(ODomain.class);
-	}
-	
-	public ODomain selectById(Connection con, String domainId) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.select()
-			.from(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.fetchOneInto(ODomain.class);
-	}
-	
-	public int insert(Connection con, ODomain item) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
-		return dsl
-			.insertInto(DOMAINS)
-			.set(record)
-			.execute();
-	}
-	
-	public int update(Connection con, ODomain item) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		DomainsRecord record = dsl.newRecord(DOMAINS, item);
-		return dsl
-			.update(DOMAINS)
-			.set(record)
-			.where(DOMAINS.DOMAIN_ID.equal(item.getDomainId()))
-			.execute();
-	}
-	
-	public int deleteById(Connection con, String domainId) {
-		DSLContext dsl = DSL.using(con, WebTopApp.getSQLDialect());
-		return dsl
-			.delete(DOMAINS)
-			.where(DOMAINS.DOMAIN_ID.equal(domainId))
-			.execute();
+	public OSetting(String serviceId, String key, String value) {
+		super(serviceId, key, value);
 	}
 }

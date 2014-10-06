@@ -52,7 +52,7 @@ import org.slf4j.Logger;
  */
 public class WebTopRealm extends AuthorizingRealm {
 	
-	public final static Logger logger = WebTopApp.getLogger(WebTopRealm.class);
+	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
 	
 	SonicleLogin sonicleLogin=null;
 	boolean initialized=false;
