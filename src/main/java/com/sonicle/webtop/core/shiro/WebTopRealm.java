@@ -33,10 +33,12 @@
  */
 package com.sonicle.webtop.core.shiro;
 
+import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.security.auth.login.LoginException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -74,6 +76,10 @@ public class WebTopRealm extends AuthorizingRealm {
 			char[] creds=(char[])at.getCredentials();
 			logger.debug("{}", (String)at.getPrincipal());
 			Principal p=sonicleLogin.validateUser((String)at.getPrincipal()+"@"+upt.getDomain(), creds);
+			ArrayList<GroupPrincipal> groups=p.getGroups();
+			for(GroupPrincipal group: groups) {
+				logger.debug("user "+p.getSubjectId()+" is in group "+group.getSubjectId());
+			}
 			WebTopAuthenticationInfo authinfo=new WebTopAuthenticationInfo(p,creds,this.getName());
 			return authinfo;
 		} catch(LoginException exc) {
