@@ -33,18 +33,23 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.api.Environment;
+import com.sonicle.webtop.core.api.WebTopService;
+
 /**
  *
  * @author malbinola
  */
-public class LocaleKey {
+public class CoreService extends WebTopService {
+
+	@Override
+	public void initialize(Environment env) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	@Override
+	public void cleanup() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 	
-	public static final String LOGIN_TITLE = "login.title";
-	public static final String LOGIN_USERNAME_PLACEHOLDER = "login.username.placeholder";
-	public static final String LOGIN_PASSWORD_PLACEHOLDER = "login.password.placeholder";
-	public static final String LOGIN_DOMAIN_LABEL = "login.domain.label";
-	public static final String LOGIN_SUBMIT_LABEL = "login.submit.label";
-	public static final String LOGIN_MAINTENANCE = "login.maintenance";
-	public static final String LOGIN_ERROR_MAINTENANCE = "login.error.maintenance";
-	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
 }

@@ -5,6 +5,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>${title}</title>
+		<link rel="icon" href="resources/com/sonicle/webtop/core/images/favicon.png" type="image/png" />
 		
 		<!-- Bootstrap -->
 		<link href="resources/com/sonicle/webtop/core/css/bootstrap.min.css" rel="stylesheet">
@@ -27,23 +28,34 @@
 			<div class="container">
 				<div class="row">
 					<div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-						<img src="resources/com/sonicle/webtop/core/images/login.png" class="img-responsive">
+						<img class="logo img-responsive" src="resources/com/sonicle/webtop/core/images/login.png">
+						<#if maintenance>
+						<div class="alert alert-warning text-center" role="alert">
+							<span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+							${maintenanceMessage}
+						</div>
+						</#if>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
 						<form name="login" method="post" action="login">
 							<div class="box">
-                                                                <!--- Failure message--->
-                                                                ${failureMessage}</br>                                                                
-                                                                <!--- Login fields --->
-								<div class="form-group"><div class="input-group">
-										<input class="form-control" id="wtusername" name="wtusername" type="username" placeholder="Enter username">
-										<div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
-									</div></div>
+								<#if failure>
+								<p class="text-center text-danger">
+									<span class="glyphicon glyphicon-exclamation-sign"></span>
+									${failureMessage}
+								</p>
+								</#if>
 								<div class="form-group">
 									<div class="input-group">
-										<input class="form-control" id="wtpassword" name="wtpassword" type="password" placeholder="Enter password">
+										<input class="form-control" id="wtusername" name="wtusername" type="username" placeholder="${usernamePlaceholder}">
+										<div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="input-group">
+										<input class="form-control" id="wtpassword" name="wtpassword" type="password" placeholder="${passwordPlaceholder}">
 										<div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
 									</div>
 								</div>
@@ -59,16 +71,15 @@
 								</div>
 								<br>
 								<!--<button class="btn btn-default full-width" type="sumbit"><span class="glyphicon glyphicon-ok"></span></button>-->
-								<button class="btn btn-primary full-width" type="sumbit">Accedi</button>
+								<button class="btn btn-primary full-width" type="sumbit">${submitLabel}</button>
 							</div>
 						</form>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-						<img src="resources/com/sonicle/webtop/core/images/poweredby.png" class="img-responsive">
-						<div class="text-center"><h6>v.3.5</h6></div>
-						<div class="text-center">v.3.5</div>
+						<img class="powered img-responsive" src="resources/com/sonicle/webtop/core/images/poweredby.png">
+						<h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
 					</div>
 				</div>
 			</div>

@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.LocaleKey;
 import com.sonicle.webtop.core.Manager;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
@@ -48,6 +49,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  *
@@ -63,40 +65,46 @@ public class Login extends HttpServlet {
 		Manager manager = wta.getManager();
 		
 		try {
+			Locale locale = ServletHelper.homogenizeLocale(request);
+			
 			//SettingsManager sm = wta.getSettingsManager();
 			//ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);
 			//boolean maintenance = LangUtils.value(sm.getServiceSetting(ServicesManager.MAIN_SERVICE_ID, Settings.MAINTENANCE), false);
-			boolean maintenance=false;
+			boolean maintenance = true;
 			
-			ServletHelper.setCacheControl(response);
-			ServletHelper.setPageContentType(response);
-			Locale locale = ServletHelper.homogenizeLocale(request);
-			
-
-			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, wta);
-			ServletHelper.fillSystemInfoVars(tplMap, wta);
-
 			// Defines messages...
-			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE) : "";
+			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE, true) : "";
+			
+			// Defines failure message
+			boolean failure = false;
 			String failureMessage = "";
 			String failureAttribute = ServletUtils.getStringAttribute(request, "loginFailure");
 			WebTopApp.logger.debug("failureAttribute is null? {}", failureAttribute==null);
 			if(failureAttribute != null) {
-				WebTopApp.logger.debug("failureAttr: {}", failureAttribute);
-				if(failureAttribute.equals(Login.FAILURE_INVALID)) {
-					failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_FAILURE);
-				} else if(failureAttribute.equals(Login.FAILURE_MAINTENANCE)) {
-					failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_MAINTENANCE);
+				switch (failureAttribute) {
+					case Login.FAILURE_INVALID:
+						failure = true;
+						failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_FAILURE, true);
+						break;
+					case Login.FAILURE_MAINTENANCE:
+						failure = true;
+						failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_MAINTENANCE, true);
+						break;
 				}
 			}
 			
-			tplMap.put("title", wta.lookupResource(WebTopApp.CORE_ID, locale, LocaleKey.LOGIN_TITLE, "5"));
-			tplMap.put("failureMessage",failureMessage);
-			tplMap.put("maintenanceEnabled", false);
-			tplMap.put("maintenanceMessage", wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE));
-			tplMap.put("domainLabel", wta.lookupResource(locale, LocaleKey.LOGIN_DOMAIN_LABEL));
-			
+			Map tplMap = new HashMap();
+			ServletHelper.fillPageVars(tplMap, locale, wta);
+			ServletHelper.fillSystemInfoVars(tplMap, locale, wta);
+			//tplMap.put("title", wta.lookupAndFormatResource(locale, LocaleKey.LOGIN_TITLE, true, "5"));
+			tplMap.put("failure", failure);
+			tplMap.put("failureMessage", failureMessage);
+			tplMap.put("maintenance", maintenance);
+			tplMap.put("maintenanceMessage", maintenanceMessage);
+			tplMap.put("usernamePlaceholder", wta.lookupResource(locale, LocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
+			tplMap.put("passwordPlaceholder", wta.lookupResource(locale, LocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
+			tplMap.put("domainLabel", wta.lookupResource(locale, LocaleKey.LOGIN_DOMAIN_LABEL, true));
+			tplMap.put("submitLabel", wta.lookupResource(locale, LocaleKey.LOGIN_SUBMIT_LABEL, true));
 			List<ODomain> domains = manager.getDomains();
 			tplMap.put("showDomain", (domains.size()>1));
 			tplMap.put("domains", domains);
@@ -107,6 +115,8 @@ public class Login extends HttpServlet {
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in login servlet!", ex);
 		} finally {
+			ServletHelper.setCacheControl(response);
+			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
 	}

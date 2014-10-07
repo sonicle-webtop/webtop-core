@@ -8,8 +8,20 @@ body {
 	margin: 2em 0;
 }
 .login img {
-	margin: 0 auto 2em;
+	margin: 0 auto 1em;
 }
+.login .logo {
+	max-height: 250px;
+}
+.login .alert {
+	padding: 5px;
+	margin-bottom: 0px;
+}
+.login .powered {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
 /*
 .login .btn {
 	background: #eee;

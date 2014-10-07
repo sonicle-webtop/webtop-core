@@ -36,6 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.api.WebTopPublicService;
 import com.sonicle.webtop.core.api.WebTopService;
 import com.sonicle.webtop.core.api.ServiceManifest;
+import com.sonicle.webtop.core.api.WebTopDeamonService;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -54,37 +56,37 @@ class ServiceDescriptor {
 		this.manifest = manifest;
 
 		// Loads default (private) service class
-		try {
-			defaultClass = Class.forName(manifest.getClassName());
-			if(!defaultClass.isAssignableFrom(WebTopService.class)) throw new ClassCastException();
-
-		} catch(ClassNotFoundException ex) {
-			logger.debug("Service class not found [{}]", manifest.getClassName());
-		} catch(ClassCastException ex) {
-			logger.warn("A valid Service class must extends 'com.sonicle.webtop.core.api.Service' class");
+		String className = manifest.getClassName();
+		if(!StringUtils.isEmpty(className)) {
+			defaultClass = loadServiceClass("Service", className, WebTopService.class);
 		}
 
 		// Loads public service class
-		try {
-			publicClass = Class.forName(manifest.getPublicClassName());
-			if(!publicClass.isAssignableFrom(WebTopPublicService.class)) throw new ClassCastException();
-
-		} catch(ClassNotFoundException ex) {
-			logger.debug("PublicService class not found [{}]", manifest.getPublicClassName());
-		} catch(ClassCastException ex) {
-			logger.warn("A valid PublicService class must extends 'com.sonicle.webtop.core.api.PublicService' class");
+		className = manifest.getPublicClassName();
+		if(!StringUtils.isEmpty(className)) {
+			publicClass = loadServiceClass("PublicService", className, WebTopPublicService.class);
 		}
 
 		// Loads deamon service class
+		className = manifest.getDeamonClassName();
+		if(!StringUtils.isEmpty(className)) {
+			deamonClass = loadServiceClass("DeamonService", className, WebTopDeamonService.class);
+		}
+	}
+	
+	private Class loadServiceClass(String description, String className, Class assignableFrom) {
+		Class clazz = null;
+		
 		try {
-			deamonClass = Class.forName(manifest.getDeamonClassName());
-			if(!deamonClass.isAssignableFrom(WebTopPublicService.class)) throw new ClassCastException();
+			clazz = Class.forName(className);
+			if(!clazz.isAssignableFrom(assignableFrom)) throw new ClassCastException();
 
 		} catch(ClassNotFoundException ex) {
-			logger.debug("DeamonService class not found [{}]", manifest.getDeamonClassName());
+			logger.debug("{} class not found [{}]", description, className);
 		} catch(ClassCastException ex) {
-			logger.warn("A valid DeamonService class must extends 'com.sonicle.webtop.core.api.DeamonService' class");
+			logger.warn("A valid {} class must extends '{}' class", description, assignableFrom.toString());
 		}
+		return null;
 	}
 
 	public ServiceManifest getManifest() {

@@ -51,6 +51,7 @@ import javax.servlet.ServletContext;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
@@ -199,15 +200,24 @@ public class WebTopApp {
 	}
 	
 	public String lookupResource(Locale locale, String key) {
-		return lookupResource(CORE_ID, locale, key);
+		return lookupResource(Manifest.ID, locale, key, false);
+	}
+	
+	public String lookupResource(Locale locale, String key, boolean escapeHtml) {
+		return lookupResource(Manifest.ID, locale, key, escapeHtml);
 	}
 	
 	public String lookupResource(String serviceId, Locale locale, String key) {
+		return lookupResource(serviceId, locale, key, false);
+	}
+	
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		String baseName = MessageFormat.format("{0}/locale", StringUtils.replace(serviceId, ".", "/"));
 		String value = "";
 		
 		try {
 			value = ResourceBundle.getBundle(baseName, locale).getString(key);
+			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
 		} catch(MissingResourceException ex) {
 			logger.warn("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
 		} finally {
@@ -215,13 +225,17 @@ public class WebTopApp {
 		}
 	}
 	
-	public String lookupResource(String serviceId, Locale locale, String key, Object... arguments) {
-		String value = lookupResource(serviceId, locale, key);
+	public String lookupAndFormatResource(Locale locale, String key, boolean escapeHtml, Object... arguments) {
+		return lookupAndFormatResource(Manifest.ID, locale, key, escapeHtml, arguments);
+	}
+	
+	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {
+		String value = lookupResource(serviceId, locale, key, escapeHtml);
 		return MessageFormat.format(value, arguments);
 	}
 	
 	public String getCustomProperty(String name) {
-		return "-----------------------------------------------------------";
+		return null;
 	}
 	
 	/**

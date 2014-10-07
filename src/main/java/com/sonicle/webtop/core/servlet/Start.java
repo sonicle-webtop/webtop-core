@@ -39,6 +39,7 @@ import com.sonicle.webtop.core.WebTopSession;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -57,13 +58,11 @@ public class Start extends HttpServlet {
 		Manager manager = wta.getManager();
 		
 		try {
-			ServletHelper.setPageContentType(response);
-			
 			Map tplMap = new HashMap();
 			tplMap.put("theme","crisp");
 			tplMap.put("debug","false");
 			tplMap.put("rtl","false");
-			ServletHelper.fillPageVars(tplMap, wta);
+			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
 			
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
 			tpl.process(tplMap, response.getWriter());
@@ -71,6 +70,8 @@ public class Start extends HttpServlet {
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in start servlet!", ex);
 		} finally {
+			ServletHelper.setCacheControl(response);
+			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
 	}

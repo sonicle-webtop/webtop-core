@@ -193,7 +193,7 @@ public class ServiceManager {
 				manifests.add(manifest);
 				
 			} catch(Exception ex) {
-				logger.warn("Service descriptor skipped due to errors", ex);
+				logger.warn("Service descriptor skipped. Cause: {}", ex.getMessage());
 			}
 		}
 		return manifests;
