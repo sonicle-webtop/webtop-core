@@ -304,6 +304,11 @@ public class ServiceManager {
 		return descr.getManifest();
 	}
 	
+	public boolean hasFullRights(String serviceId) {
+		if(serviceId.equals(Manifest.ID)) return true;
+		return false;
+	}
+	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {
 		ClassLoader cl = findClassLoader();
 		
@@ -342,6 +347,7 @@ public class ServiceManager {
 					elService.getString("className"),
 					elService.getString("publicClassName"),
 					elService.getString("deamonClassName"),
+					elService.getBoolean("hidden", false),
 					new ServiceVersion(elService.getString("version")),
 					elService.getString("buildDate"),
 					elService.getString("company"),

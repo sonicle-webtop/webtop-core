@@ -45,6 +45,7 @@ public class ServiceManifest {
 	protected String className;
 	protected String publicClassName;
 	protected String deamonClassName;
+	protected Boolean hidden;
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
@@ -66,7 +67,7 @@ public class ServiceManifest {
 	}
 	
 	public ServiceManifest(String id, 
-		String className, String publicClassName, String deamonClassName, 
+		String className, String publicClassName, String deamonClassName, Boolean hidden, 
 		ServiceVersion version, String buildDate, String company, 
 		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
 		super();
@@ -80,6 +81,7 @@ public class ServiceManifest {
 		this.className = className;
 		this.publicClassName = publicClassName;
 		this.deamonClassName = deamonClassName;
+		this.hidden = hidden;
 		if(version.isUndefined()) throw new Exception("Invalid value for property [version]");
 		this.version = version;
 		if(!StringUtils.isEmpty(buildDate)) this.buildDate = buildDate;

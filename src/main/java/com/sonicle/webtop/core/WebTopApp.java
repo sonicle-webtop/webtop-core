@@ -87,9 +87,9 @@ public class WebTopApp {
 	private final String webappName;
 	private final String systemInfo;
 	private Configuration freemarkerCfg = null;
-	private ConnectionManager conMgr = null;
-	private SettingsManager setMgr = null;
-	private ServiceManager srvMgr = null;
+	private ConnectionManager conm = null;
+	private SettingsManager setm = null;
+	private ServiceManager svcm = null;
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
 	private WebTopApp(ServletContext context) {
@@ -107,16 +107,16 @@ public class WebTopApp {
 		freemarkerCfg.setDefaultEncoding("UTF-8");
 		
 		// Connection Manager
-		conMgr = ConnectionManager.initialize(this);
+		conm = ConnectionManager.initialize(this);
 		try {
-			conMgr.registerJdbc4DataSource(Manifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+			conm.registerJdbc4DataSource(Manifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
 		// Settings Manager
-		setMgr = SettingsManager.initialize(this);
+		setm = SettingsManager.initialize(this);
 		// Service Manager
-		srvMgr = ServiceManager.initialize(this);
+		svcm = ServiceManager.initialize(this);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
@@ -125,8 +125,8 @@ public class WebTopApp {
 		logger.info("WTA shutdown started [{}]", webappName);
 		
 		// Connection Manager
-		conMgr.cleanup();
-		conMgr = null;
+		conm.cleanup();
+		conm = null;
 		logger.info("ConnectionManager destroyed.");
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
@@ -175,7 +175,7 @@ public class WebTopApp {
 	 * @return SettingsManager instance.
 	 */
 	public SettingsManager getSettingsManager() {
-		return setMgr;
+		return setm;
 	}
 	
 	/**
@@ -183,7 +183,7 @@ public class WebTopApp {
 	 * @return ConnectionManager instance.
 	 */
 	public ConnectionManager getConnectionManager() {
-		return conMgr;
+		return conm;
 	}
 	
 	/**
@@ -191,7 +191,7 @@ public class WebTopApp {
 	 * @return ServiceManager instance.
 	 */
 	public ServiceManager getServiceManager() {
-		return srvMgr;
+		return svcm;
 	}
 	
 	public CoreManager getManager() {

@@ -113,11 +113,15 @@ public class WebTopSession {
 		Environment e = null;
 		for(String serviceId : serviceIds) {
 			//TODO: check if service is allowed for user
-			if(serviceId.equals(Manifest.ID)) {
+			
+			// Instantiate right Environment
+			if(svcm.hasFullRights(serviceId)) {
 				e = new CoreEnvironment(wta, this, profile, userAgentInfo); 
 			} else {
 				e = new Environment(wta, this, profile, userAgentInfo);
 			}
+			
+			// Creates new instance
 			instance = svcm.instantiateService(serviceId, e);
 			if(instance != null) {
 				addService(instance);
