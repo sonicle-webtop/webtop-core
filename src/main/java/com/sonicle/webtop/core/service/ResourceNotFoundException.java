@@ -31,63 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.service;
 
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
-import freemarker.template.Template;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public class Start extends HttpServlet {
+public class ResourceNotFoundException extends IOException {
 	
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = WebTopSession.get(request);
-		CoreManager manager = wta.getManager();
-		
-		try {
-			
-			wts.checkEnvironment(request);
-			
-			
-			
-			Map tplMap = new HashMap();
-			tplMap.put("theme","crisp");
-			tplMap.put("debug","false");
-			tplMap.put("rtl","false");
-			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
-			
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
-		} finally {
-			ServletHelper.setCacheControl(response);
-			ServletHelper.setPageContentType(response);
-			WebTopApp.clearLoggerDC();
-		}
+	public ResourceNotFoundException() {
+		super();
 	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
+	
+	public ResourceNotFoundException(String message) {
+		super(message);
 	}
 }

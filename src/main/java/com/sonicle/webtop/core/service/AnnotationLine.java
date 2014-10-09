@@ -31,16 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.service;
+
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public abstract class WebTopService {
+public class AnnotationLine extends UpgradeLine {
 	
-	protected Environment env;
+	private static final Pattern PATTERN = Pattern.compile("^@.+");
+	private static final Pattern PATTERN_REQUIRE_ADMIN = Pattern.compile("^@RequireAdmin$");
+	private static final Pattern PATTERN_IGNORE_ERRORS = Pattern.compile("^@IgnoreErrors$");
 	
-	public abstract void initialize(Environment env);
-	public abstract void cleanup();
+	public AnnotationLine(String text) {
+		super(text);
+	}
+	
+	public static boolean matches(String text) {
+		return PATTERN.matcher(StringUtils.trim(text)).matches();
+	}
+	
+	public boolean matchesRequireAdmin() {
+		return PATTERN_REQUIRE_ADMIN.matcher(this.getText()).matches();
+	}
+	
+	public static boolean matchesRequireAdmin(String text) {
+		return PATTERN_REQUIRE_ADMIN.matcher(text).matches();
+	}
+	
+	public boolean matchesIgnoreErrors() {
+		return PATTERN_IGNORE_ERRORS.matcher(this.getText()).matches();
+	}
+	
+	public static boolean matchesIgnoreErrors(String text) {
+		return PATTERN_IGNORE_ERRORS.matcher(text).matches();
+	}
 }

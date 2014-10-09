@@ -34,22 +34,26 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.api.Environment;
-import com.sonicle.webtop.core.api.WebTopService;
+import com.sonicle.webtop.core.api.Service;
+import java.util.Locale;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class CoreService extends WebTopService {
+public class CoreService extends Service {
+	
+	public static final Logger logger = Service.getLogger(CoreService.class);
 
 	@Override
-	public void initialize(Environment env) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public void initialize(Environment api) {
+		getAdvancedEnv().getSession().test();
+		logger.debug("Mi sono inizializzato: mi chiamo {}", getName(new Locale("it_IT")));
 	}
 
 	@Override
 	public void cleanup() {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		
 	}
-	
 }

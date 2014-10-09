@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
@@ -64,9 +65,8 @@ import org.slf4j.MDC;
  */
 public class WebTopApp {
 	
-	public final static String CORE_ID = "com.sonicle.webtop.core";
-	
 	public final static Logger logger = WebTopApp.getLogger(WebTopApp.class);
+	public static final String ATTRIBUTE = "webtopapp";
 	private static final Object lock = new Object();
 	private static WebTopApp instance = null;
 	
@@ -97,7 +97,6 @@ public class WebTopApp {
 		webappName = ServletHelper.getWebAppName(context);
 		systemInfo = buildSystemInfo();
 		
-		
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		// Template Engine
@@ -110,7 +109,7 @@ public class WebTopApp {
 		// Connection Manager
 		conMgr = ConnectionManager.initialize(this);
 		try {
-			conMgr.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+			conMgr.registerJdbc4DataSource(Manifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
@@ -195,8 +194,8 @@ public class WebTopApp {
 		return srvMgr;
 	}
 	
-	public Manager getManager() {
-		return new Manager(this);
+	public CoreManager getManager() {
+		return new CoreManager(this);
 	}
 	
 	public String lookupResource(Locale locale, String key) {
@@ -406,5 +405,23 @@ public class WebTopApp {
 			pro.waitFor();
 		} catch (Throwable th) { /* Do nothing! */ }
 		return output;
+	}
+	
+	/**
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param request The http request
+	 * @return WebTopApp object
+	 */
+	public static WebTopApp get(HttpServletRequest request) {
+		return get(request.getSession().getServletContext());
+	}
+	
+	/**
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param context The servlet context
+	 * @return WebTopApp object
+	 */
+	static WebTopApp get(ServletContext context) {
+		return (WebTopApp) context.getAttribute(ATTRIBUTE);
 	}
 }

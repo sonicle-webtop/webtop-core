@@ -31,63 +31,39 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
-import freemarker.template.Template;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.dal.DomainDAO;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class Start extends HttpServlet {
+public class CoreManager {
 	
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = WebTopSession.get(request);
-		CoreManager manager = wta.getManager();
+	private WebTopApp wta = null;
+	
+	CoreManager(WebTopApp wta) {
+		this.wta = wta;
+	}
+	
+	public List<ODomain> getDomains() {
+		Connection con = null;
 		
 		try {
+			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			DomainDAO dao = DomainDAO.getInstance();
+			return dao.selectAll(con);
 			
-			wts.checkEnvironment(request);
-			
-			
-			
-			Map tplMap = new HashMap();
-			tplMap.put("theme","crisp");
-			tplMap.put("debug","false");
-			tplMap.put("rtl","false");
-			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
-			
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
+		} catch(SQLException ex) {
+			return null;
 		} finally {
-			ServletHelper.setCacheControl(response);
-			ServletHelper.setPageContentType(response);
-			WebTopApp.clearLoggerDC();
+			DbUtils.closeQuietly(con);
 		}
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 }

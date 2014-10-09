@@ -31,10 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.servlet.ServletHelper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
@@ -52,7 +51,8 @@ public class SessionListener implements HttpSessionListener {
 		
 		try {
 			WebTopSession wts = new WebTopSession(session);
-			session.setAttribute(ServletHelper.WEBTOPSESSION_ATTRIBUTE, wts);
+			session.setAttribute(WebTopSession.ATTRIBUTE, wts);
+			//session.setAttribute(ServletHelper.WEBTOPSESSION_ATTRIBUTE, wts);
 			WebTopApp.logger.info("WTS initialized [{}]", sid);
 		} catch(Exception ex) {
 			WebTopApp.logger.error("WTS initialization error [{}]", sid, ex);
@@ -65,13 +65,14 @@ public class SessionListener implements HttpSessionListener {
 		String sid = ServletHelper.getSessionID(session);
 		
 		try {
-			WebTopSession wts = ServletHelper.getWebTopSession(session);
+			WebTopSession wts = WebTopSession.get(session);
+			//WebTopSession wts = ServletHelper.getWebTopSession(session);
 			if(wts != null) wts.destroy();
 			WebTopApp.logger.info("WTS destroyed: {}", sid);
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error destroying WTS for {}", sid, ex);
 		} finally {
-			session.removeAttribute(ServletHelper.WEBTOPSESSION_ATTRIBUTE);
+			session.removeAttribute(WebTopSession.ATTRIBUTE);
 		}
 	}
 }

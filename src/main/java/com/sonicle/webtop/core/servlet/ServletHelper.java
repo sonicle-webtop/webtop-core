@@ -54,9 +54,6 @@ import org.apache.commons.lang.StringUtils;
  */
 public class ServletHelper {
 	
-	static final String WEBTOPAPP_ATTRIBUTE = "webtopapp";
-	static final String WEBTOPSESSION_ATTRIBUTE = "webtopsession";
-	
 	/**
 	 * Returns context's root path name, equals to current webapp context name.
 	 * @param context The servlet context
@@ -64,24 +61,6 @@ public class ServletHelper {
 	 */
 	public static String getWebAppName(ServletContext context) {
 		return new File(context.getRealPath("/")).getName();
-	}
-	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param request The http request
-	 * @return WebTopApp object
-	 */
-	static WebTopApp getWebTopApp(HttpServletRequest request) {
-		return getWebTopApp(request.getSession().getServletContext());
-	}
-	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param context The servlet context
-	 * @return WebTopApp object
-	 */
-	static WebTopApp getWebTopApp(ServletContext context) {
-		return (WebTopApp) context.getAttribute(WEBTOPAPP_ATTRIBUTE);
 	}
 	
 	/**
@@ -101,24 +80,6 @@ public class ServletHelper {
 	 */
 	public static String getSessionID(HttpSession session) {
 		return (session != null) ? session.getId() : "";
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param request The http request
-	 * @return WebTopSession object
-	 */
-	static WebTopSession getWebTopSession(HttpServletRequest request) {
-		return getWebTopSession(request.getSession());
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param session The http session
-	 * @return WebTopSession object
-	 */
-	static WebTopSession getWebTopSession(HttpSession session) {
-		return (WebTopSession)(session.getAttribute(WEBTOPSESSION_ATTRIBUTE));
 	}
 	
 	/*

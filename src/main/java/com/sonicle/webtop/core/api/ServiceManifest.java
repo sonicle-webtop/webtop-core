@@ -75,7 +75,8 @@ public class ServiceManifest {
 		this.id = id.toLowerCase();
 		
 		boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
-		if(noclass) throw new Exception("You need to fill at least a service class");
+		//TODO: Enable check or not?
+		//if(noclass) throw new Exception("You need to fill at least a service class");
 		this.className = className;
 		this.publicClassName = publicClassName;
 		this.deamonClassName = deamonClassName;

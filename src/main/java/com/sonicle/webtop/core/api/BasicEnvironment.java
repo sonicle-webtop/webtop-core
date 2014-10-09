@@ -31,39 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.api;
 
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
+import com.sonicle.webtop.core.UserProfile;
+import java.util.Locale;
+import net.sf.uadetector.ReadableUserAgent;
 
 /**
  *
  * @author malbinola
  */
-public class Manager {
+public interface BasicEnvironment {
 	
-	private WebTopApp wta = null;
-	
-	Manager(WebTopApp wta) {
-		this.wta = wta;
-	}
-	
-	public List<ODomain> getDomains() {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection("com.sonicle.webtop.core");
-			DomainDAO domDao = DomainDAO.getInstance();
-			return domDao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
+	public UserProfile getProfile();
+	public ReadableUserAgent getUserAgent();
+	public String lookupResource(String serviceId, Locale locale, String key);
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
 }

@@ -33,48 +33,77 @@
  */
 package com.sonicle.webtop.core.api;
 
-import com.sonicle.webtop.core.UserProfile;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
 import java.util.Locale;
-import net.sf.uadetector.ReadableUserAgent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class Environment implements BasicEnvironment {
+public abstract class Service {
 	
-	protected final WebTopApp wta;
-	protected final WebTopSession wts;
-	private final UserProfile profile;
-	private final ReadableUserAgent userAgent;
+	public static final String RESOURCE_SERVICE_NAME = "service.name";
+	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
+	private boolean configured = false;
+	private ServiceManifest manifest;
+	private Environment env;
 	
-	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile, ReadableUserAgent userAgent) {
-		this.wta = wta;
-		this.wts = wts;
-		this.profile = profile;
-		this.userAgent = userAgent;
-	}
-
-	@Override
-	public UserProfile getProfile() {
-		return profile;
-	}
+	public abstract void initialize(Environment api);
+	public abstract void cleanup();
 	
-	@Override
-	public ReadableUserAgent getUserAgent() {
-		return userAgent;
+	public final void configure(ServiceManifest manifest, Environment env) {
+		if(configured) return;
+		configured = true;
+		this.manifest = manifest;
+		this.env = env;
 	}
 	
-	@Override
-	public String lookupResource(String serviceId, Locale locale, String key) {
-		return wta.lookupResource(serviceId, locale, key);
+	public ServiceManifest getManifest() {
+		return manifest;
 	}
 	
-	@Override
-	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
-		return wta.lookupResource(serviceId, locale, key, escapeHtml);
+	public Environment getEnv() {
+		return env;
 	}
-
+	
+	public AdvancedEnvironment getAdvancedEnv() {
+		return (AdvancedEnvironment)env;
+	}
+	
+	public String getName(Locale locale) {
+		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_NAME);
+	}
+	
+	public String getDescription(Locale locale) {
+		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
+	}
+	
+	/**
+	 * Returns a valid logger instance properly configured by WebTop 
+	 * environment. Logger name is computed starting from specified class name.
+	 * @param clazz A class.
+	 * @return A logger instance.
+	 */
+	public static Logger getLogger(Class clazz) {
+		return (Logger) LoggerFactory.getLogger(clazz);
+	}
+	
+	/**
+	 * (logger) Apply a custom diagnostic context (DC) to the default one.
+	 * Passed value is associated to the key 'custom' of current DC.
+	 * @param diagnosticContext Custom diagnostic context string value to append.
+	 */
+	public static void applyLoggerDC(String diagnosticContext) {
+		WebTopApp.setServiceCustomLoggerDC(diagnosticContext);
+	}
+	
+	/**
+	 * (logger) Removes custom diagnostic context restoring the default one.
+	 * Same behaviour calling: applyLoggerDC(null)
+	 */
+	public static void clearLoggerDC() {
+		WebTopApp.unsetServiceCustomLoggerDC();
+	}
 }

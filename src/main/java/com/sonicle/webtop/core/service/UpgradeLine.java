@@ -31,12 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.service;
 
 /**
  *
  * @author malbinola
  */
-public abstract class WebTopPublicService {
+public class UpgradeLine {
 	
+	private String text = null;
+	
+	public UpgradeLine(String text) {
+		this.text = text;
+	}
+	
+	public String getText() {
+		return this.text;
+	}
 }

@@ -33,10 +33,10 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.WebTopPublicService;
-import com.sonicle.webtop.core.api.WebTopService;
+import com.sonicle.webtop.core.api.PublicService;
+import com.sonicle.webtop.core.api.Service;
 import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.WebTopDeamonService;
+import com.sonicle.webtop.core.api.DeamonService;
 import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
@@ -47,10 +47,11 @@ import org.slf4j.Logger;
 class ServiceDescriptor {
 	
 	private static final Logger logger = WebTopApp.getLogger(ServiceDescriptor.class);
-	protected ServiceManifest manifest = null;
-	protected Class defaultClass = null;
-	protected Class publicClass = null;
-	protected Class deamonClass = null;
+	private ServiceManifest manifest = null;
+	private Class defaultClass = null;
+	private Class publicClass = null;
+	private Class deamonClass = null;
+	private boolean upgraded = false;
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
@@ -58,35 +59,20 @@ class ServiceDescriptor {
 		// Loads default (private) service class
 		String className = manifest.getClassName();
 		if(!StringUtils.isEmpty(className)) {
-			defaultClass = loadServiceClass("Service", className, WebTopService.class);
+			defaultClass = loadServiceClass(className, Service.class, "Service");
 		}
 
 		// Loads public service class
 		className = manifest.getPublicClassName();
 		if(!StringUtils.isEmpty(className)) {
-			publicClass = loadServiceClass("PublicService", className, WebTopPublicService.class);
+			publicClass = loadServiceClass(className, PublicService.class, "PublicService");
 		}
 
 		// Loads deamon service class
 		className = manifest.getDeamonClassName();
 		if(!StringUtils.isEmpty(className)) {
-			deamonClass = loadServiceClass("DeamonService", className, WebTopDeamonService.class);
+			deamonClass = loadServiceClass(className, DeamonService.class, "DeamonService");
 		}
-	}
-	
-	private Class loadServiceClass(String description, String className, Class assignableFrom) {
-		Class clazz = null;
-		
-		try {
-			clazz = Class.forName(className);
-			if(!clazz.isAssignableFrom(assignableFrom)) throw new ClassCastException();
-
-		} catch(ClassNotFoundException ex) {
-			logger.debug("{} class not found [{}]", description, className);
-		} catch(ClassCastException ex) {
-			logger.warn("A valid {} class must extends '{}' class", description, assignableFrom.toString());
-		}
-		return null;
 	}
 
 	public ServiceManifest getManifest() {
@@ -94,14 +80,50 @@ class ServiceDescriptor {
 	}
 
 	public boolean hasDefaultService() {
-		return (defaultClass == null);
+		return (defaultClass != null);
+	}
+
+	public Class getDefaultClass() {
+		return defaultClass;
 	}
 
 	public boolean hasPublicService() {
-		return (publicClass == null);
+		return (publicClass != null);
+	}
+
+	public Class getPublicClass() {
+		return publicClass;
 	}
 
 	public boolean hasDeamonService() {
-		return (deamonClass == null);
+		return (deamonClass != null);
+	}
+
+	public Class getDeamonClass() {
+		return deamonClass;
+	}
+
+	public boolean isUpgraded() {
+		return upgraded;
+	}
+
+	public void setUpgraded(boolean upgraded) {
+		this.upgraded = upgraded;
+	}
+	
+	private Class loadServiceClass(String className, Class apiClass, String description) {
+		Class clazz = null;
+		
+		try {
+			clazz = Class.forName(className);
+			if(!apiClass.isAssignableFrom(clazz)) throw new ClassCastException();
+			return clazz;
+
+		} catch(ClassNotFoundException ex) {
+			logger.debug("{} class not found [{}]", description, className);
+		} catch(ClassCastException ex) {
+			logger.warn("A valid {} class must extends '{}' class", description, apiClass.toString());
+		}
+		return null;
 	}
 }

@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.LocaleKey;
-import com.sonicle.webtop.core.Manager;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -61,8 +61,8 @@ public class Login extends HttpServlet {
 	public static final String FAILURE_MAINTENANCE = "maintenance";
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = ServletHelper.getWebTopApp(request);
-		Manager manager = wta.getManager();
+		WebTopApp wta = WebTopApp.get(request);
+		CoreManager manager = wta.getManager();
 		
 		try {
 			Locale locale = ServletHelper.homogenizeLocale(request);

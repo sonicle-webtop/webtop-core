@@ -33,17 +33,25 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.security.Principal;
+
 /**
  *
  * @author malbinola
  */
 public class UserProfile {
 	
+	private final Principal principal;
+	
+	public UserProfile(Principal principal) {
+		this.principal = principal;
+	}
+	
 	public String getUserId() {
-		return null;
+		return principal.getName();
 	}
 	
 	public String getDomainId() {
-		return null;
+		return principal.getDomainId();
 	}
 }

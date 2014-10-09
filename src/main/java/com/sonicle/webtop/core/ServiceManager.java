@@ -33,20 +33,26 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.api.Environment;
 import com.sonicle.webtop.core.api.ServiceManifest;
 import com.sonicle.webtop.core.api.ServiceVersion;
+import com.sonicle.webtop.core.api.Service;
 import java.io.IOException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -74,7 +80,7 @@ public class ServiceManager {
 	
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
-	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap();
+	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -95,11 +101,11 @@ public class ServiceManager {
 	
 	private void init() {
 		
-		
-		// Progamatically add the core's manifest
-		initService(new Manifest());
+		// Progamatically register the core's manifest
+		registerService(new Manifest());
 		
 		// Loads services' manifest files from classpath
+		logger.debug("Starting services discovery...");
 		ArrayList<ServiceManifest> manifests = null;
 		try {
 			manifests = discoverServices();
@@ -113,36 +119,189 @@ public class ServiceManager {
 			throw new RuntimeException("Error during services discovery", ex);
 		}
 		
-		
-	}
-	
-	private void initService(ServiceManifest manifest) {
-		ServiceDescriptor descriptor = null;
-		
-		String serviceId = manifest.getId();
-		synchronized(services) {
-			if(services.containsKey(serviceId)) throw new RuntimeException("Service already registered");
-			descriptor = new ServiceDescriptor(manifest);
-			services.put(serviceId, descriptor);
+		// Register discovered services
+		for(ServiceManifest manifest : manifests) {
+			registerService(manifest);
 		}
 	}
 	
+	public boolean isMaintenance(String serviceId) {
+		SettingsManager setm = wta.getSettingsManager();
+		return LangUtils.value(setm.getServiceSetting(serviceId, Settings.MAINTENANCE), false);
+	}
+	
+	public void setMaintenance(String serviceId, boolean maintenance) {
+		SettingsManager setm = wta.getSettingsManager();
+		setm.setServiceSetting(serviceId, Settings.MAINTENANCE, maintenance);
+	}
+	
+	public Service instantiateService(String serviceId, Environment environment) {
+		ServiceDescriptor descr = getService(serviceId);
+		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
+		
+		// Creates service instance
+		Service instance = null;
+		try {
+			instance = (Service)descr.getDefaultClass().newInstance();
+		} catch(Exception ex) {
+			logger.error("Error instantiating service [{}]", descr.getManifest().getClassName(), ex);
+			return null;
+		}
+		instance.configure(descr.getManifest(), environment);
+		
+		// Calls initialization method
+		try {
+			WebTopApp.setServiceLoggerDC(serviceId);
+			instance.initialize(environment);
+		} catch(Exception ex) {
+			logger.error("Initialization method returns errors", ex);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+		
+		return instance;
+	}
+	
+	public void cleanupDefaultService(Service instance) {
+		// Calls cleanup method
+		try {
+			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			instance.cleanup();
+		} catch(Exception ex) {
+			logger.error("Cleanup method returns errors", ex);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
+	
+	private void registerService(ServiceManifest manifest) {
+		ServiceDescriptor descr = null;
+		String serviceId = manifest.getId();
+		boolean maintenance = false;
+		
+		logger.debug("Registering service [{}]", serviceId);
+		synchronized(services) {
+			if(services.containsKey(serviceId)) throw new RuntimeException("Service already registered");
+			descr = new ServiceDescriptor(manifest);
+			logger.debug("[default:{}, public:{}, deamon:{}]", descr.hasDefaultService(), descr.hasPublicService(), descr.hasDeamonService());
+
+			boolean upgraded = upgradeCheck(manifest);
+			descr.setUpgraded(upgraded);
+			if(upgraded) {
+				
+			}
+
+			// If already in maintenance, keeps it active
+			if(!isMaintenance(serviceId)) {
+				// ...otherwise sets it!
+				setMaintenance(serviceId, maintenance);
+			}
+			
+			services.put(serviceId, descr);
+		}
+	}
 	
 	/**
-	 * Returns the list of avaiable service IDs.
-	 * @return 
+	 * Loads what's new file for specified service.
+	 * Contents will be taken and interpreted starting from desired version number.
+	 * 
+	 * @param serviceId Service ID
+	 * @param languageTag Language tag of contents (ex. it_IT)
+	 * @param fromVersion Starting version
+	 * @return HTML translated representation of loaded file.
 	 */
-	public List<String> getServices() {
+	/*
+	public synchronized String getWhatsnew(String serviceId, String languageTag, ServiceVersion fromVersion) {
+		String resName = null;
+		Whatsnew wn = null;
+		
+		try {
+			Class clazz = getServiceClass(serviceId);
+			String key = MessageFormat.format("{0}|{1}", serviceId, languageTag);
+			if(whatsnewCache.containsKey(key)) {
+				WebTopApp.logger.trace("Getting whatsnew from cache [{}, {}]", serviceId, key);
+				wn = whatsnewCache.get(key);
+			} else {
+				resName = MessageFormat.format("/webtop/res/{0}/whatsnew/{1}.txt", serviceId, languageTag);
+				WebTopApp.logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", serviceId, resName, fromVersion);
+				wn = new Whatsnew(clazz, resName);
+				whatsnewCache.put(key, wn);
+			}
+			Version manifestVer = getManifest(serviceId).getVersion();
+			return wn.toHtml(fromVersion, manifestVer);
+			
+		} catch(ResourceNotFoundException ex) {
+			WebTopApp.logger.trace("Whatsnew file not available for service [{}]", serviceId);
+		} catch(IOException ex) {
+			WebTopApp.logger.trace(ex.getMessage());
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error getting whatsnew for service {}", serviceId, ex);
+		}
+		return StringUtils.EMPTY;
+	}
+	*/
+	
+	private boolean upgradeCheck(ServiceManifest manifest) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = null, currentVer = null;
+		
+		// Gets current service's version info
+		manifestVer = manifest.getVersion();
+		currentVer = new ServiceVersion(setm.getServiceSetting(manifest.getId(), Settings.MANIFEST_VERSION));
+		
+		// Upgrade check!
+		if(manifestVer.compareTo(currentVer) > 0) {
+			logger.info("Upgraded! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
+			manifest.setOldVersion(currentVer);
+			setm.setServiceSetting(manifest.getId(), Settings.MANIFEST_VERSION, manifestVer.toString());
+			return true;
+		} else {
+			logger.info("Not upgraded! [{} = {}]", manifestVer.toString(), currentVer.toString());
+			return false;
+		}
+	}
+	
+	/**
+	 * Returns registered services.
+	 * @return List of service IDs.
+	 */
+	public List<String> getRegisteredServices() {
 		synchronized(services) {
-			return Arrays.asList(services.keySet().toArray(new String[0]));
+			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
+		}
+	}
+	
+	public List<String> getServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(services) {
+			for(ServiceDescriptor descr : services.values()) {
+				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	public List<String> getDeamonServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(services) {
+			for(ServiceDescriptor descr : services.values()) {
+				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	private ServiceDescriptor getService(String serviceId) {
+		synchronized(services) {
+			if(!services.containsKey(serviceId)) return null;
+			return services.get(serviceId);
 		}
 	}
 	
 	public ServiceManifest getManifest(String serviceId) {
-		synchronized(services) {
-			if(!services.containsKey(serviceId)) return null;
-			return services.get(serviceId).getManifest();
-		}
+		ServiceDescriptor descr = getService(serviceId);
+		if(descr == null) return null;
+		return descr.getManifest();
 	}
 	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {
@@ -175,20 +334,20 @@ public class ServiceManager {
 		
 		logger.trace("Parsing descriptor [{}]", descriptorUri.toString());
 		XMLConfiguration config = new XMLConfiguration(descriptorUri);
-		List<HierarchicalConfiguration> services = config.configurationsAt("service");
-		for(HierarchicalConfiguration service : services) {
+		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
+		for(HierarchicalConfiguration elService : elServices) {
 			try {
 				manifest = new ServiceManifest(
-					service.getString("id"),
-					service.getString("className"),
-					service.getString("publicClassName"),
-					service.getString("deamonClassName"),
-					new ServiceVersion(service.getString("version")),
-					service.getString("buildDate"),
-					service.getString("company"),
-					service.getString("companyEmail"),
-					service.getString("companyWebSite"),
-					service.getString("supportEmail")
+					elService.getString("id"),
+					elService.getString("className"),
+					elService.getString("publicClassName"),
+					elService.getString("deamonClassName"),
+					new ServiceVersion(elService.getString("version")),
+					elService.getString("buildDate"),
+					elService.getString("company"),
+					elService.getString("companyEmail"),
+					elService.getString("companyWebSite"),
+					elService.getString("supportEmail")
 				);
 				manifests.add(manifest);
 				

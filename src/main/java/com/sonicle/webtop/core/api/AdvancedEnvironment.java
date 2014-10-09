@@ -33,10 +33,13 @@
  */
 package com.sonicle.webtop.core.api;
 
+import com.sonicle.webtop.core.WebTopSession;
+
 /**
  *
  * @author malbinola
  */
-public abstract class WebTopDeamonService {
+public interface AdvancedEnvironment extends BasicEnvironment {
 	
+	public WebTopSession getSession();
 }

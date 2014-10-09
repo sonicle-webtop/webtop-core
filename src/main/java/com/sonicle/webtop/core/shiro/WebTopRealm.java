@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class WebTopRealm extends AuthorizingRealm {
 	public WebTopRealm() throws SQLException {
 		super();
 		WebTopApp wta = WebTopApp.getInstance();
-		sonicleLogin = new SonicleLogin(wta.getConnectionManager().getDataSource(WebTopApp.CORE_ID));
+		sonicleLogin = new SonicleLogin(wta.getConnectionManager().getDataSource(Manifest.ID));
 	}
 
 	@Override
