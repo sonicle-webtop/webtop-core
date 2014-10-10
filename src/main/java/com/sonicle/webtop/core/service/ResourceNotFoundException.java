@@ -31,27 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.service;
 
-import com.sonicle.security.Principal;
+import java.io.IOException;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public class UserProfile {
+public class ResourceNotFoundException extends IOException {
 	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+	public ResourceNotFoundException() {
+		super();
 	}
 	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+	public ResourceNotFoundException(String message) {
+		super(message);
 	}
 }

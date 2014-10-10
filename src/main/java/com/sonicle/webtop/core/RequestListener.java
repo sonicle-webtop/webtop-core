@@ -33,25 +33,22 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.security.Principal;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
+public class RequestListener implements ServletRequestListener {
 	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+	@Override
+	public void requestInitialized(ServletRequestEvent sre) {
+		WebTopApp.logger.debug("RequestListener->requestInitialized");
 	}
 	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+	@Override
+	public void requestDestroyed(ServletRequestEvent sre) {
+		WebTopApp.logger.debug("RequestListener->requestDestroyed");
 	}
 }

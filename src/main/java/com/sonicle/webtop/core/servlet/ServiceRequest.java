@@ -33,50 +33,81 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import freemarker.template.Template;
+import com.sonicle.webtop.core.sdk.Service;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author malbinola
  */
-public class Start extends HttpServlet {
+public class ServiceRequest extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
-		CoreManager manager = wta.getManager();
 		
 		try {
-			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
-			wts.checkEnvironment(request);
+			WebTopApp.logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
+			String service = ServletUtils.getStringParameter(request, "service", true);
+			String action = ServletUtils.getStringParameter(request, "action", true);
+			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			
+			// Retrieves instantiated service
+			Service instance = wts.getServiceById(service);
 			
+			// Gets right method
+			Method method = null;
+			String methodName = MessageFormat.format("process{0}", action);
+			if(nowriter) {
+				try {
+					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
+				} catch(NoSuchMethodException ex) {
+					throw new Exception(MessageFormat.format("Service '{0}' has no action with name '{1}' [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName()));
+				}
+			} else {
+				try {
+					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
+				} catch(NoSuchMethodException ex) {
+					throw new Exception(MessageFormat.format("Service '{0}' has no action with name '{1}' [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName()));
+				}
+			}
 			
-			Map tplMap = new HashMap();
-			tplMap.put("theme","crisp");
-			tplMap.put("debug","false");
-			tplMap.put("rtl","false");
-			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
-			
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
+			// Invoking method...
+			PrintWriter out = null;
+			try {
+				try {
+					WebTopApp.setServiceLoggerDC(service);
+					if(nowriter) {
+						method.invoke(instance, request, response);
+					} else {
+						out = response.getWriter();
+						method.invoke(instance, request, response, out);
+						ServletHelper.setCacheControl(response);
+						ServletHelper.setPageContentType(response);
+					}
+				} finally {
+					WebTopApp.unsetServiceLoggerDC();
+				}
+			} catch(Exception ex) {
+				throw new Exception("Error durin method invocation", ex);
+			} finally {
+				IOUtils.closeQuietly(out);
+			}
 			
 		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
+			WebTopApp.logger.warn("Error in serviceRequest servlet", ex);
+			throw new ServletException(ex.getMessage());
 		} finally {
-			ServletHelper.setCacheControl(response);
-			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
 	}

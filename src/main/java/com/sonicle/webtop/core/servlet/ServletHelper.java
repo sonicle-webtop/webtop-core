@@ -33,26 +33,24 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.webtop.core.LocaleKey;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.shiro.SecurityUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
  * @author malbinola
  */
 public class ServletHelper {
-	
-	static final String WEBTOPAPP_ATTRIBUTE = "webtopapp";
-	static final String WEBTOPSESSION_ATTRIBUTE = "webtopsession";
 	
 	/**
 	 * Returns context's root path name, equals to current webapp context name.
@@ -61,24 +59,6 @@ public class ServletHelper {
 	 */
 	public static String getWebAppName(ServletContext context) {
 		return new File(context.getRealPath("/")).getName();
-	}
-	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param request The http request
-	 * @return WebTopApp object
-	 */
-	static WebTopApp getWebTopApp(HttpServletRequest request) {
-		return getWebTopApp(request.getSession().getServletContext());
-	}
-	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param context The servlet context
-	 * @return WebTopApp object
-	 */
-	static WebTopApp getWebTopApp(ServletContext context) {
-		return (WebTopApp) context.getAttribute(WEBTOPAPP_ATTRIBUTE);
 	}
 	
 	/**
@@ -98,24 +78,6 @@ public class ServletHelper {
 	 */
 	public static String getSessionID(HttpSession session) {
 		return (session != null) ? session.getId() : "";
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param request The http request
-	 * @return WebTopSession object
-	 */
-	static WebTopSession getWebTopSession(HttpServletRequest request) {
-		return getWebTopSession(request.getSession());
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param session The http session
-	 * @return WebTopSession object
-	 */
-	static WebTopSession getWebTopSession(HttpSession session) {
-		return (WebTopSession)(session.getAttribute(WEBTOPSESSION_ATTRIBUTE));
 	}
 	
 	/*
@@ -143,19 +105,25 @@ public class ServletHelper {
 		}
 	}
 	
-	public static void fillPageVars(Map tplMap, WebTopApp wta) {
-		/*
-		ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);
-		String title = wta.getCustomProperty("webtop.title");
-		if (title == null) title = MessageFormat.format("WebTop {0}", manifest.getVersion().getMajor());
-		tplMap.put("pageTitle", title);
-		tplMap.put("version", manifest.getVersion().toString());
-		tplMap.put("version_major", manifest.getVersion().getMajor());
-		tplMap.put("version_minor", manifest.getVersion().getMinor());
-		*/
+	public static boolean isPublic(HttpServletRequest request) {
+		return request.getServletPath().equals("/public");
 	}
 	
-	public static void fillSystemInfoVars(Map tplMap, WebTopApp wta) {
+	public static String getUserAgent(HttpServletRequest request) {
+		return request.getHeader("user-agent");
+	}
+	
+	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
+		ServiceManifest manifest = wta.getServiceManager().getManifest(Manifest.ID);
+		String title = wta.getCustomProperty("webtop.title");
+		if (StringUtils.isEmpty(title)) {
+			title = wta.lookupAndFormatResource(locale, LocaleKey.LOGIN_TITLE, true, manifest.getVersion().getMajor());
+		}
+		tplMap.put("title", title);
+		tplMap.put("version", manifest.getVersion());
+	}
+	
+	public static void fillSystemInfoVars(Map tplMap, Locale locale, WebTopApp wta) {
 		tplMap.put("systemInfo", wta.getSystemInfo());
 		tplMap.put("serverInfo", wta.getServerInfo());
 		tplMap.put("jdk", System.getProperty("java.version"));

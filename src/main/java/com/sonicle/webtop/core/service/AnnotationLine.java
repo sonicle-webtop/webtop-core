@@ -31,39 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.service;
 
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public class Manager {
+public class AnnotationLine extends UpgradeLine {
 	
-	private WebTopApp wta = null;
+	private static final Pattern PATTERN = Pattern.compile("^@.+");
+	private static final Pattern PATTERN_REQUIRE_ADMIN = Pattern.compile("^@RequireAdmin$");
+	private static final Pattern PATTERN_IGNORE_ERRORS = Pattern.compile("^@IgnoreErrors$");
 	
-	Manager(WebTopApp wta) {
-		this.wta = wta;
+	public AnnotationLine(String text) {
+		super(text);
 	}
 	
-	public List<ODomain> getDomains() {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection("com.sonicle.webtop.core");
-			DomainDAO domDao = DomainDAO.getInstance();
-			return domDao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+	public static boolean matches(String text) {
+		return PATTERN.matcher(StringUtils.trim(text)).matches();
+	}
+	
+	public boolean matchesRequireAdmin() {
+		return PATTERN_REQUIRE_ADMIN.matcher(this.getText()).matches();
+	}
+	
+	public static boolean matchesRequireAdmin(String text) {
+		return PATTERN_REQUIRE_ADMIN.matcher(text).matches();
+	}
+	
+	public boolean matchesIgnoreErrors() {
+		return PATTERN_IGNORE_ERRORS.matcher(this.getText()).matches();
+	}
+	
+	public static boolean matchesIgnoreErrors(String text) {
+		return PATTERN_IGNORE_ERRORS.matcher(text).matches();
 	}
 }

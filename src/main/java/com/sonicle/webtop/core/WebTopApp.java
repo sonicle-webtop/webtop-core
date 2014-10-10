@@ -43,10 +43,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import net.sf.uadetector.ReadableUserAgent;
+import net.sf.uadetector.UserAgentStringParser;
+import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.SQLDialect;
 import org.slf4j.Logger;
@@ -59,9 +65,8 @@ import org.slf4j.MDC;
  */
 public class WebTopApp {
 	
-	public final static String CORE_ID = "com.sonicle.webtop.core";
-	
 	public final static Logger logger = WebTopApp.getLogger(WebTopApp.class);
+	public static final String ATTRIBUTE = "webtopapp";
 	private static final Object lock = new Object();
 	private static WebTopApp instance = null;
 	
@@ -78,20 +83,19 @@ public class WebTopApp {
 		}
 	}
 	
-	
 	private final ServletContext servletContext;
 	private final String webappName;
 	private final String systemInfo;
 	private Configuration freemarkerCfg = null;
-	private ConnectionManager conMgr = null;
-	private SettingsManager setMgr = null;
-	private ServiceManager srvMgr = null;
+	private ConnectionManager conm = null;
+	private SettingsManager setm = null;
+	private ServiceManager svcm = null;
+	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
 	private WebTopApp(ServletContext context) {
 		servletContext = context;
 		webappName = ServletHelper.getWebAppName(context);
 		systemInfo = buildSystemInfo();
-		
 		
 		logger.info("WTA initialization started [{}]", webappName);
 		
@@ -103,16 +107,16 @@ public class WebTopApp {
 		freemarkerCfg.setDefaultEncoding("UTF-8");
 		
 		// Connection Manager
-		conMgr = ConnectionManager.initialize(this);
+		conm = ConnectionManager.initialize(this);
 		try {
-			conMgr.registerJdbc4DataSource(CORE_ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+			conm.registerJdbc4DataSource(Manifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
 		// Settings Manager
-		setMgr = SettingsManager.initialize(this);
+		setm = SettingsManager.initialize(this);
 		// Service Manager
-		srvMgr = ServiceManager.initialize(this);
+		svcm = ServiceManager.initialize(this);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
@@ -121,8 +125,8 @@ public class WebTopApp {
 		logger.info("WTA shutdown started [{}]", webappName);
 		
 		// Connection Manager
-		conMgr.cleanup();
-		conMgr = null;
+		conm.cleanup();
+		conm = null;
 		logger.info("ConnectionManager destroyed.");
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
@@ -148,24 +152,71 @@ public class WebTopApp {
 		return freemarkerCfg.getTemplate(path);
 	}
 	
-	public ConnectionManager getConnectionManager() {
-		return conMgr;
+	/**
+	 * Parses a User-Agent HTTP Header string looking for useful client information.
+	 * @param userAgentHeader HTTP Header string.
+	 * @return Object representation of the parsed string.
+	 */
+	public ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
+		synchronized(userAgentsCache) {
+			if(userAgentsCache.containsKey(userAgentHeader)) {
+				return userAgentsCache.get(userAgentHeader);
+			} else {
+				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
+				ReadableUserAgent rua = parser.parse(userAgentHeader);
+				userAgentsCache.put(userAgentHeader, rua);
+				return rua;
+			}
+		}
 	}
 	
-	public Manager getManager() {
-		return new Manager(this);
+	/**
+	 * Returns the SettingsManager.
+	 * @return SettingsManager instance.
+	 */
+	public SettingsManager getSettingsManager() {
+		return setm;
+	}
+	
+	/**
+	 * Returns the ConnectionManager.
+	 * @return ConnectionManager instance.
+	 */
+	public ConnectionManager getConnectionManager() {
+		return conm;
+	}
+	
+	/**
+	 * Returns the ServiceManager.
+	 * @return ServiceManager instance.
+	 */
+	public ServiceManager getServiceManager() {
+		return svcm;
+	}
+	
+	public CoreManager getManager() {
+		return new CoreManager(this);
 	}
 	
 	public String lookupResource(Locale locale, String key) {
-		return lookupResource(CORE_ID, locale, key);
+		return lookupResource(Manifest.ID, locale, key, false);
+	}
+	
+	public String lookupResource(Locale locale, String key, boolean escapeHtml) {
+		return lookupResource(Manifest.ID, locale, key, escapeHtml);
 	}
 	
 	public String lookupResource(String serviceId, Locale locale, String key) {
+		return lookupResource(serviceId, locale, key, false);
+	}
+	
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		String baseName = MessageFormat.format("{0}/locale", StringUtils.replace(serviceId, ".", "/"));
 		String value = "";
 		
 		try {
 			value = ResourceBundle.getBundle(baseName, locale).getString(key);
+			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
 		} catch(MissingResourceException ex) {
 			logger.warn("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
 		} finally {
@@ -173,9 +224,17 @@ public class WebTopApp {
 		}
 	}
 	
-	public String lookupResource(String serviceId, Locale locale, String key, Object... arguments) {
-		String value = lookupResource(serviceId, locale, key);
+	public String lookupAndFormatResource(Locale locale, String key, boolean escapeHtml, Object... arguments) {
+		return lookupAndFormatResource(Manifest.ID, locale, key, escapeHtml, arguments);
+	}
+	
+	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {
+		String value = lookupResource(serviceId, locale, key, escapeHtml);
 		return MessageFormat.format(value, arguments);
+	}
+	
+	public String getCustomProperty(String name) {
+		return null;
 	}
 	
 	/**
@@ -346,5 +405,23 @@ public class WebTopApp {
 			pro.waitFor();
 		} catch (Throwable th) { /* Do nothing! */ }
 		return output;
+	}
+	
+	/**
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param request The http request
+	 * @return WebTopApp object
+	 */
+	public static WebTopApp get(HttpServletRequest request) {
+		return get(request.getSession().getServletContext());
+	}
+	
+	/**
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param context The servlet context
+	 * @return WebTopApp object
+	 */
+	static WebTopApp get(ServletContext context) {
+		return (WebTopApp) context.getAttribute(ATTRIBUTE);
 	}
 }

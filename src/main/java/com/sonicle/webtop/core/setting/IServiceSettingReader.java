@@ -12,5 +12,6 @@ package com.sonicle.webtop.core.setting;
  */
 public interface IServiceSettingReader {
 	
+	public String getServiceSetting(String serviceId, String key);
 	public String getServiceSetting(String domainId, String serviceId, String key);
 }

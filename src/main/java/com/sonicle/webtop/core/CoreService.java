@@ -33,25 +33,27 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.webtop.core.sdk.Service;
+import java.util.Locale;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
+public class CoreService extends Service {
 	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+	public static final Logger logger = Service.getLogger(CoreService.class);
+
+	@Override
+	public void initialize(Environment api) {
+		getAdvancedEnv().getSession().test();
+		logger.debug("Mi sono inizializzato: mi chiamo {}", getName(new Locale("it_IT")));
 	}
-	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+
+	@Override
+	public void cleanup() {
+		
 	}
 }

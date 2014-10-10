@@ -31,44 +31,63 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.service;
 
-import com.sonicle.webtop.core.WebTopApp;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Scanner;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public class ContextListener implements ServletContextListener {
-
-	@Override
-	public void contextInitialized(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
+public class SqlScript {
+	
+	private ArrayList<String> statements = null;
+	
+	public SqlScript(Class clazz, String resourceName) throws IOException, UnsupportedOperationException {
+		InputStream is = null;
 		
 		try {
-			WebTopApp.initialize(context);
-			context.setAttribute(ServletHelper.WEBTOPAPP_ATTRIBUTE, WebTopApp.getInstance());
-		} catch(Exception ex) {
-			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
+			is = clazz.getResourceAsStream(resourceName);
+			if(is == null) throw new ResourceNotFoundException("Null InputStream!");
+			readFile(new InputStreamReader(is, "ISO-8859-15"));
+		} finally {
+			IOUtils.closeQuietly(is);
 		}
 	}
-
-	@Override
-	public void contextDestroyed(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
+	
+	public ArrayList<String> getStatements() {
+		return statements;
+	}
+	
+	private void readFile(InputStreamReader readable) throws IOException {
+		this.statements = new ArrayList<String>();
+		String lines[] = null;
+		StringBuilder sbsql = null;
 		
-		try {
-			WebTopApp wta = ServletHelper.getWebTopApp(context);
-			if(wta != null) wta.destroy();
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error destroying WTA context for {}", webappName, ex);
-		} finally {
-			context.removeAttribute(ServletHelper.WEBTOPAPP_ATTRIBUTE);
+		Scanner s = new Scanner(readable);
+		s.useDelimiter("(;( )?(\r)?\n)");
+		while (s.hasNext()) {
+			String block = s.next();
+			block = StringUtils.replace(block, "\r", "");
+			if(!StringUtils.isEmpty(block)) {
+				// Remove remaining ; at the end of the block (only if this block is the last one)
+				if(!s.hasNext() && StringUtils.endsWith(block, ";")) block = StringUtils.left(block, block.length()-1);
+				
+				sbsql = new StringBuilder();
+				lines = StringUtils.split(block, "\n");
+				for(String line: lines) {
+					if(CommentLine.matches(line)) continue;	
+					sbsql.append(StringUtils.trim(line));
+					sbsql.append(" ");
+				}
+				if(sbsql.length() > 0) statements.add(sbsql.toString());
+			}
 		}
 	}
 }

@@ -31,27 +31,27 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.service;
 
-import com.sonicle.security.Principal;
+import java.util.regex.Pattern;
 
 /**
  *
- * @author malbinola
+ * @author matteo
  */
-public class UserProfile {
+public class CommentLine extends UpgradeLine {
 	
-	private final Principal principal;
+	private static final Pattern PATTERN = Pattern.compile("^--.+");
 	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+	public CommentLine(String text) {
+		super(text);
 	}
 	
-	public String getUserId() {
-		return principal.getName();
+	public boolean matches() {
+		return PATTERN.matcher(this.getText()).matches();
 	}
 	
-	public String getDomainId() {
-		return principal.getDomainId();
+	public static boolean matches(String text) {
+		return PATTERN.matcher(text).matches();
 	}
 }

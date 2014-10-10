@@ -101,6 +101,16 @@
 	  <artifactId>commons-collections</artifactId>
 	  <version>3.2.1</version>
 	 </dependency>
+	 <dependency>
+	  <groupId>net.sf.uadetector</groupId>
+	  <artifactId>uadetector-core</artifactId>
+	  <version>0.9.20</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>net.sf.uadetector</groupId>
+	  <artifactId>uadetector-resources</artifactId>
+	  <version>2014.08</version>
+	 </dependency>
 	</dependencies>
 	
 	<build>

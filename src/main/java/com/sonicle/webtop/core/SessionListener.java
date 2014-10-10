@@ -33,25 +33,46 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.servlet.ServletHelper;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
-	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+public class SessionListener implements HttpSessionListener {
+
+	@Override
+	public void sessionCreated(HttpSessionEvent hse) {
+		HttpSession session = hse.getSession();
+		String sid = ServletHelper.getSessionID(session);
+		
+		try {
+			WebTopSession wts = new WebTopSession(session);
+			session.setAttribute(WebTopSession.ATTRIBUTE, wts);
+			//session.setAttribute(ServletHelper.WEBTOPSESSION_ATTRIBUTE, wts);
+			WebTopApp.logger.info("WTS initialized [{}]", sid);
+		} catch(Exception ex) {
+			WebTopApp.logger.error("WTS initialization error [{}]", sid, ex);
+		}
 	}
-	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+
+	@Override
+	public void sessionDestroyed(HttpSessionEvent hse) {
+		HttpSession session = hse.getSession();
+		String sid = ServletHelper.getSessionID(session);
+		
+		try {
+			WebTopSession wts = WebTopSession.get(session);
+			//WebTopSession wts = ServletHelper.getWebTopSession(session);
+			if(wts != null) wts.destroy();
+			WebTopApp.logger.info("WTS destroyed: {}", sid);
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error destroying WTS for {}", sid, ex);
+		} finally {
+			session.removeAttribute(WebTopSession.ATTRIBUTE);
+		}
 	}
 }

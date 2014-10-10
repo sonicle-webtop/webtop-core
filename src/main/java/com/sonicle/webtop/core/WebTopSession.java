@@ -33,7 +33,18 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.servlet.ServletHelper;
+import java.text.MessageFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import net.sf.uadetector.ReadableUserAgent;
+import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -41,13 +52,119 @@ import javax.servlet.http.HttpSession;
  */
 public class WebTopSession {
 	
-	private HttpSession httpSession = null;
+	private static final Logger logger = WebTopApp.getLogger(WebTopSession.class);
+	public static final String ATTRIBUTE = "webtopsession";
+	private WebTopApp wta = null;
+	private boolean initialized = false;
+	private UserProfile profile = null;
+	private ReadableUserAgent userAgentInfo = null;
+	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
 	
-	public WebTopSession(HttpSession session) {
-		httpSession = session;
+	WebTopSession(HttpSession session) {
+		wta = WebTopApp.get(session.getServletContext());
 	}
 	
-	public void destroy() {
+	void destroy() {
+		ServiceManager svcm = wta.getServiceManager();
 		
+		// Cleanup services
+		synchronized(services) {
+			for(Service instance : services.values()) {
+				svcm.cleanupDefaultService(instance);
+			}
+			services.clear();
+		}
+	}
+	
+	/**
+	 * Called from servlet package in order to init environment
+	 * @param request 
+	 */
+	public synchronized void checkEnvironment(HttpServletRequest request) {
+		if(!initialized) {
+			initializeEnvironment(request);
+		} else {
+			logger.debug("Environment aready initialized");
+		}
+	}
+	
+	public void test() {
+		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+	}
+	
+	
+	
+	
+	
+	
+	private void initializeEnvironment(HttpServletRequest request) {
+		ServiceManager svcm = wta.getServiceManager();
+		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
+		
+		logger.debug("Creating environment for {}", principal.getName());
+		
+		UserProfile up = new UserProfile(principal);
+		ReadableUserAgent uai = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
+		
+		// Instantiates services
+		Service instance = null;
+		List<String> serviceIds = svcm.getServices();
+		//TODO: order services list
+		int count = 0;
+		Environment e = null;
+		for(String serviceId : serviceIds) {
+			//TODO: check if service is allowed for user
+			
+			// Instantiate right Environment
+			if(svcm.hasFullRights(serviceId)) {
+				e = new CoreEnvironment(wta, this, profile, userAgentInfo); 
+			} else {
+				e = new Environment(wta, this, profile, userAgentInfo);
+			}
+			
+			// Creates new instance
+			instance = svcm.instantiateService(serviceId, e);
+			if(instance != null) {
+				addService(instance);
+				count++;
+			}
+		}
+		logger.debug("Instantiated {} services", count);
+		profile = up;
+		userAgentInfo = uai;
+		initialized = true;
+	}
+	
+	private void addService(Service service) {
+		String serviceId = service.getManifest().getId();
+		synchronized(services) {
+			if(services.containsKey(serviceId)) throw new RuntimeException("Cannot add service twice");
+			services.put(serviceId, service);
+		}
+	}
+	
+	public Service getServiceById(String serviceId) {
+		synchronized(services) {
+			if(!services.containsKey(serviceId)) throw new RuntimeException(MessageFormat.format("No service with ID: '{0}'", serviceId));
+			return services.get(serviceId);
+		}
+	}
+	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param request The http request
+	 * @return WebTopSession object
+	 */
+	public static WebTopSession get(HttpServletRequest request) {
+		return get(request.getSession());
+	}
+	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param session The http session
+	 * @return WebTopSession object
+	 */
+	static WebTopSession get(HttpSession session) {
+		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
 	}
 }

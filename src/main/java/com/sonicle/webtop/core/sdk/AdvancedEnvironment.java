@@ -31,27 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.WebTopSession;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
+public interface AdvancedEnvironment extends BasicEnvironment {
 	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
-	}
-	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
-	}
+	public WebTopSession getSession();
 }

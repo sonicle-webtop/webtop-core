@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.ServiceVersion;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
 
 /**
  *
@@ -43,9 +43,9 @@ import com.sonicle.webtop.core.api.ServiceVersion;
 public class Manifest extends ServiceManifest {
 	
 	public static final String ID = "com.sonicle.webtop.core";
-	public static final String CLASS_NAME_PREFIX = "Core";
-	public static final String VERSION = "4.5.2";
-	public static final String BUILD_DATE = "09/09/2014";
+	public static final String CLASS_NAME = "com.sonicle.webtop.core.CoreService";
+	public static final String VERSION = "5.0.0";
+	public static final String BUILD_DATE = "07/10/2014";
 	public static final String COMPANY = "Sonicle S.r.l.";
 	public static final String COMPANY_EMAIL = "sonicle@sonicle.com";
 	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
@@ -55,7 +55,7 @@ public class Manifest extends ServiceManifest {
 	
 	public Manifest() {
 		id = ID;
-		classNamePrefix = CLASS_NAME_PREFIX;
+		className = CLASS_NAME;
 		version = new ServiceVersion(VERSION);
 		buildDate = BUILD_DATE;
 		company = COMPANY;

@@ -50,13 +50,13 @@ import org.apache.shiro.SecurityUtils;
 public class Logout extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = ServletHelper.getWebTopApp(request);
+		WebTopApp wta = WebTopApp.get(request);
 		ServletHelper.setCacheControl(response);
 		
 		try {
 			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context
-			WebTopApp.logger.trace("Processing request: Logout [{}]", ServletHelper.getSessionID(request));
-			WebTopSession wts = ServletHelper.getWebTopSession(request);
+			WebTopApp.logger.trace("Servlet: logout [{}]", ServletHelper.getSessionID(request));
+			WebTopSession wts = WebTopSession.get(request);
 			WebTopApp.setSessionLoggerDC(wts);
 			SecurityUtils.getSubject().logout();
 			ServletUtils.redirectRequest(request, response);

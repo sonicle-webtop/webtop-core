@@ -65,7 +65,7 @@ public class WebTopRealm extends AuthorizingRealm {
 	public WebTopRealm() throws SQLException {
 		super();
 		wta = WebTopApp.getInstance();
-		sonicleLogin = new SonicleLogin(wta.getConnectionManager().getDataSource(WebTopApp.CORE_ID));
+		sonicleLogin = new SonicleLogin(wta.getConnectionManager().getDataSource(Manifest.ID));
 	}
 
 	@Override

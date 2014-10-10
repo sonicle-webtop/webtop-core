@@ -33,25 +33,37 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.security.Principal;
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.dal.DomainDAO;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
+public class CoreManager {
 	
-	private final Principal principal;
+	private WebTopApp wta = null;
 	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+	CoreManager(WebTopApp wta) {
+		this.wta = wta;
 	}
 	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+	public List<ODomain> getDomains() {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			DomainDAO dao = DomainDAO.getInstance();
+			return dao.selectAll(con);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 }

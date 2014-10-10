@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.sdk;
 
 import org.jooq.tools.StringUtils;
 
@@ -42,7 +42,10 @@ import org.jooq.tools.StringUtils;
 public class ServiceManifest {
 	
 	protected String id;
-	protected String classNamePrefix;
+	protected String className;
+	protected String publicClassName;
+	protected String deamonClassName;
+	protected Boolean hidden;
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
@@ -63,14 +66,22 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
-	public ServiceManifest(String id, String classNamePrefix, ServiceVersion version, String buildDate, 
-			String company, String companyEmail, String companyWebSite, String supportEmail) throws Exception {
+	public ServiceManifest(String id, 
+		String className, String publicClassName, String deamonClassName, Boolean hidden, 
+		ServiceVersion version, String buildDate, String company, 
+		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
 		super();
 		
 		if(StringUtils.isEmpty(id)) throw new Exception("Invalid value for property [id]");
-		this.id = id;
-		if(StringUtils.isEmpty(classNamePrefix)) throw new Exception("Invalid value for property [classNamePrefix]");
-		this.classNamePrefix = classNamePrefix;
+		this.id = id.toLowerCase();
+		
+		boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
+		//TODO: Enable check or not?
+		//if(noclass) throw new Exception("You need to fill at least a service class");
+		this.className = className;
+		this.publicClassName = publicClassName;
+		this.deamonClassName = deamonClassName;
+		this.hidden = hidden;
 		if(version.isUndefined()) throw new Exception("Invalid value for property [version]");
 		this.version = version;
 		if(!StringUtils.isEmpty(buildDate)) this.buildDate = buildDate;
@@ -83,9 +94,17 @@ public class ServiceManifest {
 	public String getId() {
 		return id;
 	}
-	
-	public String getClassNamePrefix() {
-		return classNamePrefix;
+
+	public String getClassName() {
+		return className;
+	}
+
+	public String getPublicClassName() {
+		return publicClassName;
+	}
+
+	public String getDeamonClassName() {
+		return deamonClassName;
 	}
 	
 	public ServiceVersion getVersion() {

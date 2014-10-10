@@ -33,25 +33,45 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.servlet.ServletHelper;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
-	
-	private final Principal principal;
-	
-	public UserProfile(Principal principal) {
-		this.principal = principal;
+public class ContextListener implements ServletContextListener {
+
+	@Override
+	public void contextInitialized(ServletContextEvent sce) {
+		ServletContext context = sce.getServletContext();
+		String webappName = ServletHelper.getWebAppName(context);
+		
+		try {
+			WebTopApp.initialize(context);
+			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
+			//context.setAttribute(ServletHelper.WEBTOPAPP_ATTRIBUTE, WebTopApp.getInstance());
+		} catch(Exception ex) {
+			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
+		}
 	}
-	
-	public String getUserId() {
-		return principal.getName();
-	}
-	
-	public String getDomainId() {
-		return principal.getDomainId();
+
+	@Override
+	public void contextDestroyed(ServletContextEvent sce) {
+		ServletContext context = sce.getServletContext();
+		String webappName = ServletHelper.getWebAppName(context);
+		
+		try {
+			WebTopApp wta = WebTopApp.get(context);
+			//WebTopApp wta = ServletHelper.getWebTopApp(context);
+			if(wta != null) wta.destroy();
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error destroying WTA context for {}", webappName, ex);
+		} finally {
+			context.removeAttribute(WebTopApp.ATTRIBUTE);
+		}
 	}
 }
