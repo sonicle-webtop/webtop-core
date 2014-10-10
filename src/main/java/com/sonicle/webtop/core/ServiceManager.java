@@ -345,6 +345,7 @@ public class ServiceManager {
 				manifest = new ServiceManifest(
 					elService.getString("id"),
 					elService.getString("className"),
+					elService.getString("jsClassName"),
 					elService.getString("publicClassName"),
 					elService.getString("deamonClassName"),
 					elService.getBoolean("hidden", false),

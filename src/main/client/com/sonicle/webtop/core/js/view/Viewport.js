@@ -1,4 +1,4 @@
-Ext.define('com.sonicle.webtop.core.js.view.Viewport', {
+Ext.define('Sonicle.webtop.core.view.Viewport', {
 	extend: 'Ext.container.Viewport',
 	layout: 'border',
 	items: [{

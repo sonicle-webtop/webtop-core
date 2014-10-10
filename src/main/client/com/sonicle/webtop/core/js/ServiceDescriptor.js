@@ -31,24 +31,30 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import javax.servlet.ServletRequestEvent;
-import javax.servlet.ServletRequestListener;
-
-/**
- *
- * @author malbinola
- */
-public class RequestListener implements ServletRequestListener {
+Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
+	alternateClassName: 'WT.ServiceDescriptor',
 	
-	@Override
-	public void requestInitialized(ServletRequestEvent sre) {
-		WebTopApp.logger.debug("RequestListener->requestInitialized");
-	}
+	id: null,
+	description: null,
+	version: null,
+	build: null,
+	company: null,
+	iconCls: null,
+	className: null,
+	instance: null,
 	
-	@Override
-	public void requestDestroyed(ServletRequestEvent sre) {
-		WebTopApp.logger.debug("RequestListener->requestDestroyed");
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent(arguments);
+	},
+	
+	getInstance: function() {
+		var me = this;
+		if(!me.instance) {
+			me.instance = Ext.create(className, {
+				id: me.id
+			});
+		}
+		return me.instance;
 	}
-}
+});

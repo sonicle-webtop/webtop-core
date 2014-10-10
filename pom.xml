@@ -119,7 +119,7 @@
 				<directory>src/main/resources</directory>
 			</resource>
 			<resource>
-				<directory>src/main/client-resources</directory>
+				<directory>src/main/client</directory>
 			</resource>
 		</resources>
 		<plugins>

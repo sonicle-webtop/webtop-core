@@ -1,5 +1,6 @@
-Ext.define('com.sonicle.webtop.core.js.WT', {
+Ext.define('Sonicle.webtop.core.WT', {
 	singleton: true,
+	alternateClassName: 'WT',
 	
 	aalleerrtt: function() {
 		alert('questo è un alerttttttt statico');
