@@ -31,63 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
-import freemarker.template.Template;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 
 /**
  *
  * @author malbinola
  */
-public class Start extends HttpServlet {
+public class RequestListener implements ServletRequestListener {
 	
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = WebTopSession.get(request);
-		CoreManager manager = wta.getManager();
-		
-		try {
-			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
-			wts.checkEnvironment(request);
-			
-			
-			
-			Map tplMap = new HashMap();
-			tplMap.put("theme","crisp");
-			tplMap.put("debug","false");
-			tplMap.put("rtl","false");
-			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
-			
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
-		} finally {
-			ServletHelper.setCacheControl(response);
-			ServletHelper.setPageContentType(response);
-			WebTopApp.clearLoggerDC();
-		}
-	}
-
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
+	public void requestInitialized(ServletRequestEvent sre) {
+		WebTopApp.logger.debug("RequestListener->requestInitialized");
 	}
-
+	
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
+	public void requestDestroyed(ServletRequestEvent sre) {
+		WebTopApp.logger.debug("RequestListener->requestDestroyed");
 	}
 }

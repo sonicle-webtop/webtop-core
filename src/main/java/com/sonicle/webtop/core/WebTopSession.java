@@ -37,6 +37,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.api.Environment;
 import com.sonicle.webtop.core.api.Service;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import java.text.MessageFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -139,6 +140,13 @@ public class WebTopSession {
 		synchronized(services) {
 			if(services.containsKey(serviceId)) throw new RuntimeException("Cannot add service twice");
 			services.put(serviceId, service);
+		}
+	}
+	
+	public Service getServiceById(String serviceId) {
+		synchronized(services) {
+			if(!services.containsKey(serviceId)) throw new RuntimeException(MessageFormat.format("No service with ID: '{0}'", serviceId));
+			return services.get(serviceId);
 		}
 	}
 	

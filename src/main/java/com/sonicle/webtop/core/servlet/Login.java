@@ -65,6 +65,7 @@ public class Login extends HttpServlet {
 		CoreManager manager = wta.getManager();
 		
 		try {
+			WebTopApp.logger.trace("Servlet: Login [{}]", ServletHelper.getSessionID(request));
 			Locale locale = ServletHelper.homogenizeLocale(request);
 			
 			//SettingsManager sm = wta.getSettingsManager();
