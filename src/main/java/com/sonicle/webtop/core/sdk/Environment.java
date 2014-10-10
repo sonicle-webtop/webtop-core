@@ -31,12 +31,50 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.sdk;
+
+import com.sonicle.webtop.core.UserProfile;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.WebTopSession;
+import java.util.Locale;
+import net.sf.uadetector.ReadableUserAgent;
 
 /**
  *
  * @author malbinola
  */
-public abstract class DeamonService {
+public class Environment implements BasicEnvironment {
 	
+	protected final WebTopApp wta;
+	protected final WebTopSession wts;
+	private final UserProfile profile;
+	private final ReadableUserAgent userAgent;
+	
+	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile, ReadableUserAgent userAgent) {
+		this.wta = wta;
+		this.wts = wts;
+		this.profile = profile;
+		this.userAgent = userAgent;
+	}
+
+	@Override
+	public UserProfile getProfile() {
+		return profile;
+	}
+	
+	@Override
+	public ReadableUserAgent getUserAgent() {
+		return userAgent;
+	}
+	
+	@Override
+	public String lookupResource(String serviceId, Locale locale, String key) {
+		return wta.lookupResource(serviceId, locale, key);
+	}
+	
+	@Override
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
+		return wta.lookupResource(serviceId, locale, key, escapeHtml);
+	}
+
 }

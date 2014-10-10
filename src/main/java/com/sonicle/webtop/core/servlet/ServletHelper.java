@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.webtop.core.LocaleKey;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.api.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
 import java.util.Locale;
 import java.util.Map;

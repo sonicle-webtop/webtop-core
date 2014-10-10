@@ -33,10 +33,10 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.PublicService;
-import com.sonicle.webtop.core.api.Service;
-import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.DeamonService;
+import com.sonicle.webtop.core.sdk.PublicService;
+import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.DeamonService;
 import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 

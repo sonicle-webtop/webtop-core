@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.service;
 
-import com.sonicle.webtop.core.api.ServiceVersion;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

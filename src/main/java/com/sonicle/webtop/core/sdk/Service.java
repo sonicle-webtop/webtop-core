@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.WebTopApp;
 import java.util.Locale;

@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.AdvancedEnvironment;
-import com.sonicle.webtop.core.api.Environment;
+import com.sonicle.webtop.core.sdk.AdvancedEnvironment;
+import com.sonicle.webtop.core.sdk.Environment;
 import net.sf.uadetector.ReadableUserAgent;
 
 /**

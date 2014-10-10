@@ -31,20 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
-
-import com.sonicle.webtop.core.UserProfile;
-import java.util.Locale;
-import net.sf.uadetector.ReadableUserAgent;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public interface BasicEnvironment {
+public abstract class DeamonService {
 	
-	public UserProfile getProfile();
-	public ReadableUserAgent getUserAgent();
-	public String lookupResource(String serviceId, Locale locale, String key);
-	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
 }

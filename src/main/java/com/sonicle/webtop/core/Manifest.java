@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.ServiceVersion;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
 
 /**
  *

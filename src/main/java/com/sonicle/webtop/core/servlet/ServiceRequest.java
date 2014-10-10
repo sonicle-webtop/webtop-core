@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.api.Service;
+import com.sonicle.webtop.core.sdk.Service;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;

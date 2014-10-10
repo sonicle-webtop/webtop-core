@@ -31,15 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.api;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.UserProfile;
+import java.util.Locale;
+import net.sf.uadetector.ReadableUserAgent;
 
 /**
  *
  * @author malbinola
  */
-public interface AdvancedEnvironment extends BasicEnvironment {
+public interface BasicEnvironment {
 	
-	public WebTopSession getSession();
+	public UserProfile getProfile();
+	public ReadableUserAgent getUserAgent();
+	public String lookupResource(String serviceId, Locale locale, String key);
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
 }

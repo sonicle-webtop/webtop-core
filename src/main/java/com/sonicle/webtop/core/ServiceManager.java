@@ -34,10 +34,10 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.api.Environment;
-import com.sonicle.webtop.core.api.ServiceManifest;
-import com.sonicle.webtop.core.api.ServiceVersion;
-import com.sonicle.webtop.core.api.Service;
+import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
+import com.sonicle.webtop.core.sdk.Service;
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;

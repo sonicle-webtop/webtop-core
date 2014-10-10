@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.api.Environment;
-import com.sonicle.webtop.core.api.Service;
+import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.webtop.core.sdk.Service;
 import java.util.Locale;
 import org.slf4j.Logger;
 
