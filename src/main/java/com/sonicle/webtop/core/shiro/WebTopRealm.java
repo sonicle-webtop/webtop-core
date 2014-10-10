@@ -36,10 +36,12 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import javax.security.auth.login.LoginException;
+import javax.sql.DataSource;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -55,13 +57,14 @@ import org.slf4j.Logger;
 public class WebTopRealm extends AuthorizingRealm {
 	
 	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
+	private final WebTopApp wta;
 	
 	SonicleLogin sonicleLogin=null;
 	boolean initialized=false;
 	
 	public WebTopRealm() throws SQLException {
 		super();
-		WebTopApp wta = WebTopApp.getInstance();
+		wta = WebTopApp.getInstance();
 		sonicleLogin = new SonicleLogin(wta.getConnectionManager().getDataSource(WebTopApp.CORE_ID));
 	}
 
@@ -93,7 +96,18 @@ public class WebTopRealm extends AuthorizingRealm {
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection pc) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		WebTopAuthorizationInfo authinfo=null;
+		
+		try {
+			DataSource ds=wta.getConnectionManager().getDataSource(Manifest.ID);
+			authinfo=new WebTopAuthorizationInfo(ds,(Principal)pc.getPrimaryPrincipal());
+			authinfo.fillRoles();
+			authinfo.fillStringPermissions();
+		} catch(SQLException exc) {
+			logger.debug("error building authorization info",exc);
+		}
+		
+		return authinfo;
 	}
 
 }
