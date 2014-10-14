@@ -33,29 +33,107 @@
  */
 package com.sonicle.webtop.core.shiro;
 
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.security.GroupPrincipal;
+import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.bol.OGroupRole;
+import com.sonicle.webtop.core.bol.ORolePermission;
+import com.sonicle.webtop.core.bol.OUserRole;
+import com.sonicle.webtop.core.dal.GroupRoleDAO;
+import com.sonicle.webtop.core.dal.RolePermissionDAO;
+import com.sonicle.webtop.core.dal.UserRoleDAO;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import javax.sql.DataSource;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.Permission;
+import org.slf4j.Logger;
 
 /**
  *
  * @author gbulfon
  */
 public class WebTopAuthorizationInfo implements AuthorizationInfo {
-
+	
+	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
+	
+	private DataSource ds;
+	private Principal principal;
+	private Set<String> roles=new LinkedHashSet<>();
+	private Set<String> stringPermissions;
+    private Set<Permission> objectPermissions;
+	
+	public WebTopAuthorizationInfo(DataSource ds, Principal p) {
+		this.ds=ds;
+		this.principal=p;
+	}
+	
 	@Override
 	public Collection<String> getRoles() {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return roles;
 	}
-
+	
 	@Override
 	public Collection<String> getStringPermissions() {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return stringPermissions;
 	}
 
 	@Override
 	public Collection<Permission> getObjectPermissions() {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		return objectPermissions;
 	}
 	
+	protected void fillRoles() {
+		roles=new LinkedHashSet<>();
+		Connection con=null;
+		try {
+			con=ds.getConnection();
+			
+			List<OUserRole> uroles=UserRoleDAO.getInstance().selectByUserId(con, principal.getDomainId(),principal.getSubjectId());
+			for(OUserRole urole: uroles) {
+				String roleId=urole.getRoleId();
+				roles.add(roleId);
+				logger.debug("added role {}",roleId);
+			}
+			
+			for(GroupPrincipal gp: principal.getGroups()) {
+				List<OGroupRole> groles=GroupRoleDAO.getInstance().selectByGroupId(con, gp.getDomainId(),gp.getSubjectId());
+				for(OGroupRole grole: groles) {
+					String roleId=grole.getRoleId();
+					roles.add(roleId);
+					logger.debug("added role {} from group {}",roleId,gp.getSubjectId());
+				}
+			}
+		} catch(SQLException exc) {
+			logger.error("error getting roles for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
+	protected void fillStringPermissions() {
+		Connection con=null;
+		stringPermissions=new LinkedHashSet<String>();
+		try {
+			con=ds.getConnection();
+			for(String role: roles) {
+				List<ORolePermission> rperms=RolePermissionDAO.getInstance().selectByRoleId(con, principal.getDomainId(), role);
+				for(ORolePermission rperm: rperms) {
+					String sperm=rperm.getPermission();
+					stringPermissions.add(sperm);
+					logger.debug("added permission {} from role {}",sperm,role);
+				}
+			}
+		} catch(SQLException exc) {
+			logger.error("error filling permissions for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+
 }
