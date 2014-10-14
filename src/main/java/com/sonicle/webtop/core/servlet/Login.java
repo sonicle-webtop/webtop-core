@@ -110,6 +110,7 @@ public class Login extends HttpServlet {
 			tplMap.put("showDomain", (domains.size()>1));
 			tplMap.put("domains", domains);
 			
+			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/login.html");
 			tpl.process(tplMap, response.getWriter());
 			

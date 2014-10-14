@@ -31,60 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsStartup;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.Service;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class CoreManager {
+public class JsStartup {
 	
-	private WebTopApp wta = null;
+	public ArrayList<JsStartup.Service> services = new ArrayList<>();
 	
-	CoreManager(WebTopApp wta) {
-		this.wta = wta;
-	}
-	
-	public List<ODomain> getDomains() {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public JsStartup.Service getServiceJsDescriptor(String serviceId) {
-		ServiceManager svcm = wta.getServiceManager();
-		
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		JsStartup.Service js = new JsStartup.Service();
-		js.id = manifest.getId();
-		js.description = "";
-		js.version = manifest.getVersion().toString();
-		js.build = manifest.getBuildDate();
-		js.company = manifest.getCompany();
-		js.className = manifest.getJsClassName();
-		
-		return js;
+	public static class Service {
+		public String id;
+		public String description;
+		public String version;
+		public String build;
+		public String company;
+		public String className;
 	}
 }

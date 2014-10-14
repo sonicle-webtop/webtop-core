@@ -174,6 +174,8 @@ public class ServiceManager {
 		}
 	}
 	
+	
+	
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
 		String serviceId = manifest.getId();
@@ -291,7 +293,7 @@ public class ServiceManager {
 		return list;
 	}
 	
-	private ServiceDescriptor getService(String serviceId) {
+	ServiceDescriptor getService(String serviceId) {
 		synchronized(services) {
 			if(!services.containsKey(serviceId)) return null;
 			return services.get(serviceId);
