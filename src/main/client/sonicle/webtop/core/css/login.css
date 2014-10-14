@@ -1,0 +1,72 @@
+body {
+	background: #f8f8f8;
+}
+.full-width {
+	width: 100%;
+}
+.login {
+	margin: 2em 0;
+}
+.login img {
+	margin: 0 auto 1em;
+}
+.login .logo {
+	max-height: 250px;
+}
+.login .alert {
+	padding: 5px;
+	margin-bottom: 0px;
+}
+.login .powered {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
+/*
+.login .btn {
+	background: #eee;
+	-webkit-transition: all 0.2s ease-in-out;
+	-moz-transition: all 0.2s ease-in-out;
+	-o-transition: all 0.2s ease-in-out;
+	-ms-transition: all 0.2s ease-in-out;
+	transition: all 0.2s ease-in-out;
+}
+.login .btn:hover {
+	background: #156A8B;
+	color: #fff;
+}
+*/
+
+.login .box {
+	/*
+	background: #fff;
+	border: 1px solid #ececec;
+	border-radius: 0.5rem;
+	*/
+	padding: 2em 3em;
+	
+}
+
+.login .form-group {
+	margin-bottom: 5px;
+}
+
+.spinner {
+	display: inline-block;
+	opacity: 0;
+	max-width: 0;
+
+	-webkit-transition: opacity 0.25s, max-width 0.45s; 
+	-moz-transition: opacity 0.25s, max-width 0.45s;
+	-o-transition: opacity 0.25s, max-width 0.45s;
+	transition: opacity 0.25s, max-width 0.45s; /* Duration fixed since we animate additional hidden width */
+}
+
+.has-spinner.active {
+	cursor: progress;
+}
+
+.has-spinner.active .spinner {
+	opacity: 1;
+	max-width: 50px; /* More than it will ever come, notice that this affects on animation duration */
+}
