@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
