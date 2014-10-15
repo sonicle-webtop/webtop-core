@@ -57,7 +57,7 @@ public class GroupRoleDAO {
 		return dsl
 			.select()
 			.from(GROUPS_ROLES)
-			.where(GROUPS_ROLES.DOMAIN_ID.equal(domainId)
+			.where(GROUPS_ROLES.DOMAIN_ID.in(domainId,"*")
 					.and(GROUPS_ROLES.GROUP_ID.equal(groupId))				
 			)
 			.fetchInto(OGroupRole.class);

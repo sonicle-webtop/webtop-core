@@ -58,7 +58,7 @@ public class RolePermissionDAO {
 		return dsl
 			.select()
 			.from(ROLES_PERMISSIONS)
-			.where(ROLES_PERMISSIONS.DOMAIN_ID.equal(domainId)
+			.where(ROLES_PERMISSIONS.DOMAIN_ID.in(domainId,"*")
 					.and(ROLES_PERMISSIONS.ROLE_ID.equal(roleId))
 			)
 			.fetchInto(ORolePermission.class);

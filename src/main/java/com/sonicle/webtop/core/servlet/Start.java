@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
@@ -45,6 +46,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
@@ -61,7 +64,12 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
 			
-			
+			Subject currentUser=SecurityUtils.getSubject();
+			String user_id=((Principal)currentUser.getPrincipal()).getSubjectId();
+			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.mail:access"));
+			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.calendar:access"));
+			boolean isAdmin=currentUser.hasRole("admin");
+			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
 			
 			Map tplMap = new HashMap();
 			tplMap.put("theme","crisp");

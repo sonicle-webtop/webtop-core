@@ -60,8 +60,6 @@ import org.slf4j.Logger;
  */
 public class WebTopAuthorizationInfo implements AuthorizationInfo {
 	
-	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
-	
 	private DataSource ds;
 	private Principal principal;
 	private Set<String> roles=new LinkedHashSet<>();
@@ -90,27 +88,32 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 	
 	protected void fillRoles() {
 		roles=new LinkedHashSet<>();
+		String user_id=principal.getSubjectId();
+		
 		Connection con=null;
 		try {
 			con=ds.getConnection();
-			
-			List<OUserRole> uroles=UserRoleDAO.getInstance().selectByUserId(con, principal.getDomainId(),principal.getSubjectId());
+
+			List<OUserRole> uroles=UserRoleDAO.getInstance().selectByUserId(con, principal.getDomainId(),user_id);
 			for(OUserRole urole: uroles) {
 				String roleId=urole.getRoleId();
 				roles.add(roleId);
-				logger.debug("added role {}",roleId);
+				WebTopApp.logger.debug("added role {}",roleId);
 			}
-			
+
 			for(GroupPrincipal gp: principal.getGroups()) {
+				if (gp.equals("admins")) {
+					roles.add("admin");
+				}
 				List<OGroupRole> groles=GroupRoleDAO.getInstance().selectByGroupId(con, gp.getDomainId(),gp.getSubjectId());
 				for(OGroupRole grole: groles) {
 					String roleId=grole.getRoleId();
 					roles.add(roleId);
-					logger.debug("added role {} from group {}",roleId,gp.getSubjectId());
+					WebTopApp.logger.debug("added role {} from group {}",roleId,gp.getSubjectId());
 				}
 			}
 		} catch(SQLException exc) {
-			logger.error("error getting roles for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
+			WebTopApp.logger.error("error getting roles for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -118,7 +121,7 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 
 	protected void fillStringPermissions() {
 		Connection con=null;
-		stringPermissions=new LinkedHashSet<String>();
+		stringPermissions=new LinkedHashSet<>();
 		try {
 			con=ds.getConnection();
 			for(String role: roles) {
@@ -126,11 +129,11 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 				for(ORolePermission rperm: rperms) {
 					String sperm=rperm.getPermission();
 					stringPermissions.add(sperm);
-					logger.debug("added permission {} from role {}",sperm,role);
+					WebTopApp.logger.debug("added permission {} from role {}",sperm,role);
 				}
 			}
 		} catch(SQLException exc) {
-			logger.error("error filling permissions for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
+			WebTopApp.logger.error("error filling permissions for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

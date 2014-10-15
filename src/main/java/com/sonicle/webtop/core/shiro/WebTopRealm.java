@@ -56,7 +56,6 @@ import org.slf4j.Logger;
  */
 public class WebTopRealm extends AuthorizingRealm {
 	
-	public static final Logger logger = WebTopApp.getLogger(WebTopRealm.class);
 	private final WebTopApp wta;
 	
 	SonicleLogin sonicleLogin=null;
@@ -70,44 +69,62 @@ public class WebTopRealm extends AuthorizingRealm {
 
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken at) throws AuthenticationException {
+		AuthenticationInfo authinfo=null;
 		try {
-			UsernamePasswordDomainToken upt=(UsernamePasswordDomainToken)at;
-			
-			
-			
-			//logger.debug("isRememberMe={}",upt.isRememberMe());
-			char[] creds=(char[])at.getCredentials();
-			logger.debug("{}", (String)at.getPrincipal());
-			Principal p=sonicleLogin.validateUser((String)at.getPrincipal()+"@"+upt.getDomain(), creds);
-			ArrayList<GroupPrincipal> groups=p.getGroups();
-			for(GroupPrincipal group: groups) {
-				logger.debug("user "+p.getSubjectId()+" is in group "+group.getSubjectId());
-			}
-			WebTopAuthenticationInfo authinfo=new WebTopAuthenticationInfo(p,creds,this.getName());
-			return authinfo;
+			WebTopApp.logger.debug("doGetAuthenticationInfo - auth user={}",at.getPrincipal());
+			authinfo=loadAuthenticationInfo(at);
+		} catch(Throwable t) {
+			WebTopApp.logger.debug("Exception!!!!",t);
+		}
+		return authinfo;
+	}
+
+	@Override
+	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection pc) {
+		Principal p=(Principal)pc.getPrimaryPrincipal();
+		AuthorizationInfo authzinfo=null;
+		try {
+			WebTopApp.logger.debug("doGetAuthorizationInfo - auth user={}",p.getSubjectId());
+			authzinfo=loadAuthorizationInfo(p);
+		} catch(Throwable t) {
+			WebTopApp.logger.debug("Exception!!!!",t);
+		}
+		
+		return authzinfo;
+	}
+	
+	private AuthenticationInfo loadAuthenticationInfo(AuthenticationToken at) throws AuthenticationException {
+		WebTopAuthenticationInfo authinfo=null;
+		try {
+				UsernamePasswordDomainToken upt=(UsernamePasswordDomainToken)at;
+				//logger.debug("isRememberMe={}",upt.isRememberMe());
+				char[] creds=(char[])at.getCredentials();
+				WebTopApp.logger.debug("validating user {}", (String)at.getPrincipal());
+				Principal p=sonicleLogin.validateUser((String)at.getPrincipal()+"@"+upt.getDomain(), creds);
+				ArrayList<GroupPrincipal> groups=p.getGroups();
+				for(GroupPrincipal group: groups) {
+					WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
+				}
+				authinfo=new WebTopAuthenticationInfo(p,creds,this.getName());
 		} catch(LoginException exc) {
 			exc.printStackTrace();
 			throw new AuthenticationException(exc.getMessage());
 		} catch(RuntimeException rexc) {
 			rexc.printStackTrace();
 		}
-		return null;
-	}
-
-	@Override
-	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection pc) {
-		WebTopAuthorizationInfo authinfo=null;
-		
-		try {
-			DataSource ds=wta.getConnectionManager().getDataSource(Manifest.ID);
-			authinfo=new WebTopAuthorizationInfo(ds,(Principal)pc.getPrimaryPrincipal());
-			authinfo.fillRoles();
-			authinfo.fillStringPermissions();
-		} catch(SQLException exc) {
-			logger.debug("error building authorization info",exc);
-		}
-		
 		return authinfo;
 	}
 
+	private AuthorizationInfo loadAuthorizationInfo(Principal p) {
+		WebTopAuthorizationInfo authzinfo=null;
+		try {
+			DataSource ds=wta.getConnectionManager().getDataSource(Manifest.ID);
+			authzinfo=new WebTopAuthorizationInfo(ds,p);
+			authzinfo.fillRoles();
+			authzinfo.fillStringPermissions();
+		} catch(Throwable t) {
+			WebTopApp.logger.debug("error building authorization info",t);
+		}
+		return authzinfo;
+	}
 }
