@@ -54,7 +54,6 @@ import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jooq.SQLDialect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -357,10 +356,6 @@ public class WebTopApp {
 	public static void unsetServiceCustomLoggerDC() {
 		MDC.remove("custom");
 		WebTopApp.updateAutoLoggerDC();
-	}
-	
-	public static SQLDialect getSQLDialect() {
-		return SQLDialect.POSTGRES;
 	}
 	
 	private String buildSystemInfo() {

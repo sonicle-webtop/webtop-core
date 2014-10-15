@@ -6,13 +6,11 @@
 	<version>5.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>webtop-core</name>
-	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
-	
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -75,39 +73,38 @@
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>1.7.6</version>
 		</dependency>
-	 <dependency>
-	  <groupId>commons-configuration</groupId>
-	  <artifactId>commons-configuration</artifactId>
-	  <version>1.10</version>
-	  <exclusions>
-	   <exclusion>
-	    <groupId>commons-logging</groupId>
-	    <artifactId>commons-logging</artifactId>
-	   </exclusion>
-	  </exclusions>
-	 </dependency>
-	 <dependency>
-	  <groupId>commons-collections</groupId>
-	  <artifactId>commons-collections</artifactId>
-	  <version>3.2.1</version>
-	 </dependency>
-	 <dependency>
-	  <groupId>net.sf.uadetector</groupId>
-	  <artifactId>uadetector-core</artifactId>
-	  <version>0.9.20</version>
-	 </dependency>
-	 <dependency>
-	  <groupId>net.sf.uadetector</groupId>
-	  <artifactId>uadetector-resources</artifactId>
-	  <version>2014.08</version>
-	 </dependency>
-	 <dependency>
-	  <groupId>${project.groupId}</groupId>
-	  <artifactId>webtop-core-db</artifactId>
-	  <version>1.0</version>
-	 </dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.10</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.1</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.uadetector</groupId>
+			<artifactId>uadetector-core</artifactId>
+			<version>0.9.20</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.uadetector</groupId>
+			<artifactId>uadetector-resources</artifactId>
+			<version>2014.08</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.webtop</groupId>
+			<artifactId>webtop-core-db</artifactId>
+			<version>1.0</version>
+		</dependency>
 	</dependencies>
-	
 	<build>
 		<resources>
 			<resource>
@@ -118,5 +115,4 @@
 			</resource>
 		</resources>
 	</build>
-	
 </project>
