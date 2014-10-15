@@ -76,7 +76,7 @@ public class Start extends HttpServlet {
 			
 			Map tplMap = new HashMap();
 			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
-			tplMap.put("theme", "crisp");
+			tplMap.put("theme", wts.getTheme());
 			tplMap.put("debug", "false");
 			tplMap.put("rtl", "false");
 			

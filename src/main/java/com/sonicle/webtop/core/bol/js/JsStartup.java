@@ -41,6 +41,7 @@ import java.util.ArrayList;
  */
 public class JsStartup {
 	
+	public String theme="crisp";
 	public ArrayList<JsStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {
