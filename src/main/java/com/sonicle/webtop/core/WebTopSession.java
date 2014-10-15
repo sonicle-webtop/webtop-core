@@ -34,10 +34,13 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.js.JsStartup;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -147,6 +150,12 @@ public class WebTopSession {
 		synchronized(services) {
 			if(!services.containsKey(serviceId)) throw new RuntimeException(MessageFormat.format("No service with ID: '{0}'", serviceId));
 			return services.get(serviceId);
+		}
+	}
+	
+	public List<String> getServices() {
+		synchronized(services) {
+			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
 	}
 	

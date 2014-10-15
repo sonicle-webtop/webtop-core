@@ -31,24 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.bol.js;
 
-import javax.servlet.ServletRequestEvent;
-import javax.servlet.ServletRequestListener;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class RequestListener implements ServletRequestListener {
+public class JsStartup {
 	
-	@Override
-	public void requestInitialized(ServletRequestEvent sre) {
-		WebTopApp.logger.debug("RequestListener->requestInitialized");
-	}
+	public ArrayList<JsStartup.Service> services = new ArrayList<>();
 	
-	@Override
-	public void requestDestroyed(ServletRequestEvent sre) {
-		WebTopApp.logger.debug("RequestListener->requestDestroyed");
+	public static class Service {
+		public String id;
+		public String description;
+		public String version;
+		public String build;
+		public String company;
+		public String className;
 	}
 }

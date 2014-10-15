@@ -43,6 +43,7 @@ public class ServiceManifest {
 	
 	protected String id;
 	protected String className;
+	protected String jsClassName;
 	protected String publicClassName;
 	protected String deamonClassName;
 	protected Boolean hidden;
@@ -67,8 +68,8 @@ public class ServiceManifest {
 	}
 	
 	public ServiceManifest(String id, 
-		String className, String publicClassName, String deamonClassName, Boolean hidden, 
-		ServiceVersion version, String buildDate, String company, 
+		String className, String jsClassName, String publicClassName, String deamonClassName, 
+		Boolean hidden, ServiceVersion version, String buildDate, String company, 
 		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
 		super();
 		
@@ -79,6 +80,7 @@ public class ServiceManifest {
 		//TODO: Enable check or not?
 		//if(noclass) throw new Exception("You need to fill at least a service class");
 		this.className = className;
+		this.jsClassName = jsClassName;
 		this.publicClassName = publicClassName;
 		this.deamonClassName = deamonClassName;
 		this.hidden = hidden;
@@ -97,6 +99,10 @@ public class ServiceManifest {
 
 	public String getClassName() {
 		return className;
+	}
+	
+	public String getJsClassName() {
+		return jsClassName;
 	}
 
 	public String getPublicClassName() {

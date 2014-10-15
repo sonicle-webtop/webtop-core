@@ -31,60 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsStartup;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.Service;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- *
- * @author malbinola
- */
-public class CoreManager {
+Ext.define('Sonicle.webtop.core.sdk.ServiceManifest', {
+	alternateClassName: 'WT.sdk.ServiceManifest',
 	
-	private WebTopApp wta = null;
+	id: null,
+	description: null,
+	version: null,
+	build: null,
+	company: null,
+	iconCls: null,
+	className: null,
 	
-	CoreManager(WebTopApp wta) {
-		this.wta = wta;
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent(arguments);
 	}
-	
-	public List<ODomain> getDomains() {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public JsStartup.Service getServiceJsDescriptor(String serviceId) {
-		ServiceManager svcm = wta.getServiceManager();
-		
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		JsStartup.Service js = new JsStartup.Service();
-		js.id = manifest.getId();
-		js.description = "";
-		js.version = manifest.getVersion().toString();
-		js.build = manifest.getBuildDate();
-		js.company = manifest.getCompany();
-		js.className = manifest.getJsClassName();
-		
-		return js;
-	}
-}
+});

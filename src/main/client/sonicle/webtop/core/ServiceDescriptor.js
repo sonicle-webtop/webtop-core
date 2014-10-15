@@ -31,60 +31,65 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsStartup;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.Service;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- *
- * @author malbinola
- */
-public class CoreManager {
+Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
+	alternateClassName: 'WT.ServiceDescriptor',
+	requires: [
+		'Sonicle.webtop.core.sdk.Service'
+	],
 	
-	private WebTopApp wta = null;
+	config: {
+		id: null,
+		description: null,
+		version: null,
+		build: null,
+		company: null,
+		iconCls: null,
+		className: null
+	},
 	
-	CoreManager(WebTopApp wta) {
-		this.wta = wta;
-	}
+	instance: null,
 	
-	public List<ODomain> getDomains() {
-		Connection con = null;
+	constructor: function(cfg) {
+		var me = this;
+		me.initConfig(cfg);
+		me.callParent(arguments);
+	},
+	
+	getInstance: function() {
+		var me = this;
+		if(!me.instance) {
+			var cn = me.getClassName();
+			if(!Ext.isString(cn)) return null;
+			try {
+				me.instance = Ext.create(cn, {
+					id: me.getId()
+				});
+			} catch(e) {
+				WT.Log.error('Unable to instantiate service class [{0}]', cn);
+			}
+		}
+		return me.instance;
+	},
+	
+	initService: function() {
+		WT.Log.debug('Initializing service [{0}]', this.getId());
+		var svc = this.getInstance();
+		if(svc == null) return;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
+			svc.init.call(svc);
+		} catch(e) {
+			WT.Log.error('Error while calling init() method');
 		}
-	}
+	},
 	
-	public JsStartup.Service getServiceJsDescriptor(String serviceId) {
-		ServiceManager svcm = wta.getServiceManager();
-		
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		JsStartup.Service js = new JsStartup.Service();
-		js.id = manifest.getId();
-		js.description = "";
-		js.version = manifest.getVersion().toString();
-		js.build = manifest.getBuildDate();
-		js.company = manifest.getCompany();
-		js.className = manifest.getJsClassName();
-		
-		return js;
+	getNs: function() {
+		var cn = this.getClassName();
+		var ldot = cn.lastIndexOf('.');
+		return cn.substring(0, ldot);
+	},
+	
+	getPath: function() {
+		return this.getNs().split('.').join('/').toLowerCase();
 	}
-}
+});

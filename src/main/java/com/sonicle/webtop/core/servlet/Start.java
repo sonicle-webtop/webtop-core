@@ -34,9 +34,12 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.security.Principal;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.bol.js.JsStartup;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -72,11 +75,20 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
 			
 			Map tplMap = new HashMap();
-			tplMap.put("theme","crisp");
-			tplMap.put("debug","false");
-			tplMap.put("rtl","false");
 			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
+			tplMap.put("theme", "crisp");
+			tplMap.put("debug", "false");
+			tplMap.put("rtl", "false");
 			
+			// Fill startup variables
+			JsStartup jswt = new JsStartup();
+			for(String serviceId : wts.getServices()) {
+				if(serviceId.equals(Manifest.ID)) continue;
+				jswt.services.add(manager.getServiceJsDescriptor(serviceId));
+			}
+			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));
+			
+			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
 			tpl.process(tplMap, response.getWriter());
 			
