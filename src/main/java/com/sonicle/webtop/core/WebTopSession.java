@@ -62,6 +62,7 @@ public class WebTopSession {
 	private UserProfile profile = null;
 	private ReadableUserAgent userAgentInfo = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
+	private String theme="crisp";
 	
 	WebTopSession(HttpSession session) {
 		wta = WebTopApp.get(session.getServletContext());
@@ -157,6 +158,14 @@ public class WebTopSession {
 		synchronized(services) {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
+	}
+
+	public String getTheme() {
+		return theme;
+	}
+
+	public void setTheme(String theme) {
+		this.theme = theme;
 	}
 	
 	/**

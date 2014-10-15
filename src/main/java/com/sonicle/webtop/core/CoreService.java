@@ -33,9 +33,13 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
+import java.io.PrintWriter;
 import java.util.Locale;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 
 /**
@@ -55,5 +59,12 @@ public class CoreService extends Service {
 	@Override
 	public void cleanup() {
 		
+	}
+	
+	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		String theme=request.getParameter("theme");
+		logger.debug("change theme to {}",theme);
+		getAdvancedEnv().getSession().setTheme(theme);
+		new JsonResult().printTo(out);
 	}
 }
