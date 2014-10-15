@@ -37,6 +37,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	addService: function(cfg) {
 		var desc = Ext.create('WT.ServiceDescriptor', {
 			id: cfg.id,
+			name: cfg.name,
 			description: cfg.description,
 			version: cfg.version,
 			build: cfg.build,

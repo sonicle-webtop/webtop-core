@@ -37,12 +37,11 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsStartup;
 import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  *
@@ -71,15 +70,15 @@ public class CoreManager {
 		}
 	}
 	
-	public JsStartup.Service getServiceJsDescriptor(String serviceId) {
+	public JsStartup.Service getServiceJsDescriptor(String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
-		
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		
 		JsStartup.Service js = new JsStartup.Service();
 		js.id = manifest.getId();
-		js.description = "";
+		js.name = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_NAME);
+		js.description = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_DESCRIPTION);
 		js.version = manifest.getVersion().toString();
 		js.build = manifest.getBuildDate();
 		js.company = manifest.getCompany();

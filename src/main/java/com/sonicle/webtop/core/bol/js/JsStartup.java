@@ -45,6 +45,7 @@ public class JsStartup {
 	
 	public static class Service {
 		public String id;
+		public String name;
 		public String description;
 		public String version;
 		public String build;

@@ -54,7 +54,7 @@ import org.slf4j.Logger;
  */
 public final class SettingsManager implements IServiceSettingReader {
 	
-	private static final Logger logger = WebTopApp.getLogger(ConnectionManager.class);
+	private static final Logger logger = WebTopApp.getLogger(SettingsManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -108,7 +108,7 @@ public final class SettingsManager implements IServiceSettingReader {
 
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read setting [{}, {}]", serviceId, key, ex);
-			return null;
+			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -134,7 +134,7 @@ public final class SettingsManager implements IServiceSettingReader {
 
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
-			return null;
+			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -246,7 +246,7 @@ public final class SettingsManager implements IServiceSettingReader {
 
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read user setting [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
-			return null;
+			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -311,7 +311,7 @@ public final class SettingsManager implements IServiceSettingReader {
 
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read settings (user) [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
-			return null;
+			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

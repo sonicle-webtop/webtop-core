@@ -54,6 +54,18 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	activate: Ext.emptyFn,
 	
+	getToolbar: function() {
+		return null;
+	},
+	
+	getToolComponent: function() {
+		return null;
+	},
+	
+	getMainComponent: function() {
+		return null;
+	},
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.initConfig(cfg);

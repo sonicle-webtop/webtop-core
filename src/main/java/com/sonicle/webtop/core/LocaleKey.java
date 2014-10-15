@@ -47,4 +47,6 @@ public class LocaleKey {
 	public static final String LOGIN_MAINTENANCE = "login.maintenance";
 	public static final String LOGIN_ERROR_MAINTENANCE = "login.error.maintenance";
 	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
+	public static final String SERVICE_NAME = "service.name";
+	public static final String SERVICE_DESCRIPTION = "service.description";
 }

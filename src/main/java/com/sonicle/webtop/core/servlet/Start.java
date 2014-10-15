@@ -62,6 +62,7 @@ public class Start extends HttpServlet {
 		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
 		CoreManager manager = wta.getManager();
+		Locale locale = new Locale("it_IT");
 		
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
@@ -75,7 +76,7 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
 			
 			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, new Locale("it_IT"), wta);
+			ServletHelper.fillPageVars(tplMap, locale, wta);
 			tplMap.put("theme", "crisp");
 			tplMap.put("debug", "false");
 			tplMap.put("rtl", "false");
@@ -84,7 +85,7 @@ public class Start extends HttpServlet {
 			JsStartup jswt = new JsStartup();
 			for(String serviceId : wts.getServices()) {
 				if(serviceId.equals(Manifest.ID)) continue;
-				jswt.services.add(manager.getServiceJsDescriptor(serviceId));
+				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));
 			}
 			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));
 			
