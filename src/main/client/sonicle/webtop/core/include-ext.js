@@ -81,6 +81,7 @@
         useDebug = hasOption('debug'),
         hasOverrides = !hasOption('nooverrides', path) && !!{
             // TODO: remove neptune
+            aria: 1,
             neptune: 1,
             classic: 1,
             gray: 1,

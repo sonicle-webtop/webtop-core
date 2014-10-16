@@ -21,7 +21,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 							xtype: 'button',
 							text: 'Nuovo'
 						}
-					]
+                                        ]
 				}, {
 					xtype: 'toolbar',
 					region: 'center',
