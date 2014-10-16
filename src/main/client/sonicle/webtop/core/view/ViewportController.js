@@ -31,78 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.Service', {
-	alternateClassName: 'WT.sdk.Service',
+Ext.define('Sonicle.webtop.core.view.ViewportController', {
+	extend: 'Ext.app.ViewController',
 	
-	config: {
-		/**
-		 * @cfg {String} id
-		 * Service unique identifier.
-		 */
-		id: null
+	onNavTbButtonClick: function(s) {
+		WT.getApp().activateService(s.getItemId());
 	},
 	
-	/**
-	 * @method
-	 * Called automatically when the service is initialized by the framework.
-	 */
-	init: Ext.emptyFn,
-	
-	/**
-	 * @method
-	 * Called automatically when the service is activated.
-	 */
-	activate: Ext.emptyFn,
-	
-	tb: null,
-	toolcmp: null,
-	maincmp: null,
-	
-	constructor: function(cfg) {
-		var me = this;
-		me.initConfig(cfg);
-		me.callParent(arguments);
-	},
-	
-	/**
-	 * Returns the toolbar component associated to this service.
-	 * @return {Ext.Toolbar}
-	 */
-	getToolbar: function() {
-		return this.tb;
-	},
-	
-	setToolbar: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.tb = cmp;
+	onMenuButtonClick: function(s) {
+		switch(s.getItemId()) {
+			case 'logout':
+				document.location = 'logout';
+				break;
+			default:
+				alert('Hai premuto il bottone '+s.getItemId());
 		}
 	},
 	
-	/**
-	 * Returns the tool (side) component associated to this service.
-	 * @return {Ext.Component}
-	 */
-	getToolComponent: function() {
-		return this.toolcmp;
+	setServiceToolbar: function(cmp) {
+		var co = this.getView().svctbs;
+		if(!co.contains(cmp)) co.add(cmp);
+		co.getLayout().setActiveItem(cmp);
 	},
 	
-	setToolComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.toolcmp = cmp;
-		}
+	setServiceToolCmp: function(cmp) {
+		var co = this.getView().svctools;
+		if(!co.contains(cmp)) co.add(cmp);
+		co.getLayout().setActiveItem(cmp);
 	},
 	
-	/**
-	 * Returns the main (center) component associated to this service.
-	 * @return {Ext.Component}
-	 */
-	getMainComponent: function() {
-		return this.maincmp;
-	},
-	
-	setMainComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.maincmp = cmp;
-		}
+	setServiceMainCmp: function(cmp) {
+		var co = this.getView().svcmains;
+		if(!co.contains(cmp)) co.add(cmp);
+		co.getLayout().setActiveItem(cmp);
 	}
 });
