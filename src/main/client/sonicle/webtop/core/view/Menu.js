@@ -31,78 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.Service', {
-	alternateClassName: 'WT.sdk.Service',
+Ext.define('Sonicle.webtop.core.view.Menu', {
+	extend: 'Ext.panel.Panel',
 	
-	config: {
-		/**
-		 * @cfg {String} id
-		 * Service unique identifier.
-		 */
-		id: null
+	
+	layout: {
+		type: 'table',
+		columns: 2
 	},
 	
-	/**
-	 * @method
-	 * Called automatically when the service is initialized by the framework.
-	 */
-	init: Ext.emptyFn,
-	
-	/**
-	 * @method
-	 * Called automatically when the service is activated.
-	 */
-	activate: Ext.emptyFn,
-	
-	tb: null,
-	toolcmp: null,
-	maincmp: null,
-	
-	constructor: function(cfg) {
-		var me = this;
-		me.initConfig(cfg);
-		me.callParent(arguments);
-	},
-	
-	/**
-	 * Returns the toolbar component associated to this service.
-	 * @return {Ext.Toolbar}
-	 */
-	getToolbar: function() {
-		return this.tb;
-	},
-	
-	setToolbar: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.tb = cmp;
+	items: [{
+			html: 'A'
+		}, {
+			html: 'B'
+		}, {
+			html: 'C'
+		}, {
+			html: 'D',
+			colspan: 2
 		}
-	},
-	
-	/**
-	 * Returns the tool (side) component associated to this service.
-	 * @return {Ext.Component}
-	 */
-	getToolComponent: function() {
-		return this.toolcmp;
-	},
-	
-	setToolComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.toolcmp = cmp;
-		}
-	},
-	
-	/**
-	 * Returns the main (center) component associated to this service.
-	 * @return {Ext.Component}
-	 */
-	getMainComponent: function() {
-		return this.maincmp;
-	},
-	
-	setMainComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.maincmp = cmp;
-		}
-	}
+	]
 });
