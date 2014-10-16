@@ -32,9 +32,43 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						paddingBottom: 0
 					},
 					items: [{
-							xtype: 'button',
-							text: 'Nuovo'
-						}
+                                                    xtype: 'combo',
+                                                    fieldLabel: 'Select Theme',
+                                                    width: 300,
+                                                    store: Ext.create('Ext.data.Store', {
+                                                        fields: ['id', 'description'],
+                                                        data : [
+                                                            {"id":"aria", "description":"Aria"},
+                                                            {"id":"neptune", "description":"Neptune"},
+                                                            {"id":"classic", "description":"Classic"},
+                                                            {"id":"gray", "description":"Gray"},
+                                                            {"id":"neptune-touch", "description":"Neptune Touch"},
+                                                            {"id":"crisp", "description":"Crisp"},
+                                                            {"id":"crisp-touch", "description":"Crisp Touch"}
+                                                            //...
+                                                        ]
+                                                    }),
+                                                    queryMode: 'local',
+                                                    displayField: 'description',
+                                                    valueField: 'id',
+                                                    editable: false,
+                                                    listeners: {
+                                                        scope: this,
+                                                        'select': function(c,r,o) {
+                                                            Ext.Ajax.request({
+                                                                url: 'service-request',
+                                                                params: {
+                                                                    service: 'com.sonicle.webtop.core',
+                                                                    action: 'SetTheme',
+                                                                    theme: r[0].get('id')
+                                                                },
+                                                                success: function(r) {
+                                                                    window.location.reload();
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                            }
                                         ]
 				}, {
 					xtype: 'container',
