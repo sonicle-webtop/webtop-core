@@ -53,6 +53,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
+import sun.security.jca.ServiceId;
 
 /**
  *
@@ -128,12 +129,12 @@ public class ServiceManager {
 	
 	public boolean isMaintenance(String serviceId) {
 		SettingsManager setm = wta.getSettingsManager();
-		return LangUtils.value(setm.getServiceSetting(serviceId, Settings.MAINTENANCE), false);
+		return LangUtils.value(setm.getServiceSetting(serviceId, CoreServiceSettings.MAINTENANCE), false);
 	}
 	
 	public void setMaintenance(String serviceId, boolean maintenance) {
 		SettingsManager setm = wta.getSettingsManager();
-		setm.setServiceSetting(serviceId, Settings.MAINTENANCE, maintenance);
+		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
 	public Service instantiateService(String serviceId, Environment environment) {
@@ -255,13 +256,13 @@ public class ServiceManager {
 		
 		// Gets current service's version info
 		manifestVer = manifest.getVersion();
-		currentVer = new ServiceVersion(setm.getServiceSetting(manifest.getId(), Settings.MANIFEST_VERSION));
+		currentVer = new ServiceVersion(setm.getServiceSetting(manifest.getId(), CoreServiceSettings.MANIFEST_VERSION));
 		
 		// Upgrade check!
 		if(manifestVer.compareTo(currentVer) > 0) {
 			logger.info("Upgraded! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
 			manifest.setOldVersion(currentVer);
-			setm.setServiceSetting(manifest.getId(), Settings.MANIFEST_VERSION, manifestVer.toString());
+			setm.setServiceSetting(manifest.getId(), CoreServiceSettings.MANIFEST_VERSION, manifestVer.toString());
 			return true;
 		} else {
 			logger.info("Not upgraded! [{} = {}]", manifestVer.toString(), currentVer.toString());

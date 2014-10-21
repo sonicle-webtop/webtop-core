@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreUserSettings;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Locale;
@@ -50,4 +52,6 @@ public interface BasicEnvironment {
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
     public String getSessionRefererUri();
     public Connection getCoreConnection() throws SQLException;
+    public CoreServiceSettings getCoreServiceSettings();
+    public CoreUserSettings getCoreUserSettings();
 }

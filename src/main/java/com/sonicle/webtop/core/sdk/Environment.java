@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
@@ -56,11 +58,15 @@ public class Environment implements BasicEnvironment {
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
 	private final UserProfile profile;
+    private final CoreServiceSettings css;
+    private final CoreUserSettings cus;
 	
 	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile) {
 		this.wta = wta;
 		this.wts = wts;
 		this.profile = profile;
+        this.css=new CoreServiceSettings();
+        this.cus=new CoreUserSettings();
 	}
 
 	@Override
@@ -91,6 +97,16 @@ public class Environment implements BasicEnvironment {
     @Override
     public Connection getCoreConnection() throws SQLException {
         return wta.getConnectionManager().getConnection();
+    }
+
+    @Override
+    public CoreServiceSettings getCoreServiceSettings() {
+        return css;
+    }
+
+    @Override
+    public CoreUserSettings getCoreUserSettings() {
+        return cus;
     }
 
 }
