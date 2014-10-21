@@ -33,7 +33,8 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.security.Principal;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Locale;
 import net.sf.uadetector.ReadableUserAgent;
 
@@ -47,6 +48,6 @@ public interface BasicEnvironment {
 	public ReadableUserAgent getUserAgent();
 	public String lookupResource(String serviceId, Locale locale, String key);
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
-	public Principal getPrincipal(String domainId, String userId);
     public String getSessionRefererUri();
+    public Connection getCoreConnection() throws SQLException;
 }
