@@ -33,13 +33,21 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.sql.Connection;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Locale;
+import org.apache.commons.codec.binary.Base32;
+import org.jooq.tools.StringUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -47,21 +55,53 @@ import java.util.Locale;
  */
 public final class UserProfile {
 	
+	private static final Logger logger = WebTopApp.getLogger(UserProfile.class);
 	private final WebTopApp wta;
 	private final Principal principal;
 	private OUser user;
+	private Locale locale;
 	
 	public UserProfile(WebTopApp wta, Principal principal) {
 		this.wta = wta;
 		this.principal = principal;
-		initialize();
+		
+		try {
+			initialize();
+		} catch(Throwable t) {
+			//throw new Exception("Unable to initialize UserProfile", t);
+		}
 	}
 	
-	private void initialize() {
+	private void initialize() throws Exception {
+		Connection con = null;
 		
-		// TODO: complete this!
-		//UserDAO udao = UserDAO.getInstance();
-		//udao.selectByDomainUser(wta.getConnectionManager().getConnection(), null, null);
+		try {
+			logger.debug("Initializing UserProfile");
+			con = wta.getConnectionManager().getConnection();
+			UserDAO udao = UserDAO.getInstance();
+			
+			// Retrieves corresponding user using principal details
+			user = udao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
+			if(user == null) throw new WTException("Unable to find a user for principal [{0}, {1}]", principal.getDomainId(), principal.getUserId());
+			
+			// Defines locale (for not instantiate it each time)
+			locale = new Locale(user.getLocaleLanguage(), user.getLocaleCountry());
+			
+			// If necessary, compute secret key and updates it
+			if(StringUtils.isEmpty(user.getSecret())) {
+				logger.debug("Building new secret key");
+				String secret = "0123456789101112";
+				try {
+					secret = generateSecretKey();
+				} catch(NoSuchAlgorithmException ex) { /* Do nothing... */ }
+				user.setSecret(secret);
+				udao.updateSecretByDomainUser(con, user.getDomainId(), user.getUserId(), secret);
+			}
+			
+		} catch(Exception ex) {
+			DbUtils.closeQuietly(con);
+			throw ex;
+		}
 	}
 	
 	public String getId() {
@@ -81,8 +121,20 @@ public final class UserProfile {
 		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getDomain());
 	}
 	
+	public String getSecret() {
+		return user.getSecret();
+	}
+	
 	public Locale getLocale() {
-		return new Locale("it", "IT");
-		//return new Locale(user.getLocale());
+		return locale;
+	}
+	
+	private String generateSecretKey() throws NoSuchAlgorithmException {
+		byte[] buffer = new byte[80/8];
+		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+		sr.nextBytes(buffer);
+		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+		byte[] encodedKey = new Base32().encode(secretKey);
+		return new String(encodedKey);
 	}
 }
