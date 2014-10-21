@@ -123,5 +123,10 @@ public class Environment implements BasicEnvironment {
 		}		
         return p;
 	}
+    
+    @Override
+    public String getSessionRefererUri() {
+        return wts.getRefererURI();
+    }
 
 }

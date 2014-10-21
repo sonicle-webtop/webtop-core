@@ -48,4 +48,5 @@ public interface BasicEnvironment {
 	public String lookupResource(String serviceId, Locale locale, String key);
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
 	public Principal getPrincipal(String domainId, String userId);
+    public String getSessionRefererUri();
 }
