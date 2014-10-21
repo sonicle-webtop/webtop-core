@@ -39,8 +39,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.bol.js.JsStartup;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.bol.js.JsWTStartup;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -67,7 +66,8 @@ public class Start extends HttpServlet {
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
-			UserProfile up = wts.getUserProfile();
+			Locale locale = wts.getLocale();
+			WebTopApp.logger.trace("locale:   {}", locale);
 			
 			Subject currentUser=SecurityUtils.getSubject();
 			String user_id=((Principal)currentUser.getPrincipal()).getSubjectId();
@@ -77,17 +77,17 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
 			
 			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, up.getLocale(), wta);
-			tplMap.put("locale", up.getLocale().toLanguageTag());
+			ServletHelper.fillPageVars(tplMap, locale, wta);
 			tplMap.put("theme", wts.getTheme());
 			tplMap.put("debug", "false");
 			tplMap.put("rtl", "false");
 			
 			// Fill startup variables
-			JsStartup jswt = new JsStartup();
+			JsWTStartup jswt = new JsWTStartup();
+			jswt.locale = locale.toString();
 			for(String serviceId : wts.getServices()) {
 				if(serviceId.equals(Manifest.ID)) continue;
-				jswt.services.add(manager.getServiceJsDescriptor(serviceId, up.getLocale()));
+				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));
 			}
 			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));
 			

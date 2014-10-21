@@ -15,34 +15,26 @@ import java.util.Locale;
  */
 public class Settings {
 	
-	public static final String DEFAULT_LANGUAGE = "default.language";
-	public static final String DEFAULT_COUNTRY = "default.country";
-	public static final String MAINTENANCE = "maintenance";
-	public static final String SECRET = "secret";
-	public static final String DB_INIT_ENABLED = "db.init.enabled";
-	public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
-	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	public static final String WHATSNEW_VERSION = "whatsnew.version";
-	public static final String MANIFEST_VERSION = "manifest.version";
-	public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
-	public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
-	public static final String PROFILEDATA_PROVIDER = "profiledata.provider";
-	public static final String OTP_ENABLED = "otp.enabled";
-	public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
-	public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
-	public static final String OTP_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
-	public static final String OTP_SONICLEAUTH_INTERVAL = "otp.sonicleauth.interval";
-	public static final String OTP_EMAILADDRESS = "otp.emailaddress";
-	public static final String OTP_DELIVERY = "otp.delivery";
-	public static final String OTP_DELIVERY_EMAIL = "email";
-	public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
-	public static final String OTP_SECRET = "otp.secret";
-	public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
-	public static final String DROPBOX_APP_KEY = "dropbox.appkey";
-	public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
-	public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
-	public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	
+	public static final String MAINTENANCE = "maintenance";
+	public static final String MANIFEST_VERSION = "manifest.version";
+	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
+	//public static final String DB_INIT_ENABLED = "db.init.enabled";
+	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
+	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	//public static final String PROFILEDATA_PROVIDER = "profiledata.provider";
+	//public static final String OTP_ENABLED = "otp.enabled";
+	//public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
+	//public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
+	//public static final String OTP_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
+	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
+	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
+	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
+	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
+	//public static final String DEFAULT_LANGUAGE = "default.language";
+	//public static final String DEFAULT_COUNTRY = "default.country";
+	
+	/*
 	public static String getLanguage(SettingsManager setm) {
 		return LangUtils.value(setm.getServiceSetting(Manifest.ID, DEFAULT_LANGUAGE), "it");
 	}
@@ -100,4 +92,5 @@ public class Settings {
 	public static String getGoogleDriveClientSecret(SettingsManager setm) {
 		return setm.getServiceSetting(Manifest.ID, Settings.GOOGLE_DRIVE_CLIENT_SECRET);
 	}
+	*/
 }

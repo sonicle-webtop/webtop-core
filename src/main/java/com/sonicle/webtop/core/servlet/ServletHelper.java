@@ -96,7 +96,7 @@ public class ServletHelper {
 		response.setContentType("text/html;charset=UTF-8");
 	}
 	
-	static Locale homogenizeLocale(HttpServletRequest request) {
+	public static Locale homogenizeLocale(HttpServletRequest request) {
 		Locale locale = request.getLocale();
 		if(locale.getLanguage().equals("it")) {
 			return new Locale("it", "IT");
