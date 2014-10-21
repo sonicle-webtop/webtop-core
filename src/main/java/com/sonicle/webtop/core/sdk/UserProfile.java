@@ -85,4 +85,19 @@ public final class UserProfile {
 		return new Locale("it_IT");
 		//return new Locale(user.getLocale());
 	}
+    
+    public boolean hasDocumentManagement() {
+        // TODO: setting for document management
+        return false;
+    }
+    
+    public boolean hasStructuredArchiving() {
+        // TODO: setting for document management
+        return false;
+    }
+    
+    public String getDocumentManagementFolder() {
+        // TODO: setting for document management
+        return null;
+    }
 }
