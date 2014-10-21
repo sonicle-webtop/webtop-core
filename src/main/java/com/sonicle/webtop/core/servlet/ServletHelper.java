@@ -96,7 +96,7 @@ public class ServletHelper {
 		response.setContentType("text/html;charset=UTF-8");
 	}
 	
-	static Locale homogenizeLocale(HttpServletRequest request) {
+	public static Locale homogenizeLocale(HttpServletRequest request) {
 		Locale locale = request.getLocale();
 		if(locale.getLanguage().equals("it")) {
 			return new Locale("it", "IT");
@@ -111,6 +111,10 @@ public class ServletHelper {
 	
 	public static String getUserAgent(HttpServletRequest request) {
 		return request.getHeader("user-agent");
+	}
+	
+	public static String getReferer(HttpServletRequest request) {
+		return request.getHeader("referer");
 	}
 	
 	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {

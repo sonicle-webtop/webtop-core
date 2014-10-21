@@ -33,57 +33,22 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsWTStartup;
-import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Locale;
-
 /**
  *
  * @author malbinola
  */
-public class CoreManager {
+public class UserSettings {
 	
-	private WebTopApp wta = null;
-	
-	CoreManager(WebTopApp wta) {
-		this.wta = wta;
-	}
-	
-	public List<ODomain> getDomains() {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectAll(con);
-			
-		} catch(SQLException ex) {
-			return null;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public JsWTStartup.Service getServiceJsDescriptor(String serviceId, Locale locale) {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		JsWTStartup.Service js = new JsWTStartup.Service();
-		js.id = manifest.getId();
-		js.name = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_NAME);
-		js.description = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_DESCRIPTION);
-		js.version = manifest.getVersion().toString();
-		js.build = manifest.getBuildDate();
-		js.company = manifest.getCompany();
-		js.className = manifest.getJsClassName();
-		
-		return js;
-	}
+	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	//public static final String WHATSNEW_VERSION = "whatsnew.version";
+	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
+	//public static final String SECRET = "secret";
+	//public static final String OTP_ENABLED = "otp.enabled";
+	//public static final String OTP_DELIVERY = "otp.delivery";
+	//public static final String OTP_DELIVERY_EMAIL = "email";
+	//public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
+	//public static final String OTP_SECRET = "otp.secret";
+	//public static final String OTP_EMAILADDRESS = "otp.emailaddress";
+	//public static final String OTP_SONICLEAUTH_INTERVAL = "otp.sonicleauth.interval";
+	//public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
 }

@@ -82,7 +82,7 @@ public final class UserProfile {
 	}
 	
 	public Locale getLocale() {
-		return new Locale("it_IT");
+		return new Locale("it", "IT");
 		//return new Locale(user.getLocale());
 	}
     

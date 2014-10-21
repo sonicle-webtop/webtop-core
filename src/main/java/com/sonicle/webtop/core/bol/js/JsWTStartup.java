@@ -39,13 +39,11 @@ import java.util.ArrayList;
  *
  * @author malbinola
  */
-public class JsStartup {
+public class JsWTStartup {
 	
-	public static final String DEFAULT_THEME = "crisp";
-	public static final String DEFAULT_LOCALE = "en_EN";
-	public String theme = DEFAULT_THEME;
-	public String locale = DEFAULT_LOCALE;
-	public ArrayList<JsStartup.Service> services = new ArrayList<>();
+	public String theme = "crisp";
+	public String locale = "it_IT";
+	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {
 		public String id;

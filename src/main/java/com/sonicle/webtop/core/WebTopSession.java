@@ -42,6 +42,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
@@ -59,6 +60,8 @@ public class WebTopSession {
 	private WebTopApp wta = null;
 	private boolean initialized = false;
 	private UserProfile profile = null;
+	private Locale locale = null;
+	private String refererURI = null;
 	private ReadableUserAgent userAgentInfo = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
 	private String theme = "crisp";
@@ -103,6 +106,8 @@ public class WebTopSession {
 		
 		
 		UserProfile up = new UserProfile(wta, principal);
+		String referer = ServletHelper.getReferer(request);
+		Locale requestLocale = ServletHelper.homogenizeLocale(request);
 		ReadableUserAgent uai = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
 		// Instantiates services
@@ -130,6 +135,8 @@ public class WebTopSession {
 		}
 		logger.debug("Instantiated {} services", count);
 		profile = up;
+		locale = requestLocale;
+		refererURI = referer;
 		userAgentInfo = uai;
 		initialized = true;
 	}
@@ -171,8 +178,22 @@ public class WebTopSession {
 		return profile;
 	}
 	
-	public void test() {
-		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+	/**
+	 * Return current locale.
+	 * It can be the UserProfile's locale or the locale specified during
+	 * the initial HTTP request to the server.
+	 * @return The locale.
+	 */
+	public Locale getLocale() {
+		if(profile != null) {
+			return profile.getLocale();
+		} else {
+			return locale;
+		}
+	}
+	
+	public String getRefererURI() {
+		return refererURI;
 	}
 
 	public String getTheme() {
@@ -182,6 +203,14 @@ public class WebTopSession {
 	public void setTheme(String theme) {
 		this.theme = theme;
 	}
+	
+	public void test() {
+		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
+	}
+	
+	
+	
+	
 	
 	/**
 	 * Gets WebTopSession object stored as session's attribute.
