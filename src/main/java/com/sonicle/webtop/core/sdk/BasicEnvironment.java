@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.UserProfile;
 import java.util.Locale;
 import net.sf.uadetector.ReadableUserAgent;
 

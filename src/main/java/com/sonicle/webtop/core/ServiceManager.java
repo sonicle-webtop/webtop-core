@@ -45,11 +45,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -78,6 +80,7 @@ public class ServiceManager {
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
 	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap<>();
+	private final HashMap<String, String> jsPathMappings = new HashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -94,6 +97,7 @@ public class ServiceManager {
 	 */
 	public void cleanup() {
 		services.clear();
+		jsPathMappings.clear();
 	}
 	
 	private void init() {
@@ -171,7 +175,11 @@ public class ServiceManager {
 		}
 	}
 	
-	
+	public String getServiceIdByJsPath(String jsPath) {
+		jsPath = StringUtils.removeStart(jsPath, "/");
+		jsPath = StringUtils.removeEnd(jsPath, "/");
+		return jsPathMappings.get(jsPath);
+	}
 	
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
@@ -197,6 +205,7 @@ public class ServiceManager {
 			}
 			
 			services.put(serviceId, descr);
+			jsPathMappings.put(manifest.getJsPath(), serviceId);
 		}
 	}
 	

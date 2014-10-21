@@ -34,6 +34,7 @@
 
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.setting.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
@@ -184,7 +185,11 @@ public final class SettingsManager implements IServiceSettingReader {
 		
 		try {
 			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			item = new OSetting(serviceId, key, valueToString(value));
+			item = new OSetting();
+			item.setServiceId(serviceId);
+			item.setKey(key);
+			item.setValue(valueToString(value));
+			
 			int ret = dao.update(con, item);
 			if(ret == 0) ret = dao.insert(con, item);
 			return true;
@@ -212,7 +217,12 @@ public final class SettingsManager implements IServiceSettingReader {
 		
 		try {
 			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			item = new ODomainSetting(domainId, serviceId, key, valueToString(value));
+			item = new ODomainSetting();
+			item.setDomainId(domainId);
+			item.setServiceId(serviceId);
+			item.setKey(key);
+			item.setValue(valueToString(value));
+			
 			int ret = dao.update(con, item);
 			if(ret == 0) ret = dao.insert(con, item);
 			return true;
@@ -345,7 +355,13 @@ public final class SettingsManager implements IServiceSettingReader {
 		
 		try {
 			con = wta.getConnectionManager().getConnection(Manifest.ID);
-			item = new OUserSetting(domainId, userId, serviceId, key, valueToString(value));
+			item = new OUserSetting();
+			item.setDomainId(domainId);
+			item.setUserId(userId);
+			item.setServiceId(serviceId);
+			item.setKey(key);
+			item.setValue(valueToString(value));
+			
 			int ret = dao.update(con, item);
 			if(ret == 0) ret = dao.insert(con, item);
 			return true;

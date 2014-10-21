@@ -127,6 +127,15 @@ public class ConnectionManager {
 	}
 	
 	/**
+	 * Return a connection from the core pool.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection() throws SQLException {
+		return getConnection(Manifest.ID);
+	}
+	
+	/**
 	 * Returns a connection from desired pool.
 	 * @param poolName The name of the pool.
 	 * @return A ready Connection object.

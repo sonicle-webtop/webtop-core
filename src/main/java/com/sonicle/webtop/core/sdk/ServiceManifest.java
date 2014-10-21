@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -101,8 +102,20 @@ public class ServiceManifest {
 		return className;
 	}
 	
+	public String getPackageName() {
+		return LangUtils.getPackageName(className);
+	}
+	
 	public String getJsClassName() {
 		return jsClassName;
+	}
+	
+	public String getJsPackageName() {
+		return LangUtils.getPackageName(jsClassName);
+	}
+	
+	public String getJsPath() {
+		return StringUtils.lowerCase(StringUtils.replace(getJsPackageName(), ".", "/"));
 	}
 
 	public String getPublicClassName() {

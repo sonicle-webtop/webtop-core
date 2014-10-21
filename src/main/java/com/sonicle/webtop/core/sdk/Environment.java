@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.UserProfile;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import java.util.Locale;
@@ -48,13 +47,11 @@ public class Environment implements BasicEnvironment {
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
 	private final UserProfile profile;
-	private final ReadableUserAgent userAgent;
 	
-	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile, ReadableUserAgent userAgent) {
+	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile) {
 		this.wta = wta;
 		this.wts = wts;
 		this.profile = profile;
-		this.userAgent = userAgent;
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class Environment implements BasicEnvironment {
 	
 	@Override
 	public ReadableUserAgent getUserAgent() {
-		return userAgent;
+		return wts.getUserAgent();
 	}
 	
 	@Override

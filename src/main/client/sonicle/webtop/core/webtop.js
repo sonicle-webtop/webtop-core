@@ -4,5 +4,5 @@ Ext.application({
 	extend: 'Sonicle.webtop.core.Application',
 	
     appFolder: 'resources/sonicle/webtop/core',
-    autoCreateViewport: true
+	autoCreateViewport: false
 });

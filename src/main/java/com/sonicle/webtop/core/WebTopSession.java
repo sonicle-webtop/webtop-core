@@ -33,13 +33,12 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.bol.js.JsStartup;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +61,7 @@ public class WebTopSession {
 	private UserProfile profile = null;
 	private ReadableUserAgent userAgentInfo = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
-	private String theme="crisp";
+	private String theme = "crisp";
 	
 	WebTopSession(HttpSession session) {
 		wta = WebTopApp.get(session.getServletContext());
@@ -83,8 +82,9 @@ public class WebTopSession {
 	/**
 	 * Called from servlet package in order to init environment
 	 * @param request 
+	 * @throws java.lang.Exception 
 	 */
-	public synchronized void checkEnvironment(HttpServletRequest request) {
+	public synchronized void checkEnvironment(HttpServletRequest request) throws Exception {
 		if(!initialized) {
 			initializeEnvironment(request);
 		} else {
@@ -92,28 +92,23 @@ public class WebTopSession {
 		}
 	}
 	
-	public void test() {
-		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-	}
-	
-	
-	
-	
-	
-	
-	private void initializeEnvironment(HttpServletRequest request) {
+	private void initializeEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		logger.debug("Creating environment for {}", principal.getName());
 		
-		UserProfile up = new UserProfile(principal);
+		//UserDAO dao = UserDAO.getInstance();
+		//dao.selectByDomainUser(principal.getDomainId(), , theme)
+		
+		
+		UserProfile up = new UserProfile(wta, principal);
 		ReadableUserAgent uai = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
 		// Instantiates services
 		Service instance = null;
 		List<String> serviceIds = svcm.getServices();
-		//TODO: order services list
+		// TODO: order services list
 		int count = 0;
 		Environment e = null;
 		for(String serviceId : serviceIds) {
@@ -121,9 +116,9 @@ public class WebTopSession {
 			
 			// Instantiate right Environment
 			if(svcm.hasFullRights(serviceId)) {
-				e = new CoreEnvironment(wta, this, profile, userAgentInfo); 
+				e = new CoreEnvironment(wta, this, profile); 
 			} else {
-				e = new Environment(wta, this, profile, userAgentInfo);
+				e = new Environment(wta, this, profile);
 			}
 			
 			// Creates new instance
@@ -158,6 +153,26 @@ public class WebTopSession {
 		synchronized(services) {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
+	}
+	
+	/**
+	 * Gets parsed user-agent info.
+	 * @return A readable ReadableUserAgent object. 
+	 */
+	public ReadableUserAgent getUserAgent() {
+		return userAgentInfo;
+	}
+	
+	/**
+	 * Gets the user profile associated to the session.
+	 * @return The UserProfile.
+	 */
+	public UserProfile getUserProfile() {
+		return profile;
+	}
+	
+	public void test() {
+		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
 	}
 
 	public String getTheme() {

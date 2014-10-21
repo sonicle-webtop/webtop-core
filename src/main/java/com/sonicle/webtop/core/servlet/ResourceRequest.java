@@ -33,6 +33,11 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.ServiceManager;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,15 +49,20 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -71,7 +81,13 @@ public class ResourceRequest extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		lookup(req).respondGet(resp);
+		try {
+			lookup(req).respondGet(resp);
+		} catch(Exception ex) {
+			System.out.println(ex.getMessage());
+			ex.printStackTrace();
+		} 
+		
 	}
 	
 	@Override
@@ -96,166 +112,282 @@ public class ResourceRequest extends HttpServlet {
 		}
 		return r;
 	}
-
+	
 	protected LookupResult lookupNoCache(HttpServletRequest req) {
+		URL reqUrl = null;
 		
-		String path = getPath(req);
-                System.out.println("path="+path);
-		if (isForbidden(path)) {
-			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		// Builds a convenient URL for the servlet relative URL
+		try {
+			reqUrl = new URL("http://localhost"+req.getPathInfo());
+		} catch(MalformedURLException ex) {
+			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
+		
+		// Extracts path detail
+		String reqPath = reqUrl.getPath();
+		WebTopApp.logger.trace("URL path: {}", reqPath);
+		if (isForbidden(reqPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		
+		if(reqPath.equals("/com/sonicle/webtop/core/images/login.png")) {
+			return lookupLoginImage(req, reqUrl);
+			
+		} else if(reqPath.equals("/com/sonicle/webtop/core/license.html")) {
+			return lookupLicense(req, reqUrl);
 
-		URL clurl = null;
-
-		if (path.endsWith(".js") && !path.endsWith("-compressed.js")) {
-			Properties props = System.getProperties();
-			boolean wtdebug = false;
-			if (props.containsKey("com.sonicle.webtop.wtdebug")) {
-				wtdebug = true;
-			}
-			if (!wtdebug) {
-				String dpath = path.substring(0, path.length() - 3) + "-compressed.js";
-				clurl = this.getClass().getResource(dpath);
-				if (clurl != null) {
-					path = dpath;
-				}
-			}
 		} else {
-			if (path.equals("/com/sonicle/webtop/core/images/login.png")) {
-				try {
-					String host = req.getRemoteHost();
-					URL requrl = new URL(req.getRequestURL().toString());
-					System.out.println("requrl=" + requrl);
-					host = requrl.getHost();
-					System.out.println("host=" + host);
-					int ix1 = host.indexOf('.');
-					int ix2 = host.lastIndexOf('.');
-					String hdomain = "";
-					if (ix1 == ix2) {
-						hdomain = host;
-					} else {
-						hdomain = host.substring(ix1 + 1);
-					}
-					System.out.println("hdomain=" + hdomain);
-					File file = null;
-					File dfile = new File(getServletContext().getRealPath("/images/" + hdomain + ".png"));
-					if (dfile.exists()) {
-						file = dfile;
-					} else {
-						file = new File(getServletContext().getRealPath("/images/login.png"));
-					}
-					if (file.exists()) {
-						clurl = file.toURI().toURL();
-					}
-				} catch (MalformedURLException exc) {
-					exc.printStackTrace();
-				}
-			} else if (path.equals("/com/sonicle/webtop/core/license.html")) {
-				try {
-					File file = new File(getServletContext().getRealPath("/images/license.html"));
-					if (file.exists()) {
-						clurl = file.toURI().toURL();
-					}
-				} catch (MalformedURLException exc) {
-					exc.printStackTrace();
-				}
-			}
-		}
-
-		if (clurl == null) {
-			clurl = this.getClass().getResource(path);
-		}
-
-		if (clurl == null) {
-
-			//first try to switch gif to png
-			if (path.endsWith(".gif")) {
-				String oldpath = path;
-				path = path.substring(0, path.length() - 4) + ".png";
-				clurl = this.getClass().getResource(path);
-				if (clurl == null) {
-					path = oldpath;
-				}
-			}
-
-			if (clurl == null && path.startsWith("/webtop/themes/")) { //try default
-				String relpath = path.substring(15);
-				int ix = relpath.indexOf("/");
-				String reltheme = relpath.substring(ix + 1);
-				path = "/webtop/themes/win/" + reltheme;
-				clurl = this.getClass().getResource(path);
-			}
-
-			if (clurl == null) {
-				return new Error(HttpServletResponse.SC_NOT_FOUND, "Not found");
-			}
-		}
-
-		final String mimeType = getMimeType(path);
-		String prot = clurl.getProtocol();
-		String surl = clurl.toString();
-		if (prot.equals("file")) {
-			try {
-				String realpath = clurl.getPath();
-				URI realuri = clurl.toURI();
-				// Try as an ordinary file
-				File f = new File(realuri);
-				if (!f.isFile()) {
-					return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			if(StringUtils.endsWith(reqPath, ".js")) {
+				String baseName = FilenameUtils.getBaseName(reqPath);
+				if(StringUtils.startsWith(baseName, "Locale")) {
+					return lookupLocaleJs(req, reqUrl);
 				} else {
-					try {
-						return new StaticFile(surl, f.lastModified(), mimeType, (int) f.length(), acceptsDeflate(req), new FileInputStream(f));
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-						return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-					}
+					boolean debug = System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
+					debug = false;
+					return lookupJs(req, reqUrl, debug);
 				}
-			} catch (URISyntaxException uriexc) {
-				uriexc.printStackTrace();
-				return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+			} else {
+				return lookupDefault(req, reqUrl);
 			}
-		} else if (prot.equals("jar")) {
-			int ix = surl.lastIndexOf("!/");
-			if (ix < 0) {
-				return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+		//return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+	}
+	
+	private LookupResult lookupLoginImage(HttpServletRequest request, URL url) {
+		WebTopApp.logger.trace("Looking-up login image");
+		String path = url.getPath();
+		URL fileUrl = null;
+		
+		try { // TODO: rewiew this!
+			String host = request.getRemoteHost();
+			URL requrl = new URL(request.getRequestURL().toString());
+			host = requrl.getHost();
+			int ix1 = host.indexOf('.');
+			int ix2 = host.lastIndexOf('.');
+			String hdomain = "";
+			if (ix1 == ix2) {
+				hdomain = host;
+			} else {
+				hdomain = host.substring(ix1 + 1);
 			}
+			
+			File file = null;
+			File dfile = new File(getServletContext().getRealPath("/images/" + hdomain + ".png"));
+			if (dfile.exists()) {
+				file = dfile;
+			} else {
+				file = new File(getServletContext().getRealPath("/images/login.png"));
+			}
+			if (file.exists()) {
+				fileUrl = file.toURI().toURL();
+			} else {
+				fileUrl = this.getClass().getResource(path);
+			}
+			
+			LookupFile lf = getFile(fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			
+		} catch (MalformedURLException | ForbiddenException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupResult lookupLicense(HttpServletRequest request, URL reqUrl) {
+		WebTopApp.logger.trace("Looking-up license");
+		String path = reqUrl.getPath();
+		URL fileUrl = null;
+		
+		try {
+			File file = new File(getServletContext().getRealPath("/images/license.html"));
+			if (file.exists()) {
+				fileUrl = file.toURI().toURL();
+			} else {
+				fileUrl = this.getClass().getResource(path);
+			}
+			
+			LookupFile lf = getFile(fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			
+		} catch (MalformedURLException | ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupResult lookupLocaleJs(HttpServletRequest request, URL url) {
+		String path = url.getPath();
+		URL fileUrl = null;
+		
+		try {
+			String basePath = FilenameUtils.getPath(path);
+			String baseName = FilenameUtils.getBaseName(path);
+			WebTopApp.logger.trace("basePath: {} - baseName: {}", basePath, baseName);
+			String propPath = basePath + WordUtils.uncapitalize(baseName) + ".properties";
+			
+			fileUrl = this.getClass().getResource("/" + propPath);
+			if(fileUrl == null) this.getClass().getResource("/" + basePath + "locale_en_EN.properties");
+			
+			// Retrieves properties file
+			LookupFile lf = getFile(fileUrl);
+			
+			// Reverse lookup of serviceId from js path
+			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
+			String serviceId = svcm.getServiceIdByJsPath(basePath); // We don't want the preceding '/'
+			if(serviceId == null) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			
+			// Defines specific params
+			ServiceManifest manifest = svcm.getManifest(serviceId);
+			String clazz = manifest.getJsPackageName() + "." + baseName;
+			String override = manifest.getJsClassName();
+			
+			WebTopApp.logger.trace("Class: {} - Override: {}", clazz, override);
+			
+			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, acceptsDeflate(request));
+			
+		} catch (ForbiddenException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupResult lookupJs(HttpServletRequest request, URL url, boolean debug) {
+		WebTopApp.logger.trace("Looking-up js file");
+		String path = url.getPath();
+		URL fileUrl = null;
+		
+		try {
+			String dpath = null;
+			if(!debug) {
+				dpath = path.substring(0, path.length() - 3) + "-compressed.js";
+				fileUrl = this.getClass().getResource(dpath);
+			}
+			if (fileUrl != null) {
+				path = dpath;
+			} else {
+				fileUrl = this.getClass().getResource(path);
+			}
+			
+			LookupFile lf = getFile(fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+		
+		} catch (ForbiddenException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			ex.printStackTrace();
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupResult lookupDefault(HttpServletRequest request, URL url) {
+		WebTopApp.logger.trace("Looking-up file as default");
+		String path = url.getPath();
+		URL fileUrl = null;
+		
+		try {
+			fileUrl = this.getClass().getResource(path);
+			LookupFile lf = getFile(fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			
+		} catch (ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupFile getFile(URL url) throws ResourceRequest.ForbiddenException, ResourceRequest.NotFoundException, ResourceRequest.InternalServerException {
+		if(url == null) throw new ResourceRequest.NotFoundException();
+		
+		String protocol = url.getProtocol();
+		WebTopApp.logger.trace("protocol: {}", protocol);
+		if(protocol.equals("file")) {
 			try {
-				String jarfilename = java.net.URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
-				String jarentryname = surl.substring(ix + 2);
-				//System.out.println("Opening "+jarfilename+" entry "+jarentryname);
-				File file = new File(jarfilename);
-				JarFile jarfile = new JarFile(file);
-				final ZipEntry ze = jarfile.getEntry(jarentryname);
+				File file = new File(url.toURI());
+				if (!file.isFile()) throw new ResourceRequest.ForbiddenException();
+				return new LookupFile(file.lastModified(), file.length(), new FileInputStream(file));
+				
+			} catch(URISyntaxException ex) {
+				throw new ResourceRequest.InternalServerException();
+			} catch(FileNotFoundException ex) {
+				throw new ResourceRequest.NotFoundException();
+			}
+		} else if(protocol.equals("jar")) {
+			
+			try {
+				String surl = url.toString();
+				int ix = surl.lastIndexOf("!/");
+				if (ix < 0) throw new ResourceRequest.InternalServerException();
+
+				String jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
+				String jarEntryName = surl.substring(ix + 2);
+				WebTopApp.logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
+				
+				File file = new File(jarFileName);
+				JarFile jarFile = new JarFile(file);
+				final ZipEntry ze = jarFile.getEntry(jarEntryName);
+				
 				if (ze != null) {
-					if (ze.isDirectory()) {
-						return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-					} else {
-						return new StaticFile(surl, ze.getTime(), mimeType, (int) ze.getSize(), acceptsDeflate(req), jarfile.getInputStream(ze));
-					}
+					if (ze.isDirectory()) throw new ResourceRequest.ForbiddenException();
+					return new LookupFile(ze.getTime(), ze.getSize(), jarFile.getInputStream(ze));
 				} else {
-					return new StaticFile(surl, -1, mimeType, -1, acceptsDeflate(req), clurl.openStream());
+					return new LookupFile(-1, -1, url.openStream());
 				}
-			} catch (ClassCastException e) {
-				// Unknown resource type
-				try {
-					return new StaticFile(surl, -1, mimeType, -1, acceptsDeflate(req), clurl.openStream());
-				} catch (IOException exc) {
-					return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-				return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-			} catch (IOException e) {
-				e.printStackTrace();
-				return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+				
+			} catch(UnsupportedEncodingException ex) {
+				throw new ResourceRequest.InternalServerException();
+			} catch(IOException ex) {
+				throw new ResourceRequest.NotFoundException();
 			}
 		} else {
-			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			throw new ResourceRequest.InternalServerException();
 		}
-
+	}
+	
+	public class LookupFile {
+		public long lastModified;
+		public long contentLength;
+		public InputStream inputStream;
+		
+		public LookupFile(long lastModified, long contentLength, InputStream is) {
+			this.lastModified = lastModified;
+			this.contentLength = contentLength;
+			this.inputStream = is;
+		}
+	}
+	
+	public class NotFoundException extends Exception {
+		public NotFoundException() {
+			super();
+		}
+	}
+	
+	public class InternalServerException extends Exception {
+		public InternalServerException() {
+			super();
+		}
+	}
+	
+	public class ForbiddenException extends Exception {
+		public ForbiddenException() {
+			super();
+		}
 	}
 	
 	protected String getPath(HttpServletRequest req) {
@@ -326,27 +458,83 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
+	public static class LocaleJsFile extends StaticFile {
+		protected String clazz;
+		protected String override;
+		
+		public LocaleJsFile(String clazz, String override, String url, LookupFile lf, boolean acceptsDeflate) {
+			super(url, "application/javascript", lf.lastModified, -1, lf.inputStream, acceptsDeflate);
+			this.clazz = clazz;
+			this.override = override;
+		}
+		
+		@Override
+		public InputStream getInputStream() {
+			
+			// Converts properties file into an hashmap
+			HashMap<String, String> hm = new HashMap<>();
+			try {
+				Properties properties = new Properties();
+				properties.load(inputStream);
+				for (final String name: properties.stringPropertyNames()) {
+					hm.put(name, properties.getProperty(name));
+				}
+			} catch(IOException ex) {
+				
+			} finally {
+				IOUtils.closeQuietly(inputStream);
+			}
+			
+			// Builds js class structure
+			String json = buildLocaleJson(clazz, override, hm);
+			contentLength = json.getBytes().length;
+			inputStream = null;
+			return IOUtils.toInputStream(json);
+		}
+		
+		private String buildLocaleJson(String clazz, String override, HashMap<String, String> props) {
+			String strings = JsonResult.gsonWoNulls.toJson(props);
+			return "Ext.define('"
+				+ clazz
+				+ "',{"
+				+ "override:'"
+				+ override
+				+ "',strings:"
+				+ strings
+				+ "});";
+		}
+	}
+	
 	public static class StaticFile implements LookupResult {
 		protected final String url;
-		protected final long lastModified;
+		protected long lastModified;
 		protected final String mimeType;
-		protected final int contentLength;
+		protected int contentLength;
 		protected final boolean acceptsDeflate;
-		protected final InputStream is;
+		protected InputStream inputStream;
 		
-		public StaticFile(String url, long lastModified, String mimeType, int contentLength, boolean acceptsDeflate, InputStream is) {
+		public StaticFile(String url, String mimeType, LookupFile lf, boolean acceptsDeflate) {
+			this(url, mimeType, lf.lastModified, (int)lf.contentLength, lf.inputStream, acceptsDeflate);
+		}
+		
+		public StaticFile(String url, String mimeType, long lastModified, int contentLength, InputStream is, boolean acceptsDeflate) {
 			this.url = url;
 			this.lastModified = lastModified;
 			this.mimeType = mimeType;
 			this.contentLength = contentLength;
 			this.acceptsDeflate = acceptsDeflate;
-			this.is = is;
+			this.inputStream = is;
+		}
+		
+		protected InputStream getInputStream() {
+			return inputStream;
 		}
 
 		@Override
 		public void respondGet(HttpServletResponse resp) throws IOException {
 			setHeaders(resp);
 			final OutputStream os;
+			
 			if(willDeflate()) {
 				resp.setHeader("Content-Encoding", "gzip");
 				os = new GZIPOutputStream(resp.getOutputStream(), BUFFER_SIZE);
@@ -355,7 +543,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			//TODO: why this is not working
 			//IOUtils.copy(is, os);
-			transferStreams(is, os);
+			transferStreams(getInputStream(), os);
 		}
 
 		@Override

@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	activate: Ext.emptyFn,
 	
+	strings: null,
 	tb: null,
 	toolcmp: null,
 	maincmp: null,
@@ -72,6 +73,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return this.tb;
 	},
 	
+	/**
+	 * Sets the toolbar component associated to this service.
+	 * @param {Ext.Toolbar} cmp The toolbar.
+	 */
 	setToolbar: function(cmp) {
 		if(Ext.isDefined(cmp)) {
 			this.tb = cmp;
@@ -86,6 +91,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return this.toolcmp;
 	},
 	
+	/**
+	 * Sets the tool (side) component associated to this service.
+	 * @param {Ext.Component} cmp The tool component.
+	 */
 	setToolComponent: function(cmp) {
 		if(Ext.isDefined(cmp)) {
 			this.toolcmp = cmp;
@@ -100,9 +109,23 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return this.maincmp;
 	},
 	
+	/**
+	 *  Sets the main (center) component associated to this service.
+	 * @param {Ext.Component} cmp The main component.
+	 */
 	setMainComponent: function(cmp) {
 		if(Ext.isDefined(cmp)) {
 			this.maincmp = cmp;
 		}
+	},
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param {String} key The key.
+	 * @return {String} The translated string, or null if not found.
+	 */
+	res: function(key) {
+		if(!this.strings) return undefined;
+		return this.strings[key];
 	}
 });

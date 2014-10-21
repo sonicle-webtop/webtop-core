@@ -45,13 +45,17 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		build: null,
 		company: null,
 		iconCls: null,
-		className: null
+		className: null,
+		ns: null,
+		path: null
 	},
 	
 	instance: null,
 	
 	constructor: function(cfg) {
 		var me = this;
+		cfg.ns = me.guessNs(cfg.className);
+		cfg.path = me.nsToPath(cfg.ns);
 		me.initConfig(cfg);
 		me.callParent(arguments);
 	},
@@ -84,13 +88,32 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		}
 	},
 	
-	getNs: function() {
-		var cn = this.getClassName();
+	getBaseUrl: function() {
+		return Ext.String.format('resources/{0}', this.getPath());
+	},
+	
+	getResUrl: function(locale) {
+		return Ext.String.format('{0}/locale_{1}.properties', this.getBaseUrl(), locale);
+	},
+	
+	/**
+	 * @private
+	 * Guesses the namespace from a className.
+	 * @param {String} cn The service className.
+	 * @returns {String} The guessed namespace.
+	 */
+	guessNs: function(cn) {
 		var ldot = cn.lastIndexOf('.');
 		return cn.substring(0, ldot);
 	},
 	
-	getPath: function() {
-		return this.getNs().split('.').join('/').toLowerCase();
+	/**
+	 * @private
+	 * Converts a namespace to package path.
+	 * @param {String} ns The service namespace.
+	 * @returns {String} The corresponding path.
+	 */
+	nsToPath: function(ns) {
+		return ns.split('.').join('/').toLowerCase();
 	}
 });

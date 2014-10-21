@@ -44,6 +44,7 @@ public class Manifest extends ServiceManifest {
 	
 	public static final String ID = "com.sonicle.webtop.core";
 	public static final String CLASS_NAME = "com.sonicle.webtop.core.CoreService";
+	public static final String JS_CLASS_NAME = "Sonicle.webtop.core.WT";
 	public static final String VERSION = "5.0.0";
 	public static final String BUILD_DATE = "07/10/2014";
 	public static final String COMPANY = "Sonicle S.r.l.";
@@ -56,6 +57,9 @@ public class Manifest extends ServiceManifest {
 	public Manifest() {
 		id = ID;
 		className = CLASS_NAME;
+		// This is not a real js service, it's only used 
+		// to store class for client-side ovveriding purposes.
+		jsClassName = JS_CLASS_NAME;
 		version = new ServiceVersion(VERSION);
 		buildDate = BUILD_DATE;
 		company = COMPANY;

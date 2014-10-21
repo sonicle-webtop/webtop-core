@@ -32,44 +32,44 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						paddingBottom: 0
 					},
 					items: [{
-                                                    xtype: 'combo',
-                                                    fieldLabel: 'Select Theme',
-                                                    width: 300,
-                                                    store: Ext.create('Ext.data.Store', {
-                                                        fields: ['id', 'description'],
-                                                        data : [
-                                                            {"id":"aria", "description":"Aria"},
-                                                            {"id":"neptune", "description":"Neptune"},
-                                                            {"id":"classic", "description":"Classic"},
-                                                            {"id":"gray", "description":"Gray"},
-                                                            {"id":"neptune-touch", "description":"Neptune Touch"},
-                                                            {"id":"crisp", "description":"Crisp"},
-                                                            {"id":"crisp-touch", "description":"Crisp Touch"}
-                                                            //...
-                                                        ]
-                                                    }),
-                                                    queryMode: 'local',
-                                                    displayField: 'description',
-                                                    valueField: 'id',
-                                                    editable: false,
-                                                    listeners: {
-                                                        scope: this,
-                                                        'select': function(c,r,o) {
-                                                            Ext.Ajax.request({
-                                                                url: 'service-request',
-                                                                params: {
-                                                                    service: 'com.sonicle.webtop.core',
-                                                                    action: 'SetTheme',
-                                                                    theme: r[0].get('id')
-                                                                },
-                                                                success: function(r) {
-                                                                    window.location.reload();
-                                                                }
-                                                            });
-                                                        }
-                                                    }
-                                            }
-                                        ]
+							xtype: 'combo',
+							fieldLabel: 'Select Theme',
+							width: 300,
+							store: Ext.create('Ext.data.Store', {
+								fields: ['id', 'description'],
+								data: [
+									{"id": "aria", "description": "Aria"},
+									{"id": "neptune", "description": "Neptune"},
+									{"id": "classic", "description": "Classic"},
+									{"id": "gray", "description": "Gray"},
+									{"id": "neptune-touch", "description": "Neptune Touch"},
+									{"id": "crisp", "description": "Crisp"},
+									{"id": "crisp-touch", "description": "Crisp Touch"}
+									//...
+								]
+							}),
+							queryMode: 'local',
+							displayField: 'description',
+							valueField: 'id',
+							editable: false,
+							listeners: {
+								scope: this,
+								'select': function (c, r, o) {
+									Ext.Ajax.request({
+										url: 'service-request',
+										params: {
+											service: 'com.sonicle.webtop.core',
+											action: 'SetTheme',
+											theme: r[0].get('id')
+										},
+										success: function (r) {
+											window.location.reload();
+										}
+									});
+								}
+							}
+						}
+					]
 				}, {
 					xtype: 'container',
 					region: 'center',
@@ -105,15 +105,15 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 										},
 										items: [{
 												itemId: 'feedback',
-												tooltip: 'Feedback',
+												tooltip: WT.res('menu.feedback.tip'),
 												glyph: 0xf1d8
 											}, {
 												itemId: 'whatsnew',
-												tooltip: 'novità',
+												tooltip: WT.res('menu.whatsnew.tip'),
 												glyph: 0xf0eb
 											}, {
 												itemId: 'settings',
-												tooltip: 'Impostazioni',
+												tooltip: WT.res('menu.settings.tip'),
 												glyph: 0xf013
 											}, {
 												xtype: 'container'
@@ -121,7 +121,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 												itemId: 'logout',
 												colspan: 2,
 												scale: 'small',
-												tooltip: 'Esci',
+												tooltip: WT.res('menu.logout.tip'),
 												glyph: 0xf011
 											}
 										]

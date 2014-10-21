@@ -33,9 +33,9 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.AdvancedEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
-import net.sf.uadetector.ReadableUserAgent;
 
 /**
  *
@@ -43,8 +43,8 @@ import net.sf.uadetector.ReadableUserAgent;
  */
 class CoreEnvironment extends Environment implements AdvancedEnvironment {
 
-	public CoreEnvironment(WebTopApp wta, WebTopSession wts, UserProfile profile, ReadableUserAgent userAgent) {
-		super(wta, wts, profile, userAgent);
+	public CoreEnvironment(WebTopApp wta, WebTopSession wts, UserProfile profile) {
+		super(wta, wts, profile);
 	}
 
 	@Override

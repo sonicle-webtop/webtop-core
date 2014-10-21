@@ -31,27 +31,58 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.dal.UserDAO;
+import java.text.MessageFormat;
+import java.util.Locale;
 
 /**
  *
  * @author malbinola
  */
-public class UserProfile {
+public final class UserProfile {
 	
+	private final WebTopApp wta;
 	private final Principal principal;
+	private OUser user;
 	
-	public UserProfile(Principal principal) {
+	public UserProfile(WebTopApp wta, Principal principal) {
+		this.wta = wta;
 		this.principal = principal;
+		initialize();
+	}
+	
+	private void initialize() {
+		
+		// TODO: complete this!
+		//UserDAO udao = UserDAO.getInstance();
+		//udao.selectByDomainUser(wta.getConnectionManager().getConnection(), null, null);
+	}
+	
+	public String getId() {
+		return principal.getName();
 	}
 	
 	public String getUserId() {
-		return principal.getName();
+		return principal.getUserId();
 	}
 	
 	public String getDomainId() {
 		return principal.getDomainId();
+	}
+	
+	public String getMailcardId() {
+		AuthenticationDomain ad = principal.getAuthenticationDomain();
+		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getDomain());
+	}
+	
+	public Locale getLocale() {
+		return new Locale("it_IT");
+		//return new Locale(user.getLocale());
 	}
 }

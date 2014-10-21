@@ -3,17 +3,24 @@ Ext.define('Sonicle.webtop.core.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
 		'Sonicle.webtop.core.WT',
+		//'Sonicle.webtop.core.Locale_it_IT',
+		'Sonicle.webtop.core.Locale_'+WTStartup.locale,
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ServiceDescriptor'
+	],
+	views: [
+		'Sonicle.webtop.core.view.Viewport'
 	],
 	refs: {
 		viewport: 'viewport'
 	},
 	
+	queue: null,
 	services: null,
 	
 	constructor: function(cfg) {
 		var me = this;
+		me.queue = [];
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);
 	},
@@ -23,46 +30,109 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.Log.debug('application:init');
 		Ext.setGlyphFontFamily('FontAwesome');
 		
-		// Load services defined in startup
-		Ext.each(WTStartup.services, function(svc) {
-			me.addService(svc);
-		});
+		// Loads service descriptors from startup object
+		// and defines a loading queue
+		me.queue = me.loadDescriptors().reverse();
+		
+		// Launch loading process...
+		me.loadServices();
 	},
 	
-	launch: function () {
+	buildUI: function() {
 		var me = this;
-		WT.Log.debug('application:launch');
+		WT.Log.debug('application:buildUI');
+		// Creates main viewport
+		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
 		
 		// Inits loaded services and activate the default one
 		me.services.each(function(desc,i) {
 			desc.initService();
-			if(i == 0) me.activateService(desc.getId());
+			if(i === 0) me.activateService(desc.getId());
 		});
 	},
 	
-	/*
+	/**
+	 * Loads services configuration from the startup object
+	 * defining a list of service descriptors.
+	 * @private
+	 * @returns {Array} Array of descriptors.
+	 */
+	loadDescriptors: function() {
+		var obj = null, arr = [];
+		Ext.each(WTStartup.services, function(cfg) {
+			obj = Ext.create('WT.ServiceDescriptor', {
+				id: cfg.id,
+				name: cfg.name,
+				description: cfg.description,
+				version: cfg.version,
+				build: cfg.build,
+				company: cfg.company,
+				//iconCls: null,
+				className: cfg.className
+			});
+			arr.push(obj);
+		}, this);
+		return arr;
+	},
+	
+	/**
+	 * Starts the loading process using the previously defined queue.
 	 * @private
 	 */
-	addService: function(cfg) {
-		var desc = Ext.create('WT.ServiceDescriptor', {
-			id: cfg.id,
-			name: cfg.name,
-			description: cfg.description,
-			version: cfg.version,
-			build: cfg.build,
-			company: cfg.company,
-			//iconCls: null,
-			className: cfg.className
-		});
-		var ns = desc.getNs();
-		var path = 'resources/'+desc.getPath();
-		Ext.Loader.setPath(ns, path);
-		WT.Log.debug('Added loader path [{0}, {1}]', ns, path);
-		this.services.add(desc);
+	loadServices: function() {
+		var me = this;
+		if(me.queue.length === 0) { // Queue is empty!
+			me.buildUI();
+		} else { // Queue contains elements...
+			// Pops and loads the last descriptor
+			var desc = me.queue.pop();
+			me.loadServicesWorker(desc);
+		}
 	},
 	
-	getService: function(svcId) {
-		var desc = this.getDescriptor(svcId);
+	/**
+	 * This is the async loading worker function.
+	 * It tries to load service resources and on success it
+	 * stores current descriptor into service collection.
+	 * @private
+	 * @param {WT.core.ServiceDescriptor} desc The service descriptor.
+	 */
+	loadServicesWorker: function(desc) {
+		console.log('loadServicesWorker');
+		var me = this, urls = [];
+		
+		// Register service paths into Ext classloader
+		Ext.Loader.setPath(desc.getNs(), desc.getBaseUrl());
+		
+		// Defines urls to load
+		urls.push(Ext.Loader.getPath(desc.getClassName()));
+		urls.push(Ext.Loader.getPath(desc.getNs()+'.Locale_it_IT'));
+		
+		// Launch loader...
+		console.log(urls);
+		Ext.Loader.loadScript({
+			url: urls,
+			onLoad: function() {
+				console.log('service loaded '+desc.getId());
+				me.services.add(desc);
+				me.loadServices();
+			},
+			onError: function() {
+				console.log('Error loading service '+desc.getId());
+				me.loadServices();
+			},
+			scope: me
+		});
+	},
+	
+	/**
+	 * Returns a service instance.
+	 * @param {String} svc The service id.
+	 * @returns {WT.sdk.Service} The instance or null if the instance
+	 * was not found. 
+	 */
+	getService: function(svc) {
+		var desc = this.getDescriptor(svc);
 		return (desc) ? desc.getInstance() : null;
 	},
 	
