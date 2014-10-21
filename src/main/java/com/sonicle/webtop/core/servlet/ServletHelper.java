@@ -113,6 +113,10 @@ public class ServletHelper {
 		return request.getHeader("user-agent");
 	}
 	
+	public static String getReferer(HttpServletRequest request) {
+		return request.getHeader("referer");
+	}
+	
 	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
 		ServiceManifest manifest = wta.getServiceManager().getManifest(Manifest.ID);
 		String title = wta.getCustomProperty("webtop.title");

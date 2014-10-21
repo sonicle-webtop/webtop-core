@@ -61,6 +61,7 @@ public class WebTopSession {
 	private boolean initialized = false;
 	private UserProfile profile = null;
 	private Locale locale = null;
+	private String refererURI = null;
 	private ReadableUserAgent userAgentInfo = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
 	private String theme = "crisp";
@@ -105,6 +106,7 @@ public class WebTopSession {
 		
 		
 		UserProfile up = new UserProfile(wta, principal);
+		String referer = ServletHelper.getReferer(request);
 		Locale requestLocale = ServletHelper.homogenizeLocale(request);
 		ReadableUserAgent uai = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
@@ -134,6 +136,7 @@ public class WebTopSession {
 		logger.debug("Instantiated {} services", count);
 		profile = up;
 		locale = requestLocale;
+		refererURI = referer;
 		userAgentInfo = uai;
 		initialized = true;
 	}
@@ -187,6 +190,10 @@ public class WebTopSession {
 		} else {
 			return locale;
 		}
+	}
+	
+	public String getRefererURI() {
+		return refererURI;
 	}
 
 	public String getTheme() {
