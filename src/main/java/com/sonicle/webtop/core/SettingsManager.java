@@ -36,15 +36,16 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.setting.IServiceSettingReader;
+import com.sonicle.webtop.core.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.interfaces.IServiceSettingManager;
+import com.sonicle.webtop.core.interfaces.IUserSettingManager;
 import java.sql.Connection;
-import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public final class SettingsManager implements IServiceSettingReader {
+public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager {
 	
 	private static final Logger logger = WebTopApp.getLogger(SettingsManager.class);
 	private static boolean initialized = false;
@@ -148,7 +149,6 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
-	@Override
 	public String getServiceSetting(String serviceId, String key) {
 		return getSetting(serviceId, key);
 	}
@@ -274,6 +274,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
+	@Override
 	public String getUserSetting(String domainId, String userId, String serviceId, String key) {
 		String value = getSetting(domainId, userId, serviceId, key);
 		if(value != null) return value;
@@ -288,6 +289,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
+	@Override
 	public String getUserSetting(UserProfile userProfile, String serviceId, String key) {
 		return getUserSetting(userProfile.getDomainId(), serviceId, userProfile.getUserId(), key);
 	}
@@ -299,6 +301,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting. (treated as LIKE query)
 	 * @return List of settings.
 	 */
+	@Override
 	public List<OUserSetting> getUserSettings(UserProfile userProfile, String serviceId, String key) {
 		return getUserSettings(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
 	}
@@ -311,6 +314,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting. (treated as LIKE query)
 	 * @return List of setting values.
 	 */
+	@Override
 	public List<OUserSetting> getUserSettings(String domainId, String userId, String serviceId, String key) {
 		UserSettingDAO dao = UserSettingDAO.getInstance();
 		Connection con = null;
@@ -335,6 +339,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
+	@Override
 	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value) {
 		return setUserSetting(userProfile.getDomainId(), serviceId, userProfile.getUserId(), key, value);
 	}
@@ -348,6 +353,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
+	@Override
 	public boolean setUserSetting(String domainId, String userId, String serviceId, String key, Object value) {
 		UserSettingDAO dao = UserSettingDAO.getInstance();
 		Connection con = null;
@@ -381,6 +387,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
+	@Override
 	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key) {
 		return deleteUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
 	}
@@ -393,6 +400,7 @@ public final class SettingsManager implements IServiceSettingReader {
 	 * @param key The name of the setting.
 	 * @return True if setting was succesfully deleted, otherwise false.
 	 */
+	@Override
 	public boolean deleteUserSetting(String domainId, String userId, String serviceId, String key) {
 		UserSettingDAO dao = UserSettingDAO.getInstance();
 		Connection con = null;

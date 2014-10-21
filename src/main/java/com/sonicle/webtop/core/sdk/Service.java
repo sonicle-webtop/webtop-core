@@ -72,10 +72,20 @@ public abstract class Service {
 		return (AdvancedEnvironment)env;
 	}
 	
+	/**
+	 * Returns the localized name.
+	 * @param locale The requested locale.
+	 * @return The localized string.
+	 */
 	public String getName(Locale locale) {
 		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_NAME);
 	}
 	
+	/**
+	 * Returns the localized description.
+	 * @param locale The requested locale.
+	 * @return The localized string.
+	 */
 	public String getDescription(Locale locale) {
 		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
@@ -107,15 +117,23 @@ public abstract class Service {
 		WebTopApp.unsetServiceCustomLoggerDC();
 	}
     
-    /**
-     * Facilitate resource lookup
-     */
-    public String lookupResource(UserProfile profile, String key) {
-        return env.lookupResource(manifest.id, profile.getLocale(), key);
-    }
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param key The resource key.
+	 * @return The translated string, or null if not found.
+	 */
+	public String lookupResource(String key) {
+		return env.lookupResource(manifest.id, env.getProfile().getLocale(), key);
+	}
     
-    public String lookupResource(UserProfile profile, String key, boolean escapeHtml) {
-        return env.lookupResource(manifest.id, profile.getLocale(), key, escapeHtml);
-    }
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param key The resource key.
+	 * @param escapeHtml True to apply HTML escaping.
+	 * @return The translated string, or null if not found.
+	 */
+	public String lookupResource(String key, boolean escapeHtml) {
+		return env.lookupResource(manifest.id, env.getProfile().getLocale(), key, escapeHtml);
+	}
     
 }

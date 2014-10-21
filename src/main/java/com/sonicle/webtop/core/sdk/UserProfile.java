@@ -39,6 +39,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -59,6 +60,7 @@ public final class UserProfile {
 	private final WebTopApp wta;
 	private final Principal principal;
 	private OUser user;
+	private UserData userData;
 	private Locale locale;
 	
 	public UserProfile(WebTopApp wta, Principal principal) {
@@ -68,6 +70,7 @@ public final class UserProfile {
 		try {
 			initialize();
 		} catch(Throwable t) {
+			logger.error("Unable to initialize UserProfile", t);
 			//throw new Exception("Unable to initialize UserProfile", t);
 		}
 	}
@@ -97,6 +100,11 @@ public final class UserProfile {
 				user.setSecret(secret);
 				udao.updateSecretByDomainUser(con, user.getDomainId(), user.getUserId(), secret);
 			}
+			
+			// Retrieves user-data info
+			UserDataProviderBase udp = wta.getUserDataProvider(user.getDomainId());
+			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
+			if(ud != null) userData = ud;
 			
 		} catch(Exception ex) {
 			DbUtils.closeQuietly(con);

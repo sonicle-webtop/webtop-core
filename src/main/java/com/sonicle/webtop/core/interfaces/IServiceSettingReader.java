@@ -4,14 +4,13 @@
  * and open the template in the editor.
  */
 
-package com.sonicle.webtop.core.setting;
+package com.sonicle.webtop.core.interfaces;
 
 /**
  *
- * @author matteo
+ * @author malbinola
  */
 public interface IServiceSettingReader {
 	
-	public String getServiceSetting(String serviceId, String key);
 	public String getServiceSetting(String domainId, String serviceId, String key);
 }
