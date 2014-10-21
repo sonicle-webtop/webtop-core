@@ -106,4 +106,16 @@ public abstract class Service {
 	public static void clearLoggerDC() {
 		WebTopApp.unsetServiceCustomLoggerDC();
 	}
+    
+    /**
+     * Facilitate resource lookup
+     */
+    public String lookupResource(UserProfile profile, String key) {
+        return env.lookupResource(manifest.id, profile.getLocale(), key);
+    }
+    
+    public String lookupResource(UserProfile profile, String key, boolean escapeHtml) {
+        return env.lookupResource(manifest.id, profile.getLocale(), key, escapeHtml);
+    }
+    
 }

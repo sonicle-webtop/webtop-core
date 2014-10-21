@@ -6,14 +6,14 @@
 
 package com.sonicle.webtop.core;
 
-import com.sonicle.commons.LangUtils;
-import java.util.Locale;
+
+import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 
 /**
  *
  * @author matteo
  */
-public class Settings {
+public class CoreServiceSettings extends BaseServiceSettings {
 	
 	
 	public static final String MAINTENANCE = "maintenance";

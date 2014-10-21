@@ -137,4 +137,19 @@ public final class UserProfile {
 		byte[] encodedKey = new Base32().encode(secretKey);
 		return new String(encodedKey);
 	}
+    
+    public boolean hasDocumentManagement() {
+        // TODO: setting for document management
+        return false;
+    }
+    
+    public boolean hasStructuredArchiving() {
+        // TODO: setting for document management
+        return false;
+    }
+    
+    public String getDocumentManagementFolder() {
+        // TODO: setting for document management
+        return null;
+    }
 }

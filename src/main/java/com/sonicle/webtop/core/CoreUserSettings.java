@@ -33,11 +33,13 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.sdk.BaseUserSettings;
+
 /**
  *
  * @author malbinola
  */
-public class UserSettings {
+public class CoreUserSettings extends BaseUserSettings {
 	
 	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	//public static final String WHATSNEW_VERSION = "whatsnew.version";

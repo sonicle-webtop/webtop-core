@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
@@ -56,11 +58,15 @@ public class Environment implements BasicEnvironment {
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
 	private final UserProfile profile;
+    private final CoreServiceSettings css;
+    private final CoreUserSettings cus;
 	
 	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile) {
 		this.wta = wta;
 		this.wts = wts;
 		this.profile = profile;
+        this.css=new CoreServiceSettings();
+        this.cus=new CoreUserSettings();
 	}
 
 	@Override
@@ -83,45 +89,24 @@ public class Environment implements BasicEnvironment {
 		return wta.lookupResource(serviceId, locale, key, escapeHtml);
 	}
 
-	@Override
-	public Principal getPrincipal(String domainId, String mailUserId) {
-/*        Connection con=null;
-        String iddomain=wtd.getLocalIDDomain();
-        String dlogin=mailusername;
-        String dname=mailusername;
-        AuthenticationDomain ad=getAuthenticationDomain(iddomain);
-        try {
-            con=getMainConnection();
-            stmt=con.createStatement();
-            rs=stmt.executeQuery("select login,username from users where iddomain='"+iddomain+"' and mailusername='"+mailusername+"'");
-            if (rs.next()) {
-                dlogin=rs.getString("login");
-                dname=rs.getString("username");
-            }
-            else if (wtd.isLdap()) {
-                rs.close();
-                rs=stmt.executeQuery("select login,username from users where iddomain='"+iddomain+"' and login='"+mailusername+"'");
-                if (rs.next()) {
-                    dlogin=rs.getString("login");
-                    dname=rs.getString("username");
-                }
-            }
-        } catch(SQLException exc) {
-            exc.printStackTrace();
-        } finally {
-            if (rs!=null) try { rs.close(); } catch(Exception exc) {}
-            if (stmt!=null) try { stmt.close(); } catch(Exception exc) {}
-            if (con!=null) try { con.close(); } catch(Exception exc) {}
-        }
-        com.sonicle.security.acl.Principal p=new com.sonicle.security.acl.Principal(dlogin,ad,dname);*/
-		Principal p=null;
-		try {
-			Connection con=wta.getConnectionManager().getConnection(Manifest.ID);
-			p=new Principal(mailUserId,AuthenticationDomain.getInstance(con, domainId),mailUserId);
-		} catch(SQLException exc) {
-			logger.error("Error instantiating AuthenticationDomain for {}",domainId,exc);
-		}		
-        return p;
-	}
+    @Override
+    public String getSessionRefererUri() {
+        return wts.getRefererURI();
+    }
+
+    @Override
+    public Connection getCoreConnection() throws SQLException {
+        return wta.getConnectionManager().getConnection();
+    }
+
+    @Override
+    public CoreServiceSettings getCoreServiceSettings() {
+        return css;
+    }
+
+    @Override
+    public CoreUserSettings getCoreUserSettings() {
+        return cus;
+    }
 
 }
