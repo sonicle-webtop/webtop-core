@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
 
@@ -43,16 +44,30 @@ import com.sonicle.webtop.core.WebTopApp;
 public abstract class BaseUserSettings {
     
     private SettingsManager sm;
+    protected String serviceId;
+    protected String domainId;
+    protected String userId;
     
-    public BaseUserSettings() {
+    private BaseUserSettings() {
+        
+    }
+    
+    public BaseUserSettings(String domainId, String userId, String serviceId) {
         this.sm=WebTopApp.getInstance().getSettingsManager();
+        this.domainId=domainId;
+        this.userId=userId;
+        this.serviceId=serviceId;
     }
     
-    public String getUserSetting(String domainId, String userId, String serviceId, String key) {
-        return sm.getUserSetting(domainId, userId, serviceId, key);
+    public String getUserSetting(String key, String defaultValue) {
+        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
     }
     
-    public String getUserSetting(UserProfile profile, String serviceId, String key) {
-        return sm.getUserSetting(profile, serviceId, key);
+    public int getUserSetting(String key, int defaultValue) {
+        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
+    }
+    
+    public boolean getUserSetting(String key, boolean defaultValue) {
+        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
     }
 }

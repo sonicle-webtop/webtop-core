@@ -33,8 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.security.AuthenticationDomain;
-import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.Manifest;
@@ -43,6 +41,7 @@ import com.sonicle.webtop.core.WebTopSession;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Locale;
+import javax.sql.DataSource;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +64,8 @@ public class Environment implements BasicEnvironment {
 		this.wta = wta;
 		this.wts = wts;
 		this.profile = profile;
-        this.css=new CoreServiceSettings();
-        this.cus=new CoreUserSettings();
+        this.css=new CoreServiceSettings(profile.getDomainId(),Manifest.ID);
+        this.cus=new CoreUserSettings(profile.getDomainId(),profile.getUserId(),Manifest.ID);
 	}
 
 	@Override

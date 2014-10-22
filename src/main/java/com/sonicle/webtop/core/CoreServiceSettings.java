@@ -15,7 +15,12 @@ import com.sonicle.webtop.core.sdk.BaseServiceSettings;
  */
 public class CoreServiceSettings extends BaseServiceSettings {
 	
-	
+
+    public CoreServiceSettings(String domainId, String serviceId) {
+        super(domainId,serviceId);
+    }
+    
+
 	public static final String MAINTENANCE = "maintenance";
 	public static final String MANIFEST_VERSION = "manifest.version";
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";

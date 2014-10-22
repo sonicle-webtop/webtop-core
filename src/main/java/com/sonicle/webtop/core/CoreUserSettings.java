@@ -41,6 +41,10 @@ import com.sonicle.webtop.core.sdk.BaseUserSettings;
  */
 public class CoreUserSettings extends BaseUserSettings {
 	
+    public CoreUserSettings(String domainId, String userId, String serviceId) {
+        super(domainId, userId, serviceId);
+    }
+    
 	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	//public static final String WHATSNEW_VERSION = "whatsnew.version";
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";

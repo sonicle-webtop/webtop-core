@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.WebTopApp;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +108,11 @@ public abstract class Service {
 	public static void clearLoggerDC() {
 		WebTopApp.unsetServiceCustomLoggerDC();
 	}
+    
+    // TODO: get custom service connection
+    public Connection getConnection() throws SQLException {
+        return env.getCoreConnection();
+    }
     
     /**
      * Facilitate resource lookup
