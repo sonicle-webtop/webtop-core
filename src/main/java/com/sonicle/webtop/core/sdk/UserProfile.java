@@ -161,4 +161,17 @@ public final class UserProfile {
         // TODO: setting for document management
         return null;
     }
+	
+	public String getEmailAddress() {
+		return userData.email;
+	}
+	
+	public String getDisplayName() {
+		return userData.firstName+" "+userData.lastName;
+	}
+	
+	public String getCompleteEmailAddress() {
+		return getDisplayName()+" <"+getEmailAddress()+">";
+	}
+	
 }

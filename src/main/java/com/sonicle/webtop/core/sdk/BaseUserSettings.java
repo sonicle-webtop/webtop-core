@@ -59,6 +59,10 @@ public abstract class BaseUserSettings {
         this.serviceId=serviceId;
     }
     
+    public String getUserSetting(String key) {
+        return sm.getUserSetting(domainId, userId, serviceId, key);
+    }
+	
     public String getUserSetting(String key, String defaultValue) {
         return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
     }
