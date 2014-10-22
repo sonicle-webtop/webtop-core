@@ -57,14 +57,15 @@ import org.slf4j.Logger;
 public final class UserProfile {
 	
 	private static final Logger logger = WebTopApp.getLogger(UserProfile.class);
-	private final WebTopApp wta;
+	//private final WebTopApp wta;
+	private final FullEnvironment fullEnv;
 	private final Principal principal;
 	private OUser user;
 	private UserData userData;
 	private Locale locale;
 	
-	public UserProfile(WebTopApp wta, Principal principal) {
-		this.wta = wta;
+	public UserProfile(FullEnvironment fullEnv, Principal principal) {
+		this.fullEnv = fullEnv;
 		this.principal = principal;
 		
 		try {
@@ -80,7 +81,7 @@ public final class UserProfile {
 		
 		try {
 			logger.debug("Initializing UserProfile");
-			con = wta.getConnectionManager().getConnection();
+			con = fullEnv.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
 			
 			// Retrieves corresponding user using principal details
@@ -102,7 +103,7 @@ public final class UserProfile {
 			}
 			
 			// Retrieves user-data info
-			UserDataProviderBase udp = wta.getUserDataProvider(user.getDomainId());
+			UserDataProviderBase udp = fullEnv.getUserDataProvider();
 			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
 			if(ud != null) userData = ud;
 			

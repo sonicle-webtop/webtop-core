@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.webtop.core.sdk.InsufficientRightsException;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.Service;
@@ -137,7 +138,7 @@ public class ServiceManager {
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
-	public Service instantiateService(String serviceId, Environment environment) {
+	public Service instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
 		ServiceDescriptor descr = getService(serviceId);
 		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
 		
@@ -149,12 +150,14 @@ public class ServiceManager {
 			logger.error("Error instantiating service [{}]", descr.getManifest().getClassName(), ex);
 			return null;
 		}
-		instance.configure(descr.getManifest(), environment);
+		instance.configure(descr.getManifest(), basicEnv, fullEnv);
 		
 		// Calls initialization method
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
-			instance.initialize(environment);
+			instance.initialize();
+		} catch(InsufficientRightsException ex) {
+			/* Do nothing... */
 		} catch(Exception ex) {
 			logger.error("Initialization method returns errors", ex);
 		} finally {

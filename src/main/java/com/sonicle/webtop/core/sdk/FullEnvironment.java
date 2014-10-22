@@ -31,27 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.sdk;
+
+import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 
 /**
  *
  * @author malbinola
  */
-public class WebTopException extends Exception {
+public interface FullEnvironment extends BasicEnvironment {
 	
-	public WebTopException() {
-		super();
-	}
-	
-	public WebTopException(String message) {
-		super(message);
-	}
-	
-	public WebTopException(Throwable cause) {
-		super(cause);
-	}
-	
-	public WebTopException(String message, Throwable cause) {
-		super(message, cause);
-	}
+	public WebTopSession getSession();
+	public UserDataProviderBase getUserDataProvider() throws WTException;
 }

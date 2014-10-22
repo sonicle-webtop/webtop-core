@@ -33,13 +33,17 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.WebTopSession;
-
 /**
  *
  * @author malbinola
  */
-public interface AdvancedEnvironment extends BasicEnvironment {
+public class InsufficientRightsException extends WTRuntimeException {
 	
-	public WebTopSession getSession();
+	public InsufficientRightsException(String message, Object... arguments) {
+		super(message, arguments);
+	}
+	
+	public InsufficientRightsException(Throwable cause, String message, Object... arguments) {
+		super(cause, message, arguments);
+	}
 }

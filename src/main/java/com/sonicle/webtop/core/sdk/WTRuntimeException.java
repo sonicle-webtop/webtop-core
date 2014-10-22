@@ -31,32 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.sdk.FullEnvironment;
-import com.sonicle.webtop.core.sdk.Environment;
-import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
-import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
+import java.text.MessageFormat;
 
 /**
  *
  * @author malbinola
  */
-public class CoreEnvironment extends Environment implements FullEnvironment {
-
-	public CoreEnvironment(WebTopApp wta, WebTopSession wts) {
-		super(wta, wts);
-	}
-
-	@Override
-	public WebTopSession getSession() {
-		return wts;
+public class WTRuntimeException extends RuntimeException {
+	
+	public WTRuntimeException(String message, Object... arguments) {
+		super(MessageFormat.format(message, arguments));
 	}
 	
-	@Override
-	public UserDataProviderBase getUserDataProvider() throws WTException {
-		String providerName = getCoreServiceSettings().getUserDataProvider();
-		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
+	public WTRuntimeException(Throwable cause, String message, Object... arguments) {
+		super(MessageFormat.format(message, arguments), cause);
 	}
 }

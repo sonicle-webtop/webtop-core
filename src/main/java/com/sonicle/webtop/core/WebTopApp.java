@@ -200,12 +200,6 @@ public class WebTopApp {
 		return new CoreManager(this);
 	}
 	
-	public UserDataProviderBase getUserDataProvider(String domainId) throws Exception {
-		SettingsManager sm = getSettingsManager();
-		String providerName = LangUtils.value(sm.getServiceSetting(domainId, Manifest.ID, CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
-		return UserDataProviderFactory.getProvider(providerName, getConnectionManager(), sm);
-	}
-	
 	public String lookupResource(Locale locale, String key) {
 		return lookupResource(Manifest.ID, locale, key, false);
 	}

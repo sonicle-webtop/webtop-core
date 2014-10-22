@@ -35,13 +35,13 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Locale;
-import javax.sql.DataSource;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,59 +53,52 @@ import org.slf4j.LoggerFactory;
 public class Environment implements BasicEnvironment {
 
 	public final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
-	
+
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
-	private final UserProfile profile;
-    private final CoreServiceSettings css;
-    private final CoreUserSettings cus;
-	
-	public Environment(WebTopApp wta, WebTopSession wts, UserProfile profile) {
+
+	public Environment(WebTopApp wta, WebTopSession wts) {
 		this.wta = wta;
 		this.wts = wts;
-		this.profile = profile;
-        this.css=new CoreServiceSettings(profile.getDomainId(),Manifest.ID);
-        this.cus=new CoreUserSettings(profile.getDomainId(),profile.getUserId(),Manifest.ID);
 	}
 
 	@Override
 	public UserProfile getProfile() {
-		return profile;
+		return wts.getUserProfile();
 	}
-	
+
 	@Override
 	public ReadableUserAgent getUserAgent() {
 		return wts.getUserAgent();
 	}
-	
+
 	@Override
 	public String lookupResource(String serviceId, Locale locale, String key) {
 		return wta.lookupResource(serviceId, locale, key);
 	}
-	
+
 	@Override
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		return wta.lookupResource(serviceId, locale, key, escapeHtml);
 	}
 
-    @Override
-    public String getSessionRefererUri() {
-        return wts.getRefererURI();
-    }
+	@Override
+	public String getSessionRefererUri() {
+		return wts.getRefererURI();
+	}
 
-    @Override
-    public Connection getCoreConnection() throws SQLException {
-        return wta.getConnectionManager().getConnection();
-    }
+	@Override
+	public Connection getCoreConnection() throws SQLException {
+		return wta.getConnectionManager().getConnection();
+	}
 
-    @Override
-    public CoreServiceSettings getCoreServiceSettings() {
-        return css;
-    }
+	@Override
+	public CoreServiceSettings getCoreServiceSettings() {
+		return wts.getCoreServiceSettings();
+	}
 
-    @Override
-    public CoreUserSettings getCoreUserSettings() {
-        return cus;
-    }
-
+	@Override
+	public CoreUserSettings getCoreUserSettings() {
+		return wts.getCoreUserSettings();
+	}
 }

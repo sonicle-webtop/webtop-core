@@ -35,6 +35,8 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.sdk.FullEnvironment;
+import com.sonicle.webtop.core.sdk.BasicEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.servlet.ServletHelper;
@@ -63,6 +65,10 @@ public class WebTopSession {
 	private Locale locale = null;
 	private String refererURI = null;
 	private ReadableUserAgent userAgentInfo = null;
+	private CoreServiceSettings coreServiceSettings = null;
+	private CoreUserSettings coreUserSettings = null;
+	private Environment basicEnv = null;
+	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
 	private String theme = "crisp";
 	
@@ -101,43 +107,37 @@ public class WebTopSession {
 		
 		logger.debug("Creating environment for {}", principal.getName());
 		
-		//UserDAO dao = UserDAO.getInstance();
-		//dao.selectByDomainUser(principal.getDomainId(), , theme)
+		refererURI = ServletHelper.getReferer(request);
+		locale = ServletHelper.homogenizeLocale(request);
+		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
-		
-		UserProfile up = new UserProfile(wta, principal);
-		String referer = ServletHelper.getReferer(request);
-		Locale requestLocale = ServletHelper.homogenizeLocale(request);
-		ReadableUserAgent uai = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
+		// Defines useful instances (NB: keep new order)
+		coreServiceSettings = new CoreServiceSettings(principal.getDomainId(), Manifest.ID);
+		coreUserSettings = new CoreUserSettings(principal.getDomainId(), principal.getUserId(), Manifest.ID);
+		basicEnv = new Environment(wta, this);
+		fullEnv = new CoreEnvironment(wta, this);
+		profile = new UserProfile(fullEnv, principal);
 		
 		// Instantiates services
 		Service instance = null;
 		List<String> serviceIds = svcm.getServices();
 		// TODO: order services list
 		int count = 0;
-		Environment e = null;
 		for(String serviceId : serviceIds) {
 			//TODO: check if service is allowed for user
-			
-			// Instantiate right Environment
-			if(svcm.hasFullRights(serviceId)) {
-				e = new CoreEnvironment(wta, this, profile); 
-			} else {
-				e = new Environment(wta, this, profile);
-			}
-			
 			// Creates new instance
-			instance = svcm.instantiateService(serviceId, e);
+			if(svcm.hasFullRights(serviceId)) {
+				instance = svcm.instantiateService(serviceId, basicEnv, fullEnv);
+			} else {
+				instance = svcm.instantiateService(serviceId, basicEnv, null);
+			}
 			if(instance != null) {
 				addService(instance);
 				count++;
 			}
 		}
+		
 		logger.debug("Instantiated {} services", count);
-		profile = up;
-		locale = requestLocale;
-		refererURI = referer;
-		userAgentInfo = uai;
 		initialized = true;
 	}
 	
@@ -190,6 +190,13 @@ public class WebTopSession {
 		} else {
 			return locale;
 		}
+	}
+	public CoreServiceSettings getCoreServiceSettings() {
+		return coreServiceSettings;
+	}
+	
+	public CoreUserSettings getCoreUserSettings() {
+		return coreUserSettings;
 	}
 	
 	public String getRefererURI() {

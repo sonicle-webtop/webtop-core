@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -51,27 +52,30 @@ public abstract class Service {
 	private boolean configured = false;
 	private ServiceManifest manifest;
 	private Environment env;
+	private CoreEnvironment coreEnv;
 	
-	public abstract void initialize(Environment api);
+	public abstract void initialize();
 	public abstract void cleanup();
 	
-	public final void configure(ServiceManifest manifest, Environment env) {
+	public final void configure(ServiceManifest manifest, Environment env, CoreEnvironment coreEnv) {
 		if(configured) return;
 		configured = true;
 		this.manifest = manifest;
 		this.env = env;
+		this.coreEnv = coreEnv;
 	}
 	
 	public ServiceManifest getManifest() {
 		return manifest;
 	}
 	
-	public Environment getEnv() {
+	public BasicEnvironment getEnv() {
 		return env;
 	}
 	
-	public AdvancedEnvironment getAdvancedEnv() {
-		return (AdvancedEnvironment)env;
+	public FullEnvironment getFullEnv() {
+		if(coreEnv == null) throw new InsufficientRightsException("Insufficient rigths to access full environment");
+		return coreEnv;
 	}
 	
 	/**

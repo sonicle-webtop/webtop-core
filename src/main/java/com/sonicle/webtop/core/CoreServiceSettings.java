@@ -7,6 +7,7 @@
 package com.sonicle.webtop.core;
 
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 
 /**
@@ -14,12 +15,6 @@ import com.sonicle.webtop.core.sdk.BaseServiceSettings;
  * @author matteo
  */
 public class CoreServiceSettings extends BaseServiceSettings {
-	
-
-    public CoreServiceSettings(String domainId, String serviceId) {
-        super(domainId,serviceId);
-    }
-    
 
 	public static final String MAINTENANCE = "maintenance";
 	public static final String MANIFEST_VERSION = "manifest.version";
@@ -38,6 +33,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";
+	
+	public CoreServiceSettings(String domainId, String serviceId) {
+		super(domainId, serviceId);
+	}
+	
+	public String getUserDataProvider() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
+	}
 	
 	/*
 	public static String getLanguage(SettingsManager setm) {

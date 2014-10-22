@@ -51,8 +51,8 @@ public class CoreService extends Service {
 	public static final Logger logger = Service.getLogger(CoreService.class);
 
 	@Override
-	public void initialize(Environment api) {
-		getAdvancedEnv().getSession().test();
+	public void initialize() {
+		getFullEnv().getSession().test();
 		logger.debug("Mi sono inizializzato: mi chiamo {}", getName(new Locale("it_IT")));
 	}
 
@@ -64,7 +64,7 @@ public class CoreService extends Service {
 	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		String theme=request.getParameter("theme");
 		logger.debug("change theme to {}",theme);
-		getAdvancedEnv().getSession().setTheme(theme);
+		getFullEnv().getSession().setTheme(theme);
 		new JsonResult().printTo(out);
 	}
 }

@@ -44,4 +44,8 @@ public class WTException extends Exception {
 	public WTException(String message, Object... arguments) {
 		super(MessageFormat.format(message, arguments));
 	}
+	
+	public WTException(Throwable cause, String message, Object... arguments) {
+		super(MessageFormat.format(message, arguments), cause);
+	}
 }

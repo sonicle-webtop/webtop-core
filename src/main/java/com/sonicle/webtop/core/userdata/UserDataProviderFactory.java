@@ -35,10 +35,9 @@ package com.sonicle.webtop.core.userdata;
 
 import com.sonicle.webtop.core.interfaces.IConnectionProvider;
 import com.sonicle.webtop.core.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.lang.reflect.Constructor;
-import java.text.MessageFormat;
 import java.util.HashMap;
-import javax.sql.DataSource;
 
 /**
  *
@@ -48,7 +47,7 @@ public class UserDataProviderFactory {
 	
 	private static final HashMap<String, UserDataProviderBase> instances = new HashMap<>();
 	
-	public static synchronized UserDataProviderBase getProvider(String providerName, IConnectionProvider connectionManager, IServiceSettingReader settingsManager) throws Exception {
+	public static synchronized UserDataProviderBase getProvider(String providerName, IConnectionProvider connectionManager, IServiceSettingReader settingsManager) throws WTException {
 		String className = null;
 		
 		try {
@@ -67,7 +66,7 @@ public class UserDataProviderFactory {
 			}
 			return instances.get(className);
 		} catch (Exception ex) {
-			throw new Exception(MessageFormat.format("Unable to instantiate UserData provider class. [{0}]", className), ex);
+			throw new WTException(ex, "Unable to instantiate UserData provider class. [{0}]", className);
 		}
 	}
 }
