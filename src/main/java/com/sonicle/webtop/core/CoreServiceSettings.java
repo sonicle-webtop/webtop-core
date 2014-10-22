@@ -24,6 +24,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String MAINTENANCE = "maintenance";
 	public static final String MANIFEST_VERSION = "manifest.version";
 	public static final String USERDATA_PROVIDER = "userdata.provider";
+	public static final String TMP = "tmp";
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
 	//public static final String DB_INIT_ENABLED = "db.init.enabled";
 	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
@@ -38,6 +39,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";
+	
+	public String getTempPath() {
+		return getServiceSetting(TMP);
+	}
 	
 	/*
 	public static String getLanguage(SettingsManager setm) {
