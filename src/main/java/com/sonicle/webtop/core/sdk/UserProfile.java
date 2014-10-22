@@ -168,4 +168,9 @@ public final class UserProfile {
 	public String getDisplayName() {
 		return userData.firstName+" "+userData.lastName;
 	}
+	
+	public String getCompleteEmailAddress() {
+		return getDisplayName()+" <"+getEmailAddress()+">";
+	}
+	
 }
