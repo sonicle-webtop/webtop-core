@@ -46,6 +46,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -53,11 +54,13 @@ import org.apache.commons.io.IOUtils;
  */
 public class ServiceRequest extends HttpServlet {
 	
+	private static final Logger logger = WebTopApp.getLogger(ServiceRequest.class);
+	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopSession wts = WebTopSession.get(request);
 		
 		try {
-			WebTopApp.logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
+			logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
@@ -105,7 +108,7 @@ public class ServiceRequest extends HttpServlet {
 			}
 			
 		} catch(Exception ex) {
-			WebTopApp.logger.warn("Error in serviceRequest servlet", ex);
+			logger.warn("Error in serviceRequest servlet", ex);
 			throw new ServletException(ex.getMessage());
 		} finally {
 			WebTopApp.clearLoggerDC();

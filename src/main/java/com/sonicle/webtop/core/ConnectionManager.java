@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core;
+import com.sonicle.webtop.core.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;
@@ -45,7 +46,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ConnectionManager {
+public class ConnectionManager implements IConnectionProvider {
 	
 	private static final Logger logger = WebTopApp.getLogger(ConnectionManager.class);
 	private static boolean initialized = false;
@@ -117,6 +118,15 @@ public class ConnectionManager {
 	}
 	
 	/**
+	 * Returns a DataSource from the core pool.
+	 * @return DataSource object.
+	 * @throws SQLException 
+	 */
+	public DataSource getDataSource() throws SQLException {
+		return getDataSource(Manifest.ID);
+	}
+	
+	/**
 	 * Returns a DataSource from desired pool.
 	 * @param poolName The name of the pool.
 	 * @return DataSource object.
@@ -131,6 +141,7 @@ public class ConnectionManager {
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
+	@Override
 	public Connection getConnection() throws SQLException {
 		return getConnection(Manifest.ID);
 	}

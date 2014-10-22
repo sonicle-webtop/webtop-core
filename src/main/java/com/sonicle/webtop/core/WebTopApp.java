@@ -33,7 +33,10 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -195,6 +198,12 @@ public class WebTopApp {
 	
 	public CoreManager getManager() {
 		return new CoreManager(this);
+	}
+	
+	public UserDataProviderBase getUserDataProvider(String domainId) throws Exception {
+		SettingsManager sm = getSettingsManager();
+		String providerName = LangUtils.value(sm.getServiceSetting(domainId, Manifest.ID, CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
+		return UserDataProviderFactory.getProvider(providerName, getConnectionManager(), sm);
 	}
 	
 	public String lookupResource(Locale locale, String key) {

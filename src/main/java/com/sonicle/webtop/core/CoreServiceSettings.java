@@ -23,11 +23,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 
 	public static final String MAINTENANCE = "maintenance";
 	public static final String MANIFEST_VERSION = "manifest.version";
+	public static final String USERDATA_PROVIDER = "userdata.provider";
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
 	//public static final String DB_INIT_ENABLED = "db.init.enabled";
 	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
 	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	//public static final String PROFILEDATA_PROVIDER = "profiledata.provider";
 	//public static final String OTP_ENABLED = "otp.enabled";
 	//public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
 	//public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";

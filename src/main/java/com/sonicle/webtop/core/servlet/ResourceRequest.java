@@ -64,6 +64,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -71,6 +72,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ResourceRequest extends HttpServlet {
 	
+	private static final Logger logger = WebTopApp.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
 	
@@ -81,13 +83,7 @@ public class ResourceRequest extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
-			lookup(req).respondGet(resp);
-		} catch(Exception ex) {
-			System.out.println(ex.getMessage());
-			ex.printStackTrace();
-		} 
-		
+		lookup(req).respondGet(resp);
 	}
 	
 	@Override
@@ -125,7 +121,7 @@ public class ResourceRequest extends HttpServlet {
 		
 		// Extracts path detail
 		String reqPath = reqUrl.getPath();
-		WebTopApp.logger.trace("URL path: {}", reqPath);
+		logger.trace("URL path: {}", reqPath);
 		if (isForbidden(reqPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		
 		if(reqPath.equals("/com/sonicle/webtop/core/images/login.png")) {
@@ -152,7 +148,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupLoginImage(HttpServletRequest request, URL url) {
-		WebTopApp.logger.trace("Looking-up login image");
+		logger.trace("Looking-up login image");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -197,7 +193,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupLicense(HttpServletRequest request, URL reqUrl) {
-		WebTopApp.logger.trace("Looking-up license");
+		logger.trace("Looking-up license");
 		String path = reqUrl.getPath();
 		URL fileUrl = null;
 		
@@ -228,7 +224,7 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			String basePath = FilenameUtils.getPath(path);
 			String baseName = FilenameUtils.getBaseName(path);
-			WebTopApp.logger.trace("basePath: {} - baseName: {}", basePath, baseName);
+			logger.trace("basePath: {} - baseName: {}", basePath, baseName);
 			String propPath = basePath + WordUtils.uncapitalize(baseName) + ".properties";
 			
 			fileUrl = this.getClass().getResource("/" + propPath);
@@ -247,7 +243,7 @@ public class ResourceRequest extends HttpServlet {
 			String clazz = manifest.getJsPackageName() + "." + baseName;
 			String override = manifest.getJsClassName();
 			
-			WebTopApp.logger.trace("Class: {} - Override: {}", clazz, override);
+			logger.trace("Class: {} - Override: {}", clazz, override);
 			
 			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, acceptsDeflate(request));
 			
@@ -263,7 +259,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupJs(HttpServletRequest request, URL url, boolean debug) {
-		WebTopApp.logger.trace("Looking-up js file");
+		logger.trace("Looking-up js file");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -294,7 +290,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupDefault(HttpServletRequest request, URL url) {
-		WebTopApp.logger.trace("Looking-up file as default");
+		logger.trace("Looking-up file as default");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -316,7 +312,7 @@ public class ResourceRequest extends HttpServlet {
 		if(url == null) throw new ResourceRequest.NotFoundException();
 		
 		String protocol = url.getProtocol();
-		WebTopApp.logger.trace("protocol: {}", protocol);
+		logger.trace("protocol: {}", protocol);
 		if(protocol.equals("file")) {
 			try {
 				File file = new File(url.toURI());
@@ -337,7 +333,7 @@ public class ResourceRequest extends HttpServlet {
 
 				String jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
 				String jarEntryName = surl.substring(ix + 2);
-				WebTopApp.logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
+				logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
 				
 				File file = new File(jarFileName);
 				JarFile jarFile = new JarFile(file);
@@ -390,12 +386,8 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	protected String getPath(HttpServletRequest req) {
-		//String servletPath = req.getServletPath();
-		String pathInfo = coalesce(req.getPathInfo(), "");
-		//System.out.println("pathinfo: "+pathInfo);
-		//return servletPath + pathInfo;
-		return pathInfo;
+	protected String getPath(HttpServletRequest request) {
+		return StringUtils.defaultString(request.getPathInfo());
 	}
 
 	protected boolean isForbidden(String path) {
