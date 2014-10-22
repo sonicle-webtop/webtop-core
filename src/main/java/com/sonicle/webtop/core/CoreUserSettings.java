@@ -44,7 +44,22 @@ public class CoreUserSettings extends BaseUserSettings {
     public CoreUserSettings(String domainId, String userId, String serviceId) {
         super(domainId, userId, serviceId);
     }
+	
+	public String getLookAndFeel() {
+		return getUserSetting(LAF, "default");
+	}
+	
+	public String getTheme() {
+		return getUserSetting(THEME, "crisp");
+	}
+	
+	public boolean getRTL() {
+		return getUserSetting(RTL,false);
+	}
     
+	public static final String LAF = "laf";
+	public static final String THEME = "theme";
+	public static final String RTL = "rtl";
 	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	//public static final String WHATSNEW_VERSION = "whatsnew.version";
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";

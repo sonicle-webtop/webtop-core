@@ -33,10 +33,14 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.bol.OContentType;
+import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import java.sql.Connection;
@@ -83,6 +87,11 @@ public class Environment implements BasicEnvironment {
 	}
 
 	@Override
+	public String lookupCoreResource(Locale locale, String key) {
+		return wta.lookupResource(Manifest.ID,locale, key);
+	}
+
+	@Override
 	public String getSessionRefererUri() {
 		return wts.getRefererURI();
 	}
@@ -101,4 +110,43 @@ public class Environment implements BasicEnvironment {
 	public CoreUserSettings getCoreUserSettings() {
 		return wts.getCoreUserSettings();
 	}
+
+	@Override
+	public String getContentType(String extension) {
+		extension=extension.toLowerCase();
+		String ctype=null;
+		Connection con=null;
+        try {
+            con=getCoreConnection();
+			OContentType oct=ContentTypeDAO.getInstance().selectByExtension(con, extension);
+            if (oct!=null) {
+                ctype=oct.getContentType();
+                logger.debug("Got content-type from db: {}={} ",extension,ctype);
+            }
+        } catch(SQLException exc) {
+			logger.error("Error looking up content type for extension {}",extension,exc);
+        } finally {
+            DbUtils.closeQuietly(con);
+        }
+        return ctype;
+	}
+	
+	@Override
+	public String getExtension(String ctype) {
+		ctype=ctype.toLowerCase();
+		String extension=null;
+		Connection con=null;
+		try {
+			con=getCoreConnection();
+			OContentType oct=ContentTypeDAO.getInstance().selectByContentType(con, ctype);
+			if (oct!=null) {
+				extension=oct.getExtension();
+			}
+		} catch(SQLException exc) {
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return extension;
+	}
+	
 }

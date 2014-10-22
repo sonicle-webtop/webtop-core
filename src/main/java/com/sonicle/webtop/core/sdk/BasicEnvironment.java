@@ -50,8 +50,11 @@ public interface BasicEnvironment {
 	public ReadableUserAgent getUserAgent();
 	public String lookupResource(String serviceId, Locale locale, String key);
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
+	public String lookupCoreResource(Locale locale, String key);
     public String getSessionRefererUri();
     public Connection getCoreConnection() throws SQLException;
     public CoreServiceSettings getCoreServiceSettings();
     public CoreUserSettings getCoreUserSettings();
+	public String getContentType(String extension);
+	public String getExtension(String contentType);
 }

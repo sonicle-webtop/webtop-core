@@ -31,13 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class LocaleKey {
+public class CoreLocaleKey {
 	
 	public static final String LOGIN_TITLE = "login.title";
 	public static final String LOGIN_USERNAME_PLACEHOLDER = "login.username.placeholder";
@@ -49,4 +49,7 @@ public class LocaleKey {
 	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
 	public static final String SERVICE_NAME = "service.name";
 	public static final String SERVICE_DESCRIPTION = "service.description";
+    public static final String DATE_TODAY="date.today";
+    public static final String DATE_YESTERDAY="date.yesterday";
+    public static final String DATE_TOMORROW="date.tomorrow";
 }

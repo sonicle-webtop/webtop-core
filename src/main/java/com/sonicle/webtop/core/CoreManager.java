@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsWTStartup;
@@ -77,8 +78,8 @@ public class CoreManager {
 		
 		JsWTStartup.Service js = new JsWTStartup.Service();
 		js.id = manifest.getId();
-		js.name = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_NAME);
-		js.description = wta.lookupResource(serviceId, locale, LocaleKey.SERVICE_DESCRIPTION);
+		js.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
+		js.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
 		js.version = manifest.getVersion().toString();
 		js.build = manifest.getBuildDate();
 		js.company = manifest.getCompany();

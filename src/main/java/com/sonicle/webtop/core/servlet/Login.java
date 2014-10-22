@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.servlet.ServletUtils;
-import com.sonicle.webtop.core.LocaleKey;
+import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
@@ -74,7 +74,7 @@ public class Login extends HttpServlet {
 			boolean maintenance = true;
 			
 			// Defines messages...
-			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, LocaleKey.LOGIN_MAINTENANCE, true) : "";
+			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.LOGIN_MAINTENANCE, true) : "";
 			
 			// Defines failure message
 			boolean failure = false;
@@ -85,11 +85,11 @@ public class Login extends HttpServlet {
 				switch (failureAttribute) {
 					case Login.FAILURE_INVALID:
 						failure = true;
-						failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_FAILURE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_FAILURE, true);
 						break;
 					case Login.FAILURE_MAINTENANCE:
 						failure = true;
-						failureMessage = wta.lookupResource(locale, LocaleKey.LOGIN_ERROR_MAINTENANCE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_MAINTENANCE, true);
 						break;
 				}
 			}
@@ -102,10 +102,10 @@ public class Login extends HttpServlet {
 			tplMap.put("failureMessage", failureMessage);
 			tplMap.put("maintenance", maintenance);
 			tplMap.put("maintenanceMessage", maintenanceMessage);
-			tplMap.put("usernamePlaceholder", wta.lookupResource(locale, LocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
-			tplMap.put("passwordPlaceholder", wta.lookupResource(locale, LocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
-			tplMap.put("domainLabel", wta.lookupResource(locale, LocaleKey.LOGIN_DOMAIN_LABEL, true));
-			tplMap.put("submitLabel", wta.lookupResource(locale, LocaleKey.LOGIN_SUBMIT_LABEL, true));
+			tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
+			tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
+			tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_LABEL, true));
+			tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_SUBMIT_LABEL, true));
 			List<ODomain> domains = manager.getDomains();
 			tplMap.put("showDomain", (domains.size()>1));
 			tplMap.put("domains", domains);
