@@ -341,7 +341,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	@Override
 	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value) {
-		return setUserSetting(userProfile.getDomainId(), serviceId, userProfile.getUserId(), key, value);
+		return setUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key, value);
 	}
 	
 	/**

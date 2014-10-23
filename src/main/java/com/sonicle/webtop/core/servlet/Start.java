@@ -67,6 +67,8 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
 			Locale locale = wts.getLocale();
+			String theme = wts.getTheme();
+			String lookAndFeel = wts.getLookAndFeel();
 			WebTopApp.logger.trace("locale:   {}", locale);
 			
 			Subject currentUser=SecurityUtils.getSubject();
@@ -77,14 +79,17 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
 			
 			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, locale, wta);
-			tplMap.put("theme", wts.getTheme());
+			tplMap.put("theme", theme);
+			tplMap.put("laf", lookAndFeel);
+			tplMap.put("rtl", String.valueOf(wts.getRTL()));
 			tplMap.put("debug", "false");
-			tplMap.put("rtl", "false");
+			ServletHelper.fillPageVars(tplMap, locale, wta);
 			
-			// Fill startup variables
+			// Fill client startup variables
 			JsWTStartup jswt = new JsWTStartup();
 			jswt.locale = locale.toString();
+			jswt.theme = theme;
+			jswt.laf = lookAndFeel;
 			for(String serviceId : wts.getServices()) {
 				if(serviceId.equals(Manifest.ID)) continue;
 				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));

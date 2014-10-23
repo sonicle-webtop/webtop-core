@@ -3,6 +3,6 @@ Ext.application({
     name: 'Sonicle.webtop.core',
 	extend: 'Sonicle.webtop.core.Application',
 	
-    appFolder: 'resources/sonicle/webtop/core',
+    appFolder: 'resources/com.sonicle.webtop.core',
 	autoCreateViewport: false
 });

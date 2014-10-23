@@ -8,6 +8,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	strings: null,
+	loadedCss: null,
 	
 	/**
 	 * Returns the application.
@@ -75,5 +76,19 @@ Ext.define('Sonicle.webtop.core.WT', {
 			}
 		}
 		return hm;
+	},
+	
+	loadCss: function(href) {
+		var me = this;
+		if(!me.loadedCss) me.loadedCss = {};
+		if(!me.loadedCss[href]) {
+			var doc = window.document;
+			var link = doc.createElement('link');
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = href;
+			doc.getElementsByTagName('head')[0].appendChild(link);
+			me.loadedCss[href] = href;
+		}
 	}
 });

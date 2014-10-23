@@ -46,16 +46,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -75,6 +76,8 @@ public class ResourceRequest extends HttpServlet {
 	private static final Logger logger = WebTopApp.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
+	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+)\\/(.*)$");
+	private static final Pattern PATTERN_LOCALE_FILE = Pattern.compile("^(Locale_(\\w*)).js$");
 	
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -109,42 +112,69 @@ public class ResourceRequest extends HttpServlet {
 		return r;
 	}
 	
+	private String[] splitPath(String pathInfo) throws MalformedURLException {
+		String[] tokens = StringUtils.split(pathInfo, "/", 2);
+		if(tokens.length != 2) throw new MalformedURLException("Path does not esplicitate service ID");
+		return tokens;
+	}
+	
 	protected LookupResult lookupNoCache(HttpServletRequest req) {
-		URL reqUrl = null;
+		String subject = null, subjectPath = null, jsPath = null, path = null, translPath = null;
+		boolean isService = false;
+		URL translUrl = null;
 		
 		// Builds a convenient URL for the servlet relative URL
 		try {
-			reqUrl = new URL("http://localhost"+req.getPathInfo());
+			String reqPath = req.getPathInfo();
+			logger.trace("Requested path [{}]", reqPath);
+			String[] paths = splitPath(reqPath);
+			subject = paths[0];
+			jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
+			subjectPath = (jsPath == null) ? paths[0] : jsPath;
+			isService = (jsPath != null);
+			//subjectPath = StringUtils.replace(paths[0], ".", "/");
+			path = paths[1];
+			logger.trace("{}, {}", subject, path);
+			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
+			translPath = translUrl.getPath();
+			logger.trace("Translated path [{}]", translPath);
+			if (isForbidden(translPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			
 		} catch(MalformedURLException ex) {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
-		// Extracts path detail
-		String reqPath = reqUrl.getPath();
-		logger.trace("URL path: {}", reqPath);
-		if (isForbidden(reqPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-		
-		if(reqPath.equals("/com/sonicle/webtop/core/images/login.png")) {
-			return lookupLoginImage(req, reqUrl);
+		if(subject.equals(Manifest.ID) && path.equals("images/login.png")) {
+			return lookupLoginImage(req, translUrl);
 			
-		} else if(reqPath.equals("/com/sonicle/webtop/core/license.html")) {
-			return lookupLicense(req, reqUrl);
-
+		} else if(subject.equals(Manifest.ID) && path.equals("license.html")) {
+			return lookupLicense(req, translUrl);
+			
 		} else {
-			if(StringUtils.endsWith(reqPath, ".js")) {
-				String baseName = FilenameUtils.getBaseName(reqPath);
+			if(StringUtils.endsWith(translPath, ".js")) {
+				String baseName = FilenameUtils.getBaseName(translPath);
 				if(StringUtils.startsWith(baseName, "Locale")) {
-					return lookupLocaleJs(req, reqUrl);
+					if(!isService) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+					return lookupLocaleJs(req, subject, subjectPath, path, translUrl);
+				
 				} else {
 					boolean debug = System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 					debug = false;
-					return lookupJs(req, reqUrl, debug);
+					return lookupJs(req, translUrl, debug);
 				}
+			} else if(StringUtils.startsWith(path, "laf")) {
+				if(!isService) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+				return lookupLAF(req, subject, subjectPath, path, translUrl);
+			
 			} else {
-				return lookupDefault(req, reqUrl);
+				return lookupDefault(req, translUrl);
 			}
 		}
-		//return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+	}
+	
+	private URL getResURL(String name) {
+		logger.trace("Try getting resource [{}]", name);
+		return this.getClass().getResource(name);
 	}
 	
 	private LookupResult lookupLoginImage(HttpServletRequest request, URL url) {
@@ -217,11 +247,52 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLocaleJs(HttpServletRequest request, URL url) {
-		String path = url.getPath();
+	private LookupResult lookupLAF(HttpServletRequest request, String serviceId, String subjectPath, String path, URL url) {
+		final String LOOKUP_URL = "/{0}/laf/{1}/{2}";
 		URL fileUrl = null;
 		
 		try {
+			Matcher lafm = PATTERN_LAF_PATH.matcher(path);
+			if(!lafm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+			String laf = lafm.group(1);
+			String lastPath = lafm.group(2);
+			
+			// First, try to get the resource in folder related to the specified
+			// look&feel, then if not found looks into the default laf.
+			fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, laf, lastPath));
+			if(fileUrl == null) {
+				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "default", lastPath));
+			}
+
+			LookupFile lf = getFile(fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), lf, acceptsDeflate(request));
+			
+		} catch (ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
+	private LookupResult lookupLocaleJs(HttpServletRequest request, String serviceId, String subjectPath, String path, URL url) {
+		final String LOOKUP_URL = "/{0}/locale_{1}.properties";
+		//String path = url.getPath();
+		URL fileUrl = null;
+		
+		try {
+			Matcher locm = PATTERN_LOCALE_FILE.matcher(path);
+			if(!locm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+			String baseName = locm.group(1);
+			String locale = locm.group(2);
+			
+			fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, locale));
+			if(fileUrl == null) {
+				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "en_EN"));
+			}
+			
+			/*
 			String basePath = FilenameUtils.getPath(path);
 			String baseName = FilenameUtils.getBaseName(path);
 			logger.trace("basePath: {} - baseName: {}", basePath, baseName);
@@ -229,31 +300,23 @@ public class ResourceRequest extends HttpServlet {
 			
 			fileUrl = this.getClass().getResource("/" + propPath);
 			if(fileUrl == null) this.getClass().getResource("/" + basePath + "locale_en_EN.properties");
-			
-			// Retrieves properties file
-			LookupFile lf = getFile(fileUrl);
-			
-			// Reverse lookup of serviceId from js path
-			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
-			String serviceId = svcm.getServiceIdByJsPath(basePath); // We don't want the preceding '/'
-			if(serviceId == null) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			*/
 			
 			// Defines specific params
+			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
 			String clazz = manifest.getJsPackageName() + "." + baseName;
 			String override = manifest.getJsClassName();
 			
 			logger.trace("Class: {} - Override: {}", clazz, override);
-			
+			LookupFile lf = getFile(fileUrl);
 			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, acceptsDeflate(request));
 			
 		} catch (ForbiddenException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
 	}

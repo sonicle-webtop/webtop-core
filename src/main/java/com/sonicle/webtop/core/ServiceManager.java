@@ -158,7 +158,7 @@ public class ServiceManager {
 			instance.initialize();
 		} catch(InsufficientRightsException ex) {
 			/* Do nothing... */
-		} catch(Exception ex) {
+		} catch(Throwable ex) {
 			logger.error("Initialization method returns errors", ex);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
@@ -179,11 +179,17 @@ public class ServiceManager {
 		}
 	}
 	
+	public String getServiceJsPath(String serviceId) {
+		return jsPathMappings.get(serviceId);
+	}
+	
+	/*
 	public String getServiceIdByJsPath(String jsPath) {
 		jsPath = StringUtils.removeStart(jsPath, "/");
 		jsPath = StringUtils.removeEnd(jsPath, "/");
 		return jsPathMappings.get(jsPath);
 	}
+	*/
 	
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
@@ -209,7 +215,8 @@ public class ServiceManager {
 			}
 			
 			services.put(serviceId, descr);
-			jsPathMappings.put(manifest.getJsPath(), serviceId);
+			//jsPathMappings.put(manifest.getJsPath(), serviceId);
+			jsPathMappings.put(serviceId, manifest.getJsPath());
 		}
 	}
 	
@@ -356,6 +363,7 @@ public class ServiceManager {
 			try {
 				manifest = new ServiceManifest(
 					elService.getString("id"),
+					elService.getString("xid"),
 					elService.getString("className"),
 					elService.getString("jsClassName"),
 					elService.getString("publicClassName"),

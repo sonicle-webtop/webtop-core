@@ -143,12 +143,15 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			border: false,
 			vertical: true
 		});
-		WT.getApp().services.each(function(svc) {
+		var inst = null;
+		WT.getApp().services.each(function(desc) {
+			inst = desc.getInstance();
 			navtb.add(Ext.create({
 				xtype: 'button',
-				itemId: svc.getId(),
-				iconCls: 'add16',
-				tooltip: svc.getName(),
+				scale: 'large',
+				itemId: inst.id,
+				iconCls: inst.cssIcon('l'),
+				tooltip: desc.getName(),
 				handler: 'onNavTbButtonClick'
 			}));
 		}, me);

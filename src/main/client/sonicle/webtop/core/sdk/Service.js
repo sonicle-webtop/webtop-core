@@ -34,13 +34,8 @@
 Ext.define('Sonicle.webtop.core.sdk.Service', {
 	alternateClassName: 'WT.sdk.Service',
 	
-	config: {
-		/**
-		 * @cfg {String} id
-		 * Service unique identifier.
-		 */
-		id: null
-	},
+	id: null,
+	xid: null,
 	
 	/**
 	 * @method
@@ -61,7 +56,8 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.initConfig(cfg);
+		me.id = cfg.id;
+		me.xid = cfg.xid;
 		me.callParent(arguments);
 	},
 	
@@ -127,5 +123,13 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	res: function(key) {
 		if(!this.strings) return undefined;
 		return this.strings[key];
+	},
+	
+	cssIcon: function(name, size) {
+		if(arguments.length === 2) {
+			return Ext.String.format('{0}-ico-{1}-{2}', this.xid, name, size);
+		} else {
+			return Ext.String.format('{0}-ico-{1}', this.xid, name);
+		}
 	}
 });

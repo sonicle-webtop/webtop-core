@@ -70,7 +70,6 @@ public class WebTopSession {
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
-	private String theme = "crisp";
 	
 	WebTopSession(HttpSession session) {
 		wta = WebTopApp.get(session.getServletContext());
@@ -204,11 +203,27 @@ public class WebTopSession {
 	}
 
 	public String getTheme() {
-		return theme;
+		return coreUserSettings.getTheme();
 	}
-
-	public void setTheme(String theme) {
-		this.theme = theme;
+	
+	public void setTheme(String value) {
+		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.THEME, value);
+	}
+	
+	public String getLookAndFeel() {
+		return coreUserSettings.getLookAndFeel();
+	}
+	
+	public void setLookAndFeel(String value) {
+		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.LAF, value);
+	}
+	
+	public boolean getRTL() {
+		return coreUserSettings.getRTL();
+	}
+	
+	public void setRTL(String value) {
+		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.RTL, value);
 	}
 	
 	public void test() {

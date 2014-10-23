@@ -62,12 +62,12 @@ Ext.define('Sonicle.webtop.core.Application', {
 		Ext.each(WTStartup.services, function(cfg) {
 			obj = Ext.create('WT.ServiceDescriptor', {
 				id: cfg.id,
+				xid: cfg.xid,
 				name: cfg.name,
 				description: cfg.description,
 				version: cfg.version,
 				build: cfg.build,
 				company: cfg.company,
-				//iconCls: null,
 				className: cfg.className
 			});
 			arr.push(obj);
@@ -105,8 +105,9 @@ Ext.define('Sonicle.webtop.core.Application', {
 		Ext.Loader.setPath(desc.getNs(), desc.getBaseUrl());
 		
 		// Defines urls to load
+		WT.loadCss(desc.getBaseUrl()+'/laf/'+WTStartup.laf+'/service.css');
 		urls.push(Ext.Loader.getPath(desc.getClassName()));
-		urls.push(Ext.Loader.getPath(desc.getNs()+'.Locale_it_IT'));
+		urls.push(Ext.Loader.getPath(desc.getNs()+'.Locale_'+WTStartup.locale));
 		
 		// Launch loader...
 		console.log(urls);

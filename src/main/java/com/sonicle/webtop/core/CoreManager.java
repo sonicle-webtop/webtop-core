@@ -78,6 +78,7 @@ public class CoreManager {
 		
 		JsWTStartup.Service js = new JsWTStartup.Service();
 		js.id = manifest.getId();
+		js.xid = manifest.getXId();
 		js.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
 		js.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
 		js.version = manifest.getVersion().toString();

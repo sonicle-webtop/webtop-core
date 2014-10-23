@@ -43,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 public class ServiceManifest {
 	
 	protected String id;
+	protected String xid;
 	protected String className;
 	protected String jsClassName;
 	protected String publicClassName;
@@ -68,7 +69,7 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
-	public ServiceManifest(String id, 
+	public ServiceManifest(String id, String xid,
 		String className, String jsClassName, String publicClassName, String deamonClassName, 
 		Boolean hidden, ServiceVersion version, String buildDate, String company, 
 		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
@@ -76,6 +77,8 @@ public class ServiceManifest {
 		
 		if(StringUtils.isEmpty(id)) throw new Exception("Invalid value for property [id]");
 		this.id = id.toLowerCase();
+		if(StringUtils.isEmpty(xid)) throw new Exception("Invalid value for property [xid]");
+		this.xid = xid.toLowerCase();
 		
 		boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
 		//TODO: Enable check or not?
@@ -96,6 +99,10 @@ public class ServiceManifest {
 	
 	public String getId() {
 		return id;
+	}
+	
+	public String getXId() {
+		return xid;
 	}
 
 	public String getClassName() {

@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	
 	config: {
 		id: null,
+		xid: null,
 		name: null,
 		description: null,
 		version: null,
@@ -67,7 +68,8 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 			if(!Ext.isString(cn)) return null;
 			try {
 				me.instance = Ext.create(cn, {
-					id: me.getId()
+					id: me.getId(),
+					xid: me.getXid()
 				});
 			} catch(e) {
 				WT.Log.error('Unable to instantiate service class [{0}]', cn);
@@ -89,7 +91,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	},
 	
 	getBaseUrl: function() {
-		return Ext.String.format('resources/{0}', this.getPath());
+		return Ext.String.format('resources/{0}', this.getId());
 	},
 	
 	getResUrl: function(locale) {

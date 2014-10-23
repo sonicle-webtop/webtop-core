@@ -41,12 +41,14 @@ import java.util.ArrayList;
  */
 public class JsWTStartup {
 	
-	public String theme = "crisp";
-	public String locale = "it_IT";
+	public String locale = "";
+	public String theme = "";
+	public String laf = "";
 	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {
 		public String id;
+		public String xid;
 		public String name;
 		public String description;
 		public String version;
