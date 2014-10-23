@@ -173,5 +173,8 @@ public final class UserProfile {
 	public String getCompleteEmailAddress() {
 		return getDisplayName()+" <"+getEmailAddress()+">";
 	}
-	
+
+	public Principal getPrincipal() {
+		return principal;
+	}
 }
