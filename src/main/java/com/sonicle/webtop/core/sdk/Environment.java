@@ -43,12 +43,19 @@ import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Locale;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 /**
  *
@@ -148,5 +155,33 @@ public class Environment implements BasicEnvironment {
 		}
 		return extension;
 	}
+	
+	@Override
+	public String encrypt(String s, String algorithm) throws Exception {
+		MessageDigest md = MessageDigest.getInstance(algorithm);
+		md.update(s.getBytes("UTF-8"));
+		return (new BASE64Encoder()).encode(md.digest());
+	}
+
+	@Override
+	public String decipher(String cpass, String key) throws Exception {
+		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
+		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
+		Cipher cipher=Cipher.getInstance("DES");
+		cipher.init(Cipher.DECRYPT_MODE,sk);
+		byte[] dec = new BASE64Decoder().decodeBuffer(cpass);
+		byte[] utf8 = cipher.doFinal(dec);
+		return new String(utf8, "UTF-8");
+	}
+
+	@Override
+	public String cipher(String pass, String key) throws Exception {
+		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
+		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
+		Cipher cipher=Cipher.getInstance("DES");
+		cipher.init(Cipher.ENCRYPT_MODE,sk);
+		return (new BASE64Encoder()).encode(cipher.doFinal(pass.getBytes("UTF-8")));
+	}
+	
 	
 }
