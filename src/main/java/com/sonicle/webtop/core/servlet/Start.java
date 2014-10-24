@@ -40,6 +40,8 @@ import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTStartup;
+import com.sonicle.webtop.core.sdk.Encryption;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -85,11 +87,18 @@ public class Start extends HttpServlet {
 			tplMap.put("debug", "false");
 			ServletHelper.fillPageVars(tplMap, locale, wta);
 			
+			UserProfile p=wts.getUserProfile();
+			String ticket=p.getUserId()+"@"+p.getDomainId()+"-"+currentUser.getSession().getHost()+"-"+currentUser.getSession().getStartTimestamp();
+			WebTopApp.logger.trace("Generated ticket = {}",ticket);
+			String encTicket=Encryption.cipher(ticket, p.getSecret());
+			WebTopApp.logger.trace("Encoded ticket = {}",encTicket);
+			
 			// Fill client startup variables
 			JsWTStartup jswt = new JsWTStartup();
 			jswt.locale = locale.toString();
 			jswt.theme = theme;
 			jswt.laf = lookAndFeel;
+			jswt.encAuthTicket = encTicket;
 			for(String serviceId : wts.getServices()) {
 				if(serviceId.equals(Manifest.ID)) continue;
 				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));
