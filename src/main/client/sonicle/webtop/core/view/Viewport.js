@@ -22,11 +22,18 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			itemId: 'header',
 			layout: 'border',
 			height: 40,
+			/*
+			defaults: {
+				cls: 'wt-header'
+			},
+			*/
 			items: [
 				{
 					xtype: 'toolbar',
 					region: 'west',
 					itemId: 'newtb',
+					cls: 'wt-header',
+					border: false,
 					style: {
 						paddingTop: 0,
 						paddingBottom: 0
@@ -76,12 +83,16 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 					itemId: 'svctbs',
 					layout: 'card',
 					defaults: {
+						cls: 'wt-header',
+						border: false,
 						padding: 0
 					}
 				}, {
 					xtype: 'toolbar',
 					region: 'east',
 					itemId: 'menutb',
+					cls: 'wt-header',
+					border: false,
 					style: {
 						paddingTop: 0,
 						paddingBottom: 0
@@ -140,6 +151,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			xtype: 'toolbar',
 			region: 'west',
 			itemId: 'navtb',
+			cls: 'wt-nav',
 			border: false,
 			vertical: true
 		});

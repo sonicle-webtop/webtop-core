@@ -287,20 +287,12 @@ public class ResourceRequest extends HttpServlet {
 			String baseName = locm.group(1);
 			String locale = locm.group(2);
 			
+			// First try to get the properties file that match the requested
+			// locale, if not found it searches for the en locale
 			fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, locale));
 			if(fileUrl == null) {
 				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "en_EN"));
 			}
-			
-			/*
-			String basePath = FilenameUtils.getPath(path);
-			String baseName = FilenameUtils.getBaseName(path);
-			logger.trace("basePath: {} - baseName: {}", basePath, baseName);
-			String propPath = basePath + WordUtils.uncapitalize(baseName) + ".properties";
-			
-			fileUrl = this.getClass().getResource("/" + propPath);
-			if(fileUrl == null) this.getClass().getResource("/" + basePath + "locale_en_EN.properties");
-			*/
 			
 			// Defines specific params
 			ServiceManager svcm = WebTopApp.get(request).getServiceManager();

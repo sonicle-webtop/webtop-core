@@ -3,8 +3,9 @@ Ext.define('Sonicle.webtop.core.WT', {
 	alternateClassName: 'WT',
 	
 	statics: {
-		CORE_ID: 'com.sonicle.webtop.core',
-		CORE_NS: 'Sonicle.webtop.core'
+		ID: 'com.sonicle.webtop.core',
+		XID: 'wt',
+		NS: 'Sonicle.webtop.core'
 	},
 	
 	strings: null,
@@ -22,7 +23,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	preNs: function(ns, cn) {
 		if(arguments.length === 1) {
 			//return 'Sonicle.webtop.core.'+cn;
-			return WT.CORE_NS + '.' + cn;
+			return WT.NS + '.' + cn;
 		} else {
 			return ns + '.' + cn;
 		}
@@ -37,9 +38,9 @@ Ext.define('Sonicle.webtop.core.WT', {
 	res: function(svc, key) {
 		if(arguments.length === 1) {
 			key = svc;
-			svc = WT.CORE_ID;
+			svc = WT.NS;
 		}
-		if(svc === WT.CORE_ID) {
+		if(svc === WT.NS) {
 			return WT.strings[key];
 		} else {
 			var inst = WT.getApp().getService();
@@ -78,6 +79,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return hm;
 	},
 	
+	/**
+	 * Loads a CSS file by adding in the page a new link element.
+	 * @param {String} href The CSS href url.
+	 */
 	loadCss: function(href) {
 		var me = this;
 		if(!me.loadedCss) me.loadedCss = {};
