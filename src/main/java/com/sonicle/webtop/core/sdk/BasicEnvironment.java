@@ -57,7 +57,4 @@ public interface BasicEnvironment {
     public CoreUserSettings getCoreUserSettings();
 	public String getContentType(String extension);
 	public String getExtension(String contentType);
-	public String encrypt(String s, String algorithm) throws Exception;
-	public String decipher(String cpass, String key) throws Exception;
-	public String cipher(String pass, String key) throws Exception;
 }

@@ -44,6 +44,7 @@ public class JsWTStartup {
 	public String locale = "";
 	public String theme = "";
 	public String laf = "";
+	public String encAuthTicket="";
 	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {

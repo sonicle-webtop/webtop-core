@@ -156,32 +156,4 @@ public class Environment implements BasicEnvironment {
 		return extension;
 	}
 	
-	@Override
-	public String encrypt(String s, String algorithm) throws Exception {
-		MessageDigest md = MessageDigest.getInstance(algorithm);
-		md.update(s.getBytes("UTF-8"));
-		return (new BASE64Encoder()).encode(md.digest());
-	}
-
-	@Override
-	public String decipher(String cpass, String key) throws Exception {
-		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
-		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
-		Cipher cipher=Cipher.getInstance("DES");
-		cipher.init(Cipher.DECRYPT_MODE,sk);
-		byte[] dec = new BASE64Decoder().decodeBuffer(cpass);
-		byte[] utf8 = cipher.doFinal(dec);
-		return new String(utf8, "UTF-8");
-	}
-
-	@Override
-	public String cipher(String pass, String key) throws Exception {
-		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
-		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
-		Cipher cipher=Cipher.getInstance("DES");
-		cipher.init(Cipher.ENCRYPT_MODE,sk);
-		return (new BASE64Encoder()).encode(cipher.doFinal(pass.getBytes("UTF-8")));
-	}
-	
-	
 }
