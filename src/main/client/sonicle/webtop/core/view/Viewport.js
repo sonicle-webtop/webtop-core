@@ -162,6 +162,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 				xtype: 'button',
 				scale: 'large',
 				itemId: inst.id,
+				//glyph: 0xf013,
 				iconCls: inst.cssIcon('l'),
 				tooltip: desc.getName(),
 				handler: 'onNavTbButtonClick'
