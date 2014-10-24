@@ -125,11 +125,30 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return this.strings[key];
 	},
 	
-	cssIcon: function(name, size) {
+	/**
+	 * Builds CSS class name namespacing it using service xid.
+	 * @param {String} name The CSS class name part.
+	 * @return {String} The concatenated CSS class name.
+	 */
+	cssCls: function(name) {
+		return Ext.String.format('{0}-{1}', this.xid, name);
+	},
+	
+	/**
+	 * Builds CSS class name for icons namespacing it using service xid.
+	 * For example, using 'service' as name, it will return '{xid}-icon-service'.
+	 * Using 'service-l' as name it will return '{xid}-icon-service-l'.
+	 * Likewise, using 'service' as name and 'l' as size it will return the
+	 * same value: '{xid}-icon-service-l'.
+	 * @param {String} name The icon name part.
+	 * @param {String} size (optional) Icon size (one of xs,s,m,l).
+	 * @return {String} The concatenated CSS class name.
+	 */
+	cssIconCls: function(name, size) {
 		if(arguments.length === 2) {
-			return Ext.String.format('{0}-ico-{1}-{2}', this.xid, name, size);
+			return Ext.String.format('{0}-icon-{1}-{2}', this.xid, name, size);
 		} else {
-			return Ext.String.format('{0}-ico-{1}', this.xid, name);
+			return Ext.String.format('{0}-icon-{1}', this.xid, name);
 		}
 	}
 });

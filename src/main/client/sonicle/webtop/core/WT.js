@@ -30,7 +30,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
-	 * This is shorthand reference to getResource() method.
+	 * Returns a string resource.
 	 * @param {String} svc The service id.
 	 * @param {String} key The resource key.
 	 * @returns {String} The value.
@@ -46,6 +46,24 @@ Ext.define('Sonicle.webtop.core.WT', {
 			var inst = WT.getApp().getService();
 			if(inst === null) return null;
 			return inst.res(key);
+		}
+	},
+	
+	/**
+	 * Loads a CSS file by adding in the page a new link element.
+	 * @param {String} href The CSS href url.
+	 */
+	loadCss: function(href) {
+		var me = this;
+		if(!me.loadedCss) me.loadedCss = {};
+		if(!me.loadedCss[href]) {
+			var doc = window.document;
+			var link = doc.createElement('link');
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = href;
+			doc.getElementsByTagName('head')[0].appendChild(link);
+			me.loadedCss[href] = href;
 		}
 	},
 	
@@ -78,22 +96,4 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}
 		return hm;
 	},
-	
-	/**
-	 * Loads a CSS file by adding in the page a new link element.
-	 * @param {String} href The CSS href url.
-	 */
-	loadCss: function(href) {
-		var me = this;
-		if(!me.loadedCss) me.loadedCss = {};
-		if(!me.loadedCss[href]) {
-			var doc = window.document;
-			var link = doc.createElement('link');
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = href;
-			doc.getElementsByTagName('head')[0].appendChild(link);
-			me.loadedCss[href] = href;
-		}
-	}
 });

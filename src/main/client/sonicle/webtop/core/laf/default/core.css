@@ -1,0 +1,16 @@
+/*
+	The purpose of this CSS file is to contain all platform 
+	specific styles (eg. wt-* classes) and default overrides 
+	valid for all extjs themes.
+
+	Specific platform styles contained below can be overridden
+	in dedicated CSS files to the overriding (eg. override-
+	crisp.css or override-crisp-touch.css).
+*/
+
+.wt-header {
+	
+}
+.wt-nav {
+	
+}

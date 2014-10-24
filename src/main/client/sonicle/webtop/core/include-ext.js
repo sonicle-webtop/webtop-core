@@ -110,7 +110,7 @@
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				themePath + (useDebug ? '-debug.css' : '.css') + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'override.css' + '"/>');
+				lafPath + 'core.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				lafPath + 'override-' + theme + '.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +

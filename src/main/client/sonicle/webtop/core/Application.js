@@ -106,6 +106,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Defines urls to load
 		WT.loadCss(desc.getBaseUrl()+'/laf/'+WTStartup.laf+'/service.css');
+		WT.loadCss(desc.getBaseUrl()+'/laf/'+WTStartup.laf+'/service-'+WTStartup.theme+'.css');
 		urls.push(Ext.Loader.getPath(desc.getClassName()));
 		urls.push(Ext.Loader.getPath(desc.getNs()+'.Locale_'+WTStartup.locale));
 		
