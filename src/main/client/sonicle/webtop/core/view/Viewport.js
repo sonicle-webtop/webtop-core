@@ -33,16 +33,16 @@
  */
 Ext.define('Sonicle.webtop.core.view.Viewport', {
 	extend: 'Ext.container.Viewport',
+	requires: [
+		'Sonicle.webtop.core.view.ViewportC',
+		'Sonicle.webtop.core.model.Theme'
+	],
+	controller: Ext.create('Sonicle.webtop.core.view.ViewportC'),
 	layout: 'border',
 	
-	requires: [
-		'Sonicle.webtop.core.view.ViewportController'
-	],
-	controller: Ext.create('Sonicle.webtop.core.view.ViewportController'),
-	
-	svctbs: null,
-	svctools: null,
-	svcmains: null,
+	svctb: null,
+	svctool: null,
+	svcmain: null,
 	
 	initComponent: function() {
 		var me = this;
@@ -54,11 +54,6 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			itemId: 'header',
 			layout: 'border',
 			height: 40,
-			/*
-			defaults: {
-				cls: 'wt-header'
-			},
-			*/
 			items: [
 				{
 					xtype: 'toolbar',
@@ -71,48 +66,35 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						paddingBottom: 0
 					},
 					items: [{
-							xtype: 'combo',
-							fieldLabel: 'Select Theme',
-							width: 300,
-							store: Ext.create('Ext.data.Store', {
-								fields: ['id', 'description'],
-								data: [
-									{"id": "aria", "description": "Aria"},
-									{"id": "neptune", "description": "Neptune"},
-									{"id": "classic", "description": "Classic"},
-									{"id": "gray", "description": "Gray"},
-									{"id": "neptune-touch", "description": "Neptune Touch"},
-									{"id": "crisp", "description": "Crisp"},
-									{"id": "crisp-touch", "description": "Crisp Touch"}
-									//...
-								]
-							}),
-							queryMode: 'local',
-							displayField: 'description',
-							valueField: 'id',
-							editable: false,
-							listeners: {
-								scope: this,
-								'select': function (c, r, o) {
-									Ext.Ajax.request({
-										url: 'service-request',
-										params: {
-											service: 'com.sonicle.webtop.core',
-											action: 'SetTheme',
-											theme: r[0].get('id')
-										},
-										success: function (r) {
-											window.location.reload();
-										}
-									});
-								}
+						xtype: 'combo',
+						editable: false,
+						store: {
+							model: 'Sonicle.webtop.core.model.Theme',
+							proxy: WT.ajaxProxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
+						},
+						valueField: 'id',
+						displayField: 'description',
+						listeners: {
+							scope: this,
+							select: function(c,r,o) {
+								Ext.Ajax.request({
+									url: 'service-request',
+									params: {
+										service: 'com.sonicle.webtop.core',
+										action: 'SetTheme',
+										theme: r[0].get('id')
+									},
+									success: function (r) {
+										window.location.reload();
+									}
+								});
 							}
 						}
-					]
+					}]
 				}, {
 					xtype: 'container',
 					region: 'center',
-					itemId: 'svctbs',
+					itemId: 'svctb',
 					layout: 'card',
 					defaults: {
 						cls: 'wt-header',
@@ -176,14 +158,14 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 				}
 			]
 		});
-		me.svctbs = header.queryById('svctbs');
+		me.svctb = header.queryById('svctb');
 		me.add(header);
 		
 		var navtb = Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
 			itemId: 'navtb',
-			cls: 'wt-nav',
+			cls: 'wt-navtb',
 			border: false,
 			vertical: true
 		});
@@ -203,30 +185,43 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			items: [{
 					xtype: 'container',
 					region: 'west',
-					itemId: 'svctools',
+					itemId: 'svctool',
 					layout: 'card',
 					collapsible: true
 				}, {
 					xtype: 'container',
 					region: 'center',
-					itemId: 'svcmains',
+					itemId: 'svcmain',
 					layout: 'card'
 				}
 			]
 		});
-		me.svctools = center.queryById('svctools');
-		me.svcmains = center.queryById('svcmains');
+		me.svctool = center.queryById('svctool');
+		me.svcmain = center.queryById('svcmain');
 		me.add(center);
 	},
 	
 	createSvcButton: function(desc) {
+		// Defines tooltips
+		var tip = {title: desc.getName()};
+		if(WTStartup.isadmin) { // TODO: gestire tooltip per admin
+			var build = desc.getBuild();
+			Ext.apply(tip, {
+				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
+			});
+		} else {
+			Ext.apply(tip, {
+				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
+			});
+		}
+		
 		var inst = inst = desc.getInstance();
 		return Ext.create({
 			xtype: 'button',
 			scale: 'large',
 			itemId: inst.id,
 			iconCls: inst.cssIconCls('service-m'),
-			tooltip: desc.getName(),
+			tooltip: tip,
 			handler: 'onNavTbButtonClick'
 		});
 	}

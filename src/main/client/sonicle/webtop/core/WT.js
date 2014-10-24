@@ -49,6 +49,21 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}
 	},
 	
+	ajaxProxy: function(svc, act, rootp) {
+		return {
+			type: 'ajax',
+			url: 'service-request',
+			extraParams: {
+				service: svc,
+				action: act
+			},
+			reader: {
+				type: 'json',
+				rootProperty: rootp
+			}
+		};
+	},
+	
 	/**
 	 * Loads a CSS file by adding in the page a new link element.
 	 * @param {String} href The CSS href url.
@@ -95,5 +110,5 @@ Ext.define('Sonicle.webtop.core.WT', {
 			}
 		}
 		return hm;
-	},
+	}
 });

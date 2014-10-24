@@ -31,57 +31,61 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.bol.js.JsTheme;
-import com.sonicle.webtop.core.sdk.Environment;
-import com.sonicle.webtop.core.sdk.Service;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Locale;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-
-/**
- *
- * @author malbinola
- */
-public class CoreService extends Service {
+Ext.define('Sonicle.webtop.core.view.Feedback', {
+	extend: 'Ext.panel.Panel',
+	requires: [
+		'Sonicle.webtop.core.view.FeedbackC',
+		'Ext.ux.form.Spacer',
+		'Sonicle.webtop.core.model.AvailService'
+	],
+	controller: Ext.create('Sonicle.webtop.core.view.FeedbackC'),
 	
-	public static final Logger logger = Service.getLogger(CoreService.class);
-
-	@Override
-	public void initialize() {
-		getFullEnv().getSession().test();
-		logger.debug("Mi sono inizializzato: mi chiamo {}", getName(new Locale("it_IT")));
-	}
-
-	@Override
-	public void cleanup() {
-		
-	}
+	h2cCanvas: null,
+	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
 	
-	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		String theme=request.getParameter("theme");
-		logger.debug("change theme to {}",theme);
-		getFullEnv().getSession().setTheme(theme);
-		new JsonResult().printTo(out);
-	}
-	
-	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsTheme> items = new ArrayList<>();
-		
-		// TODO: handle themes dinamically
-		items.add(new JsTheme("aria", "Aria"));
-		items.add(new JsTheme("classic", "Classic"));
-		items.add(new JsTheme("crisp", "Crisp"));
-		items.add(new JsTheme("crisp-touch", "Crisp Touch"));
-		items.add(new JsTheme("gray", "Gray"));
-		items.add(new JsTheme("neptune", "Neptune"));
-		items.add(new JsTheme("neptune-touch", "Neptune Touch"));
-		
-		new JsonResult("themes", items).printTo(out);
-	}
-}
+	items: [{
+		xtype: 'hiddenfield',
+		name: 'timestamp'
+	}, {
+		xtype: 'displayfield',
+		html: WT.res('feedback.text')
+	}, {
+		xtype: 'spacer'
+	}, {
+		xtype: 'combo',
+		editable: false,
+		store: {
+			model: 'Sonicle.webtop.core.model.AvailService',
+			proxy: WT.ajaxProxy('com.sonicle.webtop.core', 'GetAvailableServices', 'services')
+		},
+		valueField: 'id',
+		displayField: 'description',
+		fieldLabel: WT.res('f-service.lbl')
+	}, {
+		xtype: 'textareafield',
+		name: 'message',
+		allowBlank: false,
+		anchor: '100%',
+		fieldLabel: WT.res('feedback.f-message.lbl')
+	}, {
+		name: 'anonymous',
+		hideLabel: true,
+		boxLabel: WT.res('feedback.f-anonymous.lbl')
+	}, {
+		name: 'screenshot',
+		submitValue: false,
+		hideLabel: true,
+		boxLabel: WT.res('feedback.f-screenshot.lbl'),
+		handler: 'onScreenshotChange',
+		scope: this
+	}],
+	buttons: [{
+		text: WT.res('send'),
+		handler: 'onSendClick',
+		scope: this
+	}, {
+		text: WT.res('cancel'),
+		handler: 'onCancelClick',
+		scope: this
+	}]
+});

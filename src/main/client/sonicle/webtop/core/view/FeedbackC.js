@@ -31,38 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.ViewportController', {
-	extend: 'Ext.app.ViewController',
+Ext.define('Sonicle.webtop.core.view.FeedbackC', {
+	extend: 'Ext.app.ViewController'
 	
-	onNavTbButtonClick: function(s) {
-		WT.getApp().activateService(s.getItemId());
-	},
-	
-	onMenuButtonClick: function(s) {
-		switch(s.getItemId()) {
-			case 'logout':
-				document.location = 'logout';
-				break;
-			default:
-				alert('Hai premuto il bottone '+s.getItemId());
-		}
-	},
-	
-	setServiceToolbar: function(cmp) {
-		var co = this.getView().svctbs;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	},
-	
-	setServiceToolCmp: function(cmp) {
-		var co = this.getView().svctools;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	},
-	
-	setServiceMainCmp: function(cmp) {
-		var co = this.getView().svcmains;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	}
 });
