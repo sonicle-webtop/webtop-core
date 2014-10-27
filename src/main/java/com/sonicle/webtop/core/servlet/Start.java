@@ -88,7 +88,7 @@ public class Start extends HttpServlet {
 			ServletHelper.fillPageVars(tplMap, locale, wta);
 			
 			UserProfile p=wts.getUserProfile();
-			String ticket=p.getUserId()+"@"+p.getDomainId()+"-"+currentUser.getSession().getHost()+"-"+currentUser.getSession().getStartTimestamp();
+			String ticket=request.getSession().getId();
 			WebTopApp.logger.trace("Generated ticket = {}",ticket);
 			String encTicket=Encryption.cipher(ticket, p.getSecret());
 			WebTopApp.logger.trace("Encoded ticket = {}",encTicket);
@@ -99,6 +99,8 @@ public class Start extends HttpServlet {
 			jswt.theme = theme;
 			jswt.laf = lookAndFeel;
 			jswt.encAuthTicket = encTicket;
+			jswt.domainId=p.getDomainId();
+			jswt.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
 				if(serviceId.equals(Manifest.ID)) continue;
 				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));

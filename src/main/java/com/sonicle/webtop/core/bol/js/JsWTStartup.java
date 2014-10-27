@@ -45,6 +45,8 @@ public class JsWTStartup {
 	public String theme = "";
 	public String laf = "";
 	public String encAuthTicket="";
+	public String userId="";
+	public String domainId="";
 	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {

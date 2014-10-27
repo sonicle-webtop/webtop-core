@@ -5,7 +5,10 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Locale_'+WTStartup.locale,
 		'Sonicle.webtop.core.Log',
-		'Sonicle.webtop.core.ServiceDescriptor'
+		'Sonicle.webtop.core.ServiceDescriptor',
+		'Ext.ux.WebSocketManager',
+		'Ext.ux.WebSocket'
+		
 	],
 	views: [
 		'Sonicle.webtop.core.view.Viewport'
@@ -36,6 +39,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Launch loading process...
 		me.loadServices();
+		
+		me.runWebSocket();
 	},
 	
 	buildUI: function() {
@@ -172,5 +177,28 @@ Ext.define('Sonicle.webtop.core.Application', {
 			}
 			wpc.setServiceMainCmp(cmp);
 		}
+	},
+	
+	runWebSocket: function() {
+
+		var websocket = Ext.create ('Ext.ux.WebSocket', {
+			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
+			listeners: {
+				open: function (ws) {
+					console.log ('Sending ticket to websocket: '+WTStartup.encAuthTicket);
+					ws.send ('TICKET '+WTStartup.userId+" "+WTStartup.domainId+" "+WTStartup.encAuthTicket);
+				} ,
+				close: function (ws) {
+					console.log ('The websocket is closed!');
+				} ,
+				error: function (ws, error) {
+					Ext.Error.raise (error);
+				} ,
+				message: function (ws, message) {
+					console.log ('A new message is arrived: ' + message);
+				}
+			}
+		});		
+		
 	}
 });

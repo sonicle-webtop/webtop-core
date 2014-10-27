@@ -40,6 +40,8 @@ import com.sonicle.webtop.core.sdk.BasicEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.servlet.WebSocketManager;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -70,6 +72,7 @@ public class WebTopSession {
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
+	private WebSocketManager wsm=null;
 	
 	WebTopSession(HttpSession session) {
 		wta = WebTopApp.get(session.getServletContext());
@@ -230,7 +233,15 @@ public class WebTopSession {
 		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
 	}
 	
+	public void setWebSocketManager(WebSocketManager wsm) {
+		this.wsm=wsm;
+	}
 	
+	public void sendWebSocketMessage(String msg) throws IOException {
+		if (this.wsm!=null) {
+			this.wsm.sendMessage(msg);
+		}
+	}
 	
 	
 	
@@ -248,7 +259,7 @@ public class WebTopSession {
 	 * @param session The http session
 	 * @return WebTopSession object
 	 */
-	static WebTopSession get(HttpSession session) {
+	public static WebTopSession get(HttpSession session) {
 		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
 	}
 }
