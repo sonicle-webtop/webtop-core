@@ -33,7 +33,8 @@
  */
 Ext.define('Ext.ux.form.Spacer', {
 	extend: 'Ext.Component',
-	alias: 'widget.ux.spacer',
+	alias: 'widget.spacer',
+	
 	height: 10,
 	autoEl: 'div'
 });

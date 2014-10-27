@@ -161,18 +161,18 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		me.svctb = header.queryById('svctb');
 		me.add(header);
 		
-		var navtb = Ext.create({
+		var launcher = Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
-			itemId: 'navtb',
-			cls: 'wt-navtb',
+			itemId: 'launcher',
+			cls: 'wt-launcher',
 			border: false,
 			vertical: true
 		});
 		WT.getApp().services.each(function(desc) {
-			navtb.add(me.createSvcButton(desc));
+			launcher.add(me.createSvcButton(desc));
 		}, me);
-		me.add(navtb);
+		me.add(launcher);
 		
 		var center = Ext.create({
 			xtype: 'container',
@@ -222,7 +222,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			itemId: inst.id,
 			iconCls: inst.cssIconCls('service-m'),
 			tooltip: tip,
-			handler: 'onNavTbButtonClick'
+			handler: 'onLauncherButtonClick'
 		});
 	}
 });

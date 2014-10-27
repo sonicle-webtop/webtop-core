@@ -31,54 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.ViewportC', {
-	extend: 'Ext.app.ViewController',
+Ext.define('Sonicle.webtop.core.sdk.FormView', {
+	extend: 'Ext.form.Panel',
+	alternateClassName: 'WT.sdk.FormView',
 	
-	onLauncherButtonClick: function(s) {
-		WT.getApp().activateService(s.getItemId());
-	},
+	bodyPadding: 10,
 	
-	onMenuButtonClick: function(s) {
-		switch(s.getItemId()) {
-			case 'logout':
-				document.location = 'logout';
-				break;
-			case 'feedback':
-				this.buildFeedbackWnd();
-				break;
-			default:
-				alert('Hai premuto il bottone '+s.getItemId());
-		}
-	},
-	
-	setServiceToolbar: function(cmp) {
-		var co = this.getView().svctb;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	},
-	
-	setServiceToolCmp: function(cmp) {
-		var co = this.getView().svctool;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	},
-	
-	setServiceMainCmp: function(cmp) {
-		var co = this.getView().svcmain;
-		if(!co.contains(cmp)) co.add(cmp);
-		co.getLayout().setActiveItem(cmp);
-	},
-	
-	buildFeedbackWnd: function() {
-		var wnd = Ext.create({
-			xtype: 'window',
-			layout: 'fit',
-			height: 320,
-			width: 590,
-			items: [
-				Ext.create('Sonicle.webtop.core.view.Feedback')
-			]
-		});
-		if(wnd) wnd.show();
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent(arguments);
 	}
 });

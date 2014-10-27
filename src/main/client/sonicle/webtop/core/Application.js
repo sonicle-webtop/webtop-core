@@ -3,7 +3,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
 		'Sonicle.webtop.core.WT',
-		//'Sonicle.webtop.core.Locale_it_IT',
 		'Sonicle.webtop.core.Locale_'+WTStartup.locale,
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ServiceDescriptor'
@@ -28,6 +27,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	init: function() {
 		var me = this;
 		WT.Log.debug('application:init');
+		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
 		
 		// Loads service descriptors from startup object

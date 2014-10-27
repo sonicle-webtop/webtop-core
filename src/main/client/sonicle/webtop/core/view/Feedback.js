@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Feedback', {
-	extend: 'Ext.panel.Panel',
+	extend: 'WT.sdk.FormView',
 	requires: [
 		'Sonicle.webtop.core.view.FeedbackC',
 		'Ext.ux.form.Spacer',
@@ -44,13 +44,13 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
 	
 	items: [{
+		xtype: 'component',
+		html: WT.res('feedback.text')
+	}, 
+	Ext.create('Ext.ux.form.Spacer', {height: 20}), 
+	{
 		xtype: 'hiddenfield',
 		name: 'timestamp'
-	}, {
-		xtype: 'displayfield',
-		html: WT.res('feedback.text')
-	}, {
-		xtype: 'spacer'
 	}, {
 		xtype: 'combo',
 		editable: false,
@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		},
 		valueField: 'id',
 		displayField: 'description',
-		fieldLabel: WT.res('f-service.lbl')
+		fieldLabel: WT.res('feedback.f-service.lbl')
 	}, {
 		xtype: 'textareafield',
 		name: 'message',
@@ -68,10 +68,12 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		anchor: '100%',
 		fieldLabel: WT.res('feedback.f-message.lbl')
 	}, {
+		xtype: 'checkbox',
 		name: 'anonymous',
 		hideLabel: true,
 		boxLabel: WT.res('feedback.f-anonymous.lbl')
 	}, {
+		xtype: 'checkbox',
 		name: 'screenshot',
 		submitValue: false,
 		hideLabel: true,
