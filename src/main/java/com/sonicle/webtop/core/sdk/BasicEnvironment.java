@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Locale;
@@ -57,4 +58,5 @@ public interface BasicEnvironment {
     public CoreUserSettings getCoreUserSettings();
 	public String getContentType(String extension);
 	public String getExtension(String contentType);
+	public void sendWebSocketMessage(String msg) throws IOException;
 }

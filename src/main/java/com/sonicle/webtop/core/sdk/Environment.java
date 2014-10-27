@@ -43,6 +43,7 @@ import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -154,6 +155,11 @@ public class Environment implements BasicEnvironment {
 			DbUtils.closeQuietly(con);
 		}
 		return extension;
+	}
+	
+	@Override
+	public void sendWebSocketMessage(String msg) throws IOException {
+		wts.sendWebSocketMessage(msg);
 	}
 	
 }
