@@ -110,5 +110,9 @@ Ext.define('Sonicle.webtop.core.WT', {
 			}
 		}
 		return hm;
+	},
+	
+	wsMsg: function(service, action, config) {
+		return Ext.JSON.encode(Ext.apply(config||{},{ service: service, action: action }));
 	}
 });
