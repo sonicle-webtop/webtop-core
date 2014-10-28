@@ -39,8 +39,9 @@ import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.BasicEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.servlet.WebSocketManager;
+import com.sonicle.webtop.core.ws.WebSocketManager;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -237,9 +238,9 @@ public class WebTopSession {
 		this.wsm=wsm;
 	}
 	
-	public void sendWebSocketMessage(String msg) throws IOException {
+	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
 		if (this.wsm!=null) {
-			this.wsm.sendMessage(msg);
+			this.wsm.sendMessage(wsmessage);
 		}
 	}
 	

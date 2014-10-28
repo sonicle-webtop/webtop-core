@@ -186,7 +186,15 @@ Ext.define('Sonicle.webtop.core.Application', {
 			listeners: {
 				open: function (ws) {
 					console.log ('Sending ticket to websocket: '+WTStartup.encAuthTicket);
-					ws.send ('TICKET '+WTStartup.userId+" "+WTStartup.domainId+" "+WTStartup.encAuthTicket);
+					var config={
+						service: "com.sonicle.webtop.core",
+						action: "ticket",
+						
+						userId: WTStartup.userId,
+						domainId: WTStartup.domainId,
+						encAuthTicket: WTStartup.encAuthTicket
+					};
+					ws.send(Ext.JSON.encode(config));
 				} ,
 				close: function (ws) {
 					console.log ('The websocket is closed!');

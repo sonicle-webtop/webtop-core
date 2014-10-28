@@ -31,14 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.ws;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.Manifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.Encryption;
+import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import java.io.IOException;
 import java.sql.Connection;
 import javax.servlet.http.HttpSession;
@@ -75,29 +79,33 @@ public class WebSocketManager {
     }
 	
 	@OnMessage
-	public void answerMessage(String msg) {
+	public void gotMessage(String json) {
 		try {
+			logger.debug("gotMessage : {}",json);
 			if (wsSession.isOpen()) {
-				int ix=msg.indexOf(" ");
-				String cmd=msg.substring(0,ix);
-				String value=msg.substring(ix+1);
-				String answer;
-				if (cmd.equals("TICKET")) {
-					answer=answerTicket(value);
+				WebSocketMessage wsm=JsonResult.gson.fromJson(json, WebSocketMessage.class);
+				//core message
+				if (wsm.service.equals(Manifest.ID)) {
+					switch(wsm.action) {
+						case TicketMessage.ACTION_TICKET:
+							TicketMessage tm=JsonResult.gson.fromJson(json, TicketMessage.class);
+							ticketValidated=isTicketValid(tm);
+							if (!ticketValidated) sendError("The authorizazion ticket is not valid!");
+							else sendInformation("The authorization ticket has been accepted!");
+							break;
+					}
+				//service message
 				} else {
 					if (ticketValidated) {
-						switch(cmd) {
-							default:
-								answer="NOOP";
-								break;
-						}
+						Service wtservice=wts.getServiceById(wsm.service);
+						logger.debug("Found service object {}. Sending json :\n",wtservice.getClass(),json);
 					} else {
-						answer="ERROR ticket not yet validated!";
+						sendError("No authorization ticket has been validated yet!");
 					}
 				}
-				wsSession.getBasicRemote().sendText(answer);
 			}
 		} catch (IOException e) {
+			logger.error("error on gotMessage!",e);
 			try {
 				wsSession.close();
 			} catch (IOException e1) {
@@ -106,40 +114,45 @@ public class WebSocketManager {
 		}
 	}	
 	
-	public void sendMessage(String msg) throws IOException {
-		wsSession.getBasicRemote().sendText(msg);
-	}
-	
-	private String answerTicket(String value) {
-		String values[]=value.split(" ");
-		String userId=values[0];
-		String domainId=values[1];
-		String encAuthTicket=values[2];
-		String answer;
-		
+	private boolean isTicketValid(TicketMessage tm) {
+		boolean isValid=false;
 		Connection con=null;
 		try {
 			con=WebTopApp.getInstance().getConnectionManager().getConnection();
-			OUser ouser=UserDAO.getInstance().selectByDomainUser(con, domainId, userId);
+			OUser ouser=UserDAO.getInstance().selectByDomainUser(con, tm.domainId, tm.userId);
 			if (ouser!=null) {
-				String sid=Encryption.decipher(encAuthTicket, ouser.getSecret());
+				String sid=Encryption.decipher(tm.encAuthTicket, ouser.getSecret());
 				if (httpSession.getId().equals(sid)) {
-					answer="OK ticket is valid";
-					ticketValidated=true;
-				} else {
-					answer="ERROR ticket is invalid";
+					isValid=true;
 				}
-			} else {
-				answer="ERROR user not found";
 			}
 			
 		} catch(Exception exc) {
-			logger.error("Error during ticket management for {}@{}",userId,domainId,exc);
-			answer="ERROR "+exc.getMessage();
+			logger.error("Error during ticket management for {}@{}",tm.userId,tm.domainId,exc);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-		return answer;
+		return isValid;
+	}
+	
+	public void sendMessage(WebSocketMessage wsm) throws IOException {
+		wsSession.getBasicRemote().sendText(
+						wsm.toJson()
+		);
+	} 
+	
+	public void sendError(String msg) throws IOException {
+		wsSession.getBasicRemote().sendText(
+				new ErrorMessage(msg)
+						.toJson()
+		);
+	}
+	
+	public void sendInformation(String msg) throws IOException {
+		wsSession.getBasicRemote().sendText(
+				new InformationMessage(msg)
+						.toJson()
+		);
 	}
 	
 }

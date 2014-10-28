@@ -158,8 +158,8 @@ public class Environment implements BasicEnvironment {
 	}
 	
 	@Override
-	public void sendWebSocketMessage(String msg) throws IOException {
-		wts.sendWebSocketMessage(msg);
+	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
+		wts.sendWebSocketMessage(wsmessage);
 	}
 	
 }

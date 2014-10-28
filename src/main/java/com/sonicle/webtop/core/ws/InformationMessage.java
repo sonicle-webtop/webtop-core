@@ -31,26 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.ws;
 
-import javax.servlet.http.HttpSession;
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
-import javax.websocket.server.ServerEndpointConfig;
+import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.sdk.WebSocketMessage;
 
 /**
  *
  * @author gbulfon
  */
-public class WebSocketManagerConfigurator extends ServerEndpointConfig.Configurator {
+public class InformationMessage extends WebSocketMessage {
 	
-    @Override
-    public void modifyHandshake(ServerEndpointConfig config, 
-                                HandshakeRequest request, 
-                                HandshakeResponse response)
-    {
-        HttpSession httpSession = (HttpSession)request.getHttpSession();
-        config.getUserProperties().put(HttpSession.class.getName(),httpSession);
-    }	
+	public static final String ACTION_INFO="info";
 	
+	String infoDescription;
+	
+	public InformationMessage(String desc) {
+		this.service=Manifest.ID;
+		this.action=ACTION_INFO;
+		this.infoDescription=desc;
+	}
 }
