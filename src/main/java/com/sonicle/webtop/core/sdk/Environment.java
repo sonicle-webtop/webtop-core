@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.CoreService;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.Manifest;
@@ -41,22 +42,14 @@ import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
-import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Locale;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESKeySpec;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  *
@@ -65,7 +58,8 @@ import sun.misc.BASE64Encoder;
 public class Environment implements BasicEnvironment {
 
 	public final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
-
+	private static HashMap<String,ServiceManifest> manifestMap=new HashMap<>();
+	
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
 
@@ -161,5 +155,22 @@ public class Environment implements BasicEnvironment {
 	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
 		wts.sendWebSocketMessage(wsmessage);
 	}
+	
+	public static void addManifestMap(String classname, ServiceManifest manifest) {
+//		logger.debug("adding manifest map {} -> {}",classname,manifest.getId());
+		manifestMap.put(classname, manifest);
+	}
+	
+	public static ServiceManifest getManifest(Class clazz) {
+//		logger.debug("getting manifest for {}",clazz.getName());
+		return manifestMap.get(clazz.getName());
+	}
+	
+	public static String getServiceId(Class clazz) {
+//		logger.debug("getting service id for {}",clazz.getName());
+		return manifestMap.get(clazz.getName()).getId();
+	}
+	
+	
 	
 }

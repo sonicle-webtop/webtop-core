@@ -150,7 +150,7 @@ public class ServiceManager {
 			logger.error("Error instantiating service [{}]", descr.getManifest().getClassName(), ex);
 			return null;
 		}
-		instance.configure(descr.getManifest(), basicEnv, fullEnv);
+		instance.configure(basicEnv, fullEnv);
 		
 		// Calls initialization method
 		try {
@@ -195,6 +195,9 @@ public class ServiceManager {
 		ServiceDescriptor descr = null;
 		String serviceId = manifest.getId();
 		boolean maintenance = false;
+		
+		Environment.addManifestMap(manifest.getClassName(), manifest);
+
 		
 		logger.debug("Registering service [{}]", serviceId);
 		synchronized(services) {

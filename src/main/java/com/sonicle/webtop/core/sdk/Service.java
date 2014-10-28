@@ -50,23 +50,18 @@ public abstract class Service {
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
 	private boolean configured = false;
-	private ServiceManifest manifest;
 	private Environment env;
 	private CoreEnvironment coreEnv;
 	
 	public abstract void initialize();
 	public abstract void cleanup();
 	
-	public final void configure(ServiceManifest manifest, Environment env, CoreEnvironment coreEnv) {
+	public final void configure(Environment env, CoreEnvironment coreEnv) {
 		if(configured) return;
 		configured = true;
-		this.manifest = manifest;
 		this.env = env;
 		this.coreEnv = coreEnv;
-	}
-	
-	public ServiceManifest getManifest() {
-		return manifest;
+		
 	}
 	
 	public BasicEnvironment getEnv() {
@@ -78,13 +73,21 @@ public abstract class Service {
 		return coreEnv;
 	}
 	
+	public ServiceManifest getManifest() {
+		return Environment.getManifest(this.getClass());
+	}
+	
+	public String getId() {
+		return Environment.getServiceId(this.getClass());
+	}
+	
 	/**
 	 * Returns the localized name.
 	 * @param locale The requested locale.
 	 * @return The localized string.
 	 */
 	public String getName(Locale locale) {
-		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_NAME);
+		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
 	}
 	
 	/**
@@ -93,7 +96,7 @@ public abstract class Service {
 	 * @return The localized string.
 	 */
 	public String getDescription(Locale locale) {
-		return env.lookupResource(manifest.getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
+		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
 	
 	/**
@@ -134,7 +137,7 @@ public abstract class Service {
 	 * @return The translated string, or null if not found.
 	 */
 	public String lookupResource(String key) {
-		return env.lookupResource(manifest.id, env.getProfile().getLocale(), key);
+		return env.lookupResource(getId(), env.getProfile().getLocale(), key);
 	}
     
 	/**
@@ -144,7 +147,7 @@ public abstract class Service {
 	 * @return The translated string, or null if not found.
 	 */
 	public String lookupResource(String key, boolean escapeHtml) {
-		return env.lookupResource(manifest.id, env.getProfile().getLocale(), key, escapeHtml);
+		return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
 	}
     
 }
