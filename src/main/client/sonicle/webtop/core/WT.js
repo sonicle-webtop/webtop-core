@@ -2,11 +2,21 @@ Ext.define('Sonicle.webtop.core.WT', {
 	singleton: true,
 	alternateClassName: 'WT',
 	
-	statics: {
-		ID: 'com.sonicle.webtop.core',
-		XID: 'wt',
-		NS: 'Sonicle.webtop.core'
-	},
+	/**
+	 * @property
+	 * Core service ID.
+	 */
+	ID: 'com.sonicle.webtop.core',
+	/**
+	 * @property
+	 * Core service short ID.
+	 */
+	XID: 'wt',
+	/**
+	 * @property
+	 * Core service namespace.
+	 */
+	NS: 'Sonicle.webtop.core',
 	
 	strings: null,
 	loadedCss: null,

@@ -162,9 +162,9 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Function} callback The function for this action
 	 * @param {Object} scope The scope for this callback
 	 */
-	addWSAction: function(action,callback,scope) {
-		this.wsactions[action]=callback;
-		this.wsscopes[action]=scope;
+	addWSAction: function(action, callback, scope) {
+		this.wsactions[action] = callback;
+		this.wsscopes[action] = scope;
 	},
 	
 	/*
@@ -191,11 +191,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Object} cfg The message config object.
 	 */
 	websocketMessage: function(cfg) {
+		var me  = this;
 		console.log('MailService: received message with action '+cfg.action);
-		var func=this.wsactions[cfg.action];
-		var scope=this.wsscopes[cfg.action]||this;
-		if (func) func.call(scope,cfg);
+		var fn = me.wsactions[cfg.action];
+		var scope = me.wsscopes[cfg.action] || me;
+		Ext.callback(fn, scope, [cfg]);
 	}
-	
-	
 });

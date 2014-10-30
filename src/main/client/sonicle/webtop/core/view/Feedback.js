@@ -111,6 +111,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	},
 	
 	listeners: {
+		afterrender: 'onAfterRender',
 		submit: 'onSubmit'
 	}
 });

@@ -37,6 +37,13 @@ Ext.define('Sonicle.webtop.core.view.FeedbackC', {
 	h2cCanvas: null,
 	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
 	
+	onAfterRender: function() {
+		var ct = this.getView().ownerCt;
+		if(ct.isXType('window')) {
+			ct.getEl().set({'data-html2canvas-ignore': 'true'});
+		}
+	},
+	
 	onSubmit: function(s,op,success) {
 		if(success) {
 			WT.info(WT.res('feedback.sent'));
@@ -68,8 +75,8 @@ Ext.define('Sonicle.webtop.core.view.FeedbackC', {
 	
 	takeScreenshot: function() {
 		var me = this;
-		var el = me.getView().getEl();
-		el.mask(WT.res('feedback.capturing'), 'x-mask-loading');
+		var w = me.getView();
+		w.wait(WT.res('feedback.capturing'));
 		me.clearScreenshot();
 		WT.loadScriptAsync('js/html2canvas.js', function(success) {
 			if(success) {
@@ -82,11 +89,11 @@ Ext.define('Sonicle.webtop.core.view.FeedbackC', {
 						cel.setStyle('z-index', 8900);
 						Ext.get(document.body).insertSibling(cel);
 						me.h2cCanvas = canvas;
-						el.unmask();
+						w.unwait();
 					}
 				});
 			} else {
-				el.unmask();
+				w.unwait();
 			}
 		}, me);
 	},

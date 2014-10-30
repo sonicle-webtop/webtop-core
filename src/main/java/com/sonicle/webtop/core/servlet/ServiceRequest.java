@@ -76,13 +76,13 @@ public class ServiceRequest extends HttpServlet {
 				try {
 					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
 				} catch(NoSuchMethodException ex) {
-					throw new WTException("Service '{0}' has no action with name '{1}' [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
+					throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
 				}
 			} else {
 				try {
 					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
 				} catch(NoSuchMethodException ex) {
-					throw new WTException("Service '{0}' has no action with name '{1}' [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
+					throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
 				}
 			}
 			

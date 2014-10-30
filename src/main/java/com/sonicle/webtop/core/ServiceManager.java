@@ -183,6 +183,138 @@ public class ServiceManager {
 		return jsPathMappings.get(serviceId);
 	}
 	
+	/**
+	 * Returns registered services.
+	 * @return List of service IDs.
+	 */
+	public List<String> getRegisteredServices() {
+		synchronized(services) {
+			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
+		}
+	}
+	
+	/**
+	 * Lists discovered services.
+	 * @return List of registered services.
+	 */
+	public List<String> getServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(services) {
+			for(ServiceDescriptor descr : services.values()) {
+				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Lists discovered deamon services.
+	 * @return List of registered deamon services.
+	 */
+	public List<String> getDeamonServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(services) {
+			for(ServiceDescriptor descr : services.values()) {
+				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Gets descriptor for a specified service.
+	 * @param serviceId The service ID.
+	 * @return Service descriptor object.
+	 */
+	ServiceDescriptor getService(String serviceId) {
+		synchronized(services) {
+			if(!services.containsKey(serviceId)) return null;
+			return services.get(serviceId);
+		}
+	}
+	
+	/**
+	 * Gets manifest for a specified service.
+	 * @param serviceId The service ID.
+	 * @return Service manifest object.
+	 */
+	public ServiceManifest getManifest(String serviceId) {
+		ServiceDescriptor descr = getService(serviceId);
+		if(descr == null) return null;
+		return descr.getManifest();
+	}
+	
+	public boolean hasFullRights(String serviceId) {
+		if(serviceId.equals(CoreManifest.ID)) return true;
+		return false;
+	}
+	
+	/**
+	 * Resets whatsnew updating service's version in user-setting
+	 * to the current one.
+	 * @param serviceId The service ID.
+	 * @param profile The user profile.
+	 */
+	public synchronized void resetWhatsnew(String serviceId, UserProfile profile) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = null;
+		
+		// Gets current service's version info
+		manifestVer = getManifest(serviceId).getVersion();
+		setm.setUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION, manifestVer.toString());
+	}
+	
+	/**
+	 * Checks if a specific service needs to show whatsnew for passed user.
+	 * @param serviceId The service ID.
+	 * @param profile The user profile.
+	 * @return True if so, false otherwise.
+	 */
+	public boolean needWhatsnew(String serviceId, UserProfile profile) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = null, userVer = null;
+		
+		// Gets current service's version info and last version for this user
+		ServiceDescriptor desc = getService(serviceId);
+		manifestVer = desc.getManifest().getVersion();
+		userVer = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+		
+		boolean notseen = (manifestVer.compareTo(userVer) > 0);
+		boolean show = false;
+		if(notseen) {
+			String html = desc.getWhatsnew(profile.getLocale(), userVer);
+			if(StringUtils.isEmpty(html)) {
+				// If content is empty, updates whatsnew version for the user;
+				// it basically realign versions in user-settings.
+				logger.trace("Whatsnew empty [{}]", serviceId);
+				resetWhatsnew(serviceId, profile);
+			} else {
+				show = true;
+			}
+		}
+		logger.debug("Need to show whatsnew? {} [{}]", show, serviceId);
+		return show;
+	}
+	
+	/**
+	 * Loads whatsnew file for specified service.
+	 * If full parameter is true, all version paragraphs will be loaded;
+	 * otherwise current version only.
+	 * @param serviceId Service ID
+	 * @param profile The user profile.
+	 * @param full True to extract all version paragraphs.
+	 * @return HTML translated representation of loaded file.
+	 */
+	public String getWhatsnew(String serviceId, UserProfile profile, boolean full) {
+		ServiceVersion fromVersion = null;
+		ServiceDescriptor desc = getService(serviceId);
+		if(!full) {
+			SettingsManager setm = wta.getSettingsManager();
+			fromVersion = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+		}
+		return desc.getWhatsnew(profile.getLocale(), fromVersion);
+	}
+	
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
 		String serviceId = manifest.getId();
@@ -236,114 +368,8 @@ public class ServiceManager {
 		}
 	}
 	
-	/**
-	 * Returns registered services.
-	 * @return List of service IDs.
-	 */
-	public List<String> getRegisteredServices() {
-		synchronized(services) {
-			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
-		}
-	}
-	
-	public List<String> getServices() {
-		ArrayList<String> list = new ArrayList<>();
-		synchronized(services) {
-			for(ServiceDescriptor descr : services.values()) {
-				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
-			}
-		}
-		return list;
-	}
-	
-	public List<String> getDeamonServices() {
-		ArrayList<String> list = new ArrayList<>();
-		synchronized(services) {
-			for(ServiceDescriptor descr : services.values()) {
-				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
-			}
-		}
-		return list;
-	}
-	
-	ServiceDescriptor getService(String serviceId) {
-		synchronized(services) {
-			if(!services.containsKey(serviceId)) return null;
-			return services.get(serviceId);
-		}
-	}
-	
-	public ServiceManifest getManifest(String serviceId) {
-		ServiceDescriptor descr = getService(serviceId);
-		if(descr == null) return null;
-		return descr.getManifest();
-	}
-	
-	public boolean hasFullRights(String serviceId) {
-		if(serviceId.equals(CoreManifest.ID)) return true;
-		return false;
-	}
-	
-	public synchronized void updateWhatsnewVersion(String serviceId, UserProfile profile) {
-		SettingsManager setm = wta.getSettingsManager();
-		ServiceVersion manifestVer = null;
-		
-		// Gets current service's version info
-		manifestVer = getManifest(serviceId).getVersion();
-		setm.setUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION, manifestVer.toString());
-	}
-	
-	/**
-	 * Checks if a specific service needs to show whatsnew for passed user.
-	 * @param serviceId The service ID.
-	 * @param profile The user profile.
-	 * @return True if so, false otherwise.
-	 */
-	public boolean needWhatsnew(String serviceId, UserProfile profile) {
-		SettingsManager setm = wta.getSettingsManager();
-		ServiceVersion manifestVer = null, userVer = null;
-		
-		// Gets current service's version info and last version for this user
-		ServiceDescriptor desc = getService(serviceId);
-		manifestVer = desc.getManifest().getVersion();
-		userVer = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
-		
-		boolean notseen = (manifestVer.compareTo(userVer) > 0);
-		boolean show = false;
-		if(notseen) {
-			String html = desc.getWhatsnew(profile.getLocale(), userVer);
-			if(StringUtils.isEmpty(html)) {
-				logger.trace("Whatsnew empty [{}]", serviceId);
-				updateWhatsnewVersion(serviceId, profile);
-			} else {
-				show = true;
-			}
-		}
-		logger.debug("Need to show whatsnew? {} [{}]", show, serviceId);
-		return show;
-	}
-	
-	/**
-	 * Loads whatsnew file for specified service.
-	 * If full parameter is true, all version paragraphs will be loaded;
-	 * otherwise current version only.
-	 * @param serviceId Service ID
-	 * @param profile The user profile.
-	 * @param full True to extract all version paragraphs.
-	 * @return HTML translated representation of loaded file.
-	 */
-	public String getWhatsnew(String serviceId, UserProfile profile, boolean full) {
-		ServiceVersion fromVersion = null;
-		ServiceDescriptor desc = getService(serviceId);
-		if(!full) {
-			SettingsManager setm = wta.getSettingsManager();
-			fromVersion = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
-		}
-		return desc.getWhatsnew(profile.getLocale(), fromVersion);
-	}
-	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {
-		ClassLoader cl = findClassLoader();
+		ClassLoader cl = LangUtils.findClassLoader(getClass());
 		
 		// Scans classpath looking for service descriptor files
 		Enumeration<URL> enumResources = null;
@@ -397,11 +423,5 @@ public class ServiceManager {
 			}
 		}
 		return manifests;
-	}
-	
-	private ClassLoader findClassLoader() {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		if(cl == null) cl = getClass().getClassLoader();
-		return cl;
 	}
 }

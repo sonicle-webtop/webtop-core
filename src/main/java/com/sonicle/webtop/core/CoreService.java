@@ -71,8 +71,7 @@ public class CoreService extends Service {
 	}
 	
 	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		String theme=request.getParameter("theme");
-		logger.debug("change theme to {}",theme);
+		String theme = request.getParameter("theme");
 		getFullEnv().getSession().setTheme(theme);
 		new JsonResult().printTo(out);
 	}
@@ -114,22 +113,23 @@ public class CoreService extends Service {
 			//new JsonResult(false, "Erroreeeeeeeeeeeeeeeeeeeeeee").printTo(out);
 			
 		} catch(Exception ex) {
-			WebTopApp.logger.error("Error sending feedback report.", ex);
+			logger.error("Error executing action Feedback", ex);
 			new JsonResult(false, "Unable to send feedback report.").printTo(out);
 		}
 	}
 	
 	public void processGetWhatsnewTabs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsWhatsnewTab> tabs = null;
+		JsWhatsnewTab tab = null;
+		String html = null;
 		FullEnvironment env = getFullEnv();
 		UserProfile profile = env.getProfile();
 		
 		try {
 			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
 			
-			ArrayList<JsWhatsnewTab> tabs = new ArrayList<>();
+			tabs = new ArrayList<>();
 			List<String> ids = env.getSession().getServices();
-			JsWhatsnewTab tab = null;
-			String html = null;
 			for(String id : ids) {
 				if(full || env.getManager().needWhatsnew(id, profile)) {
 					html = env.getManager().getWhatsnewHtml(id, env.getProfile(), full);
@@ -143,8 +143,8 @@ public class CoreService extends Service {
 			new JsonResult(tabs).printTo(out);
 			
 		} catch (Exception ex) {
-			WebTopApp.logger.error("Error collecting what's new data.", ex);
-			new JsonResult(false, "Unable to send feedback report.").printTo(out);
+			logger.error("Error executing action GetWhatsnewTabs", ex);
+			new JsonResult(false, "Unable to get What's New info.").printTo(out);
 		}
 	}
 	
@@ -156,29 +156,27 @@ public class CoreService extends Service {
 			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
 			
 			String html = env.getManager().getWhatsnewHtml(id, env.getProfile(), full);
-			logger.debug("whatsnew html {}", html);
 			out.println(html);
 			
 		} catch (Exception ex) {
-			logger.error("Error collecting what's new data.", ex);
+			logger.error("Error executing action GetWhatsnewHTML", ex);
 		}
 	}
 	
-	/*
-	public void processGetWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processTurnOffWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
 		
 		try {
-			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
-			
+			UserProfile profile = env.getProfile();
 			List<String> ids = env.getSession().getServices();
-			List<JsWhatsnew> wns = env.getManager().getUserWhatsnew(env.getProfile(), full, ids);
-			new JsonResult(wns).printTo(out);
+			for(String id : ids) {
+				env.getManager().resetWhatsnew(id, profile);
+			}
 			
 		} catch (Exception ex) {
-			logger.error("Error collecting what's new data.", ex);
-			new JsonResult(false, "Unable to send feedback report.").printTo(out);
+			logger.error("Error executing action TurnOffWhatsnew", ex);
+		} finally {
+			new JsonResult().printTo(out);
 		}
 	}
-	*/
 }

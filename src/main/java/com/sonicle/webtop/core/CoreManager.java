@@ -119,6 +119,11 @@ public class CoreManager {
 		return svcm.getWhatsnew(serviceId, profile, full);
 	}
 	
+	public void resetWhatsnew(String serviceId, UserProfile profile) {
+		ServiceManager svcm = wta.getServiceManager();
+		svcm.resetWhatsnew(serviceId, profile);
+	}
+	
 	/*
 	public List<JsWhatsnew> getUserWhatsnew(UserProfile profile, boolean full, List<String> serviceIds) {
 		ArrayList<JsWhatsnew> items = new ArrayList<>();
