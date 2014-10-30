@@ -53,11 +53,15 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	tb: null,
 	toolcmp: null,
 	maincmp: null,
+	wsactions: null,
+	wsscopes: null,
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.id = cfg.id;
 		me.xid = cfg.xid;
+		me.wsactions = {};
+		me.wsscopes = {};
 		me.callParent(arguments);
 	},
 	
@@ -150,5 +154,48 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		} else {
 			return Ext.String.format('{0}-icon-{1}', this.xid, name);
 		}
+	},
+	
+	/*
+	 * Map a websocket action name to a callback function
+	 * @param {String} action The action name
+	 * @param {Function} callback The function for this action
+	 * @param {Object} scope The scope for this callback
+	 */
+	addWSAction: function(action,callback,scope) {
+		this.wsactions[action]=callback;
+		this.wsscopes[action]=scope;
+	},
+	
+	/*
+	 * Get the mapped function for a websocket action name
+	 * The passed function will be called with a config object
+	 * rapresenting the complete websocket message:
+	 * 
+	 *   {
+	 *     service: [service-id],
+	 *     action: [action-name],
+	 *     ...[sepcific action data]...
+	 *   }
+	 *   
+	 * @param {String} action the action name
+	 * @return {Function} callback function for this action
+	 */
+	getWSAction: function(action) {
+		return this.wsactions[action];
+	},
+	
+	/**
+	 * Callback for WebSocket messages arriving from the server.
+	 * Finds the mapped action function and call it.
+	 * @param {Object} cfg The message config object.
+	 */
+	websocketMessage: function(cfg) {
+		console.log('MailService: received message with action '+cfg.action);
+		var func=this.wsactions[cfg.action];
+		var scope=this.wsscopes[cfg.action]||this;
+		if (func) func.call(scope,cfg);
 	}
+	
+	
 });
