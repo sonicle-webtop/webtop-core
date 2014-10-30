@@ -5,7 +5,7 @@ Ext.application({
 	
     appFolder: 'resources/com.sonicle.webtop.core',
 	paths: {
-		'Ext.ux': 'resources/com.sonicle.webtop.core/ux',
+		'Ext.ux': 'resources/extjs/ux',
 		'WT': 'resources/com.sonicle.webtop.core'
 	},
 	autoCreateViewport: false
