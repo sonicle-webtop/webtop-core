@@ -184,22 +184,32 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var websocket = Ext.create ('Ext.ux.WebSocket', {
 			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
 			listeners: {
-				open: function (ws) {
-					console.log ('Sending ticket to websocket: '+WTStartup.encAuthTicket);
+				open: function(ws) {
+					console.log('Sending ticket to websocket: '+WTStartup.encAuthTicket);
 					ws.send(WT.wsMsg("com.sonicle.webtop.core","ticket",{
 						userId: WTStartup.userId,
 						domainId: WTStartup.domainId,
 						encAuthTicket: WTStartup.encAuthTicket
 					}));
 				} ,
-				close: function (ws) {
-					console.log ('The websocket is closed!');
+				close: function(ws) {
+					console.log('The websocket is closed!');
 				} ,
-				error: function (ws, error) {
-					Ext.Error.raise (error);
+				error: function(ws, error) {
+					Ext.Error.raise(error);
 				} ,
-				message: function (ws, message) {
-					console.log ('A new message is arrived: ' + message);
+				message: function(ws, msg) {
+					var obj=Ext.JSON.decode(msg,true);
+					if (obj && obj.service) {
+						var svc=WT.getApp().getService(obj.service);
+						if (svc) {
+							svc.websocketMessage(obj);
+						} else {
+							console.log('No service for websocket message: '+msg);
+						}
+					} else {
+						console.log('Invalid websocket message: '+msg);
+					}
 				}
 			}
 		});		
