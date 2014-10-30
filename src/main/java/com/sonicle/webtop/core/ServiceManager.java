@@ -39,6 +39,7 @@ import com.sonicle.webtop.core.sdk.InsufficientRightsException;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -54,7 +55,6 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
-import sun.security.jca.ServiceId;
 
 /**
  *
@@ -105,7 +105,7 @@ public class ServiceManager {
 	private void init() {
 		
 		// Progamatically register the core's manifest
-		registerService(new Manifest());
+		registerService(new CoreManifest());
 		
 		// Loads services' manifest files from classpath
 		logger.debug("Starting services discovery...");
@@ -183,24 +183,14 @@ public class ServiceManager {
 		return jsPathMappings.get(serviceId);
 	}
 	
-	/*
-	public String getServiceIdByJsPath(String jsPath) {
-		jsPath = StringUtils.removeStart(jsPath, "/");
-		jsPath = StringUtils.removeEnd(jsPath, "/");
-		return jsPathMappings.get(jsPath);
-	}
-	*/
-	
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
 		String serviceId = manifest.getId();
 		boolean maintenance = false;
 		
-		Environment.addManifestMap(manifest.getClassName(), manifest);
-
-		
 		logger.debug("Registering service [{}]", serviceId);
 		synchronized(services) {
+			//TODO: check if xid is not duplicated
 			if(services.containsKey(serviceId)) throw new RuntimeException("Service already registered");
 			descr = new ServiceDescriptor(manifest);
 			logger.debug("[default:{}, public:{}, deamon:{}]", descr.hasDefaultService(), descr.hasPublicService(), descr.hasDeamonService());
@@ -208,7 +198,8 @@ public class ServiceManager {
 			boolean upgraded = upgradeCheck(manifest);
 			descr.setUpgraded(upgraded);
 			if(upgraded) {
-				
+				// Force whatsnew pre-cache
+				descr.getWhatsnew(wta.getSystemLocale(), manifest.getOldVersion());
 			}
 
 			// If already in maintenance, keeps it active
@@ -218,50 +209,12 @@ public class ServiceManager {
 			}
 			
 			services.put(serviceId, descr);
-			//jsPathMappings.put(manifest.getJsPath(), serviceId);
 			jsPathMappings.put(serviceId, manifest.getJsPath());
-		}
-	}
-	
-	/**
-	 * Loads what's new file for specified service.
-	 * Contents will be taken and interpreted starting from desired version number.
-	 * 
-	 * @param serviceId Service ID
-	 * @param languageTag Language tag of contents (ex. it_IT)
-	 * @param fromVersion Starting version
-	 * @return HTML translated representation of loaded file.
-	 */
-	/*
-	public synchronized String getWhatsnew(String serviceId, String languageTag, ServiceVersion fromVersion) {
-		String resName = null;
-		Whatsnew wn = null;
-		
-		try {
-			Class clazz = getServiceClass(serviceId);
-			String key = MessageFormat.format("{0}|{1}", serviceId, languageTag);
-			if(whatsnewCache.containsKey(key)) {
-				WebTopApp.logger.trace("Getting whatsnew from cache [{}, {}]", serviceId, key);
-				wn = whatsnewCache.get(key);
-			} else {
-				resName = MessageFormat.format("/webtop/res/{0}/whatsnew/{1}.txt", serviceId, languageTag);
-				WebTopApp.logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", serviceId, resName, fromVersion);
-				wn = new Whatsnew(clazz, resName);
-				whatsnewCache.put(key, wn);
-			}
-			Version manifestVer = getManifest(serviceId).getVersion();
-			return wn.toHtml(fromVersion, manifestVer);
 			
-		} catch(ResourceNotFoundException ex) {
-			WebTopApp.logger.trace("Whatsnew file not available for service [{}]", serviceId);
-		} catch(IOException ex) {
-			WebTopApp.logger.trace(ex.getMessage());
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error getting whatsnew for service {}", serviceId, ex);
+			// Adds service references into static map for facilitate ID lookup 
+			Environment.addManifestMap(manifest.getClassName(), manifest);
 		}
-		return StringUtils.EMPTY;
 	}
-	*/
 	
 	private boolean upgradeCheck(ServiceManifest manifest) {
 		SettingsManager setm = wta.getSettingsManager();
@@ -327,8 +280,66 @@ public class ServiceManager {
 	}
 	
 	public boolean hasFullRights(String serviceId) {
-		if(serviceId.equals(Manifest.ID)) return true;
+		if(serviceId.equals(CoreManifest.ID)) return true;
 		return false;
+	}
+	
+	public synchronized void updateWhatsnewVersion(String serviceId, UserProfile profile) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = null;
+		
+		// Gets current service's version info
+		manifestVer = getManifest(serviceId).getVersion();
+		setm.setUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION, manifestVer.toString());
+	}
+	
+	/**
+	 * Checks if a specific service needs to show whatsnew for passed user.
+	 * @param serviceId The service ID.
+	 * @param profile The user profile.
+	 * @return True if so, false otherwise.
+	 */
+	public boolean needWhatsnew(String serviceId, UserProfile profile) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = null, userVer = null;
+		
+		// Gets current service's version info and last version for this user
+		ServiceDescriptor desc = getService(serviceId);
+		manifestVer = desc.getManifest().getVersion();
+		userVer = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+		
+		boolean notseen = (manifestVer.compareTo(userVer) > 0);
+		boolean show = false;
+		if(notseen) {
+			String html = desc.getWhatsnew(profile.getLocale(), userVer);
+			if(StringUtils.isEmpty(html)) {
+				logger.trace("Whatsnew empty [{}]", serviceId);
+				updateWhatsnewVersion(serviceId, profile);
+			} else {
+				show = true;
+			}
+		}
+		logger.debug("Need to show whatsnew? {} [{}]", show, serviceId);
+		return show;
+	}
+	
+	/**
+	 * Loads whatsnew file for specified service.
+	 * If full parameter is true, all version paragraphs will be loaded;
+	 * otherwise current version only.
+	 * @param serviceId Service ID
+	 * @param profile The user profile.
+	 * @param full True to extract all version paragraphs.
+	 * @return HTML translated representation of loaded file.
+	 */
+	public String getWhatsnew(String serviceId, UserProfile profile, boolean full) {
+		ServiceVersion fromVersion = null;
+		ServiceDescriptor desc = getService(serviceId);
+		if(!full) {
+			SettingsManager setm = wta.getSettingsManager();
+			fromVersion = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+		}
+		return desc.getWhatsnew(profile.getLocale(), fromVersion);
 	}
 	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {

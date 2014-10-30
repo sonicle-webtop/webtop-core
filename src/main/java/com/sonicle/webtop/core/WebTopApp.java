@@ -88,6 +88,7 @@ public class WebTopApp {
 	private final ServletContext servletContext;
 	private final String webappName;
 	private final String systemInfo;
+	private final Locale systemLocale;
 	private Configuration freemarkerCfg = null;
 	private ConnectionManager conm = null;
 	private SettingsManager setm = null;
@@ -111,7 +112,7 @@ public class WebTopApp {
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
 		try {
-			conm.registerJdbc4DataSource(Manifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+			conm.registerJdbc4DataSource(CoreManifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
@@ -119,6 +120,8 @@ public class WebTopApp {
 		setm = SettingsManager.initialize(this);
 		// Service Manager
 		svcm = ServiceManager.initialize(this);
+		
+		systemLocale = CoreServiceSettings.getSystemLocale(setm);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
@@ -148,6 +151,10 @@ public class WebTopApp {
 	
 	public String getSystemInfo() {
 		return systemInfo;
+	}
+	
+	public Locale getSystemLocale() {
+		return systemLocale;
 	}
 	
 	public Template loadTemplate(String path) throws IOException {
@@ -201,11 +208,11 @@ public class WebTopApp {
 	}
 	
 	public String lookupResource(Locale locale, String key) {
-		return lookupResource(Manifest.ID, locale, key, false);
+		return lookupResource(CoreManifest.ID, locale, key, false);
 	}
 	
 	public String lookupResource(Locale locale, String key, boolean escapeHtml) {
-		return lookupResource(Manifest.ID, locale, key, escapeHtml);
+		return lookupResource(CoreManifest.ID, locale, key, escapeHtml);
 	}
 	
 	public String lookupResource(String serviceId, Locale locale, String key) {
@@ -227,7 +234,7 @@ public class WebTopApp {
 	}
 	
 	public String lookupAndFormatResource(Locale locale, String key, boolean escapeHtml, Object... arguments) {
-		return lookupAndFormatResource(Manifest.ID, locale, key, escapeHtml, arguments);
+		return lookupAndFormatResource(CoreManifest.ID, locale, key, escapeHtml, arguments);
 	}
 	
 	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {

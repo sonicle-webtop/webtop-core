@@ -123,7 +123,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @throws SQLException 
 	 */
 	public DataSource getDataSource() throws SQLException {
-		return getDataSource(Manifest.ID);
+		return getDataSource(CoreManifest.ID);
 	}
 	
 	/**
@@ -143,7 +143,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 */
 	@Override
 	public Connection getConnection() throws SQLException {
-		return getConnection(Manifest.ID);
+		return getConnection(CoreManifest.ID);
 	}
 	
 	/**

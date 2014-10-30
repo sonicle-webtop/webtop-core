@@ -115,17 +115,17 @@ public class WebTopSession {
 		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
 		// Defines useful instances (NB: keep new order)
-		coreServiceSettings = new CoreServiceSettings(principal.getDomainId(), Manifest.ID);
-		coreUserSettings = new CoreUserSettings(principal.getDomainId(), principal.getUserId(), Manifest.ID);
+		coreServiceSettings = new CoreServiceSettings(principal.getDomainId(), CoreManifest.ID);
+		coreUserSettings = new CoreUserSettings(principal.getDomainId(), principal.getUserId(), CoreManifest.ID);
 		basicEnv = new Environment(wta, this);
 		fullEnv = new CoreEnvironment(wta, this);
 		profile = new UserProfile(fullEnv, principal);
 		
 		// Instantiates services
 		Service instance = null;
-		List<String> serviceIds = svcm.getServices();
-		// TODO: order services list
+		List<String> serviceIds = wta.getManager().getUserServices(profile);
 		int count = 0;
+		// TODO: order services list
 		for(String serviceId : serviceIds) {
 			//TODO: check if service is allowed for user
 			// Creates new instance
@@ -211,7 +211,7 @@ public class WebTopSession {
 	}
 	
 	public void setTheme(String value) {
-		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.THEME, value);
+		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.THEME, value);
 	}
 	
 	public String getLookAndFeel() {
@@ -219,7 +219,7 @@ public class WebTopSession {
 	}
 	
 	public void setLookAndFeel(String value) {
-		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.LAF, value);
+		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.LAF, value);
 	}
 	
 	public boolean getRTL() {
@@ -227,7 +227,7 @@ public class WebTopSession {
 	}
 	
 	public void setRTL(String value) {
-		wta.getSettingsManager().setUserSetting(profile, Manifest.ID, CoreUserSettings.RTL, value);
+		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.RTL, value);
 	}
 	
 	public void test() {

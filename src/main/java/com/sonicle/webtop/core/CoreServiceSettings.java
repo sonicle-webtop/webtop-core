@@ -9,21 +9,25 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
+import java.util.Locale;
 
 /**
  *
  * @author matteo
  */
 public class CoreServiceSettings extends BaseServiceSettings {
-
+	
+	public static final String SYSTEM_LANGUAGE = "system.language";
+	public static final String SYSTEM_COUNTRY = "system.country";
 	public static final String MAINTENANCE = "maintenance";
 	public static final String MANIFEST_VERSION = "manifest.version";
+	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	public static final String WHATSNEW_VERSION = "whatsnew.version";
 	public static final String USERDATA_PROVIDER = "userdata.provider";
 	public static final String TMP = "tmp";
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
 	//public static final String DB_INIT_ENABLED = "db.init.enabled";
 	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
-	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	//public static final String OTP_ENABLED = "otp.enabled";
 	//public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
 	//public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
@@ -46,7 +50,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public String getTempPath() {
 		return getServiceSetting(TMP);
 	}
-	
 	
 	/*
 	public static String getLanguage(SettingsManager setm) {
@@ -107,4 +110,16 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return setm.getServiceSetting(Manifest.ID, Settings.GOOGLE_DRIVE_CLIENT_SECRET);
 	}
 	*/
+	
+	public static String getSystemLanguage(SettingsManager setm) {
+		return LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreServiceSettings.SYSTEM_LANGUAGE), "it");
+	}
+	
+	public static String getSystemCountry(SettingsManager setm) {
+		return LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreServiceSettings.SYSTEM_COUNTRY), "IT");
+	}
+	
+	public static Locale getSystemLocale(SettingsManager setm) {
+		return new Locale(getSystemLanguage(setm), getSystemCountry(setm));
+	}
 }

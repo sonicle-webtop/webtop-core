@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.security.Principal;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTStartup;
@@ -102,7 +102,7 @@ public class Start extends HttpServlet {
 			jswt.domainId=p.getDomainId();
 			jswt.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
-				if(serviceId.equals(Manifest.ID)) continue;
+				if(serviceId.equals(CoreManifest.ID)) continue;
 				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));
 			}
 			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));

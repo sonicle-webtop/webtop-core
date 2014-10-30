@@ -37,6 +37,7 @@ import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -75,13 +76,13 @@ public class ServiceRequest extends HttpServlet {
 				try {
 					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
 				} catch(NoSuchMethodException ex) {
-					throw new Exception(MessageFormat.format("Service '{0}' has no action with name '{1}' [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName()));
+					throw new WTException("Service '{0}' has no action with name '{1}' [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
 				}
 			} else {
 				try {
 					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
 				} catch(NoSuchMethodException ex) {
-					throw new Exception(MessageFormat.format("Service '{0}' has no action with name '{1}' [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName()));
+					throw new WTException("Service '{0}' has no action with name '{1}' [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
 				}
 			}
 			

@@ -32,6 +32,71 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.FeedbackC', {
-	extend: 'Ext.app.ViewController'
+	extend: 'Ext.app.ViewController',
 	
+	h2cCanvas: null,
+	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
+	
+	onSubmit: function(s,op,success) {
+		if(success) {
+			WT.info(WT.res('feedback.sent'));
+			s.close();
+		}
+	},
+	
+	onCancelClick: function() {
+		this.clearScreenshot();
+		this.getView().close();
+	},
+	
+	onSendClick: function() {
+		var me = this;
+		var w = this.getView();
+		w.setFieldValue('timestamp', new Date().toString());
+		var h2c = (me.h2cCanvas) ? me.h2cCanvas.toDataURL('image/jpeg', me.jpegQuality) : null;
+		w.setFieldValue('image', h2c);
+		w.submitForm();
+	},
+	
+	onScreenshotChange: function(s, chk) {
+		if(chk) {
+			this.takeScreenshot();
+		} else {
+			this.clearScreenshot();
+		}
+	},
+	
+	takeScreenshot: function() {
+		var me = this;
+		var el = me.getView().getEl();
+		el.mask(WT.res('feedback.capturing'), 'x-mask-loading');
+		me.clearScreenshot();
+		WT.loadScriptAsync('com.sonicle.webtop.core/lib/html2canvas.js', function(success) {
+			if(success) {
+				html2canvas([document.body], {
+					onrendered: function(canvas) {
+						var cel = Ext.get(canvas);
+						cel.setStyle('position', 'absolute');
+						cel.setStyle('left', 0);
+						cel.setStyle('top', 0);
+						cel.setStyle('z-index', 8900);
+						Ext.get(document.body).insertSibling(cel);
+						me.h2cCanvas = canvas;
+						el.unmask();
+					}
+				});
+			} else {
+				el.unmask();
+			}
+		}, me);
+	},
+	
+	clearScreenshot: function() {
+		var me = this;
+		if(me.h2cCanvas) {
+			Ext.removeNode(Ext.get(me.h2cCanvas).dom);
+			me.h2cCanvas = null;
+			me.getView().setFieldValue('screenshot', false);
+		}
+	}
 });

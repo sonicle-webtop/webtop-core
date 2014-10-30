@@ -35,20 +35,24 @@ Ext.define('Sonicle.webtop.core.model.Base', {
 	extend: 'Ext.data.Model',
 	
 	schema: {
-		namespace: 'Sonicle.webtop.core.model'
-		/*
+		namespace: 'Sonicle.webtop.core.model',
 		proxy: {
 			type: 'ajax',
-			url: 'service-request',
+			api: {
+				create: 'service-request?crud=create',
+				read: 'service-request?crud=read',
+				update: 'service-request?crud=update',
+				destroy: 'service-request?crud=destroy'
+			},
 			extraParams: {
-				service: '{wtservice}',
-				action: '{wtaction}'
+				service: 'com.sonicle.webtop.core',
+				action: '{entityName}'
 			},
 			reader: {
 				type: 'json',
-				rootProperty: '{entityName:lowercase}'
+				rootProperty: '{entityName:lowercase}',
+				messageProperty: 'message'
 			}
 		}
-		*/
 	}
 });

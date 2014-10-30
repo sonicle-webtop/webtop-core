@@ -104,7 +104,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		OSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = dao.selectByServiceKey(con, serviceId, key);
 			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
 
@@ -130,7 +130,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		ODomainSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = dao.selectByDomainServiceKey(con, domainId, serviceId, key);
 			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
 
@@ -184,7 +184,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		OSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = new OSetting();
 			item.setServiceId(serviceId);
 			item.setKey(key);
@@ -216,7 +216,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		ODomainSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = new ODomainSetting();
 			item.setDomainId(domainId);
 			item.setServiceId(serviceId);
@@ -250,7 +250,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		OUserSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = dao.selectByDomainUserServiceKey(con, domainId, userId, serviceId, key);
 			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
 
@@ -320,7 +320,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			return dao.selectByDomainServiceUserKeyLike(con, domainId, userId, serviceId, key);
 
 		} catch (Exception ex) {
@@ -360,7 +360,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		OUserSetting item = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			item = new OUserSetting();
 			item.setDomainId(domainId);
 			item.setUserId(userId);
@@ -406,7 +406,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			int ret = dao.deleteByDomainServiceUserKey(con, domainId, userId, serviceId, key);
 			return (ret > 0);
 

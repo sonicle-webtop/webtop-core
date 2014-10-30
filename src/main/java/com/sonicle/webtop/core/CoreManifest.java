@@ -31,43 +31,44 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Log', {
-	singleton: true,
-	alternateClassName: 'WT.Log',
+package com.sonicle.webtop.core;
+
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
+
+/**
+ *
+ * @author malbinola
+ */
+public class CoreManifest extends ServiceManifest {
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	log: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.log(s);
-	},
+	public static final String ID = "com.sonicle.webtop.core";
+	public static final String XID = "wt";
+	public static final String CLASS_NAME = "com.sonicle.webtop.core.CoreService";
+	public static final String JS_CLASS_NAME = "Sonicle.webtop.core.WT";
+	public static final String VERSION = "5.0.0";
+	public static final String BUILD_DATE = "07/10/2014";
+	public static final String COMPANY = "Sonicle S.r.l.";
+	public static final String COMPANY_EMAIL = "sonicle@sonicle.com";
+	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
+	public static final String SUPPORT_EMAIL = "sonicle@sonicle.com";
+	public static final String DATA_SOURCE_NAME = "webtop";
+	public static final String[] INIT_CHECK_TABLES = new String[]{"upgrade_statements"/*,"settings","domains"*/};
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	debug: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.debug(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	warn: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.warn(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	error: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.error(s);
+	public CoreManifest() {
+		id = ID;
+		xid = XID;
+		className = CLASS_NAME;
+		// This is not a real js service, it's only used 
+		// to store class for client-side ovveriding purposes.
+		jsClassName = JS_CLASS_NAME;
+		version = new ServiceVersion(VERSION);
+		buildDate = BUILD_DATE;
+		company = COMPANY;
+		companyEmail = COMPANY_EMAIL;
+		companyWebSite = COMPANY_WEBSITE;
+		supportEmail = SUPPORT_EMAIL;
+		dataSourceName = DATA_SOURCE_NAME;
+		initCheckTables = INIT_CHECK_TABLES;
 	}
-});
+}

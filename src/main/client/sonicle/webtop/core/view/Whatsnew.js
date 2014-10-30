@@ -31,86 +31,87 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.Feedback', {
+Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	extend: 'WT.sdk.BaseView',
 	requires: [
-		'Sonicle.webtop.core.view.FeedbackC',
-		'Sonicle.webtop.core.model.AvailService',
-		'Sonicle.webtop.core.model.Feedback',
 		'Ext.ux.form.Spacer'
 	],
-	controller: Ext.create('Sonicle.webtop.core.view.FeedbackC'),
+	
+	layout: 'border',
+	full: true,
 	
 	initComponent: function() {
 		var me = this;
 		Ext.apply(me, {
-			items: [
-				{
-					xtype: 'form',
+			items: [{
+					xtype: 'tabpanel',
 					region: 'center',
-					itemId: 'fpnl',
-					model: 'Sonicle.webtop.core.model.Feedback',
-					bodyPadding: 10,
-					items: [
-						{
-							xtype: 'component',
-							html: WT.res('feedback.text')
-						}, 
-						Ext.create('Ext.ux.form.Spacer', {height: 20}), 
-						{
-							xtype: 'combo',
-							name: 'serviceId',
-							allowBlank: false,
-							editable: false,
-							store: {
-								model: 'Sonicle.webtop.core.model.AvailService',
-								proxy: WT.proxy('com.sonicle.webtop.core', 'GetAvailableServices', 'services')
-							},
-							valueField: 'id',
-							displayField: 'description',
-							width: 400,
-							fieldLabel: WT.res('feedback.f-service.lbl')
-						}, {
-							xtype: 'textareafield',
-							name: 'message',
-							allowBlank: false,
-							anchor: '100%',
-							fieldLabel: WT.res('feedback.f-message.lbl')
-						}, {
-							xtype: 'checkbox',
-							name: 'anonymous',
-							hideLabel: true,
-							boxLabel: WT.res('feedback.f-anonymous.lbl')
-						}, {
-							xtype: 'checkbox',
-							name: 'screenshot',
-							submitValue: false,
-							hideLabel: true,
-							boxLabel: WT.res('feedback.f-screenshot.lbl'),
-							handler: 'onScreenshotChange'
-						}, {
-							xtype: 'hiddenfield',
-							name: 'timestamp'
-						}, {
-							xtype: 'hiddenfield',
-							name: 'image'
+					itemId: 'wntab',
+					plain: true,
+					defaults: {
+						autoScroll: true,
+						bodyPadding: 5,
+						bodyCls: 'wt-whatsnew'
+					},
+					listeners: {
+						tabchange: function(s,nt,ot) {
+							if(!nt.html && nt.loader) nt.loader.load();
 						}
-					]
-				}
-			],
-
-			buttons: [{
-				text: WT.res('b-send.lbl'),
-				handler: 'onSendClick'
-			}, {
-				text: WT.res('b-cancel.lbl'),
-				handler: 'onCancelClick'
+					},
+					items: []
+			}],
+			fbar: [{
+					xtype: 'checkbox',
+					itemId: 'hide',
+					value: true,
+					boxLabel: WT.res('whatsnew.f-hide.lbl')
+				}, '->', {
+					xtype: 'button',
+					text: WT.res('whatsnew.b-close.lbl'),
+					handler: function() {
+						var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
+						if(tb.getComponent('hide').getValue()) me.turnOff();
+						me.close();
+					}
 			}]
 		});
 		me.callParent(arguments);
+		me.on('afterrender', function() {
+			me.loadTabs();
+		}, me, {single: true});
 	},
 	
-	listeners: {
-		submit: 'onSubmit'
+	loadTabs: function() {
+		var me = this;
+		var tab = me.getComponent('wntab');
+		tab.removeAll(true);
+		WT.ajaxReq('com.sonicle.webtop.core', 'GetWhatsnewTabs', {
+			params: {full: me.full},
+			callback: function(success, o) {
+				if(success) {
+					Ext.each(o.data, function(itm) {
+						tab.add(me.createTab(itm));
+					}, me);
+					tab.doLayout();
+					if(tab.items.getCount() > 0) tab.setActiveTab(0);
+				}
+			}
+		});
+	},
+	
+	createTab: function(wn) {
+		return Ext.create('Ext.panel.Panel', {
+			itemId: wn.id,
+			title: wn.title,
+			loader: WT.componentLoader('com.sonicle.webtop.core', 'GetWhatsnewHTML', {
+				params: {
+					id: wn.id
+				}
+			})
+		});
+	},
+	
+	turnOff: function() {
+		WT.ajaxReq('com.sonicle.webtop.core', 'TurnOffWhatsnew');
 	}
 });

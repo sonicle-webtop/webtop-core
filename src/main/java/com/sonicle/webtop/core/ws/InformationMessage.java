@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.ws;
 
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
 
 /**
@@ -47,7 +47,7 @@ public class InformationMessage extends WebSocketMessage {
 	String infoDescription;
 	
 	public InformationMessage(String desc) {
-		this.service=Manifest.ID;
+		this.service=CoreManifest.ID;
 		this.action=ACTION_INFO;
 		this.infoDescription=desc;
 	}

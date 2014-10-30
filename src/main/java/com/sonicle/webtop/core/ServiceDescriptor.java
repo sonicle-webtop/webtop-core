@@ -33,10 +33,18 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.PublicService;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.DeamonService;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
+import com.sonicle.webtop.core.service.ResourceNotFoundException;
+import com.sonicle.webtop.core.service.Whatsnew;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Locale;
 import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
@@ -52,6 +60,7 @@ class ServiceDescriptor {
 	private Class publicClass = null;
 	private Class deamonClass = null;
 	private boolean upgraded = false;
+	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
@@ -125,5 +134,40 @@ class ServiceDescriptor {
 			logger.warn("A valid {} class must extends '{}' class", description, apiClass.toString());
 		}
 		return null;
+	}
+	
+	/**
+	 * Loads what's new file for specified service.
+	 * Contents will be taken and interpreted starting from desired version number.
+	 * @param serviceId Service ID
+	 * @param locale Locale of contents (ex. it_IT)
+	 * @param fromVersion Starting version
+	 * @return HTML translated representation of loaded file.
+	 */
+	public synchronized String getWhatsnew(Locale locale, ServiceVersion fromVersion) {
+		String resName = null;
+		Whatsnew wn = null;
+		
+		try {
+			String slocale = locale.toString();
+			if(whatsnewCache.containsKey(slocale)) {
+				logger.trace("Getting whatsnew from cache [{}, {}]", manifest.getId(), slocale);
+				wn = whatsnewCache.get(slocale);
+			} else {
+				resName = MessageFormat.format("/{0}/whatsnew/{1}.txt", LangUtils.packageToPath(manifest.getId()), slocale);
+				logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", manifest.getId(), resName, fromVersion);
+				wn = new Whatsnew(resName);
+				whatsnewCache.put(slocale, wn);
+			}
+			return wn.toHtml(fromVersion, manifest.getVersion());
+			
+		} catch(ResourceNotFoundException ex) {
+			logger.trace("Whatsnew file not available for service [{}]", manifest.getId());
+		} catch(IOException ex) {
+			logger.trace(ex.getMessage());
+		} catch(Exception ex) {
+			logger.error("Error getting whatsnew for service {}", manifest.getId(), ex);
+		}
+		return StringUtils.EMPTY;
 	}
 }

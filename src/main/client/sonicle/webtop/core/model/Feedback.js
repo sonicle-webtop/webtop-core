@@ -31,18 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-/**
- *
- * @author malbinola
- */
-public class JsTheme {
-	public String id;
-	public String description;
+Ext.define('Sonicle.webtop.core.model.Feedback', {
+	extend: 'Sonicle.webtop.core.model.Base',
 	
-	public JsTheme(String id, String description) {
-		this.id = id;
-		this.description = description;
-	}
-}
+	fields: [
+		'serviceId',
+		'message',
+		'anonymous',
+		'timestamp',
+		'image'
+	]
+});

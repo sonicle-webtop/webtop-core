@@ -55,6 +55,11 @@ public class CoreEnvironment extends Environment implements FullEnvironment {
 	}
 	
 	@Override
+	public CoreManager getManager() {
+		return wta.getManager();
+	}
+	
+	@Override
 	public UserDataProviderBase getUserDataProvider() throws WTException {
 		String providerName = getCoreServiceSettings().getUserDataProvider();
 		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());

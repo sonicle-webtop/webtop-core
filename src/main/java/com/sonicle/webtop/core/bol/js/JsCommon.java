@@ -31,43 +31,22 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Log', {
-	singleton: true,
-	alternateClassName: 'WT.Log',
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsCommon {
+	public String id;
+	public String description;
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	log: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.log(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	debug: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.debug(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	warn: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.warn(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	error: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.error(s);
+	public JsCommon() {
+		
 	}
-});
+	
+	public JsCommon(String id, String description) {
+		this.id = id;
+		this.description = description;
+	}
+}

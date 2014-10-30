@@ -70,7 +70,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						editable: false,
 						store: {
 							model: 'Sonicle.webtop.core.model.Theme',
-							proxy: WT.ajaxProxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
+							proxy: WT.proxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
 						},
 						valueField: 'id',
 						displayField: 'description',

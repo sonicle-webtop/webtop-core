@@ -34,14 +34,22 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.bol.js.JsTheme;
-import com.sonicle.webtop.core.sdk.Environment;
+import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.webtop.core.bol.js.JsCommon;
+import com.sonicle.webtop.core.bol.js.JsFeedback;
+import com.sonicle.webtop.core.bol.js.JsWhatsnew;
+import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
+import com.sonicle.webtop.core.sdk.CoreLocaleKey;
+import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -54,8 +62,7 @@ public class CoreService extends Service {
 
 	@Override
 	public void initialize() {
-		getFullEnv().getSession().test();
-		logger.debug("Mi sono inizializzato: mi chiamo {}", getName(new Locale("it_IT")));
+		
 	}
 
 	@Override
@@ -71,17 +78,107 @@ public class CoreService extends Service {
 	}
 	
 	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsTheme> items = new ArrayList<>();
+		ArrayList<JsCommon> items = new ArrayList<>();
 		
-		// TODO: handle themes dinamically
-		items.add(new JsTheme("aria", "Aria"));
-		items.add(new JsTheme("classic", "Classic"));
-		items.add(new JsTheme("crisp", "Crisp"));
-		items.add(new JsTheme("crisp-touch", "Crisp Touch"));
-		items.add(new JsTheme("gray", "Gray"));
-		items.add(new JsTheme("neptune", "Neptune"));
-		items.add(new JsTheme("neptune-touch", "Neptune Touch"));
+		//TODO: handle themes dinamically
+		items.add(new JsCommon("aria", "Aria"));
+		items.add(new JsCommon("classic", "Classic"));
+		items.add(new JsCommon("crisp", "Crisp"));
+		items.add(new JsCommon("crisp-touch", "Crisp Touch"));
+		items.add(new JsCommon("gray", "Gray"));
+		items.add(new JsCommon("neptune", "Neptune"));
+		items.add(new JsCommon("neptune-touch", "Neptune Touch"));
 		
 		new JsonResult("themes", items).printTo(out);
 	}
+	
+	public void processGetAvailableServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		Locale locale = env.getSession().getLocale();
+		
+		ArrayList<JsCommon> items = new ArrayList<>();
+		List<String> ids = env.getSession().getServices();
+		for(String id : ids) {
+			items.add(new JsCommon(id, env.lookupResource(id, locale, Service.RESOURCE_SERVICE_NAME)));
+		}
+		new JsonResult("services", items).printTo(out);
+	}
+	
+	public void processFeedback(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			JsFeedback js = ServletUtils.getPayload(request, JsFeedback.class);
+			logger.debug("message: {}", js.message);
+			Thread.sleep(4000);
+			new JsonResult().printTo(out);
+			//new JsonResult(false, "Erroreeeeeeeeeeeeeeeeeeeeeee").printTo(out);
+			
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error sending feedback report.", ex);
+			new JsonResult(false, "Unable to send feedback report.").printTo(out);
+		}
+	}
+	
+	public void processGetWhatsnewTabs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		UserProfile profile = env.getProfile();
+		
+		try {
+			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
+			
+			ArrayList<JsWhatsnewTab> tabs = new ArrayList<>();
+			List<String> ids = env.getSession().getServices();
+			JsWhatsnewTab tab = null;
+			String html = null;
+			for(String id : ids) {
+				if(full || env.getManager().needWhatsnew(id, profile)) {
+					html = env.getManager().getWhatsnewHtml(id, env.getProfile(), full);
+					if(!StringUtils.isEmpty(html)) {
+						tab = new JsWhatsnewTab(id);
+						tab.title = env.lookupResource(id, profile.getLocale(), CoreLocaleKey.SERVICE_NAME);
+						tabs.add(tab);
+					}
+				}
+			}
+			new JsonResult(tabs).printTo(out);
+			
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Error collecting what's new data.", ex);
+			new JsonResult(false, "Unable to send feedback report.").printTo(out);
+		}
+	}
+	
+	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		
+		try {
+			String id = ServletUtils.getStringParameter(request, "id", true);
+			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
+			
+			String html = env.getManager().getWhatsnewHtml(id, env.getProfile(), full);
+			logger.debug("whatsnew html {}", html);
+			out.println(html);
+			
+		} catch (Exception ex) {
+			logger.error("Error collecting what's new data.", ex);
+		}
+	}
+	
+	/*
+	public void processGetWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		
+		try {
+			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
+			
+			List<String> ids = env.getSession().getServices();
+			List<JsWhatsnew> wns = env.getManager().getUserWhatsnew(env.getProfile(), full, ids);
+			new JsonResult(wns).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error collecting what's new data.", ex);
+			new JsonResult(false, "Unable to send feedback report.").printTo(out);
+		}
+	}
+	*/
 }

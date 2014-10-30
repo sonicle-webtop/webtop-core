@@ -31,43 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Log', {
-	singleton: true,
-	alternateClassName: 'WT.Log',
+Ext.define('Sonicle.webtop.core.sdk.mixin.ServiceBinder', {
+	extend: 'Ext.Mixin',
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	log: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.log(s);
-	},
+	svc: null,
+	ms: null,
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	debug: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.debug(s);
-	},
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	warn: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.warn(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	error: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.error(s);
-	}
 });

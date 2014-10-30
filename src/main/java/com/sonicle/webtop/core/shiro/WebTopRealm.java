@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -118,7 +118,7 @@ public class WebTopRealm extends AuthorizingRealm {
 	private AuthorizationInfo loadAuthorizationInfo(Principal p) {
 		WebTopAuthorizationInfo authzinfo=null;
 		try {
-			DataSource ds=wta.getConnectionManager().getDataSource(Manifest.ID);
+			DataSource ds=wta.getConnectionManager().getDataSource(CoreManifest.ID);
 			authzinfo=new WebTopAuthorizationInfo(ds,p);
 			authzinfo.fillRoles();
 			authzinfo.fillStringPermissions();

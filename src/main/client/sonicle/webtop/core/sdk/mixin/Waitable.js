@@ -31,43 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Log', {
-	singleton: true,
-	alternateClassName: 'WT.Log',
+Ext.define('Sonicle.webtop.core.sdk.mixin.Waitable', {
+	extend: 'Ext.Mixin',
+	alternateClassName: 'WT.sdk.mixin.Waitable',
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	log: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.log(s);
+	waitCount: null,
+	
+	initWaitable: function(){
+		this.waitCount = 0;
 	},
 	
 	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
+	 * Signals to apply the loading mask.
+	 * Every time this method will be called, a counter will be incremented.
+	 * Mask will be effectively added only on the first call (counter=1).
+	 * @param {String} msg The title to show for the waiting message box.
 	 */
-	debug: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.debug(s);
+	wait: function(msg) {
+		var me = this;
+		me.waitCount++;		
+		if(me.waitCount === 1) {
+			var cmp = me.ownerCt || me;
+			cmp.mask(msg || WT.res('waiting'));
+		}
 	},
 	
 	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
+	 * Signals to remove the loading mask.
+	 * Every time this method will be called, a counter will be decremented.
+	 * Mask will be effectively removed only when the counter is equal to 0.
 	 */
-	warn: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.warn(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	error: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.error(s);
+	unwait: function() {
+		var me = this;
+		me.waitCount--;
+		if(me.waitCount === 0) {
+			var cmp = me.ownerCt || me;
+			cmp.unmask();
+		}
 	}
 });

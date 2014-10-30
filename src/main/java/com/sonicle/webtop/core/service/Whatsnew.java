@@ -48,20 +48,18 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author matteo
+ * @author malbinola
  */
-class Whatsnew {
+public class Whatsnew {
 	
 	private final Pattern PATTER_LINE = Pattern.compile("^(\\$|%|@|\\*|!)(.*)");
-	private Class clazz = null;
 	private String resourceName = null;
 	private ServiceVersion version = null;
 	private String listMode = "none";
 	private boolean listItem = false;
 	private final LinkedHashMap<String, String> htmls = new LinkedHashMap<>();
 	
-	public Whatsnew(Class clazz, String resourceName) {
-		this.clazz = clazz;
+	public Whatsnew(String resourceName) {
 		this.resourceName = resourceName;
 	}
 	
@@ -72,9 +70,9 @@ class Whatsnew {
 		if(fromVersion == null) fromVersion = new ServiceVersion();
 		if((version != null) && (fromVersion.compareTo(version) >= 0)) return;
 		try {
-			is = clazz.getResourceAsStream(resourceName);
+			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(resourceName);
 			if(is == null) throw new ResourceNotFoundException();
-			br = new BufferedReader(new InputStreamReader(is, "ISO-8859-15"));
+			br = new BufferedReader(new InputStreamReader(is));
 			readFile(br, fromVersion, toVersion);
 			version = fromVersion;
 			
@@ -115,7 +113,7 @@ class Whatsnew {
 					skip = htmls.containsKey(lineVersion.toString()); // Skip all versions already processed!
 					if(skip) continue;
 					if(lineVersion.compareTo(fromVersion) <= 0) break; // Skip all version sections below fromVersion (included)
-					if(lineVersion.compareTo(toVersion) > 0) break; // Skip all version sections after toVersion
+					if(lineVersion.compareTo(toVersion) > 0) continue; // Skip all version sections after toVersion
 					sb = new StringBuilder(); // Prepares a new version section
 					
 				} else {
@@ -123,15 +121,15 @@ class Whatsnew {
 					if(sb == null) continue; // An active builder is required!
 					if(marker.equals("%")) { // Version title
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wntitle'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wntitle'>{0}</div>\n", text));
 
 					} else if(marker.equals("@")) { // Version sub-title
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wnsubtitle'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wnsubtitle'>{0}</div>\n", text));
 
 					} else if(marker.equals("!")) { // Free text
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wnfreetext'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wnfreetext'>{0}</div>\n", text));
 
 					} else if(marker.equals("*")) { // Unordered list
 						this.closeListItem(sb);
@@ -164,7 +162,7 @@ class Whatsnew {
 	private void openList(StringBuilder sb, String mode) {
 		if(!listMode.equals(mode)) {
 			if(mode.equals("unordered")) {
-				sb.append("<div class='wnlist'><ul>\n");
+				sb.append("<div class='wt-wnlist'><ul>\n");
 			}
 			listMode = mode;
 		}

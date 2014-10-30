@@ -31,43 +31,53 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Log', {
-	singleton: true,
-	alternateClassName: 'WT.Log',
+Ext.define('Sonicle.webtop.core.sdk.BaseView', {
+	extend: 'Ext.form.Panel',
+	alternateClassName: 'WT.sdk.BaseView',
+	mixins: [
+		'WT.sdk.mixin.Waitable',
+		'WT.sdk.mixin.Submitable'
+	],
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	log: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.log(s);
-	},
+	layout: 'border',
 	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	debug: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.debug(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	warn: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.warn(s);
-	},
-	
-	/**
-	 * @param {String} msg
-	 * @param {Mixed...} values
-	 */
-	error: function(msg, values) {
-		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
-		Ext.global.console.error(s);
+	close: function() {
+		this.ownerCt.close();
 	}
+	
+	/*
+	initComponent: function() {
+		var me = this;
+		
+		me.on('added', function(s,ct) {
+			me.initCt(ct);
+		}, me, {single: true});
+		me.on('removed', function(s,ct) {
+			me.cleanupCt(ct);
+		}, me, {single: true});
+	},
+	*/
+	
+	/*
+	initCt: function(ct) {
+		var me = this;
+		
+		if(me.ctInited) return;
+		if(ct.isXType('window')) {
+			// In this case panel's header is not necessary.
+			// It hasn't been rendered yet, we can remove it easly...
+			//this.elements = this.elements.replace(',header','');
+			//this.header = false;
+			// Apply as config, the window is not rendered
+			//ct.title = this.title;
+			//ct.iconCls = this.iconCls;
+			
+			ct.on('show', this.onWndShow, this);
+			ct.on('close', this.onWndClose, this);
+			//if(this.useWG) ct.on('hide', this.onWndHide, this);
+			ct.on('beforeclose', this.onWndBeforeClose, this);
+		}
+		me.ctInited = true;
+	}
+	*/
 });

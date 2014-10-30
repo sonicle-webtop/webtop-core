@@ -46,6 +46,9 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			case 'feedback':
 				this.buildFeedbackWnd();
 				break;
+			case 'whatsnew':
+				this.buildWhatsnewWnd();
+				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
 		}
@@ -77,6 +80,19 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			width: 590,
 			items: [
 				Ext.create('Sonicle.webtop.core.view.Feedback')
+			]
+		});
+		if(wnd) wnd.show();
+	},
+	
+	buildWhatsnewWnd: function() {
+		var wnd = Ext.create({
+			xtype: 'window',
+			layout: 'fit',
+			height: 500,
+			width: 600,
+			items: [
+				Ext.create('Sonicle.webtop.core.view.Whatsnew')
 			]
 		});
 		if(wnd) wnd.show();

@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -144,10 +144,10 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
-		if(subject.equals(Manifest.ID) && path.equals("images/login.png")) {
+		if(subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
 			return lookupLoginImage(req, translUrl);
 			
-		} else if(subject.equals(Manifest.ID) && path.equals("license.html")) {
+		} else if(subject.equals(CoreManifest.ID) && path.equals("license.html")) {
 			return lookupLicense(req, translUrl);
 			
 		} else {

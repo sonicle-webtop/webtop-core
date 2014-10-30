@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
@@ -118,7 +118,7 @@ public class ServletHelper {
 	}
 	
 	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
-		ServiceManifest manifest = wta.getServiceManager().getManifest(Manifest.ID);
+		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
 		String title = wta.getCustomProperty("webtop.title");
 		if (StringUtils.isEmpty(title)) {
 			title = wta.lookupAndFormatResource(locale, CoreLocaleKey.LOGIN_TITLE, true, manifest.getVersion().getMajor());

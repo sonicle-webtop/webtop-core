@@ -31,14 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.FormView', {
-	extend: 'Ext.form.Panel',
-	alternateClassName: 'WT.sdk.FormView',
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsFeedback {
 	
-	bodyPadding: 10,
-	
-	constructor: function(cfg) {
-		var me = this;
-		me.callParent(arguments);
-	}
-});
+	public String serviceId;
+	public String message;
+	public String anonymous;
+	public String timestamp;
+	public String image;
+}

@@ -37,12 +37,16 @@ import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsWTStartup;
+import com.sonicle.webtop.core.bol.js.JsWhatsnew;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -60,7 +64,7 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(Manifest.ID);
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			DomainDAO dao = DomainDAO.getInstance();
 			return dao.selectAll(con);
 			
@@ -88,4 +92,53 @@ public class CoreManager {
 		
 		return js;
 	}
+	
+	public List<String> getUserServices(UserProfile profile) {
+		return getUserServices(profile.getDomainId(), profile.getUserId());
+	}
+	
+	public List<String> getUserServices(String domainId, String userId) {
+		ServiceManager svcm = wta.getServiceManager();
+		ArrayList<String> result = new ArrayList<>();
+		
+		List<String> ids = svcm.getServices();
+		for(String id : ids) {
+			//TODO: check if service is allowed for user
+			result.add(id);
+		}
+		return result;
+	}
+	
+	public boolean needWhatsnew(String serviceId, UserProfile profile) {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.needWhatsnew(serviceId, profile);
+	}
+	
+	public String getWhatsnewHtml(String serviceId, UserProfile profile, boolean full) {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.getWhatsnew(serviceId, profile, full);
+	}
+	
+	/*
+	public List<JsWhatsnew> getUserWhatsnew(UserProfile profile, boolean full, List<String> serviceIds) {
+		ArrayList<JsWhatsnew> items = new ArrayList<>();
+		String html = null;
+		JsWhatsnew js = null;
+		ServiceManager svcm = wta.getServiceManager();
+		
+		if(serviceIds == null) serviceIds = getUserServices(profile);
+		for(String id: serviceIds) {
+			if(full || svcm.needWhatsnew(id, profile)) {
+				html = svcm.getWhatsnew(id, profile, full);
+				if(!StringUtils.isEmpty(html)) {
+					js = new JsWhatsnew(id);
+					js.title = wta.lookupResource(id, profile.getLocale(), CoreLocaleKey.SERVICE_NAME);
+					js.html = html;
+					items.add(js);
+				}
+			}
+		}
+		return items;
+	}
+	*/
 }

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 
@@ -43,5 +44,6 @@ import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 public interface FullEnvironment extends BasicEnvironment {
 	
 	public WebTopSession getSession();
+	public CoreManager getManager();
 	public UserDataProviderBase getUserDataProvider() throws WTException;
 }

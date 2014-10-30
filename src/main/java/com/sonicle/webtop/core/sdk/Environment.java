@@ -37,7 +37,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.CoreService;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.OContentType;
@@ -90,7 +90,7 @@ public class Environment implements BasicEnvironment {
 
 	@Override
 	public String lookupCoreResource(Locale locale, String key) {
-		return wta.lookupResource(Manifest.ID,locale, key);
+		return wta.lookupResource(CoreManifest.ID,locale, key);
 	}
 
 	@Override

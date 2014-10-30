@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.ws;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.Manifest;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.OUser;
@@ -85,7 +85,7 @@ public class WebSocketManager {
 			if (wsSession.isOpen()) {
 				WebSocketMessage wsm=JsonResult.gson.fromJson(json, WebSocketMessage.class);
 				//core message
-				if (wsm.service.equals(Manifest.ID)) {
+				if (wsm.service.equals(CoreManifest.ID)) {
 					switch(wsm.action) {
 						case TicketMessage.ACTION_TICKET:
 							TicketMessage tm=JsonResult.gson.fromJson(json, TicketMessage.class);
