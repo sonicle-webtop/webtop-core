@@ -1,0 +1,8 @@
+SERVICE SETTINGS
+-nuove chiavi di sistema: system.language e system.country
+-pensavo anche ad una nuova chiave per il character set di default?????
+-profiledata.provider -> userdata.provider
+
+WHATSNEW
+-i file vanno ora messi nella cartella %SERVICE_ID%/whatsnew/
+-chiave di traduzione per le path: la stringa {WHATSNEW_URL} nel testo html viene automaticamente tradotta in resources/%SERVICE_ID%/whatsnew/

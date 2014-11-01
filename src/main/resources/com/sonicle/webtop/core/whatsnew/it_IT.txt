@@ -5,7 +5,7 @@ $	5.0.1
 		segnalazioni e commenti inerenti i servizi della piattaforma. Tali
 		notifiche saranno successivamente prese in gestione dagli specifici 
 		team di supporto della piattaforma.</p>
-		<img src="webtop/res/main/whatsnew/4.5.0_feedback.png"/>
+		<img src="{WHATSNEW_URL}/4.5.0_feedback.png"/>
 $	5.0.0
 	%	Versione 5.0.0
 	*	<h1>Informazioni personali</h1>
@@ -24,7 +24,7 @@ $	4.5.0
 		<p>Al primo login dopo l'installazione di un nuovo rilascio 
 		(sia di servizio che di piattaforma WebTop), vengono mostrate all'utente
 		le novità applicative installate.</p>
-		<img src="webtop/res/main/whatsnew/4.5.0_whatsnew.png"/>
+		<img src="{WHATSNEW_URL}/4.5.0_whatsnew.png"/>
 	*	<h1>Informazioni sui servizi</h1>
 		<p>Posizionando il cursore sopra il bottone di attivazione di un servizio,
 		vengono mostrate le informazioni relative al servizio stesso: numero di

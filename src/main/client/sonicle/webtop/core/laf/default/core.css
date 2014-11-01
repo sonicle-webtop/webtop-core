@@ -24,19 +24,21 @@
 }
 div.wt-wntitle {
 	margin-top: 1em;
-	font-size: 220%;
+	//font-size: 220%;
+	font-size: 150%;
 	font-weight: bold;
 }
 div.wt-wnsubtitle {
 	margin-top: 0em;
-	font-size: 130%;
+	//font-size: 130%;
+	font-size: 110%;
 	font-family: Georgia,"Times New Roman",Times,serif;
 	font-style: italic;
 	color: #797c80;
 }
 div.wt-wnlist {
 	margin-top: 1em;
-	font-size: 110%;
+	//font-size: 110%;
 }
 .wt-wnlist ul {
 	padding-left: 30px;
@@ -44,7 +46,7 @@ div.wt-wnlist {
 .wt-wnlist ul li {
 	list-style: initial;
 }
-.wt-wnlist ul li h1 {
+.wt-wnlist ul li h1, .wt-wnlist ul li h2, .wt-wnlist ul li h3 {
 	margin-top: .2em;
 	font-size: 110%;
 	font-weight: bold;
@@ -53,7 +55,7 @@ div.wt-wnlist {
 	margin-bottom: .5em;
 }
 .wt-wnlist ul li img {
-	padding: .5em;
+	padding: .2em;
 	margin-bottom: .5em;
 	background-color: #fff;
 	box-shadow: 2px 2px 5px #e1e1e1;

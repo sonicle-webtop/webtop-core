@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,10 +58,16 @@ public class Whatsnew {
 	private ServiceVersion version = null;
 	private String listMode = "none";
 	private boolean listItem = false;
+	private boolean prettyPrint = false;
+	private final HashMap<Pattern, String> patterns = new HashMap<>();
 	private final LinkedHashMap<String, String> htmls = new LinkedHashMap<>();
 	
-	public Whatsnew(String resourceName) {
+	public Whatsnew(String resourceName, HashMap<String, String> variables) {
 		this.resourceName = resourceName;
+		// Converts variables into regex patterns 
+		for(String key : variables.keySet()) {
+			patterns.put(Pattern.compile("\\{"+key+"\\}"), StringUtils.defaultString(variables.get(key)));
+		}
 	}
 	
 	private void update(ServiceVersion fromVersion, ServiceVersion toVersion) throws IOException {
@@ -103,7 +110,8 @@ public class Whatsnew {
 					// Closes previous version's section
 					if(sb != null) {
 						this.closeList(sb);
-						htmls.put(lineVersion.toString(), sb.toString());
+						//htmls.put(lineVersion.toString(), sb.toString());
+						htmls.put(lineVersion.toString(), replaceVariables(sb.toString()));
 						sb = null;
 					}
 					
@@ -121,15 +129,18 @@ public class Whatsnew {
 					if(sb == null) continue; // An active builder is required!
 					if(marker.equals("%")) { // Version title
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wt-wntitle'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wntitle'>{0}</div>", text));
+						if(prettyPrint) sb.append("\n");
 
 					} else if(marker.equals("@")) { // Version sub-title
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wt-wnsubtitle'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wnsubtitle'>{0}</div>", text));
+						if(prettyPrint) sb.append("\n");
 
 					} else if(marker.equals("!")) { // Free text
 						this.closeList(sb);
-						sb.append(MessageFormat.format("<div class='wt-wnfreetext'>{0}</div>\n", text));
+						sb.append(MessageFormat.format("<div class='wt-wnfreetext'>{0}</div>", text));
+						if(prettyPrint) sb.append("\n");
 
 					} else if(marker.equals("*")) { // Unordered list
 						this.closeListItem(sb);
@@ -140,13 +151,13 @@ public class Whatsnew {
 					} else { // No special markers
 						this.closeList(sb);
 						sb.append(text);
-						sb.append("\n");
+						if(prettyPrint) sb.append("\n");
 					}
 				}
 			} else {
 				if(skip) continue;
 				if(sb == null) continue; // An active builder is required!
-				sb.append(" ");
+				sb.append(" "); // Inserts a space between lines
 				sb.append(LangUtils.escapeHtmlAccentsAndSymbols(line));
 			}
 		}
@@ -154,15 +165,24 @@ public class Whatsnew {
 		// Closes last version's section
 		if(sb != null) {
 			this.closeList(sb);
-			htmls.put(lineVersion.toString(), sb.toString());
+			//htmls.put(lineVersion.toString(), sb.toString());
+			htmls.put(lineVersion.toString(), replaceVariables(sb.toString()));
 			sb = null;
 		}
+	}
+	
+	private String replaceVariables(String html) {
+		for(Pattern patt : patterns.keySet()) {
+			html = patt.matcher(html).replaceAll(patterns.get(patt));
+		}
+		return html;
 	}
 
 	private void openList(StringBuilder sb, String mode) {
 		if(!listMode.equals(mode)) {
 			if(mode.equals("unordered")) {
-				sb.append("<div class='wt-wnlist'><ul>\n");
+				sb.append("<div class='wt-wnlist'><ul>");
+				if(prettyPrint) sb.append("\n");
 			}
 			listMode = mode;
 		}
@@ -174,14 +194,16 @@ public class Whatsnew {
 			listItem = false;
 		}
 		if(listMode.equals("unordered")) {
-			sb.append("</ul></div>\n");
+			sb.append("</ul></div>");
+			if(prettyPrint) sb.append("\n");
 		}
 		listMode = "none";
 	}
 	
 	private void openListItem(StringBuilder sb) {
 		listItem = true;
-		sb.append("<li>\n");
+		sb.append("<li>");
+		if(prettyPrint) sb.append("\n");
 	}
 	
 	private void closeListItem(StringBuilder sb) {

@@ -33,9 +33,6 @@
  */
 Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	extend: 'WT.sdk.BaseView',
-	requires: [
-		'Ext.ux.form.Spacer'
-	],
 	
 	layout: 'border',
 	full: true,

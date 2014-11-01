@@ -156,7 +156,7 @@ class ServiceDescriptor {
 			} else {
 				resName = MessageFormat.format("/{0}/whatsnew/{1}.txt", LangUtils.packageToPath(manifest.getId()), slocale);
 				logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", manifest.getId(), resName, fromVersion);
-				wn = new Whatsnew(resName);
+				wn = new Whatsnew(resName, defineWhatsnewVariables());
 				whatsnewCache.put(slocale, wn);
 			}
 			return wn.toHtml(fromVersion, manifest.getVersion());
@@ -169,5 +169,11 @@ class ServiceDescriptor {
 			logger.error("Error getting whatsnew for service {}", manifest.getId(), ex);
 		}
 		return StringUtils.EMPTY;
+	}
+	
+	private HashMap<String, String> defineWhatsnewVariables() {
+		HashMap<String, String> variables = new HashMap<>();
+		variables.put("WHATSNEW_URL", MessageFormat.format("resources/{0}/whatsnew", manifest.getJarPath()));
+		return variables;
 	}
 }
