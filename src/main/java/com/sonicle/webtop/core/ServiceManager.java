@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -81,7 +82,9 @@ public class ServiceManager {
 	
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
+	private final Object lock = new Object();
 	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap<>();
+	private final HashMap<String, String> xidMappings = new HashMap<>();
 	private final HashMap<String, String> jsPathMappings = new HashMap<>();
 	
 	/**
@@ -99,6 +102,7 @@ public class ServiceManager {
 	 */
 	public void cleanup() {
 		services.clear();
+		xidMappings.clear();
 		jsPathMappings.clear();
 	}
 	
@@ -188,7 +192,7 @@ public class ServiceManager {
 	 * @return List of service IDs.
 	 */
 	public List<String> getRegisteredServices() {
-		synchronized(services) {
+		synchronized(lock) {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
 	}
@@ -199,7 +203,7 @@ public class ServiceManager {
 	 */
 	public List<String> getServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(services) {
+		synchronized(lock) {
 			for(ServiceDescriptor descr : services.values()) {
 				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
 			}
@@ -213,7 +217,7 @@ public class ServiceManager {
 	 */
 	public List<String> getDeamonServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(services) {
+		synchronized(lock) {
 			for(ServiceDescriptor descr : services.values()) {
 				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
 			}
@@ -227,7 +231,7 @@ public class ServiceManager {
 	 * @return Service descriptor object.
 	 */
 	ServiceDescriptor getService(String serviceId) {
-		synchronized(services) {
+		synchronized(lock) {
 			if(!services.containsKey(serviceId)) return null;
 			return services.get(serviceId);
 		}
@@ -318,12 +322,14 @@ public class ServiceManager {
 	private void registerService(ServiceManifest manifest) {
 		ServiceDescriptor descr = null;
 		String serviceId = manifest.getId();
+		String xid = manifest.getXId();
 		boolean maintenance = false;
 		
 		logger.debug("Registering service [{}]", serviceId);
-		synchronized(services) {
+		synchronized(lock) {
 			//TODO: check if xid is not duplicated
-			if(services.containsKey(serviceId)) throw new RuntimeException("Service already registered");
+			if(services.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
+			if(xidMappings.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidMappings.get(xid));
 			descr = new ServiceDescriptor(manifest);
 			logger.debug("[default:{}, public:{}, deamon:{}]", descr.hasDefaultService(), descr.hasPublicService(), descr.hasDeamonService());
 
@@ -341,6 +347,7 @@ public class ServiceManager {
 			}
 			
 			services.put(serviceId, descr);
+			xidMappings.put(xid, serviceId);
 			jsPathMappings.put(serviceId, manifest.getJsPath());
 			
 			// Adds service references into static map for facilitate ID lookup 

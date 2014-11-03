@@ -91,7 +91,7 @@ public class CoreService extends Service {
 		new JsonResult("themes", items).printTo(out);
 	}
 	
-	public void processGetAvailableServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processGetUserServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
 		Locale locale = env.getSession().getLocale();
 		

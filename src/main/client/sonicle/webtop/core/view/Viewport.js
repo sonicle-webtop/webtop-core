@@ -161,6 +161,21 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		me.svctb = header.queryById('svctb');
 		me.add(header);
 		
+		/*
+		var launcher = Ext.create({
+			xtype: 'tabpanel',
+			region: 'west',
+			itemId: 'launcher',
+			tabPosition: 'left',
+			tabRotation: 0
+		});
+		WT.getApp().services.each(function(desc) {
+			launcher.add(me.createSvcButton2(desc));
+		}, me);
+		me.add(launcher);
+		*/
+		
+		
 		var launcher = Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
@@ -173,6 +188,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			launcher.add(me.createSvcButton(desc));
 		}, me);
 		me.add(launcher);
+		
 		
 		var center = Ext.create({
 			xtype: 'container',
@@ -218,6 +234,31 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		var inst = inst = desc.getInstance();
 		return Ext.create({
 			xtype: 'button',
+			scale: 'large',
+			itemId: inst.id,
+			iconCls: inst.cssIconCls('service-m'),
+			tooltip: tip,
+			handler: 'onLauncherButtonClick'
+		});
+	},
+	
+	createSvcButton2: function(desc) {
+		// Defines tooltips
+		var tip = {title: desc.getName()};
+		if(WTStartup.isadmin) { // TODO: gestire tooltip per admin
+			var build = desc.getBuild();
+			Ext.apply(tip, {
+				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
+			});
+		} else {
+			Ext.apply(tip, {
+				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
+			});
+		}
+		
+		var inst = inst = desc.getInstance();
+		return Ext.create({
+			xtype: 'container',
 			scale: 'large',
 			itemId: inst.id,
 			iconCls: inst.cssIconCls('service-m'),

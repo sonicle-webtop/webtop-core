@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import java.text.MessageFormat;
+import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -97,38 +99,102 @@ public class ServiceManifest {
 		if(!StringUtils.isEmpty(supportEmail)) this.supportEmail = supportEmail;
 	}
 	
+	/**
+	 * Gets specified service ID.
+	 * @return The value.
+	 */
 	public String getId() {
 		return id;
 	}
 	
+	/**
+	 * Gets specified service XID (short ID).
+	 * @return The value.
+	 */
 	public String getXId() {
 		return xid;
 	}
-
+	
+	/**
+	 * Gets the class name of server-side service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreService)
+	 * @return The value.
+	 */
 	public String getClassName() {
 		return className;
 	}
 	
+	/**
+	 * Extracts the package name starting form class name (getClassName()).
+	 * (eg. com.sonicle.webtop.core.CoreService -> com.sonicle.webtop.core)
+	 * @return The value.
+	 */
 	public String getPackageName() {
 		return LangUtils.getPackageName(className);
 	}
 	
+	/**
+	 * Converts the package name into its path representation.
+	 * (eg. com.sonicle.webtop.mail -> com/sonicle/webtop/mail)
+	 * @return The value.
+	 */
+	public String getJarPath() {
+		return StringUtils.lowerCase(StringUtils.replace(getPackageName(), ".", "/"));
+	}
+	
+	/**
+	 * Gets the class name of client-side service implementation.
+	 * (eg. Sonicle.webtop.mail.MailService)
+	 * @return The value.
+	 */
 	public String getJsClassName() {
 		return jsClassName;
 	}
 	
+	public String getJsLocaleClassName(Locale locale) {
+		return MessageFormat.format("{0}.Locale_{1}", getJsPackageName(), locale.toString());
+	}
+	
+	/**
+	 * Gets the package name extracted from getJsClassName().
+	 * (eg. Sonicle.webtop.mail)
+	 * @return The value.
+	 */
 	public String getJsPackageName() {
 		return LangUtils.getPackageName(jsClassName);
 	}
 	
+	/**
+	 * Converts the js package name into its path representation.
+	 * (eg. Sonicle.webtop.mail -> sonicle/webtop/mail)
+	 * @return The value.
+	 */
 	public String getJsPath() {
 		return StringUtils.lowerCase(StringUtils.replace(getJsPackageName(), ".", "/"));
 	}
-
+	
+	/**
+	 * 
+	 * @return 
+	 */
+	public String getJsBaseUrl() {
+		return MessageFormat.format("resources/{0}", getId());
+	}
+	
+	/**
+	 * Gets the class name of server-side public service implementation.
+	 * (eg. com.sonicle.webtop.core.CorePublicService)
+	 * @return The value.
+	 */
 	public String getPublicClassName() {
 		return publicClassName;
 	}
-
+	
+	/**
+	 * Gets the class name of server-side deamon service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreDeamonService)
+	 * @return The value.
+	 */
 	public String getDeamonClassName() {
 		return deamonClassName;
 	}

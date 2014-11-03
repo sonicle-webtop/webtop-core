@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -47,16 +48,20 @@ public class JsWTStartup {
 	public String encAuthTicket="";
 	public String userId="";
 	public String domainId="";
+	public HashMap<String, String> appPaths = new HashMap<>();
+	public ArrayList<String> appRequires = new ArrayList<>();
 	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
 	
 	public static class Service {
 		public String id;
 		public String xid;
+		public String ns;
+		public String path;
+		public String className;
 		public String name;
 		public String description;
 		public String version;
 		public String build;
 		public String company;
-		public String className;
 	}
 }
