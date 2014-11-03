@@ -102,8 +102,8 @@ public class Start extends HttpServlet {
 			jswt.domainId=p.getDomainId();
 			jswt.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
-				if(serviceId.equals(CoreManifest.ID)) continue;
-				jswt.services.add(manager.getServiceJsDescriptor(serviceId, locale));
+				//if(serviceId.equals(CoreManifest.ID)) continue;
+				manager.fillForService(jswt, serviceId, locale);
 			}
 			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));
 			

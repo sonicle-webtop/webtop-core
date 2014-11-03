@@ -4,9 +4,9 @@ Ext.application({
 	extend: 'Sonicle.webtop.core.Application',
 	
     appFolder: 'resources/com.sonicle.webtop.core',
-	paths: {
+	paths: Ext.applyIf({
 		'Ext.ux': 'resources/extjs/ux',
 		'WT': 'resources/com.sonicle.webtop.core'
-	},
+	}, WTStartup.appPaths || {}),
 	autoCreateViewport: false
 });

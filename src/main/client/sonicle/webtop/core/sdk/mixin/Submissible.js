@@ -31,9 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.Submitable', {
+Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
 	extend: 'Ext.Mixin',
-	alternateClassName: 'WT.sdk.mixin.Submitable',
+	alternateClassName: 'WT.sdk.mixin.Submissible',
 	
 	config: {
 		

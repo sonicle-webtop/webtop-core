@@ -40,23 +40,21 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	config: {
 		id: null,
 		xid: null,
+		ns: null,
+		path: null,
+		className: null,
 		name: null,
 		description: null,
 		version: null,
 		build: null,
 		company: null,
-		iconCls: null,
-		className: null,
-		ns: null,
-		path: null
+		iconCls: null
 	},
 	
 	instance: null,
 	
 	constructor: function(cfg) {
 		var me = this;
-		cfg.ns = me.guessNs(cfg.className);
-		cfg.path = me.nsToPath(cfg.ns);
 		me.initConfig(cfg);
 		me.callParent(arguments);
 	},
@@ -81,41 +79,12 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	initService: function() {
 		WT.Log.debug('Initializing service [{0}]', this.getId());
 		var svc = this.getInstance();
-		if(svc == null) return;
+		if(svc === null) return;
 		
 		try {
 			svc.init.call(svc);
 		} catch(e) {
 			WT.Log.error('Error while calling init() method');
 		}
-	},
-	
-	getBaseUrl: function() {
-		return Ext.String.format('resources/{0}', this.getId());
-	},
-	
-	getResUrl: function(locale) {
-		return Ext.String.format('{0}/locale_{1}.properties', this.getBaseUrl(), locale);
-	},
-	
-	/**
-	 * @private
-	 * Guesses the namespace from a className.
-	 * @param {String} cn The service className.
-	 * @returns {String} The guessed namespace.
-	 */
-	guessNs: function(cn) {
-		var ldot = cn.lastIndexOf('.');
-		return cn.substring(0, ldot);
-	},
-	
-	/**
-	 * @private
-	 * Converts a namespace to package path.
-	 * @param {String} ns The service namespace.
-	 * @returns {String} The corresponding path.
-	 */
-	nsToPath: function(ns) {
-		return ns.split('.').join('/').toLowerCase();
 	}
 });

@@ -43,6 +43,7 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +75,44 @@ public class CoreManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	
+	public void fillForService(JsWTStartup js, String serviceId, Locale locale) {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceDescriptor sdesc = svcm.getService(serviceId);
+		ServiceManifest manifest = sdesc.getManifest();
+		
+		if(serviceId.equals(CoreManifest.ID)) {
+			js.appRequires.add(manifest.getJsLocaleClassName(locale));
+			
+		} else {
+			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
+			js.appRequires.add(manifest.getJsClassName());
+			js.appRequires.add(manifest.getJsLocaleClassName(locale));
+
+			JsWTStartup.Service jssvc = new JsWTStartup.Service();
+			jssvc.id = manifest.getId();
+			jssvc.xid = manifest.getXId();
+			jssvc.ns = manifest.getJsPackageName();
+			jssvc.path = manifest.getJsBaseUrl();
+			jssvc.className = manifest.getJsClassName();
+			jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
+			jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
+			jssvc.version = manifest.getVersion().toString();
+			jssvc.build = manifest.getBuildDate();
+			jssvc.company = manifest.getCompany();
+			js.services.add(jssvc);
+		}
+	}
+	
+	/*
+	public SimpleEntry<String, String> getServicePath(String serviceId) {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceDescriptor sdesc = svcm.getService(serviceId);
+		ServiceManifest manifest = sdesc.getManifest();
+		
+		return new SimpleEntry<>(manifest.getJsPackageName(), manifest.getJsBaseUrl());
+	}
+	*/
 	
 	public JsWTStartup.Service getServiceJsDescriptor(String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
