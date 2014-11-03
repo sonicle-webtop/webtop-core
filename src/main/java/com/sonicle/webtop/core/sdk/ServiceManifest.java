@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import java.text.MessageFormat;
+import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -149,6 +151,10 @@ public class ServiceManifest {
 		return jsClassName;
 	}
 	
+	public String getJsLocaleClassName(Locale locale) {
+		return MessageFormat.format("{0}.Locale_{1}", getJsPackageName(), locale.toString());
+	}
+	
 	/**
 	 * Gets the package name extracted from getJsClassName().
 	 * (eg. Sonicle.webtop.mail)
@@ -165,6 +171,14 @@ public class ServiceManifest {
 	 */
 	public String getJsPath() {
 		return StringUtils.lowerCase(StringUtils.replace(getJsPackageName(), ".", "/"));
+	}
+	
+	/**
+	 * 
+	 * @return 
+	 */
+	public String getJsBaseUrl() {
+		return MessageFormat.format("resources/{0}", getId());
 	}
 	
 	/**

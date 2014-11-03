@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	extend: 'WT.sdk.BaseView',
 	requires: [
 		'Sonicle.webtop.core.view.FeedbackC',
-		'Sonicle.webtop.core.model.AvailService',
+		'Sonicle.webtop.core.model.UserService',
 		'Sonicle.webtop.core.model.Feedback',
 		'Ext.ux.form.Spacer'
 	],
@@ -63,8 +63,8 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 							allowBlank: false,
 							editable: false,
 							store: {
-								model: 'Sonicle.webtop.core.model.AvailService',
-								proxy: WT.proxy('com.sonicle.webtop.core', 'GetAvailableServices', 'services')
+								model: 'Sonicle.webtop.core.model.UserService',
+								proxy: WT.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
 							},
 							valueField: 'id',
 							displayField: 'description',
