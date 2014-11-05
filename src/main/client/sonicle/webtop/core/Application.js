@@ -2,11 +2,12 @@
 Ext.define('Sonicle.webtop.core.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
+		'Ext.override.Ext',
+		'Ext.ux.WebSocketManager',
+		'Ext.ux.WebSocket',
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Log',
-		'Sonicle.webtop.core.ServiceDescriptor',
-		'Ext.ux.WebSocketManager',
-		'Ext.ux.WebSocket'
+		'Sonicle.webtop.core.ServiceDescriptor'
 	].concat(WTStartup.appRequires || []),
 	views: [
 		'Sonicle.webtop.core.view.Viewport'
@@ -26,6 +27,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	init: function() {
 		var me = this;
 		WT.Log.debug('application:init');
+		//Ext.validIdRe = /^[a-z_\.][a-z0-9\-_\.]*$/i;
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
 		
