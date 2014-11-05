@@ -85,20 +85,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var svc = this.getService(id);
 		if(!svc) return;
 		var wpc = this.getViewport().getController();
-		
-		if(!wpc.hasServiceCmp(id)) {
-			var tb, tool, main;
-			if(Ext.isFunction(svc.getToolbar)) {
-				tb = svc.getToolbar.call(svc);
-			}
-			if(Ext.isFunction(svc.getToolComponent)) {
-				tool = svc.getToolComponent.call(svc);
-			}
-			if(Ext.isFunction(svc.getMainComponent)) {
-				main = svc.getMainComponent.call(svc);
-			}
-			wpc.addServiceCmp(id, tb, tool, main);
-		}
+		wpc.addServiceCmp(svc);
 		wpc.showService(id);
 	},
 	

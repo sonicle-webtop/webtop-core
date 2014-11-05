@@ -2,6 +2,7 @@ SERVICE SETTINGS
 -nuove chiavi di sistema: system.language e system.country
 -pensavo anche ad una nuova chiave per il character set di default?????
 -profiledata.provider -> userdata.provider
+-secret -> migrato all'interno della tabella users
 
 WHATSNEW
 -i file vanno ora messi nella cartella %SERVICE_ID%/whatsnew/

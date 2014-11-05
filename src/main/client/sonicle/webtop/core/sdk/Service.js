@@ -56,13 +56,29 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	wsactions: null,
 	wsscopes: null,
 	
-	constructor: function(cfg) {
+	constructor: function(id, xid, is) {
 		var me = this;
-		me.id = cfg.id;
-		me.xid = cfg.xid;
+		me.id = id;
+		me.xid = xid;
+		me.initialSettings = is || {};
 		me.wsactions = {};
 		me.wsscopes = {};
 		me.callParent(arguments);
+	},
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param {String} key The key.
+	 * @return {String} The translated string, or null if not found.
+	 */
+	res: function(key) {
+		if(!this.strings) return undefined;
+		return this.strings[key];
+	},
+	
+	
+	getInitialSetting: function(key) {
+		return this.initialSettings[key];
 	},
 	
 	/**
@@ -75,12 +91,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	/**
 	 * Sets the toolbar component associated to this service.
-	 * @param {Ext.Toolbar} cmp The toolbar.
+	 * @param {Ext.toolbar.Toolbar} cmp The toolbar.
 	 */
 	setToolbar: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.tb = cmp;
-		}
+		if(cmp) this.tb = cmp;
 	},
 	
 	/**
@@ -93,17 +107,15 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	/**
 	 * Sets the tool (side) component associated to this service.
-	 * @param {Ext.Component} cmp The tool component.
+	 * @param {Ext.Panel} cmp The tool component.
 	 */
 	setToolComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.toolcmp = cmp;
-		}
+		if(cmp) this.toolcmp = cmp;
 	},
 	
 	/**
 	 * Returns the main (center) component associated to this service.
-	 * @return {Ext.Component}
+	 * @return {Ext.Panel}
 	 */
 	getMainComponent: function() {
 		return this.maincmp;
@@ -114,19 +126,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Ext.Component} cmp The main component.
 	 */
 	setMainComponent: function(cmp) {
-		if(Ext.isDefined(cmp)) {
-			this.maincmp = cmp;
-		}
-	},
-	
-	/**
-	 * Returns the localized string associated to the key.
-	 * @param {String} key The key.
-	 * @return {String} The translated string, or null if not found.
-	 */
-	res: function(key) {
-		if(!this.strings) return undefined;
-		return this.strings[key];
+		if(cmp) this.maincmp = cmp;
 	},
 	
 	/**

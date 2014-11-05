@@ -70,12 +70,6 @@ public class CoreService extends Service {
 		
 	}
 	
-	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		String theme = request.getParameter("theme");
-		getFullEnv().getSession().setTheme(theme);
-		new JsonResult().printTo(out);
-	}
-	
 	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsCommon> items = new ArrayList<>();
 		
@@ -89,6 +83,31 @@ public class CoreService extends Service {
 		items.add(new JsCommon("neptune-touch", "Neptune Touch"));
 		
 		new JsonResult("themes", items).printTo(out);
+	}
+	
+	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String theme = ServletUtils.getStringParameter(request, "theme", true);
+			getFullEnv().getSession().setTheme(theme);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action SetTheme", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
+	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+			Integer width = ServletUtils.getIntParameter(request, "width", true);
+			getFullEnv().getSession().setViewportToolWidth(serviceId, width);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action SetTheme", ex);
+			new JsonResult(false).printTo(out);
+		}
 	}
 	
 	public void processGetUserServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

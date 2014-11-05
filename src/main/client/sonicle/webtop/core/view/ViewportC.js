@@ -65,20 +65,34 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	},
 	
 	onToolResize: function(s, w) {
-		
+		WT.ajaxReq(WT.ID, 'SetToolComponentWidth', {
+			params: {
+				serviceId: s.svcId,
+				width: w
+			}
+		});
 	},
 	
 	/**
 	 * Adds passed components to wiewport's layout.
-	 * @param {String} id The service ID.
-	 * @param {Ext.toolbar.Toolbar} tb The toolbar component.
-	 * @param {Ext.panel.Panel} tool The tool component.
-	 * @param {Ext.panel.Panel} main The main component.
+	 * @param {WT.sdk.Service} svc The service instance.
 	 */
-	addServiceCmp: function(id, tb, tool, main) {
+	addServiceCmp: function(svc) {
 		var me = this;
 		var w = me.getView();
-		if(me.hasServiceCmp(id)) return;
+		if(me.hasServiceCmp(svc.id)) return;
+		
+		// Gets service components
+		var tb = null, tool = null, main = null;
+		if(Ext.isFunction(svc.getToolbar)) {
+			tb = svc.getToolbar.call(svc);
+		}
+		if(Ext.isFunction(svc.getToolComponent)) {
+			tool = svc.getToolComponent.call(svc);
+		}
+		if(Ext.isFunction(svc.getMainComponent)) {
+			main = svc.getMainComponent.call(svc);
+		}
 		
 		if(!tb || !tb.isXType('toolbar')) {
 			tb = Ext.create({xtype: 'toolbar'});
@@ -90,7 +104,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			tool.split = true;
 			tool.setCollapsible(true);
 			tool.setMinWidth(100);
-			if(!tool.width) tool.setWidth(200);
+			tool.setWidth(svc.getInitialSetting('viewport.tool.width') || 200);
 		}
 		if(!main || !main.isXType('panel')) {
 			main = Ext.create({xtype: 'panel', region: 'center', split:true});
@@ -98,7 +112,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			main.setRegion('center');
 			main.split = true;
 		}
-		tb.svcId = tool.svcId = main.svcId = id;
+		tb.svcId = tool.svcId = main.svcId = svc.id;
 		tool.on('resize', 'onToolResize');
 		
 		var wp = Ext.create({
@@ -107,8 +121,8 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			items: [tool, main]
 		});
 		
-		me.tbmap[id] = tb.getId();
-		me.wpmap[id] = wp.getId();
+		me.tbmap[svc.id] = tb.getId();
+		me.wpmap[svc.id] = wp.getId();
 		w.svctb.add(tb);
 		w.svcwp.add(wp);
 	},
