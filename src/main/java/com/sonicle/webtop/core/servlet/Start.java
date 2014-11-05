@@ -65,6 +65,9 @@ public class Start extends HttpServlet {
 		WebTopSession wts = WebTopSession.get(request);
 		CoreManager manager = wta.getManager();
 		
+		String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
+		boolean extdebug=sextdebug!=null && sextdebug.equals("true");
+		
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
@@ -84,7 +87,7 @@ public class Start extends HttpServlet {
 			tplMap.put("theme", theme);
 			tplMap.put("laf", lookAndFeel);
 			tplMap.put("rtl", String.valueOf(wts.getRTL()));
-			tplMap.put("debug", "false");
+			tplMap.put("debug", ""+extdebug);
 			ServletHelper.fillPageVars(tplMap, locale, wta);
 			
 			UserProfile p=wts.getUserProfile();

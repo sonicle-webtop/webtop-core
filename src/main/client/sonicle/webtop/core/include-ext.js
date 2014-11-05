@@ -81,7 +81,7 @@
 		laf = getQueryParam('laf') || 'default',
 		rtl = getQueryParam('rtl'),
 		includeCSS = !hasOption('nocss', extPath),
-		useDebug = hasOption('debug'),
+		useDebug = getQueryParam('debug'),
 		hasOverrides = !hasOption('nooverrides', extPath) && !!{
 			// TODO: remove neptune
 			aria: 1,
@@ -101,6 +101,7 @@
 		lafPath;
 	
 	rtl = rtl && rtl.toString() === 'true';
+	useDebug = useDebug && useDebug.toString() === 'true';
 	extTheme = 'ext-theme-' + theme;
 	packagePath = extPath + '/packages/' + extTheme + '/build/';
 	themePath = packagePath + 'resources/' + extTheme + (rtl ? '-all-rtl' : '-all');
@@ -117,7 +118,7 @@
 				lafPath + 'laf.css' + '"/>');
 	}
 
-	extPrefix = useDebug ? '/ext' : '/ext-all';
+	extPrefix = useDebug ? '/ext-all-debug' : '/ext-all';
 
 	document.write('<script type="text/javascript" src="' + extPath + extPrefix +
 			(rtl ? '-rtl' : '') + '.js"></script>');

@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		path: null,
 		className: null,
 		name: null,
-		description: null,
+		desription: null,
 		version: null,
 		build: null,
 		company: null,
@@ -71,6 +71,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 					WTStartup.initialSettings[me.getId()]);
 			} catch(e) {
 				WT.Log.error('Unable to instantiate service class [{0}]', cn);
+				WT.Log.exception(e);
 			}
 		}
 		return me.instance;
@@ -85,6 +86,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 			svc.init.call(svc);
 		} catch(e) {
 			WT.Log.error('Error while calling init() method');
+			WT.Log.exception(e);
 		}
 	}
 });

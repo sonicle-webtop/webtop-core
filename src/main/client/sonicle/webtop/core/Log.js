@@ -69,5 +69,13 @@ Ext.define('Sonicle.webtop.core.Log', {
 	error: function(msg, values) {
 		var s = (arguments.length === 1) ? msg : Ext.String.format(msg, Ext.Array.slice(arguments, 1));
 		Ext.global.console.error(s);
+	},
+	
+	/**
+	 * @param {Exception} e
+	 */
+	exception: function(e) {
+		Ext.global.console.error(e.stack);
 	}
+	
 });
