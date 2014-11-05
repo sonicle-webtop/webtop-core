@@ -33,7 +33,9 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
@@ -45,14 +47,39 @@ public class CoreUserSettings extends BaseUserSettings {
         super(domainId, userId, serviceId);
     }
 	
+	/**
+	 * [string]
+	 * Look and feel
+	 */
 	public static final String LAF = "laf";
+	/**
+	 * [string]
+	 * Theme name
+	 */
 	public static final String THEME = "theme";
+	/**
+	 * [boolean]
+	 * Right-to-left mode
+	 */
 	public static final String RTL = "rtl";
+	/**
+	 * [boolean]
+	 * Specifies if whatsnew window must be shown after a service upgrade
+	 */
+	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	/**
+	 * [string][*]
+	 * Saves last seen service version for whatsnew handling
+	 */
+	public static final String WHATSNEW_VERSION = "whatsnew.version";
 	
-	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	//public static final String WHATSNEW_VERSION = "whatsnew.version";
+	/**
+	 * [string][*]
+	 * Saves width of tool component
+	 */
+	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
+	
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
-	//public static final String SECRET = "secret";
 	//public static final String OTP_ENABLED = "otp.enabled";
 	//public static final String OTP_DELIVERY = "otp.delivery";
 	//public static final String OTP_DELIVERY_EMAIL = "email";
@@ -71,6 +98,26 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean getRTL() {
-		return getUserSetting(RTL,false);
+		return getUserSetting(RTL, false);
+	}
+	
+	public boolean getWhatsnewEnabled() {
+		return getUserSetting(WHATSNEW_ENABLED, true);
+	}
+	
+	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
+		return setm.getUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION);
+	}
+	
+	public static boolean setWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId, String value) {
+		return setm.setUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION, value);
+	}
+	
+	public static Integer getViewportToolWidth(SettingsManager setm, UserProfile profile, String serviceId) {
+		return LangUtils.value(setm.getUserSetting(profile, serviceId, CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
+	}
+	
+	public static boolean setViewportToolWidth(SettingsManager setm, UserProfile profile, String serviceId, Integer value) {
+		return setm.setUserSetting(profile, serviceId, CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
 	}
 }

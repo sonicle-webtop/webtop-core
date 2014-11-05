@@ -167,7 +167,6 @@ public class WebTopSession {
 		}
 	}
 	
-	/*
 	public JsWTStartup.Settings getInitialSettings(String serviceId) {
 		Service svc = getServiceById(serviceId);
 		
@@ -186,11 +185,10 @@ public class WebTopSession {
 		if(hm != null) is.putAll(hm);
 		
 		if(!serviceId.equals(CoreManifest.ID)) {
-			is.put("", locale)
+			is.put(CoreUserSettings.VIEWPORT_TOOL_WIDTH, CoreUserSettings.getViewportToolWidth(wta.getSettingsManager(), profile, serviceId));
 		}
 		return is;
 	}
-	*/
 	
 	/**
 	 * Gets parsed user-agent info.
@@ -255,6 +253,10 @@ public class WebTopSession {
 	
 	public void setRTL(String value) {
 		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.RTL, value);
+	}
+	
+	public void setViewportToolWidth(Integer value) {
+		CoreUserSettings.setViewportToolWidth(wta.getSettingsManager(), profile, CoreManifest.ID, value);
 	}
 	
 	public void test() {

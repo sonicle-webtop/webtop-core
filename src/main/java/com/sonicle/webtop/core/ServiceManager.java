@@ -265,7 +265,7 @@ public class ServiceManager {
 		
 		// Gets current service's version info
 		manifestVer = getManifest(serviceId).getVersion();
-		setm.setUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION, manifestVer.toString());
+		CoreUserSettings.setWhatsnewVersion(setm, profile, serviceId, manifestVer.toString());
 	}
 	
 	/**
@@ -281,7 +281,7 @@ public class ServiceManager {
 		// Gets current service's version info and last version for this user
 		ServiceDescriptor desc = getService(serviceId);
 		manifestVer = desc.getManifest().getVersion();
-		userVer = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+		userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
 		
 		boolean notseen = (manifestVer.compareTo(userVer) > 0);
 		boolean show = false;
@@ -314,7 +314,7 @@ public class ServiceManager {
 		ServiceDescriptor desc = getService(serviceId);
 		if(!full) {
 			SettingsManager setm = wta.getSettingsManager();
-			fromVersion = new ServiceVersion(setm.getUserSetting(profile, serviceId, CoreServiceSettings.WHATSNEW_VERSION));
+			fromVersion = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
 		}
 		return desc.getWhatsnew(profile.getLocale(), fromVersion);
 	}

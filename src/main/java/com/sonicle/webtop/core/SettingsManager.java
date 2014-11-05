@@ -149,6 +149,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
+	@Override
 	public String getServiceSetting(String serviceId, String key) {
 		return getSetting(serviceId, key);
 	}
@@ -178,6 +179,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
+	@Override
 	public boolean setServiceSetting(String serviceId, String key, Object value) {
 		SettingDAO dao = SettingDAO.getInstance();
 		Connection con = null;
@@ -210,6 +212,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.s
 	 */
+	@Override
 	public boolean setServiceSetting(String domainId, String serviceId, String key, Object value) {
 		DomainSettingDAO dao = DomainSettingDAO.getInstance();
 		Connection con = null;
@@ -291,7 +294,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	@Override
 	public String getUserSetting(UserProfile userProfile, String serviceId, String key) {
-		return getUserSetting(userProfile.getDomainId(), serviceId, userProfile.getUserId(), key);
+		return getUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
 	}
 	
 	/**

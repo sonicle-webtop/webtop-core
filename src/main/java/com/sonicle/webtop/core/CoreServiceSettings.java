@@ -17,17 +17,46 @@ import java.util.Locale;
  */
 public class CoreServiceSettings extends BaseServiceSettings {
 	
+	/**
+	 * [string][system]
+	 * Defines system default language locale
+	 */
 	public static final String SYSTEM_LANGUAGE = "system.language";
+	/**
+	 * [string][system]
+	 * Defines system default country locale
+	 */
 	public static final String SYSTEM_COUNTRY = "system.country";
+	/**
+	 * [boolean][system]
+	 * Indicates if system is under maintenance
+	 */
 	public static final String MAINTENANCE = "maintenance";
+	/**
+	 * [string][system][*]
+	 * Stores installed service version
+	 */
 	public static final String MANIFEST_VERSION = "manifest.version";
-	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	public static final String WHATSNEW_VERSION = "whatsnew.version";
-	public static final String USERDATA_PROVIDER = "userdata.provider";
-	public static final String TMP = "tmp";
+	/**
+	 * [string][system+domain][*]
+	 * Overrides support email address
+	 */
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
+	/**
+	 * [boolean][system]
+	 */
 	//public static final String DB_INIT_ENABLED = "db.init.enabled";
+	/**
+	 * [boolean][system]
+	 */
 	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
+	/**
+	 * [string][system]
+	 */
+	public static final String USERDATA_PROVIDER = "userdata.provider";
+	
+	public static final String TMP = "tmp";
+	
 	//public static final String OTP_ENABLED = "otp.enabled";
 	//public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
 	//public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
