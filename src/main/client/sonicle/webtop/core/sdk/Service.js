@@ -157,6 +157,29 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/*
+	 * Builds the src url of a themed image for this service
+	 * 
+	 * @param {String} relPath The relative icon path
+	 * @return {String} the imageUrl
+	 */
+	imageUrl: function(relPath) {
+		return WT.imageUrl(this.id,relPath);
+	},
+	
+	/*
+	 * Builds the img tag of a themed image for this service
+	 * 
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	imageTag: function(relPath,width,height,others) {
+		return WT.imageTag(this.id,relPath,width,height,others);
+	},
+	
+	/*
 	 * Map a websocket action name to a callback function
 	 * @param {String} action The action name
 	 * @param {Function} callback The function for this action

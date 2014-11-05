@@ -233,5 +233,86 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	wsMsg: function(service, action, config) {
 		return Ext.JSON.encode(Ext.apply(config||{},{ service: service, action: action }));
+	},
+	
+	/*
+	 * Builds the src url of a themed image for a service
+	 * 
+	 * @param {String} sid The service id
+	 * @param {String} relPath The relative icon path
+	 * @return {String} the imageUrl
+	 */
+	imageUrl: function(sid, relPath) {
+		return Ext.String.format('resources/{0}/laf/{1}/{2}',sid,WTStartup.laf,relPath);
+	},
+	
+	/*
+	 * Builds the img tag of a themed image for a service
+	 * 
+	 * @param {String} sid The service id
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	imageTag: function(sid,relPath,width,height,others) {
+		var src=this.imageUrl(sid,relPath);
+		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
+	},
+	
+	/*
+	 * Builds the img tag of a core generic image
+	 * 
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	coreImageTag: function(relPath,width,height,others) {
+		var src=this.imageUrl(WT.ID,relPath);
+		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
+	},
+	
+	/*
+	 * Builds the src url of a global image
+	 * 
+	 * @param {String} relPath The relative icon path
+	 * @return {String} the imageUrl
+	 */
+	globalImageUrl: function(relPath) {
+		return Ext.String.format('resources/{0}/images/{1}',WT.ID,relPath);
+	},
+	
+	/*
+	 * Builds the img tag of a core generic image
+	 * 
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	globalImageTag: function(relPath,width,height,others) {
+		var src=this.globalImageUrl(relPath);
+		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
+	},
+	
+	/*
+	 * Build human readable version of integer number
+	 * 
+	 * @param {int} value The integer number
+	 * @return {String} human readable string
+	 */
+	getSizeString: function(value) {
+		var s=value;
+		value=parseInt(value/1024);
+		if (value>0) {
+			if (value<1024) s=value+"KB";
+			else s=parseInt(value/1024)+"MB";
+		}
+		return s;
 	}
+	
 });
