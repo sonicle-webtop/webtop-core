@@ -45,21 +45,10 @@ public class CoreUserSettings extends BaseUserSettings {
         super(domainId, userId, serviceId);
     }
 	
-	public String getLookAndFeel() {
-		return getUserSetting(LAF, "default");
-	}
-	
-	public String getTheme() {
-		return getUserSetting(THEME, "crisp");
-	}
-	
-	public boolean getRTL() {
-		return getUserSetting(RTL,false);
-	}
-    
 	public static final String LAF = "laf";
 	public static final String THEME = "theme";
 	public static final String RTL = "rtl";
+	
 	//public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	//public static final String WHATSNEW_VERSION = "whatsnew.version";
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
@@ -72,4 +61,16 @@ public class CoreUserSettings extends BaseUserSettings {
 	//public static final String OTP_EMAILADDRESS = "otp.emailaddress";
 	//public static final String OTP_SONICLEAUTH_INTERVAL = "otp.sonicleauth.interval";
 	//public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
+	
+	public String getLookAndFeel() {
+		return getUserSetting(LAF, "default");
+	}
+	
+	public String getTheme() {
+		return getUserSetting(THEME, "crisp");
+	}
+	
+	public boolean getRTL() {
+		return getUserSetting(RTL,false);
+	}
 }
