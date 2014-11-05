@@ -255,8 +255,8 @@ public class WebTopSession {
 		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.RTL, value);
 	}
 	
-	public void setViewportToolWidth(Integer value) {
-		CoreUserSettings.setViewportToolWidth(wta.getSettingsManager(), profile, CoreManifest.ID, value);
+	public void setViewportToolWidth(String serviceId, Integer value) {
+		CoreUserSettings.setViewportToolWidth(wta.getSettingsManager(), profile, serviceId, value);
 	}
 	
 	public void test() {

@@ -67,6 +67,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	onToolResize: function(s, w) {
 		WT.ajaxReq(WT.ID, 'SetToolComponentWidth', {
 			params: {
+				serviceId: s.svcId,
 				width: w
 			}
 		});

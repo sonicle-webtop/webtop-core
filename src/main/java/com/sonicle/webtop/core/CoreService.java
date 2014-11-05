@@ -99,8 +99,9 @@ public class CoreService extends Service {
 	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
+			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
-			getFullEnv().getSession().setViewportToolWidth(width);
+			getFullEnv().getSession().setViewportToolWidth(serviceId, width);
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
