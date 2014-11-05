@@ -239,6 +239,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			xtype: 'wtsvcbutton',
 			scale: 'large',
 			itemId: inst.id,
+			validIdRe: /^[a-z_][a-z0-9\-_.]*$/i,
 			iconCls: inst.cssIconCls('service-m'),
 			tooltip: tip,
 			handler: 'onLauncherButtonClick'
