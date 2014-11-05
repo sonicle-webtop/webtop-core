@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.js.JsWTStartup;
 import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.BasicEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
@@ -45,6 +46,7 @@ import com.sonicle.webtop.core.ws.WebSocketManager;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -164,6 +166,31 @@ public class WebTopSession {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
 	}
+	
+	/*
+	public JsWTStartup.Settings getInitialSettings(String serviceId) {
+		Service svc = getServiceById(serviceId);
+		
+		// Gets initial settings from instantiated service
+		HashMap<String, Object> hm = null;
+		try {
+			WebTopApp.setServiceLoggerDC(serviceId);
+			hm = svc.returnInitialSettings();
+		} catch(Exception ex) {
+			logger.error("returnInitialSettings method returns errors", ex);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+		
+		JsWTStartup.Settings is = new JsWTStartup.Settings();
+		if(hm != null) is.putAll(hm);
+		
+		if(!serviceId.equals(CoreManifest.ID)) {
+			is.put("", locale)
+		}
+		return is;
+	}
+	*/
 	
 	/**
 	 * Gets parsed user-agent info.

@@ -31,45 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-/**
- *
- * @author malbinola
- */
-public class JsWTStartup {
+Ext.define('Sonicle.webtop.core.SvcButton', {
+	extend: 'Ext.button.Button',
+	alias: 'widget.wtsvcbutton'
 	
-	public String locale = "";
-	public String theme = "";
-	public String laf = "";
-	public String encAuthTicket="";
-	public String userId="";
-	public String domainId="";
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
-	public HashMap<String, Settings> initialSettings = new HashMap<>();
+	/*
+	baseCls: Ext.baseCSSPrefix + 'tab',
 	
-	public static class Service {
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String className;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
-	}
-	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
-		}
-	}
-}
+	_btnWrapCls: Ext.baseCSSPrefix + 'tab-wrap',
+	_btnCls: Ext.baseCSSPrefix + 'tab-button',
+	_baseIconCls: Ext.baseCSSPrefix + 'tab-icon-el',
+	_glyphCls: Ext.baseCSSPrefix + 'tab-glyph',
+	_innerCls: Ext.baseCSSPrefix + 'tab-inner',
+	_textCls: Ext.baseCSSPrefix + 'tab-text',
+	_noTextCls: Ext.baseCSSPrefix + 'tab-no-text',
+	_hasIconCls: Ext.baseCSSPrefix + 'tab-icon',
+	_activeCls: Ext.baseCSSPrefix + 'tab-active',
+	overCls: Ext.baseCSSPrefix + 'tab-over',
+	_pressedCls: Ext.baseCSSPrefix + 'tab-pressed',
+	_disabledCls: Ext.baseCSSPrefix + 'tab-disabled'
+	*/
+});

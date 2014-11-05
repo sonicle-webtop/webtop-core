@@ -72,45 +72,34 @@ Ext.define('Sonicle.webtop.core.Application', {
 	 * @returns {WT.sdk.Service} The instance or null if the instance
 	 * was not found. 
 	 */
-	getService: function(svc) {
-		var desc = this.getDescriptor(svc);
+	getService: function(id) {
+		var desc = this.getDescriptor(id);
 		return (desc) ? desc.getInstance() : null;
 	},
 	
-	getDescriptor: function(svcId) {
-		return this.services.get(svcId);
+	getDescriptor: function(id) {
+		return this.services.get(id);
 	},
 	
-	activateService: function(svcId) {
-		var svc = this.getService(svcId);
+	activateService: function(id) {
+		var svc = this.getService(id);
 		if(!svc) return;
 		var wpc = this.getViewport().getController();
-		var cmp = null;
 		
-		if(Ext.isFunction(svc.getToolbar)) {
-			cmp = svc.getToolbar.call(svc);
-			if(!cmp) {
-				cmp = Ext.create({xtype: 'toolbar'});
-				svc.setToolbar(cmp);
+		if(!wpc.hasServiceCmp(id)) {
+			var tb, tool, main;
+			if(Ext.isFunction(svc.getToolbar)) {
+				tb = svc.getToolbar.call(svc);
 			}
-			wpc.setServiceToolbar(cmp);
-		}
-		if(Ext.isFunction(svc.getToolComponent)) {
-			cmp = svc.getToolComponent.call(svc);
-			if(!cmp) {
-				cmp = Ext.create({xtype: 'panel', width: 150});
-				svc.setToolComponent(cmp);
+			if(Ext.isFunction(svc.getToolComponent)) {
+				tool = svc.getToolComponent.call(svc);
 			}
-			wpc.setServiceToolCmp(cmp);
-		}
-		if(Ext.isFunction(svc.getMainComponent)) {
-			cmp = svc.getMainComponent.call(svc);
-			if(!cmp) {
-				cmp = Ext.create({xtype: 'panel'});
-				svc.setMainComponent(cmp);
+			if(Ext.isFunction(svc.getMainComponent)) {
+				main = svc.getMainComponent.call(svc);
 			}
-			wpc.setServiceMainCmp(cmp);
+			wpc.addServiceCmp(id, tb, tool, main);
 		}
+		wpc.showService(id);
 	},
 	
 	initWebSocket: function() {

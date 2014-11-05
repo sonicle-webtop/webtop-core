@@ -35,7 +35,8 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 	extend: 'Ext.container.Viewport',
 	requires: [
 		'Sonicle.webtop.core.view.ViewportC',
-		'Sonicle.webtop.core.model.Theme'
+		'Sonicle.webtop.core.model.Theme',
+		'Sonicle.webtop.core.SvcButton'
 	],
 	controller: Ext.create('Sonicle.webtop.core.view.ViewportC'),
 	layout: 'border',
@@ -161,21 +162,6 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		me.svctb = header.queryById('svctb');
 		me.add(header);
 		
-		/*
-		var launcher = Ext.create({
-			xtype: 'tabpanel',
-			region: 'west',
-			itemId: 'launcher',
-			tabPosition: 'left',
-			tabRotation: 0
-		});
-		WT.getApp().services.each(function(desc) {
-			launcher.add(me.createSvcButton2(desc));
-		}, me);
-		me.add(launcher);
-		*/
-		
-		
 		var launcher = Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
@@ -189,32 +175,49 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		}, me);
 		me.add(launcher);
 		
+		me.svcwp = Ext.create({
+			xtype: 'container',
+			region: 'center',
+			itemId: 'svcwp',
+			layout: 'card'
+		});
+		me.add(me.svcwp);
 		
+		
+		
+		/*
 		var center = Ext.create({
 			xtype: 'container',
 			region: 'center',
 			itemId: 'center',
 			layout: 'border',
 			defaults: {
-				split: true
+				split: true,
+				collapsible: true
 			},
 			items: [{
 					xtype: 'container',
 					region: 'west',
 					itemId: 'svctool',
 					layout: 'card',
-					collapsible: true
+					width: 200
 				}, {
 					xtype: 'container',
 					region: 'center',
 					itemId: 'svcmain',
-					layout: 'card'
+					layout: 'card',
+					collapsible: false
 				}
 			]
 		});
 		me.svctool = center.queryById('svctool');
 		me.svcmain = center.queryById('svcmain');
 		me.add(center);
+		*/
+	},
+	
+	createSvc: function() {
+		
 	},
 	
 	createSvcButton: function(desc) {
@@ -233,32 +236,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		
 		var inst = inst = desc.getInstance();
 		return Ext.create({
-			xtype: 'button',
-			scale: 'large',
-			itemId: inst.id,
-			iconCls: inst.cssIconCls('service-m'),
-			tooltip: tip,
-			handler: 'onLauncherButtonClick'
-		});
-	},
-	
-	createSvcButton2: function(desc) {
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTStartup.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
-		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
-		}
-		
-		var inst = inst = desc.getInstance();
-		return Ext.create({
-			xtype: 'container',
+			xtype: 'wtsvcbutton',
 			scale: 'large',
 			itemId: inst.id,
 			iconCls: inst.cssIconCls('service-m'),

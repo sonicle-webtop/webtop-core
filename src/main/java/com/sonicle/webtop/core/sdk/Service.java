@@ -37,6 +37,7 @@ import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.WebTopApp;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,21 +65,25 @@ public abstract class Service {
 		
 	}
 	
-	public BasicEnvironment getEnv() {
+	public final BasicEnvironment getEnv() {
 		return env;
 	}
 	
-	public FullEnvironment getFullEnv() {
+	public final FullEnvironment getFullEnv() {
 		if(coreEnv == null) throw new InsufficientRightsException("Insufficient rigths to access full environment");
 		return coreEnv;
 	}
 	
-	public ServiceManifest getManifest() {
+	public final ServiceManifest getManifest() {
 		return Environment.getManifest(this.getClass());
 	}
 	
-	public String getId() {
+	public final String getId() {
 		return Environment.getServiceId(this.getClass());
+	}
+	
+	public HashMap<String, Object> returnInitialSettings() {
+		return null;
 	}
 	
 	/**
@@ -86,7 +91,7 @@ public abstract class Service {
 	 * @param locale The requested locale.
 	 * @return The localized string.
 	 */
-	public String getName(Locale locale) {
+	public final String getName(Locale locale) {
 		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
 	}
 	
@@ -95,7 +100,7 @@ public abstract class Service {
 	 * @param locale The requested locale.
 	 * @return The localized string.
 	 */
-	public String getDescription(Locale locale) {
+	public final String getDescription(Locale locale) {
 		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
 	
@@ -126,8 +131,13 @@ public abstract class Service {
 		WebTopApp.unsetServiceCustomLoggerDC();
 	}
     
-    // TODO: get custom service connection
-    public Connection getConnection() throws SQLException {
+    /**
+	 * Gets service's db conncetion.
+	 * @return The db connection.
+	 * @throws SQLException 
+	 */
+    public final Connection getConnection() throws SQLException {
+		//TODO: update return in order to get service connection
         return env.getCoreConnection();
     }
     
@@ -136,7 +146,7 @@ public abstract class Service {
 	 * @param key The resource key.
 	 * @return The translated string, or null if not found.
 	 */
-	public String lookupResource(String key) {
+	public final String lookupResource(String key) {
 		return env.lookupResource(getId(), env.getProfile().getLocale(), key);
 	}
     
@@ -146,7 +156,7 @@ public abstract class Service {
 	 * @param escapeHtml True to apply HTML escaping.
 	 * @return The translated string, or null if not found.
 	 */
-	public String lookupResource(String key, boolean escapeHtml) {
+	public final String lookupResource(String key, boolean escapeHtml) {
 		return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
 	}
     
