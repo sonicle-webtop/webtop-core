@@ -37,6 +37,12 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	layout: 'border',
 	full: true,
 	
+	constructor: function(full) {
+		var me = this;
+		me.full = full;
+		me.callParent(arguments);
+	},
+	
 	initComponent: function() {
 		var me = this;
 		Ext.apply(me, {
@@ -61,7 +67,8 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 					xtype: 'checkbox',
 					itemId: 'hide',
 					value: true,
-					boxLabel: WT.res('whatsnew.f-hide.lbl')
+					boxLabel: WT.res('whatsnew.f-hide.lbl'),
+					hidden: me.full
 				}, '->', {
 					xtype: 'button',
 					text: WT.res('whatsnew.b-close.lbl'),

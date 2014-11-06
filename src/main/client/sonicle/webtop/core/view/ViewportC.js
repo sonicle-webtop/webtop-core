@@ -57,7 +57,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 				this.buildFeedbackWnd();
 				break;
 			case 'whatsnew':
-				this.buildWhatsnewWnd();
+				this.buildWhatsnewWnd(true);
 				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
@@ -104,7 +104,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			tool.split = true;
 			tool.setCollapsible(true);
 			tool.setMinWidth(100);
-			tool.setWidth(svc.getInitialSetting('viewport.tool.width') || 200);
+			tool.setWidth(svc.getInitialSetting('viewportToolWidth') || 200);
 		}
 		if(!main || !main.isXType('panel')) {
 			main = Ext.create({xtype: 'panel', region: 'center', split:true});
@@ -161,14 +161,14 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 		if(wnd) wnd.show();
 	},
 	
-	buildWhatsnewWnd: function() {
+	buildWhatsnewWnd: function(full) {
 		var wnd = Ext.create({
 			xtype: 'window',
 			layout: 'fit',
 			height: 500,
 			width: 600,
 			items: [
-				Ext.create('Sonicle.webtop.core.view.Whatsnew')
+				Ext.create('Sonicle.webtop.core.view.Whatsnew', full)
 			]
 		});
 		if(wnd) wnd.show();

@@ -36,6 +36,12 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	id: null,
 	xid: null,
+	strings: null,
+	tb: null,
+	toolcmp: null,
+	maincmp: null,
+	wsactions: null,
+	wsscopes: null,
 	
 	/**
 	 * @method
@@ -49,21 +55,24 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	activate: Ext.emptyFn,
 	
-	strings: null,
-	tb: null,
-	toolcmp: null,
-	maincmp: null,
-	wsactions: null,
-	wsscopes: null,
-	
-	constructor: function(id, xid, is) {
+	constructor: function(id, xid) {
 		var me = this;
 		me.id = id;
 		me.xid = xid;
-		me.initialSettings = is || {};
 		me.wsactions = {};
 		me.wsscopes = {};
 		me.callParent(arguments);
+	},
+	
+	/**
+	 * Gets the initial setting value bound to key.
+	 * @param {String} key The key.
+	 * @return {Mixed} Setting value.
+	 */
+	getInitialSetting: function(key) {
+		var is = WTStartup.initialSettings[this.id] || {};
+		return is[key];
+		//return this.initialSettings[key];
 	},
 	
 	/**
@@ -74,11 +83,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	res: function(key) {
 		if(!this.strings) return undefined;
 		return this.strings[key];
-	},
-	
-	
-	getInitialSetting: function(key) {
-		return this.initialSettings[key];
 	},
 	
 	/**

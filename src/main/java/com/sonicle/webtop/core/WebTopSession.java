@@ -184,10 +184,22 @@ public class WebTopSession {
 		JsWTStartup.Settings is = new JsWTStartup.Settings();
 		if(hm != null) is.putAll(hm);
 		
-		if(!serviceId.equals(CoreManifest.ID)) {
-			is.put(CoreUserSettings.VIEWPORT_TOOL_WIDTH, CoreUserSettings.getViewportToolWidth(wta.getSettingsManager(), profile, serviceId));
+		// Built-in settings
+		if(serviceId.equals(CoreManifest.ID)) {
+			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
+		} else {
+			is.put("viewportToolWidth", CoreUserSettings.getViewportToolWidth(wta.getSettingsManager(), profile, serviceId));
 		}
 		return is;
+	}
+	
+	private boolean isWhatsnewNeeded() {
+		ServiceManager svcm = wta.getServiceManager();
+		boolean needWhatsnew = false;
+		for(String serviceId : getServices()) {
+			needWhatsnew = needWhatsnew | svcm.needWhatsnew(serviceId, profile);
+		}
+		return needWhatsnew;
 	}
 	
 	/**
@@ -219,6 +231,7 @@ public class WebTopSession {
 			return locale;
 		}
 	}
+	
 	public CoreServiceSettings getCoreServiceSettings() {
 		return coreServiceSettings;
 	}

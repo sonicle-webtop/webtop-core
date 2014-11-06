@@ -40,6 +40,16 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Gets the initial setting value bound to key.
+	 * @param {String} key The key.
+	 * @return {Mixed} Setting value.
+	 */
+	getInitialSetting: function(key) {
+		var is = WTStartup.initialSettings[this.ID] || {};
+		return is[key];
+	},
+	
+	/**
 	 * Returns a string resource.
 	 * @param {String} svc The service id.
 	 * @param {String} key The resource key.

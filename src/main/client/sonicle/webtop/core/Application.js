@@ -2,7 +2,8 @@
 Ext.define('Sonicle.webtop.core.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
-		'Ext.override.Ext',
+		'WT.overrides.Ext',
+		'WT.overrides.Component',
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
 		'Sonicle.webtop.core.WT',
@@ -66,6 +67,12 @@ Ext.define('Sonicle.webtop.core.Application', {
 			desc.initService();
 			if(i === 0) me.activateService(desc.getId());
 		});
+		
+		// If necessary, show whatsnew
+		if(WT.getInitialSetting('isWhatsnewNeeded')) {
+			var wc = me.viewport.getController();
+			wc.buildWhatsnewWnd(false);
+		}
 	},
 	
 	/**
