@@ -32,14 +32,15 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Feedback', {
+	alternateClassName: 'WT.view.Feedback',
 	extend: 'WT.sdk.BaseView',
 	requires: [
-		'Sonicle.webtop.core.view.FeedbackC',
-		'Sonicle.webtop.core.model.UserService',
-		'Sonicle.webtop.core.model.Feedback',
+		'WT.view.FeedbackC',
+		'WT.model.UserService',
+		'WT.model.Feedback',
 		'Ext.ux.form.Spacer'
 	],
-	controller: Ext.create('Sonicle.webtop.core.view.FeedbackC'),
+	controller: Ext.create('WT.view.FeedbackC'),
 	
 	initComponent: function() {
 		var me = this;

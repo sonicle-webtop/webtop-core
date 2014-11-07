@@ -7,3 +7,9 @@ SERVICE SETTINGS
 WHATSNEW
 -i file vanno ora messi nella cartella %SERVICE_ID%/whatsnew/
 -chiave di traduzione per le path: la stringa {WHATSNEW_URL} nel testo html viene automaticamente tradotta in resources/%SERVICE_ID%/whatsnew/
+
+JS
+-i riferimenti ai componenti principali del servizio (toolbar, tool e main) vengono gestiti dal servizio
+Nel metodo init() vengono impostati attraverso i metodi setToolbar, setToolComponent, setMainComponent
+Il recupero avviene per mezzo dei getter
+- 

@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.UserService', {
-	extend: 'Sonicle.webtop.core.model.Base'
+	alternateClassName: 'WT.model.UserService',
+	extend: 'WT.model.Base'
 	
 });

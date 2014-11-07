@@ -31,15 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Feedback', {
-	alternateClassName: 'WT.model.Feedback',
-	extend: 'WT.model.Base',
-	
-	fields: [
-		'serviceId',
-		'message',
-		'anonymous',
-		'timestamp',
-		'image'
-	]
+Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
+	alternateClassName: 'WT.ux.ServiceButton',
+	extend: 'Ext.button.Button'
+	//alias: 'widget.wtservicebutton'
 });

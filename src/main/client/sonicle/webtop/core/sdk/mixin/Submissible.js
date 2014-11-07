@@ -32,8 +32,8 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
-	extend: 'Ext.Mixin',
 	alternateClassName: 'WT.sdk.mixin.Submissible',
+	extend: 'Ext.Mixin',
 	
 	config: {
 		

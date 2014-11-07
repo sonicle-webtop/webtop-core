@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Whatsnew', {
+	alternateClassName: 'WT.view.Whatsnew',
 	extend: 'WT.sdk.BaseView',
 	
 	layout: 'border',

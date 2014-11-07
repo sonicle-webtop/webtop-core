@@ -31,24 +31,74 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.SvcButton', {
-	extend: 'Ext.button.Button',
-	alias: 'widget.wtsvcbutton'
+Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
+	alternateClassName: 'WT.sdk.mixin.ActionStorer',
+	extend: 'Ext.Mixin',
 	
-	/*
-	baseCls: Ext.baseCSSPrefix + 'tab',
+	DEFAULT_GROUP: 'default',
+	actions_: null,
 	
-	_btnWrapCls: Ext.baseCSSPrefix + 'tab-wrap',
-	_btnCls: Ext.baseCSSPrefix + 'tab-button',
-	_baseIconCls: Ext.baseCSSPrefix + 'tab-icon-el',
-	_glyphCls: Ext.baseCSSPrefix + 'tab-glyph',
-	_innerCls: Ext.baseCSSPrefix + 'tab-inner',
-	_textCls: Ext.baseCSSPrefix + 'tab-text',
-	_noTextCls: Ext.baseCSSPrefix + 'tab-no-text',
-	_hasIconCls: Ext.baseCSSPrefix + 'tab-icon',
-	_activeCls: Ext.baseCSSPrefix + 'tab-active',
-	overCls: Ext.baseCSSPrefix + 'tab-over',
-	_pressedCls: Ext.baseCSSPrefix + 'tab-pressed',
-	_disabledCls: Ext.baseCSSPrefix + 'tab-disabled'
-	*/
+	mixinConfig: {
+		extended: function (baseClass, derivedClass, classBody) {
+			classBody.actions_ = {};
+		}
+	},
+	
+	/**
+	 * Adds an action into the specified group.
+	 * @param {String} [group] The action group.
+	 * @param {String} name The action name.
+	 * @param {type} obj
+	 * @return {WT.ux.Action}
+	 */
+	addAction: function(group, name, obj) {
+		var me = this;
+		if(arguments.length === 2) {
+			obj = name;
+			name = group;
+			group = me.DEFAULT_GROUP;
+		}
+		if(!me.actions_[group]) me.actions_[group] = {};
+		
+		var act = null;
+		if(WT.isAction(obj)) { // Action is already instantiated
+			act = obj;
+		} else { // Instantiate action using config
+			var cfg = {
+				handler: obj.handler
+			};
+			if(obj.text) cfg.text = obj.text;
+			if(obj.iconCls) cfg.iconCls = obj.iconCls;
+			if(obj.scope) cfg.scope = obj.scope;
+			act = Ext.create('WT.ux.Action', cfg);
+		}
+		me.actions_[group][name] = act;
+		return act;
+	},
+	
+	/**
+	 * Gets an action from the specified group.
+	 * If not provided, 'default' group is used.
+	 * @param {String} [group] The action group.
+	 * @param {String} name The action name.
+	 * @return {WT.ux.Action} The action.
+	 */
+	getAction: function(group, name) {
+		var me = this;
+		if(arguments.length === 1) {
+			name = group;
+			group = me.DEFAULT_GROUP;
+		}
+		if(!me.actions_[group]) return undefined;
+		return me.actions_[group][name];
+	},
+	
+	/**
+	 * Gets all actions belonging to group.
+	 * @param {String} group The action group.
+	 * @returns {Object} The actions map.
+	 */
+	getActions: function(group) {
+		return this.actions_[group];
+	}
 });

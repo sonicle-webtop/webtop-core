@@ -33,11 +33,19 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.Service', {
 	alternateClassName: 'WT.sdk.Service',
+	mixins: [
+		'Ext.mixin.Observable',
+		'WT.sdk.mixin.ActionStorer'
+	],
 	
-	id: null,
-	xid: null,
+	statics: {
+		NEW_ACTION_GROUP: 'new'
+	},
+	
+	ID: null,
+	XID: null,
 	strings: null,
-	tb: null,
+	tbcmp: null,
 	toolcmp: null,
 	maincmp: null,
 	wsactions: null,
@@ -50,15 +58,14 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	init: Ext.emptyFn,
 	
 	/**
-	 * @method
-	 * Called automatically when the service is activated.
+	 * @event activate
+	 * Fires after the Service has been activated.
 	 */
-	activate: Ext.emptyFn,
 	
 	constructor: function(id, xid) {
 		var me = this;
-		me.id = id;
-		me.xid = xid;
+		me.ID = id;
+		me.XID = xid;
 		me.wsactions = {};
 		me.wsscopes = {};
 		me.callParent(arguments);
@@ -70,9 +77,8 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Mixed} Setting value.
 	 */
 	getInitialSetting: function(key) {
-		var is = WTStartup.initialSettings[this.id] || {};
+		var is = WTStartup.initialSettings[this.ID] || {};
 		return is[key];
-		//return this.initialSettings[key];
 	},
 	
 	/**
@@ -90,7 +96,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Ext.Toolbar}
 	 */
 	getToolbar: function() {
-		return this.tb;
+		return this.tbcmp;
 	},
 	
 	/**
@@ -98,7 +104,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Ext.toolbar.Toolbar} cmp The toolbar.
 	 */
 	setToolbar: function(cmp) {
-		if(cmp) this.tb = cmp;
+		if(cmp) this.tbcmp = cmp;
 	},
 	
 	/**
@@ -126,7 +132,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
-	 *  Sets the main (center) component associated to this service.
+	 * Sets the main (center) component associated to this service.
 	 * @param {Ext.Component} cmp The main component.
 	 */
 	setMainComponent: function(cmp) {
@@ -139,7 +145,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssCls: function(name) {
-		return Ext.String.format('{0}-{1}', this.xid, name);
+		return WT.cssCls(this.XID, name);
 	},
 	
 	/**
@@ -149,15 +155,11 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Likewise, using 'service' as name and 'l' as size it will return the
 	 * same value: '{xid}-icon-service-l'.
 	 * @param {String} name The icon name part.
-	 * @param {String} size (optional) Icon size (one of xs,s,m,l).
+	 * @param {String} [size] Icon size (one of xs,s,m,l).
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssIconCls: function(name, size) {
-		if(arguments.length === 2) {
-			return Ext.String.format('{0}-icon-{1}-{2}', this.xid, name, size);
-		} else {
-			return Ext.String.format('{0}-icon-{1}', this.xid, name);
-		}
+		return WT.cssIconCls(this.XID, name, size);
 	},
 	
 	/*
@@ -167,7 +169,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} the imageUrl
 	 */
 	imageUrl: function(relPath) {
-		return WT.imageUrl(this.id,relPath);
+		return WT.imageUrl(this.ID, relPath);
 	},
 	
 	/*
@@ -180,7 +182,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} the complete image tag
 	 */
 	imageTag: function(relPath,width,height,others) {
-		return WT.imageTag(this.id,relPath,width,height,others);
+		return WT.imageTag(this.ID, relPath, width, height, others);
 	},
 	
 	/*

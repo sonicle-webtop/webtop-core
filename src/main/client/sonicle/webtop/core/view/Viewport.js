@@ -32,34 +32,34 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Viewport', {
+	alternateClassName: 'WT.view.Viewport',
 	extend: 'Ext.container.Viewport',
 	requires: [
-		'Sonicle.webtop.core.view.ViewportC',
-		'Sonicle.webtop.core.model.Theme',
-		'Sonicle.webtop.core.SvcButton'
+		'WT.view.ViewportC',
+		'WT.model.Theme',
+		'WT.ux.ServiceButton'
 	],
-	controller: Ext.create('Sonicle.webtop.core.view.ViewportC'),
+	controller: Ext.create('WT.view.ViewportC'),
 	layout: 'border',
 	
-	svctb: null,
-	svctool: null,
-	svcmain: null,
+	referenceHolder: true,
 	
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
 		
-		var header = Ext.create({
+		this.add(Ext.create({
 			xtype: 'container',
 			region: 'north',
-			itemId: 'header',
+			reference: 'header',
 			layout: 'border',
 			height: 40,
 			items: [
 				{
 					xtype: 'toolbar',
 					region: 'west',
-					itemId: 'newtb',
+					reference: 'newtb',
+					referenceHolder: true,
 					cls: 'wt-header',
 					border: false,
 					style: {
@@ -67,6 +67,14 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						paddingBottom: 0
 					},
 					items: [{
+							xtype: 'button',
+							reference: 'newbtn',
+							text: 'nuovo',
+							menu: []
+						}
+						
+						
+						/*{
 						xtype: 'combo',
 						editable: false,
 						store: {
@@ -91,11 +99,11 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 								});
 							}
 						}
-					}]
+					}*/]
 				}, {
 					xtype: 'container',
 					region: 'center',
-					itemId: 'svctb',
+					reference: 'svctb',
 					layout: 'card',
 					defaults: {
 						cls: 'wt-header',
@@ -105,7 +113,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 				}, {
 					xtype: 'toolbar',
 					region: 'east',
-					itemId: 'menutb',
+					reference: 'menutb',
 					cls: 'wt-header',
 					border: false,
 					style: {
@@ -158,66 +166,27 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 					]
 				}
 			]
-		});
-		me.svctb = header.queryById('svctb');
-		me.add(header);
+		}));
 		
-		var launcher = Ext.create({
+		var launcher = me.add(Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
-			itemId: 'launcher',
+			reference: 'launcher',
 			cls: 'wt-launcher',
 			border: false,
-			vertical: true
-		});
+			vertical: true,
+			referenceHolder: true
+		}));
 		WT.getApp().services.each(function(desc) {
 			launcher.add(me.createSvcButton(desc));
 		}, me);
-		me.add(launcher);
 		
-		me.svcwp = Ext.create({
+		me.add(Ext.create({
 			xtype: 'container',
 			region: 'center',
-			itemId: 'svcwp',
+			reference: 'svcwp',
 			layout: 'card'
-		});
-		me.add(me.svcwp);
-		
-		
-		
-		/*
-		var center = Ext.create({
-			xtype: 'container',
-			region: 'center',
-			itemId: 'center',
-			layout: 'border',
-			defaults: {
-				split: true,
-				collapsible: true
-			},
-			items: [{
-					xtype: 'container',
-					region: 'west',
-					itemId: 'svctool',
-					layout: 'card',
-					width: 200
-				}, {
-					xtype: 'container',
-					region: 'center',
-					itemId: 'svcmain',
-					layout: 'card',
-					collapsible: false
-				}
-			]
-		});
-		me.svctool = center.queryById('svctool');
-		me.svcmain = center.queryById('svcmain');
-		me.add(center);
-		*/
-	},
-	
-	createSvc: function() {
-		
+		}));
 	},
 	
 	createSvcButton: function(desc) {
@@ -235,11 +204,9 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		}
 		
 		var inst = inst = desc.getInstance();
-		return Ext.create({
-			xtype: 'wtsvcbutton',
+		return Ext.create('WT.ux.ServiceButton', {
 			scale: 'large',
-			itemId: inst.id,
-			validIdRe: /^[a-z_][a-z0-9\-_.]*$/i,
+			itemId: inst.ID,
 			iconCls: inst.cssIconCls('service-m'),
 			tooltip: tip,
 			handler: 'onLauncherButtonClick'

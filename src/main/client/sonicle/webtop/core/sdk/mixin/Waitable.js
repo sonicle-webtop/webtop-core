@@ -32,14 +32,10 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.sdk.mixin.Waitable', {
-	extend: 'Ext.Mixin',
 	alternateClassName: 'WT.sdk.mixin.Waitable',
+	extend: 'Ext.Mixin',
 	
-	waitCount: null,
-	
-	initWaitable: function(){
-		this.waitCount = 0;
-	},
+	waitCount_: 0,
 	
 	/**
 	 * Signals to apply the loading mask.
@@ -49,8 +45,8 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Waitable', {
 	 */
 	wait: function(msg) {
 		var me = this;
-		me.waitCount++;		
-		if(me.waitCount === 1) {
+		me.waitCount_++;		
+		if(me.waitCount_ === 1) {
 			var cmp = me.ownerCt || me;
 			cmp.mask(msg || WT.res('waiting'));
 		}
@@ -63,8 +59,8 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Waitable', {
 	 */
 	unwait: function() {
 		var me = this;
-		me.waitCount--;
-		if(me.waitCount === 0) {
+		me.waitCount_--;
+		if(me.waitCount_ === 0) {
 			var cmp = me.ownerCt || me;
 			cmp.unmask();
 		}

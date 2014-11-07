@@ -32,8 +32,8 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.sdk.BaseView', {
-	extend: 'Ext.form.Panel',
 	alternateClassName: 'WT.sdk.BaseView',
+	extend: 'Ext.form.Panel',
 	mixins: [
 		'WT.sdk.mixin.Waitable',
 		'WT.sdk.mixin.Submissible'

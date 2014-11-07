@@ -105,7 +105,6 @@ public class Start extends HttpServlet {
 			jswt.domainId=p.getDomainId();
 			jswt.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
-				//if(serviceId.equals(CoreManifest.ID)) continue;
 				manager.fillForService(jswt, serviceId, locale);
 				jswt.initialSettings.put(serviceId, wts.getInitialSettings(serviceId));
 			}

@@ -32,7 +32,8 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.Theme', {
-	extend: 'Sonicle.webtop.core.model.Base',
+	alternateClassName: 'WT.model.Theme',
+	extend: 'WT.model.Base',
 	
 	//entityName: 'themes',
 	fields: ['id', 'description']

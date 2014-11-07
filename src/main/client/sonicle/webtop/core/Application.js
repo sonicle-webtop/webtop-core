@@ -2,8 +2,6 @@
 Ext.define('Sonicle.webtop.core.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
-		'WT.overrides.Ext',
-		'WT.overrides.Component',
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
 		'Sonicle.webtop.core.WT',
@@ -28,7 +26,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 	init: function() {
 		var me = this;
 		WT.Log.debug('application:init');
-		//Ext.validIdRe = /^[a-z_\.][a-z0-9\-_\.]*$/i;
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
 		
@@ -61,16 +58,21 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Creates main viewport
 		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
+		var wc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one
-		me.services.each(function(desc,i) {
-			desc.initService();
-			if(i === 0) me.activateService(desc.getId());
+		var count = 0;
+		me.services.each(function(desc) {
+			if(desc.initService()) {
+				count++;
+				var inst = desc.getInstance();
+				wc.addServiceNewActions(inst.getActions(WT.sdk.Service.NEW_ACTION_GROUP));
+				if(count === 1) me.activateService(desc.getId());
+			}
 		});
 		
 		// If necessary, show whatsnew
 		if(WT.getInitialSetting('isWhatsnewNeeded')) {
-			var wc = me.viewport.getController();
 			wc.buildWhatsnewWnd(false);
 		}
 	},
@@ -95,7 +97,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		if(!svc) return;
 		var wpc = this.getViewport().getController();
 		wpc.addServiceCmp(svc);
-		wpc.showService(id);
+		if(wpc.showService(id)) svc.fireEvent('activate');
 	},
 	
 	initWebSocket: function() {

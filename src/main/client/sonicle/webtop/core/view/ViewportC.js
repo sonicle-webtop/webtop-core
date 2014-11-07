@@ -32,8 +32,10 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.ViewportC', {
+	alternateClassName: 'WT.view.ViewportC',
 	extend: 'Ext.app.ViewController',
 	
+	active: null,
 	tbmap: null,
 	wpmap: null,
 	
@@ -80,7 +82,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	addServiceCmp: function(svc) {
 		var me = this;
 		var w = me.getView();
-		if(me.hasServiceCmp(svc.id)) return;
+		if(me.hasServiceCmp(svc.ID)) return;
 		
 		// Gets service components
 		var tb = null, tool = null, main = null;
@@ -112,7 +114,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			main.setRegion('center');
 			main.split = true;
 		}
-		tb.svcId = tool.svcId = main.svcId = svc.id;
+		tb.svcId = tool.svcId = main.svcId = svc.ID;
 		tool.on('resize', 'onToolResize');
 		
 		var wp = Ext.create({
@@ -121,10 +123,10 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			items: [tool, main]
 		});
 		
-		me.tbmap[svc.id] = tb.getId();
-		me.wpmap[svc.id] = wp.getId();
-		w.svctb.add(tb);
-		w.svcwp.add(wp);
+		me.tbmap[svc.ID] = tb.getId();
+		me.wpmap[svc.ID] = wp.getId();
+		w.lookupReference('svctb').add(tb);
+		w.lookupReference('svcwp').add(wp);
 	},
 	
 	/**
@@ -138,14 +140,32 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	},
 	
 	/**
-	 * Activates specified service.
+	 * Shows specified service components.
 	 * @param {String} id The service ID.
+	 * @return {Boolean} True if components have been switched, false if already active.
 	 */
 	showService: function(id) {
 		var me = this;
-		var w = me.getView();
-		w.svctb.getLayout().setActiveItem(me.tbmap[id]);
-		w.svcwp.getLayout().setActiveItem(me.wpmap[id]);
+		if(me.active !== id) {
+			var w = me.getView();
+			me.active = id;
+			w.lookupReference('svctb').getLayout().setActiveItem(me.tbmap[id]);
+			w.lookupReference('svcwp').getLayout().setActiveItem(me.wpmap[id]);
+			return true;
+		} else {
+			return false;
+		}
+	},
+	
+	addServiceNewActions: function(acts) {
+		var w = this.getView();
+		var newtb = w.lookupReference('newtb');
+		var newbtn = newtb.lookupReference('newbtn');
+		var menu = newbtn.getMenu();
+		
+		Ext.iterate(acts, function(k,v) {
+			menu.add(v);
+		});
 	},
 	
 	buildFeedbackWnd: function() {

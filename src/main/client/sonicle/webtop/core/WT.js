@@ -51,7 +51,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns a string resource.
-	 * @param {String} svc The service id.
+	 * @param {String} svc The service ID.
 	 * @param {String} key The resource key.
 	 * @returns {String} The value.
 	 */
@@ -67,6 +67,46 @@ Ext.define('Sonicle.webtop.core.WT', {
 			if(inst === null) return null;
 			return inst.res(key);
 		}
+	},
+	
+	/**
+	 * Builds CSS class name namespacing it using service xid.
+	 * @param {String} xid Service short ID.
+	 * @param {String} name The CSS class name part.
+	 * @return {String} The concatenated CSS class name.
+	 */
+	cssCls: function(xid, name) {
+		return Ext.String.format('{0}-{1}', xid, name);
+	},
+	
+	/**
+	 * Builds CSS class name for icons namespacing it using service xid.
+	 * For example, using 'service' as name, it will return '{xid}-icon-service'.
+	 * Using 'service-l' as name it will return '{xid}-icon-service-l'.
+	 * Likewise, using 'service' as name and 'l' as size it will return the
+	 * same value: '{xid}-icon-service-l'.
+	 * @param {String} xid Service short ID.
+	 * @param {String} name The icon name part.
+	 * @param {String} [size] Icon size (one of xs,s,m,l).
+	 * @return {String} The concatenated CSS class name.
+	 */
+	cssIconCls: function(xid, name, size) {
+		if(size === undefined) {
+			return Ext.String.format('{0}-icon-{1}', xid, name);
+		} else {
+			return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
+		}
+	},
+	
+	isXType: function(obj, xtype) {
+		if(!Ext.isObject(obj)) return false;
+		if(!Ext.isFunction(obj.isXType)) return false;
+		return obj.isXType(xtype);
+	},
+	
+	isAction: function(obj) {
+		if(!Ext.isObject(obj)) return false;
+		return (obj.isAction && Ext.isFunction(obj.execute));
 	},
 	
 	proxy: function(svc, act, rootp) {
@@ -311,16 +351,15 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/*
 	 * Build human readable version of integer number
-	 * 
-	 * @param {int} value The integer number
-	 * @return {String} human readable string
+	 * @param {Integer} value The integer number.
+	 * @return {String} A human readable string.
 	 */
 	getSizeString: function(value) {
-		var s=value;
-		value=parseInt(value/1024);
-		if (value>0) {
-			if (value<1024) s=value+"KB";
-			else s=parseInt(value/1024)+"MB";
+		var s = value;
+		value = parseInt(value/1024);
+		if (value > 0) {
+			if (value < 1024) s = value + "KB";
+			else s = parseInt(value/1024) + "MB";
 		}
 		return s;
 	}

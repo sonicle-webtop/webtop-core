@@ -80,13 +80,16 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	initService: function() {
 		WT.Log.debug('Initializing service [{0}]', this.getId());
 		var svc = this.getInstance();
-		if(svc === null) return;
+		if(svc === null) return false;
 		
 		try {
 			svc.init.call(svc);
+			return true;
+			
 		} catch(e) {
 			WT.Log.error('Error while calling init() method');
 			WT.Log.exception(e);
+			return false;
 		}
 	}
 });
