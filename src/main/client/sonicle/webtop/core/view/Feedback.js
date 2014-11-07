@@ -70,24 +70,24 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 							valueField: 'id',
 							displayField: 'description',
 							width: 400,
-							fieldLabel: WT.res('feedback.f-service.lbl')
+							fieldLabel: WT.res('feedback.fld-service.lbl')
 						}, {
 							xtype: 'textareafield',
 							name: 'message',
 							allowBlank: false,
 							anchor: '100%',
-							fieldLabel: WT.res('feedback.f-message.lbl')
+							fieldLabel: WT.res('feedback.fld-message.lbl')
 						}, {
 							xtype: 'checkbox',
 							name: 'anonymous',
 							hideLabel: true,
-							boxLabel: WT.res('feedback.f-anonymous.lbl')
+							boxLabel: WT.res('feedback.fld-anonymous.lbl')
 						}, {
 							xtype: 'checkbox',
 							name: 'screenshot',
 							submitValue: false,
 							hideLabel: true,
-							boxLabel: WT.res('feedback.f-screenshot.lbl'),
+							boxLabel: WT.res('feedback.fld-screenshot.lbl'),
 							handler: 'onScreenshotChange'
 						}, {
 							xtype: 'hiddenfield',
@@ -101,10 +101,10 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 			],
 
 			buttons: [{
-				text: WT.res('b-send.lbl'),
+				text: WT.res('btn-send.lbl'),
 				handler: 'onSendClick'
 			}, {
-				text: WT.res('b-cancel.lbl'),
+				text: WT.res('btn-cancel.lbl'),
 				handler: 'onCancelClick'
 			}]
 		});

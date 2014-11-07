@@ -68,11 +68,11 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 					xtype: 'checkbox',
 					itemId: 'hide',
 					value: true,
-					boxLabel: WT.res('whatsnew.f-hide.lbl'),
+					boxLabel: WT.res('whatsnew.fld-hide.lbl'),
 					hidden: me.full
 				}, '->', {
 					xtype: 'button',
-					text: WT.res('whatsnew.b-close.lbl'),
+					text: WT.res('whatsnew.btn-close.lbl'),
 					handler: function() {
 						var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
 						if(tb.getComponent('hide').getValue()) me.turnOff();

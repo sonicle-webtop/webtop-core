@@ -51,21 +51,21 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns a string resource.
-	 * @param {String} svc The service ID.
+	 * @param {String} id The service ID.
 	 * @param {String} key The resource key.
 	 * @returns {String} The value.
 	 */
-	res: function(svc, key) {
+	res: function(id, key) {
 		if(arguments.length === 1) {
-			key = svc;
-			svc = WT.NS;
+			key = id;
+			id = WT.NS;
 		}
-		if(svc === WT.NS) {
+		if(id === WT.NS) {
 			return WT.strings[key];
 		} else {
-			var inst = WT.getApp().getService();
-			if(inst === null) return null;
-			return inst.res(key);
+			var inst = WT.getApp().getService(id);
+			//if(inst === null) return null;
+			return (inst) ? inst.res(key) : null;
 		}
 	},
 	

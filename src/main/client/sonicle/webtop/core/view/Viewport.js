@@ -66,14 +66,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 						paddingTop: 0,
 						paddingBottom: 0
 					},
-					items: [{
-							xtype: 'button',
-							reference: 'newbtn',
-							text: 'nuovo',
-							menu: []
-						}
-						
-						
+					items: [
 						/*{
 						xtype: 'combo',
 						editable: false,
@@ -168,7 +161,8 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			]
 		}));
 		
-		var launcher = me.add(Ext.create({
+		//var launcher = me.add(Ext.create({
+		me.add(Ext.create({
 			xtype: 'toolbar',
 			region: 'west',
 			reference: 'launcher',
@@ -177,9 +171,9 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			vertical: true,
 			referenceHolder: true
 		}));
-		WT.getApp().services.each(function(desc) {
-			launcher.add(me.createSvcButton(desc));
-		}, me);
+		//WT.getApp().services.each(function(desc) {
+		//	launcher.add(me.createSvcButton(desc));
+		//}, me);
 		
 		me.add(Ext.create({
 			xtype: 'container',
@@ -189,7 +183,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		}));
 	},
 	
-	createSvcButton: function(desc) {
+	createServiceButton: function(desc) {
 		// Defines tooltips
 		var tip = {title: desc.getName()};
 		if(WTStartup.isadmin) { // TODO: gestire tooltip per admin

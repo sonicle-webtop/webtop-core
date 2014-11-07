@@ -36,11 +36,11 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
 	extend: 'Ext.Mixin',
 	
 	DEFAULT_GROUP: 'default',
-	actions_: null,
+	_actions: null,
 	
 	mixinConfig: {
 		extended: function (baseClass, derivedClass, classBody) {
-			classBody.actions_ = {};
+			classBody._actions = {};
 		}
 	},
 	
@@ -48,8 +48,8 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
 	 * Adds an action into the specified group.
 	 * @param {String} [group] The action group.
 	 * @param {String} name The action name.
-	 * @param {type} obj
-	 * @return {WT.ux.Action}
+	 * @param {Object/Ext.Action} obj Action instance or config.
+	 * @return {WT.ux.Action} The Action that were added.
 	 */
 	addAction: function(group, name, obj) {
 		var me = this;
@@ -58,21 +58,21 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
 			name = group;
 			group = me.DEFAULT_GROUP;
 		}
-		if(!me.actions_[group]) me.actions_[group] = {};
+		if(!me._actions[group]) me._actions[group] = {};
 		
 		var act = null;
 		if(WT.isAction(obj)) { // Action is already instantiated
 			act = obj;
 		} else { // Instantiate action using config
-			var cfg = {
-				handler: obj.handler
-			};
-			if(obj.text) cfg.text = obj.text;
-			if(obj.iconCls) cfg.iconCls = obj.iconCls;
-			if(obj.scope) cfg.scope = obj.scope;
-			act = Ext.create('WT.ux.Action', cfg);
+			act = Ext.create('WT.ux.Action', {
+				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(name),
+				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(name),
+				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
+				handler: obj.handler,
+				scope: obj.scope || this
+			});
 		}
-		me.actions_[group][name] = act;
+		me._actions[group][name] = act;
 		return act;
 	},
 	
@@ -89,8 +89,8 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
 			name = group;
 			group = me.DEFAULT_GROUP;
 		}
-		if(!me.actions_[group]) return undefined;
-		return me.actions_[group][name];
+		if(!me._actions[group]) return undefined;
+		return me._actions[group][name];
 	},
 	
 	/**
@@ -99,6 +99,50 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
 	 * @returns {Object} The actions map.
 	 */
 	getActions: function(group) {
-		return this.actions_[group];
+		return this._actions[group];
+	},
+	
+	/**
+	 * @private
+	 * Builds text value
+	 */
+	_buildText: function(name) {
+		return WT.res(this._guessSvcId(), Ext.String.format('act-{0}.lbl', name));
+	},
+	
+	/**
+	 * @private
+	 * Builds tooltip value
+	 */
+	_buildTip: function(name) {
+		return WT.res(this._guessSvcId(), Ext.String.format('act-{0}.tip', name));
+	},
+	
+	/**
+	 * @private
+	 * Builds icon class
+	 */
+	_buildIconCls: function(name) {
+		return WT.cssIconCls(this._guessSvcXId(), name);
+	},
+	
+	/**
+	 * @private
+	 * Tries to guess service ID
+	 */
+	_guessSvcId: function() {
+		var me = this;
+		if(me.ID) return me.ID;
+		return null;
+	},
+	
+	/**
+	 * @private
+	 * Tries to guess service XID
+	 */
+	_guessSvcXId: function() {
+		var me = this;
+		if(me.XID) return me.XID;
+		return null;
 	}
 });

@@ -16,6 +16,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	},
 	
 	services: null,
+	currentService: null,
 	
 	constructor: function() {
 		var me = this;
@@ -61,15 +62,17 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var wc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one
-		var count = 0;
+		var count = 0, first = null;
 		me.services.each(function(desc) {
 			if(desc.initService()) {
 				count++;
-				var inst = desc.getInstance();
-				wc.addServiceNewActions(inst.getActions(WT.sdk.Service.NEW_ACTION_GROUP));
-				if(count === 1) me.activateService(desc.getId());
+				var svc = desc.getInstance();
+				wc.addServiceButton(desc);
+				if(svc.hasNewActions()) wc.addServiceNewActions(svc.getNewActions());
+				if(count === 1) first = desc.getId();
 			}
 		});
+		if(first) me.activateService(first);
 		
 		// If necessary, show whatsnew
 		if(WT.getInitialSetting('isWhatsnewNeeded')) {
@@ -79,25 +82,35 @@ Ext.define('Sonicle.webtop.core.Application', {
 	
 	/**
 	 * Returns a service instance.
-	 * @param {String} svc The service id.
-	 * @returns {WT.sdk.Service} The instance or null if the instance
-	 * was not found. 
+	 * @param {String} id The service ID.
+	 * @returns {WT.sdk.Service} The instance or null if not found. 
 	 */
 	getService: function(id) {
 		var desc = this.getDescriptor(id);
 		return (desc) ? desc.getInstance() : null;
 	},
 	
+	/**
+	 * Returns a service descriptor.
+	 * @param {String} id The service ID.
+	 * @returns {WT.ServiceDescriptor} The instance or undefined if not found. 
+	 */
 	getDescriptor: function(id) {
 		return this.services.get(id);
 	},
 	
+	/**
+	 * Activates (shows) specified service.
+	 * @param {String} id The service ID.
+	 */
 	activateService: function(id) {
-		var svc = this.getService(id);
+		var me = this;
+		var svc = me.getService(id);
 		if(!svc) return;
-		var wpc = this.getViewport().getController();
+		var wpc = me.getViewport().getController();
 		wpc.addServiceCmp(svc);
-		if(wpc.showService(id)) svc.fireEvent('activate');
+		me.currentService = id;
+		if(wpc.activateService(svc)) svc.fireEvent('activate');
 	},
 	
 	initWebSocket: function() {

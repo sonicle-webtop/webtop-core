@@ -46,32 +46,37 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 		me.callParent(arguments);
 	},
 	
-	onLauncherButtonClick: function(s) {
-		WT.getApp().activateService(s.getItemId());
+	/**
+	 * Adds specified service to wiewport's layout.
+	 * @param {WT.ServiceDescriptor} desc The service descriptor.
+	 * @returns {undefined}
+	 */
+	addServiceButton: function(desc) {
+		var w = this.getView();
+		w.lookupReference('launcher').add(w.createServiceButton(desc));
 	},
 	
-	onMenuButtonClick: function(s) {
-		switch(s.getItemId()) {
-			case 'logout':
-				document.location = 'logout';
-				break;
-			case 'feedback':
-				this.buildFeedbackWnd();
-				break;
-			case 'whatsnew':
-				this.buildWhatsnewWnd(true);
-				break;
-			default:
-				alert('Hai premuto il bottone '+s.getItemId());
+	/**
+	 * Adds specified actions to wiewport's layout.
+	 * @param {Ext.Action[]} acts Service actions to add.
+	 */
+	addServiceNewActions: function(acts) {
+		var w = this.getView();
+		var newtb = w.lookupReference('newtb');
+		var newbtn = newtb.lookupReference('newbtn');
+		if(!newbtn) {
+			newbtn = newtb.add(Ext.create({
+				xtype: 'splitbutton',
+				reference: 'newbtn',
+				text: WT.res('new.btn-new.lbl'),
+				menu: [],
+				handler: 'onNewActionButtonClick'
+			}));
 		}
-	},
-	
-	onToolResize: function(s, w) {
-		WT.ajaxReq(WT.ID, 'SetToolComponentWidth', {
-			params: {
-				serviceId: s.svcId,
-				width: w
-			}
+		
+		var menu = newbtn.getMenu();
+		Ext.each(acts, function(act) {
+			menu.add(act);
 		});
 	},
 	
@@ -141,32 +146,75 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	
 	/**
 	 * Shows specified service components.
-	 * @param {String} id The service ID.
+	 * @param {WT.sdk.Service} svc The service instance.
 	 * @return {Boolean} True if components have been switched, false if already active.
 	 */
-	showService: function(id) {
+	activateService: function(svc) {
 		var me = this;
-		if(me.active !== id) {
-			var w = me.getView();
-			me.active = id;
-			w.lookupReference('svctb').getLayout().setActiveItem(me.tbmap[id]);
-			w.lookupReference('svcwp').getLayout().setActiveItem(me.wpmap[id]);
-			return true;
-		} else {
-			return false;
-		}
+		var id = svc.ID;
+		
+		// If already active...exits
+		if(me.active === id) return false;
+		
+		var w = me.getView();
+		w.lookupReference('svctb').getLayout().setActiveItem(me.tbmap[id]);
+		w.lookupReference('svcwp').getLayout().setActiveItem(me.wpmap[id]);
+		if(svc.hasNewActions()) me.setActiveNewAction(svc);
+		me.active = id;
+		return true;
 	},
 	
-	addServiceNewActions: function(acts) {
+	/**
+	 * Shows specified service new action as default.
+	 * @param {WT.sdk.Service} svc The service instance.
+	 */
+	setActiveNewAction: function(svc) {
 		var w = this.getView();
 		var newtb = w.lookupReference('newtb');
 		var newbtn = newtb.lookupReference('newbtn');
-		var menu = newbtn.getMenu();
-		
-		Ext.iterate(acts, function(k,v) {
-			menu.add(v);
+		if(newbtn) {
+			var first = svc.getNewActions()[0];
+			newbtn.activeAction = first;
+			newbtn.setTooltip(first.getText());
+			newbtn.setIconCls(first.getIconCls());
+		}
+	},
+	
+	onLauncherButtonClick: function(s) {
+		WT.getApp().activateService(s.getItemId());
+	},
+	
+	onNewActionButtonClick: function(s) {
+		var act = s.activeAction;
+		if(act) act.execute();
+	},
+	
+	onToolResize: function(s, w) {
+		WT.ajaxReq(WT.ID, 'SetToolComponentWidth', {
+			params: {
+				serviceId: s.svcId,
+				width: w
+			}
 		});
 	},
+	
+	onMenuButtonClick: function(s) {
+		switch(s.getItemId()) {
+			case 'logout':
+				document.location = 'logout';
+				break;
+			case 'feedback':
+				this.buildFeedbackWnd();
+				break;
+			case 'whatsnew':
+				this.buildWhatsnewWnd(true);
+				break;
+			default:
+				alert('Hai premuto il bottone '+s.getItemId());
+		}
+	},
+	
+	
 	
 	buildFeedbackWnd: function() {
 		var wnd = Ext.create({
