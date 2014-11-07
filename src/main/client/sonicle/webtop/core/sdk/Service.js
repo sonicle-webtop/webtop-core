@@ -140,6 +140,34 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
+	 * Adds an action into 'new' group.
+	 * @param {String} name The action name.
+	 * @param {Object/Ext.Action} obj Action instance or config.
+	 * @return {WT.ux.Action} The Action that were added.
+	 */
+	addNewAction: function(name, obj) {
+		return this.addAction(WT.sdk.Service.NEW_ACTION_GROUP, name, obj);
+	},
+	
+	/**
+	 * Checks if there are some actions under 'new' group.
+	 * @return {Boolean} True if so.
+	 */
+	hasNewActions: function() {
+		var acts = this.getActions(WT.sdk.Service.NEW_ACTION_GROUP);
+		return !Ext.Object.isEmpty(acts);
+	},
+	
+	/**
+	 * Returns action into 'new' group.
+	 * @return {Array} An array of actions.
+	 */
+	getNewActions: function() {
+		var acts = this.getActions(WT.sdk.Service.NEW_ACTION_GROUP);
+		return (acts) ? Ext.Object.getValues(acts) : [];
+	},
+	
+	/**
 	 * Builds CSS class name namespacing it using service xid.
 	 * @param {String} name The CSS class name part.
 	 * @return {String} The concatenated CSS class name.
