@@ -43,6 +43,7 @@ import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -198,4 +199,15 @@ public class CoreService extends Service {
 			new JsonResult().printTo(out);
 		}
 	}
+	
+	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		WebSocketMessage wsm=getFullEnv().getSession().pollWebSocketQueue();
+		if (wsm!=null) {
+			JsonResult jsr=new JsonResult(wsm);
+			jsr.printTo(out);
+		} else {
+			new JsonResult().printTo(out);
+		}
+	}
+	
 }

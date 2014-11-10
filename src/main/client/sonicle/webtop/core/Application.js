@@ -18,6 +18,9 @@ Ext.define('Sonicle.webtop.core.Application', {
 	services: null,
 	currentService: null,
 	
+	kaTask: null,
+	seTask: null,
+	
 	constructor: function() {
 		var me = this;
 		me.services = Ext.create('Ext.util.Collection');
@@ -116,38 +119,113 @@ Ext.define('Sonicle.webtop.core.Application', {
 	initWebSocket: function() {
 
 		var websocket = Ext.create ('Ext.ux.WebSocket', {
-			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
+			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"xwsmanager",
+			autoReconnect: true ,
+			autoReconnectInterval: 10000,
 			listeners: {
 				open: function(ws) {
+					var me=WT.getApp();
 					console.log('Sending ticket to websocket: '+WTStartup.encAuthTicket);
 					ws.send(WT.wsMsg("com.sonicle.webtop.core","ticket",{
 						userId: WTStartup.userId,
 						domainId: WTStartup.domainId,
 						encAuthTicket: WTStartup.encAuthTicket
 					}));
+					//websocket is working
+					//kill any server events task and run http session keep alive
+					me.killServerEvents();
+					me.runKeepAliveTask();
 				} ,
 				close: function(ws) {
 					console.log('The websocket is closed!');
 				} ,
 				error: function(ws, error) {
-					Ext.Error.raise(error);
+					var me=WT.getApp();
+					//websocket is not working
+					//kill any keep alive task and run http server events instead
+					me.killKeepAliveTask();
+					me.runServerEvents();
 				} ,
 				message: function(ws, msg) {
-					var obj=Ext.JSON.decode(msg,true);
-					if (obj && obj.service) {
-						var svc=WT.getApp().getService(obj.service);
-						if (svc) {
-							svc.websocketMessage(obj);
-						} else {
-							console.log('No service for websocket message: '+msg);
-						}
-					} else {
-						console.log('Invalid websocket message: '+msg);
-					}
+					WT.getApp().handleWSMessage(msg);
 				}
 			}
 		});		
 		
+	},
+	
+	handleWSMessage: function(msg) {
+		var obj=Ext.JSON.decode(msg,true);
+		if (obj && obj.service) {
+			var svc=this.getService(obj.service);
+			if (svc) {
+				svc.websocketMessage(obj);
+			} else {
+				console.log('No service for websocket message: '+msg);
+			}
+		} else {
+			console.log('Invalid websocket message: '+msg);
+		}
+	},
+	
+	runKeepAliveTask: function() {
+		if (!this.kaTask) {
+			var task = { 
+				run: function() {
+					Ext.Ajax.request({
+						url: 'session-keep-alive',
+						method: 'GET'
+					});
+				},
+				interval: 60000 
+			};
+			this.kaTask=Ext.TaskManager.start(task);
+		} else {
+			console.log("keep alive task already running");
+		}
+	},
+	
+	killKeepAliveTask: function() {
+		if (this.kaTask) {
+			console.log("Killing keep alive task");
+			this.kaTask.destroy();
+			this.kaTask=null;
+		}
+	},
+	
+	runServerEvents: function() {
+		if (!this.seTask) {
+			var task = { 
+				run: function() {
+					WT.ajaxReq(WT.ID,"ServerEvents", {
+						callback: function(success, o) {
+							if(success) {
+								if (o.data) {
+									this.handleWSMessage(o.data);
+								} else {
+									console.log("no server events in queue");
+								}
+							}
+						}
+					});
+				},
+				scope: this,
+				interval: 30000 
+			};
+			this.seTask=Ext.TaskManager.start(task);
+		} else {
+			console.log("server events task already running");
+		}
+	},
+	
+	killServerEventsTask: function() {
+		if (this.seTask) {
+			console.log("Killing server events task");
+			this.seTask.destroy();
+			this.seTask=null;
+		}
 	}
 	
+	
+
 });

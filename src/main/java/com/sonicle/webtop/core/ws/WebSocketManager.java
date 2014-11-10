@@ -136,23 +136,19 @@ public class WebSocketManager {
 	}
 	
 	public void sendMessage(WebSocketMessage wsm) throws IOException {
-		wsSession.getBasicRemote().sendText(
-						wsm.toJson()
-		);
+		if (wsSession!=null) { 
+			wsSession.getBasicRemote().sendText(wsm.toJson());
+		} else {
+			wts.queueWebSocketMessage(wsm);
+		}
 	} 
 	
 	public void sendError(String msg) throws IOException {
-		wsSession.getBasicRemote().sendText(
-				new ErrorMessage(msg)
-						.toJson()
-		);
+		sendMessage(new ErrorMessage(msg));
 	}
 	
 	public void sendInformation(String msg) throws IOException {
-		wsSession.getBasicRemote().sendText(
-				new InformationMessage(msg)
-						.toJson()
-		);
+		sendMessage(new InformationMessage(msg));
 	}
 	
 }

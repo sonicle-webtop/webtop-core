@@ -121,6 +121,12 @@ Ext.define('Sonicle.webtop.core.WT', {
 				type: 'json',
 				rootProperty: rootp,
 				messageProperty: 'message'
+			},
+			listeners: {
+				exception: function(proxy, request, operation, eOpts) {
+					//TODO: intl. user error message plus details
+					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
+				}
 			}
 		};
 	},
