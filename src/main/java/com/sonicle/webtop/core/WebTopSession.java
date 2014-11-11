@@ -45,11 +45,13 @@ import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.ws.WebSocketManager;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
@@ -76,6 +78,7 @@ public class WebTopSession {
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
 	private WebSocketManager wsm=null;
+	private ArrayDeque<WebSocketMessage> wsqueue=new ArrayDeque<>();
 	
 	WebTopSession(HttpSession session) {
 		wta = WebTopApp.get(session.getServletContext());
@@ -284,6 +287,14 @@ public class WebTopSession {
 		if (this.wsm!=null) {
 			this.wsm.sendMessage(wsmessage);
 		}
+	}
+	
+	public void queueWebSocketMessage(WebSocketMessage wsmessage) {
+		wsqueue.addLast(wsmessage);
+	}
+	
+	public WebSocketMessage pollWebSocketQueue() {
+		return wsqueue.pollFirst();
 	}
 	
 	
