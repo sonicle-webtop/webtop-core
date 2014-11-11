@@ -95,7 +95,7 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 			callback: function(success, o) {
 				if(success) {
 					Ext.each(o.data, function(itm) {
-						tab.add(me.createTab(itm));
+						tab.add(me.createTab(itm, me.full));
 					}, me);
 					tab.doLayout();
 					if(tab.items.getCount() > 0) tab.setActiveTab(0);
@@ -104,13 +104,14 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		});
 	},
 	
-	createTab: function(wn) {
+	createTab: function(wn, full) {
 		return Ext.create('Ext.panel.Panel', {
 			itemId: wn.id,
 			title: wn.title,
 			loader: WT.componentLoader('com.sonicle.webtop.core', 'GetWhatsnewHTML', {
 				params: {
-					id: wn.id
+					id: wn.id,
+					full: full
 				}
 			})
 		});

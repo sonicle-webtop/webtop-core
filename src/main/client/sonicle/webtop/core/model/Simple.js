@@ -31,10 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Ext.ux.form.Spacer', {
-	extend: 'Ext.Component',
-	alias: 'widget.spacer',
+Ext.define('Sonicle.webtop.core.model.Simple', {
+	alternateClassName: 'WT.model.Simple',
+	extend: 'WT.model.Base',
 	
-	height: 10,
-	autoEl: 'div'
+	//entityName: 'simple',
+	fields: ['id', 'description']
 });

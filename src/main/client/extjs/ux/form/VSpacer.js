@@ -31,22 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-/**
- *
- * @author malbinola
- */
-public class JsCommon {
-	public String id;
-	public String description;
+Ext.define('Ext.ux.form.VSpacer', {
+	extend: 'Ext.Component',
+	alias: 'widget.vspacer',
 	
-	public JsCommon() {
-		
-	}
+	factor: 1,
+	autoEl: 'div',
 	
-	public JsCommon(String id, String description) {
-		this.id = id;
-		this.description = description;
+	constructor: function(cfg) {
+		var me = this;
+		if(Ext.isNumber(cfg.factor)) me.factor = cfg.factor;
+		me.height = me.factor * 10;
+		me.callParent(arguments);
 	}
-}
+});

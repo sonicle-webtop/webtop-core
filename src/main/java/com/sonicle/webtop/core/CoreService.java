@@ -35,7 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.servlet.ServletUtils;
-import com.sonicle.webtop.core.bol.js.JsCommon;
+import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsWhatsnew;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.PrintWriter;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -70,19 +71,31 @@ public class CoreService extends Service {
 		
 	}
 	
+	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		Locale locale = env.getSession().getLocale();
+		
+		//TODO: handle locales dinamically
+		ArrayList<JsSimple> locales = new ArrayList<>();
+		locales.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
+		locales.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
+		
+		new JsonResult("locales", locales).printTo(out);
+	}
+	
 	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsCommon> items = new ArrayList<>();
 		
 		//TODO: handle themes dinamically
-		items.add(new JsCommon("aria", "Aria"));
-		items.add(new JsCommon("classic", "Classic"));
-		items.add(new JsCommon("crisp", "Crisp"));
-		items.add(new JsCommon("crisp-touch", "Crisp Touch"));
-		items.add(new JsCommon("gray", "Gray"));
-		items.add(new JsCommon("neptune", "Neptune"));
-		items.add(new JsCommon("neptune-touch", "Neptune Touch"));
+		ArrayList<JsSimple> themes = new ArrayList<>();
+		themes.add(new JsSimple("aria", "Aria"));
+		themes.add(new JsSimple("classic", "Classic"));
+		themes.add(new JsSimple("crisp", "Crisp"));
+		themes.add(new JsSimple("crisp-touch", "Crisp Touch"));
+		themes.add(new JsSimple("gray", "Gray"));
+		themes.add(new JsSimple("neptune", "Neptune"));
+		themes.add(new JsSimple("neptune-touch", "Neptune Touch"));
 		
-		new JsonResult("themes", items).printTo(out);
+		new JsonResult("themes", themes).printTo(out);
 	}
 	
 	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -114,10 +127,10 @@ public class CoreService extends Service {
 		FullEnvironment env = getFullEnv();
 		Locale locale = env.getSession().getLocale();
 		
-		ArrayList<JsCommon> items = new ArrayList<>();
+		ArrayList<JsSimple> items = new ArrayList<>();
 		List<String> ids = env.getSession().getServices();
 		for(String id : ids) {
-			items.add(new JsCommon(id, env.lookupResource(id, locale, Service.RESOURCE_SERVICE_NAME)));
+			items.add(new JsSimple(id, env.lookupResource(id, locale, Service.RESOURCE_SERVICE_NAME)));
 		}
 		new JsonResult("services", items).printTo(out);
 	}

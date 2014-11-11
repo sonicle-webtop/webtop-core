@@ -59,7 +59,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Creates main viewport
 		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
-		var wc = me.viewport.getController();
+		var vc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one
 		var count = 0, first = null;
@@ -67,8 +67,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 			if(desc.initService()) {
 				count++;
 				var svc = desc.getInstance();
-				wc.addServiceButton(desc);
-				if(svc.hasNewActions()) wc.addServiceNewActions(svc.getNewActions());
+				vc.addServiceButton(desc);
+				if(svc.hasNewActions()) vc.addServiceNewActions(svc.getNewActions());
 				if(count === 1) first = desc.getId();
 			}
 		});
@@ -76,7 +76,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// If necessary, show whatsnew
 		if(WT.getInitialSetting('isWhatsnewNeeded')) {
-			wc.buildWhatsnewWnd(false);
+			vc.buildWhatsnewWnd(false);
 		}
 	},
 	

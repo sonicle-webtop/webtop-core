@@ -139,8 +139,8 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 												tooltip: WT.res('menu.whatsnew.tip'),
 												glyph: 0xf0eb
 											}, {
-												itemId: 'settings',
-												tooltip: WT.res('menu.settings.tip'),
+												itemId: 'options',
+												tooltip: WT.res('menu.options.tip'),
 												glyph: 0xf013
 											}, {
 												xtype: 'container'

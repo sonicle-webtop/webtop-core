@@ -52,8 +52,8 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	 * @returns {undefined}
 	 */
 	addServiceButton: function(desc) {
-		var w = this.getView();
-		w.lookupReference('launcher').add(w.createServiceButton(desc));
+		var v = this.getView();
+		v.lookupReference('launcher').add(v.createServiceButton(desc));
 	},
 	
 	/**
@@ -61,8 +61,8 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	 * @param {Ext.Action[]} acts Service actions to add.
 	 */
 	addServiceNewActions: function(acts) {
-		var w = this.getView();
-		var newtb = w.lookupReference('newtb');
+		var v = this.getView();
+		var newtb = v.lookupReference('newtb');
 		var newbtn = newtb.lookupReference('newbtn');
 		if(!newbtn) {
 			newbtn = newtb.add(Ext.create({
@@ -86,7 +86,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	 */
 	addServiceCmp: function(svc) {
 		var me = this;
-		var w = me.getView();
+		var v = me.getView();
 		if(me.hasServiceCmp(svc.ID)) return;
 		
 		// Gets service components
@@ -130,8 +130,8 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 		
 		me.tbmap[svc.ID] = tb.getId();
 		me.wpmap[svc.ID] = wp.getId();
-		w.lookupReference('svctb').add(tb);
-		w.lookupReference('svcwp').add(wp);
+		v.lookupReference('svctb').add(tb);
+		v.lookupReference('svcwp').add(wp);
 	},
 	
 	/**
@@ -156,9 +156,9 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 		// If already active...exits
 		if(me.active === id) return false;
 		
-		var w = me.getView();
-		w.lookupReference('svctb').getLayout().setActiveItem(me.tbmap[id]);
-		w.lookupReference('svcwp').getLayout().setActiveItem(me.wpmap[id]);
+		var v = me.getView();
+		v.lookupReference('svctb').getLayout().setActiveItem(me.tbmap[id]);
+		v.lookupReference('svcwp').getLayout().setActiveItem(me.wpmap[id]);
 		if(svc.hasNewActions()) me.setActiveNewAction(svc);
 		me.active = id;
 		return true;
@@ -169,8 +169,8 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	 * @param {WT.sdk.Service} svc The service instance.
 	 */
 	setActiveNewAction: function(svc) {
-		var w = this.getView();
-		var newtb = w.lookupReference('newtb');
+		var v = this.getView();
+		var newtb = v.lookupReference('newtb');
 		var newbtn = newtb.lookupReference('newbtn');
 		if(newbtn) {
 			var first = svc.getNewActions()[0];
@@ -209,12 +209,28 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			case 'whatsnew':
 				this.buildWhatsnewWnd(true);
 				break;
+			case 'options':
+				this.buildOptionsWnd();
+				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
 		}
 	},
 	
 	
+	
+	buildOptionsWnd: function() {
+		var wnd = Ext.create({
+			xtype: 'window',
+			layout: 'fit',
+			height: 500,
+			width: 600,
+			items: [
+				Ext.create('WT.view.CoreOptions')
+			]
+		});
+		if(wnd) wnd.show();
+	},
 	
 	buildFeedbackWnd: function() {
 		var wnd = Ext.create({
