@@ -35,9 +35,8 @@ Ext.define('Sonicle.webtop.core.store.TFADelivery', {
 	alternateClassName: 'WT.store.TFADelivery',
 	extend: 'Ext.data.ArrayStore',
 	
-	model: {
-		fields: ['id','description']
-	},
+	autoLoad: true,
+	model: 'WT.model.Simple',
 	data: [
 		['email', WT.res('store.tfadelivery.email')],
 		['googleauth', WT.res('store.tfadelivery.googleauth')]

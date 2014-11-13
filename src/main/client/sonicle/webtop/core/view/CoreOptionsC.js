@@ -31,12 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.FeedbackVM', {
-	extend: 'Ext.app.ViewModel',
+Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
+	alternateClassName: 'WT.view.CoreOptionsC',
+	extend: 'Ext.app.ViewController',
 	
-	stores: {
-		feedback: {
-			model: 'Sonicle.webtop.core.model.Feedback'
-		}
+	onFormLoad: function() {
+		this.getViewModel().set('values', this.getView().model.getData());
+	},
+	
+	onFormSave: function() {
+		this.getViewModel().set('values', this.getView().model.getData());
+	},
+	
+	onLoadClick: function() {
+		this.getView().loadForm('admin');
+	},
+	
+	onSyncClick: function() {
+		this.getView().saveForm();
 	}
+	
 });

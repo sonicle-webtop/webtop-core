@@ -98,6 +98,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}
 	},
 	
+	returnIf: function(value, ifEmpty) {
+		return (Ext.isEmpty(value)) ? ifEmpty : value;
+	},
+	
 	isXType: function(obj, xtype) {
 		if(!Ext.isObject(obj)) return false;
 		if(!Ext.isFunction(obj.isXType)) return false;

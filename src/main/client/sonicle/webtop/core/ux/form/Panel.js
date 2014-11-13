@@ -31,33 +31,61 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
-	alternateClassName: 'WT.sdk.mixin.Submissible',
-	extend: 'Ext.Mixin',
+Ext.define('Sonicle.webtop.core.ux.form.Panel', {
+	alternateClassName: 'WT.ux.form.Panel',
+	extend: 'Ext.form.Panel',
+	alias: 'widget.wtform',
 	
-	config: {
-		/**
-		* @cfg {String} formItemId Specifies the form panel to look form.
-		*/
-	   formId: 'fpnl'
-	},
+	trackResetOnLoad: true,
 	
 	model: null,
+	idField: null,
 	
-	/**
-	 * Returns form component.
-	 * @return {Ext.form.Panel}
-	 */
-	getFpnl: function() {
-		return this.getComponent(this.getFormId());
+	loadForm: function(id) {
+		var me = this;
+		
+		me.fireEvent('beforeLoad', me);
+		var opts = {
+			callback: function(rec, op, success) {
+				if(success) me.bindModel(rec);
+				me.fireEvent('load', me, op, success);
+			},
+			scope: me
+		};
+		if(Ext.isString(me.model)) {
+			if(id) me.setFieldValue(me.idField, id, true);
+			if(!me.isFieldEmpty(me.idField)) {
+				Ext.ClassManager.get(me.model).load(me.getFieldValue(me.idField), opts);
+			} else {
+				me.bindModel(Ext.create(me.model, {}));
+			}
+		} else {
+			me.model.load(opts);
+		}
 	},
 	
-	/**
-	 * Gets form management object.
-	 * @return {Ext.form.Basic} The management object.
-	 */
-	getForm: function() {
-		return this.getFpnl().getForm();
+	bindModel: function(model) {
+		var me = this;
+		me.model = model;
+		me.getForm().loadRecord(model);
+	},
+	
+	saveForm: function() {
+		var me = this;
+		var fo = me.getForm();
+		me.fireEvent('beforeSave', me);
+		if(fo.isDirty()) fo.updateRecord(me.getRecord());
+		me.model.save({
+			callback: function(rec, op, success) {
+				if(success) {
+					me.bindModel(rec);
+				} else {
+					WT.error(op.getError());
+				}
+				me.fireEvent('save', me, op, success);
+			},
+			scope: me
+		});
 	},
 	
 	/**
@@ -76,6 +104,7 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
 	 */
 	getFieldValue: function(id) {
 		var fld = this.getField(id);
+		if(!fld) return undefined;
 		if (fld.isXType('radiogroup')) {
 			return fld.getValue().value;
 		} else {
@@ -88,8 +117,11 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
 	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
 	 * @param {Mixed} value The field value.
 	 */
-	setFieldValue: function(id, value) {
-		this.getField(id).setValue(value);
+	setFieldValue: function(id, value, silent) {
+		silent = silent || false;
+		var fld = this.getField(id);
+		if(silent && !fld) return;
+		fld.setValue(value);
 	},
 	
 	/**
@@ -99,69 +131,5 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
 	 */
 	isFieldEmpty: function(id) {
 		return Ext.isEmpty(this.getFieldValue(id));
-	},
-	
-	submitForm: function() {
-		var me = this;
-		var fo = me.getForm();
-		if(!fo.isValid()) return;
-		var rec = Ext.create(me.getFormModel());
-		me.wait();
-		fo.updateRecord(rec);
-		rec.save({
-			callback: function(rec, op, success) {
-				me.unwait();
-				if(me.fireEvent('submit', me, op, success)) {
-					if(!success) WT.error(op.getError());
-				}
-			},
-			scope: me
-		});
-	},
-	
-	getFormModel: function() {
-		var model = this.getFpnl().model;
-		if(Ext.isEmpty(model)) Ext.Error.raise("You need to configure form's 'model' property");
-		return model;
-	},
-	
-	loadForm: function() {
-		var me = this;
-		var fo = me.getForm();
-		
-		if(me.model) {
-			me.wait();
-			var opts = {
-				callback: function(rec, op, success) {
-					me.unwait();
-					if(success) {
-						fo.loadRecord(rec);
-					}
-				},
-				scope: me
-			};
-			if(Ext.isString(me.model)) {
-				me.model = Ext.ClassManager.get(me.model).load('admin', opts);
-			} else {
-				me.model.load(opts);
-			}
-		} else {
-			
-		}
-	},
-	
-	saveForm: function() {
-		var me = this;
-		var fo = me.getForm();
-		if(!fo.isValid()) return;
-		me.wait();
-		fo.updateRecord(me.model);
-		me.model.save({
-			callback: function(rec, op, success) {
-				me.unwait();
-				if(!success) WT.error(op.getError());
-			},
-			scope: me
-		});
 	}
 });

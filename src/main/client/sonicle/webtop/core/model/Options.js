@@ -31,10 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Theme', {
-	alternateClassName: 'WT.model.Theme',
+Ext.define('Sonicle.webtop.core.model.Options', {
+	alternateClassName: 'WT.model.Options',
 	extend: 'WT.model.Base',
 	
-	//entityName: 'themes',
-	fields: ['id', 'description']
+	fields: [
+		'userId',
+		'displayName',
+		'locale',
+		'theme',
+		'laf',
+		'tfaEnabled',
+		'tfaDelivery',
+		'tfaEmailAddress',
+		'tfaIsTrusted',
+		'tfaTrustedOn'
+	]
 });

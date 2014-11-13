@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
@@ -72,31 +73,92 @@ public class CoreService extends Service {
 		
 	}
 	
+	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		WebTopSession wts = env.getSession();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals("read")) {
+				HashMap<String, Object> options = new HashMap<>();
+				options.put("id", "admin");
+				options.put("userId", "admin");
+				options.put("displayName", "Administrator");
+				options.put("locale", wts.getLocale());
+				options.put("theme", wts.getTheme());
+				options.put("laf", "default");
+				options.put("tfaEnabled", "siiiii");
+				new JsonResult("options", options).printTo(out);
+				
+			} else if(crud.equals("update")) {
+				HashMap<String, Object> options = new HashMap<>();
+				options.put("id", "admin");
+				options.put("tfaEnabled", "nooooo");
+				options.put("tfaDelivery", "email");
+				new JsonResult("options", options).printTo(out);
+				//new JsonResult().printTo(out);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action Options", ex);
+			new JsonResult(false).printTo(out);
+		}
+		
+		
+		
+		
+		
+	}
+	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
 		Locale locale = env.getSession().getLocale();
 		
-		//TODO: handle locales dinamically
-		ArrayList<JsSimple> locales = new ArrayList<>();
-		locales.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
-		locales.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
-		
-		new JsonResult("locales", locales).printTo(out);
+		try {
+			//TODO: handle locales dinamically
+			ArrayList<JsSimple> locales = new ArrayList<>();
+			locales.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
+			locales.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
+			new JsonResult("locales", locales).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetLocales", ex);
+			new JsonResult(false).printTo(out);
+		}
 	}
 	
 	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
-		//TODO: handle themes dinamically
-		ArrayList<JsSimple> themes = new ArrayList<>();
-		themes.add(new JsSimple("aria", "Aria"));
-		themes.add(new JsSimple("classic", "Classic"));
-		themes.add(new JsSimple("crisp", "Crisp"));
-		themes.add(new JsSimple("crisp-touch", "Crisp Touch"));
-		themes.add(new JsSimple("gray", "Gray"));
-		themes.add(new JsSimple("neptune", "Neptune"));
-		themes.add(new JsSimple("neptune-touch", "Neptune Touch"));
+		try {
+			//TODO: handle themes dinamically
+			ArrayList<JsSimple> themes = new ArrayList<>();
+			themes.add(new JsSimple("aria", "Aria"));
+			themes.add(new JsSimple("classic", "Classic"));
+			themes.add(new JsSimple("crisp", "Crisp"));
+			themes.add(new JsSimple("crisp-touch", "Crisp Touch"));
+			themes.add(new JsSimple("gray", "Gray"));
+			themes.add(new JsSimple("neptune", "Neptune"));
+			themes.add(new JsSimple("neptune-touch", "Neptune Touch"));
+			new JsonResult("themes", themes).printTo(out);
+
+		} catch (Exception ex) {
+			logger.error("Error executing action GetThemes", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
+	public void processGetLooksAndFeels(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
-		new JsonResult("themes", themes).printTo(out);
+		try {
+			//TODO: handle lafs dinamically
+			ArrayList<JsSimple> lafs = new ArrayList<>();
+			lafs.add(new JsSimple("default", "Default"));
+			new JsonResult("lafs", lafs).printTo(out);
+
+		} catch (Exception ex) {
+			logger.error("Error executing action GetLooksAndFeels", ex);
+			new JsonResult(false).printTo(out);
+		}
 	}
 	
 	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

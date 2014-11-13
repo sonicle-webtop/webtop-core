@@ -7,6 +7,7 @@ Ext.application({
 	paths: Ext.applyIf({
 		'Ext.ux': 'resources/extjs/ux',
 		'WT': 'resources/com.sonicle.webtop.core'
+		//'WT.ux': 'resources/com.sonicle.webtop.core/ux'
 		//'WT.overrides': 'resources/com.sonicle.webtop.core/overrides'
 	}, WTStartup.appPaths || {}),
 	autoCreateViewport: false

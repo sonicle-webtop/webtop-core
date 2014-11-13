@@ -33,13 +33,11 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.OptionPanel', {
 	alternateClassName: 'WT.sdk.OptionPanel',
-	extend: 'Ext.form.Panel',
+	extend: 'WT.ux.form.Panel',
 	mixins: [
-		'WT.sdk.mixin.Waitable',
-		'WT.sdk.mixin.Submissible'
-	],
+		'WT.sdk.mixin.Waitable'
+	]
 	
-	autoScroll: true
-	
-	//layout: 'border',
+	//width: 500,
+	//autoScroll: true
 });

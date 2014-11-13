@@ -224,10 +224,21 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			xtype: 'window',
 			layout: 'fit',
 			height: 500,
-			width: 600,
-			items: [
-				Ext.create('WT.view.CoreOptions')
-			]
+			width: 700,
+			items: [{
+				xtype: 'container',
+				layout: 'card',
+				activeItem: 'core',
+				items: [
+					Ext.create('WT.view.CoreOptions', {
+						itemId: 'core',
+						autoScroll: true,
+						maxWidth: 600
+					})
+				]
+			}, {
+				xtype: 'panel'
+			}]
 		});
 		if(wnd) wnd.show();
 	},
