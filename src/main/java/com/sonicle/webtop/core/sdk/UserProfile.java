@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 public final class UserProfile {
 	
 	private static final Logger logger = WebTopApp.getLogger(UserProfile.class);
-	//private final WebTopApp wta;
 	private final FullEnvironment fullEnv;
 	private final Principal principal;
 	private OUser user;

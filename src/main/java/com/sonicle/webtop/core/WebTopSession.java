@@ -188,7 +188,8 @@ public class WebTopSession {
 		if(serviceId.equals(CoreManifest.ID)) {
 			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
 		} else {
-			is.put("viewportToolWidth", CoreUserSettings.getViewportToolWidth(wta.getSettingsManager(), profile, serviceId));
+			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
+			is.put("viewportToolWidth", cus.getViewportToolWidth());
 		}
 		return is;
 	}
@@ -243,34 +244,14 @@ public class WebTopSession {
 	public String getRefererURI() {
 		return refererURI;
 	}
-
-	public String getTheme() {
-		return coreUserSettings.getTheme();
-	}
+	
+	// Rimuovereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 	
 	public void setTheme(String value) {
 		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.THEME, value);
 	}
 	
-	public String getLookAndFeel() {
-		return coreUserSettings.getLookAndFeel();
-	}
-	
-	public void setLookAndFeel(String value) {
-		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.LAF, value);
-	}
-	
-	public boolean getRTL() {
-		return coreUserSettings.getRightToLeft();
-	}
-	
-	public void setRTL(String value) {
-		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.RTL, value);
-	}
-	
-	public void setViewportToolWidth(String serviceId, Integer value) {
-		CoreUserSettings.setViewportToolWidth(wta.getSettingsManager(), profile, serviceId, value);
-	}
+	//----------------------------
 	
 	public void test() {
 		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");

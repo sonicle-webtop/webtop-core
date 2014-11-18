@@ -68,19 +68,20 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 		me.add({
 			xtype: 'panel',
 			layout: 'form',
-			title: WT.res('opts.account.tit'),
+			title: WT.res('opts.main.tit'),
 			titleCollapse: true,
 			items: [{
-				xtype: 'hidden',
-				name: 'id'
-			}, {
 				xtype: 'textfield',
-				name: 'userId',
-				fieldLabel: WT.res('opts.account.fld-userId.lbl')
+				name: 'id',
+				disabled: true,
+				fieldLabel: WT.res('opts.main.fld-id.lbl')
 			}, {
 				xtype: 'textfield',
 				name: 'displayName',
-				fieldLabel: WT.res('opts.account.fld-displayName.lbl')
+				fieldLabel: WT.res('opts.main.fld-displayName.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'combo',
 				name: 'locale',
@@ -92,53 +93,58 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 				},
 				valueField: 'id',
 				displayField: 'description',
-				fieldLabel: WT.res('opts.account.fld-locale.lbl')
-			}]
-		}, {
-			xtype: 'panel',
-			title: WT.res('opts.appearance.tit'),
-			titleCollapse: true,
-			items: [{
-				xtype: 'container',
-				layout: 'form',
-				items: [{
-					xtype: 'combo',
-					name: 'theme',
-					editable: false,
-					store: {
-						autoLoad: true,
-						model: 'WT.model.Simple',
-						proxy: WT.proxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
+				fieldLabel: WT.res('opts.main.fld-locale.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
+			}, {
+				xtype: 'combo',
+				name: 'theme',
+				editable: false,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WT.proxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
+				},
+				valueField: 'id',
+				displayField: 'description',
+				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
+				/*
+				listeners: {
+					select: function(c,r,o) {
+						return;
+						WT.ajaxReq('com.sonicle.webtop.core', 'SetTheme', {
+							params: {
+								theme: r[0].get('id')
+							},
+							callback: function(success, o) {
+								if(success) window.location.reload();
+							}
+						});
 					},
-					valueField: 'id',
-					displayField: 'description',
-					fieldLabel: WT.res('opts.appearance.fld-theme.lbl'),
-					listeners: {
-						select: function(c,r,o) {
-							WT.ajaxReq('com.sonicle.webtop.core', 'SetTheme', {
-								params: {
-									theme: r[0].get('id')
-								},
-								callback: function(success, o) {
-									if(success) window.location.reload();
-								}
-							});
-						},
-						scope: this
-					}
-				}, {
-					xtype: 'combo',
-					name: 'laf',
-					editable: false,
-					store: {
-						autoLoad: true,
-						model: 'WT.model.Simple',
-						proxy: WT.proxy('com.sonicle.webtop.core', 'GetLooksAndFeels', 'lafs')
-					},
-					valueField: 'id',
-					displayField: 'description',
-					fieldLabel: WT.res('opts.appearance.fld-laf.lbl')
-				}]
+					scope: this
+				},
+				*/
+				listeners: {
+					blur: 'onBlurAutoSave'
+				},
+				reload: true
+			}, {
+				xtype: 'combo',
+				name: 'laf',
+				editable: false,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WT.proxy('com.sonicle.webtop.core', 'GetLooksAndFeels', 'lafs')
+				},
+				valueField: 'id',
+				displayField: 'description',
+				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				},
+				reload: true
 			}]
 		}, {
 			xtype: 'panel',
@@ -149,83 +155,143 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 			items: [{
 				xtype: 'textfield',
 				name: 'usdTitle',
-				fieldLabel: WT.res('opts.userdata.fld-title.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-title.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdFirstName',
-				fieldLabel: WT.res('opts.userdata.fld-firstName.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-firstName.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdLastName',
-				fieldLabel: WT.res('opts.userdata.fld-lastName.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-lastName.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdEmail',
-				fieldLabel: WT.res('opts.userdata.fld-email.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-email.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdMobile',
-				fieldLabel: WT.res('opts.userdata.fld-mobile.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-mobile.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdTelephone',
-				fieldLabel: WT.res('opts.userdata.fld-telephone.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-telephone.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdFax',
-				fieldLabel: WT.res('opts.userdata.fld-fax.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-fax.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdAddress',
-				fieldLabel: WT.res('opts.userdata.fld-address.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-address.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdPostalCode',
-				fieldLabel: WT.res('opts.userdata.fld-postalCose.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-postalCose.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdState',
-				fieldLabel: WT.res('opts.userdata.fld-state.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-state.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdCountry',
-				fieldLabel: WT.res('opts.userdata.fld-country.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-country.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdCompany',
-				fieldLabel: WT.res('opts.userdata.fld-company.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-company.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdFunction',
-				fieldLabel: WT.res('opts.userdata.fld-function.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-function.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdWorkEmail',
-				fieldLabel: WT.res('opts.userdata.fld-wemail.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-wemail.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdWorkMobile',
-				fieldLabel: WT.res('opts.userdata.fld-wmobile.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-wmobile.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdWorkTelephone',
-				fieldLabel: WT.res('opts.userdata.fld-wtelephone.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-wtelephone.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdWorkFax',
-				fieldLabel: WT.res('opts.userdata.fld-wfax.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-wfax.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdCustom1',
-				fieldLabel: WT.res('opts.userdata.fld-custom1.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-custom1.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdCustom2',
-				fieldLabel: WT.res('opts.userdata.fld-custom2.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-custom2.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}, {
 				xtype: 'textfield',
 				name: 'usdCustom3',
-				fieldLabel: WT.res('opts.userdata.fld-custom3.lbl')
+				fieldLabel: WT.res('opts.userdata.fld-custom3.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
 			}]
 		}, {
 			xtype: 'panel',

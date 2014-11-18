@@ -63,6 +63,11 @@ public class CoreUserSettings extends BaseUserSettings {
 	 */
 	public static final String RTL = "rtl";
 	/**
+	 * [string][*]
+	 * Saves width of tool component
+	 */
+	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
+	/**
 	 * [boolean]
 	 * Specifies if whatsnew window must be shown after a service upgrade
 	 */
@@ -73,37 +78,85 @@ public class CoreUserSettings extends BaseUserSettings {
 	 */
 	public static final String WHATSNEW_VERSION = "whatsnew.version";
 	
-	/**
-	 * [string][*]
-	 * Saves width of tool component
-	 */
-	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
-	
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
 	//public static final String OTP_ENABLED = "otp.enabled";
-	//public static final String OTP_DELIVERY = "otp.delivery";
-	//public static final String OTP_DELIVERY_EMAIL = "email";
-	//public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
-	//public static final String OTP_SECRET = "otp.secret";
-	//public static final String OTP_EMAILADDRESS = "otp.emailaddress";
-	//public static final String OTP_SONICLEAUTH_INTERVAL = "otp.sonicleauth.interval";
-	//public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
+	
+	/**
+	 * [string]
+	 * Specifies delivery method. One of: NONE, EMAIL, GOOGLEAUTH.
+	 */
+	public static final String TFA_DELIVERY = "tfa.delivery";
+	public static final String TFA_DELIVERY_EMAIL = "email";
+	public static final String TFA_DELIVERY_GOOGLEAUTH = "googleauth";
+	/**
+	 * [string]
+	 * Specifies generated secret string within googleauth delivery.
+	 */
+	public static final String TFA_SECRET = "tfa.secret";
+	/**
+	 * [string]
+	 * Specifies choosen email address within email delivery.
+	 */
+	public static final String TFA_EMAILADDRESS = "tfa.emailaddress";
+	public static final String TFA_SONICLEAUTH_INTERVAL = "tfa.sonicleauth.interval";
+	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
+	
+	public String getTheme() {
+		return getUserSetting(THEME, "crisp");
+	}
+	
+	public boolean setTheme(String value) {
+		return setUserSetting(THEME, value);
+	}
 	
 	public String getLookAndFeel() {
 		return getUserSetting(LAF, "default");
 	}
 	
-	public String getTheme() {
-		return getUserSetting(THEME, "crisp");
+	public boolean setLookAndFeel(String value) {
+		return setUserSetting(LAF, value);
 	}
 	
 	public boolean getRightToLeft() {
 		return getUserSetting(RTL, false);
 	}
 	
+	public Integer getViewportToolWidth() {
+		return LangUtils.value(getUserSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
+	}
+	
+	public boolean setViewportToolWidth(Integer value) {
+		return setUserSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
+	}
+	
 	public boolean getWhatsnewEnabled() {
 		return getUserSetting(WHATSNEW_ENABLED, true);
 	}
+	
+	public String getTFADelivery() {
+		return getUserSetting(CoreUserSettings.TFA_DELIVERY);
+	}
+	
+	public boolean setTFADelivery(String value) {
+		return setUserSetting(CoreUserSettings.TFA_DELIVERY, value);
+	}
+	
+	public String getTFASecret() {
+		return getUserSetting(CoreUserSettings.TFA_SECRET);
+	}
+	
+	public boolean setTFASecret(String value) {
+		return setUserSetting(CoreUserSettings.TFA_SECRET, value);
+	}
+	
+	public String getTFAEmailAddress() {
+		return getUserSetting(CoreUserSettings.TFA_EMAILADDRESS);
+	}
+	
+	public boolean setTFAEmailAddress(String value) {
+		return setUserSetting(CoreUserSettings.TFA_EMAILADDRESS, value);
+	}
+	
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
 		return setm.getUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION);
@@ -113,11 +166,5 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setm.setUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION, value);
 	}
 	
-	public static Integer getViewportToolWidth(SettingsManager setm, UserProfile profile, String serviceId) {
-		return LangUtils.value(setm.getUserSetting(profile, serviceId, CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
-	}
 	
-	public static boolean setViewportToolWidth(SettingsManager setm, UserProfile profile, String serviceId, Integer value) {
-		return setm.setUserSetting(profile, serviceId, CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
-	}
 }

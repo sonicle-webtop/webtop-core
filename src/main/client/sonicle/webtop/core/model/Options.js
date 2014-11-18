@@ -40,8 +40,13 @@ Ext.define('Sonicle.webtop.core.model.Options', {
 	],
 	*/
 	
+	proxy: {
+		extraParams: {
+			options: true
+		}
+	},
 	fields: [
-		'userId',
+		'id',
 		'displayName',
 		'locale',
 		'theme',

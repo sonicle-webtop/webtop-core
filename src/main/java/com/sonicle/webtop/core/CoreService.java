@@ -73,6 +73,7 @@ public class CoreService extends Service {
 		
 	}
 	
+	/*
 	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
 		WebTopSession wts = env.getSession();
@@ -125,6 +126,7 @@ public class CoreService extends Service {
 			new JsonResult(false).printTo(out);
 		}
 	}
+	*/
 	
 	public void processTFAUntrustDevice(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
@@ -207,7 +209,10 @@ public class CoreService extends Service {
 		try {
 			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
-			getFullEnv().getSession().setViewportToolWidth(serviceId, width);
+			
+			UserProfile profile = getFullEnv().getProfile();
+			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
+			cus.setViewportToolWidth(width);
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {

@@ -37,6 +37,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -71,48 +72,54 @@ public class Start extends HttpServlet {
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
-			Locale locale = wts.getLocale();
-			String theme = wts.getTheme();
-			String lookAndFeel = wts.getLookAndFeel();
-			WebTopApp.logger.trace("locale:   {}", locale);
+			CoreUserSettings cus = wts.getCoreUserSettings();
+			UserProfile up = wts.getUserProfile();
 			
+			//TODO: auth test only --> Remove this later
 			Subject currentUser=SecurityUtils.getSubject();
 			String user_id=((Principal)currentUser.getPrincipal()).getSubjectId();
 			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.mail:access"));
 			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.calendar:access"));
 			boolean isAdmin=currentUser.hasRole("admin");
 			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
+			//--------------------------------------------------------------
 			
-			Map tplMap = new HashMap();
-			tplMap.put("theme", theme);
-			tplMap.put("laf", lookAndFeel);
-			tplMap.put("rtl", String.valueOf(wts.getRTL()));
-			tplMap.put("debug", ""+extdebug);
-			ServletHelper.fillPageVars(tplMap, locale, wta);
+			Locale locale = wts.getLocale();
+			String theme = cus.getTheme();
+			String lookAndFeel = cus.getLookAndFeel();
 			
-			UserProfile p=wts.getUserProfile();
+			Map vars = new HashMap();
+			
+			// Page + loader variables
+			ServletHelper.fillPageVars(vars, locale, wta);
+			vars.put("theme", theme);
+			vars.put("laf", lookAndFeel);
+			vars.put("rtl", String.valueOf(cus.getRightToLeft()));
+			vars.put("debug", ""+extdebug);
+			
+			
 			String ticket=request.getSession().getId();
 			WebTopApp.logger.trace("Generated ticket = {}",ticket);
-			String encTicket=Encryption.cipher(ticket, p.getSecret());
+			String encTicket=Encryption.cipher(ticket, up.getSecret());
 			WebTopApp.logger.trace("Encoded ticket = {}",encTicket);
 			
-			// Fill client startup variables
+			// Startup variables
 			JsWTS jswts = new JsWTS();
+			jswts.domainId = up.getDomainId();
+			jswts.userId = up.getUserId();
 			jswts.locale = locale.toString();
 			jswts.theme = theme;
 			jswts.laf = lookAndFeel;
 			jswts.encAuthTicket = encTicket;
-			jswts.domainId=p.getDomainId();
-			jswts.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
 				manager.fillForService(jswts, serviceId, locale);
 				jswts.initialSettings.put(serviceId, wts.getInitialSettings(serviceId));
 			}
-			tplMap.put("WTS", JsonResult.gson.toJson(jswts));
+			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			
 			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
-			tpl.process(tplMap, response.getWriter());
+			tpl.process(vars, response.getWriter());
 			
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in start servlet!", ex);

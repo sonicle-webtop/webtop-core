@@ -49,6 +49,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -108,18 +109,20 @@ public class ServiceRequest extends HttpServlet {
 						WebTopApp.unsetServiceLoggerDC();
 					}
 				} catch(Exception ex) {
-					throw new Exception("Error durin method invocation", ex);
+					throw new Exception("Error during method invocation", ex);
 				} finally {
 					IOUtils.closeQuietly(out);
 				}
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
-				String domain = ServletUtils.getStringParameter(request, "domain", true);
-				String user = ServletUtils.getStringParameter(request, "user", true);
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				String tokens[] = StringUtils.split(id, "@");
+				String domainId = tokens[1];
+				String userId = tokens[0];
 				
 				// Retrieves instantiated option manager (session context away)
-				BaseOptionManager instance = svcm.instantiateOptionManager(service, domain, user);
+				BaseOptionManager instance = svcm.instantiateOptionManager(service, domainId, userId);
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);
 				invokeMethod(instance, method, service, nowriter, request, response);

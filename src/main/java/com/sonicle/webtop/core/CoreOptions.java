@@ -55,86 +55,65 @@ public class CoreOptions extends BaseOptionManager {
 	
 	public static final Logger logger = Service.getLogger(CoreOptions.class);
 	
-	/*
-	public JsOptions readMainOptions() throws Exception {
-		JsOptions opts = new JsOptions();
-		
-		try {
-			UserDAO udao = UserDAO.getInstance();
-			CoreUserSettings cus = new CoreUserSettings(getDomainId(), getUserId(), getServiceId());
-			
-			OUser user = udao.selectByDomainUser(getCoreConnection(), getDomainId(), getUserId());
-			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getDomainId(), getUserId());
-			user.
-			opts.put("displayName", "Administrator");
-			opts.put("locale", user.getLocale());
-			opts.put("theme", cus.getTheme());
-			opts.put("laf", cus.getLookAndFeel());
-			opts.put("rtl", cus.getRightToLeft());
-			
-			
-			
-			
-		} catch(Exception ex) {
-			throw ex;
-		}
-	}
-	
-	public JOptions updateMainOptions(JsOptions opts) {
-		
-	}
-	
 	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		//FullEnvironment env = getFullEnv();
 		//WebTopSession wts = env.getSession();
 		
-		UserDAO udao = UserDAO.getInstance();
-		CoreUserSettings cus = new CoreUserSettings(getDomainId(), getUserId(), getServiceId());
-		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			String id = ServletUtils.getStringParameter(request, "id", true);
 			
-			
-			
-			
-			
-			
+			CoreServiceSettings css = new CoreServiceSettings(getDomainId(), getServiceId());
+			CoreUserSettings cus = new CoreUserSettings(getDomainId(), getUserId(), getServiceId());
+			UserDAO udao = UserDAO.getInstance();
+			OUser user = udao.selectByDomainUser(getCoreConnection(), getDomainId(), getUserId());
+			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getDomainId(), getUserId());
 			
 			if(crud.equals("read")) {
-				JsOptions js = new JsOptions();
-				js.put("id", id);
-				js.put("userId", id);
-				js.put("displayName", "Administrator");
+				String id = ServletUtils.getStringParameter(request, "id", true);
 				
-				
+				// Main
 				JsOptions main = new JsOptions();
-				main.put("id", "admin");
-				main.put("userId", "admin");
-				main.put("displayName", "Administrator");
-				main.put("locale", cus.getLocale());
+				main.put("displayName", user.getDisplayName());
+				main.put("locale", user.getLocale());
+				main.put("rtl", cus.getRightToLeft());
 				main.put("theme", cus.getTheme());
 				main.put("laf", cus.getLookAndFeel());
-				main.put("rtl", cus.getRightToLeft());
 				
+				// UserData
+				JsOptions usd = new JsOptions();
+				usd.put("title", "Mr");
+				usd.put("firstName", "Matteo");
+				usd.put("lastName", "Albinola");
+				
+				// TFA
 				JsOptions tfa = new JsOptions();
-				tfa.put("enabled", "siiiii");
+				tfa.put("enabled", css.getTFAEnabled());
+				tfa.put("deviceTrustEnabled", css.getTFADeviceTrustEnabled());
+				tfa.put("delivery", cus.getTFADelivery());
+				tfa.put("emailAddress", cus.getTFAEmailAddress());
 				
-				JsOptions ud = new JsOptions();
-				ud.put("title", "Mr");
-				ud.put("firstName", "Admin");
-				ud.put("lastName", "Admin");
-				options.put("userData", ud);
-				
-				new JsonResult("options", options).printTo(out);
+				JsOptions opts = new JsOptions();
+				opts.put("id", id);
+				opts.putAll(main);
+				opts.putPrefixed("tfa", tfa);
+				opts.putPrefixed("usd", usd);
+				new JsonResult("options", opts).printTo(out);
 				
 			} else if(crud.equals("update")) {
+				JsOptions opts = ServletUtils.getPayload(request, JsOptions.class);
+				
+				// Main
+				if(opts.containsKey("theme")) cus.setTheme(opts.getString("theme"));
+				if(opts.containsKey("laf")) cus.setLookAndFeel(opts.getString("laf"));
+				
+				/*
 				HashMap<String, Object> options = new HashMap<>();
 				options.put("id", "admin");
 				options.put("tfaEnabled", "nooooo");
 				options.put("tfaDelivery", "email");
 				new JsonResult("options", options).printTo(out);
-				//new JsonResult().printTo(out);
+				*/
+				new JsonResult().printTo(out);
 			}
 			
 		} catch (Exception ex) {
@@ -142,5 +121,5 @@ public class CoreOptions extends BaseOptionManager {
 			new JsonResult(false).printTo(out);
 		}
 	}
-	*/
+	
 }

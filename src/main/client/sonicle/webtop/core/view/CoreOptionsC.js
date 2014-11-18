@@ -35,16 +35,33 @@ Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
 	alternateClassName: 'WT.view.CoreOptionsC',
 	extend: 'Ext.app.ViewController',
 	
+	reload: false,
+	
+	onBlurAutoSave: function(s) {
+		var me = this;
+		if(s.isDirty()) {
+			me.reload = s.reload || false;
+			me.getView().saveForm();
+		}
+	},
+	
 	onFormLoad: function() {
 		this.getViewModel().set('values', this.getView().model.getData());
 	},
 	
 	onFormSave: function() {
-		this.getViewModel().set('values', this.getView().model.getData());
+		var me = this;
+		me.getViewModel().set('values', me.getView().model.getData());
+		if(me.reload) {
+			WT.confirm('Reload?', function(bid) {
+				if(bid === 'yes') window.location.reload();
+			});
+		}
+		me.reload = false;
 	},
 	
 	onLoadClick: function() {
-		this.getView().loadForm('admin');
+		this.getView().loadForm('admin@*');
 	},
 	
 	onSaveClick: function() {

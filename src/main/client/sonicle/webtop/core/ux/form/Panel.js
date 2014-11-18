@@ -78,6 +78,7 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 		//if(fo.isDirty()) fo.updateRecord(me.getRecord());
 		if(me.getForm().isDirty()) me.updateRecord(me.getRecord());
 		me.model.save({
+			id: me.getFieldValue(me.idField),
 			callback: function(rec, op, success) {
 				if(success) {
 					me.bindModel(rec);
