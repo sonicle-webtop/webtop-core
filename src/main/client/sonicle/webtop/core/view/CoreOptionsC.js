@@ -47,8 +47,40 @@ Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
 		this.getView().loadForm('admin');
 	},
 	
-	onSyncClick: function() {
+	onSaveClick: function() {
 		this.getView().saveForm();
+	},
+	
+	onTFAEnableClick: function() {
+		alert('TODO');
+	},
+	
+	onTFADisableClick: function() {
+		alert('TODO');
+	},
+	
+	onUntrustThisClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'TFAUntrustDevice', {
+					params: {which: 'this'},
+					callback: function(success) {
+						if(success) me.getView().loadForm();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustOtherClick: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'TFAUntrustDevice', {
+					params: {which: 'other'}
+				});
+			}
+		});
 	}
 	
 });

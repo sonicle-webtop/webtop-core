@@ -42,13 +42,13 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		xid: null,
 		ns: null,
 		path: null,
-		className: null,
-		name: null,
-		desription: null,
 		version: null,
 		build: null,
-		company: null,
-		iconCls: null
+		className: null,
+		optionsClassName: null,
+		name: null,
+		desription: null,
+		company: null
 	},
 	
 	instance: null,
@@ -92,4 +92,13 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 			return false;
 		}
 	}
+	
+	/**
+	 * Adds namespace before provided classname.
+	 * @param {String} cn A className.
+	 * @returns {String} The className preceeded by namespace.
+	 */
+	//namespace: function(cn) {
+	//	return Ext.String.format('{0}.{1}', this.getNs(), cn);
+	//}
 });

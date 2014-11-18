@@ -35,9 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.bol.js.JsWTStartup;
-import com.sonicle.webtop.core.sdk.FullEnvironment;
-import com.sonicle.webtop.core.sdk.BasicEnvironment;
+import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
@@ -51,7 +49,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
@@ -69,8 +66,8 @@ public class WebTopSession {
 	private WebTopApp wta = null;
 	private boolean initialized = false;
 	private UserProfile profile = null;
-	private Locale locale = null;
 	private String refererURI = null;
+	private Locale userAgentLocale = null;
 	private ReadableUserAgent userAgentInfo = null;
 	private CoreServiceSettings coreServiceSettings = null;
 	private CoreUserSettings coreUserSettings = null;
@@ -116,7 +113,7 @@ public class WebTopSession {
 		logger.debug("Creating environment for {}", principal.getName());
 		
 		refererURI = ServletHelper.getReferer(request);
-		locale = ServletHelper.homogenizeLocale(request);
+		userAgentLocale = ServletHelper.homogenizeLocale(request);
 		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
 		// Defines useful instances (NB: keep new order)
@@ -170,7 +167,7 @@ public class WebTopSession {
 		}
 	}
 	
-	public JsWTStartup.Settings getInitialSettings(String serviceId) {
+	public JsWTS.Settings getInitialSettings(String serviceId) {
 		Service svc = getServiceById(serviceId);
 		
 		// Gets initial settings from instantiated service
@@ -184,7 +181,7 @@ public class WebTopSession {
 			WebTopApp.unsetServiceLoggerDC();
 		}
 		
-		JsWTStartup.Settings is = new JsWTStartup.Settings();
+		JsWTS.Settings is = new JsWTS.Settings();
 		if(hm != null) is.putAll(hm);
 		
 		// Built-in settings
@@ -231,7 +228,7 @@ public class WebTopSession {
 		if(profile != null) {
 			return profile.getLocale();
 		} else {
-			return locale;
+			return userAgentLocale;
 		}
 	}
 	
@@ -264,7 +261,7 @@ public class WebTopSession {
 	}
 	
 	public boolean getRTL() {
-		return coreUserSettings.getRTL();
+		return coreUserSettings.getRightToLeft();
 	}
 	
 	public void setRTL(String value) {

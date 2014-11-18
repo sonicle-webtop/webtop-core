@@ -210,14 +210,25 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 				this.buildWhatsnewWnd(true);
 				break;
 			case 'options':
-				this.buildOptionsWnd();
+				this.buildOptionsWnd2();
 				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
 		}
 	},
 	
-	
+	buildOptionsWnd2: function() {
+		var wnd = Ext.create({
+			xtype: 'window',
+			layout: 'fit',
+			height: 500,
+			width: 750,
+			items: [
+				Ext.create('WT.view.Options')
+			]
+		});
+		if(wnd) wnd.show();
+	},
 	
 	buildOptionsWnd: function() {
 		var wnd = Ext.create({

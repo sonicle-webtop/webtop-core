@@ -9,6 +9,6 @@ Ext.application({
 		'WT': 'resources/com.sonicle.webtop.core'
 		//'WT.ux': 'resources/com.sonicle.webtop.core/ux'
 		//'WT.overrides': 'resources/com.sonicle.webtop.core/overrides'
-	}, WTStartup.appPaths || {}),
+	}, WTS.appPaths || {}),
 	autoCreateViewport: false
 });

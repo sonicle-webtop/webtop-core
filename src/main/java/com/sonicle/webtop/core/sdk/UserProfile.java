@@ -62,34 +62,30 @@ public final class UserProfile {
 	private final Principal principal;
 	private OUser user;
 	private UserData userData;
-	private Locale locale;
 	
 	public UserProfile(FullEnvironment fullEnv, Principal principal) {
 		this.fullEnv = fullEnv;
 		this.principal = principal;
 		
 		try {
-			initialize();
+			logger.debug("Initializing UserProfile");
+			loadDetails();
 		} catch(Throwable t) {
 			logger.error("Unable to initialize UserProfile", t);
 			//throw new Exception("Unable to initialize UserProfile", t);
 		}
 	}
 	
-	private void initialize() throws Exception {
+	private void loadDetails() throws Exception {
 		Connection con = null;
 		
 		try {
-			logger.debug("Initializing UserProfile");
 			con = fullEnv.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
 			
 			// Retrieves corresponding user using principal details
 			user = udao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
 			if(user == null) throw new WTException("Unable to find a user for principal [{0}, {1}]", principal.getDomainId(), principal.getUserId());
-			
-			// Defines locale (for not instantiate it each time)
-			locale = new Locale(user.getLocaleLanguage(), user.getLocaleCountry());
 			
 			// If necessary, compute secret key and updates it
 			if(StringUtils.isEmpty(user.getSecret())) {
@@ -111,6 +107,10 @@ public final class UserProfile {
 			DbUtils.closeQuietly(con);
 			throw ex;
 		}
+	}
+	
+	public void refresh() throws Exception {
+		loadDetails();
 	}
 	
 	public String getId() {
@@ -135,7 +135,7 @@ public final class UserProfile {
 	}
 	
 	public Locale getLocale() {
-		return locale;
+		return user.getLocale();
 	}
 	
 	private String generateSecretKey() throws NoSuchAlgorithmException {

@@ -34,6 +34,11 @@
 Ext.define('Sonicle.webtop.core.model.Options', {
 	alternateClassName: 'WT.model.Options',
 	extend: 'WT.model.Base',
+	/*
+	requires: [
+		'WT.model.UserData'
+	],
+	*/
 	
 	fields: [
 		'userId',
@@ -41,10 +46,57 @@ Ext.define('Sonicle.webtop.core.model.Options', {
 		'locale',
 		'theme',
 		'laf',
+		'usdTitle',
+		'usdFirstName',
+		'usdLastName',
+		'usdEmail',
+		'usdMobile',
+		'usdTelephone',
+		'usdFax',
+		'usdAddress',
+		'usdPostalCode',
+		'usdCity',
+		'usdState',
+		'usdCountry',
+		'usdCompany',
+		'usdFunction',
+		'usdWorkEmail',
+		'usdWorkMobile',
+		'usdWorkTelephone',
+		'usdWorkFax',
+		'usdCustom1',
+		'usdCustom2',
+		'usdCustom3',
 		'tfaEnabled',
 		'tfaDelivery',
 		'tfaEmailAddress',
 		'tfaIsTrusted',
 		'tfaTrustedOn'
+		
+		
+		/*
+		{name: 'usdTitle', mapping: 'userData.title'},
+		{name: 'usdFirstName', mapping: 'userData.firstName'},
+		{name: 'usdLastName', mapping: 'userData.lastName'},
+		{name: 'usdEmail', mapping: 'userData.email'},
+		{name: 'usdMobile', mapping: 'userData.mobile'},
+		{name: 'usdTelephone', mapping: 'userData.telephone'},
+		{name: 'usdFax', mapping: 'userData.fax'},
+		{name: 'usdAddress', mapping: 'userData.address'},
+		{name: 'usdPostalCode', mapping: 'userData.postalCode'},
+		{name: 'usdCity', mapping: 'userData.city'},
+		{name: 'usdState', mapping: 'userData.state'},
+		{name: 'usdCountry', mapping: 'userData.country'},
+		{name: 'usdCompany', mapping: 'userData.company'},
+		{name: 'usdFunction', mapping: 'userData.function'},
+		{name: 'usdWorkEmail', mapping: 'userData.workEmail'},
+		{name: 'usdWorkMobile', mapping: 'userData.workMobile'},
+		{name: 'usdWorkTelephone', mapping: 'userData.workTelephone'},
+		{name: 'usdWorkFax', mapping: 'userData.workFax'},
+		{name: 'usdCustom1', mapping: 'userData.custom1'},
+		{name: 'usdCustom2', mapping: 'userData.custom2'},
+		{name: 'usdCustom3', mapping: 'userData.custom3'},
+		*/
+		
 	]
 });

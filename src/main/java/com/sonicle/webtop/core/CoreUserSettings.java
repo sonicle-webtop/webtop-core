@@ -97,7 +97,7 @@ public class CoreUserSettings extends BaseUserSettings {
 		return getUserSetting(THEME, "crisp");
 	}
 	
-	public boolean getRTL() {
+	public boolean getRightToLeft() {
 		return getUserSetting(RTL, false);
 	}
 	

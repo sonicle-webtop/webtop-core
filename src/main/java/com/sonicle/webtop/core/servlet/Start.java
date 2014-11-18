@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.bol.js.JsWTStartup;
+import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import freemarker.template.Template;
@@ -97,18 +97,18 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("Encoded ticket = {}",encTicket);
 			
 			// Fill client startup variables
-			JsWTStartup jswt = new JsWTStartup();
-			jswt.locale = locale.toString();
-			jswt.theme = theme;
-			jswt.laf = lookAndFeel;
-			jswt.encAuthTicket = encTicket;
-			jswt.domainId=p.getDomainId();
-			jswt.userId=p.getUserId();
+			JsWTS jswts = new JsWTS();
+			jswts.locale = locale.toString();
+			jswts.theme = theme;
+			jswts.laf = lookAndFeel;
+			jswts.encAuthTicket = encTicket;
+			jswts.domainId=p.getDomainId();
+			jswts.userId=p.getUserId();
 			for(String serviceId : wts.getServices()) {
-				manager.fillForService(jswt, serviceId, locale);
-				jswt.initialSettings.put(serviceId, wts.getInitialSettings(serviceId));
+				manager.fillForService(jswts, serviceId, locale);
+				jswts.initialSettings.put(serviceId, wts.getInitialSettings(serviceId));
 			}
-			tplMap.put("WTStartup", JsonResult.gson.toJson(jswt));
+			tplMap.put("WTS", JsonResult.gson.toJson(jswts));
 			
 			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");

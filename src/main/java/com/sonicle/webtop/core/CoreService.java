@@ -37,10 +37,10 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
-import com.sonicle.webtop.core.bol.js.JsWhatsnew;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.FullEnvironment;
+import com.sonicle.webtop.core.sdk.JsOptions;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
@@ -79,7 +79,21 @@ public class CoreService extends Service {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String id = ServletUtils.getStringParameter(request, "id", true);
+			
+			
+			
+			//CoreUserSettings cus = new CoreUserSettings("sonicleldap","admin",CoreManifest.ID);
+			
+			
+			
 			if(crud.equals("read")) {
+				JsOptions js = new JsOptions();
+				js.put("id", id);
+				js.put("userId", id);
+				js.put("displayName", "Administrator");
+				
+				
 				HashMap<String, Object> options = new HashMap<>();
 				options.put("id", "admin");
 				options.put("userId", "admin");
@@ -88,6 +102,13 @@ public class CoreService extends Service {
 				options.put("theme", wts.getTheme());
 				options.put("laf", "default");
 				options.put("tfaEnabled", "siiiii");
+				
+				HashMap<String, Object> ud = new HashMap<>();
+				ud.put("title", "Mr");
+				ud.put("firstName", "Admin");
+				ud.put("lastName", "Admin");
+				options.put("userData", ud);
+				
 				new JsonResult("options", options).printTo(out);
 				
 			} else if(crud.equals("update")) {
@@ -103,11 +124,20 @@ public class CoreService extends Service {
 			logger.error("Error executing action Options", ex);
 			new JsonResult(false).printTo(out);
 		}
+	}
+	
+	public void processTFAUntrustDevice(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
 		
-		
-		
-		
-		
+		try {
+			String which = ServletUtils.getStringParameter(request, "which", true);
+			//TODO: complete here
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action TFAUntrustDevice", ex);
+			new JsonResult(false).printTo(out);
+		}
 	}
 	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

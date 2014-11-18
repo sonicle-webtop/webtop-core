@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 	alternateClassName: 'WT.view.CoreOptions',
-	extend: 'WT.sdk.OptionPanel',
+	extend: 'WT.sdk.OptionTab',
 	requires: [
 		'WT.store.TFADelivery',
 		'WT.model.Simple',
@@ -46,12 +46,6 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 	model: 'WT.model.Options',
 	idField: 'id',
 	
-	referenceHolder: true,
-	defaults: {
-		collapsible: true,
-		margin: '5 5 0 5'
-	},
-	
 	listeners: {
 		load: 'onFormLoad',
 		save: 'onFormSave'
@@ -62,9 +56,20 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 		me.callParent(arguments);
 		
 		me.add({
+			xtype: 'button',
+			text: 'Load',
+			handler: 'onLoadClick'
+		});
+		me.add({
+			xtype: 'button',
+			text: 'Save',
+			handler: 'onSaveClick'
+		});
+		me.add({
 			xtype: 'panel',
 			layout: 'form',
 			title: WT.res('opts.account.tit'),
+			titleCollapse: true,
 			items: [{
 				xtype: 'hidden',
 				name: 'id'
@@ -92,6 +97,7 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 		}, {
 			xtype: 'panel',
 			title: WT.res('opts.appearance.tit'),
+			titleCollapse: true,
 			items: [{
 				xtype: 'container',
 				layout: 'form',
@@ -136,7 +142,96 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 			}]
 		}, {
 			xtype: 'panel',
+			layout: 'form',
+			title: WT.res('opts.userdata.tit'),
+			collapsed: true,
+			titleCollapse: true,
+			items: [{
+				xtype: 'textfield',
+				name: 'usdTitle',
+				fieldLabel: WT.res('opts.userdata.fld-title.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdFirstName',
+				fieldLabel: WT.res('opts.userdata.fld-firstName.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdLastName',
+				fieldLabel: WT.res('opts.userdata.fld-lastName.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdEmail',
+				fieldLabel: WT.res('opts.userdata.fld-email.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdMobile',
+				fieldLabel: WT.res('opts.userdata.fld-mobile.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdTelephone',
+				fieldLabel: WT.res('opts.userdata.fld-telephone.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdFax',
+				fieldLabel: WT.res('opts.userdata.fld-fax.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdAddress',
+				fieldLabel: WT.res('opts.userdata.fld-address.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdPostalCode',
+				fieldLabel: WT.res('opts.userdata.fld-postalCose.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdState',
+				fieldLabel: WT.res('opts.userdata.fld-state.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdCountry',
+				fieldLabel: WT.res('opts.userdata.fld-country.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdCompany',
+				fieldLabel: WT.res('opts.userdata.fld-company.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdFunction',
+				fieldLabel: WT.res('opts.userdata.fld-function.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdWorkEmail',
+				fieldLabel: WT.res('opts.userdata.fld-wemail.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdWorkMobile',
+				fieldLabel: WT.res('opts.userdata.fld-wmobile.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdWorkTelephone',
+				fieldLabel: WT.res('opts.userdata.fld-wtelephone.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdWorkFax',
+				fieldLabel: WT.res('opts.userdata.fld-wfax.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdCustom1',
+				fieldLabel: WT.res('opts.userdata.fld-custom1.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdCustom2',
+				fieldLabel: WT.res('opts.userdata.fld-custom2.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'usdCustom3',
+				fieldLabel: WT.res('opts.userdata.fld-custom3.lbl')
+			}]
+		}, {
+			xtype: 'panel',
 			title: WT.res('opts.tfa.tit'),
+			collapsed: true,
+			titleCollapse: true,
 			items: [{
 				xtype: 'container',
 				layout: 'form',
@@ -156,19 +251,15 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 						xtype: 'hspacer'
 					}, {
 						xtype: 'button',
-						text: 'Attiva',
-						handler: function() {
-							me.lookupReference('delivery').getLayout().setActiveItem('email');
-						},
+						text: WT.res('btn-enable.lbl'),
+						handler: 'onTFAEnableClick',
 						bind: {
 							hidden: '{isTFAEnabled}'
 						}
 					}, {
 						xtype: 'button',
-						text: 'Disattiva',
-						handler: function() {
-							me.lookupReference('delivery').getLayout().setActiveItem('googleauth');
-						},
+						text: WT.res('btn-disable.lbl'),
+						handler: 'onTFADisableClick',
 						bind: {
 							hidden: '{!isTFAEnabled}'
 						}
@@ -223,7 +314,6 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 					items: [{
 						xtype: 'fieldset',
 						layout: 'form',
-						//title: WT.res('opts.tfa.thisdevice.trusted.tit'),
 						bind: {
 							title: '{thisTrustedOn}'
 						},
@@ -234,9 +324,9 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 							xtype: 'vspacer'
 						}, {
 							xtype: 'button',
-							itemId: 'untrustthis',
+							//itemId: 'untrustthis',
 							text: WT.res('opts.tfa.btn-untrustthis.lbl'),
-							handler: ''
+							handler: 'onUntrustThisClick'
 						}]
 					}]
 				}, {
@@ -254,7 +344,7 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 				}]
 			}, {
 				xtype: 'container',
-				reference: 'otherdevices',
+				//reference: 'otherdevices',
 				layout: 'form',
 				items: [{
 					xtype: 'fieldset',
@@ -266,22 +356,12 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 						xtype: 'vspacer'
 					}, {
 						xtype: 'button',
-						itemId: 'untrustother',
+						//itemId: 'untrustother',
 						text: WT.res('opts.tfa.btn-untrustother.lbl'),
-						handler: ''
+						handler: 'onUntrustOtherClick'
 					}]
 				}]
 			}]
-		});
-		me.add({
-			xtype: 'button',
-			text: 'Load',
-			handler: 'onLoadClick'
-		});
-		me.add({
-			xtype: 'button',
-			text: 'Sync',
-			handler: 'onSyncClick'
 		});
 	},
 	

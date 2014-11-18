@@ -31,24 +31,57 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.interfaces;
-
-import com.sonicle.webtop.core.bol.OUserSetting;
-import com.sonicle.webtop.core.sdk.UserProfile;
-import java.util.List;
-
-/**
- *
- * @author malbinola
- */
-public interface IUserSettingManager {
+Ext.define('Sonicle.webtop.core.view.Options', {
+	alternateClassName: 'WT.view.Options',
+	extend: 'WT.sdk.BaseView',
+	requires: ['WT.view.CoreOptions'],
 	
-	public String getUserSetting(String domainId, String userId, String serviceId, String key);
-	public String getUserSetting(UserProfile userProfile, String serviceId, String key);
-	public List<OUserSetting> getUserSettings(UserProfile userProfile, String serviceId, String key);
-	public List<OUserSetting> getUserSettings(String domainId, String userId, String serviceId, String key);
-	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value);
-	public boolean setUserSetting(String domainId, String userId, String serviceId, String key, Object value);
-	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key);
-	public boolean deleteUserSetting(String domainId, String userId, String serviceId, String key);
-}
+	initComponent: function() {
+		var me = this;
+		/*
+		Ext.apply(me, {
+			items: [{
+				xtype: 'tabpanel',
+				reference: 'optstab',
+				tabPosition: 'left',
+				tabRotation: 'none',
+				defaults: {
+					bodyPadding: 5,
+					border: false,
+					autoScroll: true,
+					closable: false
+				},
+				items: []
+			}]
+		});
+		*/
+		me.callParent(arguments);
+		
+		var tab = me.add({
+			xtype: 'tabpanel',
+			region: 'center',
+			reference: 'optstab',
+			tabPosition: 'left',
+			tabRotation: 0,
+			maxWidth: 650,
+			items: [
+				Ext.create('WT.view.CoreOptions', {
+					itemId: WT.ID,
+					title: 'WebTop',
+					iconCls: WT.cssIconCls(WT.XID, 'service-s')
+				})
+			]
+		});
+		
+		WT.getApp().services.each(function(desc) {
+			var cn = desc.getOptionsClassName();
+			if(!Ext.isEmpty(cn)) {
+				tab.add(Ext.create(cn, {
+					itemId: desc.getId(),
+					title: desc.getName(),
+					iconCls: WT.cssIconCls(desc.getXid(), 'service-s')
+				}));
+			}
+		});
+	}
+});

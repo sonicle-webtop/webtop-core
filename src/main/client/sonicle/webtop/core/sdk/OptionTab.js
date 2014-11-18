@@ -31,16 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.interfaces;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-
-/**
- *
- * @author malbinola
- */
-public interface IConnectionProvider {
+Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
+	alternateClassName: 'WT.sdk.OptionTab',
+	extend: 'WT.ux.form.Panel',
+	mixins: [
+		'WT.sdk.mixin.Waitable'
+	],
 	
-	public Connection getConnection() throws SQLException;
-}
+	referenceHolder: true,
+	closable: false,
+	tabConfig: {
+		textAlign: 'left'
+	},
+	border: false,
+	overflowY: 'scroll',
+	padding: 0,
+	margin: 0,
+	
+	defaults: {
+		collapsible: true,
+		margin: '5 25 0 5'
+	}
+});

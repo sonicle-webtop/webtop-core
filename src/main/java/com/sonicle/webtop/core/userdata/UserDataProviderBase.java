@@ -33,9 +33,9 @@
  */
 package com.sonicle.webtop.core.userdata;
 
-import com.sonicle.webtop.core.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.sonicle.webtop.core.sdk.UserData;
-import com.sonicle.webtop.core.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -7,7 +7,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ServiceDescriptor'
-	].concat(WTStartup.appRequires || []),
+	].concat(WTS.appRequires || []),
 	views: [
 		'Sonicle.webtop.core.view.Viewport'
 	],
@@ -34,23 +34,24 @@ Ext.define('Sonicle.webtop.core.Application', {
 		Ext.setGlyphFontFamily('FontAwesome');
 		
 		// Loads service descriptors from startup object
-		var obj = null;
-		Ext.each(WTStartup.services, function(cfg) {
-			obj = Ext.create('WT.ServiceDescriptor', {
-				id: cfg.id,
-				xid: cfg.xid,
-				ns: cfg.ns,
-				path: cfg.path,
-				className: cfg.className,
-				name: cfg.name,
-				description: cfg.description,
-				version: cfg.version,
-				build: cfg.build,
-				company: cfg.company
+		var desc = null;
+		Ext.each(WTS.services, function(obj) {
+			desc = Ext.create('WT.ServiceDescriptor', {
+				id: obj.id,
+				xid: obj.xid,
+				ns: obj.ns,
+				path: obj.path,
+				version: obj.version,
+				build: obj.build,
+				className: obj.className,
+				optionsClassName: obj.optionsClassName,
+				name: obj.name,
+				description: obj.description,
+				company: obj.company
 			});
-			WT.loadCss(obj.getPath()+'/laf/'+WTStartup.laf+'/service.css');
-			WT.loadCss(obj.getPath()+'/laf/'+WTStartup.laf+'/service-'+WTStartup.theme+'.css');
-			me.services.add(obj);
+			WT.loadCss(desc.getPath()+'/laf/'+WTS.laf+'/service.css');
+			WT.loadCss(desc.getPath()+'/laf/'+WTS.laf+'/service-'+WTS.theme+'.css');
+			me.services.add(desc);
 		}, me);
 		
 		// Inits webSocket
@@ -110,10 +111,10 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var me = this;
 		var svc = me.getService(id);
 		if(!svc) return;
-		var wpc = me.getViewport().getController();
-		wpc.addServiceCmp(svc);
+		var vpc = me.getViewport().getController();
+		vpc.addServiceCmp(svc);
 		me.currentService = id;
-		if(wpc.activateService(svc)) svc.fireEvent('activate');
+		if(vpc.activateService(svc)) svc.fireEvent('activate');
 	},
 	
 	initWebSocket: function() {
@@ -125,11 +126,11 @@ Ext.define('Sonicle.webtop.core.Application', {
 			listeners: {
 				open: function(ws) {
 					var me=WT.getApp();
-					console.log('Sending ticket to websocket: '+WTStartup.encAuthTicket);
+					console.log('Sending ticket to websocket: '+WTS.encAuthTicket);
 					ws.send(WT.wsMsg("com.sonicle.webtop.core","ticket",{
-						userId: WTStartup.userId,
-						domainId: WTStartup.domainId,
-						encAuthTicket: WTStartup.encAuthTicket
+						userId: WTS.userId,
+						domainId: WTS.domainId,
+						encAuthTicket: WTS.encAuthTicket
 					}));
 					//websocket is working
 					//kill any server events task and run http session keep alive

@@ -31,45 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.sdk.interfaces;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  *
  * @author malbinola
  */
-public class JsWTStartup {
+public interface IConnectionProvider {
 	
-	public String locale = "";
-	public String theme = "";
-	public String laf = "";
-	public String encAuthTicket="";
-	public String userId="";
-	public String domainId="";
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
-	public HashMap<String, Settings> initialSettings = new HashMap<>();
-	
-	public static class Service {
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String className;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
-	}
-	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
-		}
-	}
+	public Connection getConnection() throws SQLException;
+	public Connection getConnection(String poolName) throws SQLException;
 }

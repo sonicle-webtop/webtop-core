@@ -67,14 +67,16 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 	bindModel: function(model) {
 		var me = this;
 		me.model = model;
-		me.getForm().loadRecord(model);
+		//me.getForm().loadRecord(model);
+		me.loadRecord(model);
 	},
 	
 	saveForm: function() {
 		var me = this;
-		var fo = me.getForm();
+		//var fo = me.getForm();
 		me.fireEvent('beforeSave', me);
-		if(fo.isDirty()) fo.updateRecord(me.getRecord());
+		//if(fo.isDirty()) fo.updateRecord(me.getRecord());
+		if(me.getForm().isDirty()) me.updateRecord(me.getRecord());
 		me.model.save({
 			callback: function(rec, op, success) {
 				if(success) {
@@ -86,6 +88,35 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 			},
 			scope: me
 		});
+	},
+	
+	loadRecord: function(record) {
+		var me = this, obj;
+		me.callParent(arguments);
+		Ext.iterate(record.associations, function(ent) {
+			obj = {};
+			Ext.iterate(record[ent].getData(), function(fld,val) {
+				obj[ent+'.'+fld] = val;
+			});
+			me.getForm().setValues(obj);
+		});
+	},
+	
+	updateRecord: function(record) {
+		var me = this;
+		var values = me.getForm().getFieldValues(), arec, obj, name;
+		Ext.iterate(record.associations, function(entity) {
+			arec = record[entity];
+			obj = {};
+			Ext.iterate(arec, function(fld,val) {
+				name = entity+'.'+fld;
+				if(values.hasOwnProperty(name)) obj[fld] = values[name];
+			});
+			arec.beginEdit();
+			arec.set(obj);
+			arec.endEdit();
+		});
+		return me.callParent(arguments);
 	},
 	
 	/**

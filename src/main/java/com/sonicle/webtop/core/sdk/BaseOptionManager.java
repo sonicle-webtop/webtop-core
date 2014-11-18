@@ -31,13 +31,53 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.BaseView', {
-	alternateClassName: 'WT.sdk.BaseView',
-	extend: 'Ext.container.Container',
-	mixins: [
-		'WT.sdk.mixin.Waitable'
-	],
+package com.sonicle.webtop.core.sdk;
+
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/**
+ *
+ * @author malbinola
+ */
+public abstract class BaseOptionManager {
 	
-	layout: 'border',
-	referenceHolder: true
-});
+	private boolean inited = false;
+	private IConnectionProvider conp;
+	private ISettingManager setm;
+    private String serviceId;
+    private String domainId;
+    private String userId;
+	
+	public final void initialize(IConnectionProvider conp, ISettingManager setm, String serviceId, String domainId, String userId) {
+		if(inited) return;
+		this.conp = conp;
+		this.setm = setm;
+		this.serviceId = serviceId;
+		this.domainId = domainId;
+		this.userId = userId;
+		inited = true;
+	}
+	
+	public String getServiceId() {
+		return serviceId;
+	}
+	
+	public String getDomainId() {
+		return domainId;
+	}
+	
+	public String getUserId() {
+		return userId;
+	}
+	
+	public Connection getCoreConnection() throws SQLException {
+		return conp.getConnection();
+	}
+	
+	public Connection getConnection() throws SQLException {
+		return conp.getConnection(serviceId);
+	}
+}

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseOptionManager;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.InsufficientRightsException;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -142,6 +143,23 @@ public class ServiceManager {
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
+	public BaseOptionManager instantiateOptionManager(String serviceId, String domainId, String userId) {
+		ServiceDescriptor descr = getService(serviceId);
+		if(!descr.hasOptionManager()) throw new RuntimeException("Service has no option manager class");
+		
+		// Creates option manager instance
+		BaseOptionManager instance = null;
+		try {
+			instance = (BaseOptionManager)descr.getOptionManagerClass().newInstance();
+		} catch(Exception ex) {
+			logger.error("Error instantiating option manager [{}]", descr.getManifest().getOptionsClassName(), ex);
+			return null;
+		}
+		
+		instance.initialize(wta.getConnectionManager(), wta.getSettingsManager(), serviceId, domainId, userId);
+		return instance;
+	}
+	
 	public Service instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
 		ServiceDescriptor descr = getService(serviceId);
 		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
@@ -149,9 +167,9 @@ public class ServiceManager {
 		// Creates service instance
 		Service instance = null;
 		try {
-			instance = (Service)descr.getDefaultClass().newInstance();
+			instance = (Service)descr.getServiceClass().newInstance();
 		} catch(Exception ex) {
-			logger.error("Error instantiating service [{}]", descr.getManifest().getClassName(), ex);
+			logger.error("Error instantiating service [{}]", descr.getManifest().getServiceClassName(), ex);
 			return null;
 		}
 		instance.configure(basicEnv, fullEnv);
@@ -351,7 +369,7 @@ public class ServiceManager {
 			jsPathMappings.put(serviceId, manifest.getJsPath());
 			
 			// Adds service references into static map for facilitate ID lookup 
-			Environment.addManifestMap(manifest.getClassName(), manifest);
+			Environment.addManifestMap(manifest.getServiceClassName(), manifest);
 		}
 	}
 	
@@ -409,15 +427,16 @@ public class ServiceManager {
 		for(HierarchicalConfiguration elService : elServices) {
 			try {
 				manifest = new ServiceManifest(
-					elService.getString("id"),
-					elService.getString("xid"),
-					elService.getString("className"),
-					elService.getString("jsClassName"),
-					elService.getString("publicClassName"),
-					elService.getString("deamonClassName"),
-					elService.getBoolean("hidden", false),
+					elService.getString("package"),
+					elService.getString("jsPackage"),
+					elService.getString("shortName"),
 					new ServiceVersion(elService.getString("version")),
 					elService.getString("buildDate"),
+					elService.getString("serviceClassName"),
+					elService.getString("publicServiceClassName"),
+					elService.getString("deamonServiceClassName"),
+					elService.getString("optionsClassName"),
+					elService.getBoolean("hidden", false),
 					elService.getString("company"),
 					elService.getString("companyEmail"),
 					elService.getString("companyWebSite"),
