@@ -53,8 +53,8 @@ Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
 		var me = this;
 		me.getViewModel().set('values', me.getView().model.getData());
 		if(me.reload) {
-			WT.confirm('Reload?', function(bid) {
-				if(bid === 'yes') window.location.reload();
+			WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
+				if(bid === 'yes') WT.reload();
 			});
 		}
 		me.reload = false;

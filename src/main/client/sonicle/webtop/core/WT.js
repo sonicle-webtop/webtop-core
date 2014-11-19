@@ -30,6 +30,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return Sonicle.webtop.core.getApplication();
 	},
 	
+	reload: function() {
+		window.location.reload();
+	},
+	
 	/**
 	 * Convenience method for prepending namespace to class name.
 	 * @param {String} [ns] The namespace. If not specified, WT.NS is used.
