@@ -33,9 +33,8 @@
  */
 Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	alternateClassName: 'WT.view.Whatsnew',
-	extend: 'WT.sdk.BaseView',
+	extend: 'WT.sdk.FormView',
 	
-	layout: 'border',
 	full: true,
 	
 	constructor: function(full) {
@@ -48,36 +47,36 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		var me = this;
 		Ext.apply(me, {
 			items: [{
-					xtype: 'tabpanel',
-					region: 'center',
-					itemId: 'wntab',
-					plain: true,
-					defaults: {
-						autoScroll: true,
-						bodyPadding: 5,
-						bodyCls: 'wt-whatsnew'
-					},
-					listeners: {
-						tabchange: function(s,nt,ot) {
-							if(!nt.html && nt.loader) nt.loader.load();
-						}
-					},
-					items: []
+				xtype: 'tabpanel',
+				region: 'center',
+				itemId: 'wntab',
+				plain: true,
+				defaults: {
+					autoScroll: true,
+					bodyPadding: 5,
+					bodyCls: 'wt-whatsnew'
+				},
+				listeners: {
+					tabchange: function(s,nt,ot) {
+						if(!nt.html && nt.loader) nt.loader.load();
+					}
+				},
+				items: []
 			}],
 			fbar: [{
-					xtype: 'checkbox',
-					itemId: 'hide',
-					value: true,
-					boxLabel: WT.res('whatsnew.fld-hide.lbl'),
-					hidden: me.full
-				}, '->', {
-					xtype: 'button',
-					text: WT.res('whatsnew.btn-close.lbl'),
-					handler: function() {
-						var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
-						if(tb.getComponent('hide').getValue()) me.turnOff();
-						me.close();
-					}
+				xtype: 'checkbox',
+				itemId: 'hide',
+				value: true,
+				boxLabel: WT.res('whatsnew.fld-hide.lbl'),
+				hidden: me.full
+			}, '->', {
+				xtype: 'button',
+				text: WT.res('whatsnew.btn-close.lbl'),
+				handler: function() {
+					var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
+					if(tb.getComponent('hide').getValue()) me.turnOff();
+					me.close();
+				}
 			}]
 		});
 		me.callParent(arguments);

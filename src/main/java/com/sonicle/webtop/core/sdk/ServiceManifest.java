@@ -46,14 +46,18 @@ public class ServiceManifest {
 	
 	protected String id;
 	protected String xid;
-	protected String className;
-	protected String jsClassName;
-	protected String publicClassName;
-	protected String deamonClassName;
-	protected Boolean hidden;
+	protected String javaPackage;
+	protected String jsPackage;
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
+	protected String serviceClassName;
+	protected String optionsClassName;
+	protected String publicServiceClassName;
+	protected String deamonServiceClassName;
+	protected String jsServiceClassName;
+	protected String jsOptionsClassName;
+	protected Boolean hidden;
 	protected String company;
 	protected String companyEmail;
 	protected String companyWebSite;
@@ -71,28 +75,45 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
-	public ServiceManifest(String id, String xid,
-		String className, String jsClassName, String publicClassName, String deamonClassName, 
-		Boolean hidden, ServiceVersion version, String buildDate, String company, 
-		String companyEmail, String companyWebSite, String supportEmail) throws Exception {
+	public ServiceManifest(
+		String javaPackage, String jsPackage, String shortName, ServiceVersion version, String buildDate,
+		String serviceClassName, String publicServiceClassName, String deamonServiceClassName, 
+		String optionsClassName, Boolean hidden, 
+		String company, String companyEmail, String companyWebSite, String supportEmail
+		) throws Exception {
 		super();
 		
-		if(StringUtils.isEmpty(id)) throw new Exception("Invalid value for property [id]");
-		this.id = id.toLowerCase();
-		if(StringUtils.isEmpty(xid)) throw new Exception("Invalid value for property [xid]");
-		this.xid = xid.toLowerCase();
+		if(StringUtils.isEmpty(javaPackage)) throw new Exception("Invalid value for property [package]");
+		this.javaPackage = javaPackage.toLowerCase();
+		this.id = this.javaPackage;
+		if(StringUtils.isEmpty(jsPackage)) throw new Exception("Invalid value for property [jsPackage]");
+		this.jsPackage = jsPackage; // Lowercase allowed!
+		if(StringUtils.isEmpty(shortName)) throw new Exception("Invalid value for property [shortName]");
+		this.xid = shortName;
 		
-		boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
-		//TODO: Enable check or not?
-		//if(noclass) throw new Exception("You need to fill at least a service class");
-		this.className = className;
-		this.jsClassName = jsClassName;
-		this.publicClassName = publicClassName;
-		this.deamonClassName = deamonClassName;
-		this.hidden = hidden;
 		if(version.isUndefined()) throw new Exception("Invalid value for property [version]");
 		this.version = version;
 		if(!StringUtils.isEmpty(buildDate)) this.buildDate = buildDate;
+		
+		//TODO: Enable check or not?
+		//boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
+		//if(noclass) throw new Exception("You need to fill at least a service class");
+		if(!StringUtils.isEmpty(serviceClassName)) {
+			this.serviceClassName = LangUtils.buildClassName(this.javaPackage, serviceClassName);
+			this.jsServiceClassName = LangUtils.buildClassName(this.jsPackage, serviceClassName);
+		}
+		if(!StringUtils.isEmpty(publicServiceClassName)) {
+			this.publicServiceClassName = LangUtils.buildClassName(this.javaPackage, publicServiceClassName);
+		}
+		if(!StringUtils.isEmpty(deamonServiceClassName)) {
+			this.deamonServiceClassName = LangUtils.buildClassName(this.javaPackage, deamonServiceClassName);
+		}
+		if(!StringUtils.isEmpty(optionsClassName)) {
+			this.optionsClassName = LangUtils.buildClassName(this.javaPackage, optionsClassName);
+			this.jsOptionsClassName = LangUtils.buildClassName(this.jsPackage, optionsClassName);
+		}
+		
+		this.hidden = hidden;
 		if(!StringUtils.isEmpty(company)) this.company = company;
 		if(!StringUtils.isEmpty(companyEmail)) this.companyEmail = companyEmail;
 		if(!StringUtils.isEmpty(companyWebSite)) this.companyWebSite = companyWebSite;
@@ -116,21 +137,12 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of server-side service implementation.
-	 * (eg. com.sonicle.webtop.core.CoreService)
-	 * @return The value.
-	 */
-	public String getClassName() {
-		return className;
-	}
-	
-	/**
-	 * Extracts the package name starting form class name (getClassName()).
-	 * (eg. com.sonicle.webtop.core.CoreService -> com.sonicle.webtop.core)
+	 * Gets the server-side package name.
+	 * (eg. com.sonicle.webtop.core)
 	 * @return The value.
 	 */
 	public String getPackageName() {
-		return LangUtils.getPackageName(className);
+		return javaPackage;
 	}
 	
 	/**
@@ -143,25 +155,12 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of client-side service implementation.
-	 * (eg. Sonicle.webtop.mail.MailService)
-	 * @return The value.
-	 */
-	public String getJsClassName() {
-		return jsClassName;
-	}
-	
-	public String getJsLocaleClassName(Locale locale) {
-		return MessageFormat.format("{0}.Locale_{1}", getJsPackageName(), locale.toString());
-	}
-	
-	/**
-	 * Gets the package name extracted from getJsClassName().
+	 * Gets the client-side package name.
 	 * (eg. Sonicle.webtop.mail)
 	 * @return The value.
 	 */
 	public String getJsPackageName() {
-		return LangUtils.getPackageName(jsClassName);
+		return jsPackage;
 	}
 	
 	/**
@@ -171,32 +170,6 @@ public class ServiceManifest {
 	 */
 	public String getJsPath() {
 		return StringUtils.lowerCase(StringUtils.replace(getJsPackageName(), ".", "/"));
-	}
-	
-	/**
-	 * 
-	 * @return 
-	 */
-	public String getJsBaseUrl() {
-		return MessageFormat.format("resources/{0}", getId());
-	}
-	
-	/**
-	 * Gets the class name of server-side public service implementation.
-	 * (eg. com.sonicle.webtop.core.CorePublicService)
-	 * @return The value.
-	 */
-	public String getPublicClassName() {
-		return publicClassName;
-	}
-	
-	/**
-	 * Gets the class name of server-side deamon service implementation.
-	 * (eg. com.sonicle.webtop.core.CoreDeamonService)
-	 * @return The value.
-	 */
-	public String getDeamonClassName() {
-		return deamonClassName;
 	}
 	
 	public ServiceVersion getVersion() {
@@ -213,6 +186,62 @@ public class ServiceManifest {
 	
 	public String getBuildDate() {
 		return buildDate;
+	}
+	
+	/**
+	 * Gets the class name of server-side service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreService)
+	 * @return The value.
+	 */
+	public String getServiceClassName() {
+		return serviceClassName;
+	}
+	
+	public String getOptionsClassName() {
+		return optionsClassName;
+	}
+	
+	/**
+	 * Gets the class name of server-side public service implementation.
+	 * (eg. com.sonicle.webtop.core.CorePublicService)
+	 * @return The value.
+	 */
+	public String getPublicServiceClassName() {
+		return publicServiceClassName;
+	}
+	
+	/**
+	 * Gets the class name of server-side deamon service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreDeamonService)
+	 * @return The value.
+	 */
+	public String getDeamonServiceClassName() {
+		return deamonServiceClassName;
+	}
+	
+	/**
+	 * Gets the class name of client-side service implementation.
+	 * (eg. Sonicle.webtop.mail.MailService)
+	 * @return The value.
+	 */
+	public String getJsServiceClassName() {
+		return jsServiceClassName;
+	}
+	
+	public String getJsOptionsClassName() {
+		return jsOptionsClassName;
+	}
+	
+	public String getJsLocaleClassName(Locale locale) {
+		return MessageFormat.format("{0}.Locale_{1}", getJsPackageName(), locale.toString());
+	}
+	
+	/**
+	 * 
+	 * @return 
+	 */
+	public String getJsBaseUrl() {
+		return MessageFormat.format("resources/{0}", getId());
 	}
 	
 	public String getCompany() {

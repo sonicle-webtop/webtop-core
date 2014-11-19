@@ -36,15 +36,16 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
-import com.sonicle.webtop.core.interfaces.IServiceSettingManager;
-import com.sonicle.webtop.core.interfaces.IUserSettingManager;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
+import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
+import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
 import java.sql.Connection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +55,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager {
+public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager, ISettingManager {
 	
 	private static final Logger logger = WebTopApp.getLogger(SettingsManager.class);
 	private static boolean initialized = false;

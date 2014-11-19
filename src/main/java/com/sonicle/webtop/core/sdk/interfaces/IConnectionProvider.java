@@ -31,12 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.FeedbackVM', {
-	extend: 'Ext.app.ViewModel',
+package com.sonicle.webtop.core.sdk.interfaces;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+/**
+ *
+ * @author malbinola
+ */
+public interface IConnectionProvider {
 	
-	stores: {
-		feedback: {
-			model: 'Sonicle.webtop.core.model.Feedback'
-		}
-	}
-});
+	public Connection getConnection() throws SQLException;
+	public Connection getConnection(String poolName) throws SQLException;
+}

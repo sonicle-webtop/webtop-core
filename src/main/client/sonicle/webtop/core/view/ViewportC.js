@@ -210,24 +210,46 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 				this.buildWhatsnewWnd(true);
 				break;
 			case 'options':
-				this.buildOptionsWnd();
+				this.buildOptionsWnd2();
 				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
 		}
 	},
 	
-	
+	buildOptionsWnd2: function() {
+		var wnd = Ext.create({
+			xtype: 'window',
+			layout: 'fit',
+			height: 500,
+			width: 750,
+			items: [
+				Ext.create('WT.view.Options')
+			]
+		});
+		if(wnd) wnd.show();
+	},
 	
 	buildOptionsWnd: function() {
 		var wnd = Ext.create({
 			xtype: 'window',
 			layout: 'fit',
 			height: 500,
-			width: 600,
-			items: [
-				Ext.create('WT.view.CoreOptions')
-			]
+			width: 700,
+			items: [{
+				xtype: 'container',
+				layout: 'card',
+				activeItem: 'core',
+				items: [
+					Ext.create('WT.view.CoreOptions', {
+						itemId: 'core',
+						autoScroll: true,
+						maxWidth: 600
+					})
+				]
+			}, {
+				xtype: 'panel'
+			}]
 		});
 		if(wnd) wnd.show();
 	},

@@ -54,6 +54,13 @@ Ext.define('Sonicle.webtop.core.model.Base', {
 				rootProperty: '{entityName:lowercase}',
 				messageProperty: 'message'
 			}
+			/*
+			writer: {
+				type: 'json',
+				expandData: true,
+				nameProperty: 'mapping'
+			}
+			*/
 		}
 	}
 });

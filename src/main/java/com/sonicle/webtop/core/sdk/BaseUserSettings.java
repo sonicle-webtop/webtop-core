@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.WebTopApp;
  */
 public abstract class BaseUserSettings {
     
-    private SettingsManager sm;
+    private SettingsManager setm;
     protected String serviceId;
     protected String domainId;
     protected String userId;
@@ -53,25 +53,29 @@ public abstract class BaseUserSettings {
     }
     
     public BaseUserSettings(String domainId, String userId, String serviceId) {
-        this.sm=WebTopApp.getInstance().getSettingsManager();
-        this.domainId=domainId;
-        this.userId=userId;
-        this.serviceId=serviceId;
+        this.setm = WebTopApp.getInstance().getSettingsManager();
+        this.domainId = domainId;
+        this.userId = userId;
+        this.serviceId = serviceId;
     }
     
-    public String getUserSetting(String key) {
-        return sm.getUserSetting(domainId, userId, serviceId, key);
-    }
+	public String getUserSetting(String key) {
+		return setm.getUserSetting(domainId, userId, serviceId, key);
+	}
 	
-    public String getUserSetting(String key, String defaultValue) {
-        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
-    }
-    
-    public int getUserSetting(String key, int defaultValue) {
-        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
-    }
-    
-    public boolean getUserSetting(String key, boolean defaultValue) {
-        return LangUtils.value(sm.getUserSetting(domainId, userId, serviceId, key),defaultValue);
-    }
+	public boolean setUserSetting(String key, Object value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+
+	public String getUserSetting(String key, String defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+
+	public int getUserSetting(String key, int defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+
+	public boolean getUserSetting(String key, boolean defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
 }

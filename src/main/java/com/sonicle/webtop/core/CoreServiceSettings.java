@@ -17,6 +17,8 @@ import java.util.Locale;
  */
 public class CoreServiceSettings extends BaseServiceSettings {
 	
+	public static final String TMP = "tmp";
+	
 	/**
 	 * [string][system]
 	 * Defines system default language locale
@@ -54,13 +56,22 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [string][system]
 	 */
 	public static final String USERDATA_PROVIDER = "userdata.provider";
-	
-	public static final String TMP = "tmp";
-	
-	//public static final String OTP_ENABLED = "otp.enabled";
-	//public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
-	//public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
-	//public static final String OTP_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
+	/**
+	 * [boolean][system+domain]
+	 */
+	public static final String TFA_ENABLED = "tfa.enabled";
+	/**
+	 * [string[]][system+domain]
+	 */
+	public static final String TFA_TRUST_ADDRESSES = "otp.trust.addresses";
+	/**
+	 * [boolean][system+domain]
+	 */
+	public static final String TFA_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
+	/**
+	 * [integer][system+domain]
+	 */
+	public static final String TFA_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
 	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
@@ -72,13 +83,32 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		super(domainId, serviceId);
 	}
 	
+	public String getTempPath() {
+		return getServiceSetting(TMP);
+	}
+	
 	public String getUserDataProvider() {
 		return LangUtils.value(getServiceSetting(CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
 	}
 	
-	public String getTempPath() {
-		return getServiceSetting(TMP);
+	public boolean getTFAEnabled() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_ENABLED), false);
 	}
+	
+	public String getTFATrustedAddresses() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_ADDRESSES), (String)null);
+	}
+	
+	public boolean getTFADeviceTrustEnabled() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_DEVICE_ENABLED), true);
+	}
+	
+	public int getTFADeviceTrustDuration() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_DEVICE_DURATION), 0);
+	}
+	
+	
+	
 	
 	/*
 	public static String getLanguage(SettingsManager setm) {
@@ -93,22 +123,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		String language = getLanguage(setm);
 		String country = getCountry(setm);
 		return new Locale(language, country);
-	}
-	
-	public static boolean getOTPEnabled(SettingsManager setm, String domainId) {
-		return LangUtils.value(setm.getServiceSetting(domainId, Manifest.ID, Settings.OTP_ENABLED), false);
-	}
-	
-	public static String getOTPTrustedAddresses(SettingsManager setm, String domainId) {
-		return LangUtils.value(setm.getServiceSetting(domainId, Manifest.ID, Settings.OTP_TRUST_ADDRESSES), (String)null);
-	}
-	
-	public static boolean getOTPDeviceTrustEnabled(SettingsManager setm, String domainId) {
-		return LangUtils.value(setm.getServiceSetting(domainId, Manifest.ID, Settings.OTP_TRUST_DEVICE_ENABLED), true);
-	}
-	
-	public static int getOTPDeviceTrustDuration(SettingsManager setm, String domainId) {
-		return LangUtils.value(setm.getServiceSetting(domainId, Manifest.ID, Settings.OTP_TRUST_DEVICE_DURATION), 0);
 	}
 	
 	public static boolean getDBInitEnabled(SettingsManager setm) {

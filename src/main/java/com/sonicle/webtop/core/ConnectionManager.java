@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core;
-import com.sonicle.webtop.core.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.sql.Connection;

@@ -31,15 +31,57 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.OptionPanel', {
-	alternateClassName: 'WT.sdk.OptionPanel',
-	extend: 'Ext.form.Panel',
-	mixins: [
-		'WT.sdk.mixin.Waitable',
-		'WT.sdk.mixin.Submissible'
-	],
+Ext.define('Sonicle.webtop.core.view.Options', {
+	alternateClassName: 'WT.view.Options',
+	extend: 'WT.sdk.BaseView',
+	requires: ['WT.view.CoreOptions'],
 	
-	autoScroll: true
-	
-	//layout: 'border',
+	initComponent: function() {
+		var me = this;
+		/*
+		Ext.apply(me, {
+			items: [{
+				xtype: 'tabpanel',
+				reference: 'optstab',
+				tabPosition: 'left',
+				tabRotation: 'none',
+				defaults: {
+					bodyPadding: 5,
+					border: false,
+					autoScroll: true,
+					closable: false
+				},
+				items: []
+			}]
+		});
+		*/
+		me.callParent(arguments);
+		
+		var tab = me.add({
+			xtype: 'tabpanel',
+			region: 'center',
+			reference: 'optstab',
+			tabPosition: 'left',
+			tabRotation: 0,
+			maxWidth: 650,
+			items: [
+				Ext.create('WT.view.CoreOptions', {
+					itemId: WT.ID,
+					title: 'WebTop',
+					iconCls: WT.cssIconCls(WT.XID, 'service-s')
+				})
+			]
+		});
+		
+		WT.getApp().services.each(function(desc) {
+			var cn = desc.getOptionsClassName();
+			if(!Ext.isEmpty(cn)) {
+				tab.add(Ext.create(cn, {
+					itemId: desc.getId(),
+					title: desc.getName(),
+					iconCls: WT.cssIconCls(desc.getXid(), 'service-s')
+				}));
+			}
+		});
+	}
 });

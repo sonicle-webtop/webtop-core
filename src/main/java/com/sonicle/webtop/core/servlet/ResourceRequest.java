@@ -298,7 +298,7 @@ public class ResourceRequest extends HttpServlet {
 			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
 			String clazz = manifest.getJsPackageName() + "." + baseName;
-			String override = manifest.getJsClassName();
+			String override = manifest.getJsServiceClassName();
 			
 			logger.trace("Class: {} - Override: {}", clazz, override);
 			LookupFile lf = getFile(fileUrl);

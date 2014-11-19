@@ -44,10 +44,14 @@ public class CoreManifest extends ServiceManifest {
 	
 	public static final String ID = "com.sonicle.webtop.core";
 	public static final String XID = "wt";
-	public static final String CLASS_NAME = "com.sonicle.webtop.core.CoreService";
-	public static final String JS_CLASS_NAME = "Sonicle.webtop.core.WT";
+	public static final String JAVA_PACKAGE = "com.sonicle.webtop.core";
+	public static final String JS_PACKAGE = "Sonicle.webtop.core";
 	public static final String VERSION = "5.0.0";
 	public static final String BUILD_DATE = "07/10/2014";
+	public static final String SERVICE_CLASS_NAME = "com.sonicle.webtop.core.CoreService";
+	public static final String OPTIONS_CLASS_NAME = "com.sonicle.webtop.core.CoreOptions";
+	public static final String JS_SERVICE_CLASS_NAME = "Sonicle.webtop.core.WT";
+	public static final String JS_OPTIONS_CLASS_NAME = "Sonicle.webtop.core.CoreOptions";
 	public static final String COMPANY = "Sonicle S.r.l.";
 	public static final String COMPANY_EMAIL = "sonicle@sonicle.com";
 	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
@@ -58,12 +62,16 @@ public class CoreManifest extends ServiceManifest {
 	public CoreManifest() {
 		id = ID;
 		xid = XID;
-		className = CLASS_NAME;
-		// This is not a real js service, it's only used 
-		// to store class for client-side ovveriding purposes.
-		jsClassName = JS_CLASS_NAME;
+		javaPackage = JAVA_PACKAGE;
+		jsPackage = JS_PACKAGE;
 		version = new ServiceVersion(VERSION);
 		buildDate = BUILD_DATE;
+		serviceClassName = SERVICE_CLASS_NAME;
+		optionsClassName = OPTIONS_CLASS_NAME;
+		// This is not a real js service, it's only used 
+		// to store class for client-side ovveriding purposes.
+		jsServiceClassName = JS_SERVICE_CLASS_NAME;
+		jsOptionsClassName = JS_OPTIONS_CLASS_NAME;
 		company = COMPANY;
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;

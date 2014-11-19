@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.view.Feedback', {
 	alternateClassName: 'WT.view.Feedback',
-	extend: 'WT.sdk.BaseView',
+	extend: 'WT.sdk.FormView',
 	requires: [
 		'WT.view.FeedbackC',
 		'WT.model.UserService',

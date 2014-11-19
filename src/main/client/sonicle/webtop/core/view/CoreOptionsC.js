@@ -31,16 +31,73 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.interfaces;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-
-/**
- *
- * @author malbinola
- */
-public interface IConnectionProvider {
+Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
+	alternateClassName: 'WT.view.CoreOptionsC',
+	extend: 'Ext.app.ViewController',
 	
-	public Connection getConnection() throws SQLException;
-}
+	reload: false,
+	
+	onBlurAutoSave: function(s) {
+		var me = this;
+		if(s.isDirty()) {
+			me.reload = s.reload || false;
+			me.getView().saveForm();
+		}
+	},
+	
+	onFormLoad: function() {
+		this.getViewModel().set('values', this.getView().model.getData());
+	},
+	
+	onFormSave: function() {
+		var me = this;
+		me.getViewModel().set('values', me.getView().model.getData());
+		if(me.reload) {
+			WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
+				if(bid === 'yes') WT.reload();
+			});
+		}
+		me.reload = false;
+	},
+	
+	onLoadClick: function() {
+		this.getView().loadForm('admin@*');
+	},
+	
+	onSaveClick: function() {
+		this.getView().saveForm();
+	},
+	
+	onTFAEnableClick: function() {
+		alert('TODO');
+	},
+	
+	onTFADisableClick: function() {
+		alert('TODO');
+	},
+	
+	onUntrustThisClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'TFAUntrustDevice', {
+					params: {which: 'this'},
+					callback: function(success) {
+						if(success) me.getView().loadForm();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustOtherClick: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'TFAUntrustDevice', {
+					params: {which: 'other'}
+				});
+			}
+		});
+	}
+	
+});

@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Mixed} Setting value.
 	 */
 	getInitialSetting: function(key) {
-		var is = WTStartup.initialSettings[this.ID] || {};
+		var is = WTS.initialSettings[this.ID] || {};
 		return is[key];
 	},
 	

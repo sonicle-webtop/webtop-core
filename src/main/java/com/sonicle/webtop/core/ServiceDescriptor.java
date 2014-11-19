@@ -38,6 +38,7 @@ import com.sonicle.webtop.core.sdk.PublicService;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.DeamonService;
+import com.sonicle.webtop.core.sdk.BaseOptionManager;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.service.ResourceNotFoundException;
 import com.sonicle.webtop.core.service.Whatsnew;
@@ -56,9 +57,10 @@ class ServiceDescriptor {
 	
 	private static final Logger logger = WebTopApp.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
-	private Class defaultClass = null;
-	private Class publicClass = null;
-	private Class deamonClass = null;
+	private Class serviceClass = null;
+	private Class publicServiceClass = null;
+	private Class deamonServiceClass = null;
+	private Class optionManagerClass = null;
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
 
@@ -66,21 +68,24 @@ class ServiceDescriptor {
 		this.manifest = manifest;
 
 		// Loads default (private) service class
-		String className = manifest.getClassName();
+		String className = manifest.getServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			defaultClass = loadServiceClass(className, Service.class, "Service");
+			serviceClass = loadClass(className, Service.class, "Service");
 		}
-
 		// Loads public service class
-		className = manifest.getPublicClassName();
+		className = manifest.getPublicServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			publicClass = loadServiceClass(className, PublicService.class, "PublicService");
+			publicServiceClass = loadClass(className, PublicService.class, "PublicService");
 		}
-
 		// Loads deamon service class
-		className = manifest.getDeamonClassName();
+		className = manifest.getDeamonServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			deamonClass = loadServiceClass(className, DeamonService.class, "DeamonService");
+			deamonServiceClass = loadClass(className, DeamonService.class, "DeamonService");
+		}
+		// Loads options manager class
+		className = manifest.getOptionsClassName();
+		if(!StringUtils.isEmpty(className)) {
+			optionManagerClass = loadClass(className, BaseOptionManager.class, "OptionManager");
 		}
 	}
 
@@ -89,27 +94,35 @@ class ServiceDescriptor {
 	}
 
 	public boolean hasDefaultService() {
-		return (defaultClass != null);
+		return (serviceClass != null);
 	}
 
-	public Class getDefaultClass() {
-		return defaultClass;
+	public Class getServiceClass() {
+		return serviceClass;
+	}
+	
+	public boolean hasOptionManager() {
+		return (optionManagerClass != null);
+	}
+
+	public Class getOptionManagerClass() {
+		return optionManagerClass;
 	}
 
 	public boolean hasPublicService() {
-		return (publicClass != null);
+		return (publicServiceClass != null);
 	}
 
-	public Class getPublicClass() {
-		return publicClass;
+	public Class getPublicServiceClass() {
+		return publicServiceClass;
 	}
 
 	public boolean hasDeamonService() {
-		return (deamonClass != null);
+		return (deamonServiceClass != null);
 	}
 
-	public Class getDeamonClass() {
-		return deamonClass;
+	public Class getDeamonServiceClass() {
+		return deamonServiceClass;
 	}
 
 	public boolean isUpgraded() {
@@ -120,7 +133,7 @@ class ServiceDescriptor {
 		this.upgraded = upgraded;
 	}
 	
-	private Class loadServiceClass(String className, Class apiClass, String description) {
+	private Class loadClass(String className, Class apiClass, String description) {
 		Class clazz = null;
 		
 		try {

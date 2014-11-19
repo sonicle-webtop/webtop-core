@@ -31,45 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-/**
- *
- * @author malbinola
- */
-public class JsWTStartup {
+Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
+	alternateClassName: 'WT.sdk.OptionTab',
+	extend: 'WT.ux.form.Panel',
+	mixins: [
+		'WT.sdk.mixin.Waitable'
+	],
 	
-	public String locale = "";
-	public String theme = "";
-	public String laf = "";
-	public String encAuthTicket="";
-	public String userId="";
-	public String domainId="";
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTStartup.Service> services = new ArrayList<>();
-	public HashMap<String, Settings> initialSettings = new HashMap<>();
+	referenceHolder: true,
+	closable: false,
+	tabConfig: {
+		textAlign: 'left'
+	},
+	border: false,
+	overflowY: 'scroll',
+	padding: 0,
+	margin: 0,
 	
-	public static class Service {
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String className;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
+	defaults: {
+		collapsible: true,
+		margin: '5 25 0 5'
 	}
-	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
-		}
-	}
-}
+});

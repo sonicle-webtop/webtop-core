@@ -36,7 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsWTStartup;
+import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.js.JsWhatsnew;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -76,7 +76,7 @@ public class CoreManager {
 		}
 	}
 	
-	public void fillForService(JsWTStartup js, String serviceId, Locale locale) {
+	public void fillForService(JsWTS js, String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
@@ -86,15 +86,16 @@ public class CoreManager {
 			
 		} else {
 			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-			js.appRequires.add(manifest.getJsClassName());
+			js.appRequires.add(manifest.getJsServiceClassName());
 			js.appRequires.add(manifest.getJsLocaleClassName(locale));
 
-			JsWTStartup.Service jssvc = new JsWTStartup.Service();
+			JsWTS.Service jssvc = new JsWTS.Service();
 			jssvc.id = manifest.getId();
 			jssvc.xid = manifest.getXId();
 			jssvc.ns = manifest.getJsPackageName();
 			jssvc.path = manifest.getJsBaseUrl();
-			jssvc.className = manifest.getJsClassName();
+			jssvc.className = manifest.getJsServiceClassName();
+			if(sdesc.hasOptionManager()) jssvc.optionsClassName = manifest.getJsOptionsClassName();
 			jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
 			jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
 			jssvc.version = manifest.getVersion().toString();
@@ -114,12 +115,12 @@ public class CoreManager {
 	}
 	*/
 	
-	public JsWTStartup.Service getServiceJsDescriptor(String serviceId, Locale locale) {
+	public JsWTS.Service getServiceJsDescriptor(String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		
-		JsWTStartup.Service js = new JsWTStartup.Service();
+		JsWTS.Service js = new JsWTS.Service();
 		js.id = manifest.getId();
 		js.xid = manifest.getXId();
 		js.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
@@ -127,7 +128,7 @@ public class CoreManager {
 		js.version = manifest.getVersion().toString();
 		js.build = manifest.getBuildDate();
 		js.company = manifest.getCompany();
-		js.className = manifest.getJsClassName();
+		js.className = manifest.getJsServiceClassName();
 		
 		return js;
 	}

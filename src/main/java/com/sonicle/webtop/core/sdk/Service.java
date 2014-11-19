@@ -62,7 +62,6 @@ public abstract class Service {
 		configured = true;
 		this.env = env;
 		this.coreEnv = coreEnv;
-		
 	}
 	
 	public final BasicEnvironment getEnv() {

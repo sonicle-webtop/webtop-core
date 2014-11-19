@@ -31,13 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.BaseView', {
-	alternateClassName: 'WT.sdk.BaseView',
-	extend: 'Ext.container.Container',
-	mixins: [
-		'WT.sdk.mixin.Waitable'
-	],
+package com.sonicle.webtop.core.sdk.interfaces;
+
+import com.sonicle.webtop.core.bol.OUserSetting;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import java.util.List;
+
+/**
+ *
+ * @author malbinola
+ */
+public interface ISettingManager {
 	
-	layout: 'border',
-	referenceHolder: true
-});
+	public String getServiceSetting(String serviceId, String key);
+	public String getServiceSetting(String domainId, String serviceId, String key);
+	public boolean setServiceSetting(String serviceId, String key, Object value);
+	public boolean setServiceSetting(String domainId, String serviceId, String key, Object value);
+	public String getUserSetting(String domainId, String userId, String serviceId, String key);
+	public String getUserSetting(UserProfile userProfile, String serviceId, String key);
+	public List<OUserSetting> getUserSettings(UserProfile userProfile, String serviceId, String key);
+	public List<OUserSetting> getUserSettings(String domainId, String userId, String serviceId, String key);
+	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value);
+	public boolean setUserSetting(String domainId, String userId, String serviceId, String key, Object value);
+	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key);
+	public boolean deleteUserSetting(String domainId, String userId, String serviceId, String key);
+}

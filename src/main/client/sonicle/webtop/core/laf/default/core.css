@@ -8,6 +8,13 @@
 	crisp.css or override-crisp-touch.css).
 */
 
+/* SERVICE ICONS */
+.wt-icon-service-xs { background-image: url('elica_16.png') !important; }
+.wt-icon-service-s { background-image: url('elica_24.png') !important; }
+.wt-icon-service-m { background-image: url('elica_32.png') !important; }
+.wt-icon-service-l { background-image: url('elica_48.png') !important; }
+
+/* VIEWPORT */
 .wt-header {
 	
 }
@@ -15,6 +22,7 @@
 	
 }
 
+/* WHATSNEW */
 .wt-whatsnew {
 	padding: 10px;
 	font-family: Helvetica, Arial, sans-serif;
@@ -62,11 +70,12 @@ div.wt-wnlist {
 	border: solid 1px #ccc;
 }
 
+/* IS THIS NEEDED ANYMORE? */
+
 .wt-pnlseparator.x-header {
 	background-color: #f5f5f5;
 	padding: 2px 10px;
 }
-
 .wt-pnlseparator .x-container-title {
 	color: #666;
 	font-weight: bold;

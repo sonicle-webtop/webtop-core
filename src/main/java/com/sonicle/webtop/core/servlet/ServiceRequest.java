@@ -34,8 +34,10 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.sdk.BaseOptionManager;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.IOException;
@@ -47,6 +49,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -58,54 +61,71 @@ public class ServiceRequest extends HttpServlet {
 	private static final Logger logger = WebTopApp.getLogger(ServiceRequest.class);
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
 		
 		try {
 			logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
+			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			
-			// Retrieves instantiated service
-			Service instance = wts.getServiceById(service);
-			
-			// Gets right method
-			Method method = null;
-			String methodName = MessageFormat.format("process{0}", action);
-			if(nowriter) {
-				try {
-					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
-				} catch(NoSuchMethodException ex) {
-					throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
-				}
-			} else {
-				try {
-					method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
-				} catch(NoSuchMethodException ex) {
-					throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getClassName());
-				}
-			}
-			
-			// Invoking method...
-			PrintWriter out = null;
-			try {
-				try {
-					WebTopApp.setServiceLoggerDC(service);
-					if(nowriter) {
-						method.invoke(instance, request, response);
-					} else {
-						out = response.getWriter();
-						method.invoke(instance, request, response, out);
-						ServletHelper.setCacheControl(response);
-						ServletHelper.setPageContentType(response);
+			if(!options) {
+				// Retrieves instantiated service
+				Service instance = wts.getServiceById(service);
+
+				// Gets right method
+				Method method = null;
+				String methodName = MessageFormat.format("process{0}", action);
+				if(nowriter) {
+					try {
+						method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
+					} catch(NoSuchMethodException ex) {
+						throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getServiceClassName());
 					}
-				} finally {
-					WebTopApp.unsetServiceLoggerDC();
+				} else {
+					try {
+						method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
+					} catch(NoSuchMethodException ex) {
+						throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getServiceClassName());
+					}
 				}
-			} catch(Exception ex) {
-				throw new Exception("Error durin method invocation", ex);
-			} finally {
-				IOUtils.closeQuietly(out);
+
+				// Invoking method...
+				PrintWriter out = null;
+				try {
+					try {
+						WebTopApp.setServiceLoggerDC(service);
+						if(nowriter) {
+							method.invoke(instance, request, response);
+						} else {
+							out = response.getWriter();
+							method.invoke(instance, request, response, out);
+							ServletHelper.setCacheControl(response);
+							ServletHelper.setPageContentType(response);
+						}
+					} finally {
+						WebTopApp.unsetServiceLoggerDC();
+					}
+				} catch(Exception ex) {
+					throw new Exception("Error during method invocation", ex);
+				} finally {
+					IOUtils.closeQuietly(out);
+				}
+				
+			} else {
+				ServiceManager svcm = wta.getServiceManager();
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				String tokens[] = StringUtils.split(id, "@");
+				String domainId = tokens[1];
+				String userId = tokens[0];
+				
+				// Retrieves instantiated option manager (session context away)
+				BaseOptionManager instance = svcm.instantiateOptionManager(service, domainId, userId);
+				// Gets method and invokes it...
+				Method method = getMethod(instance.getClass(), service, action, nowriter);
+				invokeMethod(instance, method, service, nowriter, request, response);
 			}
 			
 		} catch(Exception ex) {
@@ -113,6 +133,46 @@ public class ServiceRequest extends HttpServlet {
 			throw new ServletException(ex.getMessage());
 		} finally {
 			WebTopApp.clearLoggerDC();
+		}
+	}
+	
+	private void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		PrintWriter out = null;
+		try {
+			try {
+				WebTopApp.setServiceLoggerDC(service);
+				if(nowriter) {
+					method.invoke(instance, request, response);
+				} else {
+					out = response.getWriter();
+					method.invoke(instance, request, response, out);
+					ServletHelper.setCacheControl(response);
+					ServletHelper.setPageContentType(response);
+				}
+			} finally {
+				WebTopApp.unsetServiceLoggerDC();
+			}
+		} catch(Exception ex) {
+			throw new Exception("Error during method invocation", ex);
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+	}
+	
+	private Method getMethod(Class clazz, String service, String action, boolean nowriter) throws WTException {
+		String methodName = MessageFormat.format("process{0}", action);
+		if(nowriter) {
+			try {
+				return clazz.getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
+			} catch(NoSuchMethodException ex) {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, clazz.getName());
+			}
+		} else {
+			try {
+				return clazz.getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
+			} catch(NoSuchMethodException ex) {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, clazz.getName());
+			}
 		}
 	}
 

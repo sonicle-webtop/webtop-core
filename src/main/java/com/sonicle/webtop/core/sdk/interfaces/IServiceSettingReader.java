@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.sonicle.webtop.core.interfaces;
+package com.sonicle.webtop.core.sdk.interfaces;
 
 /**
  *

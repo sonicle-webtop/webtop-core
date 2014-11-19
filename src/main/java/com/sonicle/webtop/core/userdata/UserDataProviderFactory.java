@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core.userdata;
 
-import com.sonicle.webtop.core.interfaces.IConnectionProvider;
-import com.sonicle.webtop.core.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;

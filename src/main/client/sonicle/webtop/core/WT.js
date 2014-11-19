@@ -30,13 +30,22 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return Sonicle.webtop.core.getApplication();
 	},
 	
+	reload: function() {
+		window.location.reload();
+	},
+	
+	/**
+	 * Convenience method for prepending namespace to class name.
+	 * @param {String} [ns] The namespace. If not specified, WT.NS is used.
+	 * @param {String} cn The class name.
+	 * @returns {String} The resulting string.
+	 */
 	preNs: function(ns, cn) {
 		if(arguments.length === 1) {
-			//return 'Sonicle.webtop.core.'+cn;
-			return WT.NS + '.' + cn;
-		} else {
-			return ns + '.' + cn;
+			cn = ns;
+			ns = WT.NS;
 		}
+		return Ext.String.format('{0}.{1}', ns, cn);
 	},
 	
 	/**
@@ -45,7 +54,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @return {Mixed} Setting value.
 	 */
 	getInitialSetting: function(key) {
-		var is = WTStartup.initialSettings[this.ID] || {};
+		var is = WTS.initialSettings[this.ID] || {};
 		return is[key];
 	},
 	
@@ -58,9 +67,9 @@ Ext.define('Sonicle.webtop.core.WT', {
 	res: function(id, key) {
 		if(arguments.length === 1) {
 			key = id;
-			id = WT.NS;
+			id = WT.ID;
 		}
-		if(id === WT.NS) {
+		if(id === WT.ID) {
 			return WT.strings[key];
 		} else {
 			var inst = WT.getApp().getService(id);
@@ -96,6 +105,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 		} else {
 			return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
 		}
+	},
+	
+	returnIf: function(value, ifEmpty) {
+		return (Ext.isEmpty(value)) ? ifEmpty : value;
 	},
 	
 	isXType: function(obj, xtype) {
@@ -165,9 +178,20 @@ Ext.define('Sonicle.webtop.core.WT', {
 		};
 	},
 	
+	/**
+	 * Makes an Ajax request to server.
+	 * @param {String} svc The service ID.
+	 * @param {String} act The service action to call.
+	 * @param {Object} [opts] Config options.
+	 * @param {Function} [opts.callback] The callback function to call.
+	 * @param {Boolean} opts.callback.success
+	 * @param {Object} opts.callback.json
+	 * @param {Object} opts.callback.opts
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callbacks.
+	 */
 	ajaxReq: function(svc, act, opts) {
 		var me = this;
-		if(!opts) opts = {};
+		opts = opts || {};
 		var fn = opts.callback, scope = opts.scope;
 		var options = {
 			url: 'service-request',
@@ -260,31 +284,90 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return hm;
 	},
 	
-	info: function(msg, tit) {
+	/**
+	 * Displays an information message.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] Config options.
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 */
+	info: function(msg, opts) {
+		opts = opts || {};
 		Ext.Msg.show({
-			title: tit || WT.res('info'),
+			title: opts.title || WT.res('info'),
 			message: msg,
-			buttons: Ext.MessageBox.OK,
+			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.INFO
 		});
 	},
 	
-	warn: function(msg, tit) {
+	/**
+	 * Displays a warning message.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] Config options.
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 */
+	warn: function(msg, opts) {
+		opts = opts || {};
 		Ext.Msg.show({
-			title: tit || WT.res('warning'),
+			title: opts.title || WT.res('warning'),
 			message: msg,
-			buttons: Ext.MessageBox.OK,
+			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.WARNING
 		});
 	},
 	
-	error: function(msg, tit) {
+	/**
+	 * Displays an error message.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] Config options.
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 */
+	error: function(msg, opts) {
+		opts = opts || {};
 		Ext.Msg.show({
-			title: tit || WT.res('error'),
+			title: opts.title || WT.res('error'),
 			message: msg,
-			buttons: Ext.MessageBox.OK,
+			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.ERROR
 		});
+	},
+	
+	/**
+	 * Displays a confirm message using classic YES+NO buttons.
+	 * @param {String} msg The message to display.
+	 * @param {Function} cb A callback function which is called after a choice.
+	 * @param {String} cb.buttonId The ID of the button pressed.
+	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
+	 * @param {Object} opts [opts] Config options.
+	 */
+	confirm: function(msg, cb, scope, opts) {
+		opts = opts || {};
+		Ext.Msg.show({
+			title: opts.title || WT.res('confirm'),
+			message: msg,
+			buttons: opts.buttons || Ext.Msg.YESNO,
+			icon: Ext.Msg.QUESTION,
+			fn: function(bid) {
+				Ext.callback(cb, scope, [bid]);
+			}
+		});
+	},
+	
+	/**
+	 * Displays a confirm message using YES+NO+CANCEL buttons.
+	 * @param {String} msg The message to display.
+	 * @param {Function} cb A callback function which is called after a choice.
+	 * @param {String} cb.buttonId The ID of the button pressed.
+	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
+	 * @param {Object} opts [opts] Config options.
+	 */
+	confirmYNC: function(msg, cb, scope, opts) {
+		this.confirm(msg, cb, scope, Ext.apply({
+			buttons: Ext.Msg.YESNOCANCEL
+		}, opts));
 	},
 	
 	wsMsg: function(service, action, config) {
@@ -299,7 +382,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @return {String} the imageUrl
 	 */
 	imageUrl: function(sid, relPath) {
-		return Ext.String.format('resources/{0}/laf/{1}/{2}',sid,WTStartup.laf,relPath);
+		return Ext.String.format('resources/{0}/laf/{1}/{2}',sid,WTS.laf,relPath);
 	},
 	
 	/*

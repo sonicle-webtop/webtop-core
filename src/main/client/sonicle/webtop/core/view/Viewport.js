@@ -36,7 +36,6 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 	extend: 'Ext.container.Viewport',
 	requires: [
 		'WT.view.ViewportC',
-		'WT.model.Theme',
 		'WT.ux.ServiceButton'
 	],
 	controller: Ext.create('WT.view.ViewportC'),
@@ -54,111 +53,80 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			reference: 'header',
 			layout: 'border',
 			height: 40,
-			items: [
-				{
-					xtype: 'toolbar',
-					region: 'west',
-					reference: 'newtb',
-					referenceHolder: true,
+			items: [{
+				xtype: 'toolbar',
+				region: 'west',
+				reference: 'newtb',
+				referenceHolder: true,
+				cls: 'wt-header',
+				border: false,
+				style: {
+					paddingTop: 0,
+					paddingBottom: 0
+				},
+				items: []
+			}, {
+				xtype: 'container',
+				region: 'center',
+				reference: 'svctb',
+				layout: 'card',
+				defaults: {
 					cls: 'wt-header',
 					border: false,
-					style: {
-						paddingTop: 0,
-						paddingBottom: 0
-					},
-					items: [
-						/*{
-						xtype: 'combo',
-						editable: false,
-						store: {
-							model: 'Sonicle.webtop.core.model.Theme',
-							proxy: WT.proxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
-						},
-						valueField: 'id',
-						displayField: 'description',
-						listeners: {
-							scope: this,
-							select: function(c,r,o) {
-								Ext.Ajax.request({
-									url: 'service-request',
-									params: {
-										service: 'com.sonicle.webtop.core',
-										action: 'SetTheme',
-										theme: r[0].get('id')
-									},
-									success: function (r) {
-										window.location.reload();
-									}
-								});
-							}
-						}
-					}*/]
-				}, {
-					xtype: 'container',
-					region: 'center',
-					reference: 'svctb',
-					layout: 'card',
-					defaults: {
-						cls: 'wt-header',
-						border: false,
-						padding: 0
-					}
-				}, {
-					xtype: 'toolbar',
-					region: 'east',
-					reference: 'menutb',
-					cls: 'wt-header',
-					border: false,
-					style: {
-						paddingTop: 0,
-						paddingBottom: 0
-					},
-					items: [{
-							xtype: 'button',
-							glyph: 0xf0c9,
-							menu: {
-								xtype: 'menu',
-								plain: true,
-								width: 150,
-								items: [{
-										xtype: 'buttongroup',
-										columns: 2,
-										defaults: {
-											xtype: 'button',
-											scale: 'large',
-											iconAlign: 'center',
-											width: '100%',
-											handler: 'onMenuButtonClick'
-										},
-										items: [{
-												itemId: 'feedback',
-												tooltip: WT.res('menu.feedback.tip'),
-												glyph: 0xf1d8
-											}, {
-												itemId: 'whatsnew',
-												tooltip: WT.res('menu.whatsnew.tip'),
-												glyph: 0xf0eb
-											}, {
-												itemId: 'options',
-												tooltip: WT.res('menu.options.tip'),
-												glyph: 0xf013
-											}, {
-												xtype: 'container'
-											}, {
-												itemId: 'logout',
-												colspan: 2,
-												scale: 'small',
-												tooltip: WT.res('menu.logout.tip'),
-												glyph: 0xf011
-											}
-										]
-									}
-								]
-							}
-						}
-					]
+					padding: 0
 				}
-			]
+			}, {
+				xtype: 'toolbar',
+				region: 'east',
+				reference: 'menutb',
+				cls: 'wt-header',
+				border: false,
+				style: {
+					paddingTop: 0,
+					paddingBottom: 0
+				},
+				items: [{
+					xtype: 'button',
+					glyph: 0xf0c9,
+					menu: {
+						xtype: 'menu',
+						plain: true,
+						width: 150,
+						items: [{
+							xtype: 'buttongroup',
+							columns: 2,
+							defaults: {
+								xtype: 'button',
+								scale: 'large',
+								iconAlign: 'center',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							},
+							items: [{
+								itemId: 'feedback',
+								tooltip: WT.res('menu.feedback.tip'),
+								glyph: 0xf1d8
+							}, {
+								itemId: 'whatsnew',
+								tooltip: WT.res('menu.whatsnew.tip'),
+								glyph: 0xf0eb
+							}, {
+								itemId: 'options',
+								tooltip: WT.res('menu.options.tip'),
+								glyph: 0xf013
+							}, {
+								xtype: 'container'
+							}, {
+								itemId: 'logout',
+								colspan: 2,
+								scale: 'small',
+								tooltip: WT.res('menu.logout.tip'),
+								glyph: 0xf011
+							}]
+						}]
+					}
+				}]
+			}]
 		}));
 		
 		//var launcher = me.add(Ext.create({
@@ -186,7 +154,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 	createServiceButton: function(desc) {
 		// Defines tooltips
 		var tip = {title: desc.getName()};
-		if(WTStartup.isadmin) { // TODO: gestire tooltip per admin
+		if(WTS.isadmin) { // TODO: gestire tooltip per admin
 			var build = desc.getBuild();
 			Ext.apply(tip, {
 				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
@@ -197,11 +165,10 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			});
 		}
 		
-		var inst = inst = desc.getInstance();
 		return Ext.create('WT.ux.ServiceButton', {
 			scale: 'large',
-			itemId: inst.ID,
-			iconCls: inst.cssIconCls('service-m'),
+			itemId: desc.getId(),
+			iconCls: WT.cssIconCls(desc.getXid(), 'service-m'),
 			tooltip: tip,
 			handler: 'onLauncherButtonClick'
 		});

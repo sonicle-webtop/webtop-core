@@ -31,16 +31,46 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.interfaces;
+package com.sonicle.webtop.core.bol.js;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public interface IServiceSettingManager {
+public class JsWTS {
 	
-	public String getServiceSetting(String serviceId, String key);
-	public String getServiceSetting(String domainId, String serviceId, String key);
-	public boolean setServiceSetting(String serviceId, String key, Object value);
-	public boolean setServiceSetting(String domainId, String serviceId, String key, Object value);
+	public String locale = "";
+	public String theme = "";
+	public String laf = "";
+	public String encAuthTicket="";
+	public String userId="";
+	public String domainId="";
+	public HashMap<String, String> appPaths = new HashMap<>();
+	public ArrayList<String> appRequires = new ArrayList<>();
+	public ArrayList<JsWTS.Service> services = new ArrayList<>();
+	public HashMap<String, Settings> initialSettings = new HashMap<>();
+	
+	public static class Service {
+		public String id;
+		public String xid;
+		public String ns;
+		public String path;
+		public String className;
+		public String optionsClassName;
+		public String name;
+		public String description;
+		public String version;
+		public String build;
+		public String company;
+	}
+	
+	public static class Settings extends HashMap<String, Object> {
+		
+		public Settings() {
+			super();
+		}
+	}
 }

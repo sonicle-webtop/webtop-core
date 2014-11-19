@@ -31,13 +31,54 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.BaseView', {
-	alternateClassName: 'WT.sdk.BaseView',
-	extend: 'Ext.container.Container',
-	mixins: [
-		'WT.sdk.mixin.Waitable'
-	],
+package com.sonicle.webtop.core.sdk;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.commons.lang.WordUtils;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsOptions extends HashMap<String, Object> {
 	
-	layout: 'border',
-	referenceHolder: true
-});
+	public JsOptions() {
+		super();
+	}
+
+	public String getString(String key) {
+		return (String) get(key);
+	}
+	
+	public Boolean getBoolean(String key) {
+		return (Boolean) get(key);
+	}
+	
+	public Integer getInteger(String key) {
+		return (Integer) get(key);
+	}
+	
+	public Float getFloat(String key) {
+		return (Float) get(key);
+	}
+	
+	public Double getDouble(String key) {
+		return (Double) get(key);
+	}
+	
+	public Long getLong(String key) {
+		return (Long) get(key);
+	}
+	
+	public Date getDate(String key) {
+		return (Date) get(key);
+	}
+
+	public void putPrefixed(String prefix, Map<? extends String, ? extends Object> m) {
+		for(Map.Entry<? extends String, ? extends Object> entry : m.entrySet()) {
+			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
+		}
+	}
+}
