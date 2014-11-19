@@ -36,8 +36,6 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTStartup;
-import com.sonicle.webtop.core.sdk.FullEnvironment;
-import com.sonicle.webtop.core.sdk.BasicEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
@@ -51,7 +49,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Queue;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
@@ -280,21 +277,35 @@ public class WebTopSession {
 	}
 	
 	public void setWebSocketManager(WebSocketManager wsm) {
+		logger.debug("setting WebSocketManager on session - {}",wsm);
 		this.wsm=wsm;
 	}
 	
-	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
+	public void sendWebSocketMessage(WebSocketMessage wsmessage) {
+		boolean sent=false;
+		logger.debug("Requested send of WebSocketMessage - wsm={}",wsm);
 		if (this.wsm!=null) {
-			this.wsm.sendMessage(wsmessage);
+			try {
+				this.wsm.sendMessage(wsmessage);
+				sent=true;
+			} catch(IOException exc) {
+				logger.debug("websocket manager error",exc);
+			}
+		}
+		if (!sent) {
+			queueWebSocketMessage(wsmessage);
 		}
 	}
 	
 	public void queueWebSocketMessage(WebSocketMessage wsmessage) {
 		wsqueue.addLast(wsmessage);
+		logger.debug("queued message - count={}",wsqueue.size());
 	}
 	
 	public WebSocketMessage pollWebSocketQueue() {
-		return wsqueue.pollFirst();
+		WebSocketMessage wsm=wsqueue.pollFirst();
+		logger.debug("polling message from queue - {}",wsm);
+		return wsm;
 	}
 	
 	
