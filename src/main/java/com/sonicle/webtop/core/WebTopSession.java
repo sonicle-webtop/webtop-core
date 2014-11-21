@@ -41,12 +41,13 @@ import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import com.sonicle.webtop.core.sdk.WebSocketMessage;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.ws.WebSocketManager;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -78,8 +79,9 @@ public class WebTopSession {
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
-	private WebSocketManager wsm=null;
-	private ArrayDeque<WebSocketMessage> wsqueue=new ArrayDeque<>();
+	private final Object wsmLock = new Object();
+	private WebSocketManager wsManager = null;
+	private final ArrayDeque<ServiceMessage> messageQueue = new ArrayDeque<>();
 	
 	WebTopSession(HttpSession session) {
 		httpSession = session;
@@ -149,6 +151,23 @@ public class WebTopSession {
 		
 		logger.debug("Instantiated {} services", count);
 		initialized = true;
+	}
+	
+	private String generateAuthTicket() {
+		String tk = httpSession.getId();
+		try {
+			tk = Encryption.cipher(tk, profile.getSecret());
+		} catch(Exception ex) {/* Do nothing... */}
+		return tk;
+	}
+	
+	public boolean isAuthTicketValid(String ticket) {
+		try {
+			String sid = Encryption.decipher(ticket, profile.getSecret());
+			return sid.equals(httpSession.getId());
+		} catch(Exception ex) {
+			return false;
+		}
 	}
 	
 	private void addService(Service service) {
@@ -221,9 +240,7 @@ public class WebTopSession {
 		
 		// Built-in settings
 		if(serviceId.equals(CoreManifest.ID)) {
-			String tk = httpSession.getId();
-			try { tk = Encryption.cipher(tk, profile.getSecret()); } catch(Exception ex) {/* Do nothing... */}
-			is.put("authTicket", tk);
+			is.put("authTicket", generateAuthTicket());
 			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
 		} else {
 			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
@@ -283,11 +300,57 @@ public class WebTopSession {
 		return refererURI;
 	}
 	
-	public void setWebSocketManager(WebSocketManager wsm) {
-		logger.debug("setting WebSocketManager on session - {}",wsm);
-		this.wsm=wsm;
+	public void setWebSocketEndpoint(WebSocketManager wsm) {
+		synchronized(wsmLock) {
+			wsManager = wsm;
+			try { wsManager.send(pollMessageQueue()); } catch(IOException ex) { /* Do nothing... */ }
+		}
 	}
 	
+	public void send(ServiceMessage message) {
+		send(Arrays.asList(new ServiceMessage[]{message}));
+	}
+	
+	private void queueMessages(List<ServiceMessage> messages) {
+		synchronized(messageQueue) {
+			for(ServiceMessage message : messages) {
+				logger.debug("quequing message");
+				messageQueue.addLast(message);
+			}
+			logger.debug("queue contains {} messages", messageQueue.size());
+		}
+	}
+	
+	public void send(List<ServiceMessage> messages) {
+		boolean queue = true;
+		synchronized(wsmLock) {
+			if(wsManager != null) {
+				try {
+					wsManager.send(messages);
+					queue = false;
+				} catch(IOException ex) {
+					logger.debug("websocket manager error", ex);
+				}
+			}
+		}
+		if(queue) queueMessages(messages);
+	}
+	
+	public List<ServiceMessage> pollMessageQueue() {
+		ArrayList<ServiceMessage> messages = new ArrayList();
+		synchronized(messageQueue) {
+			logger.debug("polling queue");
+			logger.debug("queue contains {} messages", messageQueue.size());
+			while(!messageQueue.isEmpty()) {
+				messages.add(messageQueue.pollFirst());
+			}
+			logger.debug("queue contains {} messages", messageQueue.size());
+		}
+		return messages;
+	}
+	
+	
+	/*
 	public void sendWebSocketMessage(WebSocketMessage wsmessage) {
 		boolean sent=false;
 		logger.debug("Requested send of WebSocketMessage - wsm={}",wsm);
@@ -300,20 +363,24 @@ public class WebTopSession {
 			}
 		}
 		if (!sent) {
-			queueWebSocketMessage(wsmessage);
+			queueMessage(wsmessage);
 		}
 	}
 	
-	public void queueWebSocketMessage(WebSocketMessage wsmessage) {
-		wsqueue.addLast(wsmessage);
-		logger.debug("queued message - count={}",wsqueue.size());
+	public void queueMessage(WebSocketMessage message) {
+		synchronized(messageQueue) {
+			messageQueue.addLast(message);
+			logger.debug("queued message - count={}", messageQueue.size());
+		}
 	}
 	
 	public WebSocketMessage pollWebSocketQueue() {
-		WebSocketMessage wsm=wsqueue.pollFirst();
+		WebSocketMessage wsm=messageQueue.pollFirst();
 		logger.debug("polling message from queue - {}",wsm);
 		return wsm;
 	}
+	
+	*/
 	
 	/**
 	 * Gets WebTopSession object stored as session's attribute.

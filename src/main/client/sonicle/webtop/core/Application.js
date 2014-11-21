@@ -58,17 +58,19 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Inits webSocket
 		//me.initWebSocket();
-		WT.ComManager.on('message', function(msg) {
-			if (msg && msg.service) {
-				var svc = me.getService(msg.service);
-				if(svc) {
-					svc.websocketMessage(msg);
+		WT.ComManager.on('receive', function(s,messages) {
+			Ext.each(messages, function(msg) {
+				if (msg && msg.service) {
+					var svc = me.getService(msg.service);
+					if(svc) {
+						svc.websocketMessage(msg);
+					} else {
+						console.log('No service for websocket message: '+msg);
+					}
 				} else {
-					console.log('No service for websocket message: '+msg);
+					console.log('Invalid websocket message: '+msg);
 				}
-			} else {
-				console.log('Invalid websocket message: '+msg);
-			}
+			});
 		});
 		WT.ComManager.connect({
 			wsAuthTicket: WTS.servicesOptions[0].authTicket
@@ -148,8 +150,9 @@ Ext.define('Sonicle.webtop.core.Application', {
 		vpc.addServiceCmp(svc);
 		me.currentService = id;
 		if(vpc.activateService(svc)) svc.fireEvent('activate');
-	},
+	}
 	
+	/*
 	//DELETE
 	initWebSocket: function() {
 
@@ -266,7 +269,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 			this.seTask=null;
 		}
 	}
-	
+	*/
 	
 
 });

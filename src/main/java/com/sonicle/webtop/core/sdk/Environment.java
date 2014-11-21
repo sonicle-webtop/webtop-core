@@ -152,8 +152,8 @@ public class Environment implements BasicEnvironment {
 	}
 	
 	@Override
-	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
-		wts.sendWebSocketMessage(wsmessage);
+	public void sendWebSocketMessage(ServiceMessage wsmessage) {
+		wts.send(wsmessage);
 	}
 	
 	public static void addManifestMap(String classname, ServiceManifest manifest) {

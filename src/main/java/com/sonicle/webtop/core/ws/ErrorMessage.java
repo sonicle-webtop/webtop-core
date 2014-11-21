@@ -34,13 +34,13 @@
 package com.sonicle.webtop.core.ws;
 
 import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.sdk.WebSocketMessage;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
  * @author gbulfon
  */
-public class ErrorMessage extends WebSocketMessage {
+public class ErrorMessage extends ServiceMessage {
 	
 	public static final String ACTION_ERROR="error";
 	

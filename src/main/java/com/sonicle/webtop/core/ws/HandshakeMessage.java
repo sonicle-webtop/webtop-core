@@ -33,22 +33,17 @@
  */
 package com.sonicle.webtop.core.ws;
 
-import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
  * @author gbulfon
  */
-public class InformationMessage extends ServiceMessage {
+public class HandshakeMessage extends ServiceMessage {
 	
-	public static final String ACTION_INFO="info";
+	public static final String ACTION_HANDSHAKE = "handshake";
 	
-	String infoDescription;
-	
-	public InformationMessage(String desc) {
-		this.service=CoreManifest.ID;
-		this.action=ACTION_INFO;
-		this.infoDescription=desc;
-	}
+	String userId;
+	String domainId;
+	String encAuthTicket;
 }

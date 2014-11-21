@@ -31,24 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.ws;
-
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author gbulfon
  */
-public class InformationMessage extends ServiceMessage {
+public class ServiceMessage {
+
+	public String service;
+	public String action;
 	
-	public static final String ACTION_INFO="info";
-	
-	String infoDescription;
-	
-	public InformationMessage(String desc) {
-		this.service=CoreManifest.ID;
-		this.action=ACTION_INFO;
-		this.infoDescription=desc;
+	/*
+	public String toJson() {
+		return JsonResult.gson.toJson(this);
 	}
+	*/
 }

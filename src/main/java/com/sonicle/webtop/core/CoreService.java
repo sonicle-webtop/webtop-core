@@ -48,7 +48,7 @@ import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.JsOptions;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.sdk.WebSocketMessage;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.text.MessageFormat;
@@ -356,13 +356,28 @@ public class CoreService extends Service {
 	}
 	
 	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebSocketMessage wsm=getFullEnv().getSession().pollWebSocketQueue();
+		FullEnvironment env = getFullEnv();
+		List<ServiceMessage> messages = new ArrayList();
+		
+		try {
+			messages = env.getSession().pollMessageQueue();
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action ServerEvents", ex);
+		} finally {
+			String raw = JsonResult.gson.toJson(messages);
+			new JsonResult(raw).printTo(out);
+		}
+		
+		/*
+		WebSocketMessage wsm=getFullEnv().getSession().pollMessageQueue();
 		if (wsm!=null) {
 			JsonResult jsr=new JsonResult(wsm);
 			jsr.printTo(out);
 		} else {
 			new JsonResult().printTo(out);
 		}
+		*/
 	}
 	
 }

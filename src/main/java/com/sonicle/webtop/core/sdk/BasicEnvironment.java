@@ -58,5 +58,5 @@ public interface BasicEnvironment {
     public CoreUserSettings getCoreUserSettings();
 	public String getContentType(String extension);
 	public String getExtension(String contentType);
-	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException;
+	public void sendWebSocketMessage(ServiceMessage wsmessage) throws IOException;
 }

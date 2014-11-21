@@ -37,10 +37,10 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 	mixins: [
 		'Ext.mixin.Observable'
 	],
-	
 	config: {
 		wsAuthTicket: '',
 		wsReconnectInterval: 10000,
+		wsKeepAliveInterval: 60000,
 		seInterval: 30000
 	},
 	
@@ -57,18 +57,23 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		me.initConfig(cfg);
 		
 		me.mode = me.MODE_UNKNOWN;
-		try {
+		if(me.isWSSupported) {
 			me.initWebSocket();
-		} catch(e) {
-			console.log('ws not available');
+		} else {
+			console.log('WebSockets are not supported');
+			me.initServerEvents();
 		}
+	},
+	
+	isWSSupported: function() {
+		return ("WebSocket" in window);
 	},
 	
 	initWebSocket: function() {
 		var me = this;
 		
 		me.ws = Ext.create('Ext.ux.WebSocket', {
-			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"xwsmanager",
+			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
 			autoReconnect: true ,
 			autoReconnectInterval: 10000,
 			listeners: {
@@ -95,7 +100,7 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 				},
 				message: function(ws, msg) {
 					//console.log('ws.message');
-					me.handleMessage(msg);
+					me.handleMessages(msg);
 				},
 				error: function(ws, err) {
 					console.log('ws.error');
@@ -110,44 +115,6 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 				}
 			}
 		});
-		
-		
-		/*
-		var websocket = Ext.create ('Ext.ux.WebSocket', {
-			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"xwsmanager",
-			autoReconnect: true ,
-			autoReconnectInterval: 10000,
-			listeners: {
-				open: function(ws) {
-					var me=WT.getApp();
-					var tk = WTS.servicesOptions[0].authTicket;
-					console.log('Sending ticket to websocket: '+tk);
-					ws.send(WT.wsMsg("com.sonicle.webtop.core","ticket",{
-						userId: WTS.userId,
-						domainId: WTS.domainId,
-						encAuthTicket: tk
-					}));
-					//websocket is working
-					//kill any server events task and run http session keep alive
-					me.killServerEvents();
-					me.runKeepAliveTask();
-				} ,
-				close: function(ws) {
-					console.log('The websocket is closed!');
-				} ,
-				error: function(ws, error) {
-					var me=WT.getApp();
-					//websocket is not working
-					//kill any keep alive task and run http server events instead
-					me.killKeepAliveTask();
-					me.runServerEvents();
-				} ,
-				message: function(ws, msg) {
-					WT.getApp().handleWSMessage(msg);
-				}
-			}
-		});
-		*/
 	},
 	
 	runKeepAliveTask: function() {
@@ -161,7 +128,7 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 						method: 'GET'
 					});
 				},
-				interval: me.getKeepAliveInterval()
+				interval: me.getWsKeepAliveInterval()
 			});
 		}
 	},
@@ -177,13 +144,15 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 	initServerEvents: function() {
 		var me = this;
 		if(!Ext.isDefined(me.seTask)) {
+			me.mode = me.MODE_SE;
+			me.shutdownKeepAliveTask();
 			me.seTask = Ext.TaskManager.start({
 				run: function () {
 					console.log('calling ServerEvents');
 					WT.ajaxReq(WT.ID, 'ServerEvents', {
 						callback: function(success, o) {
 							if(success) {
-								if(o.data) me.handleMessage(o.data);
+								if(o.data) me.handleMessages(o.data);
 							}
 						}
 					});
@@ -201,8 +170,9 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		}
 	},
 	
-	handleMessage: function(msg) {
-		this.fireEvent('message', this, Ext.JSON.decode(msg, true));
+	handleMessages: function(raw) {
+		var obj = Ext.JSON.decode(raw, true);
+		if(Ext.isArray(obj)) this.fireEvent('receive', this, obj);
 	},
 	
 	buildMsg: function(service, action, config) {

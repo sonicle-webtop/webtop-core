@@ -33,18 +33,14 @@
  */
 package com.sonicle.webtop.core.ws;
 
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.Service;
-import com.sonicle.webtop.core.sdk.WebSocketMessage;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.io.IOException;
-import java.sql.Connection;
+import java.util.Arrays;
+import java.util.List;
 import javax.servlet.http.HttpSession;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnMessage;
@@ -59,44 +55,77 @@ import org.slf4j.LoggerFactory;
  * @author gbulfon
  */
 		
-@ServerEndpoint(value = "/wsmanager", configurator=WebSocketManagerConfigurator.class)
+@ServerEndpoint(value = "/wsmanager", configurator = WebSocketManagerConfigurator.class)
 public class WebSocketManager {
 	
 	public final static Logger logger = (Logger) LoggerFactory.getLogger(WebSocketManager.class);
 	
     private Session wsSession;
-    private HttpSession httpSession;
 	private WebTopSession wts;
-	private boolean ticketValidated=false;
+	private boolean handshake = false;
+	
+	private HttpSession getHttpSession(EndpointConfig config) {
+		return (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+	}
 	
 	@OnOpen
     public void open(Session session, EndpointConfig config) {
-        this.wsSession = session;
-        this.httpSession = (HttpSession) config.getUserProperties()
-                                           .get(HttpSession.class.getName());
-		wts=WebTopSession.get(this.httpSession);
-		wts.setWebSocketManager(this);
+        wsSession = session;
+		wts = WebTopSession.get(getHttpSession(config));
+		wts.setWebSocketEndpoint(this);
     }
+	
+	private boolean isHandshake(ServiceMessage sm) {
+		return (sm.service.equals(CoreManifest.ID) && sm.action.equals(HandshakeMessage.ACTION_HANDSHAKE));
+	}
 	
 	@OnMessage
 	public void gotMessage(String json) {
+		// HANDSHAKE IS REALLY NEEDED????????????????????????
+		/*
+		try {
+			ServiceMessage sm = JsonResult.gson.fromJson(json, ServiceMessage.class);
+			if(!handshake && isHandshake(sm)) {
+				HandshakeMessage hsm = JsonResult.gson.fromJson(json, HandshakeMessage.class);
+				if(wts.isAuthTicketValid(hsm.encAuthTicket)) {
+					
+				} else {
+					
+				}
+			} else if(handshake) {
+				
+			} else {
+				
+			}
+		} catch() {
+			
+		}
+		*/
+		
+		
+		/*
 		try {
 			logger.debug("gotMessage : {}",json);
 			if (wsSession!=null && wsSession.isOpen()) {
-				WebSocketMessage wsm=JsonResult.gson.fromJson(json, WebSocketMessage.class);
+				ServiceMessage wsm=JsonResult.gson.fromJson(json, ServiceMessage.class);
 				//core message
 				if (wsm.service.equals(CoreManifest.ID)) {
 					switch(wsm.action) {
-						case TicketMessage.ACTION_TICKET:
-							TicketMessage tm=JsonResult.gson.fromJson(json, TicketMessage.class);
-							ticketValidated=isTicketValid(tm);
-							if (!ticketValidated) sendError("The authorizazion ticket is not valid!");
-							else sendInformation("The authorization ticket has been accepted!");
+						case HandshakeMessage.ACTION_HANDSHAKE:
+							HandshakeMessage tm=JsonResult.gson.fromJson(json, HandshakeMessage.class);
+							boolean ticketValidated=wts.isAuthTicketValid(tm.encAuthTicket);
+							if (!ticketValidated) {
+								handshake = false;
+								sendError("The authorizazion ticket is not valid!");
+							} else {
+								handshake = true;
+								sendInformation("The authorization ticket has been accepted!");
+							}
 							break;
 					}
 				//service message
 				} else {
-					if (ticketValidated) {
+					if (handshake) {
 						Service wtservice=wts.getServiceById(wsm.service);
 						logger.debug("Found service object {}. Sending json :\n",wtservice.getClass(),json);
 					} else {
@@ -112,44 +141,24 @@ public class WebSocketManager {
 				// Ignore
 			}
 		}
-	}	
-	
-	private boolean isTicketValid(TicketMessage tm) {
-		boolean isValid=false;
-		Connection con=null;
-		try {
-			con=WebTopApp.getInstance().getConnectionManager().getConnection();
-			OUser ouser=UserDAO.getInstance().selectByDomainUser(con, tm.domainId, tm.userId);
-			if (ouser!=null) {
-				String sid=Encryption.decipher(tm.encAuthTicket, ouser.getSecret());
-				if (httpSession.getId().equals(sid)) {
-					isValid=true;
-				}
-			}
-			
-		} catch(Exception exc) {
-			logger.error("Error during ticket management for {}@{}",tm.userId,tm.domainId,exc);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return isValid;
+		*/
 	}
 	
-	public void sendMessage(WebSocketMessage wsm) throws IOException {
-		if (wsSession!=null && wsSession.isOpen()) { 
-			logger.debug("sending message through websocket");
-			wsSession.getBasicRemote().sendText(wsm.toJson());
+	public void send(List<ServiceMessage> messages) throws IOException {
+		if ((wsSession != null) && wsSession.isOpen()) {
+			String raw = JsonResult.gson.toJson(messages);
+			logger.debug("ws message: {}", raw);
+			wsSession.getBasicRemote().sendText(raw);
 		} else {
 			throw new IOException("websocket is not open!");
 		}
 	} 
 	
-	public void sendError(String msg) throws IOException {
-		sendMessage(new ErrorMessage(msg));
+	public void sendError(String message) throws IOException {
+		send(Arrays.asList(new ServiceMessage[]{new ErrorMessage(message)}));
 	}
 	
-	public void sendInformation(String msg) throws IOException {
-		sendMessage(new InformationMessage(msg));
+	public void sendInformation(String message) throws IOException {
+		send(Arrays.asList(new ServiceMessage[]{new InformationMessage(message)}));
 	}
-	
 }
