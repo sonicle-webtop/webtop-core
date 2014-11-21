@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.

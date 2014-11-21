@@ -250,18 +250,6 @@ public class CoreService extends Service {
 		}
 	}
 	
-	public void processSetTheme(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			String theme = ServletUtils.getStringParameter(request, "theme", true);
-			getFullEnv().getSession().setTheme(theme);
-			new JsonResult().printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action SetTheme", ex);
-			new JsonResult(false).printTo(out);
-		}
-	}
-	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
