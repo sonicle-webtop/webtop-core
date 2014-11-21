@@ -6,6 +6,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocket',
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Log',
+		'Sonicle.webtop.core.ComManager',
 		'Sonicle.webtop.core.ServiceDescriptor'
 	].concat(WTS.appRequires || []),
 	views: [
@@ -37,6 +38,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var desc = null;
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WT.ServiceDescriptor', {
+				index: obj.index,
 				id: obj.id,
 				xid: obj.xid,
 				ns: obj.ns,
@@ -55,7 +57,22 @@ Ext.define('Sonicle.webtop.core.Application', {
 		}, me);
 		
 		// Inits webSocket
-		me.initWebSocket();
+		//me.initWebSocket();
+		WT.ComManager.on('message', function(msg) {
+			if (msg && msg.service) {
+				var svc = me.getService(msg.service);
+				if(svc) {
+					svc.websocketMessage(msg);
+				} else {
+					console.log('No service for websocket message: '+msg);
+				}
+			} else {
+				console.log('Invalid websocket message: '+msg);
+			}
+		});
+		WT.ComManager.connect({
+			wsAuthTicket: WTS.servicesOptions[0].authTicket
+		});
 	},
 	
 	launch: function() {
@@ -67,7 +84,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Inits loaded services and activate the default one
 		var count = 0, first = null;
-		me.services.each(function(desc) {
+		Ext.each(me.getDescriptors(), function(desc) {
 			if(desc.initService()) {
 				count++;
 				var svc = desc.getInstance();
@@ -79,9 +96,34 @@ Ext.define('Sonicle.webtop.core.Application', {
 		if(first) me.activateService(first);
 		
 		// If necessary, show whatsnew
-		if(WT.getInitialSetting('isWhatsnewNeeded')) {
+		if(WT.getServiceOption('isWhatsnewNeeded')) {
 			vc.buildWhatsnewWnd(false);
 		}
+	},
+	
+	/**
+	 * Returns loaded service descriptors.
+	 * @param {Boolean} [skip] False to include core descriptor. Default to true.
+	 * @returns {WT.ServiceDescriptor[]}
+	 */
+	getDescriptors: function(skip) {
+		if(!Ext.isDefined(skip)) skip = true;
+		var ret = [];
+		this.services.each(function(desc) {
+			if(!skip || (desc.getIndex() !== 0)) { // Skip core descriptor at index 0
+				Ext.Array.push(ret, desc);
+			}
+		});
+		return ret;
+	},
+	
+	/**
+	 * Returns a service descriptor.
+	 * @param {String} id The service ID.
+	 * @returns {WT.ServiceDescriptor} The instance or undefined if not found. 
+	 */
+	getDescriptor: function(id) {
+		return this.services.get(id);
 	},
 	
 	/**
@@ -92,15 +134,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 	getService: function(id) {
 		var desc = this.getDescriptor(id);
 		return (desc) ? desc.getInstance() : null;
-	},
-	
-	/**
-	 * Returns a service descriptor.
-	 * @param {String} id The service ID.
-	 * @returns {WT.ServiceDescriptor} The instance or undefined if not found. 
-	 */
-	getDescriptor: function(id) {
-		return this.services.get(id);
 	},
 	
 	/**
@@ -117,6 +150,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		if(vpc.activateService(svc)) svc.fireEvent('activate');
 	},
 	
+	//DELETE
 	initWebSocket: function() {
 
 		var websocket = Ext.create ('Ext.ux.WebSocket', {
@@ -126,11 +160,12 @@ Ext.define('Sonicle.webtop.core.Application', {
 			listeners: {
 				open: function(ws) {
 					var me=WT.getApp();
-					console.log('Sending ticket to websocket: '+WTS.encAuthTicket);
+					var tk = WTS.servicesOptions[0].authTicket;
+					console.log('Sending ticket to websocket: '+tk);
 					ws.send(WT.wsMsg("com.sonicle.webtop.core","ticket",{
 						userId: WTS.userId,
 						domainId: WTS.domainId,
-						encAuthTicket: WTS.encAuthTicket
+						encAuthTicket: tk
 					}));
 					//websocket is working
 					//kill any server events task and run http session keep alive
@@ -155,6 +190,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 	},
 	
+	//DELETE
 	handleWSMessage: function(msg) {
 		var obj=Ext.JSON.decode(msg,true);
 		if (obj && obj.service) {
@@ -169,6 +205,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		}
 	},
 	
+	//DELETE
 	runKeepAliveTask: function() {
 		if (!this.kaTask) {
 			var task = { 
@@ -186,6 +223,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		}
 	},
 	
+	//DELETE
 	killKeepAliveTask: function() {
 		if (this.kaTask) {
 			console.log("Killing keep alive task");
@@ -194,6 +232,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		}
 	},
 	
+	//DELETE
 	runServerEvents: function() {
 		if (!this.seTask) {
 			var task = { 
@@ -219,6 +258,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		}
 	},
 	
+	//DELETE
 	killServerEventsTask: function() {
 		if (this.seTask) {
 			console.log("Killing server events task");

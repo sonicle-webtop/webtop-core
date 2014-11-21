@@ -34,46 +34,117 @@
 Ext.define('Sonicle.webtop.core.view.Options', {
 	alternateClassName: 'WT.view.Options',
 	extend: 'WT.sdk.BaseView',
-	requires: ['WT.view.CoreOptions'],
+	requires: [
+		'WT.view.CoreOptions',
+		'WT.sdk.OptionTab',
+		'WT.sdk.OptionTabSection'
+	],
 	
 	initComponent: function() {
 		var me = this;
-		/*
 		Ext.apply(me, {
 			items: [{
+				xtype: 'toolbar',
+				region: 'north',
+				items: ['->', {
+					xtype: 'combo',
+					reference: 'users',
+					editable: false,
+					store: {
+						autoLoad: true,
+						model: 'WT.model.Simple',
+						proxy: WT.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
+					},
+					valueField: 'id',
+					displayField: 'description',
+					width: 300,
+					listeners: {
+						change: {
+							fn: function(s,nv) {
+								me.updateGui(nv);
+							}
+						}
+					},
+					value: WTS.principal
+				}]
+			}, {
 				xtype: 'tabpanel',
+				region: 'center',
 				reference: 'optstab',
 				tabPosition: 'left',
-				tabRotation: 'none',
-				defaults: {
-					bodyPadding: 5,
-					border: false,
-					autoScroll: true,
-					closable: false
-				},
-				items: []
+				tabRotation: 0,
+				maxWidth: 650,
+				items: [],
+				listeners: {
+					tabchange: {
+						fn: function(s,tab) {
+							var id = me.lookupReference('users').getValue();
+							tab.loadForm(id);
+						}
+					}
+				}
 			}]
 		});
-		*/
-		me.callParent(arguments);
-		
-		var tab = me.add({
-			xtype: 'tabpanel',
-			region: 'center',
-			reference: 'optstab',
-			tabPosition: 'left',
-			tabRotation: 0,
-			maxWidth: 650,
-			items: [
-				Ext.create('WT.view.CoreOptions', {
-					itemId: WT.ID,
-					title: 'WebTop',
-					iconCls: WT.cssIconCls(WT.XID, 'service-s')
-				})
-			]
+		me.callParent(arguments);		
+		this.on('afterrender', this.onAfterRender, this);
+	},
+	
+	onAfterRender: function() {
+		var id = 'admin@*';
+		id = 'matteo.albinola@sonicleldap';
+		this.updateGui(id);
+	},
+	
+	updateGui: function(id) {
+		var me = this;
+		var data = [];
+		me.wait();
+		if(id === WTS.principal) {
+			var isAdmin = WTS.principal === 'admin@*';
+			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
+				if(isAdmin && desc.getIndex() > 0) return false;
+				if(!Ext.isEmpty(desc.getOptionsClassName())) {
+					Ext.Array.push(data, {
+						id: desc.getId(),
+						xid: desc.getXid(),
+						name: desc.getName(),
+						className: desc.getOptionsClassName()
+					});
+				}
+			});
+			me.createTabs(data);
+			me.unwait();
+			
+		} else {
+			WT.ajaxReq(WT.ID, 'GetOptionsServices', {
+				params: {id: id},
+				callback: function(success, json) {
+					if(success) me.createTabs(json.data);
+					me.unwait();
+				}
+			});
+		}
+	},
+	
+	createTabs: function(data) {
+		var tab = this.lookupReference('optstab');
+		tab.removeAll(true);
+		Ext.each(data, function(itm) {
+			tab.add(Ext.create(itm.className, {
+				itemId: itm.id,
+				title: itm.name,
+				iconCls: WT.cssIconCls(itm.xid, 'service-s')
+			}));
 		});
-		
-		WT.getApp().services.each(function(desc) {
+		tab.setActiveTab(0);
+	}
+	
+	
+	
+	
+	/*
+	createTabs: function() {
+		Ext.each(WT.getApp().getDescriptors(false), function(desc) {
 			var cn = desc.getOptionsClassName();
 			if(!Ext.isEmpty(cn)) {
 				tab.add(Ext.create(cn, {
@@ -84,4 +155,5 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 			}
 		});
 	}
+	*/
 });

@@ -97,23 +97,16 @@ public class Start extends HttpServlet {
 			vars.put("rtl", String.valueOf(cus.getRightToLeft()));
 			vars.put("debug", ""+extdebug);
 			
-			
-			String ticket=request.getSession().getId();
-			WebTopApp.logger.trace("Generated ticket = {}",ticket);
-			String encTicket=Encryption.cipher(ticket, up.getSecret());
-			WebTopApp.logger.trace("Encoded ticket = {}",encTicket);
-			
 			// Startup variables
 			JsWTS jswts = new JsWTS();
+			jswts.principal = up.getId();
 			jswts.domainId = up.getDomainId();
 			jswts.userId = up.getUserId();
 			jswts.locale = locale.toString();
 			jswts.theme = theme;
 			jswts.laf = lookAndFeel;
-			jswts.encAuthTicket = encTicket;
 			for(String serviceId : wts.getServices()) {
-				manager.fillForService(jswts, serviceId, locale);
-				jswts.initialSettings.put(serviceId, wts.getInitialSettings(serviceId));
+				wts.fillStartupForService(jswts, serviceId);
 			}
 			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			

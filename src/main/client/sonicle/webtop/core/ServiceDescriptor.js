@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	],
 	
 	config: {
+		index: null,
 		id: null,
 		xid: null,
 		ns: null,
@@ -61,14 +62,15 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	
 	getInstance: function() {
 		var me = this;
+		if(me.getId() === WT.ID) return null; // Avoid core instantiation!
 		if(!me.instance) {
 			var cn = me.getClassName();
 			if(!Ext.isString(cn)) return null;
 			try {
-				me.instance = Ext.create(cn, 
-					me.getId(),
-					me.getXid()
-				);
+				me.instance = Ext.create(cn, {
+					ID: me.getId(),
+					XID: me.getXid()
+				});
 			} catch(e) {
 				WT.Log.error('Unable to instantiate service class [{0}]', cn);
 				WT.Log.exception(e);
@@ -82,10 +84,14 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		var svc = this.getInstance();
 		if(svc === null) return false;
 		
+		// Loads startup options as first options
+		var data = WTS.servicesOptions[this.getIndex()];
+		svc.options = Ext.create(svc.getOptionsModel(), data);
+		
+		// Calls initialization method
 		try {
 			svc.init.call(svc);
 			return true;
-			
 		} catch(e) {
 			WT.Log.error('Error while calling init() method');
 			WT.Log.exception(e);

@@ -1,6 +1,6 @@
 Ext.define('Sonicle.webtop.core.WT', {
-	singleton: true,
 	alternateClassName: 'WT',
+	singleton: true,
 	
 	/**
 	 * @property
@@ -50,17 +50,22 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Gets the initial setting value bound to key.
+	 * @param {String} [id] The service ID.
 	 * @param {String} key The key.
 	 * @return {Mixed} Setting value.
 	 */
-	getInitialSetting: function(key) {
-		var is = WTS.initialSettings[this.ID] || {};
-		return is[key];
+	getServiceOption: function(id, key) {
+		if(arguments.length === 1) {
+			key = id;
+			id = WT.ID;
+		}
+		var i = this.getApp().getDescriptor(id).getIndex();
+		return (WTS.servicesOptions[i] || {})[key];
 	},
 	
 	/**
 	 * Returns a string resource.
-	 * @param {String} id The service ID.
+	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
 	 * @returns {String} The value.
 	 */
@@ -370,6 +375,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}, opts));
 	},
 	
+	//DELETE
 	wsMsg: function(service, action, config) {
 		return Ext.JSON.encode(Ext.apply(config||{},{ service: service, action: action }));
 	},

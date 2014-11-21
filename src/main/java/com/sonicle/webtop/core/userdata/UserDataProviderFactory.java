@@ -47,7 +47,7 @@ public class UserDataProviderFactory {
 	
 	private static final HashMap<String, UserDataProviderBase> instances = new HashMap<>();
 	
-	public static synchronized UserDataProviderBase getProvider(String providerName, IConnectionProvider connectionManager, IServiceSettingReader settingsManager) throws WTException {
+	public static synchronized UserDataProviderBase getProvider(String providerName, IConnectionProvider conp, IServiceSettingReader setm) throws WTException {
 		String className = null;
 		
 		try {
@@ -62,7 +62,7 @@ public class UserDataProviderFactory {
 			if(!instances.containsKey(className)) {
 				Class clazz = Class.forName(className);
 				Constructor<UserDataProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
-				instances.put(className, constructor.newInstance(connectionManager, settingsManager));
+				instances.put(className, constructor.newInstance(conp, setm));
 			}
 			return instances.get(className);
 		} catch (Exception ex) {

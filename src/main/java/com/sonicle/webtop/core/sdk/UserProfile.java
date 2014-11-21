@@ -145,6 +145,10 @@ public final class UserProfile {
 		byte[] encodedKey = new Base32().encode(secretKey);
 		return new String(encodedKey);
 	}
+	
+	public boolean isSystemAdmin() {
+		return UserProfile.isSystemAdmin(getId());
+	}
     
     public boolean hasDocumentManagement() {
         // TODO: setting for document management
@@ -175,5 +179,9 @@ public final class UserProfile {
 
 	public Principal getPrincipal() {
 		return principal;
+	}
+	
+	public static boolean isSystemAdmin(String id) {
+		return id.equals("admin@*");
 	}
 }

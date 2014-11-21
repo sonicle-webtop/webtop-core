@@ -56,20 +56,11 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 		me.callParent(arguments);
 		
 		me.add({
-			xtype: 'button',
-			text: 'Load',
-			handler: 'onLoadClick'
-		});
-		me.add({
-			xtype: 'button',
-			text: 'Save',
-			handler: 'onSaveClick'
-		});
-		me.add({
-			xtype: 'panel',
-			layout: 'form',
+			xtype: 'wtopttabsection',
+			//xtype: 'panel',
+			//layout: 'form',
 			title: WT.res('opts.main.tit'),
-			titleCollapse: true,
+			//titleCollapse: true,
 			items: [{
 				xtype: 'textfield',
 				name: 'id',
@@ -109,22 +100,6 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 				valueField: 'id',
 				displayField: 'description',
 				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
-				/*
-				listeners: {
-					select: function(c,r,o) {
-						return;
-						WT.ajaxReq('com.sonicle.webtop.core', 'SetTheme', {
-							params: {
-								theme: r[0].get('id')
-							},
-							callback: function(success, o) {
-								if(success) window.location.reload();
-							}
-						});
-					},
-					scope: this
-				},
-				*/
 				listeners: {
 					blur: 'onBlurAutoSave'
 				},

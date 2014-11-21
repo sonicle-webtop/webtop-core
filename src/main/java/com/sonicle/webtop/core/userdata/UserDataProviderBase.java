@@ -47,14 +47,15 @@ import org.slf4j.LoggerFactory;
 public abstract class UserDataProviderBase {
 	
 	protected static final Logger logger = (Logger) LoggerFactory.getLogger(UserDataProviderBase.class);
-	protected IConnectionProvider connectionManager = null;
-	protected IServiceSettingReader settingManager = null;
+	protected IConnectionProvider conp = null;
+	protected IServiceSettingReader setm = null;
 	
-	public UserDataProviderBase(IConnectionProvider connectionManager, IServiceSettingReader settingManager) {
-		this.connectionManager = connectionManager;
-		this.settingManager = settingManager;
+	public UserDataProviderBase(IConnectionProvider conp, IServiceSettingReader setm) {
+		this.conp = conp;
+		this.setm = setm;
 	}
 	
+	public abstract boolean canWrite();
 	public abstract UserData getUserData(String domainId, String userId);
 	public abstract boolean setUserData(String domainId, String userId, UserData userData);
 }

@@ -51,13 +51,18 @@ public class WebTopUserDataProvider extends UserDataProviderBase {
 	public WebTopUserDataProvider(IConnectionProvider connectionManager, IServiceSettingReader settingsManager) {
 		super(connectionManager, settingsManager);
 	}
+	
+	@Override
+	public boolean canWrite() {
+		return true;
+	}
 
 	@Override
 	public UserData getUserData(String domainId, String userId) {
 		Connection con = null;
 		
 		try {
-			con = connectionManager.getConnection();
+			con = conp.getConnection();
 			UserDataDAO uddao = UserDataDAO.getInstance();
 			return toUserData(uddao.selectByDomainUser(con, domainId, userId));
 
@@ -74,7 +79,7 @@ public class WebTopUserDataProvider extends UserDataProviderBase {
 		Connection con = null;
 		
 		try {
-			con = connectionManager.getConnection();
+			con = conp.getConnection();
 			UserDataDAO uddao = UserDataDAO.getInstance();
 			return (uddao.update(con, fromUserData(domainId, userId, userData)) > 0);
 

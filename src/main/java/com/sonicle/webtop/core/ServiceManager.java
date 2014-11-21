@@ -156,7 +156,7 @@ public class ServiceManager {
 			return null;
 		}
 		
-		instance.initialize(wta.getConnectionManager(), wta.getSettingsManager(), serviceId, domainId, userId);
+		instance.initialize(wta, serviceId, domainId, userId);
 		return instance;
 	}
 	
@@ -433,9 +433,11 @@ public class ServiceManager {
 					new ServiceVersion(elService.getString("version")),
 					elService.getString("buildDate"),
 					elService.getString("serviceClassName"),
+					elService.getString("serviceJsClassName"),
 					elService.getString("publicServiceClassName"),
 					elService.getString("deamonServiceClassName"),
 					elService.getString("optionsClassName"),
+					elService.getString("optionsJsClassName"),
 					elService.getBoolean("hidden", false),
 					elService.getString("company"),
 					elService.getString("companyEmail"),

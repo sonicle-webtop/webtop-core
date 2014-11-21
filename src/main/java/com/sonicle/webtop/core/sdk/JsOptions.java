@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 
 /**
@@ -75,10 +76,28 @@ public class JsOptions extends HashMap<String, Object> {
 	public Date getDate(String key) {
 		return (Date) get(key);
 	}
-
+	
+	/*
 	public void putPrefixed(String prefix, Map<? extends String, ? extends Object> m) {
 		for(Map.Entry<? extends String, ? extends Object> entry : m.entrySet()) {
 			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
 		}
+	}
+	*/
+	
+	public void putPrefixed(String prefix, Map<String, Object> m) {
+		for(Map.Entry<String, Object> entry : m.entrySet()) {
+			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
+		}
+	}
+	
+	public Map<String, Object> getPrefixed(String prefix) {
+		JsOptions map = new JsOptions();
+		for(Map.Entry<String, Object> entry : entrySet()) {
+			if(StringUtils.startsWith(entry.getKey(), prefix)) {
+				map.put(WordUtils.uncapitalize(StringUtils.removeStart(entry.getKey(), prefix)), entry.getValue());
+			}
+		}
+		return map;
 	}
 }

@@ -33,11 +33,16 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.Service', {
 	alternateClassName: 'WT.sdk.Service',
+	requires: [
+		'WT.sdk.model.ServiceOptions'
+	],
 	mixins: [
 		'Ext.mixin.Observable',
-		'WT.sdk.mixin.ActionStorer'
+		'WT.mixin.ActionStorer'
 	],
-	
+	config: {
+		optionsModel: 'WT.sdk.model.ServiceOptions'
+	},
 	statics: {
 		NEW_ACTION_GROUP: 'new'
 	},
@@ -45,6 +50,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	ID: null,
 	XID: null,
 	strings: null,
+	options: null,
 	tbcmp: null,
 	toolcmp: null,
 	maincmp: null,
@@ -62,23 +68,29 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Fires after the Service has been activated.
 	 */
 	
-	constructor: function(id, xid) {
+	constructor: function(cfg) {
 		var me = this;
-		me.ID = id;
-		me.XID = xid;
+		me.ID = cfg.ID;
+		me.XID = cfg.XID;
 		me.wsactions = {};
 		me.wsscopes = {};
+		me.initConfig(cfg);
 		me.callParent(arguments);
 	},
 	
-	/**
-	 * Gets the initial setting value bound to key.
-	 * @param {String} key The key.
-	 * @return {Mixed} Setting value.
-	 */
-	getInitialSetting: function(key) {
-		var is = WTS.initialSettings[this.ID] || {};
-		return is[key];
+	getOption: function(key) {
+		return this.options.get(key);
+		//return WT.getServiceOption(this.ID, key);
+	},
+	
+	setOptions: function(opts) {
+		var me = this;
+		opts = opts || {};
+		me.options.beginEdit();
+		Ext.iterate(opts, function(k, v) {
+			me.options.set(k, v);
+		});
+		me.options.endEdit();
 	},
 	
 	/**

@@ -42,18 +42,19 @@ import java.util.HashMap;
  */
 public class JsWTS {
 	
-	public String locale = "";
-	public String theme = "";
-	public String laf = "";
-	public String encAuthTicket="";
-	public String userId="";
-	public String domainId="";
+	public String locale;
+	public String theme;
+	public String laf;
+	public String principal;
+	public String userId;
+	public String domainId;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();
 	public ArrayList<JsWTS.Service> services = new ArrayList<>();
-	public HashMap<String, Settings> initialSettings = new HashMap<>();
+	public ArrayList<Settings> servicesOptions = new ArrayList<>();
 	
 	public static class Service {
+		public int index;
 		public String id;
 		public String xid;
 		public String ns;

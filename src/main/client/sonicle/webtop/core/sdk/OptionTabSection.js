@@ -31,19 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.ServiceManifest', {
-	alternateClassName: 'WT.sdk.ServiceManifest',
+Ext.define('Sonicle.webtop.core.sdk.OptionTabSection', {
+	alternateClassName: 'WT.sdk.OptionTabSection',
+	extend: 'Ext.panel.Panel',
+	alias: 'widget.wtopttabsection',
 	
-	id: null,
-	description: null,
-	version: null,
-	build: null,
-	company: null,
-	iconCls: null,
-	className: null,
-	
-	constructor: function(cfg) {
-		var me = this;
-		me.callParent(arguments);
-	}
+	layout: 'form',
+	collapsible: true,
+	collapsed: true,
+	titleCollapse: true,
+	margin: '5 25 0 5',
+	labelWidth: 220
 });

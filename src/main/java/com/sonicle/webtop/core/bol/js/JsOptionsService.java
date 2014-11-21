@@ -31,53 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.FormView', {
-	alternateClassName: 'WT.sdk.FormView',
-	extend: 'Ext.form.Panel',
-	mixins: [
-		'WT.mixin.Waitable',
-		'WT.mixin.Submissible'
-	],
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsOptionsService {
 	
-	layout: 'border',
+	public String id;
+	public String xid;
+	public String name;
+	public String className;
 	
-	close: function() {
-		this.ownerCt.close();
+	public JsOptionsService(String id, String xid, String name, String className) {
+		this.id = id;
+		this.xid = xid;
+		this.name = name;
+		this.className = className;
 	}
-	
-	/*
-	initComponent: function() {
-		var me = this;
-		
-		me.on('added', function(s,ct) {
-			me.initCt(ct);
-		}, me, {single: true});
-		me.on('removed', function(s,ct) {
-			me.cleanupCt(ct);
-		}, me, {single: true});
-	},
-	*/
-	
-	/*
-	initCt: function(ct) {
-		var me = this;
-		
-		if(me.ctInited) return;
-		if(ct.isXType('window')) {
-			// In this case panel's header is not necessary.
-			// It hasn't been rendered yet, we can remove it easly...
-			//this.elements = this.elements.replace(',header','');
-			//this.header = false;
-			// Apply as config, the window is not rendered
-			//ct.title = this.title;
-			//ct.iconCls = this.iconCls;
-			
-			ct.on('show', this.onWndShow, this);
-			ct.on('close', this.onWndClose, this);
-			//if(this.useWG) ct.on('hide', this.onWndHide, this);
-			ct.on('beforeclose', this.onWndBeforeClose, this);
-		}
-		me.ctInited = true;
-	}
-	*/
-});
+}

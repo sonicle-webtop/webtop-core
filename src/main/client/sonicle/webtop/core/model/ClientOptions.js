@@ -31,10 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.panel.Separator', {
-	alternateClassName: 'WT.ux.panel.Separator',
-	extend: 'Ext.panel.Header',
-	alias: 'widget.wtpnlseparator',
+Ext.define('Sonicle.webtop.core.model.ClientOptions', {
+	alternateClassName: 'WT.model.ClientOptions',
 	
-	cls: 'wt-pnlseparator'
+	
 });

@@ -31,53 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.FormView', {
-	alternateClassName: 'WT.sdk.FormView',
-	extend: 'Ext.form.Panel',
-	mixins: [
-		'WT.mixin.Waitable',
-		'WT.mixin.Submissible'
-	],
+Ext.define('Sonicle.webtop.core.mixin.Waitable', {
+	alternateClassName: 'WT.mixin.Waitable',
+	extend: 'Ext.Mixin',
 	
-	layout: 'border',
+	waitCount_: 0,
 	
-	close: function() {
-		this.ownerCt.close();
-	}
-	
-	/*
-	initComponent: function() {
+	/**
+	 * Signals to apply the loading mask.
+	 * Every time this method will be called, a counter will be incremented.
+	 * Mask will be effectively added only on the first call (counter=1).
+	 * @param {String} msg The title to show for the waiting message box.
+	 */
+	wait: function(msg) {
 		var me = this;
-		
-		me.on('added', function(s,ct) {
-			me.initCt(ct);
-		}, me, {single: true});
-		me.on('removed', function(s,ct) {
-			me.cleanupCt(ct);
-		}, me, {single: true});
-	},
-	*/
-	
-	/*
-	initCt: function(ct) {
-		var me = this;
-		
-		if(me.ctInited) return;
-		if(ct.isXType('window')) {
-			// In this case panel's header is not necessary.
-			// It hasn't been rendered yet, we can remove it easly...
-			//this.elements = this.elements.replace(',header','');
-			//this.header = false;
-			// Apply as config, the window is not rendered
-			//ct.title = this.title;
-			//ct.iconCls = this.iconCls;
-			
-			ct.on('show', this.onWndShow, this);
-			ct.on('close', this.onWndClose, this);
-			//if(this.useWG) ct.on('hide', this.onWndHide, this);
-			ct.on('beforeclose', this.onWndBeforeClose, this);
+		me.waitCount_++;		
+		if(me.waitCount_ === 1) {
+			var cmp = me.ownerCt || me;
+			cmp.mask(msg || WT.res('waiting'));
 		}
-		me.ctInited = true;
+	},
+	
+	/**
+	 * Signals to remove the loading mask.
+	 * Every time this method will be called, a counter will be decremented.
+	 * Mask will be effectively removed only when the counter is equal to 0.
+	 */
+	unwait: function() {
+		var me = this;
+		me.waitCount_--;
+		if(me.waitCount_ === 0) {
+			var cmp = me.ownerCt || me;
+			cmp.unmask();
+		}
 	}
-	*/
 });

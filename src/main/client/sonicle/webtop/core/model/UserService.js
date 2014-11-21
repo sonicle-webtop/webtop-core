@@ -34,5 +34,4 @@
 Ext.define('Sonicle.webtop.core.model.UserService', {
 	alternateClassName: 'WT.model.UserService',
 	extend: 'WT.model.Base'
-	
 });

@@ -31,8 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.ActionStorer', {
-	alternateClassName: 'WT.sdk.mixin.ActionStorer',
+Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
+	alternateClassName: 'WT.mixin.ActionStorer',
 	extend: 'Ext.Mixin',
 	
 	DEFAULT_GROUP: 'default',

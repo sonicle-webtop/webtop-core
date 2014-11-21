@@ -111,7 +111,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			tool.split = true;
 			tool.setCollapsible(true);
 			tool.setMinWidth(100);
-			tool.setWidth(svc.getInitialSetting('viewportToolWidth') || 200);
+			tool.setWidth(svc.getOption('viewportToolWidth') || 200);
 		}
 		if(!main || !main.isXType('panel')) {
 			main = Ext.create({xtype: 'panel', region: 'center', split:true});

@@ -33,8 +33,11 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
-import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
+import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -45,16 +48,14 @@ import java.sql.SQLException;
 public abstract class BaseOptionManager {
 	
 	private boolean inited = false;
-	private IConnectionProvider conp;
-	private ISettingManager setm;
+	private WebTopApp wta;
     private String serviceId;
     private String domainId;
     private String userId;
 	
-	public final void initialize(IConnectionProvider conp, ISettingManager setm, String serviceId, String domainId, String userId) {
+	public final void initialize(WebTopApp wta, String serviceId, String domainId, String userId) {
 		if(inited) return;
-		this.conp = conp;
-		this.setm = setm;
+		this.wta = wta;
 		this.serviceId = serviceId;
 		this.domainId = domainId;
 		this.userId = userId;
@@ -74,10 +75,15 @@ public abstract class BaseOptionManager {
 	}
 	
 	public Connection getCoreConnection() throws SQLException {
-		return conp.getConnection();
+		return wta.getConnectionManager().getConnection();
 	}
 	
 	public Connection getConnection() throws SQLException {
-		return conp.getConnection(serviceId);
+		return wta.getConnectionManager().getConnection(serviceId);
+	}
+	
+	public UserDataProviderBase getUserDataProvider() throws WTException {
+		String providerName = new CoreServiceSettings(domainId, CoreManifest.ID).getUserDataProvider();
+		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
 	}
 }

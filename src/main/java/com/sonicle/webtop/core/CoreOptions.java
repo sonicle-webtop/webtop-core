@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.servlet.ServletUtils;
 import com.sonicle.webtop.core.bol.OUser;
@@ -40,8 +41,11 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseOptionManager;
 import com.sonicle.webtop.core.sdk.JsOptions;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.UserData;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,17 +60,20 @@ public class CoreOptions extends BaseOptionManager {
 	public static final Logger logger = Service.getLogger(CoreOptions.class);
 	
 	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		//FullEnvironment env = getFullEnv();
-		//WebTopSession wts = env.getSession();
+		Connection con = null;
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
+			con = getCoreConnection();
 			CoreServiceSettings css = new CoreServiceSettings(getDomainId(), getServiceId());
 			CoreUserSettings cus = new CoreUserSettings(getDomainId(), getUserId(), getServiceId());
 			UserDAO udao = UserDAO.getInstance();
-			OUser user = udao.selectByDomainUser(getCoreConnection(), getDomainId(), getUserId());
+			OUser user = udao.selectByDomainUser(con, getDomainId(), getUserId());
 			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getDomainId(), getUserId());
+			
+			UserDataProviderBase udp = getUserDataProvider();
+			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
 			
 			if(crud.equals("read")) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
@@ -79,12 +86,6 @@ public class CoreOptions extends BaseOptionManager {
 				main.put("theme", cus.getTheme());
 				main.put("laf", cus.getLookAndFeel());
 				
-				// UserData
-				JsOptions usd = new JsOptions();
-				usd.put("title", "Mr");
-				usd.put("firstName", "Matteo");
-				usd.put("lastName", "Albinola");
-				
 				// TFA
 				JsOptions tfa = new JsOptions();
 				tfa.put("enabled", css.getTFAEnabled());
@@ -96,29 +97,35 @@ public class CoreOptions extends BaseOptionManager {
 				opts.put("id", id);
 				opts.putAll(main);
 				opts.putPrefixed("tfa", tfa);
-				opts.putPrefixed("usd", usd);
+				opts.putPrefixed("usd", ud.getMap());
 				new JsonResult("options", opts).printTo(out);
 				
 			} else if(crud.equals("update")) {
 				JsOptions opts = ServletUtils.getPayload(request, JsOptions.class);
 				
-				// Main
+				// User
 				if(opts.containsKey("theme")) cus.setTheme(opts.getString("theme"));
 				if(opts.containsKey("laf")) cus.setLookAndFeel(opts.getString("laf"));
+				if(opts.containsKey("displayName")) user.setDisplayName(opts.getString("displayName"));
+				if(opts.containsKey("locale")) user.setLanguageTag(opts.getString("locale"));
+				udao.update(con, user);
 				
-				/*
-				HashMap<String, Object> options = new HashMap<>();
-				options.put("id", "admin");
-				options.put("tfaEnabled", "nooooo");
-				options.put("tfaDelivery", "email");
-				new JsonResult("options", options).printTo(out);
-				*/
+				// TFA
+				
+				
+				// UserData
+				if(udp.canWrite()) {
+					ud.setMap(opts.getPrefixed("usd"));
+					udp.setUserData(getDomainId(), getUserId(), ud);
+				}
 				new JsonResult().printTo(out);
 			}
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action Options", ex);
 			new JsonResult(false).printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	

@@ -31,9 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.Formable', {
+Ext.define('Sonicle.webtop.core.mixin.Formable', {
 	extend: 'Ext.Mixin',
-	alternateClassName: 'WT.sdk.mixin.Formable',
+	alternateClassName: 'WT.mixin.Formable',
 	
 	config: {
 		

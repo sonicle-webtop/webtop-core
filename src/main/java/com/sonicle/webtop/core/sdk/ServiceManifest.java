@@ -55,8 +55,8 @@ public class ServiceManifest {
 	protected String optionsClassName;
 	protected String publicServiceClassName;
 	protected String deamonServiceClassName;
-	protected String jsServiceClassName;
-	protected String jsOptionsClassName;
+	protected String serviceJsClassName;
+	protected String optionsJsClassName;
 	protected Boolean hidden;
 	protected String company;
 	protected String companyEmail;
@@ -77,8 +77,10 @@ public class ServiceManifest {
 	
 	public ServiceManifest(
 		String javaPackage, String jsPackage, String shortName, ServiceVersion version, String buildDate,
-		String serviceClassName, String publicServiceClassName, String deamonServiceClassName, 
-		String optionsClassName, Boolean hidden, 
+		String serviceClassName, String serviceJsClassName, 
+		String publicServiceClassName, String deamonServiceClassName, 
+		String optionsClassName, String optionsJsClassName, 
+		Boolean hidden, 
 		String company, String companyEmail, String companyWebSite, String supportEmail
 		) throws Exception {
 		super();
@@ -100,7 +102,7 @@ public class ServiceManifest {
 		//if(noclass) throw new Exception("You need to fill at least a service class");
 		if(!StringUtils.isEmpty(serviceClassName)) {
 			this.serviceClassName = LangUtils.buildClassName(this.javaPackage, serviceClassName);
-			this.jsServiceClassName = LangUtils.buildClassName(this.jsPackage, serviceClassName);
+			this.serviceJsClassName = LangUtils.buildClassName(this.jsPackage, StringUtils.defaultIfEmpty(serviceJsClassName, serviceClassName));
 		}
 		if(!StringUtils.isEmpty(publicServiceClassName)) {
 			this.publicServiceClassName = LangUtils.buildClassName(this.javaPackage, publicServiceClassName);
@@ -110,7 +112,7 @@ public class ServiceManifest {
 		}
 		if(!StringUtils.isEmpty(optionsClassName)) {
 			this.optionsClassName = LangUtils.buildClassName(this.javaPackage, optionsClassName);
-			this.jsOptionsClassName = LangUtils.buildClassName(this.jsPackage, optionsClassName);
+			this.optionsJsClassName = LangUtils.buildClassName(this.jsPackage, StringUtils.defaultIfEmpty(optionsJsClassName, optionsClassName));
 		}
 		
 		this.hidden = hidden;
@@ -224,12 +226,12 @@ public class ServiceManifest {
 	 * (eg. Sonicle.webtop.mail.MailService)
 	 * @return The value.
 	 */
-	public String getJsServiceClassName() {
-		return jsServiceClassName;
+	public String getServiceJsClassName() {
+		return serviceJsClassName;
 	}
 	
-	public String getJsOptionsClassName() {
-		return jsOptionsClassName;
+	public String getOptionsJsClassName() {
+		return optionsJsClassName;
 	}
 	
 	public String getJsLocaleClassName(Locale locale) {

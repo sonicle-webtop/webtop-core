@@ -34,8 +34,9 @@
 Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
 	alternateClassName: 'WT.sdk.OptionTab',
 	extend: 'WT.ux.form.Panel',
+	alias: 'widget.wtopttab',
 	mixins: [
-		'WT.sdk.mixin.Waitable'
+		'WT.mixin.Waitable'
 	],
 	
 	referenceHolder: true,
@@ -52,4 +53,5 @@ Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
 		collapsible: true,
 		margin: '5 25 0 5'
 	}
+	
 });

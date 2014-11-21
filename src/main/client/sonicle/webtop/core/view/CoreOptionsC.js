@@ -45,11 +45,11 @@ Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
 		}
 	},
 	
-	onFormLoad: function() {
-		this.getViewModel().set('values', this.getView().model.getData());
+	onFormLoad: function(success) {
+		if(success) this.getViewModel().set('values', this.getView().model.getData());
 	},
 	
-	onFormSave: function() {
+	onFormSave: function(success) {
 		var me = this;
 		me.getViewModel().set('values', me.getView().model.getData());
 		if(me.reload) {
@@ -58,14 +58,6 @@ Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
 			});
 		}
 		me.reload = false;
-	},
-	
-	onLoadClick: function() {
-		this.getView().loadForm('admin@*');
-	},
-	
-	onSaveClick: function() {
-		this.getView().saveForm();
 	},
 	
 	onTFAEnableClick: function() {

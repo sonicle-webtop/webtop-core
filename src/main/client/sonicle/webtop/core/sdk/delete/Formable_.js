@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.sdk.Formable', {
 	extend: 'Ext.form.Panel',
 	
 	mixins: [
-		'WT.sdk.mixin.Waitable'
+		'WT.mixin.Waitable'
 	],
 	
 	config: {

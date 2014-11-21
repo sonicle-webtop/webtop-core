@@ -139,9 +139,6 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			vertical: true,
 			referenceHolder: true
 		}));
-		//WT.getApp().services.each(function(desc) {
-		//	launcher.add(me.createSvcButton(desc));
-		//}, me);
 		
 		me.add(Ext.create({
 			xtype: 'container',

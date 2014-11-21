@@ -33,6 +33,10 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author malbinola
@@ -63,5 +67,55 @@ public class UserData {
 	
 	public UserData() {
 		
+	}
+	
+	public Map getMap() {
+		HashMap<String, String> map = new HashMap();
+		map.put("title", title);
+		map.put("firstName", firstName);
+		map.put("lastName", lastName);
+		map.put("address", address);
+		map.put("postalCode", postalCode);
+		map.put("city", city);
+		map.put("state", state);
+		map.put("country", country);
+		map.put("email", email);
+		map.put("mobile", mobile);
+		map.put("telephone", telephone);
+		map.put("fax", fax);
+		map.put("company", company);
+		map.put("function", function);
+		map.put("workEmail", workEmail);
+		map.put("workMobile", workMobile);
+		map.put("workTelephone", workTelephone);
+		map.put("workFax", workFax);
+		map.put("custom1", custom1);
+		map.put("custom2", custom2);
+		map.put("custom3", custom3);
+		return map;
+	}
+	
+	public void setMap(Map<String, Object> map) {
+		title = String.valueOf(LangUtils.ifValue(map, "title", title));
+		firstName =  String.valueOf(LangUtils.ifValue(map, "firstName", firstName));
+		lastName =  String.valueOf(LangUtils.ifValue(map, "lastName", lastName));
+		address =  String.valueOf(LangUtils.ifValue(map, "address", address));
+		postalCode =  String.valueOf(LangUtils.ifValue(map, "postalCode", postalCode));
+		city =  String.valueOf(LangUtils.ifValue(map, "city", city));
+		state =  String.valueOf(LangUtils.ifValue(map, "state", state));
+		country =  String.valueOf(LangUtils.ifValue(map, "country", country));
+		email =  String.valueOf(LangUtils.ifValue(map, "email", email));
+		mobile =  String.valueOf(LangUtils.ifValue(map, "mobile", mobile));
+		telephone =  String.valueOf(LangUtils.ifValue(map, "telephone", telephone));
+		fax =  String.valueOf(LangUtils.ifValue(map, "fax", fax));
+		company =  String.valueOf(LangUtils.ifValue(map, "company", company));
+		function =  String.valueOf(LangUtils.ifValue(map, "function", function));
+		workEmail =  String.valueOf(LangUtils.ifValue(map, "workEmail", workEmail));
+		workMobile =  String.valueOf(LangUtils.ifValue(map, "workMobile", workMobile));
+		workTelephone =  String.valueOf(LangUtils.ifValue(map, "workTelephone", workTelephone));
+		workFax =  String.valueOf(LangUtils.ifValue(map, "workFax", workFax));
+		custom1 =  String.valueOf(LangUtils.ifValue(map, "custom1", custom1));
+		custom2 =  String.valueOf(LangUtils.ifValue(map, "custom2", custom2));
+		custom3 =  String.valueOf(LangUtils.ifValue(map, "custom3", custom3));
 	}
 }

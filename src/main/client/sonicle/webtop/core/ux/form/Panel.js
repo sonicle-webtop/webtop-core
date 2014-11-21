@@ -44,11 +44,12 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 	loadForm: function(id) {
 		var me = this;
 		
+		if(Ext.isEmpty(me.model)) return;
 		me.fireEvent('beforeLoad', me);
 		var opts = {
 			callback: function(rec, op, success) {
 				if(success) me.bindModel(rec);
-				me.fireEvent('load', me, op, success);
+				me.fireEvent('load', me, success, op);
 			},
 			scope: me
 		};
@@ -74,6 +75,7 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 	saveForm: function() {
 		var me = this;
 		//var fo = me.getForm();
+		if(Ext.isEmpty(me.model)) return;
 		me.fireEvent('beforeSave', me);
 		//if(fo.isDirty()) fo.updateRecord(me.getRecord());
 		if(me.getForm().isDirty()) me.updateRecord(me.getRecord());

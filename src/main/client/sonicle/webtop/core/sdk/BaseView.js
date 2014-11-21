@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	alternateClassName: 'WT.sdk.BaseView',
 	extend: 'Ext.container.Container',
 	mixins: [
-		'WT.sdk.mixin.Waitable'
+		'WT.mixin.Waitable'
 	],
 	
 	layout: 'border',

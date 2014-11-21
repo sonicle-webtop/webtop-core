@@ -69,16 +69,3 @@ div.wt-wnlist {
 	box-shadow: 2px 2px 5px #e1e1e1;
 	border: solid 1px #ccc;
 }
-
-/* IS THIS NEEDED ANYMORE? */
-
-.wt-pnlseparator.x-header {
-	background-color: #f5f5f5;
-	padding: 2px 10px;
-}
-.wt-pnlseparator .x-container-title {
-	color: #666;
-	font-weight: bold;
-	font-family: helvetica, arial, verdana, sans-serif;
-	text-transform: none;
-}

@@ -31,38 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.Waitable', {
-	alternateClassName: 'WT.sdk.mixin.Waitable',
-	extend: 'Ext.Mixin',
+Ext.define('Sonicle.webtop.core.sdk.model.ServiceOptions', {
+	alternateClassName: 'WT.sdk.model.ServiceOptions',
+	extend: 'Ext.data.Model',
 	
-	waitCount_: 0,
-	
-	/**
-	 * Signals to apply the loading mask.
-	 * Every time this method will be called, a counter will be incremented.
-	 * Mask will be effectively added only on the first call (counter=1).
-	 * @param {String} msg The title to show for the waiting message box.
-	 */
-	wait: function(msg) {
-		var me = this;
-		me.waitCount_++;		
-		if(me.waitCount_ === 1) {
-			var cmp = me.ownerCt || me;
-			cmp.mask(msg || WT.res('waiting'));
-		}
-	},
-	
-	/**
-	 * Signals to remove the loading mask.
-	 * Every time this method will be called, a counter will be decremented.
-	 * Mask will be effectively removed only when the counter is equal to 0.
-	 */
-	unwait: function() {
-		var me = this;
-		me.waitCount_--;
-		if(me.waitCount_ === 0) {
-			var cmp = me.ownerCt || me;
-			cmp.unmask();
-		}
-	}
+	fields: [
+		'viewportToolWidth'
+	]
 });

@@ -33,11 +33,16 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
+import com.sonicle.webtop.core.bol.js.JsOptionsService;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
+import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.FullEnvironment;
 import com.sonicle.webtop.core.sdk.JsOptions;
@@ -45,6 +50,7 @@ import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -142,16 +148,67 @@ public class CoreService extends Service {
 		}
 	}
 	
+	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		Connection con = null;
+		
+		try {
+			ArrayList<JsSimple> data = new ArrayList<>();
+			UserProfile up = env.getProfile();
+			if(up.isSystemAdmin()) {
+				con = env.getCoreConnection();
+				UserDAO udao = UserDAO.getInstance();
+				List<OUser> users = udao.selectAll(con);
+				String id = null, descr = null;
+				for(OUser user : users) {
+					id = Principal.buildName(user.getDomainId(), user.getUserId());
+					descr = MessageFormat.format("{0} ({1})", user.getDisplayName(), id);
+					data.add(new JsSimple(id, descr));
+				}
+				
+			} else {
+				//TODO: maybe define a permission to other users to control others options
+				data.add(new JsSimple(up.getId(), up.getDisplayName()));
+			}
+			new JsonResult("users", data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetOptionsUsers", ex);
+			new JsonResult(false).printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		FullEnvironment env = getFullEnv();
+		
+		try {
+			String id = ServletUtils.getStringParameter(request, "id", true);
+			UserProfile up = env.getProfile();
+			
+			ArrayList<JsOptionsService> data = new ArrayList<>();
+			data.add(new JsOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
+			if(!up.isSystemAdmin()) data.add(new JsOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
+			if(!up.isSystemAdmin()) data.add(new JsOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			new JsonResult(data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetOptionsServices", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		FullEnvironment env = getFullEnv();
 		Locale locale = env.getSession().getLocale();
 		
 		try {
 			//TODO: handle locales dinamically
-			ArrayList<JsSimple> locales = new ArrayList<>();
-			locales.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
-			locales.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
-			new JsonResult("locales", locales).printTo(out);
+			ArrayList<JsSimple> data = new ArrayList<>();
+			data.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
+			data.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
+			new JsonResult("locales", data).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLocales", ex);
@@ -163,15 +220,15 @@ public class CoreService extends Service {
 		
 		try {
 			//TODO: handle themes dinamically
-			ArrayList<JsSimple> themes = new ArrayList<>();
-			themes.add(new JsSimple("aria", "Aria"));
-			themes.add(new JsSimple("classic", "Classic"));
-			themes.add(new JsSimple("crisp", "Crisp"));
-			themes.add(new JsSimple("crisp-touch", "Crisp Touch"));
-			themes.add(new JsSimple("gray", "Gray"));
-			themes.add(new JsSimple("neptune", "Neptune"));
-			themes.add(new JsSimple("neptune-touch", "Neptune Touch"));
-			new JsonResult("themes", themes).printTo(out);
+			ArrayList<JsSimple> data = new ArrayList<>();
+			data.add(new JsSimple("aria", "Aria"));
+			data.add(new JsSimple("classic", "Classic"));
+			data.add(new JsSimple("crisp", "Crisp"));
+			data.add(new JsSimple("crisp-touch", "Crisp Touch"));
+			data.add(new JsSimple("gray", "Gray"));
+			data.add(new JsSimple("neptune", "Neptune"));
+			data.add(new JsSimple("neptune-touch", "Neptune Touch"));
+			new JsonResult("themes", data).printTo(out);
 
 		} catch (Exception ex) {
 			logger.error("Error executing action GetThemes", ex);

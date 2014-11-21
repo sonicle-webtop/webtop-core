@@ -36,8 +36,11 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
+import com.sonicle.webtop.core.sdk.CoreLocaleKey;
+import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.WebSocketMessage;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.ws.WebSocketManager;
@@ -63,7 +66,8 @@ public class WebTopSession {
 	
 	private static final Logger logger = WebTopApp.getLogger(WebTopSession.class);
 	public static final String ATTRIBUTE = "webtopsession";
-	private WebTopApp wta = null;
+	private final HttpSession httpSession;
+	private final WebTopApp wta;
 	private boolean initialized = false;
 	private UserProfile profile = null;
 	private String refererURI = null;
@@ -78,6 +82,7 @@ public class WebTopSession {
 	private ArrayDeque<WebSocketMessage> wsqueue=new ArrayDeque<>();
 	
 	WebTopSession(HttpSession session) {
+		httpSession = session;
 		wta = WebTopApp.get(session.getServletContext());
 	}
 	
@@ -167,6 +172,36 @@ public class WebTopSession {
 		}
 	}
 	
+	public void fillStartupForService(JsWTS js, String serviceId) {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceDescriptor sdesc = svcm.getService(serviceId);
+		ServiceManifest manifest = sdesc.getManifest();
+		Locale locale = getLocale();
+		
+		// Defines paths and requires
+		js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
+		js.appRequires.add(manifest.getServiceJsClassName());
+		js.appRequires.add(manifest.getJsLocaleClassName(locale));
+		
+		// Completes service info
+		JsWTS.Service jssvc = new JsWTS.Service();
+		jssvc.index = js.services.size();
+		jssvc.id = manifest.getId();
+		jssvc.xid = manifest.getXId();
+		jssvc.ns = manifest.getJsPackageName();
+		jssvc.path = manifest.getJsBaseUrl();
+		jssvc.className = manifest.getServiceJsClassName();
+		if(sdesc.hasOptionManager()) jssvc.optionsClassName = manifest.getOptionsJsClassName();
+		jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
+		jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
+		jssvc.version = manifest.getVersion().toString();
+		jssvc.build = manifest.getBuildDate();
+		jssvc.company = manifest.getCompany();
+		js.services.add(jssvc);
+		
+		js.servicesOptions.add(getInitialSettings(serviceId));
+	}
+	
 	public JsWTS.Settings getInitialSettings(String serviceId) {
 		Service svc = getServiceById(serviceId);
 		
@@ -186,6 +221,9 @@ public class WebTopSession {
 		
 		// Built-in settings
 		if(serviceId.equals(CoreManifest.ID)) {
+			String tk = httpSession.getId();
+			try { tk = Encryption.cipher(tk, profile.getSecret()); } catch(Exception ex) {/* Do nothing... */}
+			is.put("authTicket", tk);
 			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
 		} else {
 			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);

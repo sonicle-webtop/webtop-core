@@ -31,18 +31,41 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
-	alternateClassName: 'WT.sdk.mixin.Submissible',
+Ext.define('Sonicle.webtop.core.mixin.Formable', {
 	extend: 'Ext.Mixin',
+	alternateClassName: 'WT.mixin.Formable',
 	
 	config: {
+		
 		/**
 		* @cfg {String} formItemId Specifies the form panel to look form.
 		*/
-	   formId: 'fpnl'
+	   formId: 'fpnl',
+	   
+	   /**
+		* @cfg {Boolean} crud If true, during load and submit operations
+		* a crud (specifying the action) param will be included into the request.
+		*/
+	   crud: true
 	},
 	
-	model: null,
+	statics: {
+		MODE_NEW: 'new',
+		MODE_EDIT: 'edit',
+		MODE_VIEW: 'view'
+	},
+	
+	/**
+	 * @property {String}
+	 * Indicates current editing mode: NEW, EDIT and VIEW.
+	 * @readonly
+	 */
+	mode: null,
+	
+	onModeChange: function(nm,om) {
+		//this._updateWndTitle(nm);
+		this.fireEvent('modechange', this, nm, om);
+	},
 	
 	/**
 	 * Returns form component.
@@ -101,67 +124,64 @@ Ext.define('Sonicle.webtop.core.sdk.mixin.Submissible', {
 		return Ext.isEmpty(this.getFieldValue(id));
 	},
 	
-	submitForm: function() {
+	/**
+	 * Set a new mode.
+	 *
+	 * @param {String} mode Mode value to be set.
+	 */
+	setMode: function(mode) {
+		var omode = this.mode;
+		switch(mode) {
+			case this.MODE_EDIT:
+			case this.MODE_NEW:
+			case this.MODE_VIEW:
+				this.mode = mode;
+		}
+		this.onModeChange(this.mode, omode);
+	},
+	
+	beginNew: function(id, values) {
 		var me = this;
-		var fo = me.getForm();
-		if(!fo.isValid()) return;
-		var rec = Ext.create(me.getFormModel());
-		me.wait();
-		fo.updateRecord(rec);
-		rec.save({
-			callback: function(rec, op, success) {
-				me.unwait();
-				if(me.fireEvent('submit', me, op, success)) {
-					if(!success) WT.error(op.getError());
-				}
+		if(!values) values = {};
+		
+		me.setMode(me.MODE_NEW);
+		var rec = Ext.create(me.getFpnl().model, values);
+		me.getForm().loadRecord(rec);
+	},
+	
+	beginView: function(id) {
+		var me = this;
+		me.setMode(me.MODE_VIEW);
+		me.loadForm(id);
+	},
+	
+	beginEdit: function(id, values) {
+		var me = this;
+		if(!values) values = {};
+		me.setMode(me.MODE_EDIT);
+		//me.getForm().setValues(values);
+		
+		// Override this!
+	},
+	
+	loadForm: function(id) {
+		var me = this;
+		var form = me.getForm();
+		var rec = Ext.create(me.getFpnl().model);
+		rec.load(id, {
+			success: function(rec, op) {
+				console.log('successsssssssssssssssss');
+				form.loadRecord(rec);
+			},
+			failure: function(rec, op) {
+				console.log('failureeeeeeeeeeeeeeeeee');
 			},
 			scope: me
 		});
-	},
-	
-	getFormModel: function() {
-		var model = this.getFpnl().model;
-		if(Ext.isEmpty(model)) Ext.Error.raise("You need to configure form's 'model' property");
-		return model;
-	},
-	
-	loadForm: function() {
-		var me = this;
-		var fo = me.getForm();
-		
-		if(me.model) {
-			me.wait();
-			var opts = {
-				callback: function(rec, op, success) {
-					me.unwait();
-					if(success) {
-						fo.loadRecord(rec);
-					}
-				},
-				scope: me
-			};
-			if(Ext.isString(me.model)) {
-				me.model = Ext.ClassManager.get(me.model).load('admin', opts);
-			} else {
-				me.model.load(opts);
-			}
-		} else {
-			
-		}
 	},
 	
 	saveForm: function() {
-		var me = this;
-		var fo = me.getForm();
-		if(!fo.isValid()) return;
-		me.wait();
-		fo.updateRecord(me.model);
-		me.model.save({
-			callback: function(rec, op, success) {
-				me.unwait();
-				if(!success) WT.error(op.getError());
-			},
-			scope: me
-		});
+		
 	}
+	
 });
