@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
@@ -283,37 +284,37 @@ public class WebTopSession {
 		return refererURI;
 	}
 	
-	// Rimuovereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-	
-	public void setTheme(String value) {
-		wta.getSettingsManager().setUserSetting(profile, CoreManifest.ID, CoreUserSettings.THEME, value);
-	}
-	
-	//----------------------------
-	
-	public void test() {
-		logger.debug("TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
-	}
-	
 	public void setWebSocketManager(WebSocketManager wsm) {
+		logger.debug("setting WebSocketManager on session - {}",wsm);
 		this.wsm=wsm;
 	}
 	
-	public void sendWebSocketMessage(WebSocketMessage wsmessage) throws IOException {
+	public void sendWebSocketMessage(WebSocketMessage wsmessage) {
+		boolean sent=false;
+		logger.debug("Requested send of WebSocketMessage - wsm={}",wsm);
 		if (this.wsm!=null) {
-			this.wsm.sendMessage(wsmessage);
+			try {
+				this.wsm.sendMessage(wsmessage);
+				sent=true;
+			} catch(IOException exc) {
+				logger.debug("websocket manager error",exc);
+			}
+		}
+		if (!sent) {
+			queueWebSocketMessage(wsmessage);
 		}
 	}
 	
 	public void queueWebSocketMessage(WebSocketMessage wsmessage) {
 		wsqueue.addLast(wsmessage);
+		logger.debug("queued message - count={}",wsqueue.size());
 	}
 	
 	public WebSocketMessage pollWebSocketQueue() {
-		return wsqueue.pollFirst();
+		WebSocketMessage wsm=wsqueue.pollFirst();
+		logger.debug("polling message from queue - {}",wsm);
+		return wsm;
 	}
-	
-	
 	
 	/**
 	 * Gets WebTopSession object stored as session's attribute.

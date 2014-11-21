@@ -82,7 +82,7 @@ public class WebSocketManager {
 	public void gotMessage(String json) {
 		try {
 			logger.debug("gotMessage : {}",json);
-			if (wsSession.isOpen()) {
+			if (wsSession!=null && wsSession.isOpen()) {
 				WebSocketMessage wsm=JsonResult.gson.fromJson(json, WebSocketMessage.class);
 				//core message
 				if (wsm.service.equals(CoreManifest.ID)) {
@@ -136,10 +136,11 @@ public class WebSocketManager {
 	}
 	
 	public void sendMessage(WebSocketMessage wsm) throws IOException {
-		if (wsSession!=null) { 
+		if (wsSession!=null && wsSession.isOpen()) { 
+			logger.debug("sending message through websocket");
 			wsSession.getBasicRemote().sendText(wsm.toJson());
 		} else {
-			wts.queueWebSocketMessage(wsm);
+			throw new IOException("websocket is not open!");
 		}
 	} 
 	
