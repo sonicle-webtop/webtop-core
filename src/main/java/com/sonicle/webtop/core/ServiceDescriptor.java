@@ -186,6 +186,7 @@ class ServiceDescriptor {
 	
 	private HashMap<String, String> defineWhatsnewVariables() {
 		HashMap<String, String> variables = new HashMap<>();
+		// Defines variables to place substitutions in whatsnew html
 		variables.put("WHATSNEW_URL", MessageFormat.format("resources/{0}/whatsnew", manifest.getJarPath()));
 		return variables;
 	}

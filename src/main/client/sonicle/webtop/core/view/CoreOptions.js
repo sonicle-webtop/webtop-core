@@ -35,12 +35,11 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 	alternateClassName: 'WT.view.CoreOptions',
 	extend: 'WT.sdk.OptionTab',
 	requires: [
-		'WT.store.TFADelivery',
 		'WT.model.Simple',
 		'WT.model.Options',
 		'WT.store.TFADelivery',
-		'Ext.ux.form.HSpacer',
-		'Ext.ux.form.VSpacer'
+		'WT.store.TFADelivery',
+		'Ext.ux.form.Spacer'
 	],
 	controller: Ext.create('WT.view.CoreOptionsC'),
 	model: 'WT.model.Options',
@@ -57,10 +56,7 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 		
 		me.add({
 			xtype: 'wtopttabsection',
-			//xtype: 'panel',
-			//layout: 'form',
 			title: WT.res('opts.main.tit'),
-			//titleCollapse: true,
 			items: [{
 				xtype: 'textfield',
 				name: 'id',
@@ -122,11 +118,8 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 				reload: true
 			}]
 		}, {
-			xtype: 'panel',
-			layout: 'form',
+			xtype: 'wtopttabsection',
 			title: WT.res('opts.userdata.tit'),
-			collapsed: true,
-			titleCollapse: true,
 			items: [{
 				xtype: 'textfield',
 				name: 'usdTitle',
@@ -186,7 +179,14 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 			}, {
 				xtype: 'textfield',
 				name: 'usdPostalCode',
-				fieldLabel: WT.res('opts.userdata.fld-postalCose.lbl'),
+				fieldLabel: WT.res('opts.userdata.fld-postalCode.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
+			}, {
+				xtype: 'textfield',
+				name: 'usdCity',
+				fieldLabel: WT.res('opts.userdata.fld-city.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
 				}
@@ -269,14 +269,19 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 				}
 			}]
 		}, {
-			xtype: 'panel',
+			xtype: 'wtopttabsection',
 			title: WT.res('opts.tfa.tit'),
-			collapsed: true,
-			titleCollapse: true,
 			items: [{
 				xtype: 'container',
 				layout: 'form',
 				items: [{
+					xtype: 'checkbox',
+					name: 'tfaMandatory',
+					fieldLabel: WT.res('opts.tfa.fld-mandatory.lbl'),
+					listeners: {
+						blur: 'onBlurAutoSave'
+					}
+				},{
 					xtype : 'fieldcontainer',
 					layout: 'hbox',
 					fieldLabel: WT.res('opts.tfa.fld-delivery.lbl'),
@@ -289,7 +294,8 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 						valueField: 'id',
 						displayField: 'description'
 					}, {
-						xtype: 'hspacer'
+						xtype: 'spacer',
+						vertical: false
 					}, {
 						xtype: 'button',
 						text: WT.res('btn-enable.lbl'),
@@ -362,7 +368,7 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 							xtype: 'component',
 							html: WT.res('opts.tfa.thisdevice.trusted.html')
 						}, {
-							xtype: 'vspacer'
+							xtype: 'spacer'
 						}, {
 							xtype: 'button',
 							//itemId: 'untrustthis',
@@ -394,7 +400,7 @@ Ext.define('Sonicle.webtop.core.view.CoreOptions', {
 						xtype: 'component',
 						html: WT.res('opts.tfa.otherdevices.html')
 					}, {
-						xtype: 'vspacer'
+						xtype: 'spacer'
 					}, {
 						xtype: 'button',
 						//itemId: 'untrustother',

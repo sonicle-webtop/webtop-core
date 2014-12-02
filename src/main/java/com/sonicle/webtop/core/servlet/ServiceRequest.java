@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
@@ -122,7 +122,7 @@ public class ServiceRequest extends HttpServlet {
 				String userId = tokens[0];
 				
 				// Retrieves instantiated option manager (session context away)
-				BaseOptionManager instance = svcm.instantiateOptionManager(service, domainId, userId);
+				BaseOptionManager instance = svcm.instantiateOptionManager(wts.getUserProfile(), service, domainId, userId);
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);
 				invokeMethod(instance, method, service, nowriter, request, response);

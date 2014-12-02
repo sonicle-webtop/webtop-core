@@ -46,42 +46,48 @@ import java.sql.SQLException;
  * @author malbinola
  */
 public abstract class BaseOptionManager {
-	
+
 	private boolean inited = false;
 	private WebTopApp wta;
-    private String serviceId;
-    private String domainId;
-    private String userId;
-	
-	public final void initialize(WebTopApp wta, String serviceId, String domainId, String userId) {
-		if(inited) return;
+	private UserProfile sessionProfile;
+	private String serviceId;
+	private String domainId;
+	private String userId;
+
+	public final void initialize(WebTopApp wta, UserProfile sessionProfile, String serviceId, String domainId, String userId) {
+		if (inited) return;
 		this.wta = wta;
+		this.sessionProfile = sessionProfile;
 		this.serviceId = serviceId;
 		this.domainId = domainId;
 		this.userId = userId;
 		inited = true;
 	}
 	
+	public UserProfile getSessionProfile() {
+		return sessionProfile;
+	}
+
 	public String getServiceId() {
 		return serviceId;
 	}
-	
+
 	public String getDomainId() {
 		return domainId;
 	}
-	
+
 	public String getUserId() {
 		return userId;
 	}
-	
+
 	public Connection getCoreConnection() throws SQLException {
 		return wta.getConnectionManager().getConnection();
 	}
-	
+
 	public Connection getConnection() throws SQLException {
 		return wta.getConnectionManager().getConnection(serviceId);
 	}
-	
+
 	public UserDataProviderBase getUserDataProvider() throws WTException {
 		String providerName = new CoreServiceSettings(domainId, CoreManifest.ID).getUserDataProvider();
 		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());

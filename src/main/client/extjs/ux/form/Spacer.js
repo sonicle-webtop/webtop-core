@@ -31,17 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Ext.ux.form.VSpacer', {
+Ext.define('Ext.ux.form.Spacer', {
 	extend: 'Ext.Component',
-	alias: 'widget.vspacer',
+	alias: 'widget.spacer',
 	
+	vertical: true,
 	factor: 1,
 	autoEl: 'div',
 	
 	constructor: function(cfg) {
-		var me = this;
+		var me = this, vert = cfg.vertical;
+		if(Ext.isDefined(vert) && Ext.isBoolean(vert)) me.vertical = vert;
 		if(Ext.isNumber(cfg.factor)) me.factor = cfg.factor;
-		me.height = me.factor * 10;
+		if(me.vertical) {
+			me.height = me.factor * 10;
+		} else {
+			me.width = me.factor * 10;
+		}
 		me.callParent(arguments);
 	}
 });

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.sdk.FullEnvironment;
+import com.sonicle.webtop.core.sdk.SuperEnvironment;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
  *
  * @author malbinola
  */
-public class CoreEnvironment extends Environment implements FullEnvironment {
+public class CoreEnvironment extends Environment implements SuperEnvironment {
 
 	public CoreEnvironment(WebTopApp wta, WebTopSession wts) {
 		super(wta, wts);
@@ -52,6 +52,11 @@ public class CoreEnvironment extends Environment implements FullEnvironment {
 	@Override
 	public WebTopSession getSession() {
 		return wts;
+	}
+	
+	@Override
+	public TFAManager getTFAManager() {
+		return wta.getTFAManager();
 	}
 	
 	@Override

@@ -197,7 +197,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	ajaxReq: function(svc, act, opts) {
 		var me = this;
 		opts = opts || {};
-		var fn = opts.callback, scope = opts.scope;
+		var fn = opts.callback, scope = opts.scope, sfn = opts.success, ffn = opts.failure;
 		var options = {
 			url: 'service-request',
 			method: 'POST',
@@ -208,9 +208,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 			headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
 			success: function(resp, opts) {
 				var obj = Ext.decode(resp.responseText);
+				if(sfn) Ext.callback(sfn, scope || me, [opts]);
 				Ext.callback(fn, scope || me, [obj.success, obj, opts]);
 			},
 			failure: function(resp, opts) {
+				if(ffn) Ext.callback(ffn, scope || me, [opts]);
 				Ext.callback(fn, scope || me, [false, null, opts]);
 			},
 			scope: me

@@ -105,9 +105,7 @@ public class Start extends HttpServlet {
 			jswts.locale = locale.toString();
 			jswts.theme = theme;
 			jswts.laf = lookAndFeel;
-			for(String serviceId : wts.getServices()) {
-				wts.fillStartupForService(jswts, serviceId);
-			}
+			wts.fillServices(jswts);
 			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			
 			// Load and build template

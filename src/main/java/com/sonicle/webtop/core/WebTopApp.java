@@ -93,6 +93,7 @@ public class WebTopApp {
 	private ConnectionManager conm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
+	private TFAManager tfam = null;
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
 	private WebTopApp(ServletContext context) {
@@ -121,6 +122,8 @@ public class WebTopApp {
 		setm = SettingsManager.initialize(this);
 		// Service Manager
 		svcm = ServiceManager.initialize(this);
+		// TFA Manager
+		tfam = TFAManager.initialize(this);
 		
 		systemLocale = CoreServiceSettings.getSystemLocale(setm);
 		
@@ -134,6 +137,12 @@ public class WebTopApp {
 		conm.cleanup();
 		conm = null;
 		logger.info("ConnectionManager destroyed.");
+		// Settings Manager
+		setm.cleanup();
+		// Service Manager
+		svcm.cleanup();
+		// TFA Manager
+		tfam.cleanup();
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
 	}
@@ -202,6 +211,14 @@ public class WebTopApp {
 	 */
 	public ServiceManager getServiceManager() {
 		return svcm;
+	}
+	
+	/**
+	 * Returns the TFAManager.
+	 * @return TFAManager instance.
+	 */
+	public TFAManager getTFAManager() {
+		return tfam;
 	}
 	
 	public CoreManager getManager() {

@@ -57,12 +57,12 @@ import org.slf4j.Logger;
 public final class UserProfile {
 	
 	private static final Logger logger = WebTopApp.getLogger(UserProfile.class);
-	private final FullEnvironment fullEnv;
+	private final SuperEnvironment fullEnv;
 	private final Principal principal;
 	private OUser user;
 	private UserData userData;
 	
-	public UserProfile(FullEnvironment fullEnv, Principal principal) {
+	public UserProfile(SuperEnvironment fullEnv, Principal principal) {
 		this.fullEnv = fullEnv;
 		this.principal = principal;
 		
@@ -179,6 +179,10 @@ public final class UserProfile {
 
 	public Principal getPrincipal() {
 		return principal;
+	}
+	
+	public static boolean isSystemAdmin(String domainId, String userId) {
+		return isSystemAdmin(userId + "@" + domainId);
 	}
 	
 	public static boolean isSystemAdmin(String id) {

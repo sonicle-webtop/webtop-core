@@ -58,6 +58,10 @@ public abstract class BaseUserSettings {
         this.userId = userId;
         this.serviceId = serviceId;
     }
+	
+	public boolean clearUserSetting(String key) {
+		return setm.deleteUserSetting(domainId, userId, serviceId, key);
+	}
     
 	public String getUserSetting(String key) {
 		return setm.getUserSetting(domainId, userId, serviceId, key);

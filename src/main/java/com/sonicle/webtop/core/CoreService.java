@@ -35,16 +35,18 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsOptionsService;
+import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
+import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
-import com.sonicle.webtop.core.sdk.FullEnvironment;
+import com.sonicle.webtop.core.sdk.SuperEnvironment;
 import com.sonicle.webtop.core.sdk.JsOptions;
 import com.sonicle.webtop.core.sdk.Service;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -79,128 +81,8 @@ public class CoreService extends Service {
 		
 	}
 	
-	/*
-	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
-		WebTopSession wts = env.getSession();
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			String id = ServletUtils.getStringParameter(request, "id", true);
-			
-			
-			
-			//CoreUserSettings cus = new CoreUserSettings("sonicleldap","admin",CoreManifest.ID);
-			
-			
-			
-			if(crud.equals("read")) {
-				JsOptions js = new JsOptions();
-				js.put("id", id);
-				js.put("userId", id);
-				js.put("displayName", "Administrator");
-				
-				
-				HashMap<String, Object> options = new HashMap<>();
-				options.put("id", "admin");
-				options.put("userId", "admin");
-				options.put("displayName", "Administrator");
-				options.put("locale", wts.getLocale());
-				options.put("theme", wts.getTheme());
-				options.put("laf", "default");
-				options.put("tfaEnabled", "siiiii");
-				
-				HashMap<String, Object> ud = new HashMap<>();
-				ud.put("title", "Mr");
-				ud.put("firstName", "Admin");
-				ud.put("lastName", "Admin");
-				options.put("userData", ud);
-				
-				new JsonResult("options", options).printTo(out);
-				
-			} else if(crud.equals("update")) {
-				HashMap<String, Object> options = new HashMap<>();
-				options.put("id", "admin");
-				options.put("tfaEnabled", "nooooo");
-				options.put("tfaDelivery", "email");
-				new JsonResult("options", options).printTo(out);
-				//new JsonResult().printTo(out);
-			}
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action Options", ex);
-			new JsonResult(false).printTo(out);
-		}
-	}
-	*/
-	
-	public void processTFAUntrustDevice(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
-		
-		try {
-			String which = ServletUtils.getStringParameter(request, "which", true);
-			//TODO: complete here
-			new JsonResult().printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action TFAUntrustDevice", ex);
-			new JsonResult(false).printTo(out);
-		}
-	}
-	
-	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
-		Connection con = null;
-		
-		try {
-			ArrayList<JsSimple> data = new ArrayList<>();
-			UserProfile up = env.getProfile();
-			if(up.isSystemAdmin()) {
-				con = env.getCoreConnection();
-				UserDAO udao = UserDAO.getInstance();
-				List<OUser> users = udao.selectAll(con);
-				String id = null, descr = null;
-				for(OUser user : users) {
-					id = Principal.buildName(user.getDomainId(), user.getUserId());
-					descr = MessageFormat.format("{0} ({1})", user.getDisplayName(), id);
-					data.add(new JsSimple(id, descr));
-				}
-				
-			} else {
-				//TODO: maybe define a permission to other users to control others options
-				data.add(new JsSimple(up.getId(), up.getDisplayName()));
-			}
-			new JsonResult("users", data).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action GetOptionsUsers", ex);
-			new JsonResult(false).printTo(out);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
-		
-		try {
-			String id = ServletUtils.getStringParameter(request, "id", true);
-			UserProfile up = env.getProfile();
-			
-			ArrayList<JsOptionsService> data = new ArrayList<>();
-			data.add(new JsOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
-			if(!up.isSystemAdmin()) data.add(new JsOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
-			if(!up.isSystemAdmin()) data.add(new JsOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
-			new JsonResult(data).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action GetOptionsServices", ex);
-			new JsonResult(false).printTo(out);
-		}
-	}
-	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		Locale locale = env.getSession().getLocale();
 		
 		try {
@@ -250,24 +132,58 @@ public class CoreService extends Service {
 		}
 	}
 	
-	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		SuperEnvironment env = getSuperEnv();
+		Connection con = null;
+		
 		try {
-			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-			Integer width = ServletUtils.getIntParameter(request, "width", true);
-			
-			UserProfile profile = getFullEnv().getProfile();
-			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
-			cus.setViewportToolWidth(width);
-			new JsonResult().printTo(out);
+			ArrayList<JsSimple> data = new ArrayList<>();
+			UserProfile up = env.getProfile();
+			if(up.isSystemAdmin()) {
+				con = env.getCoreConnection();
+				UserDAO udao = UserDAO.getInstance();
+				List<OUser> users = udao.selectAll(con);
+				String id = null, descr = null;
+				for(OUser user : users) {
+					id = Principal.buildName(user.getDomainId(), user.getUserId());
+					descr = MessageFormat.format("{0} ({1})", user.getDisplayName(), id);
+					data.add(new JsSimple(id, descr));
+				}
+				
+			} else {
+				//TODO: maybe define a permission to other users to control others options
+				data.add(new JsSimple(up.getId(), up.getDisplayName()));
+			}
+			new JsonResult("users", data).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action SetTheme", ex);
+			logger.error("Error executing action GetOptionsUsers", ex);
+			new JsonResult(false).printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		SuperEnvironment env = getSuperEnv();
+		
+		try {
+			String id = ServletUtils.getStringParameter(request, "id", true);
+			
+			ArrayList<JsOptionsService> data = new ArrayList<>();
+			data.add(new JsOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
+			if(!UserProfile.isSystemAdmin(id)) data.add(new JsOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
+			if(!UserProfile.isSystemAdmin(id)) data.add(new JsOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			new JsonResult(data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetOptionsServices", ex);
 			new JsonResult(false).printTo(out);
 		}
 	}
 	
 	public void processGetUserServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		Locale locale = env.getSession().getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -297,7 +213,7 @@ public class CoreService extends Service {
 		ArrayList<JsWhatsnewTab> tabs = null;
 		JsWhatsnewTab tab = null;
 		String html = null;
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		UserProfile profile = env.getProfile();
 		
 		try {
@@ -324,7 +240,7 @@ public class CoreService extends Service {
 	}
 	
 	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
@@ -339,7 +255,7 @@ public class CoreService extends Service {
 	}
 	
 	public void processTurnOffWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		
 		try {
 			UserProfile profile = env.getProfile();
@@ -355,8 +271,70 @@ public class CoreService extends Service {
 		}
 	}
 	
+	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+			Integer width = ServletUtils.getIntParameter(request, "width", true);
+			
+			UserProfile profile = getSuperEnv().getProfile();
+			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
+			cus.setViewportToolWidth(width);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action SetTheme", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
+	public void processManageTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		SuperEnvironment env = getSuperEnv();
+		TFAManager tfam = env.getTFAManager();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals("generate")) {
+				String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
+				if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_EMAIL)) {
+					String email = ServletUtils.getStringParameter(request, "emailAddress", true);
+					tfam.initTFAUsingEmail(env.getSession(), email);
+					
+				} else if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_GOOGLEAUTH)) {
+					tfam.initTFAUsingGoogleAuth(env.getSession());
+				}
+				new JsonResult(true).printTo(out);
+				
+			} else if(crud.equals("activate")) {
+				String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
+				Integer code = ServletUtils.getIntParameter(request, "code", true);
+				boolean enabled = tfam.activateTFA(env.getSession(), deliveryMode, code);
+				new JsonResult(enabled).printTo(out);
+				
+			} else if(crud.equals("untrustthis")) {
+				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(env.getProfile(), request);
+				if(tdc == null) throw new Exception("This device is already untrusted");
+				tfam.removeTrustedDevice(env.getProfile(), tdc.deviceId);
+				tfam.clearTrustedDeviceCookie(env.getProfile(), response);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("untrustothers")) {
+				TrustedDeviceCookie thistdc = tfam.readTrustedDeviceCookie(env.getProfile(), request);
+				ArrayList<JsTrustedDevice> tds = tfam.getTrustedDevices(env.getProfile());
+				for(JsTrustedDevice td: tds) {
+					if((thistdc != null) && (td.deviceId.equals(thistdc.deviceId))) continue;
+					tfam.removeTrustedDevice(env.getProfile(), td.deviceId);
+				}
+				new JsonResult().printTo(out);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action ManageTFA", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
 	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		FullEnvironment env = getFullEnv();
+		SuperEnvironment env = getSuperEnv();
 		List<ServiceMessage> messages = new ArrayList();
 		
 		try {

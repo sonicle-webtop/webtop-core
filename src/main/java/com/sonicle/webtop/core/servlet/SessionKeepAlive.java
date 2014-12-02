@@ -38,6 +38,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,17 +47,14 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class SessionKeepAlive extends HttpServlet {
-	
-    private static final Logger logger           = LoggerFactory.getLogger(SessionKeepAlive.class);
+
+	private static final Logger logger = LoggerFactory.getLogger(SessionKeepAlive.class);
 
 	@Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-    {
-        logger.debug("session keep alive poll");
-        // access the session without creating it - this maintains the session
-        request.getSession(false);
-        // send a 204
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-    }
-
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// Access session object without creating new one. This maintains the session alive!
+		HttpSession session = request.getSession(false);
+		if(logger.isTraceEnabled()) logger.trace("Session keep-alive [{}]", session.getId());
+		response.setStatus(HttpServletResponse.SC_NO_CONTENT); // Send a 204
+	}
 }

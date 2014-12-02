@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import java.io.IOException;

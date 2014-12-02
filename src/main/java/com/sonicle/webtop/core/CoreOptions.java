@@ -35,8 +35,10 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
+import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseOptionManager;
 import com.sonicle.webtop.core.sdk.JsOptions;
@@ -90,8 +92,25 @@ public class CoreOptions extends BaseOptionManager {
 				JsOptions tfa = new JsOptions();
 				tfa.put("enabled", css.getTFAEnabled());
 				tfa.put("deviceTrustEnabled", css.getTFADeviceTrustEnabled());
+				tfa.put("mandatory", cus.getTFAMandatory());
 				tfa.put("delivery", cus.getTFADelivery());
 				tfa.put("emailAddress", cus.getTFAEmailAddress());
+				
+				// TFA - trusted device
+				TFAManager tfam = WebTopApp.getInstance().getTFAManager(); //TODO: avoid this
+				boolean isTrusted = false;
+				String trustedOn = null;
+				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(getDomainId(), getUserId(), user.getSecret(), request);
+				if(tfam.isThisDeviceTrusted(getDomainId(), getUserId(), tdc)) {
+					JsTrustedDevice td = tfam.getTrustedDevice(getDomainId(), getUserId(), tdc.deviceId);
+					if(td != null) {
+						isTrusted = true;
+						trustedOn = td.getISOTimestamp();
+					}
+				}
+				tfa.put("isTrusted", isTrusted);
+				tfa.put("trustedOn", trustedOn);
+				
 				
 				JsOptions opts = new JsOptions();
 				opts.put("id", id);
@@ -111,7 +130,12 @@ public class CoreOptions extends BaseOptionManager {
 				udao.update(con, user);
 				
 				// TFA
-				
+				if(opts.containsKey("mandatory")) {
+					//TODO: do check using shiro
+					if(getSessionProfile().isSystemAdmin()) {
+						cus.setTFAMandatory(opts.getBoolean("mandatory"));
+					}
+				}
 				
 				// UserData
 				if(udp.canWrite()) {
@@ -129,4 +153,15 @@ public class CoreOptions extends BaseOptionManager {
 		}
 	}
 	
+	public void processDisableTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			TFAManager tfam = WebTopApp.getInstance().getTFAManager(); //TODO: avoid this
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action DisableTFA", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
 }

@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	
 	config: {
 		index: null,
+		maintenance: null,
 		id: null,
 		xid: null,
 		ns: null,

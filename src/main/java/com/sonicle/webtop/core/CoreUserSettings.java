@@ -80,7 +80,11 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
 	//public static final String OTP_ENABLED = "otp.enabled";
-	
+	/**
+	 * [boolean]
+	 * Specifies if TFA is required.
+	 */
+	public static final String TFA_MANDATORY = "tfa.mandatory";
 	/**
 	 * [string]
 	 * Specifies delivery method. One of: NONE, EMAIL, GOOGLEAUTH.
@@ -98,7 +102,6 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * Specifies choosen email address within email delivery.
 	 */
 	public static final String TFA_EMAILADDRESS = "tfa.emailaddress";
-	public static final String TFA_SONICLEAUTH_INTERVAL = "tfa.sonicleauth.interval";
 	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
 	
 	public String getTheme() {
@@ -133,6 +136,14 @@ public class CoreUserSettings extends BaseUserSettings {
 		return getUserSetting(WHATSNEW_ENABLED, true);
 	}
 	
+	public boolean getTFAMandatory() {
+		return getUserSetting(CoreUserSettings.TFA_MANDATORY, false);
+	}
+	
+	public boolean setTFAMandatory(boolean value) {
+		return setUserSetting(CoreUserSettings.TFA_MANDATORY, value);
+	}
+	
 	public String getTFADelivery() {
 		return getUserSetting(CoreUserSettings.TFA_DELIVERY);
 	}
@@ -156,6 +167,8 @@ public class CoreUserSettings extends BaseUserSettings {
 	public boolean setTFAEmailAddress(String value) {
 		return setUserSetting(CoreUserSettings.TFA_EMAILADDRESS, value);
 	}
+	
+	
 	
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {

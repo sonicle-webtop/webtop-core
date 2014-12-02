@@ -31,19 +31,48 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.bol.OUserSetting;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public interface FullEnvironment extends BasicEnvironment {
+public class JsTrustedDevice {
 	
-	public WebTopSession getSession();
-	public CoreManager getManager();
-	public UserDataProviderBase getUserDataProvider() throws WTException;
+	public String deviceId = null;
+	public String account = null;
+	public Long timestamp = null;
+	public String userAgent = null;
+	
+	public JsTrustedDevice(String deviceId, String account, long timestamp, String userAgent) {
+		this.deviceId = deviceId;
+		this.account = account;
+		this.timestamp = timestamp;
+		this.userAgent = userAgent;
+	}
+	
+	public static JsTrustedDevice fromJson(String value) {
+		if(value == null) return null;
+		return JsonResult.gson.fromJson(value, JsTrustedDevice.class);
+	}
+	
+	public static ArrayList<JsTrustedDevice> asList(List<OUserSetting> items) {
+		ArrayList<JsTrustedDevice> values = new ArrayList<>();
+		JsTrustedDevice valueof = null;
+		for(OUserSetting item: items) {
+			valueof = JsTrustedDevice.fromJson(item.getValue());
+			if(valueof != null) values.add(valueof);
+		}
+		return values;
+	}
+	
+	public String getISOTimestamp() {
+		return JsonResult.gson.toJson(new Date(this.timestamp)).replace("\"", "");
+	}
 }

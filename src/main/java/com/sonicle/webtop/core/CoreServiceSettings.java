@@ -8,6 +8,7 @@ package com.sonicle.webtop.core;
 
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.security.otp.provider.SonicleAuth;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.Locale;
 
@@ -30,7 +31,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 */
 	public static final String SYSTEM_COUNTRY = "system.country";
 	/**
-	 * [boolean][system]
+	 * [boolean][system][*]
 	 * Indicates if system is under maintenance
 	 */
 	public static final String MAINTENANCE = "maintenance";
@@ -56,6 +57,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [string][system]
 	 */
 	public static final String USERDATA_PROVIDER = "userdata.provider";
+	/**
+	 * [long][system]
+	 * Overrides default provider key validation interval (KVI).
+	 */
+	public static final String OTP_PROVIDER_SONICLEAUTH_KVI = "opt.provider.sonicleauth.kvi";
 	/**
 	 * [boolean][system+domain]
 	 */
@@ -90,6 +96,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public String getUserDataProvider() {
 		return LangUtils.value(getServiceSetting(CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
 	}
+	
+	public long getOTPProviderSonicleAuthKVI() {
+		return LangUtils.value(getServiceSetting(CoreServiceSettings.OTP_PROVIDER_SONICLEAUTH_KVI), SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
+	}
+	
 	
 	public boolean getTFAEnabled() {
 		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_ENABLED), false);

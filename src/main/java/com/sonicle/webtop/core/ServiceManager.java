@@ -133,7 +133,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public boolean isMaintenance(String serviceId) {
+	public boolean isInMaintenance(String serviceId) {
 		SettingsManager setm = wta.getSettingsManager();
 		return LangUtils.value(setm.getServiceSetting(serviceId, CoreServiceSettings.MAINTENANCE), false);
 	}
@@ -143,7 +143,7 @@ public class ServiceManager {
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
-	public BaseOptionManager instantiateOptionManager(String serviceId, String domainId, String userId) {
+	public BaseOptionManager instantiateOptionManager(UserProfile sessionProfile, String serviceId, String domainId, String userId) {
 		ServiceDescriptor descr = getService(serviceId);
 		if(!descr.hasOptionManager()) throw new RuntimeException("Service has no option manager class");
 		
@@ -156,7 +156,7 @@ public class ServiceManager {
 			return null;
 		}
 		
-		instance.initialize(wta, serviceId, domainId, userId);
+		instance.initialize(wta, sessionProfile, serviceId, domainId, userId);
 		return instance;
 	}
 	
@@ -345,7 +345,6 @@ public class ServiceManager {
 		
 		logger.debug("Registering service [{}]", serviceId);
 		synchronized(lock) {
-			//TODO: check if xid is not duplicated
 			if(services.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidMappings.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidMappings.get(xid));
 			descr = new ServiceDescriptor(manifest);
@@ -359,7 +358,7 @@ public class ServiceManager {
 			}
 
 			// If already in maintenance, keeps it active
-			if(!isMaintenance(serviceId)) {
+			if(!isInMaintenance(serviceId)) {
 				// ...otherwise sets it!
 				setMaintenance(serviceId, maintenance);
 			}

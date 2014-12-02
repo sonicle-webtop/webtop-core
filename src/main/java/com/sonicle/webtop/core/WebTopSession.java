@@ -70,6 +70,7 @@ public class WebTopSession {
 	private final HttpSession httpSession;
 	private final WebTopApp wta;
 	private boolean initialized = false;
+	private final HashMap<String, Object> properties = new HashMap<>();
 	private UserProfile profile = null;
 	private String refererURI = null;
 	private Locale userAgentLocale = null;
@@ -153,11 +154,28 @@ public class WebTopSession {
 		initialized = true;
 	}
 	
+	public void setProperty(String key, Object value) {
+		properties.put(key, value);
+	}
+	
+	public Object getProperty(String key) {
+		return properties.get(key);
+	}
+	
+	public boolean hasProperty(String key) {
+		return properties.containsKey(key);
+	}
+	
+	public void clearProperty(String key) {
+		properties.remove(key);
+	}
+	
+	/*
 	private String generateAuthTicket() {
 		String tk = httpSession.getId();
 		try {
 			tk = Encryption.cipher(tk, profile.getSecret());
-		} catch(Exception ex) {/* Do nothing... */}
+		} catch(Exception ex) { Do nothing... }
 		return tk;
 	}
 	
@@ -169,6 +187,7 @@ public class WebTopSession {
 			return false;
 		}
 	}
+	*/
 	
 	private void addService(Service service) {
 		String serviceId = service.getManifest().getId();
@@ -191,7 +210,25 @@ public class WebTopSession {
 		}
 	}
 	
-	public void fillStartupForService(JsWTS js, String serviceId) {
+	public void fillServices(JsWTS js) {
+		JsWTS.Service last = null;
+		String deflt = null;
+		int index;
+		for(String serviceId : getServices()) {
+			fillStartupForService(js, serviceId);
+			index = js.services.size()-1; // Last inserted
+			last = js.services.get(index);
+			last.index = index; // Position is (for convenience) also saved inside!
+			if((deflt == null) && !last.id.equals(CoreManifest.ID) && !last.maintenance) {
+				// Candidate startup (default) service must not be in maintenance
+				// and id should not be equal to core service!
+				deflt = last.id;
+			}
+		}
+		js.defaultService = deflt;
+	}
+	
+	public JsWTS.Service fillStartupForService(JsWTS js, String serviceId) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
@@ -204,7 +241,6 @@ public class WebTopSession {
 		
 		// Completes service info
 		JsWTS.Service jssvc = new JsWTS.Service();
-		jssvc.index = js.services.size();
 		jssvc.id = manifest.getId();
 		jssvc.xid = manifest.getXId();
 		jssvc.ns = manifest.getJsPackageName();
@@ -216,9 +252,11 @@ public class WebTopSession {
 		jssvc.version = manifest.getVersion().toString();
 		jssvc.build = manifest.getBuildDate();
 		jssvc.company = manifest.getCompany();
+		jssvc.maintenance = svcm.isInMaintenance(serviceId);
 		js.services.add(jssvc);
-		
 		js.servicesOptions.add(getInitialSettings(serviceId));
+		
+		return jssvc;
 	}
 	
 	public JsWTS.Settings getInitialSettings(String serviceId) {
@@ -240,7 +278,7 @@ public class WebTopSession {
 		
 		// Built-in settings
 		if(serviceId.equals(CoreManifest.ID)) {
-			is.put("authTicket", generateAuthTicket());
+			//is.put("authTicket", generateAuthTicket());
 			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
 		} else {
 			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);

@@ -31,17 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Ext.ux.form.HSpacer', {
-	extend: 'Ext.Component',
-	alias: 'widget.hspacer',
+package com.sonicle.webtop.core.sdk;
+
+import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.TFAManager;
+import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+
+/**
+ *
+ * @author malbinola
+ */
+public interface SuperEnvironment extends BasicEnvironment {
 	
-	factor: 1,
-	autoEl: 'div',
-	
-	constructor: function(cfg) {
-		var me = this;
-		if(Ext.isNumber(cfg.factor)) me.factor = cfg.factor;
-		me.width = me.factor * 10;
-		me.callParent(arguments);
-	}
-});
+	public WebTopSession getSession();
+	public TFAManager getTFAManager();
+	public CoreManager getManager();
+	public UserDataProviderBase getUserDataProvider() throws WTException;
+}

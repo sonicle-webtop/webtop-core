@@ -38,68 +38,64 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		'WT.view.FeedbackC',
 		'WT.model.UserService',
 		'WT.model.Feedback',
-		'Ext.ux.form.VSpacer'
+		'Ext.ux.form.Spacer'
 	],
 	controller: Ext.create('WT.view.FeedbackC'),
 	
 	initComponent: function() {
 		var me = this;
 		Ext.apply(me, {
-			items: [
-				{
-					xtype: 'form',
-					region: 'center',
-					itemId: 'fpnl',
-					model: 'Sonicle.webtop.core.model.Feedback',
-					bodyPadding: 10,
-					items: [
-						{
-							xtype: 'component',
-							html: WT.res('feedback.text')
-						}, {
-							xtype: 'vspacer',
-							factor: 2
-						}, {
-							xtype: 'combo',
-							name: 'serviceId',
-							allowBlank: false,
-							editable: false,
-							store: {
-								model: 'Sonicle.webtop.core.model.UserService',
-								proxy: WT.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
-							},
-							valueField: 'id',
-							displayField: 'description',
-							width: 400,
-							fieldLabel: WT.res('feedback.fld-service.lbl')
-						}, {
-							xtype: 'textareafield',
-							name: 'message',
-							allowBlank: false,
-							anchor: '100%',
-							fieldLabel: WT.res('feedback.fld-message.lbl')
-						}, {
-							xtype: 'checkbox',
-							name: 'anonymous',
-							hideLabel: true,
-							boxLabel: WT.res('feedback.fld-anonymous.lbl')
-						}, {
-							xtype: 'checkbox',
-							name: 'screenshot',
-							submitValue: false,
-							hideLabel: true,
-							boxLabel: WT.res('feedback.fld-screenshot.lbl'),
-							handler: 'onScreenshotChange'
-						}, {
-							xtype: 'hiddenfield',
-							name: 'timestamp'
-						}, {
-							xtype: 'hiddenfield',
-							name: 'image'
-						}
-					]
-				}
-			],
+			items: [{
+				xtype: 'form',
+				region: 'center',
+				itemId: 'fpnl',
+				model: 'Sonicle.webtop.core.model.Feedback',
+				bodyPadding: 10,
+				items: [{
+					xtype: 'component',
+					html: WT.res('feedback.text')
+				}, {
+					xtype: 'spacer',
+					factor: 2
+				}, {
+					xtype: 'combo',
+					name: 'serviceId',
+					allowBlank: false,
+					editable: false,
+					store: {
+						model: 'Sonicle.webtop.core.model.UserService',
+						proxy: WT.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
+					},
+					valueField: 'id',
+					displayField: 'description',
+					width: 400,
+					fieldLabel: WT.res('feedback.fld-service.lbl')
+				}, {
+					xtype: 'textareafield',
+					name: 'message',
+					allowBlank: false,
+					anchor: '100%',
+					fieldLabel: WT.res('feedback.fld-message.lbl')
+				}, {
+					xtype: 'checkbox',
+					name: 'anonymous',
+					hideLabel: true,
+					boxLabel: WT.res('feedback.fld-anonymous.lbl')
+				}, {
+					xtype: 'checkbox',
+					name: 'screenshot',
+					submitValue: false,
+					hideLabel: true,
+					boxLabel: WT.res('feedback.fld-screenshot.lbl'),
+					handler: 'onScreenshotChange'
+				}, {
+					xtype: 'hiddenfield',
+					name: 'timestamp'
+				}, {
+					xtype: 'hiddenfield',
+					name: 'image'
+				}]
+			}],
 
 			buttons: [{
 				text: WT.res('btn-send.lbl'),

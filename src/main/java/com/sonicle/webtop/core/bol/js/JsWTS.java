@@ -52,6 +52,7 @@ public class JsWTS {
 	public ArrayList<String> appRequires = new ArrayList<>();
 	public ArrayList<JsWTS.Service> services = new ArrayList<>();
 	public ArrayList<Settings> servicesOptions = new ArrayList<>();
+	public String defaultService;
 	
 	public static class Service {
 		public int index;
@@ -66,6 +67,7 @@ public class JsWTS {
 		public String version;
 		public String build;
 		public String company;
+		public boolean maintenance;
 	}
 	
 	public static class Settings extends HashMap<String, Object> {

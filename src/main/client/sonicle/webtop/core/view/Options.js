@@ -90,8 +90,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	},
 	
 	onAfterRender: function() {
-		var id = 'admin@*';
-		id = 'matteo.albinola@sonicleldap';
+		var id = this.lookupReference('users').getValue();
 		this.updateGui(id);
 	},
 	
@@ -100,7 +99,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		var data = [];
 		me.wait();
 		if(id === WTS.principal) {
-			var isAdmin = WTS.principal === 'admin@*';
+			var isAdmin = id === 'admin@*';
 			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
 				if(isAdmin && desc.getIndex() > 0) return false;
 				if(!Ext.isEmpty(desc.getOptionsClassName())) {

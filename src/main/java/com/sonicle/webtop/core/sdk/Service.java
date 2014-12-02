@@ -68,8 +68,8 @@ public abstract class Service {
 		return env;
 	}
 	
-	public final FullEnvironment getFullEnv() {
-		if(coreEnv == null) throw new InsufficientRightsException("Insufficient rigths to access full environment");
+	public final SuperEnvironment getSuperEnv() {
+		if(coreEnv == null) throw new InsufficientRightsException("Insufficient rigths to access super environment");
 		return coreEnv;
 	}
 	

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.commons.web.servlet.ServletUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.servlet.Login;
 import java.io.IOException;
 import javax.servlet.ServletException;

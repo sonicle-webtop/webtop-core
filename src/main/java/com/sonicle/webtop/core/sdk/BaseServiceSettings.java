@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
 
@@ -42,23 +41,22 @@ import com.sonicle.webtop.core.WebTopApp;
  * @author gbulfon
  */
 public abstract class BaseServiceSettings {
-    
-    private SettingsManager sm;
-    protected String serviceId;
-    protected String domainId;
-    
-    private BaseServiceSettings() {
-        
-    }
-    
-    public BaseServiceSettings(String domainId, String serviceId) {
-        this.sm=WebTopApp.getInstance().getSettingsManager();
-        this.serviceId=serviceId;
-        this.domainId=domainId;
-    }
-    
-    public String getServiceSetting(String key) {
-        return sm.getServiceSetting(domainId, serviceId, key);
-    }
-    
+
+	private SettingsManager sm;
+	protected String serviceId;
+	protected String domainId;
+
+	private BaseServiceSettings() {
+
+	}
+
+	public BaseServiceSettings(String domainId, String serviceId) {
+		this.sm = WebTopApp.getInstance().getSettingsManager();
+		this.serviceId = serviceId;
+		this.domainId = domainId;
+	}
+
+	public String getServiceSetting(String key) {
+		return sm.getServiceSetting(domainId, serviceId, key);
+	}
 }

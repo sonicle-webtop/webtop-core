@@ -31,75 +31,39 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.CoreOptionsC', {
-	alternateClassName: 'WT.view.CoreOptionsC',
-	extend: 'Ext.app.ViewController',
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.web.json.JsonResult;
+
+/**
+ *
+ * @author malbinola
+ */
+public class TrustedDeviceCookie {
 	
-	reload: false,
+	public String deviceId = null;
+	public String account = null;
+	public Long timestamp = null;
 	
-	onBlurAutoSave: function(s) {
-		var me = this;
-		if(s.isDirty()) {
-			me.reload = s.reload || false;
-			me.getView().saveForm();
-		}
-	},
-	
-	onFormLoad: function(success) {
-		if(success) this.getViewModel().set('values', this.getView().model.getData());
-	},
-	
-	onFormSave: function(success) {
-		var me = this;
-		me.getViewModel().set('values', me.getView().model.getData());
-		if(me.reload) {
-			WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
-				if(bid === 'yes') WT.reload();
-			});
-		}
-		me.reload = false;
-	},
-	
-	onTFAEnableClick: function() {
-		alert('TODO');
-	},
-	
-	onTFADisableClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'DisableTFA', {
-					params: {options: true},
-					callback: function(success) {
-						if(success) me.getView().loadForm();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustThisClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustthis'},
-					callback: function(success) {
-						if(success) me.getView().loadForm();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustOtherClick: function() {
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustothers'}
-				});
-			}
-		});
+	public TrustedDeviceCookie(JsTrustedDevice td) {
+		this.account = td.account;
+		this.deviceId = td.deviceId;
+		this.timestamp = td.timestamp;
 	}
 	
-});
+	public TrustedDeviceCookie(String deviceId, String account, long timestamp) {
+		this.account = account;
+		this.deviceId = deviceId;
+		this.timestamp = timestamp;
+	}
+	
+	public static TrustedDeviceCookie fromJson(String value) {
+		if(value == null) return null;
+		return JsonResult.gson.fromJson(value, TrustedDeviceCookie.class);
+	}
+	
+	public static String toJson(TrustedDeviceCookie value) {
+		if(value == null) return null;
+		return JsonResult.gson.toJson(value, TrustedDeviceCookie.class).replace("\"", "");
+	}
+}

@@ -37,17 +37,14 @@ import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.bol.js.JsWhatsnew;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -112,8 +109,12 @@ public class CoreManager {
 		
 		List<String> ids = svcm.getServices();
 		for(String id : ids) {
-			//TODO: check if service is allowed for user
-			result.add(id);
+			if(UserProfile.isSystemAdmin(domainId, userId)) {
+				if(id.equals(CoreManifest.ID)) result.add(id);
+			} else {
+				//TODO: check if service is allowed for user
+				result.add(id);
+			}
 		}
 		return result;
 	}

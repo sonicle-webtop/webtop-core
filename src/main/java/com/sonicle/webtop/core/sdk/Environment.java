@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Environment implements BasicEnvironment {
 
-	public final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
+	protected final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
 	private static HashMap<String,ServiceManifest> manifestMap=new HashMap<>();
 	
 	protected final WebTopApp wta;
@@ -66,6 +66,21 @@ public class Environment implements BasicEnvironment {
 	public Environment(WebTopApp wta, WebTopSession wts) {
 		this.wta = wta;
 		this.wts = wts;
+	}
+	
+	@Override
+	public Connection getCoreConnection() throws SQLException {
+		return wta.getConnectionManager().getConnection();
+	}
+
+	@Override
+	public CoreServiceSettings getCoreServiceSettings() {
+		return wts.getCoreServiceSettings();
+	}
+
+	@Override
+	public CoreUserSettings getCoreUserSettings() {
+		return wts.getCoreUserSettings();
 	}
 
 	@Override
@@ -90,27 +105,12 @@ public class Environment implements BasicEnvironment {
 
 	@Override
 	public String lookupCoreResource(Locale locale, String key) {
-		return wta.lookupResource(CoreManifest.ID,locale, key);
+		return wta.lookupResource(CoreManifest.ID, locale, key);
 	}
 
 	@Override
 	public String getSessionRefererUri() {
 		return wts.getRefererURI();
-	}
-
-	@Override
-	public Connection getCoreConnection() throws SQLException {
-		return wta.getConnectionManager().getConnection();
-	}
-
-	@Override
-	public CoreServiceSettings getCoreServiceSettings() {
-		return wts.getCoreServiceSettings();
-	}
-
-	@Override
-	public CoreUserSettings getCoreUserSettings() {
-		return wts.getCoreUserSettings();
 	}
 
 	@Override
@@ -152,8 +152,8 @@ public class Environment implements BasicEnvironment {
 	}
 	
 	@Override
-	public void sendWebSocketMessage(ServiceMessage wsmessage) {
-		wts.send(wsmessage);
+	public void sendWebSocketMessage(ServiceMessage message) {
+		wts.send(message);
 	}
 	
 	public static void addManifestMap(String classname, ServiceManifest manifest) {

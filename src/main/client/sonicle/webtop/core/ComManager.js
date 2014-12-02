@@ -38,18 +38,18 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		'Ext.mixin.Observable'
 	],
 	config: {
-		wsAuthTicket: '',
 		wsReconnectInterval: 10000,
 		wsKeepAliveInterval: 60000,
-		seInterval: 30000
+		seInterval: 20000,
+		connectionLostTimeout: 60*1000*2
 	},
 	
+	lastseen: 0,
 	mode: null,
-	ws: null,
-	
 	MODE_UNKNOWN: 'unknown',
 	MODE_WS: 'ws',
 	MODE_SE: 'se',
+	ws: null,
 	
 	connect: function(cfg) {
 		var me = this;
@@ -57,25 +57,26 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		me.initConfig(cfg);
 		
 		me.mode = me.MODE_UNKNOWN;
-		if(me.isWSSupported) {
+		if(me.isWSSupported()) {
 			me.initWebSocket();
 		} else {
-			console.log('WebSockets are not supported');
+			//console.log('WebSockets are not supported');
 			me.initServerEvents();
 		}
 	},
 	
 	isWSSupported: function() {
-		return ("WebSocket" in window);
+		return ("WebSocketx" in window);
 	},
 	
 	initWebSocket: function() {
 		var me = this;
 		
 		me.ws = Ext.create('Ext.ux.WebSocket', {
-			url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
+			url: Ext.String.format('ws://{0}:{1}{2}/wsmanager', window.location.hostname, window.location.port, window.location.pathname),
+			//url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
 			autoReconnect: true ,
-			autoReconnectInterval: 10000,
+			autoReconnectInterval: me.getWsReconnectInterval(),
 			listeners: {
 				open: function(ws) {
 					//console.log('ws.open');
@@ -84,33 +85,32 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 						me.shutdownServerEvents(); // Ensure SE are down
 						me.runKeepAliveTask();
 					}
-					
-					ws.send(WT.wsMsg(WT.ID, 'ticket', {
-						userId: WTS.userId,
-						domainId: WTS.domainId,
-						principal: WTS.principal,
-						encAuthTicket: me.getWsAuthTicket()
-					}));
 				},
 				close: function(ws) {
 					//console.log('ws.close');
-					if(me.mode === me.MODE_UNKNOWN) return; // Disabling event!
-					
-					console.log('ws lost... maybe a connection problem');
+					if(me.mode === me.MODE_UNKNOWN) {
+						return; // Disabling event!
+					} else {
+						//console.log('ws status: '+ws.getStatus());
+					}
 				},
 				message: function(ws, msg) {
 					//console.log('ws.message');
+					me.updateLastSeen();
 					me.handleMessages(msg);
 				},
 				error: function(ws, err) {
-					console.log('ws.error');
+					//console.log('ws.error');
 					if(me.mode === me.MODE_UNKNOWN) {
 						// Websocket not available!
 						// Close it and do failover on server-events...
 						ws.close();
 						me.initServerEvents();
 					} else {
-						console.log('ws status: '+ws.getStatus());
+						me.connectionLostCheck();
+						if(ws.getStatus() === ws.OPEN) {
+							//console.log('ws status: '+ws.getStatus());
+						}
 					}
 				}
 			}
@@ -118,14 +118,20 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 	},
 	
 	runKeepAliveTask: function() {
+		//console.log('runKeepAliveTask');
 		var me = this;
 		if(!Ext.isDefined(me.kaTask)) {
 			me.kaTask = Ext.TaskManager.start({
 				run: function () {
-					console.log('calling keep-alive');
 					Ext.Ajax.request({
-						url: 'session-keep-alive',
-						method: 'GET'
+						url: 'keep-alive',
+						method: 'GET',
+						success: function() {
+							me.updateLastSeen();
+						},
+						failure: function() {
+							me.connectionLostCheck();
+						}
 					});
 				},
 				interval: me.getWsKeepAliveInterval()
@@ -148,8 +154,14 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 			me.shutdownKeepAliveTask();
 			me.seTask = Ext.TaskManager.start({
 				run: function () {
-					console.log('calling ServerEvents');
+					//console.log('calling ServerEvents');
 					WT.ajaxReq(WT.ID, 'ServerEvents', {
+						success: function() {
+							me.updateLastSeen();
+						},
+						failure: function() {
+							me.connectionLostCheck();
+						},
 						callback: function(success, o) {
 							if(success) {
 								if(o.data) me.handleMessages(o.data);
@@ -167,6 +179,23 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		if(Ext.isDefined(me.seTask)) {
 			Ext.TaskManager.stop(me.seTask);
 			delete me.seTask;
+		}
+	},
+	
+	updateLastSeen: function() {
+		this.fire = true;
+		this.lastseen = Date.now();
+		//console.log('updateLastSeen '+this.lastseen);
+	},
+	
+	connectionLostCheck: function() {
+		//console.log('connectionLostCheck');
+		var me = this, now = Date.now();
+		if((now - me.lastseen) > me.getConnectionLostTimeout()) {
+			if(me.fire) {
+				me.fire = false;
+				me.fireEvent('connectionlost', me, (now - me.lastseen));
+			}
 		}
 	},
 	

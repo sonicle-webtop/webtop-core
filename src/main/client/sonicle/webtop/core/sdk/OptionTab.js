@@ -47,11 +47,11 @@ Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
 	border: false,
 	overflowY: 'scroll',
 	padding: 0,
-	margin: 0,
-	
+	margin: 0
+	/*
 	defaults: {
 		collapsible: true,
 		margin: '5 25 0 5'
 	}
-	
+	*/
 });
