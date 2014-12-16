@@ -31,23 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+Ext.define('Sonicle.webtop.core.model.ServiceOptions', {
+	extend: 'Ext.data.Model'
+});
 
-/**
- *
- * @author malbinola
- */
-public class JsOptionsService {
-	
-	public String id;
-	public String xid;
-	public String name;
-	public String className;
-	
-	public JsOptionsService(String id, String xid, String name, String className) {
-		this.id = id;
-		this.xid = xid;
-		this.name = name;
-		this.className = className;
-	}
-}

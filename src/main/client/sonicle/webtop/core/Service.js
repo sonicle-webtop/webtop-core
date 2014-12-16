@@ -31,60 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-/**
- *
- * @author malbinola
- */
-public class JsWTS {
+Ext.define('Sonicle.webtop.core.Service', {
+	extend: 'WT.sdk.Service',
+	requires: [
+		'Sonicle.webtop.core.model.ServiceOptions'
+	],
 	
-	//public String locale;
-	//public String theme;
-	//public String laf;
-	public String principal;
-	public String userId;
-	public String domainId;
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTS.Service> services = new ArrayList<>();
-	public ArrayList<Settings> servicesOptions = new ArrayList<>();
-	public String defaultService;
-	
-	public static class ServiceUserOptions {
-		public String viewClassName;
-		public String modelClassName;
-		
-		public ServiceUserOptions(String viewClassName, String modelClassName) {
-			this.viewClassName = viewClassName;
-			this.modelClassName = modelClassName;
-		}
-	}
-	
-	public static class Service {
-		public int index;
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String localeClassName;
-		public String serviceClassName;
-		public ServiceUserOptions userOptions;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
-		public boolean maintenance;
-	}
-	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
-		}
-	}
-}
+	optionsModel: 'Sonicle.webtop.core.model.ServiceOptions'
+});

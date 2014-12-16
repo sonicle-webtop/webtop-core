@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.Environment;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.servlet.ServletHelper;
@@ -79,7 +79,7 @@ public class WebTopSession {
 	private CoreUserSettings coreUserSettings = null;
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
-	private final LinkedHashMap<String, Service> services = new LinkedHashMap<>();
+	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final Object wsmLock = new Object();
 	private WebSocketManager wsManager = null;
 	private final ArrayDeque<ServiceMessage> messageQueue = new ArrayDeque<>();
@@ -94,11 +94,46 @@ public class WebTopSession {
 		
 		// Cleanup services
 		synchronized(services) {
-			for(Service instance : services.values()) {
-				svcm.cleanupDefaultService(instance);
+			for(BaseService instance : services.values()) {
+				svcm.cleanupService(instance);
 			}
 			services.clear();
 		}
+	}
+	
+	/**
+	 * Sets a property into session hashmap.
+	 * @param key The property key.
+	 * @param value The property value.
+	 */
+	public void setProperty(String key, Object value) {
+		properties.put(key, value);
+	}
+	
+	/**
+	 * Gets a property value from session hashmap.
+	 * @param key The property key.
+	 * @return Requested property value.
+	 */
+	public Object getProperty(String key) {
+		return properties.get(key);
+	}
+	
+	/**
+	 * Checks if session contains specified property.
+	 * @param key The property key.
+	 * @return True if property is found, false otherwise.
+	 */
+	public boolean hasProperty(String key) {
+		return properties.containsKey(key);
+	}
+	
+	/**
+	 * Clears/removes specified property.
+	 * @param key The property key.
+	 */
+	public void clearProperty(String key) {
+		properties.remove(key);
 	}
 	
 	/**
@@ -132,7 +167,7 @@ public class WebTopSession {
 		profile = new UserProfile(fullEnv, principal);
 		
 		// Instantiates services
-		Service instance = null;
+		BaseService instance = null;
 		List<String> serviceIds = wta.getManager().getUserServices(profile);
 		int count = 0;
 		// TODO: order services list
@@ -154,42 +189,11 @@ public class WebTopSession {
 		initialized = true;
 	}
 	
-	public void setProperty(String key, Object value) {
-		properties.put(key, value);
-	}
-	
-	public Object getProperty(String key) {
-		return properties.get(key);
-	}
-	
-	public boolean hasProperty(String key) {
-		return properties.containsKey(key);
-	}
-	
-	public void clearProperty(String key) {
-		properties.remove(key);
-	}
-	
-	/*
-	private String generateAuthTicket() {
-		String tk = httpSession.getId();
-		try {
-			tk = Encryption.cipher(tk, profile.getSecret());
-		} catch(Exception ex) { Do nothing... }
-		return tk;
-	}
-	
-	public boolean isAuthTicketValid(String ticket) {
-		try {
-			String sid = Encryption.decipher(ticket, profile.getSecret());
-			return sid.equals(httpSession.getId());
-		} catch(Exception ex) {
-			return false;
-		}
-	}
-	*/
-	
-	private void addService(Service service) {
+	/**
+	 * Stores service instance into this session.
+	 * @param service 
+	 */
+	private void addService(BaseService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(services) {
 			if(services.containsKey(serviceId)) throw new RuntimeException("Cannot add service twice");
@@ -197,13 +201,22 @@ public class WebTopSession {
 		}
 	}
 	
-	public Service getServiceById(String serviceId) {
+	/**
+	 * Gets a service instance by ID.
+	 * @param serviceId The service ID.
+	 * @return The service instance, if found.
+	 */
+	public BaseService getServiceById(String serviceId) {
 		synchronized(services) {
 			if(!services.containsKey(serviceId)) throw new RuntimeException(MessageFormat.format("No service with ID: '{0}'", serviceId));
 			return services.get(serviceId);
 		}
 	}
 	
+	/**
+	 * Gets instantiated services list.
+	 * @return A list of service ids.
+	 */
 	public List<String> getServices() {
 		synchronized(services) {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
@@ -228,16 +241,19 @@ public class WebTopSession {
 		js.defaultService = deflt;
 	}
 	
-	public JsWTS.Service fillStartupForService(JsWTS js, String serviceId) {
+	private JsWTS.Service fillStartupForService(JsWTS js, String serviceId) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		Locale locale = getLocale();
 		
 		// Defines paths and requires
-		js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-		js.appRequires.add(manifest.getServiceJsClassName());
-		js.appRequires.add(manifest.getJsLocaleClassName(locale));
+		if(serviceId.equals(CoreManifest.ID)) {
+			js.appRequires.add(manifest.getServiceJsClassName(true));
+			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
+		} else {
+			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
+		}
 		
 		// Completes service info
 		JsWTS.Service jssvc = new JsWTS.Service();
@@ -245,8 +261,14 @@ public class WebTopSession {
 		jssvc.xid = manifest.getXId();
 		jssvc.ns = manifest.getJsPackageName();
 		jssvc.path = manifest.getJsBaseUrl();
-		jssvc.className = manifest.getServiceJsClassName();
-		if(sdesc.hasOptionManager()) jssvc.optionsClassName = manifest.getOptionsJsClassName();
+		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
+		jssvc.serviceClassName = manifest.getServiceJsClassName(true);
+		if(sdesc.hasUserOptionsService()) {
+			jssvc.userOptions = new JsWTS.ServiceUserOptions(
+				manifest.getUserOptionsViewJsClassName(true),
+				manifest.getUserOptionsModelJsClassName(true)
+			);
+		}
 		jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
 		jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
 		jssvc.version = manifest.getVersion().toString();
@@ -254,21 +276,21 @@ public class WebTopSession {
 		jssvc.company = manifest.getCompany();
 		jssvc.maintenance = svcm.isInMaintenance(serviceId);
 		js.services.add(jssvc);
-		js.servicesOptions.add(getInitialSettings(serviceId));
+		js.servicesOptions.add(getClientOptions(serviceId));
 		
 		return jssvc;
 	}
 	
-	public JsWTS.Settings getInitialSettings(String serviceId) {
-		Service svc = getServiceById(serviceId);
+	private JsWTS.Settings getClientOptions(String serviceId) {
+		BaseService svc = getServiceById(serviceId);
 		
 		// Gets initial settings from instantiated service
 		HashMap<String, Object> hm = null;
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
-			hm = svc.returnInitialSettings();
+			hm = svc.returnClientOptions();
 		} catch(Exception ex) {
-			logger.error("returnInitialSettings method returns errors", ex);
+			logger.error("returnStartupOptions method returns errors", ex);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}

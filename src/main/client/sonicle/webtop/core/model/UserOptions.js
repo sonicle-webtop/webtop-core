@@ -31,22 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Options', {
-	alternateClassName: 'WT.model.Options',
-	extend: 'WT.model.Base',
-	/*
-	requires: [
-		'WT.model.UserData'
-	],
-	*/
+Ext.define('Sonicle.webtop.core.model.UserOptions', {
+	extend: 'WT.sdk.model.UserOptions',
 	
-	proxy: {
-		extraParams: {
-			options: true
-		}
-	},
+	proxy: WT.optionsProxy('com.sonicle.webtop.core'),
 	fields: [
-		'id',
 		'displayName',
 		'locale',
 		'theme',

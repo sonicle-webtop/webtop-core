@@ -35,8 +35,9 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	alternateClassName: 'WT.view.Options',
 	extend: 'WT.sdk.BaseView',
 	requires: [
-		'WT.view.CoreOptions',
-		'WT.sdk.OptionTab',
+		'WT.model.Simple',
+		'WT.sdk.UserOptionsView',
+		'WT.sdk.UserOptionsController',
 		'WT.sdk.OptionTabSection'
 	],
 	
@@ -95,20 +96,21 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	},
 	
 	updateGui: function(id) {
-		var me = this;
+		var me = this, uo = null;
 		var data = [];
 		me.wait();
-		if(id === WTS.principal) {
+		if(id === WTS.principal) { // User options are being edited by user itself
 			var isAdmin = id === 'admin@*';
 			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
 				if(isAdmin && desc.getIndex() > 0) return false;
-				if(!Ext.isEmpty(desc.getOptionsClassName())) {
-					Ext.Array.push(data, {
+				
+				uo = desc.getUserOptions();
+				if(uo) {
+					Ext.Array.push(data, Ext.apply(uo, {
 						id: desc.getId(),
 						xid: desc.getXid(),
-						name: desc.getName(),
-						className: desc.getOptionsClassName()
-					});
+						name: desc.getName()
+					}));
 				}
 			});
 			me.createTabs(data);
@@ -126,16 +128,28 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	},
 	
 	createTabs: function(data) {
-		var tab = this.lookupReference('optstab');
-		tab.removeAll(true);
+		var me = this;
+		
+		// Defines dependencies to load
+		var dep = [];
 		Ext.each(data, function(itm) {
-			tab.add(Ext.create(itm.className, {
-				itemId: itm.id,
-				title: itm.name,
-				iconCls: WT.cssIconCls(itm.xid, 'service-s')
-			}));
+			dep.push(itm.viewClassName);
+			dep.push(itm.modelClassName);
 		});
-		tab.setActiveTab(0);
+		
+		Ext.require(dep, function() {
+			var tab = me.lookupReference('optstab');
+			tab.removeAll(true);
+			Ext.each(data, function(itm) {
+				tab.add(Ext.create(itm.viewClassName, {
+					itemId: itm.id,
+					model: itm.modelClassName,
+					title: itm.name,
+					iconCls: WT.cssIconCls(itm.xid, 'service-s')
+				}));
+			});
+			tab.setActiveTab(0);
+		});
 	}
 	
 	

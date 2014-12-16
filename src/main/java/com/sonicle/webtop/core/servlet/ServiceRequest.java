@@ -37,8 +37,8 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.sdk.BaseOptionManager;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -73,7 +73,7 @@ public class ServiceRequest extends HttpServlet {
 			
 			if(!options) {
 				// Retrieves instantiated service
-				Service instance = wts.getServiceById(service);
+				BaseService instance = wts.getServiceById(service);
 
 				// Gets right method
 				Method method = null;
@@ -121,8 +121,8 @@ public class ServiceRequest extends HttpServlet {
 				String domainId = tokens[1];
 				String userId = tokens[0];
 				
-				// Retrieves instantiated option manager (session context away)
-				BaseOptionManager instance = svcm.instantiateOptionManager(wts.getUserProfile(), service, domainId, userId);
+				// Retrieves instantiated userOptions service (session context away)
+				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, domainId, userId);
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);
 				invokeMethod(instance, method, service, nowriter, request, response);

@@ -34,5 +34,7 @@
 Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 	alternateClassName: 'WT.model.ClientOptions',
 	
-	
+	fields: [
+		'id'
+	]
 });

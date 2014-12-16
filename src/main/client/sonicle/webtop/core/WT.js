@@ -18,7 +18,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	NS: 'Sonicle.webtop.core',
 	
-	strings: null,
 	loadedCss: null,
 	
 	/**
@@ -54,7 +53,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {String} key The key.
 	 * @return {Mixed} Setting value.
 	 */
-	getServiceOption: function(id, key) {
+	getOption: function(id, key) {
 		if(arguments.length === 1) {
 			key = id;
 			id = WT.ID;
@@ -74,13 +73,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 			key = id;
 			id = WT.ID;
 		}
-		if(id === WT.ID) {
-			return WT.strings[key];
-		} else {
-			var inst = WT.getApp().getService(id);
-			//if(inst === null) return null;
-			return (inst) ? inst.res(key) : null;
-		}
+		var inst = WT.getApp().getService(id);
+		return (inst) ? inst.res(key) : null;
 	},
 	
 	/**
@@ -127,14 +121,15 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return (obj.isAction && Ext.isFunction(obj.execute));
 	},
 	
-	proxy: function(svc, act, rootp) {
+	proxy: function(svc, act, rootp, opts) {
+		opts = opts || {};
 		return {
 			type: 'ajax',
 			url: 'service-request',
-			extraParams: {
+			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: svc,
 				action: act
-			},
+			}),
 			reader: {
 				type: 'json',
 				rootProperty: rootp,
@@ -149,7 +144,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 		};
 	},
 	
-	apiProxy: function(svc, act, rootp) {
+	apiProxy: function(svc, act, rootp, opts) {
+		opts = opts || {};
 		return {
 			type: 'ajax',
 			api: {
@@ -158,16 +154,24 @@ Ext.define('Sonicle.webtop.core.WT', {
 				update: 'service-request?crud=update',
 				destroy: 'service-request?crud=delete'
 			},
-			extraParams: {
+			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: svc,
 				action: act
-			},
+			}),
 			reader: {
 				type: 'json',
 				rootProperty: rootp,
 				messageProperty: 'message'
 			}
 		};
+	},
+	
+	optionsProxy: function(svc) {
+		return WT.apiProxy(svc, 'UserOptions', 'data', {
+			extraParams: {
+				options: true
+			}
+		});
 	},
 	
 	componentLoader: function(svc, act, opts) {
@@ -390,7 +394,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @return {String} the imageUrl
 	 */
 	imageUrl: function(sid, relPath) {
-		return Ext.String.format('resources/{0}/laf/{1}/{2}',sid,WTS.laf,relPath);
+		return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
 	},
 	
 	/*

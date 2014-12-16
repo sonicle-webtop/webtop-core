@@ -34,11 +34,11 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.PublicService;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BasePublicService;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import com.sonicle.webtop.core.sdk.DeamonService;
-import com.sonicle.webtop.core.sdk.BaseOptionManager;
+import com.sonicle.webtop.core.sdk.BaseDeamonService;
+import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.service.ResourceNotFoundException;
 import com.sonicle.webtop.core.service.Whatsnew;
@@ -60,7 +60,7 @@ class ServiceDescriptor {
 	private Class serviceClass = null;
 	private Class publicServiceClass = null;
 	private Class deamonServiceClass = null;
-	private Class optionManagerClass = null;
+	private Class userOptionsServiceClass = null;
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
 
@@ -70,22 +70,22 @@ class ServiceDescriptor {
 		// Loads default (private) service class
 		String className = manifest.getServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			serviceClass = loadClass(className, Service.class, "Service");
+			serviceClass = loadClass(className, BaseService.class, "Service");
 		}
 		// Loads public service class
 		className = manifest.getPublicServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			publicServiceClass = loadClass(className, PublicService.class, "PublicService");
+			publicServiceClass = loadClass(className, BasePublicService.class, "PublicService");
 		}
 		// Loads deamon service class
 		className = manifest.getDeamonServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			deamonServiceClass = loadClass(className, DeamonService.class, "DeamonService");
+			deamonServiceClass = loadClass(className, BaseDeamonService.class, "DeamonService");
 		}
-		// Loads options manager class
-		className = manifest.getOptionsClassName();
+		// Loads userOptions service class
+		className = manifest.getUserOptionsServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			optionManagerClass = loadClass(className, BaseOptionManager.class, "OptionManager");
+			userOptionsServiceClass = loadClass(className, BaseUserOptionsService.class, "UserOptionsService");
 		}
 	}
 
@@ -101,12 +101,12 @@ class ServiceDescriptor {
 		return serviceClass;
 	}
 	
-	public boolean hasOptionManager() {
-		return (optionManagerClass != null);
+	public boolean hasUserOptionsService() {
+		return (userOptionsServiceClass != null);
 	}
 
-	public Class getOptionManagerClass() {
-		return optionManagerClass;
+	public Class getUserOptionsServiceClass() {
+		return userOptionsServiceClass;
 	}
 
 	public boolean hasPublicService() {

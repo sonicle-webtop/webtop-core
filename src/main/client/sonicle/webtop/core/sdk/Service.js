@@ -68,19 +68,20 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Fires after the Service has been activated.
 	 */
 	
-	constructor: function(cfg) {
+	constructor: function(config) {
 		var me = this;
-		me.ID = cfg.ID;
-		me.XID = cfg.XID;
+		me.ID = config.ID;
+		me.XID = config.XID;
 		me.wsactions = {};
 		me.wsscopes = {};
-		me.initConfig(cfg);
+		me.initConfig(config);
 		me.callParent(arguments);
+		me.mixins.observable.constructor.call(me, config);
+		me.options = Ext.create(me.getOptionsModel(), config.optionsData);
 	},
 	
 	getOption: function(key) {
 		return this.options.get(key);
-		//return WT.getServiceOption(this.ID, key);
 	},
 	
 	setOptions: function(opts) {

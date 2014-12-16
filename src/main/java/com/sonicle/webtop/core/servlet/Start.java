@@ -102,9 +102,9 @@ public class Start extends HttpServlet {
 			jswts.principal = up.getId();
 			jswts.domainId = up.getDomainId();
 			jswts.userId = up.getUserId();
-			jswts.locale = locale.toString();
-			jswts.theme = theme;
-			jswts.laf = lookAndFeel;
+			//jswts.locale = locale.toString();
+			//jswts.theme = theme;
+			//jswts.laf = lookAndFeel;
 			wts.fillServices(jswts);
 			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			

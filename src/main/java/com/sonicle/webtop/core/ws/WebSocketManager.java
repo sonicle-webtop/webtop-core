@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.ws;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.io.IOException;
 import java.util.Arrays;

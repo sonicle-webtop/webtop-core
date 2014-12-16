@@ -51,6 +51,12 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 	MODE_SE: 'se',
 	ws: null,
 	
+	constructor: function(config) {
+		var me = this;
+		me.callParent(config);
+		me.mixins.observable.constructor.call(me, config);
+	},
+	
 	connect: function(cfg) {
 		var me = this;
 		cfg = cfg || {};
@@ -194,14 +200,14 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 		if((now - me.lastseen) > me.getConnectionLostTimeout()) {
 			if(me.fire) {
 				me.fire = false;
-				me.fireEvent('connectionlost', me, (now - me.lastseen));
+				me.fireEventArgs('connectionlost', [me, (now - me.lastseen)]);
 			}
 		}
 	},
 	
 	handleMessages: function(raw) {
 		var obj = Ext.JSON.decode(raw, true);
-		if(Ext.isArray(obj)) this.fireEvent('receive', this, obj);
+		if(Ext.isArray(obj)) this.fireEventArgs('receive', [this, obj]);
 	},
 	
 	buildMsg: function(service, action, config) {

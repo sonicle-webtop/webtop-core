@@ -40,15 +40,14 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.sdk.BaseOptionManager;
+import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.JsOptions;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserData;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -57,11 +56,11 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreOptions extends BaseOptionManager {
+public class UserOptionsService extends BaseUserOptionsService {
 	
-	public static final Logger logger = Service.getLogger(CoreOptions.class);
+	public static final Logger logger = BaseService.getLogger(UserOptionsService.class);
 	
-	public void processOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Connection con = null;
 		
 		try {
@@ -117,7 +116,7 @@ public class CoreOptions extends BaseOptionManager {
 				opts.putAll(main);
 				opts.putPrefixed("tfa", tfa);
 				opts.putPrefixed("usd", ud.getMap());
-				new JsonResult("options", opts).printTo(out);
+				new JsonResult(opts).printTo(out);
 				
 			} else if(crud.equals("update")) {
 				JsOptions opts = ServletUtils.getPayload(request, JsOptions.class);
@@ -146,7 +145,7 @@ public class CoreOptions extends BaseOptionManager {
 			}
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action Options", ex);
+			logger.error("Error executing action UserOptions", ex);
 			new JsonResult(false).printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);

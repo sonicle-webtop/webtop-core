@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public abstract class Service {
+public abstract class BaseService {
 	
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
@@ -81,7 +81,7 @@ public abstract class Service {
 		return Environment.getServiceId(this.getClass());
 	}
 	
-	public HashMap<String, Object> returnInitialSettings() {
+	public HashMap<String, Object> returnClientOptions() {
 		return null;
 	}
 	
@@ -131,7 +131,7 @@ public abstract class Service {
 	}
     
     /**
-	 * Gets service's db conncetion.
+	 * Gets service's db connection.
 	 * @return The db connection.
 	 * @throws SQLException 
 	 */

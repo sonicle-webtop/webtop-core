@@ -46,7 +46,7 @@
 	function getQueryParam(name) {
 		var regex = RegExp('[?&]' + name + '=([^&]*)');
 
-		var match = regex.exec(location.search) || regex.exec(src);
+		var match = regex.exec(location.search) || regex.exec(path);
 		return match && decodeURIComponent(match[1]);
 	}
 
@@ -73,8 +73,16 @@
 		return value;
 	}
 	
+	Ext = window.Ext || {};
+	Ext.setRepoDevModeCookie = function () {
+		document.cookie = 'ExtRepoDevMode=true; expires=Wed, 01 Jan 3000 07:00:00 GMT;';
+	};
+	Ext.clearRepoDevModeCookie = function () {
+		document.cookie = 'ExtRepoDevMode=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	};
+	
 	var scriptEls = document.getElementsByTagName('script'),
-		src = scriptEls[scriptEls.length - 1].src,
+		path = scriptEls[scriptEls.length - 1].src,
 		extPath = 'resources/extjs',
 		corePath = 'resources/com.sonicle.webtop.core',
 		theme = getQueryParam('theme') || 'crisp',
@@ -92,10 +100,11 @@
 			crisp: 1,
 			'crisp-touch': 1
 			}[theme],
-		repoDevMode = getCookieValue('ExtRepoDevMode'),
+		repoDevMode = Ext.repoDevMode = getCookieValue('ExtRepoDevMode'),
 		packagePath,
 		extTheme,
 		themePath,
+		chartsCSSPath,
 		overridePath,
 		extPrefix,
 		lafPath;
@@ -105,19 +114,25 @@
 	extTheme = 'ext-theme-' + theme;
 	packagePath = extPath + '/packages/' + extTheme + '/build/';
 	themePath = packagePath + 'resources/' + extTheme + (rtl ? '-all-rtl' : '-all');
+	chartsCSSPath = extPath + '/packages/sencha-charts/build/' + theme +
+			'/resources/sencha-charts' + (rtl ? '-all-rtl' : '-all');
 	lafPath = corePath + '/laf/' + laf + '/';
 
 	if (includeCSS) {
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				themePath + (useDebug ? '-debug.css' : '.css') + '"/>');
+		document.write('<link rel="stylesheet" type="text/css" href="' + 
+				chartsCSSPath + (useDebug ? '-debug.css' : '.css') + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'core.css' + '"/>');
+				lafPath + 'service.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'override-' + theme + '.css' + '"/>');
+				lafPath + 'service-override.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'laf.css' + '"/>');
+				lafPath + 'service-' + theme + '.css' + '"/>');
+		document.write('<link rel="stylesheet" type="text/css" href="' +
+				lafPath + 'service-override-' + theme + '.css' + '"/>');
 	}
-
+	
 	extPrefix = useDebug ? '/ext-all-debug' : '/ext-all';
 
 	document.write('<script type="text/javascript" src="' + extPath + extPrefix +

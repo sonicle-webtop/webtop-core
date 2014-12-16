@@ -1,4 +1,5 @@
 
+Ext.Loader.setConfig('disableCaching', false);
 Ext.application({
     name: 'Sonicle.webtop.core',
 	extend: 'Sonicle.webtop.core.Application',

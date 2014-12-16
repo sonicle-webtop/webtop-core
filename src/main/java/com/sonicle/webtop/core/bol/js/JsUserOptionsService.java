@@ -31,7 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.UserService', {
-	alternateClassName: 'WT.model.UserService',
-	extend: 'WT.model.Base'
-});
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsUserOptionsService {
+	
+	public String id;
+	public String xid;
+	public String name;
+	public String viewClassName;
+	public String modelClassName;
+	
+	public JsUserOptionsService(String id, String xid, String name, String viewClassName) {
+		this.id = id;
+		this.xid = xid;
+		this.name = name;
+		this.viewClassName = viewClassName;
+		this.modelClassName = null;
+	}
+}

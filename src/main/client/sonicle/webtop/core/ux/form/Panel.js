@@ -56,11 +56,14 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 		if(Ext.isString(me.model)) {
 			if(id) me.setFieldValue(me.idField, id, true);
 			if(!me.isFieldEmpty(me.idField)) {
+				// Loads model with provided id
 				Ext.ClassManager.get(me.model).load(me.getFieldValue(me.idField), opts);
 			} else {
+				// Creates an empty model (no id provided)
 				me.bindModel(Ext.create(me.model, {}));
 			}
 		} else {
+			// Model is a ready instance...use it simply!
 			me.model.load(opts);
 		}
 	},
@@ -87,7 +90,7 @@ Ext.define('Sonicle.webtop.core.ux.form.Panel', {
 				} else {
 					WT.error(op.getError());
 				}
-				me.fireEvent('save', me, op, success);
+				me.fireEvent('save', me, success, op);
 			},
 			scope: me
 		});

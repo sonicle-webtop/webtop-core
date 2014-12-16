@@ -45,7 +45,7 @@ import java.sql.SQLException;
  *
  * @author malbinola
  */
-public abstract class BaseOptionManager {
+public abstract class BaseUserOptionsService {
 
 	private boolean inited = false;
 	private WebTopApp wta;

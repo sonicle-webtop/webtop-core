@@ -31,71 +31,88 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
-	alternateClassName: 'WT.ServiceDescriptor',
-	requires: [
-		'Sonicle.webtop.core.sdk.Service'
-	],
+Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
+	alternateClassName: 'WT.view.UserOptionsC',
+	extend: 'WT.sdk.UserOptionsController',
 	
-	config: {
-		index: null,
-		maintenance: null,
-		id: null,
-		xid: null,
-		ns: null,
-		path: null,
-		version: null,
-		build: null,
-		serviceClassName: null,
-		userOptions: null,
-		name: null,
-		desription: null,
-		company: null
+	onFormLoad: function(s,success) {
+		if(success) this.getViewModel().set('values', this.getView().model.getData());
 	},
 	
-	instance: null,
-	
-	constructor: function(cfg) {
+	onFormSave: function(s,success) {
 		var me = this;
-		me.initConfig(cfg);
+		if(success) me.getViewModel().set('values', me.getView().model.getData());
 		me.callParent(arguments);
 	},
 	
-	getInstance: function() {
+	/*
+	reload: false,
+	
+	onBlurAutoSave: function(s) {
 		var me = this;
-		//if(me.getId() === WT.ID) return null; // Avoid core instantiation!
-		if(!me.instance) {
-			var cn = me.getServiceClassName();
-			if(!Ext.isString(cn)) return null;
-			try {
-				me.instance = Ext.create(cn, {
-					ID: me.getId(),
-					XID: me.getXid(),
-					optionsData: WTS.servicesOptions[me.getIndex()]
-				});
-			} catch(e) {
-				WT.Log.error('Unable to instantiate service class [{0}]', cn);
-				WT.Log.exception(e);
-			}
+		if(s.isDirty()) {
+			me.reload = s.reload || false;
+			me.getView().saveForm();
 		}
-		return me.instance;
 	},
 	
-	initService: function() {
+	onFormLoad: function(s,success) {
+		if(success) this.getViewModel().set('values', this.getView().model.getData());
+	},
+	
+	onFormSave: function(s,success) {
 		var me = this;
-		if(me.getId() === WT.ID) return null; // Avoid core initialization!
-		WT.Log.debug('Initializing service [{0}]', me.getId());
-		var svc = me.getInstance();
-		if(svc === null) return false;
-		
-		// Calls initialization method
-		try {
-			svc.init.call(svc);
-			return true;
-		} catch(e) {
-			WT.Log.error('Error while calling init() method');
-			WT.Log.exception(e);
-			return false;
+		me.getViewModel().set('values', me.getView().model.getData());
+		if(me.reload) {
+			WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
+				if(bid === 'yes') WT.reload();
+			});
 		}
+		me.reload = false;
+	},
+	
+	*/
+	
+	onTFAEnableClick: function() {
+		alert('TODO');
+	},
+	
+	onTFADisableClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'DisableTFA', {
+					params: {options: true},
+					callback: function(success) {
+						if(success) me.getView().loadForm();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustThisClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {crud: 'untrustthis'},
+					callback: function(success) {
+						if(success) me.getView().loadForm();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustOtherClick: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {crud: 'untrustothers'}
+				});
+			}
+		});
 	}
+	
 });

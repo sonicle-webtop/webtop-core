@@ -31,27 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.OptionTab', {
-	alternateClassName: 'WT.sdk.OptionTab',
-	extend: 'WT.ux.form.Panel',
-	alias: 'widget.wtopttab',
-	mixins: [
-		'WT.mixin.Waitable'
-	],
+Ext.define('Sonicle.webtop.core.sdk.model.UserOptions', {
+	alternateClassName: 'WT.sdk.model.UserOptions',
+	extend: 'Ext.data.Model',
 	
-	referenceHolder: true,
-	closable: false,
-	tabConfig: {
-		textAlign: 'left'
-	},
-	border: false,
-	overflowY: 'scroll',
-	padding: 0,
-	margin: 0
-	/*
-	defaults: {
-		collapsible: true,
-		margin: '5 25 0 5'
-	}
-	*/
+	fields: [
+		'id'
+	]
 });

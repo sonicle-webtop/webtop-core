@@ -40,7 +40,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
-import com.sonicle.webtop.core.bol.js.JsOptionsService;
+import com.sonicle.webtop.core.bol.js.JsUserOptionsService;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
@@ -48,7 +48,7 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.SuperEnvironment;
 import com.sonicle.webtop.core.sdk.JsOptions;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.io.PrintWriter;
@@ -67,22 +67,36 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class CoreService extends Service {
+public class Service extends BaseService {
 	
-	public static final Logger logger = Service.getLogger(CoreService.class);
-
+	private static final Logger logger = BaseService.getLogger(Service.class);
+	private SuperEnvironment env;
+	private CoreUserSettings cus;
+	
 	@Override
 	public void initialize() {
-		
+		env = getSuperEnv();
+		UserProfile profile = env.getProfile();
+		cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), getId());
 	}
 
 	@Override
 	public void cleanup() {
 		
 	}
+
+	@Override
+	public HashMap<String, Object> returnClientOptions() {
+		UserProfile profile = env.getProfile();
+		HashMap<String, Object> hm = new HashMap<>();
+		hm.put("locale", profile.getLocale());
+		hm.put("theme", cus.getTheme());
+		hm.put("layout", cus.getLayout());
+		hm.put("laf", cus.getLookAndFeel());
+		return hm;
+	}
 	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		Locale locale = env.getSession().getLocale();
 		
 		try {
@@ -123,7 +137,7 @@ public class CoreService extends Service {
 		try {
 			//TODO: handle lafs dinamically
 			ArrayList<JsSimple> lafs = new ArrayList<>();
-			lafs.add(new JsSimple("default", "Default"));
+			lafs.add(new JsSimple("default", "WebTop"));
 			new JsonResult("lafs", lafs).printTo(out);
 
 		} catch (Exception ex) {
@@ -165,15 +179,14 @@ public class CoreService extends Service {
 	}
 	
 	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			
-			ArrayList<JsOptionsService> data = new ArrayList<>();
-			data.add(new JsOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
-			if(!UserProfile.isSystemAdmin(id)) data.add(new JsOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
-			if(!UserProfile.isSystemAdmin(id)) data.add(new JsOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			ArrayList<JsUserOptionsService> data = new ArrayList<>();
+			data.add(new JsUserOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
+			if(!UserProfile.isSystemAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
+			if(!UserProfile.isSystemAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
 			new JsonResult(data).printTo(out);
 			
 		} catch (Exception ex) {
@@ -183,13 +196,12 @@ public class CoreService extends Service {
 	}
 	
 	public void processGetUserServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		Locale locale = env.getSession().getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
 		List<String> ids = env.getSession().getServices();
 		for(String id : ids) {
-			items.add(new JsSimple(id, env.lookupResource(id, locale, Service.RESOURCE_SERVICE_NAME)));
+			items.add(new JsSimple(id, env.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
 		}
 		new JsonResult("services", items).printTo(out);
 	}
@@ -213,7 +225,6 @@ public class CoreService extends Service {
 		ArrayList<JsWhatsnewTab> tabs = null;
 		JsWhatsnewTab tab = null;
 		String html = null;
-		SuperEnvironment env = getSuperEnv();
 		UserProfile profile = env.getProfile();
 		
 		try {
@@ -240,7 +251,6 @@ public class CoreService extends Service {
 	}
 	
 	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
@@ -255,7 +265,6 @@ public class CoreService extends Service {
 	}
 	
 	public void processTurnOffWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		
 		try {
 			UserProfile profile = env.getProfile();
@@ -277,8 +286,8 @@ public class CoreService extends Service {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
 			
 			UserProfile profile = getSuperEnv().getProfile();
-			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
-			cus.setViewportToolWidth(width);
+			CoreUserSettings cusx = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
+			cusx.setViewportToolWidth(width);
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
@@ -288,7 +297,6 @@ public class CoreService extends Service {
 	}
 	
 	public void processManageTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		TFAManager tfam = env.getTFAManager();
 		
 		try {
@@ -334,7 +342,6 @@ public class CoreService extends Service {
 	}
 	
 	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		SuperEnvironment env = getSuperEnv();
 		List<ServiceMessage> messages = new ArrayList();
 		
 		try {

@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.LangUtils;
 import java.text.MessageFormat;
 import java.util.Locale;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -52,11 +53,12 @@ public class ServiceManifest {
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
 	protected String serviceClassName;
-	protected String optionsClassName;
+	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
 	protected String deamonServiceClassName;
 	protected String serviceJsClassName;
-	protected String optionsJsClassName;
+	protected String userOptionsViewJsClassName;
+	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
 	protected String company;
 	protected String companyEmail;
@@ -75,11 +77,60 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
+	public ServiceManifest(HierarchicalConfiguration svcEl) throws Exception {
+		
+		String pkg = svcEl.getString("package");
+		if(StringUtils.isEmpty(pkg)) throw new Exception("Invalid value for property [package]");
+		javaPackage = StringUtils.lowerCase(pkg);
+		id = javaPackage;
+		
+		String jspkg = svcEl.getString("jsPackage");
+		if(StringUtils.isEmpty(jspkg)) throw new Exception("Invalid value for property [jsPackage]");
+		jsPackage = jspkg; // Lowercase allowed!
+		
+		String sname = svcEl.getString("shortName");
+		if(StringUtils.isEmpty(sname)) throw new Exception("Invalid value for property [shortName]");
+		xid = sname;
+		
+		ServiceVersion ver = new ServiceVersion(svcEl.getString("version"));
+		if(ver.isUndefined()) throw new Exception("Invalid value for property [version]");
+		version = ver;
+		
+		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
+		
+		if(svcEl.containsKey("serviceClassName")) {
+			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
+			serviceClassName = LangUtils.buildClassName(javaPackage, cn);
+			serviceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
+		}
+		
+		if(svcEl.containsKey("publicServiceClassName")) {
+			publicServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
+		}
+		
+		if(svcEl.containsKey("deamonServiceClassName")) {
+			deamonServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("deamonServiceClassName"), "DeamonService"));
+		}
+		
+		if(!svcEl.configurationsAt("userOptions").isEmpty()) {
+			userOptionsServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("userOptions.serviceClassName"), "UserOptionsService"));
+			userOptionsViewJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("userOptions.viewJsClassName"), "view.UserOptions");
+			userOptionsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("userOptions.modelJsClassName"), "model.UserOptions");
+		}
+		
+		hidden = svcEl.getBoolean("hidden", false);
+		company = StringUtils.defaultIfBlank(svcEl.getString("company"), null);
+		companyEmail = StringUtils.defaultIfBlank(svcEl.getString("companyEmail"), null);
+		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
+		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
+	}
+	
+	/*
 	public ServiceManifest(
 		String javaPackage, String jsPackage, String shortName, ServiceVersion version, String buildDate,
 		String serviceClassName, String serviceJsClassName, 
 		String publicServiceClassName, String deamonServiceClassName, 
-		String optionsClassName, String optionsJsClassName, 
+		String userOptionsServiceClassName, String userOptionsViewJsClassName, String userOptionsModelJsClassName, 
 		Boolean hidden, 
 		String company, String companyEmail, String companyWebSite, String supportEmail
 		) throws Exception {
@@ -110,9 +161,11 @@ public class ServiceManifest {
 		if(!StringUtils.isEmpty(deamonServiceClassName)) {
 			this.deamonServiceClassName = LangUtils.buildClassName(this.javaPackage, deamonServiceClassName);
 		}
-		if(!StringUtils.isEmpty(optionsClassName)) {
-			this.optionsClassName = LangUtils.buildClassName(this.javaPackage, optionsClassName);
-			this.optionsJsClassName = LangUtils.buildClassName(this.jsPackage, StringUtils.defaultIfEmpty(optionsJsClassName, optionsClassName));
+		if(!StringUtils.isEmpty(userOptionsServiceClassName)) {
+			if(StringUtils.isEmpty(userOptionsViewJsClassName)) throw new Exception("Property [userOptionsViewJsClassName] needs to be defined");
+			this.userOptionsServiceClassName = LangUtils.buildClassName(this.javaPackage, userOptionsServiceClassName);
+			this.userOptionsViewJsClassName = LangUtils.buildClassName(this.jsPackage, userOptionsViewJsClassName);
+			this.userOptionsModelJsClassName = LangUtils.buildClassName(this.jsPackage, userOptionsModelJsClassName);
 		}
 		
 		this.hidden = hidden;
@@ -121,6 +174,7 @@ public class ServiceManifest {
 		if(!StringUtils.isEmpty(companyWebSite)) this.companyWebSite = companyWebSite;
 		if(!StringUtils.isEmpty(supportEmail)) this.supportEmail = supportEmail;
 	}
+	*/
 	
 	/**
 	 * Gets specified service ID.
@@ -199,8 +253,8 @@ public class ServiceManifest {
 		return serviceClassName;
 	}
 	
-	public String getOptionsClassName() {
-		return optionsClassName;
+	public String getUserOptionsServiceClassName() {
+		return userOptionsServiceClassName;
 	}
 	
 	/**
@@ -224,14 +278,24 @@ public class ServiceManifest {
 	/**
 	 * Gets the class name of client-side service implementation.
 	 * (eg. Sonicle.webtop.mail.MailService)
+	 * @param full True to include js package.
 	 * @return The value.
 	 */
-	public String getServiceJsClassName() {
-		return serviceJsClassName;
+	public String getServiceJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, serviceJsClassName) : serviceJsClassName;
 	}
 	
-	public String getOptionsJsClassName() {
-		return optionsJsClassName;
+	public String getUserOptionsViewJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, userOptionsViewJsClassName) : userOptionsViewJsClassName;
+	}
+	
+	public String getUserOptionsModelJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, userOptionsModelJsClassName) : userOptionsModelJsClassName;
+	}
+	
+	public String getLocaleJsClassName(Locale locale, boolean full) {
+		String cn = MessageFormat.format("Locale_{0}", locale.toString());
+		return (full) ? LangUtils.buildClassName(jsPackage, cn) : cn;
 	}
 	
 	public String getJsLocaleClassName(Locale locale) {

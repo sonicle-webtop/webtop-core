@@ -105,7 +105,7 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 			tb = Ext.create({xtype: 'toolbar'});
 		}
 		if(!tool || !tool.isXType('panel')) {
-			tool = Ext.create({xtype: 'panel', region: 'west', split:true, collapsible: true, width: 200, minWidth: 100});
+			tool = Ext.create({xtype: 'panel', region: 'west', split: true, collapsible: true, width: 200, minWidth: 100});
 		} else {
 			tool.setRegion('west');
 			tool.split = true;

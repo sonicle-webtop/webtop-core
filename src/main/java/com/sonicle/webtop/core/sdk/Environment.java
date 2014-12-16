@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.CoreService;
+import com.sonicle.webtop.core.Service;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.CoreManifest;

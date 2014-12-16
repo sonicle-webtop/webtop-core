@@ -263,14 +263,14 @@ public class ResourceRequest extends HttpServlet {
 			if(fileUrl == null) {
 				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "default", lastPath));
 			}
-
+			
 			LookupFile lf = getFile(fileUrl);
 			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), lf, acceptsDeflate(request));
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
-			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
@@ -298,7 +298,7 @@ public class ResourceRequest extends HttpServlet {
 			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
 			String clazz = manifest.getJsPackageName() + "." + baseName;
-			String override = manifest.getServiceJsClassName();
+			String override = manifest.getServiceJsClassName(true);
 			
 			logger.trace("Class: {} - Override: {}", clazz, override);
 			LookupFile lf = getFile(fileUrl);

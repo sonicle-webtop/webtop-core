@@ -49,14 +49,19 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	/**
 	 * [string]
-	 * Look and feel
-	 */
-	public static final String LAF = "laf";
-	/**
-	 * [string]
 	 * Theme name
 	 */
 	public static final String THEME = "theme";
+	/**
+	 * [string]
+	 * Layout
+	 */
+	public static final String LAYOUT = "layout";
+	/**
+	 * [string]
+	 * Look and feel
+	 */
+	public static final String LAF = "laf";
 	/**
 	 * [boolean]
 	 * Right-to-left mode
@@ -110,6 +115,14 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean setTheme(String value) {
 		return setUserSetting(THEME, value);
+	}
+	
+	public String getLayout() {
+		return getUserSetting(LAYOUT, "default");
+	}
+	
+	public boolean setLayout(String value) {
+		return setUserSetting(LAYOUT, value);
 	}
 	
 	public String getLookAndFeel() {

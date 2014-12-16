@@ -31,18 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.CoreOptions', {
-	alternateClassName: 'WT.view.CoreOptions',
-	extend: 'WT.sdk.OptionTab',
-	requires: [
-		'WT.model.Simple',
-		'WT.model.Options',
-		'WT.store.TFADelivery',
-		'WT.store.TFADelivery',
-		'Ext.ux.form.Spacer'
-	],
-	controller: Ext.create('WT.view.CoreOptionsC'),
-	model: 'WT.model.Options',
+Ext.define('Sonicle.webtop.core.view.UserOptions', {
+	alternateClassName: 'WT.view.UserOptions',
+	extend: 'WT.sdk.UserOptionsView',
+	controller: Ext.create('WT.view.UserOptionsC'),
 	idField: 'id',
 	
 	listeners: {

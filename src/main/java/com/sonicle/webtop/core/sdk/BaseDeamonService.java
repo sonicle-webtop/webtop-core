@@ -37,6 +37,6 @@ package com.sonicle.webtop.core.sdk;
  *
  * @author malbinola
  */
-public abstract class PublicService {
+public abstract class BaseDeamonService {
 	
 }

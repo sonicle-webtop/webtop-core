@@ -31,12 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-/**
- *
- * @author malbinola
- */
-public abstract class DeamonService {
+Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
+	alternateClassName: 'WT.sdk.UserOptionsView',
+	extend: 'WT.ux.form.Panel',
+	mixins: [
+		'WT.mixin.Waitable'
+	],
+	requires: [
+		'Ext.ux.form.Spacer'
+	],
 	
-}
+	referenceHolder: true,
+	closable: false,
+	tabConfig: {
+		textAlign: 'left'
+	},
+	border: false,
+	overflowY: 'scroll',
+	padding: 0,
+	margin: 0
+	/*
+	defaults: {
+		collapsible: true,
+		margin: '5 25 0 5'
+	}
+	*/
+});

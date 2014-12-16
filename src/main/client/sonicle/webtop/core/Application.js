@@ -29,13 +29,17 @@ Ext.define('Sonicle.webtop.core.Application', {
 	},
 	
 	init: function() {
-		var me = this;
+		//var me = this;
 		WT.Log.debug('application:init');
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
+	},
+	
+	launch: function() {
+		var me = this;
 		
 		// Loads service descriptors from startup object
-		var desc = null;
+		var co = WTS.servicesOptions[0], desc = null, deps = [];
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WT.ServiceDescriptor', {
 				index: obj.index,
@@ -46,16 +50,58 @@ Ext.define('Sonicle.webtop.core.Application', {
 				path: obj.path,
 				version: obj.version,
 				build: obj.build,
-				className: obj.className,
-				optionsClassName: obj.optionsClassName,
+				serviceClassName: obj.serviceClassName,
+				userOptions: obj.userOptions,
 				name: obj.name,
 				description: obj.description,
 				company: obj.company
 			});
-			WT.loadCss(desc.getPath()+'/laf/'+WTS.laf+'/service.css');
-			WT.loadCss(desc.getPath()+'/laf/'+WTS.laf+'/service-'+WTS.theme+'.css');
+				
+			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service.css');
+			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override.css');
+			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-'+co['theme']+'.css');
+			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override-'+co['theme']+'.css');
+			
+			if(obj.index !== 0) {
+				deps.push(obj.serviceClassName);
+				deps.push(obj.localeClassName);
+			}
+			
 			me.services.add(desc);
 		}, me);
+		
+		// Instantiates core service
+		var cdesc = me.services.getAt(0);
+		cdesc.getInstance();
+		
+		Ext.require(deps, me.onRequiresLoaded, me);
+	},
+	
+	onRequiresLoaded: function() {
+		var me = this;
+		
+		// Creates main viewport
+		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
+		var vc = me.viewport.getController();
+		
+		// Inits loaded services and activate the default one
+		Ext.each(me.getDescriptors(), function(desc) {
+			if(!desc.getMaintenance()) {
+				if(desc.initService()) {
+					var svc = desc.getInstance();
+					vc.addServiceButton(desc);
+					if(svc.hasNewActions()) vc.addServiceNewActions(svc.getNewActions());
+				}
+			} else {
+				//TODO: show grayed button
+			}
+		});
+		if(WTS.defaultService) me.activateService(WTS.defaultService);
+		
+		// If necessary, show whatsnew
+		if(WT.getOption('isWhatsnewNeeded')) {
+			vc.buildWhatsnewWnd(false);
+		}
 		
 		// Inits messages (webSocket/ServerEvents)
 		WT.ComManager.on('receive', function(s,messages) {
@@ -69,50 +115,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.ComManager.on('connectionlost', function(s) {
 			WT.warn(WT.res('connectionlost'));
 		});
-		WT.ComManager.connect({
-			wsAuthTicket: WTS.servicesOptions[0].authTicket
-		});
-	},
-	
-	launch: function() {
-		var me = this;
-		
-		// Creates main viewport
-		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
-		var vc = me.viewport.getController();
-		
-		// Inits loaded services and activate the default one
-		var count = 0, first = null;
-		Ext.each(me.getDescriptors(), function(desc) {
-			if(!desc.getMaintenance()) {
-				if(desc.initService()) {
-					count++;
-					var svc = desc.getInstance();
-					vc.addServiceButton(desc);
-					if(svc.hasNewActions()) vc.addServiceNewActions(svc.getNewActions());
-				}
-			} else {
-				//TODO: show grayed button
-			}
-			
-			
-			/*
-			if(desc.initService()) {
-				count++;
-				var svc = desc.getInstance();
-				vc.addServiceButton(desc);
-				if(svc.hasNewActions()) vc.addServiceNewActions(svc.getNewActions());
-				if(count === 1) first = desc.getId();
-			}
-			*/
-		});
-		//if(first) me.activateService(first);
-		if(WTS.defaultService) me.activateService(WTS.defaultService);
-		
-		// If necessary, show whatsnew
-		if(WT.getServiceOption('isWhatsnewNeeded')) {
-			vc.buildWhatsnewWnd(false);
-		}
+		WT.ComManager.connect();
 	},
 	
 	/**

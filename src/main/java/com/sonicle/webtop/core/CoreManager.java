@@ -73,6 +73,7 @@ public class CoreManager {
 		}
 	}
 	
+	/*
 	public void fillStartupForService(JsWTS js, String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getService(serviceId);
@@ -90,7 +91,7 @@ public class CoreManager {
 		jssvc.ns = manifest.getJsPackageName();
 		jssvc.path = manifest.getJsBaseUrl();
 		jssvc.className = manifest.getServiceJsClassName();
-		if(sdesc.hasOptionManager()) jssvc.optionsClassName = manifest.getOptionsJsClassName();
+		if(sdesc.hasOptionsService()) jssvc.optionsViewClassName = manifest.getOptionsViewJsClassName();
 		jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
 		jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
 		jssvc.version = manifest.getVersion().toString();
@@ -98,6 +99,7 @@ public class CoreManager {
 		jssvc.company = manifest.getCompany();
 		js.services.add(jssvc);
 	}
+	*/
 	
 	public List<String> getUserServices(UserProfile profile) {
 		return getUserServices(profile.getDomainId(), profile.getUserId());

@@ -34,12 +34,12 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.BaseOptionManager;
+import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.InsufficientRightsException;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
-import com.sonicle.webtop.core.sdk.Service;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.IOException;
@@ -143,31 +143,14 @@ public class ServiceManager {
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
-	public BaseOptionManager instantiateOptionManager(UserProfile sessionProfile, String serviceId, String domainId, String userId) {
-		ServiceDescriptor descr = getService(serviceId);
-		if(!descr.hasOptionManager()) throw new RuntimeException("Service has no option manager class");
-		
-		// Creates option manager instance
-		BaseOptionManager instance = null;
-		try {
-			instance = (BaseOptionManager)descr.getOptionManagerClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating option manager [{}]", descr.getManifest().getOptionsClassName(), ex);
-			return null;
-		}
-		
-		instance.initialize(wta, sessionProfile, serviceId, domainId, userId);
-		return instance;
-	}
-	
-	public Service instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
+	public BaseService instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
 		ServiceDescriptor descr = getService(serviceId);
 		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
 		
 		// Creates service instance
-		Service instance = null;
+		BaseService instance = null;
 		try {
-			instance = (Service)descr.getServiceClass().newInstance();
+			instance = (BaseService)descr.getServiceClass().newInstance();
 		} catch(Exception ex) {
 			logger.error("Error instantiating service [{}]", descr.getManifest().getServiceClassName(), ex);
 			return null;
@@ -189,7 +172,7 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	public void cleanupDefaultService(Service instance) {
+	public void cleanupService(BaseService instance) {
 		// Calls cleanup method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
@@ -199,6 +182,23 @@ public class ServiceManager {
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
+	}
+	
+	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String serviceId, String domainId, String userId) {
+		ServiceDescriptor descr = getService(serviceId);
+		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
+		
+		// Creates userOptions service instance
+		BaseUserOptionsService instance = null;
+		try {
+			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
+		} catch(Exception ex) {
+			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
+			return null;
+		}
+		
+		instance.initialize(wta, sessionProfile, serviceId, domainId, userId);
+		return instance;
 	}
 	
 	public String getServiceJsPath(String serviceId) {
@@ -338,7 +338,7 @@ public class ServiceManager {
 	}
 	
 	private void registerService(ServiceManifest manifest) {
-		ServiceDescriptor descr = null;
+		ServiceDescriptor desc = null;
 		String serviceId = manifest.getId();
 		String xid = manifest.getXId();
 		boolean maintenance = false;
@@ -347,14 +347,14 @@ public class ServiceManager {
 		synchronized(lock) {
 			if(services.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidMappings.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidMappings.get(xid));
-			descr = new ServiceDescriptor(manifest);
-			logger.debug("[default:{}, public:{}, deamon:{}]", descr.hasDefaultService(), descr.hasPublicService(), descr.hasDeamonService());
+			desc = new ServiceDescriptor(manifest);
+			logger.debug("[default:{}, public:{}, deamon:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasDeamonService(), desc.hasUserOptionsService());
 
 			boolean upgraded = upgradeCheck(manifest);
-			descr.setUpgraded(upgraded);
+			desc.setUpgraded(upgraded);
 			if(upgraded) {
 				// Force whatsnew pre-cache
-				descr.getWhatsnew(wta.getSystemLocale(), manifest.getOldVersion());
+				desc.getWhatsnew(wta.getSystemLocale(), manifest.getOldVersion());
 			}
 
 			// If already in maintenance, keeps it active
@@ -363,7 +363,7 @@ public class ServiceManager {
 				setMaintenance(serviceId, maintenance);
 			}
 			
-			services.put(serviceId, descr);
+			services.put(serviceId, desc);
 			xidMappings.put(xid, serviceId);
 			jsPathMappings.put(serviceId, manifest.getJsPath());
 			
@@ -425,6 +425,7 @@ public class ServiceManager {
 		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
 		for(HierarchicalConfiguration elService : elServices) {
 			try {
+				/*
 				manifest = new ServiceManifest(
 					elService.getString("package"),
 					elService.getString("jsPackage"),
@@ -435,14 +436,16 @@ public class ServiceManager {
 					elService.getString("serviceJsClassName"),
 					elService.getString("publicServiceClassName"),
 					elService.getString("deamonServiceClassName"),
-					elService.getString("optionsClassName"),
-					elService.getString("optionsJsClassName"),
+					elService.getString("userOptionsServiceClassName"),
+					elService.getString("userOptionsViewJsClassName"),
 					elService.getBoolean("hidden", false),
 					elService.getString("company"),
 					elService.getString("companyEmail"),
 					elService.getString("companyWebSite"),
 					elService.getString("supportEmail")
 				);
+				*/
+				manifest = new ServiceManifest(elService);
 				manifests.add(manifest);
 				
 			} catch(Exception ex) {
