@@ -34,6 +34,9 @@
 Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	alternateClassName: 'WT.mixin.Waitable',
 	extend: 'Ext.Mixin',
+	mixinConfig: {
+		id: 'waitable'
+	},
 	
 	waitCount_: 0,
 	

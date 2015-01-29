@@ -4,6 +4,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	requires: [
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
+		'Sonicle.Date',
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ComManager',
@@ -16,6 +17,16 @@ Ext.define('Sonicle.webtop.core.Application', {
 		viewport: 'viewport'
 	},
 	
+	/**
+	 * @property {Ext.util.HashMap} locales
+	 * A collection of locale classes.
+	 */
+	locales: null,
+	
+	/**
+	 * @property {Ext.util.Collection} services
+	 * A collection of service descriptors.
+	 */
 	services: null,
 	currentService: null,
 	
@@ -23,7 +34,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 	seTask: null,
 	
 	constructor: function() {
-		var me = this;
+		var me = WT.app = this;
+		me.locales = Ext.create('Ext.util.HashMap');
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);
 	},
@@ -51,6 +63,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 				version: obj.version,
 				build: obj.build,
 				serviceClassName: obj.serviceClassName,
+				localeClassName: obj.localeClassName,
 				userOptions: obj.userOptions,
 				name: obj.name,
 				description: obj.description,
@@ -62,11 +75,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-'+co['theme']+'.css');
 			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override-'+co['theme']+'.css');
 			
-			if(obj.index !== 0) {
-				deps.push(obj.serviceClassName);
-				deps.push(obj.localeClassName);
-			}
-			
+			me.locales.add(obj.id, Ext.create(obj.localeClassName));
 			me.services.add(desc);
 		}, me);
 		
@@ -74,7 +83,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var cdesc = me.services.getAt(0);
 		cdesc.getInstance();
 		
-		Ext.require(deps, me.onRequiresLoaded, me);
+		//Ext.require(deps, me.onRequiresLoaded, me);
+		me.onRequiresLoaded.call(me);
 	},
 	
 	onRequiresLoaded: function() {
@@ -116,6 +126,15 @@ Ext.define('Sonicle.webtop.core.Application', {
 			WT.warn(WT.res('connectionlost'));
 		});
 		WT.ComManager.connect();
+	},
+	
+	/**
+	 * Returns desired locale instance.
+	 * @param {String} id The service ID.
+	 * @returns {WT.Locale}
+	 */
+	getLocale: function(id) {
+		return this.locales.get(id);
 	},
 	
 	/**

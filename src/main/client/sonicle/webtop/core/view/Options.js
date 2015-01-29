@@ -57,7 +57,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 						proxy: WT.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
 					},
 					valueField: 'id',
-					displayField: 'description',
+					displayField: 'desc',
 					width: 300,
 					listeners: {
 						change: {
@@ -130,7 +130,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	createTabs: function(data) {
 		var me = this;
 		
-		// Defines dependencies to load
+		// Defines dependencies to load (viewClass and model)
 		var dep = [];
 		Ext.each(data, function(itm) {
 			dep.push(itm.viewClassName);
@@ -145,7 +145,9 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 					itemId: itm.id,
 					model: itm.modelClassName,
 					title: itm.name,
-					iconCls: WT.cssIconCls(itm.xid, 'service-s')
+					iconCls: WT.cssIconCls(itm.xid, 'service', 'xs'),
+					ID: itm.id,
+					XID: itm.xid
 				}));
 			});
 			tab.setActiveTab(0);

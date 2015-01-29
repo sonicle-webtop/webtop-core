@@ -46,6 +46,7 @@ import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.TimeZone;
 import org.apache.commons.codec.binary.Base32;
 import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
@@ -135,6 +136,10 @@ public final class UserProfile {
 	
 	public Locale getLocale() {
 		return user.getLocale();
+	}
+	
+	public TimeZone getTimeZone() {
+		return user.getTimeZone();
 	}
 	
 	private String generateSecretKey() throws NoSuchAlgorithmException {

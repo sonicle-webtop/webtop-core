@@ -33,12 +33,12 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	alternateClassName: 'WT.sdk.UserOptionsView',
-	extend: 'WT.ux.form.Panel',
+	extend: 'Sonicle.form.Panel',
 	mixins: [
 		'WT.mixin.Waitable'
 	],
 	requires: [
-		'Ext.ux.form.Spacer'
+		'Sonicle.form.Spacer'
 	],
 	
 	referenceHolder: true,
@@ -49,11 +49,23 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	border: false,
 	overflowY: 'scroll',
 	padding: 0,
-	margin: 0
+	margin: 0,
 	/*
 	defaults: {
 		collapsible: true,
 		margin: '5 25 0 5'
 	}
 	*/
+
+	/**
+	 * @property {String} ID
+	 * Service ID.
+	 */
+	ID: null,
+	
+	/**
+	 * @property {String} XID
+	 * Service short ID.
+	 */
+	XID: null
 });

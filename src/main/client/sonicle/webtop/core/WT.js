@@ -20,6 +20,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	loadedCss: null,
 	
+	constructor: function(cfg) {
+		var me = this;
+		me.loadedCss = {};
+		me.resetHtmlCharEntities();
+		me.callParent(cfg);
+	},
+	
 	/**
 	 * Returns the application.
 	 * This is shorthand reference to Sonicle.webtop.core.getApplication().
@@ -73,8 +80,26 @@ Ext.define('Sonicle.webtop.core.WT', {
 			key = id;
 			id = WT.ID;
 		}
-		var inst = WT.getApp().getService(id);
-		return (inst) ? inst.res(key) : null;
+		
+		var loc = WT.getApp().getLocale(id);
+		if(!loc) return undefined;
+		return loc.strings[key];
+	},
+	
+	/**
+	 * Utility function to return a resource string or string itself.
+	 * If passed string contains a resource key preceeded by @ character,
+	 * res method is called instead returning the passed value.
+	 * @param {type} [id] The service ID.
+	 * @param {type} str The string.
+	 * @returns {String} The value.
+	 */
+	resStr: function(id, str) {
+		if(arguments.length === 1) {
+			str = id;
+			id = WT.ID;
+		}
+		return (str.substr(0, 1) === '@') ? WT.res(id, str) : str;
 	},
 	
 	/**
@@ -130,11 +155,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 				service: svc,
 				action: act
 			}),
-			reader: {
+			reader: Ext.apply(opts.reader || {}, {
 				type: 'json',
 				rootProperty: rootp,
 				messageProperty: 'message'
-			},
+			}),
 			listeners: {
 				exception: function(proxy, request, operation, eOpts) {
 					//TODO: intl. user error message plus details
@@ -158,11 +183,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 				service: svc,
 				action: act
 			}),
-			reader: {
+			reader: Ext.apply(opts.reader || {}, {
 				type: 'json',
 				rootProperty: rootp,
 				messageProperty: 'message'
-			}
+			})
 		};
 	},
 	
@@ -231,7 +256,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	loadCss: function(url) {
 		var me = this;
-		if(!me.loadedCss) me.loadedCss = {};
+		//if(!me.loadedCss) me.loadedCss = {};
 		if(!me.loadedCss[url]) {
 			var doc = window.document;
 			var link = doc.createElement('link');
@@ -463,6 +488,78 @@ Ext.define('Sonicle.webtop.core.WT', {
 			else s = parseInt(value/1024) + "MB";
 		}
 		return s;
+	},
+	
+	/**
+	 * Adds a set of character entity definitions to the set used by
+	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities}.
+	 * 
+	 * This object should be keyed by the entity name sequence,
+	 * with the value being the textual representation of the entity.
+	 * 
+	 * @param {Object} entObj The set of character entities to add to the current definitions.
+	 */
+	addHtmlCharEntities: function(entObj) {
+		var me = this, charKeys = [], entityKeys = [], key, echar;
+		for (key in entObj) {
+			echar = entObj[key];
+			me.entityToChar[key] = echar;
+			me.charToEntity[echar] = key;
+			charKeys.push(echar);
+			entityKeys.push(key);
+		}
+		me.charToEntityRegex = new RegExp('(' + charKeys.join('|') + ')', 'g');
+		me.entityToCharRegex = new RegExp('(' + entityKeys.join('|') /*+ '|&#[0-9]{1,5};'*/ + ')', 'g');
+	},
+	
+	/**
+	 * Resets the set of character entity definitions used by 
+	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities} 
+	 * back to the default state.
+	 */
+	resetHtmlCharEntities: function() {
+		var me = this;
+		me.charToEntity = {};
+		me.entityToChar = {};
+		// add the default set
+		me.addHtmlCharEntities({
+			'&agrave;':'à',
+			'&aacute;':'á',
+			'&egrave;':'è',
+			'&eacute;':'é',
+			'&igrave;':'ì',
+			'&iacute;':'í',
+			'&ograve;':'ò',
+			'&oacute;':'ó',
+			'&ugrave;':'ù',
+			'&uacute;':'ú'
+		});
+	},
+	
+	/**
+	 * Convert certain special characters (à, è, etc..) to their HTML character equivalents for literal display in web pages.
+	 * @param {String} value The string to encode.
+	 * @returns {String} The encoded text.
+	 */
+	encodeHtmlEntities: function(value) {
+		var me = this;
+		var htmlEncodeReplaceFn = function(match, capture) {
+			return me.charToEntity[capture];
+		};
+		return (!value) ? value : String(value).replace(me.charToEntityRegex, htmlEncodeReplaceFn);
+	},
+	
+	/**
+	 * Convert certain special characters (à, è, etc..) from their HTML character equivalents.
+	 * @param {String} value The string to decode.
+	 * @returns {String} The decoded text.
+	 */
+	decodeHtmlEntities: function(value) {
+		var me = this;
+		var htmlDecodeReplaceFn = function(match, capture) {
+            return (capture in me.entityToChar) ? me.entityToChar[capture] : String.fromCharCode(parseInt(capture.substr(2), 10));
+        };
+		return (!value) ? value : String(value).replace(me.entityToCharRegex, htmlDecodeReplaceFn);
 	}
 	
 });

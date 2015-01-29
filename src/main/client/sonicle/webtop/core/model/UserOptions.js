@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 	fields: [
 		'displayName',
 		'locale',
+		'timezone',
 		'theme',
 		'laf',
 		'usdTitle',

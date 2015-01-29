@@ -541,12 +541,14 @@ public class ResourceRequest extends HttpServlet {
 		
 		private String buildLocaleJson(String clazz, String override, HashMap<String, String> props) {
 			String strings = JsonResult.gsonWoNulls.toJson(props);
+			//String strings = JsonResult.gsonWoNullsNoEscape.toJson(props);
 			return "Ext.define('"
 				+ clazz
 				+ "',{"
-				+ "override:'"
-				+ override
-				+ "',strings:"
+				//+ "override:'"
+				//+ override
+				//+ "',"
+				+ "strings:"
 				+ strings
 				+ "});";
 		}

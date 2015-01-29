@@ -83,6 +83,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				JsOptions main = new JsOptions();
 				main.put("displayName", user.getDisplayName());
 				main.put("locale", user.getLocale());
+				main.put("timezone", user.getTimezone());
 				main.put("rtl", cus.getRightToLeft());
 				main.put("theme", cus.getTheme());
 				main.put("laf", cus.getLookAndFeel());
@@ -122,10 +123,11 @@ public class UserOptionsService extends BaseUserOptionsService {
 				JsOptions opts = ServletUtils.getPayload(request, JsOptions.class);
 				
 				// User
-				if(opts.containsKey("theme")) cus.setTheme(opts.getString("theme"));
-				if(opts.containsKey("laf")) cus.setLookAndFeel(opts.getString("laf"));
 				if(opts.containsKey("displayName")) user.setDisplayName(opts.getString("displayName"));
 				if(opts.containsKey("locale")) user.setLanguageTag(opts.getString("locale"));
+				if(opts.containsKey("timezone")) user.setTimezone(opts.getString("timezone"));
+				if(opts.containsKey("theme")) cus.setTheme(opts.getString("theme"));
+				if(opts.containsKey("laf")) cus.setLookAndFeel(opts.getString("laf"));
 				udao.update(con, user);
 				
 				// TFA

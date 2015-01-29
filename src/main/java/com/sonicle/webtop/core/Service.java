@@ -55,9 +55,12 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jooq.tools.StringUtils;
@@ -72,6 +75,8 @@ public class Service extends BaseService {
 	private static final Logger logger = BaseService.getLogger(Service.class);
 	private SuperEnvironment env;
 	private CoreUserSettings cus;
+	private static final String VALID_TIMEZONES_RE = "^(Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
+	private static final List<TimeZone> timezones = getAvailableTimezones();
 	
 	@Override
 	public void initialize() {
@@ -90,6 +95,7 @@ public class Service extends BaseService {
 		UserProfile profile = env.getProfile();
 		HashMap<String, Object> hm = new HashMap<>();
 		hm.put("locale", profile.getLocale());
+		hm.put("timezone", profile.getTimeZone().getID());
 		hm.put("theme", cus.getTheme());
 		hm.put("layout", cus.getLayout());
 		hm.put("laf", cus.getLookAndFeel());
@@ -108,6 +114,24 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLocales", ex);
+			new JsonResult(false).printTo(out);
+		}
+	}
+	
+	public void processGetTimezones(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			ArrayList<JsSimple> data = new ArrayList<>();
+			String normId = null;
+			int off;
+			for(TimeZone tz : timezones) {
+				normId = StringUtils.replace(tz.getID(), "_", " ");
+				off = tz.getRawOffset()/3600000;
+				data.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
+			}
+			new JsonResult("timezones", data).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetTimezones", ex);
 			new JsonResult(false).printTo(out);
 		}
 	}
@@ -365,4 +389,18 @@ public class Service extends BaseService {
 		*/
 	}
 	
+	public static List<TimeZone> getAvailableTimezones() {
+		ArrayList<TimeZone> tzs = new ArrayList<>();
+		final String[] ids = TimeZone.getAvailableIDs();
+		for(final String id : ids) {
+			if(id.matches(VALID_TIMEZONES_RE)) tzs.add(TimeZone.getTimeZone(id));
+		}
+		Collections.sort(tzs, new Comparator<TimeZone>() {
+			@Override
+			public int compare(final TimeZone t1, final TimeZone t2) {
+				return t1.getID().compareTo(t2.getID());
+			}
+		});
+		return tzs;
+	}
 }

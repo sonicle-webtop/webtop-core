@@ -39,7 +39,7 @@ package com.sonicle.webtop.core.bol.js;
  */
 public class JsSimple {
 	public String id;
-	public String description;
+	public String desc;
 	
 	public JsSimple() {
 		
@@ -47,6 +47,6 @@ public class JsSimple {
 	
 	public JsSimple(String id, String description) {
 		this.id = id;
-		this.description = description;
+		this.desc = description;
 	}
 }

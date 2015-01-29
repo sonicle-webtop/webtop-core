@@ -139,6 +139,12 @@
 			<resource>
 				<directory>src/main/client</directory>
 			</resource>
+			<resource>
+				<directory>src/main/ux</directory>
+			</resource>
+			<resource>
+				<directory>src/main/ux-resources</directory>
+			</resource>
 		</resources>
 	</build>
 </project>

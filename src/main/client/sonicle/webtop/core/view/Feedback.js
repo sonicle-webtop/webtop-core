@@ -38,7 +38,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		'WT.view.FeedbackC',
 		'WT.model.UserService',
 		'WT.model.Feedback',
-		'Ext.ux.form.Spacer'
+		'Sonicle.form.Spacer'
 	],
 	controller: Ext.create('WT.view.FeedbackC'),
 	
@@ -55,8 +55,8 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					xtype: 'component',
 					html: WT.res('feedback.text')
 				}, {
-					xtype: 'spacer',
-					factor: 2
+					xtype: 'sospacer',
+					mult: 2
 				}, {
 					xtype: 'combo',
 					name: 'serviceId',

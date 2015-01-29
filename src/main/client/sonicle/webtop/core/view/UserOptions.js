@@ -34,6 +34,10 @@
 Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	alternateClassName: 'WT.view.UserOptions',
 	extend: 'WT.sdk.UserOptionsView',
+	requires: [
+		'WT.store.TFADelivery',
+		'WT.model.Simple'
+	],
 	controller: Ext.create('WT.view.UserOptionsC'),
 	idField: 'id',
 	
@@ -57,6 +61,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, {
 				xtype: 'textfield',
 				name: 'displayName',
+				allowBlank: false,
 				fieldLabel: WT.res('opts.main.fld-displayName.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
@@ -64,29 +69,53 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, {
 				xtype: 'combo',
 				name: 'locale',
-				editable: false,
+				allowBlank: false,
+				typeAhead: true,
+				queryMode: 'local',
+				forceSelection: true,
+				selectOnFocus: true,
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.proxy('com.sonicle.webtop.core', 'GetLocales', 'locales')
+					proxy: WT.proxy(me.ID, 'GetLocales', 'locales')
 				},
 				valueField: 'id',
-				displayField: 'description',
+				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-locale.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
 				}
 			}, {
 				xtype: 'combo',
+				name: 'timezone',
+				allowBlank: false,
+				typeAhead: true,
+				queryMode: 'local',
+				forceSelection: true,
+				selectOnFocus: true,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WT.proxy(me.ID, 'GetTimezones', 'timezones')
+				},
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: WT.res('opts.main.fld-timezone.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
+			}, {
+				xtype: 'combo',
 				name: 'theme',
+				allowBlank: false,
 				editable: false,
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.proxy('com.sonicle.webtop.core', 'GetThemes', 'themes')
+					proxy: WT.proxy(me.ID, 'GetThemes', 'themes')
 				},
 				valueField: 'id',
-				displayField: 'description',
+				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
@@ -95,14 +124,15 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, {
 				xtype: 'combo',
 				name: 'laf',
+				allowBlank: false,
 				editable: false,
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.proxy('com.sonicle.webtop.core', 'GetLooksAndFeels', 'lafs')
+					proxy: WT.proxy(me.ID, 'GetLooksAndFeels', 'lafs')
 				},
 				valueField: 'id',
-				displayField: 'description',
+				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
@@ -284,9 +314,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						editable: false,
 						store: Ext.create('WT.store.TFADelivery'),
 						valueField: 'id',
-						displayField: 'description'
+						displayField: 'desc'
 					}, {
-						xtype: 'spacer',
+						xtype: 'sospacer',
 						vertical: false
 					}, {
 						xtype: 'button',
@@ -360,7 +390,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							xtype: 'component',
 							html: WT.res('opts.tfa.thisdevice.trusted.html')
 						}, {
-							xtype: 'spacer'
+							xtype: 'sospacer'
 						}, {
 							xtype: 'button',
 							//itemId: 'untrustthis',
@@ -392,7 +422,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						xtype: 'component',
 						html: WT.res('opts.tfa.otherdevices.html')
 					}, {
-						xtype: 'spacer'
+						xtype: 'sospacer'
 					}, {
 						xtype: 'button',
 						//itemId: 'untrustother',

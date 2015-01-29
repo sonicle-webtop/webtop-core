@@ -92,6 +92,7 @@ public class Start extends HttpServlet {
 			
 			// Page + loader variables
 			ServletHelper.fillPageVars(vars, locale, wta);
+			vars.put("language", locale.getLanguage());
 			vars.put("theme", theme);
 			vars.put("laf", lookAndFeel);
 			vars.put("rtl", String.valueOf(cus.getRightToLeft()));

@@ -34,14 +34,20 @@
 Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	alternateClassName: 'WT.mixin.ActionStorer',
 	extend: 'Ext.Mixin',
+	mixinConfig: {
+		id: 'actionstorer'
+		/*
+		extended: function (baseClass, derivedClass, classBody) {
+			classBody._actions = {};
+		}
+		*/
+	},
 	
 	DEFAULT_GROUP: 'default',
 	_actions: null,
 	
-	mixinConfig: {
-		extended: function (baseClass, derivedClass, classBody) {
-			classBody._actions = {};
-		}
+	constructor: function(cfg) {
+		this._actions = {};
 	},
 	
 	/**
@@ -64,13 +70,13 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		if(WT.isAction(obj)) { // Action is already instantiated
 			act = obj;
 		} else { // Instantiate action using config
-			act = Ext.create('WT.ux.Action', {
+			act = Ext.create('WT.ux.Action', Ext.applyIf({
 				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(name),
 				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(name),
 				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
 				handler: obj.handler,
 				scope: obj.scope || this
-			});
+			}, obj));
 		}
 		me._actions[group][name] = act;
 		return act;

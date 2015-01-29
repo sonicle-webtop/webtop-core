@@ -38,28 +38,44 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	],
 	mixins: [
 		'Ext.mixin.Observable',
+		'WT.mixin.RefStorer',
 		'WT.mixin.ActionStorer'
 	],
 	config: {
 		optionsModel: 'WT.sdk.model.ServiceOptions'
 	},
 	statics: {
+		TOOLBAR_REF_NAME: 'tbcmp',
+		TOOL_REF_NAME: 'toolcmp',
+		MAIN_REF_NAME: 'maincmp',
 		NEW_ACTION_GROUP: 'new'
 	},
 	
+	/**
+	 * @property {String} ID
+	 * Service ID.
+	 */
 	ID: null,
+	
+	/**
+	 * @property {String} XID
+	 * Service short ID.
+	 */
 	XID: null,
-	strings: null,
+	
+	/**
+	 * @property {WT.sdk.model.ServiceOptions} options
+	 * A model representing service's options pushed at startup time.
+	 */
 	options: null,
-	tbcmp: null,
-	toolcmp: null,
-	maincmp: null,
+	
 	wsactions: null,
 	wsscopes: null,
 	
 	/**
 	 * @method
 	 * Called automatically when the service is initialized by the framework.
+	 * This is the principal hook point.
 	 */
 	init: Ext.emptyFn,
 	
@@ -68,22 +84,59 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Fires after the Service has been activated.
 	 */
 	
-	constructor: function(config) {
+	constructor: function(cfg) {
 		var me = this;
-		me.ID = config.ID;
-		me.XID = config.XID;
+		me.ID = cfg.ID;
+		me.XID = cfg.XID;
 		me.wsactions = {};
 		me.wsscopes = {};
-		me.initConfig(config);
+		me.initConfig(cfg);
+		me.mixins.observable.constructor.call(me, cfg);
+		me.mixins.refstorer.constructor.call(me, cfg);
+		me.mixins.actionstorer.constructor.call(me, cfg);
 		me.callParent(arguments);
-		me.mixins.observable.constructor.call(me, config);
-		me.options = Ext.create(me.getOptionsModel(), config.optionsData);
+		
+		// Creates options using configured model
+		try {
+			me.options = Ext.create(me.getOptionsModel(), cfg.optionsData);
+		} catch(err) {
+			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', me.getOptionsModel()));
+			me.options = Ext.create('WT.sdk.model.ServiceOptions', cfg.optionsData);
+		}
 	},
 	
+	getName: function() {
+		return WT.getApp().getDescriptor(this.ID).getName();
+	},
+	
+	getDescription: function() {
+		return WT.getApp().getDescriptor(this.ID).getDescription();
+	},
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param {String} key The key.
+	 * @return {String} The translated string, or null if not found.
+	 */
+	res: function(key) {
+		return WT.res(this.ID, key);
+	},
+	
+	/**
+	 * Returns an option defined during startup set.
+	 * Some built-in options are defined in model file 'WT.sdk.model.ServiceOptions'.
+	 * @param {String} key The option key.
+	 * @return {Mixed} The option value.
+	 */
 	getOption: function(key) {
 		return this.options.get(key);
 	},
 	
+	/**
+	 * Sets one of startup option set.
+	 * Updates are only valid for client, no server sync is done using this method.
+	 * @param {Object} opts Key/Value pairs object.
+	 */
 	setOptions: function(opts) {
 		var me = this;
 		opts = opts || {};
@@ -95,21 +148,11 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
-	 * Returns the localized string associated to the key.
-	 * @param {String} key The key.
-	 * @return {String} The translated string, or null if not found.
-	 */
-	res: function(key) {
-		if(!this.strings) return undefined;
-		return this.strings[key];
-	},
-	
-	/**
 	 * Returns the toolbar component associated to this service.
 	 * @return {Ext.Toolbar}
 	 */
 	getToolbar: function() {
-		return this.tbcmp;
+		return this.getRef(WT.sdk.Service.TOOLBAR_REF_NAME);
 	},
 	
 	/**
@@ -117,7 +160,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Ext.toolbar.Toolbar} cmp The toolbar.
 	 */
 	setToolbar: function(cmp) {
-		if(cmp) this.tbcmp = cmp;
+		if(cmp) this.addRef(WT.sdk.Service.TOOLBAR_REF_NAME, cmp);
 	},
 	
 	/**
@@ -125,15 +168,17 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Ext.Component}
 	 */
 	getToolComponent: function() {
-		return this.toolcmp;
+		return this.getRef(WT.sdk.Service.TOOL_REF_NAME);
 	},
 	
 	/**
 	 * Sets the tool (side) component associated to this service.
 	 * @param {Ext.Panel} cmp The tool component.
+	 * @return {Ext.Component} The added component.
 	 */
 	setToolComponent: function(cmp) {
-		if(cmp) this.toolcmp = cmp;
+		if(cmp) return this.addRef(WT.sdk.Service.TOOL_REF_NAME, cmp);
+		return undefined;
 	},
 	
 	/**
@@ -141,7 +186,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Ext.Panel}
 	 */
 	getMainComponent: function() {
-		return this.maincmp;
+		return this.getRef(WT.sdk.Service.MAIN_REF_NAME);
 	},
 	
 	/**
@@ -149,7 +194,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {Ext.Component} cmp The main component.
 	 */
 	setMainComponent: function(cmp) {
-		if(cmp) this.maincmp = cmp;
+		if(cmp) this.addRef(WT.sdk.Service.MAIN_REF_NAME, cmp);
 	},
 	
 	/**
@@ -262,7 +307,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	websocketMessage: function(cfg) {
 		var me  = this;
-		console.log('MailService: received message with action '+cfg.action);
 		var fn = me.wsactions[cfg.action];
 		var scope = me.wsscopes[cfg.action] || me;
 		Ext.callback(fn, scope, [cfg]);

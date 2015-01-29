@@ -31,23 +31,47 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Ext.ux.form.Spacer', {
-	extend: 'Ext.Component',
-	alias: 'widget.spacer',
-	
-	vertical: true,
-	factor: 1,
-	autoEl: 'div',
+Ext.define('Sonicle.webtop.core.sdk.FormView2', {
+	alternateClassName: 'WT.sdk.FormView2',
+	extend: 'WT.sdk.DockableView',
 	
 	constructor: function(cfg) {
-		var me = this, vert = cfg.vertical;
-		if(Ext.isDefined(vert) && Ext.isBoolean(vert)) me.vertical = vert;
-		if(Ext.isNumber(cfg.factor)) me.factor = cfg.factor;
-		if(me.vertical) {
-			me.height = me.factor * 10;
-		} else {
-			me.width = me.factor * 10;
-		}
+		var me = this;
+		me.initConfig(cfg);
 		me.callParent(arguments);
+	},
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+	},
+	
+	onModeChange: function(nm, om) {
+		this.updateViewTitle(nm);
+		this.fireEvent('modechange', this, nm, om);
+	},
+	
+	updateViewTitle: function(mode) {
+		/*
+		if(this.ctInited) {
+			var ct = this.ownerCt;
+			var tit = (ct.title == null) ? '' : ct.title;
+			var last = tit.lastIndexOf(':');
+			var tit1 = (last == -1) ? tit : tit.substring(0, last);
+			var tit2 = null;
+			switch(mode) {
+				case this.MODE_VIEW:
+					tit2 = WT.res('a-view.lbl');
+					break;
+				case this.MODE_NEW:
+					tit2 = WT.res('a-add.lbl');
+					break;
+				case this.MODE_EDIT:
+					tit2 = WT.res('a-edit.lbl');
+					break;
+			}
+			ct.setTitle(String.format('{0}: {1}', tit1, tit2));
+		}
+		*/
 	}
 });

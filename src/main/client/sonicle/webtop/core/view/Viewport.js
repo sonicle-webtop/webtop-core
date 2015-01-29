@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 			region: 'north',
 			reference: 'header',
 			layout: 'border',
-			height: 40,
+			height: 35,
 			items: [{
 				xtype: 'toolbar',
 				region: 'west',

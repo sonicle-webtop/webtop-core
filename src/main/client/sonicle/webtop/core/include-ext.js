@@ -84,7 +84,9 @@
 	var scriptEls = document.getElementsByTagName('script'),
 		path = scriptEls[scriptEls.length - 1].src,
 		extPath = 'resources/extjs',
+		soUxPath = 'resources/sonicle',
 		corePath = 'resources/com.sonicle.webtop.core',
+		language = getQueryParam('language') || 'it',
 		theme = getQueryParam('theme') || 'crisp',
 		laf = getQueryParam('laf') || 'default',
 		rtl = getQueryParam('rtl'),
@@ -102,21 +104,27 @@
 			}[theme],
 		repoDevMode = Ext.repoDevMode = getCookieValue('ExtRepoDevMode'),
 		packagePath,
+		localePath,
+		extLocale,
 		extTheme,
 		themePath,
 		chartsCSSPath,
 		overridePath,
 		extPrefix,
-		lafPath;
+		lafPath,
+		soUxCSSPath;
 	
 	rtl = rtl && rtl.toString() === 'true';
 	useDebug = useDebug && useDebug.toString() === 'true';
+	packagePath = extPath + '/packages/';
+	extLocale = 'ext-locale-' + language;
+	localePath = packagePath + 'ext-locale/build/' + extLocale;
 	extTheme = 'ext-theme-' + theme;
-	packagePath = extPath + '/packages/' + extTheme + '/build/';
-	themePath = packagePath + 'resources/' + extTheme + (rtl ? '-all-rtl' : '-all');
-	chartsCSSPath = extPath + '/packages/sencha-charts/build/' + theme +
+	themePath = packagePath + extTheme + '/build/resources/' + extTheme + (rtl ? '-all-rtl' : '-all');
+	chartsCSSPath = packagePath + 'sencha-charts/build/' + theme +
 			'/resources/sencha-charts' + (rtl ? '-all-rtl' : '-all');
 	lafPath = corePath + '/laf/' + laf + '/';
+	soUxCSSPath = soUxPath + '/resources/';
 
 	if (includeCSS) {
 		document.write('<link rel="stylesheet" type="text/css" href="' +
@@ -131,12 +139,19 @@
 				lafPath + 'service-' + theme + '.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				lafPath + 'service-override-' + theme + '.css' + '"/>');
+		
+		document.write('<link rel="stylesheet" type="text/css" href="' +
+				soUxCSSPath + 'calendar.css' + '"/>');
+		document.write('<link rel="stylesheet" type="text/css" href="' +
+				soUxCSSPath + 'multicalendar.css' + '"/>');
 	}
 	
 	extPrefix = useDebug ? '/ext-all-debug' : '/ext-all';
 
 	document.write('<script type="text/javascript" src="' + extPath + extPrefix +
 			(rtl ? '-rtl' : '') + '.js"></script>');
+	document.write('<script type="text/javascript" src="' + localePath +
+			(useDebug ? '-debug' : '') + '.js"></script>');
 
 	if (hasOverrides) {
 		// since document.write('<script>') does not block execution in IE, we need to 
@@ -147,7 +162,7 @@
 		// scripts and so Ext is still undefined when the neptune overrides are executed.
 		// To work around this we use the _beforereadyhandler hook to load the neptune
 		// overrides dynamically after Ext has been defined.
-		overridePath = packagePath + extTheme + (repoDevMode ? '-debug' : '') + '.js';
+		overridePath = packagePath + extTheme + '/build/' + extTheme + (repoDevMode ? '-debug' : '') + '.js';
 
 		if (repoDevMode && window.ActiveXObject) {
 			Ext = {

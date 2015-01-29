@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsController', {
 	
 	onBlurAutoSave: function(s) {
 		var me = this;
-		if(s.isDirty()) {
+		if(s.isDirty() && s.isValid()) {
 			me.reload = s.reload || false;
 			me.getView().saveForm();
 		}

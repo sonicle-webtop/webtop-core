@@ -252,6 +252,8 @@ public class WebTopSession {
 			js.appRequires.add(manifest.getServiceJsClassName(true));
 			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
 		} else {
+			js.appRequires.add(manifest.getServiceJsClassName(true));
+			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
 			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
 		}
 		

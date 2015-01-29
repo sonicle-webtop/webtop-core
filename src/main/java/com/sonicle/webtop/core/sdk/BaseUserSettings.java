@@ -82,4 +82,8 @@ public abstract class BaseUserSettings {
 	public boolean getUserSetting(String key, boolean defaultValue) {
 		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
 	}
+	
+	public <T>T getUserSetting(String key, T defaultValue, Class<T> type) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue, type);
+	}
 }

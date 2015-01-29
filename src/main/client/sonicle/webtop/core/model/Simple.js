@@ -36,5 +36,5 @@ Ext.define('Sonicle.webtop.core.model.Simple', {
 	extend: 'WT.model.Base',
 	
 	//entityName: 'simple',
-	fields: ['id', 'description']
+	fields: ['id', 'desc']
 });

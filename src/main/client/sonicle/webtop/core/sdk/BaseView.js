@@ -35,9 +35,23 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	alternateClassName: 'WT.sdk.BaseView',
 	extend: 'Ext.container.Container',
 	mixins: [
-		'WT.mixin.Waitable'
+		'WT.mixin.Waitable',
+		'WT.mixin.ActionStorer'
 	],
 	
 	layout: 'border',
-	referenceHolder: true
+	referenceHolder: true,
+	
+	/**
+	 * @property {WT.sdk.Service} mys
+	 * Reference to service instance.
+	 * @private
+	 */
+	mys: null,
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.mixins.actionstorer.constructor.call(me, cfg);
+		me.callParent(arguments);
+	}
 });
