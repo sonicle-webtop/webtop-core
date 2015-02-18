@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.mixin.RefStorer', {
 		*/
 	},
 	
+	DEFAULT_GROUP: 'default',
 	_refs: null,
 	
 	constructor: function(cfg) {
@@ -51,29 +52,47 @@ Ext.define('Sonicle.webtop.core.mixin.RefStorer', {
 	
 	/**
 	 * Adds a reference.
+	 * @param {String} [group] The reference group.
 	 * @param {String} name The reference name.
 	 * @param {Mixed} obj The reference to add.
 	 * @return {Mixed} The reference added.
 	 */
-	addRef: function(name, obj) {
-		this._refs[name] = obj;
+	addRef: function(group, name, obj) {
+		var me = this;
+		if(arguments.length === 2) {
+			obj = name;
+			name = group;
+			group = me.DEFAULT_GROUP;
+		}
+		if(!me._refs[group]) me._refs[group] = {};
+		
+		me._refs[group][name] = obj;
 		return obj;
 	},
 	
 	/**
-	 * Gets a reference.
+	 * Gets a reference from the specified group.
+	 * If not provided, 'default' group is used.
+	 * @param {String} [group] The reference group.
 	 * @param {String} name The reference name.
 	 * @return {Mixed} The reference.
 	 */
-	getRef: function(name) {
-		return this._refs[name];
+	getRef: function(group, name) {
+		var me = this;
+		if(arguments.length === 1) {
+			name = group;
+			group = me.DEFAULT_GROUP;
+		}
+		if(!me._refs[group]) return undefined;
+		return me._refs[group][name];
 	},
 	
 	/**
 	 * Gets all references.
+	 * @param {String} group The reference group.
 	 * @returns {Object} The references map.
 	 */
-	getRefs: function() {
-		return this._refs;
+	getRefs: function(group) {
+		return this._refs[group];
 	}
 });

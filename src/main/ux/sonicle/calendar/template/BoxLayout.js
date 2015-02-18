@@ -5,7 +5,7 @@ Ext.define('Sonicle.calendar.template.BoxLayout', {
 	constructor: function (config) {
 		var me = this;
 		Ext.apply(me, config);
-
+		
 		var weekLinkTpl = me.showWeekLinks ? '<div id="{weekLinkId}" class="ext-cal-week-link">{weekNum}</div>' : '';
 		me.callParent([
 			'<tpl for="weeks">',

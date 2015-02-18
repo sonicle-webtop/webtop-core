@@ -14,19 +14,33 @@ Ext.define('Sonicle.picker.Date', {
 		 * @cfg {Boolean} showMonthpicker
 		 * False to prevent the month picker being displayed.
 		 */
-		
 		showMonthpicker: true,
-		/**
-		 * @cfg {Boolean} highlightBefore
-		 * True to highlight displayed dates belonging to the previous month.
-		 */
 		
-		highlightBefore: false,
 		/**
-		 * @cfg {Boolean} highlightAfter
-		 * True to highlight displayed dates belonging to the next month.
+		 * @cfg {Boolean} highlightPrevDays
+		 * True to highlight (according to desired mode) date cells 
+		 * belonging to the previous month.
 		 */
-		highlightAfter: false
+		highlightPrevDays: false,
+		
+		/**
+		 * @cfg {Boolean} highlightNextDays
+		 * True to highlight (according to desired mode) date cells 
+		 * belonging to the next month.
+		 */
+		highlightNextDays: false,
+		
+		/**
+		 * @cfg {Boolean} hidePrevDays
+		 * True to hide date cells belonging to the previous month.
+		 */
+		hidePrevDays: false,
+		
+		/**
+		 * @cfg {Boolean} hideNextDays
+		 * False to hide date cells belonging to the next month.
+		 */
+		hideNextDays: false
 	},
 	
 	/**
@@ -80,19 +94,27 @@ Ext.define('Sonicle.picker.Date', {
 	onRender: function(container, position) {
 		var me = this;
 		me.callParent(arguments);
-		// Overrides default behaviour in order to apply monthpicker configuration
-		/*
+		
+		// Overrides default behaviour in order to make some tunings:
+		// we need to completely disable monthpicker making also its
+		// button un-useful
 		if(!me.showMonthpicker) {
-			me.monthBtn.setArrowVisible(false);
-			me.monthBtn.updateArrowVisible();
+			me.prevEl.setVisible(false);
+			me.nextEl.setVisible(false);
+			me.monthBtn.setTooltip(null);
+			me.monthBtn._disabledCls = '';
+			me.monthBtn.setDisabled(true);
+			me.monthBtn.setStyle('cursor', 'auto');
+			Ext.defer(me.monthBtn._removeSplitCls, 100, me.monthBtn);
 		}
-		*/
 	},
 	
+	/*
 	doShowMonthPicker: function() {
 		// Overrides default behaviour in order to prevent monthpicker display
 		if(this.showMonthpicker) this.callParent(arguments);
 	},
+	*/
 	
 	onOkClick: function(picker, value) {
 		var me = this;
@@ -185,7 +207,7 @@ Ext.define('Sonicle.picker.Date', {
 		if(hmode === 'd') {
 			tfrom = hdate.getTime();
 			tto = hdate.getTime();
-		} else if ((hmode === 'w') || (hmode === 'aw')) {
+		} else if ((hmode === 'w') || (hmode === 'wa')) {
 			tfrom = me.getFirstDateOfWeek(hdate, sday).getTime();
 			tto = me.getLastDateOfWeek(hdate, sday).getTime();
 		} else if (hmode === 'w5')  {
@@ -196,8 +218,8 @@ Ext.define('Sonicle.picker.Date', {
 			tfrom = eDate.getFirstDateOfMonth(hdate).getTime();
 			tto = eDate.getLastDateOfMonth(hdate).getTime();
 		}
-		if((tfrom < t1) && !me.highlightBefore) tfrom = t1;
-		if((tto > t31) && !me.highlightAfter) tto = t31;
+		if((tfrom < t1) && !me.highlightPrevDays) tfrom = t1;
+		if((tto > t31) && !me.highlightNextDays) tto = t31;
 		
 		// Loop through cells
 		for(var c = 0; c < len; c++) {
@@ -205,7 +227,7 @@ Ext.define('Sonicle.picker.Date', {
 			dv = me.textNodes[c].dateValue;
 			d = new Date(dv);
 			
-			// Highlight it...
+			// Highlight days in current view...
 			if((dv >= tfrom) && (dv <= tto)) {
 				cell.first().setStyle('background-color', '#eaf3fa');
 			} else {
@@ -225,6 +247,13 @@ Ext.define('Sonicle.picker.Date', {
 				} else {
 					cell.first().setStyle('font-weight', '');
 				}
+			}
+			
+			// Hide cells...
+			if((me.hidePrevDays && (dv < t1)) || (me.hideNextDays && (dv > t31))) {
+				cell.setStyle('visibility', 'hidden');
+			} else {
+				cell.setStyle('visibility', '');
 			}
 		}
 	},

@@ -199,18 +199,23 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 	},
 	
 	onMenuButtonClick: function(s) {
+		var me = this, wnd;
 		switch(s.getItemId()) {
 			case 'logout':
 				document.location = 'logout';
 				break;
 			case 'feedback':
-				this.buildFeedbackWnd();
+				wnd = me.buildFeedbackWnd();
+				wnd.show(false, function() {
+					wnd.getComponent(0).beginNew();
+				});
 				break;
 			case 'whatsnew':
-				this.buildWhatsnewWnd(true);
+				wnd = me.buildWhatsnewWnd(true);
+				wnd.show();
 				break;
 			case 'options':
-				this.buildOptionsWnd2();
+				me.buildOptionsWnd2();
 				break;
 			default:
 				alert('Hai premuto il bottone '+s.getItemId());
@@ -258,25 +263,30 @@ Ext.define('Sonicle.webtop.core.view.ViewportC', {
 		var wnd = Ext.create({
 			xtype: 'window',
 			layout: 'fit',
-			height: 320,
 			width: 590,
+			height: 320,
 			items: [
-				Ext.create('Sonicle.webtop.core.view.Feedback')
+				Ext.create('Sonicle.webtop.core.view.Feedback', {
+					mys: WT.app.getService('com.sonicle.webtop.core')
+				})
 			]
 		});
-		if(wnd) wnd.show();
+		return wnd;
 	},
 	
 	buildWhatsnewWnd: function(full) {
 		var wnd = Ext.create({
 			xtype: 'window',
 			layout: 'fit',
-			height: 500,
 			width: 600,
+			height: 500,
 			items: [
-				Ext.create('Sonicle.webtop.core.view.Whatsnew', full)
+				Ext.create('Sonicle.webtop.core.view.Whatsnew', {
+					mys: WT.app.getService('com.sonicle.webtop.core'),
+					full: full
+				})
 			]
 		});
-		if(wnd) wnd.show();
+		return wnd;
 	}
 });

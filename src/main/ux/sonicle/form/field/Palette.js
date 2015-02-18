@@ -31,80 +31,75 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.FeedbackC', {
-	alternateClassName: 'WT.view.FeedbackC',
-	extend: 'Ext.app.ViewController',
+Ext.define('Sonicle.form.field.Palette', {
+	extend: 'Ext.form.field.Picker',
+	alias: ['widget.sopalettefield'],
 	
-	h2cCanvas: null,
-	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
+	editable: false,
+	regex: /^\#[0-9A-F]{6}$/i,
+	invalidText: "Colors must be in hex format (like #FFFFFF)",
+	matchFieldWidth: false,
 	
-	onAfterRender: function() {
-		var ct = this.getView().ownerCt;
-		if(ct.isXType('window')) {
-			ct.getEl().set({'data-html2canvas-ignore': 'true'});
-		}
-	},
+	/**
+	 * @property {String[]} colors
+	 * An array of 6-digit color hex code strings (without the # symbol). This array can contain any number of colors,
+	 * and each hex code should be unique. You can override individual colors if needed.
+	 * Defaults to.
+	 */
+	colors: null,
 	
-	onSubmit: function(s,op,success) {
-		if(success) {
-			WT.info(WT.res('feedback.sent'));
-			s.close();
-		}
-	},
-	
-	onCancelClick: function() {
-		this.clearScreenshot();
-		this.getView().close();
-	},
-	
-	onSendClick: function() {
+	afterRender: function() {
 		var me = this;
-		var v = this.getView();
-		v.setFieldValue('timestamp', new Date().toString());
-		var h2c = (me.h2cCanvas) ? me.h2cCanvas.toDataURL('image/jpeg', me.jpegQuality) : null;
-		v.setFieldValue('image', h2c);
-		v.submitForm();
+		me.callParent();
+		me.updateColor(me.value);
 	},
 	
-	onScreenshotChange: function(s, chk) {
-		if(chk) {
-			this.takeScreenshot();
-		} else {
-			this.clearScreenshot();
+	setValue: function(color) {
+		var me = this;
+		me.callParent(arguments);
+		me.updateColor(color);
+	},
+	
+	updateColor: function(color) {
+		var el = this.inputEl;
+		if(el && !Ext.isEmpty(color)) {
+			el.setStyle({
+				color: color,
+				backgroundColor: color,
+				boxShadow: '0px 0px 0px 1px white inset'
+			});
 		}
 	},
 	
-	takeScreenshot: function() {
-		var me = this;
-		var v = me.getView();
-		v.wait(WT.res('feedback.capturing'));
-		me.clearScreenshot();
-		WT.loadScriptAsync('js/html2canvas.js', function(success) {
-			if(success) {
-				html2canvas([document.body], {
-					onrendered: function(canvas) {
-						var cel = Ext.get(canvas);
-						cel.setStyle('position', 'absolute');
-						cel.setStyle('left', 0);
-						cel.setStyle('top', 0);
-						cel.setStyle('z-index', 8900);
-						Ext.get(document.body).insertSibling(cel);
-						me.h2cCanvas = canvas;
-						v.unwait();
-					}
-				});
-			} else {
-				v.unwait();
+	createPicker: function() {
+		var me = this, cfg = {};
+		if(Ext.isArray(me.colors)) {
+			cfg = Ext.apply(cfg, {
+				colors: me.colors
+			});
+		}
+		return Ext.create(Ext.apply(cfg, {
+			xtype: 'colorpicker',
+			pickerField: me,
+			floating: true,
+			focusable: false, // Key events are listened from the input field which is never blurred
+			minWidth: 195,
+			maxWidth: 195,
+			listeners: {
+				select: function() {
+					me.collapse();
+				}
 			}
-		}, me);
+		}));
+	},
+			
+	onExpand: function() {
+		var value = this.getValue();
+		if(value) this.picker.select(value, true);
 	},
 	
-	clearScreenshot: function() {
-		var me = this;
-		if(me.h2cCanvas) {
-			Ext.removeNode(Ext.get(me.h2cCanvas).dom);
-			me.h2cCanvas = null;
-			me.getView().setFieldValue('screenshot', false);
-		}
+	onCollapse: function() {
+		// Picker does not prepend #, let's add it!
+		this.setValue('#'+this.picker.getValue());
 	}
 });

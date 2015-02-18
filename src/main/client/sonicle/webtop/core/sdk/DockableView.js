@@ -45,37 +45,74 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		/**
 		 * @cfg {String} title
 		 * The title text to be used to apply as container's title.
-		 * If value begins with @ is treated as frameword resource string.
+		 * If value begins with @ is treated as framework resource string.
 		 */
 		title: null,
 		
 		/**
 		 * @cfg {Boolean} promptConfirm
-		 * If true, a confirm message will be shown in case of false return at canCloseView method.
+		 * This config controls the display of a confirm message on close.
+		 * If True and if {@link #beforeviewclose event} returns that a close 
+		 * operation would not be safe, a confirm message will be shown. 
 		 */
 		promptConfirm: true,
 		
 		/**
+		 * @cfg {'ync'/'yn'} [confirm='ync']
+		 * Controls confirm message buttons' appearance.
+		 * Specify as 'ync' (Yes+No+Cancel) or 'yn' (Yes+No).
+		 */
+		confirm: 'ync',
+		
+		/**
 		 * @cfg {String} confirmMsg
-		 * Custom confirm message to show.
+		 * Custom confirm message to use.
 		 */
 		confirmMsg: null
 	},
 	
 	/**
-	 * @property {Boolean} ctInited
 	 * @private
+	 * @property {Boolean} ctInited
 	 */
 	ctInited: false,
 	
+	/**
+	 * @event viewshow
+	 * Fires after the view is shown.
+	 * @param {WT.sdk.DockableView} this
+	 */
+	
+	/**
+	 * @event beforeviewclose
+	 * Fires before the view is closed. This is a cancelable event, 
+	 * so returning false will prompt (if enabled, see {@link #promptConfirm}) 
+	 * a confirm message.
+	 * @param {WT.sdk.DockableView} this
+	 */
+	
+	/**
+	 * @event viewdiscard
+	 * Fires after the user when prompted, chooses to discard current view.
+	 * This event is fired before {@link #viewclose} event.
+	 * @param {WT.sdk.DockableView} this
+	 */
+	
+	/**
+	 * @event viewclose
+	 * Fires after the view is closed.
+	 * @param {WT.sdk.DockableView} this
+	 */
+	
 	constructor: function(cfg) {
 		var me = this;
-		me.initConfig(cfg);
-		me.callParent(arguments);
+		me.callParent([cfg]);
 	},
 	
 	initComponent: function() {
 		var me = this;
+		
+		if(me.title) me.title = WT.resStr(me.mys.ID, me.title);
 		me.callParent(arguments);
 		me.on('added', function(s,ct) {
 			me.initCt(ct);
@@ -88,15 +125,35 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	initCt: function(ct) {
 		var me = this;
 		if(me.ctInited) return;
+		
 		if(ct.isXType('window')) {
 			// Apply as config (window is not yet rendered)
-			ct.title = WT.resStr(me.title);
+			if(me.title) ct.title = me.title;
 			ct.iconCls = me.iconCls;
+			if(me.tbar || me.fbar || me.lbar || me.rbar || me.dockedItems || me.buttons) {
+				Ext.apply(ct, {
+					tbar: me.tbar,
+					fbar: me.fbar,
+					lbar: me.lbar,
+					rbar: me.rbar,
+					dockedItems: me.dockedItems,
+					buttons: me.buttons,
+					buttonAlign: me.buttonAlign,
+					minButtonWidth: me.minButtonWidth
+				});
+				ct.bridgeToolbars(); // Force toolbar initialization on target component
+				
+				// Cleanup configured props
+				var props = ['tbar','fbar','lbar','rbar','dockedItems','buttons'];
+				for(var prop in props) delete me[prop];
+			}
 			
 			ct.on('show', me.onCtWndShow, me);
 			ct.on('beforeclose', me.onCtBeforeClose, me);
 			ct.on('close', me.onCtWndClose, me);
-			/* TODO: handle window groups
+			
+			// TODO: gestire i window group
+			/*
 			if(me.useWG) ct.on('hide', me.onCtWndHide, me);
 			*/
 		}
@@ -116,45 +173,51 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		me.ctInited = false;
 	},
 	
+	/**
+	 * @private
+	 */
 	onCtWndShow: function() {
 		var me = this;
-		/* TODO: handle window groups
+		// TODO: gestire i window group
+		/*
 		if(me.useWG) {
 			me.wg.each(function(wnd) {
 				wnd.show();
 			}, me);
 		}
 		*/
-		me.fireEvent('showview', me);
+		me.fireEvent('viewshow', me);
 	},
 	
+	/**
+	 * @private
+	 */
 	onCtBeforeClose: function() {
 		var me = this;
-		/* TODO: handle window groups
+		// TODO: gestire i window group
+		/*
 		if(me.useWG && me.hasWindows()) return false;
 		*/
-		var cc = Ext.callback(me.canCloseView, me);
-		//var cc = (Ext.isFunction(this.canClose)) ? this.canClose() : true;
-		if(me.promptConfirm && !cc) {
-			WT.confirmYNC(me.confirmMsg, function(bid) {
-				if(bid === 'yes') {
-					me.onConfirmView();
-				} else if(bid === 'no') {
-					me.onDiscardView();
-				}
-			});
+		if(me.promptConfirm && me.fireEvent('beforeviewclose', me) === false) {
+			me.showConfirm();
 			return false;
 		}
 		return true;
 	},
 	
+	/**
+	 * @private
+	 */
 	onCtWndClose: function() {
-		var me = this;
-		me.fireEvent('closeview', me);
+		this.fireEvent('viewclose', me);
 	},
 	
+	/**
+	 * @private
+	 */
 	onCtWndHide: function() {
-		/* TODO: handle window groups
+		// TODO: gestire i window group
+		/*
 		var me = this;
 		if(me.useWG) {
 			me.wg.hideAll();
@@ -163,29 +226,9 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	},
 	
 	/**
-	 * Handler method exexuted on confirm continue (answer: yes).
-	 * Child classes can override this method to implement their own custom logic.
-	 */
-	onConfirmView: function() {
-		//Ext.callback(me.save, me, [true]);
-		var me = this;
-		me.fireEvent('confirmview', me);
-		me.closeView(false);
-	},
-	
-	/**
-	 * Handler method exexuted on confirm discard (answer: no).
-	 * Child classes can override this method to implement their own custom logic.
-	 */
-	onDiscardView: function() {
-		var me = this;
-		me.fireEvent('discardview', me);
-		me.closeView(false);
-	},
-	
-	/**
-	 * Closes this view.
-	 * @param {Boolean} [prompt] Allow to override prompt close behaviour.
+	 * Closes this view. If specified, the 'prompt' parameter overwrites
+	 * current {@link #promptConfirm} definition.
+	 * @param {Boolean} [prompt] Allow to override prompt confirm behaviour.
 	 */
 	closeView: function(prompt) {
 		var me = this;
@@ -194,12 +237,45 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	},
 	
 	/**
-	 * Test method in order to defermine if view can be closed without
-	 * prompting any confirm message.
-	 * Child classes can override this method to implement their own custom logic.
-	 * @return {Boolean}
+	 * Shows the confirm message.
 	 */
-	canCloseView: function() {
-		return true;
+	showConfirm: function() {
+		var me = this, msg;
+		
+		if(me.confirm === 'ync') {
+			msg = me.confirmMsg || WT.res('confirm.save');
+			WT.confirmYNC(msg, function(bid) {
+				if(bid === 'yes') {
+					me.onConfirmView();
+				} else if(bid === 'no') {
+					me.onDiscardView();
+				}
+			});
+		} else {
+			msg = me.confirmMsg || WT.res('confirm.areyousure');
+			WT.confirm(msg, function(bid) {
+				if(bid === 'yes') {
+					me.onDiscardView();
+				}
+			});
+		}
+	},
+	
+	/**
+	 * Handler method executed on confirm continue (answer: yes).
+	 * Child classes can override this method to implement their own custom logic.
+	 */
+	onConfirmView: function() {
+		this.closeView(false);
+	},
+	
+	/**
+	 * Handler method executed on confirm discard (answer: no).
+	 * Child classes can override this method to implement their own custom logic.
+	 */
+	onDiscardView: function() {
+		var me = this;
+		me.fireEvent('viewdiscard', me);
+		me.closeView(false);
 	}
 });

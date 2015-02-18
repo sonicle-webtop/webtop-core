@@ -78,7 +78,7 @@ Ext.define('Sonicle.Date', {
 	 * @param {Boolean} precise (optional) If true, the milliseconds component is included in the comparison,
 	 * else it is ignored (the default).
 	 * @return {Number} The number of milliseconds difference between the two dates. If the dates are equal
-	 * this will be 0.  If the first date is earlier the return value will be positive, and if the second date
+	 * this will be 0. If the first date is earlier the return value will be positive, and if the second date
 	 * is earlier the value will be negative.
 	 */
 	compare: function(dt1, dt2, precise) {
@@ -146,13 +146,6 @@ Ext.define('Sonicle.Date', {
 				spansRange = (start1 <= start2 && end1 >= end2);
 
 		return (startsInRange || endsInRange || spansRange);
-	},
-	
-	nextWeekday: function(dt) {
-		for(;;) {
-			if(this.isWeekday(dt)) return dt;
-			this.add(dt, {days: 1});
-		}
 	},
 	
 	/**

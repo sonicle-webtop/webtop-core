@@ -19,12 +19,19 @@ Ext.define('Sonicle.calendar.Panel', {
 		'Sonicle.calendar.view.Day',
 		'Sonicle.calendar.view.Week5',
 		'Sonicle.calendar.view.Week',
+		'Sonicle.calendar.view.WeekAgenda',
 		'Sonicle.calendar.view.Month',
 		'Sonicle.calendar.form.EventDetails',
 		'Sonicle.calendar.data.EventMappings'
 	],
 	
 	layout: 'card',
+	/*
+	layout: {
+		type: 'card',
+		deferredRender: true
+	},
+	*/
 	
 	/**
 	 * @cfg {Boolean} showDayView
@@ -43,6 +50,12 @@ Ext.define('Sonicle.calendar.Panel', {
 	 * True to include the week view (and toolbar button), false to hide them (defaults to true).
 	 */
 	showWeekView: true,
+	
+	/**
+	 * @cfg {Boolean} showWeekAgendaView
+	 * True to include the week view (agenda style)(and toolbar button), false to hide them (defaults to true).
+	 */
+	showWeekAgendaView: true,
 	
 	/**
 	 * @cfg {Boolean} showMonthView
@@ -96,6 +109,12 @@ Ext.define('Sonicle.calendar.Panel', {
 	 * Alternate text to use for the 'Week' nav bar button.
 	 */
 	weekText: 'Week',
+	
+	/**
+	 * @cfg {String} weekAgendaText
+	 * Alternate text to use for the 'WeekAgenda' nav bar button.
+	 */
+	weekAgendaText: 'Week (agenda)',
 	
 	/**
 	 * @cfg {String} monthText
@@ -320,6 +339,17 @@ Ext.define('Sonicle.calendar.Panel', {
 				toggleGroup: 'tb-views'
 			});
 		}
+		if (me.showWeekAgendaView) {
+			wiewIdx++;
+			me.viewMap['wa'] = wiewIdx;
+			me.tbar.items.push({
+				id: me.id + '-tb-weekag',
+				text: me.weekAgendaText,
+				handler: me.onWeekAgendaClick,
+				scope: me,
+				toggleGroup: 'tb-views'
+			});
+		}
 		if (me.showMonthView || (me.wiewIdx === -1)) {
 			wiewIdx++;
 			me.viewMap['m'] = wiewIdx;
@@ -392,6 +422,17 @@ Ext.define('Sonicle.calendar.Panel', {
 			
 			wv = Ext.apply(Ext.apply(wv, me.viewCfg), me.weekViewCfg);
 			wv.id = me.id + '-week';
+			me.initEventRelay(wv);
+			me.add(wv);
+		}
+		if (me.showWeekAgendaView) {
+			var wv = Ext.applyIf({
+				xtype: 'weekagendaview',
+				title: me.weekAgendaText
+			}, sharedCfg);
+			
+			wv = Ext.apply(Ext.apply(wv, me.viewCfg), me.weekAgendaViewCfg);
+			wv.id = me.id + '-weekag';
 			me.initEventRelay(wv);
 			me.add(wv);
 		}
@@ -533,29 +574,34 @@ Ext.define('Sonicle.calendar.Panel', {
 		return this;
 	},
 	
-	setActiveView: function(id) {
-		var me = this, l = me.layout,
-				//tb = me.getDockedItems('toolbar')[0],
+	/**
+	 * Set the active view, optionally specifying a new start date.
+	 * @param {String/Number} id The id of the view to activate (or the 0-based index of the view within 
+	 * the CalendarPanel's internal card layout).
+	 * @param {Date} startDate (optional) The new view start date (defaults to the current start date)
+	 */
+	setActiveView: function(id, startDate) {
+		var me = this,
+				l = me.layout,
 				idx = me.viewMap[id];
 		
 		if(!Ext.isDefined(idx)) return;
 		
-		// show/hide the toolbar first so that the layout will calculate the correct item size
-		//if (tb) tb[id === me.id + '-edit' ? 'hide' : 'show']();
-
-		Ext.suspendLayouts();
-		l.setActiveItem(idx);
-		me.activeView = l.getActiveItem();
-		/*
-		if (id !== me.id + '-edit') {
-			if (id !== me.preEditView) {
-				l.activeItem.setStartDate(me.startDate, true);
-			}
-			me.updateNavState();
+		// Make sure we're actually changing views
+		if(me.getComponent(idx).id !== l.getActiveItem().id) {
+			if(startDate) me.startDate = startDate;
+			
+			// Activate the new view and refresh the layout
+			Ext.suspendLayouts();
+			l.setActiveItem(idx);
+			me.activeView = l.getActiveItem();
+			me.activeView.setStartDate(me.startDate, true);
+			Ext.resumeLayouts(true);
+			
+			me.fireViewChange();
+		} else {
+			if(startDate) me.setStartDate(startDate);
 		}
-		*/
-		Ext.resumeLayouts(true);
-		me.fireViewChange();
 	},
 	
 	// private
@@ -589,11 +635,15 @@ Ext.define('Sonicle.calendar.Panel', {
 	
 	/**
 	 * Sets the start date for the currently-active calendar view.
-	 * @param {Date} dt
+	 * @param {Date} dt The new start date
+	 * @return {Extensible.calendar.CalendarPanel} this
 	 */
 	setStartDate: function (dt) {
+		this.startDate = dt;
+		console.log('startDate='+dt);
+		Ext.suspendLayouts();
 		this.layout.activeItem.setStartDate(dt, true);
-		this.updateNavState();
+		Ext.resumeLayouts(true);
 		this.fireViewChange();
 	},
 	
@@ -622,13 +672,18 @@ Ext.define('Sonicle.calendar.Panel', {
 		this.setActiveView('d');
 	},
 	
+	onWeek5Click: function () {
+		this.setActiveView('w5');
+	},
+	
 	// private
 	onWeekClick: function () {
 		this.setActiveView('w');
 	},
 	
-	onWeek5Click: function () {
-		this.setActiveView('w5');
+	// private
+	onWeekAgendaClick: function () {
+		this.setActiveView('wa');
 	},
 	
 	// private

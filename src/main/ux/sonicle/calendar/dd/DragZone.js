@@ -83,5 +83,10 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 	
 	afterInvalidDrop: function(e, id) {
 		Ext.select('.ext-dd-shim').hide();
+	},
+	
+	destroy: function() {
+		this.callParent(arguments);
+		delete Sonicle.calendar._statusProxyInstance;
 	}
 });

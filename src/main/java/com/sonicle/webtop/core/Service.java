@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsPayload;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
@@ -47,7 +48,6 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.SuperEnvironment;
-import com.sonicle.webtop.core.sdk.JsOptions;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -114,7 +114,7 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLocales", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get locales").printTo(out);
 		}
 	}
 	
@@ -132,7 +132,7 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetTimezones", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get timezones").printTo(out);
 		}
 	}
 	
@@ -152,7 +152,7 @@ public class Service extends BaseService {
 
 		} catch (Exception ex) {
 			logger.error("Error executing action GetThemes", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get themes").printTo(out);
 		}
 	}
 	
@@ -166,7 +166,7 @@ public class Service extends BaseService {
 
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLooksAndFeels", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get look&feels").printTo(out);
 		}
 	}
 	
@@ -190,13 +190,13 @@ public class Service extends BaseService {
 				
 			} else {
 				//TODO: maybe define a permission to other users to control others options
-				data.add(new JsSimple(up.getId(), up.getDisplayName()));
+				data.add(new JsSimple(up.getStringId(), up.getDisplayName()));
 			}
 			new JsonResult("users", data).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetOptionsUsers", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get users").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -215,7 +215,7 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetOptionsServices", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Unable to get option services").printTo(out);
 		}
 	}
 	
@@ -233,8 +233,9 @@ public class Service extends BaseService {
 	public void processFeedback(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			JsFeedback js = ServletUtils.getPayload(request, JsFeedback.class);
-			logger.debug("message: {}", js.message);
+			JsPayload<JsFeedback> pl = ServletUtils.getPayload(request, JsFeedback.class);
+			
+			logger.debug("message: {}", pl.data.message);
 			Thread.sleep(4000);
 			new JsonResult().printTo(out);
 			//new JsonResult(false, "Erroreeeeeeeeeeeeeeeeeeeeeee").printTo(out);
@@ -315,8 +316,8 @@ public class Service extends BaseService {
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action SetTheme", ex);
-			new JsonResult(false).printTo(out);
+			logger.error("Error executing action SetToolComponentWidth", ex);
+			new JsonResult(false, "Unable to save with").printTo(out);
 		}
 	}
 	
@@ -361,7 +362,7 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action ManageTFA", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Error managing TFA").printTo(out);
 		}
 	}
 	

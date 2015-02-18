@@ -8,11 +8,12 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 	],
 	
 	ddGroup: 'DayViewDD',
-	dateRangeFormat: '{0}-{1}',
-	dateFormat: 'n/j',
+	//dateRangeFormat: '{0} - {1}',
+	//dateFormat: 'n/j',
 	
 	onNodeOver: function(n, dd, e, data) {
 		var me = this,
+				soDate = Sonicle.Date,
 				dt,
 				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
 				box,
@@ -47,18 +48,18 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 			if (e.xy[1] < box.y) {
 				box.height += n.timeBox.height;
 				box.y = box.y - box.height + n.timeBox.height;
-				endDt = Sonicle.Date.add(me.dragCreateDt, {minutes: me.ddIncrement});
+				endDt = soDate.add(me.dragCreateDt, {minutes: me.ddIncrement});
 			}
 			else {
-				n.date = Sonicle.Date.add(n.date, Ext.Date.MINUTE, {minutes: me.ddIncrement});
+				n.date = soDate.add(n.date, Ext.Date.MINUTE, {minutes: me.ddIncrement});
 			}
 			me.shim(me.dragCreateDt, box);
 			
-			diff = Sonicle.Date.diff(me.dragCreateDt, n.date);
-			curr = Sonicle.Date.add(me.dragCreateDt, {millis: diff});
+			diff = soDate.diff(me.dragCreateDt, n.date);
+			curr = soDate.add(me.dragCreateDt, {millis: diff});
 			
-			me.dragStartDate = Sonicle.Date.min(me.dragCreateDt, curr);
-			me.dragEndDate = endDt || Sonicle.Date.max(me.dragCreateDt, curr);
+			me.dragStartDate = soDate.min(me.dragCreateDt, curr);
+			me.dragEndDate = endDt || soDate.max(me.dragCreateDt, curr);
 			
 			dt = Ext.String.format(me.dateRangeFormat, 
 					Ext.Date.format(me.dragStartDate, timeFmt), 
@@ -88,7 +89,7 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 				box.x = n.el.getX();
 
 				me.shim(n.date, box);
-				text = me.moveText;
+				text = (e.ctrlKey || e.altKey) ? me.copyText : me.moveText;
 			}
 			if (data.type === 'eventresize') {
 				box.x = dayCol.getX();
@@ -107,9 +108,9 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 					box.height = units * n.timeBox.height;
 					
 					if(e.xy[1] >= me.resizeBox.yRef) n.date = Ext.Date.add(n.date, Ext.Date.MINUTE, me.ddIncrement);
-					curr = Sonicle.Date.copyTime(n.date, me.resizeDt);
+					curr = soDate.copyTime(n.date, me.resizeDt);
 					start = data.eventStart;
-					end = Sonicle.Date.max(curr, Sonicle.Date.add(data.eventStart, {minutes: me.ddIncrement}));
+					end = soDate.max(curr, soDate.add(data.eventStart, {minutes: me.ddIncrement}));
 					
 				} else {
 					if (!me.resizeDt) {
@@ -126,8 +127,8 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 					box.height = units * n.timeBox.height;
 					
 					if(e.xy[1] <= me.resizeBox.yRef) n.date = Ext.Date.add(n.date, Ext.Date.MINUTE, -me.ddIncrement);
-					curr = Sonicle.Date.add(Sonicle.Date.copyTime(n.date, me.resizeDt), {minutes: me.ddIncrement});
-					start = Sonicle.Date.min(curr, Sonicle.Date.add(data.eventEnd, {minutes: -me.ddIncrement}));
+					curr = soDate.add(soDate.copyTime(n.date, me.resizeDt), {minutes: me.ddIncrement});
+					start = soDate.min(curr, soDate.add(data.eventEnd, {minutes: -me.ddIncrement}));
 					end = data.eventEnd;
 				}
 				
@@ -144,7 +145,7 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 			}
 		}
 
-		data.proxy.updateMsg(Ext.util.Format.format(text, dt));
+		data.proxy.updateMsg(Ext.String.format(text, dt));
 		return me.dropAllowed;
 	},
 	
@@ -171,35 +172,36 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 	},
 	
 	onNodeDrop: function(n, dd, e, data) {
-		var rec;
+		var me = this,
+				rec;
 		if (n && data) {
 			if (data.type === 'eventdrag') {
-				rec = this.view.getEventRecordFromEl(data.ddel);
-				this.view.onEventDrop(rec, n.date, (e.ctrlKey || e.altKey) ? 'copy' : 'move');
-				this.onCalendarDragComplete();
-				delete this.dragOffset;
+				rec = me.view.getEventRecordFromEl(data.ddel);
+				me.view.onEventDrop(rec, n.date, (e.ctrlKey || e.altKey) ? 'copy' : 'move');
+				me.onCalendarDragComplete();
+				delete me.dragOffset;
 				return true;
 			}
 			if (data.type === 'eventresize') {
-				rec = this.view.getEventRecordFromEl(data.ddel);
-				this.view.onEventResize(rec, data.resizeDates);
-				this.onCalendarDragComplete();
-				delete this.resizeDt;
-				delete this.resizeBox;
+				rec = me.view.getEventRecordFromEl(data.ddel);
+				me.view.onEventResize(rec, data.resizeDates);
+				me.onCalendarDragComplete();
+				delete me.resizeDt;
+				delete me.resizeBox;
 				return true;
 			}
 			if (data.type === 'caldrag') {
-				Ext.destroy(this.dragStartMarker);
-				delete this.dragStartMarker;
-				delete this.dragCreateDt;
-				this.view.onCalendarEndDrag(this.dragStartDate, this.dragEndDate,
-						Ext.bind(this.onCalendarDragComplete, this));
+				Ext.destroy(me.dragStartMarker);
+				delete me.dragStartMarker;
+				delete me.dragCreateDt;
+				this.view.onCalendarEndDrag(me.dragStartDate, me.dragEndDate,
+						Ext.bind(me.onCalendarDragComplete, me));
 				//shims are NOT cleared here -- they stay visible until the handling
 				//code calls the onCalendarDragComplete callback which hides them.
 				return true;
 			}
 		}
-		this.onCalendarDragComplete();
+		me.onCalendarDragComplete();
 		return false;
 	}
 });

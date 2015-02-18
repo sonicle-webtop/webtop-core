@@ -27,8 +27,8 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 							'<div class="ext-cal-bg-rows">',
 								'<div class="ext-cal-bg-rows-inner">',
 								'<tpl for="times">',
-									'<div class="ext-cal-bg-row" style="height:{parent.hourHeight}px;">',
-										'<div class="ext-cal-bg-row-div ext-row-{[xindex]}" style="height:{parent.hourSeparatorHeight}px;"></div>',
+									'<div class="ext-cal-bg-row ext-row-{[xindex]} {[this.getRowBgCls(xindex, parent.bustimes)]}" style="height:{parent.hourHeight}px;">',
+										'<div class="ext-cal-bg-row-div {parent.hourSeparatorCls}" style="height:{parent.hourSeparatorHeight}px;"></div>',
 									'</div>',
 								'</tpl>',
 								'</div>',
@@ -39,7 +39,13 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 						'<td class="ext-cal-day-times">',
 						'<tpl for="times">',
 							'<div class="ext-cal-bg-row" style="height:{parent.hourHeight}px;">',
-								'<div class="ext-cal-day-time-inner" style="height:{parent.hourHeight}px;">{.}</div>',
+								//'<div class="ext-cal-day-time-inner" style="height:{parent.hourHeight}px;">{.}</div>',
+								'<div class="ext-cal-day-time-inner" style="height:{parent.hourHeight}px;">',
+									'<span class="ext-cal-day-time-hours">',
+										'{[Ext.Date.format(values, parent.hFmt)]}',
+									'</span>',
+									'{[Ext.Date.format(values, parent.mFmt)]}',
+								'</div>',
 							'</div>',
 						'</tpl>',
 						'</td>',
@@ -52,7 +58,17 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 						'</tpl>',
 					'</tr>',
 				'</tbody>',
-			'</table>'
+			'</table>', {
+				getRowBgCls: function(i, bustimes) {
+					return (this.highlightBusinessHours && bustimes[i-1]) ? 'ext-cal-bg-row-business' : 'ext-cal-bg-row-normal';
+				},
+				formatH: function(values, fmt) {
+					return Ext.Date.format(values, (this.use24HourTime) ? 'G' : 'g');
+				},
+				formatM: function(values, fmt) {
+					return Ext.Date.format(values, (this.use24HourTime) ? 'i' : 'a');
+				}
+			}
 		]);
 	},
 	
@@ -61,7 +77,6 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 		var me = this,
 				eDate = Ext.Date,
 				soDate = Sonicle.Date,
-				timeFmt = (me.use24HourTime) ? 'G:i' : 'ga',
 				start = me.viewStartHour,
 				end = me.viewEndHour,
 				mins = me.hourIncrement,
@@ -69,7 +84,8 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 				i = 0,
 				days = [],
 				dt = Ext.Date.clone(o.viewStart),
-				times = [];
+				times = [],
+				bustimes = [];
 		
 		me.today = soDate.today();
 		me.dayCount = me.dayCount || 1;
@@ -82,7 +98,8 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 		dt = eDate.clearTime(new Date('5/26/1972'));
 
 		for (i=start; i<end; i++) {
-			times.push(eDate.format(dt, timeFmt));
+			times.push(dt);
+			bustimes.push((i >= me.businessHoursStart) && (i <= me.businessHoursEnd));
 			dt = soDate.add(dt, {minutes: mins});
 		}
 
@@ -90,7 +107,11 @@ Ext.define('Sonicle.calendar.template.DayBody', {
 			days: days,
 			dayCount: days.length,
 			times: times,
+			bustimes: bustimes,
+			hFmt: (me.use24HourTime) ? 'G' : 'g',
+			mFmt: (me.use24HourTime) ? 'i' : 'a',
 			hourHeight: me.hourHeight,
+			hourSeparatorCls: me.showHourSeparator ? '' : 'no-sep', // the class suppresses the default separator
 			dayHeight: dayHeight,
 			hourSeparatorHeight: (me.hourHeight / 2)
 		}, []).join('');

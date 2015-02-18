@@ -31,11 +31,80 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.mixin.ServiceBinder', {
-	extend: 'Ext.Mixin',
+Ext.define('Sonicle.webtop.core.view.FeedbackC', {
+	alternateClassName: 'WT.view.FeedbackC',
+	extend: 'Ext.app.ViewController',
 	
-	svc: null,
-	ms: null,
+	h2cCanvas: null,
+	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
 	
+	onAfterRender: function() {
+		var ct = this.getView().ownerCt;
+		if(ct.isXType('window')) {
+			ct.getEl().set({'data-html2canvas-ignore': 'true'});
+		}
+	},
 	
+	onSubmit: function(s,op,success) {
+		if(success) {
+			WT.info(WT.res('feedback.sent'));
+			s.close();
+		}
+	},
+	
+	onSendClick: function() {
+		var me = this;
+		var v = this.getView();
+		v.setFieldValue('timestamp', new Date().toString());
+		var h2c = (me.h2cCanvas) ? me.h2cCanvas.toDataURL('image/jpeg', me.jpegQuality) : null;
+		v.setFieldValue('image', h2c);
+		v.submitForm();
+	},
+	
+	onCancelClick: function() {
+		this.clearScreenshot();
+		this.getView().close();
+	},
+	
+	onScreenshotChange: function(s, chk) {
+		if(chk) {
+			this.takeScreenshot();
+		} else {
+			this.clearScreenshot();
+		}
+	},
+	
+	takeScreenshot: function() {
+		var me = this;
+		var v = me.getView();
+		v.wait(WT.res('feedback.capturing'));
+		me.clearScreenshot();
+		WT.loadScriptAsync('js/html2canvas.js', function(success) {
+			if(success) {
+				html2canvas([document.body], {
+					onrendered: function(canvas) {
+						var cel = Ext.get(canvas);
+						cel.setStyle('position', 'absolute');
+						cel.setStyle('left', 0);
+						cel.setStyle('top', 0);
+						cel.setStyle('z-index', 8900);
+						Ext.get(document.body).insertSibling(cel);
+						me.h2cCanvas = canvas;
+						v.unwait();
+					}
+				});
+			} else {
+				v.unwait();
+			}
+		}, me);
+	},
+	
+	clearScreenshot: function() {
+		var me = this;
+		if(me.h2cCanvas) {
+			Ext.removeNode(Ext.get(me.h2cCanvas).dom);
+			me.h2cCanvas = null;
+			me.getView().setFieldValue('screenshot', false);
+		}
+	}
 });

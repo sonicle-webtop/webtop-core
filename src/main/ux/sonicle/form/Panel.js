@@ -11,58 +11,92 @@ Ext.define('Sonicle.form.Panel', {
 	trackResetOnLoad: true,
 	
 	model: null,
-	idField: null,
+	idField: null, // Private
 	
-	loadForm: function(id) {
+	constructor: function(cfg) {
 		var me = this;
+		me.callParent([cfg]);
 		
-		if(Ext.isEmpty(me.model)) return;
-		me.fireEvent('beforeLoad', me);
-		var opts = {
-			callback: function(rec, op, success) {
-				if(success) me.bindModel(rec);
-				me.fireEvent('load', me, success, op);
-			},
-			scope: me
-		};
-		if(Ext.isString(me.model)) {
-			if(id) me.setFieldValue(me.idField, id, true);
-			if(!me.isFieldEmpty(me.idField)) {
-				// Loads model with provided id
-				Ext.ClassManager.get(me.model).load(me.getFieldValue(me.idField), opts);
-			} else {
-				// Creates an empty model (no id provided)
-				me.bindModel(Ext.create(me.model, {}));
-			}
+		// Gets model's id property
+		if(Ext.isString(cfg.model)) {
+			var model = Ext.create(me.model);
+			me.idField = model.getIdProperty();
+			model.destroy();
 		} else {
-			// Model is a ready instance...use it simply!
-			me.model.load(opts);
+			me.idField = cfg.model.getIdProperty();
 		}
 	},
 	
 	bindModel: function(model) {
 		var me = this;
 		me.model = model;
-		//me.getForm().loadRecord(model);
 		me.loadRecord(model);
 	},
 	
-	saveForm: function() {
-		var me = this;
-		//var fo = me.getForm();
+	loadForm: function(data, opts) {
+		var me = this, cb;
 		if(Ext.isEmpty(me.model)) return;
-		me.fireEvent('beforeSave', me);
-		//if(fo.isDirty()) fo.updateRecord(me.getRecord());
+		if(!Ext.isObject(data)) {
+			var obj = {};
+			obj[me.idField] = data;
+			data = obj;
+		}
+		opts = opts || {};
+		cb = {fn: opts.callback, scope: opts.scope};
+		delete opts.callback;
+		delete opts.scope;
+		
+		var fn = function(rec, op, success) {
+			if(success) me.bindModel(rec);
+			me.fireEvent('load', me, success, op, opts);
+			Ext.callback(cb.fn, cb.scope, [me, success, me.model, op]);
+		};
+		
+		me.fireEvent('beforeload', me); //TODO: evento cancellabile
+		if(Ext.isString(me.model)) {
+			if(data[me.idField]) me.setFieldValue(me.idField, data[me.idField], true);
+			
+			if(!me.isFieldEmpty(me.idField)) {
+				// Loads model with provided id
+				Ext.ClassManager.get(me.model).load(me.getFieldValue(me.idField), {
+					callback: fn,
+					scope: me
+				});
+			} else {
+				// Creates an empty model (no id provided)
+				me.bindModel(Ext.create(me.model, data));
+				Ext.callback(cb.fn, cb.scope, [me, true, me.model, null]);
+			}
+		} else {
+			// Model is a ready instance...use it simply!
+			me.model.load({
+				callback: cb,
+				scope: me
+			});
+		}
+	},
+	
+	saveForm: function(opts) {
+		var me = this, cb;
+		if(Ext.isEmpty(me.model)) return;
+		opts = opts || {};
+		opts = opts || {};
+		cb = {fn: opts.callback, scope: opts.scope};
+		delete opts.callback;
+		delete opts.scope;
+		
+		me.fireEvent('beforesave', me); //TODO: evento cancellabile
 		if(me.getForm().isDirty()) me.updateRecord(me.getRecord());
 		me.model.save({
-			id: me.getFieldValue(me.idField),
+			id: me.getFieldValue(me.idField), //TODO: serve? credo di no!
 			callback: function(rec, op, success) {
 				if(success) {
 					me.bindModel(rec);
 				} else {
 					WT.error(op.getError());
 				}
-				me.fireEvent('save', me, success, op);
+				me.fireEvent('save', me, success, op, opts);
+				Ext.callback(cb.fn, cb.scope, [me, success, me.model, op]);
 			},
 			scope: me
 		});

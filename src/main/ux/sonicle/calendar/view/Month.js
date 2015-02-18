@@ -1,7 +1,7 @@
 /**
  * @class Sonicle.calendar.view.Month
  * @extends Sonicle.calendar.CalendarView
- * <p>Displays a calendar view by month. This class does not usually need ot be used directly as you can
+ * <p>Displays a calendar view by month. This class does not usually need to be used directly as you can
  * use a {@link Sonicle.calendar.CalendarPanel CalendarPanel} to manage multiple calendar views at once including
  * the month view.</p>
  * @constructor
@@ -64,6 +64,24 @@ Ext.define('Sonicle.calendar.view.Month', {
 	 */
 	weekLinkOverClass: 'ext-week-link-over',
 	
+	/**
+	 * @cfg {String} moreText
+	 * The text to display in a day box when there are more events than can be displayed and a link is provided to
+	 * show a popup window with all events for that day (defaults to '+{0} more...', where {0} will be
+	 * replaced by the number of additional events that are not currently displayed for the day).
+	 */
+	moreText: '+{0} more...',
+	
+	/**
+	 * @cfg {Number} morePanelMinWidth
+	 * When there are more events in a given day than can be displayed in the calendar view, the extra events
+	 * are hidden and a "{@link #moreText more events}" link is displayed. When clicked, the link pops up a
+	 * detail panel that displays all events for that day. By default the panel will be the same width as the day
+	 * box, but this config allows you to set the minimum width of the panel in the case where the width
+	 * of the day box is too narrow for the events to be easily readable (defaults to 220 pixels).
+	 */
+	morePanelMinWidth: 220,
+	
 	//private properties -- do not override:
 	daySelector: '.ext-cal-day',
 	moreSelector: '.ext-cal-ev-more',
@@ -71,7 +89,6 @@ Ext.define('Sonicle.calendar.view.Month', {
 	weekCount: -1,
 	// defaults to auto by month
 	dayCount: 7,
-	skipWeekend: false,
 	moreElIdDelimiter: '-more-',
 	weekLinkIdDelimiter: 'ext-cal-week-',
 	// See EXTJSIV-11407.
@@ -101,15 +118,18 @@ Ext.define('Sonicle.calendar.view.Month', {
 
 	// private
 	initDD: function() {
+		var me = this;
 		var cfg = {
-			view: this,
-			createText: this.ddCreateEventText,
-			moveText: this.ddMoveEventText,
+			view: me,
+			createText: me.ddCreateEventText,
+			copyText: me.ddCopyEventText,
+			moveText: me.ddMoveEventText,
+			dateFormat: me.ddDateFormat,
 			ddGroup: 'MonthViewDD'
 		};
-
-		this.dragZone = new Sonicle.calendar.dd.DragZone(this.el, cfg);
-		this.dropZone = new Sonicle.calendar.dd.DropZone(this.el, cfg);
+		
+		me.dragZone = Ext.create('Sonicle.calendar.dd.DragZone', me.el, cfg);
+		me.dropZone = Ext.create('Sonicle.calendar.dd.DropZone', me.el, cfg);
 	},
 	
 	// private
@@ -296,7 +316,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 			evtMaxCount: this.evtMaxCount,
 			weekCount: this.weekCount,
 			dayCount: this.dayCount,
-			skipWeekend: this.skipWeekend
+			moreText: this.moreText
 		});
 		this.fireEvent('eventsrendered', this);
 	},
@@ -322,14 +342,15 @@ Ext.define('Sonicle.calendar.view.Month', {
 	
 	// private
 	getDaySize: function(contentOnly) {
-		var box = this.el.getBox(),
-				padding = this.getViewPadding(),
-				w = (box.width - padding.width) / this.dayCount,
-				h = (box.height - padding.height) / this.getWeekCount();
-
+		var me = this,
+				box = me.el.getBox(),
+				padding = me.getViewPadding(),
+				w = (box.width - padding.width) / me.dayCount,
+				h = (box.height - padding.height) / me.getWeekCount();
+		
 		if (contentOnly) {
 			// measure last row instead of first in case text wraps in first row
-			var hd = this.el.select('.ext-cal-dtitle').last().parent('tr');
+			var hd = me.el.select('.ext-cal-dtitle').last().parent('tr');
 			h = hd ? h - hd.getHeight(true) : h;
 		}
 		return {height: h, width: w};
@@ -343,7 +364,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 				this.eventHeight = evt.parent('td').getHeight();
 			}
 			else {
-				return 16; // no events rendered, so try setting this.eventHeight again later
+				return 18; // no events rendered, so try setting this.eventHeight again later
 			}
 		}
 		return this.eventHeight;
@@ -352,16 +373,15 @@ Ext.define('Sonicle.calendar.view.Month', {
 	// private
 	getMaxEventsPerDay: function() {
 		var dayHeight = this.getDaySize(true).height,
-				eventHeight = this.getEventHeight(),
-				max = Math.max(Math.floor((dayHeight - eventHeight) / eventHeight), 0);
-
-		return max;
+				eventHeight = this.getEventHeight();
+		return Math.max(Math.floor((dayHeight - eventHeight) / eventHeight), 0);
 	},
 	
 	// private
 	getViewPadding: function(sides) {
-		var sides = sides || 'tlbr',
-				top = sides.indexOf('t') > -1,
+		sides = sides || 'tlbr';
+		
+		var top = sides.indexOf('t') > -1,
 				left = sides.indexOf('l') > -1,
 				right = sides.indexOf('r') > -1,
 				height = this.showHeader && top ? this.el.select('.ext-cal-hd-days-tbl').first().getHeight() : 0,
@@ -459,8 +479,8 @@ Ext.define('Sonicle.calendar.view.Month', {
 		var p = this.detailPanel,
 				dayEl = this.getDayEl(dt),
 				box = dayEl.getBox();
-
-		p.setWidth(Math.max(box.width, 220));
+		
+		p.setWidth(Math.max(box.width, this.morePanelMinWidth));
 		p.show();
 		p.getEl().alignTo(dayEl, 't-t?');
 	},

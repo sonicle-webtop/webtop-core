@@ -6,6 +6,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocket',
 		'Sonicle.Date',
 		'Sonicle.webtop.core.WT',
+		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ComManager',
 		'Sonicle.webtop.core.ServiceDescriptor'

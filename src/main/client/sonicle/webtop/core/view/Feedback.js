@@ -35,23 +35,41 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	alternateClassName: 'WT.view.Feedback',
 	extend: 'WT.sdk.FormView',
 	requires: [
-		'WT.view.FeedbackC',
-		'WT.model.UserService',
+		'WT.model.Simple',
 		'WT.model.Feedback',
 		'Sonicle.form.Spacer'
 	],
-	controller: Ext.create('WT.view.FeedbackC'),
+	
+	title: '@feedback.tit',
+	iconCls: 'wt-icon-feedback',
+	autoToolbar: false,
+	applyModeTitle: false,
+	confirm: 'yn',
+	
+	h2cCanvas: null,
+	jpegQuality: 0.7, // 0.1 to 1 (1 = 100%)
 	
 	initComponent: function() {
 		var me = this;
 		Ext.apply(me, {
+			buttons: [{
+				text: WT.res('act-send.lbl'),
+				handler: me.onSendClick,
+				scope: me
+			}, {
+				text: WT.res('act-cancel.lbl'),
+				handler: me.onCancelClick,
+				scope: me
+			}]
+		});
+		me.callParent(arguments);
+		
+		me.add(me.addRef('form', Ext.create({
+			region: 'center',
+			xtype: 'soform',
+			model: 'WT.model.Feedback',
+			bodyPadding: 10,
 			items: [{
-				xtype: 'form',
-				region: 'center',
-				itemId: 'fpnl',
-				model: 'Sonicle.webtop.core.model.Feedback',
-				bodyPadding: 10,
-				items: [{
 					xtype: 'component',
 					html: WT.res('feedback.text')
 				}, {
@@ -63,11 +81,11 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					allowBlank: false,
 					editable: false,
 					store: {
-						model: 'Sonicle.webtop.core.model.UserService',
+						model: 'WT.model.Simple',
 						proxy: WT.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
 					},
 					valueField: 'id',
-					displayField: 'description',
+					displayField: 'desc',
 					width: 400,
 					fieldLabel: WT.res('feedback.fld-service.lbl')
 				}, {
@@ -87,7 +105,8 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					submitValue: false,
 					hideLabel: true,
 					boxLabel: WT.res('feedback.fld-screenshot.lbl'),
-					handler: 'onScreenshotChange'
+					handler: me.onScreenshotChange,
+					scope: me
 				}, {
 					xtype: 'hiddenfield',
 					name: 'timestamp'
@@ -95,21 +114,80 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					xtype: 'hiddenfield',
 					name: 'image'
 				}]
-			}],
-
-			buttons: [{
-				text: WT.res('btn-send.lbl'),
-				handler: 'onSendClick'
-			}, {
-				text: WT.res('btn-cancel.lbl'),
-				handler: 'onCancelClick'
-			}]
-		});
-		me.callParent(arguments);
+		})));
+	},
+	listeners: {
+		afterrender: function() {
+			var ct = this.ownerCt;
+			if(ct.isXType('window')) {
+				ct.getEl().set({'data-html2canvas-ignore': 'true'});
+			}
+		},
+		viewsave: function(s, success) {
+			if(success) {
+				WT.info(WT.res('feedback.sent'));
+				this.closeView(false);
+			}
+		},
+		viewclose: function() {
+			this.clearScreenshot();
+		}
 	},
 	
-	listeners: {
-		afterrender: 'onAfterRender',
-		submit: 'onSubmit'
+	onSendClick: function() {
+		var me = this,
+				form = me.getFormCmp(),
+				h2c = (me.h2cCanvas) ? me.h2cCanvas.toDataURL('image/jpeg', me.jpegQuality) : null;
+		
+		form.setFieldValue('timestamp', new Date().toString());
+		form.setFieldValue('image', h2c);
+		me.doSave(false);
+	},
+	
+	onCancelClick: function() {
+		this.closeView(false);
+	},
+	
+	onScreenshotChange: function(s, chk) {
+		if(chk) {
+			this.takeScreenshot();
+		} else {
+			this.clearScreenshot();
+		}
+	},
+	
+	takeScreenshot: function() {
+		var me = this;
+		
+		me.wait(WT.res('feedback.capturing'));
+		me.clearScreenshot();
+		WT.loadScriptAsync('js/html2canvas.js', function(success) {
+			if(success) {
+				html2canvas([document.body], {
+					onrendered: function(canvas) {
+						var cel = Ext.get(canvas);
+						cel.setStyle('position', 'absolute');
+						cel.setStyle('left', 0);
+						cel.setStyle('top', 0);
+						cel.setStyle('z-index', 8900);
+						Ext.get(document.body).insertSibling(cel);
+						me.h2cCanvas = canvas;
+						me.unwait();
+					}
+				});
+			} else {
+				me.unwait();
+			}
+		}, me);
+	},
+	
+	clearScreenshot: function() {
+		var me = this,
+				form = me.getFormCmp();
+		if(me.h2cCanvas) {
+			Ext.removeNode(Ext.get(me.h2cCanvas).dom);
+			me.h2cCanvas = null;
+			form.setFieldValue('screenshot', false);
+		}
 	}
 });

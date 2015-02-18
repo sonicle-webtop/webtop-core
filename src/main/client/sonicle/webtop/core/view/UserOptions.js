@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'WT.model.Simple'
 	],
 	controller: Ext.create('WT.view.UserOptionsC'),
-	idField: 'id',
+	//idField: 'id',
 	
 	listeners: {
 		load: 'onFormLoad',
@@ -320,14 +320,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						vertical: false
 					}, {
 						xtype: 'button',
-						text: WT.res('btn-enable.lbl'),
+						text: WT.res('act-enable.lbl'),
 						handler: 'onTFAEnableClick',
 						bind: {
 							hidden: '{isTFAEnabled}'
 						}
 					}, {
 						xtype: 'button',
-						text: WT.res('btn-disable.lbl'),
+						text: WT.res('act-disable.lbl'),
 						handler: 'onTFADisableClick',
 						bind: {
 							hidden: '{!isTFAEnabled}'

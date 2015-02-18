@@ -18,6 +18,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	NS: 'Sonicle.webtop.core',
 	
+	palette: [
+		'AC725E','D06B64','F83A22','FA573C','FF7537','FFAD46','FAD165','FBE983',
+		'4986E7','9FC6E7','9FE1E7','92E1C0','42D692','16A765','7BD148','B3DC6C',
+		'9A9CFF','B99AFF','A47AE2','CD74E6','F691B2','CCA6AC','CABDBF','C2C2C2',
+		'FFFFFF'
+	],
+	
 	loadedCss: null,
 	
 	constructor: function(cfg) {
@@ -34,6 +41,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	getApp: function() {
 		return Sonicle.webtop.core.getApplication();
+	},
+	
+	getColorPalette: function() {
+		return this.palette;
 	},
 	
 	reload: function() {
@@ -71,9 +82,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns a string resource.
+	 * If id and key are both filled, any other arguments will be used in
+	 * conjunction with {@link Ext.String#format} method in order to replace
+	 * tokens defined in resource string.
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
-	 * @returns {String} The value.
+	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
+	 * @returns {String} The (formatted) value.
 	 */
 	res: function(id, key) {
 		if(arguments.length === 1) {
@@ -83,7 +98,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 		
 		var loc = WT.getApp().getLocale(id);
 		if(!loc) return undefined;
-		return loc.strings[key];
+		if(arguments.length > 2) {
+			var str = loc.strings[key],
+					args = Ext.Array.slice(arguments, 2);
+			return (Ext.isDefined(str)) ? Ext.String.format(str, args) : loc.strings[key];
+		} else {
+			return loc.strings[key];
+		}
 	},
 	
 	/**
@@ -99,7 +120,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 			str = id;
 			id = WT.ID;
 		}
-		return (str.substr(0, 1) === '@') ? WT.res(id, str) : str;
+		return (str.substr(0, 1) === '@') ? WT.res(id, str.substr(1)) : str;
 	},
 	
 	/**
@@ -157,7 +178,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 			}),
 			reader: Ext.apply(opts.reader || {}, {
 				type: 'json',
-				rootProperty: rootp,
+				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}),
 			listeners: {
@@ -170,6 +191,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	apiProxy: function(svc, act, rootp, opts) {
+		rootp = rootp || 'data';
 		opts = opts || {};
 		return {
 			type: 'ajax',
@@ -183,11 +205,15 @@ Ext.define('Sonicle.webtop.core.WT', {
 				service: svc,
 				action: act
 			}),
-			reader: Ext.apply(opts.reader || {}, {
+			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp,
 				messageProperty: 'message'
-			})
+			}, opts.reader || {}),
+			writer: Ext.apply({
+				type: 'json',
+				writeAllFields: true
+			}, opts.writer || {})
 		};
 	},
 	

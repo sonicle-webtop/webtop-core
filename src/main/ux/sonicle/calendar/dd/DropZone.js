@@ -12,6 +12,8 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
 
     ddGroup: 'CalendarDD',
     eventSelector: '.ext-cal-evt',
+	dateRangeFormat: '{0} - {1}',
+	dateFormat: 'n/j',
 
     // private
     shims: [],
@@ -25,23 +27,27 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
     },
 
     onNodeOver: function(n, dd, e, data) {
-        var soDate = Sonicle.Date,
-        start = (data.type === 'eventdrag') ? n.date: soDate.min(data.start, n.date),
-        end = (data.type === 'eventdrag') ? soDate.add(n.date, {days: soDate.diffDays(data.eventStart, data.eventEnd)}) :
-        soDate.max(data.start, n.date);
+        var me = this,
+				soDate = Sonicle.Date,
+				eventDragText = (e.ctrlKey || e.altKey) ? me.copyText: me.moveText,
+				start = (data.type === 'eventdrag') ? n.date: soDate.min(data.start, n.date),
+				end = (data.type === 'eventdrag') ? soDate.add(n.date, {days: soDate.diffDays(data.eventStart, data.eventEnd)}) : soDate.max(data.start, n.date);
 
-        if (!this.dragStartDate || !this.dragEndDate || (soDate.diffDays(start, this.dragStartDate) !== 0) || (soDate.diffDays(end, this.dragEndDate) !== 0)) {
-            this.dragStartDate = start;
-            this.dragEndDate = soDate.add(end, {days: 1, millis: -1, clearTime: true});
-            this.shim(start, end);
+        if (!me.dragStartDate || !me.dragEndDate || (soDate.diffDays(start, me.dragStartDate) !== 0) || (soDate.diffDays(end, me.dragEndDate) !== 0)) {
+            me.dragStartDate = start;
+            me.dragEndDate = soDate.add(end, {days: 1, millis: -1, clearTime: true});
+            me.shim(start, end);
 
-            var range = Ext.Date.format(start, 'n/j');
+            var range = Ext.Date.format(start, me.dateFormat);
             if (soDate.diffDays(start, end) > 0) {
-                range += '-' + Ext.Date.format(end, 'n/j');
+				end = Ext.Date.format(end, me.dateFormat);
+				range = Ext.String.format(me.dateRangeFormat, range, end);
             }
-            var msg = Ext.util.Format.format(data.type === 'eventdrag' ? this.moveText: this.createText, range);
-            data.proxy.updateMsg(msg);
+			me.currentRange = range;
         }
+		
+		var msg = Ext.String.format((data.type === 'eventdrag') ? eventDragText : me.createText, me.currentRange);
+		data.proxy.updateMsg(msg);
         return this.dropAllowed;
     },
 
@@ -145,29 +151,46 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
     },
 
     onNodeDrop: function(n, dd, e, data) {
+		var me = this,
+				soDate = Sonicle.Date;
         if (n && data) {
             if (data.type === 'eventdrag') {
-                var rec = this.view.getEventRecordFromEl(data.ddel),
-                dt = Sonicle.Date.copyTime(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], n.date);
-
-                this.view.onEventDrop(rec, dt);
-                this.onCalendarDragComplete();
+                var rec = me.view.getEventRecordFromEl(data.ddel),
+                dt = soDate.copyTime(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], n.date);
+				
+				me.view.onEventDrop(rec, dt, (e.ctrlKey || e.altKey) ? 'copy': 'move');
+                me.onCalendarDragComplete();
                 return true;
             }
             if (data.type === 'caldrag') {
-                this.view.onCalendarEndDrag(this.dragStartDate, this.dragEndDate,
-                Ext.bind(this.onCalendarDragComplete, this));
+				if(!me.dragEndDate) {
+					// this can occur on a long click where drag starts but onNodeOver is never executed
+					me.dragStartDate = Ext.Date.clearTime(data.start);
+					me.dragEndDate = soDate.add(me.dragStartDate, {days: 1, millis: -1, clearTime: true});
+				}
+				
+                me.view.onCalendarEndDrag(me.dragStartDate, me.dragEndDate,
+                Ext.bind(me.onCalendarDragComplete, me));
                 //shims are NOT cleared here -- they stay visible until the handling
                 //code calls the onCalendarDragComplete callback which hides them.
                 return true;
             }
         }
-        this.onCalendarDragComplete();
+        me.onCalendarDragComplete();
         return false;
     },
 
     onContainerDrop: function(dd, e, data) {
         this.onCalendarDragComplete();
         return false;
-    }
+    },
+	
+	destroy: function() {
+		Ext.each(this.shims, function(shim) {
+			if(shim) Ext.destroy(shim);
+		});
+		Ext.removeNode(this.shimCt);
+		delete this.shimCt;
+		this.shims.length = 0;
+	}
 });

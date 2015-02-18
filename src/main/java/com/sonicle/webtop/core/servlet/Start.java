@@ -100,7 +100,7 @@ public class Start extends HttpServlet {
 			
 			// Startup variables
 			JsWTS jswts = new JsWTS();
-			jswts.principal = up.getId();
+			jswts.principal = up.getStringId();
 			jswts.domainId = up.getDomainId();
 			jswts.userId = up.getUserId();
 			//jswts.locale = locale.toString();

@@ -19,6 +19,46 @@ Ext.define('Sonicle.calendar.view.Day', {
         'Sonicle.calendar.view.DayHeader',
         'Sonicle.calendar.view.DayBody'
     ],
+	
+	/**
+     * @cfg {Number} dayCount
+     * The number of days to display in the view (defaults to 1)
+     */
+    dayCount: 1,
+	
+	/**
+     * @cfg {Number} startDay
+     * The 0-based index for the day on which the calendar week begins (0=Sunday, which is the default)
+     */
+	startDay: 0,
+	
+	/**
+	 * @cfg {Boolean} startDayIsStatic
+	 * If you set <tt>startDayIsStatic</tt> to <tt>true</tt>, then the view will *always* begin on
+	 * {@link #startDay}. For any {@link #dayCount} less than 7, days outside the startDay + dayCount range
+	 * will not be viewable. If a date that is not in the viewable range is set into the view it will
+	 * automatically advance to the first viewable date for the current range.  This could be useful for
+	 * creating custom views like a weekday-only or weekend-only view.
+	 * 
+	 * Some example {@link Sonicle.calendar.CalendarPanel CalendarPanel} configs:
+	 * 
+     *		// Weekdays only:
+     *		showMultiDayView: true,
+     *		multiDayViewCfg: {
+     *			dayCount: 5,
+     *			startDay: 1,
+     *			startDayIsStatic: true
+     *		}
+     *
+     *		// Weekends only:
+     *		showMultiDayView: true,
+     *		multiDayViewCfg: {
+     *			dayCount: 2,
+     *			startDay: 6,
+     *			startDayIsStatic: true
+     *		}
+	 */
+	startDayIsStatic: false,
     
     /**
      * @cfg {Boolean} showTime
@@ -59,12 +99,35 @@ Ext.define('Sonicle.calendar.view.Day', {
      */
     ddCreateEventText: 'Create event for {0}',
 	
+	/**
+	 * @cfg {String} ddCopyEventText
+	 * The text to display inside the drag proxy while alt-dragging an event to copy it (defaults to
+	 * 'Copy event to {0}' where {0} is the updated event start date/time supplied by the view)
+	 */
+	ddCopyEventText: 'Copy event to {0}',
+	
     /**
      * @cfg {String} ddMoveEventText
      * The text to display inside the drag proxy while dragging an event to reposition it (defaults to 
      * 'Move event to {0}' where {0} is the updated event start date/time supplied by the view)
      */
     ddMoveEventText: 'Move event to {0}',
+	
+	/**
+     * @cfg {String} ddResizeEventText
+     * The string displayed to the user in the drag proxy while dragging the resize handle of an event (defaults to 
+     * 'Update event to {0}' where {0} is the updated event start-end range supplied by the view). Note that 
+     * this text is only used in views
+     * that allow resizing of events.
+     */
+    ddResizeEventText: 'Update event to {0}',
+	
+	/**
+	 * @cfg {String} ddDateFormat
+	 * String used for formatting date in texts ({@link #ddCreateEventText}, {@link #ddCopyEventText} or 
+	 * {@link #ddMoveEventText}) displayed in the drag proxy while dragging an event.
+	 */
+	ddDateFormat: 'n/j',
 	
 	/**
 	 * @cfg {Integer} ddIncrement
@@ -90,14 +153,12 @@ Ext.define('Sonicle.calendar.view.Day', {
 	 */
 	minEventDisplayMinutes: 30,
 	
-    /**
-     * @cfg {Number} dayCount
-     * The number of days to display in the view (defaults to 1)
-     */
-    dayCount: 1,
-	
-	
-	skipWeekend: false,
+	/**
+	 * @cfg {Boolean} showHourSeparator
+	 * True to display a dotted line that separates each hour block in the scrolling body area at the half-hour mark
+	 * (the default), false to hide it.
+	 */
+	showHourSeparator: true,
 	
 	/**
 	 * @cfg {Integer} viewStartHour
@@ -140,6 +201,42 @@ Ext.define('Sonicle.calendar.view.Day', {
 	 * that browsers may sometimes round the resulting height values inconsistently.
 	 */
 	hourHeight: 42,
+	
+	/**
+	 * @cfg {Number} minBodyHeight
+	 * The minimum height for the scrollable body view (defaults to 150 pixels). By default the body is auto
+	 * height and simply fills the available area left by the overall layout. However, if the browser window
+	 * is too short and/or the header area contains a lot of events on a given day, the body area could
+	 * become too small to be usable. Because of that, if the body falls below this minimum height, the
+	 * layout will automatically adjust itself by fixing the body height to this minimum height and making the
+	 * overall Day view container vertically scrollable.
+	 */
+	minBodyHeight: 150,
+	
+	/**
+	 * @cfg {Boolean} highlightBusinessHours
+	 * True to highlight business hours changing their background (the default), false otherwise.
+	 */
+	highlightBusinessHours: true,
+	
+	/**
+	 * @cfg {Integer} businessHoursStart
+	 * The hour of the day at which to begin business hours (defaults to 9, which equals early 9am / 09:00).
+	 * Valid values are integers from 0 to 24, but should be less than the value of {@link businessHoursEnd}.
+	 */
+	businessHoursStart: 9,
+	
+	/**
+	 * @cfg {Integer} businessHoursEnd
+	 * The hour of the day at which to end business hours (defaults to 17, which equals late 5pm / 17:00).
+	 * Valid values are integers from 0 to 24, but should be greater than the value of {@link businessHoursStart}.
+	 */
+	businessHoursEnd: 17,
+	
+	constructor: function(cfg) {
+		if(cfg.dayCount) cfg.dayCount = (cfg.dayCount > 7) ? 7 : cfg.dayCount;
+		this.callParent([cfg]);
+	},
     
     // private
     initComponent : function(){
@@ -153,7 +250,6 @@ Ext.define('Sonicle.calendar.view.Day', {
         cfg.showTodatText = me.showTodayText;
         cfg.todayText = me.todayText;
         cfg.dayCount = me.dayCount;
-		cfg.skipWeekend = me.skipWeekend;
         cfg.weekCount = 1;
 		cfg.readOnly = me.readOnly;
 		cfg.ddIncrement = me.ddIncrement;
@@ -168,10 +264,14 @@ Ext.define('Sonicle.calendar.view.Day', {
             xtype: 'daybodyview',
             id: me.id+'-bd',
 			enableEventResize: me.enableEventResize,
+			showHourSeparator: me.showHourSeparator,
 			viewStartHour: me.viewStartHour,
 			viewEndHour: me.viewEndHour,
 			scrollStartHour: me.scrollStartHour,
-			hourHeight: me.hourHeight
+			hourHeight: me.hourHeight,
+			highlightBusinessHours: me.highlightBusinessHours,
+			businessHoursStart: me.businessHoursStart,
+			businessHoursEnd: me.businessHoursEnd
         }, cfg);
         
         me.items = [header, body];
@@ -197,16 +297,27 @@ Ext.define('Sonicle.calendar.view.Day', {
     
     // private
     forceSize: function() {
+		var me = this;
+		
         // The defer call is mainly for good ol' IE, but it doesn't hurt in
         // general to make sure that the window resize is good and done first
         // so that we can properly calculate sizes.
-        Ext.defer(function(){
-            var ct = this.el.up('.x-panel-body'),
-                hd = this.el.down('.ext-cal-day-header'),
-                h = ct.getHeight() - hd.getHeight();
+        Ext.defer(function() {
+            var ct = me.el.up('.x-panel-body'),
+					hd = me.el.down('.ext-cal-day-header'),
+					bH = ct ? ct.getHeight() - hd.getHeight() : false;
             
-            this.el.down('.ext-cal-body-ct').setHeight(h);
-        }, Ext.isIE ? 100 : 10, this);
+			if(bH) {
+				if(bH < me.minBodyHeight) {
+					bH = me.minBodyHeight;
+					me.addCls('ext-cal-overflow-y');
+				} else {
+					me.removeCls('ext-cal-overflow-y');
+				}
+				//this.el.down('.ext-cal-body-ct').setHeight(h);
+				me.el.down('.ext-cal-body-ct').setHeight(bH - 1);
+			}
+        }, Ext.isIE ? 1 : 0, this);
     },
     
     // private

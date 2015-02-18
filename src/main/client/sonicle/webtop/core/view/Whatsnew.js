@@ -33,63 +33,64 @@
  */
 Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	alternateClassName: 'WT.view.Whatsnew',
-	extend: 'WT.sdk.FormView',
+	extend: 'WT.sdk.DockableView',
 	
+	title: '@whatsnew.tit',
+	iconCls: 'wt-icon-whatsnew',
+	closeConfirm: false,
 	full: true,
-	
-	constructor: function(full) {
-		var me = this;
-		me.full = full;
-		me.callParent(arguments);
-	},
 	
 	initComponent: function() {
 		var me = this;
+		
 		Ext.apply(me, {
-			items: [{
-				xtype: 'tabpanel',
-				region: 'center',
-				itemId: 'wntab',
-				plain: true,
-				defaults: {
-					autoScroll: true,
-					bodyPadding: 5,
-					bodyCls: 'wt-whatsnew'
-				},
-				listeners: {
-					tabchange: function(s,nt,ot) {
-						if(!nt.html && nt.loader) nt.loader.load();
+			fbar: [me.addRef('hide', Ext.create({
+					xtype: 'checkbox',
+					value: true,
+					boxLabel: WT.res('whatsnew.fld-hide.lbl'),
+					hidden: me.full
+				})), '->', {
+					xtype: 'button',
+					text: WT.res('act-close.lbl'),
+					handler: function() {
+						//var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
+						//if(tb.getComponent('hide').getValue()) me.turnOff();
+						if(me.getRef('hide').getValue()) {
+							me.turnOff();
+						}
+						me.closeView();
 					}
-				},
-				items: []
-			}],
-			fbar: [{
-				xtype: 'checkbox',
-				itemId: 'hide',
-				value: true,
-				boxLabel: WT.res('whatsnew.fld-hide.lbl'),
-				hidden: me.full
-			}, '->', {
-				xtype: 'button',
-				text: WT.res('whatsnew.btn-close.lbl'),
-				handler: function() {
-					var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
-					if(tb.getComponent('hide').getValue()) me.turnOff();
-					me.close();
-				}
 			}]
 		});
 		me.callParent(arguments);
+		
+		me.add(me.addRef('wntab', Ext.create({
+			xtype: 'tabpanel',
+			region: 'center',
+			plain: true,
+			defaults: {
+				autoScroll: true,
+				bodyPadding: 5,
+				bodyCls: 'wt-whatsnew'
+			},
+			listeners: {
+				tabchange: function(s,nt,ot) {
+					if(!nt.html && nt.loader) nt.loader.load();
+				}
+			},
+			items: []
+		})));
 		me.on('afterrender', function() {
 			me.loadTabs();
 		}, me, {single: true});
 	},
 	
 	loadTabs: function() {
-		var me = this;
-		var tab = me.getComponent('wntab');
+		var me = this,
+				tab = me.getRef('wntab');
+		
 		tab.removeAll(true);
-		WT.ajaxReq('com.sonicle.webtop.core', 'GetWhatsnewTabs', {
+		WT.ajaxReq(me.mys.ID, 'GetWhatsnewTabs', {
 			params: {full: me.full},
 			callback: function(success, o) {
 				if(success) {
@@ -107,7 +108,7 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		return Ext.create('Ext.panel.Panel', {
 			itemId: wn.id,
 			title: wn.title,
-			loader: WT.componentLoader('com.sonicle.webtop.core', 'GetWhatsnewHTML', {
+			loader: WT.componentLoader(this.mys.ID, 'GetWhatsnewHTML', {
 				params: {
 					id: wn.id,
 					full: full
@@ -117,6 +118,6 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	},
 	
 	turnOff: function() {
-		WT.ajaxReq('com.sonicle.webtop.core', 'TurnOffWhatsnew');
+		WT.ajaxReq(this.mys.ID, 'TurnOffWhatsnew');
 	}
 });

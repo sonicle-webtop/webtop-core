@@ -70,9 +70,18 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		if(WT.isAction(obj)) { // Action is already instantiated
 			act = obj;
 		} else { // Instantiate action using config
+			/*
+			var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
+					tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(obj.ID, name);
+			delete obj.ID;
+			delete obj.XID;
+			*/
+			
 			act = Ext.create('WT.ux.Action', Ext.applyIf({
-				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(name),
-				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(name),
+				//text: txt,
+				//tooltip: tip,
+				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
+				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
 				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
 				handler: obj.handler,
 				scope: obj.scope || this
@@ -112,16 +121,18 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @private
 	 * Builds text value
 	 */
-	_buildText: function(name) {
-		return WT.res(this._guessSvcId(), Ext.String.format('act-{0}.lbl', name));
+	_buildText: function(id, name) {
+		id = id || this._guessSvcId();
+		return WT.res(id, Ext.String.format('act-{0}.lbl', name));
 	},
 	
 	/**
 	 * @private
 	 * Builds tooltip value
 	 */
-	_buildTip: function(name) {
-		return WT.res(this._guessSvcId(), Ext.String.format('act-{0}.tip', name));
+	_buildTip: function(id, name) {
+		id = id || this._guessSvcId();
+		return WT.res(id, Ext.String.format('act-{0}.tip', name));
 	},
 	
 	/**
@@ -138,6 +149,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 */
 	_guessSvcId: function() {
 		var me = this;
+		if(me.mys && me.mys.ID) return me.mys.ID;
 		if(me.ID) return me.ID;
 		return null;
 	},
@@ -148,6 +160,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 */
 	_guessSvcXId: function() {
 		var me = this;
+		if(me.mys && me.mys.XID) return me.mys.XID;
 		if(me.XID) return me.XID;
 		return null;
 	}

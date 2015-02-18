@@ -70,13 +70,15 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		var me = this, cfg = {
 			use24HourTime: me.use24HourTime,
 			createText: me.ddCreateEventText,
+			copyText: me.ddCopyEventText,
 			moveText: me.ddMoveEventText,
 			resizeText: me.ddResizeEventText,
+			dateFormat: me.ddDateFormat,
 			ddIncrement: me.ddIncrement
 		};
 
 		this.el.ddScrollConfig = {
-			// scrolling is buggy in IE/Opera for some reason.  A larger vthresh
+			// scrolling is buggy in IE/Opera for some reason. A larger vthresh
 			// makes it at least functional if not perfect
 			vthresh: Ext.isIE || Ext.isOpera ? 100 : 40,
 			hthresh: -1,
@@ -128,8 +130,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 				this.el.scrollTo('top', y, true);
 				this.scrollReady = true;
 			}, 10, this);
-		}
-		else {
+		} else {
 			this.el.scrollTo('top', y, true);
 			this.scrollReady = true;
 		}
@@ -143,25 +144,28 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 				id: me.id,
 				use24HourTime: me.use24HourTime,
 				dayCount: me.dayCount,
-				skipWeekend: me.skipWeekend,
 				showTodayText: me.showTodayText,
 				todayText: me.todayText,
 				showTime: me.showTime,
+				showHourSeparator: me.showHourSeparator,
 				viewStartHour: me.viewStartHour,
 				viewEndHour: me.viewEndHour,
 				hourIncrement: me.hourIncrement,
-				hourHeight: me.hourHeight
+				hourHeight: me.hourHeight,
+				highlightBusinessHours: me.highlightBusinessHours,
+				businessHoursStart: me.businessHoursStart,
+				businessHoursEnd: me.businessHoursEnd
 			});
 		}
 		me.tpl.compile();
 		me.addCls('ext-cal-body-ct');
 
 		me.callParent(arguments);
-
+		
 		// default scroll position to scrollStartHour (7am by default) or min view hour if later
 		var startHour = Math.max(me.scrollStartHour, me.viewStartHour),
 				scrollStart = Math.max(0, startHour - me.viewStartHour);
-		if (scrollStart > 0) me.scrollTo(scrollStart * me.hourHeight);
+		if (scrollStart > 0) me.scrollTo(scrollStart * me.hourHeight, true);
 	},
 	
 	// private

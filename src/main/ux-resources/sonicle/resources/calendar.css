@@ -89,7 +89,7 @@
 }
 
 .ext-cal-hd-ct {
-    //border-bottom: 1px solid #bcf;
+    /*border-bottom: 1px solid #bcf;*/
 }
 .ext-cal-hd-day {
     text-align: center;
@@ -103,7 +103,8 @@
 .ext-cal-dayview .ext-cal-hd-days-tbl {
     table-layout: fixed;
     width: 100%;
-    background-color: #D3E1F1;
+    //background-color: #D3E1F1;
+	background-color: #f6f9fc;
     overflow: hidden;
     font-size: 11px;
     line-height: 14px;
@@ -146,9 +147,11 @@
     height: 100%;
 }
 .x-calendar-nonav .ext-cal-hd-ad-inner {
-    margin-top: 3px;
+	// We don't want this ugly margin!
+    //margin-top: 3px;
 }
 .x-calendar-nonav .ext-cal-hd-ct {
+	// We don't want this ugly border!
     //border-top: 1px solid #99BBE8;
 }
 .ext-cal-dayview .ext-cal-dtitle {
@@ -176,8 +179,8 @@
 .ext-cal-dayview .ext-cal-bg-tbl {
     background-color: #fff;
     margin-top: -1px;
-    border-bottom: 1px solid #bcf;
-    border-right: 1px solid #bcf;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
 }
 .ext-cal-dayview .ext-cal-bg-rows {
     position: relative;
@@ -194,6 +197,10 @@
 }
 .ext-cal-dayview .ext-cal-bg-row {
     height: 42px;
+}
+.ext-cal-bg-row-business {
+	opacity: .6;
+	background: #FFF4AF;
 }
 .ext-cal-dayview .ext-cal-bg-row-div {
     border-bottom: 1px dotted #ddd;
@@ -217,6 +224,10 @@
     border-bottom: 1px solid #ddd;
     padding: 3px 4px 0 0;
 }
+.ext-cal-day-time-inner .ext-cal-day-time-hours {
+	font-size: 24px;
+	margin-right: 2px;
+}
 .ext-cal-day-col {
     border-left: 1px solid #ddd;
     vertical-align: top
@@ -227,7 +238,7 @@
 }
 .ext-cal-day-col-gutter {
     position: relative;
-    //margin-right: 15px;
+    margin-right: 10px;
     height: 1008px;
 }
 .x-ie .ext-cal-day-col-gutter,
@@ -325,8 +336,7 @@
     cursor: pointer;
 }
 .ext-cal-day-first {
-    /*border-left: 1px solid #BBCCFF;*/
-   border-left: 0;
+    border-left: 1px solid #ddd;
 }
 
 .ext-cal-ev,
@@ -387,9 +397,9 @@ td.ext-cal-dtitle-today div {
 }
 /* Event cells */
 .ext-cal-ev {
-    font-family:Verdana,sans-serif;
-    padding: 0 1px 0 2px;
-    vertical-align:top;
+    font-family: Verdana,sans-serif;
+    padding: 1px 2px 0 1px; // Some trims to original padding (0 1px 0 2px)
+    vertical-align: top;
 }
 /* Event overflow more link */
 .ext-cal-ev-more {
@@ -428,6 +438,11 @@ td.ext-cal-dtitle-today div {
 .ext-cal-day-col .ext-cal-evr {
     border-width: 1px;
     border-style: solid;
+	border-color: black;
+}
+.ext-cal-ev .ext-cal-evr {
+	/* Use an inset shadow instead of classic border */
+	box-shadow: 0px 0px 0px 1px black inset;
 }
 /* Nested event divs (IE/Opera) */
 .ext-cal-evo { /* outer */

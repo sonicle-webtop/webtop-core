@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsPayload;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
@@ -120,27 +121,27 @@ public class UserOptionsService extends BaseUserOptionsService {
 				new JsonResult(opts).printTo(out);
 				
 			} else if(crud.equals("update")) {
-				JsOptions opts = ServletUtils.getPayload(request, JsOptions.class);
+				JsPayload<JsOptions> pl = ServletUtils.getPayload(request, JsOptions.class);
 				
 				// User
-				if(opts.containsKey("displayName")) user.setDisplayName(opts.getString("displayName"));
-				if(opts.containsKey("locale")) user.setLanguageTag(opts.getString("locale"));
-				if(opts.containsKey("timezone")) user.setTimezone(opts.getString("timezone"));
-				if(opts.containsKey("theme")) cus.setTheme(opts.getString("theme"));
-				if(opts.containsKey("laf")) cus.setLookAndFeel(opts.getString("laf"));
+				if(pl.contains("displayName")) user.setDisplayName(pl.data.getString("displayName"));
+				if(pl.contains("locale")) user.setLanguageTag(pl.data.getString("locale"));
+				if(pl.contains("timezone")) user.setTimezone(pl.data.getString("timezone"));
+				if(pl.contains("theme")) cus.setTheme(pl.data.getString("theme"));
+				if(pl.contains("laf")) cus.setLookAndFeel(pl.data.getString("laf"));
 				udao.update(con, user);
 				
 				// TFA
-				if(opts.containsKey("mandatory")) {
+				if(pl.contains("mandatory")) {
 					//TODO: do check using shiro
 					if(getSessionProfile().isSystemAdmin()) {
-						cus.setTFAMandatory(opts.getBoolean("mandatory"));
+						cus.setTFAMandatory(pl.data.getBoolean("mandatory"));
 					}
 				}
 				
 				// UserData
 				if(udp.canWrite()) {
-					ud.setMap(opts.getPrefixed("usd"));
+					ud.setMap(pl.data.getPrefixed("usd"));
 					udp.setUserData(getDomainId(), getUserId(), ud);
 				}
 				new JsonResult().printTo(out);

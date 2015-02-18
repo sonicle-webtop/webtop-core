@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.sdk.model.UserOptions', {
 	alternateClassName: 'WT.sdk.model.UserOptions',
 	extend: 'Ext.data.Model',
 	
+	idProperty: 'id',
 	fields: [
 		'id'
 	]

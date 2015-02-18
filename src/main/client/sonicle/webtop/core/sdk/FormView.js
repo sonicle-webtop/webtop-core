@@ -33,51 +33,251 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	alternateClassName: 'WT.sdk.FormView',
-	extend: 'Ext.form.Panel',
-	mixins: [
-		'WT.mixin.Waitable',
-		'WT.mixin.Submissible'
+	extend: 'WT.sdk.DockableView',
+	requires: [
+		'Sonicle.form.Panel'
 	],
 	
-	layout: 'border',
+	config: {
+		/**
+		 * @cgf {String} formRefKey
+		 * Key to use within {@link WT.mixin.RefStorer#getRef} method in order
+		 * to retrieve the form component of this view.
+		 */
+		formRefKey: 'form',
+		
+		/**
+		 * @cfg {Boolean} autoToolbar
+		 * True to automatically define a top toolbar with actions for saving
+		 * and closing the view (Save/Save&Close buttons).
+		 */
+		autoToolbar: true,
+		
+		/**
+		 * @cfg {Boolean} showSave
+		 * True to define also a Save button in addition to the Save&Close one.
+		 */
+		showSave: false,
+		
+		/**
+		 * @cgf {Boolean} applyModeTitle
+		 * True to update view title according to the operative {@link #mode}.
+		 */
+		applyModeTitle: true,
+		
+		/**
+		 * @cfg {String} modeTitleFormat
+		 * Formatting string to use during title update.
+		 */
+		modeTitleFormat: '{0}: {1}'
+	},
 	
-	close: function() {
-		this.ownerCt.close();
-	}
+	/**
+	 * @private
+	 * @property {String} mode
+	 * The form operative mode.
+	 */
+	mode: null,
+	MODE_NEW: 'new',
+	MODE_EDIT: 'edit',
+	MODE_VIEW: 'view',
 	
-	/*
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+	},
+	
 	initComponent: function() {
 		var me = this;
-		
-		me.on('added', function(s,ct) {
-			me.initCt(ct);
-		}, me, {single: true});
-		me.on('removed', function(s,ct) {
-			me.cleanupCt(ct);
-		}, me, {single: true});
+		if(me.autoToolbar) me.initTBar();
+		me.callParent(arguments);
+		me.on('beforeviewclose', me.onBeforeViewClose);
 	},
-	*/
 	
-	/*
-	initCt: function(ct) {
-		var me = this;
+	initTBar: function() {
+		var me = this, items = [];
 		
-		if(me.ctInited) return;
-		if(ct.isXType('window')) {
-			// In this case panel's header is not necessary.
-			// It hasn't been rendered yet, we can remove it easly...
-			//this.elements = this.elements.replace(',header','');
-			//this.header = false;
-			// Apply as config, the window is not rendered
-			//ct.title = this.title;
-			//ct.iconCls = this.iconCls;
-			
-			ct.on('show', this.onWndShow, this);
-			ct.on('close', this.onWndClose, this);
-			//if(this.useWG) ct.on('hide', this.onWndHide, this);
-			ct.on('beforeclose', this.onWndBeforeClose, this);
+		me.addAction('saveClose', {
+			text: WT.res('act-saveClose.lbl'),
+			iconCls: 'wt-icon-saveClose-xs',
+			handler: function() {
+				me.doSave(true);
+			}
+		});
+		
+		if(!me.showSave) {
+			items.push(me.getAction('saveClose'));
+			/*
+			Ext.apply(me, {
+				tbar: [
+					me.getAction('saveClose')
+				]
+			});
+			*/
+		} else {
+			items.push({
+				xtype: 'splitbutton',
+				text: WT.res('act-saveClose.lbl'),
+				iconCls: 'wt-icon-saveClose-xs',
+				menu: [
+					me.addAction('save', {
+						text: WT.res('act-save.lbl'),
+						iconCls: 'wt-icon-save-xs',
+						handler: function() {
+							me.doSave(false);
+						}
+					}),
+					me.getAction('saveClose')
+				],
+				handler: function() {
+					me.getAction('saveClose').execute();
+				}
+			});
+			/*
+			Ext.apply(me, {
+				tbar: [{
+					xtype: 'splitbutton',
+					text: WT.res('act-saveClose.lbl'),
+					iconCls: 'wt-icon-saveClose-xs',
+					menu: [
+						me.addAction('save', {
+							text: WT.res('act-save.lbl'),
+							iconCls: 'wt-icon-save-xs',
+							handler: function() {
+								me.doSave(false);
+							}
+						}),
+						me.getAction('saveClose')
+					],
+					handler: function() {
+						me.getAction('saveClose').execute();
+					}
+				}]
+			});
+			*/
 		}
-		me.ctInited = true;
+		WT.Util.applyTbItems(me, 'top', items, false);
+	},
+	
+	/**
+	 * Loads defined form and sets NEW mode.
+	 * @param {Object} data
+	 */
+	beginNew: function(data) {
+		var me = this;
+		me.setMode(me.MODE_NEW);
+		me.doLoad(data);
+	},
+	
+	/**
+	 * Loads defined form and sets VIEW mode.
+	 * @param {Object} data
+	 */
+	beginView: function(data) {
+		var me = this;
+		me.setMode(me.MODE_VIEW);
+		me.doLoad(data);
+	},
+	
+	/**
+	 * Loads defined form and sets EDIT mode.
+	 * @param {Object} data
+	 */
+	beginEdit: function(data) {
+		var me = this;
+		me.setMode(me.MODE_EDIT);
+		me.doLoad(data);
+	},
+	
+	getFormCmp: function() {
+		return this.getRef(this.formRefKey);
+	},
+	
+	/**
+	 * Sets a operative mode.
+	 * @param {String} value The mode to set.
+	 */
+	setMode: function(value) {
+		var me = this,
+				om = me.mode;
+		switch(value) {
+			case me.MODE_NEW:
+			case me.MODE_VIEW:
+			case me.MODE_EDIT:
+				me.mode = value;
+				break;
+			default:
+				return;
+		}
+		if(me.mode !== om) me.onModeChange(value, om);
+	},
+	
+	/**
+	 * Checks if current mode match within the passed one.
+	 * @param {type} mode Mode value to check.
+	 * @returns {Boolean} True if specified mode is currently active, False otherwise.
+	 */
+	isMode: function(mode) {
+		return (this.mode === mode);
+	},
+	
+	doLoad: function(data) {
+		var me = this;
+		me.getFormCmp().loadForm(data, {
+			callback: function(s, success, model) {
+				me.fireEvent('viewload', me, success, model);
+			}
+		});
+	},
+	
+	doSave: function(closeAfter) {
+		var me = this,
+				form = this.getFormCmp();
+		
+		if(!form.isValid()) return;
+		form.saveForm({
+			callback: function(s, success, model) {
+				me.fireEvent('viewsave', me, success, model);
+				if(success) {
+					if(closeAfter) me.closeView(false);
+				}
+			}
+		});
+	},
+	
+	onModeChange: function(nm, om) {
+		var me = this;
+		if(me.applyModeTitle) me.updateModeTitle(nm);
+		me.fireEvent('modechange', me, nm, om);
+	},
+	
+	onConfirmView: function() {
+		// User chose to save dirty values before close.
+		// Do save, signalling to close the view after a succesful operation.
+		this.doSave(true);
+	},
+	
+	onBeforeViewClose: function() {
+		// Fields are dirty!
+		// Returns false to stop view closing and to display a confirm message.
+		if(this.getFormCmp().isDirty()) return false;
+	},
+	
+	updateModeTitle: function(mode) {
+		var me = this, mtit;
+		if(this.ctInited) {
+			switch(mode) {
+				case me.MODE_VIEW:
+					mtit = WT.res('act-view.lbl');
+					break;
+				case me.MODE_NEW:
+					mtit = WT.res('act-new.lbl');
+					break;
+				case me.MODE_EDIT:
+					mtit = WT.res('act-edit.lbl');
+					break;
+			}
+			me.ownerCt.setTitle(Ext.String.format(me.modeTitleFormat, me.title, mtit));
+		}
 	}
-	*/
 });

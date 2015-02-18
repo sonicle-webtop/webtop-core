@@ -31,47 +31,53 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.FormView2', {
-	alternateClassName: 'WT.sdk.FormView2',
-	extend: 'WT.sdk.DockableView',
+Ext.define('Sonicle.webtop.core.sdk.OldFormView', {
+	alternateClassName: 'WT.sdk.OldFormView',
+	extend: 'Ext.form.Panel',
+	mixins: [
+		'WT.mixin.Waitable',
+		'WT.mixin.Submissible'
+	],
 	
-	constructor: function(cfg) {
-		var me = this;
-		me.initConfig(cfg);
-		me.callParent(arguments);
-	},
+	layout: 'border',
 	
+	close: function() {
+		this.ownerCt.close();
+	}
+	
+	/*
 	initComponent: function() {
 		var me = this;
-		me.callParent(arguments);
+		
+		me.on('added', function(s,ct) {
+			me.initCt(ct);
+		}, me, {single: true});
+		me.on('removed', function(s,ct) {
+			me.cleanupCt(ct);
+		}, me, {single: true});
 	},
+	*/
 	
-	onModeChange: function(nm, om) {
-		this.updateViewTitle(nm);
-		this.fireEvent('modechange', this, nm, om);
-	},
-	
-	updateViewTitle: function(mode) {
-		/*
-		if(this.ctInited) {
-			var ct = this.ownerCt;
-			var tit = (ct.title == null) ? '' : ct.title;
-			var last = tit.lastIndexOf(':');
-			var tit1 = (last == -1) ? tit : tit.substring(0, last);
-			var tit2 = null;
-			switch(mode) {
-				case this.MODE_VIEW:
-					tit2 = WT.res('a-view.lbl');
-					break;
-				case this.MODE_NEW:
-					tit2 = WT.res('a-add.lbl');
-					break;
-				case this.MODE_EDIT:
-					tit2 = WT.res('a-edit.lbl');
-					break;
-			}
-			ct.setTitle(String.format('{0}: {1}', tit1, tit2));
+	/*
+	initCt: function(ct) {
+		var me = this;
+		
+		if(me.ctInited) return;
+		if(ct.isXType('window')) {
+			// In this case panel's header is not necessary.
+			// It hasn't been rendered yet, we can remove it easly...
+			//this.elements = this.elements.replace(',header','');
+			//this.header = false;
+			// Apply as config, the window is not rendered
+			//ct.title = this.title;
+			//ct.iconCls = this.iconCls;
+			
+			ct.on('show', this.onWndShow, this);
+			ct.on('close', this.onWndClose, this);
+			//if(this.useWG) ct.on('hide', this.onWndHide, this);
+			ct.on('beforeclose', this.onWndBeforeClose, this);
 		}
-		*/
+		me.ctInited = true;
 	}
+	*/
 });

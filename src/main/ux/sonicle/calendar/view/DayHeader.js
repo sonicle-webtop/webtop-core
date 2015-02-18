@@ -18,7 +18,6 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	// private configs
 	weekCount: 1,
 	dayCount: 1,
-	skipWeekend: false,
 	allDayOnly: true,
 	monitorResize: false,
 	
@@ -61,10 +60,11 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	// private
 	recalcHeaderBox: function() {
 		var me = this, tbl = me.el.down('.ext-cal-evt-tbl'),
-				h = tbl.getHeight();
-
+				//h = tbl.getHeight();
+				h = Math.max(tbl.getHeight(), 80);
+		tbl.setHeight(h);
 		me.el.setHeight(h + 7);
-
+		
 		// These should be auto-height, but since that does not work reliably
 		// across browser / doc type, we have to size them manually
 		me.el.down('.ext-cal-hd-ad-inner').setHeight(h + 5);

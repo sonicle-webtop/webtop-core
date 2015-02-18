@@ -48,7 +48,9 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.TimeZone;
 import org.apache.commons.codec.binary.Base32;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 
 /**
@@ -113,7 +115,11 @@ public final class UserProfile {
 		loadDetails();
 	}
 	
-	public String getId() {
+	public UserProfile.Id getId() {
+		return new UserProfile.Id(principal.getName());
+	}
+	
+	public String getStringId() {
 		return principal.getName();
 	}
 	
@@ -152,7 +158,7 @@ public final class UserProfile {
 	}
 	
 	public boolean isSystemAdmin() {
-		return UserProfile.isSystemAdmin(getId());
+		return UserProfile.isSystemAdmin(getStringId());
 	}
     
     public boolean hasDocumentManagement() {
@@ -192,5 +198,52 @@ public final class UserProfile {
 	
 	public static boolean isSystemAdmin(String id) {
 		return id.equals("admin@*");
+	}
+	
+	public static class Id {
+		private final String domainId;
+		private final String userId;
+		
+		public Id(String id) {
+			this.domainId = StringUtils.split(id, "@")[1];
+			this.userId = StringUtils.split(id, "@")[0];
+		}
+		
+		public Id(String domainId, String userId) {
+			this.domainId = domainId;
+			this.userId = userId;
+		}
+		
+		public String getDomainId() {
+			return domainId;
+		}
+		
+		public String getUserId() {
+			return userId;
+		}
+		
+		@Override
+		public String toString() {
+			return domainId + "@" + userId;
+		}
+		
+		@Override
+		public int hashCode() {
+			return new HashCodeBuilder()
+				.append(domainId)
+				.append(userId)
+				.toHashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if(obj instanceof Id == false) return false;
+			if(this == obj) return true;
+			final Id otherObject = (Id) obj;
+			return new EqualsBuilder()
+				.append(domainId, otherObject.domainId)
+				.append(userId, otherObject.userId)
+				.isEquals();
+		}
 	}
 }
