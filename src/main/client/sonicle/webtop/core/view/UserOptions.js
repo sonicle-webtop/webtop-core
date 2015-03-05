@@ -35,8 +35,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	alternateClassName: 'WT.view.UserOptions',
 	extend: 'WT.sdk.UserOptionsView',
 	requires: [
+		'WT.model.Simple',
 		'WT.store.TFADelivery',
-		'WT.model.Simple'
+		'WT.store.Timezone'
 	],
 	controller: Ext.create('WT.view.UserOptionsC'),
 	//idField: 'id',
@@ -63,44 +64,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				name: 'displayName',
 				allowBlank: false,
 				fieldLabel: WT.res('opts.main.fld-displayName.lbl'),
-				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'combo',
-				name: 'locale',
-				allowBlank: false,
-				typeAhead: true,
-				queryMode: 'local',
-				forceSelection: true,
-				selectOnFocus: true,
-				store: {
-					autoLoad: true,
-					model: 'WT.model.Simple',
-					proxy: WT.proxy(me.ID, 'GetLocales', 'locales')
-				},
-				valueField: 'id',
-				displayField: 'desc',
-				fieldLabel: WT.res('opts.main.fld-locale.lbl'),
-				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'combo',
-				name: 'timezone',
-				allowBlank: false,
-				typeAhead: true,
-				queryMode: 'local',
-				forceSelection: true,
-				selectOnFocus: true,
-				store: {
-					autoLoad: true,
-					model: 'WT.model.Simple',
-					proxy: WT.proxy(me.ID, 'GetTimezones', 'timezones')
-				},
-				valueField: 'id',
-				displayField: 'desc',
-				fieldLabel: WT.res('opts.main.fld-timezone.lbl'),
 				listeners: {
 					blur: 'onBlurAutoSave'
 				}
@@ -138,6 +101,62 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					blur: 'onBlurAutoSave'
 				},
 				reload: true
+			}]
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.i18n.tit'),
+			items: [{
+				xtype: 'combo',
+				name: 'locale',
+				allowBlank: false,
+				typeAhead: true,
+				queryMode: 'local',
+				forceSelection: true,
+				selectOnFocus: true,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WT.proxy(me.ID, 'GetLocales', 'locales')
+				},
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: WT.res('opts.i18n.fld-locale.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
+			}, {
+				xtype: 'combo',
+				name: 'timezone',
+				allowBlank: false,
+				typeAhead: true,
+				queryMode: 'local',
+				forceSelection: true,
+				selectOnFocus: true,
+				store: Ext.create('WT.store.Timezone', {
+					autoLoad: true
+				}),
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: WT.res('opts.i18n.fld-timezone.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				}
+			}, {
+				xtype: 'textfield',
+				name: 'dateFormat',
+				fieldLabel: WT.res('opts.i18n.fld-dateFormat.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'longDateFormat',
+				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'timeFormat',
+				fieldLabel: WT.res('opts.i18n.fld-timeFormat.lbl')
+			}, {
+				xtype: 'textfield',
+				name: 'longTimeFormat',
+				fieldLabel: WT.res('opts.i18n.fld-longTimeFormat.lbl')
 			}]
 		}, {
 			xtype: 'wtopttabsection',

@@ -80,14 +80,21 @@ public class UserOptionsService extends BaseUserOptionsService {
 			if(crud.equals("read")) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
 				
-				// Main
+				// main
 				JsOptions main = new JsOptions();
 				main.put("displayName", user.getDisplayName());
-				main.put("locale", user.getLocale());
-				main.put("timezone", user.getTimezone());
 				main.put("rtl", cus.getRightToLeft());
 				main.put("theme", cus.getTheme());
 				main.put("laf", cus.getLookAndFeel());
+				
+				// i18n
+				JsOptions i18n = new JsOptions();
+				i18n.put("locale", user.getLocale());
+				i18n.put("timezone", user.getTimezone());
+				i18n.put("dateFormat", cus.getDateFormat());
+				i18n.put("longDateFormat", cus.getLongDateFormat());
+				i18n.put("timeFormat", cus.getTimeFormat());
+				i18n.put("longTimeFormat", cus.getLongTimeFormat());
 				
 				// TFA
 				JsOptions tfa = new JsOptions();
@@ -116,6 +123,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				JsOptions opts = new JsOptions();
 				opts.put("id", id);
 				opts.putAll(main);
+				opts.putAll(i18n);
 				opts.putPrefixed("tfa", tfa);
 				opts.putPrefixed("usd", ud.getMap());
 				new JsonResult(opts).printTo(out);
@@ -123,12 +131,19 @@ public class UserOptionsService extends BaseUserOptionsService {
 			} else if(crud.equals("update")) {
 				JsPayload<JsOptions> pl = ServletUtils.getPayload(request, JsOptions.class);
 				
-				// User
+				// main
 				if(pl.contains("displayName")) user.setDisplayName(pl.data.getString("displayName"));
-				if(pl.contains("locale")) user.setLanguageTag(pl.data.getString("locale"));
-				if(pl.contains("timezone")) user.setTimezone(pl.data.getString("timezone"));
 				if(pl.contains("theme")) cus.setTheme(pl.data.getString("theme"));
 				if(pl.contains("laf")) cus.setLookAndFeel(pl.data.getString("laf"));
+				
+				// i18n
+				if(pl.contains("locale")) user.setLanguageTag(pl.data.getString("locale"));
+				if(pl.contains("timezone")) user.setTimezone(pl.data.getString("timezone"));
+				if(pl.contains("dateFormat")) cus.setDateFormat(pl.data.getString("dateFormat"));
+				if(pl.contains("longDateFormat")) cus.setLongDateFormat(pl.data.getString("longDateFormat"));
+				if(pl.contains("timeFormat")) cus.setTimeFormat(pl.data.getString("timeFormat"));
+				if(pl.contains("longTimeFormat")) cus.setLongTimeFormat(pl.data.getString("longTimeFormat"));
+				
 				udao.update(con, user);
 				
 				// TFA

@@ -224,7 +224,7 @@ public final class UserProfile {
 		
 		@Override
 		public String toString() {
-			return domainId + "@" + userId;
+			return userId + "@" + domainId;
 		}
 		
 		@Override

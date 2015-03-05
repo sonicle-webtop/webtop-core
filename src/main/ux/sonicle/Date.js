@@ -1,6 +1,106 @@
 Ext.define('Sonicle.Date', {
 	singleton: true,
 	
+	fmtCache: {},
+	javaFmtMapping: {
+		d: 'j',
+		dd: 'd',
+		yy: 'y',
+		yyyy: 'Y',
+		a: 'A',
+		//A: 'A',
+		M: 'n',
+		MM: 'm',
+		MMM: 'M',
+		MMMM: 'F',
+		h: 'g',
+		hh: 'h',
+		H: 'G',
+		HH: 'H',
+		m: 'i',
+		mm: 'i',
+		s: 's',
+		ss: 's',
+		S: 'u',
+		SS: 'u',
+		SSS: 'u',
+		E: 'D',
+		EEE: 'D',
+		EEEE: 'D',
+		D: 'z',
+		w: 'W',
+		ww: 'W',
+		z: 'T',
+		zzzz: 'T',
+		Z: 'O',
+		X: 'O',
+		XX: 'O',
+		XXX: 'P',
+		u: 'w'
+	},
+	
+	/**
+	 * Translates the java date format String to a ExtJs format String.
+	 * @param {String} format The format String to be translated.
+	 * @returns {String}
+	 */
+	toExtJsFormat: function(format) {
+		var me = this;
+		if (!me.fmtCache[format]) {
+			me.fmtCache[format] = me.translateFormat(format, me.javaFmtMapping);
+		}
+		return me.fmtCache[format];
+	},
+	
+	/**
+	 * Translates the java date format String to a ExtJs format String.
+	 * @param {String} format The unmodified format string.
+	 * @param {Object} mapping The date format mapping object.
+	 * @returns {String}
+	 */
+	translateFormat: function(format, mapping) {
+		var me = this,
+				len = format.length,
+				i = 0,
+				beginIndex = -1,
+				lastCh = null,
+				curCh = '',
+				result = '';
+		
+		for(; i < len; i++) {
+			curCh = format.charAt(i);
+			if(lastCh === null || lastCh !== curCh) { // change detected
+				format = me._appendMappedString(format, mapping, beginIndex, i, result);
+				beginIndex = i;
+			}
+			lastCh = curCh;
+		}
+		return me._appendMappedString(format, mapping, beginIndex, i, result);
+	},
+	
+	/**
+	 * @private
+	 * Checks if the substring is a mapped date format pattern and adds it to the result format String.
+	 * @param {String} format The unmodified format String.
+	 * @param {Object} mapping The date format mapping Object.
+	 * @param {Number} beginIndex The begin index of the continuous format characters.
+	 * @param {Number} currentIndex The last index of the continuous format characters.
+	 * @param {String} result The result format String.
+	 * @returns {String}
+	 */
+	_appendMappedString: function(format, mapping, beginIndex, currentIndex, result) {
+		var temp;
+		if(beginIndex !== -1) {
+			temp = format.substring(beginIndex, currentIndex);
+			// check if the temporary string has a known mapping
+			if (mapping[temp]) {
+				temp = mapping[temp];
+			}
+			result = result.concat(temp);
+		}
+		return result;
+	},
+	
 	/**
 	 * Returns the time duration between two dates in the specified units. For finding the number of
 	 * calendar days (ignoring time) between two dates use {@link Extensible.Date.diffDays diffDays} instead.

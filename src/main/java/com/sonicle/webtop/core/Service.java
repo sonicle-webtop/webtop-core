@@ -46,6 +46,7 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.sdk.AppLocale;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.SuperEnvironment;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -55,15 +56,13 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -75,8 +74,6 @@ public class Service extends BaseService {
 	private static final Logger logger = BaseService.getLogger(Service.class);
 	private SuperEnvironment env;
 	private CoreUserSettings cus;
-	private static final String VALID_TIMEZONES_RE = "^(Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
-	private static final List<TimeZone> timezones = getAvailableTimezones();
 	
 	@Override
 	public void initialize() {
@@ -94,23 +91,31 @@ public class Service extends BaseService {
 	public HashMap<String, Object> returnClientOptions() {
 		UserProfile profile = env.getProfile();
 		HashMap<String, Object> hm = new HashMap<>();
-		hm.put("locale", profile.getLocale());
-		hm.put("timezone", profile.getTimeZone().getID());
 		hm.put("theme", cus.getTheme());
 		hm.put("layout", cus.getLayout());
 		hm.put("laf", cus.getLookAndFeel());
+		hm.put("locale", profile.getLocale());
+		hm.put("timezone", profile.getTimeZone().getID());
+		hm.put("dateFormat", cus.getDateFormat());
+		hm.put("longDateFormat", cus.getLongDateFormat());
+		hm.put("timeFormat", cus.getTimeFormat());
+		hm.put("longTimeFormat", cus.getLongTimeFormat());
 		return hm;
 	}
 	
 	public void processGetLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsSimple> items = new ArrayList<>();
 		Locale locale = env.getSession().getLocale();
 		
 		try {
-			//TODO: handle locales dinamically
-			ArrayList<JsSimple> data = new ArrayList<>();
-			data.add(new JsSimple("it_IT", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "it_IT"))));
-			data.add(new JsSimple("en_EN", env.lookupResource(CoreManifest.ID, locale, MessageFormat.format(CoreLocaleKey.LOCALE_X, "en_EN"))));
-			new JsonResult("locales", data).printTo(out);
+			for(AppLocale loc : env.getLocales()) {
+				//System.out.println(loc.getShortDatePattern());
+				//System.out.println(loc.getShortTimePattern());
+				//System.out.println(loc.getLocale().getDisplayName());
+				//System.out.println(loc.getLocale().getDisplayName(locale));
+				items.add(new JsSimple(loc.getId(), loc.getLocale().getDisplayName(locale)));
+			}
+			new JsonResult("locales", items).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLocales", ex);
@@ -119,16 +124,17 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetTimezones(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			ArrayList<JsSimple> data = new ArrayList<>();
+		ArrayList<JsSimple> items = new ArrayList<>();
+		
+		try {	
 			String normId = null;
 			int off;
-			for(TimeZone tz : timezones) {
+			for(TimeZone tz : env.getTimezones()) {
 				normId = StringUtils.replace(tz.getID(), "_", " ");
 				off = tz.getRawOffset()/3600000;
-				data.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
+				items.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
 			}
-			new JsonResult("timezones", data).printTo(out);
+			new JsonResult("timezones", items).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetTimezones", ex);
@@ -388,20 +394,5 @@ public class Service extends BaseService {
 			new JsonResult().printTo(out);
 		}
 		*/
-	}
-	
-	public static List<TimeZone> getAvailableTimezones() {
-		ArrayList<TimeZone> tzs = new ArrayList<>();
-		final String[] ids = TimeZone.getAvailableIDs();
-		for(final String id : ids) {
-			if(id.matches(VALID_TIMEZONES_RE)) tzs.add(TimeZone.getTimeZone(id));
-		}
-		Collections.sort(tzs, new Comparator<TimeZone>() {
-			@Override
-			public int compare(final TimeZone t1, final TimeZone t2) {
-				return t1.getID().compareTo(t2.getID());
-			}
-		});
-		return tzs;
 	}
 }

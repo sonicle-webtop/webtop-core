@@ -105,23 +105,30 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 							items: [{
 								itemId: 'feedback',
 								tooltip: WT.res('menu.feedback.tip'),
-								glyph: 0xf1d8
+								iconCls: 'wt-menu-feedback'
+								//glyph: 0xf1d8
 							}, {
 								itemId: 'whatsnew',
 								tooltip: WT.res('menu.whatsnew.tip'),
-								glyph: 0xf0eb
+								iconCls: 'wt-menu-whatsnew'
+								//glyph: 0xf0eb
 							}, {
 								itemId: 'options',
 								tooltip: WT.res('menu.options.tip'),
-								glyph: 0xf013
+								iconCls: 'wt-menu-options'
+								//glyph: 0xf013
 							}, {
-								xtype: 'container'
+								//xtype: 'container'
+								itemId: 'help',
+								tooltip: WT.res('menu.help.tip'),
+								iconCls: 'wt-menu-help'
 							}, {
 								itemId: 'logout',
 								colspan: 2,
 								scale: 'small',
 								tooltip: WT.res('menu.logout.tip'),
-								glyph: 0xf011
+								iconCls: 'wt-menu-logout'
+								//glyph: 0xf011
 							}]
 						}]
 					}

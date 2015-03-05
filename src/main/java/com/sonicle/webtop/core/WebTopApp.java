@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.AppLocale;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
 import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
@@ -45,7 +46,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -90,6 +93,7 @@ public class WebTopApp {
 	private final String systemInfo;
 	private final Locale systemLocale;
 	private Configuration freemarkerCfg = null;
+	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
@@ -102,6 +106,10 @@ public class WebTopApp {
 		systemInfo = buildSystemInfo();
 		
 		logger.info("WTA initialization started [{}]", webappName);
+		
+		// Locale Manager
+		String[] tags = new String[]{"it_IT", "en_EN"};
+		i18nm = I18nManager.initialize(this, tags);
 		
 		// Template Engine
 		logger.info("Initializing template engine.");
@@ -118,13 +126,17 @@ public class WebTopApp {
 		} catch (SQLException ex) {
 			logger.error("Error registeting default connection", ex);
 		}
+		
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
+		
 		// Service Manager
 		svcm = ServiceManager.initialize(this);
+		
 		// TFA Manager
 		tfam = TFAManager.initialize(this);
 		
+		// System locale
 		systemLocale = CoreServiceSettings.getSystemLocale(setm);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
@@ -187,6 +199,14 @@ public class WebTopApp {
 				return rua;
 			}
 		}
+	}
+	
+	/**
+	 * Returns the I18nManager.
+	 * @return I18nManager instance.
+	 */
+	public I18nManager getI18nManager() {
+		return i18nm;
 	}
 	
 	/**

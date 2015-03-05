@@ -31,93 +31,79 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.Whatsnew', {
-	alternateClassName: 'WT.view.Whatsnew',
-	extend: 'WT.sdk.DockableView',
+Ext.define('Sonicle.form.field.IconComboBox', {
+	extend: 'Ext.form.field.ComboBox',
+	alias: ['widget.soiconcombo', 'widget.soiconcombobox'],
 	
-	title: '@whatsnew.tit',
-	iconCls: 'wt-icon-whatsnew-xs',
-	closeConfirm: false,
-	full: true,
+	/**
+	 * @cfg {String} iconClsField
+	 * The underlying {@link Ext.data.Field#name data field name} to bind as icon class.
+	 */
+	iconClsField: 'iconCls',
 	
 	initComponent: function() {
 		var me = this;
 		
-		Ext.apply(me, {
-			fbar: [me.addRef('hide', Ext.create({
-					xtype: 'checkbox',
-					value: true,
-					boxLabel: WT.res('whatsnew.fld-hide.lbl'),
-					hidden: me.full
-				})), '->', {
-					xtype: 'button',
-					text: WT.res('act-close.lbl'),
-					handler: function() {
-						//var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
-						//if(tb.getComponent('hide').getValue()) me.turnOff();
-						if(me.getRef('hide').getValue()) {
-							me.turnOff();
-						}
-						me.closeView();
-					}
-			}]
+		me.listConfig = Ext.apply(this.listConfig || {}, {
+			getInnerTpl: me.getListItemTpl
 		});
 		me.callParent(arguments);
-		
-		me.add(me.addRef('wntab', Ext.create({
-			xtype: 'tabpanel',
-			region: 'center',
-			plain: true,
-			defaults: {
-				autoScroll: true,
-				bodyPadding: 5,
-				bodyCls: 'wt-whatsnew'
-			},
-			listeners: {
-				tabchange: function(s,nt,ot) {
-					if(!nt.html && nt.loader) nt.loader.load();
-				}
-			},
-			items: []
-		})));
-		me.on('afterrender', function() {
-			me.loadTabs();
-		}, me, {single: true});
 	},
 	
-	loadTabs: function() {
+	/**
+	 * Overrides default implementation of {@link Ext.form.field.ComboBox#afterRender}.
+	 */
+	afterRender: function() {
+		var me = this;
+		me.callParent(arguments);
+		
+		me.wrap = me.el.down('.x-form-text-wrap');
+		me.wrap.addCls('so-icon-combo');
+		Ext.DomHelper.append(me.wrap, {
+			tag: 'i', cls: 'so-picker-icon so-picker-main-icon'
+		});
+		me.icon = me.el.down('.so-picker-icon');
+	},
+	
+	/**
+	 * Overrides default implementation of {@link Ext.form.field.Field#onChange}.
+	 */
+	onChange: function(newVal, oldVal) {
+		var me = this;
+		me.updateIconClass(newVal, oldVal);
+		me.callParent(arguments);
+	},
+	
+	/**
+	 * @private
+	 * Returns modified inner template.
+	 */
+	getListItemTpl: function(displayField){
+		var picker = this.pickerField;
+		return '<div class="x-combo-list-item">'
+			+ '<i class="so-picker-icon {'+picker.iconClsField+'}">&#160;</i>'
+			+ '{'+displayField+'}'
+			+ '</div>';
+	},
+	
+	/**
+	 * @private
+	 * Gets iconClass for specified value.
+	 */
+	getIconClsByValue: function(value) {
 		var me = this,
-				tab = me.getRef('wntab');
-		
-		tab.removeAll(true);
-		WT.ajaxReq(me.mys.ID, 'GetWhatsnewTabs', {
-			params: {full: me.full},
-			callback: function(success, o) {
-				if(success) {
-					Ext.each(o.data, function(itm) {
-						tab.add(me.createTab(itm, me.full));
-					}, me);
-					tab.doLayout();
-					if(tab.items.getCount() > 0) tab.setActiveTab(0);
-				}
-			}
-		});
+				rec = me.findRecordByValue(value);
+		return (rec) ? rec.get(me.iconClsField) : '';
 	},
 	
-	createTab: function(wn, full) {
-		return Ext.create('Ext.panel.Panel', {
-			itemId: wn.id,
-			title: wn.title,
-			loader: WT.componentLoader(this.mys.ID, 'GetWhatsnewHTML', {
-				params: {
-					id: wn.id,
-					full: full
-				}
-			})
-		});
-	},
-	
-	turnOff: function() {
-		WT.ajaxReq(this.mys.ID, 'TurnOffWhatsnew');
+	/**
+	 * @private
+	 * Replaces old iconCls with the new one.
+	 */
+	updateIconClass: function(nv, ov) {
+		var me = this,
+				nCls = me.getIconClsByValue(nv),
+				oCls = me.getIconClsByValue(ov);
+		if(me.icon) me.icon.replaceCls(oCls, nCls);
 	}
 });

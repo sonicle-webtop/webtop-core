@@ -60,27 +60,52 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		showSave: false,
 		
 		/**
-		 * @cgf {Boolean} applyModeTitle
-		 * True to update view title according to the operative {@link #mode}.
+		 * @cgf {Boolean/String} [autoTitle = true]
+		 * True to enable automatic title update based on current operative
+		 * mode; False to disable the automation.
+		 * It can be a string (form field name) in order to replace operative 
+		 * mode string within specified field's value.
 		 */
-		applyModeTitle: true,
+		autoTitle: true,
 		
 		/**
-		 * @cfg {String} modeTitleFormat
+		 * @cfg {String} titleFormat
 		 * Formatting string to use during title update.
 		 */
-		modeTitleFormat: '{0}: {1}'
+		titleFormat: '{0}: {1}'
 	},
+	
+	/**
+	 * @property {String} MODE_NEW
+	 * Special constant value representing 'new' operative mode.
+	 */
+	MODE_NEW: 'new',
+	
+	/**
+	 * @property {String} MODE_EDIT
+	 * Special constant value representing 'edit' operative mode.
+	 */
+	MODE_EDIT: 'edit',
+	
+	/**
+	 * @property {String} MODE_VIEW
+	 * Special constant value representing 'view' operative mode.
+	 */
+	MODE_VIEW: 'view',
 	
 	/**
 	 * @private
 	 * @property {String} mode
-	 * The form operative mode.
+	 * Form operative mode.
 	 */
 	mode: null,
-	MODE_NEW: 'new',
-	MODE_EDIT: 'edit',
-	MODE_VIEW: 'view',
+	
+	/**
+	 * @private
+	 * @property {Object} opts
+	 * Options passed during a begin call.
+	 */
+	opts: null,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -161,32 +186,38 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	
 	/**
 	 * Loads defined form and sets NEW mode.
-	 * @param {Object} data
+	 * @param {Object} opts
+	 * @param {Object} opts.data
 	 */
-	beginNew: function(data) {
+	beginNew: function(opts) {
 		var me = this;
+		me.opts = opts || {};
 		me.setMode(me.MODE_NEW);
-		me.doLoad(data);
+		me.doLoad(me.opts.data);
 	},
 	
 	/**
 	 * Loads defined form and sets VIEW mode.
-	 * @param {Object} data
+	 * @param {Object} opts
+	 * @param {Object} opts.data
 	 */
-	beginView: function(data) {
+	beginView: function(opts) {
 		var me = this;
+		me.opts = opts || {};
 		me.setMode(me.MODE_VIEW);
-		me.doLoad(data);
+		me.doLoad(me.opts.data);
 	},
 	
 	/**
 	 * Loads defined form and sets EDIT mode.
-	 * @param {Object} data
+	 * @param {Object} opts
+	 * @param {Object} opts.data
 	 */
-	beginEdit: function(data) {
+	beginEdit: function(opts) {
 		var me = this;
+		me.opts = opts || {};
 		me.setMode(me.MODE_EDIT);
-		me.doLoad(data);
+		me.doLoad(me.opts.data);
 	},
 	
 	getFormCmp: function() {
@@ -223,6 +254,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	
 	doLoad: function(data) {
 		var me = this;
+		data = data || {};
 		me.getFormCmp().loadForm(data, {
 			callback: function(s, success, model) {
 				me.fireEvent('viewload', me, success, model);
@@ -247,7 +279,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	
 	onModeChange: function(nm, om) {
 		var me = this;
-		if(me.applyModeTitle) me.updateModeTitle(nm);
+		if(me.autoTitle) me.updateTitle();
 		me.fireEvent('modechange', me, nm, om);
 	},
 	
@@ -263,21 +295,25 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		if(this.getFormCmp().isDirty()) return false;
 	},
 	
-	updateModeTitle: function(mode) {
+	updateTitle: function() {
 		var me = this, mtit;
 		if(this.ctInited) {
-			switch(mode) {
-				case me.MODE_VIEW:
-					mtit = WT.res('act-view.lbl');
-					break;
-				case me.MODE_NEW:
-					mtit = WT.res('act-new.lbl');
-					break;
-				case me.MODE_EDIT:
-					mtit = WT.res('act-edit.lbl');
-					break;
+			if(Ext.isString(me.autoTitle)) {
+				mtit = me.getFormCmp().getFieldValue(me.autoTitle) || '';
+			} else {
+				switch(me.mode) {
+					case me.MODE_VIEW:
+						mtit = WT.res('act-view.lbl');
+						break;
+					case me.MODE_NEW:
+						mtit = WT.res('act-new.lbl');
+						break;
+					case me.MODE_EDIT:
+						mtit = WT.res('act-edit.lbl');
+						break;
+				}
 			}
-			me.ownerCt.setTitle(Ext.String.format(me.modeTitleFormat, me.title, mtit));
+			me.ownerCt.setTitle(Ext.String.format(me.titleFormat, me.title, mtit));
 		}
 	}
 });

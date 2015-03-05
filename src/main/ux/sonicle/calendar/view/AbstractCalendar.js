@@ -15,8 +15,33 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	alias: 'widget.calendarview',
 	requires: [
 		'Sonicle.Date',
+		'Sonicle.ColorUtils',
 		'Sonicle.calendar.data.EventMappings'
 	],
+	
+	/**
+	 * @cfg {String} timezoneIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} privateIconCls
+	 * A css class which sets an image to be used as the icon for private
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} reminderIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} recurringIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
 	
 	/**
 	 * @cfg {Number} dayCount
@@ -728,6 +753,18 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			eventId = this.tempEventId;
 		}
 		return eventId;
+	},
+	
+	getEventForeColor: function(bgColor) {
+		var me = this,
+				etc = me.eventTextColor;
+		if(etc === 'auto') {
+			return Sonicle.ColorUtils.getBestContrast(bgColor, me.colorLuminance);
+		} else if(etc === 'white') {
+			return '#FFFFFF';
+		} else {
+			return '#000000';
+		}
 	},
 	
 	/**

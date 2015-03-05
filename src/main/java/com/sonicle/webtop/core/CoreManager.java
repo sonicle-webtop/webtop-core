@@ -33,18 +33,14 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  *

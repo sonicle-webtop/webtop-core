@@ -76,8 +76,9 @@ Ext.define('Sonicle.webtop.core.WT', {
 			key = id;
 			id = WT.ID;
 		}
-		var i = this.getApp().getDescriptor(id).getIndex();
-		return (WTS.servicesOptions[i] || {})[key];
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		return svc.getOption(key);
 	},
 	
 	/**
@@ -150,6 +151,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 		} else {
 			return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
 		}
+	},
+	
+	getDateFmt: function() {
+		return this.getApp().getService(this.ID).getDateFmt();
+	},
+	
+	getTimeFmt: function() {
+		return this.getApp().getService(this.ID).getTimeFmt();
 	},
 	
 	returnIf: function(value, ifEmpty) {

@@ -15,6 +15,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 "evts": [{
                     "id": 1001,
                     "cid": 1,
+					"color": "#AC725E",
                     "title": "Vacation",
                     "start": makeDate(-20, 10),
                     "end": makeDate(-10, 15),
@@ -22,6 +23,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1002,
                     "cid": 2,
+					"color": "#D06B64",
                     "title": "Lunch with Matt",
                     "start": makeDate(0, 11, 30),
                     "end": makeDate(0, 13),
@@ -32,12 +34,14 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1003,
                     "cid": 3,
+					"color": "#F83A22",
                     "title": "Project due",
                     "start": makeDate(0, 15),
                     "end": makeDate(0, 15)
                 }, {
                     "id": 1004,
                     "cid": 1,
+					"color": "#FA573C",
                     "title": "Sarah's birthday",
                     "start": today,
                     "end": today,
@@ -46,6 +50,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 2004,
                     "cid": 1,
+					"color": "#FF7537",
                     "title": "Sarah's 1",
                     "start": makeDate(0, 17),
                     "end": makeDate(0, 17),
@@ -54,6 +59,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 2005,
                     "cid": 1,
+					"color": "#FFAD46",
                     "title": "Sarah's 2",
                     "start": makeDate(0, 19),
                     "end": makeDate(0, 19),
@@ -62,6 +68,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 2006,
                     "cid": 1,
+					"color": "#FAD165",
                     "title": "Sarah's 3",
                     "start": makeDate(0, 21),
                     "end": makeDate(0, 21),
@@ -70,6 +77,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 2007,
                     "cid": 1,
+					"color": "#FBE983",
                     "title": "Sarah's 4",
                     "start": makeDate(0, 21),
                     "end": makeDate(0, 21),
@@ -78,6 +86,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1005,
                     "cid": 2,
+					"color": "#B3DC6C",
                     "title": "A long one...",
                     "start": makeDate(-12),
                     "end": makeDate(10, 0, 0, -1),
@@ -85,6 +94,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1006,
                     "cid": 3,
+					"color": "#7BD148",
                     "title": "School holiday",
                     "start": makeDate(5),
                     "end": makeDate(7, 0, 0, -1),
@@ -93,6 +103,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1007,
                     "cid": 1,
+					"color": "#16A765",
                     "title": "Haircut",
                     "start": makeDate(0, 9),
                     "end": makeDate(0, 9, 30),
@@ -100,6 +111,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1008,
                     "cid": 3,
+					"color": "#42D692",
                     "title": "An old event",
                     "start": makeDate(-30),
                     "end": makeDate(-28),
@@ -107,6 +119,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1009,
                     "cid": 2,
+					"color": "#92E1C0",
                     "title": "Board meeting",
                     "start": makeDate(-2, 13),
                     "end": makeDate(-2, 18),
@@ -115,6 +128,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1010,
                     "cid": 3,
+					"color": "#9FE1E7",
                     "title": "Jenny's final exams",
                     "start": makeDate(-2),
                     "end": makeDate(3, 0, 0, -1),
@@ -122,6 +136,7 @@ Ext.define('Sonicle.calendar.data.Events', {
                 }, {
                     "id": 1011,
                     "cid": 1,
+					"color": "#9FC6E7",
                     "title": "Movie night",
                     "start": makeDate(2, 19),
                     "end": makeDate(2, 23),

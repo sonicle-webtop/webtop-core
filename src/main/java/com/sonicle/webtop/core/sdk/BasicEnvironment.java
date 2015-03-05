@@ -38,7 +38,9 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import net.sf.uadetector.ReadableUserAgent;
 
 /**
@@ -47,6 +49,8 @@ import net.sf.uadetector.ReadableUserAgent;
  */
 public interface BasicEnvironment {
 	
+	public List<AppLocale> getLocales();
+	public List<TimeZone> getTimezones();
 	public UserProfile getProfile();
 	public ReadableUserAgent getUserAgent();
 	public String lookupResource(String serviceId, Locale locale, String key);

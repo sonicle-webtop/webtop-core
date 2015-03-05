@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.sdk.Service', {
 	alternateClassName: 'WT.sdk.Service',
 	requires: [
-		'WT.sdk.model.ServiceOptions'
+		'WT.sdk.model.ClientOptions'
 	],
 	mixins: [
 		'Ext.mixin.Observable',
@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		'WT.mixin.ActionStorer'
 	],
 	config: {
-		optionsModel: 'WT.sdk.model.ServiceOptions'
+		optionsModel: 'WT.sdk.model.ClientOptions'
 	},
 	statics: {
 		TOOLBAR_REF_NAME: 'tbcmp',
@@ -64,7 +64,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	XID: null,
 	
 	/**
-	 * @property {WT.sdk.model.ServiceOptions} options
+	 * @property {WT.sdk.model.ClientOptions} options
 	 * A model representing service's options pushed at startup time.
 	 */
 	options: null,
@@ -101,7 +101,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 			me.options = Ext.create(me.getOptionsModel(), cfg.optionsData);
 		} catch(err) {
 			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', me.getOptionsModel()));
-			me.options = Ext.create('WT.sdk.model.ServiceOptions', cfg.optionsData);
+			me.options = Ext.create('WT.sdk.model.ClientOptions', cfg.optionsData);
 		}
 	},
 	
@@ -133,7 +133,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	/**
 	 * Returns an option defined during startup set.
-	 * Some built-in options are defined in model file 'WT.sdk.model.ServiceOptions'.
+	 * Some built-in options are defined in model {@link WT.sdk.model.ClientOptions}.
 	 * @param {String} key The option key.
 	 * @return {Mixed} The option value.
 	 */

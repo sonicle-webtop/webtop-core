@@ -1,0 +1,23 @@
+
+.so-icon-combo {
+	position: relative;
+}
+
+.so-icon-combo .x-form-text {
+	padding-left: 23px;
+}
+
+.so-picker-main-icon {
+	position: absolute !important;
+	float: none !important;
+	left: 3px;
+}
+
+.so-picker-icon {
+	position: relative;
+	float: left;
+	top: 3px;
+	width: 16px;
+	height: 16px;
+	margin-right:5px;
+}

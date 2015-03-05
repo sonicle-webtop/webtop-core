@@ -68,6 +68,26 @@ public class CoreUserSettings extends BaseUserSettings {
 	 */
 	public static final String RTL = "rtl";
 	/**
+	 * [string]
+	 * Layout
+	 */
+	public static final String DATE_FORMAT = "i18n.format.date";
+	/**
+	 * [string]
+	 * Layout
+	 */
+	public static final String LONG_DATE_FORMAT = "i18n.format.date.long";
+	/**
+	 * [string]
+	 * Layout
+	 */
+	public static final String TIME_FORMAT = "i18n.format.time";
+	/**
+	 * [string]
+	 * Layout
+	 */
+	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
+	/**
 	 * [string][*]
 	 * Saves width of tool component
 	 */
@@ -135,6 +155,38 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean getRightToLeft() {
 		return getUserSetting(RTL, false);
+	}
+	
+	public String getDateFormat() {
+		return getUserSetting(DATE_FORMAT, "MM/dd/yyyy");
+	}
+	
+	public boolean setDateFormat(String value) {
+		return setUserSetting(DATE_FORMAT, value);
+	}
+	
+	public String getLongDateFormat() {
+		return getUserSetting(LONG_DATE_FORMAT, "MM/dd/yyyy");
+	}
+	
+	public boolean setLongDateFormat(String value) {
+		return setUserSetting(LONG_DATE_FORMAT, value);
+	}
+	
+	public String getTimeFormat() {
+		return getUserSetting(TIME_FORMAT, "HH:mm");
+	}
+	
+	public boolean setTimeFormat(String value) {
+		return setUserSetting(TIME_FORMAT, value);
+	}
+	
+	public String getLongTimeFormat() {
+		return getUserSetting(LONG_TIME_FORMAT, "HH:mm");
+	}
+	
+	public boolean setLongTimeFormat(String value) {
+		return setUserSetting(LONG_TIME_FORMAT, value);
 	}
 	
 	public Integer getViewportToolWidth() {

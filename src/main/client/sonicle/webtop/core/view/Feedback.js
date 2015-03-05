@@ -41,9 +41,9 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	],
 	
 	title: '@feedback.tit',
-	iconCls: 'wt-icon-feedback',
+	iconCls: 'wt-icon-feedback-xs',
 	autoToolbar: false,
-	applyModeTitle: false,
+	autoTitle: false,
 	confirm: 'yn',
 	
 	h2cCanvas: null,

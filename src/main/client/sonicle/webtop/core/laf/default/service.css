@@ -14,6 +14,48 @@
 .wt-icon-service-m { background-image: url('elica_32.png') !important; }
 .wt-icon-service-l { background-image: url('elica_48.png') !important; }
 
+/* ICONS */
+.wt-icon-save-xs { background-image: url('save_16.png') !important; }
+.wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
+.wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
+.wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
+.wt-icon-feedback-xs { background-image: url('feedback_16.png') !important; }
+.wt-icon-whatsnew-xs { background-image: url('whatsnew_16.png') !important; }
+.wt-icon-options-xs { background-image: url('options_16.png') !important; }
+
+.wt-menu-feedback { background-image: url('feedback_32.png') !important; width: 32px; }
+.wt-menu-whatsnew { background-image: url('whatsnew_32.png') !important; width: 32px; }
+.wt-menu-options { background-image: url('options_32.png') !important; width: 32px; }
+.wt-menu-help { background-image: url('help_32.png') !important; width: 32px; }
+.wt-menu-logout { background-image: url('logout-disabled_16.png') !important; width: 16px; }
+.x-btn-over .wt-menu-logout { background-image: url('logout_16.png') !important; width: 16px; }
+
+.wt-palette-AC725E { background-image: url('palette/AC725E.png') !important; }
+.wt-palette-D06B64 { background-image: url('palette/D06B64.png') !important; }
+.wt-palette-F83A22 { background-image: url('palette/F83A22.png') !important; }
+.wt-palette-FA573C { background-image: url('palette/FA573C.png') !important; }
+.wt-palette-FF7537 { background-image: url('palette/FF7537.png') !important; }
+.wt-palette-FFAD46 { background-image: url('palette/FFAD46.png') !important; }
+.wt-palette-FAD165 { background-image: url('palette/FAD165.png') !important; }
+.wt-palette-FBE983 { background-image: url('palette/FBE983.png') !important; }
+.wt-palette-B3DC6C { background-image: url('palette/B3DC6C.png') !important; }
+.wt-palette-7BD148 { background-image: url('palette/7BD148.png') !important; }
+.wt-palette-16A765 { background-image: url('palette/16A765.png') !important; }
+.wt-palette-42D692 { background-image: url('palette/42D692.png') !important; }
+.wt-palette-92E1C0 { background-image: url('palette/92E1C0.png') !important; }
+.wt-palette-9FE1E7 { background-image: url('palette/9FE1E7.png') !important; }
+.wt-palette-9FC6E7 { background-image: url('palette/9FC6E7.png') !important; }
+.wt-palette-4986E7 { background-image: url('palette/4986E7.png') !important; }
+.wt-palette-9A9CFF { background-image: url('palette/9A9CFF.png') !important; }
+.wt-palette-B99AFF { background-image: url('palette/B99AFF.png') !important; }
+.wt-palette-A47AE2 { background-image: url('palette/A47AE2.png') !important; }
+.wt-palette-CD74E6 { background-image: url('palette/CD74E6.png') !important; }
+.wt-palette-F691B2 { background-image: url('palette/F691B2.png') !important; }
+.wt-palette-CCA6AC { background-image: url('palette/CCA6AC.png') !important; }
+.wt-palette-CABDBF { background-image: url('palette/CABDBF.png') !important; }
+.wt-palette-C2C2C2 { background-image: url('palette/C2C2C2.png') !important; }
+.wt-palette-FFFFFF { background-image: url('palette/FFFFFF.png') !important; }
+
 /* VIEWPORT */
 .wt-header {
 	
@@ -69,34 +111,3 @@ div.wt-wnlist {
 	box-shadow: 2px 2px 5px #e1e1e1;
 	border: solid 1px #ccc;
 }
-
-/* ICONS */
-.wt-icon-save-xs { background-image: url('save_16.png') !important; }
-.wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
-.wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
-.wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
-.wt-palette-AC725E { background-image: url('palette/AC725E.png') !important; }
-.wt-palette-D06B64 { background-image: url('palette/D06B64.png') !important; }
-.wt-palette-F83A22 { background-image: url('palette/F83A22.png') !important; }
-.wt-palette-FA573C { background-image: url('palette/FA573C.png') !important; }
-.wt-palette-FF7537 { background-image: url('palette/FF7537.png') !important; }
-.wt-palette-FFAD46 { background-image: url('palette/FFAD46.png') !important; }
-.wt-palette-FAD165 { background-image: url('palette/FAD165.png') !important; }
-.wt-palette-FBE983 { background-image: url('palette/FBE983.png') !important; }
-.wt-palette-B3DC6C { background-image: url('palette/B3DC6C.png') !important; }
-.wt-palette-7BD148 { background-image: url('palette/7BD148.png') !important; }
-.wt-palette-16A765 { background-image: url('palette/16A765.png') !important; }
-.wt-palette-42D692 { background-image: url('palette/42D692.png') !important; }
-.wt-palette-92E1C0 { background-image: url('palette/92E1C0.png') !important; }
-.wt-palette-9FE1E7 { background-image: url('palette/9FE1E7.png') !important; }
-.wt-palette-9FC6E7 { background-image: url('palette/9FC6E7.png') !important; }
-.wt-palette-4986E7 { background-image: url('palette/4986E7.png') !important; }
-.wt-palette-9A9CFF { background-image: url('palette/9A9CFF.png') !important; }
-.wt-palette-B99AFF { background-image: url('palette/B99AFF.png') !important; }
-.wt-palette-A47AE2 { background-image: url('palette/A47AE2.png') !important; }
-.wt-palette-CD74E6 { background-image: url('palette/CD74E6.png') !important; }
-.wt-palette-F691B2 { background-image: url('palette/F691B2.png') !important; }
-.wt-palette-CCA6AC { background-image: url('palette/CCA6AC.png') !important; }
-.wt-palette-CABDBF { background-image: url('palette/CABDBF.png') !important; }
-.wt-palette-C2C2C2 { background-image: url('palette/C2C2C2.png') !important; }
-.wt-palette-FFFFFF { background-image: url('palette/FFFFFF.png') !important; }

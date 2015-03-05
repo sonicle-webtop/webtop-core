@@ -21,6 +21,30 @@ Ext.define('Sonicle.calendar.view.Day', {
     ],
 	
 	/**
+	 * @cfg {String} timezoneIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} privateIconCls
+	 * A css class which sets an image to be used as the icon for private
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} reminderIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} recurringIconCls
+	 * A css class which sets an image to be used as the icon for timezone
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
      * @cfg {Number} dayCount
      * The number of days to display in the view (defaults to 1)
      */
@@ -59,6 +83,104 @@ Ext.define('Sonicle.calendar.view.Day', {
      *		}
 	 */
 	startDayIsStatic: false,
+	
+	/**
+	 * @cfg {Boolean} user24HourTime
+	 * Determines whether times should be displayed as 12 hour times with am/pm (default)
+	 * or 24 hour / military format.
+	 */
+	use24HourTime: false,
+	
+	/**
+	 * @cfg {Integer} viewStartHour
+	 * The hour of the day at which to begin the scrolling body area's times (defaults to 0, which equals early 12am / 00:00).
+	 * Valid values are integers from 0 to 24, but should be less than the value of {@link viewEndHour}.
+	 */
+	viewStartHour: 0,
+	
+	/**
+	 * @cfg {Integer} viewEndHour
+	 * The hour of the day at which to end the scrolling body area's times (defaults to 24, which equals late 12am / 00:00).
+	 * Valid values are integers from 0 to 24, but should be greater than the value of {@link viewStartHour}.
+	 */
+	viewEndHour: 24,
+	
+	/**
+	 * @cfg {Integer} scrollStartHour
+	 * The default hour of the day at which to set the body scroll position on view load (defaults to 7, which equals 7am / 07:00).
+	 * Note that if the body is not sufficiently overflowed to allow this positioning this setting will have no effect.
+	 * This setting should be equal to or greater than {@link viewStartHour}.
+	 */
+	scrollStartHour: 7,
+	
+	/**
+	 * @cfg {Boolean} highlightBusinessHours
+	 * True to highlight business hours changing their background (the default), false otherwise.
+	 */
+	highlightBusinessHours: true,
+	
+	/**
+	 * @cfg {Integer} businessHoursStart
+	 * The hour of the day at which to begin business hours (defaults to 9, which equals early 9am / 09:00).
+	 * Valid values are integers from 0 to 24, but should be less than the value of {@link businessHoursEnd}.
+	 */
+	businessHoursStart: 9,
+	
+	/**
+	 * @cfg {Integer} businessHoursEnd
+	 * The hour of the day at which to end business hours (defaults to 17, which equals late 5pm / 17:00).
+	 * Valid values are integers from 0 to 24, but should be greater than the value of {@link businessHoursStart}.
+	 */
+	businessHoursEnd: 17,
+	
+	/**
+	 * @cfg {Integer} minEventDisplayMinutes
+	 * This is the minimum **display** height, in minutes, for events shown in the view (defaults to 30). This setting
+	 * ensures that events with short duration are still readable (e.g., by default any event where the start and end
+	 * times were the same would have 0 height). It also applies when calculating whether multiple events should be
+	 * displayed as overlapping. In datetime terms, an event that starts and ends at 9:00 and another event that starts
+	 * and ends at 9:05 do not overlap, but visually the second event would obscure the first in the view. This setting
+	 * provides a way to ensure that such events will still be calculated as overlapping and displayed correctly.
+	 */
+	minEventDisplayMinutes: 30,
+	
+	/**
+	 * @cfg {Integer} hourHeight
+	 * The height, in pixels, of each hour block displayed in the scrolling body area of the view (defaults to 42).
+	 * 
+	 * **Important note:** 
+	 * While this config can be set to any reasonable integer value, note that it is also used to calculate the ratio used 
+	 * when assigning event heights. By default, an hour is 60 minutes and 42 pixels high, so the pixel-to-minute ratio is 
+	 * 42 / 60, or 0.7. This same ratio is then used when rendering events. When rendering a 30 minute event, the rendered 
+	 * height would be 30 minutes * 0.7 = 21 pixels (as expected).
+	 * 
+	 * This is important to understand when changing this value because some browsers may handle pixel rounding in different 
+	 * ways which could lead to inconsistent visual results in some cases. If you have any problems with pixel precision in 
+	 * how events are laid out, you might try to stick with hourHeight values that will generate discreet ratios. This is 
+	 * easily done by simply multiplying 60 minutes by different discreet ratios (.6, .8, 1.1, etc.) to get the corresponding 
+	 * hourHeight pixel values (36, 48, 66, etc.) that will map back to those ratios. By contrast, if you chose an hourHeight 
+	 * of 50 for example, the resulting height ratio would be 50 / 60 = .833333... This will work just fine, just be aware 
+	 * that browsers may sometimes round the resulting height values inconsistently.
+	 */
+	hourHeight: 42,
+	
+	/**
+	 * @cfg {Number} minBodyHeight
+	 * The minimum height for the scrollable body view (defaults to 150 pixels). By default the body is auto
+	 * height and simply fills the available area left by the overall layout. However, if the browser window
+	 * is too short and/or the header area contains a lot of events on a given day, the body area could
+	 * become too small to be usable. Because of that, if the body falls below this minimum height, the
+	 * layout will automatically adjust itself by fixing the body height to this minimum height and making the
+	 * overall Day view container vertically scrollable.
+	 */
+	minBodyHeight: 150,
+	
+	/**
+	 * @cfg {Boolean} showHourSeparator
+	 * True to display a dotted line that separates each hour block in the scrolling body area at the half-hour mark
+	 * (the default), false to hide it.
+	 */
+	showHourSeparator: true,
     
     /**
      * @cfg {Boolean} showTime
@@ -142,97 +264,6 @@ Ext.define('Sonicle.calendar.view.Day', {
 	 */
 	ddIncrement: 30,
 	
-	/**
-	 * @cfg {Integer} minEventDisplayMinutes
-	 * This is the minimum **display** height, in minutes, for events shown in the view (defaults to 30). This setting
-	 * ensures that events with short duration are still readable (e.g., by default any event where the start and end
-	 * times were the same would have 0 height). It also applies when calculating whether multiple events should be
-	 * displayed as overlapping. In datetime terms, an event that starts and ends at 9:00 and another event that starts
-	 * and ends at 9:05 do not overlap, but visually the second event would obscure the first in the view. This setting
-	 * provides a way to ensure that such events will still be calculated as overlapping and displayed correctly.
-	 */
-	minEventDisplayMinutes: 30,
-	
-	/**
-	 * @cfg {Boolean} showHourSeparator
-	 * True to display a dotted line that separates each hour block in the scrolling body area at the half-hour mark
-	 * (the default), false to hide it.
-	 */
-	showHourSeparator: true,
-	
-	/**
-	 * @cfg {Integer} viewStartHour
-	 * The hour of the day at which to begin the scrolling body area's times (defaults to 0, which equals early 12am / 00:00).
-	 * Valid values are integers from 0 to 24, but should be less than the value of {@link viewEndHour}.
-	 */
-	viewStartHour: 0,
-	
-	/**
-	 * @cfg {Integer} viewEndHour
-	 * The hour of the day at which to end the scrolling body area's times (defaults to 24, which equals late 12am / 00:00).
-	 * Valid values are integers from 0 to 24, but should be greater than the value of {@link viewStartHour}.
-	 */
-	viewEndHour: 24,
-	
-	/**
-	 * @cfg {Integer} scrollStartHour
-	 * The default hour of the day at which to set the body scroll position on view load (defaults to 7, which equals 7am / 07:00).
-	 * Note that if the body is not sufficiently overflowed to allow this positioning this setting will have no effect.
-	 * This setting should be equal to or greater than {@link viewStartHour}.
-	 */
-	scrollStartHour: 7,
-	
-	/**
-	 * @cfg {Integer} hourHeight
-	 * The height, in pixels, of each hour block displayed in the scrolling body area of the view (defaults to 42).
-	 * 
-	 * **Important note:** 
-	 * While this config can be set to any reasonable integer value, note that it is also used to calculate the ratio used 
-	 * when assigning event heights. By default, an hour is 60 minutes and 42 pixels high, so the pixel-to-minute ratio is 
-	 * 42 / 60, or 0.7. This same ratio is then used when rendering events. When rendering a 30 minute event, the rendered 
-	 * height would be 30 minutes * 0.7 = 21 pixels (as expected).
-	 * 
-	 * This is important to understand when changing this value because some browsers may handle pixel rounding in different 
-	 * ways which could lead to inconsistent visual results in some cases. If you have any problems with pixel precision in 
-	 * how events are laid out, you might try to stick with hourHeight values that will generate discreet ratios. This is 
-	 * easily done by simply multiplying 60 minutes by different discreet ratios (.6, .8, 1.1, etc.) to get the corresponding 
-	 * hourHeight pixel values (36, 48, 66, etc.) that will map back to those ratios. By contrast, if you chose an hourHeight 
-	 * of 50 for example, the resulting height ratio would be 50 / 60 = .833333... This will work just fine, just be aware 
-	 * that browsers may sometimes round the resulting height values inconsistently.
-	 */
-	hourHeight: 42,
-	
-	/**
-	 * @cfg {Number} minBodyHeight
-	 * The minimum height for the scrollable body view (defaults to 150 pixels). By default the body is auto
-	 * height and simply fills the available area left by the overall layout. However, if the browser window
-	 * is too short and/or the header area contains a lot of events on a given day, the body area could
-	 * become too small to be usable. Because of that, if the body falls below this minimum height, the
-	 * layout will automatically adjust itself by fixing the body height to this minimum height and making the
-	 * overall Day view container vertically scrollable.
-	 */
-	minBodyHeight: 150,
-	
-	/**
-	 * @cfg {Boolean} highlightBusinessHours
-	 * True to highlight business hours changing their background (the default), false otherwise.
-	 */
-	highlightBusinessHours: true,
-	
-	/**
-	 * @cfg {Integer} businessHoursStart
-	 * The hour of the day at which to begin business hours (defaults to 9, which equals early 9am / 09:00).
-	 * Valid values are integers from 0 to 24, but should be less than the value of {@link businessHoursEnd}.
-	 */
-	businessHoursStart: 9,
-	
-	/**
-	 * @cfg {Integer} businessHoursEnd
-	 * The hour of the day at which to end business hours (defaults to 17, which equals late 5pm / 17:00).
-	 * Valid values are integers from 0 to 24, but should be greater than the value of {@link businessHoursStart}.
-	 */
-	businessHoursEnd: 17,
-	
 	constructor: function(cfg) {
 		if(cfg.dayCount) cfg.dayCount = (cfg.dayCount > 7) ? 7 : cfg.dayCount;
 		this.callParent([cfg]);
@@ -245,6 +276,10 @@ Ext.define('Sonicle.calendar.view.Day', {
         me.dayCount = me.dayCount > 7 ? 7 : me.dayCount;
         
         var cfg = Ext.apply({}, me.initialConfig);
+		cfg.timezoneIconCls = me.timezoneIconCls;
+		cfg.privateIconCls = me.privateIconCls;
+		cfg.reminderIconCls = me.reminderIconCls;
+		cfg.recurringIconCls = me.recurringIconCls;
 		cfg.use24HourTime = me.use24HourTime;
         cfg.showTime = me.showTime;
         cfg.showTodatText = me.showTodayText;
@@ -254,7 +289,7 @@ Ext.define('Sonicle.calendar.view.Day', {
 		cfg.readOnly = me.readOnly;
 		cfg.ddIncrement = me.ddIncrement;
 		cfg.minEventDisplayMinutes = me.minEventDisplayMinutes;
-        
+		
         var header = Ext.applyIf({
             xtype: 'dayheaderview',
             id: me.id+'-hd'

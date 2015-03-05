@@ -46,7 +46,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,16 @@ public class Environment implements BasicEnvironment {
 	public Environment(WebTopApp wta, WebTopSession wts) {
 		this.wta = wta;
 		this.wts = wts;
+	}
+	
+	@Override
+	public List<AppLocale> getLocales() {
+		return wta.getI18nManager().getLocales();
+	}
+	
+	@Override
+	public List<TimeZone> getTimezones() {
+		return wta.getI18nManager().getTimezones();
 	}
 	
 	@Override

@@ -24,6 +24,9 @@ Ext.define('Sonicle.calendar.Panel', {
 		'Sonicle.calendar.form.EventDetails',
 		'Sonicle.calendar.data.EventMappings'
 	],
+	mixins: [
+		'Ext.util.StoreHolder'
+	],
 	
 	layout: 'card',
 	/*
@@ -139,6 +142,20 @@ Ext.define('Sonicle.calendar.Panel', {
 	 * @cfg {String} activeView [activeView=d]
 	 */
 	activeView: 'd',
+	
+	/**
+	 * @cfg {auto|white|black} eventTextColor [eventTextColor=auto]
+	 */
+	eventTextColor: 'auto',
+	
+	/**
+	 * @cfg {Number} colorLuminance [colorLuminance=195]
+	 * Integer number (from 0 to 255) expressing color lumimance boundary value, 
+	 * used to set the appropriate text color (black or white) depending on
+	 * event's background color. This config is only useful if 
+	 * {@link #eventTextColor} is equal to 'auto'.
+	 */
+	colorLuminance: 195,
 	
 	/**
      * @cfg {Object} viewCfg
@@ -293,6 +310,7 @@ Ext.define('Sonicle.calendar.Panel', {
 	
 	initComponent: function () {
 		var me = this, wiewIdx = -1;
+		me.bindStore(me.store || 'ext-empty-store', true, true);
 		
 		me.tbar = {
 			cls: 'ext-cal-toolbar',
@@ -378,17 +396,26 @@ Ext.define('Sonicle.calendar.Panel', {
 			delete me.tbar;
 			me.addCls('x-calendar-nonav');
 		}
-
+		
 		me.callParent();
 		
 		var sharedCfg = {
 			startDay: me.startDay,
 			use24HourTime: me.use24HourTime,
+			eventTextColor: me.eventTextColor,
+			colorLuminance: me.colorLuminance,
+			/*
+			timezoneIconCls: me.timezoneIconCls,
+			reminderIconCls: me.reminderIconCls,
+			recurringIconCls: me.recurringIconCls,
+			
+			*/
 			showToday: me.showToday,
 			showTodayText: me.showTodayText,
 			showTime: me.showTime,
-			store: me.store || me.eventStore,
-			calendarStore: me.calendarStore
+			store: me.store
+			//store: me.store || me.eventStore,
+			//calendarStore: me.calendarStore
 		};
 
 		// do not allow override
@@ -455,7 +482,8 @@ Ext.define('Sonicle.calendar.Panel', {
 			me.initEventRelay(mv);
 			me.add(mv);
 		}
-
+		
+		/*
 		me.add(Ext.applyIf({
 			xtype: 'eventeditform',
 			id: me.id + '-edit',
@@ -480,6 +508,30 @@ Ext.define('Sonicle.calendar.Panel', {
 			}
 		},
 		me.editViewCfg));
+		*/
+	},
+	
+	/**
+	 * Binds a store to this instance.
+	 * @param {Ext.data.AbstractStore/String} [store] The store to bind or ID of the store.
+	 * When no store given (or when `null` or `undefined` passed), unbinds the existing store.
+	 */
+	bindStore: function(store, /* private */ initial) {
+		var me = this;
+		me.mixins.storeholder.bindStore.call(me, store, initial);
+		store = me.getStore();
+	},
+	
+	/**
+	 * See {@link Ext.util.StoreHolder StoreHolder}.
+	 */
+	getStoreListeners: function(store, o) {
+		var me = this;
+		return {
+			//datachanged: me.onStoreDataChanged,
+			//beforeload: me.onStoreBeforeLoad,
+			//load: me.onStoreLoad
+		};
 	},
 	
 	// private

@@ -152,6 +152,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
+	@Override
 	public Connection getConnection(String poolName) throws SQLException {
 		return getPool(poolName).getConnection();
 	}
@@ -172,6 +173,13 @@ public class ConnectionManager implements IConnectionProvider {
 			if(shutdown) throw new RuntimeException("Manager is shutting down");
 			if(!pools.containsKey(name)) throw new RuntimeException(MessageFormat.format("Pool [{0}] not found", name));
 			return pools.get(name);
+		}
+	}
+	
+	public boolean isRegistered(String poolName) {
+		synchronized(pools) {
+			if(shutdown) throw new RuntimeException("Manager is shutting down");
+			return pools.containsKey(poolName);
 		}
 	}
 	

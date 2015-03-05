@@ -60,7 +60,9 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		/**
 		 * @cfg {'ync'/'yn'} [confirm='ync']
 		 * Controls confirm message buttons' appearance.
-		 * Specify as 'ync' (Yes+No+Cancel) or 'yn' (Yes+No).
+		 * Two values are allowed:
+		 * - 'ync' - Yes+No+Cancel
+		 * - 'yn' - Yes+No
 		 */
 		confirm: 'ync',
 		
@@ -209,6 +211,7 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @private
 	 */
 	onCtWndClose: function() {
+		var me = this;
 		this.fireEvent('viewclose', me);
 	},
 	

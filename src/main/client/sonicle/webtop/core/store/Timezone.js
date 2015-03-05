@@ -31,7 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.ServiceOptions', {
-	extend: 'Ext.data.Model'
+Ext.define('Sonicle.webtop.core.store.Timezone', {
+	alternateClassName: 'WT.store.Timezone',
+	extend: 'Ext.data.Store',
+	
+	model: 'WT.model.Simple',
+	proxy: WT.proxy(WT.ID, 'GetTimezones', 'timezones')
 });
-

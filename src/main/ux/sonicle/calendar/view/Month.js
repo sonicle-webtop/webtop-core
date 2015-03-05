@@ -220,18 +220,19 @@ Ext.define('Sonicle.calendar.view.Month', {
 	// inherited docs
 	getEventBodyMarkup: function() {
 		if (!this.eventBodyMarkup) {
-			this.eventBodyMarkup = ['{Title}',
-				'<tpl if="_isReminder">',
-				'<i class="ext-cal-ic ext-cal-ic-rem">&#160;</i>',
+			this.eventBodyMarkup = [
+				'<tpl if="_isTimezone">',
+				'<i class="ext-cal-ic {_tzIconCls}">&#160;</i>',
 				'</tpl>',
+				'<tpl if="_isPrivate">',
+				'<i class="ext-cal-ic {_pvtIconCls}">&#160;</i>',
+				'</tpl>',
+				'{Title}',
 				'<tpl if="_isRecurring">',
-				'<i class="ext-cal-ic ext-cal-ic-rcr">&#160;</i>',
+				'<i class="ext-cal-ic {_recIconCls}">&#160;</i>',
 				'</tpl>',
-				'<tpl if="spanLeft">',
-				'<i class="ext-cal-spl">&#160;</i>',
-				'</tpl>',
-				'<tpl if="spanRight">',
-				'<i class="ext-cal-spr">&#160;</i>',
+				'<tpl if="_isReminder">',
+				'<i class="ext-cal-ic {_remIconCls}">&#160;</i>',
 				'</tpl>'
 			].join('');
 		}
@@ -246,23 +247,23 @@ Ext.define('Sonicle.calendar.view.Month', {
 
 			tpl = !(Ext.isIE7m || this.operaLT11) ?
 					new Ext.XTemplate(
-							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr">',
+							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
 							body,
 							'</div>'
 							)
 					: new Ext.XTemplate(
 							'<tpl if="_renderAsAllDay">',
-							'<div id="{_elId}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo">',
-							'<div class="ext-cal-evm">',
-							'<div class="ext-cal-evi">',
+							'<div id="{_elId}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor}; color:{_foreColor};">',
+								'<div class="ext-cal-evm">',
+									'<div class="ext-cal-evi">',
 							'</tpl>',
 							'<tpl if="!_renderAsAllDay">',
-							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr">',
+							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
 							'</tpl>',
 							body,
 							'<tpl if="_renderAsAllDay">',
-							'</div>',
-							'</div>',
+									'</div>',
+								'</div>',
 							'</tpl>',
 							'</div>'
 							);
@@ -274,20 +275,29 @@ Ext.define('Sonicle.calendar.view.Month', {
 	
 	// private
 	getTemplateEventData: function(evt) {
-		var M = Sonicle.calendar.data.EventMappings,
-				selector = this.getEventSelectorCls(evt[M.EventId.name]),
+		var me = this,
+				M = Sonicle.calendar.data.EventMappings,
+				selector = me.getEventSelectorCls(evt[M.EventId.name]),
 				title = evt[M.Title.name],
-				timeFmt = (this.use24HourTime) ? 'G:i' : 'g:ia';
-
+				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
+				bgColor = (evt[M.Color.name] || '');
+		console.log('getTemplateEventData');
 		return Ext.applyIf({
 			_selectorCls: selector,
-			_colorCls: 'ext-color-' + (evt[M.CalendarId.name] ?
-					evt[M.CalendarId.name] : 'default') + (evt._renderAsAllDay ? '-ad' : ''),
+			_bgColor: bgColor,
+			_foreColor: me.getEventForeColor(bgColor),
+			_colorCls: 'ext-color-' + (evt[M.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : ''),
 			_elId: selector + '-' + evt._weekIndex,
+			_isTimezone: !Ext.isEmpty(evt[M.Timezone.name]),
+			_isPrivate: evt[M.IsPrivate.name],
 			_isRecurring: evt.Recurrence && evt.Recurrence !== '',
-			_isReminder: evt[M.Reminder.name] && evt[M.Reminder.name] !== '',
-			Title: (evt[M.IsAllDay.name] ? '' : Ext.Date.format(evt[M.StartDate.name], timeFmt+' ')) + (!title || title.length == 0 ? '(No title)' : title),
-			_operaLT11: this.operaLT11 ? 'ext-operaLT11' : ''
+			_isReminder: !Ext.isEmpty(evt[M.Reminder.name]),
+			_tzIconCls: me.timezoneIconCls,
+			_pvtIconCls: me.privateIconCls,
+			_recIconCls: me.recurringIconCls,
+			_remIconCls: me.reminderIconCls,
+			Title: (evt[M.IsAllDay.name] ? '' : Ext.Date.format(evt[M.StartDate.name], timeFmt+' ')) + (!title || (title.length === 0) ? '(No title)' : title),
+			_operaLT11: me.operaLT11 ? 'ext-operaLT11' : ''
 		},
 		evt);
 	},

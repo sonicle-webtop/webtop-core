@@ -587,6 +587,15 @@ td.ext-cal-dtitle-today div {
 
 /* Generic calendar icons */
 .ext-cal-ic {
+    background-repeat:no-repeat;
+    display:inline-block;
+	width:11px;
+    height:11px;
+    line-height:11px;
+    margin-right:2px;
+}
+/*
+.ext-cal-ic {
     background-image:url(./calendar/default/calendar-sprites.gif);
     background-repeat:no-repeat;
     display:inline-block;
@@ -601,6 +610,7 @@ td.ext-cal-dtitle-today div {
 .ext-cal-ic-rem {
     background-position:-14px 0;
 }
+*/
 
 /* Calendar DD styles */
 .ext-cal-dd-sel-ct {
