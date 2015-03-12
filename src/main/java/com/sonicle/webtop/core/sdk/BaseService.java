@@ -73,6 +73,10 @@ public abstract class BaseService {
 		return coreEnv;
 	}
 	
+	public final ManagerEnvironment getManagerEnv() {
+		return env;
+	}
+	
 	public final ServiceManifest getManifest() {
 		return Environment.getManifest(this.getClass());
 	}

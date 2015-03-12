@@ -7,15 +7,19 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 	requires: ['Sonicle.Date'],
 	
 	statics: {
-		// private
-		getEventRow: function(id, week, index) {
-			var indexOffset = 1,
-					//skip row with date #'s
+		/**
+		 * Retrieve the event layout table row for the specified week and row index. If
+		 * the row does not already exist it will get created and appended to the DOM.
+		 * This method does not check against the max allowed events -- it is the responsibility
+		 * of calling code to ensure that an event row at the specified index is really needed.
+		 */
+		getEventRow: function(viewId, weekIndex, rowIndex) {
+			var indexOffset = 1, //skip the first row with date #'s
 					evtRow,
-					wkRow = Ext.get(id + '-wk-' + week);
+					wkRow = Ext.get(viewId + '-wk-' + weekIndex);
 			if (wkRow) {
 				var table = wkRow.child('.ext-cal-evt-tbl', true);
-				evtRow = table.tBodies[0].childNodes[index + indexOffset];
+				evtRow = table.tBodies[0].childNodes[rowIndex + indexOffset];
 				if (!evtRow) {
 					evtRow = Ext.core.DomHelper.append(table.tBodies[0], '<tr></tr>');
 				}
@@ -23,25 +27,38 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 			return Ext.get(evtRow);
 		},
 		
+		/**
+		 * @private
+		 * Events are collected into a big multi-dimensional array in the view, then passed here
+		 * for rendering. The event grid consists of an array of weeks (1-n), each of which contains an
+		 * array of days (1-7), each of which contains an array of events and span placeholders (0-n).
+		 * @param {Object} o An object containing all of the supported config options (see Sonicle.calendar.view.Month.renderItems() to see what gets passed).
+		 */
 		render: function(o) {
-			var w = 0,
+			var wi = 0,
 					eDate = Ext.Date,
 					soDate = Sonicle.Date,
+					EM = Sonicle.calendar.data.EventMappings,
 					grid = o.eventGrid,
 					dt = eDate.clone(o.viewStart),
 					eventTpl = o.tpl,
 					max = (o.maxEventsPerDay !== undefined) ? o.maxEventsPerDay : 999,
 					weekCount = (o.weekCount < 1) ? 6 : o.weekCount,
 					dayCount = (o.weekCount === 1) ? o.dayCount : 7,
-					cellCfg;
+					cellCfg,
+					wGrid;
 			
+			//TODO: valutare se modificare la funzione come l'exensible
 			console.log('maxEventsPerDay: '+o.maxEventsPerDay);
 			
-			for (; w < weekCount; w++) {
-				if (!grid[w] || (grid[w].length === 0)) {
+			// Loop through each week in the overall event grid
+			for (; wi < weekCount; wi++) {
+				wGrid = grid[wi];
+				
+				if (!wGrid || (wGrid.length === 0)) {
 					// no events or span cells for the entire week
 					if (weekCount === 1) {
-						row = this.getEventRow(o.id, w, 0);
+						row = this.getEventRow(o.id, wi, 0);
 						cellCfg = {
 							tag: 'td',
 							cls: 'ext-cal-ev',
@@ -57,26 +74,25 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 				} else {
 					var row,
 							d = 0,
-							wk = grid[w],
 							startOfWeek = eDate.clone(dt),
 							endOfWeek = soDate.add(startOfWeek, {days: dayCount, millis: -1});
-
+					
 					for (; d < dayCount; d++) {
-						if (wk[d]) {
+						if (wGrid[d]) {
 							var ev = 0,
 									emptyCells = 0,
 									skipped = 0,
-									day = wk[d],
+									day = wGrid[d],
 									ct = day.length,
 									evt;
-
+							
 							for (; ev < ct; ev++) {
 								evt = day[ev];
-
+								
 								// Add an empty cell for days that have sparse arrays.
 								// See EXTJSIV-7832.
 								if (!evt && (ev < max)) {
-									row = this.getEventRow(o.id, w, ev);
+									row = this.getEventRow(o.id, wi, ev);
 									cellCfg = {
 										tag: 'td',
 										cls: 'ext-cal-ev',
@@ -98,20 +114,20 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 								if (!evt.isSpan || evt.isSpanStart) {
 									//skip non-starting span cells
 									var item = evt.data || evt.event.data;
-									item._weekIndex = w;
-									item._renderAsAllDay = item[Sonicle.calendar.data.EventMappings.IsAllDay.name] || evt.isSpanStart;
-									item.spanLeft = item[Sonicle.calendar.data.EventMappings.StartDate.name].getTime() < startOfWeek.getTime();
-									item.spanRight = item[Sonicle.calendar.data.EventMappings.EndDate.name].getTime() > endOfWeek.getTime();
+									item._weekIndex = wi;
+									item._renderAsAllDay = item[EM.IsAllDay.name] || evt.isSpanStart;
+									item.spanLeft = item[EM.StartDate.name].getTime() < startOfWeek.getTime();
+									item.spanRight = item[EM.EndDate.name].getTime() > endOfWeek.getTime();
                                     item.spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
 											'ext-cal-ev-spanleft') : (item.spanRight ? 'ext-cal-ev-spanright': ''));
 
-									row = this.getEventRow(o.id, w, ev);
+									row = this.getEventRow(o.id, wi, ev);
 									cellCfg = {
 										tag: 'td',
 										cls: 'ext-cal-ev',
 										cn: eventTpl.apply(o.templateDataFn(item))
 									};
-									var diff = soDate.diffDays(dt, item[Sonicle.calendar.data.EventMappings.EndDate.name]) + 1,
+									var diff = soDate.diffDays(dt, item[EM.EndDate.name]) + 1,
 											cspan = Math.min(diff, dayCount - d);
 
 									if (cspan > 1) {
@@ -126,7 +142,7 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 							if (ev > max) {
 								// We hit one or more events in the grid that could not be displayed since the max
 								// events per day count was exceeded, so add the "more events" link.
-								row = this.getEventRow(o.id, w, max);
+								row = this.getEventRow(o.id, wi, max);
 								Ext.core.DomHelper.append(row, {
 									tag: 'td',
 									cls: 'ext-cal-ev-more',
@@ -138,17 +154,17 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 									}
 								});
 							}
-							if (ct < o.evtMaxCount[w]) {
+							if (ct < o.evtMaxCount[wi]) {
 								// We did NOT hit the max event count, meaning that we are now left with a gap in
 								// the layout table which we need to fill with one last empty TD.
-								row = this.getEventRow(o.id, w, ct);
+								row = this.getEventRow(o.id, wi, ct);
 								if (row) {
 									cellCfg = {
 										tag: 'td',
 										cls: 'ext-cal-ev',
 										id: o.id + '-empty-' + (ct + 1) + '-day-' + eDate.format(dt, 'Ymd')
 									};
-									var rowspan = o.evtMaxCount[w] - ct;
+									var rowspan = o.evtMaxCount[wi] - ct;
 									if (rowspan > 1) {
 										cellCfg.rowspan = rowspan;
 									}
@@ -156,15 +172,15 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 								}
 							}
 						} else {
-							row = this.getEventRow(o.id, w, 0);
+							row = this.getEventRow(o.id, wi, 0);
 							if (row) {
 								cellCfg = {
 									tag: 'td',
 									cls: 'ext-cal-ev',
 									id: o.id + '-empty-day-' + eDate.format(dt, 'Ymd')
 								};
-								if (o.evtMaxCount[w] > 1) {
-									cellCfg.rowSpan = o.evtMaxCount[w];
+								if (o.evtMaxCount[wi] > 1) {
+									cellCfg.rowSpan = o.evtMaxCount[wi];
 								}
 								Ext.core.DomHelper.append(row, cellCfg);
 							}

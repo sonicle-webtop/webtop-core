@@ -264,6 +264,11 @@ Ext.define('Sonicle.calendar.view.Day', {
 	 */
 	ddIncrement: 30,
 	
+	/**
+	 * @private
+	 */
+	isDayView: true,
+	
 	constructor: function(cfg) {
 		if(cfg.dayCount) cfg.dayCount = (cfg.dayCount > 7) ? 7 : cfg.dayCount;
 		this.callParent([cfg]);
@@ -292,12 +297,14 @@ Ext.define('Sonicle.calendar.view.Day', {
 		
         var header = Ext.applyIf({
             xtype: 'dayheaderview',
-            id: me.id+'-hd'
+            id: me.id+'-hd',
+			ownerCalendarPanel: me.ownerCalendarPanel
         }, cfg);
         
         var body = Ext.applyIf({
             xtype: 'daybodyview',
             id: me.id+'-bd',
+			ownerCalendarPanel: me.ownerCalendarPanel,
 			enableEventResize: me.enableEventResize,
 			showHourSeparator: me.showHourSeparator,
 			viewStartHour: me.viewStartHour,

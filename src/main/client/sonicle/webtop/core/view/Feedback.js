@@ -82,7 +82,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					editable: false,
 					store: {
 						model: 'WT.model.Simple',
-						proxy: WT.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
+						proxy: WT.Util.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
 					},
 					valueField: 'id',
 					displayField: 'desc',

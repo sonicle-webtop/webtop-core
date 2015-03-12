@@ -154,6 +154,23 @@ Ext.define('Sonicle.Date', {
 	},
 	
 	/**
+	 * Copies the date value from one date object into another without altering the target's
+	 * date value. This function returns a new Date instance without modifying either original value.
+	 * @param {Date} fromDt The original date from which to copy the date
+	 * @param {Date} toDt The target date to copy the date to
+	 * @returns {Date} The new date/time value
+	 */
+	copyDate: function(fromDt, toDt) {
+		var dt = Ext.Date.clone(toDt);
+		dt.setFullYear(
+				fromDt.getFullYear(),
+				fromDt.getMonth(),
+				fromDt.getDate()
+		);
+		return dt;
+	},
+	
+	/**
 	 * Copies the time value from one date object into another without altering the target's
 	 * date value. This function returns a new Date instance without modifying either original value.
 	 * @param {Date} fromDt The original date from which to copy the time
@@ -166,8 +183,8 @@ Ext.define('Sonicle.Date', {
 				fromDt.getHours(),
 				fromDt.getMinutes(),
 				fromDt.getSeconds(),
-				fromDt.getMilliseconds());
-
+				fromDt.getMilliseconds()
+		);
 		return dt;
 	},
 	

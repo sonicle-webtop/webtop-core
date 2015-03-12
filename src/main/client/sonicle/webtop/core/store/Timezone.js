@@ -36,5 +36,5 @@ Ext.define('Sonicle.webtop.core.store.Timezone', {
 	extend: 'Ext.data.Store',
 	
 	model: 'WT.model.Simple',
-	proxy: WT.proxy(WT.ID, 'GetTimezones', 'timezones')
+	proxy: WT.Util.proxy(WT.ID, 'GetTimezones', 'timezones')
 });

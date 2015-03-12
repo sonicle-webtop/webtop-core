@@ -40,7 +40,13 @@ Ext.define('Sonicle.picker.Date', {
 		 * @cfg {Boolean} hideNextDays
 		 * False to hide date cells belonging to the next month.
 		 */
-		hideNextDays: false
+		hideNextDays: false,
+		
+		/**
+		 * @cfg {String} format
+		 * String used for formatting date
+		 */
+		format: 'Y-m-d'
 	},
 	
 	/**
@@ -131,17 +137,19 @@ Ext.define('Sonicle.picker.Date', {
 	initBoldDays: function() {
 		var me = this,
 				bd = me.boldDates,
+				fmt = me.getFormat(),
 				re = '(?:',
 				len,
 				b, bLen, bI;
-
-		if (!me.boldDatesRE && bd) {
+		
+		me.boldDatesRE = null;
+		if (bd && (bd.length > 0)) {
 			len = bd.length - 1;
 			bLen = bd.length;
 
 			for (b = 0; b < bLen; b++) {
 				bI = bd[b];
-				re += Ext.isDate(bI) ? '^' + Ext.String.escapeRegex(Ext.Date.dateFormat(bI, me.format)) + '$' : bI;
+				re += Ext.isDate(bI) ? '^' + Ext.String.escapeRegex(Ext.Date.dateFormat(bI, fmt)) + '$' : bI;
 				if (b !== len) re += '|';
 			}
 			me.boldDatesRE = new RegExp(re + ')');
@@ -197,7 +205,7 @@ Ext.define('Sonicle.picker.Date', {
 	
 	updateStyles: function() {
 		var me = this, eDate = Ext.Date, hdate = me.highlightDate, selCls = me.selectedCls, 
-				cells = me.cells, len = cells.getCount(), cell, bdMatch = me.boldDatesRE, 
+				cells = me.cells, len = cells.getCount(), cell, bold, fmt = me.getFormat(), bdMatch = me.boldDatesRE, 
 				hmode = me.highlightMode, sday = me.startDay, 
 				t1 = eDate.getFirstDateOfMonth(me.getValue()).getTime(), 
 				t31 = eDate.getLastDateOfMonth(me.getValue()).getTime(), 
@@ -240,14 +248,12 @@ Ext.define('Sonicle.picker.Date', {
 			}
 			
 			// Mark bold dates
-			if(bdMatch && me.format) {
-				formatValue = eDate.dateFormat(d, me.format);
-				if(bdMatch.test(formatValue)) {
-					cell.first().setStyle('font-weight', '800');
-				} else {
-					cell.first().setStyle('font-weight', '');
-				}
+			bold = false;
+			if(bdMatch && fmt) {
+				formatValue = eDate.dateFormat(d, fmt);
+				bold = bdMatch.test(formatValue);
 			}
+			cell.first().setStyle('font-weight', (bold) ? '800' : '');
 			
 			// Hide cells...
 			if((me.hidePrevDays && (dv < t1)) || (me.hideNextDays && (dv > t31))) {

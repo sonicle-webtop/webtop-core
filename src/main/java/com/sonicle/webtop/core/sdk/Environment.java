@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class Environment implements BasicEnvironment {
+public class Environment implements BasicEnvironment, ManagerEnvironment {
 
 	protected final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
 	private static HashMap<String,ServiceManifest> manifestMap=new HashMap<>();

@@ -31,25 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.ClientOptions', {
-	extend: 'Ext.data.Model',
-	
-	fields: [
-		'theme',
-		'layout',
-		'laf',
-		'locale',
-		'timezone',
-		'dateFormat',
-		'timeFormat',
-		{name: 'use24HourTime', type: 'boolean', persist: false, 
-			depends: 'timeFormat', 
-			convert: function(v, rec) {
-				var tf = rec.get('timeFormat');
-				return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
-			}
-		},
-		'longDateFormat',
-		'longTimeFormat'
-	]
-});
+package com.sonicle.webtop.core.sdk;
+
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreUserSettings;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
+/**
+ *
+ * @author malbinola
+ */
+public interface ManagerEnvironment {
+	public List<AppLocale> getLocales();
+	public List<TimeZone> getTimezones();
+	public String lookupResource(String serviceId, Locale locale, String key);
+	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
+	public String lookupCoreResource(Locale locale, String key);
+    public Connection getCoreConnection() throws SQLException;
+    public CoreServiceSettings getCoreServiceSettings();
+    public CoreUserSettings getCoreUserSettings();
+	public String getContentType(String extension);
+	public String getExtension(String contentType);
+}

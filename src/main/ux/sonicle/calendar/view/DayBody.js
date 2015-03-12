@@ -99,17 +99,16 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	},
 	
 	//private
-	refresh: function() {
-		var top = this.el.getScroll().top;
-		this.prepareData();
-		this.renderTemplate();
-		this.renderItems();
+	refresh: function(reloadData) {
+		var me = this,
+				top = me.el.getScroll().top;
+		me.callParent(arguments);
 
 		// skip this if the initial render scroll position has not yet been set.
 		// necessary since IE/Opera must be deferred, so the first refresh will
 		// override the initial position by default and always set it to 0.
-		if (this.scrollReady) {
-			this.scrollTo(top);
+		if (me.scrollReady) {
+			me.scrollTo(top);
 		}
 	},
 	
@@ -527,5 +526,11 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		if (day && day.date) {
 			this.fireEvent('dayclick', this, day.date, false, null);
 		}
+	},
+	
+	// inherited docs
+	isActiveView: function() {
+		var calendarPanel = this.ownerCalendarPanel;
+		return (calendarPanel && calendarPanel.getActiveView().isDayView);
 	}
 });

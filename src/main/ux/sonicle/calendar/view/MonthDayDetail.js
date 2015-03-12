@@ -51,45 +51,48 @@ Ext.define('Sonicle.calendar.view.MonthDayDetail', {
     },
 
     refresh: function() {
-        if (!this.rendered) {
-            return;
-        }
-        var eventTpl = this.view.getEventTemplate(),
+        if (!this.rendered) return;
+        var me = this,
+				eDate = Ext.Date,
+				soDate = Sonicle.Date,
+				EM = Sonicle.calendar.data.EventMappings,
+				eventTpl = me.view.getEventTemplate(),
 
         templateData = [],
 
-        evts = this.store.queryBy(function(rec) {
-            var thisDt = Ext.Date.clearTime(this.date, true).getTime(),
-                recStart = Ext.Date.clearTime(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], true).getTime(),
-                startsOnDate = (thisDt == recStart),
+        evts = me.store.queryBy(function(rec) {
+			//if(!rec.data[EM.IsAllDay.name]) return false; // Avoids display of  
+			
+            var thisDt = eDate.clearTime(me.date, true).getTime(),
+                recStart = eDate.clearTime(rec.data[EM.StartDate.name], true).getTime(),
+                startsOnDate = (thisDt === recStart),
                 spansDate = false;
 
             if (!startsOnDate) {
-                var recEnd = Ext.Date.clearTime(rec.data[Sonicle.calendar.data.EventMappings.EndDate.name], true).getTime();
+                var recEnd = eDate.clearTime(rec.data[EM.EndDate.name], true).getTime();
                 spansDate = recStart < thisDt && recEnd >= thisDt;
             }
             return startsOnDate || spansDate;
         },
-        this);
+        me);
 
         evts.each(function(evt) {
-            var item = evt.data,
-            M = Sonicle.calendar.data.EventMappings;
+            var item = evt.data;
 
-            item._renderAsAllDay = item[M.IsAllDay.name] || Sonicle.Date.diffDays(item[M.StartDate.name], item[M.EndDate.name]) > 0;
-            item.spanLeft = Sonicle.Date.diffDays(item[M.StartDate.name], this.date) > 0;
-            item.spanRight = Sonicle.Date.diffDays(this.date, item[M.EndDate.name]) > 0;
+            item._renderAsAllDay = item[EM.IsAllDay.name] || soDate.diffDays(item[EM.StartDate.name], item[EM.EndDate.name]) > 0;
+            item.spanLeft = soDate.diffDays(item[EM.StartDate.name], me.date) > 0;
+            item.spanRight = soDate.diffDays(me.date, item[EM.EndDate.name]) > 0;
             item.spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
             'ext-cal-ev-spanleft') : (item.spanRight ? 'ext-cal-ev-spanright': ''));
 
             templateData.push({
-                markup: eventTpl.apply(this.getTemplateEventData(item))
+                markup: eventTpl.apply(me.getTemplateEventData(item))
             });
         },
-        this);
+        me);
 
-        this.tpl.overwrite(this.el, templateData);
-        this.fireEvent('eventsrendered', this, this.date, evts.getCount());
+        me.tpl.overwrite(me.el, templateData);
+        me.fireEvent('eventsrendered', me, me.date, evts.getCount());
     },
 
     getTemplateEventData: function(evt) {

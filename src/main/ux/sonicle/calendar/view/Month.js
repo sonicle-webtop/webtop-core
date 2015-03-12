@@ -163,10 +163,10 @@ Ext.define('Sonicle.calendar.view.Month', {
 	// private
 	onResize: function() {
 		var me = this;
-		me.callParent(arguments);
-		me.maxEventsPerDay = me.getMaxEventsPerDay();
+		//me.callParent(arguments); ?????????????????????
 		if (me.monitorResize) {
-			me.refresh();
+			me.maxEventsPerDay = me.getMaxEventsPerDay();
+			me.refresh(false);
 		}
 	},
 	
@@ -303,9 +303,12 @@ Ext.define('Sonicle.calendar.view.Month', {
 	},
 	
 	// private
-	refresh: function() {
-		if (this.detailPanel) {
+	refresh: function(reloadData) {
+		if (this.detailPanel) { //TODO: rimuovere detailPanel
 			this.detailPanel.hide();
+		}
+		if(!this.isHeaderView) {
+			this.maxEventsPerDay = this.getMaxEventsPerDay();
 		}
 		this.callParent(arguments);
 

@@ -18,45 +18,47 @@ Ext.ns('Sonicle.calendar.data');
 
 Sonicle.calendar.data.EventMappings = {
     EventId: {
-        name: 'EventId',
-        mapping: 'id',
+        name: 'eventId',
+        //mapping: 'id',
         type: 'string'
     },
     CalendarId: {
-        name: 'CalendarId',
-        mapping: 'cid',
+        name: 'calendarId',
+        //mapping: 'cid',
         type: 'string'
     },
 	Color: {
-        name: 'Color',
-        mapping: 'color',
+        name: 'color',
+        //mapping: 'color',
         type: 'string'
     },
     Title: {
-        name: 'Title',
-        mapping: 'title',
+        name: 'title',
+        //mapping: 'title',
         type: 'string'
     },
     StartDate: {
-        name: 'StartDate',
-        mapping: 'start',
+        name: 'startDate',
+        //mapping: 'start',
         type: 'date',
-        dateFormat: 'Y-m-d H:i:s'
+        dateFormat: 'Y-m-d H:i:s',
+		dateWriteFormat: 'Y-m-d H:i:s'
     },
     EndDate: {
-        name: 'EndDate',
-        mapping: 'end',
+        name: 'endDate',
+        //mapping: 'end',
         type: 'date',
-        dateFormat: 'Y-m-d H:i:s'
+        dateFormat: 'Y-m-d H:i:s',
+		dateWriteFormat: 'Y-m-d H:i:s'
     },
     Location: {
-        name: 'Location',
-        mapping: 'loc',
+        name: 'location',
+        //mapping: 'loc',
         type: 'string'
     },
     Notes: {
-        name: 'Notes',
-        mapping: 'notes',
+        name: 'notes',
+        //mapping: 'notes',
         type: 'string'
     },
     Url: {
@@ -65,28 +67,28 @@ Sonicle.calendar.data.EventMappings = {
         type: 'string'
     },
     IsAllDay: {
-        name: 'IsAllDay',
-        mapping: 'ad',
+        name: 'isAllDay',
+        //mapping: 'ad',
         type: 'boolean'
     },
     IsPrivate: {
-        name: 'IsPrivate',
-        mapping: 'pvt',
+        name: 'isPrivate',
+       // mapping: 'pvt',
         type: 'boolean'
     },
 	Timezone: {
-        name: 'Timezone',
-        mapping: 'tz',
+        name: 'timezone',
+        //mapping: 'tz',
         type: 'string'
     },
     Reminder: {
-        name: 'Reminder',
-        mapping: 'rem',
+        name: 'reminder',
+        //mapping: 'rem',
         type: 'string'
     },
     IsNew: {
-        name: 'IsNew',
-        mapping: 'n',
+        name: 'isNew',
+        //mapping: 'n',
         type: 'boolean'
     }
 	

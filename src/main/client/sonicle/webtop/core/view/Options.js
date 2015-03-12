@@ -54,7 +54,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 					store: {
 						autoLoad: true,
 						model: 'WT.model.Simple',
-						proxy: WT.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
+						proxy: WT.Util.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
 					},
 					valueField: 'id',
 					displayField: 'desc',

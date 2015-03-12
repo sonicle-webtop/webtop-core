@@ -70,7 +70,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 				description: obj.description,
 				company: obj.company
 			});
-				
+			
 			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service.css');
 			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override.css');
 			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-'+co['theme']+'.css');

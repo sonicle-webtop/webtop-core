@@ -112,8 +112,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * Utility function to return a resource string or string itself.
 	 * If passed string contains a resource key preceeded by @ character,
 	 * res method is called instead returning the passed value.
-	 * @param {type} [id] The service ID.
-	 * @param {type} str The string.
+	 * @param {String} [id] The service ID.
+	 * @param {String} str The string.
 	 * @returns {String} The value.
 	 */
 	resStr: function(id, str) {
@@ -174,56 +174,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 	isAction: function(obj) {
 		if(!Ext.isObject(obj)) return false;
 		return (obj.isAction && Ext.isFunction(obj.execute));
-	},
-	
-	proxy: function(svc, act, rootp, opts) {
-		opts = opts || {};
-		return {
-			type: 'ajax',
-			url: 'service-request',
-			extraParams: Ext.apply(opts.extraParams || {}, {
-				service: svc,
-				action: act
-			}),
-			reader: Ext.apply(opts.reader || {}, {
-				type: 'json',
-				rootProperty: rootp || 'data',
-				messageProperty: 'message'
-			}),
-			listeners: {
-				exception: function(proxy, request, operation, eOpts) {
-					//TODO: intl. user error message plus details
-					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
-				}
-			}
-		};
-	},
-	
-	apiProxy: function(svc, act, rootp, opts) {
-		rootp = rootp || 'data';
-		opts = opts || {};
-		return {
-			type: 'ajax',
-			api: {
-				create: 'service-request?crud=create',
-				read: 'service-request?crud=read',
-				update: 'service-request?crud=update',
-				destroy: 'service-request?crud=delete'
-			},
-			extraParams: Ext.apply(opts.extraParams || {}, {
-				service: svc,
-				action: act
-			}),
-			reader: Ext.apply({
-				type: 'json',
-				rootProperty: rootp,
-				messageProperty: 'message'
-			}, opts.reader || {}),
-			writer: Ext.apply({
-				type: 'json',
-				writeAllFields: true
-			}, opts.writer || {})
-		};
 	},
 	
 	optionsProxy: function(svc) {
@@ -595,6 +545,34 @@ Ext.define('Sonicle.webtop.core.WT', {
             return (capture in me.entityToChar) ? me.entityToChar[capture] : String.fromCharCode(parseInt(capture.substr(2), 10));
         };
 		return (!value) ? value : String(value).replace(me.entityToCharRegex, htmlDecodeReplaceFn);
+	},
+	
+	/**
+	 * Creates a displayable view.
+	 * @param {String} [id] The service ID.
+	 * @param {String} type The view type name.
+	 * @param {Object} opts
+	 * @param {Object} opts.containerCfg
+	 * @returns {Ext.window.WindowView} The container.
+	 */
+	createView: function(id, type, opts) {
+		opts = opts || {};
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		
+		opts.viewCfg = Ext.apply(opts.viewCfg || {}, {
+			mys: svc
+		});
+		
+		opts.containerCfg = Ext.apply(opts.containerCfg || {}, {
+			xtype: 'window',
+			layout: 'fit',
+			items: [
+				Ext.create(type, opts.viewCfg)
+			]
+		});
+		
+		return Ext.create(opts.containerCfg);
 	}
 	
 });

@@ -21,20 +21,18 @@ Ext.define('Sonicle.calendar.Panel', {
 		'Sonicle.calendar.view.Week',
 		'Sonicle.calendar.view.WeekAgenda',
 		'Sonicle.calendar.view.Month',
-		'Sonicle.calendar.form.EventDetails',
 		'Sonicle.calendar.data.EventMappings'
 	],
 	mixins: [
 		'Ext.util.StoreHolder'
 	],
 	
-	layout: 'card',
-	/*
+	//layout: 'card',
+	
 	layout: {
 		type: 'card',
 		deferredRender: true
 	},
-	*/
 	
 	/**
 	 * @cfg {Boolean} showDayView
@@ -400,22 +398,15 @@ Ext.define('Sonicle.calendar.Panel', {
 		me.callParent();
 		
 		var sharedCfg = {
+			ownerCalendarPanel: me,
 			startDay: me.startDay,
 			use24HourTime: me.use24HourTime,
 			eventTextColor: me.eventTextColor,
 			colorLuminance: me.colorLuminance,
-			/*
-			timezoneIconCls: me.timezoneIconCls,
-			reminderIconCls: me.reminderIconCls,
-			recurringIconCls: me.recurringIconCls,
-			
-			*/
 			showToday: me.showToday,
 			showTodayText: me.showTodayText,
 			showTime: me.showTime,
 			store: me.store
-			//store: me.store || me.eventStore,
-			//calendarStore: me.calendarStore
 		};
 
 		// do not allow override
@@ -482,33 +473,6 @@ Ext.define('Sonicle.calendar.Panel', {
 			me.initEventRelay(mv);
 			me.add(mv);
 		}
-		
-		/*
-		me.add(Ext.applyIf({
-			xtype: 'eventeditform',
-			id: me.id + '-edit',
-			calendarStore: me.calendarStore,
-			listeners: {
-				'eventadd': {
-					scope: me,
-					fn: me.onEventAdd
-				},
-				'eventupdate': {
-					scope: me,
-					fn: me.onEventUpdate
-				},
-				'eventdelete': {
-					scope: me,
-					fn: me.onEventDelete
-				},
-				'eventcancel': {
-					scope: me,
-					fn: me.onEventCancel
-				}
-			}
-		},
-		me.editViewCfg));
-		*/
 	},
 	
 	/**
@@ -567,63 +531,6 @@ Ext.define('Sonicle.calendar.Panel', {
 			this.updateNavState();
 			this.navInitComplete = true;
 		}
-	},
-	
-	// private
-	onEventAdd: function (form, rec) {
-		rec.data[Sonicle.calendar.data.EventMappings.IsNew.name] = false;
-		this.hideEditForm();
-		this.eventStore.add(rec);
-		this.eventStore.sync();
-		this.fireEvent('eventadd', this, rec);
-	},
-	
-	// private
-	onEventUpdate: function (form, rec) {
-		this.hideEditForm();
-		rec.commit();
-		this.eventStore.sync();
-		this.fireEvent('eventupdate', this, rec);
-	},
-	
-	// private
-	onEventDelete: function (form, rec) {
-		this.hideEditForm();
-		this.eventStore.remove(rec);
-		this.eventStore.sync();
-		this.fireEvent('eventdelete', this, rec);
-	},
-	
-	// private
-	onEventCancel: function (form, rec) {
-		this.hideEditForm();
-		this.fireEvent('eventcancel', this, rec);
-	},
-	
-	/**
-	 * Shows the built-in event edit form for the passed in event record.  This method automatically
-	 * hides the calendar views and navigation toolbar.  To return to the calendar, call {@link #hideEditForm}.
-	 * @param {Sonicle.calendar.EventRecord} record The event record to edit
-	 * @return {Sonicle.calendar.CalendarPanel} this
-	 */
-	showEditForm: function (rec) {
-		this.preEditView = this.layout.getActiveItem().id;
-		this.setActiveView(this.id + '-edit');
-		this.layout.getActiveItem().loadRecord(rec);
-		return this;
-	},
-	
-	/**
-	 * Hides the built-in event edit form and returns to the previous calendar view. If the edit form is
-	 * not currently visible this method has no effect.
-	 * @return {Sonicle.calendar.CalendarPanel} this
-	 */
-	hideEditForm: function () {
-		if (this.preEditView) {
-			this.setActiveView(this.preEditView);
-			delete this.preEditView;
-		}
-		return this;
 	},
 	
 	/**
@@ -750,5 +657,10 @@ Ext.define('Sonicle.calendar.Panel', {
 	 */
 	getActiveView: function () {
 		return this.layout.activeItem;
+	},
+	
+	reload: function() {
+		var av = this.getActiveView();
+		if(av) av.refresh(true);
 	}
 });

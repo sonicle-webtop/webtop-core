@@ -198,9 +198,39 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 */
 	ddDateFormat: 'n/j',
 	
+	/**
+	 * @cfg {String} dateParamStart
+	 * The param name representing the start date of the current view range that's passed in requests to retrieve events
+	 * when loading the view (defaults to 'startDate').
+	 */
+	dateParamStart: 'startDate',
+	
+	/**
+	 * @cfg {String} dateParamEnd
+	 * The param name representing the end date of the current view range that's passed in requests to retrieve events
+	 * when loading the view (defaults to 'endDate').
+	 */
+	dateParamEnd: 'endDate',
+	
+	/**
+	 * @cfg {String} dateParamFormat
+	 * The format to use for date parameters sent with requests to retrieve events for the calendar (defaults to 'Y-m-d', e.g. '2010-10-31')
+	 */
+	dateParamFormat: 'Y-m-d',
+	
+	/**
+	 * @property ownerCalendarPanel
+	 * @readonly
+	 * @type Sonicle.calendar.CalendarPanel
+	 * If this view is hosted inside a {@link Sonicle.calendar.CalendarPanel} this property will reference it.
+	 * If the view was created directly outside of a CalendarPanel this property will be null.
+	 */
+	ownerCalendarPanel: null,
+	
 	//private properties -- do not override:
 	weekCount: 1,
 	eventSelector: '.ext-cal-evt',
+	eventSelectorDepth: 10,
 	eventOverClass: 'ext-evt-over',
 	eventElIdDelimiter: '-evt-',
 	dayElIdDelimiter: '-day-',
@@ -378,14 +408,15 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			'click': me.onClick,
 			scope: me
 		});
-
+		
+		//e.el.on('contextmenu', me.onContextMenu, me);
 		me.el.unselectable();
 
 		if (me.enableDD && me.initDD) {
 			me.initDD();
 		}
 
-		me.on('eventsrendered', this.forceSize);
+		me.on('eventsrendered', me.forceSize);
 		Ext.defer(me.forceSize, 100, me);
 	},
 	
@@ -394,22 +425,12 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		if (this.el && this.el.down) {
 			var hd = this.el.down('.ext-cal-hd-ct'),
 					bd = this.el.down('.ext-cal-body-ct');
-
-			if (bd == null || hd == null) {
-				return;
-			}
-
+			
+			if (!bd || !hd) return;
 			var headerHeight = hd.getHeight(),
 					sz = this.el.parent().getSize();
-
 			bd.setHeight(sz.height - headerHeight);
 		}
-	},
-	
-	refresh: function () {
-		this.prepareData();
-		this.renderTemplate();
-		this.renderItems();
 	},
 	
 	getWeekCount: function () {
@@ -419,42 +440,42 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	prepareData: function () {
-		var lastInMonth = Ext.Date.getLastDateOfMonth(this.startDate),
+		var me = this,
+				EM = Sonicle.calendar.data.EventMappings,
+				lastInMonth = Ext.Date.getLastDateOfMonth(me.startDate),
 				w = 0, d,
-				dt = Ext.Date.clone(this.viewStart),
-				weeks = this.weekCount < 1 ? 6 : this.weekCount;
+				dt = Ext.Date.clone(me.viewStart),
+				weeks = me.weekCount < 1 ? 6 : me.weekCount;
 
-		this.eventGrid = [[]];
-		this.allDayGrid = [[]];
-		this.evtMaxCount = [];
+		me.eventGrid = [[]];
+		me.allDayGrid = [[]];
+		me.evtMaxCount = [];
 
-		var evtsInView = this.store.queryBy(function (rec) {
-			return this.isEventVisible(rec.data);
-		},
-				this);
+		var evtsInView = me.store.queryBy(function (rec) {
+			return me.isEventVisible(rec.data);
+		}, me);
 
 		for (; w < weeks; w++) {
-			this.evtMaxCount[w] = 0;
-			if (this.weekCount === -1 && dt > lastInMonth) {
+			me.evtMaxCount[w] = 0;
+			if (me.weekCount === -1 && dt > lastInMonth) {
 				//current week is fully in next month so skip
 				break;
 			}
-			this.eventGrid[w] = this.eventGrid[w] || [];
-			this.allDayGrid[w] = this.allDayGrid[w] || [];
+			me.eventGrid[w] = me.eventGrid[w] || [];
+			me.allDayGrid[w] = me.allDayGrid[w] || [];
 
-			for (d = 0; d < this.dayCount; d++) {
+			for (d = 0; d < me.dayCount; d++) {
 				if (evtsInView.getCount() > 0) {
 					var evts = evtsInView.filterBy(function (rec) {
-						var startDt = Ext.Date.clearTime(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], true),
-								startsOnDate = dt.getTime() == startDt.getTime(),
-								spansFromPrevView = (w == 0 && d == 0 && (dt > rec.data[Sonicle.calendar.data.EventMappings.StartDate.name]));
-
+						var startDt = Ext.Date.clearTime(rec.data[EM.StartDate.name], true),
+								startsOnDate = dt.getTime() === startDt.getTime(),
+								spansFromPrevView = ((w === 0) && (d === 0) && (dt > rec.data[EM.StartDate.name]));
+								
 						return startsOnDate || spansFromPrevView;
-					},
-							this);
+					}, me);
 
-					this.sortEventRecordsForDay(evts);
-					this.prepareEventGrid(evts, w, d);
+					me.sortEventRecordsForDay(evts);
+					me.prepareEventGrid(evts, w, d);
 				}
 				dt = Sonicle.Date.add(dt, {days: 1});
 			}
@@ -466,35 +487,49 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	prepareEventGrid: function (evts, w, d) {
 		var me = this,
 				soDate = Sonicle.Date,
-				row = 0,
-				max = me.maxEventsPerDay ? me.maxEventsPerDay : 999;
+				EM = Sonicle.calendar.data.EventMappings,
+				row = 0;
 
 		evts.each(function (evt) {
-			var M = Sonicle.calendar.data.EventMappings,
-					days = soDate.diffDays(
-							soDate.max(me.viewStart, evt.data[M.StartDate.name]),
-							soDate.min(me.viewEnd, evt.data[M.EndDate.name])) + 1;
-
-			if (days > 1 || soDate.diffDays(evt.data[M.StartDate.name], evt.data[M.EndDate.name]) > 1) {
-				me.prepareEventGridSpans(evt, me.eventGrid, w, d, days);
-				me.prepareEventGridSpans(evt, me.allDayGrid, w, d, days, true);
+			if (soDate.diffDays(evt.data[EM.StartDate.name], evt.data[EM.EndDate.name]) > 0) {
+				var daysInView = soDate.diffDays(
+							soDate.max(me.viewStart, evt.data[EM.StartDate.name]),
+							soDate.min(me.viewEnd, evt.data[EM.EndDate.name])
+					) + 1;
+				
+				me.prepareEventGridSpans(evt, me.eventGrid, w, d, daysInView);
+				me.prepareEventGridSpans(evt, me.allDayGrid, w, d, daysInView, true);
+				
 			} else {
 				row = me.findEmptyRowIndex(w, d);
 				me.eventGrid[w][d] = me.eventGrid[w][d] || [];
 				me.eventGrid[w][d][row] = evt;
 
-				if (evt.data[M.IsAllDay.name]) {
+				if (evt.data[EM.IsAllDay.name]) {
 					row = me.findEmptyRowIndex(w, d, true);
 					me.allDayGrid[w][d] = me.allDayGrid[w][d] || [];
 					me.allDayGrid[w][d][row] = evt;
 				}
 			}
-
-			if (me.evtMaxCount[w] < me.eventGrid[w][d].length) {
-				me.evtMaxCount[w] = Math.min(max + 1, me.eventGrid[w][d].length);
-			}
+			
+			me.setMaxEventsForDay(w, d);
 			return true;
 		});
+	},
+	
+	setMaxEventsForDay: function(weekIndex, dayIndex) {
+		var me = this,
+				max = (me.maxEventsPerDay + 1) || 999;
+		
+		// If calculating the max event count for the day/week view header, use the allDayGrid
+		// so that only all-day events displayed in that area get counted, otherwise count all events.
+		var maxEventsForDay = me[me.isHeaderView ? 'allDayGrid' : 'eventGrid'][weekIndex][dayIndex] || [];
+		
+		me.evtMaxCount[weekIndex] = me.evtMaxCount[weekIndex] || 0;
+		
+		if(maxEventsForDay.length && me.evtMaxCount[weekIndex] < maxEventsForDay.length) {
+			me.evtMaxCount[weekIndex] = Math.min(max, maxEventsForDay.length);
+		}
 	},
 	
 	// private
@@ -502,10 +537,11 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		// this event spans multiple days/weeks, so we have to preprocess
 		// the events and store special span events as placeholders so that
 		// the render routine can build the necessary TD spans correctly.
-		var w1 = w,
+		var me = this,
+				w1 = w,
 				d1 = d,
-				row = this.findEmptyRowIndex(w, d, allday),
-				dt = Ext.Date.clone(this.viewStart);
+				row = me.findEmptyRowIndex(w, d, allday),
+				dt = Ext.Date.clone(me.viewStart);
 
 		var start = {
 			event: evt,
@@ -517,19 +553,18 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		grid[w][d] = grid[w][d] || [];
 		grid[w][d][row] = start;
 
-		//TODO...................................................
-		//this.setMaxEventsForDay(w, d);
+		me.setMaxEventsForDay(w, d);
 
 		while (--days) {
 			dt = Sonicle.Date.add(dt, {days: 1});
-			if (dt > this.viewEnd) {
+			if (dt > me.viewEnd) {
 				break;
 			}
 			if (++d1 > 6) {
 				// reset counters to the next week
 				d1 = 0;
 				w1++;
-				row = this.findEmptyRowIndex(w1, 0);
+				row = me.findEmptyRowIndex(w1, 0);
 			}
 			grid[w1] = grid[w1] || [];
 			grid[w1][d1] = grid[w1][d1] || [];
@@ -546,8 +581,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			// where a given week might only contain such spans, we have to make this
 			// max event check on each iteration to make sure that our empty placeholder
 			// divs get created correctly even without "real" events:
-			//this.setMaxEventsForDay(w1, d1);
-			//TODO...................................................
+			me.setMaxEventsForDay(w1, d1);
 		}
 	},
 	
@@ -589,7 +623,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	// private
 	onResize: function () {
 		this.callParent(arguments);
-		this.refresh();
+		this.refresh(false);
 	},
 	
 	// private
@@ -604,16 +638,29 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	onCalendarEndDrag: function (start, end, onComplete) {
+		var me = this,
+				EM = Sonicle.calendar.data.EventMappings;
+		
 		if (start && end) {
 			// set this flag for other event handlers that might conflict while we're waiting
-			this.dragPending = true;
+			me.dragPending = true;
 
 			// have to wait for the user to save or cancel before finalizing the dd interation
-			var o = {};
-			o[Sonicle.calendar.data.EventMappings.StartDate.name] = start;
-			o[Sonicle.calendar.data.EventMappings.EndDate.name] = end;
+			var boundOnComplete = Ext.bind(me.onCalendarEndDragComplete, me, [onComplete]),
+					dates = {};
+			dates[EM.StartDate.name] = start;
+			dates[EM.EndDate.name] = end;
+			
+			if(me.fireEvent('rangeselect', me, dates, boundOnComplete) !== false) {
+				
+			} else {
+				// client code canceled the selection so clean up immediately
+				me.onCalendarEndDragComplete(boundOnComplete);
+			}
+			
+			
 
-			this.fireEvent('rangeselect', this, o, Ext.bind(this.onCalendarEndDragComplete, this, [onComplete]));
+			//this.fireEvent('rangeselect', this, o, Ext.bind(this.onCalendarEndDragComplete, this, [onComplete]));
 		}
 	},
 	
@@ -625,23 +672,66 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		this.dragPending = false;
 	},
 	
+	/**
+	 * Refresh the view. Determine if a store reload is required after a given CRUD operation.
+	 * @param {String} action One of 'create', 'update' or 'delete'
+	 * @param {Ext.data.Operation} operation he affected operation
+	 */
+	refreshAfterEventChange: function(action, operation) {
+		// Determine if a store reload is needed. A store reload is needed if the event is recurring after being
+		// edited or was recurring before being edited AND an event store reload has not been triggered already for
+		// this operation. If an event is not currently recurring (isRecurring = false) but still has an instance
+		
+		//TODO: completare...
+		this.refresh(true);
+	},
+	
+	onStoreBeforeLoad: function(store, op, o) {
+		op.setParams(Ext.apply(op.getParams() || {}, this.getStoreParams()));
+	},
+	
+	onStoreLoad: function(sto, recs, succ) {
+		this.refresh(false);
+	},
+	
+	/*
 	// private
-	onUpdate: function (ds, rec, operation) {
-		if (this.monitorStoreEvents === false) {
-			return;
-		}
-		if (operation === Ext.data.Record.COMMIT) {
-			this.refresh();
-			if (this.enableFx && this.enableUpdateFx) {
-				this.doUpdateFx(this.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.EventId.name]), {
-					scope: this
-				});
+	onDataChanged: function (store) {
+		this.refresh();
+	},
+	*/
+	
+	onStoreWrite: function(store, op) {
+		if(op.wasSuccessful()) {
+			switch(op.action) {
+				case 'create':
+					this.onAdd(store, op);
+					break;
+				case 'update':
+					this.onUpdate(store, op, Ext.data.Record.COMMIT);
+					break;
+				case 'destroy':
+					this.onRemove(store, op);
+					break;
 			}
 		}
 	},
 	
-	doUpdateFx: function (els, o) {
-		this.highlightEvent(els, null, o);
+	// private
+	onUpdate: function (ds, rec, operation) {
+		var me = this;
+		if (me.hidden === true || me.ownerCt.hidden === true || me.monitorStoreEvents === false) {
+			// Hidden calendar view don't need to be refreshed. For views composed of header and body (for example
+			return;
+		}
+		if (operation === Ext.data.Record.COMMIT) {
+			this.refresh(true);
+			if (me.enableFx && me.enableUpdateFx) {
+				me.doUpdateFx(me.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.EventId.name]), {
+					scope: me
+				});
+			}
+		}
 	},
 	
 	// private
@@ -658,12 +748,6 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 				scope: this
 			});
 		}
-	},
-	
-	doAddFx: function (els, o) {
-		els.fadeIn(Ext.apply(o, {
-			duration: 2000
-		}));
 	},
 	
 	// private
@@ -694,6 +778,16 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 				this.refresh();
 			}
 		}
+	},
+	
+	doUpdateFx: function (els, o) {
+		this.highlightEvent(els, null, o);
+	},
+	
+	doAddFx: function (els, o) {
+		els.fadeIn(Ext.apply(o, {
+			duration: 2000
+		}));
 	},
 	
 	doRemoveFx: function (els, o) {
@@ -800,11 +894,6 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	// private
-	onDataChanged: function (store) {
-		this.refresh();
-	},
-	
-	// private
 	isEventVisible: function (evt) {
 		var M = Sonicle.calendar.data.EventMappings,
 				data = evt.data || evt,
@@ -871,19 +960,28 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 * earliest and latest dates that match the view requirements and contain the date passed to this function.
 	 * @param {Date} dt The date used to calculate the new view boundaries
 	 */
-	setStartDate: function (start, refresh) {
-		this.startDate = Ext.Date.clearTime(start);
-		this.setViewBounds(start);
-		this.store.load({
-			params: {
-				start: Ext.Date.format(this.viewStart, 'm-d-Y'),
-				end: Ext.Date.format(this.viewEnd, 'm-d-Y')
+	setStartDate: function (start, reload) {
+		var me = this,
+				eDate = Ext.Date,
+				cloneDt = eDate.clone,
+				cloStart = eDate.clone(start),
+				cloStartDate = (me.startDate) ? cloneDt(me.startDate) : null,
+				cloViewStart = (me.viewStart) ? cloneDt(me.viewStart) : null,
+				cloViewEnd = (me.viewEnd) ? cloneDt(me.viewEnd) : null;
+		
+		if(me.fireEvent('beforedatechange', me, cloStartDate, cloStart, cloViewStart, cloViewEnd) !== false) {
+			me.startDate = eDate.clearTime(start);
+			me.setViewBounds(start);
+			
+			if(me.ownerCalendarPanel && me.ownerCalendarPanel.startDate !== me.startDate) {
+				// Sync the owning CalendarPanel's start date directly, not via CalendarPanel.setStartDate(),
+				// since that would in turn call this method again.
+				me.ownerCalendarPanel.startDate = me.startDate;
 			}
-		});
-		if (refresh === true) {
-			this.refresh();
+			if(me.rendered) me.refresh(reload);
+			
+			me.fireEvent('datechange', me, cloneDt(me.startDate), cloneDt(me.viewStart), cloneDt(me.viewEnd));
 		}
-		this.fireEvent('datechange', this, this.startDate, this.viewStart, this.viewEnd);
 	},
 	
 	// private
@@ -1075,23 +1173,68 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 * @param {Ext.data.Store} store
 	 */
 	setStore: function (store, initial) {
-		if (!initial && this.store) {
-			this.store.un("datachanged", this.onDataChanged, this);
-			this.store.un("add", this.onAdd, this);
-			this.store.un("remove", this.onRemove, this);
-			this.store.un("update", this.onUpdate, this);
-			this.store.un("clear", this.refresh, this);
+		var me = this;
+		if (!initial && me.store) {
+			me.store.un('load', me.onStoreLoad, me);
+			me.store.un("write", me.onStoreWrite, me);
+			me.store.un("clear", me.refresh, me);
 		}
 		if (store) {
-			store.on("datachanged", this.onDataChanged, this);
-			store.on("add", this.onAdd, this);
-			store.on("remove", this.onRemove, this);
-			store.on("update", this.onUpdate, this);
-			store.on("clear", this.refresh, this);
+			store.on('load', me.onStoreLoad, me);
+			store.on("write", me.onStoreWrite, me);
+			store.on("clear", me.refresh, me);
 		}
-		this.store = store;
+		me.store = store;
 		if (store && store.getCount() > 0) {
-			this.refresh();
+			me.refresh();
+		}
+	},
+	
+	/**
+	 * Returns an object containing the start and end dates to be passed as params in all calls
+	 * to load the event store. The param names are customizable using {@link #dateParamStart}
+	 * and {@link #dateParamEnd} and the date format used in requests is defined by {@link #dateParamFormat}.
+	 * If you need to add additional parameters to be sent when loading the store see {@link #getStoreParams}.
+	 * @return {Object} An object containing the start and end dates.
+	 */
+	getStoreParams: function() {
+		var me = this, o = {};
+		o[me.dateParamStart] = Ext.Date.format(this.viewStart, this.dateParamFormat);
+		o[me.dateParamEnd] = Ext.Date.format(this.viewEnd, this.dateParamFormat);
+		return o;
+	},
+	
+	/**
+	 * Reloads the view's underlying event store using the params returned from {@link #getStoreParams}.
+	 * Reloading the store is typically managed automatically by the view itself, but the method is
+	 * available in case a manual reload is ever needed.
+	 * @param {Object} [opts] An object matching the format used by Store's {@link Ext.data.Store#load load} method
+	 */
+	reloadStore: function(opts) {
+		opts = opts || {};
+		var me = this,
+				proxy = me.store.getProxy();
+		proxy.setExtraParams(Ext.apply(proxy.getExtraParams(), me.getStoreParams()));
+		me.store.load(opts);
+	},
+	
+	/**
+	 * Refresh the current view, optionally reloading the event store also. While this is normally
+	 * managed internally on any navigation and/or CRUD action, there are times when you might want
+	 * to refresh the view manually (e.g., if you'd like to reload using different {@link #getStoreParams params}).
+	 * @param {Boolean} reloadData True to reload the store data first, false to simply redraw the view using current data (defaults to false)
+	 * @return {undefined}
+	 */
+	refresh: function(reloadData) {
+		var me = this;
+		if(!me.isActiveView()) return;
+		
+		if(reloadData === true) {
+			me.reloadStore();
+		} else {
+			me.prepareData();
+			me.renderTemplate();
+			me.renderItems();
 		}
 	},
 	
@@ -1136,7 +1279,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	onMouseOver: function (e, t) {
-		if (this.trackMouseOver !== false && (this.dragZone == undefined || !this.dragZone.dragging)) {
+		if (this.trackMouseOver !== false && (this.dragZone === undefined || !this.dragZone.dragging)) {
 			if (!this.handleEventMouseEvent(e, t, 'over')) {
 				this.handleDayMouseEvent(e, t, 'over');
 			}
@@ -1144,7 +1287,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	// private
 	onMouseOut: function (e, t) {
-		if (this.trackMouseOver !== false && (this.dragZone == undefined || !this.dragZone.dragging)) {
+		if (this.trackMouseOver !== false && (this.dragZone === undefined || !this.dragZone.dragging)) {
 			if (!this.handleEventMouseEvent(e, t, 'out')) {
 				this.handleDayMouseEvent(e, t, 'out');
 			}
@@ -1153,23 +1296,25 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	handleEventMouseEvent: function (e, t, type) {
-		var el = e.getTarget(this.eventSelector, 5, true),
+		var me = this,
+				el = e.getTarget(me.eventSelector, me.eventSelectorDepth, true),
 				rel,
 				els,
 				evtId;
+		
 		if (el) {
 			rel = Ext.get(e.getRelatedTarget());
 			if (el === rel || el.contains(rel)) {
 				return true;
 			}
 
-			evtId = this.getEventIdFromEl(el);
+			evtId = me.getEventIdFromEl(el);
 
-			if (this.eventOverClass) {
-				els = this.getEventEls(evtId);
-				els[type === 'over' ? 'addCls' : 'removeCls'](this.eventOverClass);
+			if (me.eventOverClass) {
+				els = me.getEventEls(evtId);
+				els[type === 'over' ? 'addCls' : 'removeCls'](me.eventOverClass);
 			}
-			this.fireEvent('event' + type, this, this.getEventRecord(evtId), el);
+			me.fireEvent('event' + type, me, me.getEventRecord(evtId), el);
 			return true;
 		}
 		return false;
@@ -1211,6 +1356,17 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		throw 'This method must be implemented by a subclass';
 	},
 	
+	/**
+	 * Returns true only if this is the active view inside of an owning
+	 * {@link Sonicle.calendar.CalendarPanel CalendarPanel}. If it is not active, or
+	 * ot hosted inside a CalendarPanel, returns false.
+	 * @return {Boolean} True if this is the active CalendarPanel view, else false
+	 */
+	isActiveView: function() {
+		var calendarPanel = this.ownerCalendarPanel;
+		return (calendarPanel && calendarPanel.getActiveView().id === this.id);
+	},
+	
 	// private
 	destroy: function () {
 		this.callParent(arguments);
@@ -1242,6 +1398,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 * @param {Object} newStartDate The new start date
 	 */
 	moveEvent: function (rec, newStartDate) {
+		console.log('moveEvent');
 		this.shiftEvent(rec, newStartDate, 'move');
 	},
 	
@@ -1249,7 +1406,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	shiftEvent: function (rec, newStartDate, moveOrCopy) {
 		var me = this,
 				newRec;
-
+		console.log('shiftEvent');
 		if (moveOrCopy === 'move') {
 			if (Sonicle.Date.compare(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], newStartDate) === 0) {
 				// No changes, so we aren't actually moving. Copying to the same date is OK.
@@ -1286,16 +1443,18 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	doShiftEvent: function (rec, newStartDate, moveOrCopy) {
+		console.log('doShiftEvent');
 		var EventMappings = Sonicle.calendar.data.EventMappings,
 				start = rec.data[EventMappings.StartDate.name],
 				end = rec.data[EventMappings.EndDate.name],
 				diff = newStartDate.getTime() - start.getTime();
-
+		
+		rec.beginEdit();
 		rec.set(EventMappings.StartDate.name, newStartDate);
 		rec.set(EventMappings.EndDate.name, Sonicle.Date.add(end, {millis: diff}));
-		if (rec.phantom)
-			this.store.add(rec);
-		rec.commit();
+		if (rec.phantom) this.store.add(rec);
+		rec.endEdit();
+		//rec.commit();
 
 		this.fireEvent('event' + moveOrCopy, this, rec);
 	}

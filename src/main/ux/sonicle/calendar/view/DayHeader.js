@@ -20,6 +20,7 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	dayCount: 1,
 	allDayOnly: true,
 	monitorResize: false,
+	isHeaderView: true,
 	
 	/**
 	 * @event dayclick
@@ -52,8 +53,8 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	forceSize: Ext.emptyFn,
 	
 	// private
-	refresh: function() {
-		this.callParent(arguments);
+	refresh: function(reloadData) {
+		this.callParent(false);
 		this.recalcHeaderBox();
 	},
 	
@@ -96,5 +97,11 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 			}
 		}
 		this.callParent(arguments);
+	},
+	
+	// inherited docs
+	isActiveView: function() {
+		var calendarPanel = this.ownerCalendarPanel;
+		return (calendarPanel && calendarPanel.getActiveView().isDayView);
 	}
 });
