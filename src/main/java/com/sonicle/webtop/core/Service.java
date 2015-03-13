@@ -91,6 +91,9 @@ public class Service extends BaseService {
 	public HashMap<String, Object> returnClientOptions() {
 		UserProfile profile = env.getProfile();
 		HashMap<String, Object> hm = new HashMap<>();
+		hm.put("domainId", profile.getDomainId());
+		hm.put("userId", profile.getUserId());
+		hm.put("principal", profile.getStringId());
 		hm.put("theme", cus.getTheme());
 		hm.put("layout", cus.getLayout());
 		hm.put("laf", cus.getLookAndFeel());

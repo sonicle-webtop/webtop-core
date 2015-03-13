@@ -1,4 +1,4 @@
 /* TREE ICONS for this LAF */
-.x-tree-icon { background-image: url(folder.png) !important; }
-.x-grid-tree-node-expanded .x-tree-icon { background-image: url(folder-open.png) !important; }
+.x-tree-icon { background-image: url(folder_16.png) }
+.x-grid-tree-node-expanded .x-tree-icon { background-image: url(folder-open_16.png) }
 

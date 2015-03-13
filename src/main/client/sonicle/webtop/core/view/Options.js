@@ -66,7 +66,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 							}
 						}
 					},
-					value: WTS.principal
+					value: WT.getOption('principal')
 				}]
 			}, {
 				xtype: 'tabpanel',
@@ -99,7 +99,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		var me = this, uo = null;
 		var data = [];
 		me.wait();
-		if(id === WTS.principal) { // User options are being edited by user itself
+		if(id === WT.getOption('principal')) { // User options are being edited by user itself
 			var isAdmin = id === 'admin@*';
 			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
 				if(isAdmin && desc.getIndex() > 0) return false;

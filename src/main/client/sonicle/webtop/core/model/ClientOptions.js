@@ -35,6 +35,9 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
+		'domainId', // Not a real option
+		'userId', // Not a real option
+		'principal', // Not a real option
 		'theme',
 		'layout',
 		'laf',
@@ -42,7 +45,7 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 		'timezone',
 		'dateFormat',
 		'timeFormat',
-		{name: 'use24HourTime', type: 'boolean', persist: false, 
+		{name: 'use24HourTime', type: 'boolean', 
 			depends: 'timeFormat', 
 			convert: function(v, rec) {
 				var tf = rec.get('timeFormat');

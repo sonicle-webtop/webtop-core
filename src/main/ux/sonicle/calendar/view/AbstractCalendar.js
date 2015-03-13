@@ -639,28 +639,24 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	// private
 	onCalendarEndDrag: function (start, end, onComplete) {
 		var me = this,
-				EM = Sonicle.calendar.data.EventMappings;
+				EM = Sonicle.calendar.data.EventMappings,
+				dates = {};
 		
 		if (start && end) {
 			// set this flag for other event handlers that might conflict while we're waiting
 			me.dragPending = true;
 
-			// have to wait for the user to save or cancel before finalizing the dd interation
-			var boundOnComplete = Ext.bind(me.onCalendarEndDragComplete, me, [onComplete]),
-					dates = {};
 			dates[EM.StartDate.name] = start;
 			dates[EM.EndDate.name] = end;
 			
+			// have to wait for the user to save or cancel before finalizing the dd interation
+			var boundOnComplete = Ext.bind(me.onCalendarEndDragComplete, me, [onComplete]);
 			if(me.fireEvent('rangeselect', me, dates, boundOnComplete) !== false) {
-				
+				// if handled, user must call boundOnComplete method!
 			} else {
 				// client code canceled the selection so clean up immediately
 				me.onCalendarEndDragComplete(boundOnComplete);
 			}
-			
-			
-
-			//this.fireEvent('rangeselect', this, o, Ext.bind(this.onCalendarEndDragComplete, this, [onComplete]));
 		}
 	},
 	

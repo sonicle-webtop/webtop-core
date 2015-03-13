@@ -112,6 +112,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	linkedModelIdField: null,
 	
+	referenceHolder: true,
 	viewModel: {},
 	
 	constructor: function(config) {

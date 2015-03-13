@@ -549,13 +549,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Creates a displayable view.
-	 * @param {String} [id] The service ID.
-	 * @param {String} type The view type name.
+	 * @param {String} id The service ID.
+	 * @param {String} name The class name or alias.
 	 * @param {Object} opts
 	 * @param {Object} opts.containerCfg
-	 * @returns {Ext.window.WindowView} The container.
+	 * @returns {Ext.window.Window} The container.
 	 */
-	createView: function(id, type, opts) {
+	createView: function(id, name, opts) {
 		opts = opts || {};
 		var svc = this.getApp().getService(id);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
@@ -568,7 +568,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 			xtype: 'window',
 			layout: 'fit',
 			items: [
-				Ext.create(type, opts.viewCfg)
+				Ext.create(name, opts.viewCfg)
 			]
 		});
 		
