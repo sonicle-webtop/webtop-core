@@ -14,15 +14,9 @@
 .wt-icon-service-m { background-image: url('elica_32.png') !important; }
 .wt-icon-service-l { background-image: url('elica_48.png') !important; }
 
-/* ICONS */
-.wt-icon-save-xs { background-image: url('save_16.png') !important; }
-.wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
-.wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
-.wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
 .wt-icon-feedback-xs { background-image: url('feedback_16.png') !important; }
 .wt-icon-whatsnew-xs { background-image: url('whatsnew_16.png') !important; }
 .wt-icon-options-xs { background-image: url('options_16.png') !important; }
-
 .wt-menu-feedback { background-image: url('feedback_32.png') !important; width: 32px; }
 .wt-menu-whatsnew { background-image: url('whatsnew_32.png') !important; width: 32px; }
 .wt-menu-options { background-image: url('options_32.png') !important; width: 32px; }
@@ -30,7 +24,28 @@
 .wt-menu-logout { background-image: url('logout-disabled_16.png') !important; width: 16px; }
 .x-btn-over .wt-menu-logout { background-image: url('logout_16.png') !important; width: 16px; }
 
+/* Platform ICONS */
+.wt-icon-ok-xs { background-image: url('ok_16.png') !important; }
+.wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
+.wt-icon-add-xs { background-image: url('add_16.png') !important; }
+.wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
+.wt-icon-edit-xs { background-image: url('edit_16.png') !important; }
+.wt-icon-block-xs { background-image: url('block_16.png') !important; }
+.wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
+.wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
+.wt-icon-search-xs { background-image: url('search_16.png') !important; }
+.wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
+.wt-icon-print-xs { background-image: url('print_16.png') !important; }
+.wt-icon-save-xs { background-image: url('save_16.png') !important; }
+.wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
+.wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
+.wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
+.wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
+.wt-icon-item-enable-xs { background-image: url('item-enable_16.png') !important; }
+.wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
+.wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
 
+/* Palette ICONS */
 .wt-palette-AC725E { background-image: url('palette/AC725E.png') !important; }
 .wt-palette-D06B64 { background-image: url('palette/D06B64.png') !important; }
 .wt-palette-F83A22 { background-image: url('palette/F83A22.png') !important; }

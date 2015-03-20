@@ -1,4 +1,17 @@
 
+/* General purpose color (generally light) */
+.wt-color-base {
+	background-color: #f5f5f5;
+}
+
+.wt-color-theme-light {
+	background-color: #e7e7e7;
+}
+
+.wt-color-theme-dark {
+	background-color: #cecece;
+}
+
 .wt-header {
 	background-color: #E7E7E7;
 }

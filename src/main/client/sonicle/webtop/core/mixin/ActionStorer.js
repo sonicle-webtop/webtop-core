@@ -78,8 +78,6 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 			*/
 			
 			act = Ext.create('WT.ux.Action', Ext.applyIf({
-				//text: txt,
-				//tooltip: tip,
 				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
 				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
 				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
@@ -140,7 +138,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * Builds icon class
 	 */
 	_buildIconCls: function(name) {
-		return WT.cssIconCls(this._guessSvcXId(), name);
+		return WT.cssIconCls(this._guessSvcXId(), name, 'xs');
 	},
 	
 	/**

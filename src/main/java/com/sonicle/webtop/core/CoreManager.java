@@ -35,12 +35,17 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OServiceEntry;
 import com.sonicle.webtop.core.dal.DomainDAO;
+import com.sonicle.webtop.core.dal.ServiceEntryDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  *
@@ -68,34 +73,6 @@ public class CoreManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
-	
-	/*
-	public void fillStartupForService(JsWTS js, String serviceId, Locale locale) {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
-		
-		// Defines paths and requires
-		js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-		js.appRequires.add(manifest.getServiceJsClassName());
-		js.appRequires.add(manifest.getJsLocaleClassName(locale));
-		
-		// Completes service info
-		JsWTS.Service jssvc = new JsWTS.Service();
-		jssvc.id = manifest.getId();
-		jssvc.xid = manifest.getXId();
-		jssvc.ns = manifest.getJsPackageName();
-		jssvc.path = manifest.getJsBaseUrl();
-		jssvc.className = manifest.getServiceJsClassName();
-		if(sdesc.hasOptionsService()) jssvc.optionsViewClassName = manifest.getOptionsViewJsClassName();
-		jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
-		jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
-		jssvc.version = manifest.getVersion().toString();
-		jssvc.build = manifest.getBuildDate();
-		jssvc.company = manifest.getCompany();
-		js.services.add(jssvc);
-	}
-	*/
 	
 	public List<String> getUserServices(UserProfile profile) {
 		return getUserServices(profile.getDomainId(), profile.getUserId());
@@ -132,26 +109,102 @@ public class CoreManager {
 		svcm.resetWhatsnew(serviceId, profile);
 	}
 	
-	/*
-	public List<JsWhatsnew> getUserWhatsnew(UserProfile profile, boolean full, List<String> serviceIds) {
-		ArrayList<JsWhatsnew> items = new ArrayList<>();
-		String html = null;
-		JsWhatsnew js = null;
-		ServiceManager svcm = wta.getServiceManager();
+	public List<OServiceEntry> getServiceEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query) {
+		Connection con = null;
 		
-		if(serviceIds == null) serviceIds = getUserServices(profile);
-		for(String id: serviceIds) {
-			if(full || svcm.needWhatsnew(id, profile)) {
-				html = svcm.getWhatsnew(id, profile, full);
-				if(!StringUtils.isEmpty(html)) {
-					js = new JsWhatsnew(id);
-					js.title = wta.lookupResource(id, profile.getLocale(), CoreLocaleKey.SERVICE_NAME);
-					js.html = html;
-					items.add(js);
-				}
-			}
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			return sedao.selectKeyValueByLikeKey(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, "%"+query+"%");
+		
+		} catch(SQLException ex) {
+			WebTopApp.logger.error("Error querying service entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
+			return new ArrayList<>();
+			
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
-		return items;
 	}
-	*/
+	
+	public void addServiceEntry(UserProfile.Id profileId, String serviceId, String context, String key, String value) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			OServiceEntry entry = sedao.select(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
+			
+			DateTime now = DateTime.now(DateTimeZone.UTC);
+			if(entry == null) {
+				entry.setValue(value);
+				entry.setFrequency(entry.getFrequency()+1);
+				entry.setLastUpdate(now);
+				
+			} else {
+				entry = new OServiceEntry();
+				entry.setDomainId(profileId.getDomainId());
+				entry.setUserId(profileId.getUserId());
+				entry.setServiceId(serviceId);
+				entry.setContext(context);
+				entry.setKey(StringUtils.upperCase(key));
+				entry.setValue(value);
+				entry.setFrequency(1);
+				entry.setLastUpdate(now);
+			}
+			
+		} catch(SQLException ex) {
+			WebTopApp.logger.error("Error adding service entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteServiceEntry(UserProfile.Id profileId) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			sedao.deleteByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			
+		} catch(SQLException ex) {
+			WebTopApp.logger.error("Error deleting service entry [{}]", profileId, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteServiceEntry(UserProfile.Id profileId, String serviceId) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			sedao.deleteByDomainUserService(con, profileId.getDomainId(), profileId.getUserId(), serviceId);
+			
+		} catch(SQLException ex) {
+			WebTopApp.logger.error("Error deleting service entry [{}, {}]", profileId, serviceId, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteServiceEntry(UserProfile.Id profileId, String serviceId, String context, String key) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			sedao.delete(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
+			
+		} catch(SQLException ex) {
+			WebTopApp.logger.error("Error deleting service entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 }

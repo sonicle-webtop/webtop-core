@@ -39,15 +39,18 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	],
 	
 	config: {
+		/**
+		 * @cfg {String} modelProperty
+		 * Name of viewModel's property in which {@link WT.sdk.ModelView#model attached model} 
+		 * data will be stored. Defaults to 'record'. (See {@link Ext.app.ViewModel#links})
+		 */
 		modelProperty: 'record',
-		model: null,
 		
 		/**
-		 * @cgf {String} formRefKey
-		 * Key to use within {@link WT.mixin.RefStorer#getRef} method in order
-		 * to retrieve the form component of this view.
+		 * @cfg {String} model
+		 * Name of the {@link Ext.data.Model Model} associated with this view.
 		 */
-		formRefKey: 'form',
+		model: null,
 		
 		/**
 		 * @cfg {Boolean} autoToolbar
@@ -66,7 +69,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		 * @cgf {Boolean/String} [autoTitle = true]
 		 * True to enable automatic title update based on current operative
 		 * mode; False to disable the automation.
-		 * It can be a string (form field name) in order to replace operative 
+		 * It can be a string (field name) in order to replace operative 
 		 * mode string within specified field's value.
 		 */
 		autoTitle: true,
@@ -110,10 +113,15 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	opts: null,
 	
+	/**
+	 * @private
+	 * @property {String} linkedModelIdField
+	 * Stores {@link Ext.data.Model#idProperty idField's name}) determined from attached model.
+	 */
 	linkedModelIdField: null,
 	
-	referenceHolder: true,
 	viewModel: {},
+	referenceHolder: true,
 	
 	constructor: function(config) {
 		var me = this,
@@ -153,7 +161,29 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+				vm = me.getViewModel();
+		
+		/*
+		var f = vm.getFormulas();
+		Ext.apply(f || {}, {
+			status: {
+				bind: {
+					bindTo: '{'+me.getModelProperty()+'}',
+					deep: true
+				},
+				get: function(model) {
+					var obj = {
+						dirty: model ? model.dirty : false,
+						valid: model && model.isModel ? model.isValid() : false
+					};
+					obj.cleanAndValid = !obj.dirty && obj.valid;
+					return obj;
+				}
+			}
+		});
+		vm.setFormulas(f);
+		*/
 		
 		if(me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
@@ -232,10 +262,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		me.doLoad(me.opts.data);
 	},
 	
-	getFormCmp: function() {
-		return this.getRef(this.formRefKey);
-	},
-	
 	/**
 	 * Sets a operative mode.
 	 * @param {String} value The mode to set.
@@ -257,17 +283,25 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	/**
 	 * Checks if current mode match within the passed one.
-	 * @param {type} mode Mode value to check.
+	 * @param {String} mode Mode value to check.
 	 * @returns {Boolean} True if specified mode is currently active, False otherwise.
 	 */
 	isMode: function(mode) {
 		return (this.mode === mode);
 	},
 	
+	/**
+	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
+	 * @returns {Object}
+	 */
 	getVMData: function() {
 		return this.getViewModel().data;
 	},
 	
+	/**
+	 * Returns the attached model.
+	 * @returns {Ext.data.Model}
+	 */
 	getModel: function() {
 		return this.getVMData()[this.getModelProperty()];
 	},
@@ -289,9 +323,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		}, function(model) {
 			var reader = model.getProxy().getReader(),
 					success = (model.phantom) ? true : reader.getSuccess(reader.rawData || {});
+			me.unwait();
 			me.fireEvent('viewload', me, success, model);
 		});
 		
+		me.wait();
 		if(Ext.isEmpty(id)) {
 			vm.linkTo(me.modelProperty, {
 				type: me.model,
@@ -312,9 +348,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this,
 				model = me.getModel();
 		
-		if(this.isModelValid()) {
+		if(me.isModelValid()) {
+			me.wait();
 			model.save({
 				callback: function(rec, op, success) {
+					me.unwait();
 					me.fireEvent('viewsave', me, success, model);
 					if(success) {
 						if(closeAfter) me.closeView(false);
@@ -353,10 +391,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	updateTitle: function() {
-		var me = this, mtit;
+		var me = this, model, mtit = '';
 		if(this.ctInited) {
 			if(Ext.isString(me.autoTitle)) {
-				mtit = me.getFormCmp().getFieldValue(me.autoTitle) || '';
+				model = me.getModel();
+				if(model) mtit = model.get(me.autoTitle) || '';
 			} else {
 				switch(me.mode) {
 					case me.MODE_VIEW:

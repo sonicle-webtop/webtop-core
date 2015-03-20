@@ -568,8 +568,8 @@ public class ResourceRequest extends HttpServlet {
 		
 		public StaticFile(String url, String mimeType, long lastModified, int contentLength, InputStream is, boolean acceptsDeflate) {
 			this.url = url;
-			this.lastModified = lastModified;
 			this.mimeType = mimeType;
+			this.lastModified = lastModified;
 			this.contentLength = contentLength;
 			this.acceptsDeflate = acceptsDeflate;
 			this.inputStream = is;
