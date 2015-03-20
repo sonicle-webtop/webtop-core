@@ -276,9 +276,9 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {String} [others] other custom tag properties
 	 * @return {String} the complete image tag
 	 */
-	imageTag: function(relPath,width,height,others) {
-		return WT.imageTag(this.ID, relPath, width, height, others);
-	},
+//	imageTag: function(relPath,width,height,others) {
+//		return WT.imageTag(this.ID, relPath, width, height, others);
+//	},
 	
 	/*
 	 * Map a websocket action name to a callback function
