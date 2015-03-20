@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.Service;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.CoreManifest;
@@ -42,7 +41,6 @@ import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;

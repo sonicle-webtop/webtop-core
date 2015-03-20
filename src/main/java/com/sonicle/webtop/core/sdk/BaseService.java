@@ -33,12 +33,25 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.Crud;
+import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsPayload;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreEnvironment;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.bol.OServiceEntry;
+import com.sonicle.webtop.core.bol.js.JsValue;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,5 +175,35 @@ public abstract class BaseService {
 	public final String lookupResource(String key, boolean escapeHtml) {
 		return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
 	}
-    
+	
+	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsValue> items = null;
+		UserProfile up = env.getProfile();
+		CoreManager corem = env.wta.getManager();
+		
+		try {
+			String context = ServletUtils.getStringParameter(request, "context", true);	
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String query = ServletUtils.getStringParameter(request, "query", true);
+				
+				items = new ArrayList<>();
+				List<OServiceEntry> entries = corem.getServiceEntriesByQuery(up.getId(), getId(), context, query);
+				for(OServiceEntry entry : entries) {
+					items.add(new JsValue(entry.getValue()));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				JsPayload<JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
+				
+				corem.deleteServiceEntry(up.getId(), getId(), context, pl.data.val);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error executing action ManageSuggestions", ex);
+			new JsonResult(false, "Error").printTo(out); //TODO: error message
+		}	
+	}
 }

@@ -178,7 +178,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * same value: '{xid}-icon-service-l'.
 	 * @param {String} xid Service short ID.
 	 * @param {String} name The icon name part.
-	 * @param {String} [size] Icon size (one of xs,s,m,l).
+	 * @param {String} [size] Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssIconCls: function(xid, name, size) {
@@ -213,7 +213,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	optionsProxy: function(svc) {
-		return WT.apiProxy(svc, 'UserOptions', 'data', {
+		return WT.Util.apiProxy(svc, 'UserOptions', 'data', {
 			extraParams: {
 				options: true
 			}
