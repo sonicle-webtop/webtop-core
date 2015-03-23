@@ -35,9 +35,9 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OServiceEntry;
+import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.dal.ServiceEntryDAO;
+import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -109,16 +109,16 @@ public class CoreManager {
 		svcm.resetWhatsnew(serviceId, profile);
 	}
 	
-	public List<OServiceEntry> getServiceEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query) {
+	public List<OServiceStoreEntry> getServiceStoreEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query) {
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			return sedao.selectKeyValueByLikeKey(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, "%"+query+"%");
 		
 		} catch(SQLException ex) {
-			WebTopApp.logger.error("Error querying service entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
+			WebTopApp.logger.error("Error querying servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
 			return new ArrayList<>();
 			
 		} finally {
@@ -126,13 +126,13 @@ public class CoreManager {
 		}
 	}
 	
-	public void addServiceEntry(UserProfile.Id profileId, String serviceId, String context, String key, String value) {
+	public void addServiceStoreEntry(UserProfile.Id profileId, String serviceId, String context, String key, String value) {
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
-			OServiceEntry entry = sedao.select(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
+			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
+			OServiceStoreEntry entry = sedao.select(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
 			
 			DateTime now = DateTime.now(DateTimeZone.UTC);
 			if(entry == null) {
@@ -141,7 +141,7 @@ public class CoreManager {
 				entry.setLastUpdate(now);
 				
 			} else {
-				entry = new OServiceEntry();
+				entry = new OServiceStoreEntry();
 				entry.setDomainId(profileId.getDomainId());
 				entry.setUserId(profileId.getUserId());
 				entry.setServiceId(serviceId);
@@ -153,55 +153,55 @@ public class CoreManager {
 			}
 			
 		} catch(SQLException ex) {
-			WebTopApp.logger.error("Error adding service entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			WebTopApp.logger.error("Error adding servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceEntry(UserProfile.Id profileId) {
+	public void deleteServiceStoreEntry(UserProfile.Id profileId) {
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.deleteByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			
 		} catch(SQLException ex) {
-			WebTopApp.logger.error("Error deleting service entry [{}]", profileId, ex);
+			WebTopApp.logger.error("Error deleting servicestore entry [{}]", profileId, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceEntry(UserProfile.Id profileId, String serviceId) {
+	public void deleteServiceStoreEntry(UserProfile.Id profileId, String serviceId) {
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.deleteByDomainUserService(con, profileId.getDomainId(), profileId.getUserId(), serviceId);
 			
 		} catch(SQLException ex) {
-			WebTopApp.logger.error("Error deleting service entry [{}, {}]", profileId, serviceId, ex);
+			WebTopApp.logger.error("Error deleting servicestore entry [{}, {}]", profileId, serviceId, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceEntry(UserProfile.Id profileId, String serviceId, String context, String key) {
+	public void deleteServiceStoreEntry(UserProfile.Id profileId, String serviceId, String context, String key) {
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			ServiceEntryDAO sedao = ServiceEntryDAO.getInstance();
+			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.delete(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
 			
 		} catch(SQLException ex) {
-			WebTopApp.logger.error("Error deleting service entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			WebTopApp.logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
