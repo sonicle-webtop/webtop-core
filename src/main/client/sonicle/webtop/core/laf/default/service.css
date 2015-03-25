@@ -27,6 +27,7 @@
 /* Platform ICONS */
 .wt-icon-ok-xs { background-image: url('ok_16.png') !important; }
 .wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
+.wt-icon-delete-xs { background-image: url('delete_16.png') !important; }
 .wt-icon-add-xs { background-image: url('add_16.png') !important; }
 .wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
 .wt-icon-edit-xs { background-image: url('edit_16.png') !important; }
@@ -35,9 +36,12 @@
 .wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
 .wt-icon-search-xs { background-image: url('search_16.png') !important; }
 .wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
+.wt-icon-new-filter-xs { background-image: url('filter_add_16.png') !important; }
 .wt-icon-print-xs { background-image: url('print_16.png') !important; }
+.wt-icon-refresh-xs { background-image: url('refresh_16.png') !important; }
 .wt-icon-save-xs { background-image: url('save_16.png') !important; }
 .wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
+.wt-icon-save-all-xs { background-image: url('save_all_16.png') !important; }
 .wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
 .wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
 .wt-icon-filter-xs { background-image: url('filter_16.png') !important; }

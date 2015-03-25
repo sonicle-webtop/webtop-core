@@ -325,6 +325,8 @@ Ext.define('Sonicle.webtop.core.Util', {
 			data.doc=data.iframe.contentDocument;
 		}
 		return data;
+	},
+	
 	checkboxBind: function(modelProp, fieldName) {
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
