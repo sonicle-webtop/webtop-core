@@ -31,20 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-/**
- *
- * @author malbinola
- */
-public class JsValue {
-	public String id;
+Ext.define('Sonicle.webtop.core.store.RRYearlyFreq', {
+	alternateClassName: 'WT.store.RRYearlyFreq',
+	extend: 'Ext.data.ArrayStore',
 	
-	public JsValue() {
-		
-	}
-	
-	public JsValue(String id) {
-		this.id = id;
-	}
-}
+	autoLoad: true,
+	model: 'WT.model.Value',
+	data: [
+		[1,Ext.Date.monthNames[0]],
+		[2,Ext.Date.monthNames[1]],
+		[3,Ext.Date.monthNames[2]],
+		[4,Ext.Date.monthNames[3]],
+		[5,Ext.Date.monthNames[4]],
+		[6,Ext.Date.monthNames[5]],
+		[7,Ext.Date.monthNames[6]],
+		[8,Ext.Date.monthNames[7]],
+		[9,Ext.Date.monthNames[8]],
+		[10,Ext.Date.monthNames[9]],
+		[11,Ext.Date.monthNames[10]],
+		[12,Ext.Date.monthNames[11]]
+	]
+});

@@ -35,6 +35,6 @@ Ext.define('Sonicle.webtop.core.model.Value', {
 	alternateClassName: 'WT.model.Value',
 	extend: 'WT.model.Base',
 	
-	idProperty: 'val',
-	fields: ['val']
+	idProperty: 'id',
+	fields: ['id']
 });

@@ -64,8 +64,8 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 					}
 				})
 			},
-			valueField: 'val',
-			displayField: 'val'
+			valueField: 'id',
+			displayField: 'id'
 		});
 		
 		me.callParent(arguments);

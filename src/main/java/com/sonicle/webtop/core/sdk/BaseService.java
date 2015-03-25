@@ -41,7 +41,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.OServiceEntry;
+import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -188,8 +188,8 @@ public abstract class BaseService {
 				String query = ServletUtils.getStringParameter(request, "query", true);
 				
 				items = new ArrayList<>();
-				List<OServiceEntry> entries = corem.getServiceEntriesByQuery(up.getId(), getId(), context, query);
-				for(OServiceEntry entry : entries) {
+				List<OServiceStoreEntry> entries = corem.getServiceStoreEntriesByQuery(up.getId(), getId(), context, query);
+				for(OServiceStoreEntry entry : entries) {
 					items.add(new JsValue(entry.getValue()));
 				}
 				new JsonResult(items, items.size()).printTo(out);
@@ -197,7 +197,7 @@ public abstract class BaseService {
 			} else if(crud.equals(Crud.DELETE)) {
 				JsPayload<JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
 				
-				corem.deleteServiceEntry(up.getId(), getId(), context, pl.data.val);
+				corem.deleteServiceStoreEntry(up.getId(), getId(), context, pl.data.id);
 				new JsonResult().printTo(out);
 			}
 			
