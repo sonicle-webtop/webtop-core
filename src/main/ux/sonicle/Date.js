@@ -102,6 +102,15 @@ Ext.define('Sonicle.Date', {
 	},
 	
 	/**
+	 * Returns localized day name with minimal string length.
+	 * @param {Number} day The day index (0=sunday, 1=monday, etc...)
+	 * @returns {String} Localized name.
+	 */
+	getShortestDayName: function(day) {
+		return Ext.Date.getShortDayName(day).substring(0, 1);
+	},
+	
+	/**
 	 * Returns the time duration between two dates in the specified units. For finding the number of
 	 * calendar days (ignoring time) between two dates use {@link Extensible.Date.diffDays diffDays} instead.
 	 * @param {Date} start The start date
