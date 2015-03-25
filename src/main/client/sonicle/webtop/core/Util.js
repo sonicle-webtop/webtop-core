@@ -204,5 +204,40 @@ Ext.define('Sonicle.webtop.core.Util', {
 			type: type,
 			allowNull: true
 		}, cfg);
+	},
+	
+	checkboxBind: function(modelProp, fieldName) {
+		return {
+			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			get: function(val) {
+				return val;
+			},
+			set: function(val) {
+				this.get(modelProp).set(fieldName, val);
+			}
+		};
+	},
+	
+	checkboxGroupBind: function(modelProp, fieldName) {
+		return {
+			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			get: function(val) {
+				var ret = {};
+				ret[fieldName] = val;
+				return ret;
+			},
+			set: function(val) {
+				this.get(modelProp).set(fieldName, val[fieldName]);
+			}
+		};
+	},
+	
+	equalsFormula: function(modelProp, fieldName, equalsTo) {
+		return {
+			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			get: function(val) {
+				return (val === equalsTo);
+			}
+		};
 	}
 });
