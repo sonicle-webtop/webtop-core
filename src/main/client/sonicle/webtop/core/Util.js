@@ -206,6 +206,127 @@ Ext.define('Sonicle.webtop.core.Util', {
 		}, cfg);
 	},
 	
+	/*
+	 * Builds the src url of a themed image for a service
+	 * @param {String} sid The service id
+	 * @param {String} relPath The relative icon path
+	 * @return {String} the imageUrl
+	 */
+	imageUrl: function(sid, relPath) {
+		return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
+	},
+	
+	/*
+	 * Builds the img tag of a themed image for a service.
+	 * @param {String} sid The service id
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	imageTag: function(sid,relPath,width,height,others) {
+		var src=this.imageUrl(sid,relPath);
+		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
+	},
+	
+	/*
+	 * Builds the src url of a global image
+	 * @param {String} relPath The relative icon path
+	 * @return {String} the imageUrl
+	 */
+	globalImageUrl: function(relPath) {
+		return Ext.String.format('resources/{0}/images/{1}',WT.ID,relPath);
+	},
+	
+	/*
+	 * Builds the img tag of a core generic image
+	 * @param {String} relPath The relative icon path
+	 * @param {int} width The icon width
+	 * @param {int} height The icon height
+	 * @param {String} [others] other custom tag properties
+	 * @return {String} the complete image tag
+	 */
+	globalImageTag: function(relPath,width,height,others) {
+		var src=this.globalImageUrl(relPath);
+		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
+	},
+	
+	/*
+	 * Check filename extension trying to guess a known file type name
+	 * @param {String} filename The file name
+	 * @return {String} The recognized file type name, as in WT.filtypes, "bin" if not
+	 */
+	normalizeFileType: function(filename) {
+		var ix=filename.lastIndexOf('.'),
+			extension="bin";
+	
+		if (ix>=0) extension=filename.substring(ix+1).toLowerCase();
+		var ft=WT.filetypes;
+		var typename=ft[extension];
+		if (!typename) typename=ft["bin"];
+		return typename;
+	},
+	
+	/*
+	 * Format a human readble version of the passed size argument (xKB,xMB)
+	 * @param {int} value The value of size to be formatted
+	 * @return {String} The value if less than 1024, else xKB, xMB
+	 */
+	humanReadableSize: function(value) {
+		var s = value;
+		value = parseInt(value/1024);
+		if (value>0) {
+			if (value<1024) s = value+"KB";
+			else s = parseInt(value/1024)+"MB";
+		}
+		return s;
+	},
+	
+	/*
+	 * Build a service request url, based on sid, action and params,
+	 * usable in href or locations
+	 * @param {String} sid The service id
+	 * @param {String} action The action to be called on service
+	 * @param {Object} [params] Optional additional parameters encoded into the url
+	 * @return {String} The encoded url
+	 */
+	serviceRequestUrl: function(sid,action,params) {
+		var url = "service-request?service="+sid+"&action="+action;
+		if (params) url += "&"+Ext.Object.toQueryString(params);
+		return url;
+	},
+	
+	/*
+	 * Build a service request url, based on sid, action and params, adding the
+	 * nowriter option into the params to allow for binary send of data,
+	 * usable in href or locations
+	 * @param {String} sid The service id
+	 * @param {String} action The action to be called on service
+	 * @param {Object} [params] Optional additional parameters encoded into the url
+	 * @return {String} The encoded url
+	 */
+	serviceRequestBinaryUrl: function(sid,action,params) {
+		params = params || {};
+		params.nowriter=true;
+		return this.serviceRequestUrl(sid,action,params);
+	},
+	
+	/*
+	 * Build a data object with iframe data, using cross-browser code
+	 * @param {String} iframename The name of the iframe
+	 * @return {Object} A data object with doc and iframe properties
+	 */
+	getIFrameData: function(iframename) {
+		var data={ doc: null, iframe: document.getElementById(iframename)};
+		if (Ext.isIE) {
+			if (window.frames[iframename]) data.doc=window.frames[iframename].document;
+		} else {
+			data.doc=data.iframe.contentDocument;
+		}
+		return data;
+	},
+	
 	checkboxBind: function(modelProp, fieldName) {
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
@@ -240,4 +361,6 @@ Ext.define('Sonicle.webtop.core.Util', {
 			}
 		};
 	}
+	
+	
 });
