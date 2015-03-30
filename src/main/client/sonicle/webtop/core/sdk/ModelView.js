@@ -142,7 +142,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 						dirty: model ? model.dirty : false,
 						valid: model && model.isModel ? model.isValid() : false
 					};
-					obj.dirtyAndValid = obj.dirty && obj.valid;
+					obj.cleanAndValid = !obj.dirty && obj.valid;
 					return obj;
 				}
 			}
@@ -383,11 +383,13 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	isModelDirty: function() {
-		return this.getModelStatus().dirty;
+		var sta = this.getModelStatus();
+		return (sta) ? sta.dirty : false;
 	},
 	
 	isModelValid: function() {
-		return this.getModelStatus().valid;
+		var sta = this.getModelStatus();
+		return (sta) ? sta.valid : true;
 	},
 	
 	updateTitle: function() {
