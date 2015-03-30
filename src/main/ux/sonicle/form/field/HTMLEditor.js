@@ -55,7 +55,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			items: [
 				{
 					xtype: 'combo', 
-					width: 100,
+					width: 150,
 					store: Ext.create('Ext.data.Store', {
 						fields: ['fn'],
 						data : [
@@ -76,6 +76,35 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					listeners: {
 						'select': function(c,r,o) {
 							me.execCommand('fontname',false,r.get('fn'));
+						}
+					}
+				},
+				{
+					xtype: 'combo', 
+					width: 70,
+					store: Ext.create('Ext.data.Store', {
+						fields: ['fs'],
+						data : [
+							{ fs: "6" },
+							{ fs: "8"},
+							{ fs: "10"},
+							{ fs: "12"},
+							{ fs: "14"},
+							{ fs: "16"},
+							{ fs: "18"},
+							{ fs: "20"},
+							{ fs: "22"},
+							{ fs: "24"}
+						]
+					}),
+					forceSelection: true,
+					autoSelect: true,
+					displayField: 'fs',
+					valueField: 'fs',
+					queryMode: 'local',
+					listeners: {
+						'select': function(c,r,o) {
+							me.execCommand('fontsize',false,r.get('fs'));
 						}
 					}
 				},
