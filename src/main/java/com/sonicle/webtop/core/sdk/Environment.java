@@ -33,20 +33,11 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.bol.OContentType;
-import com.sonicle.webtop.core.dal.ContentTypeDAO;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +46,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class Environment implements BasicEnvironment, ManagerEnvironment {
+public class Environment implements BasicEnvironment {
 
 	protected final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
 	private static HashMap<String,ServiceManifest> manifestMap=new HashMap<>();
@@ -66,21 +57,6 @@ public class Environment implements BasicEnvironment, ManagerEnvironment {
 	public Environment(WebTopApp wta, WebTopSession wts) {
 		this.wta = wta;
 		this.wts = wts;
-	}
-	
-	@Override
-	public List<AppLocale> getLocales() {
-		return wta.getI18nManager().getLocales();
-	}
-	
-	@Override
-	public List<TimeZone> getTimezones() {
-		return wta.getI18nManager().getTimezones();
-	}
-	
-	@Override
-	public Connection getCoreConnection() throws SQLException {
-		return wta.getConnectionManager().getConnection();
 	}
 
 	@Override
@@ -104,61 +80,8 @@ public class Environment implements BasicEnvironment, ManagerEnvironment {
 	}
 
 	@Override
-	public String lookupResource(String serviceId, Locale locale, String key) {
-		return wta.lookupResource(serviceId, locale, key);
-	}
-
-	@Override
-	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
-		return wta.lookupResource(serviceId, locale, key, escapeHtml);
-	}
-
-	@Override
-	public String lookupCoreResource(Locale locale, String key) {
-		return wta.lookupResource(CoreManifest.ID, locale, key);
-	}
-
-	@Override
 	public String getSessionRefererUri() {
 		return wts.getRefererURI();
-	}
-
-	@Override
-	public String getContentType(String extension) {
-		extension=extension.toLowerCase();
-		String ctype=null;
-		Connection con=null;
-        try {
-            con=getCoreConnection();
-			OContentType oct=ContentTypeDAO.getInstance().selectByExtension(con, extension);
-            if (oct!=null) {
-                ctype=oct.getContentType();
-                logger.debug("Got content-type from db: {}={} ",extension,ctype);
-            }
-        } catch(SQLException exc) {
-			logger.error("Error looking up content type for extension {}",extension,exc);
-        } finally {
-            DbUtils.closeQuietly(con);
-        }
-        return ctype;
-	}
-	
-	@Override
-	public String getExtension(String ctype) {
-		ctype=ctype.toLowerCase();
-		String extension=null;
-		Connection con=null;
-		try {
-			con=getCoreConnection();
-			OContentType oct=ContentTypeDAO.getInstance().selectByContentType(con, ctype);
-			if (oct!=null) {
-				extension=oct.getExtension();
-			}
-		} catch(SQLException exc) {
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return extension;
 	}
 	
 	@Override

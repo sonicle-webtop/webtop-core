@@ -1,20 +1,37 @@
 
-/* General purpose color (generally light) */
-.wt-color-base {
-	background-color: #f5f5f5;
-}
-
-.wt-color-theme-light {
-	background-color: #e7e7e7;
-}
-
-.wt-color-theme-dark {
-	background-color: #cecece;
-}
-
 .wt-header {
 	background-color: #E7E7E7;
 }
 .wt-launcher {
 	background-color: #E7E7E7;
+}
+
+/* -----------------------------------------
+ * Convenience classes for addressing theme base colors
+ */
+/*
+ * Background: generally light to not provide excessive contrast
+ * 1:light, 2:base, 3:dark/alternative
+ */
+.wt-theme-bg-1 {
+	background-color: #ffffff;
+}
+.wt-theme-bg-2 {
+	background-color: #f5f5f5;
+}
+.wt-theme-bg-3 {
+	background-color: #f5f5f5;
+}
+/*
+ * Header/
+ * 1:light, 2:darker, 3:dark
+ */
+.wt-theme-hd-1 {
+	background-color: #f5f5f5;
+}
+.wt-theme-hd-2 {
+	background-color: #e6e6e6;
+}
+.wt-theme-hd-3 {
+	background-color: #cecece;
 }

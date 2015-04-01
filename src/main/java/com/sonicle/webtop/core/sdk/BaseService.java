@@ -33,13 +33,13 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsPayload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
@@ -86,10 +86,6 @@ public abstract class BaseService {
 		return coreEnv;
 	}
 	
-	public final ManagerEnvironment getManagerEnv() {
-		return env;
-	}
-	
 	public final ServiceManifest getManifest() {
 		return Environment.getManifest(this.getClass());
 	}
@@ -108,7 +104,8 @@ public abstract class BaseService {
 	 * @return The localized string.
 	 */
 	public final String getName(Locale locale) {
-		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
+		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
+		//return env.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
 	}
 	
 	/**
@@ -117,7 +114,8 @@ public abstract class BaseService {
 	 * @return The localized string.
 	 */
 	public final String getDescription(Locale locale) {
-		return env.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
+		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
+		//return env.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
 	
 	/**
@@ -154,7 +152,8 @@ public abstract class BaseService {
 	 */
     public final Connection getConnection() throws SQLException {
 		//TODO: update return in order to get service connection
-        return env.getCoreConnection();
+		return WT.getCoreConnection();
+        //return env.getCoreConnection();
     }
     
 	/**
@@ -163,7 +162,8 @@ public abstract class BaseService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key) {
-		return env.lookupResource(getId(), env.getProfile().getLocale(), key);
+		return WT.lookupResource(getId(), env.getProfile().getLocale(), key);
+		//return env.lookupResource(getId(), env.getProfile().getLocale(), key);
 	}
     
 	/**
@@ -173,7 +173,8 @@ public abstract class BaseService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key, boolean escapeHtml) {
-		return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
+		return WT.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
+		//return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

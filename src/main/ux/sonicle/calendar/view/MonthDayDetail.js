@@ -61,13 +61,19 @@ Ext.define('Sonicle.calendar.view.MonthDayDetail', {
         templateData = [],
 
         evts = me.store.queryBy(function(rec) {
-			//if(!rec.data[EM.IsAllDay.name]) return false; // Avoids display of  
-			
             var thisDt = eDate.clearTime(me.date, true).getTime(),
                 recStart = eDate.clearTime(rec.data[EM.StartDate.name], true).getTime(),
+				recEnd = eDate.clearTime(rec.data[EM.EndDate.name], true).getTime(),
+				isAllDay = (rec.data[EM.IsAllDay.name] === true),
                 startsOnDate = (thisDt === recStart),
+				endsOnDate = (thisDt === recEnd),
                 spansDate = false;
-
+			
+			if(this.view.isHeaderView) {
+				// Skip events that are already displayed on hours view
+				if(startsOnDate && endsOnDate && !isAllDay) return false;
+			}
+			
             if (!startsOnDate) {
                 var recEnd = eDate.clearTime(rec.data[EM.EndDate.name], true).getTime();
                 spansDate = recStart < thisDt && recEnd >= thisDt;

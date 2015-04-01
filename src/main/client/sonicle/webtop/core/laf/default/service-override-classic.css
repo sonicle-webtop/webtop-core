@@ -1,9 +1,0 @@
-.x-segmented-button-item-horizontal.x-segmented-button-middle {
-    border-radius: 0;
-	/*border-left: 0;*/
-}
-.x-segmented-button-item-horizontal.x-segmented-button-last {
-	/*border-left: 0;*/
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-}

@@ -1,10 +1,9 @@
 
 .wt-header {
-	//background-color: #105F99;
-	background-color: #2A6FA0
+	background-color: #dce7f4;
 }
 .wt-launcher {
-	background-color: #3892d3;
+	background-color: #dce7f4;
 }
 
 /* -----------------------------------------
@@ -15,24 +14,25 @@
  * 1:light, 2:base, 3:dark/alternative
  */
 .wt-theme-bg-1 {
-	background-color: #ffffff;
+	background-color: #dfe9f6;
 }
 .wt-theme-bg-2 {
-	background-color: #dfeaf2;
+	background-color: #dfe9f6;
 }
 .wt-theme-bg-3 {
-	background-color: #3892d3;
+	background-color: #dfe9f6;
 }
 /*
  * Header/
  * 1:light, 2:darker, 3:dark
  */
 .wt-theme-hd-1 {
-	background-color: #dfeaf2;
+	background-color: #dfe9f6;
 }
 .wt-theme-hd-2 {
-	background-color: #5fa7db;
+	background-color: #ced9e7;
 }
 .wt-theme-hd-3 {
-	background-color: #157fcc;
+	background-color: #cecece;
 }
+

@@ -18,7 +18,7 @@ Ext.ns('Sonicle.calendar.data');
 
 Sonicle.calendar.data.EventMappings = {
     EventId: {
-        name: 'eventId',
+        name: 'id',
         //mapping: 'id',
         type: 'string'
     },
@@ -89,6 +89,18 @@ Sonicle.calendar.data.EventMappings = {
     IsNew: {
         name: 'isNew',
         //mapping: 'n',
+        type: 'boolean'
+    },
+	IsReadOnly: {
+        name: 'isReadOnly',
+        type: 'boolean'
+    },
+	IsRecurring: {
+        name: 'isRecurring',
+        type: 'boolean'
+    },
+	IsRecurrenceBroken: {
+        name: 'isRecurrenceBroken',
         type: 'boolean'
     }
 	
