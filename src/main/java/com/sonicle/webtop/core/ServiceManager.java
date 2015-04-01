@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -339,6 +340,7 @@ public class ServiceManager {
 	}
 	
 	private void registerService(ServiceManifest manifest) {
+		ConnectionManager conm = wta.getConnectionManager();
 		ServiceDescriptor desc = null;
 		String serviceId = manifest.getId();
 		String xid = manifest.getXId();
@@ -348,9 +350,20 @@ public class ServiceManager {
 		synchronized(lock) {
 			if(services.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidMappings.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidMappings.get(xid));
+			
 			desc = new ServiceDescriptor(manifest);
 			logger.debug("[default:{}, public:{}, deamon:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasDeamonService(), desc.hasUserOptionsService());
-
+			
+			try {
+				if(!conm.isRegistered(serviceId)) {
+					//TODO: sostituire la seguente registrazione fake con quella reale dei servizi
+					wta.getConnectionManager().registerJdbc4DataSource(serviceId, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+				}
+				
+			} catch(SQLException ex) {
+				throw new WTRuntimeException(ex, "Error registering service connection");
+			}
+			
 			boolean upgraded = upgradeCheck(manifest);
 			desc.setUpgraded(upgraded);
 			if(upgraded) {

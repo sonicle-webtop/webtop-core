@@ -105,7 +105,6 @@ public abstract class BaseService {
 	 */
 	public final String getName(Locale locale) {
 		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
-		//return env.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
 	}
 	
 	/**
@@ -115,7 +114,6 @@ public abstract class BaseService {
 	 */
 	public final String getDescription(Locale locale) {
 		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
-		//return env.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
 	
 	/**
@@ -151,9 +149,7 @@ public abstract class BaseService {
 	 * @throws SQLException 
 	 */
     public final Connection getConnection() throws SQLException {
-		//TODO: update return in order to get service connection
-		return WT.getCoreConnection();
-        //return env.getCoreConnection();
+		return WT.getConnection(getId());
     }
     
 	/**
@@ -163,7 +159,6 @@ public abstract class BaseService {
 	 */
 	public final String lookupResource(String key) {
 		return WT.lookupResource(getId(), env.getProfile().getLocale(), key);
-		//return env.lookupResource(getId(), env.getProfile().getLocale(), key);
 	}
     
 	/**
@@ -174,7 +169,6 @@ public abstract class BaseService {
 	 */
 	public final String lookupResource(String key, boolean escapeHtml) {
 		return WT.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
-		//return env.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
