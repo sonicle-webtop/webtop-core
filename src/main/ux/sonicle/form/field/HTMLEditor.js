@@ -86,12 +86,13 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			tinyMCEConfig: {
 				plugins: [
 				"advlist autolink lists link image charmap print preview hr anchor pagebreak",
-				"searchreplace wordcount visualblocks visualchars code fullscreen",
+				"searchreplace visualblocks visualchars code fullscreen",
 				"insertdatetime media nonbreaking save table contextmenu directionality",
 				"emoticons template paste textcolor"
 				],
 
 				toolbar: false,
+				statusbar: false,
 				//toolbar1: "newdocument fullpage | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | styleselect formatselect fontselect fontsizeselect",
 				//toolbar2: "cut copy paste | searchreplace | bullist numlist | outdent indent blockquote | undo redo | link unlink anchor image media code | inserttime preview | forecolor backcolor",
 				//toolbar3: "table | hr removeformat | subscript superscript | charmap emoticons | print fullscreen | ltr rtl | spellchecker | visualchars visualblocks nonbreaking template pagebreak restoredraft",
@@ -300,7 +301,8 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                 items.push(
                     '-',
                     btn('sourceedit', true, function(){
-                        me.toggleSourceEdit(!me.sourceEditMode);
+                        //me.toggleSourceEdit(!me.sourceEditMode);
+						me.execCommand('mceToggleEditor');
                     })
                 );
             }
@@ -319,7 +321,8 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             xtype: 'toolbar',
 			region: 'north',
             defaultButtonUI: me.defaultButtonUI,
-            cls: Ext.baseCSSPrefix + 'html-editor-tb',
+			cls: Ext.baseCSSPrefix + 'html-editor-tb',
+//            bodyCls: 'wt-theme-bg-2',
             enableOverflow: true,
             items: items,
 
