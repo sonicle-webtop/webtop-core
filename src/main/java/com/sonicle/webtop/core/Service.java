@@ -112,7 +112,7 @@ public class Service extends BaseService {
 		Locale locale = env.getSession().getLocale();
 		
 		try {
-			for(AppLocale loc : env.getLocales()) {
+			for(AppLocale loc : WT.getInstalledLocales()) {
 				//System.out.println(loc.getShortDatePattern());
 				//System.out.println(loc.getShortTimePattern());
 				//System.out.println(loc.getLocale().getDisplayName());
@@ -133,7 +133,7 @@ public class Service extends BaseService {
 		try {	
 			String normId = null;
 			int off;
-			for(TimeZone tz : env.getTimezones()) {
+			for(TimeZone tz : WT.getTimezones()) {
 				normId = StringUtils.replace(tz.getID(), "_", " ");
 				off = tz.getRawOffset()/3600000;
 				items.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
@@ -188,7 +188,7 @@ public class Service extends BaseService {
 			ArrayList<JsSimple> data = new ArrayList<>();
 			UserProfile up = env.getProfile();
 			if(up.isSystemAdmin()) {
-				con = env.getCoreConnection();
+				con = WT.getCoreConnection();
 				UserDAO udao = UserDAO.getInstance();
 				List<OUser> users = udao.selectAll(con);
 				String id = null, descr = null;
@@ -235,7 +235,7 @@ public class Service extends BaseService {
 		ArrayList<JsSimple> items = new ArrayList<>();
 		List<String> ids = env.getSession().getServices();
 		for(String id : ids) {
-			items.add(new JsSimple(id, env.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
+			items.add(new JsSimple(id, WT.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
 		}
 		new JsonResult("services", items).printTo(out);
 	}
@@ -272,7 +272,7 @@ public class Service extends BaseService {
 					html = env.getManager().getWhatsnewHtml(id, env.getProfile(), full);
 					if(!StringUtils.isEmpty(html)) {
 						tab = new JsWhatsnewTab(id);
-						tab.title = env.lookupResource(id, profile.getLocale(), CoreLocaleKey.SERVICE_NAME);
+						tab.title = WT.lookupResource(id, profile.getLocale(), CoreLocaleKey.SERVICE_NAME);
 						tabs.add(tab);
 					}
 				}

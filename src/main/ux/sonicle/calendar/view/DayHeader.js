@@ -61,8 +61,8 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	// private
 	recalcHeaderBox: function() {
 		var me = this, tbl = me.el.down('.ext-cal-evt-tbl'),
-				//h = tbl.getHeight();
-				h = Math.max(tbl.getHeight(), 80);
+				h = tbl.getHeight();
+				//h = Math.max(tbl.getHeight(), 80);
 		tbl.setHeight(h);
 		me.el.setHeight(h + 7);
 		

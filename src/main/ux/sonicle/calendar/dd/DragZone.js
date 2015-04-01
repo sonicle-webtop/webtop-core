@@ -12,6 +12,19 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 	ddGroup: 'CalendarDD',
 	eventSelector: '.ext-cal-evt',
 	
+	statics: {
+		isEventDraggable: function(rec) {
+			var EM = Sonicle.calendar.data.EventMappings,
+					data = (rec.data) ? rec.data : rec,
+					isRR = (data[EM.IsRecurring.name] === true),
+					isRO = (data[EM.IsReadOnly.name] === true);
+
+			if(isRR) return false;
+			if(isRO) return false;
+			return true;
+		}
+	},
+	
 	constructor: function(el, config) {
 		if (!Sonicle.calendar._statusProxyInstance) {
 			Sonicle.calendar._statusProxyInstance = new Sonicle.calendar.dd.StatusProxy();
@@ -22,14 +35,17 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 	
 	getDragData: function(e) {
 		// Check whether we are dragging on an event first
-		var t = e.getTarget(this.eventSelector, 3);
+		var EM = Sonicle.calendar.data.EventMappings,
+				t = e.getTarget(this.eventSelector, 3);
+		
 		if (t) {
 			var rec = this.view.getEventRecordFromEl(t);
 			return {
 				type: 'eventdrag',
 				ddel: t,
-				eventStart: rec.data[Sonicle.calendar.data.EventMappings.StartDate.name],
-				eventEnd: rec.data[Sonicle.calendar.data.EventMappings.EndDate.name],
+				draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				eventStart: rec.data[EM.StartDate.name],
+				eventEnd: rec.data[EM.EndDate.name],
 				proxy: this.proxy
 			};
 		}
@@ -45,6 +61,10 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 			};
 		}
 		return null;
+	},
+	
+	onBeforeDrag: function(data, e) {
+		return data.draggable;
 	},
 	
 	onInitDrag: function(x, y) {

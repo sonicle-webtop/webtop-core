@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
@@ -82,7 +83,7 @@ public final class UserProfile {
 		Connection con = null;
 		
 		try {
-			con = fullEnv.getCoreConnection();
+			con = WT.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
 			
 			// Retrieves corresponding user using principal details

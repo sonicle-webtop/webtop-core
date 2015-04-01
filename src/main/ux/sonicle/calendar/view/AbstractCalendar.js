@@ -21,25 +21,31 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	/**
 	 * @cfg {String} timezoneIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * A css class which sets an image to be used as the icon for timezone events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
 	 * @cfg {String} privateIconCls
-	 * A css class which sets an image to be used as the icon for private
+	 * A css class which sets an image to be used as the icon for private events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
 	 * @cfg {String} reminderIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * A css class which sets an image to be used as the icon for reminder events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
-	 * @cfg {String} recurringIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * @cfg {String} recurrenceIconCls
+	 * A css class which sets an image to be used as the icon for recurring events.
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} recurrenceBrokenIconCls
+	 * A css class which sets an image to be used as the icon for recurring broken events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
@@ -454,6 +460,14 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		var evtsInView = me.store.queryBy(function (rec) {
 			return me.isEventVisible(rec.data);
 		}, me);
+		
+		var filterFn = function(rec) {
+			var startDt = Ext.Date.clearTime(rec.data[EM.StartDate.name], true),
+					startsOnDate = dt.getTime() === startDt.getTime(),
+					spansFromPrevView = ((w === 0) && (d === 0) && (dt > rec.data[EM.StartDate.name]));
+			
+			return startsOnDate || spansFromPrevView;
+		};
 
 		for (; w < weeks; w++) {
 			me.evtMaxCount[w] = 0;
@@ -466,13 +480,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 
 			for (d = 0; d < me.dayCount; d++) {
 				if (evtsInView.getCount() > 0) {
-					var evts = evtsInView.filterBy(function (rec) {
-						var startDt = Ext.Date.clearTime(rec.data[EM.StartDate.name], true),
-								startsOnDate = dt.getTime() === startDt.getTime(),
-								spansFromPrevView = ((w === 0) && (d === 0) && (dt > rec.data[EM.StartDate.name]));
-								
-						return startsOnDate || spansFromPrevView;
-					}, me);
+					var evts = evtsInView.filterBy(filterFn, me);
 
 					me.sortEventRecordsForDay(evts);
 					me.prepareEventGrid(evts, w, d);
@@ -791,6 +799,26 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	/**
+	 * Builds strings useful for displaying an event.
+	 * @param {Object} edata Event data.
+	 * @param {String} timeFmt Desired time format string.
+	 * @return {Object} An object containing title and tooltip properties.
+	 */
+	buildEventDisplayInfo: function(edata, timeFmt) {
+		var EM = Sonicle.calendar.data.EventMappings,
+				title = edata[EM.Title.name],
+				location = edata[EM.Location.name],
+				start = Ext.Date.format(edata[EM.StartDate.name], timeFmt),
+				end = Ext.Date.format(edata[EM.EndDate.name], timeFmt),
+				titloc = Ext.isEmpty(location) ? title : Ext.String.format('{0} @{1}', title, location);
+		
+		return {
+			title: titloc,
+			tooltip: (edata[EM.IsAllDay.name] === true) ? titloc : Ext.String.format('{0} {1} {2}', start, end, titloc)
+		};
+	},
+	
+	/**
 	 * Visually highlights an event using {@link Ext.Fx#highlight} config options.
 	 * If {@link #highlightEventActions} is false this method will have no effect.
 	 * @param {Ext.CompositeElement} els The element(s) to highlight
@@ -928,6 +956,20 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		}
 
 		return (start1 <= end2 && end1 >= start2);
+	},
+	
+	isEventSpanning: function(evt) {
+		var EM = Sonicle.calendar.data.EventMappings,
+				data = evt.data || evt,
+				diff;
+		
+		diff = Sonicle.Date.diffDays(data[EM.StartDate.name], data[EM.EndDate.name]);
+		//TODO: Prevent 00:00 end time from causing a span. This logic is OK, but
+        //      other changes are still needed for it to work fully. Deferring for now.
+//        if (diff <= 1 && Extensible.Date.isMidnight(data[M.EndDate.name])) {
+//            return false;
+//        }
+		return diff > 0;
 	},
 	
 	getDayEl: function (dt) {
@@ -1414,6 +1456,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		}
 
 		if (me.fireEvent('beforeevent' + moveOrCopy, me, newRec, Ext.Date.clone(newStartDate)) !== false) {
+			//TODO: cambiare gestione ricorrenza
 			if (newRec.get('isRecurring')) {
 				me.onRecurrenceEditModeSelected('single', newRec, newStartDate, moveOrCopy);
 			} else {

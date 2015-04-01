@@ -33,27 +33,15 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-
 /**
  *
  * @author malbinola
  */
-public interface ManagerEnvironment {
-	public List<AppLocale> getLocales();
-	public List<TimeZone> getTimezones();
-	public String lookupResource(String serviceId, Locale locale, String key);
-	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml);
-	public String lookupCoreResource(Locale locale, String key);
-    public Connection getCoreConnection() throws SQLException;
-    public CoreServiceSettings getCoreServiceSettings();
-    public CoreUserSettings getCoreUserSettings();
-	public String getContentType(String extension);
-	public String getExtension(String contentType);
+public class BaseServiceManager {
+	
+	protected final ServiceManifest manifest;
+	
+	public BaseServiceManager(ServiceManifest manifest) {
+		this.manifest = manifest;
+	}
 }

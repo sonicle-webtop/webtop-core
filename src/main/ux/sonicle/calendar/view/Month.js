@@ -221,6 +221,9 @@ Ext.define('Sonicle.calendar.view.Month', {
 	getEventBodyMarkup: function() {
 		if (!this.eventBodyMarkup) {
 			this.eventBodyMarkup = [
+				'<tpl if="_isRecurring">',
+				'<i class="ext-cal-ic {_recIconCls}">&#160;</i>',
+				'</tpl>',
 				'<tpl if="_isTimezone">',
 				'<i class="ext-cal-ic {_tzIconCls}">&#160;</i>',
 				'</tpl>',
@@ -228,9 +231,6 @@ Ext.define('Sonicle.calendar.view.Month', {
 				'<i class="ext-cal-ic {_pvtIconCls}">&#160;</i>',
 				'</tpl>',
 				'{Title}',
-				'<tpl if="_isRecurring">',
-				'<i class="ext-cal-ic {_recIconCls}">&#160;</i>',
-				'</tpl>',
 				'<tpl if="_isReminder">',
 				'<i class="ext-cal-ic {_remIconCls}">&#160;</i>',
 				'</tpl>'
@@ -247,18 +247,18 @@ Ext.define('Sonicle.calendar.view.Month', {
 
 			tpl = !(Ext.isIE7m || this.operaLT11) ?
 					new Ext.XTemplate(
-							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
 							body,
 							'</div>'
 							)
 					: new Ext.XTemplate(
 							'<tpl if="_renderAsAllDay">',
-							'<div id="{_elId}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor}; color:{_foreColor};">',
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor}; color:{_foreColor};">',
 								'<div class="ext-cal-evm">',
 									'<div class="ext-cal-evi">',
 							'</tpl>',
 							'<tpl if="!_renderAsAllDay">',
-							'<div id="{_elId}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
 							'</tpl>',
 							body,
 							'<tpl if="_renderAsAllDay">',
@@ -276,27 +276,29 @@ Ext.define('Sonicle.calendar.view.Month', {
 	// private
 	getTemplateEventData: function(evt) {
 		var me = this,
-				M = Sonicle.calendar.data.EventMappings,
-				selector = me.getEventSelectorCls(evt[M.EventId.name]),
-				title = evt[M.Title.name],
+				EM = Sonicle.calendar.data.EventMappings,
+				selector = me.getEventSelectorCls(evt[EM.EventId.name]),
+				title = evt[EM.Title.name],
 				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
-				bgColor = (evt[M.Color.name] || '');
-		console.log('getTemplateEventData');
+				bgColor = (evt[EM.Color.name] || ''),
+				dinfo = me.buildEventDisplayInfo(evt, timeFmt);
+		
 		return Ext.applyIf({
 			_selectorCls: selector,
 			_bgColor: bgColor,
 			_foreColor: me.getEventForeColor(bgColor),
-			_colorCls: 'ext-color-' + (evt[M.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : ''),
+			_colorCls: 'ext-color-' + (evt[EM.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : ''),
 			_elId: selector + '-' + evt._weekIndex,
-			_isTimezone: !Ext.isEmpty(evt[M.Timezone.name]),
-			_isPrivate: evt[M.IsPrivate.name],
-			_isRecurring: evt.Recurrence && evt.Recurrence !== '',
-			_isReminder: !Ext.isEmpty(evt[M.Reminder.name]),
+			_isTimezone: !Ext.isEmpty(evt[EM.Timezone.name]),
+			_isPrivate: (evt[EM.IsPrivate.name] === true),
+			_isRecurring: (evt[EM.IsRecurring.name] === true),
+			_isReminder: !Ext.isEmpty(evt[EM.Reminder.name]),
 			_tzIconCls: me.timezoneIconCls,
 			_pvtIconCls: me.privateIconCls,
-			_recIconCls: me.recurringIconCls,
+			_recIconCls: (evt[EM.IsRecurrenceBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls,
 			_remIconCls: me.reminderIconCls,
-			Title: (evt[M.IsAllDay.name] ? '' : Ext.Date.format(evt[M.StartDate.name], timeFmt+' ')) + (!title || (title.length === 0) ? '(No title)' : title),
+			Title: dinfo.title,
+			Tooltip: dinfo.tooltip,
 			_operaLT11: me.operaLT11 ? 'ext-operaLT11' : ''
 		},
 		evt);
@@ -304,11 +306,13 @@ Ext.define('Sonicle.calendar.view.Month', {
 	
 	// private
 	refresh: function(reloadData) {
-		if (this.detailPanel) { //TODO: rimuovere detailPanel
+		if (this.detailPanel) {
 			this.detailPanel.hide();
 		}
 		if(!this.isHeaderView) {
 			this.maxEventsPerDay = this.getMaxEventsPerDay();
+		} else {
+			this.maxEventsPerDay = 3;
 		}
 		this.callParent(arguments);
 
@@ -323,7 +327,8 @@ Ext.define('Sonicle.calendar.view.Month', {
 			eventGrid: this.allDayOnly ? this.allDayGrid : this.eventGrid,
 			viewStart: this.viewStart,
 			tpl: this.getEventTemplate(),
-			maxEventsPerDay: this.getMaxEventsPerDay(),
+			maxEventsPerDay: this.maxEventsPerDay,
+			//maxEventsPerDay: this.getMaxEventsPerDay(),
 			id: this.id,
 			templateDataFn: Ext.bind(this.getTemplateEventData, this),
 			evtMaxCount: this.evtMaxCount,

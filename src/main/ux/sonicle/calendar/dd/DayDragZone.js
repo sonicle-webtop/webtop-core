@@ -13,8 +13,7 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 	resizeSelector: '.ext-evt-rsz',
 	
 	getDragData: function (e) {
-		var startDateName = Sonicle.calendar.data.EventMappings.StartDate.name,
-				endDateName = Sonicle.calendar.data.EventMappings.EndDate.name,
+		var EM = Sonicle.calendar.data.EventMappings,
 				t, p, rec;
 		
 		t = e.getTarget(this.topResizeSelector, 2, true);
@@ -26,8 +25,9 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 				type: 'eventresize',
 				direction: 'top',
 				ddel: p.dom,
-				eventStart: rec.get(startDateName),
-				eventEnd: rec.get(endDateName),
+				draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				eventStart: rec.get(EM.StartDate.name),
+				eventEnd: rec.get(EM.EndDate.name),
 				proxy: this.proxy
 			};
 		}
@@ -41,8 +41,9 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 				type: 'eventresize',
 				direction: 'bottom',
 				ddel: p.dom,
-				eventStart: rec.get(startDateName),
-				eventEnd: rec.get(endDateName),
+				draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				eventStart: rec.get(EM.StartDate.name),
+				eventEnd: rec.get(EM.EndDate.name),
 				proxy: this.proxy
 			};
 		}
@@ -69,8 +70,9 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 			return {
 				type: 'eventdrag',
 				ddel: t,
-				eventStart: rec.get(startDateName),
-				eventEnd: rec.get(endDateName),
+				draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				eventStart: rec.get(EM.StartDate.name),
+				eventEnd: rec.get(EM.EndDate.name),
 				proxy: this.proxy
 			};
 		}

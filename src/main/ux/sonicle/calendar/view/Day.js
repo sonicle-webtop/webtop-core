@@ -22,25 +22,31 @@ Ext.define('Sonicle.calendar.view.Day', {
 	
 	/**
 	 * @cfg {String} timezoneIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * A css class which sets an image to be used as the icon for timezone events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
 	 * @cfg {String} privateIconCls
-	 * A css class which sets an image to be used as the icon for private
+	 * A css class which sets an image to be used as the icon for private events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
 	 * @cfg {String} reminderIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * A css class which sets an image to be used as the icon for reminder events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
 	/**
-	 * @cfg {String} recurringIconCls
-	 * A css class which sets an image to be used as the icon for timezone
+	 * @cfg {String} recurrenceIconCls
+	 * A css class which sets an image to be used as the icon for recurring events.
+	 * There are no default icon classes that come with this component.
+	 */
+	
+	/**
+	 * @cfg {String} recurrenceBrokenIconCls
+	 * A css class which sets an image to be used as the icon for recurring broken events.
 	 * There are no default icon classes that come with this component.
 	 */
 	
@@ -284,7 +290,8 @@ Ext.define('Sonicle.calendar.view.Day', {
 		cfg.timezoneIconCls = me.timezoneIconCls;
 		cfg.privateIconCls = me.privateIconCls;
 		cfg.reminderIconCls = me.reminderIconCls;
-		cfg.recurringIconCls = me.recurringIconCls;
+		cfg.recurrenceIconCls = me.recurrenceIconCls;
+		cfg.recurrenceBrokenIconCls = me.recurrenceBrokenIconCls;
 		cfg.use24HourTime = me.use24HourTime;
         cfg.showTime = me.showTime;
         cfg.showTodatText = me.showTodayText;
