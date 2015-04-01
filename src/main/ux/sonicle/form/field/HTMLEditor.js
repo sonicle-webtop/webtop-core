@@ -55,13 +55,32 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
      */
     defaultButtonUI: 'default-toolbar',
 	
-	enableFont: false,
+	defaultFont: 'Arial',
+	
+    // This will strip any number of single or double quotes (in any order) from a string at the anchors.
+    reStripQuotes: /^['"]*|['"]*$/g,	enableFont: false,
+    textAlignRE: /text-align:(.*?);/i,
+    safariNonsenseRE: /\sclass="(?:Apple-style-span|Apple-tab-span|khtml-block-placeholder)"/gi,
+    nonDigitsRE: /\D/g,
+	
 	enableFontSize: false,
 	enableFormat: false,
 	enableColors: false,
 	enableAlignments: false,
+	enableLinks: false,
 	enableLists: false,
 	enableSourceEdit: false,
+	
+	fontFamilies: [
+		"Arial",
+		"Comic Sans MS",
+		"Courier New",
+		"Helvetica",
+		"Tahoma",
+		"Times New Roman",
+		"Verdana"
+	],
+	
 	
 	initComponent: function() {
 		var me=this;
@@ -72,6 +91,9 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
         //    type: 'vbox',
         //    align: 'stretch'
         //};
+		
+		me.tmce.on("init", me.tmceInit, me);
+		me.tmce.on("change", me.updateToolbar, me);
 		
 		me.callParent(arguments);
 		me.initField();
@@ -106,6 +128,10 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		
     },
 	
+	getToolbar: function() {
+		return this.toolbar;
+	},
+	
 /*
      * Called when the editor creates its toolbar. Override this method if you need to
      * add custom toolbar buttons.
@@ -128,7 +154,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             return {
                 itemId: id,
                 cls: baseCSSPrefix + 'btn-icon',
-                iconCls: baseCSSPrefix + 'edit-'+id,
+                iconCls: 'wt-icon-format-'+id+"-xs",
                 enableToggle:toggle !== false,
                 scope: me,
                 handler:handler||me.relayBtnCmd,
@@ -141,41 +167,38 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 
 
         if (me.enableFont) {
-
+			var fontData=[];
+			for(i=0;i<me.fontFamilies.length;++i) {
+				var fn=me.fontFamilies[i];
+				fontData[i]={ id: fn.toLowerCase(), fn: fn };
+			}
+			
             items.push(
-				{
+				me.fontCombo=Ext.widget({
 					xtype: 'combo', 
 					width: 140,
 					store: Ext.create('Ext.data.Store', {
-						fields: ['fn'],
-						data : [
-							{ fn: "Arial" },
-							{ fn: "Comic Sans MS" },
-							{ fn: "Courier New" },
-							{ fn: "Helvetica" },
-							{ fn: "Tahoma" },
-							{ fn: "Times New Roman" },
-							{ fn: "Verdana" }
-						]
+						fields: ['id','fn'],
+						data : fontData
 					}),
 					forceSelection: true,
 					autoSelect: true,
 					displayField: 'fn',
-					valueField: 'fn',
+					valueField: 'id',
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
 							me.execCommand('fontname',false,r.get('fn'));
 						}
 					}
-				},
+				}),
 				'-'
             );
         }
 		
         if (me.enableFontSize) {
 			items.push(
-				{
+				me.fontSizeCombo=Ext.widget({
 					xtype: 'combo', 
 					width: 50,
 					store: Ext.create('Ext.data.Store', {
@@ -200,7 +223,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 							me.execCommand('fontsize',false,r.get('id'));
 						}
 					}
-				},
+				}),
 				'-'
 			);
 			
@@ -219,7 +242,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                 '-', {
                     itemId: 'forecolor',
                     cls: baseCSSPrefix + 'btn-icon',
-                    iconCls: baseCSSPrefix + 'edit-forecolor',
+                    iconCls: 'wt-icon-format-forecolor-xs',
                     overflowText: me.buttonTips.forecolor.title,
                     tooltip: tipsEnabled ? me.buttonTips.forecolor || undef : undef,
                     tabIndex:-1,
@@ -242,7 +265,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                 }, {
                     itemId: 'backcolor',
                     cls: baseCSSPrefix + 'btn-icon',
-                    iconCls: baseCSSPrefix + 'edit-backcolor',
+                    iconCls: 'wt-icon-format-backcolor-xs',
                     overflowText: me.buttonTips.backcolor.title,
                     tooltip: tipsEnabled ? me.buttonTips.backcolor || undef : undef,
                     tabIndex:-1,
@@ -300,9 +323,9 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             if (me.enableSourceEdit) {
                 items.push(
                     '-',
-                    btn('sourceedit', true, function(){
+                    btn('sourceedit', false, function(){
                         //me.toggleSourceEdit(!me.sourceEditMode);
-						me.execCommand('mceToggleEditor');
+						me.execCommand('mceSourceEditor',true,true);
                     })
                 );
             }
@@ -350,6 +373,112 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             }
         }
     },
+	
+	onEditorEvent: function() {
+		this.updateToolbar();
+	},
+	
+	tmceInit: function() {
+        var me = this, fn,
+			ed = tinymce.get(me.tmce.getInputId()),
+			doc = ed.getDoc(),
+			docEl = Ext.get(doc);
+	
+		fn = me.onEditorEvent.bind(me);
+		docEl.on({
+			mousedown: fn,
+			dblclick: fn,
+			click: fn,
+			keyup: fn,
+			delegated: false,
+			buffer:100
+		});
+		this.updateToolbar();
+	},
+	
+    /**
+     * Triggers a toolbar update by reading the markup state of the current selection in the editor.
+     * @protected
+     */
+    updateToolbar: function() {
+        var me = this,
+            i, l, btns, ed, doc, name, queriedName, fontSelect,
+            toolbarSubmenus;
+	
+//			console.log("updateToolbar");
+
+//        if (me.readOnly) {
+//            return;
+//        }
+
+//        if (!me.activated) {
+//            me.onFirstFocus();
+//            return;
+//        }
+
+        btns = me.getToolbar().items.map;
+		ed = tinymce.get(this.tmce.getInputId());
+		doc = ed.getDoc();
+
+        if (me.enableFont && !Ext.isSafari2) {
+            // When querying the fontName, Chrome may return an Array of font names
+            // with those containing spaces being placed between single-quotes.
+            queriedName = ed.getDoc().queryCommandValue('fontName');
+            name = (queriedName ? queriedName.split(",")[0].replace(me.reStripQuotes, '') : me.defaultFont).toLowerCase();
+            fontCombo = me.fontCombo;
+            if (name !== fontCombo.getValue() || name !== queriedName) {
+                fontCombo.setValue(name);
+            }
+        }
+        if (me.enableFontSize && !Ext.isSafari2) {
+            var six = ed.getDoc().queryCommandValue('fontSize'),
+				fontSizeCombo = me.fontSizeCombo;
+			var ix=parseInt(six)+1;
+            if (ix !== fontSizeCombo.getValue()) {
+                fontSizeCombo.setValue(ix);
+            }
+        }
+
+        function updateButtons() {
+            var state;
+            
+            for (i = 0, l = arguments.length, name; i < l; i++) {
+                name  = arguments[i];
+                
+                // Firefox 18+ sometimes throws NS_ERROR_INVALID_POINTER exception
+                // See https://sencha.jira.com/browse/EXTJSIV-9766
+                try {
+                    state = ed.queryCommandState(name);
+                }
+                catch (e) {
+                    state = false;
+                }
+                
+                btns[name].toggle(state);
+            }
+        }
+        if(me.enableFormat){
+            updateButtons('bold', 'italic', 'underline');
+        }
+        if(me.enableAlignments){
+            updateButtons('justifyleft', 'justifycenter', 'justifyright');
+        }
+        if(!Ext.isSafari2 && me.enableLists){
+            updateButtons('insertorderedlist', 'insertunorderedlist');
+        }
+
+        // Ensure any of our toolbar's owned menus are hidden.
+        // The overflow menu must control itself.
+        toolbarSubmenus = me.toolbar.query('menu');
+        for (i = 0; i < toolbarSubmenus.length; i++) {
+            toolbarSubmenus[i].hide();
+        }
+        me.syncValue();
+    },
+	
+	syncValue: function() {
+		//do nothing here for now
+	},
 	
     // @private
     relayBtnCmd: function(btn) {
