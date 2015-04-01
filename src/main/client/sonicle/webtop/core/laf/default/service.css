@@ -53,6 +53,11 @@
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
 
+/* Formatting buttons */
+.wt-icon-bold-xs { background-image: url('format-bold_16.png') !important; }
+.wt-icon-italic-xs { background-image: url('format-italic_16.png') !important; }
+.wt-icon-underline-xs { background-image: url('format-underline_16.png') !important; }
+
 /* Palette ICONS */
 .wt-palette-AC725E { background-image: url('palette/AC725E.png') !important; }
 .wt-palette-D06B64 { background-image: url('palette/D06B64.png') !important; }
@@ -134,4 +139,23 @@ div.wt-wnlist {
 	background-color: #fff;
 	box-shadow: 2px 2px 5px #e1e1e1;
 	border: solid 1px #ccc;
+}
+
+
+
+
+
+
+.x-toolbar .x-toolbar-item {
+    margin-right: 2px;
+}
+
+.x-toolbar .x-toolbar-separator-horizontal {
+	margin-left: 2px !important;
+    margin-right: 4px !important;
+	padding-right: 2px !important;
+}
+
+.mce-container {
+	border: 0px !important;
 }
