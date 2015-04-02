@@ -70,6 +70,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	enableLinks: false,
 	enableLists: false,
 	enableSourceEdit: false,
+	enableClean: false,
 	
 	fontFamilies: [
 		"Arial",
@@ -306,13 +307,6 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
         }
 
         if (!Ext.isSafari2) {
-            if (me.enableLinks) {
-                items.push(
-                    '-',
-                    btn('createlink', false, me.createLink)
-                );
-            }
-
             if (me.enableLists) {
                 items.push(
                     '-',
@@ -320,6 +314,18 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                     btn('insertunorderedlist')
                 );
             }
+        }
+        
+		if (me.enableClean) {
+			items.push(
+				'-',
+				btn('clean', false, function(){
+					me.execCommand('RemoveFormat',true,true);
+				})
+			);
+		}
+		
+        if (!Ext.isSafari2) {
             if (me.enableSourceEdit) {
                 items.push(
                     '-',
@@ -329,8 +335,15 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                     })
                 );
             }
-        }
-        
+			
+			if (me.enableLinks) {
+				items.push(
+					'-',
+					btn('createlink', false, me.createLink)
+				);
+			}
+		}
+
 /*        // Everything starts disabled.
         for (i = 0; i < items.length; i++) {
             if (items[i].itemId !== 'sourceedit') {
@@ -581,7 +594,13 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             title: 'Source Edit',
             text: 'Switch to source editing mode.',
             cls: Ext.baseCSSPrefix + 'html-editor-tip'
+        },
+        clean: {
+            title: 'Remove formatting',
+            text: 'Clean selected text removing any undesired formatting.',
+            cls: Ext.baseCSSPrefix + 'html-editor-tip'
         }
+		
     }
     //</locale>	
 	
