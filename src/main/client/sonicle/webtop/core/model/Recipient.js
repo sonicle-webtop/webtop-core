@@ -31,64 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
-	alternateClassName: 'WT.ux.SuggestCombo',
-	extend: 'Ext.form.field.ComboBox',
-	alias: ['widget.wtsuggestcombo', 'widget.wtsuggestcombobox'],
-	
-	requires: [
-		'Sonicle.webtop.core.model.Value'
-	],
-	
-	/**
-	 * @cfg {String} sid
-	 * Webtop service ID.
-	 */
-	
-	/**
-	 * @cfg {String} suggestionContext
-	 * Suggestion context.
-	 */
-	
-	typeAhead: true,
-	minChars: 2,
-	autoSelect: false,
-	queryMode: 'remote',
-	forceSelection: false,
-	selectOnFocus: false,
-	
-	initComponent: function() {
-		var me = this;
-		Ext.apply(me, {
-			store: {
-				model: 'Sonicle.webtop.core.model.Value',
-				proxy: WT.Util.apiProxy(me.sid, 'ManageSuggestions', 'data', {
-					extraParams: {
-						context: me.suggestionContext
-					}
-				})
-			},
-			valueField: 'id',
-			displayField: 'id'
-		});
-		
-		me.callParent(arguments);
-		
-		me.on('specialkey', me._onSpecialKey);
-	},
-	
-	_onSpecialKey: function(s,e) {
-		if(s.isExpanded) {
-			if(e.shiftKey && (e.getKey() === e.DELETE)) {
-				var pick = s.getPicker(),
-						nav = pick.getNavigationModel(),
-						rec = nav.getRecord();
 
-				if(rec) {
-					rec.drop();
-					s.getStore().sync();
-				}
-			}
-		}
-	}
+Ext.define('Sonicle.webtop.core.model.Recipient', {
+	alternateClassName: 'WT.model.Recipient',
+	extend: 'WT.model.Base',
+	
+	fields: [
+		'recipientType',
+		'email'
+	]
 });

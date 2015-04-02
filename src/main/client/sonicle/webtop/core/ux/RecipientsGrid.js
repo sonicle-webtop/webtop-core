@@ -31,64 +31,83 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
-	alternateClassName: 'WT.ux.SuggestCombo',
-	extend: 'Ext.form.field.ComboBox',
-	alias: ['widget.wtsuggestcombo', 'widget.wtsuggestcombobox'],
-	
+
+Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
+	alternateClassName: 'WT.ux.RegipientsGrid',
+	extend: 'Ext.grid.Panel',
+	alias: ['widget.wtrecipientsgrid'],
 	requires: [
-		'Sonicle.webtop.core.model.Value'
+		'Sonicle.webtop.core.model.Recipient',
+		'Sonicle.webtop.core.model.RecipientType'
 	],
-	
+
 	/**
 	 * @cfg {String} sid
-	 * Webtop service ID.
+	 * Webtop service ID, if different from Contacts sid.
 	 */
+	sid: 'com.sonicle.webtop.contacts',
+	
+	/**
+	 * @cfg {String} action
+	 * Webtop action, if different from LookupContacts.
+	 */
+	action: 'LookupContacts',
 	
 	/**
 	 * @cfg {String} suggestionContext
 	 * Suggestion context.
 	 */
 	
-	typeAhead: true,
-	minChars: 2,
-	autoSelect: false,
-	queryMode: 'remote',
-	forceSelection: false,
-	selectOnFocus: false,
-	
 	initComponent: function() {
 		var me = this;
+		
 		Ext.apply(me, {
-			store: {
-				model: 'Sonicle.webtop.core.model.Value',
-				proxy: WT.Util.apiProxy(me.sid, 'ManageSuggestions', 'data', {
-					extraParams: {
-						context: me.suggestionContext
-					}
-				})
+			selModel: 'cellmodel',
+			hideHeaders: true,
+			plugins: {
+				ptype: 'cellediting',
+				clicksToEdit: 1
 			},
-			valueField: 'id',
-			displayField: 'id'
+			store: {
+				model: 'Sonicle.webtop.core.model.Recipient',
+				data: [ ['to',''] ]
+			},
+			
+			columns: [
+				{
+					width: 50, 
+					dataIndex: 'recipientType', 
+					editor: Ext.create('Ext.form.ComboBox',{
+					  forceSelection: true,
+					  queryMode: 'local',
+					  displayField: 'description',
+					  triggerAction: 'all',
+					  //selectOnFocus: true,
+					  width: 30,
+					  //editable: false,
+					  store: {
+						  model: "Sonicle.webtop.core.model.RecipientType",
+						  data: [
+							  { recipientType: 'to', description: WT.res('recipienttype.to') },
+							  { recipientType: 'cc', description: WT.res('recipienttype.cc') },
+							  { recipientType: 'bcc', description: WT.res('recipienttype.bcc') }
+						  ]
+					  },
+					  value: 'to',
+					  valueField: 'recipientType'
+					}),
+					renderer: function(value, md, record, ri, ci, s, view) {
+						return '<font color="black">'+WT.res('recipient.'+value)+'</font>';
+					}
+				},
+				{
+					width: 400,
+					dataIndex: 'email', 
+					editor: 'textfield'
+				}
+			]
 		});
 		
 		me.callParent(arguments);
-		
-		me.on('specialkey', me._onSpecialKey);
-	},
-	
-	_onSpecialKey: function(s,e) {
-		if(s.isExpanded) {
-			if(e.shiftKey && (e.getKey() === e.DELETE)) {
-				var pick = s.getPicker(),
-						nav = pick.getNavigationModel(),
-						rec = nav.getRecord();
-
-				if(rec) {
-					rec.drop();
-					s.getStore().sync();
-				}
-			}
-		}
-	}
+	}	
 });

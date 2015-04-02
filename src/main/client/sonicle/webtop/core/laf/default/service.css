@@ -54,9 +54,19 @@
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
 
 /* Formatting buttons */
-.wt-icon-bold-xs { background-image: url('format-bold_16.png') !important; }
-.wt-icon-italic-xs { background-image: url('format-italic_16.png') !important; }
-.wt-icon-underline-xs { background-image: url('format-underline_16.png') !important; }
+.wt-icon-format-bold-xs { background-image: url('format-bold_16.png') !important; }
+.wt-icon-format-italic-xs { background-image: url('format-italic_16.png') !important; }
+.wt-icon-format-underline-xs { background-image: url('format-underline_16.png') !important; }
+.wt-icon-format-forecolor-xs { background-image: url('format-forecolor_16.png') !important; }
+.wt-icon-format-backcolor-xs { background-image: url('format-backcolor_16.png') !important; }
+.wt-icon-format-justifyleft-xs { background-image: url('format-justifyleft_16.png') !important; }
+.wt-icon-format-justifycenter-xs { background-image: url('format-justifycenter_16.png') !important; }
+.wt-icon-format-justifyright-xs { background-image: url('format-justifyright_16.png') !important; }
+.wt-icon-format-createlink-xs { background-image: url('format-createlink_16.png') !important; }
+.wt-icon-format-insertorderedlist-xs { background-image: url('format-insertorderedlist_16.png') !important; }
+.wt-icon-format-insertunorderedlist-xs { background-image: url('format-insertunorderedlist_16.png') !important; }
+.wt-icon-format-sourceedit-xs { background-image: url('format-sourceedit_16.png') !important; }
+.wt-icon-format-clean-xs { background-image: url('format-clean_16.png') !important; }
 
 /* Palette ICONS */
 .wt-palette-AC725E { background-image: url('palette/AC725E.png') !important; }
