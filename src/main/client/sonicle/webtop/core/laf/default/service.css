@@ -27,16 +27,17 @@
 /* Platform ICONS */
 .wt-icon-ok-xs { background-image: url('ok_16.png') !important; }
 .wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
-.wt-icon-delete-xs { background-image: url('delete_16.png') !important; }
 .wt-icon-add-xs { background-image: url('add_16.png') !important; }
-.wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
 .wt-icon-edit-xs { background-image: url('edit_16.png') !important; }
+.wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
+.wt-icon-delete-xs { background-image: url('remove_16.png') !important; }
+.wt-icon-restore-xs { background-image: url('restore_16.png') !important; }
 .wt-icon-block-xs { background-image: url('block_16.png') !important; }
 .wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
 .wt-icon-search-xs { background-image: url('search_16.png') !important; }
 .wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
-.wt-icon-new-filter-xs { background-image: url('filter_add_16.png') !important; }
+.wt-icon-new-filter-xs { background-image: url('filter-add_16.png') !important; }
 .wt-icon-panel-bottom-xs { background-image: url('panel-bottom_16.png') !important; }
 .wt-icon-panel-left-xs { background-image: url('panel-left_16.png') !important; }
 .wt-icon-panel-right-xs { background-image: url('panel-right_16.png') !important; }
@@ -48,7 +49,6 @@
 .wt-icon-save-all-xs { background-image: url('save_all_16.png') !important; }
 .wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
 .wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
-.wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
 .wt-icon-item-enable-xs { background-image: url('item-enable_16.png') !important; }
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }

@@ -53,6 +53,18 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	 * @param {Boolean} allday True if the day clicked on represents an all-day box, else false. Clicks within the 
 	 * DayBodyView always return false for this param.
 	 * @param {Ext.core.Element} el The Element that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
+	 */
+	
+	/**
+	 * @event daydblclick
+	 * Fires after the user clicks within the day view container and not on an event element
+	 * @param {Sonicle.calendar.view.DayBody} this
+	 * @param {Date} dt The date/time that was clicked on
+	 * @param {Boolean} allday True if the day clicked on represents an all-day box, else false. Clicks within the 
+	 * DayBodyView always return false for this param.
+	 * @param {Ext.core.Element} el The Element that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
 	 */
 
 	initComponent: function() {
@@ -482,19 +494,20 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	
 	// private
 	getDayAt: function(x, y) {
-		var xoffset = this.el.down('.ext-cal-day-times').getWidth(),
-				viewBox = this.el.getBox(),
-				daySize = this.getDaySize(false),
+		var me = this,
+				xoffset = me.el.down('.ext-cal-day-times').getWidth(),
+				viewBox = me.el.getBox(),
+				daySize = me.getDaySize(false),
 				relX = x - viewBox.x - xoffset,
 				dayIndex = Math.floor(relX / daySize.width), // clicked col index
-				scroll = this.el.getScroll(),
-				row = this.el.down('.ext-cal-bg-row'), // first avail row, just to calc size
-				rowH = row.getHeight() / this.incrementsPerHour,
+				scroll = me.el.getScroll(),
+				row = me.el.down('.ext-cal-bg-row'), // first avail row, just to calc size
+				rowH = row.getHeight() / me.incrementsPerHour,
 				relY = y - viewBox.y - rowH + scroll.top,
 				rowIndex = Math.max(0, Math.ceil(relY / rowH)),
-				mins = rowIndex * (this.hourIncrement / this.incrementsPerHour),
-				dt = Sonicle.Date.add(this.viewStart, {days: dayIndex, minutes: mins, hours: this.viewStartHour}),
-				el = this.getDayEl(dt),
+				mins = rowIndex * (me.hourIncrement / me.incrementsPerHour),
+				dt = Sonicle.Date.add(me.viewStart, {days: dayIndex, minutes: mins, hours: me.viewStartHour}),
+				el = me.getDayEl(dt),
 				timeX = x;
 
 		if (el) {
@@ -507,7 +520,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			// this is the box for the specific time block in the day that was clicked on:
 			timeBox: {
 				x: timeX,
-				y: (rowIndex * this.hourHeight / this.incrementsPerHour) + viewBox.y - scroll.top,
+				y: (rowIndex * me.hourHeight / me.incrementsPerHour) + viewBox.y - scroll.top,
 				width: daySize.width,
 				height: rowH
 			}
@@ -528,13 +541,15 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		if (el) {
 			if (el.id && el.id.indexOf(this.dayElIdDelimiter) > -1) {
 				var dt = this.getDateFromId(el.id, this.dayElIdDelimiter);
-				this.fireEvent('dayclick', this, Ext.Date.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt, true)));
+				// We handle dayclick/daydblclick in same way...
+				this.fireEvent('day'+e.type, this, Ext.Date.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt, true)), e);
 				return;
 			}
 		}
 		var day = this.getDayAt(e.getX(), e.getY());
 		if (day && day.date) {
-			this.fireEvent('dayclick', this, day.date, false, null);
+			// We handle dayclick/daydblclick in same way...
+			this.fireEvent('day'+e.type, this, day.date, false, null, e);
 		}
 	},
 	
