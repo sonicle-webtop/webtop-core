@@ -32,13 +32,59 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 
+Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
+	extend: 'Ext.grid.NavigationModel',
+	
+	//remove cell focus style
+	focusCls: '',
+	
+/*    initKeyNav: function(view) {
+        var me = this;
+		//me.callParent(arguments);
+		me.position = new Ext.grid.CellContext(view);
+
+        // Change keynav because default stops any cursor key
+		// even when inside the editor
+        me.keyNav = new Ext.util.KeyNav({
+            target: view,
+            ignoreInputFields: true,
+            eventName: 'itemkeydown',
+            //defaultEventAction: 'stopEvent',
+			defaultEventAction: false,
+
+            // Every key event is tagged with the source view, so the NavigationModel is independent.
+            processEvent: function(view, record, row, recordIndex, event) {
+                return event;
+            },
+            up: me.onKeyUp,
+            down: me.onKeyDown,
+            right: me.onKeyRight,
+            left: me.onKeyLeft,
+            pageDown: me.onKeyPageDown,
+            pageUp: me.onKeyPageUp,
+            home: me.onKeyHome,
+            end: me.onKeyEnd,
+            tab: me.onKeyTab,
+            space: me.onKeySpace,
+            enter: me.onKeyEnter,
+            A: {
+                ctrl: true,
+                // Need a separate function because we don't want the key
+                // events passed on to selectAll (causes event suppression).
+                handler: me.onSelectAllKeyPress
+            },
+            scope: me
+        });
+    }	*/
+});
+
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WT.ux.RegipientsGrid',
 	extend: 'Ext.grid.Panel',
 	alias: ['widget.wtrecipientsgrid'],
 	requires: [
-		'Sonicle.webtop.core.model.Recipient',
-		'Sonicle.webtop.core.model.RecipientType'
+		'Sonicle.webtop.core.ux.SuggestCombo',
+		'Sonicle.webtop.core.model.Simple'
 	],
 
 	/**
@@ -53,10 +99,24 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	 */
 	action: 'LookupContacts',
 	
+	/*
+	 * @cfg {String} store
+	 * Provides the store to the recipients
+	 */
+	
+	/*
+	 * @cfg {Object} fields
+	 * Provides { recipientType: 'name', email: 'name' }
+	 * field names to be found in the store
+	 */
+	fields: { recipientType: 'recipientType', email: 'email' },
+	
 	/**
 	 * @cfg {String} suggestionContext
 	 * Suggestion context.
 	 */
+	
+	//messageId: null,
 	
 	initComponent: function() {
 		var me = this;
@@ -64,50 +124,64 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 		Ext.apply(me, {
 			selModel: 'cellmodel',
 			hideHeaders: true,
+			viewConfig: {
+				navigationModel: Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{ grid: me }),
+				scrollable: true
+			},
 			plugins: {
 				ptype: 'cellediting',
 				clicksToEdit: 1
 			},
-			store: {
-				model: 'Sonicle.webtop.core.model.Recipient',
-				data: [ ['to',''] ]
-			},
-			
 			columns: [
 				{
 					width: 50, 
-					dataIndex: 'recipientType', 
+					dataIndex: me.fields.recipientType, 
 					editor: Ext.create('Ext.form.ComboBox',{
 					  forceSelection: true,
 					  queryMode: 'local',
-					  displayField: 'description',
+					  displayField: 'desc',
 					  triggerAction: 'all',
 					  //selectOnFocus: true,
 					  width: 30,
 					  //editable: false,
 					  store: {
-						  model: "Sonicle.webtop.core.model.RecipientType",
+						  model: "Sonicle.webtop.core.model.Simple",
 						  data: [
-							  { recipientType: 'to', description: WT.res('recipienttype.to') },
-							  { recipientType: 'cc', description: WT.res('recipienttype.cc') },
-							  { recipientType: 'bcc', description: WT.res('recipienttype.bcc') }
+							  { id: 'to', desc: WT.res('recipienttype.to') },
+							  { id: 'cc', desc: WT.res('recipienttype.cc') },
+							  { id: 'bcc', desc: WT.res('recipienttype.bcc') }
 						  ]
 					  },
 					  value: 'to',
-					  valueField: 'recipientType'
+					  valueField: 'id'
 					}),
 					renderer: function(value, md, record, ri, ci, s, view) {
-						return '<font color="black">'+WT.res('recipient.'+value)+'</font>';
+						return '<font color="black">'+WT.res('recipienttype.'+value)+'</font>';
 					}
 				},
 				{
 					width: 400,
-					dataIndex: 'email', 
-					editor: 'textfield'
+					dataIndex: me.fields.email, 
+					//editor: 'textfield'
+					editor: Ext.create({
+						xtype: 'wtsuggestcombo',
+						sid: 'com.sonicle.webtop.mail',
+						context: 'recipient'
+						//width: 400,
+					})
 				}
 			]
 		});
 		
 		me.callParent(arguments);
-	}	
+	},
+	
+	addRecipient: function(rtype,email) {
+		this.getStore().add({ rtype: rtype, email: email});
+	},
+	
+/*	setValue: function(v) {
+		console.log("RecipientsGrid: setValue v="+v);
+		this.messageId=v;
+	}*/
 });
