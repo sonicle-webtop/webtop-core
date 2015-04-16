@@ -77,6 +77,11 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		me.on('specialkey', me._onSpecialKey);
 	},
 	
+    onDownArrow: function(e) {
+		if (e.altKey)
+			this.callParent(arguments);
+    },
+	
 	_onSpecialKey: function(s,e) {
 		if(s.isExpanded) {
 			if(e.shiftKey && (e.getKey() === e.DELETE)) {

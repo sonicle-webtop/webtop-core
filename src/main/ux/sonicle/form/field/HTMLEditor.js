@@ -41,7 +41,9 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	requires: [
 		'Ext.ux.form.TinyMCETextArea'
 	],
-
+	
+	defaultBindProperty: 'value',
+	
 	layout: 'border',
     border: false,
 	
@@ -82,22 +84,20 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		"Verdana"
 	],
 	
-	
 	initComponent: function() {
 		var me=this;
 		
 		me.items = [ me.createToolbar(), me.createTinyMCE() ];
 		
-        //me.layout = {
-        //    type: 'vbox',
-        //    align: 'stretch'
-        //};
-		
 		me.tmce.on("init", me.tmceInit, me);
-		me.tmce.on("change", me.updateToolbar, me);
+		me.tmce.on("change", function(c,nv,ov,eopts) {
+			me.mixins.field.setValue.call(me,nv);
+			me.updateToolbar();
+		});
 		
 		me.callParent(arguments);
 		me.initField();
+		
 	},
 	
 	createTinyMCE: function(){
@@ -121,8 +121,8 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 				//toolbar3: "table | hr removeformat | subscript superscript | charmap emoticons | print fullscreen | ltr rtl | spellchecker | visualchars visualblocks nonbreaking template pagebreak restoredraft",
 				menubar: false,
 				toolbar_items_size: 'small'
-			},
-			value: 'This is the WebTop-TinyMCE HTML Editor'
+			}/*,
+			value: 'This is the WebTop-TinyMCE HTML Editor'*/
 
 		});
 		return this.tmce;
@@ -331,7 +331,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
                     '-',
                     btn('sourceedit', false, function(){
                         //me.toggleSourceEdit(!me.sourceEditMode);
-						me.execCommand('mceSourceEditor',true,true);
+						me.execCommand('mceCodeEditor',true,true);
                     })
                 );
             }
@@ -429,14 +429,18 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 //            return;
 //        }
 
+		
         btns = me.getToolbar().items.map;
 		ed = tinymce.get(this.tmce.getInputId());
+		if (!ed) return;
+		
 		doc = ed.getDoc();
+		if (!doc) return;
 
         if (me.enableFont && !Ext.isSafari2) {
             // When querying the fontName, Chrome may return an Array of font names
             // with those containing spaces being placed between single-quotes.
-            queriedName = ed.getDoc().queryCommandValue('fontName');
+            queriedName = doc.queryCommandValue('fontName');
             name = (queriedName ? queriedName.split(",")[0].replace(me.reStripQuotes, '') : me.defaultFont).toLowerCase();
             fontCombo = me.fontCombo;
             if (name !== fontCombo.getValue() || name !== queriedName) {
@@ -444,7 +448,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             }
         }
         if (me.enableFontSize && !Ext.isSafari2) {
-            var six = ed.getDoc().queryCommandValue('fontSize'),
+            var six = doc.queryCommandValue('fontSize'),
 				fontSizeCombo = me.fontSizeCombo;
 			var ix=parseInt(six)+1;
             if (ix !== fontSizeCombo.getValue()) {
@@ -488,6 +492,25 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
         }
         me.syncValue();
     },
+
+	setValue: function(val) {
+		var me=this;
+	
+		if (val!==me.value) {
+			me.mixins.field.setValue.call(me,val);
+			//console.log("updating tmce too!");
+			me.tmce.setValue(val);
+		}
+	},
+	
+/*	setHtml: function(html) {
+		//Ext.Error.raise('Stop here!');
+		this.tmce.setValue(html);
+	},
+	
+	getHtml: function() {
+		return this.tmce.getValue();
+	},*/
 	
 	syncValue: function() {
 		//do nothing here for now

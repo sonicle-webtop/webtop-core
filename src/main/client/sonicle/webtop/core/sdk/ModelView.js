@@ -333,9 +333,18 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				type: me.model,
 				create: true
 			});
-			vm.get(me.modelProperty).set(data, {
+			var m=vm.get(me.modelProperty);
+			m.set(data, {
 				dirty: false
 			});
+			if (m.associations) {
+				Ext.iterate(m.associations, function(ent) {
+					var a=data[ent];
+					if (a) {
+						m[ent]().add(a);
+					}
+				});
+			}
 		} else {
 			vm.linkTo(me.modelProperty, {
 				type: me.model,
