@@ -427,6 +427,63 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}, opts));
 	},
 	
+	/**
+	 * Convenience function that registers to contextmenu event of the provided
+	 * component; when the event fires it automatically displays specified menu.
+	 * Context data will be filled in best way as possible.
+	 * @param {Ext.Component} cmp The component.
+	 * @param {Ext.menu.Menu} menu Menu component to show during event.
+	 */
+	registerContextMenu: function(cmp, menu) {
+		if(!menu || !menu.isXType('menu')) return;
+		if(cmp.isXType('dataview')) {
+			cmp.on('itemcontextmenu', function(s,rec,itm,i,e) {
+				WT.showContextMenu(e, menu, {
+					record: rec,
+					item: itm,
+					index: i
+				});
+			});
+		}
+	},
+	
+	/**
+	 * Displays specified contextmenu in a centralized way.
+	 * Any previous visible menu will be hide automatically.
+	 * @param {Ext.event.Event} evt The raw event object.
+	 * @param {Ext.menu.Menu} menu The menu component.
+	 * @param {Object} data Useful data to pass (data will be saved into menu.tag property).
+	 */
+	showContextMenu: function(evt, menu, data) {
+		var me = this;
+		evt.stopEvent();
+		me.hideContextMenu();
+		if(!menu || !menu.isXType('menu')) return;
+		menu.tag = data;
+		me.contextMenu = menu;
+		menu.showAt(evt.getXY());
+	},
+	
+	/**
+	 * Hides currently visible context menu.
+	 */
+	hideContextMenu: function() {
+		var me = this,
+				cxm = me.contextMenu;
+		if(cxm) {
+			me.contextMenu = null;
+			cxm.hide();
+		}
+	},
+	
+	/**
+	 * Returns context menu data previously saved into menu.tag property.
+	 * @returns {Object} The data object.
+	 */
+	getContextMenuData: function() {
+		return (this.contextMenu) ? this.contextMenu.tag : null;
+	},
+	
 	//DELETE
 	wsMsg: function(service, action, config) {
 		return Ext.JSON.encode(Ext.apply(config||{},{ service: service, action: action }));

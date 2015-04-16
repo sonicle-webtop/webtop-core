@@ -276,6 +276,16 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 * @param {Sonicle.calendar.view.AbstractCalendar} this
 	 * @param {Sonicle.calendar.EventRecord} rec The {@link Sonicle.calendar.EventRecord record} for the event that was clicked on
 	 * @param {HTMLNode} el The DOM node that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
+	 */
+	
+	/**
+	 * @event eventdblclick
+	 * Fires after the user clicks on an event element
+	 * @param {Sonicle.calendar.view.AbstractCalendar} this
+	 * @param {Sonicle.calendar.EventRecord} rec The {@link Sonicle.calendar.EventRecord record} for the event that was clicked on
+	 * @param {HTMLNode} el The DOM node that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
 	 */
 
 	/**
@@ -412,10 +422,11 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			'mouseover': me.onMouseOver,
 			'mouseout': me.onMouseOut,
 			'click': me.onClick,
+			'dblclick': me.onClick,
+			'contextmenu': me.onContextMenu,
 			scope: me
 		});
 		
-		//e.el.on('contextmenu', me.onContextMenu, me);
 		me.el.unselectable();
 
 		if (me.enableDD && me.initDD) {
@@ -1310,8 +1321,17 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		var el = e.getTarget(this.eventSelector, 5);
 		if (el) {
 			var id = this.getEventIdFromEl(el);
-			this.fireEvent('eventclick', this, this.getEventRecord(id), el);
+			// We handle eventclick/eventdblclick in same way...
+			this.fireEvent('event'+e.type, this, this.getEventRecord(id), el, e);
 			return true;
+		}
+	},
+	
+	onContextMenu: function(e, t) {
+		var el = e.getTarget(this.eventSelector, 5, true);
+		if(el) {
+			var id = this.getEventIdFromEl(el);
+			this.fireEvent('eventcontextmenu', this, this.getEventRecord(id), el, e);
 		}
 	},
 	

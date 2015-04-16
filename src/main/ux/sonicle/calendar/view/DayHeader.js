@@ -30,6 +30,18 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 	 * @param {Boolean} allday True if the day clicked on represents an all-day box, else false. Clicks within the 
 	 * DayHeaderView always return true for this param.
 	 * @param {Ext.core.Element} el The Element that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
+	 */
+	
+	/**
+	 * @event daydblclick
+	 * Fires after the user clicks within the day view container and not on an event element
+	 * @param {Sonicle.calendar.DayBodyView} this
+	 * @param {Date} dt The date/time that was clicked on
+	 * @param {Boolean} allday True if the day clicked on represents an all-day box, else false. Clicks within the 
+	 * DayHeaderView always return true for this param.
+	 * @param {Ext.core.Element} el The Element that was clicked on
+	 * @param {Ext.event.Event} evt The raw event object.
 	 */
 
 	// private
@@ -91,8 +103,8 @@ Ext.define('Sonicle.calendar.view.DayHeader', {
 			if(el.id && el.id.indexOf(this.dayElIdDelimiter) > -1) {
 				parts = el.id.split(this.dayElIdDelimiter);
 				dt = parts[parts.length - 1];
-
-				this.fireEvent('dayclick', this, Ext.Date.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt)));
+				// We handle dayclick/daydblclick in same way...
+				this.fireEvent('day'+e.type, this, Ext.Date.parseDate(dt, 'Ymd'), true, Ext.get(this.getDayId(dt)), e);
 				return;
 			}
 		}
