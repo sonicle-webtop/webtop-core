@@ -154,6 +154,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			me.tpl = Ext.create('Sonicle.calendar.template.DayBody', {
 				id: me.id,
 				use24HourTime: me.use24HourTime,
+				timezone: me.timezone,
 				dayCount: me.dayCount,
 				showTodayText: me.showTodayText,
 				todayText: me.todayText,
@@ -217,7 +218,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	getEventBodyMarkup: function() {
 		if (!this.eventBodyMarkup) {
 			this.eventBodyMarkup = [
-				'<tpl if="_isRecurring">',
+				'<tpl if="_isRecurring || _isBroken">',
 				'<i class="ext-cal-ic {_recIconCls}">&#160;</i>',
 				'</tpl>',
 				'<tpl if="_isTimezone">',
@@ -324,13 +325,14 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		data._foreColor = me.getEventForeColor(data._bgColor),
 		data._colorCls = 'ext-color-' + (evt[EM.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : '');
 		data._elId = selector + (evt._weekIndex ? '-' + evt._weekIndex : '');
-		data._isTimezone = !Ext.isEmpty(evt[EM.Timezone.name]);
+		data._isTimezone = (evt[EM.Timezone.name] !== me.timezone);
 		data._isPrivate = (evt[EM.IsPrivate.name] === true);
 		data._isRecurring = (evt[EM.IsRecurring.name] === true);
+		data._isBroken = (evt[EM.IsBroken.name] === true);
 		data._isReminder = !Ext.isEmpty(evt[EM.Reminder.name]);
 		data._tzIconCls = me.timezoneIconCls;
 		data._pvtIconCls = me.privateIconCls;
-		data._recIconCls = (evt[EM.IsRecurrenceBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls;
+		data._recIconCls = (evt[EM.IsBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls;
 		data._remIconCls = me.reminderIconCls;
 		
 		var dinfo = me.buildEventDisplayInfo(evt, timeFmt);

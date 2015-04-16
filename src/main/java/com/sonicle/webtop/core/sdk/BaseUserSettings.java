@@ -39,14 +39,14 @@ import com.sonicle.webtop.core.WebTopApp;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-public abstract class BaseUserSettings {
+public abstract class BaseUserSettings extends BaseSettings {
     
     private SettingsManager setm;
-    protected String serviceId;
     protected String domainId;
     protected String userId;
+	protected String serviceId;
     
     private BaseUserSettings() {
         
@@ -59,6 +59,61 @@ public abstract class BaseUserSettings {
         this.serviceId = serviceId;
     }
 	
+	@Override
+	public String getSetting(String key) {
+		return setm.getUserSetting(domainId, userId, serviceId, key);
+	}
+	
+	@Override
+	public boolean setSetting(String key, Object value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+	
+	@Override
+	public String getString(String key, String defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setString(String key, String value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+	
+	@Override
+	public Boolean getBoolean(String key, Boolean defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setBoolean(String key, Boolean value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+	
+	@Override
+	public Integer getInteger(String key, Integer defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setInteger(String key, Integer value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+	
+	@Override
+	public Long getLong(String key, Long defaultValue) {
+		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setLong(String key, Long value) {
+		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+	}
+	
+	public boolean clear(String key) {
+		return setm.deleteUserSetting(domainId, userId, serviceId, key);
+	}
+	
+	/*
 	public boolean clearUserSetting(String key) {
 		return setm.deleteUserSetting(domainId, userId, serviceId, key);
 	}
@@ -86,4 +141,5 @@ public abstract class BaseUserSettings {
 	public <T>T getUserSetting(String key, T defaultValue, Class<T> type) {
 		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue, type);
 	}
+	*/
 }

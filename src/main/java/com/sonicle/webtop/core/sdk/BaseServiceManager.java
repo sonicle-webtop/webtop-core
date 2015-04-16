@@ -44,4 +44,8 @@ public class BaseServiceManager {
 	public BaseServiceManager(ServiceManifest manifest) {
 		this.manifest = manifest;
 	}
+	
+	public String getServiceId() {
+		return manifest.id;
+	}
 }

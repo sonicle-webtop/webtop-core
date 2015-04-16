@@ -57,6 +57,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [string][system]
 	 */
 	public static final String USERDATA_PROVIDER = "userdata.provider";
+	public static final String DEFAULT_USERDATA_PROVIDER = "WebTop";
 	/**
 	 * [long][system]
 	 * Overrides default provider key validation interval (KVI).
@@ -66,6 +67,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [boolean][system+domain]
 	 */
 	public static final String TFA_ENABLED = "tfa.enabled";
+	public static final Boolean DEFAULT_TFA_ENABLED = false;
 	/**
 	 * [string[]][system+domain]
 	 */
@@ -74,10 +76,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [boolean][system+domain]
 	 */
 	public static final String TFA_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
+	public static final Boolean DEFAULT_TFA_TRUST_DEVICE_ENABLED = true;
 	/**
 	 * [integer][system+domain]
 	 */
 	public static final String TFA_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
+	public static final Integer DEFAULT_TFA_TRUST_DEVICE_DURATION = 0;
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
 	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
@@ -90,32 +94,31 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public String getTempPath() {
-		return getServiceSetting(TMP);
+		return getString(TMP, null);
 	}
 	
 	public String getUserDataProvider() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.USERDATA_PROVIDER), "WebTop");
+		return getString(CoreServiceSettings.USERDATA_PROVIDER, DEFAULT_USERDATA_PROVIDER);
 	}
 	
 	public long getOTPProviderSonicleAuthKVI() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.OTP_PROVIDER_SONICLEAUTH_KVI), SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
+		return getLong(CoreServiceSettings.OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
 	}
 	
-	
 	public boolean getTFAEnabled() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_ENABLED), false);
+		return getBoolean(CoreServiceSettings.TFA_ENABLED, DEFAULT_TFA_ENABLED);
 	}
 	
 	public String getTFATrustedAddresses() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_ADDRESSES), (String)null);
+		return getString(CoreServiceSettings.TFA_TRUST_ADDRESSES, null);
 	}
 	
 	public boolean getTFADeviceTrustEnabled() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_DEVICE_ENABLED), true);
+		return getBoolean(CoreServiceSettings.TFA_TRUST_DEVICE_ENABLED, DEFAULT_TFA_TRUST_DEVICE_ENABLED);
 	}
 	
 	public int getTFADeviceTrustDuration() {
-		return LangUtils.value(getServiceSetting(CoreServiceSettings.TFA_TRUST_DEVICE_DURATION), 0);
+		return getInteger(CoreServiceSettings.TFA_TRUST_DEVICE_DURATION, DEFAULT_TFA_TRUST_DEVICE_DURATION);
 	}
 	
 	

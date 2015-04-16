@@ -97,6 +97,13 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	use24HourTime: false,
 	
 	/**
+	 * @cfg {String} timezone
+	 * Timezone that should be considered as default view timezone.
+	 * A globe icon will be displayed on events that have a timezone different to this.
+	 */
+	timezone: null,
+	
+	/**
 	 * @cfg {Boolean} spansHavePriority
 	 * Allows switching between two different modes of rendering events that span multiple days. When true,
 	 * span events are always sorted first, possibly at the expense of start dates being out of order (e.g., 

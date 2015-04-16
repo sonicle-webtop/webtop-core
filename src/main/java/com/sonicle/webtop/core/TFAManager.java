@@ -342,10 +342,10 @@ public class TFAManager {
 	}
 	
 	void disableTFA(String domainId, String userId) {
-		CoreUserSettings css = new CoreUserSettings(domainId, userId, CoreManifest.ID);
-		//css.clearUserSetting(CoreUserSettings.TFA_ENABLED);
-		css.clearUserSetting(CoreUserSettings.TFA_SECRET);
-		css.clearUserSetting(CoreUserSettings.TFA_EMAILADDRESS);
-		css.clearUserSetting(CoreUserSettings.TFA_DELIVERY);
+		CoreUserSettings cus = new CoreUserSettings(domainId, userId, CoreManifest.ID);
+		//cus.clearUserSetting(CoreUserSettings.TFA_ENABLED);
+		cus.clear(CoreUserSettings.TFA_SECRET);
+		cus.clear(CoreUserSettings.TFA_EMAILADDRESS);
+		cus.clear(CoreUserSettings.TFA_DELIVERY);
 	}
 }

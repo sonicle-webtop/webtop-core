@@ -17,11 +17,10 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 			var EM = Sonicle.calendar.data.EventMappings,
 					data = (rec.data) ? rec.data : rec,
 					isRR = (data[EM.IsRecurring.name] === true),
-					isRBro = (data[EM.IsRecurrenceBroken.name] === true),
+					//isRBro = (data[EM.IsBroken.name] === true),
 					isRO = (data[EM.IsReadOnly.name] === true);
 
-			if(isRR && !isRBro) return false;
-			if(isRO) return false;
+			if(isRR || isRO) return false;
 			return true;
 		}
 	},

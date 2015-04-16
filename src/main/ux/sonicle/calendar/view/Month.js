@@ -221,7 +221,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 	getEventBodyMarkup: function() {
 		if (!this.eventBodyMarkup) {
 			this.eventBodyMarkup = [
-				'<tpl if="_isRecurring">',
+				'<tpl if="_isRecurring || _isBroken">',
 				'<i class="ext-cal-ic {_recIconCls}">&#160;</i>',
 				'</tpl>',
 				'<tpl if="_isTimezone">',
@@ -289,13 +289,14 @@ Ext.define('Sonicle.calendar.view.Month', {
 			_foreColor: me.getEventForeColor(bgColor),
 			_colorCls: 'ext-color-' + (evt[EM.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : ''),
 			_elId: selector + '-' + evt._weekIndex,
-			_isTimezone: !Ext.isEmpty(evt[EM.Timezone.name]),
+			_isTimezone: (evt[EM.Timezone.name] !== me.timezone),
 			_isPrivate: (evt[EM.IsPrivate.name] === true),
 			_isRecurring: (evt[EM.IsRecurring.name] === true),
+			_isBroken: (evt[EM.IsBroken.name] === true),
 			_isReminder: !Ext.isEmpty(evt[EM.Reminder.name]),
 			_tzIconCls: me.timezoneIconCls,
 			_pvtIconCls: me.privateIconCls,
-			_recIconCls: (evt[EM.IsRecurrenceBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls,
+			_recIconCls: (evt[EM.IsBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls,
 			_remIconCls: me.reminderIconCls,
 			Title: dinfo.title,
 			Tooltip: dinfo.tooltip,

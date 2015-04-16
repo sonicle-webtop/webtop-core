@@ -99,6 +99,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	MODE_VIEW: 'view',
 	
+	validModeRe: /^new|edit|view$/i,
+	
 	/**
 	 * @private
 	 * @property {String} mode
@@ -269,14 +271,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	setMode: function(value) {
 		var me = this,
 				om = me.mode;
-		switch(value) {
-			case me.MODE_NEW:
-			case me.MODE_VIEW:
-			case me.MODE_EDIT:
-				me.mode = value;
-				break;
-			default:
-				return;
+		
+		if(!me.validModeRe.test(value)) return;
+		me.mode = value;
+		if(me.isMode(me.MODE_VIEW)) {
+			me.promptConfirm = false;
 		}
 		if(me.mode !== om) me.onModeChange(value, om);
 	},

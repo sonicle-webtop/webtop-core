@@ -427,6 +427,18 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}, opts));
 	},
 	
+	confirmForRecurrence: function(msg, cb, scope, opts) {
+		var html = "</br></br>"
+				+ "<table width='70%' style='font-size: 12px'>"
+				+ "<tr><td><input type='radio' name='recurrence' id='this' checked='true' /></td><td width='95%'>"+WT.res("confirm.recurrence.this")+"</td></tr>"
+				+ "<tr><td><input type='radio' name='recurrence' id='since' /></td><td width='95%'>"+WT.res("confirm.recurrence.since")+"</td></tr>"
+				+ "<tr><td><input type='radio' name='recurrence' id='all' /></td><td width='95%'>"+WT.res("confirm.recurrence.all")+"</td></tr>"
+				+ "</table>";
+		this.confirm(msg + html, cb, scope, Ext.apply({
+			buttons: Ext.Msg.OKCANCEL
+		}, opts));
+	},
+	
 	/**
 	 * Convenience function that registers to contextmenu event of the provided
 	 * component; when the event fires it automatically displays specified menu.

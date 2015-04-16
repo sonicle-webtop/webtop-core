@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseDeamonService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.InsufficientRightsException;
@@ -143,6 +144,33 @@ public class ServiceManager {
 	public void setMaintenance(String serviceId, boolean maintenance) {
 		SettingsManager setm = wta.getSettingsManager();
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
+	}
+	
+	public BaseDeamonService instantiateDeamonService(String serviceId) {
+		ServiceDescriptor descr = getService(serviceId);
+		if(!descr.hasDeamonService()) throw new RuntimeException("Service has no default class");
+		
+		// Creates service instance
+		BaseDeamonService instance = null;
+		try {
+			instance = (BaseDeamonService)descr.getDeamonServiceClass().newInstance();
+		} catch(Exception ex) {
+			logger.error("Error instantiating deamon service [{}]", descr.getManifest().getDeamonServiceClassName(), ex);
+			return null;
+		}
+		instance.configure();
+		
+		// Calls initialization method
+		try {
+			WebTopApp.setServiceLoggerDC(serviceId);
+			instance.initialize();
+		} catch(Throwable ex) {
+			logger.error("Initialization method returns errors", ex);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+		
+		return instance;
 	}
 	
 	public BaseService instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {

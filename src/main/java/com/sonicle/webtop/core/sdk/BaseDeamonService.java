@@ -39,4 +39,12 @@ package com.sonicle.webtop.core.sdk;
  */
 public abstract class BaseDeamonService {
 	
+	private boolean configured = false;
+	public abstract void initialize();
+	public abstract void cleanup();
+	
+	public final void configure() {
+		if(configured) return;
+		configured = true;
+	}
 }

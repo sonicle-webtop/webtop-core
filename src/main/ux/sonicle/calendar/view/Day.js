@@ -293,6 +293,7 @@ Ext.define('Sonicle.calendar.view.Day', {
 		cfg.recurrenceIconCls = me.recurrenceIconCls;
 		cfg.recurrenceBrokenIconCls = me.recurrenceBrokenIconCls;
 		cfg.use24HourTime = me.use24HourTime;
+		cfg.timezone = me.timezone;
         cfg.showTime = me.showTime;
         cfg.showTodatText = me.showTodayText;
         cfg.todayText = me.todayText;

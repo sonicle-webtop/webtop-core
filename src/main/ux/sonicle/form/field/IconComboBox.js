@@ -41,6 +41,12 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 	 */
 	iconClsField: 'iconCls',
 	
+	/**
+	 * @private
+	 * Keeps track of latest applied icon class.
+	 */
+	lastCls: null,
+	
 	initComponent: function() {
 		var me = this;
 		
@@ -101,9 +107,14 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 	 * Replaces old iconCls with the new one.
 	 */
 	updateIconClass: function(nv, ov) {
-		var me = this,
-				nCls = me.getIconClsByValue(nv),
-				oCls = me.getIconClsByValue(ov);
-		if(me.icon) me.icon.replaceCls(oCls, nCls);
+		var me = this, cls;
+		if(me.icon) {
+			if(me.lastCls) me.icon.removeCls(me.lastCls);
+			cls = me.getIconClsByValue(nv);
+			if(!Ext.isEmpty(cls)) {
+				me.lastCls = cls;
+				me.icon.addCls(cls);
+			}
+		}
 	}
 });

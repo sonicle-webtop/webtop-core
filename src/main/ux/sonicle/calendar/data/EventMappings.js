@@ -95,12 +95,12 @@ Sonicle.calendar.data.EventMappings = {
         name: 'isReadOnly',
         type: 'boolean'
     },
-	IsRecurring: {
-        name: 'isRecurring',
+	IsBroken: {
+        name: 'isBroken',
         type: 'boolean'
     },
-	IsRecurrenceBroken: {
-        name: 'isBroken',
+	IsRecurring: {
+        name: 'isRecurring',
         type: 'boolean'
     }
 	

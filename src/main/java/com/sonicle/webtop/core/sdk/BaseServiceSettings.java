@@ -33,30 +33,83 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-public abstract class BaseServiceSettings {
+public abstract class BaseServiceSettings extends BaseSettings {
 
-	private SettingsManager sm;
-	protected String serviceId;
+	private SettingsManager setm;
 	protected String domainId;
+	protected String serviceId;
 
 	private BaseServiceSettings() {
 
 	}
 
 	public BaseServiceSettings(String domainId, String serviceId) {
-		this.sm = WebTopApp.getInstance().getSettingsManager();
-		this.serviceId = serviceId;
+		setm = WebTopApp.getInstance().getSettingsManager();
 		this.domainId = domainId;
+		this.serviceId = serviceId;
 	}
-
+	
+	@Override
+	public String getSetting(String key) {
+		return setm.getServiceSetting(domainId, serviceId, key);
+	}
+	
+	@Override
+	public boolean setSetting(String key, Object value) {
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	@Override
+	public String getString(String key, String defaultValue) {
+		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setString(String key, String value) {
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	@Override
+	public Boolean getBoolean(String key, Boolean defaultValue) {
+		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setBoolean(String key, Boolean value) {
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	@Override
+	public Integer getInteger(String key, Integer defaultValue) {
+		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setInteger(String key, Integer value) {
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	@Override
+	public Long getLong(String key, Long defaultValue) {
+		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+	}
+	
+	@Override
+	public boolean setLong(String key, Long value) {
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	/*
 	public String getServiceSetting(String key) {
-		return sm.getServiceSetting(domainId, serviceId, key);
+		return setm.getServiceSetting(domainId, serviceId, key);
 	}
+	*/
 }

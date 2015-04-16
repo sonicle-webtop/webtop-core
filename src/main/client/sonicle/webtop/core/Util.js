@@ -76,6 +76,14 @@ Ext.define('Sonicle.webtop.core.Util', {
 		return null;
 	},
 	
+	getCheckedRadioUsingDOM: function(keys) {
+		var checked = null;
+		Ext.iterate(keys, function(key) {
+			if((checked === null) && (Ext.get(key).dom.checked === true)) checked = key;
+		});
+		return checked;
+	},
+	
 	/**
 	 * Find a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
 	 * @param {Ext.form.Panel} form The form panel.
@@ -203,6 +211,17 @@ Ext.define('Sonicle.webtop.core.Util', {
 			name: name,
 			type: type,
 			allowNull: true
+		}, cfg);
+	},
+	
+	calcField: function(name, type, depends, convert, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			name: name,
+			type: type,
+			persist: false,
+			depends: depends,
+			convert: convert
 		}, cfg);
 	},
 	

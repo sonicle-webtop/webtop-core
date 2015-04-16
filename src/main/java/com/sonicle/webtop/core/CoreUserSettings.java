@@ -130,107 +130,107 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
 	
 	public String getTheme() {
-		return getUserSetting(THEME, "crisp");
+		return getString(THEME, "crisp");
 	}
 	
 	public boolean setTheme(String value) {
-		return setUserSetting(THEME, value);
+		return setString(THEME, value);
 	}
 	
 	public String getLayout() {
-		return getUserSetting(LAYOUT, "default");
+		return getString(LAYOUT, "default");
 	}
 	
 	public boolean setLayout(String value) {
-		return setUserSetting(LAYOUT, value);
+		return setString(LAYOUT, value);
 	}
 	
 	public String getLookAndFeel() {
-		return getUserSetting(LAF, "default");
+		return getString(LAF, "default");
 	}
 	
 	public boolean setLookAndFeel(String value) {
-		return setUserSetting(LAF, value);
+		return setString(LAF, value);
 	}
 	
 	public boolean getRightToLeft() {
-		return getUserSetting(RTL, false);
+		return getBoolean(RTL, false);
 	}
 	
 	public String getDateFormat() {
-		return getUserSetting(DATE_FORMAT, "MM/dd/yyyy");
+		return getString(DATE_FORMAT, "MM/dd/yyyy");
 	}
 	
 	public boolean setDateFormat(String value) {
-		return setUserSetting(DATE_FORMAT, value);
+		return setString(DATE_FORMAT, value);
 	}
 	
 	public String getLongDateFormat() {
-		return getUserSetting(LONG_DATE_FORMAT, "MM/dd/yyyy");
+		return getString(LONG_DATE_FORMAT, "MM/dd/yyyy");
 	}
 	
 	public boolean setLongDateFormat(String value) {
-		return setUserSetting(LONG_DATE_FORMAT, value);
+		return setString(LONG_DATE_FORMAT, value);
 	}
 	
 	public String getTimeFormat() {
-		return getUserSetting(TIME_FORMAT, "HH:mm");
+		return getString(TIME_FORMAT, "HH:mm");
 	}
 	
 	public boolean setTimeFormat(String value) {
-		return setUserSetting(TIME_FORMAT, value);
+		return setString(TIME_FORMAT, value);
 	}
 	
 	public String getLongTimeFormat() {
-		return getUserSetting(LONG_TIME_FORMAT, "HH:mm");
+		return getString(LONG_TIME_FORMAT, "HH:mm");
 	}
 	
 	public boolean setLongTimeFormat(String value) {
-		return setUserSetting(LONG_TIME_FORMAT, value);
+		return setString(LONG_TIME_FORMAT, value);
 	}
 	
 	public Integer getViewportToolWidth() {
-		return LangUtils.value(getUserSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
+		return LangUtils.value(getSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
 	}
 	
 	public boolean setViewportToolWidth(Integer value) {
-		return setUserSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
+		return setInteger(CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
 	}
 	
 	public boolean getWhatsnewEnabled() {
-		return getUserSetting(WHATSNEW_ENABLED, true);
+		return getBoolean(WHATSNEW_ENABLED, true);
 	}
 	
 	public boolean getTFAMandatory() {
-		return getUserSetting(CoreUserSettings.TFA_MANDATORY, false);
+		return getBoolean(CoreUserSettings.TFA_MANDATORY, false);
 	}
 	
 	public boolean setTFAMandatory(boolean value) {
-		return setUserSetting(CoreUserSettings.TFA_MANDATORY, value);
+		return setBoolean(CoreUserSettings.TFA_MANDATORY, value);
 	}
 	
 	public String getTFADelivery() {
-		return getUserSetting(CoreUserSettings.TFA_DELIVERY);
+		return getString(CoreUserSettings.TFA_DELIVERY, null);
 	}
 	
 	public boolean setTFADelivery(String value) {
-		return setUserSetting(CoreUserSettings.TFA_DELIVERY, value);
+		return setString(CoreUserSettings.TFA_DELIVERY, value);
 	}
 	
 	public String getTFASecret() {
-		return getUserSetting(CoreUserSettings.TFA_SECRET);
+		return getString(CoreUserSettings.TFA_SECRET, null);
 	}
 	
 	public boolean setTFASecret(String value) {
-		return setUserSetting(CoreUserSettings.TFA_SECRET, value);
+		return setString(CoreUserSettings.TFA_SECRET, value);
 	}
 	
 	public String getTFAEmailAddress() {
-		return getUserSetting(CoreUserSettings.TFA_EMAILADDRESS);
+		return getString(CoreUserSettings.TFA_EMAILADDRESS, null);
 	}
 	
 	public boolean setTFAEmailAddress(String value) {
-		return setUserSetting(CoreUserSettings.TFA_EMAILADDRESS, value);
+		return setString(CoreUserSettings.TFA_EMAILADDRESS, value);
 	}
 	
 	
