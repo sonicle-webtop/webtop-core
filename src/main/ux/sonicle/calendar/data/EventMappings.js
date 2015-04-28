@@ -17,15 +17,20 @@
 Ext.ns('Sonicle.calendar.data');
 
 Sonicle.calendar.data.EventMappings = {
-    EventId: {
+	Id: {
         name: 'id',
         //mapping: 'id',
         type: 'string'
     },
+    EventId: {
+        name: 'eventId',
+        //mapping: 'id',
+        type: 'int'
+    },
     CalendarId: {
         name: 'calendarId',
         //mapping: 'cid',
-        type: 'string'
+        type: 'int'
     },
 	Color: {
         name: 'color',

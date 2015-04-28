@@ -55,7 +55,7 @@ import org.slf4j.Logger;
  */
 class ServiceDescriptor {
 	
-	private static final Logger logger = WebTopApp.getLogger(ServiceDescriptor.class);
+	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
 	private Class serviceClass = null;
 	private Class publicServiceClass = null;

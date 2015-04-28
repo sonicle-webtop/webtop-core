@@ -59,7 +59,7 @@ import org.slf4j.Logger;
  */
 public class UserOptionsService extends BaseUserOptionsService {
 	
-	public static final Logger logger = BaseService.getLogger(UserOptionsService.class);
+	public static final Logger logger = WT.getLogger(UserOptionsService.class);
 	
 	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Connection con = null;

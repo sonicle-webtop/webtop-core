@@ -72,7 +72,7 @@ import org.slf4j.Logger;
  */
 public class Service extends BaseService {
 	
-	private static final Logger logger = BaseService.getLogger(Service.class);
+	private static final Logger logger = WT.getLogger(Service.class);
 	private SuperEnvironment env;
 	private CoreUserSettings cus;
 	
@@ -380,23 +380,12 @@ public class Service extends BaseService {
 		List<ServiceMessage> messages = new ArrayList();
 		
 		try {
-			messages = env.getSession().pollMessageQueue();
+			messages = env.getSession().getEnqueuedMessages();
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action ServerEvents", ex);
 		} finally {
-			String raw = JsonResult.gson.toJson(messages);
-			new JsonResult(raw).printTo(out);
+			new JsonResult(JsonResult.gson.toJson(messages)).printTo(out);
 		}
-		
-		/*
-		WebSocketMessage wsm=getFullEnv().getSession().pollMessageQueue();
-		if (wsm!=null) {
-			JsonResult jsr=new JsonResult(wsm);
-			jsr.printTo(out);
-		} else {
-			new JsonResult().printTo(out);
-		}
-		*/
 	}
 }

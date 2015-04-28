@@ -49,7 +49,6 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.ByteArrayOutputStream;
-import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,7 +67,7 @@ import org.slf4j.Logger;
  */
 public class TFAManager {
 	
-	private static final Logger logger = WebTopApp.getLogger(TFAManager.class);
+	private static final Logger logger = WT.getLogger(TFAManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -81,7 +80,7 @@ public class TFAManager {
 		if(initialized) throw new RuntimeException("Initialization already done");
 		TFAManager tfam = new TFAManager(wta);
 		initialized = true;
-		logger.info("TFAManager initialized.");
+		logger.info("TFAManager initialized");
 		return tfam;
 	}
 	
@@ -100,7 +99,8 @@ public class TFAManager {
 	 * Performs cleanup process.
 	 */
 	void cleanup() {
-		
+		wta = null;
+		logger.info("TFAManager destroyed");
 	}
 	
 	/*

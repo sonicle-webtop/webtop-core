@@ -56,7 +56,7 @@ Ext.define('Sonicle.calendar.data.EventModel', {
 
             // It is critical that the id property mapping is updated in case it changed, since it
             // is used elsewhere in the data package to match records on CRUD actions:
-            me.prototype.idProperty = Mappings.EventId.name || 'id';
+            me.prototype.idProperty = Mappings.Id.name || 'id';
 
             me.replaceFields(Ext.Object.getValues(Mappings), true);
 

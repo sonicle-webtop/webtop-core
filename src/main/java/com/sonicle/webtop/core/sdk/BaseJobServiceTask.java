@@ -31,24 +31,34 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.ws;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.WebTopApp;
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-public class InformationMessage extends ServiceMessage {
+public abstract class BaseJobServiceTask implements Job {
 	
-	public static final String ACTION_INFO="info";
+	private JobExecutionContext jec;
 	
-	String infoDescription;
-	
-	public InformationMessage(String desc) {
-		this.service=CoreManifest.ID;
-		this.action=ACTION_INFO;
-		this.infoDescription=desc;
+	public JobDataMap getData() {
+		return jec.getMergedJobDataMap();
 	}
+	
+	@Override
+	public final void execute(JobExecutionContext jec) throws JobExecutionException {
+		this.jec = jec;
+		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
+			executeWork();
+		}
+	}
+	
+	public abstract void setJobService(BaseDeamonService value);
+	public abstract void executeWork();
 }

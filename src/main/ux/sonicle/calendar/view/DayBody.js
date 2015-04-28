@@ -314,7 +314,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	getTemplateEventData: function(evt) {
 		var me = this,
 				EM = Sonicle.calendar.data.EventMappings,
-				selector = me.getEventSelectorCls(evt[EM.EventId.name]),
+				selector = me.getEventSelectorCls(evt[EM.Id.name]),
 				data = {},
 				timeFmt = (me.use24HourTime) ? 'G:i ' : 'g:ia ';
 

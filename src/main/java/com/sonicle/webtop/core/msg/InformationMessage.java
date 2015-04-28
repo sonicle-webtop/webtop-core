@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -40,15 +40,21 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
  *
  * @author gbulfon
  */
-public class ErrorMessage extends ServiceMessage {
+public class InformationMessage extends ServiceMessage {
 	
-	public static final String ACTION_ERROR="error";
+	protected String message;
 	
-	String errorDescription;
+	public InformationMessage(String message) {
+		super(CoreManifest.ID, "info");
+		this.message = message;
+	}
 	
-	public ErrorMessage(String desc) {
-		this.service=CoreManifest.ID;
-		this.action=ACTION_ERROR;
-		this.errorDescription=desc;
+	public String getMessage() {
+		return message;
+	}
+	
+	public ServiceMessage setMessage(String value) {
+		message = value;
+		return this;
 	}
 }

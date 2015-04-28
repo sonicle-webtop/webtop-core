@@ -277,7 +277,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 	getTemplateEventData: function(evt) {
 		var me = this,
 				EM = Sonicle.calendar.data.EventMappings,
-				selector = me.getEventSelectorCls(evt[EM.EventId.name]),
+				selector = me.getEventSelectorCls(evt[EM.Id.name]),
 				title = evt[EM.Title.name],
 				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
 				bgColor = (evt[EM.Color.name] || ''),

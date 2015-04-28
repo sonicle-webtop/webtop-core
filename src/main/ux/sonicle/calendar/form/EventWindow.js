@@ -200,7 +200,7 @@ Ext.define('Sonicle.calendar.form.EventWindow', {
             me.titleField.focus(true);
         }]);
         
-        this.deleteButton[o.data && o.data[M.EventId.name] ? 'show': 'hide']();
+        this.deleteButton[o.data && o.data[M.Id.name] ? 'show': 'hide']();
 
         var rec,
         f = this.formPanel.form;

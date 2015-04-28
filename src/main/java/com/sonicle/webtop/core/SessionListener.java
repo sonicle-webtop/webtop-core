@@ -46,6 +46,10 @@ public class SessionListener implements HttpSessionListener {
 
 	@Override
 	public void sessionCreated(HttpSessionEvent hse) {
+		WebTopApp wta = WebTopApp.getInstance();
+		wta.getSessionManager().createSession(hse.getSession());
+		
+		/*
 		HttpSession session = hse.getSession();
 		String sid = ServletHelper.getSessionID(session);
 		
@@ -57,10 +61,15 @@ public class SessionListener implements HttpSessionListener {
 		} catch(Exception ex) {
 			WebTopApp.logger.error("WTS initialization error [{}]", sid, ex);
 		}
+		*/
 	}
 
 	@Override
 	public void sessionDestroyed(HttpSessionEvent hse) {
+		WebTopApp wta = WebTopApp.getInstance();
+		wta.getSessionManager().destroySession(hse.getSession());
+		
+		/*
 		HttpSession session = hse.getSession();
 		String sid = ServletHelper.getSessionID(session);
 		
@@ -74,5 +83,6 @@ public class SessionListener implements HttpSessionListener {
 		} finally {
 			session.removeAttribute(WebTopSession.ATTRIBUTE);
 		}
+		*/
 	}
 }

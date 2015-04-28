@@ -53,7 +53,6 @@ public class ContextListener implements ServletContextListener {
 		try {
 			WebTopApp.initialize(context);
 			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
-			//context.setAttribute(ServletHelper.WEBTOPAPP_ATTRIBUTE, WebTopApp.getInstance());
 		} catch(Exception ex) {
 			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
 		}

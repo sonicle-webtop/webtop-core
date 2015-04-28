@@ -25,21 +25,25 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * Defines system default language locale
 	 */
 	public static final String SYSTEM_LANGUAGE = "system.language";
+	
 	/**
 	 * [string][system]
 	 * Defines system default country locale
 	 */
 	public static final String SYSTEM_COUNTRY = "system.country";
+	
 	/**
 	 * [boolean][system][*]
 	 * Indicates if system is under maintenance
 	 */
 	public static final String MAINTENANCE = "maintenance";
+	
 	/**
 	 * [string][system][*]
 	 * Stores installed service version
 	 */
 	public static final String MANIFEST_VERSION = "manifest.version";
+	
 	/**
 	 * [string][system+domain][*]
 	 * Overrides support email address
@@ -53,21 +57,25 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [boolean][system]
 	 */
 	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
+	
 	/**
 	 * [string][system]
 	 */
 	public static final String USERDATA_PROVIDER = "userdata.provider";
 	public static final String DEFAULT_USERDATA_PROVIDER = "WebTop";
+	
 	/**
 	 * [long][system]
 	 * Overrides default provider key validation interval (KVI).
 	 */
 	public static final String OTP_PROVIDER_SONICLEAUTH_KVI = "opt.provider.sonicleauth.kvi";
+	
 	/**
 	 * [boolean][system+domain]
 	 */
 	public static final String TFA_ENABLED = "tfa.enabled";
 	public static final Boolean DEFAULT_TFA_ENABLED = false;
+	
 	/**
 	 * [string[]][system+domain]
 	 */
@@ -77,11 +85,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 */
 	public static final String TFA_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
 	public static final Boolean DEFAULT_TFA_TRUST_DEVICE_ENABLED = true;
+	
 	/**
 	 * [integer][system+domain]
 	 */
 	public static final String TFA_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
 	public static final Integer DEFAULT_TFA_TRUST_DEVICE_DURATION = 0;
+	
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
 	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";

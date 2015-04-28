@@ -31,25 +31,61 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
 import java.io.IOException;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import javax.servlet.http.HttpSession;
+import javax.websocket.EndpointConfig;
+import javax.websocket.OnClose;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+import javax.websocket.server.ServerEndpoint;
+import org.slf4j.Logger;
 
 /**
  *
- * @author malbinola
+ * @author gbulfon
  */
-public interface BasicEnvironment {
+		
+@ServerEndpoint(value = "/websocket", configurator = WebSocketConfigurator.class)
+public class WebSocket {
 	
-	public UserProfile getProfile();
-	public ReadableUserAgent getUserAgent();
-    public String getSessionRefererUri();
-    public CoreServiceSettings getCoreServiceSettings();
-    public CoreUserSettings getCoreUserSettings();
-	public void notify(ServiceMessage message) throws IOException;
-	public void notify(List<ServiceMessage> messages) throws IOException;
+	public final static Logger logger = WT.getLogger(WebSocket.class);
+	
+    private Session wsSession;
+	private WebTopSession wts;
+	
+	private HttpSession getHttpSession(EndpointConfig config) {
+		return (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+	}
+	
+	@OnOpen
+    public void onOpen(Session session, EndpointConfig config) {
+        wsSession = session;
+		wts = WebTopSession.get(getHttpSession(config));
+		wts.setWebSocketEndpoint(this);
+		logger.trace("Connection established");
+    }
+	
+	@OnClose
+	public void onClose(Session session) {
+		logger.trace("Connection closed");
+	}
+	
+	@OnMessage
+	public void onMessage(String json) {
+		
+	}
+	
+	public void send(String rawMessage) throws IOException {
+		if ((wsSession != null) && wsSession.isOpen()) {
+			if(!rawMessage.isEmpty() && !rawMessage.equals("[]")) {
+				logger.trace("Sending WS data [{}]", rawMessage);
+				wsSession.getBasicRemote().sendText(rawMessage);
+			}
+		} else {
+			throw new IOException("WebSocket is not open!");
+		}
+	}
 }

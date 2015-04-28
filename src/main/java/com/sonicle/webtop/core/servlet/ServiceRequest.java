@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.ServiceManager;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
@@ -58,7 +59,7 @@ import org.slf4j.Logger;
  */
 public class ServiceRequest extends HttpServlet {
 	
-	private static final Logger logger = WebTopApp.getLogger(ServiceRequest.class);
+	private static final Logger logger = WT.getLogger(ServiceRequest.class);
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);

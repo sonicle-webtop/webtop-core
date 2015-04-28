@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseDeamonService;
+import com.sonicle.webtop.core.sdk.BaseDeamonService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.InsufficientRightsException;
@@ -54,10 +55,22 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.logging.Level;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 
 /**
@@ -66,37 +79,41 @@ import org.slf4j.Logger;
  */
 public class ServiceManager {
 	
-	private static final Logger logger = WebTopApp.getLogger(ServiceManager.class);
+	private static final Logger logger = WT.getLogger(ServiceManager.class);
 	private static boolean initialized = false;
 	
 	/**
 	 * Initialization method. This method should be called once.
 	 * 
 	 * @param wta WebTopApp instance.
+	 * @param scheduler Scheduler instance.
 	 * @return The instance.
 	 */
-	public static synchronized ServiceManager initialize(WebTopApp wta) {
+	public static synchronized ServiceManager initialize(WebTopApp wta, Scheduler scheduler) {
 		if(initialized) throw new RuntimeException("Initialization already done");
-		ServiceManager svcm = new ServiceManager(wta);
+		ServiceManager svcm = new ServiceManager(wta, scheduler);
 		initialized = true;
-		logger.info("ServiceManager initialized.");
+		logger.info("ServiceManager initialized");
 		return svcm;
 	}
 	
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
+	private Scheduler scheduler = null;
 	private final Object lock = new Object();
-	private final LinkedHashMap<String, ServiceDescriptor> services = new LinkedHashMap<>();
+	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
 	private final HashMap<String, String> xidMappings = new HashMap<>();
 	private final HashMap<String, String> jsPathMappings = new HashMap<>();
+	private final LinkedHashMap<String, BaseDeamonService> deamonServices = new LinkedHashMap<>();
 	
 	/**
 	 * Private constructor.
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private ServiceManager(WebTopApp wta) {
+	private ServiceManager(WebTopApp wta, Scheduler scheduler) {
 		this.wta = wta;
+		this.scheduler = scheduler;
 		init();
 	}
 	
@@ -104,9 +121,23 @@ public class ServiceManager {
 	 * Performs cleanup process.
 	 */
 	public void cleanup() {
-		services.clear();
+		
+		// Cleanup deamon services
+		//TODO: effettuare lo shutdown dei task
+		BaseDeamonService deamonInst = null;
+		for(String serviceId : getServices()) {
+			deamonInst = deamonServices.remove(serviceId);
+			if(deamonInst != null) {
+				cleanupDeamonService(deamonInst);
+			}
+		}
+		
+		descriptors.clear();
 		xidMappings.clear();
 		jsPathMappings.clear();
+		scheduler = null;
+		wta = null;
+		logger.info("ServiceManager destroyed");
 	}
 	
 	private void init() {
@@ -134,6 +165,170 @@ public class ServiceManager {
 		for(ServiceManifest manifest : manifests) {
 			registerService(manifest);
 		}
+		
+		// Initialize deamon services
+		int count = 0;
+		for(String serviceId : getServices()) {
+			if(!getDescriptor(serviceId).hasDeamonService()) continue;
+			if(!isInMaintenance(serviceId)) {
+				if(instantiateDeamonService(serviceId)) {
+					count++;
+				} else {
+					//TODO: invalidare startup servizio, deamon non inizializzato?
+				}
+			}
+		}
+		logger.debug("Instantiated {} deamon services", count);
+		initializeDeamons(); // Postpone initialization because init methods can require WebTopApp, not set yet!
+	}
+	
+	public boolean canExecuteTaskWork(JobKey taskKey) {
+		if(wta.isTheLatest()) {
+			return true;
+		} else {
+			stopAllJobServicesTasks();
+			return false;
+		}
+	}
+	
+	private boolean instantiateDeamonService(String serviceId) {
+		synchronized(deamonServices) {
+			if(deamonServices.containsKey(serviceId)) throw new RuntimeException("Cannot add deamon service twice");
+			BaseDeamonService inst = createDeamonService(serviceId);
+			if(inst != null) {
+				deamonServices.put(serviceId, inst);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	private JobDetail createJobTask(String serviceId, BaseDeamonService service, TaskDefinition taskDef) {
+		String classBaseName = taskDef.clazz.getSimpleName();
+		
+		JobDataMap data = (taskDef.data != null) ? taskDef.data : new JobDataMap();
+		data.put("jobService", service);
+		JobBuilder jb = JobBuilder.newJob(taskDef.clazz)
+				.usingJobData(data)
+				.withIdentity(classBaseName, serviceId);
+		if(!StringUtils.isEmpty(taskDef.description)) jb.withDescription(taskDef.description);
+		return jb.build();
+	}
+	
+	private Trigger createJobTaskTrigger(String serviceId, TaskDefinition taskDef) {
+		String classBaseName = taskDef.clazz.getSimpleName();
+		
+		TriggerBuilder tb = taskDef.trigger.getTriggerBuilder()
+				.withIdentity(classBaseName, serviceId)
+				.startNow();
+		return tb.build();
+	}
+	
+	private void startJobServiceTasks(String serviceId, BaseDeamonService service) {
+		List<TaskDefinition> taskDefs = null;
+		JobDetail jobDetail = null;
+		Trigger trigger = null;
+		
+		try {
+			// Gets task definitions from base service definition
+			try {
+				WebTopApp.setServiceLoggerDC(serviceId);
+				taskDefs = service.returnTasks();
+			} catch(Exception ex) {
+				logger.error("JobService method returns errors [returnTask()]", ex);
+				throw ex;
+			} finally {
+				WebTopApp.unsetServiceLoggerDC();
+			}
+			if(taskDefs != null) {
+				stopJobServiceTasks(serviceId);
+				
+				// Schedule job defining its trigger and details
+				for(TaskDefinition taskDef : taskDefs) {
+					jobDetail = createJobTask(serviceId, service, taskDef);
+					trigger = createJobTaskTrigger(serviceId, taskDef);
+					scheduler.scheduleJob(jobDetail, trigger);
+					//scheduler.scheduleJob(jobDetail, taskDef.trigger);
+					logger.debug("Task scheduled [{}]", jobDetail.getKey().toString());
+				}
+			}
+			
+		} catch(SchedulerException ex) {
+			logger.error("Error scheduling task [{}]", jobDetail.getKey().toString(), ex);
+		} catch(Exception ex) {
+			logger.error("Error instantiating task [{}]", jobDetail.getKey().toString(), ex);
+		}
+	}
+	
+	private void stopJobServiceTasks(String serviceId) {
+		try {
+			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(serviceId));
+			scheduler.deleteJobs(new ArrayList<>(keys));
+			logger.debug("Deleted tasks for group [{}]", serviceId);
+			
+		} catch(SchedulerException ex) {
+			logger.error("Error deleting tasks for group [{}]", serviceId, ex);
+		}
+	}
+	
+	public void startAllJobServicesTasks() {
+		if(!wta.isTheLatest()) return; // Make sure we are in latest webapp
+		synchronized(deamonServices) {
+			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+				startJobServiceTasks(entry.getKey(), entry.getValue());
+			}
+		}
+	}
+	
+	/*
+	public void startAllJobServicesTasks() {
+		if(!wta.isTheLatest()) return; // Make sure we are in latest webapp
+		
+		synchronized(deamonServices) {
+			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+				try {
+					scheduler.resumeJobs(GroupMatcher.jobGroupEquals(entry.getKey()));
+					
+				} catch(SchedulerException ex) {
+					logger.error("Error resuming tasks for group [{}]", entry.getKey());
+				}
+			}
+		}
+	}
+	*/
+	
+	public void stopAllJobServicesTasks() {
+		synchronized(deamonServices) {
+			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+				stopJobServiceTasks(entry.getKey());
+			}
+		}
+	}
+	
+	private void initializeDeamons() {
+		Thread engine = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					synchronized(deamonServices) {
+						Thread.sleep(2000);
+						for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+							// Calls initialization method
+							try {
+								WebTopApp.setServiceLoggerDC(entry.getKey());
+								entry.getValue().initialize();
+							} catch(Throwable ex) {
+								logger.error("DeamonService method returns errors [initialize()]", ex);
+							} finally {
+								WebTopApp.unsetServiceLoggerDC();
+							}
+						}
+					}	
+				} catch (InterruptedException ex) { /* Do nothing... */	}
+			}
+		});
+		engine.start();		
 	}
 	
 	public boolean isInMaintenance(String serviceId) {
@@ -146,35 +341,10 @@ public class ServiceManager {
 		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
 	}
 	
-	public BaseDeamonService instantiateDeamonService(String serviceId) {
-		ServiceDescriptor descr = getService(serviceId);
-		if(!descr.hasDeamonService()) throw new RuntimeException("Service has no default class");
-		
-		// Creates service instance
-		BaseDeamonService instance = null;
-		try {
-			instance = (BaseDeamonService)descr.getDeamonServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating deamon service [{}]", descr.getManifest().getDeamonServiceClassName(), ex);
-			return null;
-		}
-		instance.configure();
-		
-		// Calls initialization method
-		try {
-			WebTopApp.setServiceLoggerDC(serviceId);
-			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("Initialization method returns errors", ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
-		}
-		
-		return instance;
-	}
+	
 	
 	public BaseService instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
-		ServiceDescriptor descr = getService(serviceId);
+		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
 		
 		// Creates service instance
@@ -215,7 +385,7 @@ public class ServiceManager {
 	}
 	
 	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String serviceId, String domainId, String userId) {
-		ServiceDescriptor descr = getService(serviceId);
+		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
 		
 		// Creates userOptions service instance
@@ -231,6 +401,34 @@ public class ServiceManager {
 		return instance;
 	}
 	
+	private BaseDeamonService createDeamonService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(!descr.hasDeamonService()) throw new RuntimeException("Service has no deamon class");
+		
+		// Creates service instance
+		BaseDeamonService instance = null;
+		try {
+			instance = (BaseDeamonService)descr.getDeamonServiceClass().newInstance();
+		} catch(Exception ex) {
+			logger.error("Error instantiating deamon service [{}]", descr.getManifest().getDeamonServiceClassName(), ex);
+			return null;
+		}
+		instance.configure();
+		return instance;
+	}
+	
+	public void cleanupDeamonService(BaseDeamonService instance) {
+		// Calls cleanup method
+		try {
+			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			instance.cleanup();
+		} catch(Exception ex) {
+			logger.error("Cleanup method returns errors", ex);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
+	
 	public String getServiceJsPath(String serviceId) {
 		return jsPathMappings.get(serviceId);
 	}
@@ -241,7 +439,7 @@ public class ServiceManager {
 	 */
 	public List<String> getRegisteredServices() {
 		synchronized(lock) {
-			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
+			return Arrays.asList(descriptors.keySet().toArray(new String[descriptors.size()]));
 		}
 	}
 	
@@ -252,7 +450,7 @@ public class ServiceManager {
 	public List<String> getServices() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock) {
-			for(ServiceDescriptor descr : services.values()) {
+			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
 			}
 		}
@@ -266,7 +464,7 @@ public class ServiceManager {
 	public List<String> getDeamonServices() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock) {
-			for(ServiceDescriptor descr : services.values()) {
+			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
 			}
 		}
@@ -278,10 +476,10 @@ public class ServiceManager {
 	 * @param serviceId The service ID.
 	 * @return Service descriptor object.
 	 */
-	ServiceDescriptor getService(String serviceId) {
+	ServiceDescriptor getDescriptor(String serviceId) {
 		synchronized(lock) {
-			if(!services.containsKey(serviceId)) return null;
-			return services.get(serviceId);
+			if(!descriptors.containsKey(serviceId)) return null;
+			return descriptors.get(serviceId);
 		}
 	}
 	
@@ -291,7 +489,7 @@ public class ServiceManager {
 	 * @return Service manifest object.
 	 */
 	public ServiceManifest getManifest(String serviceId) {
-		ServiceDescriptor descr = getService(serviceId);
+		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(descr == null) return null;
 		return descr.getManifest();
 	}
@@ -327,7 +525,7 @@ public class ServiceManager {
 		ServiceVersion manifestVer = null, userVer = null;
 		
 		// Gets current service's version info and last version for this user
-		ServiceDescriptor desc = getService(serviceId);
+		ServiceDescriptor desc = getDescriptor(serviceId);
 		manifestVer = desc.getManifest().getVersion();
 		userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
 		
@@ -359,7 +557,7 @@ public class ServiceManager {
 	 */
 	public String getWhatsnew(String serviceId, UserProfile profile, boolean full) {
 		ServiceVersion fromVersion = null;
-		ServiceDescriptor desc = getService(serviceId);
+		ServiceDescriptor desc = getDescriptor(serviceId);
 		if(!full) {
 			SettingsManager setm = wta.getSettingsManager();
 			fromVersion = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
@@ -376,7 +574,7 @@ public class ServiceManager {
 		
 		logger.debug("Registering service [{}]", serviceId);
 		synchronized(lock) {
-			if(services.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
+			if(descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidMappings.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidMappings.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
@@ -405,12 +603,13 @@ public class ServiceManager {
 				setMaintenance(serviceId, maintenance);
 			}
 			
-			services.put(serviceId, desc);
+			descriptors.put(serviceId, desc);
 			xidMappings.put(xid, serviceId);
 			jsPathMappings.put(serviceId, manifest.getJsPath());
 			
-			// Adds service references into static map for facilitate ID lookup 
-			Environment.addManifestMap(manifest.getServiceClassName(), manifest);
+			// Adds service references into static map in order to facilitate ID lookup
+			WT.manifestCache.put(serviceId, manifest);
+			//Environment.addManifestMap(manifest.getServiceClassName(), manifest);
 		}
 	}
 	
@@ -467,26 +666,6 @@ public class ServiceManager {
 		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
 		for(HierarchicalConfiguration elService : elServices) {
 			try {
-				/*
-				manifest = new ServiceManifest(
-					elService.getString("package"),
-					elService.getString("jsPackage"),
-					elService.getString("shortName"),
-					new ServiceVersion(elService.getString("version")),
-					elService.getString("buildDate"),
-					elService.getString("serviceClassName"),
-					elService.getString("serviceJsClassName"),
-					elService.getString("publicServiceClassName"),
-					elService.getString("deamonServiceClassName"),
-					elService.getString("userOptionsServiceClassName"),
-					elService.getString("userOptionsViewJsClassName"),
-					elService.getBoolean("hidden", false),
-					elService.getString("company"),
-					elService.getString("companyEmail"),
-					elService.getString("companyWebSite"),
-					elService.getString("supportEmail")
-				);
-				*/
 				manifest = new ServiceManifest(elService);
 				manifests.add(manifest);
 				

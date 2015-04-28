@@ -48,7 +48,7 @@ import org.slf4j.Logger;
  */
 public class ConnectionManager implements IConnectionProvider {
 	
-	private static final Logger logger = WebTopApp.getLogger(ConnectionManager.class);
+	private static final Logger logger = WT.getLogger(ConnectionManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -61,7 +61,7 @@ public class ConnectionManager implements IConnectionProvider {
 		if(initialized) throw new RuntimeException("Initialization already done");
 		ConnectionManager conm = new ConnectionManager(wta);
 		initialized = true;
-		logger.info("ConnectionManager initialized.");
+		logger.info("ConnectionManager initialized");
 		return conm;
 	}
 	
@@ -89,6 +89,8 @@ public class ConnectionManager implements IConnectionProvider {
 			}
 			pools.clear();
 		}
+		wta = null;
+		logger.info("ConnectionManager destroyed");
 	}
 	
 	public void registerJdbc3DataSource(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {

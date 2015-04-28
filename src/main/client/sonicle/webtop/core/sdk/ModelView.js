@@ -316,6 +316,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				linkName = me.getModelProperty(),
 				id = data[me.linkedModelIdField];
 		
+		// Due to there is no callback on linkTo method, we need to register a
+		// binding handler that will be called (once) when the viewmodel will
+		// be populated.
 		vm.bind({
 			bindTo: '{'+linkName+'}',
 			single: true
@@ -327,12 +330,14 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		});
 		
 		me.wait();
-		if(Ext.isEmpty(id)) {
+		if(Ext.isEmpty(id)) { // New case
+			// Defines a viewmodel link, creating an empty (phantom) model
 			vm.linkTo(me.modelProperty, {
 				type: me.model,
 				create: true
 			});
-			var m=vm.get(me.modelProperty);
+			// Apply initial data resetting dirty flag
+			var m = vm.get(me.modelProperty);
 			m.set(data, {
 				dirty: false
 			});
@@ -344,7 +349,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 					}
 				});
 			}
-		} else {
+		} else { // Edit/View case
 			vm.linkTo(me.modelProperty, {
 				type: me.model,
 				id: id

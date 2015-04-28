@@ -69,8 +69,12 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	options: null,
 	
-	wsactions: null,
-	wsscopes: null,
+	/**
+	 * @private
+	 * @property {Object} msgListeners
+	 * A map that holds message listeners defined by service.
+	 */
+	msgListeners: null,
 	
 	/**
 	 * @method
@@ -88,8 +92,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		var me = this;
 		me.ID = cfg.ID;
 		me.XID = cfg.XID;
-		me.wsactions = {};
-		me.wsscopes = {};
+		me.msgListeners = {};
 		me.initConfig(cfg);
 		me.mixins.observable.constructor.call(me, cfg);
 		me.mixins.refstorer.constructor.call(me, cfg);
@@ -259,7 +262,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	
 	/*
 	 * Builds the src url of a themed image for this service
-	 * 
 	 * @param {String} relPath The relative icon path
 	 * @return {String} the imageUrl
 	 */
@@ -280,15 +282,27 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 //		return WT.imageTag(this.ID, relPath, width, height, others);
 //	},
 	
-	/*
-	 * Map a websocket action name to a callback function
+	/**
+	 * Shorthand for {@link WT.sdk.Service#addMessageListener}.
 	 * @param {String} action The action name
 	 * @param {Function} callback The function for this action
 	 * @param {Object} scope The scope for this callback
 	 */
-	addWSAction: function(action, callback, scope) {
-		this.wsactions[action] = callback;
-		this.wsscopes[action] = scope;
+	onMessage: function(action, fn, scope) {
+		this.addMessageListener(action, fn, scope);
+	},
+	
+	/*
+	 * Maps a message action to a specific callback function.
+	 * @param {String} action The action name
+	 * @param {Function} callback The function for this action
+	 * @param {Object} scope The scope for this callback
+	 */
+	addMessageListener: function(action, fn, scope) {
+		this.msgListeners[action] = {
+			fn: fn,
+			scope: scope || this
+		};
 	},
 	
 	/*
@@ -305,19 +319,18 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @param {String} action the action name
 	 * @return {Function} callback function for this action
 	 */
-	getWSAction: function(action) {
-		return this.wsactions[action];
-	},
+	//getMessageAction: function(action) {
+	//	return this.wsactions[action];
+	//},
 	
 	/**
-	 * Callback for WebSocket messages arriving from the server.
-	 * Finds the mapped action function and call it.
-	 * @param {Object} cfg The message config object.
+	 * @private
+	 * Callback for messages arriving from the server.
+	 * It finds the mapped action function and calls it.
+	 * @param {Object} cfg The message object.
 	 */
-	websocketMessage: function(cfg) {
-		var me  = this;
-		var fn = me.wsactions[cfg.action];
-		var scope = me.wsscopes[cfg.action] || me;
-		Ext.callback(fn, scope, [cfg]);
+	handleMessage: function(cfg) {
+		var lis = this.msgListeners[cfg.action];
+		if(lis) Ext.callback(lis.fn, lis.scope, [cfg]);
 	}
 });

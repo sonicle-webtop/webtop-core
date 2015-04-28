@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.Util', {
 	singleton: true,
-	alternateClassName: 'WT.Util',
+	alternateClassName: ['WT.Util', 'WTU'],
 	
 	applyTbItems: function(obj, dock, items, append) {
 		if(append === undefined) append = true;
@@ -194,10 +194,10 @@ Ext.define('Sonicle.webtop.core.Util', {
 	},
 	
 	/**
-	 * Helper method for building a {@link Ext.data.field.Field field} config
-	 * @param {String} name Field {@link Ext.data.field.Field#name}.
-	 * @param {String} type Field {@link Ext.data.field.Field#type}.
-	 * @param {type} allowBlank If 'false' automatically adds the presence validator.
+	 * Helper method for building a {@link Ext.data.field.Field field} config.
+	 * @param {String} name {@link Ext.data.field.Field#name}
+	 * @param {String} type {@link Ext.data.field.Field#type}
+	 * @param {Boolean} allowBlank If 'false' automatically adds the presence validator.
 	 * @param {Object} [cfg] Custom config to apply.
 	 * @returns {Object}
 	 */
@@ -214,6 +214,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 		}, cfg);
 	},
 	
+	/**
+	 * Helper method for building a calculated {@link Ext.data.field.Field field} config.
+	 * @param {String} name {@link Ext.data.field.Field#name}
+	 * @param {String} type {@link Ext.data.field.Field#type}
+	 * @param {String} depends {@link Ext.data.field.Field#depends}
+	 * @param {Function} convert {@link Ext.data.field.Field#convert}
+	 * @param {Object} [cfg] Custom config to apply.
+	 * @returns {Object}
+	 */
 	calcField: function(name, type, depends, convert, cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
@@ -222,6 +231,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 			persist: false,
 			depends: depends,
 			convert: convert
+		}, cfg);
+	},
+	
+	roField: function(name, type, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			name: name,
+			type: type,
+			persist: false
 		}, cfg);
 	},
 	

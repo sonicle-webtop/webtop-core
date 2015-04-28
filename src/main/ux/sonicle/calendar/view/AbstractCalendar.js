@@ -749,7 +749,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		if (operation === Ext.data.Record.COMMIT) {
 			this.refresh(true);
 			if (me.enableFx && me.enableUpdateFx) {
-				me.doUpdateFx(me.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.EventId.name]), {
+				me.doUpdateFx(me.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.Id.name]), {
 					scope: me
 				});
 			}
@@ -766,7 +766,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		this.refresh();
 
 		if (this.enableFx && this.enableAddFx) {
-			this.doAddFx(this.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.EventId.name]), {
+			this.doAddFx(this.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.Id.name]), {
 				scope: this
 			});
 		}
@@ -774,7 +774,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	onRemove: function (ds, recs) {
-		var name = Sonicle.calendar.data.EventMappings.EventId.name,
+		var idField = Sonicle.calendar.data.EventMappings.Id.name,
 				i, len, rec, els;
 
 		if (this.monitorStoreEvents === false) {
@@ -785,7 +785,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			rec = recs[i];
 
 			if (this.enableFx && this.enableRemoveFx) {
-				els = this.getEventEls(rec.get(name));
+				els = this.getEventEls(rec.get(idField));
 
 				if (els.getCount() > 0) {
 					this.doRemoveFx(els, {
@@ -796,7 +796,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 				}
 			}
 			else {
-				this.getEventEls(rec.get(name)).remove();
+				this.getEventEls(rec.get(idField)).remove();
 				this.refresh();
 			}
 		}
@@ -1295,7 +1295,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	getEventRecord: function (id) {
-		var idx = this.store.find(Sonicle.calendar.data.EventMappings.EventId.name, id);
+		var idx = this.store.find(Sonicle.calendar.data.EventMappings.Id.name, id);
 		return this.store.getAt(idx);
 	},
 	

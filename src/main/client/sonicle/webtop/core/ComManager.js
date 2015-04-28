@@ -72,15 +72,14 @@ Ext.define('Sonicle.webtop.core.ComManager', {
 	},
 	
 	isWSSupported: function() {
-		return ("WebSocketx" in window);
+		return ("WebSocket" in window);
 	},
 	
 	initWebSocket: function() {
 		var me = this;
 		
 		me.ws = Ext.create('Ext.ux.WebSocket', {
-			url: Ext.String.format('ws://{0}:{1}{2}/wsmanager', window.location.hostname, window.location.port, window.location.pathname),
-			//url: 'ws://'+window.location.hostname+':'+window.location.port+window.location.pathname+"wsmanager",
+			url: Ext.String.format('ws://{0}:{1}{2}/websocket', window.location.hostname, window.location.port, window.location.pathname),
 			autoReconnect: true ,
 			autoReconnectInterval: me.getWsReconnectInterval(),
 			listeners: {

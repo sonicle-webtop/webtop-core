@@ -52,8 +52,6 @@ import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -86,17 +84,36 @@ public abstract class BaseService {
 		return coreEnv;
 	}
 	
-	public final ServiceManifest getManifest() {
-		return Environment.getManifest(this.getClass());
-	}
-	
-	public final String getId() {
-		return Environment.getServiceId(this.getClass());
-	}
-	
 	public HashMap<String, Object> returnClientOptions() {
 		return null;
 	}
+	
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
+		return WT.getManifest(this.getClass());
+		//return Environment.getManifest(this.getClass());
+	}
+	
+	/**
+	 * Gets WebTop Service's ID.
+	 * @return The service ID.
+	 */
+	public final String getId() {
+		return WT.getServiceId(this.getClass());
+		//return Environment.getServiceId(this.getClass());
+	}
+	
+	/**
+	 * Gets WebTop Service's db connection.
+	 * @return The db connection.
+	 * @throws SQLException 
+	 */
+    public final Connection getConnection() throws SQLException {
+		return WT.getConnection(getId());
+    }
 	
 	/**
 	 * Returns the localized name.
@@ -115,42 +132,6 @@ public abstract class BaseService {
 	public final String getDescription(Locale locale) {
 		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
-	
-	/**
-	 * Returns a valid logger instance properly configured by WebTop 
-	 * environment. Logger name is computed starting from specified class name.
-	 * @param clazz A class.
-	 * @return A logger instance.
-	 */
-	public static Logger getLogger(Class clazz) {
-		return (Logger) LoggerFactory.getLogger(clazz);
-	}
-	
-	/**
-	 * (logger) Apply a custom diagnostic context (DC) to the default one.
-	 * Passed value is associated to the key 'custom' of current DC.
-	 * @param diagnosticContext Custom diagnostic context string value to append.
-	 */
-	public static void applyLoggerDC(String diagnosticContext) {
-		WebTopApp.setServiceCustomLoggerDC(diagnosticContext);
-	}
-	
-	/**
-	 * (logger) Removes custom diagnostic context restoring the default one.
-	 * Same behaviour calling: applyLoggerDC(null)
-	 */
-	public static void clearLoggerDC() {
-		WebTopApp.unsetServiceCustomLoggerDC();
-	}
-    
-    /**
-	 * Gets service's db connection.
-	 * @return The db connection.
-	 * @throws SQLException 
-	 */
-    public final Connection getConnection() throws SQLException {
-		return WT.getConnection(getId());
-    }
     
 	/**
 	 * Returns the localized string associated to the key.

@@ -33,6 +33,14 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.WebTopApp;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import org.quartz.JobDataMap;
+import org.quartz.Trigger;
+
 /**
  *
  * @author malbinola
@@ -41,10 +49,73 @@ public abstract class BaseDeamonService {
 	
 	private boolean configured = false;
 	public abstract void initialize();
+	public abstract List<TaskDefinition> returnTasks();
 	public abstract void cleanup();
 	
 	public final void configure() {
 		if(configured) return;
 		configured = true;
+	}
+	
+	private static WebTopApp getWTA() {
+		return WebTopApp.getInstance();
+	}
+	
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
+		return WT.getManifest(this.getClass());
+	}
+	
+	/**
+	 * Gets WebTop Service's ID.
+	 * @return The service ID.
+	 */
+	public final String getId() {
+		return WT.getServiceId(this.getClass());
+	}
+	
+	/**
+	 * Gets WebTop Service's db connection.
+	 * @return The db connection.
+	 * @throws SQLException 
+	 */
+    public final Connection getConnection() throws SQLException {
+		return WT.getConnection(getId());
+    }
+	
+	
+	/*
+	public String scheduleTask(String minutes, String hours, String daysofmonth, String months, String daysofweek, BaseTask task) {
+		return getWTA().registerTask(minutes, hours, daysofmonth, months, daysofweek, task);
+	}
+	
+	public void unscheduleTask(String taskId) {
+		getWTA().unregisterTask(taskId);
+	}
+	*/
+	
+	public static class TaskDefinition {
+		public Class clazz;
+		public JobDataMap data;
+		public Trigger trigger;
+		public String description;
+		
+		public TaskDefinition(Class clazz, Trigger trigger) {
+			this(clazz, null, trigger, null);
+		}
+		
+		public TaskDefinition(Class clazz, JobDataMap data, Trigger trigger) {
+			this(clazz, data, trigger, null);
+		}
+		
+		public TaskDefinition(Class clazz, JobDataMap data, Trigger trigger, String description) {
+			this.clazz = clazz;
+			this.data = data;
+			this.trigger = trigger;
+			this.description = description;
+		}
 	}
 }

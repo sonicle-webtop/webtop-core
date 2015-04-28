@@ -48,6 +48,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.TimeZone;
+import net.sf.qualitycheck.Check;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -60,7 +61,7 @@ import org.slf4j.Logger;
  */
 public final class UserProfile {
 	
-	private static final Logger logger = WebTopApp.getLogger(UserProfile.class);
+	private static final Logger logger = WT.getLogger(UserProfile.class);
 	private final SuperEnvironment fullEnv;
 	private final Principal principal;
 	private OUser user;
@@ -197,8 +198,8 @@ public final class UserProfile {
 		return isSystemAdmin(userId + "@" + domainId);
 	}
 	
-	public static boolean isSystemAdmin(String id) {
-		return id.equals("admin@*");
+	public static boolean isSystemAdmin(String profileId) {
+		return profileId.equals("admin@*");
 	}
 	
 	public static class Id {
@@ -211,8 +212,8 @@ public final class UserProfile {
 		}
 		
 		public Id(String domainId, String userId) {
-			this.domainId = domainId;
-			this.userId = userId;
+			this.domainId = Check.notNull(domainId);
+			this.userId = Check.notNull(userId);
 		}
 		
 		public String getDomainId() {

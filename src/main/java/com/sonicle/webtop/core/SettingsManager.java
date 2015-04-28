@@ -57,7 +57,7 @@ import org.slf4j.Logger;
  */
 public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager, ISettingManager {
 	
-	private static final Logger logger = WebTopApp.getLogger(SettingsManager.class);
+	private static final Logger logger = WT.getLogger(SettingsManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -70,7 +70,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		if(initialized) throw new RuntimeException("Initialization already done");
 		SettingsManager setm = new SettingsManager(wta);
 		initialized = true;
-		logger.info("SettingsManager initialized.");
+		logger.info("SettingsManager initialized");
 		return setm;
 	}
 	
@@ -88,8 +88,9 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	/**
 	 * Performs cleanup process.
 	 */
-	public void cleanup() {
-		
+	protected void cleanup() {
+		wta = null;
+		logger.info("SettingsManager destroyed");
 	}
 	
 	/**
@@ -329,6 +330,22 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read settings (user) [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
+			throw new RuntimeException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OUserSetting> getUserSettings(String serviceId, String key, Object value) {
+		UserSettingDAO dao = UserSettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			return dao.selectByServiceKeyValue(con, serviceId, key, valueToString(value));
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read settings (user) [{}, {}]", serviceId, key, ex);
 			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);

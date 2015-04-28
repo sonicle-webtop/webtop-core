@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
@@ -63,7 +64,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -73,7 +73,7 @@ import org.slf4j.Logger;
  */
 public class ResourceRequest extends HttpServlet {
 	
-	private static final Logger logger = WebTopApp.getLogger(ResourceRequest.class);
+	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
 	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+)\\/(.*)$");

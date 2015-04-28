@@ -37,17 +37,12 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
-import com.sonicle.webtop.core.sdk.Encryption;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.ws.WebSocketManager;
-import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -65,8 +60,9 @@ import org.slf4j.Logger;
  */
 public class WebTopSession {
 	
-	private static final Logger logger = WebTopApp.getLogger(WebTopSession.class);
 	public static final String ATTRIBUTE = "webtopsession";
+	private static final Logger logger = WT.getLogger(WebTopSession.class);
+	
 	private final HttpSession httpSession;
 	private final WebTopApp wta;
 	private boolean initialized = false;
@@ -80,16 +76,14 @@ public class WebTopSession {
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
-	private final Object wsmLock = new Object();
-	private WebSocketManager wsManager = null;
-	private final ArrayDeque<ServiceMessage> messageQueue = new ArrayDeque<>();
+	private SessionComManager comm = null;
 	
 	WebTopSession(HttpSession session) {
 		httpSession = session;
 		wta = WebTopApp.get(session.getServletContext());
 	}
 	
-	void destroy() {
+	void destroy() throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		
 		// Cleanup services
@@ -99,6 +93,68 @@ public class WebTopSession {
 			}
 			services.clear();
 		}
+		// Unregister this session
+		wta.getSessionManager().unregisterSession(this);
+	}
+	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param request The http request
+	 * @return WebTopSession object
+	 */
+	public static WebTopSession get(HttpServletRequest request) {
+		return get(request.getSession());
+	}
+	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param session The http session
+	 * @return WebTopSession object
+	 */
+	public static WebTopSession get(HttpSession session) {
+		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
+	}
+	
+	/**
+	 * Returns the session ID.
+	 * @return HttpSession unique identifier.
+	 */
+	public String getId() {
+		return httpSession.getId();
+	}
+	
+	/**
+	 * Gets parsed user-agent info.
+	 * @return A readable ReadableUserAgent object. 
+	 */
+	public ReadableUserAgent getUserAgent() {
+		return userAgentInfo;
+	}
+	
+	/**
+	 * Gets the user profile associated to the session.
+	 * @return The UserProfile.
+	 */
+	public UserProfile getUserProfile() {
+		return profile;
+	}
+	
+	/**
+	 * Return current locale.
+	 * It can be the UserProfile's locale or the locale specified during
+	 * the initial HTTP request to the server.
+	 * @return The locale.
+	 */
+	public Locale getLocale() {
+		if(profile != null) {
+			return profile.getLocale();
+		} else {
+			return userAgentLocale;
+		}
+	}
+	
+	public String getRefererURI() {
+		return refererURI;
 	}
 	
 	/**
@@ -166,6 +222,10 @@ public class WebTopSession {
 		fullEnv = new CoreEnvironment(wta, this);
 		profile = new UserProfile(fullEnv, principal);
 		
+		// Creates communication manager and registers this active session
+		comm = new SessionComManager(profile.getId());
+		wta.getSessionManager().registerSession(this);
+		
 		// Instantiates services
 		BaseService instance = null;
 		List<String> serviceIds = wta.getManager().getUserServices(profile);
@@ -173,6 +233,7 @@ public class WebTopSession {
 		// TODO: order services list
 		for(String serviceId : serviceIds) {
 			//TODO: check if service is allowed for user
+			if(!svcm.getDescriptor(serviceId).hasDefaultService()) continue;
 			// Creates new instance
 			if(svcm.hasFullRights(serviceId)) {
 				instance = svcm.instantiateService(serviceId, basicEnv, fullEnv);
@@ -184,8 +245,8 @@ public class WebTopSession {
 				count++;
 			}
 		}
-		
 		logger.debug("Instantiated {} services", count);
+		
 		initialized = true;
 	}
 	
@@ -243,7 +304,7 @@ public class WebTopSession {
 	
 	private JsWTS.Service fillStartupForService(JsWTS js, String serviceId) {
 		ServiceManager svcm = wta.getServiceManager();
-		ServiceDescriptor sdesc = svcm.getService(serviceId);
+		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		Locale locale = getLocale();
 		
@@ -320,36 +381,6 @@ public class WebTopSession {
 		return needWhatsnew;
 	}
 	
-	/**
-	 * Gets parsed user-agent info.
-	 * @return A readable ReadableUserAgent object. 
-	 */
-	public ReadableUserAgent getUserAgent() {
-		return userAgentInfo;
-	}
-	
-	/**
-	 * Gets the user profile associated to the session.
-	 * @return The UserProfile.
-	 */
-	public UserProfile getUserProfile() {
-		return profile;
-	}
-	
-	/**
-	 * Return current locale.
-	 * It can be the UserProfile's locale or the locale specified during
-	 * the initial HTTP request to the server.
-	 * @return The locale.
-	 */
-	public Locale getLocale() {
-		if(profile != null) {
-			return profile.getLocale();
-		} else {
-			return userAgentLocale;
-		}
-	}
-	
 	public CoreServiceSettings getCoreServiceSettings() {
 		return coreServiceSettings;
 	}
@@ -358,107 +389,19 @@ public class WebTopSession {
 		return coreUserSettings;
 	}
 	
-	public String getRefererURI() {
-		return refererURI;
+	public void setWebSocketEndpoint(WebSocket wsm) {
+		comm.setWebSocketEndpoint(wsm);
 	}
 	
-	public void setWebSocketEndpoint(WebSocketManager wsm) {
-		synchronized(wsmLock) {
-			wsManager = wsm;
-			try { wsManager.send(pollMessageQueue()); } catch(IOException ex) { /* Do nothing... */ }
-		}
+	public void nofity(ServiceMessage message) {
+		comm.nofity(message);
 	}
 	
-	public void send(ServiceMessage message) {
-		send(Arrays.asList(new ServiceMessage[]{message}));
+	public void nofity(List<ServiceMessage> messages) {
+		comm.nofity(messages);
 	}
 	
-	private void queueMessages(List<ServiceMessage> messages) {
-		synchronized(messageQueue) {
-			for(ServiceMessage message : messages) {
-				logger.debug("quequing message");
-				messageQueue.addLast(message);
-			}
-			logger.debug("queue contains {} messages", messageQueue.size());
-		}
-	}
-	
-	public void send(List<ServiceMessage> messages) {
-		boolean queue = true;
-		synchronized(wsmLock) {
-			if(wsManager != null) {
-				try {
-					wsManager.send(messages);
-					queue = false;
-				} catch(IOException ex) {
-					logger.debug("websocket manager error", ex);
-				}
-			}
-		}
-		if(queue) queueMessages(messages);
-	}
-	
-	public List<ServiceMessage> pollMessageQueue() {
-		ArrayList<ServiceMessage> messages = new ArrayList();
-		synchronized(messageQueue) {
-			logger.debug("polling queue");
-			logger.debug("queue contains {} messages", messageQueue.size());
-			while(!messageQueue.isEmpty()) {
-				messages.add(messageQueue.pollFirst());
-			}
-			logger.debug("queue contains {} messages", messageQueue.size());
-		}
-		return messages;
-	}
-	
-	
-	/*
-	public void sendWebSocketMessage(WebSocketMessage wsmessage) {
-		boolean sent=false;
-		logger.debug("Requested send of WebSocketMessage - wsm={}",wsm);
-		if (this.wsm!=null) {
-			try {
-				this.wsm.sendMessage(wsmessage);
-				sent=true;
-			} catch(IOException exc) {
-				logger.debug("websocket manager error",exc);
-			}
-		}
-		if (!sent) {
-			queueMessage(wsmessage);
-		}
-	}
-	
-	public void queueMessage(WebSocketMessage message) {
-		synchronized(messageQueue) {
-			messageQueue.addLast(message);
-			logger.debug("queued message - count={}", messageQueue.size());
-		}
-	}
-	
-	public WebSocketMessage pollWebSocketQueue() {
-		WebSocketMessage wsm=messageQueue.pollFirst();
-		logger.debug("polling message from queue - {}",wsm);
-		return wsm;
-	}
-	
-	*/
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param request The http request
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpServletRequest request) {
-		return get(request.getSession());
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param session The http session
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpSession session) {
-		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
+	public List<ServiceMessage> getEnqueuedMessages() {
+		return comm.popEnqueuedMessages();
 	}
 }

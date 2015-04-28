@@ -33,11 +33,14 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.AppLocale;
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.dal.MessageQueueDAO;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
-import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -45,11 +48,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.MessageFormat;
-import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -58,10 +61,16 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
@@ -70,16 +79,22 @@ import org.slf4j.MDC;
  */
 public class WebTopApp {
 	
-	public final static Logger logger = WebTopApp.getLogger(WebTopApp.class);
 	public static final String ATTRIBUTE = "webtopapp";
+	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static final Object lock = new Object();
+	
 	private static WebTopApp instance = null;
 	
+	/**
+	 * Initialization method. This method should be called once.
+	 * @param context ServletContext instance.
+	 */
 	public static void initialize(ServletContext context) {
 		synchronized(lock) {
 			if(instance != null) throw new RuntimeException("WebTopApp initialization already done!");
 			instance = new WebTopApp(context);
 		}
+		instance.afterInit();
 	}
 	
 	public static WebTopApp getInstance() {
@@ -89,26 +104,36 @@ public class WebTopApp {
 	}
 	
 	private final ServletContext servletContext;
-	private final String webappName;
 	private final String systemInfo;
-	private final Locale systemLocale;
+	private Locale systemLocale;
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
+	private SessionManager sesm = null;
 	private TFAManager tfam = null;
+	private Scheduler scheduler = null;
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
+	/**
+	 * Private constructor.
+	 * Instances of this class must be created using static initialize method.
+	 * @param @param context ServletContext instance.
+	 */
 	private WebTopApp(ServletContext context) {
 		servletContext = context;
-		webappName = ServletHelper.getWebAppName(context);
 		systemInfo = buildSystemInfo();
-		
+		init();
+	}
+	
+	private void init() {
+		String webappName = getWebAppName();
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		// Locale Manager
 		String[] tags = new String[]{"it_IT", "en_EN"};
+		//TODO: caricare dinamicamente le lingue installate nel sistema
 		i18nm = I18nManager.initialize(this, tags);
 		
 		// Template Engine
@@ -120,43 +145,95 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
+		//TODO: caricare dinamicamente i parametri della connessione principale
 		try {
 			conm.registerJdbc4DataSource(CoreManifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
 			//conm.registerJdbc4DataSource(CoreManifest.ID, "org.postgresql.ds.PGSimpleDataSource", "localhost", null, "webtop5", "postgres", "postgres");
 		} catch (SQLException ex) {
-			logger.error("Error registeting default connection", ex);
+			logger.error("Error registering default connection", ex);
+			throw new WTRuntimeException(ex, "Error registering default connection");
 		}
 		
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
-		
-		// Service Manager
-		svcm = ServiceManager.initialize(this);
+		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
 		
 		// TFA Manager
 		tfam = TFAManager.initialize(this);
 		
-		// System locale
-		systemLocale = CoreServiceSettings.getSystemLocale(setm);
+		// Scheduler (services manager (for deamons) requires this component)
+		try {
+			//TODO: gestire le opzioni di configurazione dello scheduler
+			SchedulerFactory sf = new StdSchedulerFactory();
+			scheduler = sf.getScheduler();
+			scheduler.start();
+			
+		} catch(SchedulerException ex) {
+			throw new WTRuntimeException(ex, "Error starting scheduler");
+		}
+		
+		// Session Manager
+		sesm = SessionManager.initialize(this);
+		
+		// Service Manager
+		svcm = ServiceManager.initialize(this, scheduler);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
 	
 	public void destroy() {
+		String webappName = getWebAppName();
 		logger.info("WTA shutdown started [{}]", webappName);
+		
+		// Service Manager
+		svcm.cleanup();
+		svcm = null;
+		
+		// Session Manager
+		sesm.cleanup();
+		sesm = null;
+		
+		// Scheduler
+		try {
+			scheduler.shutdown(true);
+			scheduler = null;
+		} catch(SchedulerException ex) {
+			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
+		}
+		
+		// TFA Manager
+		tfam.cleanup();
+		tfam = null;
+		
+		// Settings Manager
+		setm.cleanup();
+		setm = null;
 		
 		// Connection Manager
 		conm.cleanup();
 		conm = null;
-		logger.info("ConnectionManager destroyed.");
-		// Settings Manager
-		setm.cleanup();
-		// Service Manager
-		svcm.cleanup();
-		// TFA Manager
-		tfam.cleanup();
+		
+		// I18nManager Manager
+		//I18nManager.cleanup();
+		i18nm = null;
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
+	}
+	
+	private void afterInit() {
+		Thread engine = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(5000);
+					
+					logger.debug("Starting JobServices tasks...");
+					svcm.startAllJobServicesTasks();
+					
+				} catch (InterruptedException ex) { /* Do nothing... */	}
+			}
+		});
+		engine.start();	
 	}
 	
 	/**
@@ -164,7 +241,33 @@ public class WebTopApp {
 	 * @return Webapp's name
 	 */
 	public String getWebAppName() {
-		return webappName;
+		return ServletHelper.getWebAppName(servletContext);
+	}
+	
+	/**
+	 * Checks if this webapp is the latest version in the application server.
+	 * @return True if this is the last version, false otherwise.
+	 */
+	public boolean isTheLatest() {
+		String webappName = getWebAppName();
+		String webappBaseName = StringUtils.split(webappName, "##")[0];
+		String webappPath = servletContext.getRealPath("/");
+		String webappsDirPath = webappPath + "/..";
+		
+		// Cycles webapps folders into application server webapps directory
+		// and extract app names that matches with base name.
+		File webappsDir = new File(webappsDirPath);
+		ListOrderedSet names = new ListOrderedSet();
+		for(File file : webappsDir.listFiles()) {
+			if(file.isDirectory()) {
+				if(StringUtils.startsWith(file.getName(), webappBaseName)) {
+					names.add(file.getName());
+				}
+			}
+		}
+		
+		String latest = (String)names.get(names.size()-1);
+		return webappName.equals(latest);
 	}
 	
 	public String getServerInfo() {
@@ -241,6 +344,25 @@ public class WebTopApp {
 		return tfam;
 	}
 	
+	/**
+	 * Returns the SessionManager.
+	 * @return SessionManager instance.
+	 */
+	public SessionManager getSessionManager() {
+		return sesm;
+	}
+	
+	/*
+	public String registerTask(String minutes, String hours, String daysOfMonth, String months, String daysOfWeek, BaseTask task) {
+		String[] tokens = new String[]{minutes, hours, daysOfMonth, months, daysOfWeek};
+		return scheduler.schedule(StringUtils.join(tokens, " "), task);
+	}
+	
+	public void unregisterTask(String taskId) {
+		scheduler.deschedule(taskId);
+	}
+	*/
+	
 	public CoreManager getManager() {
 		return new CoreManager(this);
 	}
@@ -280,6 +402,39 @@ public class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
+	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+		List<WebTopSession> sessions = sesm.getSessions(profileId);
+		if(!sessions.isEmpty()) {
+			for(WebTopSession session : sessions) {
+				session.nofity(messages);
+			}
+		} else { // No user active sessions found!
+			if(enqueueIfOffline) {
+				Connection con = null;
+				
+				try {
+					MessageQueueDAO mqdao = MessageQueueDAO.getInstance();
+					con = conm.getConnection();
+					OMessageQueue queued = null;
+					for(ServiceMessage message : messages) {
+						queued = new OMessageQueue();
+						queued.setQueueId(mqdao.getSequence(con).intValue());
+						queued.setDomainId(profileId.getDomainId());
+						queued.setUserId(profileId.getUserId());
+						queued.setMessageType(message.getClass().getName());
+						queued.setMessageRaw(JsonResult.gson.toJson(message));
+						queued.setQueuedOn(DateTime.now(DateTimeZone.UTC));
+						mqdao.insert(con, queued);
+					}
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				} finally {
+					DbUtils.closeQuietly(con);
+				}
+			}
+		}
+	}
+	
 	public String getCustomProperty(String name) {
 		return null;
 	}
@@ -289,18 +444,18 @@ public class WebTopApp {
 	 * @param clazz
 	 * @return The logger name.
 	 */
-	public static String getLoggerName(Class clazz) {
-		return clazz.getName();
-	}
+	//public static String getLoggerName(Class clazz) {
+	//	return clazz.getName();
+	//}
 	
 	/**
 	 * Prepares a logger instance for desired class.
 	 * @param clazz
 	 * @return The logger instance.
 	 */
-	public static Logger getLogger(Class clazz) {
-		return (Logger) LoggerFactory.getLogger(WebTopApp.getLoggerName(clazz));
-	}
+	//public static Logger getLogger(Class clazz) {
+	//	return (Logger) LoggerFactory.getLogger(WebTopApp.getLoggerName(clazz));
+	//}
 	
 	/**
 	 * (logger) Initialize diagnostic context (MDC object) with default entries:

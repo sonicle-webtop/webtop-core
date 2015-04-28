@@ -31,13 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
 public class HandshakeMessage extends ServiceMessage {
 	
@@ -46,4 +46,8 @@ public class HandshakeMessage extends ServiceMessage {
 	String userId;
 	String domainId;
 	String encAuthTicket;
+	
+	public HandshakeMessage() {
+		super();
+	}
 }

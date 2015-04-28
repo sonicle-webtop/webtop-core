@@ -38,13 +38,35 @@ package com.sonicle.webtop.core.sdk;
  * @author gbulfon
  */
 public class ServiceMessage {
-
-	public String service;
-	public String action;
 	
-	/*
-	public String toJson() {
-		return JsonResult.gson.toJson(this);
+	protected String service;
+	protected String action;
+	
+	public ServiceMessage() {
+		super();
 	}
-	*/
+	
+	public ServiceMessage(String service, String action) {
+		super();
+		this.service = service;
+		this.action = action;
+	}
+	
+	public final String getService() {
+		return service;
+	}
+	
+	public final ServiceMessage setService(String value) {
+		service = value;
+		return this;
+	}
+	
+	public final String getAction() {
+		return action;
+	}
+	
+	public final ServiceMessage setAction(String value) {
+		action = value;
+		return this;
+	}
 }

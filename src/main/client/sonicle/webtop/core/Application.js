@@ -119,7 +119,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 			Ext.each(messages, function(msg) {
 				if (msg && msg.service) {
 					var svc = me.getService(msg.service);
-					if(svc) svc.websocketMessage(msg);
+					if(svc) svc.handleMessage(msg);
 				}
 			});
 		});

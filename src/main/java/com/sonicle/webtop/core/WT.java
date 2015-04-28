@@ -34,15 +34,27 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OContentType;
+import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
+import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.sdk.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -50,8 +62,15 @@ import java.util.TimeZone;
  */
 public class WT {
 	
+	static final HashMap<String, ServiceManifest> manifestCache = new HashMap<>();
+	private static final HashMap<String, String> cnameToServiceIdCache = new HashMap<>();
+	
 	private static WebTopApp getWTA() {
 		return WebTopApp.getInstance();
+	}
+	
+	public static boolean isLatestWebApp() {
+		return getWTA().isTheLatest();
 	}
 	
 	public static List<AppLocale> getInstalledLocales() {
@@ -60,6 +79,32 @@ public class WT {
 	
 	public static List<TimeZone> getTimezones() {
 		return getWTA().getI18nManager().getTimezones();
+	}
+	
+	public static ServiceManifest getManifest(String serviceId) {
+		return getWTA().getServiceManager().getManifest(serviceId);
+	}
+	
+	public static ServiceManifest getManifest(Class clazz) {
+		String cname = clazz.getName();
+		synchronized(manifestCache) {
+			if(cnameToServiceIdCache.containsKey(cname)) {
+				return manifestCache.get(cnameToServiceIdCache.get(cname));
+			} else {
+				for(String sid : manifestCache.keySet()) {
+					if(StringUtils.startsWith(cname, sid)) {
+						cnameToServiceIdCache.put(cname, sid);
+						return manifestCache.get(sid);
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static String getServiceId(Class clazz) {
+		ServiceManifest manifest = getManifest(clazz);
+		return (manifest == null) ? null : manifest.getId();
 	}
 	
 	public static Connection getCoreConnection() throws SQLException {
@@ -87,6 +132,22 @@ public class WT {
 	
 	public static String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
+	}
+	
+	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
+		nofity(profileId, message, false);
+	}
+	
+	public static void nofity(UserProfile.Id profileId, ServiceMessage message, boolean enqueueIfOffline) {
+		nofity(profileId, Arrays.asList(new ServiceMessage[]{message}), enqueueIfOffline);
+	}
+	
+	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages) {
+		nofity(profileId, messages, false);
+	}
+	
+	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
 	public static String getContentType(String extension) {
@@ -126,5 +187,32 @@ public class WT {
 			DbUtils.closeQuietly(con);
 		}
 		return extension;
+	}
+	
+	/**
+	 * Returns a valid logger instance properly configured by WebTop 
+	 * environment. Logger name is computed starting from specified class name.
+	 * @param clazz A class.
+	 * @return A logger instance.
+	 */
+	public static Logger getLogger(Class clazz) {
+		return (Logger) LoggerFactory.getLogger(clazz);
+	}
+	
+	/**
+	 * (logger) Apply a custom diagnostic context (DC) to the default one.
+	 * Passed value is associated to the key 'custom' of current DC.
+	 * @param diagnosticContext Custom diagnostic context string value to append.
+	 */
+	public static void applyLoggerDC(String diagnosticContext) {
+		WebTopApp.setServiceCustomLoggerDC(diagnosticContext);
+	}
+	
+	/**
+	 * (logger) Removes custom diagnostic context restoring the default one.
+	 * Same behaviour calling: applyLoggerDC(null)
+	 */
+	public static void clearLoggerDC() {
+		WebTopApp.unsetServiceCustomLoggerDC();
 	}
 }

@@ -35,7 +35,6 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.AppLocale;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,7 +48,7 @@ import org.slf4j.Logger;
  */
 public class I18nManager {
 	
-	private static final Logger logger = WebTopApp.getLogger(I18nManager.class);
+	private static final Logger logger = WT.getLogger(I18nManager.class);
 	private static boolean initialized = false;
 	
 	/**

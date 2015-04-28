@@ -31,25 +31,30 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.msg;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import java.io.IOException;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
  * @author malbinola
  */
-public interface BasicEnvironment {
+public class ErrorMessage extends ServiceMessage {
 	
-	public UserProfile getProfile();
-	public ReadableUserAgent getUserAgent();
-    public String getSessionRefererUri();
-    public CoreServiceSettings getCoreServiceSettings();
-    public CoreUserSettings getCoreUserSettings();
-	public void notify(ServiceMessage message) throws IOException;
-	public void notify(List<ServiceMessage> messages) throws IOException;
+	protected String message;
+	
+	public ErrorMessage(String message) {
+		super(CoreManifest.ID, "error");
+		this.message = message;
+	}
+	
+	public String getMessage() {
+		return message;
+	}
+	
+	public ServiceMessage setMessage(String value) {
+		message = value;
+		return this;
+	}
 }

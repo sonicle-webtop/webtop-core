@@ -31,25 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import java.io.IOException;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import javax.servlet.http.HttpSession;
+import javax.websocket.HandshakeResponse;
+import javax.websocket.server.HandshakeRequest;
+import javax.websocket.server.ServerEndpointConfig;
 
 /**
  *
- * @author malbinola
+ * @author gbulfon
  */
-public interface BasicEnvironment {
+public class WebSocketConfigurator extends ServerEndpointConfig.Configurator {
 	
-	public UserProfile getProfile();
-	public ReadableUserAgent getUserAgent();
-    public String getSessionRefererUri();
-    public CoreServiceSettings getCoreServiceSettings();
-    public CoreUserSettings getCoreUserSettings();
-	public void notify(ServiceMessage message) throws IOException;
-	public void notify(List<ServiceMessage> messages) throws IOException;
+    @Override
+    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
+    {
+        HttpSession httpSession = (HttpSession)request.getHttpSession();
+        config.getUserProperties().put(HttpSession.class.getName(),httpSession);
+    }
 }

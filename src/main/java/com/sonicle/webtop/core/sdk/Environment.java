@@ -35,21 +35,19 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
-import java.util.HashMap;
+import java.util.List;
 import net.sf.uadetector.ReadableUserAgent;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
 public class Environment implements BasicEnvironment {
-
-	protected final static Logger logger = (Logger) LoggerFactory.getLogger(Environment.class);
-	private static HashMap<String,ServiceManifest> manifestMap=new HashMap<>();
+	private final static Logger logger = WT.getLogger(Environment.class);
 	
 	protected final WebTopApp wta;
 	protected final WebTopSession wts;
@@ -85,25 +83,12 @@ public class Environment implements BasicEnvironment {
 	}
 	
 	@Override
-	public void sendWebSocketMessage(ServiceMessage message) {
-		wts.send(message);
+	public void notify(ServiceMessage message) {
+		wts.nofity(message);
 	}
 	
-	public static void addManifestMap(String classname, ServiceManifest manifest) {
-//		logger.debug("adding manifest map {} -> {}",classname,manifest.getId());
-		manifestMap.put(classname, manifest);
+	@Override
+	public void notify(List<ServiceMessage> messages) {
+		wts.nofity(messages);
 	}
-	
-	public static ServiceManifest getManifest(Class clazz) {
-//		logger.debug("getting manifest for {}",clazz.getName());
-		return manifestMap.get(clazz.getName());
-	}
-	
-	public static String getServiceId(Class clazz) {
-//		logger.debug("getting service id for {}",clazz.getName());
-		return manifestMap.get(clazz.getName()).getId();
-	}
-	
-	
-	
 }
