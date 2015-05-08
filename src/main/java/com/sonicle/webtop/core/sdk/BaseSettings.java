@@ -75,7 +75,13 @@ public abstract class BaseSettings {
 	public LocalTime getTime(String key, LocalTime defaultValue, String pattern) {
 		DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern).withZone(DateTimeZone.getDefault());
 		String value = getString(key, null);
-		return (value == null) ? defaultValue : LocalTime.parse(value, dtf);
+		if (value == null) return defaultValue;
+		try {
+			return LocalTime.parse(value, dtf);
+		} catch(Exception ex) {
+			return defaultValue;
+		}
+		//return (value == null) ? defaultValue : LocalTime.parse(value, dtf);
 	}
 	
 	public LocalDate getDate(String key, String defaultValue, String pattern) {
@@ -87,6 +93,12 @@ public abstract class BaseSettings {
 	public LocalDate getDate(String key, LocalDate defaultValue, String pattern) {
 		DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern).withZone(DateTimeZone.getDefault());
 		String value = getString(key, null);
-		return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
+		if (value == null) return defaultValue;
+		try {
+			return LocalDate.parse(value, dtf);
+		} catch(Exception ex) {
+			return defaultValue;
+		}
+		//return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
 	}
 }

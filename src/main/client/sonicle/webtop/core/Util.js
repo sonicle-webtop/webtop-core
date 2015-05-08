@@ -143,7 +143,13 @@ Ext.define('Sonicle.webtop.core.Util', {
 		if(fld) fld.focus();
 	},
 	
-	setExtraParams: function(proxy, params, overwrite) {
+	/**
+	 * Applies extra params to passed proxy.
+	 * @param {Ext.data.proxy.Proxy} proxy The proxy.
+	 * @param {Object} params Extra params to apply.
+	 * @param {Boolean overwrite 'true' to overwrite previous params, 'false' to merge them.
+	 */
+	applyExtraParams: function(proxy, params, overwrite) {
 		if(arguments.length === 2) overwrite = false;
 		if(!proxy.isProxy) return;
 		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
