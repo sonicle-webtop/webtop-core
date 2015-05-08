@@ -39,20 +39,26 @@ import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,6 +84,7 @@ public class ResourceRequest extends HttpServlet {
 	protected static final int BUFFER_SIZE = 4*1024;
 	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+)\\/(.*)$");
 	private static final Pattern PATTERN_LOCALE_FILE = Pattern.compile("^(Locale_(\\w*)).js$");
+	private static final ConcurrentHashMap<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
 	
 	@Override
 	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -100,13 +107,21 @@ public class ResourceRequest extends HttpServlet {
 	
 	@Override
 	protected long getLastModified(HttpServletRequest req) {
-		return lookup(req).getLastModified();
+		String pathInfo = req.getPathInfo();
+		if(lastModifiedCache.containsKey(pathInfo)) {
+			return lastModifiedCache.get(pathInfo);
+		} else {
+			return lookup(req).getLastModified();
+		}
+		//return lookup(req).getLastModified();
 	}
 	
 	protected LookupResult lookup(HttpServletRequest req) {
 		LookupResult r = (LookupResult) req.getAttribute("lookupResult");
 		if (r == null) {
-			r = lookupNoCache(req);
+			String pathInfo = req.getPathInfo();
+			r = lookupNoCache(req, pathInfo);
+			lastModifiedCache.put(pathInfo, r.getLastModified());
 			req.setAttribute("lookupResult", r);
 		}
 		return r;
@@ -118,15 +133,15 @@ public class ResourceRequest extends HttpServlet {
 		return tokens;
 	}
 	
-	protected LookupResult lookupNoCache(HttpServletRequest req) {
+	protected LookupResult lookupNoCache(HttpServletRequest req, String reqPath) {
 		String subject = null, subjectPath = null, jsPath = null, path = null, translPath = null;
 		boolean isService = false;
 		URL translUrl = null;
 		
 		// Builds a convenient URL for the servlet relative URL
 		try {
-			String reqPath = req.getPathInfo();
-			logger.trace("Requested path [{}]", reqPath);
+			//String reqPath = req.getPathInfo();
+			//logger.trace("Requested path [{}]", reqPath);
 			String[] paths = splitPath(reqPath);
 			subject = paths[0];
 			jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
@@ -134,10 +149,10 @@ public class ResourceRequest extends HttpServlet {
 			isService = (jsPath != null);
 			//subjectPath = StringUtils.replace(paths[0], ".", "/");
 			path = paths[1];
-			logger.trace("{}, {}", subject, path);
+			//logger.trace("{}, {}", subject, path);
 			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			translPath = translUrl.getPath();
-			logger.trace("Translated path [{}]", translPath);
+			//logger.trace("Translated path [{}]", translPath);
 			if (isForbidden(translPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			
 		} catch(MalformedURLException ex) {
@@ -173,12 +188,12 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private URL getResURL(String name) {
-		logger.trace("Try getting resource [{}]", name);
+		//logger.trace("Try getting resource [{}]", name);
 		return this.getClass().getResource(name);
 	}
 	
 	private LookupResult lookupLoginImage(HttpServletRequest request, URL url) {
-		logger.trace("Looking-up login image");
+		//logger.trace("Looking-up login image");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -223,7 +238,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupLicense(HttpServletRequest request, URL reqUrl) {
-		logger.trace("Looking-up license");
+		//logger.trace("Looking-up license");
 		String path = reqUrl.getPath();
 		URL fileUrl = null;
 		
@@ -300,7 +315,7 @@ public class ResourceRequest extends HttpServlet {
 			String clazz = manifest.getJsPackageName() + "." + baseName;
 			String override = manifest.getServiceJsClassName(true);
 			
-			logger.trace("Class: {} - Override: {}", clazz, override);
+			//logger.trace("Class: {} - Override: {}", clazz, override);
 			LookupFile lf = getFile(fileUrl);
 			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, acceptsDeflate(request));
 			
@@ -314,7 +329,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupJs(HttpServletRequest request, URL url, boolean debug) {
-		logger.trace("Looking-up js file");
+		//logger.trace("Looking-up js file");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -345,7 +360,7 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupDefault(HttpServletRequest request, URL url) {
-		logger.trace("Looking-up file as default");
+		//logger.trace("Looking-up file as default");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -367,11 +382,12 @@ public class ResourceRequest extends HttpServlet {
 		if(url == null) throw new ResourceRequest.NotFoundException();
 		
 		String protocol = url.getProtocol();
-		logger.trace("protocol: {}", protocol);
+		//logger.trace("protocol: {}", protocol);
 		if(protocol.equals("file")) {
 			try {
 				File file = new File(url.toURI());
 				if (!file.isFile()) throw new ResourceRequest.ForbiddenException();
+				//logger.trace("File lastModified: {}", new Date(file.lastModified()));
 				return new LookupFile(file.lastModified(), file.length(), new FileInputStream(file));
 				
 			} catch(URISyntaxException ex) {
@@ -388,7 +404,7 @@ public class ResourceRequest extends HttpServlet {
 
 				String jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
 				String jarEntryName = surl.substring(ix + 2);
-				logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
+				//logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
 				
 				File file = new File(jarFileName);
 				JarFile jarFile = new JarFile(file);
@@ -396,6 +412,7 @@ public class ResourceRequest extends HttpServlet {
 				
 				if (ze != null) {
 					if (ze.isDirectory()) throw new ResourceRequest.ForbiddenException();
+					//logger.trace("ZipEntry lastModified: {}", new Date(ze.getTime()));
 					return new LookupFile(ze.getTime(), ze.getSize(), jarFile.getInputStream(ze));
 				} else {
 					return new LookupFile(-1, -1, url.openStream());
@@ -505,70 +522,27 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	public static class LocaleJsFile extends StaticFile {
-		protected String clazz;
-		protected String override;
-		
-		public LocaleJsFile(String clazz, String override, String url, LookupFile lf, boolean acceptsDeflate) {
-			super(url, "application/javascript", lf.lastModified, -1, lf.inputStream, acceptsDeflate);
-			this.clazz = clazz;
-			this.override = override;
-		}
-		
-		@Override
-		public InputStream getInputStream() {
-			
-			// Converts properties file into an hashmap
-			HashMap<String, String> hm = new HashMap<>();
-			try {
-				Properties properties = new Properties();
-				properties.load(inputStream);
-				for (final String name: properties.stringPropertyNames()) {
-					hm.put(name, properties.getProperty(name));
-				}
-			} catch(IOException ex) {
-				
-			} finally {
-				IOUtils.closeQuietly(inputStream);
-			}
-			
-			// Builds js class structure
-			String json = buildLocaleJson(clazz, override, hm);
-			contentLength = json.getBytes().length;
-			inputStream = null;
-			return IOUtils.toInputStream(json);
-		}
-		
-		private String buildLocaleJson(String clazz, String override, HashMap<String, String> props) {
-			String strings = JsonResult.gsonWoNulls.toJson(props);
-			//String strings = JsonResult.gsonWoNullsNoEscape.toJson(props);
-			return "Ext.define('"
-				+ clazz
-				+ "',{"
-				//+ "override:'"
-				//+ override
-				//+ "',"
-				+ "strings:"
-				+ strings
-				+ "});";
-		}
-	}
-	
 	public static class StaticFile implements LookupResult {
 		protected final String url;
 		protected long lastModified;
 		protected final String mimeType;
+		protected final String charset;
 		protected int contentLength;
 		protected final boolean acceptsDeflate;
 		protected InputStream inputStream;
 		
 		public StaticFile(String url, String mimeType, LookupFile lf, boolean acceptsDeflate) {
-			this(url, mimeType, lf.lastModified, (int)lf.contentLength, lf.inputStream, acceptsDeflate);
+			this(url, mimeType, null, lf, acceptsDeflate);
 		}
 		
-		public StaticFile(String url, String mimeType, long lastModified, int contentLength, InputStream is, boolean acceptsDeflate) {
+		public StaticFile(String url, String mimeType, String charset, LookupFile lf, boolean acceptsDeflate) {
+			this(url, mimeType, charset, lf.lastModified, (int)lf.contentLength, lf.inputStream, acceptsDeflate);
+		}
+		
+		public StaticFile(String url, String mimeType, String charset, long lastModified, int contentLength, InputStream is, boolean acceptsDeflate) {
 			this.url = url;
 			this.mimeType = mimeType;
+			this.charset = charset;
 			this.lastModified = lastModified;
 			this.contentLength = contentLength;
 			this.acceptsDeflate = acceptsDeflate;
@@ -581,13 +555,20 @@ public class ResourceRequest extends HttpServlet {
 
 		@Override
 		public void respondGet(HttpServletResponse resp) throws IOException {
-			setHeaders(resp);
 			final OutputStream os;
+			
+			resp.setHeader("Cache-Control", "private, no-cache");
+			resp.setStatus(HttpServletResponse.SC_OK);
+			resp.setContentType(mimeType);
+			if(charset != null) resp.setCharacterEncoding(charset);
 			
 			if(willDeflate()) {
 				resp.setHeader("Content-Encoding", "gzip");
 				os = new GZIPOutputStream(resp.getOutputStream(), BUFFER_SIZE);
 			} else {
+				// Content length is not directly predictable in case of GZIP.
+				// So only add it if there is no means of GZIP, else browser will hang.
+				if(contentLength >= 0) resp.setContentLength(contentLength);
 				os = resp.getOutputStream();
 			}
 			//TODO: why this is not working
@@ -606,17 +587,138 @@ public class ResourceRequest extends HttpServlet {
 		}
 		
 		protected boolean willDeflate() {
-			return acceptsDeflate && deflatable(mimeType) && contentLength >= DEFLATE_THRESHOLD;
+			return acceptsDeflate && deflatable(mimeType) && (contentLength >= DEFLATE_THRESHOLD);
+		}
+	}
+	
+	public static class LocaleJsFile extends StaticFile {
+		protected String clazz;
+		protected String override;
+		
+		public LocaleJsFile(String clazz, String override, String url, LookupFile lf, boolean acceptsDeflate) {
+			super(url, "application/javascript", "utf-8", lf.lastModified, -1, lf.inputStream, acceptsDeflate);
+			this.clazz = clazz;
+			this.override = override;
 		}
 		
-		protected void setHeaders(HttpServletResponse resp) {
-			resp.setStatus(HttpServletResponse.SC_OK);
-			resp.setContentType(mimeType);
-			if (contentLength >= 0 && !willDeflate()) {
-				resp.setContentLength(contentLength);
+		@Override
+		public InputStream getInputStream() {
+			String strings = loadProperties(inputStream);
+			IOUtils.closeQuietly(inputStream);
+			inputStream = null;
+			
+			String json = buildLocaleJson(clazz, strings);
+			contentLength = json.getBytes().length;
+			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
+			
+			/*
+			// Converts properties file into an hashmap
+			HashMap<String, String> hm = new HashMap<>();
+			InputStreamReader isr = null;
+			try {
+				Properties properties = new Properties();
+				isr = new InputStreamReader(inputStream, "ISO-8859-1");
+				properties.load(isr);
+				for (final String name: properties.stringPropertyNames()) {
+					hm.put(name, properties.getProperty(name));
+				}
+			} catch(IOException ex) {
+				
+			} finally {
+				IOUtils.closeQuietly(isr);
+				IOUtils.closeQuietly(inputStream);
 			}
+			
+			// Builds js class structure
+			//Charset cset = Charset.forName("ISO-8859-1"); // Default charset for .properties files
+			String json = buildLocaleJson2(clazz, override, hm);
+			contentLength = json.getBytes().length;
+			inputStream = null;
+			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
+			*/
 		}
 		
+		private String buildLocaleJson(String clazz, String strings) {
+			return "Ext.define('"
+				+ clazz
+				+ "',{"
+				+ "strings:"
+				+ strings
+				+ "});";
+		}
+		
+		private String loadProperties(InputStream is) {
+			ArrayList<String> strings = new ArrayList();
+			BufferedReader br = null;
+			
+			try {
+				br = new BufferedReader(new InputStreamReader(is, Charset.forName("ISO-8859-1")));
+				String line = null, key, value, json;
+				int firstEqual = -1;
+				while((line = br.readLine()) != null) {
+					firstEqual = line.indexOf("=");
+					if(firstEqual > 0) {
+						key = line.substring(0, firstEqual);
+						value = line.substring(firstEqual+1);
+						json = "\"" + key + "\"" + ":" + "\"" + value + "\"";
+						strings.add(json);
+					}
+				}
+				
+			} catch(IOException ex) {
+				throw new RuntimeException(ex);
+			} finally {
+				IOUtils.closeQuietly(br);
+			}
+				
+			return "{" + StringUtils.join(strings, ",") + "}";
+		}
+		
+		
+		
+		
+		
+		
+		
+		/*
+		private String buildLocaleJson2(String clazz, String override, HashMap<String, String> props) {
+			//String strings = JsonResult.gsonWoNulls.toJson(props);
+			String strings = JsonResult.gsonWoNullsNoEscape.toJson(props);
+			return "Ext.define('"
+				+ clazz
+				+ "',{"
+				//+ "override:'"
+				//+ override
+				//+ "',"
+				+ "strings:"
+				+ strings
+				+ "});";
+		}
+		
+		private HashMap<String, String> loadProperties(InputStream is) {
+			HashMap<String, String> hm = new HashMap<>();
+			BufferedReader br = null;
+			
+			try {
+				br = new BufferedReader(new InputStreamReader(is, Charset.forName("ISO-8859-1")));
+				String line = null;
+				int firstEqual = -1;
+				while((line = br.readLine()) != null) {
+					firstEqual = line.indexOf("=");
+					if(firstEqual > 0) {
+						hm.put(line.substring(0, firstEqual), line.substring(firstEqual+1));
+					}
+				}
+				
+			} catch(IOException ex) {
+				throw new RuntimeException(ex);
+			} finally {
+				IOUtils.closeQuietly(br);
+			}
+				
+			return hm;
+		}
+		*/
 	}
 	
 	// TODO: replaced with IOUtils.copy

@@ -36,7 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsPayload;
+import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
@@ -129,25 +130,25 @@ public class UserOptionsService extends BaseUserOptionsService {
 				new JsonResult(opts).printTo(out);
 				
 			} else if(crud.equals("update")) {
-				JsPayload<JsOptions> pl = ServletUtils.getPayload(request, JsOptions.class);
+				Payload<MapItem, JsOptions> pl = ServletUtils.getPayload(request, JsOptions.class);
 				
 				// main
-				if(pl.contains("displayName")) user.setDisplayName(pl.data.getString("displayName"));
-				if(pl.contains("theme")) cus.setTheme(pl.data.getString("theme"));
-				if(pl.contains("laf")) cus.setLookAndFeel(pl.data.getString("laf"));
+				if(pl.map.has("displayName")) user.setDisplayName(pl.data.getString("displayName"));
+				if(pl.map.has("theme")) cus.setTheme(pl.data.getString("theme"));
+				if(pl.map.has("laf")) cus.setLookAndFeel(pl.data.getString("laf"));
 				
 				// i18n
-				if(pl.contains("locale")) user.setLanguageTag(pl.data.getString("locale"));
-				if(pl.contains("timezone")) user.setTimezone(pl.data.getString("timezone"));
-				if(pl.contains("dateFormat")) cus.setDateFormat(pl.data.getString("dateFormat"));
-				if(pl.contains("longDateFormat")) cus.setLongDateFormat(pl.data.getString("longDateFormat"));
-				if(pl.contains("timeFormat")) cus.setTimeFormat(pl.data.getString("timeFormat"));
-				if(pl.contains("longTimeFormat")) cus.setLongTimeFormat(pl.data.getString("longTimeFormat"));
+				if(pl.map.has("locale")) user.setLanguageTag(pl.data.getString("locale"));
+				if(pl.map.has("timezone")) user.setTimezone(pl.data.getString("timezone"));
+				if(pl.map.has("dateFormat")) cus.setDateFormat(pl.data.getString("dateFormat"));
+				if(pl.map.has("longDateFormat")) cus.setLongDateFormat(pl.data.getString("longDateFormat"));
+				if(pl.map.has("timeFormat")) cus.setTimeFormat(pl.data.getString("timeFormat"));
+				if(pl.map.has("longTimeFormat")) cus.setLongTimeFormat(pl.data.getString("longTimeFormat"));
 				
 				udao.update(con, user);
 				
 				// TFA
-				if(pl.contains("mandatory")) {
+				if(pl.map.has("mandatory")) {
 					//TODO: do check using shiro
 					if(getSessionProfile().isSystemAdmin()) {
 						cus.setTFAMandatory(pl.data.getBoolean("mandatory"));

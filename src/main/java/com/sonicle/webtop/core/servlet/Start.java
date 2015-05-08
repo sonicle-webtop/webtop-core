@@ -113,7 +113,7 @@ public class Start extends HttpServlet {
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in start servlet!", ex);
 		} finally {
-			ServletHelper.setCacheControl(response);
+			response.setHeader("Cache-Control", "private, no-cache");
 			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}

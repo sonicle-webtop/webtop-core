@@ -141,8 +141,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				},
 				get: function(model) {
 					var obj = {
-						dirty: model ? model.dirty : false,
-						valid: model && model.isModel ? model.isValid() : false
+						//FIXME: l'aggiornamento di una associatons non notifica il cambio di stato
+						dirty: (model && model.isDirty) ? model.isDirty() : false,
+						valid: (model && model.isModel) ? model.isValid() : false
 					};
 					obj.cleanAndValid = !obj.dirty && obj.valid;
 					return obj;
@@ -314,7 +315,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this,
 				vm = me.getViewModel(),
 				linkName = me.getModelProperty(),
-				id = data[me.linkedModelIdField];
+				id = data[me.linkedModelIdField],
+				model;
 		
 		// Due to there is no callback on linkTo method, we need to register a
 		// binding handler that will be called (once) when the viewmodel will
@@ -337,18 +339,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 				create: true
 			});
 			// Apply initial data resetting dirty flag
-			var m = vm.get(me.modelProperty);
-			m.set(data, {
+			model = vm.get(me.modelProperty);
+			model.set(data, {
 				dirty: false
 			});
-			if (m.associations) {
-				Ext.iterate(m.associations, function(ent) {
-					var a=data[ent];
-					if (a) {
-						m[ent]().add(a);
-					}
-				});
-			}
+			model.setAssociated(data); // Using our custom Sonicle.data.Model!
 		} else { // Edit/View case
 			vm.linkTo(me.modelProperty, {
 				type: me.model,
@@ -361,7 +356,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this,
 				model = me.getModel();
 		
-		if(me.isModelValid()) {
+		if(model && model.isValid()) {
 			me.wait();
 			model.save({
 				callback: function(rec, op, success) {
@@ -392,17 +387,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	onBeforeViewClose: function() {
 		// Returns false to stop view closing and to display a confirm message.
-		if(this.isModelDirty()) return false;
-	},
-	
-	isModelDirty: function() {
-		var sta = this.getModelStatus();
-		return (sta) ? sta.dirty : false;
-	},
-	
-	isModelValid: function() {
-		var sta = this.getModelStatus();
-		return (sta) ? sta.valid : true;
+		var model = this.getModel();
+		if(model && model.isDirty()) return false; // Using our custom Sonicle.data.Model!
 	},
 	
 	updateTitle: function() {

@@ -5,6 +5,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
 		'Sonicle.Date',
+		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
@@ -89,29 +90,38 @@ Ext.define('Sonicle.webtop.core.Application', {
 	},
 	
 	onRequiresLoaded: function() {
-		var me = this;
+		var me = this,
+				def = null, vpc;
 		
 		// Creates main viewport
 		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
-		var vc = me.viewport.getController();
+		vpc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one
 		Ext.each(me.getDescriptors(), function(desc) {
 			if(!desc.getMaintenance()) {
 				if(desc.initService()) {
 					var svc = desc.getInstance();
-					vc.addServiceButton(desc);
-					if(svc.hasNewActions()) vc.addServiceNewActions(svc.getNewActions());
+					vpc.addServiceButton(desc);
+					if(svc.hasNewActions()) vpc.addServiceNewActions(svc.getNewActions());
+					// Saves first succesfully activated service for later displaying default
+					if(def === null) def = desc.getId();
 				}
 			} else {
 				//TODO: show grayed button
 			}
 		});
-		if(WTS.defaultService) me.activateService(WTS.defaultService);
+		
+		// Sets default service
+		if(WTS.defaultService) {
+			var desc = me.getDescriptor(WTS.defaultService);
+			if(desc.isInited()) def = WTS.defaultService;
+		}
+		if(def !== null) me.activateService(def);
 		
 		// If necessary, show whatsnew
 		if(WT.getOption('isWhatsnewNeeded')) {
-			vc.buildWhatsnewWnd(false);
+			vpc.buildWhatsnewWnd(false);
 		}
 		
 		// Inits messages (webSocket/ServerEvents)

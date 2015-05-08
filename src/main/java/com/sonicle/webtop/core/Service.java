@@ -36,7 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsPayload;
+import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.Payload;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
@@ -243,7 +244,7 @@ public class Service extends BaseService {
 	public void processFeedback(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			JsPayload<JsFeedback> pl = ServletUtils.getPayload(request, JsFeedback.class);
+			Payload<MapItem, JsFeedback> pl = ServletUtils.getPayload(request, JsFeedback.class);
 			
 			logger.debug("message: {}", pl.data.message);
 			Thread.sleep(4000);

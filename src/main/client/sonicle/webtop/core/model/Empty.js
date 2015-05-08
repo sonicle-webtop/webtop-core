@@ -31,53 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Base', {
-	alternateClassName: 'WT.model.Base',
-	extend: 'Sonicle.data.Model',
+Ext.define('Sonicle.webtop.core.model.Empty', {
+	alternateClassName: 'WT.model.Empty',
+	extend: 'WT.model.Base',
 	
-	identifier: 'negative',
-	
-	schema: {
-		namespace: 'Sonicle.webtop.core.model',
-		proxy: {
-			
-			type: 'memory',
-			extraParams: {
-				service: 'no.service',
-				action: 'no.action'
-			},
-			reader: {
-				type: 'json',
-				rootProperty: '{entityName:lowercase}',
-				messageProperty: 'message'
-			},
-			writer: {
-				type: 'json'
-			}
-			
-			/*
-			type: 'ajax',
-			api: {
-				create: 'service-request?crud=create',
-				read: 'service-request?crud=read',
-				update: 'service-request?crud=update',
-				destroy: 'service-request?crud=destroy'
-			},
-			extraParams: {
-				service: 'com.sonicle.webtop.core',
-				action: '{entityName}'
-			},
-			reader: {
-				type: 'json',
-				rootProperty: '{entityName:lowercase}',
-				messageProperty: 'message'
-			}
-			*/
-			//writer: {
-			//	type: 'json',
-			//	expandData: true,
-			//	nameProperty: 'mapping'
-			//}
-		}
-	}
+	fields: []
 });

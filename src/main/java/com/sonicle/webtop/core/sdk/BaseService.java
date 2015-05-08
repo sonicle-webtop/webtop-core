@@ -35,8 +35,9 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsPayload;
+import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WT;
@@ -171,7 +172,7 @@ public abstract class BaseService {
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
-				JsPayload<JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
+				Payload<MapItem, JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
 				
 				corem.deleteServiceStoreEntry(up.getId(), getId(), context, pl.data.id);
 				new JsonResult().printTo(out);

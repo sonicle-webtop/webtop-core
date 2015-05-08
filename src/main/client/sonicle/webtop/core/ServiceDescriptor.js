@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	},
 	
 	instance: null,
+	inited: false,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -91,11 +92,16 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		// Calls initialization method
 		try {
 			svc.init.call(svc);
+			me.inited = true;
 			return true;
 		} catch(e) {
 			WT.Log.error('Error while calling init() method');
 			WT.Log.exception(e);
 			return false;
 		}
+	},
+	
+	isInited: function() {
+		return this.inited;
 	}
 });

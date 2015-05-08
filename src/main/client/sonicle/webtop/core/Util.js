@@ -143,6 +143,13 @@ Ext.define('Sonicle.webtop.core.Util', {
 		if(fld) fld.focus();
 	},
 	
+	setExtraParams: function(proxy, params, overwrite) {
+		if(arguments.length === 2) overwrite = false;
+		if(!proxy.isProxy) return;
+		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
+		proxy.setExtraParams(obj);
+	},
+	
 	proxy: function(svc, act, rootp, opts) {
 		opts = opts || {};
 		return {
@@ -152,14 +159,17 @@ Ext.define('Sonicle.webtop.core.Util', {
 				service: svc,
 				action: act
 			}),
-			reader: Ext.apply(opts.reader || {}, {
+			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data',
 				messageProperty: 'message'
-			}),
+			}, opts.reader || {}),
+			writer: Ext.apply({
+				type: 'json'
+			}, opts.writer || {}),
 			listeners: {
 				exception: function(proxy, request, operation, eOpts) {
-					//TODO: intl. user error message plus details
+					//TODO: localizzare il messaggio di errore
 					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
 				}
 			}
@@ -183,13 +193,19 @@ Ext.define('Sonicle.webtop.core.Util', {
 			}),
 			reader: Ext.apply({
 				type: 'json',
-				rootProperty: rootp,
+				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}, opts.reader || {}),
 			writer: Ext.apply({
 				type: 'json',
 				writeAllFields: true
-			}, opts.writer || {})
+			}, opts.writer || {}),
+			listeners: {
+				exception: function(proxy, request, operation, eOpts) {
+					//TODO: localizzare il messaggio di errore
+					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
+				}
+			}
 		};
 	},
 	
@@ -242,6 +258,57 @@ Ext.define('Sonicle.webtop.core.Util', {
 			persist: false
 		}, cfg);
 	},
+	
+	localCombo: function(cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			xtype: 'combo',
+			typeAhead: true,
+			queryMode: 'local',
+			forceSelection: true,
+			triggerAction: 'all',
+			valueField: 'id',
+			displayField: 'desc'
+		}, cfg);
+	},
+	
+	/**
+	 * Configures a renderer for looking-up columns value from a resource.
+	 * Resource key will be the result of the following concatenation: '{key}.{value}'
+	 * @param {String} id The service ID.
+	 * @param {String} key The key.
+	 * @returns {Function} The renderer function
+	 */
+	resValueRenderer: function(id, key) {
+		return function(value) {
+			return WT.res(id, key + '.' + value);
+		};
+	},
+	
+	
+	
+	
+	/**
+	 *
+	 * @param {Integer} size The icon size in pixels.
+	 * @param {String} classPrefix A prefix to append before value returned by classField.
+	 * @param {String} classField A field for getting css class value.
+	 * @param {String} tooltipField A field for getting tooltip value.
+	 * @return {Function} The icon redering function.
+	 */
+	/*iconRenderer: function(size, classPrefix, classField, tooltipField) {
+		classPrefix = classPrefix || '';
+		return function(v,md,rec) {
+			var ttip = (tooltipField) ? rec.get(tooltipField) : '';
+			var cls = (rec.get(classField)) ? classPrefix+rec.get(classField) : '';
+			//if(cls && classPrefix) cls = classPrefix+cls;
+			return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+		};
+	},
+	*/
+	
+	
+	
 	
 	/*
 	 * Builds the src url of a themed image for a service
