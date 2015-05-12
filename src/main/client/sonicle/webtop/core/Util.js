@@ -35,6 +35,44 @@ Ext.define('Sonicle.webtop.core.Util', {
 	singleton: true,
 	alternateClassName: ['WT.Util', 'WTU'],
 	
+	constructor: function(cfg) {
+		var me = this;
+		//me.resetHtmlCharEntities();
+		me.callParent(cfg);
+	},
+	
+	/**
+	 * Null-safe method for checking xtype.
+	 * @param {Mixed} obj An object instance.
+	 * @param {String} xtype The xtype to check.
+	 * @returns {Boolean}
+	 */
+	isXType: function(obj, xtype) {
+		if(!Ext.isObject(obj)) return false;
+		if(!Ext.isFunction(obj.isXType)) return false;
+		return obj.isXType(xtype);
+	},
+	
+	/**
+	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
+	 * @param {Mixed} value The value
+	 * @param {Mixed} ifEmpty The fallback value
+	 * @returns {Mixed} Returned value
+	 */
+	iif: function(value, ifEmpty) {
+		return (Ext.isEmpty(value)) ? ifEmpty : value;
+	},
+	
+	/**
+	 * Checks if passed object instance is an {@link Ext.Action}.
+	 * @param {Mixed} obj The object instance to check.
+	 * @returns {Boolean} 'True' if passed object is an action.
+	 */
+	isAction: function(obj) {
+		if(!Ext.isObject(obj)) return false;
+		return (obj.isAction && Ext.isFunction(obj.execute));
+	},
+	
 	applyTbItems: function(obj, dock, items, append) {
 		if(append === undefined) append = true;
 		var me = this,
@@ -156,212 +194,6 @@ Ext.define('Sonicle.webtop.core.Util', {
 		proxy.setExtraParams(obj);
 	},
 	
-	proxy: function(svc, act, rootp, opts) {
-		opts = opts || {};
-		return {
-			type: 'ajax',
-			url: 'service-request',
-			extraParams: Ext.apply(opts.extraParams || {}, {
-				service: svc,
-				action: act
-			}),
-			reader: Ext.apply({
-				type: 'json',
-				rootProperty: rootp || 'data',
-				messageProperty: 'message'
-			}, opts.reader || {}),
-			writer: Ext.apply({
-				type: 'json'
-			}, opts.writer || {}),
-			listeners: {
-				exception: function(proxy, request, operation, eOpts) {
-					//TODO: localizzare il messaggio di errore
-					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
-				}
-			}
-		};
-	},
-	
-	apiProxy: function(svc, act, rootp, opts) {
-		rootp = rootp || 'data';
-		opts = opts || {};
-		return {
-			type: 'ajax',
-			api: {
-				create: 'service-request?crud=create',
-				read: 'service-request?crud=read',
-				update: 'service-request?crud=update',
-				destroy: 'service-request?crud=delete'
-			},
-			extraParams: Ext.apply(opts.extraParams || {}, {
-				service: svc,
-				action: act
-			}),
-			reader: Ext.apply({
-				type: 'json',
-				rootProperty: rootp || 'data',
-				messageProperty: 'message'
-			}, opts.reader || {}),
-			writer: Ext.apply({
-				type: 'json',
-				writeAllFields: true
-			}, opts.writer || {}),
-			listeners: {
-				exception: function(proxy, request, operation, eOpts) {
-					//TODO: localizzare il messaggio di errore
-					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
-				}
-			}
-		};
-	},
-	
-	/**
-	 * Helper method for building a {@link Ext.data.field.Field field} config.
-	 * @param {String} name {@link Ext.data.field.Field#name}
-	 * @param {String} type {@link Ext.data.field.Field#type}
-	 * @param {Boolean} allowBlank If 'false' automatically adds the presence validator.
-	 * @param {Object} [cfg] Custom config to apply.
-	 * @returns {Object}
-	 */
-	field: function(name, type, allowBlank, cfg) {
-		cfg = cfg || {};
-		var validators = [];
-		if(!allowBlank) validators.push('presence');
-		cfg.validators = (Ext.isArray(cfg.validators)) ? Ext.Array.push(cfg.validators, validators) : validators;
-		
-		return Ext.apply({
-			name: name,
-			type: type,
-			allowNull: true
-		}, cfg);
-	},
-	
-	/**
-	 * Helper method for building a calculated {@link Ext.data.field.Field field} config.
-	 * @param {String} name {@link Ext.data.field.Field#name}
-	 * @param {String} type {@link Ext.data.field.Field#type}
-	 * @param {String} depends {@link Ext.data.field.Field#depends}
-	 * @param {Function} convert {@link Ext.data.field.Field#convert}
-	 * @param {Object} [cfg] Custom config to apply.
-	 * @returns {Object}
-	 */
-	calcField: function(name, type, depends, convert, cfg) {
-		cfg = cfg || {};
-		return Ext.apply({
-			name: name,
-			type: type,
-			persist: false,
-			depends: depends,
-			convert: convert
-		}, cfg);
-	},
-	
-	roField: function(name, type, cfg) {
-		cfg = cfg || {};
-		return Ext.apply({
-			name: name,
-			type: type,
-			persist: false
-		}, cfg);
-	},
-	
-	localCombo: function(cfg) {
-		cfg = cfg || {};
-		return Ext.apply({
-			xtype: 'combo',
-			typeAhead: true,
-			queryMode: 'local',
-			forceSelection: true,
-			triggerAction: 'all',
-			valueField: 'id',
-			displayField: 'desc'
-		}, cfg);
-	},
-	
-	/**
-	 * Configures a renderer for looking-up columns value from a resource.
-	 * Resource key will be the result of the following concatenation: '{key}.{value}'
-	 * @param {String} id The service ID.
-	 * @param {String} key The key.
-	 * @returns {Function} The renderer function
-	 */
-	resValueRenderer: function(id, key) {
-		return function(value) {
-			return WT.res(id, key + '.' + value);
-		};
-	},
-	
-	
-	
-	
-	/**
-	 *
-	 * @param {Integer} size The icon size in pixels.
-	 * @param {String} classPrefix A prefix to append before value returned by classField.
-	 * @param {String} classField A field for getting css class value.
-	 * @param {String} tooltipField A field for getting tooltip value.
-	 * @return {Function} The icon redering function.
-	 */
-	/*iconRenderer: function(size, classPrefix, classField, tooltipField) {
-		classPrefix = classPrefix || '';
-		return function(v,md,rec) {
-			var ttip = (tooltipField) ? rec.get(tooltipField) : '';
-			var cls = (rec.get(classField)) ? classPrefix+rec.get(classField) : '';
-			//if(cls && classPrefix) cls = classPrefix+cls;
-			return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
-		};
-	},
-	*/
-	
-	
-	
-	
-	/*
-	 * Builds the src url of a themed image for a service
-	 * @param {String} sid The service id
-	 * @param {String} relPath The relative icon path
-	 * @return {String} the imageUrl
-	 */
-	imageUrl: function(sid, relPath) {
-		return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
-	},
-	
-	/*
-	 * Builds the img tag of a themed image for a service.
-	 * @param {String} sid The service id
-	 * @param {String} relPath The relative icon path
-	 * @param {int} width The icon width
-	 * @param {int} height The icon height
-	 * @param {String} [others] other custom tag properties
-	 * @return {String} the complete image tag
-	 */
-	imageTag: function(sid,relPath,width,height,others) {
-		var src=this.imageUrl(sid,relPath);
-		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
-	},
-	
-	/*
-	 * Builds the src url of a global image
-	 * @param {String} relPath The relative icon path
-	 * @return {String} the imageUrl
-	 */
-	globalImageUrl: function(relPath) {
-		return Ext.String.format('resources/{0}/images/{1}',WT.ID,relPath);
-	},
-	
-	/*
-	 * Builds the img tag of a core generic image
-	 * @param {String} relPath The relative icon path
-	 * @param {int} width The icon width
-	 * @param {int} height The icon height
-	 * @param {String} [others] other custom tag properties
-	 * @return {String} the complete image tag
-	 */
-	globalImageTag: function(relPath,width,height,others) {
-		var src=this.globalImageUrl(relPath);
-		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >',src,width,height,others||'');
-	},
-	
 	/*
 	 * Check filename extension trying to guess a known file type name
 	 * @param {String} filename The file name
@@ -386,40 +218,14 @@ Ext.define('Sonicle.webtop.core.Util', {
 	humanReadableSize: function(value) {
 		var s = value;
 		value = parseInt(value/1024);
-		if (value>0) {
-			if (value<1024) s = value+"KB";
-			else s = parseInt(value/1024)+"MB";
+		if(value > 0) {
+			if(value < 1024) {
+				s = value + "KB";
+			} else {
+				s = parseInt(value/1024) + "MB";
+			}
 		}
 		return s;
-	},
-	
-	/*
-	 * Build a service request url, based on sid, action and params,
-	 * usable in href or locations
-	 * @param {String} sid The service id
-	 * @param {String} action The action to be called on service
-	 * @param {Object} [params] Optional additional parameters encoded into the url
-	 * @return {String} The encoded url
-	 */
-	serviceRequestUrl: function(sid,action,params) {
-		var url = "service-request?service="+sid+"&action="+action;
-		if (params) url += "&"+Ext.Object.toQueryString(params);
-		return url;
-	},
-	
-	/*
-	 * Build a service request url, based on sid, action and params, adding the
-	 * nowriter option into the params to allow for binary send of data,
-	 * usable in href or locations
-	 * @param {String} sid The service id
-	 * @param {String} action The action to be called on service
-	 * @param {Object} [params] Optional additional parameters encoded into the url
-	 * @return {String} The encoded url
-	 */
-	serviceRequestBinaryUrl: function(sid,action,params) {
-		params = params || {};
-		params.nowriter=true;
-		return this.serviceRequestUrl(sid,action,params);
 	},
 	
 	/*
@@ -435,42 +241,81 @@ Ext.define('Sonicle.webtop.core.Util', {
 			data.doc=data.iframe.contentDocument;
 		}
 		return data;
-	},
-	
-	checkboxBind: function(modelProp, fieldName) {
-		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
-			get: function(val) {
-				return val;
-			},
-			set: function(val) {
-				this.get(modelProp).set(fieldName, val);
-			}
-		};
-	},
-	
-	checkboxGroupBind: function(modelProp, fieldName) {
-		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
-			get: function(val) {
-				var ret = {};
-				ret[fieldName] = val;
-				return ret;
-			},
-			set: function(val) {
-				this.get(modelProp).set(fieldName, val[fieldName]);
-			}
-		};
-	},
-	
-	equalsFormula: function(modelProp, fieldName, equalsTo) {
-		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
-			get: function(val) {
-				return (val === equalsTo);
-			}
-		};
 	}
 	
 	
+	
+	
+	/**
+	 * Adds a set of character entity definitions to the set used by
+	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities}.
+	 * 
+	 * This object should be keyed by the entity name sequence,
+	 * with the value being the textual representation of the entity.
+	 * 
+	 * @param {Object} entObj The set of character entities to add to the current definitions.
+	 *//*
+	addHtmlCharEntities: function(entObj) {
+		var me = this, charKeys = [], entityKeys = [], key, echar;
+		for (key in entObj) {
+			echar = entObj[key];
+			me.entityToChar[key] = echar;
+			me.charToEntity[echar] = key;
+			charKeys.push(echar);
+			entityKeys.push(key);
+		}
+		me.charToEntityRegex = new RegExp('(' + charKeys.join('|') + ')', 'g');
+		//me.entityToCharRegex = new RegExp('(' + entityKeys.join('|') + '|&#[0-9]{1,5};' + ')', 'g');
+		me.entityToCharRegex = new RegExp('(' + entityKeys.join('|') + ')', 'g');
+	},*/
+	
+	/**
+	 * Resets the set of character entity definitions used by 
+	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities} 
+	 * back to the default state.
+	 *//*
+	resetHtmlCharEntities: function() {
+		var me = this;
+		me.charToEntity = {};
+		me.entityToChar = {};
+		// add the default set
+		me.addHtmlCharEntities({
+			'&agrave;':'à',
+			'&aacute;':'á',
+			'&egrave;':'è',
+			'&eacute;':'é',
+			'&igrave;':'ì',
+			'&iacute;':'í',
+			'&ograve;':'ò',
+			'&oacute;':'ó',
+			'&ugrave;':'ù',
+			'&uacute;':'ú'
+		});
+	},*/
+	
+	/**
+	 * Convert certain special characters (à, è, etc..) to their HTML character equivalents for literal display in web pages.
+	 * @param {String} value The string to encode.
+	 * @returns {String} The encoded text.
+	 *//*
+	encodeHtmlEntities: function(value) {
+		var me = this;
+		var htmlEncodeReplaceFn = function(match, capture) {
+			return me.charToEntity[capture];
+		};
+		return (!value) ? value : String(value).replace(me.charToEntityRegex, htmlEncodeReplaceFn);
+	},*/
+	
+	/**
+	 * Convert certain special characters (à, è, etc..) from their HTML character equivalents.
+	 * @param {String} value The string to decode.
+	 * @returns {String} The decoded text.
+	 *//*
+	decodeHtmlEntities: function(value) {
+		var me = this;
+		var htmlDecodeReplaceFn = function(match, capture) {
+            return (capture in me.entityToChar) ? me.entityToChar[capture] : String.fromCharCode(parseInt(capture.substr(2), 10));
+        };
+		return (!value) ? value : String(value).replace(me.entityToCharRegex, htmlDecodeReplaceFn);
+	},*/
 });

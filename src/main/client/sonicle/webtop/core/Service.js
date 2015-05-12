@@ -35,17 +35,5 @@ Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WT.sdk.Service',
 	requires: [
 		'Sonicle.webtop.core.model.ClientOptions'
-	],
-	
-	optionsModel: 'Sonicle.webtop.core.model.ClientOptions',
-	
-	getDateFmt: function() {
-		return '';
-		
-	},
-	
-	getTimeFmt: function() {
-		return 'H:i';
-		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
-	}
+	]
 });

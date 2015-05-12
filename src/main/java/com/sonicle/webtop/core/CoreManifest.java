@@ -50,6 +50,7 @@ public class CoreManifest extends ServiceManifest {
 	public static final String BUILD_DATE = "07/10/2014";
 	public static final String SERVICE_CLASS_NAME = "com.sonicle.webtop.core.Service";
 	public static final String SERVICE_JS_CLASS_NAME = "Service";
+	public static final String CLIENTOPTIONS_MODEL_JS_CLASS_NAME = "model.ClientOptions";
 	public static final String USEROPTIONS_SERVICE_CLASS_NAME = "com.sonicle.webtop.core.UserOptionsService";
 	public static final String USEROPTIONS_VIEW_JS_CLASS_NAME = "view.UserOptions";
 	public static final String USEROPTIONS_MODEL_JS_CLASS_NAME = "model.UserOptions";
@@ -71,6 +72,7 @@ public class CoreManifest extends ServiceManifest {
 		// This is not a real js service, it's only used 
 		// to store class for client-side ovveriding purposes.
 		serviceJsClassName = SERVICE_JS_CLASS_NAME;
+		clientOptionsModelJsClassName = CLIENTOPTIONS_MODEL_JS_CLASS_NAME;
 		userOptionsServiceClassName = USEROPTIONS_SERVICE_CLASS_NAME;
 		userOptionsViewJsClassName = USEROPTIONS_VIEW_JS_CLASS_NAME;
 		userOptionsModelJsClassName = USEROPTIONS_MODEL_JS_CLASS_NAME;

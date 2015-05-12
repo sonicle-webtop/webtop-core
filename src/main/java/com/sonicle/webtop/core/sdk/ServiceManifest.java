@@ -57,6 +57,7 @@ public class ServiceManifest {
 	protected String publicServiceClassName;
 	protected String deamonServiceClassName;
 	protected String serviceJsClassName;
+	protected String clientOptionsModelJsClassName;
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
@@ -102,6 +103,7 @@ public class ServiceManifest {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
 			serviceClassName = LangUtils.buildClassName(javaPackage, cn);
 			serviceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
+			clientOptionsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("clientOptionsModelJsClassName"), "model.ClientOptions");
 		}
 		
 		if(svcEl.containsKey("publicServiceClassName")) {
@@ -283,6 +285,10 @@ public class ServiceManifest {
 	 */
 	public String getServiceJsClassName(boolean full) {
 		return (full) ? LangUtils.buildClassName(jsPackage, serviceJsClassName) : serviceJsClassName;
+	}
+	
+	public String getClientOptionsModelJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, clientOptionsModelJsClassName) : clientOptionsModelJsClassName;
 	}
 	
 	public String getUserOptionsViewJsClassName(boolean full) {

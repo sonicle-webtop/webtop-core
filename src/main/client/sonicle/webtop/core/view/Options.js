@@ -54,7 +54,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 					store: {
 						autoLoad: true,
 						model: 'WT.model.Simple',
-						proxy: WT.Util.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
+						proxy: WTF.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
 					},
 					valueField: 'id',
 					displayField: 'desc',
@@ -145,7 +145,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 					itemId: itm.id,
 					model: itm.modelClassName,
 					title: itm.name,
-					iconCls: WT.cssIconCls(itm.xid, 'service', 'xs'),
+					iconCls: WTF.cssIconCls(itm.xid, 'service', 'xs'),
 					ID: itm.id,
 					XID: itm.xid
 				}));
@@ -165,7 +165,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 				tab.add(Ext.create(cn, {
 					itemId: desc.getId(),
 					title: desc.getName(),
-					iconCls: WT.cssIconCls(desc.getXid(), 'service-s')
+					iconCls: WTF.cssIconCls(desc.getXid(), 'service-s')
 				}));
 			}
 		});

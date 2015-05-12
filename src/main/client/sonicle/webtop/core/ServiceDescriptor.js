@@ -47,6 +47,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		version: null,
 		build: null,
 		serviceClassName: null,
+		clientOptionsClassName: null,
 		userOptions: null,
 		name: null,
 		desription: null,
@@ -72,6 +73,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 				me.instance = Ext.create(cn, {
 					ID: me.getId(),
 					XID: me.getXid(),
+					clientOptionsClassName: me.getClientOptionsClassName(),
 					optionsData: WTS.servicesOptions[me.getIndex()]
 				});
 			} catch(e) {

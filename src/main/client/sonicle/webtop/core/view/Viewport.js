@@ -172,7 +172,7 @@ Ext.define('Sonicle.webtop.core.view.Viewport', {
 		return Ext.create('WT.ux.ServiceButton', {
 			scale: 'large',
 			itemId: desc.getId(),
-			iconCls: WT.cssIconCls(desc.getXid(), 'service-m'),
+			iconCls: WTF.cssIconCls(desc.getXid(), 'service-m'),
 			tooltip: tip,
 			handler: 'onLauncherButtonClick'
 		});
