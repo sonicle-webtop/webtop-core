@@ -122,19 +122,12 @@ public class SessionComManager {
 	}
 	
 	public void nofity(List<ServiceMessage> messages) {
-		boolean queue = true;
 		synchronized(wsmlock) {
-			if(ws != null) send(messages);
-			/*	try {
-					ws.send(JsonResult.gson.toJson(messages));
-					queue = false;
-				} catch(IOException ex) {
-					logger.debug("WebSocket manager error", ex);
-				}
+			if (ws != null) {
+				send(messages);
 			}
-		*/
+			else enqueueMessages(messages);
 		}
-		if(queue) enqueueMessages(messages);
 	}
 	
 	/*
