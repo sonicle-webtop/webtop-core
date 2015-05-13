@@ -75,7 +75,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.Util.proxy(me.ID, 'GetThemes', 'themes')
+					proxy: WTF.proxy(me.ID, 'GetThemes', 'themes')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -92,7 +92,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.Util.proxy(me.ID, 'GetLooksAndFeels', 'lafs')
+					proxy: WTF.proxy(me.ID, 'GetLooksAndFeels', 'lafs')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -116,7 +116,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WT.Util.proxy(me.ID, 'GetLocales', 'locales')
+					proxy: WTF.proxy(me.ID, 'GetLocales', 'locales')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -468,13 +468,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			activeDelivery: function(get) {
 				var values = get('values');
 				if(!values) return 'none';
-				return WT.returnIf(values.tfaDelivery, 'none');
+				return WTU.iif(values.tfaDelivery, 'none');
 			},
 			
 			activeThisDevice: function(get) {
 				var values = get('values');
 				if(!values) return 'nottrusted';
-				return WT.returnIf(values.tfaIsTrusted, 'nottrusted');
+				return WTU.iif(values.tfaIsTrusted, 'nottrusted');
 			},
 			
 			thisTrustedOn: function(get) {

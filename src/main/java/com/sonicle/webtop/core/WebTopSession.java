@@ -326,6 +326,7 @@ public class WebTopSession {
 		jssvc.path = manifest.getJsBaseUrl();
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
 		jssvc.serviceClassName = manifest.getServiceJsClassName(true);
+		jssvc.clientOptionsClassName = manifest.getClientOptionsModelJsClassName(true);
 		if(sdesc.hasUserOptionsService()) {
 			jssvc.userOptions = new JsWTS.ServiceUserOptions(
 				manifest.getUserOptionsViewJsClassName(true),

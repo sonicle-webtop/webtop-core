@@ -60,13 +60,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 		asf:    'video'
 	},
 	
-	
 	loadedCss: null,
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.loadedCss = {};
-		me.resetHtmlCharEntities();
 		me.callParent(cfg);
 	},
 	
@@ -160,60 +158,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return (str.substr(0, 1) === '@') ? WT.res(id, str.substr(1)) : str;
 	},
 	
-	/**
-	 * Builds CSS class name namespacing it using service xid.
-	 * @param {String} xid Service short ID.
-	 * @param {String} name The CSS class name part.
-	 * @return {String} The concatenated CSS class name.
-	 */
-	cssCls: function(xid, name) {
-		return Ext.String.format('{0}-{1}', xid, name);
-	},
-	
-	/**
-	 * Builds CSS class name for icons namespacing it using service xid.
-	 * For example, using 'service' as name, it will return '{xid}-icon-service'.
-	 * Using 'service-l' as name it will return '{xid}-icon-service-l'.
-	 * Likewise, using 'service' as name and 'l' as size it will return the
-	 * same value: '{xid}-icon-service-l'.
-	 * @param {String} xid Service short ID.
-	 * @param {String} name The icon name part.
-	 * @param {String} [size] Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
-	 * @return {String} The concatenated CSS class name.
-	 */
-	cssIconCls: function(xid, name, size) {
-		if(size === undefined) {
-			return Ext.String.format('{0}-icon-{1}', xid, name);
-		} else {
-			return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
-		}
-	},
-	
-	getDateFmt: function() {
-		return this.getApp().getService(this.ID).getDateFmt();
-	},
-	
-	getTimeFmt: function() {
-		return this.getApp().getService(this.ID).getTimeFmt();
-	},
-	
-	returnIf: function(value, ifEmpty) {
-		return (Ext.isEmpty(value)) ? ifEmpty : value;
-	},
-	
-	isXType: function(obj, xtype) {
-		if(!Ext.isObject(obj)) return false;
-		if(!Ext.isFunction(obj.isXType)) return false;
-		return obj.isXType(xtype);
-	},
-	
-	isAction: function(obj) {
-		if(!Ext.isObject(obj)) return false;
-		return (obj.isAction && Ext.isFunction(obj.execute));
-	},
-	
 	optionsProxy: function(svc) {
-		return WT.Util.apiProxy(svc, 'UserOptions', 'data', {
+		return WTF.apiProxy(svc, 'UserOptions', 'data', {
 			extraParams: {
 				options: true
 			}
@@ -309,36 +255,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 			},
 			scope: me
 		});
-	},
-	
-	/**
-	 * Decodes (parses) a properties text to an object.
-	 * @param {String} text The properties string.
-	 * @returns {Object} The resulting object.
-	 */
-	decodeProps: function(text) {
-		var i1, i2 = -1, line, ieq;
-		var hm = {}, key, val;
-		var done = false;
-		while(!done) {
-			i1 = i2+1;
-			i2 = text.indexOf('\n', i1);
-			line = null;
-			if(i2 < 0) {
-				if(i1 < text.length) line = text.substring(i1, text.length);
-				done = true;
-			} else {
-				line = text.substring(i1, i2);
-			}
-			if(line) {
-				ieq = line.indexOf('=');
-				if(ieq < 0) continue;
-				key = line.substring(0, ieq);
-				val = line.substring(ieq+1);
-				hm[key] = val;
-			}
-		}
-		return hm;
 	},
 	
 	/**
@@ -496,100 +412,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return (this.contextMenu) ? this.contextMenu.tag : null;
 	},
 	
-	//DELETE
-	wsMsg: function(service, action, config) {
-		return Ext.JSON.encode(Ext.apply(config||{},{ service: service, action: action }));
-	},
-	
-	
-	
-	/*
-	 * Build human readable version of integer number
-	 * @param {Integer} value The integer number.
-	 * @return {String} A human readable string.
-	 */
-	getSizeString: function(value) {
-		var s = value;
-		value = parseInt(value/1024);
-		if (value > 0) {
-			if (value < 1024) s = value + "KB";
-			else s = parseInt(value/1024) + "MB";
-		}
-		return s;
-	},
-	
-	/**
-	 * Adds a set of character entity definitions to the set used by
-	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities}.
-	 * 
-	 * This object should be keyed by the entity name sequence,
-	 * with the value being the textual representation of the entity.
-	 * 
-	 * @param {Object} entObj The set of character entities to add to the current definitions.
-	 */
-	addHtmlCharEntities: function(entObj) {
-		var me = this, charKeys = [], entityKeys = [], key, echar;
-		for (key in entObj) {
-			echar = entObj[key];
-			me.entityToChar[key] = echar;
-			me.charToEntity[echar] = key;
-			charKeys.push(echar);
-			entityKeys.push(key);
-		}
-		me.charToEntityRegex = new RegExp('(' + charKeys.join('|') + ')', 'g');
-		me.entityToCharRegex = new RegExp('(' + entityKeys.join('|') /*+ '|&#[0-9]{1,5};'*/ + ')', 'g');
-	},
-	
-	/**
-	 * Resets the set of character entity definitions used by 
-	 * {@link WT#encodeHtmlEntities} and {@link WT#decodeHtmlEntities} 
-	 * back to the default state.
-	 */
-	resetHtmlCharEntities: function() {
-		var me = this;
-		me.charToEntity = {};
-		me.entityToChar = {};
-		// add the default set
-		me.addHtmlCharEntities({
-			'&agrave;':'à',
-			'&aacute;':'á',
-			'&egrave;':'è',
-			'&eacute;':'é',
-			'&igrave;':'ì',
-			'&iacute;':'í',
-			'&ograve;':'ò',
-			'&oacute;':'ó',
-			'&ugrave;':'ù',
-			'&uacute;':'ú'
-		});
-	},
-	
-	/**
-	 * Convert certain special characters (à, è, etc..) to their HTML character equivalents for literal display in web pages.
-	 * @param {String} value The string to encode.
-	 * @returns {String} The encoded text.
-	 */
-	encodeHtmlEntities: function(value) {
-		var me = this;
-		var htmlEncodeReplaceFn = function(match, capture) {
-			return me.charToEntity[capture];
-		};
-		return (!value) ? value : String(value).replace(me.charToEntityRegex, htmlEncodeReplaceFn);
-	},
-	
-	/**
-	 * Convert certain special characters (à, è, etc..) from their HTML character equivalents.
-	 * @param {String} value The string to decode.
-	 * @returns {String} The decoded text.
-	 */
-	decodeHtmlEntities: function(value) {
-		var me = this;
-		var htmlDecodeReplaceFn = function(match, capture) {
-            return (capture in me.entityToChar) ? me.entityToChar[capture] : String.fromCharCode(parseInt(capture.substr(2), 10));
-        };
-		return (!value) ? value : String(value).replace(me.entityToCharRegex, htmlDecodeReplaceFn);
-	},
-	
 	/**
 	 * Creates a displayable view.
 	 * @param {String} id The service ID.
@@ -616,6 +438,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 		});
 		
 		return Ext.create(opts.containerCfg);
-	}
+	},
 	
+	getDateFmt: function() {
+		return '';
+	},
+	
+	getTimeFmt: function() {
+		return 'H:i';
+		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
+	}
 });

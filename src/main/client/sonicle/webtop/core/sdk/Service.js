@@ -41,9 +41,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		'WT.mixin.RefStorer',
 		'WT.mixin.ActionStorer'
 	],
-	config: {
-		optionsModel: 'WT.sdk.model.ClientOptions'
-	},
 	statics: {
 		TOOLBAR_REF_NAME: 'tbcmp',
 		TOOL_REF_NAME: 'toolcmp',
@@ -101,9 +98,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		
 		// Creates options using configured model
 		try {
-			me.options = Ext.create(me.getOptionsModel(), cfg.optionsData);
+			me.options = Ext.create(cfg.clientOptionsClassName, cfg.optionsData);
+			
 		} catch(err) {
-			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', me.getOptionsModel()));
+			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', cfg.clientOptionsClassName));
 			me.options = Ext.create('WT.sdk.model.ClientOptions', cfg.optionsData);
 		}
 	},
@@ -243,7 +241,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssCls: function(name) {
-		return WT.cssCls(this.XID, name);
+		return WTF.cssCls(this.XID, name);
 	},
 	
 	/**
@@ -257,7 +255,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssIconCls: function(name, size) {
-		return WT.cssIconCls(this.XID, name, size);
+		return WTF.cssIconCls(this.XID, name, size);
 	},
 	
 	/*
@@ -266,21 +264,8 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {String} the imageUrl
 	 */
 	imageUrl: function(relPath) {
-		return WT.imageUrl(this.ID, relPath);
+		return WTF.resourceUrl(this.ID, relPath);
 	},
-	
-	/*
-	 * Builds the img tag of a themed image for this service
-	 * 
-	 * @param {String} relPath The relative icon path
-	 * @param {int} width The icon width
-	 * @param {int} height The icon height
-	 * @param {String} [others] other custom tag properties
-	 * @return {String} the complete image tag
-	 */
-//	imageTag: function(relPath,width,height,others) {
-//		return WT.imageTag(this.ID, relPath, width, height, others);
-//	},
 	
 	/**
 	 * Shorthand for {@link WT.sdk.Service#addMessageListener}.

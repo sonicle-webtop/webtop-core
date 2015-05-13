@@ -62,7 +62,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		Ext.apply(me, {
 			store: {
 				model: 'Sonicle.webtop.core.model.Value',
-				proxy: WT.Util.apiProxy(me.sid, 'ManageSuggestions', 'data', {
+				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {
 						context: me.suggestionContext
 					}

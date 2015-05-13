@@ -67,7 +67,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		if(!me._actions[group]) me._actions[group] = {};
 		
 		var act = null;
-		if(WT.isAction(obj)) { // Action is already instantiated
+		if(WTU.isAction(obj)) { // Action is already instantiated
 			act = obj;
 		} else { // Instantiate action using config
 			/*
@@ -138,7 +138,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * Builds icon class
 	 */
 	_buildIconCls: function(name) {
-		return WT.cssIconCls(this._guessSvcXId(), name, 'xs');
+		return WTF.cssIconCls(this._guessSvcXId(), name, 'xs');
 	},
 	
 	/**

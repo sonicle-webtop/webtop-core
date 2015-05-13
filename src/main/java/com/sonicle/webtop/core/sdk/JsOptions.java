@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.web.json.MapItem;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +44,7 @@ import org.apache.commons.lang.WordUtils;
  *
  * @author malbinola
  */
-public class JsOptions extends HashMap<String, Object> {
+public class JsOptions extends MapItem {
 	
 	public JsOptions() {
 		super();

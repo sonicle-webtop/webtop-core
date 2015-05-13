@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -73,15 +74,15 @@ public abstract class BaseSettings {
 	}
 	
 	public LocalTime getTime(String key, LocalTime defaultValue, String pattern) {
-		DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern).withZone(DateTimeZone.getDefault());
+		DateTimeFormatter dtf = DateTimeUtils.createFormatter(pattern);
 		String value = getString(key, null);
 		if (value == null) return defaultValue;
-		try {
-			return LocalTime.parse(value, dtf);
-		} catch(Exception ex) {
-			return defaultValue;
-		}
-		//return (value == null) ? defaultValue : LocalTime.parse(value, dtf);
+		return (value == null) ? defaultValue : LocalTime.parse(value, dtf);
+	}
+	
+	public boolean setTime(String key, LocalTime value, String pattern) {
+		DateTimeFormatter dtf = DateTimeUtils.createFormatter(pattern);
+		return setString(key, (value == null) ? null : dtf.print(value));
 	}
 	
 	public LocalDate getDate(String key, String defaultValue, String pattern) {
@@ -94,11 +95,6 @@ public abstract class BaseSettings {
 		DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern).withZone(DateTimeZone.getDefault());
 		String value = getString(key, null);
 		if (value == null) return defaultValue;
-		try {
-			return LocalDate.parse(value, dtf);
-		} catch(Exception ex) {
-			return defaultValue;
-		}
-		//return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
+		return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
 	}
 }

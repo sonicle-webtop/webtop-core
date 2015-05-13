@@ -72,6 +72,7 @@ public class JsWTS {
 		public String path;
 		public String localeClassName;
 		public String serviceClassName;
+		public String clientOptionsClassName;
 		public ServiceUserOptions userOptions;
 		public String name;
 		public String description;
