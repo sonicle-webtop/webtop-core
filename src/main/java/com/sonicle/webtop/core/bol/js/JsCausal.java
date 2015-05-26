@@ -31,25 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
 
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.bol.OCausal;
 
 /**
  *
  * @author malbinola
  */
-public class WTException extends Exception {
+public class JsCausal extends JsSimple {
+	public String status;
+	public Boolean readOnly;
 	
-	public WTException() {
-		super();
+	public JsCausal() {
+		
 	}
 	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
+	public JsCausal(OCausal causal) {
+		super(causal.getCausalId(), causal.getDescription());
+		status = causal.getStatus();
+		readOnly = causal.getReadOnly();
 	}
 	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
-	}
 }

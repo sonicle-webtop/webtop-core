@@ -37,6 +37,8 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
+import com.sonicle.webtop.core.sdk.FileResource;
+import com.sonicle.webtop.core.sdk.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
@@ -48,6 +50,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
@@ -56,6 +63,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.jar.JarFile;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
@@ -221,15 +229,14 @@ public class WebTopApp {
 	}
 	
 	private void afterInit() {
+		svcm.onWebTopAppInit();
 		Thread engine = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					Thread.sleep(5000);
-					
 					logger.debug("Starting JobServices tasks...");
 					svcm.startAllJobServicesTasks();
-					
 				} catch (InterruptedException ex) { /* Do nothing... */	}
 			}
 		});
@@ -385,6 +392,7 @@ public class WebTopApp {
 		
 		try {
 			value = ResourceBundle.getBundle(baseName, locale).getString(key);
+			//value = new String(value.getBytes("ISO-8859-1"), "UTF-8");
 			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
 		} catch(MissingResourceException ex) {
 			logger.warn("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
@@ -400,6 +408,35 @@ public class WebTopApp {
 	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {
 		String value = lookupResource(serviceId, locale, key, escapeHtml);
 		return MessageFormat.format(value, arguments);
+	}
+	
+	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
+		if(!url.getProtocol().equals("file")) throw new MalformedURLException("Protocol must be 'file'");
+		File file = new File(url.toURI());
+		if(file.exists() && file.isFile()) {
+			return new FileResource(file);
+		} else {
+			return null;
+		}
+	}
+	
+	public JarFileResource getJarResource(URL url) throws URISyntaxException, MalformedURLException, IOException {
+		if(!url.getProtocol().equals("jar")) throw new MalformedURLException("Protocol must be 'jar'");
+		
+		String surl = url.toString();
+		int ix = surl.lastIndexOf("!/");
+		if (ix < 0) throw new MalformedURLException("URL must contains '!/'");
+		
+		String jarFileName, jarEntryName;
+		try {
+			jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
+			jarEntryName = surl.substring(ix + 2);
+		} catch(UnsupportedEncodingException ex) {
+			throw new WTRuntimeException(ex, "UTF-8 encoding not supported");
+		}
+		
+		File file = new File(jarFileName);
+		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
 	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {

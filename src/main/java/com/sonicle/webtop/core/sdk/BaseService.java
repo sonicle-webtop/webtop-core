@@ -40,17 +40,13 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -58,16 +54,11 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author malbinola
  */
-public abstract class BaseService {
+public abstract class BaseService extends BaseBaseService {
 	
-	public static final String RESOURCE_SERVICE_NAME = "service.name";
-	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
 	private boolean configured = false;
 	private Environment env;
 	private CoreEnvironment coreEnv;
-	
-	public abstract void initialize();
-	public abstract void cleanup();
 	
 	public final void configure(Environment env, CoreEnvironment coreEnv) {
 		if(configured) return;
@@ -88,51 +79,6 @@ public abstract class BaseService {
 	public HashMap<String, Object> returnClientOptions() {
 		return null;
 	}
-	
-	/**
-	 * Gets WebTop Service manifest class.
-	 * @return The manifest.
-	 */
-	public final ServiceManifest getManifest() {
-		return WT.getManifest(this.getClass());
-		//return Environment.getManifest(this.getClass());
-	}
-	
-	/**
-	 * Gets WebTop Service's ID.
-	 * @return The service ID.
-	 */
-	public final String getId() {
-		return WT.getServiceId(this.getClass());
-		//return Environment.getServiceId(this.getClass());
-	}
-	
-	/**
-	 * Gets WebTop Service's db connection.
-	 * @return The db connection.
-	 * @throws SQLException 
-	 */
-    public final Connection getConnection() throws SQLException {
-		return WT.getConnection(getId());
-    }
-	
-	/**
-	 * Returns the localized name.
-	 * @param locale The requested locale.
-	 * @return The localized string.
-	 */
-	public final String getName(Locale locale) {
-		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
-	}
-	
-	/**
-	 * Returns the localized description.
-	 * @param locale The requested locale.
-	 * @return The localized string.
-	 */
-	public final String getDescription(Locale locale) {
-		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
-	}
     
 	/**
 	 * Returns the localized string associated to the key.
@@ -140,7 +86,7 @@ public abstract class BaseService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key) {
-		return WT.lookupResource(getId(), env.getProfile().getLocale(), key);
+		return lookupResource(env.getProfile().getLocale(), key);
 	}
     
 	/**
@@ -150,7 +96,7 @@ public abstract class BaseService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key, boolean escapeHtml) {
-		return WT.lookupResource(getId(), env.getProfile().getLocale(), key, escapeHtml);
+		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

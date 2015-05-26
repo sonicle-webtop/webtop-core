@@ -89,7 +89,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			ddIncrement: me.ddIncrement
 		};
 
-		this.el.ddScrollConfig = {
+		me.el.ddScrollConfig = {
 			// scrolling is buggy in IE/Opera for some reason. A larger vthresh
 			// makes it at least functional if not perfect
 			vthresh: Ext.isIE || Ext.isOpera ? 100 : 40,

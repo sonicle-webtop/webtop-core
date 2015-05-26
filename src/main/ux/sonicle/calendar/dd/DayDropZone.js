@@ -11,6 +11,32 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 	//dateRangeFormat: '{0} - {1}',
 	//dateFormat: 'n/j',
 	
+	updateProxy: function(e, data, start, end) {
+		var me = this,
+				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
+				text,
+				dt;
+		
+		if(data.type === 'caldrag') {
+			text = me.createText;
+			dt = Ext.String.format(me.dateRangeFormat, 
+					Ext.Date.format(start, timeFmt), 
+					Ext.Date.format(end, timeFmt));
+			
+		} else if(data.type === 'eventdrag') {
+			text = (e.ctrlKey || e.altKey) ? me.copyText : me.moveText;
+			dt = Ext.Date.format(start, (me.dateFormat + ' ' + timeFmt));
+			
+		} else if(data.type === 'eventresize') {
+			text = me.resizeText;
+			dt = Ext.String.format(me.dateRangeFormat, 
+					Ext.Date.format(start, timeFmt), 
+					Ext.Date.format(end, timeFmt));
+		}
+		
+		data.proxy.updateMsg(Ext.String.format(text, dt));
+	},
+	
 	onNodeOver: function(n, dd, e, data) {
 		var me = this,
 				soDate = Sonicle.Date,
@@ -57,13 +83,15 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 			
 			diff = soDate.diff(me.dragCreateDt, n.date);
 			curr = soDate.add(me.dragCreateDt, {millis: diff});
-			
 			me.dragStartDate = soDate.min(me.dragCreateDt, curr);
 			me.dragEndDate = endDt || soDate.max(me.dragCreateDt, curr);
 			
+			/*
 			dt = Ext.String.format(me.dateRangeFormat, 
 					Ext.Date.format(me.dragStartDate, timeFmt), 
 					Ext.Date.format(me.dragEndDate, timeFmt));
+			*/
+			me.updateProxy(e, data, me.dragStartDate, me.dragEndDate);
 			
 		} else {
 			evtEl = Ext.get(data.ddel);
@@ -85,11 +113,14 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 				} else {
 					box.y = n.timeBox.y;
 				}
-				dt = Ext.Date.format(n.date, (me.dateFormat + ' ' + timeFmt));
+				
 				box.x = n.el.getX();
-
 				me.shim(n.date, box);
+				/*
+				dt = Ext.Date.format(n.date, (me.dateFormat + ' ' + timeFmt));
 				text = (e.ctrlKey || e.altKey) ? me.copyText : me.moveText;
+				*/
+				me.updateProxy(e, data, n.date, n.date);
 			}
 			if (data.type === 'eventresize') {
 				box.x = dayCol.getX();
@@ -138,14 +169,17 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 					StartDate: start,
 					EndDate: end
 				};
+				/*
 				dt = Ext.String.format(me.dateRangeFormat, 
 						Ext.Date.format(start, timeFmt), 
 						Ext.Date.format(end, timeFmt));
 				text = me.resizeText;
+				*/
+				me.updateProxy(e, data, start, end);
 			}
 		}
-
-		data.proxy.updateMsg(Ext.String.format(text, dt));
+		
+		//data.proxy.updateMsg(Ext.String.format(text, dt));
 		return me.dropAllowed;
 	},
 	

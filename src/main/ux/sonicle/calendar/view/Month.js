@@ -247,20 +247,20 @@ Ext.define('Sonicle.calendar.view.Month', {
 
 			tpl = !(Ext.isIE7m || this.operaLT11) ?
 					new Ext.XTemplate(
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
-							body,
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
+							'<div class="ext-evt-bd" style="color:{_foreColor};">', body, '</div>',
 							'</div>'
 							)
 					: new Ext.XTemplate(
 							'<tpl if="_renderAsAllDay">',
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor}; color:{_foreColor};">',
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor};">',
 								'<div class="ext-cal-evm">',
 									'<div class="ext-cal-evi">',
 							'</tpl>',
 							'<tpl if="!_renderAsAllDay">',
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor}; color:{_foreColor};">',
+							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
 							'</tpl>',
-							body,
+							'<div class="ext-evt-bd" style="color:{_foreColor};">', body, '</div>',
 							'<tpl if="_renderAsAllDay">',
 									'</div>',
 								'</div>',

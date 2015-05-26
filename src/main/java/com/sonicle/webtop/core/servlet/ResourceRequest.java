@@ -33,7 +33,9 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PropertiesEx;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
@@ -45,7 +47,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -55,9 +56,6 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -129,7 +127,7 @@ public class ResourceRequest extends HttpServlet {
 	
 	private String[] splitPath(String pathInfo) throws MalformedURLException {
 		String[] tokens = StringUtils.split(pathInfo, "/", 2);
-		if(tokens.length != 2) throw new MalformedURLException("Path does not esplicitate service ID");
+		if(tokens.length != 2) throw new MalformedURLException("URL does not esplicitate service ID");
 		return tokens;
 	}
 	
@@ -142,13 +140,13 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			//String reqPath = req.getPathInfo();
 			//logger.trace("Requested path [{}]", reqPath);
-			String[] paths = splitPath(reqPath);
-			subject = paths[0];
+			String[] urlParts = splitPath(reqPath);
+			subject = urlParts[0];
 			jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
-			subjectPath = (jsPath == null) ? paths[0] : jsPath;
+			subjectPath = (jsPath == null) ? urlParts[0] : jsPath;
 			isService = (jsPath != null);
 			//subjectPath = StringUtils.replace(paths[0], ".", "/");
-			path = paths[1];
+			path = urlParts[1];
 			//logger.trace("{}, {}", subject, path);
 			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			translPath = translUrl.getPath();
@@ -224,7 +222,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			ex.printStackTrace();
@@ -251,7 +249,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -280,7 +278,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), lf, acceptsDeflate(request));
+			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), lf, ServletUtils.acceptsDeflate(request));
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -317,7 +315,7 @@ public class ResourceRequest extends HttpServlet {
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
 			LookupFile lf = getFile(fileUrl);
-			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, acceptsDeflate(request));
+			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, ServletUtils.acceptsDeflate(request));
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -346,7 +344,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
 		
 		} catch (ForbiddenException ex) {
 			ex.printStackTrace();
@@ -367,7 +365,7 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			fileUrl = this.getClass().getResource(path);
 			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, acceptsDeflate(request));
+			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -382,7 +380,6 @@ public class ResourceRequest extends HttpServlet {
 		if(url == null) throw new ResourceRequest.NotFoundException();
 		
 		String protocol = url.getProtocol();
-		//logger.trace("protocol: {}", protocol);
 		if(protocol.equals("file")) {
 			try {
 				File file = new File(url.toURI());
@@ -468,27 +465,11 @@ public class ResourceRequest extends HttpServlet {
 	}
 
 	protected String getMimeType(String path) {
-		return coalesce(getServletContext().getMimeType(path), "application/octet-stream");
-	}
-
-	protected static boolean acceptsDeflate(HttpServletRequest req) {
-		final String ae = req.getHeader("Accept-Encoding");
-		return ae != null && ae.contains("gzip");
+		return LangUtils.coalesce(getServletContext().getMimeType(path), "application/octet-stream");
 	}
 
 	protected static boolean deflatable(String mimetype) {
-		return mimetype.startsWith("text/")
-			|| mimetype.equals("application/postscript")
-			|| mimetype.startsWith("application/ms")
-			|| mimetype.startsWith("application/vnd")
-			|| mimetype.endsWith("xml");
-	}
-
-	protected static <T> T coalesce(T... ts) {
-		for (T t : ts) {
-			if (t != null) return t;
-		}
-		return null;
+		return ServletUtils.isDeflatable(mimetype);
 	}
 
 	public static interface LookupResult {
@@ -571,9 +552,16 @@ public class ResourceRequest extends HttpServlet {
 				if(contentLength >= 0) resp.setContentLength(contentLength);
 				os = resp.getOutputStream();
 			}
-			//TODO: why this is not working
-			//IOUtils.copy(is, os);
-			transferStreams(getInputStream(), os);
+			
+			//TODO: Why IOUtils.copy is not working?
+			InputStream is = getInputStream();
+			try {
+				ServletUtils.transferStreams(is, os);
+				//IOUtils.copy(is, os);
+			} finally {
+				IOUtils.closeQuietly(os);
+				IOUtils.closeQuietly(is);
+			}
 		}
 
 		@Override
@@ -610,32 +598,6 @@ public class ResourceRequest extends HttpServlet {
 			String json = buildLocaleJson(clazz, strings);
 			contentLength = json.getBytes().length;
 			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
-			
-			/*
-			// Converts properties file into an hashmap
-			HashMap<String, String> hm = new HashMap<>();
-			InputStreamReader isr = null;
-			try {
-				Properties properties = new Properties();
-				isr = new InputStreamReader(inputStream, "ISO-8859-1");
-				properties.load(isr);
-				for (final String name: properties.stringPropertyNames()) {
-					hm.put(name, properties.getProperty(name));
-				}
-			} catch(IOException ex) {
-				
-			} finally {
-				IOUtils.closeQuietly(isr);
-				IOUtils.closeQuietly(inputStream);
-			}
-			
-			// Builds js class structure
-			//Charset cset = Charset.forName("ISO-8859-1"); // Default charset for .properties files
-			String json = buildLocaleJson2(clazz, override, hm);
-			contentLength = json.getBytes().length;
-			inputStream = null;
-			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
-			*/
 		}
 		
 		private String buildLocaleJson(String clazz, String strings) {
@@ -652,6 +614,16 @@ public class ResourceRequest extends HttpServlet {
 			BufferedReader br = null;
 			
 			try {
+				PropertiesEx properties = new PropertiesEx();
+				properties.load(is, true); // Important! True to preserve unicode escapes found in properties
+				String json;
+				for(final String name: properties.stringPropertyNames()) {
+					json = "\"" + name + "\"" + ":" + "\"" + properties.getProperty(name) + "\"";
+					strings.add(json);
+				}
+				
+				// Alternative way to preserve escapes...
+				/*
 				br = new BufferedReader(new InputStreamReader(is, Charset.forName("ISO-8859-1")));
 				String line = null, key, value, json;
 				int firstEqual = -1;
@@ -664,6 +636,7 @@ public class ResourceRequest extends HttpServlet {
 						strings.add(json);
 					}
 				}
+				*/
 				
 			} catch(IOException ex) {
 				throw new RuntimeException(ex);
@@ -672,66 +645,6 @@ public class ResourceRequest extends HttpServlet {
 			}
 				
 			return "{" + StringUtils.join(strings, ",") + "}";
-		}
-		
-		
-		
-		
-		
-		
-		
-		/*
-		private String buildLocaleJson2(String clazz, String override, HashMap<String, String> props) {
-			//String strings = JsonResult.gsonWoNulls.toJson(props);
-			String strings = JsonResult.gsonWoNullsNoEscape.toJson(props);
-			return "Ext.define('"
-				+ clazz
-				+ "',{"
-				//+ "override:'"
-				//+ override
-				//+ "',"
-				+ "strings:"
-				+ strings
-				+ "});";
-		}
-		
-		private HashMap<String, String> loadProperties(InputStream is) {
-			HashMap<String, String> hm = new HashMap<>();
-			BufferedReader br = null;
-			
-			try {
-				br = new BufferedReader(new InputStreamReader(is, Charset.forName("ISO-8859-1")));
-				String line = null;
-				int firstEqual = -1;
-				while((line = br.readLine()) != null) {
-					firstEqual = line.indexOf("=");
-					if(firstEqual > 0) {
-						hm.put(line.substring(0, firstEqual), line.substring(firstEqual+1));
-					}
-				}
-				
-			} catch(IOException ex) {
-				throw new RuntimeException(ex);
-			} finally {
-				IOUtils.closeQuietly(br);
-			}
-				
-			return hm;
-		}
-		*/
-	}
-	
-	// TODO: replaced with IOUtils.copy
-	protected static void transferStreams(InputStream is, OutputStream os) throws IOException {
-		try {
-			byte[] buf = new byte[BUFFER_SIZE];
-			int bytesRead;
-			while ((bytesRead = is.read(buf)) != -1) {
-				os.write(buf, 0, bytesRead);
-			}
-		} finally {
-			is.close();
-			os.close();
 		}
 	}
 }

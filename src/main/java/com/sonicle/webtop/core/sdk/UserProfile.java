@@ -207,8 +207,10 @@ public final class UserProfile {
 		private final String userId;
 		
 		public Id(String id) {
-			this.domainId = StringUtils.split(id, "@")[1];
-			this.userId = StringUtils.split(id, "@")[0];
+			String[] tokens = StringUtils.split(id, "@", 2);
+			if(tokens.length != 2) throw new WTRuntimeException("Unable to parse specified profileId [{0}]", id);
+			this.domainId = tokens[1];
+			this.userId = tokens[0];
 		}
 		
 		public Id(String domainId, String userId) {

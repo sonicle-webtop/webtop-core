@@ -331,7 +331,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						reference: 'flddelivery',
 						name: 'tfaDelivery',
 						editable: false,
-						store: Ext.create('WT.store.TFADelivery'),
+						store: Ext.create('WT.store.TFADelivery', {
+							autoLoad: true
+						}),
 						valueField: 'id',
 						displayField: 'desc'
 					}, {

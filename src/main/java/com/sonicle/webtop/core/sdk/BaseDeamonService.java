@@ -45,12 +45,10 @@ import org.quartz.Trigger;
  *
  * @author malbinola
  */
-public abstract class BaseDeamonService {
+public abstract class BaseDeamonService extends BaseBaseService {
 	
 	private boolean configured = false;
-	public abstract void initialize();
 	public abstract List<TaskDefinition> returnTasks();
-	public abstract void cleanup();
 	
 	public final void configure() {
 		if(configured) return;
@@ -60,42 +58,6 @@ public abstract class BaseDeamonService {
 	private static WebTopApp getWTA() {
 		return WebTopApp.getInstance();
 	}
-	
-	/**
-	 * Gets WebTop Service manifest class.
-	 * @return The manifest.
-	 */
-	public final ServiceManifest getManifest() {
-		return WT.getManifest(this.getClass());
-	}
-	
-	/**
-	 * Gets WebTop Service's ID.
-	 * @return The service ID.
-	 */
-	public final String getId() {
-		return WT.getServiceId(this.getClass());
-	}
-	
-	/**
-	 * Gets WebTop Service's db connection.
-	 * @return The db connection.
-	 * @throws SQLException 
-	 */
-    public final Connection getConnection() throws SQLException {
-		return WT.getConnection(getId());
-    }
-	
-	
-	/*
-	public String scheduleTask(String minutes, String hours, String daysofmonth, String months, String daysofweek, BaseTask task) {
-		return getWTA().registerTask(minutes, hours, daysofmonth, months, daysofweek, task);
-	}
-	
-	public void unscheduleTask(String taskId) {
-		getWTA().unregisterTask(taskId);
-	}
-	*/
 	
 	public static class TaskDefinition {
 		public Class clazz;

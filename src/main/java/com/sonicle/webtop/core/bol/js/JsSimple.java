@@ -38,14 +38,14 @@ package com.sonicle.webtop.core.bol.js;
  * @author malbinola
  */
 public class JsSimple {
-	public String id;
+	public Object id;
 	public String desc;
 	
 	public JsSimple() {
 		
 	}
 	
-	public JsSimple(String id, String description) {
+	public JsSimple(Object id, String description) {
 		this.id = id;
 		this.desc = description;
 	}

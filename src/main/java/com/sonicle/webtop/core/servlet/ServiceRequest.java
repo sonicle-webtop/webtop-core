@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.BaseRequestServlet;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
@@ -57,7 +58,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ServiceRequest extends HttpServlet {
+public class ServiceRequest extends BaseRequestServlet {
 	
 	private static final Logger logger = WT.getLogger(ServiceRequest.class);
 	
@@ -75,8 +76,10 @@ public class ServiceRequest extends HttpServlet {
 			if(!options) {
 				// Retrieves instantiated service
 				BaseService instance = wts.getServiceById(service);
-
+				
 				// Gets right method
+				Method method = getMethod(instance.getClass(), service, action, nowriter);
+				/*
 				Method method = null;
 				String methodName = MessageFormat.format("process{0}", action);
 				if(nowriter) {
@@ -92,8 +95,12 @@ public class ServiceRequest extends HttpServlet {
 						throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getServiceClassName());
 					}
 				}
+				*/
 
-				// Invoking method...
+				// Invokes retrieved method...
+				invokeMethod(instance, method, service, nowriter, request, response);
+				
+				/*
 				PrintWriter out = null;
 				try {
 					try {
@@ -114,6 +121,7 @@ public class ServiceRequest extends HttpServlet {
 				} finally {
 					IOUtils.closeQuietly(out);
 				}
+				*/
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
@@ -124,6 +132,7 @@ public class ServiceRequest extends HttpServlet {
 				
 				// Retrieves instantiated userOptions service (session context away)
 				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, domainId, userId);
+				
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);
 				invokeMethod(instance, method, service, nowriter, request, response);
@@ -137,6 +146,7 @@ public class ServiceRequest extends HttpServlet {
 		}
 	}
 	
+	/*
 	private void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		PrintWriter out = null;
 		try {
@@ -146,9 +156,9 @@ public class ServiceRequest extends HttpServlet {
 					method.invoke(instance, request, response);
 				} else {
 					out = response.getWriter();
+					response.setHeader("Cache-Control", "private");
+					response.setContentType("text/html;charset=UTF-8");
 					method.invoke(instance, request, response, out);
-					ServletHelper.setCacheControl(response);
-					ServletHelper.setPageContentType(response);
 				}
 			} finally {
 				WebTopApp.unsetServiceLoggerDC();
@@ -159,7 +169,9 @@ public class ServiceRequest extends HttpServlet {
 			IOUtils.closeQuietly(out);
 		}
 	}
+	*/
 	
+	/*
 	private Method getMethod(Class clazz, String service, String action, boolean nowriter) throws WTException {
 		String methodName = MessageFormat.format("process{0}", action);
 		if(nowriter) {
@@ -176,6 +188,7 @@ public class ServiceRequest extends HttpServlet {
 			}
 		}
 	}
+	*/
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

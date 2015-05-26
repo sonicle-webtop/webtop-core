@@ -33,23 +33,39 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import java.text.MessageFormat;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 /**
  *
  * @author malbinola
  */
-public class WTException extends Exception {
+public class FileResource implements Resource {
 	
-	public WTException() {
-		super();
+	private final File file;
+	
+	public FileResource(File file) {
+		this.file = file;
 	}
-	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
+
+	@Override
+	public String getFilename() {
+		return file.getName();
 	}
-	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
+
+	@Override
+	public long getLastModified() {
+		return file.lastModified();
+	}
+
+	@Override
+	public long getSize() {
+		return file.length();
+	}
+
+	@Override
+	public InputStream getInputStream() throws Exception {
+		return new FileInputStream(file);
 	}
 }

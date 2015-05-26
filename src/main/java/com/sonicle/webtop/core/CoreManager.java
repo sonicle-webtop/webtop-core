@@ -82,7 +82,7 @@ public class CoreManager {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<String> result = new ArrayList<>();
 		
-		List<String> ids = svcm.getServices();
+		List<String> ids = svcm.listServices();
 		for(String id : ids) {
 			if(UserProfile.isSystemAdmin(domainId, userId)) {
 				if(id.equals(CoreManifest.ID)) result.add(id);

@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.store.DateFormat', {
 	alternateClassName: 'WT.store.DateFormat',
 	extend: 'Ext.data.ArrayStore',
 	
-	autoLoad: true,
 	model: 'WT.model.Simple',
 	data: [
 		['ddmmyyyy', WT.res('store.dateformat.ddmmyyyy')],

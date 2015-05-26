@@ -46,10 +46,33 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
 			me.currentRange = range;
         }
 		
+		//me.updateProxy(e, data, start, end);
 		var msg = Ext.String.format((data.type === 'eventdrag') ? eventDragText : me.createText, me.currentRange);
 		data.proxy.updateMsg(msg);
         return this.dropAllowed;
     },
+	
+	updateProxy: function(e, data, start, end) {
+		var me = this,
+				//timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
+				text,
+				dt;
+		
+		if(data.type === 'eventdrag') {
+			text = (e.ctrlKey || e.altKey) ? me.copyText: me.moveText;
+		} else {
+			text = me.createText;
+		}
+		if(Sonicle.Date.diffDays(start, end) > 0) {
+			dt = Ext.String.format(me.dateRangeFormat, 
+					Ext.Date.format(start, me.dateFormat), 
+					Ext.Date.format(end, me.dateFormat));
+		} else {
+			dt = Ext.Date.format(start, me.dateFormat);
+		}
+		
+		data.proxy.updateMsg(Ext.String.format(text, dt));
+	},
 
     shim: function(start, end) {
         this.currWeek = -1;

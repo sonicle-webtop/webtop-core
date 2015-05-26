@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OContentType;
@@ -43,13 +44,17 @@ import com.sonicle.webtop.core.sdk.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import freemarker.template.Template;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -134,6 +139,11 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
+		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
+		return getWTA().loadTemplate(path);
+	}
+	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
 		nofity(profileId, message, false);
 	}
@@ -148,6 +158,10 @@ public class WT {
 	
 	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
+	}
+	
+	public static String generateUUID() {
+		return UUID.randomUUID().toString();
 	}
 	
 	public static String getContentType(String extension) {

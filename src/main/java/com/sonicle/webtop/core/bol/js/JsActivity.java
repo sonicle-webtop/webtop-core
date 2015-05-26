@@ -31,25 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
 
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.bol.OActivity;
 
 /**
  *
  * @author malbinola
  */
-public class WTException extends Exception {
+public class JsActivity extends JsSimple {
+	public String status;
+	public Boolean readOnly;
 	
-	public WTException() {
-		super();
+	public JsActivity() {
+		
 	}
 	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
-	}
-	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
+	public JsActivity(OActivity activity) {
+		super(activity.getActivityId(), activity.getDescription());
+		status = activity.getStatus();
+		readOnly = activity.getReadOnly();
 	}
 }

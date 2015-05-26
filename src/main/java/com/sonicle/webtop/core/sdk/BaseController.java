@@ -33,23 +33,22 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import java.text.MessageFormat;
-
 /**
  *
  * @author malbinola
  */
-public class WTException extends Exception {
+public abstract class BaseController {
 	
-	public WTException() {
-		super();
+	protected final ServiceManifest manifest;
+	
+	public BaseController(ServiceManifest manifest) {
+		this.manifest = manifest;
 	}
 	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
+	public String getServiceId() {
+		return manifest.id;
 	}
 	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
-	}
+	public abstract void initializeUser(UserProfile.Id profileId) throws Exception;
+	public abstract void cleanupUser(UserProfile.Id profileId, boolean deep) throws Exception;
 }

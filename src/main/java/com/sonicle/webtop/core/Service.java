@@ -39,7 +39,12 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OCausal;
+import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsActivity;
+import com.sonicle.webtop.core.bol.js.JsCausal;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsUserOptionsService;
@@ -47,6 +52,9 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
+import com.sonicle.webtop.core.dal.ActivityDAO;
+import com.sonicle.webtop.core.dal.CausalDAO;
+import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AppLocale;
 import com.sonicle.webtop.core.sdk.CoreLocaleKey;
@@ -59,6 +67,7 @@ import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -113,18 +122,41 @@ public class Service extends BaseService {
 		Locale locale = env.getSession().getLocale();
 		
 		try {
-			for(AppLocale loc : WT.getInstalledLocales()) {
+			for(AppLocale apploc : WT.getInstalledLocales()) {
 				//System.out.println(loc.getShortDatePattern());
 				//System.out.println(loc.getShortTimePattern());
 				//System.out.println(loc.getLocale().getDisplayName());
 				//System.out.println(loc.getLocale().getDisplayName(locale));
-				items.add(new JsSimple(loc.getId(), loc.getLocale().getDisplayName(locale)));
+				items.add(new JsSimple(apploc.getId(), apploc.getLocale().getDisplayName(locale)));
 			}
 			new JsonResult("locales", items).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLocales", ex);
 			new JsonResult(false, "Unable to get locales").printTo(out);
+		}
+	}
+	
+	public void processGetLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
+		Locale locale = env.getSession().getLocale();
+		Locale loc = null;
+		String lang = null;
+		
+		try {
+			for(AppLocale apploc : WT.getInstalledLocales()) {
+				loc = apploc.getLocale();
+				lang = loc.getLanguage();
+				if(!items.containsKey(lang)) {
+					items.put(lang, new JsSimple(lang, loc.getDisplayLanguage(locale)));
+				}
+			}
+			
+			new JsonResult("languages", items.values(), items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetLanguages", ex);
+			new JsonResult(false, "Unable to get languages").printTo(out);
 		}
 	}
 	
@@ -139,7 +171,8 @@ public class Service extends BaseService {
 				off = tz.getRawOffset()/3600000;
 				items.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
 			}
-			new JsonResult("timezones", items).printTo(out);
+			
+			new JsonResult("timezones", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action GetTimezones", ex);
@@ -148,18 +181,19 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
 			//TODO: handle themes dinamically
-			ArrayList<JsSimple> data = new ArrayList<>();
-			data.add(new JsSimple("aria", "Aria"));
-			data.add(new JsSimple("classic", "Classic"));
-			data.add(new JsSimple("crisp", "Crisp"));
-			data.add(new JsSimple("crisp-touch", "Crisp Touch"));
-			data.add(new JsSimple("gray", "Gray"));
-			data.add(new JsSimple("neptune", "Neptune"));
-			data.add(new JsSimple("neptune-touch", "Neptune Touch"));
-			new JsonResult("themes", data).printTo(out);
+			items.add(new JsSimple("aria", "Aria"));
+			items.add(new JsSimple("classic", "Classic"));
+			items.add(new JsSimple("crisp", "Crisp"));
+			items.add(new JsSimple("crisp-touch", "Crisp Touch"));
+			items.add(new JsSimple("gray", "Gray"));
+			items.add(new JsSimple("neptune", "Neptune"));
+			items.add(new JsSimple("neptune-touch", "Neptune Touch"));
+			
+			new JsonResult("themes", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
 			logger.error("Error executing action GetThemes", ex);
@@ -168,12 +202,12 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetLooksAndFeels(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
 			//TODO: handle lafs dinamically
-			ArrayList<JsSimple> lafs = new ArrayList<>();
-			lafs.add(new JsSimple("default", "WebTop"));
-			new JsonResult("lafs", lafs).printTo(out);
+			items.add(new JsSimple("default", "WebTop"));
+			new JsonResult("lafs", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
 			logger.error("Error executing action GetLooksAndFeels", ex);
@@ -389,4 +423,120 @@ public class Service extends BaseService {
 			new JsonResult(JsonResult.gson.toJson(messages)).printTo(out);
 		}
 	}
+	
+	public void processGetActivities(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		List<JsActivity> items = new ArrayList<>();
+		
+		try {
+			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
+			UserProfile.Id profileId = new UserProfile.Id(groupId);
+			ActivityDAO adao = ActivityDAO.getInstance();
+			con = WT.getCoreConnection();
+			
+			//TODO: tradurre campo descrizione in base al locale dell'utente
+			List<OActivity> activities = adao.viewByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			for(OActivity activity : activities) {
+				items.add(new JsActivity(activity));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetActivities", ex);
+			new JsonResult(false, "Unable to get activities").printTo(out);
+		}
+	}
+	
+	public void processGetCustomers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		List<JsSimple> items = new ArrayList<>();
+		
+		try {
+			String query = ServletUtils.getStringParameter(request, "query", "");
+			CustomerDAO cdao = CustomerDAO.getInstance();
+			con = WT.getCoreConnection();
+			
+			List<OCustomer> customers = cdao.viewByLike(con, "%" + query + "%");
+			for(OCustomer customer : customers) {
+				items.add(new JsSimple(customer.getCustomerId(), customer.getDescription()));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetCustomers", ex);
+			new JsonResult(false, "Unable to get customers").printTo(out);
+		}
+	}
+	
+	public void processGetStatisticCustomers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		List<JsSimple> items = new ArrayList<>();
+		
+		try {
+			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
+			String parentCustomerId = ServletUtils.getStringParameter(request, "parentCustomerId", null);
+			String query = ServletUtils.getStringParameter(request, "query", "");
+			UserProfile.Id profileId = new UserProfile.Id(groupId);
+			CustomerDAO cdao = CustomerDAO.getInstance();
+			con = WT.getCoreConnection();
+			
+			List<OCustomer> customers = cdao.viewByParentDomainLike(con, parentCustomerId, profileId.getDomainId(), "%" + query + "%");
+			ArrayList<String> parts = null;
+			String address = null, description;
+			for(OCustomer customer : customers) {
+				parts = new ArrayList<>();
+				if(!StringUtils.isEmpty(customer.getAddress())) {
+					parts.add(customer.getAddress());
+				}
+				if(!StringUtils.isEmpty(customer.getCity())) {
+					parts.add(customer.getCity());
+				}
+				if(!StringUtils.isEmpty(customer.getCountry())) {
+					parts.add(customer.getCountry());
+				}
+				address = StringUtils.join(parts, ", ");
+				if(StringUtils.isEmpty(address)) {
+					description = customer.getDescription();
+				} else {
+					description = MessageFormat.format("{0} ({1})", customer.getDescription(), address);
+				}
+				items.add(new JsSimple(customer.getCustomerId(), description));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetStatisticCustomers", ex);
+			new JsonResult(false, "Unable to get statistic customers").printTo(out);
+		}
+	}
+	
+	public void processGetCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		List<JsCausal> items = new ArrayList<>();
+		
+		try {
+			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
+			String customerId = ServletUtils.getStringParameter(request, "customerId", null);
+			UserProfile.Id profileId = new UserProfile.Id(groupId);
+			CausalDAO cdao = CausalDAO.getInstance();
+			con = WT.getCoreConnection();
+			
+			//TODO: tradurre campo descrizione in base al locale dell'utente
+			List<OCausal> causals = cdao.viewByDomainUserCustomer(con, profileId.getDomainId(), profileId.getUserId(), customerId);
+			for(OCausal causal : causals) {
+				items.add(new JsCausal(causal));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action GetCausals", ex);
+			new JsonResult(false, "Unable to get causals").printTo(out);
+		}
+	}
+	
+	
 }

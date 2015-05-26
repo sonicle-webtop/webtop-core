@@ -440,11 +440,13 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return Ext.create(opts.containerCfg);
 	},
 	
-	getDateFmt: function() {
-		return '';
+	getShortDateFmt: function() {
+		//TODO: restituire il valore localizzato (dalle options)
+		return 'd/m/Y';
 	},
 	
-	getTimeFmt: function() {
+	getShortTimeFmt: function() {
+		//TODO: restituire il valore localizzato (dalle options)
 		return 'H:i';
 		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
 	}

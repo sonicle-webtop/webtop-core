@@ -607,12 +607,12 @@ Ext.define('Sonicle.calendar.Panel', {
 	 * @return {Extensible.calendar.CalendarPanel} this
 	 */
 	setStartDate: function (dt) {
-		this.startDate = dt;
-		console.log('startDate='+dt);
+		var me = this;
+		me.startDate = dt;
 		Ext.suspendLayouts();
-		this.layout.activeItem.setStartDate(dt, true);
+		me.layout.activeItem.setStartDate(dt, true);
 		Ext.resumeLayouts(true);
-		this.fireViewChange();
+		me.fireViewChange();
 	},
 	
 	// private
@@ -623,16 +623,18 @@ Ext.define('Sonicle.calendar.Panel', {
 	
 	// private
 	onPrevClick: function () {
-		this.startDate = this.layout.activeItem.movePrev();
-		this.updateNavState();
-		this.fireViewChange();
+		var me = this;
+		me.startDate = me.layout.activeItem.movePrev();
+		me.updateNavState();
+		me.fireViewChange();
 	},
 	
 	// private
 	onNextClick: function () {
-		this.startDate = this.layout.activeItem.moveNext();
-		this.updateNavState();
-		this.fireViewChange();
+		var me = this;
+		me.startDate = me.layout.activeItem.moveNext();
+		me.updateNavState();
+		me.fireViewChange();
 	},
 	
 	// private

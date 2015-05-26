@@ -240,8 +240,16 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 */
 	ownerCalendarPanel: null,
 	
+	/**
+	 * @property titleEditor
+	 * @readonly
+	 * @type Ext.Editor
+	 */
+	titleEditor: null,
+	
 	//private properties -- do not override:
 	weekCount: 1,
+	eventTitleSelector: '.ext-evt-bd',
 	eventSelector: '.ext-cal-evt',
 	eventSelectorDepth: 10,
 	eventOverClass: 'ext-evt-over',
@@ -410,8 +418,28 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	initComponent: function () {
 		var me = this;
 		me.setStartDate(me.startDate || new Date());
-
+		
 		me.callParent(arguments);
+		
+		me.titleEditor = Ext.create({
+			xtype: 'editor',
+			updateEl: false,
+			alignment: 'l-l',
+			autoSize: {
+				width: 'boundEl'
+			},
+			field: {
+				xtype: 'textfield'
+			},
+			listeners: {
+				complete: function(s, val, sval) {
+					if(val !== sval) {
+						var rec = me.getEventRecord(s.getItemId());
+						me.doEventTitleUpdate(rec, val);
+					}
+				}
+			}
+		});
 	},
 	
 	// private
@@ -716,13 +744,6 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		this.refresh(false);
 	},
 	
-	/*
-	// private
-	onDataChanged: function (store) {
-		this.refresh();
-	},
-	*/
-	
 	onStoreWrite: function(store, op) {
 		if(op.wasSuccessful()) {
 			switch(op.action) {
@@ -740,14 +761,38 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	// private
-	onUpdate: function (ds, rec, operation) {
-		var me = this;
-		if (me.hidden === true || me.ownerCt.hidden === true || me.monitorStoreEvents === false) {
+	onAdd: function (store, op) {
+		var me = this,
+				rec = op.getRecords()[0];
+		
+		if(me.hidden === true || me.ownerCt.hidden === true || me.monitorStoreEvents === false) {
 			// Hidden calendar view don't need to be refreshed. For views composed of header and body (for example
+			// Sonicle.calendar.view.Day or Sonicle.calendar.view.Week) we need to check the ownerCt to find out
+			// if a view is hidden.
 			return;
 		}
-		if (operation === Ext.data.Record.COMMIT) {
-			this.refresh(true);
+		
+		me.refresh(true);
+		if (me.enableFx && me.enableUpdateFx) {
+			me.doAddFx(me.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.Id.name]), {
+				scope: me
+			});
+		}
+	},
+	
+	// private
+	onUpdate: function (store, op, updateType) {
+		var me = this,
+				rec = op.getRecords()[0];
+		
+		if (me.hidden === true || me.ownerCt.hidden === true || me.monitorStoreEvents === false) {
+			// Hidden calendar view don't need to be refreshed. For views composed of header and body (for example
+			// Sonicle.calendar.view.Day or Sonicle.calendar.view.Week) we need to check the ownerCt to find out
+			// if a view is hidden.
+			return;
+		}
+		if (updateType === Ext.data.Record.COMMIT) {
+			me.refresh(true);
 			if (me.enableFx && me.enableUpdateFx) {
 				me.doUpdateFx(me.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.Id.name]), {
 					scope: me
@@ -757,63 +802,91 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	// private
-	onAdd: function (ds, records, index) {
-		if (this.monitorStoreEvents === false) {
+	onRemove: function (store, op) {
+		var me = this,
+				EM = Sonicle.calendar.data.EventMappings,
+				rec = op.getRecords()[0];
+		
+		if (me.hidden === true || me.ownerCt.hidden === true || me.monitorStoreEvents === false) {
+			// Hidden calendar view don't need to be refreshed. For views composed of header and body (for example
+			// Sonicle.calendar.view.Day or Sonicle.calendar.view.Week) we need to check the ownerCt to find out
+			// if a view is hidden.
 			return;
 		}
-		var rec = records[0];
-		this.tempEventId = rec.id;
-		this.refresh();
-
-		if (this.enableFx && this.enableAddFx) {
-			this.doAddFx(this.getEventEls(rec.data[Sonicle.calendar.data.EventMappings.Id.name]), {
-				scope: this
+		
+		if(me.enableFx && me.enableRemoveFx) {
+			me.doRemoveFx(me.getEventEls(rec.data[EM.EventId.name]), {
+				remove: true,
+				scope: me,
+				callback: Ext.bind(me.refresh, me, [])
 			});
+		} else {
+			me.getEventEls(rec.data[EM.EventId.name]).remove();
+			me.refresh();
 		}
 	},
-	
-	// private
-	onRemove: function (ds, recs) {
-		var idField = Sonicle.calendar.data.EventMappings.Id.name,
-				i, len, rec, els;
 
-		if (this.monitorStoreEvents === false) {
-			return;
-		}
-
-		for (i = 0, len = recs.length; i < len; i++) {
-			rec = recs[i];
-
-			if (this.enableFx && this.enableRemoveFx) {
-				els = this.getEventEls(rec.get(idField));
-
-				if (els.getCount() > 0) {
-					this.doRemoveFx(els, {
-						remove: true,
-						scope: this,
-						callback: this.refresh
-					});
-				}
-			}
-			else {
-				this.getEventEls(rec.get(idField)).remove();
-				this.refresh();
-			}
-		}
-	},
-	
-	doUpdateFx: function (els, o) {
-		this.highlightEvent(els, null, o);
-	},
-	
+    /**
+	 * Provides the element effect(s) to run after an event is added. The method is passed a {@link Ext.CompositeElement}
+	 * that contains one or more elements in the DOM representing the event that was added. The default
+	 * effect is {@link Ext.Element#fadeIn fadeIn}. Note that this method will only be called when
+	 * {@link #enableAddFx} is true (it is true by default).
+	 * @param {Ext.CompositeElement} el The {@link Ext.CompositeElement} representing the added event
+	 * @param {Object} options An options object to be passed through to any Element.Fx methods. By default this
+	 * object only contains the current scope (<tt>{scope:this}</tt>) but you can also add any additional fx-specific
+	 * options that might be needed for a particular effect to this object.
+	 */
 	doAddFx: function (els, o) {
 		els.fadeIn(Ext.apply(o, {
 			duration: 2000
 		}));
 	},
 	
+    /**
+	 * Provides the element effect(s) to run after an event is updated. The method is passed a {@link Ext.CompositeElement}
+	 * that contains one or more elements in the DOM representing the event that was updated. The default
+	 * effect is {@link Ext.Element#highlight highlight}. Note that this method will only be called when
+	 * {@link #enableUpdateFx} is true (it is false by default).
+	 * @param {Ext.CompositeElement} el The {@link Ext.CompositeElement} representing the updated event
+	 * @param {Object} options An options object to be passed through to any Element.Fx methods. By default this
+	 * object only contains the current scope (<tt>{scope:this}</tt>) but you can also add any additional fx-specific
+	 * options that might be needed for a particular effect to this object.
+	 */
+	doUpdateFx: function (els, o) {
+		this.highlightEvent(els, null, o);
+	},
+	
+    /**
+	 * Provides the element effect(s) to run after an event is removed. The method is passed a {@link Ext.CompositeElement}
+	 * that contains one or more elements in the DOM representing the event that was removed. The default
+	 * effect is {@link Ext.Element#fadeOut fadeOut}. Note that this method will only be called when
+	 * {@link #enableRemoveFx} is true (it is true by default).
+	 * @param {Ext.CompositeElement} el The {@link Ext.CompositeElement} representing the removed event
+	 * @param {Object} options An options object to be passed through to any Element.Fx methods. By default this
+	 * object contains the following properties:
+	 *		{
+	 *			remove: true, // required by fadeOut to actually remove the element(s)
+	 *			scope: this,  // required for the callback
+	 *			callback: fn  // required to refresh the view after the fx finish
+	 *		}
+	 * While you can modify this options object as needed if you change the effect used, please note that the
+	 * callback method (and scope) MUST still be passed in order for the view to refresh correctly after the removal.
+	 * Please see the inline code comments before overriding this method.
+	 */
 	doRemoveFx: function (els, o) {
-		els.fadeOut(o);
+		// Please make sure you keep this entire code block or removing events might not work correctly!
+		// Removing is a little different because we have to wait for the fx to finish, then we have to actually
+		// refresh the view AFTER the fx are run (this is different than add and update).
+		if(els.getCount() === 0 && Ext.isFunction(o.callback)) {
+			// if there are no matching elements in the view make sure the callback still runs.
+			// this can happen when an event accessed from the "more" popup is deleted.
+			o.callback.call(o.scope || this);
+		} else {
+			// If you'd like to customize the remove fx do so here. Just make sure you
+			// DO NOT override the default callback property on the options object, and that
+			// you still pass that object in whatever fx method you choose.
+			els.fadeOut(o);
+		}
 	},
 	
 	/**
@@ -1319,17 +1392,60 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		return Ext.Date.format(this.startDate, 'F Y');
 	},
 	
+	startTitleEditing: function(id, title, el) {
+		var me = this;
+		
+		if(me.titleEditor.editing) me.titleEditor.cancelEdit();
+		me.titleEditor.itemId = id;
+		me.titleEditor.startEdit(el, title);
+		me.titleEditor.field.focus(true);
+	},
+	
+	
 	/*
 	 * Shared click handling.  Each specific view also provides view-specific
 	 * click handling that calls this first.  This method returns true if it
 	 * can handle the click (and so the subclass should ignore it) else false.
 	 */
 	onClick: function (e, t) {
-		var el = e.getTarget(this.eventSelector, 5);
-		if (el) {
-			var id = this.getEventIdFromEl(el);
+		/*
+		if(e.ctrlKey && e.getTarget('.ext-evt-bd', 1) !== null) {
+			// ignore clicks on the evt-bd
+			return;
+		}
+		*/
+		var me = this, 
+				EM = Sonicle.calendar.data.EventMappings,
+				el, tel, id, rec;
+		/*
+		el = e.getTarget(me.eventTitleSelector, 1);
+		if(e.ctrlKey && el) {
+			var evtEl = e.getTarget(me.eventSelector, 5);
+			if(evtEl) {
+				id = me.getEventIdFromEl(evtEl);
+				rec = me.getEventRecord(id);
+				me.startTitleEditing(id, rec.data[Sonicle.calendar.data.EventMappings.Title.name], el);
+				return true;
+			}
+		}
+		*/
+		
+		el = e.getTarget(me.eventSelector, 5);
+		if(el) {
+			id = me.getEventIdFromEl(el);
+			rec = me.getEventRecord(id);
+			
+			// Intercepts CTRL+click on title for displaying a speedy editor
+			if(e.ctrlKey && !rec.data[EM.IsReadOnly.name] && !rec.data[EM.IsRecurring.name]) {
+				tel = e.getTarget(me.eventTitleSelector, 1);
+				if(tel) {
+					me.startTitleEditing(id, rec.data[EM.Title.name], tel);
+					return true;
+				}
+			}
+			
 			// We handle eventclick/eventdblclick in same way...
-			this.fireEvent('event'+e.type, this, this.getEventRecord(id), el, e);
+			me.fireEvent('event'+e.type, me, me.getEventRecord(id), el, e);
 			return true;
 		}
 	},
@@ -1449,7 +1565,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	/**
 	 * Create a copy of the event with a new start date, preserving the original event duration.
-	 * @param {Object} rec The original event {@link Extensible.calendar.data.EventModel record}
+	 * @param {Object} rec The original event {@link Sonicle.calendar.data.EventModel record}
 	 * @param {Object} newStartDate The new start date. The end date of the created event copy will be adjusted
 	 * automatically to preserve the original duration.
 	 */
@@ -1459,11 +1575,10 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	/**
 	 * Move the event to a new start date, preserving the original event duration.
-	 * @param {Object} rec The event {@link Extensible.calendar.data.EventModel record}
+	 * @param {Object} rec The event {@link Sonicle.calendar.data.EventModel record}
 	 * @param {Object} newStartDate The new start date
 	 */
 	moveEvent: function (rec, newStartDate) {
-		console.log('moveEvent');
 		this.shiftEvent(rec, newStartDate, 'move');
 	},
 	
@@ -1471,7 +1586,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	shiftEvent: function (rec, newStartDate, moveOrCopy) {
 		var me = this,
 				newRec;
-		console.log('shiftEvent');
+		
 		if (moveOrCopy === 'move') {
 			if (Sonicle.Date.compare(rec.data[Sonicle.calendar.data.EventMappings.StartDate.name], newStartDate) === 0) {
 				// No changes, so we aren't actually moving. Copying to the same date is OK.
@@ -1479,49 +1594,35 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			}
 			newRec = rec;
 		} else {
-			newRec = rec.clone();
+			newRec = rec.copy(null);
 		}
 
 		if (me.fireEvent('beforeevent' + moveOrCopy, me, newRec, Ext.Date.clone(newStartDate)) !== false) {
-			//TODO: cambiare gestione ricorrenza
-			if (newRec.get('isRecurring')) {
-				me.onRecurrenceEditModeSelected('single', newRec, newStartDate, moveOrCopy);
-			} else {
-				me.doShiftEvent(newRec, newStartDate, moveOrCopy);
-			}
+			me.doShiftEvent(newRec, newStartDate, moveOrCopy);
 		}
-	},
-	
-	// private
-	onRecurrenceEditModeSelected: function (editMode, rec, newStartDate, moveOrCopy) {
-		var EventMappings = Sonicle.calendar.data.EventMappings;
-
-		if (editMode) {
-			if (moveOrCopy === 'copy') {
-				rec.clearRecurrence();
-			}
-			rec.data[EventMappings.REditMode.name] = editMode;
-			rec.data[EventMappings.RInstanceStartDate.name] = rec.getStartDate();
-			this.doShiftEvent(rec, newStartDate, moveOrCopy);
-		}
-		// else user canceled
 	},
 	
 	// private
 	doShiftEvent: function (rec, newStartDate, moveOrCopy) {
-		console.log('doShiftEvent');
-		var EventMappings = Sonicle.calendar.data.EventMappings,
-				start = rec.data[EventMappings.StartDate.name],
-				end = rec.data[EventMappings.EndDate.name],
+		var me = this,
+				EM = Sonicle.calendar.data.EventMappings,
+				start = rec.data[EM.StartDate.name],
+				end = rec.data[EM.EndDate.name],
 				diff = newStartDate.getTime() - start.getTime();
 		
 		rec.beginEdit();
-		rec.set(EventMappings.StartDate.name, newStartDate);
-		rec.set(EventMappings.EndDate.name, Sonicle.Date.add(end, {millis: diff}));
-		if (rec.phantom) this.store.add(rec);
+		rec.set(EM.StartDate.name, newStartDate);
+		rec.set(EM.EndDate.name, Sonicle.Date.add(end, {millis: diff}));
 		rec.endEdit();
-		//rec.commit();
+		if(rec.phantom) me.store.add(rec);
 
-		this.fireEvent('event' + moveOrCopy, this, rec);
+		me.fireEvent('event' + moveOrCopy, me, rec);
+	},
+	
+	doEventTitleUpdate: function(rec, newTitle) {
+		rec.beginEdit();
+		rec.set(Sonicle.calendar.data.EventMappings.Title.name, newTitle);
+		rec.endEdit();
+		this.fireEvent('eventTitleUpdate', this, rec);
 	}
 });

@@ -22,6 +22,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system]
+	 * Defines system public path in which store public services resources
+	 */
+	public static final String SYSTEM_PATH_PUBLIC = "system.path.public";
+	
+	/**
+	 * [string][system]
 	 * Defines system default language locale
 	 */
 	public static final String SYSTEM_LANGUAGE = "system.language";
@@ -43,6 +49,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * Stores installed service version
 	 */
 	public static final String MANIFEST_VERSION = "manifest.version";
+	
+	/**
+	 * [string][system][*]
+	 * Specifies the service public name to use typically in public URLs.
+	 * If specified it overrides the generated one (see ServiceManager).
+	 */
+	public static final String PUBLIC_NAME = "public.name";
 	
 	/**
 	 * [string][system+domain][*]
@@ -105,6 +118,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getTempPath() {
 		return getString(TMP, null);
+	}
+	
+	public String getSystemPublicPath() {
+		return getString(SYSTEM_PATH_PUBLIC, null);
 	}
 	
 	public String getUserDataProvider() {

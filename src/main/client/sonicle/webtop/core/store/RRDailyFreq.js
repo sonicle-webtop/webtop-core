@@ -31,25 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import java.text.MessageFormat;
-
-/**
- *
- * @author malbinola
- */
-public class WTException extends Exception {
+Ext.define('Sonicle.webtop.core.store.RRDailyFreq', {
+	alternateClassName: 'WT.store.RRDailyFreq',
+	extend: 'Ext.data.ArrayStore',
 	
-	public WTException() {
-		super();
-	}
-	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
-	}
-	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
-	}
-}
+	autoLoad: true,
+	model: 'WT.model.Value',
+	data: [
+		[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],
+		[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],
+		[21],[22],[23],[24],[25],[26],[27],[28],[29]
+	]
+});

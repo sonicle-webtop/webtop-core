@@ -4,10 +4,9 @@
  * sonicle@sonicle.com
  * http://www.sonicle.com
  */
-Ext.define('Sonicle.picker.Date', {
-	alternateClassName: 'Sonicle.DatePicker',
+Ext.define('Sonicle.calendar.DatePicker', {
 	extend: 'Ext.picker.Date',
-	alias: 'widget.sodatepicker',
+	alias: 'widget.socalendarpicker',
 	
 	config: {
 		/**
@@ -15,6 +14,10 @@ Ext.define('Sonicle.picker.Date', {
 		 * False to prevent the month picker being displayed.
 		 */
 		showMonthpicker: true,
+		
+		ddTargetCls: '',
+		
+		highlightCls: '',
 		
 		/**
 		 * @cfg {Boolean} highlightPrevDays
@@ -98,8 +101,52 @@ Ext.define('Sonicle.picker.Date', {
 	},
 	
 	onRender: function(container, position) {
-		var me = this;
+		var me = this, tbody;
 		me.callParent(arguments);
+		
+		tbody = me.eventEl.select('tbody').elements[0];
+		me.dddz = Ext.create('Ext.dd.DropZone', tbody, {
+			view: me,
+			
+			getTargetFromEvent: function(e) {
+				var cellEl = e.getTarget('.x-datepicker-cell', 2, true);
+				return (cellEl) ? cellEl : null;
+			},
+			
+			onNodeEnter: function(target, dd, e, data) {
+				var cls = this.view.ddTargetCls;
+				if(!Ext.isEmpty(cls)) Ext.fly(target).addCls(cls);
+			},
+			
+			onNodeOut: function(target, dd, e, data) {
+				var cls = this.view.ddTargetCls;
+				if(!Ext.isEmpty(cls)) Ext.fly(target).removeCls(cls);
+			},
+			
+			onNodeOver: function(target, dd, e, data) {
+				var self = this,
+						dz = dd.view.dropZone,
+						cellDate = self.extractDate(target),
+						newDate = Sonicle.Date.copyDate(cellDate, data.eventStart);
+				dz.updateProxy(e, data, newDate, newDate);
+				return self.dropAllowed;
+			},
+			
+			onNodeDrop: function(target, dd, e, data) {
+				var self = this,
+						dz = dd.view.dropZone,
+						cellDate = self.extractDate(target),
+						newDate = Sonicle.Date.copyDate(cellDate, data.eventStart);
+				dz.onNodeDrop({date: newDate}, dd, e, data);
+			},
+			
+			extractDate: function(targetEl) {
+				var dtEl = targetEl.down('.x-datepicker-date', true);
+				return new Date(dtEl.dateValue);
+			}
+		});
+		me.dddz.addToGroup('DayViewDD');
+		me.dddz.addToGroup('MonthViewDD');
 		
 		// Overrides default behaviour in order to make some tunings:
 		// we need to completely disable monthpicker making also its
@@ -236,10 +283,14 @@ Ext.define('Sonicle.picker.Date', {
 			d = new Date(dv);
 			
 			// Highlight days in current view...
-			if((dv >= tfrom) && (dv <= tto)) {
-				cell.first().setStyle('background-color', '#eaf3fa');
-			} else {
-				cell.first().setStyle('background-color', '');
+			if(!Ext.isEmpty(me.highlightCls)) {
+				if((dv >= tfrom) && (dv <= tto)) {
+					cell.first().addCls(me.highlightCls);
+					//cell.first().setStyle('background-color', '#eaf3fa');
+				} else {
+					cell.first().removeCls(me.highlightCls);
+					//cell.first().setStyle('background-color', '');
+				}
 			}
 			
 			// Removes selection on the first day if it differs from highlight date
@@ -253,7 +304,7 @@ Ext.define('Sonicle.picker.Date', {
 				formatValue = eDate.dateFormat(d, fmt);
 				bold = bdMatch.test(formatValue);
 			}
-			cell.first().setStyle('font-weight', (bold) ? '800' : '');
+			cell.first().setStyle('font-weight', (bold) ? '600' : '');
 			
 			// Hide cells...
 			if((me.hidePrevDays && (dv < t1)) || (me.hideNextDays && (dv > t31))) {
@@ -263,6 +314,21 @@ Ext.define('Sonicle.picker.Date', {
 			}
 		}
 	},
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	showPrevMonth: function(e) {
 		var me = this;

@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.store.TimeFormat', {
 	alternateClassName: 'WT.store.TimeFormat',
 	extend: 'Ext.data.ArrayStore',
 	
-	autoLoad: true,
 	model: 'WT.model.Simple',
 	data: [
 		['24h', WT.res('store.timeformat.24h')],

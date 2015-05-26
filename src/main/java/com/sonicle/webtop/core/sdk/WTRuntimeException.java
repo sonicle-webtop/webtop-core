@@ -41,6 +41,10 @@ import java.text.MessageFormat;
  */
 public class WTRuntimeException extends RuntimeException {
 	
+	public WTRuntimeException() {
+		super();
+	}
+	
 	public WTRuntimeException(String message, Object... arguments) {
 		super(MessageFormat.format(message, arguments));
 	}

@@ -31,25 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import java.text.MessageFormat;
-
-/**
- *
- * @author malbinola
- */
-public class WTException extends Exception {
+Ext.define('Sonicle.webtop.core.model.ActivityLkp', {
+	alternateClassName: 'WT.model.ActivityLkp',
+	extend: 'WT.model.Base',
 	
-	public WTException() {
-		super();
-	}
-	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
-	}
-	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
-	}
-}
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'int', false),
+		WTF.field('desc', 'string', true),
+		WTF.field('status', 'string', false),
+		WTF.field('readOnly', 'boolean', false)
+	]
+});

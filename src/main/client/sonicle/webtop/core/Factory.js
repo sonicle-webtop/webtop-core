@@ -221,7 +221,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * Helper method for building a calculated {@link Ext.data.field.Field field} config.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
-	 * @param {String} depends See {@link Ext.data.field.Field#depends}
+	 * @param {String/String[]} depends See {@link Ext.data.field.Field#depends}
 	 * @param {Function} convert See {@link Ext.data.field.Field#convert}
 	 * @param {Object} [cfg] Custom config to apply.
 	 * @returns {Object} The field config
@@ -238,7 +238,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/**
-	 * elper method for building a readOnly {@link Ext.data.field.Field field} config.
+	 * Helper method for building a readOnly {@link Ext.data.field.Field field} config.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
 	 * @param {Object} [cfg] Custom config to apply.
@@ -253,16 +253,44 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, cfg);
 	},
 	
-	localCombo: function(cfg) {
+	localCombo: function(valueField, displayField, cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
 			xtype: 'combo',
 			typeAhead: true,
 			queryMode: 'local',
 			forceSelection: true,
+			selectOnFocus: true,
 			triggerAction: 'all',
-			valueField: 'id',
-			displayField: 'desc'
+			valueField: valueField,
+			displayField: displayField,
+			submitEmptyText: false
+		}, cfg);
+	},
+	
+	remoteCombo: function(valueField, displayField, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			xtype: 'combo',
+			typeAhead: true,
+			queryMode: 'remote',
+			minChars: 2,
+			forceSelection: true,
+			selectOnFocus: true,
+			triggerAction: 'all',
+			valueField: valueField,
+			displayField: displayField,
+			submitEmptyText: false
+		}, cfg);
+	},
+	
+	clearTrigger: function(cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			type: 'clear',
+			weight: -1,
+			hideWhenEmpty: true,
+			hideWhenMouseOut: true
 		}, cfg);
 	},
 	
@@ -320,6 +348,13 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	*/
 	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to perform a two-way binding between checkbox and a boolean field.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @returns {Object} Formula configuration object
+	 */
 	checkboxBind: function(modelProp, fieldName) {
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
@@ -332,20 +367,58 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		};
 	},
 	
-	checkboxGroupBind: function(modelProp, fieldName) {
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to perform a two-way binding between checkboxgroup and a model's field.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {String} [objProp] Property name to set into value object. Defaults to fieldName.
+	 * @returns {Object} Formula configuration object
+	 */
+	checkboxGroupBind: function(modelProp, fieldName, objProp) {
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
 			get: function(val) {
 				var ret = {};
-				ret[fieldName] = val;
+				ret[objProp || fieldName] = val;
 				return ret;
 			},
 			set: function(val) {
-				this.get(modelProp).set(fieldName, val[fieldName]);
+				this.get(modelProp).set(fieldName, val[objProp || fieldName]);
 			}
 		};
 	},
 	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to perform a two-way binding between radiogroup and a model's field.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {String} [objProp] Property name to set into value object. Defaults to fieldName.
+	 * @returns {Object} Formula configuration object
+	 */
+	radioGroupBind: function(modelProp, fieldName, objProp) {
+		return {
+			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			get: function(val) {
+				var ret = {};
+				ret[objProp || fieldName] = val;
+				return ret;
+			},
+			set: function(val) {
+				this.get(modelProp).set(fieldName, val[objProp || fieldName]);
+			}
+		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
+	 * equality between a model's field and passed value.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {Mixed} equalsTo Value to match.
+	 * @returns {Object} Formula configuration object
+	 */
 	equalsFormula: function(modelProp, fieldName, equalsTo) {
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},

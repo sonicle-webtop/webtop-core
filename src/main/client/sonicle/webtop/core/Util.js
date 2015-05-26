@@ -183,15 +183,22 @@ Ext.define('Sonicle.webtop.core.Util', {
 	
 	/**
 	 * Applies extra params to passed proxy.
-	 * @param {Ext.data.proxy.Proxy} proxy The proxy.
+	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
 	 * @param {Object} params Extra params to apply.
 	 * @param {Boolean overwrite 'true' to overwrite previous params, 'false' to merge them.
 	 */
 	applyExtraParams: function(proxy, params, overwrite) {
 		if(arguments.length === 2) overwrite = false;
-		if(!proxy.isProxy) return;
+		if(!proxy.isProxy && !proxy.isStore) return;
+		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
 		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
 		proxy.setExtraParams(obj);
+	},
+	
+	loadExtraParams: function(store, params, overwrite) {
+		if(!store.isStore) return;
+		WTU.applyExtraParams(store, params, overwrite);
+		store.load();
 	},
 	
 	/*
@@ -210,22 +217,81 @@ Ext.define('Sonicle.webtop.core.Util', {
 		return typename;
 	},
 	
+	humanReadableDuration: function(seconds, opts) {
+		opts = opts || {};
+		opts.unitSeparator = opts.unitSeparator || ' ';
+		var remaining = seconds,
+				value, values, out, unitkey,
+				units = [
+					{name: 'years', value: 31536000},
+					{name: 'months', value: 2628000},
+					{name: 'weeks', value: 604800},
+					{name: 'days', value: 86400},
+					{name: 'hours', value: 3600},
+					{name: 'minutes', value: 60},
+					{name: 'seconds', value: 1}
+				];
+		
+		values = [];
+		Ext.iterate(units, function(unit, i) {
+			if(Ext.isArray(opts.units)) {
+				if(opts.units.indexOf(unit.name) < 0) return;
+			}
+			value = Math.floor(remaining / unit.value);
+			if(value > 0) {
+				values.push({
+					unit: unit.name,
+					value: value
+				});
+				remaining = remaining % unit.value;
+			}
+			if(remaining <= 0) return false;
+		});
+		
+		out = [];
+		Ext.iterate(values, function(value) {
+			unitkey = (value.value > 1) ? value.unit : value.unit.substring(0, value.unit.length-1);
+			out.push(value.value + opts.unitSeparator + WT.res('word.time.' + unitkey));
+		});
+		
+		return out.join(' ');
+	},
+	
 	/*
-	 * Format a human readble version of the passed size argument (xKB,xMB)
-	 * @param {int} value The value of size to be formatted
-	 * @return {String} The value if less than 1024, else xKB, xMB
+	 * Converts passed value in bytes in a human readable format.(eg. like '10 KB' or '100 MB')
+	 * @param {int} bytes The value in bytes
+	 * @param {Boolean} [opts.si] Whether to use the SI multiple (1000) or binary one (1024)
+	 * @param {Boolean} [opts.siUnits] Whether to use the SI units labels or binary ones
+	 * @param {String} [unitSeparator] Separator to use between value and unit
+	 * @return {String} The formatted string
 	 */
-	humanReadableSize: function(value) {
-		var s = value;
-		value = parseInt(value/1024);
-		if(value > 0) {
-			if(value < 1024) {
-				s = value + "KB";
+	humanReadableSize: function(bytes, opts) {
+		opts = opts || {};
+		opts.unitSeparator = opts.unitSeparator || '';
+		var thresh = (opts.si) ? 1000 : 1024,
+				units = (opts.siUnits) ? ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'] : ['kB','MB','GB','TB','PB','EB','ZB','YB'],
+				u;
+		if(Math.abs(bytes) < thresh) return bytes + opts.unitSeparator + 'B';
+		
+		u = -1;
+		do {
+			bytes /= thresh;
+			++u;
+		} while(Math.abs(bytes) >= thresh && u < units.length - 1);
+		return bytes.toFixed(1) + opts.unitSeparator + units[u];
+		
+		/*
+		var s = bytes;
+		bytes = parseInt(bytes/1024);
+		if(bytes > 0) {
+			if(bytes < 1024) {
+				s = bytes + "KB";
 			} else {
-				s = parseInt(value/1024) + "MB";
+				s = parseInt(bytes/1024) + "MB";
 			}
 		}
 		return s;
+		*/
 	},
 	
 	/*

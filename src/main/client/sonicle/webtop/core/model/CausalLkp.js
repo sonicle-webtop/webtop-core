@@ -31,15 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.RRDaylyFreq', {
-	alternateClassName: 'WT.store.RRDaylyFreq',
-	extend: 'Ext.data.ArrayStore',
+Ext.define('Sonicle.webtop.core.model.CausalLkp', {
+	alternateClassName: 'WT.model.CausalLkp',
+	extend: 'WT.model.Base',
 	
-	autoLoad: true,
-	model: 'WT.model.Value',
-	data: [
-		[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],
-		[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],
-		[21],[22],[23],[24],[25],[26],[27],[28],[29]
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'int', false),
+		WTF.field('desc', 'string', true),
+		WTF.field('status', 'string', false),
+		WTF.field('readOnly', 'boolean', false)
 	]
 });

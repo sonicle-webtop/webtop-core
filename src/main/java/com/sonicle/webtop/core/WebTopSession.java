@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -257,7 +258,7 @@ public class WebTopSession {
 	private void addService(BaseService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(services) {
-			if(services.containsKey(serviceId)) throw new RuntimeException("Cannot add service twice");
+			if(services.containsKey(serviceId)) throw new WTRuntimeException("Cannot add service twice");
 			services.put(serviceId, service);
 		}
 	}
@@ -269,7 +270,7 @@ public class WebTopSession {
 	 */
 	public BaseService getServiceById(String serviceId) {
 		synchronized(services) {
-			if(!services.containsKey(serviceId)) throw new RuntimeException(MessageFormat.format("No service with ID: '{0}'", serviceId));
+			if(!services.containsKey(serviceId)) throw new WTRuntimeException("No service with ID: '{0}'", serviceId);
 			return services.get(serviceId);
 		}
 	}

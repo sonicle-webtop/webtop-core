@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.store.TFADelivery', {
 	alternateClassName: 'WT.store.TFADelivery',
 	extend: 'Ext.data.ArrayStore',
 	
-	autoLoad: true,
 	model: 'WT.model.Simple',
 	data: [
 		['email', WT.res('store.tfadelivery.email')],

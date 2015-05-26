@@ -33,10 +33,41 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.servlet.PublicServiceRequest;
+import java.net.MalformedURLException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  *
  * @author malbinola
  */
-public abstract class BasePublicService {
+public abstract class BasePublicService extends BaseBaseService {
 	
+	private boolean configured = false;
+	
+	public final void configure() {
+		if(configured) return;
+		configured = true;
+	}
+	
+	public abstract void processDefault(HttpServletRequest request, HttpServletResponse response) throws Exception;
+	
+	protected String extractPublicName(String pathInfo) throws MalformedURLException {
+		String[] tokens = StringUtils.split(pathInfo, "/", 2);
+		if(tokens.length != 2) throw new MalformedURLException("Invalid URL");
+		return tokens[0];
+	}
+	
+	protected String extractContext(String pathInfo) throws MalformedURLException {
+		String[] tokens = StringUtils.split(pathInfo, "/", 2);
+		if(tokens.length != 2) throw new MalformedURLException("Invalid URL");
+		return tokens[1];
+	}
+	
+	protected String getPublicResourcesBaseUrl() {
+		return PublicServiceRequest.PUBLIC_RESOURCES;
+	}
 }

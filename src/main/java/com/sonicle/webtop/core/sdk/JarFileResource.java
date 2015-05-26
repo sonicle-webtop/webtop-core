@@ -33,23 +33,43 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import java.text.MessageFormat;
+import java.io.InputStream;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 /**
  *
  * @author malbinola
  */
-public class WTException extends Exception {
+public class JarFileResource implements Resource {
+	private final JarFile jarFile;
+	private final String jarEntryName;
+	private final ZipEntry ze;
 	
-	public WTException() {
-		super();
+	public JarFileResource(JarFile jarFile, String jarEntryName) {
+		this.jarFile = jarFile;
+		this.jarEntryName = jarEntryName;
+		ze = jarFile.getEntry(jarEntryName);
+		if((ze == null) || (ze.isDirectory())) throw new WTRuntimeException("Requested entry is directory");
 	}
-	
-	public WTException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
+
+	@Override
+	public String getFilename() {
+		return jarEntryName;
 	}
-	
-	public WTException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
+
+	@Override
+	public long getLastModified() {
+		return ze.getTime();
+	}
+
+	@Override
+	public long getSize() {
+		return ze.getSize();
+	}
+
+	@Override
+	public InputStream getInputStream() throws Exception {
+		return jarFile.getInputStream(ze);
 	}
 }

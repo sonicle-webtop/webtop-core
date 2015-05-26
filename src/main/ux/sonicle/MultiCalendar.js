@@ -9,7 +9,7 @@ Ext.define('Sonicle.MultiCalendar', {
 	alias: 'widget.somulticalendar',
 	
 	requires: [
-		'Sonicle.picker.Date'
+		'Sonicle.calendar.DatePicker'
 	],
 	mixins: [
 		'Ext.form.field.Field',
@@ -172,13 +172,15 @@ Ext.define('Sonicle.MultiCalendar', {
 			first = (i === 0);
 			last = (i === months-1);
 			me.add(Ext.create({
-				xtype: 'sodatepicker',
+				xtype: 'socalendarpicker',
 				border: false,
 				showToday: false,
 				showMonthpicker: first,
 				startDay: me.startDay,
 				highlightMode: me.highlightMode,
 				boldDates: me.dates,
+				ddTargetCls: 'so-multical-dd-target',
+				highlightCls: 'so-multical-highlight',
 				highlightPrevDays: first,
 				highlightNextDays: last,
 				hidePrevDays: !first,
