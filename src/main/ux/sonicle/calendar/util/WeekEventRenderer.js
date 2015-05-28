@@ -49,7 +49,6 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 					wGrid;
 			
 			//TODO: valutare se modificare la funzione come l'exensible
-			console.log('maxEventsPerDay: '+o.maxEventsPerDay);
 			
 			// Loop through each week in the overall event grid
 			for (; wi < weekCount; wi++) {

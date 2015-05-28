@@ -40,7 +40,9 @@ import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.sdk.Resource;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -85,31 +87,31 @@ public class ResourceRequest extends HttpServlet {
 	private static final ConcurrentHashMap<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
 	
 	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		lookup(req).respondGet(resp);
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		lookup(request).respondGet(request, response);
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		lookup(req).respondGet(resp);
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		lookup(request).respondGet(request, response);
 	}
 	
 	@Override
-	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doHead(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
-			lookup(req).respondHead(resp);
+			lookup(request).respondHead(request, response);
 		} catch(UnsupportedOperationException ex) {
-			super.doHead(req, resp);
+			super.doHead(request, response);
 		}
 	}
 	
 	@Override
-	protected long getLastModified(HttpServletRequest req) {
-		String pathInfo = req.getPathInfo();
+	protected long getLastModified(HttpServletRequest request) {
+		String pathInfo = request.getPathInfo();
 		if(lastModifiedCache.containsKey(pathInfo)) {
 			return lastModifiedCache.get(pathInfo);
 		} else {
-			return lookup(req).getLastModified();
+			return lookup(request).getLastModified();
 		}
 		//return lookup(req).getLastModified();
 	}
@@ -221,16 +223,14 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = this.getClass().getResource(path);
 			}
 			
-			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
 	}
@@ -248,8 +248,8 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = this.getClass().getResource(path);
 			}
 			
-			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -277,8 +277,8 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "default", lastPath));
 			}
 			
-			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -314,8 +314,8 @@ public class ResourceRequest extends HttpServlet {
 			String override = manifest.getServiceJsClassName(true);
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
-			LookupFile lf = getFile(fileUrl);
-			return new LocaleJsFile(clazz, override, fileUrl.toString(), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new LocaleJsFile(clazz, override, fileUrl.toString(), resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -343,16 +343,14 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = this.getClass().getResource(path);
 			}
 			
-			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
 		
 		} catch (ForbiddenException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
-			ex.printStackTrace();
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
 	}
@@ -364,8 +362,8 @@ public class ResourceRequest extends HttpServlet {
 		
 		try {
 			fileUrl = this.getClass().getResource(path);
-			LookupFile lf = getFile(fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), lf, ServletUtils.acceptsDeflate(request));
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -376,46 +374,21 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupFile getFile(URL url) throws ResourceRequest.ForbiddenException, ResourceRequest.NotFoundException, ResourceRequest.InternalServerException {
+	private Resource getFile(WebTopApp wta, URL url) throws ResourceRequest.ForbiddenException, ResourceRequest.NotFoundException, ResourceRequest.InternalServerException {
+		Resource resource = null;
 		if(url == null) throw new ResourceRequest.NotFoundException();
 		
 		String protocol = url.getProtocol();
 		if(protocol.equals("file")) {
 			try {
-				File file = new File(url.toURI());
-				if (!file.isFile()) throw new ResourceRequest.ForbiddenException();
-				//logger.trace("File lastModified: {}", new Date(file.lastModified()));
-				return new LookupFile(file.lastModified(), file.length(), new FileInputStream(file));
-				
-			} catch(URISyntaxException ex) {
+				resource = wta.getFileResource(url);
+			} catch(URISyntaxException | MalformedURLException | WTRuntimeException ex) {
 				throw new ResourceRequest.InternalServerException();
-			} catch(FileNotFoundException ex) {
-				throw new ResourceRequest.NotFoundException();
 			}
 		} else if(protocol.equals("jar")) {
-			
 			try {
-				String surl = url.toString();
-				int ix = surl.lastIndexOf("!/");
-				if (ix < 0) throw new ResourceRequest.InternalServerException();
-
-				String jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
-				String jarEntryName = surl.substring(ix + 2);
-				//logger.trace("jarFileName: {} - jarEntryName: {}", jarFileName, jarEntryName);
-				
-				File file = new File(jarFileName);
-				JarFile jarFile = new JarFile(file);
-				final ZipEntry ze = jarFile.getEntry(jarEntryName);
-				
-				if (ze != null) {
-					if (ze.isDirectory()) throw new ResourceRequest.ForbiddenException();
-					//logger.trace("ZipEntry lastModified: {}", new Date(ze.getTime()));
-					return new LookupFile(ze.getTime(), ze.getSize(), jarFile.getInputStream(ze));
-				} else {
-					return new LookupFile(-1, -1, url.openStream());
-				}
-				
-			} catch(UnsupportedEncodingException ex) {
+				resource = wta.getJarResource(url);
+			} catch(URISyntaxException | MalformedURLException | WTRuntimeException ex) {
 				throw new ResourceRequest.InternalServerException();
 			} catch(IOException ex) {
 				throw new ResourceRequest.NotFoundException();
@@ -423,18 +396,9 @@ public class ResourceRequest extends HttpServlet {
 		} else {
 			throw new ResourceRequest.InternalServerException();
 		}
-	}
-	
-	public class LookupFile {
-		public long lastModified;
-		public long contentLength;
-		public InputStream inputStream;
 		
-		public LookupFile(long lastModified, long contentLength, InputStream is) {
-			this.lastModified = lastModified;
-			this.contentLength = contentLength;
-			this.inputStream = is;
-		}
+		if(resource == null) throw new ResourceRequest.NotFoundException();
+		return resource;
 	}
 	
 	public class NotFoundException extends Exception {
@@ -468,96 +432,59 @@ public class ResourceRequest extends HttpServlet {
 		return LangUtils.coalesce(getServletContext().getMimeType(path), "application/octet-stream");
 	}
 
-	protected static boolean deflatable(String mimetype) {
-		return ServletUtils.isDeflatable(mimetype);
-	}
-
 	public static interface LookupResult {
-		public void respondGet(HttpServletResponse resp) throws IOException;
-		public void respondHead(HttpServletResponse resp);
+		public void respondGet(HttpServletRequest request, HttpServletResponse response) throws IOException;
+		public void respondHead(HttpServletRequest request, HttpServletResponse response);
 		public long getLastModified();
-	}
-
-	public static class Error implements LookupResult {
-		protected final int statusCode;
-		protected final String message;
-
-		public Error(int statusCode, String message) {
-			this.statusCode = statusCode;
-			this.message = message;
-		}
-		
-		@Override
-		public long getLastModified() {
-			return -1;
-		}
-		
-		@Override
-		public void respondGet(HttpServletResponse resp) throws IOException {
-			resp.sendError(statusCode, message);
-		}
-		
-		@Override
-		public void respondHead(HttpServletResponse resp) {
-			throw new UnsupportedOperationException();
-		}
 	}
 	
 	public static class StaticFile implements LookupResult {
 		protected final String url;
-		protected long lastModified;
 		protected final String mimeType;
 		protected final String charset;
-		protected int contentLength;
-		protected final boolean acceptsDeflate;
-		protected InputStream inputStream;
+		protected final Resource resourceFile;
 		
-		public StaticFile(String url, String mimeType, LookupFile lf, boolean acceptsDeflate) {
-			this(url, mimeType, null, lf, acceptsDeflate);
+		public StaticFile(String url, String mimeType, Resource resourceFile) {
+			this(url, mimeType, null, resourceFile);
 		}
 		
-		public StaticFile(String url, String mimeType, String charset, LookupFile lf, boolean acceptsDeflate) {
-			this(url, mimeType, charset, lf.lastModified, (int)lf.contentLength, lf.inputStream, acceptsDeflate);
-		}
-		
-		public StaticFile(String url, String mimeType, String charset, long lastModified, int contentLength, InputStream is, boolean acceptsDeflate) {
+		public StaticFile(String url, String mimeType, String charset, Resource resourceFile) {
 			this.url = url;
 			this.mimeType = mimeType;
 			this.charset = charset;
-			this.lastModified = lastModified;
-			this.contentLength = contentLength;
-			this.acceptsDeflate = acceptsDeflate;
-			this.inputStream = is;
+			this.resourceFile = resourceFile;
 		}
 		
-		protected InputStream getInputStream() {
-			return inputStream;
+		protected void prepareContent() throws IOException {
+			// Do nothing...
+		}
+		
+		protected InputStream getInputStream() throws IOException {
+			return resourceFile.getInputStream();
+		}
+		
+		protected int getContentLength() {
+			return (int)resourceFile.getSize();
 		}
 
 		@Override
-		public void respondGet(HttpServletResponse resp) throws IOException {
-			final OutputStream os;
+		public void respondGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+			OutputStream os = null;
+			InputStream is = null;
 			
-			resp.setHeader("Cache-Control", "private, no-cache");
-			resp.setStatus(HttpServletResponse.SC_OK);
-			resp.setContentType(mimeType);
-			if(charset != null) resp.setCharacterEncoding(charset);
-			
-			if(willDeflate()) {
-				resp.setHeader("Content-Encoding", "gzip");
-				os = new GZIPOutputStream(resp.getOutputStream(), BUFFER_SIZE);
-			} else {
-				// Content length is not directly predictable in case of GZIP.
-				// So only add it if there is no means of GZIP, else browser will hang.
-				if(contentLength >= 0) resp.setContentLength(contentLength);
-				os = resp.getOutputStream();
-			}
-			
-			//TODO: Why IOUtils.copy is not working?
-			InputStream is = getInputStream();
 			try {
+				prepareContent();
+				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
+				ServletUtils.setContentTypeHeader(response, mimeType);
+				if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
+					ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24);
+				} else {
+					ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+				}
+				is = getInputStream();
 				ServletUtils.transferStreams(is, os);
-				//IOUtils.copy(is, os);
+				os.flush();
+				response.setStatus(HttpServletResponse.SC_OK);
 			} finally {
 				IOUtils.closeQuietly(os);
 				IOUtils.closeQuietly(is);
@@ -565,39 +492,49 @@ public class ResourceRequest extends HttpServlet {
 		}
 
 		@Override
-		public void respondHead(HttpServletResponse resp) {
+		public void respondHead(HttpServletRequest request, HttpServletResponse response) {
 			
 		}
 
 		@Override
 		public long getLastModified() {
-			return lastModified;
-		}
-		
-		protected boolean willDeflate() {
-			return acceptsDeflate && deflatable(mimeType) && (contentLength >= DEFLATE_THRESHOLD);
+			return resourceFile.getLastModified();
 		}
 	}
 	
 	public static class LocaleJsFile extends StaticFile {
 		protected String clazz;
 		protected String override;
+		protected String json = null;
+		protected int contentLength = -1;
 		
-		public LocaleJsFile(String clazz, String override, String url, LookupFile lf, boolean acceptsDeflate) {
-			super(url, "application/javascript", "utf-8", lf.lastModified, -1, lf.inputStream, acceptsDeflate);
+		public LocaleJsFile(String clazz, String override, String url, Resource resourceFile) {
+			super(url, "application/javascript", "utf-8", resourceFile);
 			this.clazz = clazz;
 			this.override = override;
 		}
 		
 		@Override
-		public InputStream getInputStream() {
-			String strings = loadProperties(inputStream);
-			IOUtils.closeQuietly(inputStream);
-			inputStream = null;
+		protected void prepareContent() throws IOException {
+			InputStream is = resourceFile.getInputStream();
+			String strings = loadProperties(is);
+			IOUtils.closeQuietly(is);
+			is = null;
 			
-			String json = buildLocaleJson(clazz, strings);
+			json = buildLocaleJson(clazz, strings);
 			contentLength = json.getBytes().length;
+		}
+		
+		@Override
+		public InputStream getInputStream() throws IOException {
+			if(json == null) throw new WTRuntimeException("This method needs to be called after prepareContent()");
 			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
+		}
+		
+		@Override
+		protected int getContentLength() {
+			if(contentLength == -1) throw new WTRuntimeException("This method needs to be called after prepareContent()");
+			return contentLength;
 		}
 		
 		private String buildLocaleJson(String clazz, String strings) {
@@ -645,6 +582,31 @@ public class ResourceRequest extends HttpServlet {
 			}
 				
 			return "{" + StringUtils.join(strings, ",") + "}";
+		}
+	}
+	
+	public static class Error implements LookupResult {
+		protected final int statusCode;
+		protected final String message;
+
+		public Error(int statusCode, String message) {
+			this.statusCode = statusCode;
+			this.message = message;
+		}
+		
+		@Override
+		public long getLastModified() {
+			return -1;
+		}
+		
+		@Override
+		public void respondGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+			response.sendError(statusCode, message);
+		}
+		
+		@Override
+		public void respondHead(HttpServletRequest request, HttpServletResponse response) {
+			throw new UnsupportedOperationException();
 		}
 	}
 }

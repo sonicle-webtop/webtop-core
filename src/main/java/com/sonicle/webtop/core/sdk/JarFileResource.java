@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -69,7 +70,7 @@ public class JarFileResource implements Resource {
 	}
 
 	@Override
-	public InputStream getInputStream() throws Exception {
+	public InputStream getInputStream() throws IOException {
 		return jarFile.getInputStream(ze);
 	}
 }

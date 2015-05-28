@@ -5,6 +5,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
 		'Sonicle.Date',
+		'Sonicle.PrintManager',
 		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Factory',

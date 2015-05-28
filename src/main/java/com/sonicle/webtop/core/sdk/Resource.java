@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -44,5 +45,5 @@ public interface Resource {
 	public String getFilename();
 	public long getLastModified();
 	public long getSize();
-	public InputStream getInputStream() throws Exception;
+	public InputStream getInputStream() throws IOException;
 }

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -65,7 +66,7 @@ public class FileResource implements Resource {
 	}
 
 	@Override
-	public InputStream getInputStream() throws Exception {
+	public InputStream getInputStream() throws IOException {
 		return new FileInputStream(file);
 	}
 }
