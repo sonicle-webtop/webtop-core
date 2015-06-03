@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PropertiesEx;
+import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
@@ -45,25 +46,18 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -82,6 +76,14 @@ public class ResourceRequest extends HttpServlet {
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
+	private static final Pattern PATTERN_VIRTUAL_URL = Pattern.compile("^"
+			+ RegexUtils.MATCH_URL_SEPARATOR
+			+ RegexUtils.capture(RegexUtils.MATCH_JAVA_PACKAGE)
+			+ RegexUtils.MATCH_URL_SEPARATOR
+			+ RegexUtils.capture(RegexUtils.MATCH_SW_VERSION)
+			+ RegexUtils.MATCH_URL_SEPARATOR
+			+ RegexUtils.capture(RegexUtils.MATCH_ANY)
+			+ "$");
 	private static final Pattern PATTERN_LAF_PATH = Pattern.compile("^laf\\/([\\w\\-\\.]+)\\/(.*)$");
 	private static final Pattern PATTERN_LOCALE_FILE = Pattern.compile("^(Locale_(\\w*)).js$");
 	private static final ConcurrentHashMap<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
@@ -135,23 +137,54 @@ public class ResourceRequest extends HttpServlet {
 	
 	protected LookupResult lookupNoCache(HttpServletRequest req, String reqPath) {
 		String subject = null, subjectPath = null, jsPath = null, path = null, translPath = null;
-		boolean isService = false;
+		boolean isVirtualUrl = false, jsPathFound = false;
 		URL translUrl = null;
 		
 		// Builds a convenient URL for the servlet relative URL
 		try {
 			//String reqPath = req.getPathInfo();
 			//logger.trace("Requested path [{}]", reqPath);
-			String[] urlParts = splitPath(reqPath);
-			subject = urlParts[0];
-			jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
-			subjectPath = (jsPath == null) ? urlParts[0] : jsPath;
-			isService = (jsPath != null);
-			//subjectPath = StringUtils.replace(paths[0], ".", "/");
-			path = urlParts[1];
-			//logger.trace("{}, {}", subject, path);
+			
+			Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
+			if(matcher.matches()) {
+				// Matches URLs like: /{service.id}/{service.version}/{remaining.url.part}
+				// Eg. /com.sonicle.webtop.core/5.1.1/laf/default/service.css
+				//	{service.id} -> com.sonicle.webtop.core
+				//	{service.version} -> 5.1.1
+				//	{remaining.url.part} -> laf/default/service.css
+				
+				isVirtualUrl = true;
+				subject = matcher.group(1);
+				jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
+				jsPathFound = (jsPath != null);
+				subjectPath = (jsPathFound) ? jsPath : subject;
+				path = matcher.group(3);
+			} else {
+				isVirtualUrl = false;
+				String[] urlParts = splitPath(reqPath);
+				subject = urlParts[0];
+				jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
+				jsPathFound = (jsPath != null);
+				subjectPath = (jsPathFound) ? jsPath : urlParts[0];
+				path = urlParts[1];
+			}
+			
+			//String[] urlParts = splitPath(reqPath);
+			//subject = urlParts[0];
+			//System.out.println("subject: "+subject);
+			//jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
+			//System.out.println("jsPath: "+jsPath);
+			//subjectPath = (jsPath == null) ? urlParts[0] : jsPath;
+			//System.out.println("subjectPath: "+subjectPath);
+			//isService = (jsPath != null);
+			////subjectPath = StringUtils.replace(paths[0], ".", "/");
+			//path = urlParts[1];
+			//System.out.println("path: "+path);
+			////logger.trace("{}, {}", subject, path);
 			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			translPath = translUrl.getPath();
+			System.out.println("translPath: "+translPath);
+			
 			//logger.trace("Translated path [{}]", translPath);
 			if (isForbidden(translPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			
@@ -160,29 +193,29 @@ public class ResourceRequest extends HttpServlet {
 		}
 		
 		if(subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
-			return lookupLoginImage(req, translUrl);
+			return lookupLoginImage(req, isVirtualUrl, translUrl);
 			
 		} else if(subject.equals(CoreManifest.ID) && path.equals("license.html")) {
-			return lookupLicense(req, translUrl);
+			return lookupLicense(req, isVirtualUrl, translUrl);
 			
 		} else {
 			if(StringUtils.endsWith(translPath, ".js")) {
 				String baseName = FilenameUtils.getBaseName(translPath);
 				if(StringUtils.startsWith(baseName, "Locale")) {
-					if(!isService) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-					return lookupLocaleJs(req, subject, subjectPath, path, translUrl);
+					if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+					return lookupLocaleJs(req, isVirtualUrl, subject, subjectPath, path, translUrl);
 				
 				} else {
 					boolean debug = System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 					debug = false;
-					return lookupJs(req, translUrl, debug);
+					return lookupJs(req, isVirtualUrl, translUrl, debug);
 				}
 			} else if(StringUtils.startsWith(path, "laf")) {
-				if(!isService) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-				return lookupLAF(req, subject, subjectPath, path, translUrl);
+				if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+				return lookupLAF(req, isVirtualUrl, subject, subjectPath, path, translUrl);
 			
 			} else {
-				return lookupDefault(req, translUrl);
+				return lookupDefault(req, isVirtualUrl, translUrl);
 			}
 		}
 	}
@@ -192,7 +225,7 @@ public class ResourceRequest extends HttpServlet {
 		return this.getClass().getResource(name);
 	}
 	
-	private LookupResult lookupLoginImage(HttpServletRequest request, URL url) {
+	private LookupResult lookupLoginImage(HttpServletRequest request, boolean forceCaching, URL url) {
 		//logger.trace("Looking-up login image");
 		String path = url.getPath();
 		URL fileUrl = null;
@@ -224,7 +257,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -235,7 +268,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLicense(HttpServletRequest request, URL reqUrl) {
+	private LookupResult lookupLicense(HttpServletRequest request, boolean forceCaching, URL reqUrl) {
 		//logger.trace("Looking-up license");
 		String path = reqUrl.getPath();
 		URL fileUrl = null;
@@ -249,7 +282,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -260,7 +293,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLAF(HttpServletRequest request, String serviceId, String subjectPath, String path, URL url) {
+	private LookupResult lookupLAF(HttpServletRequest request, boolean forceCaching, String serviceId, String subjectPath, String path, URL url) {
 		final String LOOKUP_URL = "/{0}/laf/{1}/{2}";
 		URL fileUrl = null;
 		
@@ -278,7 +311,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), forceCaching, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -289,7 +322,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLocaleJs(HttpServletRequest request, String serviceId, String subjectPath, String path, URL url) {
+	private LookupResult lookupLocaleJs(HttpServletRequest request, boolean forceCaching, String serviceId, String subjectPath, String path, URL url) {
 		final String LOOKUP_URL = "/{0}/locale_{1}.properties";
 		//String path = url.getPath();
 		URL fileUrl = null;
@@ -315,7 +348,7 @@ public class ResourceRequest extends HttpServlet {
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new LocaleJsFile(clazz, override, fileUrl.toString(), resFile);
+			return new LocaleJsFile(clazz, override, fileUrl.toString(), forceCaching, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -326,7 +359,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, URL url, boolean debug) {
+	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean debug) {
 		//logger.trace("Looking-up js file");
 		String path = url.getPath();
 		URL fileUrl = null;
@@ -344,7 +377,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
 		
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -355,7 +388,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupDefault(HttpServletRequest request, URL url) {
+	private LookupResult lookupDefault(HttpServletRequest request, boolean forceCaching, URL url) {
 		//logger.trace("Looking-up file as default");
 		String path = url.getPath();
 		URL fileUrl = null;
@@ -363,7 +396,7 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			fileUrl = this.getClass().getResource(path);
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -441,16 +474,18 @@ public class ResourceRequest extends HttpServlet {
 	public static class StaticFile implements LookupResult {
 		protected final String url;
 		protected final String mimeType;
+		protected final boolean forceCaching;
 		protected final String charset;
 		protected final Resource resourceFile;
 		
-		public StaticFile(String url, String mimeType, Resource resourceFile) {
-			this(url, mimeType, null, resourceFile);
+		public StaticFile(String url, String mimeType, boolean forceCaching, Resource resourceFile) {
+			this(url, mimeType, forceCaching, null, resourceFile);
 		}
 		
-		public StaticFile(String url, String mimeType, String charset, Resource resourceFile) {
+		public StaticFile(String url, String mimeType, boolean forceCaching, String charset, Resource resourceFile) {
 			this.url = url;
 			this.mimeType = mimeType;
+			this.forceCaching = forceCaching;
 			this.charset = charset;
 			this.resourceFile = resourceFile;
 		}
@@ -476,11 +511,16 @@ public class ResourceRequest extends HttpServlet {
 				prepareContent();
 				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
 				ServletUtils.setContentTypeHeader(response, mimeType);
-				if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
-					ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24);
+				if(forceCaching) {
+					ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24*365); // infinite
 				} else {
-					ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+					if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
+						ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24); // 1 day
+					} else {
+						ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+					}
 				}
+					
 				is = getInputStream();
 				ServletUtils.transferStreams(is, os);
 				os.flush();
@@ -508,8 +548,8 @@ public class ResourceRequest extends HttpServlet {
 		protected String json = null;
 		protected int contentLength = -1;
 		
-		public LocaleJsFile(String clazz, String override, String url, Resource resourceFile) {
-			super(url, "application/javascript", "utf-8", resourceFile);
+		public LocaleJsFile(String clazz, String override, String url, boolean forceCaching, Resource resourceFile) {
+			super(url, "application/javascript", forceCaching, "utf-8", resourceFile);
 			this.clazz = clazz;
 			this.override = override;
 		}

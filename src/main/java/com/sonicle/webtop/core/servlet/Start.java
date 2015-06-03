@@ -100,9 +100,6 @@ public class Start extends HttpServlet {
 			
 			// Startup variables
 			JsWTS jswts = new JsWTS();
-			//jswts.principal = up.getStringId(); //TODO: rimuovere
-			//jswts.domainId = up.getDomainId(); //TODO: rimuovere
-			//jswts.userId = up.getUserId(); //TODO: rimuovere
 			wts.fillServices(jswts);
 			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			

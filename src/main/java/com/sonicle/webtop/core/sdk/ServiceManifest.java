@@ -313,7 +313,7 @@ public class ServiceManifest {
 	 * @return 
 	 */
 	public String getJsBaseUrl() {
-		return MessageFormat.format("resources/{0}", getId());
+		return MessageFormat.format("resources/{0}/{1}", getId(), getVersion().toString());
 	}
 	
 	public String getCompany() {

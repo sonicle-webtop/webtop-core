@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.RegexUtils;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -42,8 +43,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @author malbinola
  */
 public class ServiceVersion implements Comparable<ServiceVersion> {
-	
-	private static final Pattern PATTERN_VERSION = Pattern.compile("^[0-9]+(\\.[0-9]+){1,2}$");
+	//private static final Pattern PATTERN_VERSION = Pattern.compile("^[0-9]+(\\.[0-9]+){1,2}$");
+	private static final Pattern PATTERN_VERSION = Pattern.compile("^" + RegexUtils.MATCH_SW_VERSION + "$");
 	private String version = null;
 	
 	public ServiceVersion() {
