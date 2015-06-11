@@ -68,7 +68,7 @@ Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
 		if(scale === 'large') iconSize = 'm';
 		
 		Ext.apply(cfg, {
-			//itemId: desc.getId(),
+			itemId: desc.getId(),
 			overflowText: desc.getName(),
 			tooltip: tip,
 			iconCls: WTF.cssIconCls(desc.getXid(), 'service-' + iconSize)

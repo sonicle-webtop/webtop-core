@@ -107,9 +107,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 				if(desc.initService()) {
 					var svc = desc.getInstance();
 					vp.addServiceButton(desc);
-					vp.addServiceButton(desc);
-					vp.addServiceButton(desc);
-					vp.addServiceButton(desc);
 					if(svc.hasNewActions()) vp.addServiceNewActions(svc.getNewActions());
 					// Saves first succesfully activated service for later displaying default
 					if(def === null) def = desc.getId();
