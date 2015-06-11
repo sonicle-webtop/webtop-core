@@ -41,13 +41,7 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTS {
-	
-	//public String locale;
-	//public String theme;
-	//public String laf;
-	public String principal;
-	public String userId;
-	public String domainId;
+	public String layoutClassName;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();
 	public ArrayList<JsWTS.Service> services = new ArrayList<>();

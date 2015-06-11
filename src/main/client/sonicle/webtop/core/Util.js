@@ -73,6 +73,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 		return (obj.isAction && Ext.isFunction(obj.execute));
 	},
 	
+	removeHeader: function(cmp) {
+		if(!cmp.isPanel) return;
+		if(cmp.header && cmp.header.isHeader) {
+			cmp.header.destroy();
+		}
+		cmp.header = false;
+		cmp.updateHeader();
+	},
+	
 	applyTbItems: function(obj, dock, items, append) {
 		if(append === undefined) append = true;
 		var me = this,

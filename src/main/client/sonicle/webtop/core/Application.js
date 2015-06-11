@@ -15,7 +15,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ServiceDescriptor'
 	].concat(WTS.appRequires || []),
 	views: [
-		'Sonicle.webtop.core.view.Viewport'
+		Ext.String.format('WT.view.main.{0}', WTS.layoutClassName)
 	],
 	refs: {
 		viewport: 'viewport'
@@ -52,10 +52,11 @@ Ext.define('Sonicle.webtop.core.Application', {
 	},
 	
 	launch: function() {
-		var me = this;
+		var me = this,
+				co = WTS.servicesOptions[0],
+				desc, deps = [];
 		
 		// Loads service descriptors from startup object
-		var co = WTS.servicesOptions[0], desc = null, deps = [];
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WT.ServiceDescriptor', {
 				index: obj.index,
@@ -94,10 +95,10 @@ Ext.define('Sonicle.webtop.core.Application', {
 	
 	onRequiresLoaded: function() {
 		var me = this,
-				def = null, vpc;
+				def = null, vp, vpc;
 		
 		// Creates main viewport
-		me.viewport = me.getView('Sonicle.webtop.core.view.Viewport').create();
+		vp = me.viewport = me.getView(me.views[0]).create();
 		vpc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one
@@ -105,8 +106,11 @@ Ext.define('Sonicle.webtop.core.Application', {
 			if(!desc.getMaintenance()) {
 				if(desc.initService()) {
 					var svc = desc.getInstance();
-					vpc.addServiceButton(desc);
-					if(svc.hasNewActions()) vpc.addServiceNewActions(svc.getNewActions());
+					vp.addServiceButton(desc);
+					vp.addServiceButton(desc);
+					vp.addServiceButton(desc);
+					vp.addServiceButton(desc);
+					if(svc.hasNewActions()) vp.addServiceNewActions(svc.getNewActions());
 					// Saves first succesfully activated service for later displaying default
 					if(def === null) def = desc.getId();
 				}
@@ -195,7 +199,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		var svc = me.getService(id);
 		if(!svc) return;
 		var vpc = me.getViewport().getController();
-		vpc.addServiceCmp(svc);
+		vpc.addServiceCmps(svc);
 		me.currentService = id;
 		if(vpc.activateService(svc)) svc.fireEvent('activate');
 	}

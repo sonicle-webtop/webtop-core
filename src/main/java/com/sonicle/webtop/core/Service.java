@@ -73,6 +73,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -198,6 +199,21 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error executing action GetThemes", ex);
 			new JsonResult(false, "Unable to get themes").printTo(out);
+		}
+	}
+	
+	public void processGetLayouts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		
+		try {
+			items.add(new JsSimple("default", "WebTop"));
+			items.add(new JsSimple("outlook2013", "Outlook 2013/Mozilla"));
+			
+			new JsonResult("layouts", items, items.size()).printTo(out);
+
+		} catch (Exception ex) {
+			logger.error("Error executing action GetLayouts", ex);
+			new JsonResult(false, "Unable to get layouts").printTo(out);
 		}
 	}
 	
@@ -538,5 +554,19 @@ public class Service extends BaseService {
 		}
 	}
 	
-	
+	/*
+	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		
+		try {
+			if(ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
+			
+			
+			
+			
+		} catch (Exception ex) {
+			
+		}
+	}
+	*/
 }

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
@@ -40,15 +41,34 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
+import com.sonicle.webtop.core.bol.js.JsUploadedFile;
 import com.sonicle.webtop.core.bol.js.JsValue;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.ProgressListener;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -99,7 +119,106 @@ public abstract class BaseService extends BaseBaseService {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
-	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	
+	
+	public final void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ServletFileUpload upload = null;
+		ArrayList<String> items = new ArrayList<>();
+		
+		System.out.println("processUpload");
+		
+		try {
+			String context = ServletUtils.getStringParameter(request, "context", true);
+			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
+			
+			// Defines progress listener
+			/*
+			ProgressListener progressListener = new ProgressListener() {
+				private long currXBytes = -1;
+				@Override
+				public void update(long bytesRead, long contentLength, int items) {
+					long xBytes = bytesRead / 1000000;
+					if (currXBytes == xBytes) return;
+					currXBytes = xBytes;
+					if(contentLength == -1) {
+						System.out.println("{ciao:"+currXBytes+"}");
+					} else {
+						System.out.println("{ciao:"+currXBytes+"}");
+					}
+				}
+			};
+			*/
+			
+			Method streamMethod = getUploadStreamMethod(context);
+			if(streamMethod != null) {
+				// Defines the upload object
+				upload = new ServletFileUpload();
+				//upload.setProgressListener(progressListener);
+				
+				// Process files...
+				FileItemIterator fit = upload.getItemIterator(request);
+				while(fit.hasNext()) {
+					FileItemStream fis = fit.next();
+					System.out.println("FileItemStream: "+fis.getName());
+					if(!fis.isFormField()) {
+						streamMethod.invoke(this, request, fis.openStream());
+						items.add("");
+					}
+				}
+			} else {
+				//CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+				//File uploadsDir = new File(css.getSystemUploadsPath());
+				File uploadsDir = new File("C:/temp/uploads");
+				if(!uploadsDir.isDirectory() || !uploadsDir.canWrite()) {
+					throw new WTException("Problems with upload folder");
+				}
+				System.out.println("tempDir defined");
+				
+				
+				// Defines the upload object
+				DiskFileItemFactory factory = new DiskFileItemFactory();
+				//factory.setSizeThreshold(yourMaxMemorySize);
+				//factory.setRepository(yourTempDirectory);
+				upload = new ServletFileUpload(factory);
+				//upload.setProgressListener(progressListener);
+				
+				System.out.println("upload created");
+				
+				// Process files...
+				List<FileItem> files = upload.parseRequest(request);
+				Iterator it = files.iterator();
+				while(it.hasNext()) {
+					FileItem fi = (FileItem)it.next();
+					System.out.println("FileItem: "+fi.getName());
+					if(!fi.isFormField()) {
+						System.out.println("writing file");
+						String filename = WT.generateTempFilename();
+						fi.write(new File(uploadsDir, filename));
+						items.add(filename);
+					}
+				}
+			}
+			
+			new JsonResult(items).printTo(response, out);
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			new JsonResult(false, "Error uploading").printTo(response, out);
+		}
+	}
+	
+	protected final Method getUploadStreamMethod(String context) {
+		String methodName = MessageFormat.format("process{0}UploadStream", context);
+		try {
+			return getClass().getMethod(methodName, HttpServletRequest.class, InputStream.class);
+		} catch(NoSuchMethodException ex) {
+			return null;
+		}
+	}
+	
+	
+	
+	public final void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsValue> items = null;
 		UserProfile up = env.getProfile();
 		CoreManager corem = env.wta.getManager();

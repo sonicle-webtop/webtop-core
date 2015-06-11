@@ -424,14 +424,27 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		me.titleEditor = Ext.create({
 			xtype: 'editor',
 			updateEl: false,
-			alignment: 'l-l',
+			hideEl: false,
+			
+			alignment: 'c-c',
+			minHeight: 24,
 			autoSize: {
-				width: 'boundEl'
+				width: 'boundEl',
+				height: 'boundEl'
 			},
 			field: {
-				xtype: 'textfield'
+				xtype: 'textarea',
+				enterIsSpecial: true,
+				fieldCls: 'ext-cal-editor'
 			},
 			listeners: {
+				startEdit: function(s, el) {
+					// Fix: avoids incorrect auto editor alignment 
+					// performed using alignment config
+					Ext.defer(function() {
+						s.alignTo(el, 'c-c');
+					}, 10);
+				},
 				complete: function(s, val, sval) {
 					if(val !== sval) {
 						var rec = me.getEventRecord(s.getItemId());
@@ -1398,7 +1411,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		if(me.titleEditor.editing) me.titleEditor.cancelEdit();
 		me.titleEditor.itemId = id;
 		me.titleEditor.startEdit(el, title);
-		me.titleEditor.field.focus(true);
+		me.titleEditor.field.focus();
 	},
 	
 	

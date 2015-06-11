@@ -183,7 +183,7 @@ public class ResourceRequest extends HttpServlet {
 			////logger.trace("{}, {}", subject, path);
 			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			translPath = translUrl.getPath();
-			System.out.println("translPath: "+translPath);
+			//System.out.println("translPath: "+translPath);
 			
 			//logger.trace("Translated path [{}]", translPath);
 			if (isForbidden(translPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -206,9 +206,9 @@ public class ResourceRequest extends HttpServlet {
 					return lookupLocaleJs(req, isVirtualUrl, subject, subjectPath, path, translUrl);
 				
 				} else {
-					boolean debug = System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
-					debug = false;
-					return lookupJs(req, isVirtualUrl, translUrl, debug);
+					//TODO: usare i file compressi se il debug è disattivato
+					return lookupJs(req, isVirtualUrl, translUrl, false);
+					//return lookupJs(req, isVirtualUrl, translUrl, !WebTopApp.systemIsDebug());
 				}
 			} else if(StringUtils.startsWith(path, "laf")) {
 				if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
@@ -359,14 +359,14 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean debug) {
+	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean minified) {
 		//logger.trace("Looking-up js file");
 		String path = url.getPath();
 		URL fileUrl = null;
 		
 		try {
 			String dpath = null;
-			if(!debug) {
+			if(minified) {
 				dpath = path.substring(0, path.length() - 3) + "-compressed.js";
 				fileUrl = this.getClass().getResource(dpath);
 			}

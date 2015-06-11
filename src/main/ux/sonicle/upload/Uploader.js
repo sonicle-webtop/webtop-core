@@ -17,11 +17,12 @@ Ext.define('Sonicle.upload.Uploader', {
 		autoRemoveUploaded: true,
 		runtimes: '',
 		url: '',
+		extraParams: null,
 		maxFileSize: '128mb',
 		resize: '',
 		flashSwfUrl: '',
 		silverlightXapUrl: '',
-		filters: [],
+		filters: {},
 		chunkSize: null,
 		uniqueNames: true,
 		multipart: true,
@@ -33,7 +34,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	constructor: function(owner, cfg) {
-		var me = this;
+		var me = this, url;
 		me.owner = owner;
 		me.succeeded = [];
 		me.failed = [];
@@ -41,9 +42,10 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.initConfig(cfg);
 		me.mixins.observable.constructor.call(me, cfg);
 		
+		url = Ext.String.urlAppend(me.getUrl(), Ext.Object.toQueryString(me.getExtraParams() || {}));
 		me.pluploadConfig = Ext.apply({}, cfg.pluploadConfig || {}, {
 			runtimes: me.getRuntimes(),
-			url: me.getUrl(),
+			url: url,
 			max_file_size: me.getMaxFileSize(),
 			resize: me.getResize(),
 			flash_swf_url: me.getFlashSwfUrl(),
@@ -132,13 +134,24 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	updateStore: function(v) {
 		var me = this,
-				rec = me.store.getById(v.id);
+				rec = me.store.getById(v.id),
+				data;
+		
+		console.log('updateStore');
+		data = {
+			id: v.id,
+			name: v.name,
+			size: v.size,
+			percent: v.percent,
+			status: v.status,
+			loaded: v.loaded
+		};
 		
 		if(rec) {
-			rec.set(v);
+			rec.set(data);
 			rec.commit();
 		} else {
-			me.store.loadData([v], true);
+			me.store.loadData([data], true);
 		}
 	},
 	
@@ -154,7 +167,7 @@ Ext.define('Sonicle.upload.Uploader', {
 			me.fireEvent('storeempty', me);
 		}
 		
-		var id = rec.get('id');
+		var id = rec[0].get('id');
 		Ext.each(me.succeeded, function(v) {
 			if(v && v.id === id) Ext.Array.remove(me.succeeded, v);
 		});
@@ -166,6 +179,8 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	onStoreUpdate: function(sto, rec, op) {
+		console.log('onStoreUpdate');
+		console.log(rec.data);
 		this.updateProgress();
 	},
 	
@@ -259,7 +274,9 @@ Ext.define('Sonicle.upload.Uploader', {
 				response = Ext.JSON.decode(status.response);
 		
 		if(response.success === true) {
+			file.uploadId = response.data[0];
 			file.server_error = 0;
+			me.updateStore(file);
 			me.succeeded.push(file);
 			me.fireEvent('fileuploaded', me, file, response);
 		} else {

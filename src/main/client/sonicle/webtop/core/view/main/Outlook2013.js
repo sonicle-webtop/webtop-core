@@ -31,48 +31,95 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
-	alternateClassName: 'WT.ux.ServiceButton',
-	extend: 'Ext.button.Button',
+Ext.define('Sonicle.webtop.core.view.main.Outlook2013', {
+	alternateClassName: 'WT.view.main.Outlook2013',
+	extend: 'WT.view.main.Abstract',
 	requires: [
-		'Sonicle.plugin.BadgeText'
+		'WT.ux.StackServiceButton'
 	],
-	plugins: [{
-		ptype: 'sobadgetext',
-		align: 'bl'
-	}],
 	
-	textAlign: 'left',
+	westCmp: function() {
+		return {
+			xtype: 'panel',
+			referenceHolder: true,
+			split: true,
+			collapsible: true,
+			border: false,
+			width: 200,
+			minWidth: 100,
+			layout: 'border',
+			items: [{
+				xtype: 'container',
+				region: 'center',
+				reference: 'tool',
+				layout: 'card',
+				items: []
+			}, {
+				xtype: 'container',
+				region: 'south',
+				height: 155,
+				layout: 'border',
+				items: [{
+					region: 'center',
+					xtype: 'toolbar',
+					reference: 'launcher1',
+					vertical: true,
+					border: false,
+					layout: {
+						type: 'vbox',
+						align: 'stretch'
+					},
+					items: []
+				}, {
+					region: 'south',
+					xtype: 'toolbar',
+					reference: 'launcher2',
+					enableOverflow: true,
+					border: false,
+					items: []
+				}]
+			}],
+			listeners: {
+				resize: 'onToolResize'
+			}
+		};
+	},
 	
-	constructor: function(desc, cfg) {
+	centerCmp: function() {
+		return {
+			xtype: 'container',
+			layout: 'card',
+			items: []
+		};
+	},
+	
+	getSide: function() {
+		return this.lookupReference('west');
+	},
+	
+	getToolStack: function() {
+		return this.lookupReference('west').lookupReference('tool');
+	},
+	
+	getMainStack: function() {
+		return this.lookupReference('center');
+	},
+	
+	addServiceButton: function(desc) {
 		var me = this,
-				scale = cfg.scale || me.scale,
-				tip, iconSize;
+				west = me.lookupReference('west'),
+				l1 = west.lookupReference('launcher1'),
+				l2 = west.lookupReference('launcher2');
 		
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTS.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
+		if(l1.items.getCount() < 3) {
+			l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
+				handler: 'onLauncherButtonClick'
+			})).setBadgeText('12');
 		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
+			l2.add(Ext.create('WT.ux.ServiceButton', desc, {
+				scale: 'small',
+				handler: 'onLauncherButtonClick'
+			})).setBadgeText('15');
 		}
-		
-		// Defines icon
-		iconSize = 'xs';
-		if(scale === 'medium') iconSize = 's';
-		if(scale === 'large') iconSize = 'm';
-		
-		Ext.apply(cfg, {
-			//itemId: desc.getId(),
-			overflowText: desc.getName(),
-			tooltip: tip,
-			iconCls: WTF.cssIconCls(desc.getXid(), 'service-' + iconSize)
-		});
-		me.callParent([cfg]);
 	}
 });

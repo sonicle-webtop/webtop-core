@@ -43,5 +43,6 @@ import java.sql.SQLException;
 public interface IConnectionProvider {
 	
 	public Connection getConnection() throws SQLException;
-	public Connection getConnection(String poolName) throws SQLException;
+	public Connection getConnection(String namespace) throws SQLException;
+	public Connection getConnection(String namespace, String dataSourceName) throws SQLException;
 }

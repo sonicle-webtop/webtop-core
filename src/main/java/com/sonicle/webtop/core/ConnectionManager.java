@@ -32,13 +32,16 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core;
+import com.sonicle.webtop.core.DataSourcesConfig.HikariConfigMap;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 
@@ -47,8 +50,8 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ConnectionManager implements IConnectionProvider {
-	
 	private static final Logger logger = WT.getLogger(ConnectionManager.class);
+	public static final String DEFAULT_DATASOURCE = "default";
 	private static boolean initialized = false;
 	
 	/**
@@ -67,6 +70,7 @@ public class ConnectionManager implements IConnectionProvider {
 	
 	private boolean shutdown = false;
 	private WebTopApp wta = null;
+	private DataSourcesConfig config = null;
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
 	
 	/**
@@ -76,6 +80,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 */
 	private ConnectionManager(WebTopApp wta) {
 		this.wta = wta;
+		init();
 	}
 	
 	/**
@@ -93,6 +98,35 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.info("ConnectionManager destroyed");
 	}
 	
+	private void init() {
+		// Loads dataSources configuration
+		String configResource = "/META-INF/sources.xml";
+		config = new DataSourcesConfig();
+		try {
+			logger.debug("Loading dataSources configuration at [{}]", configResource);
+			URL url = wta.getResource(configResource);
+			config.parseConfiguration(url);
+		} catch(Exception ex) {
+			throw new RuntimeException("Unable to load dataSources configuration file", ex);
+		}
+		
+		// Setup core sources
+		logger.debug("Setting-up core dataSources...");
+		HikariConfigMap coreSources = config.getSources(CoreManifest.ID);
+		if(!coreSources.containsKey(DEFAULT_DATASOURCE)) {
+			throw new RuntimeException("No core default dataSource defined");
+		}
+		for(Entry<String, HikariConfig> entry : coreSources.entrySet()) {
+			registerDataSource(CoreManifest.ID, entry.getKey(), entry.getValue());
+		}
+	}
+	
+	public final void registerDataSource(String namespace, String dataSourceName, HikariConfig config) {
+		logger.debug("Registering data source [{}] into namespace [{}]", dataSourceName, namespace);
+		addPool(poolName(namespace, dataSourceName), config);
+	}
+	
+	/*
 	public void registerJdbc3DataSource(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {
 		HikariConfig config = new HikariConfig();
 		config.setDriverClassName(driverClassName);
@@ -118,28 +152,54 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.trace("[{}, {}, {}, {}, {}]", dataSourceClassName, serverName, serverPort, databaseName, user);
 		addPool(poolName, config);
 	}
+	*/
+	
+	public DataSourcesConfig getConfiguration() {
+		return config;
+	}
 	
 	/**
-	 * Returns a DataSource from the core pool.
+	 * Builds a valid connection pool name.
+	 * @param namespace The pool namespace (eg. the service ID).
+	 * @param dataSourceName The data source name (eg. default)
+	 * @return Concatenated name
+	 */
+	public String poolName(String namespace, String dataSourceName) {
+		return MessageFormat.format("{0}.{1}", namespace, dataSourceName);
+	}
+	
+	/**
+	 * Returns the default Core DataSource.
 	 * @return DataSource object.
 	 * @throws SQLException 
 	 */
 	public DataSource getDataSource() throws SQLException {
-		return getDataSource(CoreManifest.ID);
+		return getDataSource(CoreManifest.ID, DEFAULT_DATASOURCE);
 	}
 	
 	/**
-	 * Returns a DataSource from desired pool.
-	 * @param poolName The name of the pool.
+	 * Returns the default DataSource from desired namespace.
+	 * @param namespace The pool namespace.
 	 * @return DataSource object.
 	 * @throws SQLException 
 	 */
-	public DataSource getDataSource(String poolName) throws SQLException {
-		return getPool(poolName);
+	public DataSource getDataSource(String namespace) throws SQLException {
+		return getDataSource(namespace, DEFAULT_DATASOURCE);
 	}
 	
 	/**
-	 * Return a connection from the core pool.
+	 * Returns a DataSource from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return DataSource object.
+	 * @throws SQLException 
+	 */
+	public DataSource getDataSource(String namespace, String dataSourceName) throws SQLException {
+		return getPool(poolName(namespace, dataSourceName));
+	}
+	
+	/**
+	 * Return the default Core connection.
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
@@ -149,14 +209,26 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	/**
-	 * Returns a connection from desired pool.
-	 * @param poolName The name of the pool.
+	 * Returns the default connection from desired namespace.
+	 * @param namespace The pool namespace.
 	 * @return A ready Connection object.
 	 * @throws SQLException 
 	 */
 	@Override
-	public Connection getConnection(String poolName) throws SQLException {
-		return getPool(poolName).getConnection();
+	public Connection getConnection(String namespace) throws SQLException {
+		return getConnection(namespace, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	@Override
+	public Connection getConnection(String namespace, String dataSourceName) throws SQLException {
+		return getPool(poolName(namespace, dataSourceName)).getConnection();
 	}
 	
 	private void addPool(String poolName, HikariConfig config) {
@@ -178,12 +250,21 @@ public class ConnectionManager implements IConnectionProvider {
 		}
 	}
 	
+	public boolean isRegistered(String namespace, String dataSourceName) {
+		synchronized(pools) {
+			if(shutdown) throw new RuntimeException("Manager is shutting down");
+			return pools.containsKey(poolName(namespace, dataSourceName));
+		}
+	}
+	
+	/*
 	public boolean isRegistered(String poolName) {
 		synchronized(pools) {
 			if(shutdown) throw new RuntimeException("Manager is shutting down");
 			return pools.containsKey(poolName);
 		}
 	}
+	*/
 	
 	/*
 	private void addPool(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {

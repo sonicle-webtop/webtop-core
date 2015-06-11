@@ -149,10 +149,7 @@ public class SessionManager {
 		String sid = session.getId();
 		
 		synchronized(sessions) {
-			if(!sessions.containsKey(sid)) {
-				logger.error("Session not registered [{}]", sid);
-				throw new WTException("Session not registered [{0}]", sid);
-			} else {
+			if(sessions.containsKey(sid)) {
 				if(session.getUserProfile() == null) {
 					logger.error("Session [{}] is not bound to a user", sid);
 					throw new WTException("Session [{0}] is not bound to a user", sid);

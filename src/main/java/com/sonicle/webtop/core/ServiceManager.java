@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.zaxxer.hikari.HikariConfig;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
@@ -569,14 +570,24 @@ public class ServiceManager {
 			desc = new ServiceDescriptor(manifest);
 			logger.debug("[default:{}, public:{}, deamon:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasDeamonService(), desc.hasUserOptionsService());
 			
+			// Register service's dataSources
 			try {
-				if(!conm.isRegistered(serviceId)) {
-					//TODO: sostituire la seguente registrazione fake con quella reale dei servizi
-					wta.getConnectionManager().registerJdbc4DataSource(serviceId, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
+				DataSourcesConfig config = conm.getConfiguration();
+				DataSourcesConfig.HikariConfigMap sources = config.getSources(serviceId);
+				if(sources != null) {
+					logger.debug("Registering {} dataSources", sources.size());
+					// If service provides its own sources, register them...
+					for(Entry<String, HikariConfig> entry : sources.entrySet()) {
+						if(!conm.isRegistered(serviceId, entry.getKey())) {
+							conm.registerDataSource(serviceId, entry.getKey(), entry.getValue());
+						}
+					}
+				} else {
+					logger.debug("No custom dataSources defined");
 				}
 				
-			} catch(SQLException ex) {
-				throw new WTRuntimeException(ex, "Error registering service connection");
+			} catch(Exception ex) {
+				throw new WTRuntimeException(ex, "Error registering service dataSources");
 			}
 			
 			boolean upgraded = upgradeCheck(manifest);

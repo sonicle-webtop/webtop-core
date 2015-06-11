@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -65,11 +66,12 @@ public abstract class BaseRequestServlet extends HttpServlet {
 					method.invoke(instance, request, response);
 				} else {
 					out = response.getWriter();
-					response.setHeader("Cache-Control", "private");
-					response.setContentType("text/html;charset=UTF-8");
+					ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+					ServletUtils.setJsonContentTypeHeader(response);
 					method.invoke(instance, request, response, out);
 				}
 			} finally {
+				if(out != null) out.flush();
 				WebTopApp.unsetServiceLoggerDC();
 			}
 		} catch(Exception ex) {

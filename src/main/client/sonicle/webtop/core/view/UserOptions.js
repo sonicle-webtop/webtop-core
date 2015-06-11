@@ -86,6 +86,23 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				reload: true
 			}, {
 				xtype: 'combo',
+				name: 'layout',
+				allowBlank: false,
+				editable: false,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WTF.proxy(me.ID, 'GetLayouts', 'layouts')
+				},
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: WT.res('opts.main.fld-layout.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				},
+				reload: true
+			}, {
+				xtype: 'combo',
 				name: 'laf',
 				allowBlank: false,
 				editable: false,

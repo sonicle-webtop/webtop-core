@@ -7,11 +7,12 @@
 Ext.define('Sonicle.upload.Model', {
 	extend: 'Ext.data.Model',
 	fields: [
-		'id',
-		'loaded',
-		'name',
-		'size',
-		'percent',
-		'status'
+		{name: 'id', type: 'string'},
+		{name: 'name', type: 'string'},
+		{name: 'size', type: 'int'},
+		{name: 'percent', type: 'int'},
+		{name: 'status', type: 'int'},
+		{name: 'loaded', type: 'int'},
+		{name: 'uploadId', type: 'string'}
 	]
 });

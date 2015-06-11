@@ -22,6 +22,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system]
+	 * Defines system uploads path in which temporarly store uploaded files
+	 */
+	public static final String SYSTEM_PATH_UPLOADS = "system.path.uploads";
+	
+	/**
+	 * [string][system]
 	 * Defines system public path in which store public services resources
 	 */
 	public static final String SYSTEM_PATH_PUBLIC = "system.path.public";
@@ -118,6 +124,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getTempPath() {
 		return getString(TMP, null);
+	}
+	
+	public String getSystemUploadsPath() {
+		return getString(SYSTEM_PATH_UPLOADS, null);
 	}
 	
 	public String getSystemPublicPath() {

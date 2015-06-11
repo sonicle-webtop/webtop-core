@@ -31,48 +31,68 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
-	alternateClassName: 'WT.ux.ServiceButton',
-	extend: 'Ext.button.Button',
-	requires: [
-		'Sonicle.plugin.BadgeText'
-	],
-	plugins: [{
-		ptype: 'sobadgetext',
-		align: 'bl'
-	}],
+Ext.define('Sonicle.webtop.core.view.main.Default', {
+	alternateClassName: 'WT.view.main.Default',
+	extend: 'WT.view.main.Abstract',
 	
-	textAlign: 'left',
+	westCmp: function() {
+		return {
+			xtype: 'toolbar',
+			vertical: true,
+			border: false,
+			cls: 'wt-launcher',
+			enableOverflow: true,
+			items: []
+		};
+	},
 	
-	constructor: function(desc, cfg) {
+	centerCmp: function() {
+		return {
+			xtype: 'container',
+			layout: 'border',
+			items: [{
+				region: 'west',
+				xtype: 'panel',
+				reference: 'tool',
+				split: true,
+				collapsible: true,
+				border: false,
+				width: 200,
+				minWidth: 100,
+				layout: 'card',
+				items: [],
+				listeners: {
+					resize: 'onToolResize'
+				}
+			}, {
+				region: 'center',
+				xtype: 'container',
+				reference: 'main',
+				layout: 'card',
+				items: []
+			}]
+		};
+	},
+	
+	getSide: function() {
+		return this.getToolStack();
+	},
+	
+	getToolStack: function() {
+		return this.lookupReference('center').lookupReference('tool');
+	},
+	
+	getMainStack: function() {
+		return this.lookupReference('center').lookupReference('main');
+	},
+	
+	addServiceButton: function(desc) {
 		var me = this,
-				scale = cfg.scale || me.scale,
-				tip, iconSize;
+				west = me.lookupReference('west');
 		
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTS.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
-		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
-		}
-		
-		// Defines icon
-		iconSize = 'xs';
-		if(scale === 'medium') iconSize = 's';
-		if(scale === 'large') iconSize = 'm';
-		
-		Ext.apply(cfg, {
-			//itemId: desc.getId(),
-			overflowText: desc.getName(),
-			tooltip: tip,
-			iconCls: WTF.cssIconCls(desc.getXid(), 'service-' + iconSize)
-		});
-		me.callParent([cfg]);
+		west.add(Ext.create('WT.ux.ServiceButton', desc, {
+			scale: 'large',
+			handler: 'onLauncherButtonClick'
+		}));
 	}
 });

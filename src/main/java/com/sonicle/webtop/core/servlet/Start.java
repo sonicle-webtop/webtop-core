@@ -86,6 +86,7 @@ public class Start extends HttpServlet {
 			
 			Locale locale = wts.getLocale();
 			String theme = cus.getTheme();
+			String layout = cus.getLayout();
 			String lookAndFeel = cus.getLookAndFeel();
 			
 			Map vars = new HashMap();
@@ -94,13 +95,14 @@ public class Start extends HttpServlet {
 			ServletHelper.fillPageVars(vars, locale, wta);
 			vars.put("language", locale.getLanguage());
 			vars.put("theme", theme);
+			vars.put("layout", layout);
 			vars.put("laf", lookAndFeel);
 			vars.put("rtl", String.valueOf(cus.getRightToLeft()));
 			vars.put("debug", ""+extdebug);
 			
 			// Startup variables
 			JsWTS jswts = new JsWTS();
-			wts.fillServices(jswts);
+			wts.fillStartup(jswts, layout);
 			vars.put("WTS", JsonResult.gson.toJson(jswts));
 			
 			// Load and build template

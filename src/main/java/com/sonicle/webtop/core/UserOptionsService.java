@@ -86,6 +86,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				main.put("displayName", user.getDisplayName());
 				main.put("rtl", cus.getRightToLeft());
 				main.put("theme", cus.getTheme());
+				main.put("layout", cus.getLayout());
 				main.put("laf", cus.getLookAndFeel());
 				
 				// i18n
@@ -135,6 +136,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// main
 				if(pl.map.has("displayName")) user.setDisplayName(pl.data.getString("displayName"));
 				if(pl.map.has("theme")) cus.setTheme(pl.data.getString("theme"));
+				if(pl.map.has("layout")) cus.setLayout(pl.data.getString("layout"));
 				if(pl.map.has("laf")) cus.setLookAndFeel(pl.data.getString("laf"));
 				
 				// i18n

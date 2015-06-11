@@ -40,6 +40,9 @@
 .ext-cal-mdv td {
     font-size: 11px;
 }
+.ext-cal-editor {
+    font-size: 11px;
+}
 .x-cal-body {
     /* override the default -noheader style ext uses when there is no panel header */
     border-top: 0 !important;
@@ -427,12 +430,12 @@ td.ext-cal-dtitle-today div {
 
 /* Default rounded event div (Gecko/Webkit/W3C) */
 .ext-cal-evr { /* rounded */
-    -moz-border-radius:5px;
-    -webkit-border-radius:5px;
-    border-radius:5px;
-    overflow:hidden;
-    padding: 2px 1px 2px 5px;
-    white-space:nowrap;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    overflow: hidden;
+    padding: 2px 1px 2px 2px;
+    white-space: nowrap;
 	text-overflow: ellipsis;
     border: 0;
 }
@@ -666,6 +669,11 @@ td.ext-cal-dtitle-today div {
     position: absolute;
     top: 3px;
     left: 4px;
+}
+
+.ext-evt-bd {
+	height: 100%;
+	word-break: break-all;
 }
 
 /*

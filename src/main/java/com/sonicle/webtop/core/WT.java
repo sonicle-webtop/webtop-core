@@ -119,12 +119,30 @@ public class WT {
 	
 	public static Connection getConnection(String serviceId) throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection(serviceId);
+		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
+			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE);
+		} else {
+			return conm.getConnection();
+		}
+	}
+	
+	public static Connection getConnection(String serviceId, String dataSourceName) throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		return conm.getConnection(serviceId, dataSourceName);
 	}
 	
 	public static Connection getConnection(ServiceManifest manifest) throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection(manifest.getId());
+		if (conm.isRegistered(manifest.getId(), ConnectionManager.DEFAULT_DATASOURCE)) {
+			return conm.getConnection(manifest.getId(), ConnectionManager.DEFAULT_DATASOURCE);
+		} else {
+			return conm.getConnection();
+		}
+	}
+	
+	public static Connection getConnection(ServiceManifest manifest, String dataSourceName) throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		return conm.getConnection(manifest.getId(), dataSourceName);
 	}
 	
 	public static String lookupCoreResource(Locale locale, String key) {
@@ -162,6 +180,19 @@ public class WT {
 	
 	public static String generateUUID() {
 		return UUID.randomUUID().toString();
+	}
+	
+	public static String generateTempFilename() {
+		return generateTempFilename(null, null);
+	}
+	
+	public static String generateTempFilename(String prefix, String suffix) {
+		String uuid = generateUUID();
+		if(StringUtils.isEmpty(suffix)) {
+			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
+		} else {
+			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
+		}
 	}
 	
 	public static String getContentType(String extension) {

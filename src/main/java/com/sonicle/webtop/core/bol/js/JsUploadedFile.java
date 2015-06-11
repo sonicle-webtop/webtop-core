@@ -31,48 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
-	alternateClassName: 'WT.ux.ServiceButton',
-	extend: 'Ext.button.Button',
-	requires: [
-		'Sonicle.plugin.BadgeText'
-	],
-	plugins: [{
-		ptype: 'sobadgetext',
-		align: 'bl'
-	}],
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsUploadedFile {
+	public String multipartId;
+	public String serverId;
 	
-	textAlign: 'left',
-	
-	constructor: function(desc, cfg) {
-		var me = this,
-				scale = cfg.scale || me.scale,
-				tip, iconSize;
-		
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTS.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
-		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
-		}
-		
-		// Defines icon
-		iconSize = 'xs';
-		if(scale === 'medium') iconSize = 's';
-		if(scale === 'large') iconSize = 'm';
-		
-		Ext.apply(cfg, {
-			//itemId: desc.getId(),
-			overflowText: desc.getName(),
-			tooltip: tip,
-			iconCls: WTF.cssIconCls(desc.getXid(), 'service-' + iconSize)
-		});
-		me.callParent([cfg]);
+	public JsUploadedFile(String multipartId, String serverId) {
+		this.multipartId = multipartId;
+		this.serverId = serverId;
 	}
-});
+}

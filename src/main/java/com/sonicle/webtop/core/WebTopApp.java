@@ -153,14 +153,6 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
-		//TODO: caricare dinamicamente i parametri della connessione principale
-		try {
-			conm.registerJdbc4DataSource(CoreManifest.ID, "org.postgresql.ds.PGSimpleDataSource", "www.sonicle.com", null, "webtop5", "sonicle", "sonicle");
-			//conm.registerJdbc4DataSource(CoreManifest.ID, "org.postgresql.ds.PGSimpleDataSource", "localhost", null, "webtop5", "postgres", "postgres");
-		} catch (SQLException ex) {
-			logger.error("Error registering default connection", ex);
-			throw new WTRuntimeException(ex, "Error registering default connection");
-		}
 		
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
@@ -275,6 +267,10 @@ public class WebTopApp {
 		
 		String latest = (String)names.get(names.size()-1);
 		return webappName.equals(latest);
+	}
+	
+	public URL getResource(String resource) throws MalformedURLException {
+		return servletContext.getResource(resource);
 	}
 	
 	public String getServerInfo() {
@@ -474,6 +470,10 @@ public class WebTopApp {
 	
 	public String getCustomProperty(String name) {
 		return null;
+	}
+	
+	public static boolean systemIsDebug() {
+		return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 	}
 	
 	/**

@@ -1,3 +1,9 @@
+/*
+ * Sonicle ExtJs UX
+ * Copyright (C) 2015 Sonicle S.r.l.
+ * sonicle@sonicle.com
+ * http://www.sonicle.com
+ */
 Ext.define('Sonicle.ColorUtils', function (ColorUtils) {
     var oldIE = Ext.isIE && Ext.ieVersion < 10;
 
