@@ -483,6 +483,8 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error executing action GetCustomers", ex);
 			new JsonResult(false, "Unable to get customers").printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
@@ -526,6 +528,8 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error executing action GetStatisticCustomers", ex);
 			new JsonResult(false, "Unable to get statistic customers").printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
@@ -551,22 +555,8 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error executing action GetCausals", ex);
 			new JsonResult(false, "Unable to get causals").printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
-	
-	/*
-	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		
-		try {
-			if(ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
-			
-			
-			
-			
-		} catch (Exception ex) {
-			
-		}
-	}
-	*/
 }

@@ -30,7 +30,14 @@ Ext.define('Sonicle.upload.Uploader', {
 		multiSelection: true,
 		container: null,
 		browseButton: null,
-		dropElement: null
+		dropElement: null,
+		pluploadConfig: null
+	},
+	
+	pluOptions: null,
+	
+	buildPluploadUrl: function() {
+		return Ext.String.urlAppend(this.getUrl(), Ext.Object.toQueryString(this.getExtraParams() || {}));
 	},
 	
 	constructor: function(owner, cfg) {
@@ -42,10 +49,9 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.initConfig(cfg);
 		me.mixins.observable.constructor.call(me, cfg);
 		
-		url = Ext.String.urlAppend(me.getUrl(), Ext.Object.toQueryString(me.getExtraParams() || {}));
-		me.pluploadConfig = Ext.apply({}, cfg.pluploadConfig || {}, {
+		me.pluOptions = Ext.apply({}, cfg.pluploadConfig || {}, {
 			runtimes: me.getRuntimes(),
-			url: url,
+			url: me.buildPluploadUrl(),
 			max_file_size: me.getMaxFileSize(),
 			resize: me.getResize(),
 			flash_swf_url: me.getFlashSwfUrl(),
@@ -72,6 +78,22 @@ Ext.define('Sonicle.upload.Uploader', {
 				scope: me
 			}
 		});
+	},
+	
+	forceExtraParams: function(params) {
+		//TODO: rivedere....
+		var me = this,
+				pars = Ext.apply(me.getExtraParams(), params);
+		me.setExtraParams(pars);
+		if(!me.pluOptions) return;
+		Ext.apply(me.pluOptions, {
+			url: me.buildPluploadUrl()
+		});
+		if(me.uploader) me.uploader.setOption('url', me.pluOptions['url']);
+	},
+	
+	updateExtraParams: function(nv, ov) {
+		console.log('updateExtraParams');
 	},
 	
 	init: function() {
@@ -187,18 +209,18 @@ Ext.define('Sonicle.upload.Uploader', {
 	initUploader: function() {
 		var me = this;
 		
-		if(!me.pluploadConfig.runtimes) {
+		if(!me.pluOptions.runtimes) {
 			var runtimes = ['html5'];
-			me.pluploadConfig.flash_swf_url && runtimes.push('flash');
-			me.pluploadConfig.silverlight_xap_url && runtimes.push('silverlight');
+			me.pluOptions.flash_swf_url && runtimes.push('flash');
+			me.pluOptions.silverlight_xap_url && runtimes.push('silverlight');
 			runtimes.push('html4');
-			me.pluploadConfig.runtimes = runtimes.join(',');
+			me.pluOptions.runtimes = runtimes.join(',');
 		}
-		if(!me.pluploadConfig.container) {
-			me.pluploadConfig.container = Ext.fly(me.pluploadConfig.browse_button).parent().id;
+		if(!me.pluOptions.container) {
+			me.pluOptions.container = Ext.fly(me.pluOptions.browse_button).parent().id;
 		}
 		
-		me.uploader = Ext.create('plupload.Uploader', me.pluploadConfig);
+		me.uploader = Ext.create('plupload.Uploader', me.pluOptions);
 		
 		Ext.each([
 			'Init',
@@ -295,7 +317,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	_FilesAdded: function(uploader, files) {
 		var me = this;
-		if(me.pluploadConfig.multi_selection !== true) {
+		if(me.pluOptions.multi_selection !== true) {
 			if(me.store.data.length === 1) return false;
 			files = [files[0]];
 			uploader.files = [files[0]];

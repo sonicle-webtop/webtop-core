@@ -118,8 +118,8 @@ public class DataSourcesConfig {
 		
 		//TODO: applicare gli eventuali parametri di default e renderli dinamici
 		// Our custom default configs
-		config.setMinimumIdle(5);
-		config.setMaximumPoolSize(20);
+		//config.setMinimumIdle(5);
+		//config.setMaximumPoolSize(20);
 		
 		return config;
 	}

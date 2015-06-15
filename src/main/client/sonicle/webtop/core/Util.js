@@ -194,7 +194,7 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * Applies extra params to passed proxy.
 	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
 	 * @param {Object} params Extra params to apply.
-	 * @param {Boolean overwrite 'true' to overwrite previous params, 'false' to merge them.
+	 * @param {Boolean} [overwrite] 'true' to clear previous params, 'false' to merge them.
 	 */
 	applyExtraParams: function(proxy, params, overwrite) {
 		if(arguments.length === 2) overwrite = false;
