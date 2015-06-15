@@ -31,68 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.main.Default', {
-	alternateClassName: 'WT.view.main.Default',
-	extend: 'WT.view.main.Abstract',
+Ext.define('Sonicle.webtop.core.Info', {
+	singleton: true,
+	alternateClassName: ['WT.Info', 'WTI'],
 	
-	westCmp: function() {
-		return {
-			xtype: 'toolbar',
-			vertical: true,
-			border: false,
-			cls: 'wt-launcher',
-			enableOverflow: true,
-			items: []
-		};
+	getTheme: function() {
+		return WT.getOption('theme');
 	},
 	
-	centerCmp: function() {
-		return {
-			xtype: 'container',
-			layout: 'border',
-			items: [{
-				region: 'west',
-				xtype: 'panel',
-				reference: 'tool',
-				split: true,
-				collapsible: true,
-				border: false,
-				width: 200,
-				minWidth: 100,
-				layout: 'card',
-				items: [],
-				listeners: {
-					resize: 'onToolResize'
-				}
-			}, {
-				region: 'center',
-				xtype: 'container',
-				reference: 'main',
-				layout: 'card',
-				items: []
-			}]
-		};
+	isTouchTheme: function() {
+		return (this.getTheme().indexOf('touch') !== -1);
 	},
 	
-	getSide: function() {
-		return this.getToolStack();
+	getLayout: function() {
+		return WT.getOption('layout');
 	},
 	
-	getToolStack: function() {
-		return this.lookupReference('center').lookupReference('tool');
-	},
-	
-	getMainStack: function() {
-		return this.lookupReference('center').lookupReference('main');
-	},
-	
-	addServiceButton: function(desc) {
-		var me = this,
-				west = me.lookupReference('west');
-		
-		west.add(Ext.create('WT.ux.ServiceButton', desc, {
-			scale: 'large',
-			handler: 'onLauncherButtonClick'
-		})).setBadgeText(Ext.Number.randomInt(0,99)+'');
+	getLaf: function() {
+		return WT.getOption('laf');
 	}
 });

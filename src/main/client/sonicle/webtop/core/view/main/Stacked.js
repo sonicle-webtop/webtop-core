@@ -31,12 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.main.Outlook2013', {
-	alternateClassName: 'WT.view.main.Outlook2013',
+Ext.define('Sonicle.webtop.core.view.main.Stacked', {
+	alternateClassName: 'WT.view.main.Stacked',
 	extend: 'WT.view.main.Abstract',
 	requires: [
 		'WT.ux.StackServiceButton'
 	],
+	
+	measuredL1Height: 0,
+	measuredL2Height: 0,
 	
 	westCmp: function() {
 		return {
@@ -55,8 +58,9 @@ Ext.define('Sonicle.webtop.core.view.main.Outlook2013', {
 				layout: 'card',
 				items: []
 			}, {
-				xtype: 'container',
 				region: 'south',
+				xtype: 'container',
+				reference: 'launchers',
 				height: 155,
 				layout: 'border',
 				items: [{
@@ -108,18 +112,44 @@ Ext.define('Sonicle.webtop.core.view.main.Outlook2013', {
 	addServiceButton: function(desc) {
 		var me = this,
 				west = me.lookupReference('west'),
+				l = west.lookupReference('launchers'),
 				l1 = west.lookupReference('launcher1'),
-				l2 = west.lookupReference('launcher2');
+				l2 = west.lookupReference('launcher2'),
+				cmp;
 		
 		if(l1.items.getCount() < 3) {
-			l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
+			cmp = l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
 				handler: 'onLauncherButtonClick'
-			})).setBadgeText('12');
+			}));
+			cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+			// Toolbar item real height depends on theme (touch or not) and on
+			// choosen scale. We need to measure it getting current height 
+			// during first item insertion.
+			if(!me.measuredL1Height) me.measuredL1Height = cmp.getHeight();
+			
 		} else {
-			l2.add(Ext.create('WT.ux.ServiceButton', desc, {
+			cmp = l2.add(Ext.create('WT.ux.ServiceButton', desc, {
 				scale: 'small',
 				handler: 'onLauncherButtonClick'
-			})).setBadgeText('15');
+			}));
+			cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+			// Toolbar item real height depends on theme (touch or not) and on
+			// choosen scale. We need to measure it getting current height 
+			// during first item insertion.
+			if(!me.measuredL2Height) me.measuredL2Height = cmp.getHeight();
 		}
+		l.setHeight(me.calculateHeight(l1, l2));
+		l.updateLayout();
+	},
+	
+	calculateHeight: function(l1, l2) {
+		var me = this,
+				l1Rows = l1.items.getCount();
+		// 24 -> 32 -> 38
+		return (6 + 6) // l1 toolbar top&bottom margins
+				+ (me.measuredL1Height * l1Rows) // l1 toolbar height
+				+ (6 * (l1Rows -1)) // l1 toolbar items spacing
+				+ (6 + 6) // l2 toolbar top&bottom margins
+				+ ((l2.items.getCount() > 0) ? me.measuredL2Height : 0); // l2 toolbar height
 	}
 });

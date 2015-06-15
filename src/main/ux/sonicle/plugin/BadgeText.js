@@ -105,9 +105,9 @@ Ext.define('Sonicle.plugin.BadgeText', {
 			Ext.apply(styles, me.calculateAnchors(me.align, button.getHeight(), 14));
 		} else {
 			Ext.apply(styles, {
-				'height': '18px',
+				'height': '16px',
 				'font-size': '10px',
-				'padding': '1px 2px'
+				'padding': '2px 2px'
 			});
 			Ext.apply(styles, me.calculateAnchors(me.align, button.getHeight(), 18));
 		}
@@ -135,9 +135,9 @@ Ext.define('Sonicle.plugin.BadgeText', {
 			case 'cr':
 				return {'top': (Math.round((buttonHeight-badgeHeight)/2)-1)+'px', 'right': '1px'};
 			case 'bl':
-				return {'bottom': '0px', 'left': '1px'};
+				return {'bottom': '1px', 'left': '1px'};
 			case 'br':
-				return {'bottom': '0px', 'right': '1px'};
+				return {'bottom': '1px', 'right': '1px'};
 		}
 	},
 	

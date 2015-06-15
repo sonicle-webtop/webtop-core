@@ -8,6 +8,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.PrintManager',
 		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.webtop.core.WT',
+		'Sonicle.webtop.core.Info',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
@@ -98,7 +99,9 @@ Ext.define('Sonicle.webtop.core.Application', {
 				def = null, vp, vpc;
 		
 		// Creates main viewport
-		vp = me.viewport = me.getView(me.views[0]).create();
+		vp = me.viewport = me.getView(me.views[0]).create({
+			totalServices: me.services.count()
+		});
 		vpc = me.viewport.getController();
 		
 		// Inits loaded services and activate the default one

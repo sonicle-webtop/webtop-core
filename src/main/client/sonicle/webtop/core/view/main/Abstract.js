@@ -43,6 +43,10 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	layout: 'border',
 	referenceHolder: true,
 	
+	config: {
+		totalServices: -1
+	},
+	
 	westCmp: Ext.emptyFn,
 	centerCmp: Ext.emptyFn,
 	getSide: Ext.emptyFn,
@@ -193,29 +197,4 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			menu.add(act);
 		});
 	}
-	
-	/*
-	createServiceButton: function(desc) {
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTS.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
-		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
-		}
-		
-		return Ext.create('WT.ux.ServiceButton', {
-			scale: 'large',
-			itemId: desc.getId(),
-			iconCls: WTF.cssIconCls(desc.getXid(), 'service-m'),
-			tooltip: tip,
-			handler: 'onLauncherButtonClick'
-		});
-	}
-	*/
 });

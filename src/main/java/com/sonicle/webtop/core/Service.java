@@ -207,7 +207,7 @@ public class Service extends BaseService {
 		
 		try {
 			items.add(new JsSimple("default", "WebTop"));
-			items.add(new JsSimple("outlook2013", "Outlook 2013/Mozilla"));
+			items.add(new JsSimple("stacked", "Outlook 2007/2003"));
 			
 			new JsonResult("layouts", items, items.size()).printTo(out);
 

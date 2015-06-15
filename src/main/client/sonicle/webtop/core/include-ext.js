@@ -132,15 +132,6 @@
 		document.write('<link rel="stylesheet" type="text/css" href="' + 
 				chartsCSSPath + (useDebug ? '-debug.css' : '.css') + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'service.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'service-override.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'service-' + theme + '.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				lafPath + 'service-override-' + theme + '.css' + '"/>');
-		
-		document.write('<link rel="stylesheet" type="text/css" href="' +
 				soUxCSSPath + 'calendar.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				soUxCSSPath + 'multicalendar.css' + '"/>');

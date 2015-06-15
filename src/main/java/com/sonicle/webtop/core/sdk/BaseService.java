@@ -123,7 +123,6 @@ public abstract class BaseService extends BaseBaseService {
 	
 	public final void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ServletFileUpload upload = null;
-		ArrayList<String> items = new ArrayList<>();
 		
 		System.out.println("processUpload");
 		
@@ -162,10 +161,14 @@ public abstract class BaseService extends BaseBaseService {
 					System.out.println("FileItemStream: "+fis.getName());
 					if(!fis.isFormField()) {
 						streamMethod.invoke(this, request, fis.openStream());
-						items.add("");
 					}
 				}
+				
+				new JsonResult().printTo(out);
+				
 			} else {
+				ArrayList<String> items = new ArrayList<>();
+				
 				//CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
 				//File uploadsDir = new File(css.getSystemUploadsPath());
 				File uploadsDir = new File("C:/temp/uploads");
@@ -197,13 +200,13 @@ public abstract class BaseService extends BaseBaseService {
 						items.add(filename);
 					}
 				}
+				
+				new JsonResult(items).printTo(out);
 			}
-			
-			new JsonResult(items).printTo(response, out);
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			new JsonResult(false, "Error uploading").printTo(response, out);
+			new JsonResult(false, "Error uploading").printTo(out);
 		}
 	}
 	
