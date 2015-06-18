@@ -43,16 +43,17 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 		'laf',
 		'locale',
 		'timezone',
-		'dateFormat',
-		'timeFormat',
+		'startDay',
+		'shortDateFormat',
+		'longDateFormat',
+		'shortTimeFormat',
+		'longTimeFormat',
 		{name: 'use24HourTime', type: 'boolean', 
-			depends: 'timeFormat', 
+			depends: 'shortTimeFormat', 
 			convert: function(v, rec) {
-				var tf = rec.get('timeFormat');
+				var tf = rec.get('shortTimeFormat');
 				return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
 			}
-		},
-		'longDateFormat',
-		'longTimeFormat'
+		}
 	]
 });

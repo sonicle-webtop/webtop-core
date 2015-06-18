@@ -116,6 +116,22 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Gets the initial setting value bound to key.
+	 * @param {String} [id] The service ID.
+	 * @param {Object} opts Key/Value pairs object.
+	 * @return {Mixed} Setting value.
+	 */
+	setOptions: function(id, opts) {
+		if(arguments.length === 1) {
+			opts = id;
+			id = WT.ID;
+		}
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		return svc.setOptions(opts);
+	},
+	
+	/**
 	 * Returns a string resource.
 	 * If id and key are both filled, any other arguments will be used in
 	 * conjunction with {@link Ext.String#format} method in order to replace
@@ -184,6 +200,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {String} svc The service ID.
 	 * @param {String} act The service action to call.
 	 * @param {Object} [opts] Config options.
+	 * @param {Object} [opts.params] Any custom params.
 	 * @param {Function} [opts.callback] The callback function to call.
 	 * @param {Boolean} opts.callback.success
 	 * @param {Object} opts.callback.json
@@ -440,15 +457,55 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return Ext.create(opts.containerCfg);
 	},
 	
+	getTheme: function() {
+		return WT.getOption('theme');
+	},
+	
+	isTouchTheme: function() {
+		return (this.getTheme().indexOf('touch') !== -1);
+	},
+	
+	getLayout: function() {
+		return WT.getOption('layout');
+	},
+	
+	getLaf: function() {
+		return WT.getOption('laf');
+	},
+	
+	getStartDay: function() {
+		return WT.getOption('startDay');
+	},
+	
+	getUse24HourTime: function() {
+		return WT.getOption('use24HourTime');
+	},
+	
+	getTimezone: function() {
+		return WT.getOption('timezone');
+	},
+	
 	getShortDateFmt: function() {
-		//TODO: restituire il valore localizzato (dalle options)
+		console.log('getShortDateFmt');
+		//TODO: restituire il valore localizzato (dalle options) convertendolo da quello java
+		//return WT.getOption('dateFormat');
 		return 'd/m/Y';
 	},
 	
+	getLongDateFmt: function() {
+		return WT.getOption('longDateFormat');
+	},
+	
 	getShortTimeFmt: function() {
-		//TODO: restituire il valore localizzato (dalle options)
+		console.log('getShortTimeFmt');
+		//TODO: restituire il valore localizzato (dalle options) convertendolo da quello java
+		//return WT.getOption('timeFormat');
 		return 'H:i';
 		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
+	},
+	
+	getLongTimeFmt: function() {
+		return WT.getOption('longTimeFormat');
 	},
 	
 	print: function(html) {

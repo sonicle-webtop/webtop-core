@@ -169,6 +169,28 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		};
 	},
 	
+	/**
+	 * Helper method for building a config object for the uploader.
+	 * @param {String} sid The service ID
+	 * @param {String} context The upload context
+	 * @param {Object} [opts]
+	 * @param {Object} [opts.extraParams] Additional extra params to apply
+	 * @returns {Object} Object config
+	 */
+	uploader: function(sid, context, opts) {
+		opts = opts || {};
+		return {
+			url: 'service-request',
+			extraParams: Ext.apply(opts.extraParams || {}, {
+				service: sid,
+				action: 'Upload',
+				context: context
+			}),
+			flashSwfUrl: 'resources/js/plupload/Moxie.swf',
+			silverlightXapUrl: 'resources/js/plupload/Moxie.xap'
+		};
+	},
+	
 	/*
 	 * Builds a service request URL, based on service ID, action and params.
 	 * @param {String} sid The service ID
@@ -197,7 +219,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/**
-	 * Helper method for building a {@link Ext.data.field.Field field} config.
+	 * Helper method for building a config object for {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
 	 * @param {Boolean} allowBlank If 'false' automatically adds the presence validator.
@@ -214,11 +236,32 @@ Ext.define('Sonicle.webtop.core.Factory', {
 			name: name,
 			type: type,
 			allowNull: true
-		}, cfg);
+		}, cfg, {
+			defaultValue: null
+		});
 	},
 	
 	/**
-	 * Helper method for building a calculated {@link Ext.data.field.Field field} config.
+	 * Helper method for building a config object for readOnly {@link Ext.data.field.Field field}.
+	 * @param {String} name See {@link Ext.data.field.Field#name}
+	 * @param {String} type See {@link Ext.data.field.Field#type}
+	 * @param {Object} [cfg] Custom config to apply.
+	 * @returns {Object} The field config
+	 */
+	roField: function(name, type, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			name: name,
+			type: type,
+			allowNull: true,
+			persist: false
+		}, cfg, {
+			defaultValue: null
+		});
+	},
+	
+	/**
+	 * Helper method for building a config object for calculated {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
 	 * @param {String/String[]} depends See {@link Ext.data.field.Field#depends}
@@ -234,22 +277,6 @@ Ext.define('Sonicle.webtop.core.Factory', {
 			persist: false,
 			depends: depends,
 			convert: convert
-		}, cfg);
-	},
-	
-	/**
-	 * Helper method for building a readOnly {@link Ext.data.field.Field field} config.
-	 * @param {String} name See {@link Ext.data.field.Field#name}
-	 * @param {String} type See {@link Ext.data.field.Field#type}
-	 * @param {Object} [cfg] Custom config to apply.
-	 * @returns {Object} The field config
-	 */
-	roField: function(name, type, cfg) {
-		cfg = cfg || {};
-		return Ext.apply({
-			name: name,
-			type: type,
-			persist: false
 		}, cfg);
 	},
 	

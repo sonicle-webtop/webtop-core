@@ -111,9 +111,10 @@ public class Service extends BaseService {
 		hm.put("laf", cus.getLookAndFeel());
 		hm.put("locale", profile.getLocale());
 		hm.put("timezone", profile.getTimeZone().getID());
-		hm.put("dateFormat", cus.getDateFormat());
+		hm.put("startDay", cus.getStartDay());
+		hm.put("shortDateFormat", cus.getShortDateFormat());
 		hm.put("longDateFormat", cus.getLongDateFormat());
-		hm.put("timeFormat", cus.getTimeFormat());
+		hm.put("shortTimeFormat", cus.getShortTimeFormat());
 		hm.put("longTimeFormat", cus.getLongTimeFormat());
 		return hm;
 	}
@@ -363,22 +364,6 @@ public class Service extends BaseService {
 			logger.error("Error executing action TurnOffWhatsnew", ex);
 		} finally {
 			new JsonResult().printTo(out);
-		}
-	}
-	
-	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-			Integer width = ServletUtils.getIntParameter(request, "width", true);
-			
-			UserProfile profile = getSuperEnv().getProfile();
-			CoreUserSettings cusx = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
-			cusx.setViewportToolWidth(width);
-			new JsonResult().printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action SetToolComponentWidth", ex);
-			new JsonResult(false, "Unable to save with").printTo(out);
 		}
 	}
 	

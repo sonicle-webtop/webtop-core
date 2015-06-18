@@ -56,51 +56,72 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * Theme name
 	 */
 	public static final String THEME = "theme";
+	public static final String DEFAULT_THEME = "crisp";
+	
 	/**
 	 * [string]
 	 * Layout
 	 */
 	public static final String LAYOUT = "layout";
+	public static final String DEFAULT_LAYOUT = "default";
+	
 	/**
 	 * [string]
 	 * Look and feel
 	 */
 	public static final String LAF = "laf";
+	public static final String DEFAULT_LAF = "default";
+	
 	/**
 	 * [boolean]
 	 * Right-to-left mode
 	 */
 	public static final String RTL = "rtl";
+	public static final boolean DEFAULT_RTL = false;
+	
 	/**
-	 * [string]
-	 * Layout
+	 * [int]
+	 * Week start day (0:sunday, 1:monday)
 	 */
-	public static final String DATE_FORMAT = "i18n.format.date";
+	public static final String START_DAY = "i18n.startDay";
+	public static final int DEFAULT_START_DAY = 1;
+	
 	/**
 	 * [string]
-	 * Layout
+	 * Short date format pattern
+	 */
+	public static final String SHORT_DATE_FORMAT = "i18n.format.date.short";
+	
+	/**
+	 * [string]
+	 * Long date format pattern
 	 */
 	public static final String LONG_DATE_FORMAT = "i18n.format.date.long";
+	
 	/**
 	 * [string]
-	 * Layout
+	 * Short time format pattern
 	 */
-	public static final String TIME_FORMAT = "i18n.format.time";
+	public static final String SHORT_TIME_FORMAT = "i18n.format.time.short";
+	
 	/**
 	 * [string]
-	 * Layout
+	 * Long time format pattern
 	 */
 	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
+	
 	/**
 	 * [string][*]
 	 * Saves width of tool component
 	 */
 	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
+	
 	/**
 	 * [boolean]
 	 * Specifies if whatsnew window must be shown after a service upgrade
 	 */
 	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	
 	/**
 	 * [string][*]
 	 * Saves last seen service version for whatsnew handling
@@ -134,7 +155,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
 	
 	public String getTheme() {
-		return getString(THEME, "crisp");
+		return getString(THEME, DEFAULT_THEME);
 	}
 	
 	public boolean setTheme(String value) {
@@ -142,7 +163,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLayout() {
-		return getString(LAYOUT, "default");
+		return getString(LAYOUT, DEFAULT_LAYOUT);
 	}
 	
 	public boolean setLayout(String value) {
@@ -150,7 +171,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLookAndFeel() {
-		return getString(LAF, "default");
+		return getString(LAF, DEFAULT_LAF);
 	}
 	
 	public boolean setLookAndFeel(String value) {
@@ -158,15 +179,23 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean getRightToLeft() {
-		return getBoolean(RTL, false);
+		return getBoolean(RTL, DEFAULT_RTL);
 	}
 	
-	public String getDateFormat() {
-		return getString(DATE_FORMAT, "MM/dd/yyyy");
+	public Integer getStartDay() {
+		return getInteger(START_DAY, DEFAULT_START_DAY);
 	}
 	
-	public boolean setDateFormat(String value) {
-		return setString(DATE_FORMAT, value);
+	public boolean setStartDay(Integer value) {
+		return setInteger(START_DAY, value);
+	}
+	
+	public String getShortDateFormat() {
+		return getString(SHORT_DATE_FORMAT, "MM/dd/yyyy");
+	}
+	
+	public boolean setShortDateFormat(String value) {
+		return setString(SHORT_DATE_FORMAT, value);
 	}
 	
 	public String getLongDateFormat() {
@@ -177,12 +206,12 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(LONG_DATE_FORMAT, value);
 	}
 	
-	public String getTimeFormat() {
-		return getString(TIME_FORMAT, "HH:mm");
+	public String getShortTimeFormat() {
+		return getString(SHORT_TIME_FORMAT, "HH:mm");
 	}
 	
-	public boolean setTimeFormat(String value) {
-		return setString(TIME_FORMAT, value);
+	public boolean setShortTimeFormat(String value) {
+		return setString(SHORT_TIME_FORMAT, value);
 	}
 	
 	public String getLongTimeFormat() {

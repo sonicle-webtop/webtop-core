@@ -31,23 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Info', {
-	singleton: true,
-	alternateClassName: ['WT.Info', 'WTI'],
+Ext.define('Sonicle.webtop.core.store.StartDay', {
+	extend: 'Ext.data.ArrayStore',
 	
-	getTheme: function() {
-		return WT.getOption('theme');
-	},
-	
-	isTouchTheme: function() {
-		return (this.getTheme().indexOf('touch') !== -1);
-	},
-	
-	getLayout: function() {
-		return WT.getOption('layout');
-	},
-	
-	getLaf: function() {
-		return WT.getOption('laf');
-	}
+	model: 'WT.model.Simple',
+	data: [
+		[0, WT.res('store.startDay.0')],
+		[1, WT.res('store.startDay.1')]
+	]
 });

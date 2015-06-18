@@ -8,7 +8,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.PrintManager',
 		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.webtop.core.WT',
-		'Sonicle.webtop.core.Info',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',

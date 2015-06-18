@@ -159,17 +159,32 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					blur: 'onBlurAutoSave'
 				}
 			}, {
+				xtype: 'combo',
+				name: 'startDay',
+				allowBlank: false,
+				editable: false,
+				store: Ext.create('Sonicle.webtop.core.store.StartDay', {
+					autoLoad: true
+				}),
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: WT.res(me.ID, 'opts.i18n.fld-startDay.lbl'),
+				listeners: {
+					blur: 'onBlurAutoSave'
+				},
+				reload: true
+			}, {
 				xtype: 'textfield',
-				name: 'dateFormat',
-				fieldLabel: WT.res('opts.i18n.fld-dateFormat.lbl')
+				name: 'shortDateFormat',
+				fieldLabel: WT.res('opts.i18n.fld-shortDateFormat.lbl')
 			}, {
 				xtype: 'textfield',
 				name: 'longDateFormat',
 				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl')
 			}, {
 				xtype: 'textfield',
-				name: 'timeFormat',
-				fieldLabel: WT.res('opts.i18n.fld-timeFormat.lbl')
+				name: 'shortTimeFormat',
+				fieldLabel: WT.res('opts.i18n.fld-shortTimeFormat.lbl')
 			}, {
 				xtype: 'textfield',
 				name: 'longTimeFormat',

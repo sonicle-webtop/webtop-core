@@ -93,9 +93,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				JsOptions i18n = new JsOptions();
 				i18n.put("locale", user.getLocale());
 				i18n.put("timezone", user.getTimezone());
-				i18n.put("dateFormat", cus.getDateFormat());
+				i18n.put("startDay", cus.getStartDay());
+				i18n.put("shortDateFormat", cus.getShortDateFormat());
 				i18n.put("longDateFormat", cus.getLongDateFormat());
-				i18n.put("timeFormat", cus.getTimeFormat());
+				i18n.put("shortTimeFormat", cus.getShortTimeFormat());
 				i18n.put("longTimeFormat", cus.getLongTimeFormat());
 				
 				// TFA
@@ -142,9 +143,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// i18n
 				if(pl.map.has("locale")) user.setLanguageTag(pl.data.getString("locale"));
 				if(pl.map.has("timezone")) user.setTimezone(pl.data.getString("timezone"));
-				if(pl.map.has("dateFormat")) cus.setDateFormat(pl.data.getString("dateFormat"));
+				if(pl.map.has("startDay")) cus.setStartDay(pl.data.getInteger("startDay"));
+				if(pl.map.has("shortDateFormat")) cus.setShortDateFormat(pl.data.getString("shortDateFormat"));
 				if(pl.map.has("longDateFormat")) cus.setLongDateFormat(pl.data.getString("longDateFormat"));
-				if(pl.map.has("timeFormat")) cus.setTimeFormat(pl.data.getString("timeFormat"));
+				if(pl.map.has("shortTimeFormat")) cus.setShortTimeFormat(pl.data.getString("shortTimeFormat"));
 				if(pl.map.has("longTimeFormat")) cus.setLongTimeFormat(pl.data.getString("longTimeFormat"));
 				
 				udao.update(con, user);

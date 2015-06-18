@@ -35,10 +35,21 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	alternateClassName: 'WT.view.main.AbstractC',
 	extend: 'Ext.app.ViewController',
 	
-	active: null,
 	svctbmap: null,
 	toolmap: null,
 	mainmap: null,
+	
+	/**
+	 * @property {Boolean} isActivating
+	 * Tracks period during service transition between one to other.
+	 */
+	isActivating: false,
+	
+	/**
+	 * @property {String} active
+	 * Currently active service
+	 */
+	active: null,
 	
 	constructor: function() {
 		var me = this;
@@ -113,14 +124,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		
 		// If already active...exits
 		if(me.active === id) return false;
-		
+		me.isActivating = true;
 		// Activate components
 		me.setActiveServiceToolbar(svc);
 		if(svc.hasNewActions()) me.setActiveNewAction(svc);
 		me.setActiveServiceComponents(svc);
 		// -------------------
-		
 		me.active = id;
+		me.isActivating = false;
 		return true;
 	},
 	
@@ -167,12 +178,19 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	onToolResize: function(s, w) {
-		WT.ajaxReq(WT.ID, 'SetToolComponentWidth', {
-			params: {
-				serviceId: this.active,
-				width: w
-			}
-		});
+		var me = this,
+				active = me.active;
+		if((me.isActivating === false) && active) {
+			WT.ajaxReq(active, 'SetToolComponentWidth', {
+				params: {
+					width: w
+				},
+				callback: function(success) {
+					// Updates option locally...
+					if(success) WT.setOptions(active, {'viewportToolWidth': w});
+				}
+			});
+		}
 	},
 	
 	onLauncherButtonClick: function(s) {

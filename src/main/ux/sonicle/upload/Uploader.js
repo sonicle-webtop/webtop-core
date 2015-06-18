@@ -36,12 +36,8 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	pluOptions: null,
 	
-	buildPluploadUrl: function() {
-		return Ext.String.urlAppend(this.getUrl(), Ext.Object.toQueryString(this.getExtraParams() || {}));
-	},
-	
 	constructor: function(owner, cfg) {
-		var me = this, url;
+		var me = this;
 		me.owner = owner;
 		me.succeeded = [];
 		me.failed = [];
@@ -51,7 +47,7 @@ Ext.define('Sonicle.upload.Uploader', {
 		
 		me.pluOptions = Ext.apply({}, cfg.pluploadConfig || {}, {
 			runtimes: me.getRuntimes(),
-			url: me.buildPluploadUrl(),
+			url: me.buildPluploadUrl(me.getUrl(), me.getExtraParams()),
 			max_file_size: me.getMaxFileSize(),
 			resize: me.getResize(),
 			flash_swf_url: me.getFlashSwfUrl(),
@@ -80,41 +76,22 @@ Ext.define('Sonicle.upload.Uploader', {
 		});
 	},
 	
-	forceExtraParams: function(params) {
-		//TODO: rivedere....
-		var me = this,
-				pars = Ext.apply(me.getExtraParams(), params);
-		me.setExtraParams(pars);
-		if(!me.pluOptions) return;
-		Ext.apply(me.pluOptions, {
-			url: me.buildPluploadUrl()
-		});
-		if(me.uploader) me.uploader.setOption('url', me.pluOptions['url']);
-	},
-	
-	updateExtraParams: function(nv, ov) {
-		console.log('updateExtraParams');
-	},
-	
-	init: function() {
+	mergeExtraParams: function(obj) {
 		var me = this;
-		if(!me.inited) {
-			me.inited = true;
-			me.initUploader();
-		}
+		me.setExtraParams(Ext.apply(me.getExtraParams() || {}, obj));
 	},
 	
 	removeAll: function() {
 		var me = this;
 		me.store.each(function(rec) {
-			me.removeFile(rec.get('id'));
+			if(rec) me.removeFile(rec.get('id'));
 		});
 	},
 	
 	removeUploaded: function() {
 		var me = this;
 		me.store.each(function(rec) {
-			if(rec.get('status') === 5) {
+			if(rec && (rec.get('status') === 5)) {
 				me.removeFile(rec.get('id'));
 			}
 		});
@@ -140,6 +117,51 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.uploader.start();
 	},
 	
+	/**
+	 * @private
+	 */
+	buildPluploadUrl: function(url, extraParams) {
+		return Ext.String.urlAppend(url, Ext.Object.toQueryString(extraParams || {}));
+	},
+	
+	/**
+	 * @private
+	 */
+	refreshUrl: function(obj) {
+		var me = this,
+				url = (obj.url) ? obj.url : me.getUrl(),
+				ep = (obj.extraParams) ? obj.extraParams : me.getExtraParams(),
+				pluUrl = me.buildPluploadUrl(url, ep);
+		
+		if(!me.pluOptions) return;
+		Ext.apply(me.pluOptions, {
+			url: pluUrl
+		});
+		if(me.uploader) me.uploader.setOption('url', pluUrl);
+	},
+	
+	/**
+	 * @private
+	 */
+	applyExtraParams: function(value) {
+		this.refreshUrl({extraParams: value});
+		return value;
+	},
+	
+	/**
+	 * @private
+	 */
+	init: function() {
+		var me = this;
+		if(!me.inited) {
+			me.inited = true;
+			me.initUploader();
+		}
+	},
+	
+	/**
+	 * @private
+	 */
 	updateProgress: function() {
 		var me = this,
 				progress = me.uploader.total,
@@ -154,12 +176,14 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.fireEvent('updateprogress', me, total, percent, sent, succeeded, failed, queued, speed);		
 	},
 	
+	/**
+	 * @private
+	 */
 	updateStore: function(v) {
 		var me = this,
 				rec = me.store.getById(v.id),
 				data;
 		
-		console.log('updateStore');
 		data = {
 			id: v.id,
 			name: v.name,
@@ -201,11 +225,12 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	onStoreUpdate: function(sto, rec, op) {
-		console.log('onStoreUpdate');
-		console.log(rec.data);
 		this.updateProgress();
 	},
 	
+	/**
+	 * @private
+	 */
 	initUploader: function() {
 		var me = this;
 		
@@ -296,7 +321,9 @@ Ext.define('Sonicle.upload.Uploader', {
 				response = Ext.JSON.decode(status.response);
 		
 		if(response.success === true) {
-			file.uploadId = response.data[0];
+			if(response.data && (response.data.temp === true)) {
+				file.uploadId = response.data.uploadId;
+			}
 			file.server_error = 0;
 			me.updateStore(file);
 			me.succeeded.push(file);

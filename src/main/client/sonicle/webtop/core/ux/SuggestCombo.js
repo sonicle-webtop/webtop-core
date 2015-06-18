@@ -54,8 +54,10 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	minChars: 2,
 	autoSelect: false,
 	queryMode: 'remote',
+	triggerAction: 'all',
 	forceSelection: false,
-	selectOnFocus: false,
+	selectOnFocus: true,
+	editable: true,
 	
 	initComponent: function() {
 		var me = this;
@@ -65,15 +67,15 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {
 						context: me.suggestionContext
+					},
+					reader: {
+						type: 'array'
 					}
 				})
-			},
-			valueField: 'id',
-			displayField: 'id'
+			}
 		});
 		
 		me.callParent(arguments);
-		
 		me.on('specialkey', me._onSpecialKey);
 	},
 	
