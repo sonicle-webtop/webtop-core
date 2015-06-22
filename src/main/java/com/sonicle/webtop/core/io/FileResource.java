@@ -31,34 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.io;
 
-import com.sonicle.webtop.core.WebTopApp;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseJobServiceTask implements Job {
+public class FileResource implements Resource {
 	
-	private JobExecutionContext jec;
+	private final File file;
 	
-	public JobDataMap getData() {
-		return jec.getMergedJobDataMap();
+	public FileResource(File file) {
+		this.file = file;
 	}
-	
+
 	@Override
-	public final void execute(JobExecutionContext jec) throws JobExecutionException {
-		this.jec = jec;
-		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
-		}
+	public String getFilename() {
+		return file.getName();
 	}
-	
-	public abstract void setJobService(BaseJobService value);
-	public abstract void executeWork();
+
+	@Override
+	public long getLastModified() {
+		return file.lastModified();
+	}
+
+	@Override
+	public long getSize() {
+		return file.length();
+	}
+
+	@Override
+	public InputStream getInputStream() throws IOException {
+		return new FileInputStream(file);
+	}
 }

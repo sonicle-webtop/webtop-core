@@ -31,34 +31,45 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.util;
 
-import com.sonicle.webtop.core.WebTopApp;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import java.security.MessageDigest;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESKeySpec;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 /**
  *
- * @author malbinola
+ * @author gbulfon
  */
-public abstract class BaseJobServiceTask implements Job {
+public class Encryption {
 	
-	private JobExecutionContext jec;
-	
-	public JobDataMap getData() {
-		return jec.getMergedJobDataMap();
+	public static String encrypt(String s, String algorithm) throws Exception {
+		MessageDigest md = MessageDigest.getInstance(algorithm);
+		md.update(s.getBytes("UTF-8"));
+		return (new BASE64Encoder()).encode(md.digest());
+	}
+
+	public static String decipher(String encoded_string, String key) throws Exception {
+		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
+		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
+		Cipher cipher=Cipher.getInstance("DES");
+		cipher.init(Cipher.DECRYPT_MODE,sk);
+		byte[] dec = new BASE64Decoder().decodeBuffer(encoded_string);
+		byte[] utf8 = cipher.doFinal(dec);
+		return new String(utf8, "UTF-8");
+	}
+
+	public static String cipher(String string, String key) throws Exception {
+		DESKeySpec ks=new DESKeySpec(key.getBytes("UTF-8"));
+		SecretKey sk=SecretKeyFactory.getInstance("DES").generateSecret(ks);
+		Cipher cipher=Cipher.getInstance("DES");
+		cipher.init(Cipher.ENCRYPT_MODE,sk);
+		return (new BASE64Encoder()).encode(cipher.doFinal(string.getBytes("UTF-8")));
 	}
 	
-	@Override
-	public final void execute(JobExecutionContext jec) throws JobExecutionException {
-		this.jec = jec;
-		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
-		}
-	}
 	
-	public abstract void setJobService(BaseJobService value);
-	public abstract void executeWork();
 }

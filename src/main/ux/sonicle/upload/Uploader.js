@@ -12,26 +12,43 @@ Ext.define('Sonicle.upload.Uploader', {
 		'Ext.mixin.Observable'
 	],
 	
+	statics: {
+		/**
+		 * Adds passed mimeType and related extensions to mOxie internal 
+		 * structures. (see mOxie.Mime.addMimeType() method)
+		 * @param {String} mimeType The content mimeType.
+		 * @param {String/String[]} extension File extensions to register within mimeType.
+		 */
+		registerMimeType: function(mimeType, extension) {
+			if(!mOxie) return;
+			if(!Ext.isArray(extension)) extension = [extension];
+			var mm = mOxie.Mime,
+					exts = mm.extensions[mimeType] || [];
+			
+			Ext.iterate(extension, function(ext) {
+				if(exts.indexOf(ext) === -1) exts.push(ext);
+			});
+			mm.addMimeType(Ext.String.format('{0},{1}', mimeType, exts.join(' ')));
+		}
+	},
+	
 	config: {
 		autoStart: true,
 		autoRemoveUploaded: true,
-		runtimes: '',
 		url: '',
 		extraParams: null,
+		mimeTypes: [],
 		maxFileSize: '128mb',
-		resize: '',
-		flashSwfUrl: '',
-		silverlightXapUrl: '',
-		filters: {},
-		chunkSize: null,
-		uniqueNames: true,
-		multipart: true,
-		multipartParams: {},
+		preventDuplicates: true,
 		multiSelection: true,
+		uniqueNames: true,
+		runtimes: '',
 		container: null,
 		browseButton: null,
 		dropElement: null,
-		pluploadConfig: null
+		flashSwfUrl: '',
+		silverlightXapUrl: '',
+		pluploadConfig: null // Direct config to apply
 	},
 	
 	pluOptions: null,
@@ -45,26 +62,7 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.initConfig(cfg);
 		me.mixins.observable.constructor.call(me, cfg);
 		
-		me.pluOptions = Ext.apply({}, cfg.pluploadConfig || {}, {
-			runtimes: me.getRuntimes(),
-			url: me.buildPluploadUrl(me.getUrl(), me.getExtraParams()),
-			max_file_size: me.getMaxFileSize(),
-			resize: me.getResize(),
-			flash_swf_url: me.getFlashSwfUrl(),
-			silverlight_xap_url: me.getSilverlightXapUrl(),
-			filters: me.getFilters(),
-			//chunk_size: '1mb', // @see http://www.plupload.com/punbb/viewtopic.php?id=1259
-			chunk_size: me.getChunkSize(),
-			unique_names: me.getUniqueNames(),
-			multipart: me.getMultipart(),
-			multipart_params: me.getMultipartParams(),
-			multi_selection: me.getMultiSelection(),
-			container: me.getContainer(),
-			browse_button: me.getBrowseButton(),
-			drop_element: me.getDropElement(),
-			required_features: null
-		});
-		
+		me.pluOptions = me.buildPluOptions();
 		me.store = Ext.create('Ext.data.JsonStore', {
 			model: 'Sonicle.upload.Model',
 			listeners: {
@@ -73,6 +71,10 @@ Ext.define('Sonicle.upload.Uploader', {
 				update: me.onStoreUpdate,
 				scope: me
 			}
+		});
+		
+		Ext.Function.interceptAfter(me, 'setExtraParams', function() {
+			me.refreshPluOptions();
 		});
 	},
 	
@@ -127,25 +129,45 @@ Ext.define('Sonicle.upload.Uploader', {
 	/**
 	 * @private
 	 */
-	refreshUrl: function(obj) {
-		var me = this,
-				url = (obj.url) ? obj.url : me.getUrl(),
-				ep = (obj.extraParams) ? obj.extraParams : me.getExtraParams(),
-				pluUrl = me.buildPluploadUrl(url, ep);
-		
-		if(!me.pluOptions) return;
-		Ext.apply(me.pluOptions, {
-			url: pluUrl
+	buildPluOptions: function(cfg) {
+		var me = this;
+		return Ext.apply({}, me.getPluploadConfig() || {}, {
+			browse_button: me.getBrowseButton(),
+			url: me.buildPluploadUrl(me.getUrl(), me.getExtraParams()),
+			filters: {
+				mime_types: me.getMimeTypes(),
+				max_file_size: me.getMaxFileSize(),
+				preventDuplicates: me.getPreventDuplicates()
+			},
+			multipart: true,
+			multipart_params: {},
+			chunk_size: 0, // Disabled
+			//chunk_size: '1mb', // @see http://www.plupload.com/punbb/viewtopic.php?id=1259
+			resize: null,
+			multi_selection: me.getMultiSelection(),
+			required_features: null,
+			unique_names: me.getUniqueNames(),
+			runtimes: me.getRuntimes(),
+			container: me.getContainer(),
+			drop_element: me.getDropElement(),
+			flash_swf_url: me.getFlashSwfUrl(),
+			silverlight_xap_url: me.getSilverlightXapUrl()
 		});
-		if(me.uploader) me.uploader.setOption('url', pluUrl);
 	},
 	
-	/**
-	 * @private
-	 */
-	applyExtraParams: function(value) {
-		this.refreshUrl({extraParams: value});
-		return value;
+	refreshPluOptions: function() {
+		var me = this, opt;
+		if(!me.pluOptions) return;
+		
+		me.pluOptions = me.buildPluOptions();
+		if(me.uploader) {
+			me.uploader.setOption('url', me.pluOptions.url);
+			/*
+			for(opt in me.pluOptions) {
+				me.uploader.setOption(opt, me.pluOptions[opt]);
+			}
+			*/
+		}
 	},
 	
 	/**

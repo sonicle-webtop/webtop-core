@@ -42,6 +42,16 @@ Ext.define('Sonicle.webtop.core.Util', {
 	},
 	
 	/**
+	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
+	 * @param {Mixed} value The value
+	 * @param {Mixed} ifEmpty The fallback value
+	 * @returns {Mixed} Returned value
+	 */
+	iif: function(value, ifEmpty) {
+		return (Ext.isEmpty(value)) ? ifEmpty : value;
+	},
+	
+	/**
 	 * Null-safe method for checking xtype.
 	 * @param {Mixed} obj An object instance.
 	 * @param {String} xtype The xtype to check.
@@ -54,16 +64,6 @@ Ext.define('Sonicle.webtop.core.Util', {
 	},
 	
 	/**
-	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
-	 * @param {Mixed} value The value
-	 * @param {Mixed} ifEmpty The fallback value
-	 * @returns {Mixed} Returned value
-	 */
-	iif: function(value, ifEmpty) {
-		return (Ext.isEmpty(value)) ? ifEmpty : value;
-	},
-	
-	/**
 	 * Checks if passed object instance is an {@link Ext.Action}.
 	 * @param {Mixed} obj The object instance to check.
 	 * @returns {Boolean} 'True' if passed object is an action.
@@ -73,141 +73,24 @@ Ext.define('Sonicle.webtop.core.Util', {
 		return (obj.isAction && Ext.isFunction(obj.execute));
 	},
 	
-	removeHeader: function(cmp) {
-		if(!cmp.isPanel) return;
-		if(cmp.header && cmp.header.isHeader) {
-			cmp.header.destroy();
+	/**
+	 * Returns corresponding pixels for passed image size.
+	 * @param {String} size The image size (one of xs, s, m, l).
+	 * @returns {Number} Pixels
+	 */
+	imgSizeToPx: function(size) {
+		switch(size) {
+			case 'xs':
+				return 16;
+			case 's':
+				return 24;
+			case 'm':
+				return 32;
+			case 'l':
+				return 48;
+			default:
+				return 0;
 		}
-		cmp.header = false;
-		cmp.updateHeader();
-	},
-	
-	applyTbItems: function(obj, dock, items, append) {
-		if(append === undefined) append = true;
-		var me = this,
-				prop = me._dockToProp(dock),
-				bar = obj[prop];
-		
-		if(!prop) Ext.Error.raise('Please specify a valid docking property');
-		
-		if(Ext.isArray(bar)) {
-			if(append) {
-				obj[prop] = bar.concat(items);
-			} else {
-				obj[prop] = items.concat(bar);
-			}
-		} else if(Ext.isObject(bar)) {
-			if(Ext.isArray(bar.items)) {
-				if(append) {
-					obj[prop].items = bar.items.concat(items);
-				} else {
-					obj[prop].items = items.concat(bar.items);
-				}
-			}
-		} else if(bar && bar.isToolbar) {
-			if(append) {
-				obj[prop].items.addAll(items);
-			} else {
-				obj[prop].items.insert(0, items);
-			}
-		} else {
-			obj[prop] = items;
-		}
-	},
-	
-	_dockToProp: function(dock) {
-		if(dock === 'top') return 'tbar';
-		if(dock === 'bottom') return 'fbar';
-		if(dock === 'left') return 'lbar';
-		if(dock === 'right') return 'rbar';
-		return null;
-	},
-	
-	getCheckedRadioUsingDOM: function(keys) {
-		var checked = null;
-		Ext.iterate(keys, function(key) {
-			if((checked === null) && (Ext.get(key).dom.checked === true)) checked = key;
-		});
-		return checked;
-	},
-	
-	/**
-	 * Find a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
-	 * @param {Ext.form.Panel} form The form panel.
-	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
-	 * @returns {Ext.form.field.Field} The first matching field, or `null` if none was found.
-	 */
-	getField: function(form, id) {
-		return form.getForm().findField(id);
-	},
-	
-	/**
-	 * Gets value of a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
-	 * @param {Ext.form.Panel} form The form panel.
-	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
-	 * @return {Mixed} Field value.
-	 */
-	getFieldValue: function(form, id) {
-		var fld = this.getField(form, id);
-		if(!fld) return undefined;
-		if (fld.isXType('radiogroup')) {
-			return fld.getValue().value;
-		} else {
-			return fld.getValue();
-		}
-	},
-	
-	/**
-	 * Sets value for a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
-	 * @param {Ext.form.Panel} form The form panel.
-	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
-	 * @param {Mixed} value The field value.
-	 */
-	setFieldValue: function(form, id, value, silent) {
-		silent = silent || false;
-		var fld = this.getField(form, id);
-		if(silent && !fld) return;
-		fld.setValue(value);
-	},
-	
-	/**
-	 * Checks if a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form} is empty.
-	 * @param {Ext.form.Panel} form The form panel.
-	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
-	 * @return {Bolean}
-	 */
-	isFieldEmpty: function(form, id) {
-		return Ext.isEmpty(this.getFieldValue(form, id));
-	},
-	
-	/**
-	 * Focus a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
-	 * @param {Ext.form.Panel} form The form panel.
-	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
-	 */
-	focusField: function(form, id) {
-		var fld = this.getField(form, id);
-		if(fld) fld.focus();
-	},
-	
-	/**
-	 * Applies extra params to passed proxy.
-	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
-	 * @param {Object} params Extra params to apply.
-	 * @param {Boolean} [overwrite] 'true' to clear previous params, 'false' to merge them.
-	 */
-	applyExtraParams: function(proxy, params, overwrite) {
-		if(arguments.length === 2) overwrite = false;
-		if(!proxy.isProxy && !proxy.isStore) return;
-		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
-		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
-		proxy.setExtraParams(obj);
-	},
-	
-	loadExtraParams: function(store, params, overwrite) {
-		if(!store.isStore) return;
-		WTU.applyExtraParams(store, params, overwrite);
-		store.load();
 	},
 	
 	/*
@@ -303,6 +186,82 @@ Ext.define('Sonicle.webtop.core.Util', {
 		*/
 	},
 	
+	/**
+	 * Applies extra params to passed proxy.
+	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
+	 * @param {Object} params Extra params to apply.
+	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
+	 */
+	applyExtraParams: function(proxy, params, overwrite) {
+		if(arguments.length === 2) overwrite = false;
+		if(!proxy.isProxy && !proxy.isStore) return;
+		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
+		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
+		proxy.setExtraParams(obj);
+	},
+	
+	/**
+	 * Applies extra params to passed store's proxy and then performs a reload.
+	 * @param {Ext.data.Store} store The store.
+	 * @param {Object} params Extra params to apply.
+	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
+	 */
+	loadExtraParams: function(store, params, overwrite) {
+		if(!store.isStore) return;
+		WTU.applyExtraParams(store, params, overwrite);
+		store.load();
+	},
+	
+	removeHeader: function(cmp) {
+		if(!cmp.isPanel) return;
+		if(cmp.header && cmp.header.isHeader) {
+			cmp.header.destroy();
+		}
+		cmp.header = false;
+		cmp.updateHeader();
+	},
+	
+	applyTbItems: function(obj, dock, items, append) {
+		if(append === undefined) append = true;
+		var me = this,
+				prop = me._dockToProp(dock),
+				bar = obj[prop];
+		
+		if(!prop) Ext.Error.raise('Please specify a valid docking property');
+		
+		if(Ext.isArray(bar)) {
+			if(append) {
+				obj[prop] = bar.concat(items);
+			} else {
+				obj[prop] = items.concat(bar);
+			}
+		} else if(Ext.isObject(bar)) {
+			if(Ext.isArray(bar.items)) {
+				if(append) {
+					obj[prop].items = bar.items.concat(items);
+				} else {
+					obj[prop].items = items.concat(bar.items);
+				}
+			}
+		} else if(bar && bar.isToolbar) {
+			if(append) {
+				obj[prop].items.addAll(items);
+			} else {
+				obj[prop].items.insert(0, items);
+			}
+		} else {
+			obj[prop] = items;
+		}
+	},
+	
+	getCheckedRadioUsingDOM: function(keys) {
+		var checked = null;
+		Ext.iterate(keys, function(key) {
+			if((checked === null) && (Ext.get(key).dom.checked === true)) checked = key;
+		});
+		return checked;
+	},
+	
 	/*
 	 * Build a data object with iframe data, using cross-browser code
 	 * @param {String} iframename The name of the iframe
@@ -316,10 +275,74 @@ Ext.define('Sonicle.webtop.core.Util', {
 			data.doc=data.iframe.contentDocument;
 		}
 		return data;
+	},
+	
+	/**
+	 * Find a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
+	 * @param {Ext.form.Panel} form The form panel.
+	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
+	 * @returns {Ext.form.field.Field} The first matching field, or `null` if none was found.
+	 */
+	getField: function(form, id) {
+		return form.getForm().findField(id);
+	},
+	
+	/**
+	 * Gets value of a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
+	 * @param {Ext.form.Panel} form The form panel.
+	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
+	 * @return {Mixed} Field value.
+	 */
+	getFieldValue: function(form, id) {
+		var fld = this.getField(form, id);
+		if(!fld) return undefined;
+		if (fld.isXType('radiogroup')) {
+			return fld.getValue().value;
+		} else {
+			return fld.getValue();
+		}
+	},
+	
+	/**
+	 * Sets value for a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
+	 * @param {Ext.form.Panel} form The form panel.
+	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
+	 * @param {Mixed} value The field value.
+	 */
+	setFieldValue: function(form, id, value, silent) {
+		silent = silent || false;
+		var fld = this.getField(form, id);
+		if(silent && !fld) return;
+		fld.setValue(value);
+	},
+	
+	/**
+	 * Checks if a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form} is empty.
+	 * @param {Ext.form.Panel} form The form panel.
+	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
+	 * @return {Bolean}
+	 */
+	isFieldEmpty: function(form, id) {
+		return Ext.isEmpty(this.getFieldValue(form, id));
+	},
+	
+	/**
+	 * Focus a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
+	 * @param {Ext.form.Panel} form The form panel.
+	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
+	 */
+	focusField: function(form, id) {
+		var fld = this.getField(form, id);
+		if(fld) fld.focus();
+	},
+	
+	_dockToProp: function(dock) {
+		if(dock === 'top') return 'tbar';
+		if(dock === 'bottom') return 'fbar';
+		if(dock === 'left') return 'lbar';
+		if(dock === 'right') return 'rbar';
+		return null;
 	}
-	
-	
-	
 	
 	/**
 	 * Adds a set of character entity definitions to the set used by

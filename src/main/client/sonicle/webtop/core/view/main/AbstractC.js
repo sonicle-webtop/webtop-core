@@ -106,7 +106,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.toolmap[svc.ID] = tool.getId();
 		tStack.add(tool);
 		
-		if(!main || !main.isPanel) {
+		if(!main || !main.isXType('container')) {
 			main = Ext.create({xtype: 'panel'});
 		}
 		me.mainmap[svc.ID] = main.getId();

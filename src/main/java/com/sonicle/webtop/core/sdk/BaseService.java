@@ -33,10 +33,8 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.google.gson.JsonObject;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsObject;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
@@ -231,8 +229,8 @@ public abstract class BaseService extends BaseBaseService {
 				}
 				
 				if(!uploaded) throw new Exception("No file has been uploaded");
-				JsObject jo = new JsObject().add("temp", true).add("uploadId", items.get(0));
-				new JsonResult(jo).printTo(out);
+				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
+				new JsonResult(mi).printTo(out);
 			}
 			
 		} catch (Exception ex) {

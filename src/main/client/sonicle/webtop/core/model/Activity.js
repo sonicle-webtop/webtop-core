@@ -31,34 +31,4 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.WebTopApp;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
-/**
- *
- * @author malbinola
- */
-public abstract class BaseJobServiceTask implements Job {
-	
-	private JobExecutionContext jec;
-	
-	public JobDataMap getData() {
-		return jec.getMergedJobDataMap();
-	}
-	
-	@Override
-	public final void execute(JobExecutionContext jec) throws JobExecutionException {
-		this.jec = jec;
-		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
-		}
-	}
-	
-	public abstract void setJobService(BaseJobService value);
-	public abstract void executeWork();
-}

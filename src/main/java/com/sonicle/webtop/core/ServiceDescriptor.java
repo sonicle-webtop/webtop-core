@@ -37,7 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import com.sonicle.webtop.core.sdk.BaseDeamonService;
+import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.service.ResourceNotFoundException;
@@ -59,7 +59,7 @@ class ServiceDescriptor {
 	private ServiceManifest manifest = null;
 	private Class serviceClass = null;
 	private Class publicServiceClass = null;
-	private Class deamonServiceClass = null;
+	private Class jobServiceClass = null;
 	private Class userOptionsServiceClass = null;
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
@@ -77,10 +77,10 @@ class ServiceDescriptor {
 		if(!StringUtils.isEmpty(className)) {
 			publicServiceClass = loadClass(className, BasePublicService.class, "PublicService");
 		}
-		// Loads deamon service class
-		className = manifest.getDeamonServiceClassName();
+		// Loads job service class
+		className = manifest.getJobServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			deamonServiceClass = loadClass(className, BaseDeamonService.class, "DeamonService");
+			jobServiceClass = loadClass(className, BaseJobService.class, "JobService");
 		}
 		// Loads userOptions service class
 		className = manifest.getUserOptionsServiceClassName();
@@ -117,12 +117,12 @@ class ServiceDescriptor {
 		return publicServiceClass;
 	}
 
-	public boolean hasDeamonService() {
-		return (deamonServiceClass != null);
+	public boolean hasJobService() {
+		return (jobServiceClass != null);
 	}
 
-	public Class getDeamonServiceClass() {
-		return deamonServiceClass;
+	public Class getJobServiceClass() {
+		return jobServiceClass;
 	}
 
 	public boolean isUpgraded() {

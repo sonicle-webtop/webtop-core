@@ -133,6 +133,10 @@ public final class UserProfile {
 		return principal.getDomainId();
 	}
 	
+	public String getAuthenticationDomainId() {
+		return (isSystemAdmin()) ? principal.getAuthenticationDomain().getIDDomain() : getDomainId();
+	}
+	
 	public String getMailcardId() {
 		AuthenticationDomain ad = principal.getAuthenticationDomain();
 		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getDomain());

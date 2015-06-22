@@ -37,7 +37,7 @@ package com.sonicle.webtop.core.sdk;
  *
  * @author malbinola
  */
-public class BaseServiceManager {
+public abstract class BaseServiceManager {
 	
 	protected final ServiceManifest manifest;
 	

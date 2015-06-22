@@ -46,6 +46,15 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/*
+	 * Builds the URL of a global image.
+	 * @param {String} relPath The relative resource path.
+	 * @return {String} The URL
+	 */
+	globalImageUrl: function(relPath) {
+		return Ext.String.format('resources/{0}/images/{1}', WT.ID, relPath);
+	},
+	
+	/*
 	 * Builds the img HTML tag of a themed image for a service.
 	 * @param {String} sid The service ID.
 	 * @param {String} relPath The relative icon path.
@@ -57,15 +66,6 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	imageTag: function(sid, relPath, width, height, others) {
 		var src = WTF.resourceUrl(sid,relPath);
 		return Ext.String.format('<img src="{0}" width={1} height={2} {3} >', src, width, height, others||'');
-	},
-	
-	/*
-	 * Builds the URL of a global image.
-	 * @param {String} relPath The relative resource path.
-	 * @return {String} The URL
-	 */
-	globalImageUrl: function(relPath) {
-		return Ext.String.format('resources/{0}/images/{1}', WT.ID, relPath);
 	},
 	
 	/*
@@ -179,16 +179,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 */
 	uploader: function(sid, context, opts) {
 		opts = opts || {};
-		return {
+		return Ext.merge({
 			url: 'service-request',
-			extraParams: Ext.apply(opts.extraParams || {}, {
+			extraParams: {
 				service: sid,
 				action: 'Upload',
 				context: context
-			}),
+			},
 			flashSwfUrl: 'resources/js/plupload/Moxie.swf',
 			silverlightXapUrl: 'resources/js/plupload/Moxie.xap'
-		};
+		}, opts);
 	},
 	
 	/*
@@ -339,20 +339,49 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	/**
 	 * Configures a renderer for setting tdCls meta property.
 	 * Class name will be the result of the following concatenation: '{clsPrefix}{value}'
-	 * @param {Object} cfg Custom configuration object
+	 * @param {Object} cfg Custom configuration object.
 	 * @param {String} [cfg.fieldName] Specifies the field from which getting value instead of current one.
 	 * @param {String} [cfg.clsPrefix] Specifies the prefix to prepend to value. Defaults to ''.
-	 * @param {String} [cfg.moreCls]
+	 * @param {String} [cfg.moreCls] Any other classes.
 	 * @returns {Function} The renderer function
 	 */
 	clsColRenderer: function(cfg) {
 		cfg = cfg || {};
 		return function(value,meta,rec) {
 			var val = (cfg.fieldName) ? rec.get(cfg.fieldName) : value,
-					prefixed = (cfg.clsPrefix) ? cfg.clsPrefix + val : val,
+					prefix = (cfg.clsPrefix) ? cfg.clsPrefix + val : val,
 					more = (cfg.moreCls) ? ' ' + cfg.moreCls : '';
-			meta.tdCls = prefixed + more;
+			meta.tdCls = prefix + more;
 			return '';
+		};
+	},
+	
+	
+	
+	/**
+	 * Configures a renderer for adding an icon.
+	 * Class name will be calculated using {@link WTF.cssIconCls}.
+	 * @param {Object} cfg Custom configuration object.
+	 * @param {String/Function} cfg.nameField Specifies the field from which getting name value instead of current one.
+	 * @param {String/Function} [cfg.tooltipField] Specifies the field from which getting tooltip value.
+	 * @param {String} cfg.xid Service short ID.
+	 * @param {String} cfg.size Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
+	 * @returns {Function} The renderer function
+	 */
+	iconColRenderer: function(cfg) {
+		cfg = cfg || {};
+		var nameFn = Ext.isFunction(cfg.nameField),
+				ttipFn = Ext.isFunction(cfg.tooltipFieldName);
+		return function(value,meta,rec) {
+			var val = (nameFn) ? cfg.nameField(rec) : ((cfg.nameField) ? rec.get(cfg.nameField) : value),
+					ttip = (ttipFn) ? cfg.tooltipField(rec) : ((cfg.tooltipField) ? rec.get(cfg.tooltipField) : null),
+					cls = WTF.cssIconCls(cfg.xid, val, cfg.size),
+					size = WTU.imgSizeToPx(cfg.size);
+			if(ttip) {
+				return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+			} else {
+				return '<div class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+			}
 		};
 	},
 	

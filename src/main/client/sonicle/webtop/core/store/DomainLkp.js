@@ -31,26 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-/**
- *
- * @author malbinola
- */
-public class CoreLocaleKey {
+Ext.define('Sonicle.webtop.core.store.DomainLkp', {
+	alternateClassName: 'WT.store.DomainLkp',
+	extend: 'Ext.data.Store',
 	
-	public static final String LOGIN_TITLE = "login.title";
-	public static final String LOGIN_USERNAME_PLACEHOLDER = "login.username.placeholder";
-	public static final String LOGIN_PASSWORD_PLACEHOLDER = "login.password.placeholder";
-	public static final String LOGIN_DOMAIN_LABEL = "login.domain.label";
-	public static final String LOGIN_SUBMIT_LABEL = "login.submit.label";
-	public static final String LOGIN_MAINTENANCE = "login.maintenance";
-	public static final String LOGIN_ERROR_MAINTENANCE = "login.error.maintenance";
-	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
-	public static final String SERVICE_NAME = "service.name";
-	public static final String SERVICE_DESCRIPTION = "service.description";
-	public static final String DATE_TODAY = "date.today";
-	public static final String DATE_YESTERDAY = "date.yesterday";
-	public static final String DATE_TOMORROW = "date.tomorrow";
-	public static final String LOCALE_X = "locale.{0}";
-}
+	model: 'WT.model.Simple',
+	proxy: WTF.proxy(WT.ID, 'LookupDomains', 'domains')
+});

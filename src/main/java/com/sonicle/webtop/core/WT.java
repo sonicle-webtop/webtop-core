@@ -40,7 +40,7 @@ import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
-import com.sonicle.webtop.core.sdk.AppLocale;
+import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;

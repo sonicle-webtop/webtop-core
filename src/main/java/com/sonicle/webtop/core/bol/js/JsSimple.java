@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import java.text.MessageFormat;
+
 /**
  *
  * @author malbinola
@@ -48,5 +50,9 @@ public class JsSimple {
 	public JsSimple(Object id, String description) {
 		this.id = id;
 		this.desc = description;
+	}
+	
+	public static JsSimple wildcard(String description) {
+		return new JsSimple("*", MessageFormat.format("(*) {0}", description));
 	}
 }

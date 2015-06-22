@@ -31,10 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.io;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -42,31 +40,10 @@ import java.io.InputStream;
  *
  * @author malbinola
  */
-public class FileResource implements Resource {
+public interface Resource {
 	
-	private final File file;
-	
-	public FileResource(File file) {
-		this.file = file;
-	}
-
-	@Override
-	public String getFilename() {
-		return file.getName();
-	}
-
-	@Override
-	public long getLastModified() {
-		return file.lastModified();
-	}
-
-	@Override
-	public long getSize() {
-		return file.length();
-	}
-
-	@Override
-	public InputStream getInputStream() throws IOException {
-		return new FileInputStream(file);
-	}
+	public String getFilename();
+	public long getLastModified();
+	public long getSize();
+	public InputStream getInputStream() throws IOException;
 }

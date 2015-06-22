@@ -36,8 +36,10 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
+import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
+import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -63,9 +65,24 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			DomainDAO dao = DomainDAO.getInstance();
 			return dao.selectAll(con);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OUser> getUsers(String domainId) {
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			UserDAO udao = UserDAO.getInstance();
+			return udao.selectByDomain(con, domainId);
 			
 		} catch(SQLException ex) {
 			return null;

@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.sdk.Encryption;
+import com.sonicle.webtop.core.util.Encryption;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import freemarker.template.Template;
 import java.io.IOException;

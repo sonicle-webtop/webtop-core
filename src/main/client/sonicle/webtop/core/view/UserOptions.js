@@ -75,7 +75,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WTF.proxy(me.ID, 'GetThemes', 'themes')
+					proxy: WTF.proxy(me.ID, 'LookupThemes', 'themes')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -92,7 +92,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WTF.proxy(me.ID, 'GetLayouts', 'layouts')
+					proxy: WTF.proxy(me.ID, 'LookupLayouts', 'layouts')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -109,7 +109,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WTF.proxy(me.ID, 'GetLooksAndFeels', 'lafs')
+					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
 				},
 				valueField: 'id',
 				displayField: 'desc',
@@ -133,7 +133,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WTF.proxy(me.ID, 'GetLocales', 'locales')
+					proxy: WTF.proxy(me.ID, 'LookupLocales', 'locales')
 				},
 				valueField: 'id',
 				displayField: 'desc',

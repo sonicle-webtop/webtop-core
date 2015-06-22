@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.sdk.Resource;
+import com.sonicle.webtop.core.io.Resource;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.BufferedReader;

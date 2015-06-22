@@ -31,19 +31,70 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-/**
- *
- * @author malbinola
- */
-public interface Resource {
+Ext.define('Sonicle.webtop.core.view.main.Queued', {
+	alternateClassName: 'WT.view.main.Queued',
+	extend: 'WT.view.main.Abstract',
 	
-	public String getFilename();
-	public long getLastModified();
-	public long getSize();
-	public InputStream getInputStream() throws IOException;
-}
+	westCmp: function() {
+		return {
+			xtype: 'panel',
+			referenceHolder: true,
+			split: true,
+			collapsible: true,
+			border: false,
+			width: 200,
+			minWidth: 100,
+			layout: 'border',
+			items: [{
+				xtype: 'container',
+				region: 'center',
+				reference: 'tool',
+				layout: 'card',
+				items: []
+			}, {
+				region: 'south',
+				xtype: 'toolbar',
+				reference: 'launcher',
+				enableOverflow: true,
+				border: false,
+				items: []
+			}],
+			listeners: {
+				resize: 'onToolResize'
+			}
+		};
+	},
+	
+	centerCmp: function() {
+		return {
+			xtype: 'container',
+			layout: 'card',
+			items: []
+		};
+	},
+	
+	getSide: function() {
+		return this.lookupReference('west');
+	},
+	
+	getToolStack: function() {
+		return this.lookupReference('west').lookupReference('tool');
+	},
+	
+	getMainStack: function() {
+		return this.lookupReference('center');
+	},
+	
+	addServiceButton: function(desc) {
+		var me = this,
+				west = me.lookupReference('west'),
+				l = west.lookupReference('launcher'),
+				cmp;
+		
+		cmp = l.add(Ext.create('WT.ux.ServiceButton', desc, {
+			scale: 'medium',
+			handler: 'onLauncherButtonClick'
+		}));
+		cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+	}
+});

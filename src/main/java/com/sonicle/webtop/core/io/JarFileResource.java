@@ -31,34 +31,47 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.io;
 
-import com.sonicle.webtop.core.WebTopApp;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseJobServiceTask implements Job {
+public class JarFileResource implements Resource {
+	private final JarFile jarFile;
+	private final String jarEntryName;
+	private final ZipEntry ze;
 	
-	private JobExecutionContext jec;
-	
-	public JobDataMap getData() {
-		return jec.getMergedJobDataMap();
+	public JarFileResource(JarFile jarFile, String jarEntryName) {
+		this.jarFile = jarFile;
+		this.jarEntryName = jarEntryName;
+		ze = jarFile.getEntry(jarEntryName);
+		if((ze == null) || (ze.isDirectory())) throw new WTRuntimeException("Requested entry is directory");
 	}
-	
+
 	@Override
-	public final void execute(JobExecutionContext jec) throws JobExecutionException {
-		this.jec = jec;
-		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
-		}
+	public String getFilename() {
+		return jarEntryName;
 	}
-	
-	public abstract void setJobService(BaseJobService value);
-	public abstract void executeWork();
+
+	@Override
+	public long getLastModified() {
+		return ze.getTime();
+	}
+
+	@Override
+	public long getSize() {
+		return ze.getSize();
+	}
+
+	@Override
+	public InputStream getInputStream() throws IOException {
+		return jarFile.getInputStream(ze);
+	}
 }

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.sdk.AppLocale;
+import com.sonicle.webtop.core.util.AppLocale;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

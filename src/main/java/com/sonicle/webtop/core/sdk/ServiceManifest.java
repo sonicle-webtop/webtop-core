@@ -55,7 +55,7 @@ public class ServiceManifest {
 	protected String serviceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
-	protected String deamonServiceClassName;
+	protected String jobServiceClassName;
 	protected String serviceJsClassName;
 	protected String clientOptionsModelJsClassName;
 	protected String userOptionsViewJsClassName;
@@ -110,8 +110,8 @@ public class ServiceManifest {
 			publicServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
 		}
 		
-		if(svcEl.containsKey("deamonServiceClassName")) {
-			deamonServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("deamonServiceClassName"), "DeamonService"));
+		if(svcEl.containsKey("jobServiceClassName")) {
+			jobServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("jobServiceClassName"), "JobService"));
 		}
 		
 		if(!svcEl.configurationsAt("userOptions").isEmpty()) {
@@ -269,12 +269,12 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of server-side deamon service implementation.
-	 * (eg. com.sonicle.webtop.core.CoreDeamonService)
+	 * Gets the class name of server-side job service implementation.
+	 * (eg. com.sonicle.webtop.core.CoreJobService)
 	 * @return The value.
 	 */
-	public String getDeamonServiceClassName() {
-		return deamonServiceClassName;
+	public String getJobServiceClassName() {
+		return jobServiceClassName;
 	}
 	
 	/**

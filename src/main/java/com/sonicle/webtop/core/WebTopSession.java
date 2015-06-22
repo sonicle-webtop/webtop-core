@@ -36,7 +36,6 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.sdk.CoreLocaleKey;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;

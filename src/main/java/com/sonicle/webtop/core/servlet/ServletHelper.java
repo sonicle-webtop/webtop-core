@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.webtop.core.sdk.CoreLocaleKey;
+import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;

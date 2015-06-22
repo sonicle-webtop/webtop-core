@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.BaseDeamonService;
-import com.sonicle.webtop.core.sdk.BaseDeamonService.TaskDefinition;
+import com.sonicle.webtop.core.sdk.BaseJobService;
+import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
@@ -108,7 +108,7 @@ public class ServiceManager {
 	private final HashMap<String, String> serviceIdToJsPath = new HashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
-	private final LinkedHashMap<String, BaseDeamonService> deamonServices = new LinkedHashMap<>();
+	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -126,20 +126,20 @@ public class ServiceManager {
 	 */
 	public void cleanup() {
 		
-		// Cleanup public/deamon services
+		// Cleanup public/job services
 		BasePublicService publicInst = null;
-		BaseDeamonService deamonInst = null;
+		BaseJobService jobInst = null;
 		for(String serviceId : listServices()) {
 			// Cleanup public service
 			publicInst = publicServices.remove(serviceId);
 			if(publicInst != null) cleanupPublicService(publicInst);
-			// Cleanup deamon service
+			// Cleanup job service
 			//TODO: effettuare lo shutdown dei task
-			deamonInst = deamonServices.remove(serviceId);
-			if(deamonInst != null) cleanupDeamonService(deamonInst);
+			jobInst = jobServices.remove(serviceId);
+			if(jobInst != null) cleanupJobService(jobInst);
 		}
 		
-		deamonServices.clear();
+		jobServices.clear();
 		publicServices.clear();
 		descriptors.clear();
 		xidToServiceId.clear();
@@ -176,8 +176,8 @@ public class ServiceManager {
 			registerService(manifest);
 		}
 		
-		// Initialize public/deamon services
-		int okPublics = 0, failPublics = 0, okDeamons = 0, failDeamons = 0;
+		// Initialize public/job services
+		int okPublics = 0, failPublics = 0, okJobs = 0, failJobs = 0;
 		for(String serviceId : listServices()) {
 			if(getDescriptor(serviceId).hasPublicService()) {
 				if(!isInMaintenance(serviceId)) {
@@ -189,19 +189,19 @@ public class ServiceManager {
 					}
 				}
 			}
-			if(getDescriptor(serviceId).hasDeamonService()) {
+			if(getDescriptor(serviceId).hasJobService()) {
 				if(!isInMaintenance(serviceId)) {
-					if(createDeamonService(serviceId)) {
-						okDeamons++;
+					if(createJobService(serviceId)) {
+						okJobs++;
 					} else {
-						failDeamons++;
-						//TODO: invalidare startup servizio, deamon non inizializzato?
+						failJobs++;
+						//TODO: invalidare startup servizio, job non inizializzato?
 					}
 				}
 			}
 		}
 		logger.debug("Instantiated {} of {} public services", okPublics, (okPublics+failPublics));
-		logger.debug("Instantiated {} of {} deamon services", okDeamons, (okDeamons+failDeamons));
+		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
 		//postponeDeamonsInitialization(); // Postpone initialization because init methods can require WebTopApp, not set yet!
 	}
 	
@@ -214,10 +214,10 @@ public class ServiceManager {
 			}
 		}
 		
-		// Inits deamons services
-		synchronized(deamonServices) {
-			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
-				initializeDeamonService(entry.getValue());
+		// Inits job services
+		synchronized(jobServices) {
+			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
+				initializeJobService(entry.getValue());
 			}
 		}
 	}
@@ -314,14 +314,14 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists discovered deamon services.
-	 * @return List of registered deamon services.
+	 * Lists discovered job services.
+	 * @return List of registered job services.
 	 */
-	public List<String> listDeamonServices() {
+	public List<String> listJobServices() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock) {
 			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasDeamonService()) list.add(descr.getManifest().getId());
+				if(descr.hasJobService()) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
@@ -415,16 +415,16 @@ public class ServiceManager {
 	
 	public void startAllJobServicesTasks() {
 		if(!wta.isTheLatest()) return; // Make sure we are in latest webapp
-		synchronized(deamonServices) {
-			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+		synchronized(jobServices) {
+			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
 				startJobServiceTasks(entry.getKey(), entry.getValue());
 			}
 		}
 	}
 	
 	public void stopAllJobServicesTasks() {
-		synchronized(deamonServices) {
-			for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
+		synchronized(jobServices) {
+			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
 				stopJobServiceTasks(entry.getKey());
 			}
 		}
@@ -568,7 +568,7 @@ public class ServiceManager {
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.debug("[default:{}, public:{}, deamon:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasDeamonService(), desc.hasUserOptionsService());
+			logger.debug("[default:{}, public:{}, job:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register service's dataSources
 			try {
@@ -704,12 +704,12 @@ public class ServiceManager {
 		}
 	}
 	
-	private boolean createDeamonService(String serviceId) {
-		synchronized(deamonServices) {
-			if(deamonServices.containsKey(serviceId)) throw new RuntimeException("Cannot add deamon service twice");
-			BaseDeamonService inst = instantiateDeamonService(serviceId);
+	private boolean createJobService(String serviceId) {
+		synchronized(jobServices) {
+			if(jobServices.containsKey(serviceId)) throw new RuntimeException("Cannot add job service twice");
+			BaseJobService inst = instantiateJobService(serviceId);
 			if(inst != null) {
-				deamonServices.put(serviceId, inst);
+				jobServices.put(serviceId, inst);
 				return true;
 			} else {
 				return false;
@@ -717,55 +717,55 @@ public class ServiceManager {
 		}
 	}
 	
-	private BaseDeamonService instantiateDeamonService(String serviceId) {
+	private BaseJobService instantiateJobService(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasDeamonService()) throw new RuntimeException("Service has no deamon class");
+		if(!descr.hasJobService()) throw new RuntimeException("Service has no job class");
 		
 		// Creates service instance
-		BaseDeamonService instance = null;
+		BaseJobService instance = null;
 		try {
-			instance = (BaseDeamonService)descr.getDeamonServiceClass().newInstance();
+			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
 		} catch(Exception ex) {
-			logger.error("Error instantiating DeamonService [{}]", descr.getManifest().getDeamonServiceClassName(), ex);
+			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
 		instance.configure();
 		return instance;
 	}
 	
-	private void initializeDeamonService(BaseDeamonService instance) {
+	private void initializeJobService(BaseJobService instance) {
 		// Calls initialization method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getId());
 			instance.initialize();
 		} catch(Throwable ex) {
-			logger.error("DeamonService method returns errors [initialize()]", ex);
+			logger.error("JobService method returns errors [initialize()]", ex);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
 	}
 	
-	private void cleanupDeamonService(BaseDeamonService instance) {
+	private void cleanupJobService(BaseJobService instance) {
 		// Calls cleanup method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();
 		} catch(Exception ex) {
-			logger.error("DeamonService method returns errors [cleanup()]", ex);
+			logger.error("JobService method returns errors [cleanup()]", ex);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
 	}
 	
-	private void postponeDeamonsInitialization() {
+	private void postponeJobsInitialization() {
 		Thread engine = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					Thread.sleep(2000);
-					synchronized(deamonServices) {
-						for(Entry<String, BaseDeamonService> entry : deamonServices.entrySet()) {
-							initializeDeamonService(entry.getValue());
+					synchronized(jobServices) {
+						for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
+							initializeJobService(entry.getValue());
 						}
 					}	
 				} catch (InterruptedException ex) { /* Do nothing... */	}
@@ -774,7 +774,7 @@ public class ServiceManager {
 		engine.start();		
 	}
 	
-	private JobDetail createJobTask(String serviceId, BaseDeamonService service, TaskDefinition taskDef) {
+	private JobDetail createJobTask(String serviceId, BaseJobService service, TaskDefinition taskDef) {
 		String classBaseName = taskDef.clazz.getSimpleName();
 		
 		JobDataMap data = (taskDef.data != null) ? taskDef.data : new JobDataMap();
@@ -795,7 +795,7 @@ public class ServiceManager {
 		return tb.build();
 	}
 	
-	private void startJobServiceTasks(String serviceId, BaseDeamonService service) {
+	private void startJobServiceTasks(String serviceId, BaseJobService service) {
 		List<TaskDefinition> taskDefs = null;
 		JobDetail jobDetail = null;
 		Trigger trigger = null;

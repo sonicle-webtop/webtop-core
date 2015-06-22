@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 		'WT.ux.StackServiceButton'
 	],
 	
-	measuredL1Height: 0,
-	measuredL2Height: 0,
+	measuredL1Height: null,
+	measuredL2Height: null,
 	
 	westCmp: function() {
 		return {
@@ -144,12 +144,14 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	
 	calculateHeight: function(l1, l2) {
 		var me = this,
+				height1 = me.measuredL1Height || 0,
+				height2 = me.measuredL2Height || 0,
 				l1Rows = l1.items.getCount();
 		// 24 -> 32 -> 38
 		return (6 + 6) // l1 toolbar top&bottom margins
-				+ (me.measuredL1Height * l1Rows) // l1 toolbar height
+				+ (height1 * l1Rows) // l1 toolbar height
 				+ (6 * (l1Rows -1)) // l1 toolbar items spacing
 				+ (6 + 6) // l2 toolbar top&bottom margins
-				+ ((l2.items.getCount() > 0) ? me.measuredL2Height : 0); // l2 toolbar height
+				+ ((l2.items.getCount() > 0) ? height2 : 0); // l2 toolbar height
 	}
 });

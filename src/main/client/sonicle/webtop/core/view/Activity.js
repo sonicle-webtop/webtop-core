@@ -31,34 +31,71 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import com.sonicle.webtop.core.WebTopApp;
-import org.quartz.Job;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
-/**
- *
- * @author malbinola
- */
-public abstract class BaseJobServiceTask implements Job {
+Ext.define('Sonicle.webtop.core.view.Activity', {
+	extend: 'WT.sdk.ModelView',
+	requires: [
+		//'Ext.ux.form.trigger.Clear'
+	],
 	
-	private JobExecutionContext jec;
-	
-	public JobDataMap getData() {
-		return jec.getMergedJobDataMap();
-	}
-	
-	@Override
-	public final void execute(JobExecutionContext jec) throws JobExecutionException {
-		this.jec = jec;
-		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
+	title: '@activity.tit',
+	iconCls: 'wt-icon-activity-xs',
+	model: 'Sonicle.webtop.core.model.Activity',
+	viewModel: {
+		formulas: {
+			readOnly: WTF.checkboxBind('record', 'readOnly')
 		}
-	}
+	},
 	
-	public abstract void setJobService(BaseJobService value);
-	public abstract void executeWork();
-}
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		
+		me.add(me.addRef('main', Ext.create({
+			region: 'center',
+			xtype: 'form',
+			layout: 'anchor',
+			modelValidation: true,
+			bodyPadding: 5,
+			defaults: {
+				labelWidth: 100
+			},
+			items: [{
+				xtype: 'combo',
+				bind: '{record.userId}',
+				typeAhead: true,
+				queryMode: 'local',
+				forceSelection: true,
+				selectOnFocus: true,
+				store: {
+					autoLoad: true,
+					model: 'WT.model.Simple',
+					proxy: WTF.proxy(WT.ID, 'LookupUsers', 'users', {
+						extraParams: {wildcard: true}
+					})
+				},
+				valueField: 'id',
+				displayField: 'desc',
+				fieldLabel: me.mys.res('event.fld-userId.lbl')
+			}, {
+				xtype: 'textareafield',
+				bind: '{record.description}',
+				fieldLabel: me.mys.res('calendar.fld-description.lbl'),
+				anchor: '100%'
+			}, {
+				xtype: 'checkbox',
+				bind: '{readOnly}',
+				hideEmptyLabel: false,
+				boxLabel: me.mys.res('calendar.fld-readOnly.lbl')
+			}]
+		})));
+		me.on('viewload', me.onViewLoad);
+	},
+	
+	onViewLoad: function(s, success) {
+		if(!success) return;
+		var me = this,
+				main = me.getRef('main');
+		
+		main.getComponent('domainId').focus(true);
+	}
+});

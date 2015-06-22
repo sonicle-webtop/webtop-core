@@ -33,10 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import org.quartz.JobDataMap;
 import org.quartz.Trigger;
@@ -45,7 +42,7 @@ import org.quartz.Trigger;
  *
  * @author malbinola
  */
-public abstract class BaseDeamonService extends BaseBaseService {
+public abstract class BaseJobService extends BaseBaseService {
 	
 	private boolean configured = false;
 	public abstract List<TaskDefinition> returnTasks();
