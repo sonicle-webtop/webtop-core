@@ -34,7 +34,10 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.bol.model.AuthResource;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang3.StringUtils;
@@ -65,8 +68,7 @@ public class ServiceManifest {
 	protected String companyEmail;
 	protected String companyWebSite;
 	protected String supportEmail;
-	protected String dataSourceName;
-	protected String[] initCheckTables;
+	protected ArrayList<AuthResource> resources;
 	
 	public ServiceManifest() {
 		version = new ServiceVersion();
@@ -76,6 +78,7 @@ public class ServiceManifest {
 		companyEmail = "sonicle@sonicle.com";
 		companyWebSite = "http://www.sonicle.com";
 		supportEmail = "sonicle@sonicle.com";
+		resources = new ArrayList<>();
 	}
 	
 	public ServiceManifest(HierarchicalConfiguration svcEl) throws Exception {
@@ -125,58 +128,25 @@ public class ServiceManifest {
 		companyEmail = StringUtils.defaultIfBlank(svcEl.getString("companyEmail"), null);
 		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
 		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
+		
+		resources = new ArrayList<>();
+		if(!svcEl.configurationsAt("resources").isEmpty()) {
+			List<HierarchicalConfiguration> elResources = svcEl.configurationsAt("resources.resource");
+			for(HierarchicalConfiguration elResource : elResources) {
+				if(elResource.containsKey("[@name]")) {
+					String name = elResource.getString("[@name]");
+					if(StringUtils.isEmpty(name)) throw new Exception("");
+					
+					if(elResource.containsKey("[@actions]")) {
+						String[] actions = StringUtils.split(elResource.getString("[@actions]"), ",");
+						resources.add(new AuthResource(name, actions));
+					} else {
+						resources.add(new AuthResource(name));
+					}
+				}
+			}
+		}
 	}
-	
-	/*
-	public ServiceManifest(
-		String javaPackage, String jsPackage, String shortName, ServiceVersion version, String buildDate,
-		String serviceClassName, String serviceJsClassName, 
-		String publicServiceClassName, String deamonServiceClassName, 
-		String userOptionsServiceClassName, String userOptionsViewJsClassName, String userOptionsModelJsClassName, 
-		Boolean hidden, 
-		String company, String companyEmail, String companyWebSite, String supportEmail
-		) throws Exception {
-		super();
-		
-		if(StringUtils.isEmpty(javaPackage)) throw new Exception("Invalid value for property [package]");
-		this.javaPackage = javaPackage.toLowerCase();
-		this.id = this.javaPackage;
-		if(StringUtils.isEmpty(jsPackage)) throw new Exception("Invalid value for property [jsPackage]");
-		this.jsPackage = jsPackage; // Lowercase allowed!
-		if(StringUtils.isEmpty(shortName)) throw new Exception("Invalid value for property [shortName]");
-		this.xid = shortName;
-		
-		if(version.isUndefined()) throw new Exception("Invalid value for property [version]");
-		this.version = version;
-		if(!StringUtils.isEmpty(buildDate)) this.buildDate = buildDate;
-		
-		//TODO: Enable check or not?
-		//boolean noclass = StringUtils.isEmpty(className) && StringUtils.isEmpty(publicClassName) & StringUtils.isEmpty(deamonClassName);
-		//if(noclass) throw new Exception("You need to fill at least a service class");
-		if(!StringUtils.isEmpty(serviceClassName)) {
-			this.serviceClassName = LangUtils.buildClassName(this.javaPackage, serviceClassName);
-			this.serviceJsClassName = LangUtils.buildClassName(this.jsPackage, StringUtils.defaultIfEmpty(serviceJsClassName, serviceClassName));
-		}
-		if(!StringUtils.isEmpty(publicServiceClassName)) {
-			this.publicServiceClassName = LangUtils.buildClassName(this.javaPackage, publicServiceClassName);
-		}
-		if(!StringUtils.isEmpty(deamonServiceClassName)) {
-			this.deamonServiceClassName = LangUtils.buildClassName(this.javaPackage, deamonServiceClassName);
-		}
-		if(!StringUtils.isEmpty(userOptionsServiceClassName)) {
-			if(StringUtils.isEmpty(userOptionsViewJsClassName)) throw new Exception("Property [userOptionsViewJsClassName] needs to be defined");
-			this.userOptionsServiceClassName = LangUtils.buildClassName(this.javaPackage, userOptionsServiceClassName);
-			this.userOptionsViewJsClassName = LangUtils.buildClassName(this.jsPackage, userOptionsViewJsClassName);
-			this.userOptionsModelJsClassName = LangUtils.buildClassName(this.jsPackage, userOptionsModelJsClassName);
-		}
-		
-		this.hidden = hidden;
-		if(!StringUtils.isEmpty(company)) this.company = company;
-		if(!StringUtils.isEmpty(companyEmail)) this.companyEmail = companyEmail;
-		if(!StringUtils.isEmpty(companyWebSite)) this.companyWebSite = companyWebSite;
-		if(!StringUtils.isEmpty(supportEmail)) this.supportEmail = supportEmail;
-	}
-	*/
 	
 	/**
 	 * Gets specified service ID.
@@ -332,11 +302,7 @@ public class ServiceManifest {
 		return supportEmail;
 	}
 	
-	public String getDataSourceName() {
-		return dataSourceName;
-	}
-	
-	public String[] getInitCheckTables() {
-		return initCheckTables;
+	public ArrayList<AuthResource> getResources() {
+		return resources;
 	}
 }

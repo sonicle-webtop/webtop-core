@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 	alternateClassName: 'WT.view.main.Queued',
 	extend: 'WT.view.main.Abstract',
 	
-	westCmp: function() {
+	createWestCmp: function() {
 		return {
 			xtype: 'panel',
 			referenceHolder: true,
@@ -65,11 +65,20 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 		};
 	},
 	
-	centerCmp: function() {
+	createCenterCmp: function() {
 		return {
+			region: 'center',
 			xtype: 'container',
-			layout: 'card',
-			items: []
+			layout: 'border',
+			items: [{
+				region: 'center',
+				xtype: 'container',
+				reference: 'main',
+				layout: 'card',
+				items: []
+			},
+				this.createTaskBar({region: 'south'})
+			]
 		};
 	},
 	
@@ -82,7 +91,7 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 	},
 	
 	getMainStack: function() {
-		return this.lookupReference('center');
+		return this.lookupReference('center').lookupReference('main');
 	},
 	
 	addServiceButton: function(desc) {

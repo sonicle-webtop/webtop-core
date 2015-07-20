@@ -5,6 +5,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
 		'Sonicle.Date',
+		'Sonicle.URLManager',
 		'Sonicle.PrintManager',
 		'Sonicle.upload.Uploader',
 		'Sonicle.data.identifier.NegativeString',
@@ -46,7 +47,6 @@ Ext.define('Sonicle.webtop.core.Application', {
 	},
 	
 	init: function() {
-		//var me = this;
 		WT.Log.debug('application:init');
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
@@ -86,9 +86,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 			me.services.add(desc);
 		}, me);
 		
-		// Instantiates core service
-		var cdesc = me.services.getAt(0);
-		cdesc.getInstance();
+		
 		
 		//Ext.require(deps, me.onRequiresLoaded, me);
 		me.onRequiresLoaded.call(me);
@@ -97,6 +95,10 @@ Ext.define('Sonicle.webtop.core.Application', {
 	onRequiresLoaded: function() {
 		var me = this,
 				def = null, vp, vpc;
+		
+		// Instantiates core service
+		var cdesc = me.services.getAt(0);
+		cdesc.getInstance();
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({
@@ -202,5 +204,14 @@ Ext.define('Sonicle.webtop.core.Application', {
 		vpc.addServiceCmps(svc);
 		me.currentService = id;
 		if(vpc.activateService(svc)) svc.fireEvent('activate');
+	}
+});
+
+Ext.override(Ext.data.proxy.Server, {
+	constructor: function(cfg) {
+		this.callOverridden([cfg]);
+		this.addListener('exception', function(proxy, resp, op) {
+			if(resp.status === 401) WT.reload();
+		});
 	}
 });

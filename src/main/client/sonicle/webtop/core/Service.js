@@ -34,6 +34,34 @@
 Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WT.sdk.Service',
 	requires: [
-		'Sonicle.webtop.core.model.ClientOptions'
-	]
+		'Sonicle.webtop.core.model.ClientOptions',
+		'Sonicle.webtop.core.view.Activities'
+		//'Sonicle.webtop.core.view.Causals'
+	],
+	
+	viewActivities: function() {
+		var me = this,
+				vwc = this._createActivitiesView();
+		
+		vwc.show();
+	},
+	
+	viewCausals: function() {
+		var me = this,
+				vwc = this._createCausalsView();
+		
+		vwc.show();
+	},
+	
+	_createActivitiesView: function(cfg) {
+		return WT.createView(WT.ID, 'view.Activities', {
+			viewCfg: cfg
+		});
+	},
+	
+	_createCausalsView: function(cfg) {
+		return WT.createView(WT.ID, 'view.Causals', {
+			viewCfg: cfg
+		});
+	}
 });

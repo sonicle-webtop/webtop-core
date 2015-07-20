@@ -41,6 +41,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
@@ -62,9 +63,17 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	
 	@Override
 	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {
-		// Do a forward instead of classic redirect. It avoids ugly URL suffixes.
 		try {
-			ServletUtils.forwardRequest((HttpServletRequest)request, (HttpServletResponse)response, getLoginUrl());
+			String url = ((HttpServletRequest)request).getRequestURL().toString();
+			if(StringUtils.contains(url, "service-request")
+					|| StringUtils.contains(url, "ServiceRequest")
+					|| StringUtils.contains(url, "keep-alive")
+					| StringUtils.contains(url, "websocket")) {
+				((HttpServletResponse)response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+			} else {
+				// Do a forward instead of classic redirect. It avoids ugly URL suffixes.
+				ServletUtils.forwardRequest((HttpServletRequest)request, (HttpServletResponse)response, getLoginUrl());
+			}
 		} catch(ServletException ex) {
 			throw new IOException(ex);
 		}
@@ -74,7 +83,15 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	protected AuthenticationToken createToken(String username, String password, ServletRequest request, ServletResponse response) {
 		boolean rememberMe = isRememberMe(request);
 		String host = getHost(request);
+		
+		// If domain param is provided, it has precedence over any domain info
+		// explicited in username. So, appends it to the provided username.
 		String domain = getDomain(request);
+		/*
+		if(!StringUtils.isEmpty(domain)) {
+			username = Principal.appendDomain(username, domain);
+		}
+		*/
 		return createToken(username, password, domain, rememberMe, host);
 	}
 	

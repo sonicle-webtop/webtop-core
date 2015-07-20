@@ -40,8 +40,12 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		'Sonicle.form.Spacer'
 	],
 	
-	title: '@feedback.tit',
-	iconCls: 'wt-icon-feedback-xs',
+	dockableConfig: {
+		title: '@feedback.tit',
+		iconCls: 'wt-icon-feedback-xs',
+		width: 590,
+		height: 320
+	},
 	autoToolbar: false,
 	autoTitle: false,
 	confirm: 'yn',
@@ -82,7 +86,7 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					editable: false,
 					store: {
 						model: 'WT.model.Simple',
-						proxy: WTF.proxy('com.sonicle.webtop.core', 'GetUserServices', 'services')
+						proxy: WTF.proxy('com.sonicle.webtop.core', 'LookupSessionServices', 'services')
 					},
 					valueField: 'id',
 					displayField: 'desc',

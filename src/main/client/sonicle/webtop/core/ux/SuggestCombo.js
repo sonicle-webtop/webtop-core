@@ -58,6 +58,8 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	forceSelection: false,
 	selectOnFocus: true,
 	editable: true,
+	valueField: 'id',
+	displayField: 'id',
 	
 	initComponent: function() {
 		var me = this;
@@ -67,9 +69,6 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {
 						context: me.suggestionContext
-					},
-					reader: {
-						type: 'array'
 					}
 				})
 			}

@@ -56,7 +56,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -117,6 +116,7 @@ public class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
+	private SystemManager sysm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
@@ -153,14 +153,13 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
-		
+		// Sys Manager
+		sysm = SystemManager.initialize(this);
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
-		
 		// TFA Manager
 		tfam = TFAManager.initialize(this);
-		
 		// Scheduler (services manager (for deamons) requires this component)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
@@ -171,10 +170,8 @@ public class WebTopApp {
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error starting scheduler");
 		}
-		
 		// Session Manager
 		sesm = SessionManager.initialize(this);
-		
 		// Service Manager
 		svcm = ServiceManager.initialize(this, scheduler);
 		
@@ -188,11 +185,9 @@ public class WebTopApp {
 		// Service Manager
 		svcm.cleanup();
 		svcm = null;
-		
 		// Session Manager
 		sesm.cleanup();
 		sesm = null;
-		
 		// Scheduler
 		try {
 			scheduler.shutdown(true);
@@ -200,19 +195,18 @@ public class WebTopApp {
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
 		}
-		
 		// TFA Manager
 		tfam.cleanup();
 		tfam = null;
-		
 		// Settings Manager
 		setm.cleanup();
 		setm = null;
-		
+		// Sys Manager
+		sysm.cleanup();
+		sysm = null;
 		// Connection Manager
 		conm.cleanup();
 		conm = null;
-		
 		// I18nManager Manager
 		//I18nManager.cleanup();
 		i18nm = null;
@@ -329,6 +323,14 @@ public class WebTopApp {
 	 */
 	public ConnectionManager getConnectionManager() {
 		return conm;
+	}
+	
+	/**
+	 * Returns the SystemManager.
+	 * @return SystemManager instance.
+	 */
+	public SystemManager getSystemManager() {
+		return sysm;
 	}
 	
 	/**

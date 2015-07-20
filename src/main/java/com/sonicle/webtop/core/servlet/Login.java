@@ -37,10 +37,13 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.SystemManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -49,7 +52,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  *
@@ -62,7 +64,8 @@ public class Login extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		CoreManager manager = wta.getManager();
+		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		CoreManager core = wta.getManager();
 		
 		try {
 			WebTopApp.logger.trace("Servlet: Login [{}]", ServletHelper.getSessionID(request));
@@ -94,6 +97,15 @@ public class Login extends HttpServlet {
 				}
 			}
 			
+			// Prepare domains list
+			List<ODomain> enabledDomains = core.listDomains(true);
+			List<HtmlSelect> domains = new ArrayList<>();
+			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_PROMPT, true)));
+			for(ODomain dom : enabledDomains) {
+				domains.add(new HtmlSelect(dom.getDomainId(), dom.getDescription()));
+			}
+			boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
+			
 			Map tplMap = new HashMap();
 			ServletHelper.fillPageVars(tplMap, locale, wta);
 			ServletHelper.fillSystemInfoVars(tplMap, locale, wta);
@@ -106,8 +118,7 @@ public class Login extends HttpServlet {
 			tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
 			tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_LABEL, true));
 			tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_SUBMIT_LABEL, true));
-			List<ODomain> domains = manager.getDomains();
-			tplMap.put("showDomain", (domains.size()>1));
+			tplMap.put("showDomain", showDomain);
 			tplMap.put("domains", domains);
 			
 			// Load and build template
@@ -131,5 +142,35 @@ public class Login extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		processRequest(req, resp);
+	}
+	
+	public static class HtmlSelect {
+		private String value;
+		private String description;
+
+		public HtmlSelect() {
+
+		}
+
+		public HtmlSelect(String value, String description) {
+			this.value = value;
+			this.description = description;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
+		}
 	}
 }

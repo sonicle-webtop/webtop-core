@@ -44,7 +44,6 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.JsOptions;
-import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserData;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
@@ -154,7 +153,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// TFA
 				if(pl.map.has("mandatory")) {
 					//TODO: do check using shiro
-					if(getSessionProfile().isSystemAdmin()) {
+					if(getSessionProfile().isWebTopAdmin()) {
 						cus.setTFAMandatory(pl.data.getBoolean("mandatory"));
 					}
 				}

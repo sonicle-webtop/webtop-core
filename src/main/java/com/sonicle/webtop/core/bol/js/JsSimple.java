@@ -55,4 +55,8 @@ public class JsSimple {
 	public static JsSimple wildcard(String description) {
 		return new JsSimple("*", MessageFormat.format("(*) {0}", description));
 	}
+	
+	public static String description(String description, String parenthesis) {
+		return MessageFormat.format("{0} ({1})", description, parenthesis);
+	}
 }

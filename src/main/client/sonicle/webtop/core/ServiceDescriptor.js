@@ -74,6 +74,7 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 					ID: me.getId(),
 					XID: me.getXid(),
 					clientOptionsClassName: me.getClientOptionsClassName(),
+					permsData: WTS.servicesPerms[me.getIndex()],
 					optionsData: WTS.servicesOptions[me.getIndex()]
 				});
 			} catch(e) {

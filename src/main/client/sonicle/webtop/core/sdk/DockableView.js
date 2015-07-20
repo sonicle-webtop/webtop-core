@@ -35,19 +35,37 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	alternateClassName: 'WT.sdk.DockableView',
 	extend: 'WT.sdk.BaseView',
 	
+	viewModel: {},
 	config: {
-		/**
-		 * @cfg {String} iconCls
-		 * The icon class to be used to apply as container's iconCls.
-		 */
-		iconCls: null,
-		
-		/**
-		 * @cfg {String} title
-		 * The title text to be used to apply as container's title.
-		 * If value begins with @ is treated as framework resource string.
-		 */
-		title: null,
+		dockableConfig: {
+			/**
+			 * @cfg {String} iconCls
+			 * The icon class to be used to apply as container's iconCls.
+			 */
+			
+			/**
+			 * @cfg {String} title
+			 * The title text to be used to apply as container's title.
+			 * If value begins with @ is treated as framework resource string.
+			 */
+			
+			width: 400,
+			height: 200,
+			
+			/**
+			 * @cfg {Boolean} constrainToService
+			 */
+			constrainToService: false,
+			
+			/**
+			 * @cfg {Boolean} modal
+			 */
+			modal: false,
+			
+			minimizable: true,
+			
+			maximizable: true
+		},
 		
 		/**
 		 * @cfg {Boolean} promptConfirm
@@ -108,14 +126,23 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		// Defines a basic viewModel (eg. useful for binding)
+		//if(!me.viewModel) me.viewModel = Ext.create('Ext.app.ViewModel');
 		me.callParent([cfg]);
+	},
+	
+	resTitle: function() {
+		var me = this,
+				cfg = me.getDockableConfig();
+		return (cfg) ? WT.resStr(me.mys.ID, cfg.title) : null;
 	},
 	
 	initComponent: function() {
 		var me = this;
 		
-		if(me.title) me.title = WT.resStr(me.mys.ID, me.title);
+		me.title = me.resTitle();
 		me.callParent(arguments);
+		me.on('titlechange', me.onTitleChange);
 		me.on('added', function(s,ct) {
 			me.initCt(ct);
 		}, me, {single: true});
@@ -130,8 +157,12 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		
 		if(ct.isXType('window')) {
 			// Apply as config (window is not yet rendered)
-			if(me.title) ct.title = me.title;
-			ct.iconCls = me.iconCls;
+			ct.title = me.title;
+			if(me.dockableConfig.iconCls) ct.iconCls = me.dockableConfig.iconCls;
+			
+			// Le toolbar non vengono più applicate al container ma bensì alla vista
+			// stessa, ora la view è un panel non più un component
+			/*
 			if(me.tbar || me.fbar || me.lbar || me.rbar || me.dockedItems || me.buttons) {
 				Ext.apply(ct, {
 					tbar: me.tbar,
@@ -149,6 +180,7 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 				var props = ['tbar','fbar','lbar','rbar','dockedItems','buttons'];
 				for(var prop in props) delete me[prop];
 			}
+			*/
 			
 			ct.on('show', me.onCtWndShow, me);
 			ct.on('beforeclose', me.onCtBeforeClose, me);
@@ -173,6 +205,15 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 			ct.un('hide', me.onCtWndHide, me);
 		}
 		me.ctInited = false;
+	},
+	
+	/**
+	 * @private
+	 */
+	onTitleChange: function(s,nv) {
+		var me = this;
+		if(!me.ctInited) return;
+		me.ownerCt.setTitle(nv);
 	},
 	
 	/**

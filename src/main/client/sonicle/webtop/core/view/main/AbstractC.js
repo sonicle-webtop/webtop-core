@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	svctbmap: null,
 	toolmap: null,
 	mainmap: null,
+	views: Ext.create('Ext.util.HashMap'),
 	
 	/**
 	 * @property {Boolean} isActivating
@@ -57,6 +58,16 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.toolmap = {};
 		me.mainmap = {};
 		me.callParent(arguments);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.callParent(arguments);
+		me.svctbmap = null;
+		me.toolmap = null;
+		me.mainmap = null;
+		me.views.destroy();
+		me.views = null;
 	},
 	
 	/**
@@ -80,7 +91,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 		me.svctbmap[id] = tb.getId();
 		north = me.lookupReference('north');
-		north.lookupReference('svctb').add(tb);
+		north.lookupReference('servicetb').add(tb);
 		
 		// Retrieves service components
 		if(Ext.isFunction(svc.getToolComponent)) {
@@ -121,7 +132,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	activateService: function(svc) {
 		var me = this,
 				id = svc.ID;
-		
 		// If already active...exits
 		if(me.active === id) return false;
 		me.isActivating = true;
@@ -129,6 +139,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.setActiveServiceToolbar(svc);
 		if(svc.hasNewActions()) me.setActiveNewAction(svc);
 		me.setActiveServiceComponents(svc);
+		me.setActiveServiceViews(svc);
 		// -------------------
 		me.active = id;
 		me.isActivating = false;
@@ -136,7 +147,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	/**
-	 * Shows specified service new action as default.
+	 * @private
+	 * Sets specified service newAction as default.
 	 * @param {WT.sdk.Service} svc The service instance.
 	 */
 	setActiveNewAction: function(svc) {
@@ -154,14 +166,24 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	/**
+	 * @private
+	 * Shows active service toolbar.
+	 * @param {WT.sdk.Service} svc The service instance.
+	 */
 	setActiveServiceToolbar: function(svc) {
 		var me = this,
 				north = me.lookupReference('north'),
-				svctb = north.lookupReference('svctb');
+				svctb = north.lookupReference('servicetb');
 		
 		svctb.getLayout().setActiveItem(me.svctbmap[svc.ID]);
 	},
 	
+	/**
+	 * @private
+	 * Shows active service components.
+	 * @param {WT.sdk.Service} svc The service instance.
+	 */
 	setActiveServiceComponents: function(svc) {
 		var me = this,
 				vw = me.getView(),
@@ -175,6 +197,18 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if(active) side.setTitle(active.getTitle());
 		side.setWidth(svc.getOption('viewportToolWidth') || 200);
 		mStack.getLayout().setActiveItem(me.mainmap[svc.ID]);
+	},
+	
+	/**
+	 * @private
+	 * Shows active service views (if present).
+	 * @param {WT.sdk.Service} svc The service instance.
+	 */
+	setActiveServiceViews: function(svc) {
+		var me = this,
+				vw = me.getView(),
+				taskbar = vw.getTaskBar();
+		taskbar.activateService(svc);
 	},
 	
 	onToolResize: function(s, w) {
@@ -221,10 +255,132 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			case 'options':
 				me.buildOptionsWnd2();
 				break;
-			default:
-				alert('Hai premuto il bottone '+s.getItemId());
 		}
 	},
+	
+	onOthersMenuClick: function(s) {
+		var core = WT.getApp().getService(WT.ID);
+		switch(s.getItemId()) {
+			case 'activities':
+				core.viewActivities();
+				break;
+			case 'causals':
+				core.viewCausals();
+				break;
+		}
+	},
+	
+	onTaskBarButtonClick: function(s, btn, e) {
+		var winId = btn.getItemId(),
+				win = Ext.ComponentManager.get(btn.getItemId()),
+				awin = Ext.WindowManager.getActive();
+		if(win.hidden) {
+			btn.disable();
+			win.show(null, function() {
+				btn.enable();
+			});
+		} else if(awin && (awin.getId() === winId)) {
+			btn.disable();
+			win.on('hide', function() {
+				btn.enable();
+			}, null, {single: true});
+			win.minimize();
+		} else {
+			win.toFront();
+		}
+	},
+	
+	onTaskBarButtonContextMenu: function(s, btn, e) {
+		WT.showContextMenu(e, this.getView().getRef('cxmTaskBar'), {winId: btn.getItemId()});
+	},
+	
+	onTaskBarButtonContextClick: function(s) {
+		var win = Ext.ComponentManager.get(WT.getContextMenuData().winId);
+		switch(s.getItemId()) {
+			case 'restore':
+				if(win.isVisible()) {
+					win.restore();
+					win.toFront();
+				} else {
+					win.show();
+				}
+				break;
+			case 'minimize':
+				win.minimize();
+				break;
+			case 'maximize':
+				win.maximize();
+				win.toFront();
+				break;
+			case 'close':
+				win.close();
+				break;
+		}
+	},
+	
+	createView: function(svc, viewName, opts) {
+		opts = opts || {};
+		var me = this, view, dockCfg, win;
+		
+		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
+			mys: svc
+		});
+		view = Ext.create(svc.preNs(viewName), opts.viewCfg);
+		
+		dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
+		view.setDockableConfig(dockCfg);
+		
+		win = Ext.create(Ext.apply({
+			xtype: 'wtwindow',
+			layout: 'fit',
+			width: dockCfg.width,
+			height: dockCfg.height,
+			modal: dockCfg.modal,
+			minimizable: dockCfg.minimizable,
+			maximizable: dockCfg.maximizable,
+			items: [view]
+		}));
+		me.toggleWinListeners(win, 'on');
+		me.getView().getTaskBar().addButton(win);
+		return win;
+	},
+	
+	
+	
+	onWinActivate: function(s) {
+		this.getView().getTaskBar().activateButton(s);
+	},
+	
+	onWinDestroy: function(s) {
+		var me = this;
+		me.toggleWinListeners(s, 'un');
+		me.getView().getTaskBar().removeButton(s);
+	},
+	
+	onWinTitleChange: function(s) {
+		var me = this;
+		me.getView().getTaskBar().updateButtonTitle(s);
+	},
+	
+	toggleWinListeners: function(win, fn) {
+		var me = this;
+		win[fn]('activate',  me.onWinActivate, me);
+		win[fn]('destroy',  me.onWinDestroy, me);
+		win[fn]('titlechange',  me.onWinTitleChange, me);
+	},
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	buildOptionsWnd2: function() {
 		var wnd = Ext.create({

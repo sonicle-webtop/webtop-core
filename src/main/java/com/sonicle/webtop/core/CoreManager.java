@@ -34,16 +34,25 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.bol.ActivityGrid;
+import com.sonicle.webtop.core.bol.CausalGrid;
+import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
+import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.dal.ActivityDAO;
+import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
+import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -61,28 +70,39 @@ public class CoreManager {
 		this.wta = wta;
 	}
 	
-	public List<ODomain> getDomains() {
+	public List<ODomain> listDomains(boolean enabledOnly) throws Exception {
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectAll(con);
+			DomainDAO ddao = DomainDAO.getInstance();
+			return (enabledOnly) ? ddao.selectEnabled(con) : ddao.selectAll(con);
 			
-		} catch(SQLException ex) {
-			return null;
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public List<OUser> getUsers(String domainId) {
+	public ODomain getDomain(String domainId) throws Exception {
 		Connection con = null;
 		
+		try {
+			con = WT.getCoreConnection();
+			DomainDAO ddao = DomainDAO.getInstance();
+			return ddao.selectById(con, domainId);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OUser> listUsers(boolean enabledOnly) {
+		Connection con = null;
+		//TODO: gestire gli abilitati
 		try {
 			con = WT.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
-			return udao.selectByDomain(con, domainId);
+			return udao.selectAll(con);
 			
 		} catch(SQLException ex) {
 			return null;
@@ -91,21 +111,225 @@ public class CoreManager {
 		}
 	}
 	
-	public List<String> getUserServices(UserProfile profile) {
-		return getUserServices(profile.getDomainId(), profile.getUserId());
+	public List<OUser> listUsers(String domainId, boolean enabledOnly) {
+		Connection con = null;
+		//TODO: gestire gli abilitati
+		try {
+			con = WT.getCoreConnection();
+			UserDAO dao = UserDAO.getInstance();
+			return dao.selectByDomain(con, domainId);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
-	public List<String> getUserServices(String domainId, String userId) {
+	public List<ActivityGrid> listLiveActivities(Collection<String> domainIds) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			return dao.viewLiveByDomains(con, domainIds);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OActivity> listLiveActivities(UserProfile.Id profileId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			return dao.selectLiveByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OActivity getActivity(int activityId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			return dao.select(con, activityId);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int insertActivity(OActivity item) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			item.setActivityId(dao.getSequence(con).intValue());
+			return dao.insert(con, item);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int updateActivity(OActivity item) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			return dao.update(con, item);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int deleteActivity(int activityId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ActivityDAO dao = ActivityDAO.getInstance();
+			return dao.delete(con, activityId);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<CausalGrid> listLiveCausals(Collection<String> domainIds) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			return dao.viewLiveByDomains(con, domainIds);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OCausal> listLiveCausals(UserProfile.Id profileId, String customerId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			return dao.selectLiveByDomainUserCustomer(con, profileId.getDomainId(), profileId.getUserId(), customerId);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OCausal getCausal(int causalId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			return dao.select(con, causalId);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int insertCausal(OCausal item) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			item.setCausalId(dao.getSequence(con).intValue());
+			return dao.insert(con, item);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int updateCausal(OCausal item) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			return dao.update(con, item);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int deleteCausal(int causalId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CausalDAO dao = CausalDAO.getInstance();
+			return dao.delete(con, causalId);
+			
+		} catch(SQLException ex) {
+			return -1;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OShare> listIncomingSharesForUser(String serviceId, UserProfile.Id profileId, String resource) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			ShareDAO shaDao = ShareDAO.getInstance();
+			return shaDao.selectIncomingByServiceDomainUserResource(con, serviceId, profileId.getDomainId(), profileId.getUserId(), resource);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<String> getPrivateServicesForUser(UserProfile profile) {
+		return getPrivateServicesForUser(profile.getDomainId(), profile.getUserId());
+	}
+	
+	public List<String> getPrivateServicesForUser(String domainId, String userId) {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<String> result = new ArrayList<>();
 		
-		List<String> ids = svcm.listServices();
-		for(String id : ids) {
-			if(UserProfile.isSystemAdmin(domainId, userId)) {
-				if(id.equals(CoreManifest.ID)) result.add(id);
-			} else {
-				//TODO: check if service is allowed for user
-				result.add(id);
+		if(UserProfile.isWebTopAdmin(domainId, userId)) {
+			// Apply a predefined set of services if the user is WebTop admin
+			result.add(CoreManifest.ID);
+			//TODO: aggiungere il servizio di amministrazione
+		} else {
+			List<String> ids = svcm.listPrivateServices();
+			for(String id : ids) {
+				// Checks user rights on service...
+				// Remember that permission for core service is automatically pushed by the realm.
+				if(WT.isPermitted(CoreManifest.ID, CoreAuthKey.RES_SERVICE, CoreAuthKey.ACT_SERVICE_ACCESS, id)) {
+					result.add(id);
+				}
 			}
 		}
 		return result;

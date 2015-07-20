@@ -75,9 +75,8 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 				box.height += n.timeBox.height;
 				box.y = box.y - box.height + n.timeBox.height;
 				endDt = soDate.add(me.dragCreateDt, {minutes: me.ddIncrement});
-			}
-			else {
-				n.date = soDate.add(n.date, Ext.Date.MINUTE, {minutes: me.ddIncrement});
+			} else {
+				n.date = soDate.add(n.date, {minutes: me.ddIncrement});
 			}
 			me.shim(me.dragCreateDt, box);
 			
@@ -85,12 +84,6 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 			curr = soDate.add(me.dragCreateDt, {millis: diff});
 			me.dragStartDate = soDate.min(me.dragCreateDt, curr);
 			me.dragEndDate = endDt || soDate.max(me.dragCreateDt, curr);
-			
-			/*
-			dt = Ext.String.format(me.dateRangeFormat, 
-					Ext.Date.format(me.dragStartDate, timeFmt), 
-					Ext.Date.format(me.dragEndDate, timeFmt));
-			*/
 			me.updateProxy(e, data, me.dragStartDate, me.dragEndDate);
 			
 		} else {
@@ -134,7 +127,6 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 							height: box.height
 						};
 					}
-					
 					units = (e.xy[1] <= me.resizeBox.yRef) ? 1 : Math.ceil(Math.abs(e.xy[1] - me.resizeBox.yRef) / n.timeBox.height);
 					box.height = units * n.timeBox.height;
 					

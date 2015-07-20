@@ -38,6 +38,7 @@ import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.URLUtils;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.security.otp.OTPKey;
 import com.sonicle.security.otp.OTPProviderFactory;
@@ -278,7 +279,7 @@ public class TFAManager {
 	JsTrustedDevice trustThisDevice(String domainId, String userId, String userAgentHeader) {
 		String deviceId = DigestUtils.shaHex(UUID.randomUUID().toString() + userAgentHeader);
 		long now = new Date().getTime();
-		JsTrustedDevice td = new JsTrustedDevice(deviceId, Principal.buildName(domainId, userId), now, userAgentHeader);
+		JsTrustedDevice td = new JsTrustedDevice(deviceId, DomainAccount.buildName(domainId, userId), now, userAgentHeader);
 		registerTrustedDevice(domainId, userId, td);
 		return td;
 	}

@@ -36,7 +36,12 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	extend: 'Ext.container.Viewport',
 	requires: [
 		'WT.view.main.AbstractC',
-		'WT.ux.ServiceButton'
+		'WT.ux.TaskBar',
+		'WT.ux.ServiceButton',
+		'WT.ux.Window'
+	],
+	mixins: [
+		'WT.mixin.RefStorer'
 	],
 	controller: Ext.create('WT.view.main.AbstractC'),
 	
@@ -47,42 +52,83 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		totalServices: -1
 	},
 	
-	westCmp: Ext.emptyFn,
-	centerCmp: Ext.emptyFn,
+	createWestCmp: Ext.emptyFn,
+	createCenterCmp: Ext.emptyFn,
 	getSide: Ext.emptyFn,
 	getToolStack: Ext.emptyFn,
 	getMainStack: Ext.emptyFn,
 	addServiceButton: Ext.emptyFn,
 	
+	constructor: function(cfg) {
+		var me = this;
+		me.mixins.refstorer.constructor.call(me, cfg);
+		me.callParent([cfg]);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.mixins.refstorer.destroy.call(me);
+		me.callParent();
+	},
+	
 	initComponent: function() {
 		var me = this;
+		
+		me.addRef('cxmTaskBar', Ext.create({
+			xtype: 'menu',
+			items: [{
+				itemId: 'restore',
+				text: 'Restore',
+				handler: 'onTaskBarButtonContextClick'
+			}, {
+				itemId: 'minimize',
+				text: 'Minimize',
+				handler: 'onTaskBarButtonContextClick'
+			}, {
+				itemId: 'maximize',
+				text: 'Maximize',
+				handler: 'onTaskBarButtonContextClick'
+			},
+			'-',
+			{
+				itemId: 'close',
+				text: 'Close',
+				handler: 'onTaskBarButtonContextClick'
+			}],
+			listeners: {
+				beforeshow: function(s) {
+					var win = Ext.ComponentManager.get(WT.getContextMenuData().winId),
+							items = s.items;
+					items.get('restore').setDisabled(!win.canRestore());
+					items.get('minimize').setDisabled((win.minimizable) ? !win.canMinimize() : true);
+					items.get('maximize').setDisabled((win.maximizable) ? !win.canMaximize() : true);
+				}
+			}
+		}));
+		
 		me.callParent(arguments);
 		
-		me.addToRegion('north', me.northCmp());
-		me.addToRegion('west', me.westCmp());
-		me.addToRegion('center', me.centerCmp());
-		//me.addToRegion('east', me.eastCmp());
-		//me.addToRegion('south', me.southCmp());
+		me.addToRegion('north', me.createNorthCmp());
+		me.addToRegion('west', me.createWestCmp());
+		me.addToRegion('center', me.createCenterCmp());
+		//me.addToRegion('east', me.createEastCmp());
+		//me.addToRegion('south', me.createSouthCmp());
 	},
 	
-	addToRegion: function(region, cmp) {
-		var me = this;
-		if(cmp) {
-			if(cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
+	createTaskBar: function(cfg) {
+		return Ext.apply(cfg || {}, {
+			xtype: 'wttaskbar',
+			reference: 'taskbar',
+			height: 35,
+			items: [],
+			listeners: {
+				buttonclick: 'onTaskBarButtonClick',
+				buttoncontextmenu: 'onTaskBarButtonContextMenu'
 			}
-			me.add(cmp);
-		}
+		});
 	},
 	
-	northCmp: function() {
+	createNorthCmp: function() {
 		return {
 			xtype: 'container',
 			referenceHolder: true,
@@ -103,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			}, {
 				xtype: 'container',
 				region: 'center',
-				reference: 'svctb',
+				reference: 'servicetb',
 				layout: 'card',
 				defaults: {
 					cls: 'wt-header',
@@ -141,35 +187,54 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								itemId: 'feedback',
 								tooltip: WT.res('menu.feedback.tip'),
 								iconCls: 'wt-menu-feedback'
-								//glyph: 0xf1d8
 							}, {
 								itemId: 'whatsnew',
 								tooltip: WT.res('menu.whatsnew.tip'),
 								iconCls: 'wt-menu-whatsnew'
-								//glyph: 0xf0eb
 							}, {
 								itemId: 'options',
 								tooltip: WT.res('menu.options.tip'),
 								iconCls: 'wt-menu-options'
-								//glyph: 0xf013
 							}, {
-								//xtype: 'container'
 								itemId: 'help',
 								tooltip: WT.res('menu.help.tip'),
 								iconCls: 'wt-menu-help'
+							}, {
+								itemId: 'others',
+								colspan: 2,
+								scale: 'small',
+								textAlign: 'left',
+								//menuAlign: '',
+								text: WT.res('menu.tools.lbl'),
+								menu: [{
+									itemId: 'activities',
+									text: WT.res('activities.tit'),
+									iconCls: 'wt-icon-activity-xs',
+									hidden: !WT.isPermitted('ACTIVITIES', 'MANAGE'),
+									handler: 'onOthersMenuClick'
+								}, {
+									itemId: 'causals',
+									text: WT.res('causals.tit'),
+									iconCls: 'wt-icon-causal-xs',
+									hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
+									handler: 'onOthersMenuClick'
+								}]
 							}, {
 								itemId: 'logout',
 								colspan: 2,
 								scale: 'small',
 								tooltip: WT.res('menu.logout.tip'),
 								iconCls: 'wt-menu-logout'
-								//glyph: 0xf011
 							}]
 						}]
 					}
 				}]
 			}]
 		};
+	},
+	
+	getTaskBar: function() {
+		return this.lookupReference('center').lookupReference('taskbar');
 	},
 	
 	/**
@@ -196,5 +261,28 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		Ext.each(acts, function(act) {
 			menu.add(act);
 		});
+	},
+	
+	/*
+	 * @private
+	 * Adds passet config to chosen layout region.
+	 * @param {String} region Border layout region
+	 * @param {Ext.Component} cmp The component to add
+	 */
+	addToRegion: function(region, cmp) {
+		var me = this;
+		if(cmp) {
+			if(cmp.isComponent) {
+				cmp.setRegion(region);
+				cmp.setReference(region);
+			} else {
+				Ext.apply(cmp, {
+					region: region,
+					reference: region,
+					referenceHolder: true
+				});
+			}
+			me.add(cmp);
+		}
 	}
 });

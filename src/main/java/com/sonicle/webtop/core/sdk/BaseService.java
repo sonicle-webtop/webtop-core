@@ -43,6 +43,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import java.io.File;
@@ -111,11 +112,6 @@ public abstract class BaseService extends BaseBaseService {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
-	
-	
-	
-	
-	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
@@ -132,7 +128,7 @@ public abstract class BaseService extends BaseBaseService {
 	}
 	
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<String> items = null;
+		ArrayList<String[]> items = null;
 		UserProfile up = env.getProfile();
 		CoreManager corem = env.wta.getManager();
 		
@@ -140,12 +136,14 @@ public abstract class BaseService extends BaseBaseService {
 			String context = ServletUtils.getStringParameter(request, "context", true);	
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				String query = ServletUtils.getStringParameter(request, "query", true);
+				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				items = new ArrayList<>();
-				List<OServiceStoreEntry> entries = corem.getServiceStoreEntriesByQuery(up.getId(), getId(), context, query);
-				for(OServiceStoreEntry entry : entries) {
-					items.add(entry.getValue());
+				if(query != null) {
+					List<OServiceStoreEntry> entries = corem.getServiceStoreEntriesByQuery(up.getId(), getId(), context, query);
+					for(OServiceStoreEntry entry : entries) {
+						items.add(new String[]{entry.getValue()});
+					}
 				}
 				new JsonResult(items, items.size()).printTo(out);
 				
@@ -164,6 +162,7 @@ public abstract class BaseService extends BaseBaseService {
 	
 	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ServletFileUpload upload = null;
+		UploadedFile uploadedFile = null;
 		
 		try {
 			String context = ServletUtils.getStringParameter(request, "context", true);
@@ -176,33 +175,27 @@ public abstract class BaseService extends BaseBaseService {
 				
 				// Process files...
 				Object data = null;
-				boolean uploaded = false;
+				boolean succedeed = false;
 				FileItemIterator fit = upload.getItemIterator(request);
 				while(fit.hasNext()) {
 					FileItemStream fis = fit.next();
 					if(!fis.isFormField()) {
+						uploadedFile = new UploadedFile(WT.generateUUID(), fis.getName(), true);
+						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
-						uploaded = true;
-						
+						env.wts.removeUploadedFile(uploadedFile);
+						succedeed = true;
 						// Plupload client-side will upload multiple file each in its own
 						// request; we can skip fileItems looping.
 						break;
 					}
 				}
 				
-				if(!uploaded) throw new Exception("No file has been uploaded");
+				if(!succedeed) throw new Exception("No file has been uploaded");
 				new JsonResult(data).printTo(out);
 				
 			} else {
 				ArrayList<String> items = new ArrayList<>();
-				
-				//CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
-				//File uploadsDir = new File(css.getSystemUploadsPath());
-				//TODO: leggere directory upload dai settings
-				File uploadsDir = new File("C:/temp/uploads");
-				if(!uploadsDir.isDirectory() || !uploadsDir.canWrite()) {
-					throw new WTException("Problems with upload folder");
-				}
 				
 				// Defines the upload object
 				DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -211,30 +204,32 @@ public abstract class BaseService extends BaseBaseService {
 				upload = new ServletFileUpload(factory);
 				
 				// Process files...
-				boolean uploaded = false;
+				boolean succedeed = false;
 				List<FileItem> files = upload.parseRequest(request);
 				Iterator it = files.iterator();
 				while(it.hasNext()) {
 					FileItem fi = (FileItem)it.next();
 					if(!fi.isFormField()) {
-						String filename = WT.generateTempFilename();
-						fi.write(new File(uploadsDir, filename));
-						items.add(filename);
-						uploaded = true;
-						
+						File file = WT.createTempFile();
+						uploadedFile = new UploadedFile(file.getName(), fi.getName(), false);
+						env.wts.addUploadedFile(uploadedFile);
+						fi.write(file);
+						items.add(uploadedFile.id);
+						succedeed = true;
 						// Plupload client-side will upload multiple file each in its own
 						// request; we can skip fileItems looping.
 						break;
 					}
 				}
 				
-				if(!uploaded) throw new Exception("No file has been uploaded");
+				if(!succedeed) throw new Exception("No file has been uploaded");
 				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
 				new JsonResult(mi).printTo(out);
 			}
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			if(uploadedFile != null) env.wts.removeUploadedFile(uploadedFile);
 			new JsonResult(false, "Error uploading").printTo(out);
 		}
 	}

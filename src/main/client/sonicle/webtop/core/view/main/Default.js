@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	alternateClassName: 'WT.view.main.Default',
 	extend: 'WT.view.main.Abstract',
 	
-	westCmp: function() {
+	createWestCmp: function() {
 		return {
 			xtype: 'toolbar',
 			vertical: true,
@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		};
 	},
 	
-	centerCmp: function() {
+	createCenterCmp: function() {
 		return {
 			xtype: 'container',
 			layout: 'border',
@@ -67,9 +67,16 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			}, {
 				region: 'center',
 				xtype: 'container',
-				reference: 'main',
-				layout: 'card',
-				items: []
+				layout: 'border',
+				items: [{
+					region: 'center',
+					xtype: 'container',
+					reference: 'main',
+					layout: 'card',
+					items: []
+				},
+					this.createTaskBar({region: 'south'})
+				]
 			}]
 		};
 	},

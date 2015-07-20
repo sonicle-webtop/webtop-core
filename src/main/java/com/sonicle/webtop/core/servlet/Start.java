@@ -33,16 +33,12 @@
  */
 package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.security.Principal;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.util.Encryption;
-import com.sonicle.webtop.core.sdk.UserProfile;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,8 +48,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
 
 /**
  *
@@ -73,16 +67,7 @@ public class Start extends HttpServlet {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
 			CoreUserSettings cus = wts.getCoreUserSettings();
-			UserProfile up = wts.getUserProfile();
-			
-			//TODO: auth test only --> Remove this later
-			Subject currentUser=SecurityUtils.getSubject();
-			String user_id=((Principal)currentUser.getPrincipal()).getSubjectId();
-			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.mail:access"));
-			WebTopApp.logger.trace("user {} is permitted mail service: {}",user_id,currentUser.isPermitted("service:com.sonicle.webtop.calendar:access"));
-			boolean isAdmin=currentUser.hasRole("admin");
-			WebTopApp.logger.trace("user {} is admin: {}",user_id,isAdmin);
-			//--------------------------------------------------------------
+			//UserProfile up = wts.getUserProfile();
 			
 			Locale locale = wts.getLocale();
 			String theme = cus.getTheme();

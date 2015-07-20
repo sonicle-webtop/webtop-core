@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
+import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -76,6 +77,7 @@ public class WebTopSession {
 	private Environment basicEnv = null;
 	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
+	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
 	
 	WebTopSession(HttpSession session) {
@@ -89,10 +91,20 @@ public class WebTopSession {
 		// Cleanup services
 		synchronized(services) {
 			for(BaseService instance : services.values()) {
-				svcm.cleanupService(instance);
+				svcm.cleanupPrivateService(instance);
 			}
 			services.clear();
 		}
+		// Cleanup uploads
+		synchronized(uploads) {
+			for(UploadedFile file : uploads.values()) {
+				if(!file.virtual) {
+					WT.deleteTempFile(file.id);
+				}
+			}
+			uploads.clear();
+		}
+		
 		// Unregister this session
 		wta.getSessionManager().unregisterSession(this);
 	}
@@ -215,7 +227,7 @@ public class WebTopSession {
 		userAgentLocale = ServletHelper.homogenizeLocale(request);
 		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
-		// Defines useful instances (NB: keep new order)
+		// Defines useful instances (NB: keep code assignment order!!!)
 		coreServiceSettings = new CoreServiceSettings(principal.getDomainId(), CoreManifest.ID);
 		coreUserSettings = new CoreUserSettings(principal.getDomainId(), principal.getUserId(), CoreManifest.ID);
 		basicEnv = new Environment(wta, this);
@@ -228,17 +240,15 @@ public class WebTopSession {
 		
 		// Instantiates services
 		BaseService instance = null;
-		List<String> serviceIds = wta.getManager().getUserServices(profile);
+		List<String> serviceIds = wta.getManager().getPrivateServicesForUser(profile);
 		int count = 0;
-		// TODO: order services list
+		// TODO: ordinamento lista servizi (scelta dall'utente?)
 		for(String serviceId : serviceIds) {
-			//TODO: check if service is allowed for user
-			if(!svcm.getDescriptor(serviceId).hasDefaultService()) continue;
 			// Creates new instance
 			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiateService(serviceId, basicEnv, fullEnv);
+				instance = svcm.instantiatePrivateService(serviceId, basicEnv, fullEnv);
 			} else {
-				instance = svcm.instantiateService(serviceId, basicEnv, null);
+				instance = svcm.instantiatePrivateService(serviceId, basicEnv, null);
 			}
 			if(instance != null) {
 				addService(instance);
@@ -311,11 +321,24 @@ public class WebTopSession {
 		ServiceManifest manifest = sdesc.getManifest();
 		Locale locale = getLocale();
 		
-		// Defines paths and requires
-		if(serviceId.equals(CoreManifest.ID)) {
+		JsWTS.Permissions perms = new JsWTS.Permissions();
+		// Generates service auth permissions
+		for(AuthResource res : manifest.getResources()) {
+			JsWTS.Actions acts = new JsWTS.Actions();
+			for(String act : res.getActions()) {
+				if(WT.isPermitted(serviceId, res.getName(), act)) {
+					acts.put(act, 1);
+				}
+			}
+			if(!acts.isEmpty()) perms.put(res.getName(), acts);
+		}
+		
+		if(svcm.isCoreService(serviceId)) {
+			// Defines paths and requires
 			js.appRequires.add(manifest.getServiceJsClassName(true));
 			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
 		} else {
+			// Defines paths and requires
 			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
 			js.appRequires.add(manifest.getServiceJsClassName(true));
 			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
@@ -342,8 +365,10 @@ public class WebTopSession {
 		jssvc.build = manifest.getBuildDate();
 		jssvc.company = manifest.getCompany();
 		jssvc.maintenance = svcm.isInMaintenance(serviceId);
+		
 		js.services.add(jssvc);
 		js.servicesOptions.add(getClientOptions(serviceId));
+		js.servicesPerms.add(perms);
 		
 		return jssvc;
 	}
@@ -407,5 +432,33 @@ public class WebTopSession {
 	
 	public List<ServiceMessage> getEnqueuedMessages() {
 		return comm.popEnqueuedMessages();
+	}
+	
+	public void addUploadedFile(UploadedFile uploadedFile) {
+		synchronized(uploads) {
+			uploads.put(uploadedFile.id, uploadedFile);
+		}
+	}
+	
+	public void removeUploadedFile(UploadedFile uploadedFile) {
+		removeUploadedFile(uploadedFile.id);
+	}
+	
+	public void removeUploadedFile(String id) {
+		synchronized(uploads) {
+			uploads.remove(id);
+		}
+	}
+	
+	public static class UploadedFile {
+		public String id;
+		public String filename;
+		public boolean virtual;
+		
+		public UploadedFile(String id, String filename, boolean virtual) {
+			this.id = id;
+			this.filename = filename;
+			this.virtual = virtual;
+		}
 	}
 }

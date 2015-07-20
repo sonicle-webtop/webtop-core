@@ -61,6 +61,12 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	XID: null,
 	
 	/**
+	 * @property {Object} perms
+	 * A object carring user's permission.
+	 */
+	perms: null,
+	
+	/**
 	 * @property {WT.sdk.model.ClientOptions} options
 	 * A model representing service's options pushed at startup time.
 	 */
@@ -96,6 +102,9 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		me.mixins.actionstorer.constructor.call(me, cfg);
 		me.callParent(arguments);
 		
+		me.perms = cfg.permsData;
+		delete cfg.permsData;
+		
 		// Creates options using configured model
 		try {
 			me.options = Ext.create(cfg.clientOptionsClassName, cfg.optionsData);
@@ -114,22 +123,19 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return WT.getApp().getDescriptor(this.ID).getDescription();
 	},
 	
+	preNs: function(cn) {
+		return WT.preNs(WT.getApp().getDescriptor(this.ID).getNs(), cn);
+	},
+	
 	/**
-	 * Returns the localized string associated to the key.
-	 * Values arguments will be used to replace tokens in source string.
-	 * @param {String} key The key.
-	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @return {String} The translated (formatted) string, or undefined if not found.
+	 * Checks against a resource if specified action is allowed.
+	 * @param {String} resource The resource name.
+	 * @param {String} action The action name.
+	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
 	 */
-	res: function(key) {
-		var me = this,
-				eArr = Ext.Array;
-		if(arguments.length === 1) {
-			return WT.res(me.ID, key);
-		} else {
-			var args = eArr.slice(arguments, 1);
-			return WT.res.apply(me, eArr.merge([me.ID, key], args));
-		}
+	isPermitted: function(resource, action) {
+		var r = this.perms[resource];
+		return (r) ? (r[action] === 1) : false;
 	},
 	
 	/**
@@ -155,6 +161,24 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 			me.options.set(k, v);
 		});
 		me.options.endEdit();
+	},
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * Values arguments will be used to replace tokens in source string.
+	 * @param {String} key The key.
+	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
+	 * @return {String} The translated (formatted) string, or undefined if not found.
+	 */
+	res: function(key) {
+		var me = this,
+				eArr = Ext.Array;
+		if(arguments.length === 1) {
+			return WT.res(me.ID, key);
+		} else {
+			var args = eArr.slice(arguments, 1);
+			return WT.res.apply(me, eArr.merge([me.ID, key], args));
+		}
 	},
 	
 	/**

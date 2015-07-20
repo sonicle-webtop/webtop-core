@@ -31,4 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-
+Ext.define('Sonicle.webtop.core.model.Activity', {
+	extend: 'WT.model.Base',
+	proxy: WTF.apiProxy(WT.ID, 'ManageActivities'),
+	
+	identifier: 'negative',
+	idProperty: 'activityId',
+	fields: [
+		WTF.field('activityId', 'int', false),
+		WTF.field('domainId', 'string', false),
+		WTF.field('userId', 'string', false),
+		WTF.field('description', 'string', false),
+		WTF.field('readOnly', 'boolean', false, {defaultValue: false}),
+		WTF.field('externalId', 'string', true)
+	]
+});

@@ -63,7 +63,7 @@ import java.util.logging.Level;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -129,7 +129,7 @@ public class ServiceManager {
 		// Cleanup public/job services
 		BasePublicService publicInst = null;
 		BaseJobService jobInst = null;
-		for(String serviceId : listServices()) {
+		for(String serviceId : listPrivateServices()) {
 			// Cleanup public service
 			publicInst = publicServices.remove(serviceId);
 			if(publicInst != null) cleanupPublicService(publicInst);
@@ -178,7 +178,7 @@ public class ServiceManager {
 		
 		// Initialize public/job services
 		int okPublics = 0, failPublics = 0, okJobs = 0, failJobs = 0;
-		for(String serviceId : listServices()) {
+		for(String serviceId : listPrivateServices()) {
 			if(getDescriptor(serviceId).hasPublicService()) {
 				if(!isInMaintenance(serviceId)) {
 					if(createPublicService(serviceId)) {
@@ -242,6 +242,10 @@ public class ServiceManager {
 		}
 	}
 	
+	public boolean isCoreService(String serviceId) {
+		return serviceId.equals(CoreManifest.ID);
+	}
+	
 	public boolean hasFullRights(String serviceId) {
 		if(serviceId.equals(CoreManifest.ID)) return true;
 		return false;
@@ -282,11 +286,11 @@ public class ServiceManager {
 	 * Lists discovered services.
 	 * @return List of registered services.
 	 */
-	public List<String> listServices() {
+	public List<String> listPrivateServices() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock) {
 			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasDefaultService()) list.add(descr.getManifest().getId());
+				if(descr.hasPrivateService()) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
@@ -444,14 +448,14 @@ public class ServiceManager {
 	
 	
 	
-	public BaseService instantiateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
+	public BaseService instantiatePrivateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasDefaultService()) throw new RuntimeException("Service has no default class");
+		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
 		// Creates service instance
 		BaseService instance = null;
 		try {
-			instance = (BaseService)descr.getServiceClass().newInstance();
+			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
 		} catch(Exception ex) {
 			logger.error("Error instantiating service [{}]", descr.getManifest().getServiceClassName(), ex);
 			return null;
@@ -473,7 +477,7 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	public void cleanupService(BaseService instance) {
+	public void cleanupPrivateService(BaseService instance) {
 		// Calls cleanup method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
@@ -568,7 +572,7 @@ public class ServiceManager {
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.debug("[default:{}, public:{}, job:{}, userOptions:{}]", desc.hasDefaultService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.debug("[default:{}, public:{}, job:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register service's dataSources
 			try {

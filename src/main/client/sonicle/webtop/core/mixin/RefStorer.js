@@ -50,6 +50,10 @@ Ext.define('Sonicle.webtop.core.mixin.RefStorer', {
 		this._refs = {};
 	},
 	
+	destroy: function() {
+		this._refs = null;
+	},
+	
 	/**
 	 * Adds a reference.
 	 * @param {String} [group] The reference group.

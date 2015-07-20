@@ -37,7 +37,6 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.userdata.UserDataProviderBase;
@@ -47,12 +46,12 @@ import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.TimeZone;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -133,10 +132,6 @@ public final class UserProfile {
 		return principal.getDomainId();
 	}
 	
-	public String getAuthenticationDomainId() {
-		return (isSystemAdmin()) ? principal.getAuthenticationDomain().getIDDomain() : getDomainId();
-	}
-	
 	public String getMailcardId() {
 		AuthenticationDomain ad = principal.getAuthenticationDomain();
 		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getDomain());
@@ -150,7 +145,7 @@ public final class UserProfile {
 		return user.getLocale();
 	}
 	
-	public TimeZone getTimeZone() {
+	public DateTimeZone getTimeZone() {
 		return user.getTimeZone();
 	}
 	
@@ -163,8 +158,8 @@ public final class UserProfile {
 		return new String(encodedKey);
 	}
 	
-	public boolean isSystemAdmin() {
-		return UserProfile.isSystemAdmin(getStringId());
+	public boolean isWebTopAdmin() {
+		return UserProfile.isWebTopAdmin(getStringId());
 	}
     
     public boolean hasDocumentManagement() {
@@ -198,12 +193,12 @@ public final class UserProfile {
 		return principal;
 	}
 	
-	public static boolean isSystemAdmin(String domainId, String userId) {
-		return isSystemAdmin(userId + "@" + domainId);
+	public static boolean isWebTopAdmin(String domainId, String userId) {
+		return Principal.isAdmin(domainId, userId);
 	}
 	
-	public static boolean isSystemAdmin(String profileId) {
-		return profileId.equals("admin@*");
+	public static boolean isWebTopAdmin(String profileId) {
+		return Principal.isAdmin(profileId);
 	}
 	
 	public static class Id {

@@ -38,6 +38,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		'Sonicle.form.Panel'
 	],
 	
+	//viewModel: {},
+	
 	config: {
 		/**
 		 * @cfg {String} modelProperty
@@ -121,9 +123,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 * Stores {@link Ext.data.Model#idProperty idField's name}) determined from attached model.
 	 */
 	linkedModelIdField: null,
-	
-	viewModel: {},
-	referenceHolder: true,
 	
 	constructor: function(config) {
 		var me = this,
@@ -393,7 +392,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	updateTitle: function() {
 		var me = this, model, mtit = '';
-		if(this.ctInited) {
+		if(me.ctInited) {
 			if(Ext.isString(me.autoTitle)) {
 				model = me.getModel();
 				if(model) mtit = model.get(me.autoTitle) || '';
@@ -410,7 +409,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 						break;
 				}
 			}
-			me.ownerCt.setTitle(Ext.String.format(me.titleFormat, me.title, mtit));
+			me.setTitle(Ext.String.format(me.titleFormat, me.resTitle(), mtit));
 		}
 	}
 });

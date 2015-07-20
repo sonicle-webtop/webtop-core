@@ -34,11 +34,15 @@
 Ext.define('Sonicle.webtop.core.view.Activity', {
 	extend: 'WT.sdk.ModelView',
 	requires: [
-		//'Ext.ux.form.trigger.Clear'
+		'Sonicle.webtop.core.model.Activity'
 	],
 	
-	title: '@activity.tit',
-	iconCls: 'wt-icon-activity-xs',
+	dockableConfig: {
+		title: '@activity.tit',
+		iconCls: 'wt-icon-activity-xs',
+		width: 430,
+		height: 220
+	},
 	model: 'Sonicle.webtop.core.model.Activity',
 	viewModel: {
 		formulas: {
@@ -47,55 +51,93 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+				vm = me.getViewModel();
 		me.callParent(arguments);
 		
-		me.add(me.addRef('main', Ext.create({
+		me.add({
 			region: 'center',
 			xtype: 'form',
+			reference: 'main',
+			referenceHolder: true,
 			layout: 'anchor',
 			modelValidation: true,
 			bodyPadding: 5,
 			defaults: {
 				labelWidth: 100
 			},
-			items: [{
-				xtype: 'combo',
-				bind: '{record.userId}',
-				typeAhead: true,
-				queryMode: 'local',
-				forceSelection: true,
-				selectOnFocus: true,
-				store: {
-					autoLoad: true,
-					model: 'WT.model.Simple',
-					proxy: WTF.proxy(WT.ID, 'LookupUsers', 'users', {
-						extraParams: {wildcard: true}
-					})
-				},
-				valueField: 'id',
-				displayField: 'desc',
-				fieldLabel: me.mys.res('event.fld-userId.lbl')
-			}, {
-				xtype: 'textareafield',
+			items: [
+				WTF.localCombo('id', 'desc', {
+					reference: 'domain',
+					bind: '{record.domainId}',
+					store: {
+						autoLoad: true,
+						model: 'WT.model.Simple',
+						proxy: WTF.proxy(me.mys.ID, 'LookupDomains', 'domains', {
+							extraParams: {wildcard: true}
+						})
+					},
+					fieldLabel: me.mys.res('activity.fld-domain.lbl'),
+					anchor: '100%',
+					listeners: {
+						select: function(s, rec) {
+							me.updateUserParams(true);
+						}
+					}
+				}),
+				WTF.localCombo('id', 'desc', {
+					reference: 'user',
+					bind: '{record.userId}',
+					store: {
+						autoLoad: true,
+						model: 'WT.model.Simple',
+						proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
+							extraParams: {wildcard: true}
+						})
+					},
+					fieldLabel: me.mys.res('activity.fld-user.lbl'),
+					anchor: '100%'
+				}),
+			{
+				xtype: 'textfield',
 				bind: '{record.description}',
-				fieldLabel: me.mys.res('calendar.fld-description.lbl'),
+				fieldLabel: me.mys.res('activity.fld-description.lbl'),
 				anchor: '100%'
+			}, {
+				xtype: 'textfield',
+				bind: '{record.externalId}',
+				fieldLabel: me.mys.res('activity.fld-externalId.lbl'),
+				width: 250
 			}, {
 				xtype: 'checkbox',
 				bind: '{readOnly}',
 				hideEmptyLabel: false,
-				boxLabel: me.mys.res('calendar.fld-readOnly.lbl')
+				boxLabel: me.mys.res('activity.fld-readOnly.lbl')
 			}]
-		})));
+		});
 		me.on('viewload', me.onViewLoad);
+		vm.bind('{record.domainId}', me.onDomainChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
 		if(!success) return;
 		var me = this,
-				main = me.getRef('main');
+				main = me.lookupReference('main');
 		
-		main.getComponent('domainId').focus(true);
+		main.lookupReference('user').focus(true);
+	},
+	
+	onDomainChanged: function() {
+		this.updateUserParams(true);
+	},
+	
+	updateUserParams: function(reload) {
+		var me = this,
+				main = me.lookupReference('main'),
+				store = main.lookupReference('user').getStore();
+		WTU.applyExtraParams(store, {
+			domainId: main.lookupReference('domain').getValue()
+		});
+		if(reload) store.load();
 	}
 });

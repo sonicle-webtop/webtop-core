@@ -35,9 +35,13 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	alternateClassName: 'WT.view.Whatsnew',
 	extend: 'WT.sdk.DockableView',
 	
-	title: '@whatsnew.tit',
-	iconCls: 'wt-icon-whatsnew-xs',
-	closeConfirm: false,
+	dockableConfig: {
+		title: '@whatsnew.tit',
+		iconCls: 'wt-icon-whatsnew-xs',
+		width: 600,
+		height: 500
+	},
+	promptConfirm: false,
 	full: true,
 	
 	initComponent: function() {

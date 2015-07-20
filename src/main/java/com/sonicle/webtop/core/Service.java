@@ -34,11 +34,14 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
-import com.sonicle.security.Principal;
+import com.sonicle.security.DomainAccount;
+import com.sonicle.webtop.core.bol.ActivityGrid;
+import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
@@ -50,13 +53,11 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsUserOptionsService;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
-import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.CustomerDAO;
-import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.SuperEnvironment;
@@ -74,7 +75,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -89,14 +89,14 @@ public class Service extends BaseService {
 	private CoreUserSettings cus;
 	
 	@Override
-	public void initialize() {
+	public void initialize() throws Exception {
 		env = getSuperEnv();
 		UserProfile profile = env.getProfile();
 		cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), getId());
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup() throws Exception {
 		
 	}
 
@@ -233,18 +233,26 @@ public class Service extends BaseService {
 	
 	public void processLookupDomains(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsSimple> items = new ArrayList<>();
-		Locale locale = env.getProfile().getLocale();
+		CoreManager core = env.getManager();
+		UserProfile up = env.getProfile();
 		
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(locale, CoreLocaleKey.WORD_ALL_MALE)));
-			List<ODomain> domains = env.getManager().getDomains();
-			for(ODomain domain : domains) {
-				items.add(new JsSimple(domain.getDomainId(), domain.getDomainName()));
+			if(up.isWebTopAdmin()) {
+				// WebTopAdmin can access to all domains
+				if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+				List<ODomain> domains = core.listDomains(true);
+				for(ODomain domain : domains) {
+					items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
+				}
+			} else {
+				// Domain users can only access to their domain
+				ODomain domain = core.getDomain(up.getDomainId());
+				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
 			}
 			
-			new JsonResult(items, items.size()).printTo(out);
+			new JsonResult("domains", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action LookupDomains", ex);
@@ -252,52 +260,158 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processLookupUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processLookupDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsSimple> items = new ArrayList<>();
+		CoreManager core = env.getManager();
 		UserProfile up = env.getProfile();
 		
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			if(domainId == null) domainId = up.getAuthenticationDomainId();
-			List<OUser> users = env.getManager().getUsers(domainId);
-			for(OUser user : users) {
-				items.add(new JsSimple(new UserProfile.Id(user.getDomainId(), user.getUserId()), user.getDisplayName()));
+			List<OUser> users = null;
+			if(up.isWebTopAdmin()) {
+				if(!StringUtils.isEmpty(domainId)) {
+					users = core.listUsers(domainId, true);
+				} else {
+					users = core.listUsers(true);
+				}
+			} else {
+				// Domain users can only see users belonging to their own domain
+				users = core.listUsers(up.getDomainId(), true);
 			}
 			
-			new JsonResult(items, items.size()).printTo(out);
+			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for(OUser user : users) {
+				items.add(new JsSimple(user.getUserId(), JsSimple.description(user.getDisplayName(), user.getUserId())));
+			}
+			
+			new JsonResult("users", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupDomains", ex);
-			new JsonResult(false, "Unable to lookup domains").printTo(out);
+			logger.error("Error executing action LookupUsers", ex);
+			new JsonResult(false, "Unable to lookup users").printTo(out);
 		}
 	}
 	
 	public void processLookupActivities(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Connection con = null;
+		CoreManager core = env.getManager();
 		List<JsActivity> items = new ArrayList<>();
 		
 		try {
-			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
-			UserProfile.Id profileId = new UserProfile.Id(groupId);
-			ActivityDAO adao = ActivityDAO.getInstance();
-			con = WT.getCoreConnection();
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			UserProfile.Id pid = new UserProfile.Id(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OActivity> activities = adao.viewByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			List<OActivity> activities = core.listLiveActivities(pid);
 			for(OActivity activity : activities) {
 				items.add(new JsActivity(activity));
 			}
 			
-			new JsonResult(items, items.size()).printTo(out);
+			new JsonResult("activities", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action LookupActivities", ex);
 			new JsonResult(false, "Unable to lookup activities").printTo(out);
-		} finally {
-			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processManageActivities(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager core = env.getManager();
+		UserProfile up = env.getProfile();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				Integer id = ServletUtils.getIntParameter(request, "id", null);
+				if(id == null) {
+					List<ActivityGrid> items = core.listLiveActivities(queryDomains(up));
+					new JsonResult("activities", items, items.size()).printTo(out);
+				} else {
+					OActivity item = core.getActivity(id);
+					new JsonResult(item).printTo(out);
+				}
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
+				core.insertActivity(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
+				core.updateActivity(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
+				core.deleteActivity(pl.data.getActivityId());
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error executing action ManageActivities", ex);
+			new JsonResult(false, "Error").printTo(out);
+			
+		}
+	}
+	
+	public void processLookupCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager core = env.getManager();
+		List<JsCausal> items = new ArrayList<>();
+		
+		try {
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			String customerId = ServletUtils.getStringParameter(request, "customerId", null);
+			UserProfile.Id pid = new UserProfile.Id(profileId);
+			
+			//TODO: tradurre campo descrizione in base al locale dell'utente
+			List<OCausal> causals = core.listLiveCausals( pid, customerId);
+			for(OCausal causal : causals) {
+				items.add(new JsCausal(causal));
+			}
+			new JsonResult("causals", items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action LookupCausals", ex);
+			new JsonResult(false, "Unable to lookup causals").printTo(out);
+		}
+	}
+	
+	public void processManageCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager core = env.getManager();
+		UserProfile up = env.getProfile();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				Integer id = ServletUtils.getIntParameter(request, "id", null);
+				if(id == null) {
+					List<CausalGrid> items =  core.listLiveCausals(queryDomains(up));
+					new JsonResult("causals", items, items.size()).printTo(out);
+				} else {
+					OCausal item = core.getCausal(id);
+					new JsonResult(item).printTo(out);
+				}
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
+				core.insertCausal( pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
+				core.updateCausal(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
+				core.deleteCausal(pl.data.getCausalId());
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error executing action ManageCausals", ex);
+			new JsonResult(false, "Error").printTo(out);
 		}
 	}
 	
@@ -310,12 +424,13 @@ public class Service extends BaseService {
 			CustomerDAO cdao = CustomerDAO.getInstance();
 			con = WT.getCoreConnection();
 			
+			//TODO: spostare recupero nel manager
 			List<OCustomer> customers = cdao.viewByLike(con, "%" + query + "%");
 			for(OCustomer customer : customers) {
 				items.add(new JsSimple(customer.getCustomerId(), customer.getDescription()));
 			}
 			
-			new JsonResult(items, items.size()).printTo(out);
+			new JsonResult("customers", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action LookupCustomers", ex);
@@ -330,14 +445,15 @@ public class Service extends BaseService {
 		List<JsSimple> items = new ArrayList<>();
 		
 		try {
-			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			String parentCustomerId = ServletUtils.getStringParameter(request, "parentCustomerId", null);
 			String query = ServletUtils.getStringParameter(request, "query", "");
-			UserProfile.Id profileId = new UserProfile.Id(groupId);
+			UserProfile.Id pid = new UserProfile.Id(profileId);
 			CustomerDAO cdao = CustomerDAO.getInstance();
 			con = WT.getCoreConnection();
 			
-			List<OCustomer> customers = cdao.viewByParentDomainLike(con, parentCustomerId, profileId.getDomainId(), "%" + query + "%");
+			//TODO: spostare recupero nel manager
+			List<OCustomer> customers = cdao.viewByParentDomainLike(con, parentCustomerId, pid.getDomainId(), "%" + query + "%");
 			ArrayList<String> parts = null;
 			String address = null, description;
 			for(OCustomer customer : customers) {
@@ -360,7 +476,7 @@ public class Service extends BaseService {
 				items.add(new JsSimple(customer.getCustomerId(), description));
 			}
 			
-			new JsonResult(items, items.size()).printTo(out);
+			new JsonResult("customers", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action LookupStatisticCustomers", ex);
@@ -370,32 +486,14 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processLookupCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Connection con = null;
-		List<JsCausal> items = new ArrayList<>();
-		
-		try {
-			String groupId = ServletUtils.getStringParameter(request, "groupId", true);
-			String customerId = ServletUtils.getStringParameter(request, "customerId", null);
-			UserProfile.Id profileId = new UserProfile.Id(groupId);
-			CausalDAO cdao = CausalDAO.getInstance();
-			con = WT.getCoreConnection();
-			
-			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OCausal> causals = cdao.viewByDomainUserCustomer(con, profileId.getDomainId(), profileId.getUserId(), customerId);
-			for(OCausal causal : causals) {
-				items.add(new JsCausal(causal));
-			}
-			
-			new JsonResult(items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action LookupCausals", ex);
-			new JsonResult(false, "Unable to lookup causals").printTo(out);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		SuperEnvironment env = getSuperEnv();
@@ -404,13 +502,13 @@ public class Service extends BaseService {
 		try {
 			ArrayList<JsSimple> data = new ArrayList<>();
 			UserProfile up = env.getProfile();
-			if(up.isSystemAdmin()) {
+			if(up.isWebTopAdmin()) {
 				con = WT.getCoreConnection();
 				UserDAO udao = UserDAO.getInstance();
 				List<OUser> users = udao.selectAll(con);
 				String id = null, descr = null;
 				for(OUser user : users) {
-					id = Principal.buildName(user.getDomainId(), user.getUserId());
+					id = DomainAccount.buildName(user.getDomainId(), user.getUserId());
 					descr = MessageFormat.format("{0} ({1})", user.getDisplayName(), id);
 					data.add(new JsSimple(id, descr));
 				}
@@ -435,9 +533,10 @@ public class Service extends BaseService {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			
 			ArrayList<JsUserOptionsService> data = new ArrayList<>();
+			//TODO: aggiornare l'implementazione
 			data.add(new JsUserOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
-			if(!UserProfile.isSystemAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
-			if(!UserProfile.isSystemAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			if(!UserProfile.isWebTopAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
+			if(!UserProfile.isWebTopAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
 			new JsonResult(data).printTo(out);
 			
 		} catch (Exception ex) {
@@ -446,7 +545,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processGetUserServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processLookupSessionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Locale locale = env.getSession().getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -576,6 +675,17 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error managing TFA").printTo(out);
 		}
 	}
+	
+	private List<String> queryDomains(UserProfile profile) {
+		List<String> domains = new ArrayList<>();
+		if(profile.isWebTopAdmin()) domains.add("*");
+		domains.add(profile.getDomainId());
+		return domains;
+	}
+	
+	
+	
+	
 	
 	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<ServiceMessage> messages = new ArrayList();

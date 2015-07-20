@@ -35,16 +35,16 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OContentType;
-import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
-import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -55,9 +55,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
-import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import javax.sql.DataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,6 +111,25 @@ public class WT {
 		return (manifest == null) ? null : manifest.getId();
 	}
 	
+	public static DataSource getCoreDataSource() throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		return conm.getDataSource();
+	}
+	
+	public static DataSource getDataSource(String serviceId) throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
+			return conm.getDataSource(serviceId, ConnectionManager.DEFAULT_DATASOURCE);
+		} else {
+			return conm.getDataSource();
+		}
+	}
+	
+	public static DataSource getDataSource(String serviceId, String dataSourceName) throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		return conm.getDataSource(serviceId, dataSourceName);
+	}
+	
 	public static Connection getCoreConnection() throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		return conm.getConnection();
@@ -157,6 +175,18 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static boolean isPermitted(String serviceId, String resource) {
+		return getWTA().getSystemManager().isPermitted(AuthResource.namespacedName(serviceId, resource));
+	}
+	
+	public static boolean isPermitted(String serviceId, String resource, String action) {
+		return getWTA().getSystemManager().isPermitted(AuthResource.namespacedName(serviceId, resource), action);
+	}
+	
+	public static boolean isPermitted(String serviceId, String resource, String action, String instanceId) {
+		return getWTA().getSystemManager().isPermitted(AuthResource.namespacedName(serviceId, resource), action, instanceId);
+	}
+	
 	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
 		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
 		return getWTA().loadTemplate(path);
@@ -182,17 +212,50 @@ public class WT {
 		return UUID.randomUUID().toString();
 	}
 	
-	public static String generateTempFilename() {
-		return generateTempFilename(null, null);
+	public static String buildTempFilename() {
+		return buildTempFilename(null, null);
 	}
 	
-	public static String generateTempFilename(String prefix, String suffix) {
+	public static String buildTempFilename(String prefix, String suffix) {
 		String uuid = generateUUID();
 		if(StringUtils.isEmpty(suffix)) {
 			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
 		} else {
 			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
 		}
+	}
+	
+	public static String getSystemTempPath() {
+		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		String path = css.getSystemTempPath();
+		if(StringUtils.isEmpty(path)) {
+			path = System.getProperty("java.io.tmpdir");
+			WebTopApp.logger.warn("System temporary folder not defined. Using default one '{}'", path);
+		}
+		return path;
+	}
+	
+	public static File getTempFolder() throws WTException {
+		File tempDir = new File(getSystemTempPath());
+		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
+			throw new WTException("Temp folder isn't a directory or is write protected");
+		}
+		return tempDir;
+	}
+	
+	public static File createTempFile() throws WTException {
+		return createTempFile(null, null);
+	}
+	
+	public static File createTempFile(String prefix, String suffix) throws WTException {
+		File tempDir = getTempFolder();
+		return new File(tempDir, buildTempFilename(prefix, suffix));
+	}
+	
+	public static boolean deleteTempFile(String filename) throws WTException {
+		File tempDir = getTempFolder();
+		File tempFile = new File(tempDir, filename);
+		return tempFile.delete();
 	}
 	
 	public static String getContentType(String extension) {

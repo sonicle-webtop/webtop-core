@@ -35,6 +35,19 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	singleton: true,
 	alternateClassName: ['WT.Factory', 'WTF'],
 	
+	/**
+	 * Builds the URL of service request.
+	 * @param {type} sid The service ID.
+	 * @param {type} action The service Action.
+	 * @param {type} [nowriter=false] 'true' to target the nowriter action, 'false' otherwise.
+	 * @returns {String} The URL
+	 */
+	processUrl: function(sid, action, nowriter) {
+		if(nowriter === undefined) nowriter = false;
+		var nw = (nowriter) ? '&nowriter=true' : '';
+		return Ext.String.format('service-request?service={0}&action={1}' + nw, sid, action);
+	},
+	
 	/*
 	 * Builds the URL of a themed resource file (image, css, etc...) for a service.
 	 * @param {String} sid The service ID.
@@ -340,7 +353,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * Configures a renderer for setting tdCls meta property.
 	 * Class name will be the result of the following concatenation: '{clsPrefix}{value}'
 	 * @param {Object} cfg Custom configuration object.
-	 * @param {String} [cfg.fieldName] Specifies the field from which getting value instead of current one.
+	 * @param {String} [cfg.valueField] Specifies the field from which getting value instead of current one.
 	 * @param {String} [cfg.clsPrefix] Specifies the prefix to prepend to value. Defaults to ''.
 	 * @param {String} [cfg.moreCls] Any other classes.
 	 * @returns {Function} The renderer function
@@ -348,7 +361,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	clsColRenderer: function(cfg) {
 		cfg = cfg || {};
 		return function(value,meta,rec) {
-			var val = (cfg.fieldName) ? rec.get(cfg.fieldName) : value,
+			var val = (cfg.valueField) ? rec.get(cfg.valueField) : value,
 					prefix = (cfg.clsPrefix) ? cfg.clsPrefix + val : val,
 					more = (cfg.moreCls) ? ' ' + cfg.moreCls : '';
 			meta.tdCls = prefix + more;
@@ -356,26 +369,41 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		};
 	},
 	
-	
+	/**
+	 * Configures a renderer for displaying label within related value
+	 * using the following format: "{label} ({value})".
+	 * @param {Object} cfg Custom configuration object.
+	 * @param {String} [cfg.labelField] Specifies the field from which getting label value instead of current one.
+	 * @param {String} cfg.valueField Specifies the field from which getting value.
+	 * @returns {Function} The renderer function
+	 */
+	lvColRenderer: function(cfg) {
+		cfg = cfg || {};
+		return function(value,meta,rec) {
+			var lbl = (cfg.labelField) ? rec.get(cfg.labelField) : value,
+					v = (cfg.valueField) ? rec.get(cfg.valueField) : null;
+			return (lbl && v) ? Ext.String.format('{0} ({1})', lbl, v) : lbl || v;
+		};
+	},
 	
 	/**
 	 * Configures a renderer for adding an icon.
 	 * Class name will be calculated using {@link WTF.cssIconCls}.
 	 * @param {Object} cfg Custom configuration object.
-	 * @param {String/Function} cfg.nameField Specifies the field from which getting name value instead of current one.
-	 * @param {String/Function} [cfg.tooltipField] Specifies the field from which getting tooltip value.
+	 * @param {String/Function} cfg.iconField Specifies the field from which getting name value instead of current one.
+	 * @param {String} [cfg.tooltipField] Specifies the field from which getting tooltip value.
 	 * @param {String} cfg.xid Service short ID.
 	 * @param {String} cfg.size Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
 	 * @returns {Function} The renderer function
 	 */
 	iconColRenderer: function(cfg) {
 		cfg = cfg || {};
-		var nameFn = Ext.isFunction(cfg.nameField),
-				ttipFn = Ext.isFunction(cfg.tooltipFieldName);
+		var icoFn = Ext.isFunction(cfg.iconField);
 		return function(value,meta,rec) {
-			var val = (nameFn) ? cfg.nameField(rec) : ((cfg.nameField) ? rec.get(cfg.nameField) : value),
-					ttip = (ttipFn) ? cfg.tooltipField(rec) : ((cfg.tooltipField) ? rec.get(cfg.tooltipField) : null),
-					cls = WTF.cssIconCls(cfg.xid, val, cfg.size),
+			var data = (icoFn) ? cfg.iconField(rec) : ((cfg.iconField) ? rec.get(cfg.iconField) : value),
+					ico = Ext.isArray(data) ? data[0] : data,
+					ttip = Ext.isArray(data) ? data[1] : ((cfg.tooltipField) ? rec.get(cfg.tooltipField) : null),
+					cls = (ico) ? WTF.cssIconCls(cfg.xid, ico, cfg.size) : '',
 					size = WTU.imgSizeToPx(cfg.size);
 			if(ttip) {
 				return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';

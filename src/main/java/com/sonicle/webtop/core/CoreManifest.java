@@ -33,8 +33,10 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
+import java.util.ArrayList;
 
 /**
  *
@@ -59,7 +61,6 @@ public class CoreManifest extends ServiceManifest {
 	public static final String COMPANY_WEBSITE = "http://www.sonicle.com";
 	public static final String SUPPORT_EMAIL = "sonicle@sonicle.com";
 	public static final String DATA_SOURCE_NAME = "webtop";
-	public static final String[] INIT_CHECK_TABLES = new String[]{"upgrade_statements"/*,"settings","domains"*/};
 	
 	public CoreManifest() {
 		id = ID;
@@ -80,7 +81,8 @@ public class CoreManifest extends ServiceManifest {
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
-		dataSourceName = DATA_SOURCE_NAME;
-		initCheckTables = INIT_CHECK_TABLES;
+		resources = new ArrayList<>();
+		resources.add(new AuthResource("ACTIVITIES", new String[]{"MANAGE"}));
+		resources.add(new AuthResource("CAUSALS", new String[]{"MANAGE"}));
 	}
 }

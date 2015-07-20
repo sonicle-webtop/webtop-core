@@ -22,9 +22,9 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system]
-	 * Defines system uploads path in which temporarly store uploaded files
+	 * Defines system temp path in which temporarly store files
 	 */
-	public static final String SYSTEM_PATH_UPLOADS = "system.path.uploads";
+	public static final String SYSTEM_PATH_TEMP = "system.path.temp";
 	
 	/**
 	 * [string][system]
@@ -43,6 +43,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * Defines system default country locale
 	 */
 	public static final String SYSTEM_COUNTRY = "system.country";
+	
+	/**
+	 * [boolean][system]
+	 * Indicates whether to forcedly hide domain selection from login page
+	 */
+	public static final String LOGIN_HIDE_DOMAINS = "login.domains.hide";
 	
 	/**
 	 * [boolean][system][*]
@@ -126,12 +132,16 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(TMP, null);
 	}
 	
-	public String getSystemUploadsPath() {
-		return getString(SYSTEM_PATH_UPLOADS, null);
+	public String getSystemTempPath() {
+		return getString(SYSTEM_PATH_TEMP, null);
 	}
 	
 	public String getSystemPublicPath() {
 		return getString(SYSTEM_PATH_PUBLIC, null);
+	}
+	
+	public Boolean getHideLoginDomains() {
+		return getBoolean(LOGIN_HIDE_DOMAINS, false);
 	}
 	
 	public String getUserDataProvider() {

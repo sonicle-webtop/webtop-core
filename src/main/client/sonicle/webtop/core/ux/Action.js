@@ -33,6 +33,9 @@
  */
 Ext.define('Sonicle.webtop.core.ux.Action', {
 	alternateClassName: 'WT.ux.Action',
-	extend: 'Ext.Action'
+	extend: 'Ext.Action',
 	
+	getComponents: function() {
+		return this.items;
+	}
 });

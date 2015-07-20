@@ -31,12 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-/**
- *
- * @author malbinola
- */
-public class ServiceDataSource {
+Ext.define('Sonicle.webtop.core.sdk.WizardPage', {
+	alternateClassName: 'WT.sdk.WizardPage',
+	extend: 'Ext.panel.Panel',
+	alias: 'widget.wtwizardpage',
 	
-}
+	viewModel: {},
+	referenceHolder: true,
+	border: false
+});

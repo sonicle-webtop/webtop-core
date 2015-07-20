@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	alternateClassName: 'WT.sdk.BaseView',
-	extend: 'Ext.container.Container',
+	extend: 'Ext.panel.Panel',
 	mixins: [
 		'WT.mixin.Waitable',
 		'WT.mixin.ActionStorer',
@@ -41,6 +41,8 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	],
 	
 	layout: 'border',
+	header: false,
+	border: false,
 	referenceHolder: true,
 	
 	/**
@@ -54,5 +56,30 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 		me.mixins.actionstorer.constructor.call(me, cfg);
 		me.mixins.refstorer.constructor.call(me, cfg);
 		me.callParent([cfg]);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.mixins.actionstorer.destroy.call(me);
+		me.mixins.refstorer.destroy.call(me);
+		me.callParent();
+	},
+	
+	/**
+	 * Returns the toolbar docked on 'top'.
+	 * @returns {Ext.toolbar.Toolbar}
+	 */
+	getTopBar: function() {
+		var ret = this.getDockedItems('toolbar[dock="top"]');
+		return (ret && (ret.length > 0)) ? ret[0] : null;
+	},
+	
+	/**
+	 * Returns the toolbar docked on 'bottom'.
+	 * @returns {Ext.toolbar.Toolbar}
+	 */
+	getBottomBar: function() {
+		var ret = this.getDockedItems('toolbar[dock="bottom"]');
+		return (ret && (ret.length > 0)) ? ret[0] : null;
 	}
 });

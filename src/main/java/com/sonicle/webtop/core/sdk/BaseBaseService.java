@@ -47,8 +47,8 @@ public abstract class BaseBaseService {
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
 	
-	public abstract void initialize();
-	public abstract void cleanup();
+	public abstract void initialize() throws Exception;
+	public abstract void cleanup() throws Exception;
 	
 	/**
 	 * Gets WebTop Service manifest class.

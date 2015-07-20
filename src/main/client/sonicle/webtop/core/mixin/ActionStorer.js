@@ -50,6 +50,10 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		this._actions = {};
 	},
 	
+	destroy: function() {
+		this._actions = null;
+	},
+	
 	/**
 	 * Adds an action into the specified group.
 	 * @param {String} [group] The action group.
@@ -76,13 +80,33 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 			delete obj.ID;
 			delete obj.XID;
 			*/
-			
+			/*
 			act = Ext.create('WT.ux.Action', Ext.applyIf({
 				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
 				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
 				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
 				handler: obj.handler,
 				scope: obj.scope || this
+			}, obj));
+			*/
+			var txt = Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
+					tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
+					cls = Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
+					cb = obj.handler,
+					sco = obj.scope || this;
+			
+			delete obj.text;
+			delete obj.tooltip;
+			delete obj.iconCls;
+			delete obj.handler;
+			delete obj.scope;
+			
+			act = Ext.create('WT.ux.Action', Ext.apply({
+				text: txt,
+				tooltip: tip,
+				iconCls: cls,
+				handler: cb,
+				scope: sco || this
 			}, obj));
 		}
 		me._actions[group][name] = act;

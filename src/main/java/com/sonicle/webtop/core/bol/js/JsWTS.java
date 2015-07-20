@@ -46,6 +46,7 @@ public class JsWTS {
 	public ArrayList<String> appRequires = new ArrayList<>();
 	public ArrayList<JsWTS.Service> services = new ArrayList<>();
 	public ArrayList<Settings> servicesOptions = new ArrayList<>();
+	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
 	public String defaultService;
 	
 	public static class ServiceUserOptions {
@@ -56,6 +57,14 @@ public class JsWTS {
 			this.viewClassName = viewClassName;
 			this.modelClassName = modelClassName;
 		}
+	}
+	
+	public static class Permissions extends HashMap<String, Actions> {
+		
+	}
+	
+	public static class Actions extends HashMap<String, Object> {
+		
 	}
 	
 	public static class Service {

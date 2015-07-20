@@ -100,6 +100,24 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Checks against a resource if specified action is allowed.
+	 * @param {String} [id] The service ID.
+	 * @param {String} resource The resource name.
+	 * @param {String} action The action name.
+	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
+	 */
+	isPermitted: function(id, resource, action) {
+		if(arguments.length === 2) {
+			action = resource;
+			resource = id;
+			id = WT.ID;
+		}
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		return svc.isPermitted(resource, action);
+	},
+	
+	/**
 	 * Gets the initial setting value bound to key.
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The key.
@@ -360,18 +378,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 		}, opts));
 	},
 	
-	confirmForRecurrence: function(msg, cb, scope, opts) {
-		var html = "</br></br>"
-				+ "<table width='70%' style='font-size: 12px'>"
-				+ "<tr><td><input type='radio' name='recurrence' id='this' checked='true' /></td><td width='95%'>"+WT.res("confirm.recurrence.this")+"</td></tr>"
-				+ "<tr><td><input type='radio' name='recurrence' id='since' /></td><td width='95%'>"+WT.res("confirm.recurrence.since")+"</td></tr>"
-				+ "<tr><td><input type='radio' name='recurrence' id='all' /></td><td width='95%'>"+WT.res("confirm.recurrence.all")+"</td></tr>"
-				+ "</table>";
-		this.confirm(msg + html, cb, scope, Ext.apply({
-			buttons: Ext.Msg.OKCANCEL
-		}, opts));
-	},
-	
 	/**
 	 * Convenience function that registers to contextmenu event of the provided
 	 * component; when the event fires it automatically displays specified menu.
@@ -431,30 +437,38 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Creates a displayable view.
-	 * @param {String} id The service ID.
+	 * @param {String} sid The service ID.
 	 * @param {String} name The class name or alias.
 	 * @param {Object} opts
+	 * @param {Object} opts.viewCfg
 	 * @param {Object} opts.containerCfg
 	 * @returns {Ext.window.Window} The container.
 	 */
-	createView: function(id, name, opts) {
+	createView: function(sid, name, opts) {
 		opts = opts || {};
-		var svc = this.getApp().getService(id);
-		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		var svc = this.getApp().getService(sid);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().createView(svc, name, opts);
 		
-		opts.viewCfg = Ext.apply(opts.viewCfg || {}, {
+		/*
+		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
 			mys: svc
 		});
+		view = Ext.create(name, opts.viewCfg);
+		dockCfg = view.getDockableConfig();
 		
 		opts.containerCfg = Ext.apply(opts.containerCfg || {}, {
 			xtype: 'window',
 			layout: 'fit',
-			items: [
-				Ext.create(name, opts.viewCfg)
-			]
+			items: [view]
+		}, {
+			width: dockCfg.width,
+			height: dockCfg.height,
+			modal: opts.modal || false
 		});
 		
 		return Ext.create(opts.containerCfg);
+		*/
 	},
 	
 	getTheme: function() {

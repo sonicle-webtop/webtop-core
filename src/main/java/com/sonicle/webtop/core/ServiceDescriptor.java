@@ -57,7 +57,7 @@ class ServiceDescriptor {
 	
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
-	private Class serviceClass = null;
+	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
 	private Class userOptionsServiceClass = null;
@@ -67,10 +67,10 @@ class ServiceDescriptor {
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
 
-		// Loads default (private) service class
+		// Loads (private) service class
 		String className = manifest.getServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
-			serviceClass = loadClass(className, BaseService.class, "Service");
+			privateServiceClass = loadClass(className, BaseService.class, "Service");
 		}
 		// Loads public service class
 		className = manifest.getPublicServiceClassName();
@@ -93,12 +93,12 @@ class ServiceDescriptor {
 		return manifest;
 	}
 
-	public boolean hasDefaultService() {
-		return (serviceClass != null);
+	public boolean hasPrivateService() {
+		return (privateServiceClass != null);
 	}
 
-	public Class getServiceClass() {
-		return serviceClass;
+	public Class getPrivateServiceClass() {
+		return privateServiceClass;
 	}
 	
 	public boolean hasUserOptionsService() {

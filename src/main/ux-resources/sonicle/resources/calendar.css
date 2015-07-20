@@ -201,9 +201,15 @@
 .ext-cal-dayview .ext-cal-bg-row {
     height: 42px;
 }
-.ext-cal-bg-row-business {
+.ext-cal-bg-row-normal {
 	opacity: .6;
 	background: #FFF4AF;
+}
+.ext-cal-bg-row-business {
+	/*
+	opacity: .6;
+	background: #FFF4AF;
+	*/
 }
 .ext-cal-dayview .ext-cal-bg-row-div {
     border-bottom: 1px dotted #ddd;

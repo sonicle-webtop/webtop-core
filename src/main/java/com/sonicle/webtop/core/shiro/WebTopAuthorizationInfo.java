@@ -94,12 +94,14 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 		try {
 			con=ds.getConnection();
 
+			/*
 			List<OUserRole> uroles=UserRoleDAO.getInstance().selectByUserId(con, principal.getDomainId(),user_id);
 			for(OUserRole urole: uroles) {
 				String roleId=urole.getRoleId();
 				roles.add(roleId);
 				WebTopApp.logger.debug("added role {}",roleId);
 			}
+			*/
 
 			for(GroupPrincipal gp: principal.getGroups()) {
 				if (gp.equals("admins")) {
@@ -125,12 +127,14 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 		try {
 			con=ds.getConnection();
 			for(String role: roles) {
+				/*
 				List<ORolePermission> rperms=RolePermissionDAO.getInstance().selectByRoleId(con, principal.getDomainId(), role);
 				for(ORolePermission rperm: rperms) {
 					String sperm=rperm.getPermission();
 					stringPermissions.add(sperm);
 					WebTopApp.logger.debug("added permission {} from role {}",sperm,role);
 				}
+				*/
 			}
 		} catch(SQLException exc) {
 			WebTopApp.logger.error("error filling permissions for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);

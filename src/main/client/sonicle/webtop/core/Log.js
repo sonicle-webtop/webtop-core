@@ -35,6 +35,62 @@ Ext.define('Sonicle.webtop.core.Log', {
 	singleton: true,
 	alternateClassName: 'WT.Log',
 	
+	constructor: function() {
+		var me = this;
+		window.onerror = Ext.Function.bind(me.onWindowError, me);
+		me.callParent(arguments);
+	},
+	
+	onWindowError: function(message, file, line, column, errorObj) {
+		//Ext.global.console.error(message);
+		console.log('WINDOW ERROR: ' + message);
+		
+		/*
+		var win = window,
+            d = document;
+
+        if (!message || message.match('chrome://') || message.match('Script error')) {
+            return;
+        }
+
+        if (this.nbrErrorsLogged < this.maxNbrLogs && message && (line || file)) {
+            this.nbrErrorsLogged++;
+
+            var windowWidth = win.innerWidth || d.documentElement.clientWidth || d.body.clientWidth,
+                windowHeight = win.innerHeight || d.documentElement.clientHeight || d.body.clientHeight;
+
+            var crashData = {
+                msg          : message,
+                url          : file,
+                line         : line,
+                href         : win.location.href,
+                windowWidth  : windowWidth,
+                windowHeight : windowHeight,
+                extVersion   : Ext.versions && Ext.versions.extjs && Ext.versions.extjs.version,
+                localDate    : new Date().toString(),
+
+                browser : (Ext.ieVersion && "IE" + Ext.ieVersion) ||
+                (Ext.chromeVersion && "Chrome" + Ext.chromeVersion) ||
+                (Ext.firefoxVersion && "FF" + Ext.firefoxVersion) ||
+                (Ext.safariVersion && "Safari" + Ext.safariVersion) ||
+                (Ext.operaVersion && "Opera" + Ext.operaVersion) ||
+                navigator.userAgent,
+
+                column : column || '',
+                stack  : (errorObj && errorObj.stack) || ''
+            };
+
+            var crashString = '';
+
+            Ext.Object.each(crashData, function (key, value) {
+                crashString += (key + '=' + encodeURIComponent(value) + '&');
+            });
+
+            new Image().src = this.logUrl + '?' + crashString;
+        }
+		*/
+	},
+	
 	/**
 	 * @param {String} msg
 	 * @param {Mixed...} values
