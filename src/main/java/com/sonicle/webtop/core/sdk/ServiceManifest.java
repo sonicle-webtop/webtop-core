@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.AuthResourceShareInstance;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,13 +136,22 @@ public class ServiceManifest {
 			for(HierarchicalConfiguration elResource : elResources) {
 				if(elResource.containsKey("[@name]")) {
 					String name = elResource.getString("[@name]");
-					if(StringUtils.isEmpty(name)) throw new Exception("");
+					if(StringUtils.isEmpty(name)) throw new Exception("Resource must have a valid uppercase name");
+					name = name.toUpperCase();
 					
-					if(elResource.containsKey("[@actions]")) {
-						String[] actions = StringUtils.split(elResource.getString("[@actions]"), ",");
-						resources.add(new AuthResource(name, actions));
+					String type = elResource.getString("[@type]", "default");
+					if(type.equals("share")) { // Shared resource
+						resources.add(new AuthResourceShareInstance(name));
+					} else if(type.equals("default")) { // Classic resource (not shared)
+						if(elResource.containsKey("[@actions]")) {
+							String[] actions = StringUtils.split(elResource.getString("[@actions]"), ",");
+							if(actions.length == 0) throw new Exception("Resource must declare at least 1 action");
+							resources.add(new AuthResource(name, actions));
+						} else {
+							throw new Exception("Resource must declare supported actions");
+						}
 					} else {
-						resources.add(new AuthResource(name));
+						throw new WTException("Invalid resource type [{}]", type);
 					}
 				}
 			}

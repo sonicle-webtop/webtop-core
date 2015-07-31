@@ -11,24 +11,23 @@ Ext.define('Sonicle.upload.Item', {
 		'Sonicle.upload.Uploader'
 	],
 	
-	constructor: function(cfg) {
-		var me = this;
-		cfg = cfg || {};
-		cfg.uploaderConfig = Ext.applyIf(cfg.uploaderConfig || {}, {
-			browseButton: cfg.id || Ext.id(me),
-			dropElement: null
-		});
-		me.callParent([cfg]);
+	config: {
+		uploaderAutoInit: true
 	},
+	
+	uploader: null,
 	
 	initComponent: function() {
 		var me = this;
-		
 		me.callParent(arguments);
+		
 		me.uploader = Ext.create('Sonicle.upload.Uploader', me, me.initialConfig.uploaderConfig);
-		me.on('afterrender', function() {
+		if(me.getUploaderAutoInit()) {
+			me.on('afterrender', function() {
+				me.uploader.setBrowseButton(me.getId());
 				me.uploader.init();
-		}, {single: true});
+			}, {single: true});
+		}
 		
 		me.relayEvents(me.uploader, [
 			'beforestart',
@@ -43,5 +42,11 @@ Ext.define('Sonicle.upload.Item', {
 			'uploadprogress',
 			'storeempty'
 		]);
+	},
+	
+	initUploader: function() {
+		var me = this;
+		me.uploader.setBrowseButton(me.getId());
+		me.uploader.init();
 	}
 });

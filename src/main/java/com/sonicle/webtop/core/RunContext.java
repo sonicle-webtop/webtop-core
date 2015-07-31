@@ -33,40 +33,26 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.sdk.SuperEnvironment;
-import com.sonicle.webtop.core.sdk.Environment;
-import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
-import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class CoreEnvironment extends Environment implements SuperEnvironment {
-
-	public CoreEnvironment(WebTopApp wta, WebTopSession wts) {
-		super(wta, wts);
-	}
-
-	@Override
-	public WebTopSession getSession() {
-		return wts;
+public class RunContext {
+	private final String serviceId;
+	private final UserProfile.Id profile;
+	
+	RunContext(String serviceId, UserProfile.Id profile) {
+		this.serviceId = serviceId;
+		this.profile = profile;
 	}
 	
-	@Override
-	public TFAManager getTFAManager() {
-		return wta.getTFAManager();
+	public String getServiceId() {
+		return serviceId;
 	}
 	
-	@Override
-	public CoreManager getManager() {
-		return wta.getManager();
-	}
-	
-	@Override
-	public UserDataProviderBase getUserDataProvider() throws WTException {
-		String providerName = getCoreServiceSettings().getUserDataProvider();
-		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
+	public UserProfile.Id getProfileId() {
+		return profile;
 	}
 }

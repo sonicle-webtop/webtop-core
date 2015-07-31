@@ -448,7 +448,7 @@ public class ServiceManager {
 	
 	
 	
-	public BaseService instantiatePrivateService(String serviceId, Environment basicEnv, CoreEnvironment fullEnv) {
+	public BaseService instantiatePrivateService(String serviceId, Environment env) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
@@ -460,7 +460,7 @@ public class ServiceManager {
 			logger.error("Error instantiating service [{}]", descr.getManifest().getServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(basicEnv, fullEnv);
+		instance.configure(new RunContext(serviceId, env.getProfile().getId()), env);
 		
 		// Calls initialization method
 		try {
@@ -680,7 +680,7 @@ public class ServiceManager {
 			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
 			return null;
 		}
-		instance.configure();
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
 		return instance;
 	}
 	
@@ -733,7 +733,7 @@ public class ServiceManager {
 			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
-		instance.configure();
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
 		return instance;
 	}
 	

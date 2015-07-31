@@ -38,7 +38,6 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.SystemManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
@@ -65,7 +64,7 @@ public class Login extends HttpServlet {
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
-		CoreManager core = wta.getManager();
+		CoreManager core = new CoreManager(wta.createRunContext(), wta);
 		
 		try {
 			WebTopApp.logger.trace("Servlet: Login [{}]", ServletHelper.getSessionID(request));

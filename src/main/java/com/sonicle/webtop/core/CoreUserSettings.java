@@ -43,13 +43,17 @@ import com.sonicle.webtop.core.sdk.UserProfile;
  */
 public class CoreUserSettings extends BaseUserSettings {
 	
+	public CoreUserSettings(UserProfile.Id profileId) {
+		super(profileId, CoreManifest.ID);
+	}
+	
 	public CoreUserSettings(String domainId, String userId) {
 		super(domainId, userId, CoreManifest.ID);
 	}
-	
-    public CoreUserSettings(String domainId, String userId, String serviceId) {
-        super(domainId, userId, serviceId);
-    }
+
+	public CoreUserSettings(String domainId, String userId, String serviceId) {
+		super(domainId, userId, serviceId);
+	}
 	
 	/**
 	 * [string]

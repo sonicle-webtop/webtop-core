@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
@@ -61,13 +62,13 @@ import org.slf4j.Logger;
 public final class UserProfile {
 	
 	private static final Logger logger = WT.getLogger(UserProfile.class);
-	private final SuperEnvironment fullEnv;
+	private final CoreManager core;
 	private final Principal principal;
 	private OUser user;
 	private UserData userData;
 	
-	public UserProfile(SuperEnvironment fullEnv, Principal principal) {
-		this.fullEnv = fullEnv;
+	public UserProfile(CoreManager core, Principal principal) {
+		this.core = core;
 		this.principal = principal;
 		
 		try {
@@ -102,7 +103,7 @@ public final class UserProfile {
 			}
 			
 			// Retrieves user-data info
-			UserDataProviderBase udp = fullEnv.getUserDataProvider();
+			UserDataProviderBase udp = core.getUserDataProvider();
 			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
 			if(ud != null) userData = ud;
 			

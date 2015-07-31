@@ -173,8 +173,9 @@ public class TFAManager {
 	}
 	
 	public boolean activateTFA(WebTopSession wts, String deliveryMode, int code) {
-		CoreServiceSettings css = wts.getCoreServiceSettings();
-		CoreUserSettings cus = wts.getCoreUserSettings();
+		UserProfile profile = wts.getUserProfile();
+		CoreServiceSettings css = new CoreServiceSettings(profile.getDomainId(), CoreManifest.ID);
+		CoreUserSettings cus = new CoreUserSettings(profile.getId());
 		
 		boolean valid = false;
 		if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_EMAIL)) {
@@ -206,8 +207,8 @@ public class TFAManager {
 	}
 	
 	void beforeCodeCheck(WebTopSession wts) {
-		CoreUserSettings cus = wts.getCoreUserSettings();
 		UserProfile profile = wts.getUserProfile();
+		CoreUserSettings cus = new CoreUserSettings(profile.getId());
 		OTPKey otp = null;
 		
 		String deliveryMode = cus.getTFADelivery();
@@ -225,8 +226,9 @@ public class TFAManager {
 	}
 	
 	boolean checkCode(WebTopSession wts, int code) {
-		CoreServiceSettings css = wts.getCoreServiceSettings();
-		CoreUserSettings cus = wts.getCoreUserSettings();
+		UserProfile profile = wts.getUserProfile();
+		CoreServiceSettings css = new CoreServiceSettings(profile.getDomainId(), CoreManifest.ID);
+		CoreUserSettings cus = new CoreUserSettings(profile.getId());
 		OTPKey otp = null;
 		
 		boolean valid = false;
@@ -343,7 +345,7 @@ public class TFAManager {
 	}
 	
 	void disableTFA(String domainId, String userId) {
-		CoreUserSettings cus = new CoreUserSettings(domainId, userId, CoreManifest.ID);
+		CoreUserSettings cus = new CoreUserSettings(domainId, userId);
 		//cus.clearUserSetting(CoreUserSettings.TFA_ENABLED);
 		cus.clear(CoreUserSettings.TFA_SECRET);
 		cus.clear(CoreUserSettings.TFA_EMAILADDRESS);

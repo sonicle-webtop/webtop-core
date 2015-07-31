@@ -111,6 +111,19 @@ public class WT {
 		return (manifest == null) ? null : manifest.getId();
 	}
 	
+	/*
+	public static RunContext createRunContext(String serviceId, UserProfile.Id profile) {
+		return new RunContext(WT.getManifest(serviceId), profile);
+	}
+	
+	public static RunContext createRunContext(String serviceId, String domainId, String userId) {
+		return new RunContext(WT.getManifest(serviceId), new UserProfile.Id(domainId, userId));
+	}
+	*/
+	public static CoreManager getCoreManager(RunContext context) {
+		return new CoreManager(context, getWTA());
+	}
+	
 	public static DataSource getCoreDataSource() throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		return conm.getDataSource();

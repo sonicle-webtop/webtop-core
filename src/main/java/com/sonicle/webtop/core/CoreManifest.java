@@ -62,7 +62,7 @@ public class CoreManifest extends ServiceManifest {
 	public static final String SUPPORT_EMAIL = "sonicle@sonicle.com";
 	public static final String DATA_SOURCE_NAME = "webtop";
 	
-	public CoreManifest() {
+	CoreManifest() {
 		id = ID;
 		xid = XID;
 		javaPackage = JAVA_PACKAGE;

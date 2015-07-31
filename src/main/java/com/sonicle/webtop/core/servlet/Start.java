@@ -58,7 +58,6 @@ public class Start extends HttpServlet {
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
-		CoreManager manager = wta.getManager();
 		
 		String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
 		boolean extdebug=sextdebug!=null && sextdebug.equals("true");
@@ -66,8 +65,7 @@ public class Start extends HttpServlet {
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
 			wts.checkEnvironment(request);
-			CoreUserSettings cus = wts.getCoreUserSettings();
-			//UserProfile up = wts.getUserProfile();
+			CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId()); // Keep at this line!
 			
 			Locale locale = wts.getLocale();
 			String theme = cus.getTheme();

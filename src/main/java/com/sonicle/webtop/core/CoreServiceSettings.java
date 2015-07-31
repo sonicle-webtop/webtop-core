@@ -18,6 +18,16 @@ import java.util.Locale;
  */
 public class CoreServiceSettings extends BaseServiceSettings {
 	
+	/*
+	public CoreServiceSettings(String domainId) {
+		super(domainId, CoreManifest.ID);
+	}
+	*/
+	
+	public CoreServiceSettings(String domainId, String serviceId) {
+		super(domainId, serviceId);
+	}
+	
 	public static final String TMP = "tmp";
 	
 	/**
@@ -123,10 +133,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";
-	
-	public CoreServiceSettings(String domainId, String serviceId) {
-		super(domainId, serviceId);
-	}
 	
 	public String getTempPath() {
 		return getString(TMP, null);

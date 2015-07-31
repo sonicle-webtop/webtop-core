@@ -137,6 +137,8 @@
 				soUxCSSPath + 'multicalendar.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				soUxCSSPath + 'iconcombobox.css' + '"/>');
+		document.write('<link rel="stylesheet" type="text/css" href="' +
+				soUxCSSPath + 'colorcolumn.css' + '"/>');
 	}
 	
 	extPrefix = useDebug ? '/ext-all-debug' : '/ext-all';

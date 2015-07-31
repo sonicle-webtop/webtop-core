@@ -7,6 +7,9 @@
 Ext.define('Sonicle.calendar.DatePicker', {
 	extend: 'Ext.picker.Date',
 	alias: 'widget.socalendarpicker',
+	requires: [
+		'Sonicle.Date'
+	],
 	
 	config: {
 		/**
@@ -54,7 +57,7 @@ Ext.define('Sonicle.calendar.DatePicker', {
 	
 	/**
 	 * @cfg {String} highlightMode
-	 * One of: "d" day, "w5" work week, "w" week, "wa" week agenda, "m" month.
+	 * One of: "d" day, "w5" work week, "w" week, "dw" double-week, "m" month.
 	 */
 	highlightMode : 'd',
 	
@@ -251,7 +254,7 @@ Ext.define('Sonicle.calendar.DatePicker', {
 	},
 	
 	updateStyles: function() {
-		var me = this, eDate = Ext.Date, hdate = me.highlightDate, selCls = me.selectedCls, 
+		var me = this, eDate = Ext.Date, soDate = Sonicle.Date, hdate = me.highlightDate, selCls = me.selectedCls, 
 				cells = me.cells, len = cells.getCount(), cell, bold, fmt = me.getFormat(), bdMatch = me.boldDatesRE, 
 				hmode = me.highlightMode, sday = me.startDay, 
 				t1 = eDate.getFirstDateOfMonth(me.getValue()).getTime(), 
@@ -262,13 +265,19 @@ Ext.define('Sonicle.calendar.DatePicker', {
 		if(hmode === 'd') {
 			tfrom = hdate.getTime();
 			tto = hdate.getTime();
-		} else if ((hmode === 'w') || (hmode === 'wa')) {
-			tfrom = me.getFirstDateOfWeek(hdate, sday).getTime();
-			tto = me.getLastDateOfWeek(hdate, sday).getTime();
-		} else if (hmode === 'w5')  {
-			var foffs = [1,0], loffs = [-1,-2];
-			tfrom = eDate.add(me.getFirstDateOfWeek(hdate, sday), eDate.DAY, foffs[sday]).getTime();
-			tto = eDate.add(me.getLastDateOfWeek(hdate, sday), eDate.DAY, loffs[sday]).getTime();
+		} else if (hmode === 'w5') {
+			var foffs = [1,0];
+			d = soDate.add(soDate.getFirstDateOfWeek(hdate, sday), {days: foffs[sday]});
+			tfrom = d.getTime();
+			tto = soDate.add(d, {days: (5-1)}).getTime();
+		} else if ((hmode === 'w')) {
+			d = soDate.getFirstDateOfWeek(hdate, sday);
+			tfrom = d.getTime();
+			tto = soDate.add(d, {days: (7-1)}).getTime();
+		} else if(hmode === 'dw') {
+			d = soDate.getFirstDateOfWeek(hdate, sday);
+			tfrom = d.getTime();
+			tto = soDate.add(d, {days: (14-1)}).getTime();
 		} else if (hmode === 'm') {
 			tfrom = eDate.getFirstDateOfMonth(hdate).getTime();
 			tto = eDate.getLastDateOfMonth(hdate).getTime();
@@ -315,21 +324,6 @@ Ext.define('Sonicle.calendar.DatePicker', {
 		}
 	},
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	showPrevMonth: function(e) {
 		var me = this;
 		me.callParent(arguments);
@@ -352,24 +346,5 @@ Ext.define('Sonicle.calendar.DatePicker', {
 		var me = this;
 		me.callParent(arguments);
 		me.fireEvent('select', me, me.value);
-	},
-	
-	getFirstDateOfWeek: function(date, startDay) {
-		var eDate = Ext.Date, newDate = eDate.clearTime(date, true), day = newDate.getDay(), sub;
-		if (day !== startDay) {
-			if (day === 0) {
-				sub = 6;
-			} else {
-				sub = day - startDay;
-			}
-			return eDate.add(newDate, eDate.DAY, -sub);
-		} else {
-			return newDate;
-		}
-	},
-	
-	getLastDateOfWeek: function(date, startDay) {
-		var eDate = Ext.Date, start = this.getFirstDateOfWeek(date, startDay);
-		return eDate.add(start, eDate.DAY, 6);
 	}
 });

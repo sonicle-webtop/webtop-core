@@ -31,57 +31,46 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
+package com.sonicle.webtop.core.bol.js;
 
-import java.text.MessageFormat;
-import java.util.LinkedHashSet;
-import org.jooq.tools.StringUtils;
+import com.sonicle.webtop.core.sdk.JsUserOptionsBase;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResource {
-	public static final String ACTION_READ = "READ";
-	public static final String ACTION_WRITE = "WRITE";
-	public static final String ACTION_EDIT = "EDIT";
-	public static final String ACTION_DELETE = "DELETE";
-	
-	private final String name;
-	private final LinkedHashSet<String> actions = new LinkedHashSet<>();
-	
-	public AuthResource(String name) {
-		this.name = name.toUpperCase();
-	}
-	
-	public AuthResource(String name, String[] actions) {
-		this(name);
-		for(String action : actions) {
-			if(!StringUtils.isEmpty(action)) {
-				this.actions.add(action.trim());
-			}
-		}
-	}
-
-	public String getName() {
-		return name;
-	}
-	
-	public String[] getActions() {
-		return actions.toArray(new String[actions.size()]);
-	}
-	
-	public static String namespacedName(String serviceId, String resourceName) {
-		return MessageFormat.format("{0}.{1}", serviceId, resourceName);
-	}
-	
-	public static String permissionString(String resource, String action, String instance) {
-		return MessageFormat.format("{0}:{1}:{2}", resource, StringUtils.defaultString(action, "*"), StringUtils.defaultString(instance, "*"));
-	}
-	
-	/*
-	public static String ns(String namespace, String name) {
-		return MessageFormat.format("{0}.{1}", namespace, name);
-	}
-	*/
+public class JsUserOptions extends JsUserOptionsBase {
+	public String displayName;
+	public String theme;
+	public String layout;
+	public String laf;
+	public String locale;
+	public String timezone;
+	public Integer startDay;
+	public String shortDateFormat;
+	public String longDateFormat;
+	public String shortTimeFormat;
+	public String longTimeFormat;
+	public String usdTitle;
+	public String usdFirstName;
+	public String usdLastName;
+	public String usdEmail;
+	public String usdMobile;
+	public String usdTelephone;
+	public String usdFax;
+	public String usdAddress;
+	public String usdPostalCode;
+	public String usdCity;
+	public String usdState;
+	public String usdCountry;
+	public String usdCompany;
+	public String usdFunction;
+	public String usdWorkEmail;
+	public String usdWorkMobile;
+	public String usdWorkTelephone;
+	public String usdWorkFax;
+	public String usdCustom1;
+	public String usdCustom2;
+	public String usdCustom3;
+	public Boolean tfaEnabled;
 }

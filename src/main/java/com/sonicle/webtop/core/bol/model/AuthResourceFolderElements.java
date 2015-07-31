@@ -31,21 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.TFAManager;
-import com.sonicle.webtop.core.WebTopSession;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+package com.sonicle.webtop.core.bol.model;
 
 /**
  *
  * @author malbinola
  */
-public interface SuperEnvironment extends BasicEnvironment {
+public class AuthResourceFolderElements extends AuthResource {
+	private final String originalName;
 	
-	public WebTopSession getSession();
-	public TFAManager getTFAManager();
-	public CoreManager getManager();
-	public UserDataProviderBase getUserDataProvider() throws WTException;
+	public AuthResourceFolderElements(String name) {
+		super(buildName(name), new String[]{ACTION_READ, ACTION_WRITE, ACTION_EDIT, ACTION_DELETE});
+		this.originalName = name;
+	}
+	
+	public String getOriginalName() {
+		return originalName;
+	}
+	
+	public static String buildName(String name) {
+		return name + "_ELEMENTS";
+	}
 }

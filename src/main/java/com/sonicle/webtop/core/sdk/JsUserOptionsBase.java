@@ -31,57 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
-
-import java.text.MessageFormat;
-import java.util.LinkedHashSet;
-import org.jooq.tools.StringUtils;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResource {
-	public static final String ACTION_READ = "READ";
-	public static final String ACTION_WRITE = "WRITE";
-	public static final String ACTION_EDIT = "EDIT";
-	public static final String ACTION_DELETE = "DELETE";
-	
-	private final String name;
-	private final LinkedHashSet<String> actions = new LinkedHashSet<>();
-	
-	public AuthResource(String name) {
-		this.name = name.toUpperCase();
-	}
-	
-	public AuthResource(String name, String[] actions) {
-		this(name);
-		for(String action : actions) {
-			if(!StringUtils.isEmpty(action)) {
-				this.actions.add(action.trim());
-			}
-		}
-	}
-
-	public String getName() {
-		return name;
-	}
-	
-	public String[] getActions() {
-		return actions.toArray(new String[actions.size()]);
-	}
-	
-	public static String namespacedName(String serviceId, String resourceName) {
-		return MessageFormat.format("{0}.{1}", serviceId, resourceName);
-	}
-	
-	public static String permissionString(String resource, String action, String instance) {
-		return MessageFormat.format("{0}:{1}:{2}", resource, StringUtils.defaultString(action, "*"), StringUtils.defaultString(instance, "*"));
-	}
-	
-	/*
-	public static String ns(String namespace, String name) {
-		return MessageFormat.format("{0}.{1}", namespace, name);
-	}
-	*/
+public class JsUserOptionsBase {
+	public String id;
 }

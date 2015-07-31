@@ -35,17 +35,31 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	singleton: true,
 	alternateClassName: ['WT.Factory', 'WTF'],
 	
-	/**
-	 * Builds the URL of service request.
-	 * @param {type} sid The service ID.
-	 * @param {type} action The service Action.
-	 * @param {type} [nowriter=false] 'true' to target the nowriter action, 'false' otherwise.
-	 * @returns {String} The URL
+	/*
+	 * Builds a service request URL, based on service ID, action and params.
+	 * @param {String} sid The service ID
+	 * @param {String} action The action to be called on service
+	 * @param {Object} [params] Optional additional parameters that will be encoded into the URL
+	 * @return {String} The encoded URL
 	 */
-	processUrl: function(sid, action, nowriter) {
-		if(nowriter === undefined) nowriter = false;
-		var nw = (nowriter) ? '&nowriter=true' : '';
-		return Ext.String.format('service-request?service={0}&action={1}' + nw, sid, action);
+	processUrl: function(sid, action, params) {
+		var url = Ext.String.format('service-request?service={0}&action={1}', sid, action);
+		if(params) url = Ext.String.urlAppend(url, Ext.Object.toQueryString(params));
+		return url;
+	},
+	
+	/*
+	 * Build a service request URL, based on service ID, action and params, 
+	 * adding the nowriter option into the params to allow for binary send of data.
+	 * @param {String} sid The service ID
+	 * @param {String} action The action to be called on service
+	 * @param {Object} [params] Optional additional parameters that will be encoded into the URL
+	 * @return {String} The encoded URL
+	 */
+	processBinUrl: function(sid, action, params) {
+		return WTF.processUrl(sid, action, Ext.apply(params || {}, {
+			nowriter: true
+		}));
 	},
 	
 	/*
@@ -204,33 +218,6 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, opts);
 	},
 	
-	/*
-	 * Builds a service request URL, based on service ID, action and params.
-	 * @param {String} sid The service ID
-	 * @param {String} action The action to be called on service
-	 * @param {Object} [params] Optional additional parameters that will be encoded into the URL
-	 * @return {String} The encoded URL
-	 */
-	serviceRequestUrl: function(sid, action, params) {
-		var url = "service-request?service="+sid+"&action="+action;
-		if(params) url += "&"+Ext.Object.toQueryString(params);
-		return url;
-	},
-	
-	/*
-	 * Build a service request URL, based on service ID, action and params, 
-	 * adding the nowriter option into the params to allow for binary send of data.
-	 * @param {String} sid The service ID
-	 * @param {String} action The action to be called on service
-	 * @param {Object} [params] Optional additional parameters that will be encoded into the URL
-	 * @return {String} The encoded URL
-	 */
-	serviceRequestBinaryUrl: function(sid, action, params) {
-		params = params || {};
-		params.nowriter = true;
-		return WTF.serviceRequestUrl(sid, action, params);
-	},
-	
 	/**
 	 * Helper method for building a config object for {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
@@ -290,6 +277,21 @@ Ext.define('Sonicle.webtop.core.Factory', {
 			persist: false,
 			depends: depends,
 			convert: convert
+		}, cfg);
+	},
+	
+	lookupCombo: function(valueField, displayField, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			xtype: 'combo',
+			typeAhead: false,
+			queryMode: 'local',
+			forceSelection: true,
+			selectOnFocus: true,
+			triggerAction: 'all',
+			valueField: valueField,
+			displayField: displayField,
+			submitEmptyText: false
 		}, cfg);
 	},
 	

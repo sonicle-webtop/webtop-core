@@ -72,10 +72,6 @@ public class WebTopSession {
 	private String refererURI = null;
 	private Locale userAgentLocale = null;
 	private ReadableUserAgent userAgentInfo = null;
-	private CoreServiceSettings coreServiceSettings = null;
-	private CoreUserSettings coreUserSettings = null;
-	private Environment basicEnv = null;
-	private CoreEnvironment fullEnv = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
@@ -220,6 +216,7 @@ public class WebTopSession {
 	private void initializeEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
+		CoreManager core = new CoreManager(wta.createRunContext(), wta);
 		
 		logger.debug("Creating environment for {}", principal.getName());
 		
@@ -228,11 +225,7 @@ public class WebTopSession {
 		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
-		coreServiceSettings = new CoreServiceSettings(principal.getDomainId(), CoreManifest.ID);
-		coreUserSettings = new CoreUserSettings(principal.getDomainId(), principal.getUserId(), CoreManifest.ID);
-		basicEnv = new Environment(wta, this);
-		fullEnv = new CoreEnvironment(wta, this);
-		profile = new UserProfile(fullEnv, principal);
+		profile = new UserProfile(core, principal);
 		
 		// Creates communication manager and registers this active session
 		comm = new SessionComManager(profile.getId());
@@ -240,15 +233,15 @@ public class WebTopSession {
 		
 		// Instantiates services
 		BaseService instance = null;
-		List<String> serviceIds = wta.getManager().getPrivateServicesForUser(profile);
+		List<String> serviceIds = core.getPrivateServicesForUser(profile);
 		int count = 0;
 		// TODO: ordinamento lista servizi (scelta dall'utente?)
 		for(String serviceId : serviceIds) {
 			// Creates new instance
 			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiatePrivateService(serviceId, basicEnv, fullEnv);
+				instance = svcm.instantiatePrivateService(serviceId, new CoreSessionContext(wta, this));
 			} else {
-				instance = svcm.instantiatePrivateService(serviceId, basicEnv, null);
+				instance = svcm.instantiatePrivateService(serviceId, new Environment(this));
 			}
 			if(instance != null) {
 				addService(instance);
@@ -279,7 +272,7 @@ public class WebTopSession {
 	 */
 	public BaseService getServiceById(String serviceId) {
 		synchronized(services) {
-			if(!services.containsKey(serviceId)) throw new WTRuntimeException("No service with ID: '{0}'", serviceId);
+			if(!services.containsKey(serviceId)) throw new WTRuntimeException("No service with ID [{0}]", serviceId);
 			return services.get(serviceId);
 		}
 	}
@@ -410,12 +403,19 @@ public class WebTopSession {
 		return needWhatsnew;
 	}
 	
-	public CoreServiceSettings getCoreServiceSettings() {
-		return coreServiceSettings;
+	public boolean needWhatsnew(String serviceId, UserProfile profile) {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.needWhatsnew(serviceId, profile);
 	}
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return coreUserSettings;
+	public String getWhatsnewHtml(String serviceId, UserProfile profile, boolean full) {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.getWhatsnew(serviceId, profile, full);
+	}
+	
+	public void resetWhatsnew(String serviceId, UserProfile profile) {
+		ServiceManager svcm = wta.getServiceManager();
+		svcm.resetWhatsnew(serviceId, profile);
 	}
 	
 	public void setWebSocketEndpoint(WebSocket wsm) {
@@ -437,6 +437,12 @@ public class WebTopSession {
 	public void addUploadedFile(UploadedFile uploadedFile) {
 		synchronized(uploads) {
 			uploads.put(uploadedFile.id, uploadedFile);
+		}
+	}
+	
+	public UploadedFile getUploadedFile(String id) {
+		synchronized(uploads) {
+			return uploads.get(id);
 		}
 	}
 	

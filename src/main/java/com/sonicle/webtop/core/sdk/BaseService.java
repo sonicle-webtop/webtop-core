@@ -33,13 +33,14 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.RunContext;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
-import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreSessionContext;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
@@ -67,26 +68,25 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
  *
  * @author malbinola
  */
-public abstract class BaseService extends BaseBaseService {
-	
+public abstract class BaseService extends BaseServiceBase {
 	private boolean configured = false;
+	private RunContext context;
 	private Environment env;
-	private CoreEnvironment coreEnv;
 	
-	public final void configure(Environment env, CoreEnvironment coreEnv) {
+	public final void configure(RunContext context, Environment env) {
 		if(configured) return;
 		configured = true;
+		this.context = context;
 		this.env = env;
-		this.coreEnv = coreEnv;
 	}
 	
-	public final BasicEnvironment getEnv() {
+	public final Environment getEnv() {
 		return env;
 	}
 	
-	public final SuperEnvironment getSuperEnv() {
-		if(coreEnv == null) throw new InsufficientRightsException("Insufficient rigths to access super environment");
-		return coreEnv;
+	@Override
+	public RunContext getRunContext() {
+		return context;
 	}
 	
 	public HashMap<String, Object> returnClientOptions() {
@@ -112,6 +112,14 @@ public abstract class BaseService extends BaseBaseService {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
+	public final UploadedFile getUploadedFile(String id) {
+		return env.wts.getUploadedFile(id);
+	}
+	
+	public final void removeUploadedFile(String id) {
+		env.wts.removeUploadedFile(id);
+	}
+	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
@@ -130,17 +138,17 @@ public abstract class BaseService extends BaseBaseService {
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		UserProfile up = env.getProfile();
-		CoreManager corem = env.wta.getManager();
+		CoreManager core = new CoreManager(getRunContext(), ((CoreSessionContext)getEnv()).getApp());
 		
 		try {
-			String context = ServletUtils.getStringParameter(request, "context", true);	
+			String cntx = ServletUtils.getStringParameter(request, "context", true);	
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				items = new ArrayList<>();
 				if(query != null) {
-					List<OServiceStoreEntry> entries = corem.getServiceStoreEntriesByQuery(up.getId(), getId(), context, query);
+					List<OServiceStoreEntry> entries = core.getServiceStoreEntriesByQuery(up.getId(), getId(), cntx, query);
 					for(OServiceStoreEntry entry : entries) {
 						items.add(new String[]{entry.getValue()});
 					}
@@ -150,7 +158,7 @@ public abstract class BaseService extends BaseBaseService {
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
 				
-				corem.deleteServiceStoreEntry(up.getId(), getId(), context, pl.data.id);
+				core.deleteServiceStoreEntry(up.getId(), getId(), cntx, pl.data.id);
 				new JsonResult().printTo(out);
 			}
 			
@@ -165,10 +173,10 @@ public abstract class BaseService extends BaseBaseService {
 		UploadedFile uploadedFile = null;
 		
 		try {
-			String context = ServletUtils.getStringParameter(request, "context", true);
+			String cntx = ServletUtils.getStringParameter(request, "context", true);
 			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
 			
-			Method streamMethod = getUploadStreamMethod(context);
+			Method streamMethod = getUploadStreamMethod(cntx);
 			if(streamMethod != null) {
 				// Defines the upload object
 				upload = new ServletFileUpload();
@@ -196,6 +204,7 @@ public abstract class BaseService extends BaseBaseService {
 				
 			} else {
 				ArrayList<String> items = new ArrayList<>();
+				Method uploadMethod = getUploadMethod(cntx);
 				
 				// Defines the upload object
 				DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -215,6 +224,12 @@ public abstract class BaseService extends BaseBaseService {
 						env.wts.addUploadedFile(uploadedFile);
 						fi.write(file);
 						items.add(uploadedFile.id);
+						try {
+							uploadMethod.invoke(this, request, uploadedFile);
+						} catch(Throwable t) {
+							//TODO: aggiungere logging
+							t.printStackTrace();
+						}
 						succedeed = true;
 						// Plupload client-side will upload multiple file each in its own
 						// request; we can skip fileItems looping.
@@ -234,7 +249,16 @@ public abstract class BaseService extends BaseBaseService {
 		}
 	}
 	
-	protected final Method getUploadStreamMethod(String context) {
+	private Method getUploadMethod(String context) {
+		String methodName = MessageFormat.format("process{0}Upload", context);
+		try {
+			return getClass().getMethod(methodName, HttpServletRequest.class, UploadedFile.class);
+		} catch(NoSuchMethodException ex) {
+			return null;
+		}
+	}
+	
+	private Method getUploadStreamMethod(String context) {
 		String methodName = MessageFormat.format("process{0}UploadStream", context);
 		try {
 			return getClass().getMethod(methodName, HttpServletRequest.class, InputStream.class);

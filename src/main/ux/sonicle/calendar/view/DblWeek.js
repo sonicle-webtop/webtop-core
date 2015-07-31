@@ -1,18 +1,17 @@
 /**
- * @class Sonicle.calendar.view.WeekAgenda
- * @extends Sonicle.calendar.DayView
- * <p>Displays a calendar view by week (agenda). This class does not usually need to be used directly as you can
+ * @class Sonicle.calendar.view.DblWeek
+ * <p>Displays a calendar view by 2-week. This class does not usually need to be used directly as you can
  * use a {@link Sonicle.calendar.CalendarPanel CalendarPanel} to manage multiple calendar views at once including
  * the week (agenda) view.</p>
  * @constructor
  * @param {Object} config The config object
  */
-Ext.define('Sonicle.calendar.view.WeekAgenda', {
+Ext.define('Sonicle.calendar.view.DblWeek', {
     extend: 'Sonicle.calendar.view.Month',
-	alias: 'widget.weekagendaview',
+	alias: 'widget.dblweekview',
 	
 	constructor: function(cfg) {
-		cfg.weekCount = 1;
+		cfg.weekCount = 2;
 		this.callParent([cfg]);
 	},
 	

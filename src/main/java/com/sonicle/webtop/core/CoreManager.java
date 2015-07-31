@@ -36,19 +36,26 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
+import com.sonicle.webtop.core.bol.IncomingShare;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
+import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
+import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.sdk.BaseServiceManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -62,12 +69,22 @@ import org.joda.time.DateTimeZone;
  *
  * @author malbinola
  */
-public class CoreManager {
-	
+public class CoreManager extends BaseServiceManager {
 	private WebTopApp wta = null;
 	
-	CoreManager(WebTopApp wta) {
+	public CoreManager(RunContext context, WebTopApp wta) {
+		super(CoreManifest.ID, context);
 		this.wta = wta;
+	}
+	
+	public TFAManager getTFAManager() {
+		return wta.getTFAManager();
+	}
+	
+	public UserDataProviderBase getUserDataProvider() throws WTException {
+		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		String providerName = css.getUserDataProvider();
+		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws Exception {
@@ -116,11 +133,28 @@ public class CoreManager {
 		//TODO: gestire gli abilitati
 		try {
 			con = WT.getCoreConnection();
-			UserDAO dao = UserDAO.getInstance();
-			return dao.selectByDomain(con, domainId);
+			UserDAO useDao = UserDAO.getInstance();
+			return useDao.selectByDomain(con, domainId);
 			
 		} catch(SQLException ex) {
 			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OUser getUser(UserProfile.Id pid) throws Exception {
+		return getUser(pid.getDomainId(), pid.getUserId());
+	}
+	
+	public OUser getUser(String domainId, String userId) throws Exception {
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			UserDAO useDao = UserDAO.getInstance();
+			return useDao.selectByDomainUser(con, domainId, userId);
+			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -296,12 +330,40 @@ public class CoreManager {
 		}
 	}
 	
-	public List<OShare> listIncomingSharesForUser(String serviceId, UserProfile.Id profileId, String resource) {
+	public List<OCustomer> listCustomersByLike(String like) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CustomerDAO dao = CustomerDAO.getInstance();
+			return dao.viewByLike(con, like);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OCustomer getCustomer(String customerId) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			CustomerDAO dao = CustomerDAO.getInstance();
+			return dao.viewById(con, customerId);
+			
+		} catch(SQLException ex) {
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<IncomingShare> listIncomingSharesForUser(String serviceId, UserProfile.Id profileId, String resource) {
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
 			ShareDAO shaDao = ShareDAO.getInstance();
-			return shaDao.selectIncomingByServiceDomainUserResource(con, serviceId, profileId.getDomainId(), profileId.getUserId(), resource);
+			return shaDao.viewIncomingByServiceDomainUserResource(con, serviceId, profileId.getDomainId(), profileId.getUserId(), resource);
 			
 		} catch(SQLException ex) {
 			return null;
@@ -335,26 +397,11 @@ public class CoreManager {
 		return result;
 	}
 	
-	public boolean needWhatsnew(String serviceId, UserProfile profile) {
-		ServiceManager svcm = wta.getServiceManager();
-		return svcm.needWhatsnew(serviceId, profile);
-	}
-	
-	public String getWhatsnewHtml(String serviceId, UserProfile profile, boolean full) {
-		ServiceManager svcm = wta.getServiceManager();
-		return svcm.getWhatsnew(serviceId, profile, full);
-	}
-	
-	public void resetWhatsnew(String serviceId, UserProfile profile) {
-		ServiceManager svcm = wta.getServiceManager();
-		svcm.resetWhatsnew(serviceId, profile);
-	}
-	
 	public List<OServiceStoreEntry> getServiceStoreEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query) {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			return sedao.selectKeyValueByLikeKey(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, "%"+query+"%");
 		
@@ -371,7 +418,7 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			OServiceStoreEntry entry = sedao.select(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
 			
@@ -405,7 +452,7 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.deleteByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			
@@ -421,7 +468,7 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.deleteByDomainUserService(con, profileId.getDomainId(), profileId.getUserId(), serviceId);
 			
@@ -437,7 +484,7 @@ public class CoreManager {
 		Connection con = null;
 		
 		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			sedao.delete(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
 			

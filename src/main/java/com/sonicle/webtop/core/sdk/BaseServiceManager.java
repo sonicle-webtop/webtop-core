@@ -33,19 +33,54 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.RunContext;
+import com.sonicle.webtop.core.WT;
+import java.util.Locale;
+import net.sf.qualitycheck.Check;
+
 /**
  *
  * @author malbinola
  */
 public abstract class BaseServiceManager {
+	private final String serviceId;
+	private final RunContext context;
 	
-	protected final ServiceManifest manifest;
-	
-	public BaseServiceManager(ServiceManifest manifest) {
-		this.manifest = manifest;
+	public BaseServiceManager(String serviceId, RunContext context) {
+		this.serviceId = Check.notNull(serviceId);
+		this.context = Check.notNull(context);
 	}
 	
 	public String getServiceId() {
-		return manifest.id;
+		return serviceId;
+	}
+	
+	public RunContext getRunContext() {
+		return context;
+	}
+	
+	public ServiceManifest getManifest() {
+		return WT.getManifest(getServiceId());
+	}
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key) {
+		return WT.lookupResource(getServiceId(), locale, key);
+	}
+    
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @param escapeHtml True to apply HTML escaping.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
+		return WT.lookupResource(getServiceId(), locale, key, escapeHtml);
 	}
 }

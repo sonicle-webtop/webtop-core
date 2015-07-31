@@ -357,6 +357,10 @@ public class WebTopApp {
 		return sesm;
 	}
 	
+	public RunContext createRunContext() {
+		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"));
+	}
+	
 	/*
 	public String registerTask(String minutes, String hours, String daysOfMonth, String months, String daysOfWeek, BaseTask task) {
 		String[] tokens = new String[]{minutes, hours, daysOfMonth, months, daysOfWeek};
@@ -367,10 +371,6 @@ public class WebTopApp {
 		scheduler.deschedule(taskId);
 	}
 	*/
-	
-	public CoreManager getManager() {
-		return new CoreManager(this);
-	}
 	
 	public String lookupResource(Locale locale, String key) {
 		return lookupResource(CoreManifest.ID, locale, key, false);
@@ -393,7 +393,8 @@ public class WebTopApp {
 			//value = new String(value.getBytes("ISO-8859-1"), "UTF-8");
 			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
 		} catch(MissingResourceException ex) {
-			logger.warn("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
+			//TODO: abilitare logging
+			//logger.trace("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
 		} finally {
 			return value;
 		}

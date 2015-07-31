@@ -33,20 +33,32 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.RunContext;
+import com.sonicle.webtop.core.WT;
+
 /**
  *
  * @author malbinola
  */
 public abstract class BaseController {
+	private final String serviceId;
+	private final RunContext context;
 	
-	protected final ServiceManifest manifest;
-	
-	public BaseController(ServiceManifest manifest) {
-		this.manifest = manifest;
+	public BaseController(String serviceId, RunContext context) {
+		this.serviceId = serviceId;
+		this.context = context;
 	}
 	
 	public String getServiceId() {
-		return manifest.id;
+		return serviceId;
+	}
+	
+	public RunContext getRunContext() {
+		return context;
+	}
+	
+	public ServiceManifest getManifest() {
+		return WT.getManifest(getServiceId());
 	}
 	
 	public abstract void initializeUser(UserProfile.Id profileId) throws Exception;

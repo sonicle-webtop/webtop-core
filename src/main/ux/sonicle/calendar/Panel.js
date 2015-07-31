@@ -19,7 +19,7 @@ Ext.define('Sonicle.calendar.Panel', {
 		'Sonicle.calendar.view.Day',
 		'Sonicle.calendar.view.Week5',
 		'Sonicle.calendar.view.Week',
-		'Sonicle.calendar.view.WeekAgenda',
+		'Sonicle.calendar.view.DblWeek',
 		'Sonicle.calendar.view.Month',
 		'Sonicle.calendar.data.EventMappings'
 	],
@@ -53,10 +53,10 @@ Ext.define('Sonicle.calendar.Panel', {
 	showWeekView: true,
 	
 	/**
-	 * @cfg {Boolean} showWeekAgendaView
-	 * True to include the week view (agenda style)(and toolbar button), false to hide them (defaults to true).
+	 * @cfg {Boolean} showDblWeekView
+	 * True to include the dblweek view (and toolbar button), false to hide them (defaults to true).
 	 */
-	showWeekAgendaView: true,
+	showDblWeekView: true,
 	
 	/**
 	 * @cfg {Boolean} showMonthView
@@ -112,10 +112,10 @@ Ext.define('Sonicle.calendar.Panel', {
 	weekText: 'Week',
 	
 	/**
-	 * @cfg {String} weekAgendaText
-	 * Alternate text to use for the 'WeekAgenda' nav bar button.
+	 * @cfg {String} dblWeekText
+	 * Alternate text to use for the 'DblWeek' nav bar button.
 	 */
-	weekAgendaText: 'Week (agenda)',
+	dblWeekText: '2-Week',
 	
 	/**
 	 * @cfg {String} monthText
@@ -362,13 +362,13 @@ Ext.define('Sonicle.calendar.Panel', {
 				toggleGroup: 'tb-views'
 			});
 		}
-		if (me.showWeekAgendaView) {
+		if (me.showDblWeekView) {
 			wiewIdx++;
-			me.viewMap['wa'] = wiewIdx;
+			me.viewMap['dw'] = wiewIdx;
 			me.tbar.items.push({
-				id: me.id + '-tb-weekag',
-				text: me.weekAgendaText,
-				handler: me.onWeekAgendaClick,
+				id: me.id + '-tb-dweek',
+				text: me.dblWeekText,
+				handler: me.onDblWeekClick,
 				scope: me,
 				toggleGroup: 'tb-views'
 			});
@@ -451,14 +451,14 @@ Ext.define('Sonicle.calendar.Panel', {
 			me.initEventRelay(wv);
 			me.add(wv);
 		}
-		if (me.showWeekAgendaView) {
+		if (me.showDblWeekView) {
 			var wv = Ext.applyIf({
-				xtype: 'weekagendaview',
-				title: me.weekAgendaText
+				xtype: 'dblweekview',
+				title: me.dblWeekText
 			}, sharedCfg);
 			
-			wv = Ext.apply(Ext.apply(wv, me.viewCfg), me.weekAgendaViewCfg);
-			wv.id = me.id + '-weekag';
+			wv = Ext.apply(Ext.apply(wv, me.viewCfg), me.dblWeekViewCfg);
+			wv.id = me.id + '-dweek';
 			me.initEventRelay(wv);
 			me.add(wv);
 		}
@@ -652,8 +652,8 @@ Ext.define('Sonicle.calendar.Panel', {
 	},
 	
 	// private
-	onWeekAgendaClick: function () {
-		this.setActiveView('wa');
+	onDblWeekClick: function () {
+		this.setActiveView('dw');
 	},
 	
 	// private

@@ -33,61 +33,42 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import java.util.List;
 import net.sf.uadetector.ReadableUserAgent;
-import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class Environment implements BasicEnvironment {
-	private final static Logger logger = WT.getLogger(Environment.class);
-	
-	protected final WebTopApp wta;
+public class Environment {
+	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
 	protected final WebTopSession wts;
 
-	public Environment(WebTopApp wta, WebTopSession wts) {
-		this.wta = wta;
+	public Environment(WebTopSession wts) {
 		this.wts = wts;
 	}
 
-	@Override
-	public CoreServiceSettings getCoreServiceSettings() {
-		return wts.getCoreServiceSettings();
-	}
-
-	@Override
-	public CoreUserSettings getCoreUserSettings() {
-		return wts.getCoreUserSettings();
-	}
-
-	@Override
 	public UserProfile getProfile() {
 		return wts.getUserProfile();
 	}
+	
+	public UserProfile.Id getProfileId() {
+		return wts.getUserProfile().getId();
+	}
 
-	@Override
 	public ReadableUserAgent getUserAgent() {
 		return wts.getUserAgent();
 	}
 
-	@Override
 	public String getSessionRefererUri() {
 		return wts.getRefererURI();
 	}
 	
-	@Override
 	public void notify(ServiceMessage message) {
 		wts.nofity(message);
 	}
 	
-	@Override
 	public void notify(List<ServiceMessage> messages) {
 		wts.nofity(messages);
 	}
