@@ -52,8 +52,22 @@ Ext.define('Sonicle.calendar.DatePicker', {
 		 * @cfg {String} format
 		 * String used for formatting date
 		 */
-		format: 'Y-m-d'
+		format: 'Y-m-d',
+		
+		showDayInfo: true
 	},
+	
+	/*
+	 * @cfg {String} dayText
+	 * The text to display in the day info tooltip
+	 */
+	dayText: 'Day',
+	
+	/*
+	 * @cfg {String} weekText
+	 * The text to display in the day info tooltip
+	 */
+	weekText: 'Week',
 	
 	/**
 	 * @cfg {String} highlightMode
@@ -321,7 +335,12 @@ Ext.define('Sonicle.calendar.DatePicker', {
 			} else {
 				cell.setStyle('visibility', '');
 			}
+			if(me.showDayInfo) cell.dom.setAttribute('data-qtip', me.formatDayTip(d));
 		}
+	},
+	
+	formatDayTip: function(date) {
+		return Ext.String.format('{0}:&nbsp;{1}&nbsp;-&nbsp;{2}:&nbsp;{3}', this.dayText, Ext.Date.getDayOfYear(date)+1, this.weekText, Ext.Date.getWeekOfYear(date));
 	},
 	
 	showPrevMonth: function(e) {
