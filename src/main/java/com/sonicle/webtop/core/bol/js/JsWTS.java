@@ -41,6 +41,7 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTS {
+	public String securityToken;
 	public String layoutClassName;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();

@@ -35,13 +35,34 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
+		WTF.field('profileId', 'string'), // Not a real option
+		WTF.field('domainId', 'string'), // Not a real option
+		WTF.field('userId', 'string'), // Not a real option
+		WTF.field('theme', 'string'),
+		WTF.field('layout', 'string'),
+		WTF.field('laf', 'string'),
+		WTF.field('language', 'string'),
+		WTF.field('timezone', 'string'),
+		WTF.field('startDay', 'int'),
+		WTF.field('shortDateFormat', 'string'),
+		WTF.field('longDateFormat', 'string'),
+		WTF.field('shortTimeFormat', 'string'),
+		WTF.field('longTimeFormat', 'string'),
+		WTF.calcField('use24HourTime', 'boolean', 'shortTimeFormat', function(v, rec) {
+			var tf = rec.get('shortTimeFormat');
+			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
+		}),
+		WTF.field('upiProviderWritable', 'boolean'),
+		WTF.field('tfaEnabled', 'boolean')
+		
+		/*
 		'domainId', // Not a real option
 		'userId', // Not a real option
-		'principal', // Not a real option
+		'profileId', // Not a real option
 		'theme',
 		'layout',
 		'laf',
-		'locale',
+		'language',
 		'timezone',
 		'startDay',
 		'shortDateFormat',
@@ -54,6 +75,8 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 				var tf = rec.get('shortTimeFormat');
 				return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
 			}
-		}
+		},
+		'upiProviderWritable'
+		*/
 	]
 });

@@ -33,12 +33,14 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 /**
  *
  * @author malbinola
  */
 public class Role {
-	
 	private String id;
 	private String description;
 	
@@ -61,5 +63,27 @@ public class Role {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	@Override
+	public String toString() {
+		return id;
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder()
+			.append(id)
+			.toHashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof Role == false) return false;
+		if(this == obj) return true;
+		final Role otherObject = (Role) obj;
+		return new EqualsBuilder()
+			.append(id, otherObject.id)
+			.isEquals();
 	}
 }

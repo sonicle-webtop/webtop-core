@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.webtop.core.bol.IncomingShare;
+import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
@@ -45,10 +45,10 @@ public class IncomingFolder extends FolderBase {
 	private final UserProfile.Id profileId;
 	private final String description;
 	
-	public IncomingFolder(IncomingShare share) {
+	public IncomingFolder(OShare share) {
 		super(new UserProfile.Id(share.getDomainId(), share.getUserId()).toString());
 		profileId = new UserProfile.Id(share.getDomainId(), share.getUserId());
-		description = share.getUserDescription();
+		description = share.getName();
 	}
 
 	@Override

@@ -189,7 +189,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		
 		if(me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
-		me.on('beforeviewclose', me.onBeforeViewClose);
 	},
 	
 	initTBar: function() {
@@ -384,10 +383,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		this.doSave(true);
 	},
 	
-	onBeforeViewClose: function() {
+	canCloseView: function() {
 		// Returns false to stop view closing and to display a confirm message.
 		var model = this.getModel();
 		if(model && model.isDirty()) return false; // Using our custom Sonicle.data.Model!
+		return true;
 	},
 	
 	updateTitle: function() {

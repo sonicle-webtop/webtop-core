@@ -60,8 +60,8 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class WebTopSession {
-	
 	public static final String ATTRIBUTE = "webtopsession";
+	public static final String PROPERTY_SECURITY_TOKEN = "CSRFTOKEN";
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	
 	private final HttpSession httpSession;
@@ -201,6 +201,16 @@ public class WebTopSession {
 	}
 	
 	/**
+	 * Returns the value of SECURITY_TOKEN property.
+	 * A token is generated for each session and this is used for securing 
+	 * each service requests, in order to not exposte CSRF vulnerability.
+	 * @return Property value
+	 */
+	public String getSecurityToken() {
+		return wta.getSessionManager().getSecurityToken(this);
+	}
+	
+	/**
 	 * Called from servlet package in order to init environment
 	 * @param request 
 	 * @throws java.lang.Exception 
@@ -239,7 +249,7 @@ public class WebTopSession {
 		for(String serviceId : serviceIds) {
 			// Creates new instance
 			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiatePrivateService(serviceId, new CoreSessionContext(wta, this));
+				instance = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
 			} else {
 				instance = svcm.instantiatePrivateService(serviceId, new Environment(this));
 			}
@@ -288,6 +298,7 @@ public class WebTopSession {
 	}
 	
 	public void fillStartup(JsWTS js, String layout) {
+		js.securityToken = getSecurityToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		// Evaluate services
@@ -312,6 +323,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
+		UserProfile.Id pid = profile.getId();
 		Locale locale = getLocale();
 		
 		JsWTS.Permissions perms = new JsWTS.Permissions();
@@ -319,8 +331,8 @@ public class WebTopSession {
 		for(AuthResource res : manifest.getResources()) {
 			JsWTS.Actions acts = new JsWTS.Actions();
 			for(String act : res.getActions()) {
-				if(WT.isPermitted(serviceId, res.getName(), act)) {
-					acts.put(act, 1);
+				if(WT.isPermitted(pid, serviceId, res.getName(), act)) {
+					acts.put(act, true);
 				}
 			}
 			if(!acts.isEmpty()) perms.put(res.getName(), acts);

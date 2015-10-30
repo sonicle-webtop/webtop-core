@@ -50,7 +50,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	 * Suggestion context.
 	 */
 	
-	typeAhead: true,
+	typeAhead: false,
 	minChars: 2,
 	autoSelect: false,
 	queryMode: 'remote',
@@ -58,6 +58,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	forceSelection: false,
 	selectOnFocus: true,
 	editable: true,
+	hideTrigger: true,
 	valueField: 'id',
 	displayField: 'id',
 	
@@ -78,10 +79,12 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		me.on('specialkey', me._onSpecialKey);
 	},
 	
+	/*
     onDownArrow: function(e) {
-		if (e.altKey)
-			this.callParent(arguments);
+		// Disable list opening on down arrow
+		if (e.altKey) this.callParent(arguments);
     },
+	*/
 	
 	_onSpecialKey: function(s,e) {
 		if(s.isExpanded) {

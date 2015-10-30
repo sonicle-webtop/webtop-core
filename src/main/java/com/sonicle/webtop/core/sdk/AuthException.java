@@ -31,28 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
-
-import java.text.MessageFormat;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResourceShareInstance extends AuthResource {
-	public static final String SUFFIX = "SHARE_INSTANCE";
-	private final String originalName;
+public class AuthException extends WTRuntimeException {
 	
-	public AuthResourceShareInstance(String name) {
-		super(buildName(name), new String[]{ACTION_READ, ACTION_WRITE, ACTION_EDIT, ACTION_DELETE});
-		this.originalName = name;
+	public AuthException(String message, Object... arguments) {
+		super(message, arguments);
 	}
 	
-	public String getOriginalName() {
-		return originalName;
-	}
-	
-	public static String buildName(String name) {
-		return MessageFormat.format("{0}_{1}", name, SUFFIX);
+	public AuthException(Throwable cause, String message, Object... arguments) {
+		super(cause, message, arguments);
 	}
 }

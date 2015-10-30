@@ -35,44 +35,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
 	alternateClassName: 'WT.view.UserOptionsC',
 	extend: 'WT.sdk.UserOptionsController',
 	
-	onFormLoad: function(s,success) {
-		if(success) this.getViewModel().set('values', this.getView().model.getData());
-	},
-	
-	onFormSave: function(s,success) {
-		var me = this;
-		if(success) me.getViewModel().set('values', me.getView().model.getData());
-		me.callParent(arguments);
-	},
-	
-	/*
-	reload: false,
-	
-	onBlurAutoSave: function(s) {
-		var me = this;
-		if(s.isDirty()) {
-			me.reload = s.reload || false;
-			me.getView().saveForm();
-		}
-	},
-	
-	onFormLoad: function(s,success) {
-		if(success) this.getViewModel().set('values', this.getView().model.getData());
-	},
-	
-	onFormSave: function(s,success) {
-		var me = this;
-		me.getViewModel().set('values', me.getView().model.getData());
-		if(me.reload) {
-			WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
-				if(bid === 'yes') WT.reload();
-			});
-		}
-		me.reload = false;
-	},
-	
-	*/
-	
 	onTFAEnableClick: function() {
 		alert('TODO');
 	},

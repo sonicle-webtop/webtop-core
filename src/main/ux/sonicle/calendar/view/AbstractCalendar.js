@@ -16,6 +16,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	requires: [
 		'Sonicle.Date',
 		'Sonicle.ColorUtils',
+		'Sonicle.calendar.util.EventUtils',
 		'Sonicle.calendar.data.EventMappings'
 	],
 	
@@ -554,20 +555,31 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	prepareEventGrid: function (evts, w, d) {
 		var me = this,
 				soDate = Sonicle.Date,
+				EU = Sonicle.calendar.util.EventUtils,
 				EM = Sonicle.calendar.data.EventMappings,
 				row = 0;
 
 		evts.each(function (evt) {
-			if (soDate.diffDays(evt.data[EM.StartDate.name], evt.data[EM.EndDate.name]) > 0) {
+			if (EU.isSpanning(evt.data[EM.StartDate.name], evt.data[EM.EndDate.name])) {
+				// Event spans on multiple days...
 				var daysInView = soDate.diffDays(
 							soDate.max(me.viewStart, evt.data[EM.StartDate.name]),
 							soDate.min(me.viewEnd, evt.data[EM.EndDate.name])
-					) + 1;
+					) +1;
 				
-				me.prepareEventGridSpans(evt, me.eventGrid, w, d, daysInView);
-				me.prepareEventGridSpans(evt, me.allDayGrid, w, d, daysInView, true);
+				//TODO: 24h threshold as config
+				if(EU.durationInHours(evt.data[EM.StartDate.name], evt.data[EM.EndDate.name]) >= 24) {
+					me.prepareEventGridSpans(evt, me.eventGrid, w, d, daysInView);
+					me.prepareEventGridSpans(evt, me.allDayGrid, w, d, daysInView, true);
+				} else {
+					// If event length in hours is less than desired threshold,
+					// prepare info for drawing it in day view (event spans vertically) 
+					// instead of in header view (event spans horizontally)
+					me.prepareEventGridSpans(evt, me.eventGrid, w, d, daysInView);
+				}
 				
 			} else {
+				// Event take only single day...
 				row = me.findEmptyRowIndex(w, d);
 				me.eventGrid[w][d] = me.eventGrid[w][d] || [];
 				me.eventGrid[w][d][row] = evt;
@@ -614,6 +626,8 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 			event: evt,
 			isSpan: true,
 			isSpanStart: true,
+			spanTop: false,
+			spanBottom: false,
 			spanLeft: false,
 			spanRight: (d === 6)
 		};
@@ -712,7 +726,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 		if (start && end) {
 			// set this flag for other event handlers that might conflict while we're waiting
 			me.dragPending = true;
-
+			
 			dates[EM.StartDate.name] = start;
 			dates[EM.EndDate.name] = end;
 			
@@ -1004,7 +1018,7 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	 * 
 	 * @param {String} eventId
 	 * @return {Ext.CompositeElement} The matching CompositeElement of nodes
-	 * that comprise the rendered event.  Any event that spans across a view 
+	 * that comprise the rendered event. Any event that spans across a view 
 	 * boundary will contain more than one internal Element.
 	 */
 	getEventEls: function (eventId) {
@@ -1044,36 +1058,55 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	
 	// private
 	isOverlapping: function (evt1, evt2) {
-		var ev1 = evt1.data ? evt1.data : evt1,
+		var soDate = Sonicle.Date,
+				EM = Sonicle.calendar.data.EventMappings,
+				ev1 = evt1.data ? evt1.data : evt1,
 				ev2 = evt2.data ? evt2.data : evt2,
-				M = Sonicle.calendar.data.EventMappings,
-				start1 = ev1[M.StartDate.name].getTime(),
-				end1 = Sonicle.Date.add(ev1[M.EndDate.name], {seconds: -1}).getTime(),
-				start2 = ev2[M.StartDate.name].getTime(),
-				end2 = Sonicle.Date.add(ev2[M.EndDate.name], {seconds: -1}).getTime();
+				start1 = ev1[EM.StartDate.name].getTime(),
+				end1 = soDate.add(ev1[EM.EndDate.name], {seconds: -1}).getTime(),
+				start2 = ev2[EM.StartDate.name].getTime(),
+				end2 = soDate.add(ev2[EM.EndDate.name], {seconds: -1}).getTime();
 
-		if (end1 < start1) {
-			end1 = start1;
-		}
-		if (end2 < start2) {
-			end2 = start2;
-		}
-
+		if (end1 < start1) end1 = start1;
+		if (end2 < start2) end2 = start2;
 		return (start1 <= end2 && end1 >= start2);
 	},
 	
 	isEventSpanning: function(evt) {
+		var EU = Sonicle.calendar.util.EventUtils,
+				EM = Sonicle.calendar.data.EventMappings,
+				data = evt.data || evt;
+		return EU.isSpanning(data[EM.StartDate.name], data[EM.EndDate.name]);
+	},
+	
+	/*
+	isEventSpanning: function(evt, hoursThreshold) {
 		var EM = Sonicle.calendar.data.EventMappings,
+				soDate = Sonicle.Date,
 				data = evt.data || evt,
 				diff;
 		
-		diff = Sonicle.Date.diffDays(data[EM.StartDate.name], data[EM.EndDate.name]);
+		diff = soDate.diffDays(data[EM.StartDate.name], data[EM.EndDate.name]);
+		if(hoursThreshold) {
+			return (diff > 0) && (soDate.diff(data[EM.StartDate.name], data[EM.EndDate.name], 'hours') >= hoursThreshold);
+		} else {
+			return (diff > 0);
+		}
+		
 		//TODO: Prevent 00:00 end time from causing a span. This logic is OK, but
         //      other changes are still needed for it to work fully. Deferring for now.
-//        if (diff <= 1 && Extensible.Date.isMidnight(data[M.EndDate.name])) {
-//            return false;
-//        }
-		return diff > 0;
+		//        if (diff <= 1 && Extensible.Date.isMidnight(data[M.EndDate.name])) {
+		//            return false;
+		//        }
+		
+	},
+	*/
+	
+	eventDurationInHours: function(evt) {
+		var EU = Sonicle.calendar.util.EventUtils,
+				EM = Sonicle.calendar.data.EventMappings,
+				data = evt.data || evt;
+		return EU.durationInHours(data[EM.StartDate.name], data[EM.EndDate.name]);
 	},
 	
 	getDayEl: function (dt) {

@@ -116,7 +116,6 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		var me = this;
 		if(me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
-		me.on('beforeviewclose', me.onBeforeViewClose);
 	},
 	
 	initTBar: function() {
@@ -277,6 +276,13 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		});
 	},
 	
+	canCloseView: function() {
+		// Fields are dirty!
+		// Returns false to stop view closing and to display a confirm message.
+		if(this.getFormCmp().isDirty()) return false;
+		return true;
+	},
+	
 	onModeChange: function(nm, om) {
 		var me = this;
 		if(me.autoTitle) me.updateTitle();
@@ -287,12 +293,6 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		// User chose to save dirty values before close.
 		// Do save, signalling to close the view after a succesful operation.
 		this.doSave(true);
-	},
-	
-	onBeforeViewClose: function() {
-		// Fields are dirty!
-		// Returns false to stop view closing and to display a confirm message.
-		if(this.getFormCmp().isDirty()) return false;
 	},
 	
 	updateTitle: function() {

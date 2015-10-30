@@ -104,6 +104,14 @@ public class TFAManager {
 		logger.info("TFAManager destroyed");
 	}
 	
+	boolean isEnabled(String domainId) {
+		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
+		return css.getTFAEnabled();
+	}
+	
+	
+	
+	
 	/*
 	public boolean isEnabled(UserProfile profile) {
 		SettingsManager sm = wta.getSettingsManager();
@@ -126,9 +134,8 @@ public class TFAManager {
 	}
 	*/
 	
-	boolean isTrusted(UserProfile profile, String remoteIP) {
-		CoreServiceSettings css = new CoreServiceSettings(profile.getDomainId(), CoreManifest.ID);
-		SettingsManager sm = wta.getSettingsManager();
+	boolean isTrusted(String domainId, String remoteIP) {
+		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
 		
 		String addresses = css.getTFATrustedAddresses();
 		if(addresses != null) {
@@ -344,9 +351,8 @@ public class TFAManager {
 		ServletUtils.setEncryptedCookie(secret, response, name, tdc, TrustedDeviceCookie.class, duration);
 	}
 	
-	void disableTFA(String domainId, String userId) {
+	void deactivateTFA(String domainId, String userId) {
 		CoreUserSettings cus = new CoreUserSettings(domainId, userId);
-		//cus.clearUserSetting(CoreUserSettings.TFA_ENABLED);
 		cus.clear(CoreUserSettings.TFA_SECRET);
 		cus.clear(CoreUserSettings.TFA_EMAILADDRESS);
 		cus.clear(CoreUserSettings.TFA_DELIVERY);

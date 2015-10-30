@@ -47,8 +47,19 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * @param {Mixed} ifEmpty The fallback value
 	 * @returns {Mixed} Returned value
 	 */
-	iif: function(value, ifEmpty) {
+	deflt: function(value, ifEmpty) {
 		return (Ext.isEmpty(value)) ? ifEmpty : value;
+	},
+	
+	/**
+	 * Return the true value if bool is true, otherwise the false value.
+	 * @param {Boolean} bool The boolean condition
+	 * @param {Mixed} trueVal The true value
+	 * @param {Mixed} falseVal The false value
+	 * @returns {Mixed} A value according to condition
+	 */
+	iif: function(bool, trueVal, falseVal) {
+		return (bool === true) ? trueVal : falseVal;
 	},
 	
 	/**

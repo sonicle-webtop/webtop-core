@@ -32,6 +32,18 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system]
+	 * Defines server path in which PHP is installed
+	 */
+	public static final String PHP_PATH = "php.path";
+	
+	/**
+	 * [string][system]
+	 * Defines server path in which ZPUSH is installed
+	 */
+	public static final String ZPUSH_PATH = "zpush.path";
+	
+	/**
+	 * [string][system]
 	 * Defines system temp path in which temporarly store files
 	 */
 	public static final String SYSTEM_PATH_TEMP = "system.path.temp";
@@ -96,8 +108,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	/**
 	 * [string][system]
 	 */
-	public static final String USERDATA_PROVIDER = "userdata.provider";
-	public static final String DEFAULT_USERDATA_PROVIDER = "WebTop";
+	public static final String USERINFO_PROVIDER = "userinfo.provider";
+	public static final String DEFAULT_USERINFO_PROVIDER = "WebTop";
 	
 	/**
 	 * [long][system]
@@ -107,6 +119,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [boolean][system+domain]
+	 * 2FA enables status on the platform
 	 */
 	public static final String TFA_ENABLED = "tfa.enabled";
 	public static final Boolean DEFAULT_TFA_ENABLED = false;
@@ -114,18 +127,24 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	/**
 	 * [string[]][system+domain]
 	 */
-	public static final String TFA_TRUST_ADDRESSES = "otp.trust.addresses";
+	public static final String TFA_TRUST_ADDRESSES = "tfa.trust.addresses";
 	/**
 	 * [boolean][system+domain]
 	 */
-	public static final String TFA_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
+	public static final String TFA_TRUST_DEVICE_ENABLED = "tfa.trust.device.enabled";
 	public static final Boolean DEFAULT_TFA_TRUST_DEVICE_ENABLED = true;
 	
 	/**
 	 * [integer][system+domain]
 	 */
-	public static final String TFA_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
+	public static final String TFA_TRUST_DEVICE_DURATION = "tfa.trust.device.duration";
 	public static final Integer DEFAULT_TFA_TRUST_DEVICE_DURATION = 0;
+	
+	/**
+	 * [string][system]
+	 */
+	public static final String SYNC_DEVICES_SHELL_URI = "sync.devices.shell.uri";
+	public static final String DEFAULT_SYNC_DEVICES_SHELL_URI = "sh://localhost";
 	
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
@@ -136,6 +155,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getTempPath() {
 		return getString(TMP, null);
+	}
+	
+	public String getPhpPath() {
+		return getString(PHP_PATH, null);
+	}
+	
+	public String getZPushPath() {
+		return getString(ZPUSH_PATH, null);
 	}
 	
 	public String getSystemTempPath() {
@@ -150,31 +177,39 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_DOMAINS, false);
 	}
 	
-	public String getUserDataProvider() {
-		return getString(CoreServiceSettings.USERDATA_PROVIDER, DEFAULT_USERDATA_PROVIDER);
+	public String getUserInfoProvider() {
+		return getString(USERINFO_PROVIDER, DEFAULT_USERINFO_PROVIDER);
 	}
 	
 	public long getOTPProviderSonicleAuthKVI() {
-		return getLong(CoreServiceSettings.OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
+		return getLong(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
 	}
 	
 	public boolean getTFAEnabled() {
-		return getBoolean(CoreServiceSettings.TFA_ENABLED, DEFAULT_TFA_ENABLED);
+		return getBoolean(TFA_ENABLED, DEFAULT_TFA_ENABLED);
 	}
 	
+	/*
+	public boolean setTFAEnabled(boolean value) {
+		return setBoolean(TFA_ENABLED, value);
+	}
+	*/
+	
 	public String getTFATrustedAddresses() {
-		return getString(CoreServiceSettings.TFA_TRUST_ADDRESSES, null);
+		return getString(TFA_TRUST_ADDRESSES, null);
 	}
 	
 	public boolean getTFADeviceTrustEnabled() {
-		return getBoolean(CoreServiceSettings.TFA_TRUST_DEVICE_ENABLED, DEFAULT_TFA_TRUST_DEVICE_ENABLED);
+		return getBoolean(TFA_TRUST_DEVICE_ENABLED, DEFAULT_TFA_TRUST_DEVICE_ENABLED);
 	}
 	
 	public int getTFADeviceTrustDuration() {
-		return getInteger(CoreServiceSettings.TFA_TRUST_DEVICE_DURATION, DEFAULT_TFA_TRUST_DEVICE_DURATION);
+		return getInteger(TFA_TRUST_DEVICE_DURATION, DEFAULT_TFA_TRUST_DEVICE_DURATION);
 	}
 	
-	
+	public String getSyncDevicesShellUri() {
+		return getString(SYNC_DEVICES_SHELL_URI, DEFAULT_SYNC_DEVICES_SHELL_URI);
+	}
 	
 	
 	/*

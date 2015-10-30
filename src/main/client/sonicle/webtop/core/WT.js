@@ -85,6 +85,10 @@ Ext.define('Sonicle.webtop.core.WT', {
 		window.location.reload();
 	},
 	
+	logout: function() {
+		window.location = 'logout';
+	},
+	
 	/**
 	 * Convenience method for prepending namespace to class name.
 	 * @param {String} [ns] The namespace. If not specified, WT.NS is used.
@@ -203,7 +207,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	componentLoader: function(svc, act, opts) {
 		if(!opts) opts = {};
 		return {
-			url: 'service-request',
+			url: WTF.requestBaseUrl(),
 			params: Ext.applyIf({
 				service: svc,
 				action: act
@@ -230,7 +234,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 		opts = opts || {};
 		var fn = opts.callback, scope = opts.scope, sfn = opts.success, ffn = opts.failure;
 		var options = {
-			url: 'service-request',
+			url: WTF.requestBaseUrl(),
 			method: 'POST',
 			params: Ext.applyIf({
 				service: svc,
@@ -293,54 +297,86 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
-	 * Displays an information message.
+	 * Displays a message.
 	 * @param {String} msg The message to display.
-	 * @param {Object} [opts] Config options.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 */
+	msg: function(msg, opts) {
+		opts = opts || {};
+		Ext.Msg.show(Ext.apply({
+			title: opts.title || WT.res('info'),
+			message: msg,
+			buttons: opts.buttons || Ext.MessageBox.OK
+		}, opts.config || {}));
+	},
+	
+	/**
+	 * Displays an information message.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show({
+		Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.INFO
-		});
+		}, opts.config || {}));
 	},
 	
 	/**
 	 * Displays a warning message.
 	 * @param {String} msg The message to display.
-	 * @param {Object} [opts] Config options.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show({
+		Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('warning'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.WARNING
-		});
+		}, opts.config || {}));
 	},
 	
 	/**
 	 * Displays an error message.
 	 * @param {String} msg The message to display.
-	 * @param {Object} [opts] Config options.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show({
+		Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('error'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.ERROR
-		});
+		}, opts.config || {}));
 	},
 	
 	/**

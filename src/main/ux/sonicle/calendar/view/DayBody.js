@@ -242,7 +242,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		if (!me.eventTpl) {
 			me.eventTpl = !(Ext.isIE || Ext.isOpera) ?
 				Ext.create('Ext.XTemplate',
-					'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} ext-cal-evt ext-cal-evr" style="left: {_left}%; width: {_width}%; top: {_top}px; height: {_height}px; background:{_bgColor};">',
+					'<div id="{_elId}" data-qtitle="{Title}" data-qtip="{Tooltip}" data-draggable="{_isDraggable}" class="{_selectorCls} {_colorCls} {_spanCls} ext-cal-evt ext-cal-evr" style="left: {_left}%; width: {_width}%; top: {_top}px; height: {_height}px; background:{_bgColor};">',
 						'<tpl if="_isDraggable">',
 						'<div class="ext-evt-rsz ext-evt-rsz-top"><div class="ext-evt-rsz-h">&#160;</div></div>',
 						'</tpl>',
@@ -253,7 +253,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 					'</div>'
 				)
 				: Ext.create('Ext.XTemplate',
-					'<div id="{_elId}" data-qtip="{Tooltip}" class="ext-cal-evt {_selectorCls} {_colorCls}-x" style="left: {_left}%; width: {_width}%; top: {_top}px; background:{_bgColor};">',
+					'<div id="{_elId}" data-qtitle="{Title}" data-qtip="{Tooltip}" data-draggable="{_isDraggable}" class="ext-cal-evt {_selectorCls} {_spanCls} {_colorCls}-x" style="left: {_left}%; width: {_width}%; top: {_top}px; background:{_bgColor};">',
 						'<div class="ext-cal-evb">&#160;</div>',
 						'<dl style="height: {_height}px;" class="ext-cal-evdm">',
 							'<tpl if="_isDraggable">',
@@ -290,13 +290,13 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 
 			tpl = !(Ext.isIE || Ext.isOpera) ?
 				Ext.create('Ext.XTemplate',
-					'<div id="{_elId}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="left: {_left}%; width: {_width}%; top: {_top}px; height: {_height}px; background:{_bgColor};">',
+					'<div id="{_elId}" class="{_selectorCls} {_colorCls} {_spanCls} ext-cal-evt ext-cal-evr" style="left: {_left}%; width: {_width}%; top: {_top}px; height: {_height}px; background:{_bgColor};">',
 					body,
 					'</div>'
 				)
 				: Ext.create('Ext.XTemplate',
 					'<div id="{_elId}" class="ext-cal-evt" style="left: {_left}%; width: {_width}%; top: {_top}px; height: {_height}px; background:{_bgColor};">',
-						'<div class="{_selectorCls} {spanCls} {_colorCls} ext-cal-evo">',
+						'<div class="{_selectorCls} {_spanCls} {_colorCls} ext-cal-evo">',
 							'<div class="ext-cal-evm">',
 								'<div class="ext-cal-evi">',
 								body,
@@ -311,20 +311,44 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	},
 	
 	// private
-	getTemplateEventData: function(evt) {
+	getTemplateEventData: function(evt, date) {
 		var me = this,
+				soDate = Sonicle.Date,
+				EU = Sonicle.calendar.util.EventUtils,
 				EM = Sonicle.calendar.data.EventMappings,
+				isSpan = me.isEventSpanning(evt),
+				spanTop = false,
+				spanBottom = false,
 				selector = me.getEventSelectorCls(evt[EM.Id.name]),
-				data = {},
-				timeFmt = (me.use24HourTime) ? 'G:i ' : 'g:ia ';
-
-		me.getTemplateEventBox(evt);
+				start = evt[EM.StartDate.name],
+				end = evt[EM.EndDate.name],
+				dinfo,
+				data = {};
+		
+		if(isSpan) {
+			// Make use of weekIndex property already known for drawing
+			// horizontal spanning events
+			evt._weekIndex = soDate.diffDays(date, start)+1;
+			if(soDate.diffDays(start, date) === 0) {
+				spanBottom = true;
+				data[EM.EndDate.name] = end = soDate.setTime(date, 23, 59, 59);
+			} else if (soDate.diffDays(end, date) === 0) {
+				spanTop = true;
+				data[EM.StartDate.name] = start = soDate.setTime(date, 0, 0, 0);
+			} else {
+				data[EM.EndDate.name] = end = soDate.setTime(date, 23, 59, 59);
+				data[EM.StartDate.name] = start = soDate.setTime(date, 0, 0, 0);
+			}
+		}
+		dinfo = EU.buildDisplayInfo(evt, EU.dateFmt(), EU.timeFmt(me.use24HourTime));
+		Ext.apply(evt, me.getTemplateEventBox(start, end));
+		data._elId = selector + (evt._weekIndex ? '-' + evt._weekIndex : '');
 		data._selectorCls = selector;
-		data._isDraggable = me.enableEventResize ? Sonicle.calendar.dd.DragZone.isEventDraggable(evt) : false;
 		data._bgColor = (evt[EM.Color.name] || '');
 		data._foreColor = me.getEventForeColor(data._bgColor),
 		data._colorCls = 'ext-color-' + (evt[EM.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : '');
-		data._elId = selector + (evt._weekIndex ? '-' + evt._weekIndex : '');
+		data._spanCls = (!isSpan ? '' : (!spanTop && !spanBottom ? 'ext-cal-ev-spanboth' : (spanBottom ? 'ext-cal-ev-spanbottom' : 'ext-cal-ev-spantop')));
+		data._isDraggable = (me.enableEventResize && !isSpan) ? EU.isMovable(evt) : false;
 		data._isTimezone = (evt[EM.Timezone.name] !== me.timezone);
 		data._isPrivate = (evt[EM.IsPrivate.name] === true);
 		data._isRecurring = (evt[EM.IsRecurring.name] === true);
@@ -334,11 +358,11 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 		data._pvtIconCls = me.privateIconCls;
 		data._recIconCls = (evt[EM.IsBroken.name] === true) ? me.recurrenceBrokenIconCls : me.recurrenceIconCls;
 		data._remIconCls = me.reminderIconCls;
-		
-		var dinfo = me.buildEventDisplayInfo(evt, timeFmt);
+		data.isSpan = isSpan;
+		data.spanTop = spanTop;
+		data.spanBottom = spanBottom;
 		data.Title = dinfo.title;
 		data.Tooltip = dinfo.tooltip;
-		
 		return Ext.applyIf(data, evt);
 	},
 	
@@ -351,11 +375,9 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 	},
 	
 	// private
-	getTemplateEventBox: function(evt) {
+	getTemplateEventBox: function(start, end) {
 		var me = this,
 				heightFactor = me.hourHeight / me.hourIncrement,
-				start = evt[Sonicle.calendar.data.EventMappings.StartDate.name],
-				end = evt[Sonicle.calendar.data.EventMappings.EndDate.name],
 				startOffset = Math.max(start.getHours() - me.viewStartHour, 0),
 				endOffset = Math.min(end.getHours() - me.viewStartHour, me.viewEndHour - me.viewStartHour),
 				startMins = startOffset * me.hourIncrement,
@@ -371,11 +393,13 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			// only add the minutes if the end is visible, otherwise it offsets the event incorrectly
 			endMins += end.getMinutes();
 		}
-
-		evt._left = 0;
-		evt._width = 100;
-		evt._top = startMins * heightFactor + evtOffsets.top;
-		evt._height = Math.max(((endMins - startMins) * heightFactor), me.minEventHeight) + evtOffsets.height;
+		
+		return {
+			_left: 0,
+			_width: 100,
+			_top: startMins * heightFactor + evtOffsets.top,
+			_height: Math.max(((endMins - startMins) * heightFactor), me.minEventHeight) + evtOffsets.height
+		};
 	},
 	
 	// private
@@ -390,6 +414,7 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 				item,
 				ad,
 				span,
+				date,
 				i,
 				j,
 				l,
@@ -414,20 +439,22 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 				
 				item = evt.data || evt.event.data;
 				ad = item[EM.IsAllDay.name] === true;
-				span = this.isEventSpanning(evt.event || evt);
-				if(ad || span) continue; // this event is already rendered in the header view
+				span = me.isEventSpanning(evt.event || evt);
+				//TODO: 24h threshold as config
+				if(ad || (span && (me.eventDurationInHours(evt.event || evt) >= 24))) continue; // this event is already rendered in the header view
 				
+				date = Sonicle.Date.add(me.viewStart, {days: day});
 				Ext.apply(item, {
 					cls: 'ext-cal-ev',
 					_positioned: true
 				});
 				evts.push({
-					data: this.getTemplateEventData(item),
-					date: Sonicle.Date.add(this.viewStart, {days: day})
+					date: date,
+					data: me.getTemplateEventData(item, date)
 				});
 			}
 		}
-
+		
 		// overlapping event pre-processing loop
 		i = j = overlapCols = prevCol = 0;
 		l = evts.length;
@@ -436,12 +463,10 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			evt2 = null;
 			prevCol = overlapCols;
 			for (j = 0; j < l; j++) {
-				if (i === j) {
-					continue;
-				}
+				if (i === j) continue;
 				evt2 = evts[j].data;
 				if (this.isOverlapping(evt, evt2)) {
-					evt._overlap = evt._overlap === undefined ? 1 : evt._overlap + 1;
+					evt._overlap = (evt._overlap === undefined) ? 1 : evt._overlap + 1;
 					if (i < j) {
 						if (evt._overcol === undefined) {
 							evt._overcol = 0;
@@ -465,10 +490,9 @@ Ext.define('Sonicle.calendar.view.DayBody', {
 			}
 			markup = this.getEventTemplate().apply(evt);
 			target = this.id + '-day-col-' + Ext.Date.format(evts[i].date, 'Ymd');
-
 			Ext.core.DomHelper.append(target, markup);
 		}
-
+		
 		this.fireEvent('eventsrendered', this);
 	},
 	

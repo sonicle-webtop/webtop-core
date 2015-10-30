@@ -39,7 +39,6 @@ import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
-import com.sonicle.webtop.core.sdk.InsufficientRightsException;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -48,7 +47,6 @@ import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.zaxxer.hikari.HikariConfig;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,7 +57,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -310,6 +307,20 @@ public class ServiceManager {
 		return list;
 	}
 	
+	/**
+	 * Lists discovered user option services.
+	 * @return List of registered user option services.
+	 */
+	public List<String> listUserOptionServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(lock) {
+			for(ServiceDescriptor descr : descriptors.values()) {
+				if(descr.hasUserOptionsService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
 	public BasePublicService getPublicService(String serviceId) {
 		synchronized(publicServices) {
 			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID: '{0}'", serviceId);
@@ -466,8 +477,6 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
 			instance.initialize();
-		} catch(InsufficientRightsException ex) {
-			/* Do nothing... */
 		} catch(Throwable ex) {
 			logger.error("Initialization method returns errors", ex);
 		} finally {
@@ -489,7 +498,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String serviceId, String domainId, String userId) {
+	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String serviceId, UserProfile.Id targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
 		
@@ -501,8 +510,7 @@ public class ServiceManager {
 			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
 			return null;
 		}
-		
-		instance.initialize(wta, sessionProfile, serviceId, domainId, userId);
+		instance.configure(new RunContext(serviceId, sessionProfile.getId()), sessionProfile, targetProfileId);
 		return instance;
 	}
 	

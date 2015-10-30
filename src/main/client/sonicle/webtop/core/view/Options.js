@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.view.Options', {
 	alternateClassName: 'WT.view.Options',
-	extend: 'WT.sdk.BaseView',
+	extend: 'WT.sdk.DockableView',
 	requires: [
 		'WT.model.Simple',
 		'WT.sdk.UserOptionsView',
@@ -41,69 +41,79 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		'WT.sdk.OptionTabSection'
 	],
 	
+	dockableConfig: {
+		title: '@opts.tit',
+		iconCls: 'wt-icon-options-xs',
+		width: 650,
+		height: 500
+	},
+	promptConfirm: false,
+	
+	profileId: null,
+	
 	initComponent: function() {
 		var me = this;
-		Ext.apply(me, {
-			items: [{
-				xtype: 'toolbar',
-				region: 'north',
-				items: ['->', {
-					xtype: 'combo',
-					reference: 'users',
-					editable: false,
-					store: {
-						autoLoad: true,
-						model: 'WT.model.Simple',
-						proxy: WTF.proxy('com.sonicle.webtop.core', 'GetOptionsUsers', 'users')
-					},
-					valueField: 'id',
-					displayField: 'desc',
-					width: 300,
-					listeners: {
-						change: {
-							fn: function(s,nv) {
-								me.updateGui(nv);
-							}
-						}
-					},
-					value: WT.getOption('principal')
-				}]
-			}, {
-				xtype: 'tabpanel',
-				region: 'center',
-				reference: 'optstab',
-				tabPosition: 'left',
-				tabRotation: 0,
-				maxWidth: 650,
-				items: [],
-				listeners: {
-					tabchange: {
-						fn: function(s,tab) {
-							var id = me.lookupReference('users').getValue();
-							tab.loadForm(id);
+		me.callParent(arguments);
+		me.add({
+			region: 'center',
+			xtype: 'tabpanel',
+			reference: 'svctabs',
+			plain: true,
+			items: [],
+			listeners: {
+				tabchange: {
+					fn: function(s,tab) {
+						if(!tab.loaded) {
+							tab.loaded = true;
+							tab.loadModel({
+								data: {id: me.profileId}
+							});
 						}
 					}
 				}
-			}]
+			}
 		});
-		me.callParent(arguments);		
-		this.on('afterrender', this.onAfterRender, this);
+		me.on('viewclose', me.onViewClose, me);
+		me.initTabs();
 	},
 	
-	onAfterRender: function() {
-		var id = this.lookupReference('users').getValue();
-		this.updateGui(id);
+	onViewClose: function() {
+		var me = this,
+				tabs = me.lref('svctabs'),
+				needLogin = false,
+				needReload = false;
+		
+		// Checks if there is at least one panel that needs...
+		tabs.items.each(function(tab) {
+			if(tab.needLogin) {
+				needLogin = true;
+				return false;
+			}
+		});
+		tabs.items.each(function(tab) {
+			if(tab.needReload) {
+				needReload = true;
+				return false;
+			}
+		});
+		
+		if(needLogin) {
+			WT.confirm(WT.res('opts.confirm.needLogin'), function(bid) {
+				if(bid === 'yes') WT.logout();
+			});
+		} else if(needReload) {
+			WT.confirm(WT.res('opts.confirm.needReload'), function(bid) {
+				if(bid === 'yes') WT.reload();
+			});
+		}
 	},
 	
-	updateGui: function(id) {
-		var me = this, uo = null;
-		var data = [];
-		me.wait();
-		if(id === WT.getOption('principal')) { // User options are being edited by user itself
-			var isAdmin = id === 'admin@*';
+	initTabs: function() {
+		var me = this,
+				data = [], uo = null;
+		
+		if(WT.getOption('profileId') === me.profileId) {
 			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
-				if(isAdmin && desc.getIndex() > 0) return false;
-				
 				uo = desc.getUserOptions();
 				if(uo) {
 					Ext.Array.push(data, Ext.apply(uo, {
@@ -114,22 +124,22 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 				}
 			});
 			me.createTabs(data);
-			me.unwait();
-			
 		} else {
-			WT.ajaxReq(WT.ID, 'GetOptionsServices', {
-				params: {id: id},
-				callback: function(success, json) {
-					if(success) me.createTabs(json.data);
-					me.unwait();
-				}
-			});
+			me.on('afterrender', function() {
+				me.wait();
+				WT.ajaxReq(WT.ID, 'GetOptionsServices', {
+					params: {id: me.profileId},
+					callback: function(success, json) {
+						if(success) me.createTabs(json.data);
+						me.unwait();
+					}
+				});
+			}, me, {single: true});
 		}
 	},
 	
 	createTabs: function(data) {
 		var me = this;
-		
 		// Defines dependencies to load (viewClass and model)
 		var dep = [];
 		Ext.each(data, function(itm) {
@@ -138,37 +148,20 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		});
 		
 		Ext.require(dep, function() {
-			var tab = me.lookupReference('optstab');
-			tab.removeAll(true);
+			var tabs = me.lref('svctabs');
+			tabs.removeAll(true);
 			Ext.each(data, function(itm) {
-				tab.add(Ext.create(itm.viewClassName, {
+				tabs.add(Ext.create(itm.viewClassName, {
 					itemId: itm.id,
-					model: itm.modelClassName,
 					title: itm.name,
 					iconCls: WTF.cssIconCls(itm.xid, 'service', 'xs'),
 					ID: itm.id,
-					XID: itm.xid
+					XID: itm.xid,
+					profileId: me.profileId,
+					modelName: itm.modelClassName
 				}));
 			});
-			tab.setActiveTab(0);
+			tabs.setActiveTab(0);
 		});
 	}
-	
-	
-	
-	
-	/*
-	createTabs: function() {
-		Ext.each(WT.getApp().getDescriptors(false), function(desc) {
-			var cn = desc.getOptionsClassName();
-			if(!Ext.isEmpty(cn)) {
-				tab.add(Ext.create(cn, {
-					itemId: desc.getId(),
-					title: desc.getName(),
-					iconCls: WTF.cssIconCls(desc.getXid(), 'service-s')
-				}));
-			}
-		});
-	}
-	*/
 });

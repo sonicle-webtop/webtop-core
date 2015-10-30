@@ -33,63 +33,47 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
-import com.sonicle.webtop.core.userdata.UserDataProviderFactory;
-import java.sql.Connection;
-import java.sql.SQLException;
+import com.sonicle.webtop.core.RunContext;
 
 /**
  *
  * @author malbinola
  */
 public abstract class BaseUserOptionsService {
-
-	private boolean inited = false;
-	private WebTopApp wta;
+	private boolean configured = false;
+	private RunContext context;
 	private UserProfile sessionProfile;
-	private String serviceId;
-	private String domainId;
-	private String userId;
+	private UserProfile.Id targetProfileId;
 
-	public final void initialize(WebTopApp wta, UserProfile sessionProfile, String serviceId, String domainId, String userId) {
-		if (inited) return;
-		this.wta = wta;
+	public final void configure(RunContext context, UserProfile sessionProfile, UserProfile.Id targetProfileId) {
+		if(configured) return;
+		configured = true;
+		this.context = context;
 		this.sessionProfile = sessionProfile;
-		this.serviceId = serviceId;
-		this.domainId = domainId;
-		this.userId = userId;
-		inited = true;
+		this.targetProfileId = targetProfileId;
+	}
+	
+	public RunContext getRunContext() {
+		return context;
 	}
 	
 	public UserProfile getSessionProfile() {
 		return sessionProfile;
 	}
-
+	
 	public String getServiceId() {
-		return serviceId;
+		return context.getServiceId();
 	}
-
-	public String getDomainId() {
-		return domainId;
+	
+	public UserProfile.Id getTargetProfileId() {
+		return targetProfileId;
 	}
-
-	public String getUserId() {
-		return userId;
+	
+	public String getTargetDomainId() {
+		return targetProfileId.getDomainId();
 	}
-
-	public Connection getCoreConnection() throws SQLException {
-		return wta.getConnectionManager().getConnection();
-	}
-
-	public Connection getConnection() throws SQLException {
-		return wta.getConnectionManager().getConnection(serviceId);
-	}
-
-	public UserDataProviderBase getUserDataProvider() throws WTException {
-		String providerName = new CoreServiceSettings(domainId, CoreManifest.ID).getUserDataProvider();
-		return UserDataProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
+	
+	public String getTargetUserId() {
+		return targetProfileId.getUserId();
 	}
 }

@@ -41,24 +41,31 @@ import com.sonicle.webtop.core.bol.OUserGroup;
 import com.sonicle.webtop.core.bol.UserRole;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.GroupRoleDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.UserGroupDAO;
 import com.sonicle.webtop.core.dal.UserRoleDAO;
+import com.sonicle.webtop.core.sdk.AuthException;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class SystemManager {
-	
+public class AuthManager {
+	public static final String ROLE_SYSADMIN = "sysadmin";
 	private static final Logger logger = WT.getLogger(TFAManager.class);
 	private static boolean initialized = false;
 	
@@ -68,12 +75,12 @@ public class SystemManager {
 	 * @param wta WebTopApp instance.
 	 * @return The instance.
 	 */
-	static synchronized SystemManager initialize(WebTopApp wta) {
+	static synchronized AuthManager initialize(WebTopApp wta) {
 		if(initialized) throw new RuntimeException("Initialization already done");
-		SystemManager sysm = new SystemManager(wta);
+		AuthManager autm = new AuthManager(wta);
 		initialized = true;
-		logger.info("SystemManager initialized");
-		return sysm;
+		logger.info("AuthManager initialized");
+		return autm;
 	}
 	
 	private WebTopApp wta = null;
@@ -83,7 +90,7 @@ public class SystemManager {
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private SystemManager(WebTopApp wta) {
+	private AuthManager(WebTopApp wta) {
 		this.wta = wta;
 	}
 	
@@ -92,14 +99,32 @@ public class SystemManager {
 	 */
 	void cleanup() {
 		wta = null;
-		logger.info("SystemManager destroyed");
+		logger.info("AuthManager destroyed");
 	}
 	
+	public ORolePermission addPermission(Connection con, UserProfile.Id roleId, String serviceId, String resource, String action, String instance) throws WTException {
+		ORolePermission perm = new ORolePermission();
+		perm.setDomainId(roleId.getDomainId());
+		perm.setRoleId(roleId.getUserId());
+		perm.setServiceId(serviceId);
+		perm.setResource(resource);
+		perm.setAction(action);
+		perm.setInstance(instance);
+		
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		perm.setUid(rpdao.getSequence(con).intValue());
+		rpdao.insert(con, perm);
+		return perm;
+	}
 	
+	public void permissionDelete(Connection con, UserProfile.Id roleId, String serviceId, String resource, String action, String instance) throws WTException {
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		rpdao.deleteByDomainRoleServiceResourceActionInstance(con, roleId.getDomainId(), roleId.getUserId(), serviceId, resource, action, instance);
+	}
 	
-	public List<Role> getRolesForGroup(String domainId, String groupId) throws Exception {
+	public Set<Role> getRolesForGroup(String domainId, String groupId) throws Exception {
 		Connection con = null;
-		ArrayList<Role> roles = new ArrayList<>();
+		LinkedHashSet<Role> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
@@ -116,21 +141,26 @@ public class SystemManager {
 		return roles;
 	}
 	
-	public List<Role> getRolesForUser(String domainId, String userId, boolean self, boolean transitive) throws Exception {
+	public Set<Role> getRolesForUser(UserProfile.Id pid, boolean self, boolean transitive) throws Exception {
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
-		ArrayList<Role> roles = new ArrayList<>();
+		LinkedHashSet<Role> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			
+			if(Principal.xisAdmin(pid.toString())) {
+				// Built-in role that marks users that have admin rights
+				roles.add(new Role(ROLE_SYSADMIN, ROLE_SYSADMIN));
+			}
+			
 			if(self) {
-				roles.add(new Role(userId, userId));
+				roles.add(new Role(pid.getUserId(), pid.getUserId()));
 			}
 			
 			// Gets direct assigned roles
 			UserRoleDAO urdao = UserRoleDAO.getInstance();
-			List<UserRole> userRoles = urdao.viewByDomainUser(con, domainId, userId);
+			List<UserRole> userRoles = urdao.viewByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			for(UserRole role : userRoles) {
 				if(roleMap.contains(role.getRoleId())) continue; // Skip duplicate roles
 				roleMap.add(role.getRoleId());
@@ -139,11 +169,11 @@ public class SystemManager {
 			
 			if(transitive) {
 				// Get transivite roles (belonging to groups)
-				List<Role> groupRoles = null;
+				Set<Role> groupRoles = null;
 				UserGroupDAO ugdao = UserGroupDAO.getInstance();
-				List<OUserGroup> groups = ugdao.selectByDomainUser(con, domainId, userId);
+				List<OUserGroup> groups = ugdao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 				for(OUserGroup ug : groups) {
-					groupRoles = getRolesForGroup(domainId, ug.getGroupId());
+					groupRoles = getRolesForGroup(pid.getDomainId(), ug.getGroupId());
 					for(Role role : groupRoles) {
 						if(roleMap.contains(role.getId())) continue; // Skip duplicate roles
 						roleMap.add(role.getId());
@@ -171,23 +201,53 @@ public class SystemManager {
 		}
 	}
 	
-	public boolean isPermitted(String resource) {
-		return isPermitted(resource, "ACCESS", "*");
+	public boolean isPermitted(UserProfile.Id pid, String resource) {
+		return isPermitted(pid, resource, "ACCESS", "*");
 	}
 	
-	public boolean isPermitted(String resource, String action) {
-		return isPermitted(resource, action, "*");
+	public boolean isPermitted(UserProfile.Id pid, String resource, String action) {
+		return isPermitted(pid, resource, action, "*");
 	}
 	
-	public boolean isPermitted(String resource, String action, String instance) {
-		Subject currentUser = SecurityUtils.getSubject();
-		Principal principal = (Principal)currentUser.getPrincipal();
-		if(principal.isAdmin()) return true; // Avoids permission check for WebTop admin
-		return currentUser.isPermitted(AuthResource.permissionString(resource, action, instance));
+	public boolean isPermitted(UserProfile.Id pid, String resource, String action, String instance) {
+		Subject subject = SecurityUtils.getSubject(); // Current user
+		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
+			// Requested subject is not the current one
+			//TODO: instantiate a principal on-the-fly
+		}
+		
+		/*
+		if(subject.hasRole(ROLE_WTADMIN)) {
+			return true; // Skip permission check for WebTop admin
+		} else {
+			return subject.isPermitted(AuthResource.permissionString(resource, action, instance));
+		}
+		*/
+		return subject.isPermitted(AuthResource.permissionString(resource, action, instance));
 	}
 	
-	public boolean hasRole(String roleName) {
-		Subject currentUser = SecurityUtils.getSubject();
-		return currentUser.hasRole(roleName);
+	public void ensureIsPermitted(UserProfile.Id pid, String resource) {
+		if(!isPermitted(pid, resource)) throw new AuthException("ACCESS permission on {0} is required", resource);
+	}
+	
+	public void ensureIsPermitted(UserProfile.Id pid, String resource, String action) {
+		if(!isPermitted(pid, resource, action)) throw new AuthException("{0} permission on {1} is required", action, resource);
+	}
+	
+	public void ensureIsPermitted(UserProfile.Id pid, String resource, String action, String instance) {
+		if(!isPermitted(pid, resource, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, resource, instance);
+	}
+	
+	public boolean hasRole(UserProfile.Id pid, String roleName) {
+		Subject subject = SecurityUtils.getSubject(); // Current user
+		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
+			// Requested subject is not the current one
+			//TODO: instantiate a principal on-the-fly
+		}
+		return subject.hasRole(roleName);
+	}
+	
+	public void ensureHasRole(UserProfile.Id pid, String roleName) {
+		if(!hasRole(pid, roleName)) throw new AuthException("{0} role is required", roleName);
 	}
 }

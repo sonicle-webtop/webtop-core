@@ -14,7 +14,11 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
 		'Sonicle.webtop.core.ComManager',
-		'Sonicle.webtop.core.ServiceDescriptor'
+		'Sonicle.webtop.core.ServiceDescriptor',
+		
+		'Sonicle.webtop.core.ux.Panel',
+		'Sonicle.webtop.core.ux.FieldsPanel'
+		
 	].concat(WTS.appRequires || []),
 	views: [
 		Ext.String.format('WT.view.main.{0}', WTS.layoutClassName)

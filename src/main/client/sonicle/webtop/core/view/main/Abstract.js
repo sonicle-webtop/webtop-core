@@ -145,7 +145,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					paddingTop: 0,
 					paddingBottom: 0
 				},
-				items: []
+				items: [{
+					xtype: 'splitbutton',
+					reference: 'newbtn',
+					text: WT.res('new.btn-new.lbl'),
+					menu: [],
+					handler: 'onNewActionButtonClick'
+				}]
 			}, {
 				xtype: 'container',
 				region: 'center',
@@ -167,6 +173,24 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					paddingBottom: 0
 				},
 				items: [{
+					xtype: 'button',
+					reference: 'toolboxbtn',
+					iconCls: 'wt-menu-tools',
+					tooltip: WT.res('menu.tools.lbl'),
+					menu: [{
+						itemId: 'activities',
+						text: WT.res('activities.tit'),
+						iconCls: 'wt-icon-activity-xs',
+						hidden: !WT.isPermitted('ACTIVITIES', 'MANAGE'),
+						handler: 'onToolsMenuClick'
+					}, {
+						itemId: 'causals',
+						text: WT.res('causals.tit'),
+						iconCls: 'wt-icon-causal-xs',
+						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
+						handler: 'onToolsMenuClick'
+					}, '-']
+				}, {
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {
@@ -200,26 +224,6 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								tooltip: WT.res('menu.help.tip'),
 								iconCls: 'wt-menu-help'
 							}, {
-								itemId: 'others',
-								colspan: 2,
-								scale: 'small',
-								textAlign: 'left',
-								//menuAlign: '',
-								text: WT.res('menu.tools.lbl'),
-								menu: [{
-									itemId: 'activities',
-									text: WT.res('activities.tit'),
-									iconCls: 'wt-icon-activity-xs',
-									hidden: !WT.isPermitted('ACTIVITIES', 'MANAGE'),
-									handler: 'onOthersMenuClick'
-								}, {
-									itemId: 'causals',
-									text: WT.res('causals.tit'),
-									iconCls: 'wt-icon-causal-xs',
-									hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
-									handler: 'onOthersMenuClick'
-								}]
-							}, {
 								itemId: 'logout',
 								colspan: 2,
 								scale: 'small',
@@ -247,6 +251,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				newtb = north.lookupReference('newtb'),
 				newbtn = newtb.lookupReference('newbtn');
 		
+		/*
 		if(!newbtn) {
 			newbtn = newtb.add(Ext.create({
 				xtype: 'splitbutton',
@@ -256,6 +261,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				handler: 'onNewActionButtonClick'
 			}));
 		}
+		*/
 		
 		var menu = newbtn.getMenu();
 		Ext.each(acts, function(act) {

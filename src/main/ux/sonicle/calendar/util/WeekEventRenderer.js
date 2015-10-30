@@ -117,7 +117,7 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 									item._renderAsAllDay = item[EM.IsAllDay.name] || evt.isSpanStart;
 									item.spanLeft = item[EM.StartDate.name].getTime() < startOfWeek.getTime();
 									item.spanRight = item[EM.EndDate.name].getTime() > endOfWeek.getTime();
-                                    item.spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
+                                    item._spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
 											'ext-cal-ev-spanleft') : (item.spanRight ? 'ext-cal-ev-spanright': ''));
 
 									row = this.getEventRow(o.id, wi, ev);

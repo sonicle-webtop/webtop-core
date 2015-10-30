@@ -35,6 +35,29 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	singleton: true,
 	alternateClassName: ['WT.Factory', 'WTF'],
 	
+	/**
+	 * Builds base url for requests.
+	 * @param {Object} [params] Optional additional parameters that will be encoded into the URL
+	 * @returns {String} The encoded URL
+	 */
+	requestBaseUrl: function(params) {
+		var url = Ext.String.format('service-request?csrf={0}', WTS.securityToken);
+		return (params) ? Ext.String.urlAppend(url, Ext.Object.toQueryString(params)) : url;
+	},
+	
+	/**
+	 * Builds params object for a service request.
+	 * @param {String} sid The service ID
+	 * @param {String} action The action to be called on service
+	 * @returns {Object} The params object
+	 */
+	processParams: function(sid, act) {
+		return {
+			service: sid,
+			action: act
+		};
+	},
+	
 	/*
 	 * Builds a service request URL, based on service ID, action and params.
 	 * @param {String} sid The service ID
@@ -43,9 +66,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @return {String} The encoded URL
 	 */
 	processUrl: function(sid, action, params) {
+		/*
 		var url = Ext.String.format('service-request?service={0}&action={1}', sid, action);
 		if(params) url = Ext.String.urlAppend(url, Ext.Object.toQueryString(params));
 		return url;
+		*/
+		var pars = Ext.apply(params || {}, {
+			service: sid,
+			action: action
+		});
+		return WTF.requestBaseUrl(pars);
 	},
 	
 	/*
@@ -141,7 +171,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		opts = opts || {};
 		return {
 			type: 'ajax',
-			url: 'service-request',
+			url: WTF.requestBaseUrl(),
 			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: sid,
 				action: act
@@ -169,10 +199,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		return {
 			type: 'ajax',
 			api: {
+				create: WTF.requestBaseUrl({crud: 'create'}),
+				read: WTF.requestBaseUrl({crud: 'read'}),
+				update: WTF.requestBaseUrl({crud: 'update'}),
+				destroy: WTF.requestBaseUrl({crud: 'destroy'})
+				/*
 				create: 'service-request?crud=create',
 				read: 'service-request?crud=read',
 				update: 'service-request?crud=update',
 				destroy: 'service-request?crud=delete'
+				*/
 			},
 			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: svc,
@@ -207,7 +243,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	uploader: function(sid, context, opts) {
 		opts = opts || {};
 		return Ext.merge({
-			url: 'service-request',
+			url: WTF.requestBaseUrl(),
 			extraParams: {
 				service: sid,
 				action: 'Upload',
@@ -261,7 +297,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/**
-	 * Helper method for building a config object for calculated {@link Ext.data.field.Field field}.
+	 * Helper method for building a config object for calculated model {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
 	 * @param {String} type See {@link Ext.data.field.Field#type}
 	 * @param {String/String[]} depends See {@link Ext.data.field.Field#depends}
@@ -280,14 +316,22 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, cfg);
 	},
 	
+	/**
+	 * Builds a config object for a {@link Ext.form.field.ComboBox} form field.
+	 * It renders a classic combobox with a unfilterable drop-down list.
+	 * @param {String} valueField See {@link Ext.form.field.ComboBox#valueField}
+	 * @param {String} displayField See {@link Ext.form.field.ComboBox#displayField}
+	 * @param {type} [cfg] Custom config to apply.
+	 * @returns {Object} The field config
+	 */
 	lookupCombo: function(valueField, displayField, cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
 			xtype: 'combo',
+			editable: false,
 			typeAhead: false,
-			queryMode: 'local',
+			//queryMode: 'local',
 			forceSelection: true,
-			selectOnFocus: true,
 			triggerAction: 'all',
 			valueField: valueField,
 			displayField: displayField,
@@ -295,6 +339,14 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, cfg);
 	},
 	
+	/**
+	 * Builds a config object for a {@link Ext.form.field.ComboBox} form field.
+	 * It renders a combobox with a local filtered drop-down list.
+	 * @param {String} valueField See {@link Ext.form.field.ComboBox#valueField}
+	 * @param {String} displayField See {@link Ext.form.field.ComboBox#displayField}
+	 * @param {type} [cfg] Custom config to apply.
+	 * @returns {Object} The field config
+	 */
 	localCombo: function(valueField, displayField, cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
@@ -310,6 +362,14 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, cfg);
 	},
 	
+	/**
+	 * Builds a config object for a {@link Ext.form.field.ComboBox} form field.
+	 * It renders a combobox with a remote filtered drop-down list.
+	 * @param {String} valueField See {@link Ext.form.field.ComboBox#valueField}
+	 * @param {String} displayField See {@link Ext.form.field.ComboBox#displayField}
+	 * @param {type} [cfg] Custom config to apply.
+	 * @returns {Object} The field config
+	 */
 	remoteCombo: function(valueField, displayField, cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
@@ -500,16 +560,36 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	/**
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
 	 * equality between a model's field and passed value.
-	 * @param {String} modelProp ViewModel's property in which the model is stored.
-	 * @param {String} fieldName Model's field name.
-	 * @param {Mixed} equalsTo Value to match.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} fieldName Model's field name
+	 * @param {Mixed} equalsTo Value to match
+	 * @param {Boolean} [not=false] True to apply NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	equalsFormula: function(modelProp, fieldName, equalsTo) {
+	equalsFormula: function(modelProp, fieldName, equalsTo, not) {
+		if(arguments.length === 3) not = false;
 		return {
 			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
 			get: function(val) {
-				return (val === equalsTo);
+				return (not === true) ? (val !== equalsTo) : (val === equalsTo);
+			}
+		};
+	},
+	
+	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
+	 * equality between a model's field and passed value.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} fieldName Model's field name
+	 * @param {Boolean} [not=false] True to apply NOT operator
+	 * @returns {Object} Formula configuration object
+	 */
+	isEmptyFormula: function(modelProp, fieldName, not) {
+		if(arguments.length === 2) not = false;
+		return {
+			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			get: function(val) {
+				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
 			}
 		};
 	}

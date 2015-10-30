@@ -31,42 +31,32 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.userdata;
+package com.sonicle.webtop.core.userinfo;
 
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
-import com.sonicle.webtop.core.sdk.WTException;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class UserDataProviderFactory {
+public abstract class UserInfoProviderBase {
 	
-	private static final HashMap<String, UserDataProviderBase> instances = new HashMap<>();
+	protected static final Logger logger = (Logger) LoggerFactory.getLogger(UserInfoProviderBase.class);
+	protected IConnectionProvider conp = null;
+	protected IServiceSettingReader setm = null;
 	
-	public static synchronized UserDataProviderBase getProvider(String providerName, IConnectionProvider conp, IServiceSettingReader setm) throws WTException {
-		String className = null;
-		
-		try {
-			// Defines fully qualified class name
-			if(providerName.equals("WebTop")) {
-				className = "com.sonicle.webtop.core.userdata.provider.WebTopUserDataProvider";
-			} else {
-				className = providerName;
-			}
-			
-			// Lookup class instance
-			if(!instances.containsKey(className)) {
-				Class clazz = Class.forName(className);
-				Constructor<UserDataProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
-				instances.put(className, constructor.newInstance(conp, setm));
-			}
-			return instances.get(className);
-		} catch (Exception ex) {
-			throw new WTException(ex, "Unable to instantiate UserData provider class. [{0}]", className);
-		}
+	public UserInfoProviderBase(IConnectionProvider conp, IServiceSettingReader setm) {
+		this.conp = conp;
+		this.setm = setm;
 	}
+	
+	public abstract boolean canWrite();
+	public abstract boolean addUser(String domainId, String userId);
+	public abstract boolean deleteUser(String domainId, String userId);
+	public abstract UserPersonalInfo getInfo(String domainId, String userId);
+	public abstract boolean setInfo(String domainId, String userId, UserPersonalInfo info);
 }

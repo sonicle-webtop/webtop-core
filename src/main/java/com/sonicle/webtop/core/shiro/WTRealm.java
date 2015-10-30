@@ -36,18 +36,17 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
 import com.sonicle.webtop.core.CoreAuthKey;
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.SystemManager;
+import com.sonicle.webtop.core.AuthManager;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.OPermission;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.security.auth.login.LoginException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -109,26 +108,31 @@ public class WTRealm extends AuthorizingRealm {
 	
 	protected WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
-		SystemManager sysm = wta.getSystemManager();
+		AuthManager autm = wta.getAuthManager();
+		UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
 		
 		HashSet<String> roles = new HashSet<>();
 		HashSet<String> perms = new HashSet<>();
+		
+		if(Principal.xisAdmin(pid.toString())) {
+			perms.add(AuthResource.permissionString("WTADMIN", "ACCESS", "*"));
+		}
 		
 		// Force core private service permission for any principal
 		String resource = AuthResource.namespacedName(CoreManifest.ID, CoreAuthKey.RES_SERVICE);
 		perms.add(AuthResource.permissionString(resource, CoreAuthKey.ACT_SERVICE_ACCESS, CoreManifest.ID));
 		
-		List<Role> userRoles = sysm.getRolesForUser(principal.getDomainId(), principal.getUserId(), true, true);
+		Set<Role> userRoles = autm.getRolesForUser(pid, true, true);
 		for(Role role : userRoles) {
 			roles.add(role.getId());
-			
-			List<ORolePermission> rolePerms = sysm.getRolePermissions(principal.getDomainId(), role.getId());
+
+			List<ORolePermission> rolePerms = autm.getRolePermissions(principal.getDomainId(), role.getId());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 
 				// will become "com.sonicle.webtop.core.TEST"
 				resource = AuthResource.namespacedName(perm.getServiceId(), perm.getResource());
-				// Generate permission string that shiro can undestand 
+				// Generate permission string that shiro can understand 
 				// under the form: {resource}:{action}:{instance}
 				perms.add(AuthResource.permissionString(resource, perm.getAction(), perm.getInstance()));
 			}

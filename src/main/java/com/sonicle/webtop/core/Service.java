@@ -37,6 +37,8 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.security.DomainAccount;
@@ -51,10 +53,13 @@ import com.sonicle.webtop.core.bol.js.JsActivity;
 import com.sonicle.webtop.core.bol.js.JsCausal;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
-import com.sonicle.webtop.core.bol.js.JsUserOptionsService;
+import com.sonicle.webtop.core.bol.js.JsGridSync;
+import com.sonicle.webtop.core.bol.js.JsGridSync.JsGridSyncList;
+import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
+import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -82,13 +87,13 @@ import org.slf4j.Logger;
 public class Service extends BaseService {
 	
 	private static final Logger logger = WT.getLogger(Service.class);
-	private CoreManager manager;
+	private CoreManager core;
 	private CoreUserSettings cus;
 	
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
-		manager = new CoreManager(getRunContext(), ((CoreSessionContext)getEnv()).getApp());
+		core = new CoreManager(getRunContext(), ((CoreEnvironment)getEnv()).getApp());
 		cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId());
 	}
 
@@ -101,45 +106,31 @@ public class Service extends BaseService {
 	public HashMap<String, Object> returnClientOptions() {
 		UserProfile profile = getEnv().getProfile();
 		HashMap<String, Object> hm = new HashMap<>();
+		
+		hm.put("profileId", profile.getStringId());
 		hm.put("domainId", profile.getDomainId());
 		hm.put("userId", profile.getUserId());
-		hm.put("principal", profile.getStringId());
+		
 		hm.put("theme", cus.getTheme());
 		hm.put("layout", cus.getLayout());
 		hm.put("laf", cus.getLookAndFeel());
-		hm.put("locale", profile.getLocale());
+		hm.put("language", profile.getLanguageTag());
 		hm.put("timezone", profile.getTimeZone().getID());
 		hm.put("startDay", cus.getStartDay());
 		hm.put("shortDateFormat", cus.getShortDateFormat());
 		hm.put("longDateFormat", cus.getLongDateFormat());
 		hm.put("shortTimeFormat", cus.getShortTimeFormat());
 		hm.put("longTimeFormat", cus.getLongTimeFormat());
-		return hm;
-	}
-	
-	public void processLookupLocales(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		Locale locale = ((CoreSessionContext)getEnv()).getSession().getLocale();
 		
-		try {
-			for(AppLocale apploc : WT.getInstalledLocales()) {
-				//System.out.println(loc.getShortDatePattern());
-				//System.out.println(loc.getShortTimePattern());
-				//System.out.println(loc.getLocale().getDisplayName());
-				//System.out.println(loc.getLocale().getDisplayName(locale));
-				items.add(new JsSimple(apploc.getId(), apploc.getLocale().getDisplayName(locale)));
-			}
-			new JsonResult("locales", items).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error executing action LookupLocales", ex);
-			new JsonResult(false, "Unable to lookup locales").printTo(out);
-		}
+		hm.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
+		hm.put("upiProviderWritable", core.isUserInfoProviderWritable());
+		
+		return hm;
 	}
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
-		Locale locale = ((CoreSessionContext)getEnv()).getSession().getLocale();
+		Locale locale = ((CoreEnvironment)getEnv()).getSession().getLocale();
 		Locale loc = null;
 		String lang = null;
 		
@@ -148,7 +139,8 @@ public class Service extends BaseService {
 				loc = apploc.getLocale();
 				lang = loc.getLanguage();
 				if(!items.containsKey(lang)) {
-					items.put(lang, new JsSimple(lang, loc.getDisplayLanguage(locale)));
+					//items.put(lang, new JsSimple(lang, loc.getDisplayLanguage(locale)));
+					items.put(lang, new JsSimple(apploc.getId(), apploc.getLocale().getDisplayName(locale)));
 				}
 			}
 			new JsonResult("languages", items.values(), items.size()).printTo(out);
@@ -235,16 +227,16 @@ public class Service extends BaseService {
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			
-			if(up.isWebTopAdmin()) {
+			if(WT.hasRole(up.getId(), AuthManager.ROLE_SYSADMIN)) {
 				// WebTopAdmin can access to all domains
 				if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-				List<ODomain> domains = manager.listDomains(true);
+				List<ODomain> domains = core.listDomains(true);
 				for(ODomain domain : domains) {
 					items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
 				}
 			} else {
 				// Domain users can only access to their domain
-				ODomain domain = manager.getDomain(up.getDomainId());
+				ODomain domain = core.getDomain(up.getDomainId());
 				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
 			}
 			
@@ -265,15 +257,15 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
 			List<OUser> users = null;
-			if(up.isWebTopAdmin()) {
+			if(WT.hasRole(up.getId(), AuthManager.ROLE_SYSADMIN)) {
 				if(!StringUtils.isEmpty(domainId)) {
-					users = manager.listUsers(domainId, true);
+					users = core.listUsers(domainId, true);
 				} else {
-					users = manager.listUsers(true);
+					users = core.listUsers(true);
 				}
 			} else {
 				// Domain users can only see users belonging to their own domain
-				users = manager.listUsers(up.getDomainId(), true);
+				users = core.listUsers(up.getDomainId(), true);
 			}
 			
 			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
@@ -297,7 +289,7 @@ public class Service extends BaseService {
 			UserProfile.Id pid = new UserProfile.Id(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OActivity> activities = manager.listLiveActivities(pid);
+			List<OActivity> activities = core.listLiveActivities(pid);
 			for(OActivity activity : activities) {
 				items.add(new JsActivity(activity));
 			}
@@ -318,26 +310,26 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<ActivityGrid> items = manager.listLiveActivities(queryDomains(up));
+					List<ActivityGrid> items = core.listLiveActivities(queryDomains(up));
 					new JsonResult("activities", items, items.size()).printTo(out);
 				} else {
-					OActivity item = manager.getActivity(id);
+					OActivity item = core.getActivity(id);
 					new JsonResult(item).printTo(out);
 				}
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				manager.insertActivity(pl.data);
+				core.insertActivity(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				manager.updateActivity(pl.data);
+				core.updateActivity(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				manager.deleteActivity(pl.data.getActivityId());
+				core.deleteActivity(pl.data.getActivityId());
 				new JsonResult().printTo(out);
 			}
 			
@@ -357,7 +349,7 @@ public class Service extends BaseService {
 			UserProfile.Id pid = new UserProfile.Id(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OCausal> causals = manager.listLiveCausals( pid, customerId);
+			List<OCausal> causals = core.listLiveCausals( pid, customerId);
 			for(OCausal causal : causals) {
 				items.add(new JsCausal(causal));
 			}
@@ -377,26 +369,26 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<CausalGrid> items =  manager.listLiveCausals(queryDomains(up));
+					List<CausalGrid> items =  core.listLiveCausals(queryDomains(up));
 					new JsonResult("causals", items, items.size()).printTo(out);
 				} else {
-					OCausal item = manager.getCausal(id);
+					OCausal item = core.getCausal(id);
 					new JsonResult(item).printTo(out);
 				}
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				manager.insertCausal( pl.data);
+				core.insertCausal( pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				manager.updateCausal(pl.data);
+				core.updateCausal(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				manager.deleteCausal(pl.data.getCausalId());
+				core.deleteCausal(pl.data.getCausalId());
 				new JsonResult().printTo(out);
 			}
 			
@@ -412,7 +404,7 @@ public class Service extends BaseService {
 		try {
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			
-			List<OCustomer> customers = manager.listCustomersByLike("%" + query + "%");
+			List<OCustomer> customers = core.listCustomersByLike("%" + query + "%");
 			for(OCustomer customer : customers) {
 				items.add(new JsSimple(customer.getCustomerId(), customer.getDescription()));
 			}
@@ -478,7 +470,7 @@ public class Service extends BaseService {
 	
 	
 	
-	
+	/*
 	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Connection con = null;
 		UserProfile up = getEnv().getProfile();
@@ -509,17 +501,20 @@ public class Service extends BaseService {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	*/
 	
 	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			
-			ArrayList<JsUserOptionsService> data = new ArrayList<>();
+			List<UserOptionsServiceData> data = core.getUserOptionServicesForUser(new UserProfile.Id(id));
+			/*
 			//TODO: aggiornare l'implementazione
-			data.add(new JsUserOptionsService("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
-			if(!UserProfile.isWebTopAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
-			if(!UserProfile.isWebTopAdmin(id)) data.add(new JsUserOptionsService("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			data.add(new UserOptionsServiceData("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
+			if(!UserProfile.isWebTopAdmin(id)) data.add(new UserOptionsServiceData("com.sonicle.webtop.calendar", "wtcal", "Calendario", "Sonicle.webtop.calendar.CalendarOptions"));
+			if(!UserProfile.isWebTopAdmin(id)) data.add(new UserOptionsServiceData("com.sonicle.webtop.mail", "wtmail", "Posta Elettronica", "Sonicle.webtop.mail.MailOptions"));
+			*/
 			new JsonResult(data).printTo(out);
 			
 		} catch (Exception ex) {
@@ -529,7 +524,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupSessionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreSessionContext)getEnv()).getSession();
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		Locale locale = wts.getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -557,7 +552,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetWhatsnewTabs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreSessionContext)getEnv()).getSession();
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		ArrayList<JsWhatsnewTab> tabs = null;
 		JsWhatsnewTab tab = null;
 		String html = null;
@@ -569,7 +564,6 @@ public class Service extends BaseService {
 			tabs = new ArrayList<>();
 			List<String> ids = wts.getServices();
 			for(String id : ids) {
-				
 				if(full || wts.needWhatsnew(id, profile)) {
 					html = wts.getWhatsnewHtml(id, profile, full);
 					if(!StringUtils.isEmpty(html)) {
@@ -588,7 +582,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreSessionContext)getEnv()).getSession();
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
@@ -603,7 +597,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processTurnOffWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreSessionContext)getEnv()).getSession();
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		
 		try {
 			UserProfile profile = getEnv().getProfile();
@@ -620,9 +614,9 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreSessionContext)getEnv()).getSession();
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		UserProfile profile = getEnv().getProfile();
-		TFAManager tfam = manager.getTFAManager();
+		TFAManager tfam = core.getTFAManager();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
@@ -666,9 +660,49 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		UserProfile profile = getEnv().getProfile();
+		
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				ArrayList<JsGridSync> items = new ArrayList<>();
+				List<SyncDevice> devices = core.listZPushDevices();
+				for(SyncDevice device : devices) {
+					items.add(new JsGridSync(device.device, device.user, device.info));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				//PayloadAsList<JsGridSyncList> pl = ServletUtils.getPayloadAsList(request, JsGridSyncList.class);
+				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
+				CompositeId cid = new CompositeId(pl.data.id);
+				
+				core.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("info")) {
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				CompositeId cid = new CompositeId(id);
+				
+				String info = core.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
+				new JsonResult(info).printTo(out);
+			}
+			
+		} catch (Exception ex) {
+			logger.error("Error in ManageSyncDevices", ex);
+			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
+		}
+	}
+	
+	
+	
 	private List<String> queryDomains(UserProfile profile) {
 		List<String> domains = new ArrayList<>();
-		if(profile.isWebTopAdmin()) domains.add("*");
+		if(WT.isPermitted(profile.getId(), CoreManifest.ID, "WTADMIN")) domains.add("*");
 		domains.add(profile.getDomainId());
 		return domains;
 	}
@@ -681,7 +715,7 @@ public class Service extends BaseService {
 		List<ServiceMessage> messages = new ArrayList();
 		
 		try {
-			messages = ((CoreSessionContext)getEnv()).getSession().getEnqueuedMessages();
+			messages = ((CoreEnvironment)getEnv()).getSession().getEnqueuedMessages();
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action ServerEvents", ex);

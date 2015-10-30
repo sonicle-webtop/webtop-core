@@ -36,11 +36,16 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.codec.binary.Base32;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -98,6 +103,9 @@ public class SessionManager {
 		
 		try {
 			WebTopSession wts = new WebTopSession(httpSession);
+			// Generates and sets a security token for securing server 
+			// requests and protecting against CSRF.
+			wts.setProperty(WebTopSession.PROPERTY_SECURITY_TOKEN, generateSecurityToken());
 			httpSession.setAttribute(ATTRIBUTE, wts);
 			logger.info("WTS created [{}]", sid);
 			return wts;
@@ -183,6 +191,33 @@ public class SessionManager {
 			}
 		}
 		return list;
+	}
+	
+	public String getSecurityToken(HttpSession httpSession) {
+		WebTopSession wts = getSession(httpSession);
+		if(wts == null) return null;
+		return getSecurityToken(wts);
+	}
+	
+	public String getSecurityToken(WebTopSession wts) {
+		return (String)wts.getProperty(WebTopSession.PROPERTY_SECURITY_TOKEN);
+	}
+	
+	public boolean checkSecurityToken(HttpSession httpSession, String token) {
+		return StringUtils.equals(getSecurityToken(httpSession), token);
+	}
+	
+	public boolean checkSecurityToken(WebTopSession wts, String token) {
+		return StringUtils.equals(getSecurityToken(wts), token);
+	}
+	
+	private String generateSecurityToken() throws NoSuchAlgorithmException {
+		byte[] buffer = new byte[80/8];
+		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+		sr.nextBytes(buffer);
+		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+		byte[] encodedKey = new Base32().encode(secretKey);
+		return new String(encodedKey).toLowerCase();
 	}
 	
 	private static class ProfileSids extends HashSet<String> {

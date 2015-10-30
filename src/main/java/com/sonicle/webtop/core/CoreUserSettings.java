@@ -134,29 +134,33 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
 	//public static final String OTP_ENABLED = "otp.enabled";
-	/**
-	 * [boolean]
-	 * Specifies if TFA is required.
-	 */
-	public static final String TFA_MANDATORY = "tfa.mandatory";
+	
 	/**
 	 * [string]
-	 * Specifies delivery method. One of: NONE, EMAIL, GOOGLEAUTH.
+	 * Specifies delivery method. One of: email, googleauth.
 	 */
 	public static final String TFA_DELIVERY = "tfa.delivery";
 	public static final String TFA_DELIVERY_EMAIL = "email";
 	public static final String TFA_DELIVERY_GOOGLEAUTH = "googleauth";
+	
 	/**
 	 * [string]
 	 * Specifies generated secret string within googleauth delivery.
 	 */
 	public static final String TFA_SECRET = "tfa.secret";
+	
 	/**
 	 * [string]
 	 * Specifies choosen email address within email delivery.
 	 */
 	public static final String TFA_EMAILADDRESS = "tfa.emailaddress";
 	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
+	
+	/**
+	 * [boolean]
+	 */
+	public static final String SYNC_DEVICES_ENABLED = "sync.devices.enabled";
+	public static final Boolean DEFAULT_SYNC_DEVICES_ENABLED = true;
 	
 	public String getTheme() {
 		return getString(THEME, DEFAULT_THEME);
@@ -238,14 +242,6 @@ public class CoreUserSettings extends BaseUserSettings {
 		return getBoolean(WHATSNEW_ENABLED, true);
 	}
 	
-	public boolean getTFAMandatory() {
-		return getBoolean(CoreUserSettings.TFA_MANDATORY, false);
-	}
-	
-	public boolean setTFAMandatory(boolean value) {
-		return setBoolean(CoreUserSettings.TFA_MANDATORY, value);
-	}
-	
 	public String getTFADelivery() {
 		return getString(CoreUserSettings.TFA_DELIVERY, null);
 	}
@@ -270,7 +266,13 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(CoreUserSettings.TFA_EMAILADDRESS, value);
 	}
 	
+	public boolean getSyncDevicesEnabled() {
+		return getBoolean(CoreUserSettings.SYNC_DEVICES_ENABLED, DEFAULT_SYNC_DEVICES_ENABLED);
+	}
 	
+	public boolean setSyncDevicesEnabled(Boolean value) {
+		return setBoolean(CoreUserSettings.SYNC_DEVICES_ENABLED, value);
+	}
 	
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {

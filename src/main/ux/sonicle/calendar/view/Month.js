@@ -12,6 +12,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 	alias: 'widget.monthview',
 	requires: [
 		'Ext.XTemplate',
+		'Sonicle.calendar.util.EventUtils',
 		'Sonicle.calendar.template.Month',
 		'Sonicle.calendar.util.WeekEventRenderer',
 		'Sonicle.calendar.view.MonthDayDetail'
@@ -199,7 +200,7 @@ Ext.define('Sonicle.calendar.view.Month', {
 				run: function() {
 					var el = Ext.fly(this.id + '-clock'),
 							t = new Date(),
-							timeFmt = (this.use24HourTime) ? 'G:i' : 'g:ia';
+							timeFmt = Sonicle.calendar.util.EventUtils.timeFmt(this.use24HourTime);
 
 					if (t.getDay() === this.prevClockDay) {
 						if (el) {
@@ -247,18 +248,18 @@ Ext.define('Sonicle.calendar.view.Month', {
 
 			tpl = !(Ext.isIE7m || this.operaLT11) ?
 					new Ext.XTemplate(
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
+							'<div id="{_elId}" data-qtitle="{Title}" data-qtip="{Tooltip}" data-draggable="{_isDraggable}" class="{_selectorCls} {_colorCls} {_spanCls} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
 							'<div class="ext-evt-bd" style="color:{_foreColor};">', body, '</div>',
 							'</div>'
 							)
 					: new Ext.XTemplate(
 							'<tpl if="_renderAsAllDay">',
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor};">',
+							'<div id="{_elId}" data-qtitle="{Title}" data-qtip="{Tooltip}" data-draggable="{_isDraggable}" class="{_selectorCls} {_spanCls} {_colorCls} {_operaLT11} ext-cal-evo" style="background:{_bgColor};">',
 								'<div class="ext-cal-evm">',
 									'<div class="ext-cal-evi">',
 							'</tpl>',
 							'<tpl if="!_renderAsAllDay">',
-							'<div id="{_elId}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
+							'<div id="{_elId}" data-qtitle="{Title}" data-qtip="{Tooltip}" class="{_selectorCls} {_colorCls} {_operaLT11} ext-cal-evt ext-cal-evr" style="background:{_bgColor};">',
 							'</tpl>',
 							'<div class="ext-evt-bd" style="color:{_foreColor};">', body, '</div>',
 							'<tpl if="_renderAsAllDay">',
@@ -277,18 +278,18 @@ Ext.define('Sonicle.calendar.view.Month', {
 	getTemplateEventData: function(evt) {
 		var me = this,
 				EM = Sonicle.calendar.data.EventMappings,
+				EU = Sonicle.calendar.util.EventUtils,
 				selector = me.getEventSelectorCls(evt[EM.Id.name]),
-				title = evt[EM.Title.name],
-				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
 				bgColor = (evt[EM.Color.name] || ''),
-				dinfo = me.buildEventDisplayInfo(evt, timeFmt);
+				dinfo = EU.buildDisplayInfo(evt, EU.dateFmt(), EU.timeFmt(me.use24HourTime));
 		
 		return Ext.applyIf({
+			_elId: selector + '-' + evt._weekIndex,
 			_selectorCls: selector,
 			_bgColor: bgColor,
 			_foreColor: me.getEventForeColor(bgColor),
 			_colorCls: 'ext-color-' + (evt[EM.Color.name] || 'nocolor') + (evt._renderAsAllDay ? '-ad' : ''),
-			_elId: selector + '-' + evt._weekIndex,
+			_isDraggable: EU.isMovable(evt),
 			_isTimezone: (evt[EM.Timezone.name] !== me.timezone),
 			_isPrivate: (evt[EM.IsPrivate.name] === true),
 			_isRecurring: (evt[EM.IsRecurring.name] === true),

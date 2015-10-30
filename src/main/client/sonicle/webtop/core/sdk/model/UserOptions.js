@@ -37,6 +37,6 @@ Ext.define('Sonicle.webtop.core.sdk.model.UserOptions', {
 	
 	idProperty: 'id',
 	fields: [
-		'id'
+		WTF.field('id', 'string', false)
 	]
 });

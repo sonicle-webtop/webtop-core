@@ -44,33 +44,48 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String theme;
 	public String layout;
 	public String laf;
-	public String locale;
+	public String language;
 	public String timezone;
 	public Integer startDay;
 	public String shortDateFormat;
 	public String longDateFormat;
 	public String shortTimeFormat;
 	public String longTimeFormat;
-	public String usdTitle;
-	public String usdFirstName;
-	public String usdLastName;
-	public String usdEmail;
-	public String usdMobile;
-	public String usdTelephone;
-	public String usdFax;
-	public String usdAddress;
-	public String usdPostalCode;
-	public String usdCity;
-	public String usdState;
-	public String usdCountry;
-	public String usdCompany;
-	public String usdFunction;
-	public String usdWorkEmail;
-	public String usdWorkMobile;
-	public String usdWorkTelephone;
-	public String usdWorkFax;
-	public String usdCustom1;
-	public String usdCustom2;
-	public String usdCustom3;
-	public Boolean tfaEnabled;
+	
+	public String upiTitle;
+	public String upiFirstName;
+	public String upiLastName;
+	public String upiNickname;
+	public String upiGender;
+	public String upiEmail;
+	public String upiTelephone;
+	public String upiFax;
+	public String upiPager;
+	public String upiMobile;
+	public String upiAddress;
+	public String upiPostalCode;
+	public String upiCity;
+	public String upiState;
+	public String upiCountry;
+	public String upiCompany;
+	public String upiFunction;
+	public String upiCustom1;
+	public String upiCustom2;
+	public String upiCustom3;
+	
+	public String tfaDelivery;
+	public String tfaEmailAddress;
+	public Boolean tfaDeviceIsTrusted;
+	public String tfaDeviceTrustedOn;
+	
+	public Boolean canWriteUpi; // Read-only
+	public Boolean canSyncDevices; // Read-only
+	
+	public JsUserOptions() {
+		super();
+	}
+	
+	public JsUserOptions(String id) {
+		super(id);
+	}
 }

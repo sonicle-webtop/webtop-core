@@ -40,7 +40,7 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreSessionContext;
+import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
@@ -138,7 +138,7 @@ public abstract class BaseService extends BaseServiceBase {
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		UserProfile up = env.getProfile();
-		CoreManager core = new CoreManager(getRunContext(), ((CoreSessionContext)getEnv()).getApp());
+		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
 			String cntx = ServletUtils.getStringParameter(request, "context", true);	
@@ -147,12 +147,11 @@ public abstract class BaseService extends BaseServiceBase {
 				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				items = new ArrayList<>();
-				if(query != null) {
-					List<OServiceStoreEntry> entries = core.getServiceStoreEntriesByQuery(up.getId(), getId(), cntx, query);
-					for(OServiceStoreEntry entry : entries) {
-						items.add(new String[]{entry.getValue()});
-					}
+				List<OServiceStoreEntry> entries = core.listServiceStoreEntriesByQuery(up.getId(), getId(), cntx, query, 50);
+				for(OServiceStoreEntry entry : entries) {
+					items.add(new String[]{entry.getValue()});
 				}
+				
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {

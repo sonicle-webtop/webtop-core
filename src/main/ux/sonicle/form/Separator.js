@@ -32,9 +32,13 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.form.Separator', {
-	extend: 'Ext.Component',
-	alias: ['widget.soseparator', 'widget.separator'],
+	//extend: 'Ext.Component',
+	extend: 'Ext.form.FieldSet',
+	alias: ['widget.soformseparator', 'widget.formseparator'],
 	
-	autoEl: 'div',
-	cls: 'x-fieldset x-fieldset-collapsed x-fieldset-default'
+	//autoEl: 'div',
+	//cls: 'x-fieldset x-fieldset-collapsed x-fieldset-default'
+	collapsed: true,
+	anchor: '100%',
+	width: '100%'
 });

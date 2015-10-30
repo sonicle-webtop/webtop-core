@@ -81,8 +81,37 @@ public class CoreManifest extends ServiceManifest {
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
+		
 		resources = new ArrayList<>();
+		
+		/*
+			Marks WebTop Admins
+			- ACCESS: can manage webtop palform properties
+		*/
+		resources.add(new AuthResource("WTADMIN", new String[]{"ACCESS"}));
+		
+		/*
+			Activities
+			- MANAGE: access to management form
+		*/
 		resources.add(new AuthResource("ACTIVITIES", new String[]{"MANAGE"}));
+		
+		/*
+			Causals
+			- MANAGE: access to management form
+		*/
 		resources.add(new AuthResource("CAUSALS", new String[]{"MANAGE"}));
+		
+		/*
+			User personal info (via Options)
+			- WRITE: user can update/change its data (if provider supports it)
+		*/
+		resources.add(new AuthResource("UPI", new String[]{"WRITE"}));
+		
+		/*
+			Device synchroniztion
+			- ACCESS: ability to sync data with devices
+		*/
+		resources.add(new AuthResource("DEVICES_SYNC", new String[]{"ACCESS"}));
 	}
 }

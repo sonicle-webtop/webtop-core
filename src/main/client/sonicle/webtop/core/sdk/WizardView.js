@@ -111,7 +111,6 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			]
 		});
 		me.callParent(arguments);
-		me.on('beforeviewclose', me.onBeforeViewClose);
 		me.add(me.createPages());
 		me.onNavigate(me.pages[0]);
 	},
@@ -245,8 +244,9 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		});
 	},
 	
-	onBeforeViewClose: function() {
+	canCloseView: function() {
 		// Returns false to stop view closing and to display a confirm message.
 		if(this.hasNext(1)) return false;
+		return true;
 	}
 });

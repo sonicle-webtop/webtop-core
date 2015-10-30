@@ -31,25 +31,41 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.userinfo;
+
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.sdk.WTException;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class JsUserOptionsService {
+public class UserInfoProviderFactory {
+	private static final HashMap<String, UserInfoProviderBase> instances = new HashMap<>();
 	
-	public String id;
-	public String xid;
-	public String name;
-	public String viewClassName;
-	public String modelClassName;
-	
-	public JsUserOptionsService(String id, String xid, String name, String viewClassName) {
-		this.id = id;
-		this.xid = xid;
-		this.name = name;
-		this.viewClassName = viewClassName;
-		this.modelClassName = null;
+	public static synchronized UserInfoProviderBase getProvider(String providerName, IConnectionProvider conp, IServiceSettingReader setm) throws WTException {
+		String className = null;
+		
+		try {
+			// Defines fully qualified class name
+			if(providerName.equals("WebTop")) {
+				className = "com.sonicle.webtop.core.userinfo.provider.WebTopUserInfoProvider";
+			} else {
+				className = providerName;
+			}
+			
+			// Lookup class instance
+			if(!instances.containsKey(className)) {
+				Class clazz = Class.forName(className);
+				Constructor<UserInfoProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
+				instances.put(className, constructor.newInstance(conp, setm));
+			}
+			return instances.get(className);
+		} catch (Exception ex) {
+			throw new WTException(ex, "Unable to instantiate UserInfo provider class [{0}]", className);
+		}
 	}
 }

@@ -35,11 +35,22 @@ Ext.define('Sonicle.webtop.core.sdk.OptionTabSection', {
 	alternateClassName: 'WT.sdk.OptionTabSection',
 	extend: 'Ext.panel.Panel',
 	alias: 'widget.wtopttabsection',
+	requires: [
+		'Sonicle.form.Separator'
+	],
 	
-	layout: 'form',
-	collapsible: true,
-	collapsed: true,
-	titleCollapse: true,
-	margin: '5 25 0 5',
-	labelWidth: 220
+	tabConfig: {
+		textAlign: 'left',
+		minWidth: 150,
+		maxWidth: 150
+	},
+	
+	layout: 'anchor',
+	bodyPadding: 5,
+	scrollable: 'y',
+	
+	defaults: {
+		labelAlign: 'right',
+		labelWidth: 140
+	}
 });

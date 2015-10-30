@@ -39,4 +39,11 @@ package com.sonicle.webtop.core.sdk;
  */
 public class JsUserOptionsBase {
 	public String id;
+	
+	public JsUserOptionsBase() {
+	}
+	
+	public JsUserOptionsBase(String id) {
+		this.id = id;
+	}
 }

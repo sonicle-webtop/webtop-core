@@ -4,7 +4,8 @@
 Ext.define('Sonicle.calendar.dd.DayDropZone', {
 	extend: 'Sonicle.calendar.dd.DropZone',
 	requires: [
-		'Sonicle.Date'
+		'Sonicle.Date',
+		'Sonicle.calendar.util.EventUtils'
 	],
 	
 	ddGroup: 'DayViewDD',
@@ -13,7 +14,7 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 	
 	updateProxy: function(e, data, start, end) {
 		var me = this,
-				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
+				timeFmt = Sonicle.calendar.util.EventUtils.timeFmt(me.use24HourTime),
 				text,
 				dt;
 		
@@ -41,7 +42,7 @@ Ext.define('Sonicle.calendar.dd.DayDropZone', {
 		var me = this,
 				soDate = Sonicle.Date,
 				dt,
-				timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
+				timeFmt = Sonicle.calendar.util.EventUtils.timeFmt(me.use24HourTime),
 				box,
 				endDt,
 				text = me.createText,

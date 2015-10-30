@@ -33,29 +33,28 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	alternateClassName: 'WT.sdk.UserOptionsView',
-	extend: 'Sonicle.form.Panel',
+	extend: 'Ext.tab.Panel',
 	mixins: [
-		'WT.mixin.Waitable'
+		'WT.mixin.PanelUtil',
+		'WT.mixin.Waitable',
+		'WT.mixin.ActionStorer',
+		'WT.mixin.HasModel'
 	],
 	requires: [
 		'Sonicle.form.Spacer'
 	],
 	
 	referenceHolder: true,
+	tabPosition: 'left',
+	tabRotation: 0,
 	closable: false,
 	tabConfig: {
 		textAlign: 'left'
 	},
-	border: false,
-	overflowY: 'scroll',
-	padding: 0,
-	margin: 0,
-	/*
-	defaults: {
-		collapsible: true,
-		margin: '5 25 0 5'
-	}
-	*/
+	modelValidation: true,
+	
+	modelIdProperty: 'id',
+	viewModel: {},
 
 	/**
 	 * @property {String} ID
@@ -67,5 +66,44 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	 * @property {String} XID
 	 * Service short ID.
 	 */
-	XID: null
+	XID: null,
+	
+	profileId: null,
+	needLogin: false,
+	needReload: false,
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.mixins.actionstorer.constructor.call(me, cfg);
+		me.callParent([cfg]);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.mixins.actionstorer.destroy.call(me);
+		me.callParent();
+	},
+	
+	onBlurAutoSave: function(s) {
+		var me = this, name;
+		
+		if(s.needLogin || s.needReload) {
+			name = me._extrField(s.getInitialConfig().bind);
+			if(me.getModel().isModified(name)) {
+				if(s.needLogin) me.needLogin = true;
+				if(s.needReload) me.needReload = true;
+			}
+		}
+		if(me.getModel().dirty) {
+			me.saveModel();
+		}
+	},
+	
+	/**
+	 * @private
+	 * Extract the field name from a binding string ('{record.id}' -> 'id')
+	 */
+	_extrField: function(bind) {
+		return bind.substring(1, bind.length-1).replace(this.getModelProperty()+'.', '');
+	}
 });

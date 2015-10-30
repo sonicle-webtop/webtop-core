@@ -45,7 +45,8 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		TOOLBAR_REF_NAME: 'tbcmp',
 		TOOL_REF_NAME: 'toolcmp',
 		MAIN_REF_NAME: 'maincmp',
-		NEW_ACTION_GROUP: 'new'
+		ACTION_GROUP_NEW: 'new',
+		ACTION_GROUP_TOOLBOX: 'toolbox'
 	},
 	
 	/**
@@ -135,7 +136,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	isPermitted: function(resource, action) {
 		var r = this.perms[resource];
-		return (r) ? (r[action] === 1) : false;
+		return (r) ? (r[action] === true) : false;
 	},
 	
 	/**
@@ -238,7 +239,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {WT.ux.Action} The Action that were added.
 	 */
 	addNewAction: function(name, obj) {
-		return this.addAction(WT.sdk.Service.NEW_ACTION_GROUP, name, obj);
+		return this.addAction(WT.sdk.Service.ACTION_GROUP_NEW, name, obj);
 	},
 	
 	/**
@@ -246,7 +247,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Boolean} True if so.
 	 */
 	hasNewActions: function() {
-		var acts = this.getActions(WT.sdk.Service.NEW_ACTION_GROUP);
+		var acts = this.getActions(WT.sdk.Service.ACTION_GROUP_NEW);
 		return !Ext.Object.isEmpty(acts);
 	},
 	
@@ -255,7 +256,16 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Array} An array of actions.
 	 */
 	getNewActions: function() {
-		var acts = this.getActions(WT.sdk.Service.NEW_ACTION_GROUP);
+		var acts = this.getActions(WT.sdk.Service.ACTION_GROUP_NEW);
+		return (acts) ? Ext.Object.getValues(acts) : [];
+	},
+	
+	/**
+	 * Returns action into 'new' group.
+	 * @return {Array} An array of actions.
+	 */
+	getToolboxActions: function() {
+		var acts = this.getActions(WT.sdk.Service.ACTION_GROUP_TOOLBOX);
 		return (acts) ? Ext.Object.getValues(acts) : [];
 	},
 	

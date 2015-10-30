@@ -40,12 +40,12 @@ import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -62,70 +62,31 @@ public class ServiceRequest extends BaseRequestServlet {
 		
 		try {
 			logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
-			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
+			String csrf = ServletUtils.getStringParameter(request, "csrf", null);
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
+			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
+			
+			if(!wta.getSessionManager().checkSecurityToken(wts, csrf)) {
+				throw new Exception("Unable to authenticate current request. Provided security token is not valid.");
+			}
 			
 			if(!options) {
 				// Retrieves instantiated service
 				BaseService instance = wts.getServiceById(service);
 				
-				// Gets right method
+				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);
-				/*
-				Method method = null;
-				String methodName = MessageFormat.format("process{0}", action);
-				if(nowriter) {
-					try {
-						method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
-					} catch(NoSuchMethodException ex) {
-						throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, instance.getManifest().getServiceClassName());
-					}
-				} else {
-					try {
-						method = instance.getClass().getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
-					} catch(NoSuchMethodException ex) {
-						throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, instance.getManifest().getServiceClassName());
-					}
-				}
-				*/
-
-				// Invokes retrieved method...
 				invokeMethod(instance, method, service, nowriter, request, response);
-				
-				/*
-				PrintWriter out = null;
-				try {
-					try {
-						WebTopApp.setServiceLoggerDC(service);
-						if(nowriter) {
-							method.invoke(instance, request, response);
-						} else {
-							out = response.getWriter();
-							method.invoke(instance, request, response, out);
-							ServletHelper.setCacheControl(response);
-							ServletHelper.setPageContentType(response);
-						}
-					} finally {
-						WebTopApp.unsetServiceLoggerDC();
-					}
-				} catch(Exception ex) {
-					throw new Exception("Error during method invocation", ex);
-				} finally {
-					IOUtils.closeQuietly(out);
-				}
-				*/
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
-				String id = ServletUtils.getStringParameter(request, "id", true);
-				String tokens[] = StringUtils.split(id, "@");
-				String domainId = tokens[1];
-				String userId = tokens[0];
+				String profile = ServletUtils.getStringParameter(request, "id", true);
 				
 				// Retrieves instantiated userOptions service (session context away)
-				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, domainId, userId);
+				UserProfile.Id pid = new UserProfile.Id(profile);
+				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, pid);
 				
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);

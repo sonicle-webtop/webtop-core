@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
@@ -44,10 +45,9 @@ import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
-import com.sonicle.webtop.core.sdk.JsOptions;
-import com.sonicle.webtop.core.sdk.UserData;
+import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import javax.servlet.http.HttpServletRequest;
@@ -59,79 +59,91 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class UserOptionsService extends BaseUserOptionsService {
-	
 	public static final Logger logger = WT.getLogger(UserOptionsService.class);
 	
 	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Connection con = null;
+		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
-			con = getCoreConnection();
-			CoreServiceSettings ss = new CoreServiceSettings(getDomainId(), CoreManifest.ID);
-			CoreUserSettings us = new CoreUserSettings(getDomainId(), getUserId());
+			UserInfoProviderBase provider = core.getUserInfoProvider();
+			CoreServiceSettings ss = new CoreServiceSettings(getTargetDomainId(), CoreManifest.ID);
+			CoreUserSettings us = new CoreUserSettings(getTargetDomainId(), getTargetUserId());
+			
+			con = WT.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
-			OUser user = udao.selectByDomainUser(con, getDomainId(), getUserId());
-			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getDomainId(), getUserId());
+			OUser user = udao.selectByDomainUser(con, getTargetDomainId(), getTargetUserId());
+			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getTargetDomainId(), getTargetUserId());
 			
-			UserDataProviderBase udp = getUserDataProvider();
-			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
-			
-			if(crud.equals("read")) {
-				String id = ServletUtils.getStringParameter(request, "id", true);
+			UserPersonalInfo upi = provider.getInfo(getTargetDomainId(), getTargetUserId());
+				
+			if(crud.equals(Crud.READ)) {
+				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
 				
 				// main
-				JsOptions main = new JsOptions();
-				main.put("displayName", user.getDisplayName());
-				main.put("rtl", us.getRightToLeft());
-				main.put("theme", us.getTheme());
-				main.put("layout", us.getLayout());
-				main.put("laf", us.getLookAndFeel());
+				jso.displayName = user.getDisplayName();
+				jso.theme = us.getTheme();
+				jso.layout = us.getLayout();
+				jso.laf = us.getLookAndFeel();
 				
 				// i18n
-				JsOptions i18n = new JsOptions();
-				i18n.put("locale", user.getLocale());
-				i18n.put("timezone", user.getTimezone());
-				i18n.put("startDay", us.getStartDay());
-				i18n.put("shortDateFormat", us.getShortDateFormat());
-				i18n.put("longDateFormat", us.getLongDateFormat());
-				i18n.put("shortTimeFormat", us.getShortTimeFormat());
-				i18n.put("longTimeFormat", us.getLongTimeFormat());
+				jso.language = user.getLanguageTag();
+				jso.timezone = user.getTimezone();
+				jso.startDay = us.getStartDay();
+				jso.shortDateFormat = us.getShortDateFormat();
+				jso.longDateFormat = us.getLongDateFormat();
+				jso.shortTimeFormat = us.getShortTimeFormat();
+				jso.longTimeFormat = us.getLongTimeFormat();
+				
+				// profileInfo
+				jso.canWriteUpi = WT.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "UPI", "WRITE");
+				jso.upiTitle = upi.getTitle();
+				jso.upiFirstName = upi.getFirstName();
+				jso.upiLastName = upi.getLastName();
+				jso.upiNickname = upi.getNickname();
+				jso.upiGender = upi.getGender();
+				jso.upiEmail = upi.getEmail();
+				jso.upiTelephone = upi.getTelephone();
+				jso.upiFax = upi.getFax();
+				jso.upiPager = upi.getPager();
+				jso.upiMobile = upi.getMobile();
+				jso.upiAddress = upi.getAddress();
+				jso.upiCity = upi.getCity();
+				jso.upiPostalCode = upi.getPostalCode();
+				jso.upiState = upi.getState();
+				jso.upiCountry = upi.getCountry();
+				jso.upiCompany = upi.getCompany();
+				jso.upiFunction = upi.getFunction();
+				jso.upiCustom1 = upi.getCustom1();
+				jso.upiCustom2 = upi.getCustom2();
+				jso.upiCustom3 = upi.getCustom3();
 				
 				// TFA
-				JsOptions tfa = new JsOptions();
-				tfa.put("enabled", ss.getTFAEnabled());
-				tfa.put("deviceTrustEnabled", ss.getTFADeviceTrustEnabled());
-				tfa.put("mandatory", us.getTFAMandatory());
-				tfa.put("delivery", us.getTFADelivery());
-				tfa.put("emailAddress", us.getTFAEmailAddress());
-				
-				// TFA - trusted device
-				TFAManager tfam = WebTopApp.getInstance().getTFAManager(); //TODO: avoid this
+				TFAManager tfam = core.getTFAManager();
 				boolean isTrusted = false;
 				String trustedOn = null;
-				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(getDomainId(), getUserId(), user.getSecret(), request);
-				if(tfam.isThisDeviceTrusted(getDomainId(), getUserId(), tdc)) {
-					JsTrustedDevice td = tfam.getTrustedDevice(getDomainId(), getUserId(), tdc.deviceId);
+				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(getTargetDomainId(), getTargetUserId(), user.getSecret(), request);
+				if(tfam.isThisDeviceTrusted(getTargetDomainId(), getTargetUserId(), tdc)) {
+					JsTrustedDevice td = tfam.getTrustedDevice(getTargetDomainId(), getTargetUserId(), tdc.deviceId);
 					if(td != null) {
 						isTrusted = true;
 						trustedOn = td.getISOTimestamp();
 					}
 				}
-				tfa.put("isTrusted", isTrusted);
-				tfa.put("trustedOn", trustedOn);
 				
+				jso.tfaDelivery = us.getTFADelivery();
+				jso.tfaEmailAddress = us.getTFAEmailAddress();
+				jso.tfaDeviceIsTrusted = isTrusted;
+				jso.tfaDeviceTrustedOn = trustedOn;
 				
-				JsOptions opts = new JsOptions();
-				opts.put("id", id);
-				opts.putAll(main);
-				opts.putAll(i18n);
-				opts.putPrefixed("tfa", tfa);
-				opts.putPrefixed("usd", ud.getMap());
-				new JsonResult(opts).printTo(out);
+				// Sync
+				jso.canSyncDevices = WT.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				
-			} else if(crud.equals("update")) {
+				new JsonResult(jso).printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(request, JsUserOptions.class);
 				
 				// main
@@ -141,15 +153,13 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
 				
 				// i18n
-				if(pl.map.has("locale")) user.setLanguageTag(pl.data.locale);
+				if(pl.map.has("language")) user.setLanguageTag(pl.data.language);
 				if(pl.map.has("timezone")) user.setTimezone(pl.data.timezone);
 				if(pl.map.has("startDay")) us.setStartDay(pl.data.startDay);
 				if(pl.map.has("shortDateFormat")) us.setShortDateFormat(pl.data.shortDateFormat);
 				if(pl.map.has("longDateFormat")) us.setLongDateFormat(pl.data.longDateFormat);
 				if(pl.map.has("shortTimeFormat")) us.setShortTimeFormat(pl.data.shortTimeFormat);
 				if(pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
-				
-				udao.update(con, user);
 				
 				// TFA
 				//TODO: gestire salvataggio TFA
@@ -162,50 +172,56 @@ public class UserOptionsService extends BaseUserOptionsService {
 				}
 				*/
 				
-				// UserData
-				if(udp.canWrite()) {
-					if(pl.map.has("usdTitle")) ud.title = pl.data.usdTitle;
-					if(pl.map.has("usdFirstName")) ud.firstName = pl.data.usdFirstName;
-					if(pl.map.has("usdFirstName")) ud.lastName = pl.data.usdFirstName;
-					if(pl.map.has("usdEmail")) ud.email = pl.data.usdEmail;
-					if(pl.map.has("usdMobile")) ud.mobile = pl.data.usdMobile;
-					if(pl.map.has("usdTelephone")) ud.telephone = pl.data.usdTelephone;
-					if(pl.map.has("usdFax")) ud.fax = pl.data.usdFax;
-					if(pl.map.has("usdAddress")) ud.address = pl.data.usdAddress;
-					if(pl.map.has("usdPostalCode")) ud.postalCode = pl.data.usdPostalCode;
-					if(pl.map.has("usdCity")) ud.city = pl.data.usdCity;
-					if(pl.map.has("usdState")) ud.state = pl.data.usdState;
-					if(pl.map.has("usdCountry")) ud.country = pl.data.usdCountry;
-					if(pl.map.has("usdCompany")) ud.company = pl.data.usdCompany;
-					if(pl.map.has("usdFunction")) ud.function = pl.data.usdFunction;
-					if(pl.map.has("usdWorkEmail")) ud.workEmail = pl.data.usdWorkEmail;
-					if(pl.map.has("usdWorkMobile")) ud.workMobile = pl.data.usdWorkMobile;
-					if(pl.map.has("usdWorkTelephone")) ud.workTelephone = pl.data.usdWorkTelephone;
-					if(pl.map.has("usdWorkFax")) ud.workFax = pl.data.usdWorkFax;
-					if(pl.map.has("usdCustom1")) ud.custom1 = pl.data.usdCustom1;
-					if(pl.map.has("usdCustom2")) ud.custom2 = pl.data.usdCustom2;
-					if(pl.map.has("usdCustom3")) ud.custom3 = pl.data.usdCustom3;
-					udp.setUserData(getDomainId(), getUserId(), ud);
+				// User personal info
+				if(provider.canWrite()) {
+					if(WT.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "UPI", "WRITE")) {
+						if(pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
+						if(pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
+						if(pl.map.has("upiLastName")) upi.setLastName(pl.data.upiLastName);
+						if(pl.map.has("upiNickname")) upi.setNickname(pl.data.upiNickname);
+						if(pl.map.has("upiGender")) upi.setGender(pl.data.upiGender);
+						if(pl.map.has("upiEmail")) upi.setEmail(pl.data.upiEmail);
+						if(pl.map.has("upiTelephone")) upi.setTelephone(pl.data.upiTelephone);
+						if(pl.map.has("upiFax")) upi.setFax(pl.data.upiFax);
+						if(pl.map.has("upiPager")) upi.setPager(pl.data.upiPager);
+						if(pl.map.has("upiMobile")) upi.setMobile(pl.data.upiMobile);
+						if(pl.map.has("upiAddress")) upi.setAddress(pl.data.upiAddress);
+						if(pl.map.has("upiCity")) upi.setCity(pl.data.upiCity);
+						if(pl.map.has("upiPostalCode")) upi.setPostalCode(pl.data.upiPostalCode);
+						if(pl.map.has("upiState")) upi.setState(pl.data.upiState);
+						if(pl.map.has("upiCountry")) upi.setCountry(pl.data.upiCountry);
+						if(pl.map.has("upiCompany")) upi.setCompany(pl.data.upiCompany);
+						if(pl.map.has("upiFunction")) upi.setFunction(pl.data.upiFunction);
+						if(pl.map.has("upiCustom1")) upi.setCustom1(pl.data.upiCustom1);
+						if(pl.map.has("upiCustom2")) upi.setCustom2(pl.data.upiCustom2);
+						if(pl.map.has("upiCustom3")) upi.setCustom3(pl.data.upiCustom3);
+						provider.setInfo(getTargetDomainId(), getTargetUserId(), upi);
+					}
 				}
+				
+				udao.update(con, user);
+				
 				new JsonResult().printTo(out);
 			}
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action UserOptions", ex);
-			new JsonResult(false).printTo(out);
+			new JsonResult(false, "Error").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void processDisableTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processDeactivateTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
-			TFAManager tfam = WebTopApp.getInstance().getTFAManager(); //TODO: avoid this
+			TFAManager tfam = core.getTFAManager();
+			tfam.deactivateTFA(getTargetDomainId(), getTargetUserId());
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action DisableTFA", ex);
+			logger.error("Error executing action DeactivateTFA", ex);
 			new JsonResult(false).printTo(out);
 		}
 	}

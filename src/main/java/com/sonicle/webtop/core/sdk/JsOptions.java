@@ -85,13 +85,13 @@ public class JsOptions extends MapItem {
 	}
 	*/
 	
-	public void putPrefixed(String prefix, Map<String, Object> m) {
+	public void putAllWithPrefix(String prefix, Map<String, Object> m) {
 		for(Map.Entry<String, Object> entry : m.entrySet()) {
 			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
 		}
 	}
 	
-	public Map<String, Object> getPrefixed(String prefix) {
+	public Map<String, Object> getWithPrefix(String prefix) {
 		JsOptions map = new JsOptions();
 		for(Map.Entry<String, Object> entry : entrySet()) {
 			if(StringUtils.startsWith(entry.getKey(), prefix)) {

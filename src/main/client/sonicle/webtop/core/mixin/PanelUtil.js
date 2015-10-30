@@ -31,19 +31,47 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-/**
- *
- * @author malbinola
- */
-public class InsufficientRightsException extends WTRuntimeException {
+Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
+	alternateClassName: 'WT.mixin.PanelUtil',
+	extend: 'Ext.Mixin',
+	mixinConfig: {
+		id: 'panelutil'
+	},
 	
-	public InsufficientRightsException(String message, Object... arguments) {
-		super(message, arguments);
-	}
+	/**
+	 * Convenience method to get the toolbar docked on 'top'.
+	 * @returns {Ext.toolbar.Toolbar}
+	 */
+	getTopBar: function() {
+		var ret = this.getDockedItems('toolbar[dock="top"]');
+		return (ret && (ret.length > 0)) ? ret[0] : null;
+	},
 	
-	public InsufficientRightsException(Throwable cause, String message, Object... arguments) {
-		super(cause, message, arguments);
+	/**
+	 * Convenience method to get the toolbar docked on 'bottom'.
+	 * @returns {Ext.toolbar.Toolbar}
+	 */
+	getBottomBar: function() {
+		var ret = this.getDockedItems('toolbar[dock="bottom"]');
+		return (ret && (ret.length > 0)) ? ret[0] : null;
+	},
+	
+	/**
+	 * Convenience method for getting a reference to a container.
+	 * @param {Ext.container.Container} cmp The component on which calling {@link Ext.container.Container#lookupReference}
+	 * @param {String} path Reference path to follow
+	 * @returns {Ext.container.Container}
+	 */
+	lref: function(cmp, path) {
+		if(arguments.length === 1) {
+			path = cmp;
+			cmp = this;
+		}
+		var i, keys = path.split('.');
+		for(i=0; i<keys.length; i++) {
+			cmp = cmp.lookupReference(keys[i]);
+			if(!cmp) break;
+		}
+		return cmp;
 	}
-}
+});	

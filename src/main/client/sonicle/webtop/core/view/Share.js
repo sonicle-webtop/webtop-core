@@ -31,27 +31,27 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.webtop.core.sdk.Environment;
-
-/**
- *
- * @author malbinola
- */
-public class CoreSessionContext extends Environment {
-	protected final WebTopApp wta;
-
-	public CoreSessionContext(WebTopApp wta, WebTopSession wts) {
-		super(wts);
-		this.wta = wta;
+Ext.define('Sonicle.webtop.core.view.Share', {
+	alternateClassName: 'WT.view.Share',
+	extend: 'WT.sdk.ModelView',
+	requires: [
+		'Sonicle.webtop.core.model.Share'
+	],
+	
+	dockableConfig: {
+		title: 'share.tit',
+		iconCls: 'wt-icon-share-xs',
+		width: 500,
+		height: 500
+	},
+	model: 'Sonicle.webtop.core.model.Causal',
+	
+	initComponent: function() {
+		var me = this,
+				vm = me.getViewModel();
+		me.callParent(arguments);
+	
 	}
 	
-	public WebTopApp getApp() {
-		return wta;
-	}
 	
-	public WebTopSession getSession() {
-		return wts;
-	}
-}
+});

@@ -203,6 +203,12 @@ Ext.define('Sonicle.Date', {
 		return dt;
 	},
 	
+	setTime: function(dateTime, h, m, s) {
+		var dt = Ext.Date.clone(dateTime);
+		dt.setHours(h, m, s, 0);
+		return dt;
+	},
+	
 	/**
 	 * Compares two dates and returns a value indicating how they relate to each other.
 	 * @param {Date} dt1 The first date

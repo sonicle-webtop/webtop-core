@@ -116,7 +116,7 @@ public class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
-	private SystemManager sysm = null;
+	private AuthManager autm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
@@ -153,8 +153,8 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
-		// Sys Manager
-		sysm = SystemManager.initialize(this);
+		// Auth Manager
+		autm = AuthManager.initialize(this);
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
@@ -202,8 +202,8 @@ public class WebTopApp {
 		setm.cleanup();
 		setm = null;
 		// Sys Manager
-		sysm.cleanup();
-		sysm = null;
+		autm.cleanup();
+		autm = null;
 		// Connection Manager
 		conm.cleanup();
 		conm = null;
@@ -326,11 +326,11 @@ public class WebTopApp {
 	}
 	
 	/**
-	 * Returns the SystemManager.
-	 * @return SystemManager instance.
+	 * Returns the AuthManager.
+	 * @return AuthManager instance.
 	 */
-	public SystemManager getSystemManager() {
-		return sysm;
+	public AuthManager getAuthManager() {
+		return autm;
 	}
 	
 	/**

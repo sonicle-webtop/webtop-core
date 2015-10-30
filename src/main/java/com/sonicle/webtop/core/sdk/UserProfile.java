@@ -40,13 +40,14 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.userdata.UserDataProviderBase;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import javax.mail.internet.InternetAddress;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +66,7 @@ public final class UserProfile {
 	private final CoreManager core;
 	private final Principal principal;
 	private OUser user;
-	private UserData userData;
+	private UserPersonalInfo personalInfo;
 	
 	public UserProfile(CoreManager core, Principal principal) {
 		this.core = core;
@@ -102,10 +103,9 @@ public final class UserProfile {
 				udao.updateSecretByDomainUser(con, user.getDomainId(), user.getUserId(), secret);
 			}
 			
-			// Retrieves user-data info
-			UserDataProviderBase udp = core.getUserDataProvider();
-			UserData ud = udp.getUserData(user.getDomainId(), user.getUserId());
-			if(ud != null) userData = ud;
+			// Retrieves user-info
+			UserPersonalInfo upi = core.getUserPersonalInfo(getId());
+			if(upi != null) personalInfo = upi;
 			
 		} catch(Exception ex) {
 			DbUtils.closeQuietly(con);
@@ -146,60 +146,33 @@ public final class UserProfile {
 		return user.getLocale();
 	}
 	
+	public String getLanguageTag() {
+		return user.getLanguageTag();
+	}
+	
 	public DateTimeZone getTimeZone() {
 		return user.getTimeZone();
 	}
 	
-	private String generateSecretKey() throws NoSuchAlgorithmException {
-		byte[] buffer = new byte[80/8];
-		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-		sr.nextBytes(buffer);
-		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
-		byte[] encodedKey = new Base32().encode(secretKey);
-		return new String(encodedKey);
+	public String getDisplayName() {
+		return user.getDisplayName();
 	}
-	
-	public boolean isWebTopAdmin() {
-		return UserProfile.isWebTopAdmin(getStringId());
-	}
-    
-    public boolean hasDocumentManagement() {
-        // TODO: setting for document management
-        return false;
-    }
-    
-    public boolean hasStructuredArchiving() {
-        // TODO: setting for document management
-        return false;
-    }
-    
-    public String getDocumentManagementFolder() {
-        // TODO: setting for document management
-        return null;
-    }
 	
 	public String getEmailAddress() {
-		return userData.email;
-	}
-	
-	public String getDisplayName() {
-		return userData.firstName+" "+userData.lastName;
+		return personalInfo.getEmail();
 	}
 	
 	public String getCompleteEmailAddress() {
-		return getDisplayName()+" <"+getEmailAddress()+">";
+		try {
+			return new InternetAddress(getEmailAddress(), getDisplayName()).toString();
+		} catch(UnsupportedEncodingException ex) {
+			logger.error("Unable to build complete email address", ex);
+			return null;
+		}
 	}
 
 	public Principal getPrincipal() {
 		return principal;
-	}
-	
-	public static boolean isWebTopAdmin(String domainId, String userId) {
-		return Principal.isAdmin(domainId, userId);
-	}
-	
-	public static boolean isWebTopAdmin(String profileId) {
-		return Principal.isAdmin(profileId);
 	}
 	
 	public static class Id {
@@ -249,5 +222,14 @@ public final class UserProfile {
 				.append(userId, otherObject.userId)
 				.isEquals();
 		}
+	}
+	
+	private String generateSecretKey() throws NoSuchAlgorithmException {
+		byte[] buffer = new byte[80/8];
+		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+		sr.nextBytes(buffer);
+		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+		byte[] encodedKey = new Base32().encode(secretKey);
+		return new String(encodedKey);
 	}
 }

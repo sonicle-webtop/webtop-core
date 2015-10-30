@@ -31,31 +31,35 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.userdata;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
-import com.sonicle.webtop.core.sdk.UserData;
-import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sonicle.commons.web.json.CompositeId;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public abstract class UserDataProviderBase {
+public class JsGridSync {
+	public String id;
+	public String device;
+	public String user;
+	public String info;
 	
-	protected static final Logger logger = (Logger) LoggerFactory.getLogger(UserDataProviderBase.class);
-	protected IConnectionProvider conp = null;
-	protected IServiceSettingReader setm = null;
-	
-	public UserDataProviderBase(IConnectionProvider conp, IServiceSettingReader setm) {
-		this.conp = conp;
-		this.setm = setm;
+	public JsGridSync() {
+		
 	}
 	
-	public abstract boolean canWrite();
-	public abstract UserData getUserData(String domainId, String userId);
-	public abstract boolean setUserData(String domainId, String userId, UserData userData);
+	public JsGridSync(String device, String user, String info) {
+		this.id = new CompositeId(device, user).toString();
+		this.device = device;
+		this.user = user;
+		this.info = info;
+	}
+	
+	public static class JsGridSyncList extends ArrayList<JsGridSync> {
+		public JsGridSyncList() {
+			super();
+		}
+	}
 }

@@ -88,7 +88,7 @@ Ext.define('Sonicle.calendar.view.MonthDayDetail', {
             item._renderAsAllDay = item[EM.IsAllDay.name] || soDate.diffDays(item[EM.StartDate.name], item[EM.EndDate.name]) > 0;
             item.spanLeft = soDate.diffDays(item[EM.StartDate.name], me.date) > 0;
             item.spanRight = soDate.diffDays(me.date, item[EM.EndDate.name]) > 0;
-            item.spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
+            item._spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
             'ext-cal-ev-spanleft') : (item.spanRight ? 'ext-cal-ev-spanright': ''));
 
             templateData.push({

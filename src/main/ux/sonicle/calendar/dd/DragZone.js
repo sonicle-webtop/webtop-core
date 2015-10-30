@@ -12,6 +12,7 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 	ddGroup: 'CalendarDD',
 	eventSelector: '.ext-cal-evt',
 	
+	/*
 	statics: {
 		isEventDraggable: function(rec) {
 			var EM = Sonicle.calendar.data.EventMappings,
@@ -24,6 +25,7 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 			return true;
 		}
 	},
+	*/
 	
 	constructor: function(el, config) {
 		if (!Sonicle.calendar._statusProxyInstance) {
@@ -43,7 +45,8 @@ Ext.define('Sonicle.calendar.dd.DragZone', {
 			return {
 				type: 'eventdrag',
 				ddel: t,
-				draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				//draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
+				draggable: (t.getAttribute('data-draggable') === 'true'),
 				eventStart: rec.data[EM.StartDate.name],
 				eventEnd: rec.data[EM.EndDate.name],
 				proxy: this.proxy

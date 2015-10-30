@@ -35,25 +35,27 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsController', {
 	alternateClassName: 'WT.sdk.UserOptionsController',
 	extend: 'Ext.app.ViewController',
 	
-	reload: false,
+	needLogin: false,
+	needReload: false,
 	
-	onBlurAutoSave: function(s) {
-		var me = this;
-		if(s.isDirty() && s.isValid()) {
-			me.reload = s.reload || false;
-			me.getView().saveForm();
-		}
+	extrField: function(mp, bind) {
+		// From '{record.id}' to 'id'
+		return bind.substring(1, bind.length-1).replace(mp+'.', '');
 	},
 	
-	onFormSave: function(s,success) {
-		var me = this;
-		if(success) {
-			if(me.reload) {
-				WT.confirm(WT.res('opts.confirm.reload'), function(bid) {
-					if(bid === 'yes') WT.reload();
-				});
+	onBlurAutoSave: function(s) {
+		var me = this, 
+				vw = me.getView(), name;
+		
+		if(s.needLogin || s.needReload) {
+			name = me.extrField(vw.getModelProperty(), s.getInitialConfig().bind);
+			if(vw.getModel().isModified(name)) {
+				if(s.needLogin) me.needLogin = true;
+				if(s.needReload) me.needReload = true;
 			}
-			me.reload = false;
+		}
+		if(vw.getModel().dirty) {
+			vw.doSave();
 		}
 	}
 });

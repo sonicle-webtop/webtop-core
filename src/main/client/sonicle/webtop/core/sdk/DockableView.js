@@ -104,14 +104,6 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 */
 	
 	/**
-	 * @event beforeviewclose
-	 * Fires before the view is closed. This is a cancelable event, 
-	 * so returning false will prompt (if enabled, see {@link #promptConfirm}) 
-	 * a confirm message.
-	 * @param {WT.sdk.DockableView} this
-	 */
-	
-	/**
 	 * @event viewdiscard
 	 * Fires after the user when prompted, chooses to discard current view.
 	 * This event is fired before {@link #viewclose} event.
@@ -151,6 +143,9 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		}, me, {single: true});
 	},
 	
+	/**
+	 * @private
+	 */
 	initCt: function(ct) {
 		var me = this;
 		if(me.ctInited) return;
@@ -194,6 +189,9 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		me.ctInited = true;
 	},
 	
+	/**
+	 * @private
+	 */
 	cleanupCt: function(ct) {
 		var me = this;
 		if(!me.ctInited) return;
@@ -241,19 +239,33 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		/*
 		if(me.useWG && me.hasWindows()) return false;
 		*/
-		if(me.promptConfirm && me.fireEvent('beforeviewclose', me) === false) {
+		if(me.getPromptConfirm() === false) return true;
+		if(me.canCloseView() === false) {
 			me.showConfirm();
 			return false;
 		}
 		return true;
 	},
 	
+	/*
+	onCtBeforeClose__: function() {
+		var me = this;
+		// TODO: gestire i window group
+		//if(me.useWG && me.hasWindows()) return false;
+		if(me.promptConfirm && me.fireEvent('beforeviewclose', me) === false) {
+			me.showConfirm();
+			return false;
+		}
+		return true;
+	},
+	*/
+	
 	/**
 	 * @private
 	 */
 	onCtWndClose: function() {
 		var me = this;
-		this.fireEvent('viewclose', me);
+		me.fireEvent('viewclose', me);
 	},
 	
 	/**
@@ -267,6 +279,16 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 			me.wg.hideAll();
 		}
 		*/
+	},
+	
+	/**
+	 * Method executed during container close. Returning false will prompt 
+	 * (if enabled, see {@link #promptConfirm}) a confirm message.
+	 * Child classes can override this method to implement their own custom logic.
+	 * @return {Boolean}
+	 */
+	canCloseView: function() {
+		return true;
 	},
 	
 	/**

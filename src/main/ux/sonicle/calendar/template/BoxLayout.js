@@ -1,6 +1,9 @@
 Ext.define('Sonicle.calendar.template.BoxLayout', {
 	extend: 'Ext.XTemplate',
-	requires: ['Sonicle.Date'],
+	requires: [
+		'Sonicle.Date',
+		'Sonicle.calendar.util.EventUtils'
+	],
 	
 	constructor: function (config) {
 		var me = this;
@@ -106,7 +109,7 @@ Ext.define('Sonicle.calendar.template.BoxLayout', {
 	getTodayText: function() {
 		var dt = Ext.Date.format(new Date(), 'l, F j, Y'),
 				fmt,
-				timeFmt = (this.use24HourTime) ? 'G:i ' : 'g:ia ',
+				timeFmt = Sonicle.calendar.util.EventUtils.timeFmt(this.use24HourTime)+' ',
 				todayText = this.showTodayText !== false ? this.todayText : '',
 				timeText = this.showTime !== false ? ' <span id="' + this.id + '-clock" class="ext-cal-dtitle-time">' +
 				Ext.Date.format(new Date(), timeFmt) + '</span>' : '',

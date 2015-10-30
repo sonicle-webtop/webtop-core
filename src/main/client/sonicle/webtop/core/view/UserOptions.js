@@ -37,354 +37,574 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	requires: [
 		'WT.model.Simple',
 		'WT.store.TFADelivery',
-		'WT.store.Timezone'
+		'WT.store.Timezone',
+		'Sonicle.form.field.Icon',
+		'Sonicle.plugin.FieldTooltip',
+		'Sonicle.webtop.core.ux.PermStatusField'
 	],
-	controller: Ext.create('WT.view.UserOptionsC'),
-	//idField: 'id',
 	
-	listeners: {
-		load: 'onFormLoad',
-		save: 'onFormSave'
+	viewModel: {
+		formulas: {
+			isTFAActive: WTF.isEmptyFormula('record', 'tfaDelivery', true),
+			activeDelivery: {
+				bind: {bindTo: '{record.tfaDelivery}'},
+				get: function(val) {
+					return WTU.deflt(val, 'none');
+				}
+			},
+			activeThisDevice: {
+				bind: {bindTo: '{record.tfaDeviceIsTrusted}'},
+				get: function(val) {
+					return WTU.iif(val, 'trusted', 'nottrusted');
+				}
+			},
+			trustedTitle: {
+				bind: {bindTo: '{record.tfaDeviceTrustedOn}'},
+				get: function(val) {
+					var tit = WT.res('opts.tfa.thisdevice.trusted.tit');
+					return Ext.String.format(tit, val);
+				}
+			},
+			/*
+			upiFieldEditable: function() {
+				return WT.getOption('upiProviderWritable') && WT.isPermitted('UPI', 'WRITE');
+			},
+			*/
+			upiFieldEditable: function(get) {
+				return WT.getOption('upiProviderWritable') && get('record.canWriteUpi');
+			}
+		}
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this, vm;
 		me.callParent(arguments);
+		
+		vm = me.getViewModel();
+		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
+			areMine: function() {
+				return WT.getOption('profile') === me.profileId;
+			}
+		}));
 		
 		me.add({
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.main.tit'),
 			items: [{
 				xtype: 'textfield',
-				name: 'id',
+				bind: '{record.id}',
 				disabled: true,
-				fieldLabel: WT.res('opts.main.fld-id.lbl')
+				fieldLabel: WT.res('opts.main.fld-profile.lbl'),
+				width: 380
 			}, {
 				xtype: 'textfield',
-				name: 'displayName',
-				allowBlank: false,
+				bind: '{record.displayName}',
 				fieldLabel: WT.res('opts.main.fld-displayName.lbl'),
+				width: 380,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
-				xtype: 'combo',
-				name: 'theme',
-				allowBlank: false,
-				editable: false,
+				xtype: 'sospacer'
+			}, {
+				xtype: 'formseparator'
+			}, 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.theme}',
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
 					proxy: WTF.proxy(me.ID, 'LookupThemes', 'themes')
 				},
-				valueField: 'id',
-				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				},
-				reload: true
-			}, {
-				xtype: 'combo',
-				name: 'layout',
-				allowBlank: false,
-				editable: false,
+				needReload: true
+			}), 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.layout}',
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
 					proxy: WTF.proxy(me.ID, 'LookupLayouts', 'layouts')
 				},
-				valueField: 'id',
-				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-layout.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				},
-				reload: true
-			}, {
-				xtype: 'combo',
-				name: 'laf',
-				allowBlank: false,
-				editable: false,
+				needReload: true
+			}), 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.laf}',
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
 					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
 				},
-				valueField: 'id',
-				displayField: 'desc',
 				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				},
-				reload: true
-			}]
+				needReload: true
+			})]
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.i18n.tit'),
-			items: [{
-				xtype: 'combo',
-				name: 'locale',
-				allowBlank: false,
-				typeAhead: true,
-				queryMode: 'local',
-				forceSelection: true,
-				selectOnFocus: true,
+			items: [WTF.localCombo('id', 'desc', {
+				bind: '{record.language}',
 				store: {
 					autoLoad: true,
 					model: 'WT.model.Simple',
-					proxy: WTF.proxy(me.ID, 'LookupLocales', 'locales')
+					proxy: WTF.proxy(me.ID, 'LookupLanguages', 'languages')
 				},
-				valueField: 'id',
-				displayField: 'desc',
-				fieldLabel: WT.res('opts.i18n.fld-locale.lbl'),
+				fieldLabel: WT.res('opts.i18n.fld-language.lbl'),
+				width: 340,
 				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'combo',
-				name: 'timezone',
-				allowBlank: false,
-				typeAhead: true,
-				queryMode: 'local',
-				forceSelection: true,
-				selectOnFocus: true,
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				needLogin: true
+			}), 
+			WTF.localCombo('id', 'desc', {
+				bind: '{record.timezone}',
 				store: Ext.create('WT.store.Timezone', {
 					autoLoad: true
 				}),
-				valueField: 'id',
-				displayField: 'desc',
 				fieldLabel: WT.res('opts.i18n.fld-timezone.lbl'),
+				width: 450,
 				listeners: {
-					blur: 'onBlurAutoSave'
-				}
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				needLogin: true
+			}), {
+				xtype: 'sospacer'
 			}, {
-				xtype: 'combo',
-				name: 'startDay',
-				allowBlank: false,
-				editable: false,
+				xtype: 'formseparator'
+			}, 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.startDay}',
 				store: Ext.create('Sonicle.webtop.core.store.StartDay', {
 					autoLoad: true
 				}),
-				valueField: 'id',
-				displayField: 'desc',
-				fieldLabel: WT.res(me.ID, 'opts.i18n.fld-startDay.lbl'),
+				fieldLabel: WT.res('opts.i18n.fld-startDay.lbl'),
+				width: 280,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				},
-				reload: true
+				needReload: true
+			}), {
+				xtype: 'textfield',
+				bind: '{record.shortDateFormat}',
+				fieldLabel: WT.res('opts.i18n.fld-shortDateFormat.lbl'),
+				width: 280,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			}, {
 				xtype: 'textfield',
-				name: 'shortDateFormat',
-				fieldLabel: WT.res('opts.i18n.fld-shortDateFormat.lbl')
+				bind: '{record.longDateFormat}',
+				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl'),
+				width: 280,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			}, {
 				xtype: 'textfield',
-				name: 'longDateFormat',
-				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl')
+				bind: '{record.shortTimeFormat}',
+				fieldLabel: WT.res('opts.i18n.fld-shortTimeFormat.lbl'),
+				width: 280,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			}, {
 				xtype: 'textfield',
-				name: 'shortTimeFormat',
-				fieldLabel: WT.res('opts.i18n.fld-shortTimeFormat.lbl')
-			}, {
-				xtype: 'textfield',
-				name: 'longTimeFormat',
-				fieldLabel: WT.res('opts.i18n.fld-longTimeFormat.lbl')
+				bind: '{record.longTimeFormat}',
+				fieldLabel: WT.res('opts.i18n.fld-longTimeFormat.lbl'),
+				width: 280,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			}]
 		}, {
 			xtype: 'wtopttabsection',
-			title: WT.res('opts.userdata.tit'),
+			title: WT.res('opts.upi.tit'),
 			items: [{
+				xtype: 'wtpermstatusfield',
+				bind: '{record.canWriteUpi}',
+				fieldLabel: WT.res('opts.upi.canwrite'),
+				userText: me.profileId
+			}, {
+				xtype: 'sospacer'
+			}, {
 				xtype: 'textfield',
-				name: 'usdTitle',
-				fieldLabel: WT.res('opts.userdata.fld-title.lbl'),
+				bind: {
+					value: '{record.upiTitle}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-title.lbl'),
+				width: 250,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdFirstName',
-				fieldLabel: WT.res('opts.userdata.fld-firstName.lbl'),
+				bind: {
+					value: '{record.upiFirstName}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-firstName.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdLastName',
-				fieldLabel: WT.res('opts.userdata.fld-lastName.lbl'),
+				bind: {
+					value: '{record.upiLastName}',
+					disabled: '{!upiFieldEditable}'
+				},
+				width: 300,
+				fieldLabel: WT.res('opts.upi.fld-lastName.lbl'),
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdEmail',
-				fieldLabel: WT.res('opts.userdata.fld-email.lbl'),
+				bind: {
+					value: '{record.upiNickname}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-nickname.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
+			}, 
+			WTF.remoteCombo('id', 'desc', {
+				bind: {
+					value: '{record.upiGender}',
+					disabled: '{!upiFieldEditable}'
+				},
+				autoLoadOnValue: true,
+				store: Ext.create('Sonicle.webtop.core.store.Gender'),
+				triggers: {
+					clear: WTF.clearTrigger()
+				},
+				fieldLabel: WT.res('opts.upi.fld-gender.lbl'),
+				width: 250,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
+			}), {
+				xtype: 'textfield',
+				bind: {
+					value: '{record.upiEmail}',
+					disabled: '{!upiFieldEditable}'
+				},
+				width: 400,
+				fieldLabel: WT.res('opts.upi.fld-email.lbl'),
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdMobile',
-				fieldLabel: WT.res('opts.userdata.fld-mobile.lbl'),
+				bind: {
+					value: '{record.upiMobile}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-mobile.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdTelephone',
-				fieldLabel: WT.res('opts.userdata.fld-telephone.lbl'),
+				bind: {
+					value: '{record.upiTelephone}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-telephone.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdFax',
-				fieldLabel: WT.res('opts.userdata.fld-fax.lbl'),
+				bind: {
+					value: '{record.upiFax}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-fax.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdAddress',
-				fieldLabel: WT.res('opts.userdata.fld-address.lbl'),
+				bind: {
+					value: '{record.upiPager}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-pager.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdPostalCode',
-				fieldLabel: WT.res('opts.userdata.fld-postalCode.lbl'),
+				bind: {
+					value: '{record.upiAddress}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-address.lbl'),
+				width: 400,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdCity',
-				fieldLabel: WT.res('opts.userdata.fld-city.lbl'),
+				bind: {
+					value: '{record.upiCity}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-city.lbl'),
+				width: 400,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdState',
-				fieldLabel: WT.res('opts.userdata.fld-state.lbl'),
+				bind: {
+					value: '{record.upiPostalCode}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-postalCode.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdCountry',
-				fieldLabel: WT.res('opts.userdata.fld-country.lbl'),
+				bind: {
+					value: '{record.upiState}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-state.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdCompany',
-				fieldLabel: WT.res('opts.userdata.fld-company.lbl'),
+				bind: {
+					value: '{record.upiCountry}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-country.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdFunction',
-				fieldLabel: WT.res('opts.userdata.fld-function.lbl'),
+				bind: {
+					value: '{record.upiCompany}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-company.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdWorkEmail',
-				fieldLabel: WT.res('opts.userdata.fld-wemail.lbl'),
+				bind: {
+					value: '{record.upiFunction}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-function.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdWorkMobile',
-				fieldLabel: WT.res('opts.userdata.fld-wmobile.lbl'),
+				bind: {
+					value: '{record.upiCustom1}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-custom1.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdWorkTelephone',
-				fieldLabel: WT.res('opts.userdata.fld-wtelephone.lbl'),
+				bind: {
+					value: '{record.upiCustom2}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-custom2.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}, {
 				xtype: 'textfield',
-				name: 'usdWorkFax',
-				fieldLabel: WT.res('opts.userdata.fld-wfax.lbl'),
+				bind: {
+					value: '{record.upiCustom3}',
+					disabled: '{!upiFieldEditable}'
+				},
+				fieldLabel: WT.res('opts.upi.fld-custom3.lbl'),
+				width: 300,
 				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'textfield',
-				name: 'usdCustom1',
-				fieldLabel: WT.res('opts.userdata.fld-custom1.lbl'),
-				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'textfield',
-				name: 'usdCustom2',
-				fieldLabel: WT.res('opts.userdata.fld-custom2.lbl'),
-				listeners: {
-					blur: 'onBlurAutoSave'
-				}
-			}, {
-				xtype: 'textfield',
-				name: 'usdCustom3',
-				fieldLabel: WT.res('opts.userdata.fld-custom3.lbl'),
-				listeners: {
-					blur: 'onBlurAutoSave'
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
 				}
 			}]
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.tfa.tit'),
+			disabled: WT.getOption('tfaEnabled'),
 			items: [{
 				xtype: 'container',
 				layout: 'form',
 				items: [{
-					xtype: 'checkbox',
-					name: 'tfaMandatory',
-					fieldLabel: WT.res('opts.tfa.fld-mandatory.lbl'),
-					listeners: {
-						blur: 'onBlurAutoSave'
-					}
-				},{
 					xtype : 'fieldcontainer',
 					layout: 'hbox',
 					fieldLabel: WT.res('opts.tfa.fld-delivery.lbl'),
-					items: [{
-						xtype: 'combo',
-						reference: 'flddelivery',
-						name: 'tfaDelivery',
-						editable: false,
+					items: [
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.tfaDelivery}',
 						store: Ext.create('WT.store.TFADelivery', {
 							autoLoad: true
 						}),
-						valueField: 'id',
-						displayField: 'desc'
-					}, {
+						readOnly: true,
+						emptyText: WT.res('word.none.female'),
+						width: 250
+					}), {
 						xtype: 'sospacer',
 						vertical: false
 					}, {
 						xtype: 'button',
-						text: WT.res('act-enable.lbl'),
-						handler: 'onTFAEnableClick',
 						bind: {
-							hidden: '{isTFAEnabled}'
-						}
+							hidden: '{isTFAActive}'
+						},
+						text: WT.res('act-activate.lbl'),
+						menu: [{
+							itemId: 'email',
+							text: WT.res('store.tfadelivery.email'),
+							handler: me.onTFAActivateMenuClick,
+							scope: me
+						}, {
+							itemId: 'googleauth',
+							text: WT.res('store.tfadelivery.googleauth'),
+							handler: me.onTFAActivateMenuClick,
+							scope: me
+						}]
 					}, {
 						xtype: 'button',
-						text: WT.res('act-disable.lbl'),
-						handler: 'onTFADisableClick',
 						bind: {
-							hidden: '{!isTFAEnabled}'
-						}
+							hidden: '{!isTFAActive}'
+						},
+						text: WT.res('act-deactivate.lbl'),
+						handler: me.onTFADeactivateMenuClick,
+						scope: me
 					}]
 				}]
 			}, {
@@ -417,7 +637,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						layout: 'form',
 						items: [{
 							xtype: 'displayfield',
-							name: 'tfaEmailAddress',
+							bind: '{record.tfaEmailAddress}',
 							fieldLabel: WT.res('tfa.setup.email.fld-emailaddress.lbl')
 						}]
 					}]
@@ -437,7 +657,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						xtype: 'fieldset',
 						layout: 'form',
 						bind: {
-							title: '{thisTrustedOn}'
+							title: '{trustedTitle}'
 						},
 						items: [{
 							xtype: 'component',
@@ -446,9 +666,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							xtype: 'sospacer'
 						}, {
 							xtype: 'button',
-							//itemId: 'untrustthis',
 							text: WT.res('opts.tfa.btn-untrustthis.lbl'),
-							handler: 'onUntrustThisClick'
+							handler: me.onUntrustThisClick,
+							scope: me
 						}]
 					}]
 				}, {
@@ -466,7 +686,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}]
 			}, {
 				xtype: 'container',
-				//reference: 'otherdevices',
 				layout: 'form',
 				items: [{
 					xtype: 'fieldset',
@@ -478,45 +697,179 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						xtype: 'sospacer'
 					}, {
 						xtype: 'button',
-						//itemId: 'untrustother',
 						text: WT.res('opts.tfa.btn-untrustother.lbl'),
-						handler: 'onUntrustOtherClick'
+						handler: me.onUntrustOtherClick,
+						scope: me
 					}]
 				}]
 			}]
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.sync.tit'),
+			layout: 'fit',
+			items: [{
+				xtype: 'wtpanel',
+				layout: 'border',
+				items: [{
+					region: 'north',
+					xtype: 'wtfieldspanel',
+					bodyPadding: 0,
+					height: 30,
+					items: [{
+						xtype: 'wtpermstatusfield',
+						bind: '{record.canSyncDevices}',
+						fieldLabel: WT.res('opts.sync.cansyncdevices'),
+						userText: me.profileId
+					}]
+				}, {
+					region: 'center',
+					xtype: 'gridpanel',
+					reference: 'gpsync',
+					store: {
+						autoSync: true,
+						model: 'WT.model.Empty',
+						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices')
+					},
+					columns: [{
+						dataIndex: 'device',
+						header: WT.res('opts.sync.gp-sync.device.lbl'),
+						width: 200
+					}, {
+						dataIndex: 'user',
+						header: WT.res('opts.sync.gp-sync.user.lbl'),
+						width: 200
+					}, {
+						dataIndex: 'info',
+						header: WT.res('opts.sync.gp-sync.info.lbl'),
+						//flex: 1
+						width: 200
+					}],
+					tbar: [
+						me.addAction('showSyncDeviceInfo', {
+							text: WT.res('opts.sync.details.tit'),
+							tooltip: null,
+							iconCls: 'wt-icon-info-xs',
+							handler: function() {
+								var sm = me.lref('gpsync').getSelectionModel();
+								me.showSyncDeviceInfo(sm.getSelection()[0]);
+							},
+							disabled: true
+						}),
+						me.addAction('deleteSyncDevice', {
+							text: WT.res('act-delete.lbl'),
+							tooltip: null,
+							iconCls: 'wt-icon-delete-xs',
+							handler: function() {
+								var sm = me.lref('gpsync').getSelectionModel();
+								me.deleteSyncDevice(sm.getSelection());
+							},
+							disabled: true
+						}),
+						'-',
+						me.addAction('refreshSyncDevices', {
+							text: WT.res('act-refresh.lbl'),
+							tooltip: null,
+							iconCls: 'wt-icon-refresh-xs',
+							handler: function() {
+								me.refreshSyncDevices();
+							}
+						})
+					],
+					listeners: {
+						selectionchange: function(s,recs) {
+							me.getAction('showSyncDeviceInfo').setDisabled(!recs.length);
+							me.getAction('deleteSyncDevice').setDisabled(!recs.length);
+						}
+					}
+				}]
+			}],
+			listeners: {
+				activate: {
+					fn: function() {
+						me.refreshSyncDevices();
+					},
+					single: true
+				}
+			}
 		});
 	},
 	
-	viewModel: {
-		data: {
-			values: null
-		},
-		
-		formulas: {
-			isTFAEnabled: function(get) {
-				var values = get('values');
-				if(!values) return false;
-				return !Ext.isEmpty(values.tfaDelivery);
+	refreshSyncDevices: function() {
+		var me = this,
+				sto = me.lref('gpsync').getStore();
+		sto.load();
+	},
+	
+	showSyncDeviceInfo: function(rec) {
+		var me = this;
+		me.wait();
+		WT.ajaxReq(WT.ID, 'ManageSyncDevices', {
+			params: {
+				crud: 'info',
+				id: rec.getId()
 			},
-			
-			activeDelivery: function(get) {
-				var values = get('values');
-				if(!values) return 'none';
-				return WTU.iif(values.tfaDelivery, 'none');
-			},
-			
-			activeThisDevice: function(get) {
-				var values = get('values');
-				if(!values) return 'nottrusted';
-				return WTU.iif(values.tfaIsTrusted, 'nottrusted');
-			},
-			
-			thisTrustedOn: function(get) {
-				var tit = WT.res('opts.tfa.thisdevice.trusted.tit');
-				var values = get('values');
-				if(!values) return tit;
-				return Ext.String.format(tit, values.tfaTrustedOn);
+			callback: function(success, obj) {
+				me.unwait();
+				if(success) {
+					WT.msg(obj.data, {
+						title: WT.res('opts.sync.details.tit')
+					});
+				}
 			}
-		}
+		});
+	},
+	
+	deleteSyncDevice: function(recs) {
+		var me = this,
+				grid = me.lref('gpsync'),
+				sto = grid.getStore();
+		
+		WT.confirm(WT.res('confirm.delete'), function(bid) {
+			if(bid === 'yes') {
+				sto.remove(recs[0]);
+			}
+		}, me);
+	},
+	
+	onTFAActivateMenuClick: function(s) {
+		alert('TODO');
+	},
+	
+	onTFADeactivateMenuClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'DeactivateTFA', {
+					params: {options: true},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustThisClick: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {crud: 'untrustthis'},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	onUntrustOtherClick: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {crud: 'untrustothers'}
+				});
+			}
+		});
 	}
 });
