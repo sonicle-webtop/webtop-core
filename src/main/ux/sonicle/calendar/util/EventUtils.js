@@ -32,6 +32,11 @@ Ext.define('Sonicle.calendar.util.EventUtils', {
 			return (diff > 0);
 		},
 		
+		isLikeSingleDay: function(start, end) {
+			var soDate = Sonicle.Date;
+			return (soDate.isMidnight(start) && soDate.isMidnight(end) && (soDate.diffDays(start, end) === 1));
+		},
+		
 		durationInHours: function(start, end) {
 			var soDate = Sonicle.Date;
 			return soDate.diff(start, end, 'hours');
@@ -53,18 +58,19 @@ Ext.define('Sonicle.calendar.util.EventUtils', {
 					endd = eDate.format(edata[EM.EndDate.name], dateFmt),
 					endt = eDate.format(edata[EM.EndDate.name], timeFmt),
 					titloc = Ext.isEmpty(location) ? title : Ext.String.format('{0} @{1}', title, location);
-
+			
+			/*
 			if((edata[EM.IsAllDay.name] === true)) {
 				return {
 					title: titloc,
 					tooltip: Ext.String.format('{0} {1}-{2}', startd, startt, endt)
 				};
-			} else {
+			} else {*/
 				return {
 					title: titloc,
 					tooltip: Ext.String.format('{0} {1}<br>{2} {3}', startd, startt, endd, endt)
 				};
-			}
+			//}
 	   },
 		
 		realEndDate: function(end) {

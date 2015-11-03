@@ -39,6 +39,7 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 					eDate = Ext.Date,
 					soDate = Sonicle.Date,
 					EM = Sonicle.calendar.data.EventMappings,
+					EU = Sonicle.calendar.util.EventUtils,
 					grid = o.eventGrid,
 					dt = eDate.clone(o.viewStart),
 					eventTpl = o.tpl,
@@ -112,11 +113,13 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 
 								if (!evt.isSpan || evt.isSpanStart) {
 									//skip non-starting span cells
-									var item = evt.data || evt.event.data;
+									var item = evt.data || evt.event.data,
+											likeSingle = !item[EM.IsAllDay.name] && EU.isLikeSingleDay(item[EM.StartDate.name], item[EM.EndDate.name]);
+									
 									item._weekIndex = wi;
 									item._renderAsAllDay = item[EM.IsAllDay.name] || evt.isSpanStart;
-									item.spanLeft = item[EM.StartDate.name].getTime() < startOfWeek.getTime();
-									item.spanRight = item[EM.EndDate.name].getTime() > endOfWeek.getTime();
+									item.spanLeft = (likeSingle) ? false : item[EM.StartDate.name].getTime() < startOfWeek.getTime();
+									item.spanRight = (likeSingle) ? false : item[EM.EndDate.name].getTime() > endOfWeek.getTime();
                                     item._spanCls = (item.spanLeft ? (item.spanRight ? 'ext-cal-ev-spanboth':
 											'ext-cal-ev-spanleft') : (item.spanRight ? 'ext-cal-ev-spanright': ''));
 
@@ -128,8 +131,8 @@ Ext.define('Sonicle.calendar.util.WeekEventRenderer', {
 									};
 									var diff = soDate.diffDays(dt, item[EM.EndDate.name]) + 1,
 											cspan = Math.min(diff, dayCount - d);
-
-									if (cspan > 1) {
+									
+									if (!likeSingle && cspan > 1) {
 										cellCfg.colspan = cspan;
 									}
 									Ext.core.DomHelper.append(row, cellCfg);
