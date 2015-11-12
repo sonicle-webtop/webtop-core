@@ -202,7 +202,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				create: WTF.requestBaseUrl({crud: 'create'}),
 				read: WTF.requestBaseUrl({crud: 'read'}),
 				update: WTF.requestBaseUrl({crud: 'update'}),
-				destroy: WTF.requestBaseUrl({crud: 'destroy'})
+				destroy: WTF.requestBaseUrl({crud: 'delete'})
 				/*
 				create: 'service-request?crud=create',
 				read: 'service-request?crud=read',

@@ -89,7 +89,7 @@ Sonicle.calendar.data.EventMappings = {
     Reminder: {
         name: 'reminder',
         //mapping: 'rem',
-        type: 'string'
+        type: 'int'
     },
     IsNew: {
         name: 'isNew',

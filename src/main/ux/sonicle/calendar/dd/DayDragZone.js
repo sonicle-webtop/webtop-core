@@ -26,7 +26,7 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 				direction: 'top',
 				ddel: p.dom,
 				//draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
-				draggable: (t.getAttribute('data-draggable') === 'true'),
+				draggable: (p.getAttribute('data-draggable') === 'true'),
 				eventStart: rec.get(EM.StartDate.name),
 				eventEnd: rec.get(EM.EndDate.name),
 				proxy: this.proxy
@@ -43,7 +43,7 @@ Ext.define('Sonicle.calendar.dd.DayDragZone', {
 				direction: 'bottom',
 				ddel: p.dom,
 				//draggable: Sonicle.calendar.dd.DragZone.isEventDraggable(rec),
-				draggable: (t.getAttribute('data-draggable') === 'true'),
+				draggable: (p.getAttribute('data-draggable') === 'true'),
 				eventStart: rec.get(EM.StartDate.name),
 				eventEnd: rec.get(EM.EndDate.name),
 				proxy: this.proxy

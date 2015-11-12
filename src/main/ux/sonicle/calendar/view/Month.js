@@ -231,10 +231,10 @@ Ext.define('Sonicle.calendar.view.Month', {
 				'<tpl if="_isPrivate">',
 				'<i class="ext-cal-ic {_pvtIconCls}">&#160;</i>',
 				'</tpl>',
-				'{Title}',
 				'<tpl if="_isReminder">',
 				'<i class="ext-cal-ic {_remIconCls}">&#160;</i>',
-				'</tpl>'
+				'</tpl>',
+				'{Title}'
 			].join('');
 		}
 		return this.eventBodyMarkup;
