@@ -65,13 +65,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					return Ext.String.format(tit, val);
 				}
 			},
-			/*
-			upiFieldEditable: function() {
-				return WT.getOption('upiProviderWritable') && WT.isPermitted('UPI', 'WRITE');
-			},
-			*/
 			upiFieldEditable: function(get) {
-				return WT.getOption('upiProviderWritable') && get('record.canWriteUpi');
+				return WT.getOption('upiProviderWritable') && get('record.canManageUpi');
 			}
 		}
 	},
@@ -266,7 +261,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			title: WT.res('opts.upi.tit'),
 			items: [{
 				xtype: 'wtpermstatusfield',
-				bind: '{record.canWriteUpi}',
+				bind: '{record.canManageUpi}',
 				fieldLabel: WT.res('opts.upi.canwrite'),
 				userText: me.profileId
 			}, {

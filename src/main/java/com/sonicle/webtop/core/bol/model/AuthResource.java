@@ -42,9 +42,11 @@ import org.jooq.tools.StringUtils;
  * @author malbinola
  */
 public class AuthResource {
+	public static final String ACTION_ACCESS = "ACCESS";
+	public static final String ACTION_MANAGE = "MANAGE";
+	public static final String ACTION_CREATE = "CREATE";
 	public static final String ACTION_READ = "READ";
-	public static final String ACTION_WRITE = "WRITE";
-	public static final String ACTION_EDIT = "EDIT";
+	public static final String ACTION_UPDATE = "UPDATE";
 	public static final String ACTION_DELETE = "DELETE";
 	
 	private final String name;
@@ -78,10 +80,4 @@ public class AuthResource {
 	public static String permissionString(String resource, String action, String instance) {
 		return MessageFormat.format("{0}:{1}:{2}", resource, StringUtils.defaultString(action, "*"), StringUtils.defaultString(instance, "*"));
 	}
-	
-	/*
-	public static String ns(String namespace, String name) {
-		return MessageFormat.format("{0}.{1}", namespace, name);
-	}
-	*/
 }

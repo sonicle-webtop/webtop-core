@@ -33,26 +33,44 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import java.text.MessageFormat;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResourceShareElement extends AuthResource {
-	public static final String SUFFIX = "SHARE_ELEMENT";
-	private final String originalName;
+public class SharePermsRoot extends SharePerms {
 	
-	public AuthResourceShareElement(String name) {
-		super(buildName(name), new String[]{ACTION_READ, ACTION_WRITE, ACTION_EDIT, ACTION_DELETE});
-		this.originalName = name;
+	public SharePermsRoot(String... actions) {
+		super(actions);
 	}
 	
-	public String getOriginalName() {
-		return originalName;
+	public SharePermsRoot(String[] actions, boolean[] bools) {
+		super(actions, bools);
 	}
 	
-	public static String buildName(String name) {
-		return MessageFormat.format("{0}_{1}", name, SUFFIX);
+	@Override
+	protected void parse(String[] actions, boolean[] bools) {
+		if(actions.length != bools.length) throw new IllegalArgumentException("Passed arrays must have same lenght");
+		for(int i=0; i<actions.length; i++) {
+			if(bools[i]) parse(actions[i]);
+		}
+	}
+	
+	@Override
+	protected void parse(String... actions) {
+		for(String action : actions) {
+			if(StringUtils.equalsIgnoreCase(action, "MANAGE"))
+				mask |= MANAGE;
+			else throw new IllegalArgumentException("Invalid action " + action);
+		}
+	}
+	
+	public boolean implies(String... actions) {
+		return implies(new SharePermsRoot(actions));
+	}
+	
+	public static SharePermsRoot full() {
+		return new SharePermsRoot("MANAGE");
 	}
 }

@@ -78,7 +78,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean tfaDeviceIsTrusted;
 	public String tfaDeviceTrustedOn;
 	
-	public Boolean canWriteUpi; // Read-only
+	public Boolean canManageUpi; // Read-only
 	public Boolean canSyncDevices; // Read-only
 	
 	public JsUserOptions() {

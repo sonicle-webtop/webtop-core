@@ -227,7 +227,7 @@ public class Service extends BaseService {
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			
-			if(WT.hasRole(up.getId(), AuthManager.ROLE_SYSADMIN)) {
+			if(WT.isSysAdmin(up.getId())) {
 				// WebTopAdmin can access to all domains
 				if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 				List<ODomain> domains = core.listDomains(true);
@@ -257,7 +257,7 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
 			List<OUser> users = null;
-			if(WT.hasRole(up.getId(), AuthManager.ROLE_SYSADMIN)) {
+			if(WT.isSysAdmin(up.getId())) {
 				if(!StringUtils.isEmpty(domainId)) {
 					users = core.listUsers(domainId, true);
 				} else {
@@ -702,7 +702,7 @@ public class Service extends BaseService {
 	
 	private List<String> queryDomains(UserProfile profile) {
 		List<String> domains = new ArrayList<>();
-		if(WT.isPermitted(profile.getId(), CoreManifest.ID, "WTADMIN")) domains.add("*");
+		if(WT.isWebTopAdmin(profile.getId())) domains.add("*");
 		domains.add(profile.getDomainId());
 		return domains;
 	}

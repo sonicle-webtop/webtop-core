@@ -96,6 +96,10 @@ Sonicle.calendar.data.EventMappings = {
         //mapping: 'n',
         type: 'boolean'
     },
+	Rights: {
+		name: 'rights',
+		type: 'string'
+	},
 	IsReadOnly: {
         name: 'isReadOnly',
         type: 'boolean'

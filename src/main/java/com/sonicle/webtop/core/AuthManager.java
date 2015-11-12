@@ -35,22 +35,24 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.bol.GroupRole;
+import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.bol.OUserGroup;
-import com.sonicle.webtop.core.bol.UserRole;
+import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.dal.DAOException;
-import com.sonicle.webtop.core.dal.GroupRoleDAO;
+import com.sonicle.webtop.core.dal.RoleDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
-import com.sonicle.webtop.core.dal.UserGroupDAO;
-import com.sonicle.webtop.core.dal.UserRoleDAO;
+import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -65,7 +67,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class AuthManager {
-	public static final String ROLE_SYSADMIN = "sysadmin";
 	private static final Logger logger = WT.getLogger(TFAManager.class);
 	private static boolean initialized = false;
 	
@@ -83,7 +84,25 @@ public class AuthManager {
 		return autm;
 	}
 	
+	private static final String SYSADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
+	private static final String WTADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	private WebTopApp wta = null;
+	private final Object lock = new Object();
+	private HashMap<UserProfile.Id, Uids> userToSidCache = null;
+	private HashMap<String, UserProfile.Id> uidToUserCache = null;
+	private HashMap<String, UserProfile.Id> roleUidToUserCache = null;
+	
+	public static class Uids {
+		public String uid;
+		public String roleUid;
+		
+		public Uids() {}
+		
+		public Uids(String uid, String roleUid) {
+			this.uid = uid;
+			this.roleUid = roleUid;
+		}
+	}
 	
 	/**
 	 * Private constructor.
@@ -92,6 +111,10 @@ public class AuthManager {
 	 */
 	private AuthManager(WebTopApp wta) {
 		this.wta = wta;
+		userToSidCache = new HashMap<>();
+		uidToUserCache = new HashMap<>();
+		roleUidToUserCache = new HashMap<>();
+		updateCache();
 	}
 	
 	/**
@@ -99,131 +122,207 @@ public class AuthManager {
 	 */
 	void cleanup() {
 		wta = null;
+		synchronized(lock) {
+			userToSidCache.clear();
+			uidToUserCache.clear();
+			roleUidToUserCache.clear();
+		}
 		logger.info("AuthManager destroyed");
 	}
 	
-	public ORolePermission addPermission(Connection con, UserProfile.Id roleId, String serviceId, String resource, String action, String instance) throws WTException {
+	void updateCache() {
+		synchronized(lock) {
+			try {
+				buildUidCache();
+			} catch(SQLException ex) {
+				logger.error("Unable to build SID cache", ex);
+			}
+		}
+	}
+	
+	public String userToSid(UserProfile.Id pid) {
+		synchronized(lock) {
+			if(!userToSidCache.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
+			return userToSidCache.get(pid).uid;
+		}
+	}
+	
+	public String userToRoleSid(UserProfile.Id pid) {
+		synchronized(lock) {
+			if(!userToSidCache.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
+			return userToSidCache.get(pid).roleUid;
+		}
+	}
+	
+	public UserProfile.Id uidToUser(String uid) {
+		synchronized(lock) {
+			if(!uidToUserCache.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
+			return uidToUserCache.get(uid);
+		}
+	}
+	
+	public UserProfile.Id roleUidToUser(String uid) {
+		synchronized(lock) {
+			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
+			return roleUidToUserCache.get(uid);
+		}
+	}
+	
+	private void buildUidCache() throws SQLException {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			UserDAO dao = UserDAO.getInstance();
+			List<UserUid> uids = dao.selectAllUids(con);
+			
+			userToSidCache.clear();
+			uidToUserCache.clear();
+			roleUidToUserCache.clear();
+			for(UserUid uuid : uids) {
+				UserProfile.Id pid = new UserProfile.Id(uuid.getDomainId(), uuid.getUserId());
+				userToSidCache.put(pid, new Uids(uuid.getUserUid(), uuid.getRoleUid()));
+				uidToUserCache.put(uuid.getUserUid(), pid);
+				roleUidToUserCache.put(uuid.getRoleUid(), pid);
+			}
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+		return addPermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
+	}
+	
+	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
 		ORolePermission perm = new ORolePermission();
-		perm.setDomainId(roleId.getDomainId());
-		perm.setRoleId(roleId.getUserId());
+		perm.setRoleUid(roleUid);
 		perm.setServiceId(serviceId);
 		perm.setResource(resource);
 		perm.setAction(action);
 		perm.setInstance(instance);
 		
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		perm.setUid(rpdao.getSequence(con).intValue());
+		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
 		rpdao.insert(con, perm);
 		return perm;
 	}
 	
-	public void permissionDelete(Connection con, UserProfile.Id roleId, String serviceId, String resource, String action, String instance) throws WTException {
+	public void permissionDelete(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+		permissionDelete(con, userToRoleSid(pid), serviceId, resource, action, instance);
+	}
+	
+	public void permissionDelete(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		rpdao.deleteByDomainRoleServiceResourceActionInstance(con, roleId.getDomainId(), roleId.getUserId(), serviceId, resource, action, instance);
+		rpdao.deleteByRoleServiceResourceActionInstance(con, roleUid, serviceId, resource, action, instance);
 	}
 	
-	public Set<Role> getRolesForGroup(String domainId, String groupId) throws Exception {
-		Connection con = null;
-		LinkedHashSet<Role> roles = new LinkedHashSet<>();
-		
-		try {
-			con = WT.getConnection(CoreManifest.ID);
-			
-			GroupRoleDAO grdao = GroupRoleDAO.getInstance();
-			List<GroupRole> groupRoles = grdao.viewByGroup(con, domainId, groupId);
-			for(GroupRole role : groupRoles) {
-				roles.add(new Role(role.getRoleId(), role.getRoleDescription()));
-			}
-		
-		} finally {
-			DbUtils.closeQuietly(con);
+	public List<String> getRolesAsString(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+		ArrayList<String> uids = new ArrayList<>();
+		Set<Role> roles = getRolesForUser(pid, self, transitive);
+		for(Role role : roles) {
+			uids.add(role.getUid());
 		}
-		return roles;
+		return uids;
 	}
 	
-	public Set<Role> getRolesForUser(UserProfile.Id pid, boolean self, boolean transitive) throws Exception {
+	public Set<Role> getRolesForUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
 		LinkedHashSet<Role> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			
-			if(Principal.xisAdmin(pid.toString())) {
-				// Built-in role that marks users that have admin rights
-				roles.add(new Role(ROLE_SYSADMIN, ROLE_SYSADMIN));
-			}
+			String userSid = userToSid(pid);
+			String roleSid = userToRoleSid(pid);
 			
 			if(self) {
-				roles.add(new Role(pid.getUserId(), pid.getUserId()));
+				UserDAO usedao = UserDAO.getInstance();
+				OUser user = usedao.selectByUid(con, userSid);
+				roles.add(new Role(roleSid, pid.getUserId(), user.getDisplayName()));
+			}
+			
+			RoleDAO roldao = RoleDAO.getInstance();
+			
+			// Gets by group
+			List<ORole> groles = roldao.selectFromGroupsByUser(con, userSid);
+			for(ORole role : groles) {
+				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
 			}
 			
 			// Gets direct assigned roles
-			UserRoleDAO urdao = UserRoleDAO.getInstance();
-			List<UserRole> userRoles = urdao.viewByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			for(UserRole role : userRoles) {
-				if(roleMap.contains(role.getRoleId())) continue; // Skip duplicate roles
-				roleMap.add(role.getRoleId());
-				roles.add(new Role(role.getRoleId(), role.getRoleDescription()));
+			List<ORole> droles = roldao.selectDirectByUser(con, userSid);
+			for(ORole role : droles) {
+				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
 			}
 			
+			// Get transivite roles (belonging to groups)
 			if(transitive) {
-				// Get transivite roles (belonging to groups)
-				Set<Role> groupRoles = null;
-				UserGroupDAO ugdao = UserGroupDAO.getInstance();
-				List<OUserGroup> groups = ugdao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-				for(OUserGroup ug : groups) {
-					groupRoles = getRolesForGroup(pid.getDomainId(), ug.getGroupId());
-					for(Role role : groupRoles) {
-						if(roleMap.contains(role.getId())) continue; // Skip duplicate roles
-						roleMap.add(role.getId());
-						roles.add(new Role(role.getId(), role.getDescription()));
-					}
+				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userSid);
+				for(ORole role : troles) {
+					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+					roleMap.add(role.getRoleUid());
+					roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
 				}
 			}
-		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "Unable to get roles for [{0}]", pid.toString());
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 		return roles;
 	}
 	
-	public List<ORolePermission> getRolePermissions(String domainId, String roleId) throws Exception {
+	public List<ORolePermission> getRolePermissions(String roleSid) throws Exception {
 		Connection con = null;
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			RolePermissionDAO pdao = RolePermissionDAO.getInstance();
-			return pdao.selectByDomainRole(con, domainId, roleId);
+			RolePermissionDAO dao = RolePermissionDAO.getInstance();
+			return dao.selectByRole(con, roleSid);
 		
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public boolean isPermitted(UserProfile.Id pid, String resource) {
-		return isPermitted(pid, resource, "ACCESS", "*");
+	public boolean isPermitted(UserProfile.Id pid, String authResource) {
+		return isPermitted(pid, authResource, "ACCESS", "*");
 	}
 	
-	public boolean isPermitted(UserProfile.Id pid, String resource, String action) {
-		return isPermitted(pid, resource, action, "*");
+	public boolean isPermitted(UserProfile.Id pid, String authResource, String action) {
+		return isPermitted(pid, authResource, action, "*");
 	}
 	
-	public boolean isPermitted(UserProfile.Id pid, String resource, String action, String instance) {
+	public boolean isPermitted(UserProfile.Id pid, String authResource, String action, String instance) {
+		Subject subject = getSubject(pid);
+		if(subject.isPermitted(WTADMIN_PSTRING)) return true;
+		return subject.isPermitted(AuthResource.permissionString(authResource, action, instance));
+	}
+	
+	public boolean isSysAdmin(UserProfile.Id pid) {
+		Subject subject = getSubject(pid);
+		return subject.isPermitted(SYSADMIN_PSTRING);
+	}
+	
+	public boolean isWebTopAdmin(UserProfile.Id pid) {
+		Subject subject = getSubject(pid);
+		return subject.isPermitted(WTADMIN_PSTRING);
+	}
+	
+	private Subject getSubject(UserProfile.Id pid) {
 		Subject subject = SecurityUtils.getSubject(); // Current user
 		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
 			// Requested subject is not the current one
 			//TODO: instantiate a principal on-the-fly
-		}
-		
-		/*
-		if(subject.hasRole(ROLE_WTADMIN)) {
-			return true; // Skip permission check for WebTop admin
+			return subject;
 		} else {
-			return subject.isPermitted(AuthResource.permissionString(resource, action, instance));
+			return subject;
 		}
-		*/
-		return subject.isPermitted(AuthResource.permissionString(resource, action, instance));
 	}
 	
 	public void ensureIsPermitted(UserProfile.Id pid, String resource) {
@@ -238,6 +337,7 @@ public class AuthManager {
 		if(!isPermitted(pid, resource, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, resource, instance);
 	}
 	
+	/*
 	public boolean hasRole(UserProfile.Id pid, String roleName) {
 		Subject subject = SecurityUtils.getSubject(); // Current user
 		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
@@ -250,4 +350,5 @@ public class AuthManager {
 	public void ensureHasRole(UserProfile.Id pid, String roleName) {
 		if(!hasRole(pid, roleName)) throw new AuthException("{0} role is required", roleName);
 	}
+	*/
 }

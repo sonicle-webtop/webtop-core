@@ -37,12 +37,6 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.bol.OGroupRole;
-import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.bol.OUserRole;
-import com.sonicle.webtop.core.dal.GroupRoleDAO;
-import com.sonicle.webtop.core.dal.RolePermissionDAO;
-import com.sonicle.webtop.core.dal.UserRoleDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -52,7 +46,6 @@ import java.util.Set;
 import javax.sql.DataSource;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.Permission;
-import org.slf4j.Logger;
 
 /**
  *
@@ -107,12 +100,14 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 				if (gp.equals("admins")) {
 					roles.add("admin");
 				}
-				List<OGroupRole> groles=GroupRoleDAO.getInstance().selectByGroupId(con, gp.getDomainId(),gp.getSubjectId());
+				/*
+				List<OGroupRole> groles=null;GroupRoleDAO.getInstance().selectByGroupId(con, gp.getDomainId(),gp.getSubjectId());
 				for(OGroupRole grole: groles) {
 					String roleId=grole.getRoleId();
 					roles.add(roleId);
 					WebTopApp.logger.debug("added role {} from group {}",roleId,gp.getSubjectId());
 				}
+				*/
 			}
 		} catch(SQLException exc) {
 			WebTopApp.logger.error("error getting roles for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);

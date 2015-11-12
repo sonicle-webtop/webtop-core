@@ -1,5 +1,5 @@
 /*
- * webtop-calendar is a WebTop Service developed by Sonicle S.r.l.
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,34 +27,38 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
- * feasible for technical reasons, the Appropriate Legal Notices must display
- * the words "Powered by Sonicle WebTop".
+ * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
+ * reasonably feasible for technical reasons, the Appropriate Legal Notices must
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.bol.model;
-
-import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class MyFolder extends FolderBase {
+public class ShareFolder {
+	protected final String shareId;
+	protected final SharePermsFolder perms;
+	protected final SharePermsFolderEls elsPerms;
+	protected final Object object;
 	
-	private final UserProfile.Id profileId;
-	
-	public MyFolder(UserProfile.Id profileId) {
-		super(profileId.toString());
-		this.profileId = profileId;
-	}
-	
-	@Override
-	public String getDomainId() {
-		return profileId.getDomainId();
+	public ShareFolder(String shareId, SharePermsFolder perms, SharePermsFolderEls elsPerms, Object object) {
+		this.shareId = shareId;
+		this.perms = perms;
+		this.elsPerms = elsPerms;
+		this.object = object;
 	}
 
-	@Override
-	public String getUserId() {
-		return profileId.getUserId();
+	public String getShareId() {
+		return shareId;
+	}
+	
+	public SharePermsFolder getPerms() {
+		return perms;
+	}
+	
+	public SharePermsFolderEls getElsPerms() {
+		return elsPerms;
 	}
 }

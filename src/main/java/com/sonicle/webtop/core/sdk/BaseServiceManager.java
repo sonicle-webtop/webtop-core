@@ -45,10 +45,16 @@ import net.sf.qualitycheck.Check;
 public abstract class BaseServiceManager {
 	private final String serviceId;
 	private final RunContext context;
+	private final UserProfile.Id targetProfile;
 	
 	public BaseServiceManager(String serviceId, RunContext context) {
+		this(serviceId, context, null);
+	}
+	
+	public BaseServiceManager(String serviceId, RunContext context, UserProfile.Id targetProfileId) {
 		this.serviceId = Check.notNull(serviceId);
 		this.context = Check.notNull(context);
+		this.targetProfile = targetProfileId;
 	}
 	
 	public String getServiceId() {
@@ -57,6 +63,14 @@ public abstract class BaseServiceManager {
 	
 	public RunContext getRunContext() {
 		return context;
+	}
+	
+	public UserProfile.Id getRunProfileId() {
+		return context.getProfileId();
+	}
+	
+	public UserProfile.Id getTargetProfileId() {
+		return (targetProfile != null) ? targetProfile : getRunProfileId();
 	}
 	
 	public ServiceManifest getManifest() {

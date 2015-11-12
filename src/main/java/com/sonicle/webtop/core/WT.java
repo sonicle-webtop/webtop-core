@@ -188,8 +188,12 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
-	public static boolean hasRole(UserProfile.Id profileId, String roleName) {
-		return getWTA().getAuthManager().hasRole(profileId, roleName);
+	public static boolean isSysAdmin(UserProfile.Id profileId) {
+		return getWTA().getAuthManager().isSysAdmin(profileId);
+	}
+	
+	public static boolean isWebTopAdmin(UserProfile.Id profileId) {
+		return getWTA().getAuthManager().isWebTopAdmin(profileId);
 	}
 	
 	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource) {
@@ -202,10 +206,6 @@ public class WT {
 	
 	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource, String action, String instanceId) {
 		return getWTA().getAuthManager().isPermitted(profileId, AuthResource.namespacedName(serviceId, resource), action, instanceId);
-	}
-	
-	public static void ensureHasRole(UserProfile.Id profileId, String roleName)  {
-		getWTA().getAuthManager().ensureHasRole(profileId, roleName);
 	}
 	
 	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource) {

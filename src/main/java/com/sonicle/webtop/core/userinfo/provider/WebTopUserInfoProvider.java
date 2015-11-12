@@ -34,16 +34,13 @@
 package com.sonicle.webtop.core.userinfo.provider;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
-import com.sonicle.webtop.core.dal.UserDataDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import java.sql.Connection;
-import org.apache.commons.beanutils.BeanUtils;
 
 /**
  *

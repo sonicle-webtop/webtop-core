@@ -45,6 +45,10 @@ public class WTRuntimeException extends RuntimeException {
 		super();
 	}
 	
+	public WTRuntimeException(String message) {
+		super(message);
+	}
+	
 	public WTRuntimeException(String message, Object... arguments) {
 		super(MessageFormat.format(message, arguments));
 	}

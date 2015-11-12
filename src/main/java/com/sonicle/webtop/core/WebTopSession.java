@@ -37,6 +37,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -329,6 +330,7 @@ public class WebTopSession {
 		JsWTS.Permissions perms = new JsWTS.Permissions();
 		// Generates service auth permissions
 		for(AuthResource res : manifest.getResources()) {
+			if(res instanceof AuthResourceShare) continue;
 			JsWTS.Actions acts = new JsWTS.Actions();
 			for(String act : res.getActions()) {
 				if(WT.isPermitted(pid, serviceId, res.getName(), act)) {

@@ -37,13 +37,43 @@ package com.sonicle.webtop.core.bol.model;
  *
  * @author malbinola
  */
-public class Share {
-	public String id;
-	public String domainId;
-	public String userId;
-	public String targetUserId;
-	public String serviceId;
-	public String instanceId;
-	public String instanceName;
-	public String parameters;
+public abstract class SharePerms {
+	public static final int CREATE = 1;
+	public static final int READ = 2;
+	public static final int UPDATE = 4;
+	public static final int DELETE = 8;
+	public static final int MANAGE = 16;
+	protected int mask;
+	
+	public SharePerms(String... actions) {
+		parse(actions);
+	}
+	
+	public SharePerms(String[] actions, boolean[] bools) {
+		parse(actions, bools);
+	}
+	
+	abstract protected void parse(String... actions);
+	abstract protected void parse(String[] actions, boolean[] bools);
+	
+	public void merge(SharePerms permission) {
+		mask |= permission.mask;
+	}
+	
+	public boolean implies(SharePerms permission) {
+		if ((mask & permission.mask) != permission.mask)
+			return false;
+		return true;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		if((mask & CREATE) == CREATE) sb.append("c");
+		if((mask & READ) == READ) sb.append("r");
+		if((mask & UPDATE) == UPDATE) sb.append("u");
+		if((mask & DELETE) == DELETE) sb.append("d");
+		if((mask & MANAGE) == MANAGE) sb.append("m");
+		return sb.toString();
+	}
 }

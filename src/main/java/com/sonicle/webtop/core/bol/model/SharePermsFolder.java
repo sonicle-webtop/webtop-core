@@ -33,26 +33,57 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import java.text.MessageFormat;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResourceShareFolder extends AuthResource {
-	public static final String SUFFIX = "SHARE_FOLDER";
-	private final String originalName;
+public class SharePermsFolder extends SharePerms {
 	
-	public AuthResourceShareFolder(String name) {
-		super(buildName(name), new String[]{ACTION_READ, ACTION_WRITE});
-		this.originalName = name;
+	public SharePermsFolder(String... actions) {
+		super(actions);
 	}
 	
-	public String getOriginalName() {
-		return originalName;
+	public SharePermsFolder(String[] actions, boolean[] bools) {
+		super(actions, bools);
 	}
 	
-	public static String buildName(String name) {
-		return MessageFormat.format("{0}_{1}", name, SUFFIX);
+	@Override
+	protected void parse(String[] actions, boolean[] bools) {
+		if(actions.length != bools.length) throw new IllegalArgumentException("Passed arrays must have same lenght");
+		for(int i=0; i<actions.length; i++) {
+			if(bools[i]) parse(actions[i]);
+		}
 	}
+	
+	@Override
+	protected void parse(String... actions) {
+		for(String action : actions) {
+			if(StringUtils.equalsIgnoreCase(action, "READ"))
+				mask |= READ;
+			else if(StringUtils.equalsIgnoreCase(action, "UPDATE"))
+				mask |= UPDATE;
+			else if(StringUtils.equalsIgnoreCase(action, "DELETE"))
+				mask |= DELETE;
+			else throw new IllegalArgumentException("Invalid action " + action);
+		}
+	}
+	
+	public boolean implies(String... actions) {
+		return implies(new SharePermsFolder(actions));
+	}
+	
+	public static SharePermsFolder full() {
+		return new SharePermsFolder("READ", "UPDATE", "DELETE");
+	}
+	
+	/*
+	public void merge(SharePermission permission) {
+		if (!(permission instanceof FolderPermission)) throw new IllegalArgumentException("");
+		FolderPermission p = (FolderPermission)permission;
+		
+		 
+	}
+	*/
 }

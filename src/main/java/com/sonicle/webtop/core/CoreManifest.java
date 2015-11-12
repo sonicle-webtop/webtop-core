@@ -85,33 +85,48 @@ public class CoreManifest extends ServiceManifest {
 		resources = new ArrayList<>();
 		
 		/*
-			Marks WebTop Admins
-			- ACCESS: can manage webtop palform properties
+			SYSADMIN
+			Marks sysadmin
+			- ACCESS: can manage system
 		*/
-		resources.add(new AuthResource("WTADMIN", new String[]{"ACCESS"}));
 		
 		/*
+			WTADMIN
+			Mark WebTop admins (users that can act as admins)
+			- ACCESS: can manage webtop palform
+		*/
+		resources.add(new AuthResource("WTADMIN", new String[]{AuthResource.ACTION_ACCESS}));
+		
+		/*
+			SERVICE
+			- ACCESS
+			- CONFIGURE
+		*/
+		
+		/*
+			ACTIVITIES
+			Resource that 
 			Activities
 			- MANAGE: access to management form
 		*/
-		resources.add(new AuthResource("ACTIVITIES", new String[]{"MANAGE"}));
+		resources.add(new AuthResource("ACTIVITIES", new String[]{AuthResource.ACTION_MANAGE}));
 		
 		/*
 			Causals
 			- MANAGE: access to management form
 		*/
-		resources.add(new AuthResource("CAUSALS", new String[]{"MANAGE"}));
+		resources.add(new AuthResource("CAUSALS", new String[]{AuthResource.ACTION_MANAGE}));
 		
 		/*
 			User personal info (via Options)
 			- WRITE: user can update/change its data (if provider supports it)
 		*/
-		resources.add(new AuthResource("UPI", new String[]{"WRITE"}));
+		resources.add(new AuthResource("USER_PROFILE_INFO", new String[]{AuthResource.ACTION_MANAGE}));
 		
 		/*
 			Device synchroniztion
 			- ACCESS: ability to sync data with devices
 		*/
-		resources.add(new AuthResource("DEVICES_SYNC", new String[]{"ACCESS"}));
+		resources.add(new AuthResource("DEVICES_SYNC", new String[]{AuthResource.ACTION_ACCESS}));
 	}
 }

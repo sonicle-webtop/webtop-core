@@ -73,7 +73,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.roField('tfaDeviceTrusted', 'boolean'),
 		WTF.roField('tfaDeviceTrustedOn', 'string'),
 		
-		WTF.roField('canWriteUpi', 'boolean', true),
+		WTF.roField('canManageUpi', 'boolean', true),
 		WTF.roField('canSyncDevices', 'boolean', true)
 	]
 });

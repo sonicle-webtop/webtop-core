@@ -35,7 +35,6 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
-import com.sonicle.webtop.core.CoreAuthKey;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.AuthManager;
 import com.sonicle.webtop.core.WebTopApp;
@@ -115,26 +114,27 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> perms = new HashSet<>();
 		
 		if(Principal.xisAdmin(pid.toString())) {
-			perms.add(AuthResource.permissionString("WTADMIN", "ACCESS", "*"));
+			perms.add(AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), AuthResource.ACTION_ACCESS, "*"));
+			perms.add(AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), AuthResource.ACTION_ACCESS, "*"));
 		}
 		
 		// Force core private service permission for any principal
-		String resource = AuthResource.namespacedName(CoreManifest.ID, CoreAuthKey.RES_SERVICE);
-		perms.add(AuthResource.permissionString(resource, CoreAuthKey.ACT_SERVICE_ACCESS, CoreManifest.ID));
+		String authRes = AuthResource.namespacedName(CoreManifest.ID, "SERVICE");
+		perms.add(AuthResource.permissionString(authRes, AuthResource.ACTION_ACCESS, CoreManifest.ID));
 		
 		Set<Role> userRoles = autm.getRolesForUser(pid, true, true);
 		for(Role role : userRoles) {
-			roles.add(role.getId());
+			roles.add(role.getUid());
 
-			List<ORolePermission> rolePerms = autm.getRolePermissions(principal.getDomainId(), role.getId());
+			List<ORolePermission> rolePerms = autm.getRolePermissions(role.getUid());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 
 				// will become "com.sonicle.webtop.core.TEST"
-				resource = AuthResource.namespacedName(perm.getServiceId(), perm.getResource());
+				authRes = AuthResource.namespacedName(perm.getServiceId(), perm.getResource());
 				// Generate permission string that shiro can understand 
 				// under the form: {resource}:{action}:{instance}
-				perms.add(AuthResource.permissionString(resource, perm.getAction(), perm.getInstance()));
+				perms.add(AuthResource.permissionString(authRes, perm.getAction(), perm.getInstance()));
 			}
 		}
 		

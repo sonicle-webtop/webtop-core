@@ -1,5 +1,5 @@
 /*
- * webtop-calendar is a WebTop Service developed by Sonicle S.r.l.
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,38 +27,45 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
- * feasible for technical reasons, the Appropriate Legal Notices must display
- * the words "Powered by Sonicle WebTop".
+ * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
+ * reasonably feasible for technical reasons, the Appropriate Legal Notices must
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class IncomingFolder extends FolderBase {
+public class ShareRoot {
+	protected final String shareId;
+	protected final SharePermsRoot perms;
+	protected final UserProfile.Id ownerProfileId;
+	protected final String description;
 	
-	private final UserProfile.Id profileId;
-	private final String description;
+	public ShareRoot(String shareId, SharePermsRoot perms, UserProfile.Id ownerProfileId, String description) {
+		this.shareId = shareId;
+		this.perms = perms;
+		this.ownerProfileId = ownerProfileId;
+		this.description = description;
+	}
 	
-	public IncomingFolder(OShare share) {
-		super(new UserProfile.Id(share.getDomainId(), share.getUserId()).toString());
-		profileId = new UserProfile.Id(share.getDomainId(), share.getUserId());
-		description = share.getName();
+	public ShareRoot(IncomingRootShare share, SharePermsRoot perms) {
+		this(share.getShareId(), perms, share.getOriginPid(), share.getDescription());
 	}
-
-	@Override
-	public String getDomainId() {
-		return profileId.getDomainId();
+	
+	public String getShareId() {
+		return shareId;
 	}
-
-	@Override
-	public String getUserId() {
-		return profileId.getUserId();
+	
+	public SharePermsRoot getPerms() {
+		return perms;
+	}
+	
+	public UserProfile.Id getOwnerProfileId() {
+		return ownerProfileId;
 	}
 	
 	public String getDescription() {

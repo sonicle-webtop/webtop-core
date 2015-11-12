@@ -33,67 +33,30 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import java.text.MessageFormat;
 
 /**
  *
  * @author malbinola
  */
-public class Role {
-	private String uid;
-	private String name;
-	private String description;
+public class AuthResourceShare extends AuthResource {
+	public static final String ROOT_SUFFIX = "ROOT";
+	public static final String FOLDER_SUFFIX = "FOLDER";
+	public static final String FOLDER_ELS_SUFFIX = "FOLDER_ELS";
 	
-	public Role(String uid, String name, String description) {
-		this.uid = uid;
-		this.name = name;
-		this.description = description;
-	}
-
-	public String getUid() {
-		return uid;
-	}
-
-	public void setId(String uid) {
-		this.uid = uid;
+	public AuthResourceShare(String name) {
+		super(name);
 	}
 	
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
+	public static String buildRootName(String name) {
+		return MessageFormat.format("{0}_{1}", name, ROOT_SUFFIX);
 	}
 	
-	@Override
-	public String toString() {
-		return name;
+	public static String buildFolderName(String name) {
+		return MessageFormat.format("{0}_{1}", name, FOLDER_SUFFIX);
 	}
-
-	@Override
-	public int hashCode() {
-		return new HashCodeBuilder()
-			.append(uid)
-			.toHashCode();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if(obj instanceof Role == false) return false;
-		if(this == obj) return true;
-		final Role otherObject = (Role) obj;
-		return new EqualsBuilder()
-			.append(uid, otherObject.uid)
-			.isEquals();
+	
+	public static String buildFolderElsName(String name) {
+		return MessageFormat.format("{0}_{1}", name, FOLDER_ELS_SUFFIX);
 	}
 }

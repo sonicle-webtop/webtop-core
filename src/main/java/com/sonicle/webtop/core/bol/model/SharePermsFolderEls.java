@@ -31,16 +31,50 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.bol.model;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class CoreAuthKey {
-	public static final String RES_SERVICE = "SERVICE";
-	public static final String ACT_SERVICE_ACCESS = "ACCESS";
-	public static final String ACT_SERVICE_CONFIGURE = "CONFIGURE";
-	public static final String RES_ADVANCED_USER_OPTIONS = "ADVANCED_USER_OPTIONS";
-	public static final String ACT_ADVANCED_USER_OPTIONS_ACCESS = "ACCESS";
+public class SharePermsFolderEls extends SharePerms {
+	
+	public SharePermsFolderEls(String... actions) {
+		super(actions);
+	}
+	
+	public SharePermsFolderEls(String[] actions, boolean[] bools) {
+		super(actions, bools);
+	}
+	
+	@Override
+	protected void parse(String[] actions, boolean[] bools) {
+		if(actions.length != bools.length) throw new IllegalArgumentException("Passed arrays must have same lenght");
+		for(int i=0; i<actions.length; i++) {
+			if(bools[i]) parse(actions[i]);
+		}
+	}
+	
+	@Override
+	protected void parse(String... actions) {
+		for(String action : actions) {
+			if(StringUtils.equalsIgnoreCase(action, "CREATE"))
+				mask |= CREATE;
+			else if(StringUtils.equalsIgnoreCase(action, "UPDATE"))
+				mask |= UPDATE;
+			else if(StringUtils.equalsIgnoreCase(action, "DELETE"))
+				mask |= DELETE;
+			else throw new IllegalArgumentException("Invalid action " + action);
+		}
+	}
+	
+	public boolean implies(String... actions) {
+		return implies(new SharePermsFolderEls(actions));
+	}
+	
+	public static SharePermsFolderEls full() {
+		return new SharePermsFolderEls("CREATE", "UPDATE", "DELETE");
+	}
 }

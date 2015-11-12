@@ -31,25 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResourceFolderElements extends AuthResource {
-	private final String originalName;
+public class AuthPermissionException extends AuthException {
 	
-	public AuthResourceFolderElements(String name) {
-		super(buildName(name), new String[]{ACTION_READ, ACTION_WRITE, ACTION_EDIT, ACTION_DELETE});
-		this.originalName = name;
-	}
-	
-	public String getOriginalName() {
-		return originalName;
-	}
-	
-	public static String buildName(String name) {
-		return name + "_ELEMENTS";
+	public AuthPermissionException(UserProfile.Id pid, String resource, String action) {
+		super("Profile [{0}] ha");
 	}
 }

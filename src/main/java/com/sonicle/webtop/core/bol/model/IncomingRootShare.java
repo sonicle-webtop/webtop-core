@@ -1,5 +1,5 @@
 /*
- * webtop-calendar is a WebTop Service developed by Sonicle S.r.l.
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,28 +27,38 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
- * feasible for technical reasons, the Appropriate Legal Notices must display
- * the words "Powered by Sonicle WebTop".
+ * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
+ * reasonably feasible for technical reasons, the Appropriate Legal Notices must
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.bol.model;
+
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public abstract class FolderBase {
+public class IncomingRootShare {
+	private final String shareId;
+	private final UserProfile.Id originPid;
+	private final String description;
 	
-	protected final String id;
-	
-	public FolderBase(String id) {
-		this.id = id;
+	public IncomingRootShare(String shareId, UserProfile.Id originPid, String description) {
+		this.shareId = shareId;
+		this.originPid = originPid;
+		this.description = description;
 	}
-	
-	public String getId() {
-		return id;
+
+	public String getShareId() {
+		return shareId;
 	}
-	
-	abstract public String getDomainId();
-	abstract public String getUserId();
+
+	public UserProfile.Id getOriginPid() {
+		return originPid;
+	}
+
+	public String getDescription() {
+		return description;
+	}
 }
