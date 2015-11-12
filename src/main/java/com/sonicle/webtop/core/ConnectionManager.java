@@ -236,8 +236,6 @@ public class ConnectionManager implements IConnectionProvider {
 			if(shutdown) throw new RuntimeException("Manager is shutting down");
 			if(pools.containsKey(poolName)) throw new RuntimeException(MessageFormat.format("Pool for [{0}] is already defined.", poolName));
 			config.setPoolName(poolName);
-			config.setMinimumIdle(5);
-			config.setMaximumPoolSize(20);
 			pools.put(poolName, new HikariDataSource(config));
 		}
 	}
