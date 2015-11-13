@@ -143,10 +143,12 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Returns an option defined during startup set.
 	 * Some built-in options are defined in model {@link WT.sdk.model.ClientOptions}.
 	 * @param {String} key The option key.
+	 * @param {Mixed} [ifEmpty] The fallback value
 	 * @return {Mixed} The option value.
 	 */
-	getOption: function(key) {
-		return this.options.get(key);
+	getOption: function(key, ifEmpty) {
+		var v = this.options.get(key);
+		return (arguments.length === 2) ? WTU.deflt(v, ifEmpty) : v;
 	},
 	
 	/**
