@@ -176,6 +176,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				service: sid,
 				action: act
 			}),
+			model: opts.model,
 			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data',
@@ -214,6 +215,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				service: svc,
 				action: act
 			}),
+			model: opts.model,
 			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data',
