@@ -194,6 +194,31 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		};
 	},
 	
+	proxyReader: function(sid, act, rootp, opts) {
+		opts = opts || {};
+		var obj={
+			type: 'ajax',
+			url: WTF.requestBaseUrl(),
+			extraParams: Ext.apply(opts.extraParams || {}, {
+				service: sid,
+				action: act
+			}),
+			reader: Ext.apply({
+				type: 'json',
+				rootProperty: rootp || 'data',
+				messageProperty: 'message'
+			}, opts.reader || {}),
+			listeners: {
+				exception: function(proxy, request, operation, eOpts) {
+					//TODO: localizzare il messaggio di errore
+					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+				}
+			}
+		};
+		if (opts.model) obj.model=opts.model;
+		return obj;
+	},
+	
 	apiProxy: function(svc, act, rootp, opts) {
 		rootp = rootp || 'data';
 		opts = opts || {};
