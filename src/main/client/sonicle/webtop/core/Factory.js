@@ -596,7 +596,8 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				return ret;
 			},
 			set: function(val) {
-				this.get(modelProp).set(fieldName, val[objProp || fieldName]);
+				var val = val[objProp || fieldName];
+				if(val !== undefined) this.get(modelProp).set(fieldName, val);
 			}
 		};
 	},

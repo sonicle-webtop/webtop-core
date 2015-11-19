@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		 * @cfg {String} modeTitleFormat
 		 * Formatting string used to insert current operative mode in title.
 		 */
-		modeTitleFormat: '{0}: {1}',
+		modeTitleFormat: '{0}: {1}'
 	},
 	
 	/**
@@ -114,12 +114,14 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	opts: null,
 	
-	/*
 	constructor: function(config) {
-		config.viewModel = Ext.create('Ext.app.ViewModel');
+		var me = this;
+		
+		if(me.getInitialConfig('viewModel') === undefined) {
+			me.config.viewModel = Ext.create('Ext.app.ViewModel');
+		}
 		this.callParent([config]);
 	},
-	*/
 	
 	initComponent: function() {
 		var me = this;
