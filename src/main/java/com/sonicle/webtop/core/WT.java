@@ -259,7 +259,7 @@ public class WT {
 	}
 	
 	public static String getSystemTempPath() {
-		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		String path = css.getSystemTempPath();
 		if(StringUtils.isEmpty(path)) {
 			path = System.getProperty("java.io.tmpdir");

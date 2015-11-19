@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	],
 	
 	dockableConfig: {
-		title: '@causals.tit',
+		title: '{causals.tit}',
 		iconCls: 'wt-icon-causal-xs',
 		width: 600,
 		height: 400

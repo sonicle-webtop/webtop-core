@@ -125,7 +125,7 @@ public abstract class BaseService extends BaseServiceBase {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
 			
 			UserProfile up = env.getProfile();
-			CoreUserSettings cusx = new CoreUserSettings(up.getDomainId(), up.getUserId(), getId());
+			CoreUserSettings cusx = new CoreUserSettings(getId(), up.getId());
 			cusx.setViewportToolWidth(width);
 			new JsonResult().printTo(out);
 			

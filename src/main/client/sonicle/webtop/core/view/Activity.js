@@ -38,12 +38,12 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 	],
 	
 	dockableConfig: {
-		title: '@activity.tit',
+		title: '{activity.tit}',
 		iconCls: 'wt-icon-activity-xs',
 		width: 430,
 		height: 220
 	},
-	model: 'Sonicle.webtop.core.model.Activity',
+	modelName: 'Sonicle.webtop.core.model.Activity',
 	viewModel: {
 		formulas: {
 			readOnly: WTF.checkboxBind('record', 'readOnly')

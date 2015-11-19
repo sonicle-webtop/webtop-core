@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 			/**
 			 * @cfg {String} title
 			 * The title text to be used to apply as container's title.
-			 * If value begins with @ is treated as framework resource string.
+			 * Can be a value or a template string that points to a resource.
 			 */
 			
 			width: 400,
@@ -121,12 +121,6 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		// Defines a basic viewModel (eg. useful for binding)
 		//if(!me.viewModel) me.viewModel = Ext.create('Ext.app.ViewModel');
 		me.callParent([cfg]);
-	},
-	
-	resTitle: function() {
-		var me = this,
-				cfg = me.getDockableConfig();
-		return (cfg) ? WT.resStr(me.mys.ID, cfg.title) : null;
 	},
 	
 	initComponent: function() {
@@ -209,9 +203,7 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @private
 	 */
 	onTitleChange: function(s,nv) {
-		var me = this;
-		if(!me.ctInited) return;
-		me.ownerCt.setTitle(nv);
+		this.setViewTitle(nv);
 	},
 	
 	/**
@@ -281,6 +273,16 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		*/
 	},
 	
+	getViewTitle: function() {
+		var me = this;
+		return (me.ctInited) ? me.ownerCt.getTitle() : null; 
+	},
+	
+	setViewTitle: function(title) {
+		var me = this;
+		if(me.ctInited) me.ownerCt.setTitle(title);
+	},
+	
 	/**
 	 * Method executed during container close. Returning false will prompt 
 	 * (if enabled, see {@link #promptConfirm}) a confirm message.
@@ -343,5 +345,14 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		var me = this;
 		me.fireEvent('viewdiscard', me);
 		me.closeView(false);
+	},
+	
+	/**
+	 * @private
+	 */
+	resTitle: function() {
+		var me = this,
+				cfg = me.getDockableConfig();
+		return (cfg) ? WT.resTpl(me.mys.ID, cfg.title) : null;
 	}
 });

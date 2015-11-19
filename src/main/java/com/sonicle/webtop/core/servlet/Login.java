@@ -63,7 +63,7 @@ public class Login extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		CoreManager core = new CoreManager(wta.createRunContext(), wta);
 		
 		try {

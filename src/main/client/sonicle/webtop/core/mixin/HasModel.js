@@ -212,6 +212,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * Saves configured model.
 	 * @param {Object} opts 
 	 * @param {Object} opts.pass Custom parameters to pass to events callbacks
+	 * @returns {Boolean} 'true' if the async operation started, 'false' otherwise
 	 */
 	saveModel: function(opts) {
 		opts = opts || {};
@@ -221,6 +222,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		
 		if(model && model.isValid()) {
 			me.fireEvent('beforemodelsave', me, model, opts.pass);
+			/*
 			if(me.getModelIdAsParam()) {
 				proxy = model.getProxy();
 				if(proxy.isRemote) {
@@ -229,12 +231,23 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 					});
 				}
 			}
+			*/
 			model.save({
 				callback: function(rec, op, success) {
-					me.fireEvent('modelsave', me, success, model, opts.pass);
+					/*
+					if(me.getModelIdAsParam()) {
+						if(proxy.isRemote) {
+							WTU.removeExtraParams(proxy, 'id');
+						}
+					}
+					*/
+					me.fireEvent('modelsave', me, op, success, model, opts.pass);
 				},
 				scope: me
 			});
+			return true;
+		} else {
+			return false;
 		}
 	},
 	
@@ -258,55 +271,5 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				}
 			};
 		}
-		
-	},
-	
-	/**
-	 * CANCELLAREEEEEE
-	 */
-	loadModel2: function(data, opts) {
-		data = data || {};
-		opts = opts || {};
-		var me = this,
-				vm = me.getViewModel(),
-				linkName = me.getModelProperty(),
-				idProp = me.getModelIdProperty(),
-				id = data[idProp];
-		
-		if(!id) Ext.Error.raise('Unable to find a value for guessed model ID ['+idProp+']');
-		
-		// Due to there is no callback on linkTo method, we need to register a
-		// binding handler that will be called (once) when the viewmodel will
-		// be populated.
-		vm.bind({
-			bindTo: '{'+linkName+'}',
-			single: true
-		}, function() {
-			var model = me.getModel(),
-					reader = model.getProxy().getReader(),
-					success = (model.phantom) ? true : reader.getSuccess(reader.rawData || {});
-			me.fireEvent('modelload', me, success, model, opts.pass);
-		});
-		
-		me.fireEvent('beforemodelload', me, opts.pass);
-		if(Ext.isEmpty(id)) { // New instance
-			// Defines a viewmodel link, creating an empty (phantom) model
-			vm.linkTo(linkName, {
-				type: me.getModelName(),
-				create: true
-			});
-			// Apply initial data resetting dirty flag
-			var model = vm.get(linkName);
-			model.set(data, {
-				dirty: false
-			});
-			model.setAssociated(data); // Using our custom Sonicle.data.Model!
-		} else { // Load an instance
-			vm.linkTo(linkName, {
-				type: me.getModelName(),
-				id: id
-			});
-		}
 	}
-	
 });

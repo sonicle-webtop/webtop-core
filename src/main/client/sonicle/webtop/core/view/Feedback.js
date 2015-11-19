@@ -41,13 +41,13 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 	],
 	
 	dockableConfig: {
-		title: '@feedback.tit',
+		title: '{feedback.tit}',
 		iconCls: 'wt-icon-feedback-xs',
 		width: 590,
 		height: 320
 	},
 	autoToolbar: false,
-	autoTitle: false,
+	modeTitle: false,
 	confirm: 'yn',
 	
 	h2cCanvas: null,

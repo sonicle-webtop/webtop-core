@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
@@ -43,19 +42,17 @@ import com.sonicle.webtop.core.WebTopApp;
  * @author malbinola
  */
 public abstract class BaseServiceSettings extends BaseSettings {
-
+	public static final String DEFAULT_PREFIX = "default.";
 	private SettingsManager setm;
-	protected String domainId;
 	protected String serviceId;
+	protected String domainId;
 
-	private BaseServiceSettings() {
+	//private BaseServiceSettings() {}
 
-	}
-
-	public BaseServiceSettings(String domainId, String serviceId) {
+	public BaseServiceSettings(String serviceId, String domainId) {
 		setm = WebTopApp.getInstance().getSettingsManager();
-		this.domainId = domainId;
 		this.serviceId = serviceId;
+		this.domainId = domainId;
 	}
 	
 	@Override

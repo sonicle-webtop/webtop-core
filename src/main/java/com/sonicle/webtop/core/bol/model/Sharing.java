@@ -33,32 +33,66 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class IncomingRootShare {
-	private final String shareId;
-	private final UserProfile.Id originPid;
-	private final String description;
+public class Sharing {
+	protected String id;
+	protected int level;
+	protected ArrayList<RoleRights> rights;
 	
-	public IncomingRootShare(String shareId, UserProfile.Id originPid, String description) {
-		this.shareId = shareId;
-		this.originPid = originPid;
-		this.description = description;
+	public Sharing() {
+		rights = new ArrayList<>();
 	}
 
-	public String getShareId() {
-		return shareId;
+	public String getId() {
+		return id;
 	}
 
-	public UserProfile.Id getOriginPid() {
-		return originPid;
+	public void setId(String id) {
+		this.id = id;
 	}
 
-	public String getDescription() {
-		return description;
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
+
+	public ArrayList<RoleRights> getRights() {
+		return rights;
+	}
+
+	public void setRights(ArrayList<RoleRights> rights) {
+		this.rights = rights;
+	}
+	
+	public static class RoleRights {
+		public String roleUid;
+		public Boolean rootManage;
+		public Boolean folderRead;
+		public Boolean folderUpdate;
+		public Boolean folderDelete;
+		public Boolean elementsCreate;
+		public Boolean elementsUpdate;
+		public Boolean elementsDelete;
+		
+		public RoleRights() {}
+		
+		public RoleRights(String roleUid, SharePermsRoot rperms, SharePermsFolder fperms, SharePermsElements eperms) {
+			this.roleUid = roleUid;
+			rootManage = (rperms != null) ? rperms.implies("MANAGE") : null;
+			folderRead = fperms.implies("READ");
+			folderUpdate = fperms.implies("UPDATE");
+			folderDelete = fperms.implies("DELETE");
+			elementsCreate = eperms.implies("CREATE");
+			elementsUpdate = eperms.implies("UPDATE");
+			elementsDelete = eperms.implies("DELETE");
+		}
 	}
 }

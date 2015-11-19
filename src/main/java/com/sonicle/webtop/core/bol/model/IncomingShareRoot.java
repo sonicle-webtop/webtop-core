@@ -33,30 +33,32 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class AuthResourceShare extends AuthResource {
-	public static final String ROOT_SUFFIX = "ROOT";
-	public static final String FOLDER_SUFFIX = "FOLDER";
-	public static final String ELEMENTS_SUFFIX = "FOLDER_ELS";
+public class IncomingShareRoot {
+	private final String shareId;
+	private final UserProfile.Id originPid;
+	private final String description;
 	
-	public AuthResourceShare(String name) {
-		super(name);
+	public IncomingShareRoot(String shareId, UserProfile.Id originPid, String description) {
+		this.shareId = shareId;
+		this.originPid = originPid;
+		this.description = description;
 	}
-	
-	public static String buildRootPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, ROOT_SUFFIX);
+
+	public String getShareId() {
+		return shareId;
 	}
-	
-	public static String buildFolderPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, FOLDER_SUFFIX);
+
+	public UserProfile.Id getOriginPid() {
+		return originPid;
 	}
-	
-	public static String buildElementsPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, ELEMENTS_SUFFIX);
+
+	public String getDescription() {
+		return description;
 	}
 }

@@ -61,6 +61,6 @@ public abstract class BaseController {
 		return WT.getManifest(getServiceId());
 	}
 	
-	public abstract void initializeUser(UserProfile.Id profileId) throws Exception;
-	public abstract void cleanupUser(UserProfile.Id profileId, boolean deep) throws Exception;
+	public abstract void initializeProfile(UserProfile.Id profileId) throws Exception;
+	public abstract void cleanupProfile(UserProfile.Id profileId, boolean deep) throws Exception;
 }

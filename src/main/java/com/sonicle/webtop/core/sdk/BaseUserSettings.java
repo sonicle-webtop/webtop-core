@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
@@ -46,26 +45,17 @@ import java.util.List;
  * @author malbinola
  */
 public abstract class BaseUserSettings extends BaseSettings {
-    
-    private SettingsManager setm;
-    protected String domainId;
-    protected String userId;
+	private SettingsManager setm;
 	protected String serviceId;
-    
-    private BaseUserSettings() {
-        
-    }
+	protected UserProfile.Id profileId;
+
+	//private BaseUserSettings() {}
 	
-	public BaseUserSettings(UserProfile.Id profileId, String serviceId) {
-		this(profileId.getDomainId(), profileId.getUserId(), serviceId);
+	public BaseUserSettings(String serviceId, UserProfile.Id profileId) {
+		this.setm = WebTopApp.getInstance().getSettingsManager();
+		this.serviceId = serviceId;
+		this.profileId = profileId;
 	}
-    
-    public BaseUserSettings(String domainId, String userId, String serviceId) {
-        this.setm = WebTopApp.getInstance().getSettingsManager();
-        this.domainId = domainId;
-        this.userId = userId;
-        this.serviceId = serviceId;
-    }
 	
 	public List<UserProfile.Id> getProfilesThatHave(String key, Object value) {
 		ArrayList<UserProfile.Id> profiles = new ArrayList<>();
@@ -77,55 +67,55 @@ public abstract class BaseUserSettings extends BaseSettings {
 	
 	@Override
 	public String getSetting(String key) {
-		return setm.getUserSetting(domainId, userId, serviceId, key);
+		return setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}
 	
 	@Override
 	public boolean setSetting(String key, Object value) {
-		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	@Override
 	public String getString(String key, String defaultValue) {
-		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setString(String key, String value) {
-		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	@Override
 	public Boolean getBoolean(String key, Boolean defaultValue) {
-		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setBoolean(String key, Boolean value) {
-		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	@Override
 	public Integer getInteger(String key, Integer defaultValue) {
-		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setInteger(String key, Integer value) {
-		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	@Override
 	public Long getLong(String key, Long defaultValue) {
-		return LangUtils.value(setm.getUserSetting(domainId, userId, serviceId, key), defaultValue);
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setLong(String key, Long value) {
-		return setm.setUserSetting(domainId, userId, serviceId, key, value);
+		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	public boolean clear(String key) {
-		return setm.deleteUserSetting(domainId, userId, serviceId, key);
+		return setm.deleteUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}
 }

@@ -167,16 +167,29 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}
 	},
 	
+	/**
+	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy}.
+	 * @param {String} sid The service ID
+	 * @param {String} act The action name
+	 * @param {String} rootp The rootProperty
+	 * @param {Object} [opts]
+	 * @param {Object} [opts.extraParams]
+	 * @param {String} [opts.model]
+	 * @param {Object} [opts.reader]
+	 * @param {Object} [opts.writer]
+	 * @returns {Object} Object config
+	 */
 	proxy: function(sid, act, rootp, opts) {
 		opts = opts || {};
-		return {
+		var obj = {};
+		if(opts.model) Ext.apply(obj, {model: opts.model});
+		return Ext.apply({
 			type: 'ajax',
 			url: WTF.requestBaseUrl(),
 			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: sid,
 				action: act
 			}),
-			model: opts.model,
 			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data',
@@ -191,9 +204,20 @@ Ext.define('Sonicle.webtop.core.Factory', {
 					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
 				}
 			}
-		};
+		}, obj);
 	},
 	
+	/**
+	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy} using CRUD api.
+	 * @param {String} sid The service ID
+	 * @param {String} act The action name
+	 * @param {String} rootp The rootProperty
+	 * @param {Object} [opts]
+	 * @param {Object} [opts.extraParams]
+	 * @param {Object} [opts.reader]
+	 * @param {Object} [opts.writer]
+	 * @returns {Object} Object config
+	 */
 	apiProxy: function(svc, act, rootp, opts) {
 		rootp = rootp || 'data';
 		opts = opts || {};
@@ -215,7 +239,6 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				service: svc,
 				action: act
 			}),
-			model: opts.model,
 			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data',
@@ -492,6 +515,25 @@ Ext.define('Sonicle.webtop.core.Factory', {
 			var cls = (rec.get(classField)) ? classPrefix+rec.get(classField) : '';
 			//if(cls && classPrefix) cls = classPrefix+cls;
 			return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+		};
+	},
+	*/
+	
+	/*
+	gridSelectionBind: function(modelProp, gripProp) {
+		return {
+			bind: {
+				bindTo: '{'+gripProp+'.selection}',
+				deep: true
+			},
+			get: function(model) {
+				return model;
+			},
+			set: function(model) {
+				if(!model.isModel) model = this.get(modelProp).getById(model);
+				this.set()
+				this.get(modelProp).set(fieldName, val);
+			}
 		};
 	},
 	*/

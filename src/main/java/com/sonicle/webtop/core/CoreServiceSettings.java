@@ -18,11 +18,8 @@ import java.util.Locale;
  */
 public class CoreServiceSettings extends BaseServiceSettings {
 	
-	/*
-	public CoreServiceSettings(String domainId) {
-		super(domainId, CoreManifest.ID);
-	}
-	*/
+	// NB: please do not provide a constructor that defaults serviceId 
+	// because there are keys that can be applied widely across services
 	
 	public CoreServiceSettings(String domainId, String serviceId) {
 		super(domainId, serviceId);

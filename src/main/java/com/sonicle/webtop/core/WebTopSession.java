@@ -402,7 +402,7 @@ public class WebTopSession {
 			//is.put("authTicket", generateAuthTicket());
 			is.put("isWhatsnewNeeded", isWhatsnewNeeded());
 		} else {
-			CoreUserSettings cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId(), serviceId);
+			CoreUserSettings cus = new CoreUserSettings(serviceId, profile.getId());
 			is.put("viewportToolWidth", cus.getViewportToolWidth());
 		}
 		return is;

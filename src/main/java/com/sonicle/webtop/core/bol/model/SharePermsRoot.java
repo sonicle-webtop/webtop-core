@@ -40,6 +40,9 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class SharePermsRoot extends SharePerms {
+	public static final String[] ACTIONS = new String[]{
+		AuthResource.ACTION_MANAGE
+	};
 	
 	public SharePermsRoot(String... actions) {
 		super(actions);
@@ -50,7 +53,7 @@ public class SharePermsRoot extends SharePerms {
 	}
 	
 	@Override
-	protected void parse(String[] actions, boolean[] bools) {
+	public void parse(String[] actions, boolean[] bools) {
 		if(actions.length != bools.length) throw new IllegalArgumentException("Passed arrays must have same lenght");
 		for(int i=0; i<actions.length; i++) {
 			if(bools[i]) parse(actions[i]);
@@ -58,10 +61,13 @@ public class SharePermsRoot extends SharePerms {
 	}
 	
 	@Override
-	protected void parse(String... actions) {
+	public void parse(String... actions) {
 		for(String action : actions) {
 			if(StringUtils.equalsIgnoreCase(action, "MANAGE"))
 				mask |= MANAGE;
+			else if(action.equals("*")) {
+				mask |= MANAGE;
+			}
 			else throw new IllegalArgumentException("Invalid action " + action);
 		}
 	}
