@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
@@ -42,6 +43,7 @@ import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.GroupDAO;
 import com.sonicle.webtop.core.dal.RoleDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
@@ -190,33 +192,6 @@ public class AuthManager {
 		}
 	}
 	
-	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
-		return addPermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
-	}
-	
-	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
-		ORolePermission perm = new ORolePermission();
-		perm.setRoleUid(roleUid);
-		perm.setServiceId(serviceId);
-		perm.setResource(resource);
-		perm.setAction(action);
-		perm.setInstance(instance);
-		
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
-		rpdao.insert(con, perm);
-		return perm;
-	}
-	
-	public void permissionDelete(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
-		permissionDelete(con, userToRoleSid(pid), serviceId, resource, action, instance);
-	}
-	
-	public void permissionDelete(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		rpdao.deleteByRoleServiceResourceActionInstance(con, roleUid, serviceId, resource, action, instance);
-	}
-	
 	public List<String> getRolesAsString(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
 		ArrayList<String> uids = new ArrayList<>();
 		Set<Role> roles = getRolesForUser(pid, self, transitive);
@@ -270,14 +245,76 @@ public class AuthManager {
 				}
 			}
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "Unable to get roles for [{0}]", pid.toString());
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 		return roles;
 	}
 	
-	public List<ORolePermission> getRolePermissions(String roleSid) throws Exception {
+	public List<Role> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
+		Connection con = null;
+		ArrayList<Role> roles = new ArrayList<>();
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			if(fromUsers) {
+				UserDAO usedao = UserDAO.getInstance();
+				List<OUser> users = usedao.selectActiveByDomain(con, domainId);
+				for(OUser user: users) {
+					roles.add(new Role(user.getRoleUid(), user.getUserId(), user.getDisplayName()));
+				}
+			}
+			if(fromUsers) {
+				GroupDAO grpdao = GroupDAO.getInstance();
+				List<OGroup> groups = grpdao.selectActiveByDomain(con, domainId);
+				for(OGroup group: groups) {
+					roles.add(new Role(group.getRoleUid(), group.getUserId(), group.getDisplayName()));
+				}
+			}
+			
+			RoleDAO roldao = RoleDAO.getInstance();
+			List<ORole> eroles = roldao.selectByDomain(con, domainId);
+			for(ORole erole : eroles) {
+				roles.add(new Role(erole.getRoleUid(), erole.getName(), erole.getDescription()));
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return roles;
+	}
+	
+	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+		return addPermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
+	}
+	
+	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
+		ORolePermission perm = new ORolePermission();
+		perm.setRoleUid(roleUid);
+		perm.setServiceId(serviceId);
+		perm.setResource(resource);
+		perm.setAction(action);
+		perm.setInstance(instance);
+		
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
+		rpdao.insert(con, perm);
+		return perm;
+	}
+	
+	public void deletePermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+		deletePermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
+	}
+	
+	public void deletePermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		rpdao.deleteByRoleServiceResourceActionInstance(con, roleUid, serviceId, resource, action, instance);
+	}
+	
+	public List<ORolePermission> listRolePermissions(String roleSid) throws Exception {
 		Connection con = null;
 		
 		try {

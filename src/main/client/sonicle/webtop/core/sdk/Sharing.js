@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	dockableConfig: {
 		title: '{sharing.tit@com.sonicle.webtop.core}',
 		iconCls: 'wt-icon-sharing-xs',
-		width: 500,
-		height: 450
+		width: 450,
+		height: 380
 	},
 	modeTitle: false,
 	
@@ -53,6 +53,12 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	 * @cfg {String} fieldTitle
 	 * Please provide a value for this config.
 	 * For more info see {@link WT.sdk.ModelView#fieldTitle}.
+	 */
+	
+	/**
+	 * @cfg {String} rightsModelName
+	 * The model used to create record for collecting role rights.
+	 * Please provide a value for this config.
 	 */
 	
 	viewModel: {
@@ -76,28 +82,30 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 		var me = this;
 		me.callParent(arguments);
 		
+		if(Ext.isEmpty(me.rightsModelName)) Ext.Error.raise('rightsModelName need to be defined');
+		
 		me.add({
 			region: 'north',
 			xtype: 'wtfieldspanel',
 			height: 30,
-			items: [{
-				xtype: 'textfield',
-				listeners: {
-					specialkey: {
-						fn: function(s, e) {
-							//TODO: trasformare questo campo in una combo di lookup
-							if(e.getKey() === e.ENTER) {
-								var role = s.getValue(), model;
-								if(!Ext.isEmpty(role)) {
-									model = me.addRights(role);
-									me.lref('gprights').setSelection(model);
-									s.setValue(null);
-								}
-							}
+			items: [
+				WTF.localCombo('id', 'desc', {
+					reference: 'fldrole',
+					store: {
+						autoLoad: true,
+						model: 'WT.model.Simple',
+						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
+					},
+					anchor: '100%',
+					emptyText: WT.res('sharing.fld-role.lbl'),
+					listeners: {
+						select: function(s, rec) {
+							var model = me.addRights(rec.get('id'));
+							me.lref('gprights').setSelection(model);
+							s.setValue(null);
 						}
 					}
-				}
-			}]
+				})]
 		});
 		me.add({
 			region: 'center',
@@ -224,6 +232,13 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				}]
 			}]
 		});
+		me.on('viewload', me.onViewLoad);
+	},
+	
+	onViewLoad: function(s, success) {
+		if(!success) return;
+		var me = this;
+		me.lref('fldrole').focus(true);
 	},
 	
 	addRights: function(roleUid) {
@@ -233,7 +248,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				rec;
 		
 		if(sto.indexOfId(roleUid) !== -1) return null;
-		rec = Ext.create('Sonicle.webtop.core.sdk.model.SharingRoleRights', {
+		rec = Ext.create(me.rightsModelName, {
 			roleUid: roleUid,
 			folderRead: true
 		});

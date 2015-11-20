@@ -97,22 +97,21 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 					},
 					fieldLabel: me.mys.res('activity.fld-user.lbl'),
 					anchor: '100%'
-				}),
-			{
-				xtype: 'textfield',
-				bind: '{record.description}',
-				fieldLabel: me.mys.res('activity.fld-description.lbl'),
-				anchor: '100%'
-			}, {
-				xtype: 'textfield',
-				bind: '{record.externalId}',
-				fieldLabel: me.mys.res('activity.fld-externalId.lbl'),
-				width: 250
-			}, {
-				xtype: 'checkbox',
-				bind: '{readOnly}',
-				hideEmptyLabel: false,
-				boxLabel: me.mys.res('activity.fld-readOnly.lbl')
+				}), {
+					xtype: 'textfield',
+					bind: '{record.description}',
+					fieldLabel: me.mys.res('activity.fld-description.lbl'),
+					anchor: '100%'
+				}, {
+					xtype: 'textfield',
+					bind: '{record.externalId}',
+					fieldLabel: me.mys.res('activity.fld-externalId.lbl'),
+					width: 250
+				}, {
+					xtype: 'checkbox',
+					bind: '{readOnly}',
+					hideEmptyLabel: false,
+					boxLabel: me.mys.res('activity.fld-readOnly.lbl')
 			}]
 		});
 		me.on('viewload', me.onViewLoad);

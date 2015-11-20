@@ -40,23 +40,23 @@ import java.text.MessageFormat;
  * @author malbinola
  */
 public class AuthResourceShare extends AuthResource {
-	public static final String ROOT_SUFFIX = "ROOT";
-	public static final String FOLDER_SUFFIX = "FOLDER";
-	public static final String ELEMENTS_SUFFIX = "FOLDER_ELS";
+	public static final String ROOT_SUFFIX = "_SHARE_ROOT";
+	public static final String FOLDER_SUFFIX = "_SHARE_FOLDER";
+	public static final String ELEMENTS_SUFFIX = "_SHARE_ELEMENTS";
 	
 	public AuthResourceShare(String name) {
 		super(name);
 	}
 	
 	public static String buildRootPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, ROOT_SUFFIX);
+		return name + ROOT_SUFFIX;
 	}
 	
 	public static String buildFolderPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, FOLDER_SUFFIX);
+		return name + FOLDER_SUFFIX;
 	}
 	
 	public static String buildElementsPermissionResource(String name) {
-		return MessageFormat.format("{0}_{1}", name, ELEMENTS_SUFFIX);
+		return name + ELEMENTS_SUFFIX;
 	}
 }

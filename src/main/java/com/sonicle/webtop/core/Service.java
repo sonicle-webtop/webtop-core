@@ -59,6 +59,7 @@ import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
+import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
@@ -85,15 +86,18 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class Service extends BaseService {
-	
 	private static final Logger logger = WT.getLogger(Service.class);
 	private CoreManager core;
 	private CoreUserSettings us;
 	
+	private WebTopApp getApp() {
+		return ((CoreEnvironment)getEnv()).getApp();
+	}
+	
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
-		core = new CoreManager(getRunContext(), ((CoreEnvironment)getEnv()).getApp());
+		core = new CoreManager(getRunContext(), getApp());
 		us = new CoreUserSettings(profile.getId());
 	}
 
@@ -127,6 +131,8 @@ public class Service extends BaseService {
 		
 		return hm;
 	}
+	
+	 
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
@@ -245,6 +251,34 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error executing action LookupDomains", ex);
 			new JsonResult(false, "Unable to lookup domains").printTo(out);
+		}
+	}
+	
+	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsSimple> items = new ArrayList<>();
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean users = ServletUtils.getBooleanParameter(request, "users", true);
+			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
+			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
+			
+			if(!WT.isSysAdmin(up.getId())) {
+				domainId = up.getDomainId();
+			}
+			
+			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			List<Role> roles = core.listRoles(domainId, users, groups);
+			for(Role role : roles) {
+				items.add(new JsSimple(role.getUid(), JsSimple.description(role.getName(), role.getDescription())));
+			}
+			
+			new JsonResult("roles", items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action LookupDomainRoles", ex);
+			new JsonResult(false, "Unable to lookup roles").printTo(out);
 		}
 	}
 	

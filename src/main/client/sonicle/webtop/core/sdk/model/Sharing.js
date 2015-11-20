@@ -40,19 +40,21 @@ Ext.define('Sonicle.webtop.core.model.sdk.Sharing', {
 	fields: [
 		WTF.field('id', 'string', false),
 		WTF.roField('level', 'int')
-	],
-	hasMany: [{
-		name: 'rights',
-		model: 'Sonicle.webtop.core.sdk.model.SharingRoleRights'
-	}]
+	]
 });
-Ext.define('Sonicle.webtop.core.sdk.model.SharingRoleRights', {
-	alternateClassName: 'WT.sdk.model.SharingRoleRights',
+Ext.define('Sonicle.webtop.core.sdk.model.SharingRights', {
+	alternateClassName: 'WT.sdk.model.SharingRights',
 	extend: 'WT.model.Base',
 	
 	identifier: 'negativestring',
 	idProperty: 'roleUid',
 	fields: [
+		WTF.field('_fk', 'string', true, {
+			reference: {
+				parent: 'Sonicle.webtop.core.model.sdk.Sharing',
+				inverse: 'rights'
+			}
+		}),
 		WTF.field('roleUid', 'string', false),
 		WTF.field('rootManage', 'boolean', false, {defaultValue: false}),
 		WTF.field('folderRead', 'boolean', false, {defaultValue: false}),

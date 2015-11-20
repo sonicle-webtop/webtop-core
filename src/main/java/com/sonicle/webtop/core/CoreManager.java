@@ -50,8 +50,8 @@ import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
 import com.sonicle.webtop.core.bol.model.SharePermsFolder;
 import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
+import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.Sharing;
-import com.sonicle.webtop.core.bol.model.SharePerms;
 import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
@@ -76,7 +76,6 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -174,6 +173,17 @@ public class CoreManager extends BaseServiceManager {
 			return null;
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<Role> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
+				
+		try {
+			AuthManager authm = wta.getAuthManager();
+			return authm.listRoles(domainId, fromUsers, fromGroups);
+			
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list roles [{0}, {1}, {2}]", domainId, fromUsers, fromGroups);
 		}
 	}
 	
@@ -689,6 +699,7 @@ public class CoreManager extends BaseServiceManager {
 		Connection con = null;
 		
 		try {
+			String puid = authm.userToSid(targetPid);
 			CompositeId cid = new CompositeId().parse(sharing.getId());
 			int level = cid.getHowManyTokens()-1;
 			String rootId = cid.getToken(0);
@@ -698,11 +709,11 @@ public class CoreManager extends BaseServiceManager {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				String puid = authm.userToSid(targetPid);
 				rootShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
 			}
+			if(rootShare == null) rootShare = addRootShare(con, puid, serviceId, rootShareRes);
 			
 			if(level == 0) {
 				OShare folderShare = shadao.selectByUserServiceResourceInstance(con, rootShare.getUserUid(), serviceId, folderShareRes, OShare.INSTANCE_WILDCARD);
