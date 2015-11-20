@@ -33,14 +33,29 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.webtop.core.bol.model.Role;
+import java.text.MessageFormat;
+
 /**
  *
  * @author malbinola
  */
-public class JsFeedback {
-	public String serviceId;
-	public String message;
-	public String anonymous;
-	public String timestamp;
-	public String image;
+public class JsRole extends JsSimple {
+	public String source;
+	
+	public JsRole() {}
+	
+	public JsRole(Object id, String description, String source) {
+		super(id, description);
+		this.source = source;
+	}
+	
+	public JsRole(Role role) {
+		super(role.getUid(), JsSimple.description(role.getName(), role.getDescription()));
+		source = role.getSource();
+	}
+	
+	public static JsRole wildcard(String description) {
+		return new JsRole("*", MessageFormat.format("(*) {0}", description), null);
+	}
 }

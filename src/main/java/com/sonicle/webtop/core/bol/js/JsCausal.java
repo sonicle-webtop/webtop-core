@@ -43,9 +43,7 @@ public class JsCausal extends JsSimple {
 	public String status;
 	public Boolean readOnly;
 	
-	public JsCausal() {
-		
-	}
+	public JsCausal() {}
 	
 	public JsCausal(OCausal causal) {
 		super(causal.getCausalId(), causal.getDescription());

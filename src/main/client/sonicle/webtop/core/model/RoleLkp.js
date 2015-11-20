@@ -31,16 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-/**
- *
- * @author malbinola
- */
-public class JsFeedback {
-	public String serviceId;
-	public String message;
-	public String anonymous;
-	public String timestamp;
-	public String image;
-}
+Ext.define('Sonicle.webtop.core.model.RoleLkp', {
+	alternateClassName: 'WT.model.RoleLkp',
+	extend: 'WT.model.Base',
+	
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string', false),
+		WTF.roField('desc', 'string'),
+		WTF.roField('source', 'string'),
+		WTF.calcField('sourcedesc', 'string', 'source', function(v,rec) {
+			return '['+WT.res('role.source.'+rec.get('source'))+']';
+		})
+	]
+});

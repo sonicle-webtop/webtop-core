@@ -55,6 +55,7 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridSync.JsGridSyncList;
+import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
@@ -255,7 +256,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = new ArrayList<>();
+		List<JsRole> items = new ArrayList<>();
 		UserProfile up = getEnv().getProfile();
 		
 		try {
@@ -268,10 +269,10 @@ public class Service extends BaseService {
 				domainId = up.getDomainId();
 			}
 			
-			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			if(wildcard) items.add(JsRole.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			List<Role> roles = core.listRoles(domainId, users, groups);
 			for(Role role : roles) {
-				items.add(new JsSimple(role.getUid(), JsSimple.description(role.getName(), role.getDescription())));
+				items.add(new JsRole(role));
 			}
 			
 			new JsonResult("roles", items, items.size()).printTo(out);

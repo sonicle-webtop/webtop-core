@@ -41,13 +41,19 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @author malbinola
  */
 public class Role {
+	public static final String SOURCE_USER = "user";
+	public static final String SOURCE_GROUP = "group";
+	public static final String SOURCE_ROLE = "role";
+	public static final String SOURCE_TRANSITIVE = "trans";
 	private String uid;
 	private String name;
+	private String source;
 	private String description;
 	
-	public Role(String uid, String name, String description) {
+	public Role(String uid, String name, String source, String description) {
 		this.uid = uid;
 		this.name = name;
+		this.source = source;
 		this.description = description;
 	}
 
@@ -65,6 +71,14 @@ public class Role {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	public String getDescription() {

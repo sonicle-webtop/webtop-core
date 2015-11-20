@@ -214,7 +214,7 @@ public class AuthManager {
 			if(self) {
 				UserDAO usedao = UserDAO.getInstance();
 				OUser user = usedao.selectByUid(con, userSid);
-				roles.add(new Role(roleSid, pid.getUserId(), user.getDisplayName()));
+				roles.add(new Role(roleSid, pid.getUserId(), Role.SOURCE_USER, user.getDisplayName()));
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
@@ -224,7 +224,7 @@ public class AuthManager {
 			for(ORole role : groles) {
 				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
 				roleMap.add(role.getRoleUid());
-				roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
+				roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_GROUP, role.getDescription()));
 			}
 			
 			// Gets direct assigned roles
@@ -232,7 +232,7 @@ public class AuthManager {
 			for(ORole role : droles) {
 				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
 				roleMap.add(role.getRoleUid());
-				roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
+				roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_ROLE, role.getDescription()));
 			}
 			
 			// Get transivite roles (belonging to groups)
@@ -241,7 +241,7 @@ public class AuthManager {
 				for(ORole role : troles) {
 					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
 					roleMap.add(role.getRoleUid());
-					roles.add(new Role(role.getRoleUid(), role.getName(), role.getDescription()));
+					roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_TRANSITIVE, role.getDescription()));
 				}
 			}
 		} catch(SQLException | DAOException ex) {
@@ -262,21 +262,21 @@ public class AuthManager {
 				UserDAO usedao = UserDAO.getInstance();
 				List<OUser> users = usedao.selectActiveByDomain(con, domainId);
 				for(OUser user: users) {
-					roles.add(new Role(user.getRoleUid(), user.getUserId(), user.getDisplayName()));
+					roles.add(new Role(user.getRoleUid(), user.getUserId(), Role.SOURCE_USER, user.getDisplayName()));
 				}
 			}
 			if(fromUsers) {
 				GroupDAO grpdao = GroupDAO.getInstance();
 				List<OGroup> groups = grpdao.selectActiveByDomain(con, domainId);
 				for(OGroup group: groups) {
-					roles.add(new Role(group.getRoleUid(), group.getUserId(), group.getDisplayName()));
+					roles.add(new Role(group.getRoleUid(), group.getUserId(), Role.SOURCE_GROUP, group.getDisplayName()));
 				}
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
 			List<ORole> eroles = roldao.selectByDomain(con, domainId);
 			for(ORole erole : eroles) {
-				roles.add(new Role(erole.getRoleUid(), erole.getName(), erole.getDescription()));
+				roles.add(new Role(erole.getRoleUid(), erole.getName(), Role.SOURCE_ROLE, erole.getDescription()));
 			}
 			
 		} catch(SQLException | DAOException ex) {

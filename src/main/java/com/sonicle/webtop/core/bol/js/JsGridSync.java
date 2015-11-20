@@ -46,9 +46,7 @@ public class JsGridSync {
 	public String user;
 	public String info;
 	
-	public JsGridSync() {
-		
-	}
+	public JsGridSync() {}
 	
 	public JsGridSync(String device, String user, String info) {
 		this.id = new CompositeId(device, user).toString();

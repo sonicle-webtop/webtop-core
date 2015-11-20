@@ -34,6 +34,10 @@
 Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	alternateClassName: 'WT.sdk.Sharing',
 	extend: 'WT.sdk.ModelView',
+	requires: [
+		'Sonicle.webtop.core.model.RoleLkp',
+		'Sonicle.form.field.SourceComboBox'
+	],
 	
 	dockableConfig: {
 		title: '{sharing.tit@com.sonicle.webtop.core}',
@@ -90,12 +94,14 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 			height: 30,
 			items: [
 				WTF.localCombo('id', 'desc', {
+					xtype: 'sosourcecombo',
 					reference: 'fldrole',
 					store: {
 						autoLoad: true,
-						model: 'WT.model.Simple',
+						model: 'WT.model.RoleLkp',
 						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
 					},
+					sourceField: 'sourcedesc',
 					anchor: '100%',
 					emptyText: WT.res('sharing.fld-role.lbl'),
 					listeners: {
