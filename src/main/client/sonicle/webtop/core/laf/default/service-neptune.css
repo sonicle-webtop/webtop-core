@@ -7,32 +7,17 @@
 	background-color: #3892d3;
 }
 
-/* -----------------------------------------
- * Convenience classes for addressing theme base colors
- */
 /*
- * Background: generally light to not provide excessive contrast
- * 1:light, 2:base, 3:dark/alternative
+ * Background: 1:light, 2:medium-dark, 3:dark/alternative
+ * Generally light to not provide excessive contrast
  */
-.wt-theme-bg-1 {
-	background-color: #ffffff;
-}
-.wt-theme-bg-2 {
-	background-color: #dfeaf2;
-}
-.wt-theme-bg-3 {
-	background-color: #3892d3;
-}
+.wt-theme-bg-1 { background-color: #ffffff; }
+.wt-theme-bg-2 { background-color: #dfeaf2; }
+.wt-theme-bg-3 { background-color: #3892d3; }
+
 /*
- * Header/
- * 1:light, 2:darker, 3:dark
+ * Header colors: 1:light, 2:medium-dark, 3:dark
  */
-.wt-theme-hd-1 {
-	background-color: #dfeaf2;
-}
-.wt-theme-hd-2 {
-	background-color: #5fa7db;
-}
-.wt-theme-hd-3 {
-	background-color: #157fcc;
-}
+.wt-theme-hd-1 { background-color: #dfeaf2; }
+.wt-theme-hd-2 { background-color: #5fa7db; }
+.wt-theme-hd-3 { background-color: #157fcc; }

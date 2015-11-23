@@ -76,6 +76,7 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -466,8 +467,11 @@ public class CoreManager extends BaseServiceManager {
 	
 	public List<IncomingShareRoot> listIncomingShareRoots(UserProfile.Id pid, String serviceId, String resource) throws WTException {
 		Connection con = null;
-		String rootRes = OShare.buildRootResource(resource);
-		String folderRes = OShare.buildFolderResource(resource);
+		String rootShareRes = OShare.buildRootResource(resource);
+		String folderShareRes = OShare.buildFolderResource(resource);
+		String rootPermRes = AuthResourceShare.buildRootPermissionResource(resource);
+		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
+		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
 		
 		try {
 			AuthManager authm = wta.getAuthManager();
@@ -483,14 +487,15 @@ public class CoreManager extends BaseServiceManager {
 			// We look into permission returning each share instance that have 
 			// "*_FOLDER" as resource and satisfies a set of roles. Then we can
 			// get a list of unique uids (from shares table) that owns the share.
-			List<String> originUids = shadao.viewOriginByRoleServiceResource(con, roleUids, serviceId, folderRes);
+			List<String> permRes = Arrays.asList(rootPermRes, folderPermRes, elementsPermRes);
+			List<String> originUids = shadao.viewOriginByRoleServiceResource(con, roleUids, serviceId, folderShareRes, permRes);
 			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
 			for(String uid : originUids) {
 				if(uid.equals(puid)) continue; // Skip self role
 				
 				// Foreach incoming uid we have to find the root share and then
 				// test if READ right is allowed
-				OShare root = shadao.selectByUserServiceResourceInstance(con, uid, serviceId, rootRes, OShare.ROOT_INSTANCE);
+				OShare root = shadao.selectByUserServiceResourceInstance(con, uid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
 				if(root == null) continue;
 				
 				OUser user = usedao.selectByUid(con, uid);
@@ -508,7 +513,8 @@ public class CoreManager extends BaseServiceManager {
 	
 	public List<OShare> listIncomingShareFolders(UserProfile.Id pid, String rootShareId, String serviceId, String resource) throws WTException {
 		Connection con = null;
-		String folderRes = OShare.buildFolderResource(resource);
+		String folderShareRes = OShare.buildFolderResource(resource);
+		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
 		
 		try {
 			AuthManager auth = wta.getAuthManager();
@@ -520,9 +526,9 @@ public class CoreManager extends BaseServiceManager {
 			if(rootShare == null) throw new WTException("Unable to find root share [{0}]", rootShareId);
 			
 			ArrayList<OShare> folders = new ArrayList<>();
-			List<OShare> shares = shadao.selectByUserServiceResource(con, rootShare.getUserUid(), serviceId, folderRes);
+			List<OShare> shares = shadao.selectByUserServiceResource(con, rootShare.getUserUid(), serviceId, folderShareRes);
 			for(OShare share : shares) {
-				if(auth.isPermitted(pid, AuthResource.namespacedName(serviceId, folderRes), AuthResource.ACTION_READ, share.getShareId().toString())) {
+				if(auth.isPermitted(pid, AuthResource.namespacedName(serviceId, folderPermRes), AuthResource.ACTION_READ, share.getShareId().toString())) {
 					folders.add(share);
 				}
 			}
