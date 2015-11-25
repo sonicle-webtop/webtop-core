@@ -19,19 +19,25 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.3.2</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.6</version>
+			<groupId>javax.websocket</groupId>
+			<artifactId>javax.websocket-api</artifactId>
+			<version>1.1</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>1.7.6</version>
+		</dependency>
+		<dependency>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>2.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.shiro</groupId>
@@ -43,40 +49,21 @@
 			<artifactId>shiro-web</artifactId>
 			<version>1.2.3</version>
 		</dependency>
+		
 		<dependency>
-			<groupId>org.freemarker</groupId>
-			<artifactId>freemarker</artifactId>
-			<version>2.3.20</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sonicle.commons</groupId>
-			<artifactId>sonicle-commons</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sonicle.commons</groupId>
-			<artifactId>sonicle-commons-web</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP-java6</artifactId>
-			<version>2.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sonicle.security</groupId>
-			<artifactId>sonicle-security</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>1.7.6</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-configuration</groupId>
@@ -95,6 +82,36 @@
 			<version>3.2.1</version>
 		</dependency>
 		<dependency>
+			<groupId>commons-fileupload</groupId>
+			<artifactId>commons-fileupload</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.webtop</groupId>
+			<artifactId>webtop-core-db</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.commons</groupId>
+			<artifactId>sonicle-commons</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.commons</groupId>
+			<artifactId>sonicle-commons-web</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.security</groupId>
+			<artifactId>sonicle-security</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>webtop-tinymce</artifactId>
+			<version>5.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>net.sf.uadetector</groupId>
 			<artifactId>uadetector-core</artifactId>
 			<version>0.9.20</version>
@@ -105,15 +122,9 @@
 			<version>2014.08</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sonicle.webtop</groupId>
-			<artifactId>webtop-core-db</artifactId>
-			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>javax.websocket</groupId>
-			<artifactId>javax.websocket-api</artifactId>
-			<version>1.1</version>
-			<scope>provided</scope>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.20</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.zxing</groupId>
@@ -134,11 +145,6 @@
 			<groupId>net.glxn.qrgen</groupId>
 			<artifactId>javase</artifactId>
 			<version>2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>webtop-tinymce</artifactId>
-			<version>5.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
@@ -152,25 +158,20 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
-			<version>1.3.1</version>
+			<groupId>net.sf.supercsv</groupId>
+			<artifactId>super-csv</artifactId>
+			<version>2.3.1</version>
 		</dependency>
-	 <dependency>
-	  <groupId>net.sf.supercsv</groupId>
-	  <artifactId>super-csv</artifactId>
-	  <version>2.3.1</version>
-	 </dependency>
-	 <dependency>
-	  <groupId>net.sf.supercsv</groupId>
-	  <artifactId>super-csv-joda</artifactId>
-	  <version>2.3.1</version>
-	 </dependency>
-	 <dependency>
-	  <groupId>org.mnode.ical4j</groupId>
-	  <artifactId>ical4j</artifactId>
-	  <version>1.0.6</version>
-	 </dependency>
+		<dependency>
+			<groupId>net.sf.supercsv</groupId>
+			<artifactId>super-csv-joda</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mnode.ical4j</groupId>
+			<artifactId>ical4j</artifactId>
+			<version>1.0.6</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<resources>

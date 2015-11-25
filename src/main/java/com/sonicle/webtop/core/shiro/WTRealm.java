@@ -126,7 +126,7 @@ public class WTRealm extends AuthorizingRealm {
 		for(Role role : userRoles) {
 			roles.add(role.getUid());
 
-			List<ORolePermission> rolePerms = autm.getRolePermissions(role.getUid());
+			List<ORolePermission> rolePerms = autm.listRolePermissions(role.getUid());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 

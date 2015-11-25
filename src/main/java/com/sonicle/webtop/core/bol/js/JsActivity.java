@@ -43,9 +43,7 @@ public class JsActivity extends JsSimple {
 	public String status;
 	public Boolean readOnly;
 	
-	public JsActivity() {
-		
-	}
+	public JsActivity() {}
 	
 	public JsActivity(OActivity activity) {
 		super(activity.getActivityId(), activity.getDescription());

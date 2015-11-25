@@ -38,7 +38,6 @@ package com.sonicle.webtop.core.bol.js;
  * @author malbinola
  */
 public class JsFeedback {
-	
 	public String serviceId;
 	public String message;
 	public String anonymous;

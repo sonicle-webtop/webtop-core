@@ -43,9 +43,7 @@ public class JsSimple {
 	public Object id;
 	public String desc;
 	
-	public JsSimple() {
-		
-	}
+	public JsSimple() {}
 	
 	public JsSimple(Object id, String description) {
 		this.id = id;

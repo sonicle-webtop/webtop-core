@@ -17,6 +17,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ServiceDescriptor',
 		
 		'Sonicle.webtop.core.ux.Panel',
+		'Sonicle.webtop.core.ux.TabPanel',
 		'Sonicle.webtop.core.ux.FieldsPanel'
 		
 	].concat(WTS.appRequires || []),
