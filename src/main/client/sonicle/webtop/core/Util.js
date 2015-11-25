@@ -197,17 +197,28 @@ Ext.define('Sonicle.webtop.core.Util', {
 		*/
 	},
 	
+	removeExtraParams: function(proxy, params) {
+		if(!Ext.isArray(params)) params = [params];
+		if(!proxy.isProxy && !proxy.isStore) return;
+		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
+		var obj = {};
+		Ext.iterate(proxy.getExtraParams(), function(k,v) {
+			if(params.indexOf(k) !== -1) obj[k] = v;
+		});
+		proxy.setExtraParams(obj);
+	},
+	
 	/**
 	 * Applies extra params to passed proxy.
 	 * @param {Ext.data.proxy.Proxy/Ext.data.Store} proxy The proxy.
 	 * @param {Object} params Extra params to apply.
-	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
+	 * @param {Boolean} [clear=false] 'true' to clear previous params, 'false' to merge them.
 	 */
-	applyExtraParams: function(proxy, params, overwrite) {
-		if(arguments.length === 2) overwrite = false;
+	applyExtraParams: function(proxy, params, clear) {
+		if(arguments.length === 2) clear = false;
 		if(!proxy.isProxy && !proxy.isStore) return;
 		proxy = (proxy.isStore) ? proxy.getProxy() : proxy;
-		var obj = Ext.apply((overwrite) ? {} : proxy.getExtraParams(), params);
+		var obj = Ext.apply((clear) ? {} : proxy.getExtraParams(), params);
 		proxy.setExtraParams(obj);
 	},
 	

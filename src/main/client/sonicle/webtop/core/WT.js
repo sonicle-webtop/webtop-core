@@ -182,18 +182,28 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Utility function to return a resource string or string itself.
-	 * If passed string contains a resource key preceeded by @ character,
-	 * res method is called instead returning the passed value.
+	 * If passed string is a valid resource template (see below), 
+	 * passed value will be evaluated and {@link #res} return value 
+	 * will be returned as result.
+	 * Resource template string can be: '{abc}' or '{abc@com.sonicle.webtop.myservice}'.
+	 * The first one points at the resource with key 'abc' in the service 
+	 * 'com.sonicle.webtop.core', while the second in service 'com.sonicle.webtop.myservice'.
 	 * @param {String} [id] The service ID.
 	 * @param {String} str The string.
 	 * @returns {String} The value.
 	 */
-	resStr: function(id, str) {
+	resTpl: function(id, str) {
 		if(arguments.length === 1) {
 			str = id;
 			id = WT.ID;
 		}
-		return (str.substr(0, 1) === '@') ? WT.res(id, str.substr(1)) : str;
+		if(str.startsWith('{') && str.endsWith('}')) {
+			var s = str.substr(1, str.length-2),
+					tokens = s.split('@');
+			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
+		} else {
+			return str; // No template defined...
+		}
 	},
 	
 	optionsProxy: function(svc) {

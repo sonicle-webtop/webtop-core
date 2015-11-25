@@ -40,13 +40,13 @@ package com.sonicle.webtop.core.bol.model;
 public class ShareFolder {
 	protected final String shareId;
 	protected final SharePermsFolder perms;
-	protected final SharePermsFolderEls elsPerms;
+	protected final SharePermsElements eperms;
 	protected final Object object;
 	
-	public ShareFolder(String shareId, SharePermsFolder perms, SharePermsFolderEls elsPerms, Object object) {
+	public ShareFolder(String shareId, SharePermsFolder perms, SharePermsElements eperms, Object object) {
 		this.shareId = shareId;
 		this.perms = perms;
-		this.elsPerms = elsPerms;
+		this.eperms = eperms;
 		this.object = object;
 	}
 
@@ -58,7 +58,7 @@ public class ShareFolder {
 		return perms;
 	}
 	
-	public SharePermsFolderEls getElsPerms() {
-		return elsPerms;
+	public SharePermsElements getElementsPerms() {
+		return eperms;
 	}
 }

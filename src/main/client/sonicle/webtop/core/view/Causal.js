@@ -40,12 +40,12 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	],
 	
 	dockableConfig: {
-		title: '@causal.tit',
+		title: '{causal.tit}',
 		iconCls: 'wt-icon-causal-xs',
 		width: 430,
 		height: 250
 	},
-	model: 'Sonicle.webtop.core.model.Causal',
+	modelName: 'Sonicle.webtop.core.model.Causal',
 	viewModel: {
 		formulas: {
 			readOnly: WTF.checkboxBind('record', 'readOnly')

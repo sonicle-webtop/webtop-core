@@ -70,8 +70,8 @@ public class UserOptionsService extends BaseUserOptionsService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
 			UserInfoProviderBase provider = core.getUserInfoProvider();
-			CoreServiceSettings ss = new CoreServiceSettings(getTargetDomainId(), CoreManifest.ID);
-			CoreUserSettings us = new CoreUserSettings(getTargetDomainId(), getTargetUserId());
+			CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
+			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
 			con = WT.getCoreConnection();
 			UserDAO udao = UserDAO.getInstance();
@@ -218,7 +218,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 		
 		try {
 			TFAManager tfam = core.getTFAManager();
-			tfam.deactivateTFA(getTargetDomainId(), getTargetUserId());
+			tfam.deactivateTFA(getTargetProfileId());
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {

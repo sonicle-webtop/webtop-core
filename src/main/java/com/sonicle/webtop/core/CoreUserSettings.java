@@ -44,15 +44,11 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 public class CoreUserSettings extends BaseUserSettings {
 	
 	public CoreUserSettings(UserProfile.Id profileId) {
-		super(profileId, CoreManifest.ID);
-	}
-	
-	public CoreUserSettings(String domainId, String userId) {
-		super(domainId, userId, CoreManifest.ID);
+		super(CoreManifest.ID, profileId);
 	}
 
-	public CoreUserSettings(String domainId, String userId, String serviceId) {
-		super(domainId, userId, serviceId);
+	public CoreUserSettings(String serviceId, UserProfile.Id profileId) {
+		super(serviceId, profileId);
 	}
 	
 	/**
@@ -132,7 +128,6 @@ public class CoreUserSettings extends BaseUserSettings {
 	 */
 	public static final String WHATSNEW_VERSION = "whatsnew.version";
 	
-	//public static final String PROFILEDATA_EDITABLE = "profiledata.editable";
 	//public static final String OTP_ENABLED = "otp.enabled";
 	
 	/**

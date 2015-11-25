@@ -88,13 +88,13 @@ public class Service extends BaseService {
 	
 	private static final Logger logger = WT.getLogger(Service.class);
 	private CoreManager core;
-	private CoreUserSettings cus;
+	private CoreUserSettings us;
 	
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
 		core = new CoreManager(getRunContext(), ((CoreEnvironment)getEnv()).getApp());
-		cus = new CoreUserSettings(profile.getDomainId(), profile.getUserId());
+		us = new CoreUserSettings(profile.getId());
 	}
 
 	@Override
@@ -111,16 +111,16 @@ public class Service extends BaseService {
 		hm.put("domainId", profile.getDomainId());
 		hm.put("userId", profile.getUserId());
 		
-		hm.put("theme", cus.getTheme());
-		hm.put("layout", cus.getLayout());
-		hm.put("laf", cus.getLookAndFeel());
+		hm.put("theme", us.getTheme());
+		hm.put("layout", us.getLayout());
+		hm.put("laf", us.getLookAndFeel());
 		hm.put("language", profile.getLanguageTag());
 		hm.put("timezone", profile.getTimeZone().getID());
-		hm.put("startDay", cus.getStartDay());
-		hm.put("shortDateFormat", cus.getShortDateFormat());
-		hm.put("longDateFormat", cus.getLongDateFormat());
-		hm.put("shortTimeFormat", cus.getShortTimeFormat());
-		hm.put("longTimeFormat", cus.getLongTimeFormat());
+		hm.put("startDay", us.getStartDay());
+		hm.put("shortDateFormat", us.getShortDateFormat());
+		hm.put("longDateFormat", us.getLongDateFormat());
+		hm.put("shortTimeFormat", us.getShortTimeFormat());
+		hm.put("longTimeFormat", us.getLongTimeFormat());
 		
 		hm.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
 		hm.put("upiProviderWritable", core.isUserInfoProviderWritable());

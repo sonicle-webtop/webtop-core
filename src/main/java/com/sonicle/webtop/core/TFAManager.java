@@ -105,7 +105,7 @@ public class TFAManager {
 	}
 	
 	boolean isEnabled(String domainId) {
-		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 		return css.getTFAEnabled();
 	}
 	
@@ -135,7 +135,7 @@ public class TFAManager {
 	*/
 	
 	boolean isTrusted(String domainId, String remoteIP) {
-		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 		
 		String addresses = css.getTFATrustedAddresses();
 		if(addresses != null) {
@@ -181,7 +181,7 @@ public class TFAManager {
 	
 	public boolean activateTFA(WebTopSession wts, String deliveryMode, int code) {
 		UserProfile profile = wts.getUserProfile();
-		CoreServiceSettings css = new CoreServiceSettings(profile.getDomainId(), CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profile.getDomainId());
 		CoreUserSettings cus = new CoreUserSettings(profile.getId());
 		
 		boolean valid = false;
@@ -234,7 +234,7 @@ public class TFAManager {
 	
 	boolean checkCode(WebTopSession wts, int code) {
 		UserProfile profile = wts.getUserProfile();
-		CoreServiceSettings css = new CoreServiceSettings(profile.getDomainId(), CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profile.getDomainId());
 		CoreUserSettings cus = new CoreUserSettings(profile.getId());
 		OTPKey otp = null;
 		
@@ -295,7 +295,7 @@ public class TFAManager {
 	
 	boolean isThisDeviceTrusted(String domainId, String userId, TrustedDeviceCookie tdc) {
 		if(tdc == null) return false;
-		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 		
 		// Checks (if enabled) cookie duration
 		int duration = css.getTFADeviceTrustDuration();
@@ -351,8 +351,8 @@ public class TFAManager {
 		ServletUtils.setEncryptedCookie(secret, response, name, tdc, TrustedDeviceCookie.class, duration);
 	}
 	
-	void deactivateTFA(String domainId, String userId) {
-		CoreUserSettings cus = new CoreUserSettings(domainId, userId);
+	void deactivateTFA(UserProfile.Id profileId) {
+		CoreUserSettings cus = new CoreUserSettings(profileId);
 		cus.clear(CoreUserSettings.TFA_SECRET);
 		cus.clear(CoreUserSettings.TFA_EMAILADDRESS);
 		cus.clear(CoreUserSettings.TFA_DELIVERY);

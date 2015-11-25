@@ -52,7 +52,7 @@ public class ShareRoot {
 		this.description = description;
 	}
 	
-	public ShareRoot(IncomingRootShare share, SharePermsRoot perms) {
+	public ShareRoot(IncomingShareRoot share, SharePermsRoot perms) {
 		this(share.getShareId(), perms, share.getOriginPid(), share.getDescription());
 	}
 	

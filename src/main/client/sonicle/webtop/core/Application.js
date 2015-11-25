@@ -134,7 +134,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// If necessary, show whatsnew
 		if(WT.getOption('isWhatsnewNeeded')) {
-			vpc.buildWhatsnewWnd(false);
+			vpc.showWhatsnew(false);
 		}
 		
 		// Inits messages (webSocket/ServerEvents)

@@ -79,7 +79,7 @@ public class PublicServiceRequest extends BaseRequestServlet {
 	}
 	
 	public FileResource getExternalPublicFile(WebTopApp wta, String serviceId, String relativePath) throws URISyntaxException, MalformedURLException {
-		CoreServiceSettings css = new CoreServiceSettings("*", CoreManifest.ID);
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		String pathname = LangUtils.joinPaths(css.getSystemPublicPath(), serviceId, relativePath);
 		return wta.getFileResource(new File(pathname).toURI().toURL());
 	}

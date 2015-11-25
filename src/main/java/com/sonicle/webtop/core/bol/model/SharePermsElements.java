@@ -39,18 +39,23 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public class SharePermsFolderEls extends SharePerms {
+public class SharePermsElements extends SharePerms {
+	public static final String[] ACTIONS = new String[]{
+		AuthResource.ACTION_CREATE,
+		AuthResource.ACTION_UPDATE,
+		AuthResource.ACTION_DELETE
+	};
 	
-	public SharePermsFolderEls(String... actions) {
+	public SharePermsElements(String... actions) {
 		super(actions);
 	}
 	
-	public SharePermsFolderEls(String[] actions, boolean[] bools) {
+	public SharePermsElements(String[] actions, boolean[] bools) {
 		super(actions, bools);
 	}
 	
 	@Override
-	protected void parse(String[] actions, boolean[] bools) {
+	public void parse(String[] actions, boolean[] bools) {
 		if(actions.length != bools.length) throw new IllegalArgumentException("Passed arrays must have same lenght");
 		for(int i=0; i<actions.length; i++) {
 			if(bools[i]) parse(actions[i]);
@@ -58,7 +63,7 @@ public class SharePermsFolderEls extends SharePerms {
 	}
 	
 	@Override
-	protected void parse(String... actions) {
+	public void parse(String... actions) {
 		for(String action : actions) {
 			if(StringUtils.equalsIgnoreCase(action, "CREATE"))
 				mask |= CREATE;
@@ -66,15 +71,20 @@ public class SharePermsFolderEls extends SharePerms {
 				mask |= UPDATE;
 			else if(StringUtils.equalsIgnoreCase(action, "DELETE"))
 				mask |= DELETE;
+			else if(action.equals("*")) {
+				mask |= CREATE;
+				mask |= UPDATE;
+				mask |= DELETE;
+			}
 			else throw new IllegalArgumentException("Invalid action " + action);
 		}
 	}
 	
 	public boolean implies(String... actions) {
-		return implies(new SharePermsFolderEls(actions));
+		return implies(new SharePermsElements(actions));
 	}
 	
-	public static SharePermsFolderEls full() {
-		return new SharePermsFolderEls("CREATE", "UPDATE", "DELETE");
+	public static SharePermsElements full() {
+		return new SharePermsElements("CREATE", "UPDATE", "DELETE");
 	}
 }

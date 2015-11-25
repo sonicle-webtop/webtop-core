@@ -34,13 +34,26 @@
 Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	alternateClassName: 'WT.sdk.ModelView',
 	extend: 'WT.sdk.DockableView',
-	mixins: [
-		'WT.mixin.HasModel'
+	requires: [
+		'Sonicle.form.Panel'
 	],
 	
-	session: true,
+	//viewModel: {},
 	
 	config: {
+		/**
+		 * @cfg {String} modelProperty
+		 * Name of viewModel's property in which {@link WT.sdk.ModelView#model attached model} 
+		 * data will be stored. Defaults to 'record'. (See {@link Ext.app.ViewModel#links})
+		 */
+		modelProperty: 'record',
+		
+		/**
+		 * @cfg {String} model
+		 * Name of the {@link Ext.data.Model Model} associated with this view.
+		 */
+		model: null,
+		
 		/**
 		 * @cfg {Boolean} autoToolbar
 		 * True to automatically define a top toolbar with actions for saving
@@ -55,29 +68,19 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		showSave: false,
 		
 		/**
-		 * @cgf {Boolean/String} [fieldTitle = false]
-		 * Pass as `false` to prevent model's field from being included in title.
-		 * Pass as string (field's name) to specify a field different from model's id.
+		 * @cgf {Boolean/String} [autoTitle = true]
+		 * True to enable automatic title update based on current operative
+		 * mode; False to disable the automation.
+		 * It can be a string (field name) in order to replace operative 
+		 * mode string within specified field's value.
 		 */
-		fieldTitle: false,
+		autoTitle: true,
 		
 		/**
-		 * @cfg {String} fieldTitleFormat
-		 * Formatting string used to insert a model's field in title.
+		 * @cfg {String} titleFormat
+		 * Formatting string to use during title update.
 		 */
-		fieldTitleFormat: '{0} [{1}]',
-		
-		/**
-		 * @cgf {Boolean} [modeTitle = false]
-		 * Pass as `false` to prevent current operative mode from being included in title.
-		 */
-		modeTitle: true,
-		
-		/**
-		 * @cfg {String} modeTitleFormat
-		 * Formatting string used to insert current operative mode in title.
-		 */
-		modeTitleFormat: '{0}: {1}',
+		titleFormat: '{0}: {1}'
 	},
 	
 	/**
@@ -114,19 +117,78 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	opts: null,
 	
-	/*
+	/**
+	 * @private
+	 * @property {String} linkedModelIdField
+	 * Stores {@link Ext.data.Model#idProperty idField's name}) determined from attached model.
+	 */
+	linkedModelIdField: null,
+	
 	constructor: function(config) {
-		config.viewModel = Ext.create('Ext.app.ViewModel');
-		this.callParent([config]);
+		var me = this,
+				cfg = me.config;
+		
+		// Defines a viewModel if not exists
+		me.config.viewModel = cfg.viewModel || {};
+		
+		// Apply some built-in formulas...
+		me.config.viewModel.formulas = Ext.apply(cfg.viewModel.formulas || {}, {
+			status: {
+				bind: {
+					bindTo: '{'+cfg.modelProperty+'}',
+					deep: true
+				},
+				get: function(model) {
+					var obj = {
+						//FIXME: l'aggiornamento di una associatons non notifica il cambio di stato
+						dirty: (model && model.isDirty) ? model.isDirty() : false,
+						valid: (model && model.isModel) ? model.isValid() : false
+					};
+					obj.cleanAndValid = !obj.dirty && obj.valid;
+					return obj;
+				}
+			}
+		});
+		
+		// Guess model idField name
+		if(Ext.isString(cfg.model)) {
+			var model = Ext.create(cfg.model);
+			me.linkedModelIdField = model.getIdProperty();
+			model.destroy();
+		} else {
+			me.linkedModelIdField = cfg.model.getIdProperty();
+		}
+		
+		me.callParent([config]);
 	},
-	*/
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+				vm = me.getViewModel();
+		
+		/*
+		var f = vm.getFormulas();
+		Ext.apply(f || {}, {
+			status: {
+				bind: {
+					bindTo: '{'+me.getModelProperty()+'}',
+					deep: true
+				},
+				get: function(model) {
+					var obj = {
+						dirty: model ? model.dirty : false,
+						valid: model && model.isModel ? model.isValid() : false
+					};
+					obj.cleanAndValid = !obj.dirty && obj.valid;
+					return obj;
+				}
+			}
+		});
+		vm.setFormulas(f);
+		*/
+		
 		if(me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
-		me.on('modelsave', me.onModelSave);
-		me.on('modelload', me.onModelLoad);
 	},
 	
 	initTBar: function() {
@@ -136,7 +198,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			text: WT.res('act-saveClose.lbl'),
 			iconCls: 'wt-icon-saveClose-xs',
 			handler: function() {
-				me.saveView(true);
+				me.doSave(true);
 			}
 		});
 		
@@ -152,7 +214,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 						text: WT.res('act-save.lbl'),
 						iconCls: 'wt-icon-save-xs',
 						handler: function() {
-							me.saveView(false);
+							me.doSave(false);
 						}
 					}),
 					me.getAction('saveClose')
@@ -174,7 +236,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this;
 		me.opts = opts || {};
 		me.setMode(me.MODE_NEW);
-		me.loadView();
+		me.doLoad(me.opts.data);
 	},
 	
 	/**
@@ -186,7 +248,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this;
 		me.opts = opts || {};
 		me.setMode(me.MODE_VIEW);
-		me.loadView();
+		me.doLoad(me.opts.data);
 	},
 	
 	/**
@@ -198,7 +260,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this;
 		me.opts = opts || {};
 		me.setMode(me.MODE_EDIT);
-		me.loadView();
+		me.doLoad(me.opts.data);
 	},
 	
 	/**
@@ -226,51 +288,99 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		return (this.mode === mode);
 	},
 	
-	loadView: function() {
-		var me = this;
-		me.wait();
-		me.loadModel({
-			data: me.opts.data
+	/**
+	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
+	 * @returns {Object}
+	 */
+	getVMData: function() {
+		return this.getViewModel().data;
+	},
+	
+	/**
+	 * Returns the attached model.
+	 * @returns {Ext.data.Model}
+	 */
+	getModel: function() {
+		return this.getVMData()[this.getModelProperty()];
+	},
+	
+	getModelStatus: function() {
+		return this.getVMData().status;
+	},
+	
+	doLoad: function(data) {
+		data = data || {};
+		var me = this,
+				vm = me.getViewModel(),
+				linkName = me.getModelProperty(),
+				id = data[me.linkedModelIdField],
+				model;
+		
+		// Due to there is no callback on linkTo method, we need to register a
+		// binding handler that will be called (once) when the viewmodel will
+		// be populated.
+		vm.bind({
+			bindTo: '{'+linkName+'}',
+			single: true
+		}, function(model) {
+			var reader = model.getProxy().getReader(),
+					success = (model.phantom) ? true : reader.getSuccess(reader.rawData || {});
+			me.unwait();
+			me.fireEvent('viewload', me, success, model);
 		});
-	},
-	
-	saveView: function(closeAfter) {
-		var me = this, ok;
+		
 		me.wait();
-		ok = me.saveModel({
-			pass: {
-				closeAfter: closeAfter
-			}
-		});
-		if(!ok) me.unwait();
+		if(Ext.isEmpty(id)) { // New case
+			// Defines a viewmodel link, creating an empty (phantom) model
+			vm.linkTo(me.modelProperty, {
+				type: me.model,
+				create: true
+			});
+			// Apply initial data resetting dirty flag
+			model = vm.get(me.modelProperty);
+			model.set(data, {
+				dirty: false
+			});
+			model.setAssociated(data); // Using our custom Sonicle.data.Model!
+		} else { // Edit/View case
+			vm.linkTo(me.modelProperty, {
+				type: me.model,
+				id: id
+			});
+		}
 	},
 	
-	onModelLoad: function(s, success, model) {
-		s.unwait();
-		if(s.fieldTitle) s.updateTitle();
-		s.fireEvent('viewload', s, success, model);
-	},
-	
-	onModelSave: function(s, op, success, model, pass) {
-		s.unwait();
-		s.fireEvent('viewsave', s, success, model);
-		if(success) {
-			if(pass.closeAfter) s.closeView(false);
-		} else {
-			WT.error(op.getError());
+	doSave: function(closeAfter) {
+		var me = this,
+				model = me.getModel();
+		
+		if(model && model.isValid()) {
+			me.wait();
+			model.save({
+				callback: function(rec, op, success) {
+					me.unwait();
+					me.fireEvent('viewsave', me, success, model);
+					if(success) {
+						if(closeAfter) me.closeView(false);
+					} else {
+						WT.error(op.getError());
+					}
+				},
+				scope: me
+			});
 		}
 	},
 	
 	onModeChange: function(nm, om) {
 		var me = this;
-		if(me.modeTitle) me.updateTitle();
+		if(me.autoTitle) me.updateTitle();
 		me.fireEvent('modechange', me, nm, om);
 	},
 	
 	onConfirmView: function() {
 		// User chose to save dirty values before close.
 		// Do save, signalling to close the view after a succesful operation.
-		this.saveView(true);
+		this.doSave(true);
 	},
 	
 	canCloseView: function() {
@@ -281,34 +391,25 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	updateTitle: function() {
-		var me = this,
-				title = me.getTitle(),
-				model, arg1;
-		
-		if((me.fieldTitle === true) || Ext.isString(me.fieldTitle)) {
-			model = me.getModel();
-			if(model) {
-				arg1 = Ext.isString(me.fieldTitle) ? model.get(me.fieldTitle) : model.getId();
-				title = Ext.String.format(me.fieldTitleFormat, title, (!Ext.isEmpty(arg1) ? arg1+'' : ''));
+		var me = this, model, mtit = '';
+		if(me.ctInited) {
+			if(Ext.isString(me.autoTitle)) {
+				model = me.getModel();
+				if(model) mtit = model.get(me.autoTitle) || '';
+			} else {
+				switch(me.mode) {
+					case me.MODE_VIEW:
+						mtit = WT.res('act-view.lbl');
+						break;
+					case me.MODE_NEW:
+						mtit = WT.res('act-new.lbl');
+						break;
+					case me.MODE_EDIT:
+						mtit = WT.res('act-edit.lbl');
+						break;
+				}
 			}
+			me.setTitle(Ext.String.format(me.titleFormat, me.resTitle(), mtit));
 		}
-		
-		if(me.modeTitle === true) {
-			switch(me.mode) {
-				case me.MODE_VIEW:
-					arg1 = WT.res('act-view.lbl');
-					break;
-				case me.MODE_NEW:
-					arg1 = WT.res('act-new.lbl');
-					break;
-				case me.MODE_EDIT:
-					arg1 = WT.res('act-edit.lbl');
-					break;
-				default:
-					arg1 = null;
-			}
-			if(arg1) title = Ext.String.format(me.modeTitleFormat, title, arg1);
-		}
-		me.setViewTitle(title);
 	}
 });
