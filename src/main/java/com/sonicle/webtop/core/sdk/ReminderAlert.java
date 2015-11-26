@@ -37,39 +37,32 @@ package com.sonicle.webtop.core.sdk;
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
+public abstract class ReminderAlert {
+	protected String serviceId;
+	protected UserProfile.Id profileId;
+	protected String type;
+	protected String instanceId;
 	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
+	public ReminderAlert(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+		this.serviceId = serviceId;
+		this.profileId = profileId;
+		this.type = type;
+		this.instanceId = instanceId;
 	}
-	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
+
+	public String getServiceId() {
+		return serviceId;
 	}
-	
-	public final String getService() {
-		return service;
+
+	public UserProfile.Id getProfileId() {
+		return profileId;
 	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
+
+	public String getType() {
+		return type;
 	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
+
+	public String getInstanceId() {
+		return instanceId;
 	}
 }

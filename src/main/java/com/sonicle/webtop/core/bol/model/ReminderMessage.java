@@ -31,45 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.model;
+
+import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.bol.js.JsReminderAlert;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
-	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
-	}
-	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
-	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
+public class ReminderMessage extends ServiceMessage {
+
+	public ReminderMessage(JsReminderAlert data) {
+		super(CoreManifest.ID, "reminderNotify", data);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
+ * webtop-calendar is a WebTop Service developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,49 +27,22 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
- * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
+ * feasible for technical reasons, the Appropriate Legal Notices must display
+ * the words "Powered by Sonicle WebTop".
  */
-package com.sonicle.webtop.core.sdk;
-
-/**
- *
- * @author malbinola
- */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
+Ext.define('Sonicle.webtop.core.model.ReminderAlert', {
+	alternateClassName: 'WT.model.ReminderAlert',
+	extend: 'WT.model.Base',
 	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
-	}
-	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
-	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
-	}
-}
+	fields: [
+		WTF.roField('serviceId', 'string'),
+		WTF.roField('type', 'string'),
+		WTF.roField('instanceId', 'string'),
+		WTF.roField('title', 'string'),
+		WTF.roField('date', 'date', WTF.isoDateFieldCfg()),
+		
+		WTF.roField('sdate', 'string', {dateFormat: 'c'}),
+		WTF.roField('fixeddate', 'date', {dateReadFormat: 'Y-m-dTH:i:s.uO', dateWriteFormat: 'Y-m-d\\TH:i:s.uO'})
+	]
+});

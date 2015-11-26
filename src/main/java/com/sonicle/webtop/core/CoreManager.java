@@ -41,10 +41,12 @@ import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OPostponedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsReminderAlert;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -60,11 +62,13 @@ import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainDAO;
+import com.sonicle.webtop.core.dal.PostponedReminderDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.sdk.BaseServiceManager;
+import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.MethodAuthException;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -90,12 +94,19 @@ import org.joda.time.DateTimeZone;
  *
  * @author malbinola
  */
-public class CoreManager extends BaseServiceManager {
+public class CoreManager extends BaseManager {
 	private WebTopApp wta = null;
 	
 	public CoreManager(RunContext context, WebTopApp wta) {
-		super(CoreManifest.ID, context);
+		super(context);
 		this.wta = wta;
+	}
+	
+	public ServiceManager getServiceManager() {
+		if(!getRunContext().getServiceId().equals(CoreManifest.ID)) {
+			throw new MethodAuthException("getServiceManager", getRunContext());
+		}
+		return wta.getServiceManager();
 	}
 	
 	public TFAManager getTFAManager() {
@@ -851,158 +862,6 @@ public class CoreManager extends BaseServiceManager {
 		dao.insert(con, share);
 		return share;
 	}
-	
-	
-	
-	
-	
-	
-	
-	/*
-	public void updateOutcomingShare2(UserProfile.Id pid, String serviceId, String resource, Sharing share) throws WTException {
-		String rootShareRes = OShare.buildRootResource(resource);
-		String folderShareRes = OShare.buildFolderResource(resource);
-		String rootPermRes = AuthResourceShare.buildRootPermissionResource(resource);
-		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
-		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
-		AuthManager authm = wta.getAuthManager();
-		ShareDAO shadao = ShareDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			con.setAutoCommit(false);
-			String puid = authm.userToSid(pid);
-			
-			OShare rootShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
-			if(rootShare == null) rootShare = addRootShare(con, puid, serviceId, rootShareRes);
-			
-			OShare folderShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, folderShareRes, share.id);
-			
-			if(!share.rights.isEmpty()) {
-				removeRootSharePermissions(con, rootShare.getShareId().toString(), serviceId, resource);
-				if(folderShare == null) {
-					folderShare = addFolderShare(con, puid, serviceId, folderShareRes, share.id);
-				} else { // Folder isn't new (and we have some rights)...
-					// Removes all rights belonging to this folder share
-					removeFolderSharePermissions(con, folderShare.getShareId().toString(), serviceId, resource);
-				}
-				
-				// Adds permissions according to specified rights...
-				for(Sharing.RoleRights rr : share.rights) {
-					if(rr.rootManage) addSharePermission(con, rr.roleUid, serviceId, rootPermRes, "MANAGE", rootShare.getShareId().toString());
-					if(rr.folderRead) addSharePermission(con, rr.roleUid, serviceId, folderPermRes, "READ", folderShare.getShareId().toString());
-					if(rr.folderUpdate) addSharePermission(con, rr.roleUid, serviceId, folderPermRes, "UPDATE", folderShare.getShareId().toString());
-					if(rr.folderDelete) addSharePermission(con, rr.roleUid, serviceId, folderPermRes, "DELETE", folderShare.getShareId().toString());
-					if(rr.elementsCreate) addSharePermission(con, rr.roleUid, serviceId, elementsPermRes, "CREATE", folderShare.getShareId().toString());
-					if(rr.elementsUpdate) addSharePermission(con, rr.roleUid, serviceId, elementsPermRes, "UPDATE", folderShare.getShareId().toString());
-					if(rr.elementsDelete) addSharePermission(con, rr.roleUid, serviceId, elementsPermRes, "DELETE", folderShare.getShareId().toString());
-				}
-				
-			} else { // No rights specified...
-				// If defines, removes folder share and its rights
-				if(folderShare != null) removeFolderShare(con, folderShare.getShareId().toString(), serviceId, resource);
-			}
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
-		} catch(Exception ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "Unable to update folder share rights");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
-	/*
-	public OutcomingShare getOutcomingShare(UserProfile.Id pid, String serviceId, String resource, String shareId) throws WTException {
-		String rootShareRes = OShare.buildRootResource(resource);
-		String folderShareRes = OShare.buildFolderResource(resource);
-		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
-		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
-		AuthManager authm = wta.getAuthManager();
-		ShareDAO shadao = ShareDAO.getInstance();
-		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			CompositeId cid = new CompositeId().parse(shareId);
-			int level = cid.getHowManyTokens()-1;
-			
-			con = WT.getCoreConnection();
-			String puid = authm.userToSid(pid);
-			OShare rootShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
-			OShare folderShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, folderShareRes, folderId);
-			
-			OutcomingShare outshare = new OutcomingShare();
-			outshare.id = folderId;
-			outshare.type = OutcomingShare.TYPE_FOLDER;
-			outshare.rights = new ArrayList<>();
-			
-			if((rootShare != null) && (folderShare != null)) {
-				// A rootShare must be defined in order to continue...
-				List<String> roleUids = listRoles(serviceId, folderPermRes, folderShare.getShareId().toString());
-				for(String roleUid : roleUids) {
-					// Root...
-					SharePermsRoot rperms = null;
-					// Folder...
-					SharePermsFolder fperms = new SharePermsFolder();
-					for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, folderPermRes, folderShare.getShareId().toString())) {
-						fperms.parse(perm.getAction());
-					}
-					// Elements...
-					SharePermsElements eperms = new SharePermsElements();
-					for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, elementsPermRes, folderShare.getShareId().toString())) {
-						eperms.parse(perm.getAction());
-					}
-					outshare.rights.add(new OutcomingShare.RoleRights(roleUid, rperms, fperms, eperms));
-				}
-			}
-			
-			return outshare;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
-	
-	
-	
-	
-	
-	/*
-	private OShare getShare(UserProfile.Id pid, String serviceId, String resource, String instance) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			ShareDAO dao = ShareDAO.getInstance();
-			String uuid = authm.userToSid(pid);
-			
-			if(instance == null) {
-				String rootRes = OShare.buildRootResource(resource);
-				List<OShare> shares = dao.selectByUserServiceResource(con, uuid, serviceId, rootRes);
-				return (shares.isEmpty()) ? null : shares.get(0);
-			} else {
-				String folderRes = OShare.buildFolderResource(resource);
-				return dao.selectByUserServiceResourceInstance(con, uuid, serviceId, folderRes, instance);
-			}
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
 			
 	public List<OShare> listShareByOwner(UserProfile.Id pid, String serviceId, String shareResource) throws WTException {
 		Connection con = null;
@@ -1035,102 +894,6 @@ public class CoreManager extends BaseServiceManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
-	
-	
-	/*
-	public OShare shareGet(String id) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			ShareDAO dao = ShareDAO.getInstance();
-			return dao.selectById(con, id);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException();
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
-	/*
-	public OShare shareGet(UserProfile.Id sharingProfileId, String targetUserId, String serviceId, String resource, String instanceId) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			ShareDAO dao = ShareDAO.getInstance();
-			return dao.selectByDomainUserTargetServiceResourceInstance(con, sharingProfileId.getDomainId(), sharingProfileId.getUserId(), targetUserId, serviceId, resource, instanceId);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException();
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public void shareAdd(UserProfile.Id sharingProfileId, String targetUserId, String serviceId, String resource, String instance, String name, String params, List<String> actions) throws WTException {
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			con.setAutoCommit(false);
-			ShareDAO dao = ShareDAO.getInstance();
-			
-			// 1 - Ensures we have a ready share on folder container
-			// (resource name ends with '_SHARE_FOLDER' suffix)
-			String foldResource = AuthResourceShareFolder.buildName(resource);
-			OShare foldShare = dao.selectByDomainUserTargetServiceResourceInstance(con, sharingProfileId.getDomainId(), sharingProfileId.getUserId(), targetUserId, serviceId, foldResource, sharingProfileId.toString());
-			if(foldShare == null) {
-				//TODO: recuperare il corretto displayName di chi condivide
-				//TODO: che succede se sharingProfileId è un gruppo?
-				String foldName = sharingProfileId.toString();
-				
-				foldShare = new OShare();
-				foldShare.setDomainId(sharingProfileId.getDomainId());
-				foldShare.setUserId(sharingProfileId.getUserId());
-				foldShare.setTargetUserId(targetUserId);
-				foldShare.setServiceId(serviceId);
-				foldShare.setResource(foldResource);
-				foldShare.setInstance(sharingProfileId.toString());
-				foldShare.setName(foldName);
-				foldShare.setParameters(null);
-				foldShare.setShareId(String.valueOf(dao.getSequence(con).intValue()));
-				dao.insert(con, foldShare);
-			}
-			
-			// 2 - Add the shared element
-			// (resource name ends with '_SHARE_ELEMENT' suffix)
-			String elemResource = AuthResourceShareElement.buildName(resource);
-			OShare elemShare = new OShare();
-			elemShare.setDomainId(sharingProfileId.getDomainId());
-			elemShare.setUserId(sharingProfileId.getUserId());
-			elemShare.setTargetUserId(targetUserId);
-			elemShare.setServiceId(serviceId);
-			elemShare.setResource(elemResource);
-			elemShare.setInstance(instance);
-			elemShare.setName(name);
-			elemShare.setParameters(params);
-			elemShare.setShareId(String.valueOf(dao.getSequence(con).intValue()));
-			dao.insert(con, elemShare);
-			
-			AuthManager auth = wta.getAuthManager();
-			for(String action : actions) {
-				//TODO: che succede se sharingProfileId è un gruppo?
-				auth.addPermission(con, sharingProfileId, serviceId, elemResource, action, instance);
-			}
-			
-			DbUtils.commitQuietly(con);
-			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException();
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
 	
 	public List<String> getPrivateServicesForUser(UserProfile profile) {
 		return getPrivateServicesForUser(profile.getId());
@@ -1178,6 +941,53 @@ public class CoreManager extends BaseServiceManager {
 	public boolean hasPrivateService(UserProfile.Id pid, String serviceId) {
 		List<String> services = getPrivateServicesForUser(pid);
 		return services.contains(serviceId);
+	}
+	
+	public OPostponedReminder postponeReminder(UserProfile.Id profileId, JsReminderAlert reminder, int minutes) throws WTException {
+		PostponedReminderDAO dao = PostponedReminderDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			
+			OPostponedReminder item = new OPostponedReminder();
+			item.setDomainId(profileId.getDomainId());
+			item.setUserId(profileId.getUserId());
+			item.setServiceId(reminder.serviceId);
+			item.setType(reminder.type);
+			item.setInstanceId(reminder.instanceId);
+			item.setRemindOn(reminder.date.plusMinutes(minutes));
+			item.setTitle(reminder.title);
+			
+			item.setPostponedReminderId(dao.getSequence(con).intValue());
+			dao.insert(con, item);
+			return item;
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB Error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OPostponedReminder> listExpiredPostponedReminders(DateTime greaterInstant) throws WTException {
+		PostponedReminderDAO dao = PostponedReminderDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			con.setAutoCommit(false);
+			List<OPostponedReminder> items = dao.selectExpiredForUpdateByInstant(con, greaterInstant);
+			for(OPostponedReminder item : items) {
+				dao.delete(con, item.getPostponedReminderId());
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB Error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query, int limit) {

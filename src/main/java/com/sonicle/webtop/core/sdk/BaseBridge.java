@@ -40,17 +40,16 @@ import com.sonicle.webtop.core.WT;
  *
  * @author malbinola
  */
-public abstract class BaseController {
-	private final String serviceId;
+public abstract class BaseBridge {
+	public final String SERVICE_ID;
 	private final RunContext context;
 	
-	public BaseController(String serviceId, RunContext context) {
-		this.serviceId = serviceId;
-		this.context = context;
-	}
+	public abstract void initializeProfile(UserProfile.Id profileId) throws Exception;
+	public abstract void cleanupProfile(UserProfile.Id profileId, boolean deep) throws Exception;
 	
-	public String getServiceId() {
-		return serviceId;
+	public BaseBridge(RunContext context) {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+		this.context = context;
 	}
 	
 	public RunContext getRunContext() {
@@ -58,9 +57,6 @@ public abstract class BaseController {
 	}
 	
 	public ServiceManifest getManifest() {
-		return WT.getManifest(getServiceId());
+		return WT.getManifest(SERVICE_ID);
 	}
-	
-	public abstract void initializeProfile(UserProfile.Id profileId) throws Exception;
-	public abstract void cleanupProfile(UserProfile.Id profileId, boolean deep) throws Exception;
 }

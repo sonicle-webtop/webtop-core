@@ -227,7 +227,7 @@ public class WebTopSession {
 	private void initializeEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = new CoreManager(wta.createRunContext(), wta);
+		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
 		
 		logger.debug("Creating environment for {}", principal.getName());
 		
@@ -342,12 +342,12 @@ public class WebTopSession {
 		
 		if(svcm.isCoreService(serviceId)) {
 			// Defines paths and requires
-			js.appRequires.add(manifest.getServiceJsClassName(true));
+			js.appRequires.add(manifest.getPrivateServiceJsClassName(true));
 			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
 		} else {
 			// Defines paths and requires
 			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-			js.appRequires.add(manifest.getServiceJsClassName(true));
+			js.appRequires.add(manifest.getPrivateServiceJsClassName(true));
 			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
 		}
 		
@@ -358,7 +358,7 @@ public class WebTopSession {
 		jssvc.ns = manifest.getJsPackageName();
 		jssvc.path = manifest.getJsBaseUrl();
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
-		jssvc.serviceClassName = manifest.getServiceJsClassName(true);
+		jssvc.serviceClassName = manifest.getPrivateServiceJsClassName(true);
 		jssvc.clientOptionsClassName = manifest.getClientOptionsModelJsClassName(true);
 		if(sdesc.hasUserOptionsService()) {
 			jssvc.userOptions = new JsWTS.ServiceUserOptions(

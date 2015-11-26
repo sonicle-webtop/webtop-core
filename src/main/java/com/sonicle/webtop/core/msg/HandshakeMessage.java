@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.msg;
 
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
@@ -40,14 +41,13 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
  * @author malbinola
  */
 public class HandshakeMessage extends ServiceMessage {
-	
+	//TODO: è ancora utile questa classe
 	public static final String ACTION_HANDSHAKE = "handshake";
-	
 	String userId;
 	String domainId;
 	String encAuthTicket;
 	
 	public HandshakeMessage() {
-		super();
+		super(CoreManifest.ID, ACTION_HANDSHAKE);
 	}
 }

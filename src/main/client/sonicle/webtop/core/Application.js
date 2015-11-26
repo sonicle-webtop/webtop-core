@@ -104,6 +104,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		// Instantiates core service
 		var cdesc = me.services.getAt(0);
 		cdesc.getInstance();
+		cdesc.initService();
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({

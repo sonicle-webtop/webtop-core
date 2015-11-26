@@ -344,7 +344,7 @@ public class ResourceRequest extends HttpServlet {
 			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
 			String clazz = manifest.getJsPackageName() + "." + baseName;
-			String override = manifest.getServiceJsClassName(true);
+			String override = manifest.getPrivateServiceJsClassName(true);
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);

@@ -31,45 +31,54 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.webtop.core.bol.OPostponedReminder;
+import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
+import java.util.ArrayList;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 /**
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
+public class JsReminderAlert {
+	public String serviceId;
+	public String type;
+	public String instanceId;
+	public String title;
+	public String sdate;
+	public DateTime date;
+	public String fixeddate;
+	public String timezone;
 	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
+	public JsReminderAlert(ReminderAlertWeb rem) {
+		serviceId = rem.getServiceId();
+		type = rem.getType();
+		instanceId = rem.getInstanceId();
+		title = rem.getTitle();
+		sdate = ISODateTimeFormat.dateTime().print(rem.getDate());
+		date = rem.getDate();
+		//DateTimeFormatter ymdhmsZoneFmt = DateTimeUtils.createYmdHmsFormatter(profileTz);
+		//date = ymdhmsZoneFmt.print(alert.getDate());
+		//fixeddate = "2015-11-26T10:53:00.000+0100";
+		//timezone = rem.getTimezone();
 	}
 	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
+	public JsReminderAlert(OPostponedReminder rem) {
+		serviceId = rem.getServiceId();
+		type = rem.getType();
+		instanceId = rem.getInstanceId();
+		title = rem.getTitle();
+		date = rem.getRemindOn();
 	}
 	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
+	public static class List extends ArrayList<JsReminderAlert> {
+		public List() {
+			super();
+		}
 	}
 }

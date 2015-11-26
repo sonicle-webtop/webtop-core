@@ -44,28 +44,24 @@ import java.util.Locale;
  * @author malbinola
  */
 public abstract class BaseServiceBase {
-	
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
+	public final String SERVICE_ID;
 	
 	public abstract void initialize() throws Exception;
 	public abstract void cleanup() throws Exception;
 	public abstract RunContext getRunContext();
+	
+	public BaseServiceBase() {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+	}
 	
 	/**
 	 * Gets WebTop Service manifest class.
 	 * @return The manifest.
 	 */
 	public final ServiceManifest getManifest() {
-		return WT.getManifest(this.getClass());
-	}
-	
-	/**
-	 * Gets WebTop Service's ID.
-	 * @return The service ID.
-	 */
-	public final String getId() {
-		return WT.getServiceId(this.getClass());
+		return WT.findManifest(this.getClass());
 	}
 	
 	/**
@@ -74,7 +70,7 @@ public abstract class BaseServiceBase {
 	 * @throws SQLException 
 	 */
     public final Connection getConnection() throws SQLException {
-		return WT.getConnection(getId());
+		return WT.getConnection(SERVICE_ID);
     }
 	
 	/**
@@ -83,7 +79,7 @@ public abstract class BaseServiceBase {
 	 * @return The localized string.
 	 */
 	public final String getName(Locale locale) {
-		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_NAME);
+		return WT.lookupResource(SERVICE_ID, locale, RESOURCE_SERVICE_NAME);
 	}
 	
 	/**
@@ -92,7 +88,7 @@ public abstract class BaseServiceBase {
 	 * @return The localized string.
 	 */
 	public final String getDescription(Locale locale) {
-		return WT.lookupResource(getId(), locale, RESOURCE_SERVICE_DESCRIPTION);
+		return WT.lookupResource(SERVICE_ID, locale, RESOURCE_SERVICE_DESCRIPTION);
 	}
 	
 	/**
@@ -102,7 +98,7 @@ public abstract class BaseServiceBase {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(Locale locale, String key) {
-		return WT.lookupResource(getId(), locale, key);
+		return WT.lookupResource(SERVICE_ID, locale, key);
 	}
     
 	/**
@@ -113,6 +109,6 @@ public abstract class BaseServiceBase {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
-		return WT.lookupResource(getId(), locale, key, escapeHtml);
+		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
 	}
 }

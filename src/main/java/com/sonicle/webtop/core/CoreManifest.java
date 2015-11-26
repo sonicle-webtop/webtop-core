@@ -50,8 +50,10 @@ public class CoreManifest extends ServiceManifest {
 	public static final String JS_PACKAGE = "Sonicle.webtop.core";
 	public static final String VERSION = "5.0.0";
 	public static final String BUILD_DATE = "07/10/2014";
-	public static final String SERVICE_CLASS_NAME = "com.sonicle.webtop.core.Service";
-	public static final String SERVICE_JS_CLASS_NAME = "Service";
+	public static final String MANAGER_CLASS_NAME = "com.sonicle.webtop.core.CoreManager";
+	public static final String PRIVATE_SERVICE_CLASS_NAME = "com.sonicle.webtop.core.Service";
+	public static final String PRIVATE_SERVICE_JS_CLASS_NAME = "Service";
+	public static final String JOB_SERVICE_CLASS_NAME = "com.sonicle.webtop.core.JobService";
 	public static final String CLIENTOPTIONS_MODEL_JS_CLASS_NAME = "model.ClientOptions";
 	public static final String USEROPTIONS_SERVICE_CLASS_NAME = "com.sonicle.webtop.core.UserOptionsService";
 	public static final String USEROPTIONS_VIEW_JS_CLASS_NAME = "view.UserOptions";
@@ -69,10 +71,10 @@ public class CoreManifest extends ServiceManifest {
 		jsPackage = JS_PACKAGE;
 		version = new ServiceVersion(VERSION);
 		buildDate = BUILD_DATE;
-		serviceClassName = SERVICE_CLASS_NAME;
-		// This is not a real js service, it's only used 
-		// to store class for client-side ovveriding purposes.
-		serviceJsClassName = SERVICE_JS_CLASS_NAME;
+		managerClassName = MANAGER_CLASS_NAME;
+		privateServiceClassName = PRIVATE_SERVICE_CLASS_NAME;
+		privateServiceJsClassName = PRIVATE_SERVICE_JS_CLASS_NAME;
+		jobServiceClassName = JOB_SERVICE_CLASS_NAME;
 		clientOptionsModelJsClassName = CLIENTOPTIONS_MODEL_JS_CLASS_NAME;
 		userOptionsServiceClassName = USEROPTIONS_SERVICE_CLASS_NAME;
 		userOptionsViewJsClassName = USEROPTIONS_VIEW_JS_CLASS_NAME;

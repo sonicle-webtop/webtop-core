@@ -105,6 +105,16 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Checks against a resource if specified action is allowed.
+	 * @param {String} [id] The service ID
+	 * @return {String} Corresponding service's XID
+	 */
+	findXid: function(id) {
+		var desc = this.getApp().getDescriptor(id);
+		return (desc) ? desc.getXid() : null;
+	},
+	
+	/**
+	 * Checks against a resource if specified action is allowed.
 	 * @param {String} [id] The service ID.
 	 * @param {String} resource The resource name.
 	 * @param {String} action The action name.
@@ -240,17 +250,21 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Object} [opts.scope] The scope (this) for the supplied callbacks.
 	 */
 	ajaxReq: function(svc, act, opts) {
-		var me = this;
 		opts = opts || {};
-		var fn = opts.callback, scope = opts.scope, sfn = opts.success, ffn = opts.failure;
-		var options = {
+		var me = this,
+				fn = opts.callback, 
+				scope = opts.scope, 
+				sfn = opts.success, 
+				ffn = opts.failure,
+				hdrs = {};
+		
+		var obj = {
 			url: WTF.requestBaseUrl(),
 			method: 'POST',
 			params: Ext.applyIf({
 				service: svc,
 				action: act
 			}, opts.params || {}),
-			headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
 			success: function(resp, opts) {
 				var obj = Ext.decode(resp.responseText);
 				if(sfn) Ext.callback(sfn, scope || me, [opts]);
@@ -262,8 +276,16 @@ Ext.define('Sonicle.webtop.core.WT', {
 			},
 			scope: me
 		};
-		if(opts.timeout) Ext.apply(options, {timeout: opts.timeout});
-		Ext.Ajax.request(options);
+		if(opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
+		if(opts.jsonData) {
+			Ext.apply(obj, {jsonData: opts.jsonData});
+			hdrs['Content-Type'] = 'application/json';
+		} else {
+			hdrs['Content-Type'] = 'application/x-www-form-urlencoded; charset=utf-8';
+		}
+		Ext.apply(obj, {headers: hdrs});
+		//headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
+		Ext.Ajax.request(obj);
 	},
 	
 	/**

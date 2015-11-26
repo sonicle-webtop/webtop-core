@@ -348,10 +348,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @private
 	 * Callback for messages arriving from the server.
 	 * It finds the mapped action function and calls it.
-	 * @param {Object} cfg The message object.
+	 * @param {Object} msg The message data.
 	 */
-	handleMessage: function(cfg) {
-		var lis = this.msgListeners[cfg.action];
-		if(lis) Ext.callback(lis.fn, lis.scope, [cfg]);
+	handleMessage: function(msg) {
+		var lis = this.msgListeners[msg.action];
+		if(lis) Ext.callback(lis.fn, lis.scope, [msg]);
 	}
 });

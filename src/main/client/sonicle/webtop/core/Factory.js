@@ -321,6 +321,13 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		});
 	},
 	
+	isoDateFieldCfg: function(cfg) {
+		return Ext.apply(cfg || {}, {
+			dateReadFormat: 'Y-m-dTH:i:s.uO',
+			dateWriteFormat: 'Y-m-d\\TH:i:s.uO'
+		});
+	},
+	
 	/**
 	 * Helper method for building a config object for calculated model {@link Ext.data.field.Field field}.
 	 * @param {String} name See {@link Ext.data.field.Field#name}
