@@ -59,6 +59,6 @@ public abstract class BaseJobServiceTask implements Job {
 		}
 	}
 	
-	public abstract void setJobService(BaseJobService value);
+	public abstract void setJobService(BaseJobService jobService);
 	public abstract void executeWork();
 }

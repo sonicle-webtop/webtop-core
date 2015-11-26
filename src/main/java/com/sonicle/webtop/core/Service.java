@@ -55,6 +55,7 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridSync.JsGridSyncList;
+import com.sonicle.webtop.core.bol.js.JsReminderAlert;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
@@ -645,6 +646,23 @@ public class Service extends BaseService {
 			logger.error("Error executing action TurnOffWhatsnew", ex);
 		} finally {
 			new JsonResult().printTo(out);
+		}
+	}
+	
+	public void processPostponeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+				
+		try {
+			Integer postpone = ServletUtils.getIntParameter(request, "postpone", 5);
+			PayloadAsList<JsReminderAlert.List> pl = ServletUtils.getPayloadAsList(request, JsReminderAlert.List.class);
+			
+			for(JsReminderAlert reminder : pl.data) {
+				core.postponeReminder(getEnv().getProfileId(), reminder, postpone);
+			}
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error executing PosponeReminder", ex);
+			new JsonResult(false, "Error").printTo(out);
 		}
 	}
 	

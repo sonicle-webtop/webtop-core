@@ -65,7 +65,6 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	
 	getInstance: function() {
 		var me = this;
-		//if(me.getId() === WT.ID) return null; // Avoid core instantiation!
 		if(!me.instance) {
 			var cn = me.getServiceClassName();
 			if(!Ext.isString(cn)) return null;
@@ -87,7 +86,6 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 	
 	initService: function() {
 		var me = this;
-		if(me.getId() === WT.ID) return null; // Avoid core initialization!
 		WT.Log.debug('Initializing service [{0}]', me.getId());
 		var svc = me.getInstance();
 		if(svc === null) return false;

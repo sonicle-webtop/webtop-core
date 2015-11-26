@@ -37,39 +37,10 @@ package com.sonicle.webtop.core.sdk;
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
-	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
+public class ReminderAlertEmail extends ReminderAlert {
+
+	public ReminderAlertEmail(String serviceId, UserProfile.Id profileId, String resource, String objectId) {
+		super(serviceId, profileId, resource, objectId);
 	}
 	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
-	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
-	}
 }

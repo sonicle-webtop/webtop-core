@@ -357,8 +357,8 @@ public class WebTopApp {
 		return sesm;
 	}
 	
-	public RunContext createRunContext() {
-		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"));
+	public RunContext createAdminRunContext() {
+		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"), Locale.ENGLISH);
 	}
 	
 	/*

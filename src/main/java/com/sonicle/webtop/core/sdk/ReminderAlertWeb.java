@@ -33,68 +33,42 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
-import com.sonicle.webtop.core.WT;
-import java.util.Locale;
-import net.sf.qualitycheck.Check;
+import org.joda.time.DateTime;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseServiceManager {
-	private final String serviceId;
-	private final RunContext context;
-	private final UserProfile.Id targetProfile;
-	
-	public BaseServiceManager(String serviceId, RunContext context) {
-		this(serviceId, context, null);
+public class ReminderAlertWeb extends ReminderAlert {
+	private String title;
+	private DateTime date;
+	private String timezone;
+
+	public ReminderAlertWeb(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+		super(serviceId, profileId, type, instanceId);
 	}
-	
-	public BaseServiceManager(String serviceId, RunContext context, UserProfile.Id targetProfileId) {
-		this.serviceId = Check.notNull(serviceId);
-		this.context = Check.notNull(context);
-		this.targetProfile = targetProfileId;
+
+	public String getTitle() {
+		return title;
 	}
-	
-	public String getServiceId() {
-		return serviceId;
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
-	
-	public RunContext getRunContext() {
-		return context;
+
+	public DateTime getDate() {
+		return date;
 	}
-	
-	public UserProfile.Id getRunProfileId() {
-		return context.getProfileId();
+
+	public void setDate(DateTime date) {
+		this.date = date;
 	}
-	
-	public UserProfile.Id getTargetProfileId() {
-		return (targetProfile != null) ? targetProfile : getRunProfileId();
+
+	public String getTimezone() {
+		return timezone;
 	}
-	
-	public ServiceManifest getManifest() {
-		return WT.getManifest(getServiceId());
-	}
-	
-	/**
-	 * Returns the localized string associated to the key.
-	 * @param locale The requested locale.
-	 * @param key The resource key.
-	 * @return The translated string, or null if not found.
-	 */
-	public final String lookupResource(Locale locale, String key) {
-		return WT.lookupResource(getServiceId(), locale, key);
-	}
-    
-	/**
-	 * Returns the localized string associated to the key.
-	 * @param locale The requested locale.
-	 * @param key The resource key.
-	 * @param escapeHtml True to apply HTML escaping.
-	 * @return The translated string, or null if not found.
-	 */
-	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
-		return WT.lookupResource(getServiceId(), locale, key, escapeHtml);
+
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
 	}
 }

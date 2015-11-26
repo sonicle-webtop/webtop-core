@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.RunContext;
-import com.sonicle.webtop.core.WebTopApp;
 import java.util.List;
 import net.sf.qualitycheck.Check;
 import org.quartz.JobDataMap;
@@ -47,6 +46,7 @@ import org.quartz.Trigger;
 public abstract class BaseJobService extends BaseServiceBase {
 	private boolean configured = false;
 	private RunContext context;
+	
 	public abstract List<TaskDefinition> returnTasks();
 	
 	public final void configure(RunContext context) {
@@ -58,10 +58,6 @@ public abstract class BaseJobService extends BaseServiceBase {
 	@Override
 	public RunContext getRunContext() {
 		return context;
-	}
-	
-	private static WebTopApp getWTA() {
-		return WebTopApp.getInstance();
 	}
 	
 	public static class TaskDefinition {

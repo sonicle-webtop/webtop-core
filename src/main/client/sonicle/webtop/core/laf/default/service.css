@@ -14,9 +14,16 @@
 .wt-icon-service-m { background-image: url('elica_32.png') !important; }
 .wt-icon-service-l { background-image: url('elica_48.png') !important; }
 
+.wt-icon-empty { background-image: url('empty.png') !important;}
+.wt-icon-empty-xs { width: 16px; height: 16px; background-image: url('empty.png') !important;}
+.wt-icon-empty-s { width: 24px; height: 24px; background-image: url('empty.png') !important;}
+.wt-icon-empty-m { width: 32px; height: 32px; background-image: url('empty.png') !important;}
+.wt-icon-empty-l { width: 48px; height: 48px; background-image: url('empty.png') !important;}
+
 .wt-icon-feedback-xs { background-image: url('feedback_16.png') !important; }
 .wt-icon-whatsnew-xs { background-image: url('whatsnew_16.png') !important; }
 .wt-icon-options-xs { background-image: url('options_16.png') !important; }
+.wt-icon-reminder-xs { background-image: url('reminder_16.png') !important; }
 .wt-icon-activity-xs { background-image: url('activity_16.png') !important; }
 .wt-icon-activity-ro-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-causal-xs { background-image: url('causal_16.png') !important; }
@@ -46,6 +53,7 @@
 .wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
 .wt-icon-new-filter-xs { background-image: url('filter-add_16.png') !important; }
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }
+.wt-icon-postpone-xs { background-image: url('postpone_16.png') !important; }
 .wt-icon-panel-bottom-xs { background-image: url('panel-bottom_16.png') !important; }
 .wt-icon-panel-left-xs { background-image: url('panel-left_16.png') !important; }
 .wt-icon-panel-right-xs { background-image: url('panel-right_16.png') !important; }

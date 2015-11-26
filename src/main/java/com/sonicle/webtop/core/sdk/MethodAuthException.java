@@ -33,43 +33,19 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.RunContext;
+
 /**
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
-	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
+public class MethodAuthException extends AuthException {
+
+	public MethodAuthException(String methodName) {
+		super("Method [{0}] cannot be accessed", methodName);
 	}
 	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
-	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
+	public MethodAuthException(String methodName, RunContext runContext) {
+		super("Method [{0}] cannot be accessed by [{1}, {2}]", methodName, runContext.getServiceId(), runContext.getProfileId().toString());
 	}
 }

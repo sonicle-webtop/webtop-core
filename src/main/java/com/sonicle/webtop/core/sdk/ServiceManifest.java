@@ -48,7 +48,6 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class ServiceManifest {
-	
 	protected String id;
 	protected String xid;
 	protected String javaPackage;
@@ -56,11 +55,12 @@ public class ServiceManifest {
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
-	protected String serviceClassName;
+	protected String managerClassName;
+	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
 	protected String jobServiceClassName;
-	protected String serviceJsClassName;
+	protected String privateServiceJsClassName;
 	protected String clientOptionsModelJsClassName;
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
@@ -103,10 +103,14 @@ public class ServiceManifest {
 		
 		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
 		
+		if(svcEl.containsKey("managerClassName")) {
+			managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+		}
+		
 		if(svcEl.containsKey("serviceClassName")) {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
-			serviceClassName = LangUtils.buildClassName(javaPackage, cn);
-			serviceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
+			privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+			privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
 			clientOptionsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("clientOptionsModelJsClassName"), "model.ClientOptions");
 		}
 		
@@ -226,13 +230,17 @@ public class ServiceManifest {
 		return buildDate;
 	}
 	
+	public String getManagerClassName() {
+		return managerClassName;
+	}
+	
 	/**
 	 * Gets the class name of server-side service implementation.
 	 * (eg. com.sonicle.webtop.core.CoreService)
 	 * @return The value.
 	 */
-	public String getServiceClassName() {
-		return serviceClassName;
+	public String getPrivateServiceClassName() {
+		return privateServiceClassName;
 	}
 	
 	public String getUserOptionsServiceClassName() {
@@ -263,8 +271,8 @@ public class ServiceManifest {
 	 * @param full True to include js package.
 	 * @return The value.
 	 */
-	public String getServiceJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, serviceJsClassName) : serviceJsClassName;
+	public String getPrivateServiceJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceJsClassName) : privateServiceJsClassName;
 	}
 	
 	public String getClientOptionsModelJsClassName(boolean full) {

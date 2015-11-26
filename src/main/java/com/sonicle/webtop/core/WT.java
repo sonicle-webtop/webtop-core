@@ -65,7 +65,6 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class WT {
-	
 	static final HashMap<String, ServiceManifest> manifestCache = new HashMap<>();
 	private static final HashMap<String, String> cnameToServiceIdCache = new HashMap<>();
 	
@@ -89,7 +88,7 @@ public class WT {
 		return getWTA().getServiceManager().getManifest(serviceId);
 	}
 	
-	public static ServiceManifest getManifest(Class clazz) {
+	public static ServiceManifest findManifest(Class clazz) {
 		String cname = clazz.getName();
 		synchronized(manifestCache) {
 			if(cnameToServiceIdCache.containsKey(cname)) {
@@ -106,8 +105,8 @@ public class WT {
 		return null;
 	}
 	
-	public static String getServiceId(Class clazz) {
-		ServiceManifest manifest = getManifest(clazz);
+	public static String findServiceId(Class clazz) {
+		ServiceManifest manifest = findManifest(clazz);
 		return (manifest == null) ? null : manifest.getId();
 	}
 	

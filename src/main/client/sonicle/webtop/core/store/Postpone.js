@@ -31,45 +31,36 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-/**
- *
- * @author malbinola
- */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
+Ext.define('Sonicle.webtop.core.store.Postpone', {
+	extend: 'Ext.data.ArrayStore',
 	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
-	}
+	model: 'WT.model.Simple',
+	data: [
+		[5, ''],
+		[10, ''],
+		[15, ''],
+		[30, ''],
+		[45, ''],
+		[60, ''],
+		[120, ''],
+		[180, ''],
+		[240, ''],
+		[480, ''],
+		[720, ''],
+		[1080, ''],
+		[1440, ''],
+		[2880, ''],
+		[4320, ''],
+		[5760, ''],
+		[10080, ''],
+		[20160, '']
+	],
 	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.postpone.'+row[0]);
+		});
+		me.callParent([cfg]);
 	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
-	}
-}
+});

@@ -40,7 +40,6 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreEnvironment;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
@@ -125,7 +124,7 @@ public abstract class BaseService extends BaseServiceBase {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
 			
 			UserProfile up = env.getProfile();
-			CoreUserSettings cusx = new CoreUserSettings(getId(), up.getId());
+			CoreUserSettings cusx = new CoreUserSettings(SERVICE_ID, up.getId());
 			cusx.setViewportToolWidth(width);
 			new JsonResult().printTo(out);
 			
@@ -147,7 +146,7 @@ public abstract class BaseService extends BaseServiceBase {
 				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				items = new ArrayList<>();
-				List<OServiceStoreEntry> entries = core.listServiceStoreEntriesByQuery(up.getId(), getId(), cntx, query, 50);
+				List<OServiceStoreEntry> entries = core.listServiceStoreEntriesByQuery(up.getId(), SERVICE_ID, cntx, query, 50);
 				for(OServiceStoreEntry entry : entries) {
 					items.add(new String[]{entry.getValue()});
 				}
@@ -157,7 +156,7 @@ public abstract class BaseService extends BaseServiceBase {
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
 				
-				core.deleteServiceStoreEntry(up.getId(), getId(), cntx, pl.data.id);
+				core.deleteServiceStoreEntry(up.getId(), SERVICE_ID, cntx, pl.data.id);
 				new JsonResult().printTo(out);
 			}
 			

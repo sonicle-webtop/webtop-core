@@ -34,11 +34,14 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseBridge;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.BaseJobService;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
+import com.sonicle.webtop.core.sdk.IManagerHandleReminders;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.service.ResourceNotFoundException;
 import com.sonicle.webtop.core.service.Whatsnew;
@@ -54,9 +57,9 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 class ServiceDescriptor {
-	
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
+	private Class managerClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
@@ -66,9 +69,15 @@ class ServiceDescriptor {
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
-
+		
+		// Loads manager class
+		String className = manifest.getManagerClassName();
+		if(!StringUtils.isEmpty(className)) {
+			managerClass = loadClass(className, BaseManager.class, "Manager");
+		}
+		
 		// Loads (private) service class
-		String className = manifest.getServiceClassName();
+		className = manifest.getPrivateServiceClassName();
 		if(!StringUtils.isEmpty(className)) {
 			privateServiceClass = loadClass(className, BaseService.class, "Service");
 		}
@@ -91,6 +100,18 @@ class ServiceDescriptor {
 
 	public ServiceManifest getManifest() {
 		return manifest;
+	}
+	
+	public boolean hasManager() {
+		return (managerClass != null);
+	}
+	
+	public Class getManagerClass() {
+		return managerClass;
+	}
+	
+	public boolean doesManagerImplements(Class clazz) {
+		return implementsInterface(managerClass, clazz);
 	}
 
 	public boolean hasPrivateService() {
@@ -147,6 +168,12 @@ class ServiceDescriptor {
 			logger.warn("A valid {} class must extends '{}' class", description, apiClass.toString());
 		}
 		return null;
+	}
+	
+	private boolean implementsInterface(Class clazz, Class interfaceClass) {
+		if(clazz == null) return false;
+		if(interfaceClass == null) return false;
+		return interfaceClass.isAssignableFrom(clazz);
 	}
 	
 	/**

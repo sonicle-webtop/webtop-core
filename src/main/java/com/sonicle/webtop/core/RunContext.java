@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
+import java.util.Locale;
 
 /**
  *
@@ -42,10 +43,12 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 public class RunContext {
 	private final String serviceId;
 	private final UserProfile.Id profile;
+	private final Locale locale;
 	
-	RunContext(String serviceId, UserProfile.Id profile) {
+	RunContext(String serviceId, UserProfile.Id profile, Locale locale) {
 		this.serviceId = serviceId;
 		this.profile = profile;
+		this.locale = locale;
 	}
 	
 	public String getServiceId() {
@@ -54,5 +57,9 @@ public class RunContext {
 	
 	public UserProfile.Id getProfileId() {
 		return profile;
+	}
+	
+	public Locale getLocale() {
+		return locale;
 	}
 }

@@ -39,11 +39,38 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.view.Causals'
 	],
 	
+	vwrem: null,
+	
+	init: function() {
+		var me = this;
+		me.onMessage('reminderNotify', function(msg) {
+			me.showReminder(msg.payload);
+		});
+	},
+	
 	showActivities: function() {
 		WT.createView(WT.ID, 'view.Activities').show();
 	},
 	
 	showCausals: function() {
 		WT.createView(WT.ID, 'view.Causals').show();
+	},
+	
+	showReminder: function(data) {
+		var me = this;
+		
+		if(me.vwrem) {
+			me.vwrem.getComponent(0).addReminder(data);
+		} else {
+			me.vwrem = WT.createView(WT.ID, 'view.Reminder');
+			me.vwrem.on('viewclose', function() {
+				me.vwrem = null;
+			});
+			me.vwrem.show(false, function() {
+				Ext.defer(function() {
+					me.vwrem.getComponent(0).addReminder(data);
+				}, 200);
+			});
+		}
 	}
 });

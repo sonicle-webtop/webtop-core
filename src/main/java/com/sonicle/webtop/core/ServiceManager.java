@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseBridge;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BasePublicService;
@@ -42,10 +43,12 @@ import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.zaxxer.hikari.HikariConfig;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,6 +58,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.commons.configuration.ConfigurationException;
@@ -77,7 +81,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ServiceManager {
-	
 	private static final Logger logger = WT.getLogger(ServiceManager.class);
 	private static boolean initialized = false;
 	
@@ -270,8 +273,8 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Returns registered services.
-	 * @return List of service IDs.
+	 * Lists IDs of registered services.
+	 * @return List of services' IDs.
 	 */
 	public List<String> getRegisteredServices() {
 		synchronized(lock) {
@@ -280,8 +283,22 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists discovered services.
-	 * @return List of registered services.
+	 * Lists IDs of services which Manager implements specified class.
+	 * @return List of services' IDs
+	 */
+	public List<String> listServicesWhichManagerImplements(Class clazz) {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(lock) {
+			for(ServiceDescriptor descr : descriptors.values()) {
+				if(descr.doesManagerImplements(clazz)) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Lists IDs of services that have private implementation.
+	 * @return List of services' IDs.
 	 */
 	public List<String> listPrivateServices() {
 		ArrayList<String> list = new ArrayList<>();
@@ -294,8 +311,8 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists discovered public services.
-	 * @return List of registered public services.
+	 * Lists IDs of services that have public implementation.
+	 * @return List of services' IDs.
 	 */
 	public List<String> listPublicServices() {
 		ArrayList<String> list = new ArrayList<>();
@@ -308,8 +325,22 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists discovered user option services.
-	 * @return List of registered user option services.
+	 * Lists IDs of services that have job implementation.
+	 * @return List of services' IDs.
+	 */
+	public List<String> listJobServices() {
+		ArrayList<String> list = new ArrayList<>();
+		synchronized(lock) {
+			for(ServiceDescriptor descr : descriptors.values()) {
+				if(descr.hasJobService()) list.add(descr.getManifest().getId());
+			}
+		}
+		return list;
+	}
+	
+	/**
+	 * Lists IDs of services that have userOption implementation.
+	 * @return List of services' IDs.
 	 */
 	public List<String> listUserOptionServices() {
 		ArrayList<String> list = new ArrayList<>();
@@ -326,20 +357,6 @@ public class ServiceManager {
 			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID: '{0}'", serviceId);
 			return publicServices.get(serviceId);
 		}
-	}
-	
-	/**
-	 * Lists discovered job services.
-	 * @return List of registered job services.
-	 */
-	public List<String> listJobServices() {
-		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
-			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasJobService()) list.add(descr.getManifest().getId());
-			}
-		}
-		return list;
 	}
 	
 	/**
@@ -454,10 +471,21 @@ public class ServiceManager {
 		}
 	}
 	
-	
-	
-	
-	
+	public BaseManager instantiateManager(String serviceId, RunContext runContext) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(!descr.hasManager()) throw new RuntimeException("Service has no Manager class");
+		
+		// Creates manager instance
+		try {
+			Class clazz = descr.getManagerClass();
+			Constructor<BaseManager> constructor = clazz.getConstructor(RunContext.class, UserProfile.Id.class);
+			return constructor.newInstance(runContext, runContext.getProfileId());
+			
+		} catch(Exception ex) {
+			logger.error("Error instantiating Manager [{}]", descr.getManifest().getManagerClassName(), ex);
+			return null;
+		}
+	}
 	
 	public BaseService instantiatePrivateService(String serviceId, Environment env) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
@@ -468,10 +496,11 @@ public class ServiceManager {
 		try {
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
 		} catch(Exception ex) {
-			logger.error("Error instantiating service [{}]", descr.getManifest().getServiceClassName(), ex);
+			logger.error("Error instantiating PrivateService [{}]", descr.getManifest().getPrivateServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, env.getProfile().getId()), env);
+		UserProfile profile = env.getProfile();
+		instance.configure(new RunContext(serviceId, profile.getId(), profile.getLocale()), env);
 		
 		// Calls initialization method
 		try {
@@ -510,7 +539,7 @@ public class ServiceManager {
 			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, sessionProfile.getId()), sessionProfile, targetProfileId);
+		instance.configure(new RunContext(serviceId, sessionProfile.getId(), sessionProfile.getLocale()), sessionProfile, targetProfileId);
 		return instance;
 	}
 	
@@ -580,7 +609,7 @@ public class ServiceManager {
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.debug("[default:{}, public:{}, job:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.debug("[manager:{}, private:{}, public:{}, job:{}, userOptions:{}]", desc.hasManager(), desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register service's dataSources
 			try {
@@ -688,14 +717,14 @@ public class ServiceManager {
 			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), Locale.ENGLISH));
 		return instance;
 	}
 	
 	private void initializePublicService(BasePublicService instance) {
 		// Calls initialization method
 		try {
-			WebTopApp.setServiceLoggerDC(instance.getId());
+			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable ex) {
 			logger.error("PublicService method returns errors [initialize()]", ex);
@@ -741,14 +770,14 @@ public class ServiceManager {
 			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), Locale.ENGLISH));
 		return instance;
 	}
 	
 	private void initializeJobService(BaseJobService instance) {
 		// Calls initialization method
 		try {
-			WebTopApp.setServiceLoggerDC(instance.getId());
+			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable ex) {
 			logger.error("JobService method returns errors [initialize()]", ex);
