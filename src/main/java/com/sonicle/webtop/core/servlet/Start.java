@@ -59,8 +59,9 @@ public class Start extends HttpServlet {
 		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
 		
-		String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
-		boolean extdebug=sextdebug!=null && sextdebug.equals("true");
+		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
+		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");
+		boolean extdebug = WebTopApp.getPropExtDebug();
 		
 		try {
 			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));

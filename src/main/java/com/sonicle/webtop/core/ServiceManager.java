@@ -445,19 +445,19 @@ public class ServiceManager {
 	
 	
 	
-	public void startAllJobServicesTasks() {
+	public void scheduleAllJobServicesTasks() {
 		if(!wta.isTheLatest()) return; // Make sure we are in latest webapp
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-				startJobServiceTasks(entry.getKey(), entry.getValue());
+				scheduleJobServiceTasks(entry.getKey(), entry.getValue());
 			}
 		}
 	}
 	
-	public void stopAllJobServicesTasks() {
+	public void unscheduleAllJobServicesTasks() {
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
-				stopJobServiceTasks(entry.getKey());
+				unscheduleJobServiceTasks(entry.getKey());
 			}
 		}
 	}
@@ -466,7 +466,7 @@ public class ServiceManager {
 		if(wta.isTheLatest()) {
 			return true;
 		} else {
-			stopAllJobServicesTasks();
+			unscheduleAllJobServicesTasks();
 			return false;
 		}
 	}
@@ -836,7 +836,7 @@ public class ServiceManager {
 		return tb.build();
 	}
 	
-	private void startJobServiceTasks(String serviceId, BaseJobService service) {
+	private void scheduleJobServiceTasks(String serviceId, BaseJobService service) {
 		List<TaskDefinition> taskDefs = null;
 		JobDetail jobDetail = null;
 		Trigger trigger = null;
@@ -853,7 +853,7 @@ public class ServiceManager {
 				WebTopApp.unsetServiceLoggerDC();
 			}
 			if(taskDefs != null) {
-				stopJobServiceTasks(serviceId);
+				unscheduleJobServiceTasks(serviceId);
 				
 				// Schedule job defining its trigger and details
 				for(TaskDefinition taskDef : taskDefs) {
@@ -872,7 +872,7 @@ public class ServiceManager {
 		}
 	}
 	
-	private void stopJobServiceTasks(String serviceId) {
+	private void unscheduleJobServiceTasks(String serviceId) {
 		try {
 			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(serviceId));
 			scheduler.deleteJobs(new ArrayList<>(keys));

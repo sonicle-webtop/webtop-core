@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OMessageQueue;
@@ -165,8 +166,11 @@ public class WebTopApp {
 			//TODO: gestire le opzioni di configurazione dello scheduler
 			SchedulerFactory sf = new StdSchedulerFactory();
 			scheduler = sf.getScheduler();
-			scheduler.start();
-			
+			if(WebTopApp.getPropDisableScheduler()) {
+				logger.info("Scheduler disabled in startup");
+			} else {
+				scheduler.start();
+			}
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error starting scheduler");
 		}
@@ -221,9 +225,10 @@ public class WebTopApp {
 			public void run() {
 				try {
 					Thread.sleep(5000);
-					logger.debug("Starting JobServices tasks...");
-					svcm.startAllJobServicesTasks();
-				} catch (InterruptedException ex) { /* Do nothing... */	}
+					logger.debug("Scheduling JobServices tasks...");
+					if(!scheduler.isStarted()) logger.warn("Tasks will be scheduled but scheduler is not running!");
+					svcm.scheduleAllJobServicesTasks();
+				} catch (InterruptedException | SchedulerException ex) { /* Do nothing... */	}
 			}
 		});
 		engine.start();	
@@ -475,8 +480,22 @@ public class WebTopApp {
 		return null;
 	}
 	
-	public static boolean systemIsDebug() {
-		return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
+	public static boolean getPropDisableScheduler() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.disable.scheduler");
+		return LangUtils.value(prop, false);
+		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
+	}
+	
+	public static boolean getPropWTDebug() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.wtdebug");
+		return LangUtils.value(prop, false);
+		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
+	}
+	
+	public static boolean getPropExtDebug() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.extdebug");
+		return LangUtils.value(prop, false);
+		//return System.getProperties().containsKey("com.sonicle.webtop.extdebug");
 	}
 	
 	/**
