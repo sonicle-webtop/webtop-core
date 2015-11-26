@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.Panel', {
 	alternateClassName: 'WT.ux.Panel',
 	extend: 'Ext.Panel',
 	alias: ['widget.wtpanel'],
+	mixins: [ 'WT.mixin.PanelUtil' ],
 	
 	border: false
 });
