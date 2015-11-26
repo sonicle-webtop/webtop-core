@@ -37,9 +37,6 @@ import com.sonicle.webtop.core.bol.OPostponedReminder;
 import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 
 /**
  *
@@ -50,9 +47,7 @@ public class JsReminderAlert {
 	public String type;
 	public String instanceId;
 	public String title;
-	public String sdate;
 	public DateTime date;
-	public String fixeddate;
 	public String timezone;
 	
 	public JsReminderAlert(ReminderAlertWeb rem) {
@@ -60,12 +55,8 @@ public class JsReminderAlert {
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		sdate = ISODateTimeFormat.dateTime().print(rem.getDate());
 		date = rem.getDate();
-		//DateTimeFormatter ymdhmsZoneFmt = DateTimeUtils.createYmdHmsFormatter(profileTz);
-		//date = ymdhmsZoneFmt.print(alert.getDate());
-		//fixeddate = "2015-11-26T10:53:00.000+0100";
-		//timezone = rem.getTimezone();
+		timezone = rem.getTimezone();
 	}
 	
 	public JsReminderAlert(OPostponedReminder rem) {
@@ -73,7 +64,8 @@ public class JsReminderAlert {
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		date = rem.getRemindOn();
+		date = rem.getDate().withZone(rem.getDateTimeZone());
+		timezone = rem.getTimezone();
 	}
 	
 	public static class List extends ArrayList<JsReminderAlert> {

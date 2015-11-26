@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
@@ -81,6 +82,8 @@ import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 /**
@@ -650,13 +653,17 @@ public class Service extends BaseService {
 	}
 	
 	public void processPostponeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-				
+		
 		try {
+			String now = ServletUtils.getStringParameter(request, "now", true);
 			Integer postpone = ServletUtils.getIntParameter(request, "postpone", 5);
 			PayloadAsList<JsReminderAlert.List> pl = ServletUtils.getPayloadAsList(request, JsReminderAlert.List.class);
 			
+			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(getEnv().getProfile().getTimeZone());
+			DateTime remindOn = fmt.parseDateTime(now).plusMinutes(postpone);
+			
 			for(JsReminderAlert reminder : pl.data) {
-				core.postponeReminder(getEnv().getProfileId(), reminder, postpone);
+				core.postponeReminder(getEnv().getProfileId(), reminder, remindOn);
 			}
 			new JsonResult().printTo(out);
 			

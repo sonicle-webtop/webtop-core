@@ -63,9 +63,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.vwrem.getComponent(0).addReminder(data);
 		} else {
 			me.vwrem = WT.createView(WT.ID, 'view.Reminder');
-			me.vwrem.on('viewclose', function() {
+			me.vwrem.on('close', function() {
 				me.vwrem = null;
-			});
+			}, {single: true});
 			me.vwrem.show(false, function() {
 				Ext.defer(function() {
 					me.vwrem.getComponent(0).addReminder(data);

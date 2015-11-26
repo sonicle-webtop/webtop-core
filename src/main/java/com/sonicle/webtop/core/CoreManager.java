@@ -943,7 +943,7 @@ public class CoreManager extends BaseManager {
 		return services.contains(serviceId);
 	}
 	
-	public OPostponedReminder postponeReminder(UserProfile.Id profileId, JsReminderAlert reminder, int minutes) throws WTException {
+	public OPostponedReminder postponeReminder(UserProfile.Id profileId, JsReminderAlert reminder, DateTime remindOn) throws WTException {
 		PostponedReminderDAO dao = PostponedReminderDAO.getInstance();
 		Connection con = null;
 		
@@ -956,8 +956,10 @@ public class CoreManager extends BaseManager {
 			item.setServiceId(reminder.serviceId);
 			item.setType(reminder.type);
 			item.setInstanceId(reminder.instanceId);
-			item.setRemindOn(reminder.date.plusMinutes(minutes));
+			item.setRemindOn(remindOn);
 			item.setTitle(reminder.title);
+			item.setDate(reminder.date);
+			item.setTimezone(reminder.timezone);
 			
 			item.setPostponedReminderId(dao.getSequence(con).intValue());
 			dao.insert(con, item);
@@ -981,9 +983,11 @@ public class CoreManager extends BaseManager {
 			for(OPostponedReminder item : items) {
 				dao.delete(con, item.getPostponedReminderId());
 			}
+			DbUtils.commitQuietly(con);
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
 			throw new WTException(ex, "DB Error");
 		} finally {
 			DbUtils.closeQuietly(con);

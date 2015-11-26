@@ -102,10 +102,13 @@ public class JobService extends BaseJobService {
 		
 		@Override
 		public void executeWork() {
+			HashMap<UserProfile.Id, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
+			DateTime now = DateTime.now(DateTimeZone.UTC);
+			
+			logger.trace("ReminderJob started [{}]", now);
+			
 			try {
 				ArrayList<ReminderAlert> alerts = new ArrayList<>();
-				DateTime now = DateTime.now(DateTimeZone.UTC);
-				logger.trace("ReminderJob started [{}]", now);
 
 				// Creates a manager instance for each service and calls it for reminders...
 				for(String sid : jobService.sidUsingReminders) {
@@ -116,7 +119,6 @@ public class JobService extends BaseJobService {
 
 				// Process returned reminders...
 				logger.trace("Processing {} returned alerts", alerts.size());
-				HashMap<UserProfile.Id, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
 				for(ReminderAlert alert : alerts) {
 					if(alert instanceof ReminderAlertEmail) {
 						//TODO: inviare notifica per email
@@ -129,7 +131,13 @@ public class JobService extends BaseJobService {
 						byProfile.get(alert.getProfileId()).add(msg);
 					}
 				}
-
+				
+			} catch(RuntimeException ex) {
+				logger.error("Unable to process service reminders", ex);
+			}
+			
+			try {
+				logger.trace("Processing postponed reminders");
 				List<OPostponedReminder> prems = jobService.core.listExpiredPostponedReminders(now);
 				for(OPostponedReminder prem : prems) {
 					UserProfile.Id pid = new UserProfile.Id(prem.getDomainId(), prem.getUserId());
@@ -139,17 +147,17 @@ public class JobService extends BaseJobService {
 					}
 					byProfile.get(pid).add(msg);
 				}
-
-				// Process messages...
-				for(UserProfile.Id pid : byProfile.keySet()) {
-					WT.nofity(pid, byProfile.get(pid));
-				}
-				
-				logger.trace("ReminderJob finished");
 				
 			} catch(WTException ex) {
-				logger.error("Unable to complete job", ex);
+				logger.error("Unable to process postponed reminders", ex);
 			}
+			
+			// Process messages...
+			for(UserProfile.Id pid : byProfile.keySet()) {
+				WT.nofity(pid, byProfile.get(pid));
+			}
+			
+			logger.trace("ReminderJob finished");
 		}
 	}
 }

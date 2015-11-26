@@ -41,8 +41,6 @@ Ext.define('Sonicle.webtop.core.model.ReminderAlert', {
 		WTF.roField('instanceId', 'string'),
 		WTF.roField('title', 'string'),
 		WTF.roField('date', 'date', WTF.isoDateFieldCfg()),
-		
-		WTF.roField('sdate', 'string', {dateFormat: 'c'}),
-		WTF.roField('fixeddate', 'date', {dateReadFormat: 'Y-m-dTH:i:s.uO', dateWriteFormat: 'Y-m-d\\TH:i:s.uO'})
+		WTF.roField('timezone', 'string')
 	]
 });

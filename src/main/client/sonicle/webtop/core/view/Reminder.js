@@ -134,7 +134,6 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				sto = me.getViewModel().getStore('reminders');
 		
 		Ext.iterate(data, function(obj) {
-			console.log(obj);
 			sto.add(Ext.create('WT.model.ReminderAlert', obj));
 		});
 	},
@@ -145,15 +144,13 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				sto = me.getViewModel().getStore('reminders'),
 				json = [];
 		
-		console.log('postponeReminder');
-		console.log(recs);
-		
 		if(recs.length > 0) {
 			Ext.iterate(recs, function(rec) {
 				json.push(rec.getData({serialize: true}));
 			});
 			WT.ajaxReq(WT.ID, 'PostponeReminder', {
 				params: {
+					now: Ext.Date.format(new Date(), 'Y-m-d H:i:s'),
 					postpone: cbo.getValue()
 				},
 				jsonData: json,

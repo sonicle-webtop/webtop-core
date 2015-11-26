@@ -347,6 +347,12 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		});
 	},
 	
+	/**
+	 * Creates an object config that properly configure field's formats for
+	 * reading and writing dates. ISO date pattern (Y-m-dTH:i:s.uO) will be used.
+	 * @param {Object} [cfg] Previous cfg to merge
+	 * @returns {Object} An object config
+	 */
 	isoDateFieldCfg: function(cfg) {
 		return Ext.apply(cfg || {}, {
 			dateReadFormat: 'Y-m-dTH:i:s.uO',
