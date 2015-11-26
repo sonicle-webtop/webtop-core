@@ -207,6 +207,32 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}, obj);
 	},
 	
+	proxyReader: function(sid, act, rootp, opts) {
+		opts = opts || {};
+		var obj = {};
+		if(opts.model) Ext.apply(obj, {model: opts.model});
+		return Ext.apply({
+			type: 'ajax',
+			url: WTF.requestBaseUrl(),
+			extraParams: Ext.apply(opts.extraParams || {}, {
+				service: sid,
+				action: act
+			}),
+			reader: Ext.apply({
+				type: 'json',
+				rootProperty: rootp || 'data',
+				messageProperty: 'message'
+			}, opts.reader || {}),
+			listeners: {
+				exception: function(proxy, request, operation, eOpts) {
+					//TODO: localizzare il messaggio di errore
+					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+				}
+			}
+		}, obj);
+		return obj;
+	},
+	
 	/**
 	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy} using CRUD api.
 	 * @param {String} sid The service ID

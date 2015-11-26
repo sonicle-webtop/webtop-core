@@ -72,4 +72,8 @@ public class Environment {
 	public void notify(List<ServiceMessage> messages) {
 		wts.nofity(messages);
 	}
+	
+	public String getSecurityToken() {
+		return wts.getSecurityToken();
+	}
 }
