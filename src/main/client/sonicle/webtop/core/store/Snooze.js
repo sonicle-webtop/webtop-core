@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.Postpone', {
+Ext.define('Sonicle.webtop.core.store.Snooze', {
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
@@ -59,7 +59,7 @@ Ext.define('Sonicle.webtop.core.store.Postpone', {
 	constructor: function(cfg) {
 		var me = this;
 		Ext.each(me.config.data, function(row) {
-			row[1] = WT.res('store.postpone.'+row[0]);
+			row[1] = WT.res('store.snooze.'+row[0]);
 		});
 		me.callParent([cfg]);
 	}

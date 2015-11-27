@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OPostponedReminder;
+import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
@@ -62,7 +62,7 @@ import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainDAO;
-import com.sonicle.webtop.core.dal.PostponedReminderDAO;
+import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
@@ -943,14 +943,14 @@ public class CoreManager extends BaseManager {
 		return services.contains(serviceId);
 	}
 	
-	public OPostponedReminder postponeReminder(UserProfile.Id profileId, JsReminderAlert reminder, DateTime remindOn) throws WTException {
-		PostponedReminderDAO dao = PostponedReminderDAO.getInstance();
+	public OSnoozedReminder snoozeReminder(UserProfile.Id profileId, JsReminderAlert reminder, DateTime remindOn) throws WTException {
+		SnoozedReminderDAO dao = SnoozedReminderDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
-			OPostponedReminder item = new OPostponedReminder();
+			OSnoozedReminder item = new OSnoozedReminder();
 			item.setDomainId(profileId.getDomainId());
 			item.setUserId(profileId.getUserId());
 			item.setServiceId(reminder.serviceId);
@@ -961,7 +961,7 @@ public class CoreManager extends BaseManager {
 			item.setDate(reminder.date);
 			item.setTimezone(reminder.timezone);
 			
-			item.setPostponedReminderId(dao.getSequence(con).intValue());
+			item.setSnoozedReminderId(dao.getSequence(con).intValue());
 			dao.insert(con, item);
 			return item;
 		
@@ -972,16 +972,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OPostponedReminder> listExpiredPostponedReminders(DateTime greaterInstant) throws WTException {
-		PostponedReminderDAO dao = PostponedReminderDAO.getInstance();
+	public List<OSnoozedReminder> listExpiredSnoozedReminders(DateTime greaterInstant) throws WTException {
+		SnoozedReminderDAO dao = SnoozedReminderDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			con.setAutoCommit(false);
-			List<OPostponedReminder> items = dao.selectExpiredForUpdateByInstant(con, greaterInstant);
-			for(OPostponedReminder item : items) {
-				dao.delete(con, item.getPostponedReminderId());
+			List<OSnoozedReminder> items = dao.selectExpiredForUpdateByInstant(con, greaterInstant);
+			for(OSnoozedReminder item : items) {
+				dao.delete(con, item.getSnoozedReminderId());
 			}
 			DbUtils.commitQuietly(con);
 			return items;

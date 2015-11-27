@@ -54,7 +54,7 @@ public class Logout extends HttpServlet {
 		ServletHelper.setCacheControl(response);
 		
 		try {
-			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context
+			WebTopApp.initLoggerDC(wta.getName()); // Init default diagnostic context
 			WebTopApp.logger.trace("Servlet: logout [{}]", ServletHelper.getSessionID(request));
 			WebTopSession wts = WebTopSession.get(request);
 			WebTopApp.setSessionLoggerDC(wts);

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.bol.OPostponedReminder;
+import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
@@ -59,7 +59,7 @@ public class JsReminderAlert {
 		timezone = rem.getTimezone();
 	}
 	
-	public JsReminderAlert(OPostponedReminder rem) {
+	public JsReminderAlert(OSnoozedReminder rem) {
 		serviceId = rem.getServiceId();
 		type = rem.getType();
 		instanceId = rem.getInstanceId();

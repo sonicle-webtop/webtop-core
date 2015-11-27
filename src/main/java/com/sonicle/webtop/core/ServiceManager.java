@@ -446,7 +446,7 @@ public class ServiceManager {
 	
 	
 	public void scheduleAllJobServicesTasks() {
-		if(!wta.isTheLatest()) return; // Make sure we are in latest webapp
+		if(!wta.isLastVersion()) return; // Make sure we are in latest webapp
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
 				scheduleJobServiceTasks(entry.getKey(), entry.getValue());
@@ -463,7 +463,7 @@ public class ServiceManager {
 	}
 	
 	public boolean canExecuteTaskWork(JobKey taskKey) {
-		if(wta.isTheLatest()) {
+		if(wta.isLastVersion()) {
 			return true;
 		} else {
 			unscheduleAllJobServicesTasks();
@@ -603,13 +603,13 @@ public class ServiceManager {
 		String xid = manifest.getXId();
 		boolean maintenance = false;
 		
-		logger.debug("Registering service [{}]", serviceId);
+		logger.info("Registering service [{}]", serviceId);
 		synchronized(lock) {
 			if(descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.debug("[manager:{}, private:{}, public:{}, job:{}, userOptions:{}]", desc.hasManager(), desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.info("[manager:{}, private:{}, public:{}, job:{}, userOptions:{}]", desc.hasManager(), desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register service's dataSources
 			try {

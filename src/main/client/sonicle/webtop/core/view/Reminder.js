@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 	extend: 'WT.sdk.DockableView',
 	requires: [
 		'Sonicle.webtop.core.model.ReminderAlert',
-		'Sonicle.webtop.core.store.Postpone'
+		'Sonicle.webtop.core.store.Snooze'
 	],
 	
 	dockableConfig: {
@@ -60,26 +60,25 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		
 		Ext.apply(me, {
 			fbar: [WTF.localCombo('id', 'desc', {
-				reference: 'cbopostpone',
-				store: Ext.create('Sonicle.webtop.core.store.Postpone', {
+				reference: 'cbosnooze',
+				store: Ext.create('Sonicle.webtop.core.store.Snooze', {
 					autoLoad: true
 				}),
-				fieldLabel: me.mys.res('reminder.cbo-postpone.lbl'),
+				fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
 				labelWidth: 70,
 				width: 190,
 				value: 5
 			}), ' ', {
 				xtype: 'button',
-				text: WT.res('reminder.btn-postpone.lbl'),
-				iconCls: 'wt-icon-postpone-xs',
+				text: WT.res('reminder.btn-snooze.lbl'),
+				iconCls: 'wt-icon-snooze-xs',
 				handler: function() {
 					var sm = me.lref('gpreminders').getSelectionModel();
-					if(sm.hasSelection()) me.postponeReminder(sm.getSelection());
+					if(sm.hasSelection()) me.snoozeReminder(sm.getSelection());
 				}
 			}, '->', {
 				xtype: 'button',
-				text: WT.res('act-delete.lbl'),
-				iconCls: 'wt-icon-delete-xs',
+				text: WT.res('reminder.btn-ignore.lbl'),
 				handler: function() {
 					var sm = me.lref('gpreminders').getSelectionModel();
 					if(sm.hasSelection()) me.deleteReminder(sm.getSelection());
@@ -138,9 +137,9 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		});
 	},
 	
-	postponeReminder: function(recs) {
+	snoozeReminder: function(recs) {
 		var me = this,
-				cbo = me.lref('cbopostpone'),
+				cbo = me.lref('cbosnooze'),
 				sto = me.getViewModel().getStore('reminders'),
 				json = [];
 		
@@ -148,14 +147,15 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 			Ext.iterate(recs, function(rec) {
 				json.push(rec.getData({serialize: true}));
 			});
-			WT.ajaxReq(WT.ID, 'PostponeReminder', {
+			WT.ajaxReq(WT.ID, 'SnoozeReminder', {
 				params: {
 					now: Ext.Date.format(new Date(), 'Y-m-d H:i:s'),
-					postpone: cbo.getValue()
+					snooze: cbo.getValue()
 				},
 				jsonData: json,
-				callback: function(success, json) {
+				callback: function(success) {
 					if(success) sto.remove(recs);
+					if(sto.getCount()===0) me.closeView();
 				}
 			});
 		}
@@ -165,5 +165,6 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		var me = this,
 				sto = me.getViewModel().getStore('reminders');
 		sto.remove(rec);
+		if(sto.getCount()===0) me.closeView();
 	}
 });
