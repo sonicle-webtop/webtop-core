@@ -137,7 +137,11 @@ public class WebTopApp {
 	}
 	
 	private void init() {
-		String webappName = getWebAppName();
+		logger.info("wtdebug = {}", getPropWTDebug());
+		logger.info("extdebug = {}", getPropExtDebug());
+		logger.info("scheduler.disabled = {}", getPropDisableScheduler());
+		
+		String webappName = getName();
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		// Locale Manager
@@ -161,13 +165,13 @@ public class WebTopApp {
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
 		// TFA Manager
 		tfam = TFAManager.initialize(this);
-		// Scheduler (services manager (for deamons) requires this component)
+		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
 			SchedulerFactory sf = new StdSchedulerFactory();
 			scheduler = sf.getScheduler();
 			if(WebTopApp.getPropDisableScheduler()) {
-				logger.info("Scheduler disabled in startup");
+				logger.warn("Scheduler startup disabled");
 			} else {
 				scheduler.start();
 			}
@@ -183,7 +187,7 @@ public class WebTopApp {
 	}
 	
 	public void destroy() {
-		String webappName = getWebAppName();
+		String webappName = getName();
 		logger.info("WTA shutdown started [{}]", webappName);
 		
 		// Service Manager
@@ -226,8 +230,8 @@ public class WebTopApp {
 				try {
 					Thread.sleep(5000);
 					logger.debug("Scheduling JobServices tasks...");
-					if(!scheduler.isStarted()) logger.warn("Tasks will be scheduled but scheduler is not running!");
 					svcm.scheduleAllJobServicesTasks();
+					if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
 				} catch (InterruptedException | SchedulerException ex) { /* Do nothing... */	}
 			}
 		});
@@ -238,7 +242,7 @@ public class WebTopApp {
 	 * Returns webapp's name as configured in the application server.
 	 * @return Webapp's name
 	 */
-	public String getWebAppName() {
+	public String getName() {
 		return ServletHelper.getWebAppName(servletContext);
 	}
 	
@@ -246,8 +250,8 @@ public class WebTopApp {
 	 * Checks if this webapp is the latest version in the application server.
 	 * @return True if this is the last version, false otherwise.
 	 */
-	public boolean isTheLatest() {
-		String webappName = getWebAppName();
+	public boolean isLastVersion() {
+		String webappName = getName();
 		String webappBaseName = StringUtils.split(webappName, "##")[0];
 		String webappPath = servletContext.getRealPath("/");
 		String webappsDirPath = webappPath + "/..";
@@ -264,8 +268,8 @@ public class WebTopApp {
 			}
 		}
 		
-		String latest = (String)names.get(names.size()-1);
-		return webappName.equals(latest);
+		String last = (String)names.get(names.size()-1);
+		return webappName.equals(last);
 	}
 	
 	public URL getResource(String resource) throws MalformedURLException {

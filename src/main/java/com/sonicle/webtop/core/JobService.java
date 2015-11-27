@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.bol.OPostponedReminder;
+import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderAlert;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
 import com.sonicle.webtop.core.sdk.BaseJobService;
@@ -137,9 +137,9 @@ public class JobService extends BaseJobService {
 			}
 			
 			try {
-				logger.trace("Processing postponed reminders");
-				List<OPostponedReminder> prems = jobService.core.listExpiredPostponedReminders(now);
-				for(OPostponedReminder prem : prems) {
+				logger.trace("Processing snoozed reminders");
+				List<OSnoozedReminder> prems = jobService.core.listExpiredSnoozedReminders(now);
+				for(OSnoozedReminder prem : prems) {
 					UserProfile.Id pid = new UserProfile.Id(prem.getDomainId(), prem.getUserId());
 					ReminderMessage msg = new ReminderMessage(new JsReminderAlert(prem));
 					if(!byProfile.containsKey(pid)) {
@@ -149,12 +149,12 @@ public class JobService extends BaseJobService {
 				}
 				
 			} catch(WTException ex) {
-				logger.error("Unable to process postponed reminders", ex);
+				logger.error("Unable to process snoozed reminders", ex);
 			}
 			
 			// Process messages...
 			for(UserProfile.Id pid : byProfile.keySet()) {
-				WT.nofity(pid, byProfile.get(pid));
+				WT.nofity(pid, byProfile.get(pid), true);
 			}
 			
 			logger.trace("ReminderJob finished");

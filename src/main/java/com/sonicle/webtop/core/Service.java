@@ -652,18 +652,18 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processPostponeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processSnoozeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String now = ServletUtils.getStringParameter(request, "now", true);
-			Integer postpone = ServletUtils.getIntParameter(request, "postpone", 5);
+			Integer snooze = ServletUtils.getIntParameter(request, "snooze", 5);
 			PayloadAsList<JsReminderAlert.List> pl = ServletUtils.getPayloadAsList(request, JsReminderAlert.List.class);
 			
 			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(getEnv().getProfile().getTimeZone());
-			DateTime remindOn = fmt.parseDateTime(now).plusMinutes(postpone);
+			DateTime remindOn = fmt.parseDateTime(now).plusMinutes(snooze);
 			
 			for(JsReminderAlert reminder : pl.data) {
-				core.postponeReminder(getEnv().getProfileId(), reminder, remindOn);
+				core.snoozeReminder(getEnv().getProfileId(), reminder, remindOn);
 			}
 			new JsonResult().printTo(out);
 			

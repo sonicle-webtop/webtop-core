@@ -73,7 +73,7 @@ public class WT {
 	}
 	
 	public static boolean isLatestWebApp() {
-		return getWTA().isTheLatest();
+		return getWTA().isLastVersion();
 	}
 	
 	public static List<AppLocale> getInstalledLocales() {
