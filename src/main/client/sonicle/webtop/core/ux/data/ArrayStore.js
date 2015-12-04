@@ -35,8 +35,15 @@ Ext.define('Sonicle.webtop.core.ux.data.ArrayStore', {
 	alternateClassName: 'WT.ux.data.ArrayStore',
 	extend: 'Ext.data.ArrayStore',
 	
-	sid: null,
-	resKeyPrefix: null,
+	/**
+	 * @cfg {String} sid
+	 * Webtop service ID.
+	 */
+	
+	/**
+	 * @cfg {String} resKeyPrefix
+	 * The resource key prefix.
+	 */
 	
 	constructor: function(cfg) {
 		var me = this;

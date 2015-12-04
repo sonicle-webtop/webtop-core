@@ -39,6 +39,10 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	requires: [
 		'WT.ux.data.ValueModel'
 	],
+	plugins: [
+		'soenterkeyplugin',
+		'sofieldtooltip'
+	],
 	
 	/**
 	 * @cfg {String} sid
@@ -77,6 +81,14 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		
 		me.callParent(arguments);
 		me.on('specialkey', me._onSpecialKey);
+	},
+	
+	setSuggestionContext: function(value) {
+		var me = this;
+		me.suggestionContext = value;
+		WTU.applyExtraParams(me.getStore(), {
+			context: value
+		});
 	},
 	
 	/*
