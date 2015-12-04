@@ -36,14 +36,14 @@ Ext.define('Sonicle.webtop.core.ux.data.ArrayStore', {
 	extend: 'Ext.data.ArrayStore',
 	
 	sid: null,
-	keyPrefix: null,
+	resKeyPrefix: null,
 	
 	constructor: function(cfg) {
 		var me = this;
 		
-		if(!Ext.isEmpty(me.sid) && !Ext.isEmpty(me.keyPrefix)) {
+		if(!Ext.isEmpty(me.sid) && !Ext.isEmpty(me.resKeyPrefix)) {
 			Ext.each(me.config.data, function(row) {
-				row[1] = WT.res(me.sid, me.keyPrefix+row[0]);
+				row[1] = WT.res(me.sid, me.resKeyPrefix+row[0]);
 			});
 		}
 		me.callParent([cfg]);
