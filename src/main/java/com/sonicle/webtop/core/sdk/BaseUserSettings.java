@@ -38,6 +38,7 @@ import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -117,5 +118,21 @@ public abstract class BaseUserSettings extends BaseSettings {
 	
 	public boolean clear(String key) {
 		return setm.deleteUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
+	}
+	
+	public HashMap<String,String> getStrings(String likeKey) {
+		List<OUserSetting> list=setm.getUserSettings(profileId.getDomainId(), profileId.getUserId(), serviceId, likeKey+"%");
+		HashMap<String,String> strings=new HashMap<>();
+		int ix=likeKey.length();
+		for(OUserSetting el: list) strings.put(el.getKey().substring(ix), el.getValue());
+		return strings;
+	}
+	
+	public HashMap<String,Integer> getIntegers(String likeKey) {
+		List<OUserSetting> list=setm.getUserSettings(profileId.getDomainId(), profileId.getUserId(), serviceId, likeKey+"%");
+		HashMap<String,Integer> integers=new HashMap<>();
+		int ix=likeKey.length();
+		for(OUserSetting el: list) integers.put(el.getKey().substring(ix), Integer.valueOf(el.getValue()));
+		return integers;
 	}
 }

@@ -151,6 +151,22 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Gets the initial setting value object bound to key.
+	 * @param {String} [id] The service ID.
+	 * @param {String} key The key.
+	 * @return {Mixed} Setting value object.
+	 */
+	getOptionAsObject: function(id,key) {
+		if(arguments.length === 1) {
+			key = id;
+			id = WT.ID;
+		}
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		return svc.getOptionAsObject(key);
+	},
+	
+	/**
 	 * Gets the initial setting value bound to key.
 	 * @param {String} [id] The service ID.
 	 * @param {Object} opts Key/Value pairs object.
@@ -349,6 +365,31 @@ Ext.define('Sonicle.webtop.core.WT', {
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK
 		}, opts.config || {}));
+	},
+	
+	/**
+	 * Displays a message prompting for input.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] An object containing prompt configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {String} opts.title A custom title.
+	 * @param {Function} [opts.fn] The callback function invoked after the message box is closed.
+	 * @param {Object} [opts.scope=window] The scope (this reference) in which the callback is executed.
+	 * @param {Boolean/Number} [opts.multiline=false] The scope (this reference) in which the callback is executed.
+	 * @param {String} [opts.value=''] Default value of the text input element
+	 */
+	prompt: function(msg, opts) {
+		opts = opts || {};
+		Ext.Msg.prompt(
+			opts.title || WT.res('prompt'),
+			msg,
+			opts.fn,
+			opts.scope,
+			opts.multiline,
+			opts.value
+		);
 	},
 	
 	/**

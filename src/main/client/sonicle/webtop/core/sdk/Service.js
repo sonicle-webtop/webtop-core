@@ -152,6 +152,17 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
+	 * Returns an option as an object defined during startup set.
+	 * Some built-in options are defined in model {@link WT.sdk.model.ClientOptions}.
+	 * @param {String} key The option key.
+	 * @return {Mixed} The option value object.
+	 */
+	getOptionAsObject: function(key) {
+		return Ext.JSON.decode(this.getOption(key,'{}'));
+	},
+	
+	
+	/**
 	 * Sets one of startup option set.
 	 * Updates are only valid for client, no server sync is done using this method.
 	 * @param {Object} opts Key/Value pairs object.
