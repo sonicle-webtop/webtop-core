@@ -466,12 +466,13 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @param {Object} cfg Custom configuration object
 	 * @param {String} cfg.id The service ID.
 	 * @param {String} cfg.key The resource key.
+	 * @param {Boolean} cfg.keepcase True to not apply lowercase transform to value
 	 * @returns {Function} The renderer function
 	 */
 	resColRenderer: function(cfg) {
 		cfg = cfg || {};
 		return function(value) {
-			return WT.res(cfg.id, cfg.key + '.' + value);
+			return WT.res(cfg.id, cfg.key + '.' + ((cfg.keepcase === true) ? String(value) : Ext.util.Format.lowercase(value)));
 		};
 	},
 	

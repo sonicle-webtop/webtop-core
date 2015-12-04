@@ -31,29 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.webtop.core.sdk.UserProfile;
-import java.util.Locale;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class RunContext {
-	private final String serviceId;
-	private final UserProfile.Id profile;
+public class NestedClass {
+	private Object fk;
 	
-	RunContext(String serviceId, UserProfile.Id profile) {
-		this.serviceId = serviceId;
-		this.profile = profile;
+	public NestedClass() {}
+	
+	public NestedClass(Object fk) {
+		this.fk = fk;
 	}
-	
-	public String getServiceId() {
-		return serviceId;
+
+	public Object getFk() {
+		return fk;
 	}
-	
-	public UserProfile.Id getProfileId() {
-		return profile;
+
+	public void setFk(Object fk) {
+		this.fk = fk;
 	}
 }

@@ -500,7 +500,7 @@ public class ServiceManager {
 			return null;
 		}
 		UserProfile profile = env.getProfile();
-		instance.configure(new RunContext(serviceId, profile.getId(), profile.getLocale()), env);
+		instance.configure(new RunContext(serviceId, profile.getId()), env);
 		
 		// Calls initialization method
 		try {
@@ -539,7 +539,7 @@ public class ServiceManager {
 			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, sessionProfile.getId(), sessionProfile.getLocale()), sessionProfile, targetProfileId);
+		instance.configure(new RunContext(serviceId, sessionProfile.getId()), sessionProfile, targetProfileId);
 		return instance;
 	}
 	
@@ -717,7 +717,7 @@ public class ServiceManager {
 			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), Locale.ENGLISH));
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
 		return instance;
 	}
 	
@@ -770,7 +770,7 @@ public class ServiceManager {
 			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), Locale.ENGLISH));
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
 		return instance;
 	}
 	

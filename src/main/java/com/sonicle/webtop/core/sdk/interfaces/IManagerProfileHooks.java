@@ -31,13 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.sdk.interfaces;
+
+import com.sonicle.webtop.core.sdk.WTException;
 
 /**
  *
  * @author malbinola
  */
-public interface IManagerHandleProfiles {
+public interface IManagerProfileHooks {
 	
 	public void initializeProfile() throws WTException;
 	public void cleanupProfile(boolean deep) throws WTException;

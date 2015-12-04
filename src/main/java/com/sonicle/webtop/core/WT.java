@@ -106,19 +106,22 @@ public class WT {
 	}
 	
 	public static String findServiceId(Class clazz) {
-		ServiceManifest manifest = findManifest(clazz);
-		return (manifest == null) ? null : manifest.getId();
+		String cname = clazz.getName();
+		synchronized(cnameToServiceIdCache) {
+			if(cnameToServiceIdCache.containsKey(cname)) {
+				return cnameToServiceIdCache.get(cname);
+			} else {
+				for(String sid : manifestCache.keySet()) {
+					if(StringUtils.startsWith(cname, sid)) {
+						cnameToServiceIdCache.put(cname, sid);
+						return sid;
+					}
+				}
+			}
+		}
+		return null;
 	}
 	
-	/*
-	public static RunContext createRunContext(String serviceId, UserProfile.Id profile) {
-		return new RunContext(WT.getManifest(serviceId), profile);
-	}
-	
-	public static RunContext createRunContext(String serviceId, String domainId, String userId) {
-		return new RunContext(WT.getManifest(serviceId), new UserProfile.Id(domainId, userId));
-	}
-	*/
 	public static CoreManager getCoreManager(RunContext context) {
 		return new CoreManager(context, getWTA());
 	}
@@ -270,7 +273,7 @@ public class WT {
 	public static File getTempFolder() throws WTException {
 		File tempDir = new File(getSystemTempPath());
 		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
-			throw new WTException("Temp folder isn't a directory or is write protected");
+			throw new WTException("Temp folder is not a directory or is write protected");
 		}
 		return tempDir;
 	}

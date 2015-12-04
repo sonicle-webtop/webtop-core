@@ -112,29 +112,29 @@ public class Service extends BaseService {
 	}
 
 	@Override
-	public HashMap<String, Object> returnClientOptions() {
+	public ClientOptions returnClientOptions() {
 		UserProfile profile = getEnv().getProfile();
-		HashMap<String, Object> hm = new HashMap<>();
+		ClientOptions co = new ClientOptions();
 		
-		hm.put("profileId", profile.getStringId());
-		hm.put("domainId", profile.getDomainId());
-		hm.put("userId", profile.getUserId());
+		co.put("profileId", profile.getStringId());
+		co.put("domainId", profile.getDomainId());
+		co.put("userId", profile.getUserId());
 		
-		hm.put("theme", us.getTheme());
-		hm.put("layout", us.getLayout());
-		hm.put("laf", us.getLookAndFeel());
-		hm.put("language", profile.getLanguageTag());
-		hm.put("timezone", profile.getTimeZone().getID());
-		hm.put("startDay", us.getStartDay());
-		hm.put("shortDateFormat", us.getShortDateFormat());
-		hm.put("longDateFormat", us.getLongDateFormat());
-		hm.put("shortTimeFormat", us.getShortTimeFormat());
-		hm.put("longTimeFormat", us.getLongTimeFormat());
+		co.put("theme", us.getTheme());
+		co.put("layout", us.getLayout());
+		co.put("laf", us.getLookAndFeel());
+		co.put("language", profile.getLanguageTag());
+		co.put("timezone", profile.getTimeZone().getID());
+		co.put("startDay", us.getStartDay());
+		co.put("shortDateFormat", us.getShortDateFormat());
+		co.put("longDateFormat", us.getLongDateFormat());
+		co.put("shortTimeFormat", us.getShortTimeFormat());
+		co.put("longTimeFormat", us.getLongTimeFormat());
 		
-		hm.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
-		hm.put("upiProviderWritable", core.isUserInfoProviderWritable());
+		co.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
+		co.put("upiProviderWritable", core.isUserInfoProviderWritable());
 		
-		return hm;
+		return co;
 	}
 	
 	 

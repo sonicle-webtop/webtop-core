@@ -460,6 +460,12 @@ public class WebTopSession {
 		}
 	}
 	
+	public boolean hasUploadedFile(String id) {
+		synchronized(uploads) {
+			return uploads.containsKey(id);
+		}
+	}
+	
 	public void removeUploadedFile(UploadedFile uploadedFile) {
 		removeUploadedFile(uploadedFile.id);
 	}

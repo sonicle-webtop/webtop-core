@@ -88,7 +88,7 @@ public abstract class BaseService extends BaseServiceBase {
 		return context;
 	}
 	
-	public HashMap<String, Object> returnClientOptions() {
+	public ClientOptions returnClientOptions() {
 		return null;
 	}
     
@@ -109,6 +109,10 @@ public abstract class BaseService extends BaseServiceBase {
 	 */
 	public final String lookupResource(String key, boolean escapeHtml) {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
+	}
+	
+	public final boolean hasUploadedFile(String id) {
+		return env.wts.hasUploadedFile(id);
 	}
 	
 	public final UploadedFile getUploadedFile(String id) {
@@ -262,6 +266,12 @@ public abstract class BaseService extends BaseServiceBase {
 			return getClass().getMethod(methodName, HttpServletRequest.class, InputStream.class);
 		} catch(NoSuchMethodException ex) {
 			return null;
+		}
+	}
+	
+	public static class ClientOptions extends HashMap<String, Object> {
+		public ClientOptions() {
+			super();
 		}
 	}
 }

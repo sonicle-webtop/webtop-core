@@ -45,7 +45,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 	seTask: null,
 	
 	constructor: function() {
-		var me = WT.app = this;
+		var me = this;
+		WT.app = me;
 		me.locales = Ext.create('Ext.util.HashMap');
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);

@@ -117,6 +117,7 @@ public class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
+	private UserManager usrm = null;
 	private AuthManager autm = null;
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
@@ -158,6 +159,8 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
+		// User Manager
+		usrm = UserManager.initialize(this);
 		// Auth Manager
 		autm = AuthManager.initialize(this);
 		// Settings Manager
@@ -209,9 +212,12 @@ public class WebTopApp {
 		// Settings Manager
 		setm.cleanup();
 		setm = null;
-		// Sys Manager
+		// Auth Manager
 		autm.cleanup();
 		autm = null;
+		// User Manager
+		usrm.cleanup();
+		usrm = null;
 		// Connection Manager
 		conm.cleanup();
 		conm = null;
@@ -335,6 +341,14 @@ public class WebTopApp {
 	}
 	
 	/**
+	 * Returns the UserManager.
+	 * @return UserManager instance.
+	 */
+	public UserManager getUserManager() {
+		return usrm;
+	}
+	
+	/**
 	 * Returns the AuthManager.
 	 * @return AuthManager instance.
 	 */
@@ -367,7 +381,7 @@ public class WebTopApp {
 	}
 	
 	public RunContext createAdminRunContext() {
-		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"), Locale.ENGLISH);
+		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"));
 	}
 	
 	/*

@@ -31,8 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.sdk.interfaces;
 
+import com.sonicle.webtop.core.sdk.ReminderAlert;
 import java.util.List;
 import org.joda.time.DateTime;
 
@@ -40,7 +41,7 @@ import org.joda.time.DateTime;
  *
  * @author malbinola
  */
-public interface IManagerHandleReminders {
+public interface IManagerUsesReminders {
 	
 	public List<ReminderAlert> returnReminderAlerts(DateTime now);
 }

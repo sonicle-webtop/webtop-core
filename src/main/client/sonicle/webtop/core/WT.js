@@ -18,6 +18,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	NS: 'Sonicle.webtop.core',
 	
+	app: null,
+	
 	palette: [
 		'AC725E','D06B64','F83A22','FA573C','FF7537','FFAD46','FAD165','FBE983',
 		'4986E7','9FC6E7','9FE1E7','92E1C0','42D692','16A765','7BD148','B3DC6C',
@@ -74,7 +76,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @returns {Sonicle.webtop.core.Application} The resulting object.
 	 */
 	getApp: function() {
-		return Sonicle.webtop.core.getApplication();
+		return this.app;
+		//return Sonicle.webtop.core.getApplication();
 	},
 	
 	getColorPalette: function() {

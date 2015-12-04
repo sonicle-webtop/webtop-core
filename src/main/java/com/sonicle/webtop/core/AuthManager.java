@@ -39,7 +39,6 @@ import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -50,11 +49,9 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -89,22 +86,6 @@ public class AuthManager {
 	private static final String SYSADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
 	private static final String WTADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	private WebTopApp wta = null;
-	private final Object lock = new Object();
-	private HashMap<UserProfile.Id, Uids> userToSidCache = null;
-	private HashMap<String, UserProfile.Id> uidToUserCache = null;
-	private HashMap<String, UserProfile.Id> roleUidToUserCache = null;
-	
-	public static class Uids {
-		public String uid;
-		public String roleUid;
-		
-		public Uids() {}
-		
-		public Uids(String uid, String roleUid) {
-			this.uid = uid;
-			this.roleUid = roleUid;
-		}
-	}
 	
 	/**
 	 * Private constructor.
@@ -113,10 +94,6 @@ public class AuthManager {
 	 */
 	private AuthManager(WebTopApp wta) {
 		this.wta = wta;
-		userToSidCache = new HashMap<>();
-		uidToUserCache = new HashMap<>();
-		roleUidToUserCache = new HashMap<>();
-		updateCache();
 	}
 	
 	/**
@@ -124,72 +101,7 @@ public class AuthManager {
 	 */
 	void cleanup() {
 		wta = null;
-		synchronized(lock) {
-			userToSidCache.clear();
-			uidToUserCache.clear();
-			roleUidToUserCache.clear();
-		}
 		logger.info("AuthManager destroyed");
-	}
-	
-	void updateCache() {
-		synchronized(lock) {
-			try {
-				buildUidCache();
-			} catch(SQLException ex) {
-				logger.error("Unable to build SID cache", ex);
-			}
-		}
-	}
-	
-	public String userToSid(UserProfile.Id pid) {
-		synchronized(lock) {
-			if(!userToSidCache.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
-			return userToSidCache.get(pid).uid;
-		}
-	}
-	
-	public String userToRoleSid(UserProfile.Id pid) {
-		synchronized(lock) {
-			if(!userToSidCache.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
-			return userToSidCache.get(pid).roleUid;
-		}
-	}
-	
-	public UserProfile.Id uidToUser(String uid) {
-		synchronized(lock) {
-			if(!uidToUserCache.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
-			return uidToUserCache.get(uid);
-		}
-	}
-	
-	public UserProfile.Id roleUidToUser(String uid) {
-		synchronized(lock) {
-			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
-			return roleUidToUserCache.get(uid);
-		}
-	}
-	
-	private void buildUidCache() throws SQLException {
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			UserDAO dao = UserDAO.getInstance();
-			List<UserUid> uids = dao.selectAllUids(con);
-			
-			userToSidCache.clear();
-			uidToUserCache.clear();
-			roleUidToUserCache.clear();
-			for(UserUid uuid : uids) {
-				UserProfile.Id pid = new UserProfile.Id(uuid.getDomainId(), uuid.getUserId());
-				userToSidCache.put(pid, new Uids(uuid.getUserUid(), uuid.getRoleUid()));
-				uidToUserCache.put(uuid.getUserUid(), pid);
-				roleUidToUserCache.put(uuid.getRoleUid(), pid);
-			}
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
 	}
 	
 	public List<String> getRolesAsString(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
@@ -202,14 +114,15 @@ public class AuthManager {
 	}
 	
 	public Set<Role> getRolesForUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+		UserManager usrm = wta.getUserManager();
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
 		LinkedHashSet<Role> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			String userSid = userToSid(pid);
-			String roleSid = userToRoleSid(pid);
+			String userSid = usrm.userToUid(pid);
+			String roleSid = usrm.userToRoleUid(pid);
 			
 			if(self) {
 				UserDAO usedao = UserDAO.getInstance();
@@ -288,7 +201,8 @@ public class AuthManager {
 	}
 	
 	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
-		return addPermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
+		UserManager usrm = wta.getUserManager();
+		return addPermission(con, usrm.userToRoleUid(pid), serviceId, resource, action, instance);
 	}
 	
 	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
@@ -306,7 +220,8 @@ public class AuthManager {
 	}
 	
 	public void deletePermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
-		deletePermission(con, userToRoleSid(pid), serviceId, resource, action, instance);
+		UserManager usrm = wta.getUserManager();
+		deletePermission(con, usrm.userToRoleUid(pid), serviceId, resource, action, instance);
 	}
 	
 	public void deletePermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {

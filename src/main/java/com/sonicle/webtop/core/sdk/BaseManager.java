@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.RunContext;
 import com.sonicle.webtop.core.WT;
 import java.util.Locale;
@@ -46,6 +47,7 @@ public abstract class BaseManager {
 	public final String SERVICE_ID;
 	private final RunContext context;
 	private final UserProfile.Id targetProfile;
+	protected Locale locale;
 	
 	public BaseManager(RunContext context) {
 		this(context, null);
@@ -55,7 +57,17 @@ public abstract class BaseManager {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.context = Check.notNull(context);
 		this.targetProfile = targetProfileId;
+		locale = findLocale();
 	}
+	
+	protected Locale findLocale() {
+		try {
+			CoreManager core = WT.getCoreManager(context);
+			return core.getUserData(getTargetProfileId()).getLocale();
+		} catch(Exception ex) {
+			return Locale.ENGLISH;
+		}
+	} 
 	
 	public RunContext getRunContext() {
 		return context;
@@ -67,6 +79,14 @@ public abstract class BaseManager {
 	
 	public UserProfile.Id getTargetProfileId() {
 		return (targetProfile != null) ? targetProfile : getRunProfileId();
+	}
+	
+	public Locale getLocale() {
+		return locale;
+	}
+	
+	public void setLocale(Locale locale) {
+		this.locale = locale;
 	}
 	
 	public ServiceManifest getManifest() {

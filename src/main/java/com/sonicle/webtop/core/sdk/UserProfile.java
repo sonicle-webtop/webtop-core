@@ -175,6 +175,44 @@ public final class UserProfile {
 		return principal;
 	}
 	
+	public static class Data {
+		private String displayName;
+		private String languageTag;
+		private Locale locale;
+		private String timezoneId;
+		private DateTimeZone timezone;
+		
+		public Data() {}
+		
+		public Data(OUser user) {
+			displayName = user.getDisplayName();
+			languageTag = user.getLanguageTag();
+			locale = user.getLocale();
+			timezoneId = user.getTimezone();
+			timezone = user.getTimeZone();
+		}
+
+		public String getDisplayName() {
+			return displayName;
+		}
+
+		public String getLanguageTag() {
+			return languageTag;
+		}
+		
+		public Locale getLocale() {
+			return locale;
+		}
+
+		public String getTimezoneId() {
+			return timezoneId;
+		}
+		
+		public DateTimeZone getTimezone() {
+			return timezone;
+		}
+	}
+	
 	public static class Id {
 		private final String domainId;
 		private final String userId;

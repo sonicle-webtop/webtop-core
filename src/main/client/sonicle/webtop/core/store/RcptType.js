@@ -31,29 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
-
-import com.sonicle.webtop.core.sdk.UserProfile;
-import java.util.Locale;
-
-/**
- *
- * @author malbinola
- */
-public class RunContext {
-	private final String serviceId;
-	private final UserProfile.Id profile;
+Ext.define('Sonicle.webtop.core.store.RcptType', {
+	extend: 'Ext.data.ArrayStore',
 	
-	RunContext(String serviceId, UserProfile.Id profile) {
-		this.serviceId = serviceId;
-		this.profile = profile;
-	}
-	
-	public String getServiceId() {
-		return serviceId;
-	}
-	
-	public UserProfile.Id getProfileId() {
-		return profile;
-	}
-}
+	model: 'WT.model.Simple',
+	data: [
+		['TO', WT.res('store.rcptType.to')],
+		['CC', WT.res('store.rcptType.cc')],
+		['BCC', WT.res('store.rcptType.bcc')]
+	]
+});

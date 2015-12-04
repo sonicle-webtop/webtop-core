@@ -102,6 +102,15 @@ public class CoreManager extends BaseManager {
 		this.wta = wta;
 	}
 	
+	@Override
+	protected Locale findLocale() {
+		try {
+			return getUserData(getTargetProfileId()).getLocale();
+		} catch(Exception ex) {
+			return Locale.ENGLISH;
+		}
+	}
+	
 	public ServiceManager getServiceManager() {
 		if(!getRunContext().getServiceId().equals(CoreManifest.ID)) {
 			throw new MethodAuthException("getServiceManager", getRunContext());
@@ -110,6 +119,9 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public TFAManager getTFAManager() {
+		if(!getRunContext().getServiceId().equals(CoreManifest.ID)) {
+			throw new MethodAuthException("getTFAManager", getRunContext());
+		}
 		return wta.getTFAManager();
 	}
 	
@@ -142,20 +154,21 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public ODomain getDomain(String domainId) throws Exception {
-		Connection con = null;
+		UserManager usrm = wta.getUserManager();
 		
 		try {
-			con = WT.getCoreConnection();
-			DomainDAO dao = DomainDAO.getInstance();
-			return dao.selectById(con, domainId);
-			
-		} finally {
-			DbUtils.closeQuietly(con);
+			return usrm.getDomain(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to get domain [{0}]", domainId);
 		}
 	}
 	
 	public UserProfile.Id userUidToProfileId(String userUid) {
-		return wta.getAuthManager().uidToUser(userUid);
+		return wta.getUserManager().uidToUser(userUid);
+	}
+	
+	public UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
+		return wta.getUserManager().userData(pid);
 	}
 	
 	public List<OUser> listUsers(boolean enabledOnly) {
@@ -189,26 +202,22 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<Role> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
-				
+		AuthManager authm = wta.getAuthManager();
+		
 		try {
-			AuthManager authm = wta.getAuthManager();
 			return authm.listRoles(domainId, fromUsers, fromGroups);
-			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list roles [{0}, {1}, {2}]", domainId, fromUsers, fromGroups);
 		}
 	}
 	
-	public OUser getUser(UserProfile.Id pid) throws Exception {
-		Connection con = null;
+	public OUser getUser(UserProfile.Id pid) throws WTException {
+		UserManager usrm = wta.getUserManager();
 		
 		try {
-			con = WT.getCoreConnection();
-			UserDAO dao = UserDAO.getInstance();
-			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			
-		} finally {
-			DbUtils.closeQuietly(con);
+			return usrm.getUser(pid);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to get User [{0}]", pid);
 		}
 	}
 	
@@ -477,16 +486,18 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<IncomingShareRoot> listIncomingShareRoots(UserProfile.Id pid, String serviceId, String resource) throws WTException {
-		Connection con = null;
 		String rootShareRes = OShare.buildRootResource(resource);
 		String folderShareRes = OShare.buildFolderResource(resource);
 		String rootPermRes = AuthResourceShare.buildRootPermissionResource(resource);
 		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
 		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
+		UserManager usrm = wta.getUserManager();
+		AuthManager authm = wta.getAuthManager();
+		Connection con = null;
 		
 		try {
-			AuthManager authm = wta.getAuthManager();
-			String puid = authm.userToSid(pid);
+			
+			String puid = usrm.userToUid(pid);
 			List<String> roleUids = authm.getRolesAsString(pid, true, true);
 			
 			con = WT.getCoreConnection();
@@ -511,7 +522,7 @@ public class CoreManager extends BaseManager {
 				
 				OUser user = usedao.selectByUid(con, uid);
 				if(user == null) continue;
-				roots.add(new IncomingShareRoot(root.getShareId().toString(), authm.uidToUser(root.getUserUid()), user.getDisplayName()));
+				roots.add(new IncomingShareRoot(root.getShareId().toString(), usrm.uidToUser(root.getUserUid()), user.getDisplayName()));
 			}
 			return roots;
 			
@@ -620,6 +631,7 @@ public class CoreManager extends BaseManager {
 		String folderShareRes = OShare.buildFolderResource(resource);
 		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
 		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
+		UserManager usrm = wta.getUserManager();
 		AuthManager authm = wta.getAuthManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
@@ -635,7 +647,7 @@ public class CoreManager extends BaseManager {
 			// Retrieves the root share
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
-				String puid = authm.userToSid(pid);
+				String puid = usrm.userToUid(pid);
 				rootShare = shadao.selectByUserServiceResourceInstance(con, puid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
@@ -711,12 +723,13 @@ public class CoreManager extends BaseManager {
 		String rootPermRes = AuthResourceShare.buildRootPermissionResource(resource);
 		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
 		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
+		UserManager usrm = wta.getUserManager();
 		AuthManager authm = wta.getAuthManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			String puid = authm.userToSid(targetPid);
+			String puid = usrm.userToUid(targetPid);
 			CompositeId cid = new CompositeId().parse(sharing.getId());
 			int level = cid.getHowManyTokens()-1;
 			String rootId = cid.getToken(0);
@@ -864,13 +877,13 @@ public class CoreManager extends BaseManager {
 	}
 			
 	public List<OShare> listShareByOwner(UserProfile.Id pid, String serviceId, String shareResource) throws WTException {
+		UserManager usrm = wta.getUserManager();
+		ShareDAO dao = ShareDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ShareDAO dao = ShareDAO.getInstance();
-			AuthManager auth = wta.getAuthManager();
-			String uuid = auth.userToSid(pid);
+			String uuid = usrm.userToUid(pid);
 			return dao.selectByUserServiceResource(con, uuid, serviceId, shareResource);
 			
 		} catch(SQLException | DAOException ex) {

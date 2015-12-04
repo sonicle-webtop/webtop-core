@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.bol.model.ReminderMessage;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobServiceTask;
 import com.sonicle.webtop.core.sdk.BaseManager;
-import com.sonicle.webtop.core.sdk.IManagerHandleReminders;
+import com.sonicle.webtop.core.sdk.interfaces.IManagerUsesReminders;
 import com.sonicle.webtop.core.sdk.ReminderAlert;
 import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
 import com.sonicle.webtop.core.sdk.ReminderAlertEmail;
@@ -68,7 +68,7 @@ public class JobService extends BaseJobService {
 	@Override
 	public void initialize() throws Exception {
 		core = WT.getCoreManager(getRunContext());
-		sidUsingReminders = core.getServiceManager().listServicesWhichManagerImplements(IManagerHandleReminders.class);
+		sidUsingReminders = core.getServiceManager().listServicesWhichManagerImplements(IManagerUsesReminders.class);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class JobService extends BaseJobService {
 				// Creates a manager instance for each service and calls it for reminders...
 				for(String sid : jobService.sidUsingReminders) {
 					BaseManager instance = jobService.core.getServiceManager().instantiateManager(sid, jobService.getRunContext());
-					IManagerHandleReminders manager = (IManagerHandleReminders)instance;
+					IManagerUsesReminders manager = (IManagerUsesReminders)instance;
 					alerts.addAll(manager.returnReminderAlerts(now));
 				}
 
