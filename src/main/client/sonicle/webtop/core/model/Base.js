@@ -33,6 +33,8 @@
  */
 Ext.define('Sonicle.webtop.core.model.Base', {
 	alternateClassName: 'WT.model.Base',
+	extend: 'WT.ux.data.BaseModel'
+	/*
 	extend: 'Sonicle.data.Model',
 	
 	identifier: 'negative',
@@ -54,30 +56,7 @@ Ext.define('Sonicle.webtop.core.model.Base', {
 			writer: {
 				type: 'json'
 			}
-			
-			/*
-			type: 'ajax',
-			api: {
-				create: 'service-request?crud=create',
-				read: 'service-request?crud=read',
-				update: 'service-request?crud=update',
-				destroy: 'service-request?crud=destroy'
-			},
-			extraParams: {
-				service: 'com.sonicle.webtop.core',
-				action: '{entityName}'
-			},
-			reader: {
-				type: 'json',
-				rootProperty: '{entityName:lowercase}',
-				messageProperty: 'message'
-			}
-			*/
-			//writer: {
-			//	type: 'json',
-			//	expandData: true,
-			//	nameProperty: 'mapping'
-			//}
 		}
 	}
+	*/
 });

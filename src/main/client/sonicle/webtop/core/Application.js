@@ -9,6 +9,14 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.PrintManager',
 		'Sonicle.upload.Uploader',
 		'Sonicle.data.identifier.NegativeString',
+		'Sonicle.plugin.EnterKeyPlugin',
+		'Sonicle.plugin.FieldTooltip',
+		
+		'Sonicle.webtop.core.ux.data.BaseModel',
+		'Sonicle.webtop.core.ux.data.EmptyModel',
+		'Sonicle.webtop.core.ux.data.SimpleModel',
+		'Sonicle.webtop.core.ux.data.ArrayStore',
+		
 		'Sonicle.webtop.core.WT',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',

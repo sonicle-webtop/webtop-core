@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.store.RRMonthlyFreq', {
 	extend: 'Ext.data.ArrayStore',
 	
 	autoLoad: true,
-	model: 'WT.model.Value',
+	model: 'WT.ux.data.ValueModel',
 	data: [
 		[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12]
 	]

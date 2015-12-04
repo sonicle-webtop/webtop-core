@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.store.RRWeeklyFreq', {
 	alternateClassName: 'WT.store.RRWeeklyFreq',
 	extend: 'Ext.data.ArrayStore',
 	
-	model: 'WT.model.Value',
+	model: 'WT.ux.data.ValueModel',
 	data: [
 		[1],[2],[3],[4]
 	]

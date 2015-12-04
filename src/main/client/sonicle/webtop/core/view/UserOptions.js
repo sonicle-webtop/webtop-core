@@ -722,7 +722,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					reference: 'gpsync',
 					store: {
 						autoSync: true,
-						model: 'WT.model.Empty',
+						model: 'WT.ux.data.EmptyModel',
 						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices')
 					},
 					columns: [{

@@ -31,9 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Value', {
-	alternateClassName: 'WT.model.Value',
-	extend: 'WT.model.Base',
+Ext.define('Sonicle.webtop.core.ux.data.ValueModel', {
+	alternateClassName: 'WT.ux.data.ValueModel',
+	extend: 'WT.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: ['id']

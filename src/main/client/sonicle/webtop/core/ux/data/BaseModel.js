@@ -31,15 +31,53 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.RRYearlyDay', {
-	alternateClassName: 'WT.store.RRYearlyDay',
-	extend: 'Ext.data.ArrayStore',
+Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
+	alternateClassName: 'WT.ux.data.BaseModel',
+	extend: 'Sonicle.data.Model',
 	
-	autoLoad: true,
-	model: 'WT.ux.data.ValueModel',
-	data: [
-		[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],
-		[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],
-		[21],[22],[23],[24],[25],[26],[27],[28],[29],[30],[31]
-	]
+	identifier: 'negative',
+	
+	schema: {
+		namespace: 'Sonicle.webtop.core.model',
+		proxy: {
+			
+			type: 'memory',
+			extraParams: {
+				service: 'no.service',
+				action: 'no.action'
+			},
+			reader: {
+				type: 'json',
+				rootProperty: '{entityName:lowercase}',
+				messageProperty: 'message'
+			},
+			writer: {
+				type: 'json'
+			}
+			
+			/*
+			type: 'ajax',
+			api: {
+				create: 'service-request?crud=create',
+				read: 'service-request?crud=read',
+				update: 'service-request?crud=update',
+				destroy: 'service-request?crud=destroy'
+			},
+			extraParams: {
+				service: 'com.sonicle.webtop.core',
+				action: '{entityName}'
+			},
+			reader: {
+				type: 'json',
+				rootProperty: '{entityName:lowercase}',
+				messageProperty: 'message'
+			}
+			*/
+			//writer: {
+			//	type: 'json',
+			//	expandData: true,
+			//	nameProperty: 'mapping'
+			//}
+		}
+	}
 });

@@ -31,15 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.RRYearlyDay', {
-	alternateClassName: 'WT.store.RRYearlyDay',
+Ext.define('Sonicle.webtop.core.ux.data.ArrayStore', {
+	alternateClassName: 'WT.ux.data.ArrayStore',
 	extend: 'Ext.data.ArrayStore',
 	
-	autoLoad: true,
-	model: 'WT.ux.data.ValueModel',
-	data: [
-		[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],
-		[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],
-		[21],[22],[23],[24],[25],[26],[27],[28],[29],[30],[31]
-	]
+	sid: null,
+	keyPrefix: null,
+	
+	constructor: function(cfg) {
+		var me = this;
+		
+		if(!Ext.isEmpty(me.sid) && !Ext.isEmpty(me.keyPrefix)) {
+			Ext.each(me.config.data, function(row) {
+				row[1] = WT.res(me.sid, me.keyPrefix+row[0]);
+			});
+		}
+		me.callParent([cfg]);
+	}
 });

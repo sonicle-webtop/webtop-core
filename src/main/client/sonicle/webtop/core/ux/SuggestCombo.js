@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	alias: ['widget.wtsuggestcombo', 'widget.wtsuggestcombobox'],
 	
 	requires: [
-		'Sonicle.webtop.core.model.Value'
+		'WT.ux.data.ValueModel'
 	],
 	
 	/**
@@ -66,7 +66,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		var me = this;
 		Ext.apply(me, {
 			store: {
-				model: 'Sonicle.webtop.core.model.Value',
+				model: 'WT.ux.data.ValueModel',
 				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {
 						context: me.suggestionContext

@@ -31,9 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Empty', {
-	alternateClassName: 'WT.model.Empty',
-	extend: 'WT.model.Base',
+Ext.define('Sonicle.webtop.core.ux.data.EmptyModel', {
+	alternateClassName: 'WT.ux.data.EmptyModel',
+	extend: 'WT.ux.data.BaseModel',
 	
 	fields: []
 });
