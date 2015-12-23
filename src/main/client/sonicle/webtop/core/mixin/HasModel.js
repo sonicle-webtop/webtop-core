@@ -55,9 +55,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		 */
 		modelName: null,
 		
-		modelIdProperty: null,
-		
-		modelIdAsParam: true
+		modelIdProperty: null
 	},
 	
 	initComponent: function() {
@@ -222,25 +220,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		
 		if(model && model.isValid()) {
 			me.fireEvent('beforemodelsave', me, model, opts.pass);
-			/*
-			if(me.getModelIdAsParam()) {
-				proxy = model.getProxy();
-				if(proxy.isRemote) {
-					WTU.applyExtraParams(proxy, {
-						id: model.getId()
-					});
-				}
-			}
-			*/
 			model.save({
 				callback: function(rec, op, success) {
-					/*
-					if(me.getModelIdAsParam()) {
-						if(proxy.isRemote) {
-							WTU.removeExtraParams(proxy, 'id');
-						}
-					}
-					*/
 					me.fireEvent('modelsave', me, op, success, model, opts.pass);
 				},
 				scope: me

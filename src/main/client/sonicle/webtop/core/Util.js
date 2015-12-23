@@ -228,7 +228,7 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * @param {Object} params Extra params to apply.
 	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
 	 */
-	loadExtraParams: function(store, params, overwrite) {
+	loadWithExtraParams: function(store, params, overwrite) {
 		if(!store.isStore) return;
 		WTU.applyExtraParams(store, params, overwrite);
 		store.load();

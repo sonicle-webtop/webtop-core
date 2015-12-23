@@ -51,7 +51,16 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 		me.waitCount_++;		
 		if(me.waitCount_ === 1) {
 			var cmp = me.ownerCt || me;
-			cmp.mask(msg || WT.res('waiting'));
+			cmp.setLoading(msg || WT.res('waiting'));
+			//cmp.mask(msg || WT.res('waiting'));
+		}
+	},
+	
+	waitUpdate: function(msg) {
+		var me = this;
+		if(me.waitCount_ >= 1) {
+			var cmp = me.ownerCt || me;
+			cmp.setLoading(msg || WT.res('waiting'));
 		}
 	},
 	
@@ -65,7 +74,8 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 		me.waitCount_--;
 		if(me.waitCount_ === 0) {
 			var cmp = me.ownerCt || me;
-			cmp.unmask();
+			cmp.setLoading(false);
+			//cmp.unmask();
 		}
 	}
 });

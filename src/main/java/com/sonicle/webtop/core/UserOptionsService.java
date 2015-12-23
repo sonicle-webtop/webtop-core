@@ -62,7 +62,8 @@ import org.slf4j.Logger;
 public class UserOptionsService extends BaseUserOptionsService {
 	public static final Logger logger = WT.getLogger(UserOptionsService.class);
 	
-	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	@Override
+	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
 		Connection con = null;
 		CoreManager core = WT.getCoreManager(getRunContext());
 		
@@ -145,7 +146,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				new JsonResult(jso).printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(request, JsUserOptions.class);
+				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(payload, JsUserOptions.class);
 				
 				// main
 				if(pl.map.has("displayName")) user.setDisplayName(pl.data.displayName);

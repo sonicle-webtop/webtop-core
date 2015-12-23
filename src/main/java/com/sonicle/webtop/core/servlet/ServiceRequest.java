@@ -34,18 +34,22 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -82,15 +86,23 @@ public class ServiceRequest extends BaseRequestServlet {
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
-				String profile = ServletUtils.getStringParameter(request, "id", true);
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				String payload = null;
+				
+				if(StringUtils.isEmpty(id)) {
+					payload = ServletUtils.getPayload(request);
+					Payload<MapItem, JsUserOptionsBase> pl = ServletUtils.getPayload(payload, JsUserOptionsBase.class);
+					if(pl.map.has("id")) id = pl.data.id;
+				}
+				if(StringUtils.isEmpty(id)) throw new Exception("No id specified");
 				
 				// Retrieves instantiated userOptions service (session context away)
-				UserProfile.Id pid = new UserProfile.Id(profile);
+				UserProfile.Id pid = new UserProfile.Id(id);
 				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, pid);
 				
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), service, action, nowriter);
-				invokeMethod(instance, method, service, nowriter, request, response);
+				Method method = getMethod(instance.getClass(), service, action, nowriter, String.class);
+				invokeMethod(instance, method, service, nowriter, request, response, payload);
 			}
 			
 		} catch(Exception ex) {

@@ -34,6 +34,9 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.RunContext;
+import java.io.PrintWriter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -76,4 +79,6 @@ public abstract class BaseUserOptionsService {
 	public String getTargetUserId() {
 		return targetProfileId.getUserId();
 	}
+	
+	public abstract void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload);
 }

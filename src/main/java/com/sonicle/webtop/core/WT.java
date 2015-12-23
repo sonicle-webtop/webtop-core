@@ -190,6 +190,14 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static UserProfile.Data getUserData(UserProfile.Id profileId) {
+		try {
+			return getWTA().getUserManager().userData(profileId);
+		} catch(WTException ex) {
+			return null;
+		}
+	}
+	
 	public static boolean isSysAdmin(UserProfile.Id profileId) {
 		return getWTA().getAuthManager().isSysAdmin(profileId);
 	}

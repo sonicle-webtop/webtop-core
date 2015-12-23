@@ -36,10 +36,12 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.WTException;
+import edu.emory.mathcs.backport.java.util.Arrays;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,19 +60,24 @@ public abstract class BaseRequestServlet extends HttpServlet {
 		return tokens;
 	}
 	
-	protected void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	protected void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response, Object... args) throws Exception {
 		PrintWriter out = null;
 		try {
 			try {
 				WebTopApp.setServiceLoggerDC(service);
-				if(nowriter) {
-					method.invoke(instance, request, response);
-				} else {
-					out = response.getWriter();
+				
+				ArrayList<Object> invokeArgs = new ArrayList<>();
+				invokeArgs.add(request);
+				invokeArgs.add(response);
+				if(!nowriter) {
 					ServletUtils.setCacheControlHeaderPrivateNoCache(response);
 					ServletUtils.setJsonContentTypeHeader(response);
-					method.invoke(instance, request, response, out);
+					out = response.getWriter();
+					invokeArgs.add(out);
 				}
+				if(args.length > 0) invokeArgs.addAll(Arrays.asList(args));
+				method.invoke(instance, invokeArgs.toArray());
+				
 			} finally {
 				if(out != null) out.flush();
 				WebTopApp.unsetServiceLoggerDC();
@@ -82,7 +89,33 @@ public abstract class BaseRequestServlet extends HttpServlet {
 		}
 	}
 	
-	protected Method getMethod(Class clazz, String service, String action, boolean nowriter) throws WTException {
+	protected Method getMethod(Class clazz, String service, String action, boolean nowriter, Class<?>... args) throws WTException {
+		String methodName = null;
+		ArrayList<Class<?>> classArgs = new ArrayList<>();
+		classArgs.add(HttpServletRequest.class);
+		classArgs.add(HttpServletResponse.class);
+		
+		if(nowriter) {
+			methodName = MessageFormat.format("process{0}", action);
+		} else {
+			action = StringUtils.isEmpty(action) ? "DefaultAction" : action;
+			methodName = MessageFormat.format("process{0}", action);
+			classArgs.add(PrintWriter.class);
+		}
+		if(args.length > 0) classArgs.addAll(Arrays.asList(args));
+		
+		try {
+			return clazz.getMethod(methodName, classArgs.toArray(new Class<?>[classArgs.size()]));
+		} catch(NoSuchMethodException ex) {
+			if(nowriter) {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,...) not found in {3}]", service, action, methodName, clazz.getName());
+			} else {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out,...) not found in {3}]", service, action, methodName, clazz.getName());
+			}
+		}
+	}
+	
+	protected Method getMethodOld(Class clazz, String service, String action, boolean nowriter) throws WTException {
 		String methodName = null;
 		if(nowriter) {
 			methodName = MessageFormat.format("process{0}", action);

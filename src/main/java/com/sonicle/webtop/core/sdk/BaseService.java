@@ -252,7 +252,7 @@ public abstract class BaseService extends BaseServiceBase {
 	}
 	
 	private Method getUploadMethod(String context) {
-		String methodName = MessageFormat.format("process{0}Upload", context);
+		String methodName = MessageFormat.format("processUpload{0}", context);
 		try {
 			return getClass().getMethod(methodName, HttpServletRequest.class, UploadedFile.class);
 		} catch(NoSuchMethodException ex) {
@@ -261,7 +261,7 @@ public abstract class BaseService extends BaseServiceBase {
 	}
 	
 	private Method getUploadStreamMethod(String context) {
-		String methodName = MessageFormat.format("process{0}UploadStream", context);
+		String methodName = MessageFormat.format("processUploadStream{0}", context);
 		try {
 			return getClass().getMethod(methodName, HttpServletRequest.class, InputStream.class);
 		} catch(NoSuchMethodException ex) {

@@ -74,8 +74,9 @@ public final class UserManager {
 	}
 	
 	private WebTopApp wta = null;
-	private final Object lock = new Object();
+	private final Object lock1 = new Object();
 	private HashMap<UserProfile.Id, UserUidBag> userToUidBagCache = null;
+	private final Object lock2 = new Object();
 	private HashMap<String, UserProfile.Id> uidToUserCache = null;
 	private HashMap<String, UserProfile.Id> roleUidToUserCache = null;
 	private HashMap<UserProfile.Id, UserProfile.Data> userToBagCache = null;
@@ -99,7 +100,7 @@ public final class UserManager {
 	 */
 	void cleanup() {
 		wta = null;
-		synchronized(lock) {
+		synchronized(lock2) {
 			userToUidBagCache.clear();
 			uidToUserCache.clear();
 			roleUidToUserCache.clear();
@@ -109,7 +110,7 @@ public final class UserManager {
 	}
 	
 	void updateCache() {
-		synchronized(lock) {
+		synchronized(lock2) {
 			try {
 				buildUidCache();
 			} catch(SQLException ex) {
@@ -118,36 +119,8 @@ public final class UserManager {
 		}
 	}
 	
-	public String userToUid(UserProfile.Id pid) {
-		synchronized(lock) {
-			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
-			return userToUidBagCache.get(pid).userUid;
-		}
-	}
-	
-	public String userToRoleUid(UserProfile.Id pid) {
-		synchronized(lock) {
-			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
-			return userToUidBagCache.get(pid).roleUid;
-		}
-	}
-	
-	public UserProfile.Id uidToUser(String uid) {
-		synchronized(lock) {
-			if(!uidToUserCache.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
-			return uidToUserCache.get(uid);
-		}
-	}
-	
-	public UserProfile.Id roleUidToUser(String uid) {
-		synchronized(lock) {
-			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
-			return roleUidToUserCache.get(uid);
-		}
-	}
-	
 	public UserProfile.Data userData(UserProfile.Id pid) throws WTException {
-		synchronized(lock) {
+		synchronized(lock1) {
 			if(!userToBagCache.containsKey(pid)) {
 				try {
 					OUser user = getUser(pid);
@@ -162,6 +135,34 @@ public final class UserManager {
 			} else {
 				return userToBagCache.get(pid);
 			}
+		}
+	}
+	
+	public String userToUid(UserProfile.Id pid) {
+		synchronized(lock2) {
+			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
+			return userToUidBagCache.get(pid).userUid;
+		}
+	}
+	
+	public String userToRoleUid(UserProfile.Id pid) {
+		synchronized(lock2) {
+			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
+			return userToUidBagCache.get(pid).roleUid;
+		}
+	}
+	
+	public UserProfile.Id uidToUser(String uid) {
+		synchronized(lock2) {
+			if(!uidToUserCache.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
+			return uidToUserCache.get(uid);
+		}
+	}
+	
+	public UserProfile.Id roleUidToUser(String uid) {
+		synchronized(lock2) {
+			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
+			return roleUidToUserCache.get(uid);
 		}
 	}
 	

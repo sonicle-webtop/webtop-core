@@ -103,7 +103,7 @@ public class JobService extends BaseJobService {
 		@Override
 		public void executeWork() {
 			HashMap<UserProfile.Id, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
-			DateTime now = DateTime.now(DateTimeZone.UTC);
+			DateTime now = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
 			
 			logger.trace("ReminderJob started [{}]", now);
 			
