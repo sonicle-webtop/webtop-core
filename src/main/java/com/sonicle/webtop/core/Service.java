@@ -56,7 +56,7 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridSync.JsGridSyncList;
-import com.sonicle.webtop.core.bol.js.JsReminderAlert;
+import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
@@ -93,6 +93,7 @@ import org.slf4j.Logger;
 public class Service extends BaseService {
 	private static final Logger logger = WT.getLogger(Service.class);
 	private CoreManager core;
+	private CoreServiceSettings ss;
 	private CoreUserSettings us;
 	
 	private WebTopApp getApp() {
@@ -103,6 +104,7 @@ public class Service extends BaseService {
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
 		core = new CoreManager(getRunContext(), getApp());
+		ss = new CoreServiceSettings(profile.getDomainId(), SERVICE_ID);
 		us = new CoreUserSettings(profile.getId());
 	}
 
@@ -131,8 +133,12 @@ public class Service extends BaseService {
 		co.put("shortTimeFormat", us.getShortTimeFormat());
 		co.put("longTimeFormat", us.getLongTimeFormat());
 		
-		co.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
 		co.put("upiProviderWritable", core.isUserInfoProviderWritable());
+		co.put("feedbackEnabled", ss.getFeedbackEnabled());
+		co.put("whatsnewEnabled", ss.getWhatsnewEnabled());
+		
+		co.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
+		
 		
 		return co;
 	}
@@ -657,12 +663,12 @@ public class Service extends BaseService {
 		try {
 			String now = ServletUtils.getStringParameter(request, "now", true);
 			Integer snooze = ServletUtils.getIntParameter(request, "snooze", 5);
-			PayloadAsList<JsReminderAlert.List> pl = ServletUtils.getPayloadAsList(request, JsReminderAlert.List.class);
+			PayloadAsList<JsReminderInApp.List> pl = ServletUtils.getPayloadAsList(request, JsReminderInApp.List.class);
 			
 			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(getEnv().getProfile().getTimeZone());
 			DateTime remindOn = fmt.parseDateTime(now).plusMinutes(snooze);
 			
-			for(JsReminderAlert reminder : pl.data) {
+			for(JsReminderInApp reminder : pl.data) {
 				core.snoozeReminder(getEnv().getProfileId(), reminder, remindOn);
 			}
 			new JsonResult().printTo(out);

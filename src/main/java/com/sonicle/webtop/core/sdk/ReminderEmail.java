@@ -37,10 +37,27 @@ package com.sonicle.webtop.core.sdk;
  *
  * @author malbinola
  */
-public class ReminderAlertEmail extends ReminderAlert {
-
-	public ReminderAlertEmail(String serviceId, UserProfile.Id profileId, String resource, String objectId) {
+public class ReminderEmail extends BaseReminder {
+	protected String subject;
+	protected String body;
+	
+	public ReminderEmail(String serviceId, UserProfile.Id profileId, String resource, String objectId) {
 		super(serviceId, profileId, resource, objectId);
 	}
+
+	public String getSubject() {
+		return subject;
+	}
+
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
 	
+	public String getBody() {
+		return body;
+	}
+
+	public void setBody(String body) {
+		this.body = body;
+	}
 }

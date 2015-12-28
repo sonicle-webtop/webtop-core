@@ -210,10 +210,12 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 							items: [{
 								itemId: 'feedback',
 								tooltip: WT.res('menu.feedback.tip'),
+								disabled: !WT.getOption('feedbackEnabled'),
 								iconCls: 'wt-menu-feedback'
 							}, {
 								itemId: 'whatsnew',
 								tooltip: WT.res('menu.whatsnew.tip'),
+								disabled: !WT.getOption('whatsnewEnabled'),
 								iconCls: 'wt-menu-whatsnew'
 							}, {
 								itemId: 'options',

@@ -53,6 +53,9 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
 		}),
 		WTF.field('upiProviderWritable', 'boolean'),
+		WTF.field('feedbackEnabled', 'boolean'),
+		WTF.field('whatsnewEnabled', 'boolean'),
+		
 		WTF.field('tfaEnabled', 'boolean')
 		
 		/*

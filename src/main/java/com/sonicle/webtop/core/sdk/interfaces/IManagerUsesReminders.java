@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk.interfaces;
 
-import com.sonicle.webtop.core.sdk.ReminderAlert;
+import com.sonicle.webtop.core.sdk.BaseReminder;
 import java.util.List;
 import org.joda.time.DateTime;
 
@@ -43,5 +43,5 @@ import org.joda.time.DateTime;
  */
 public interface IManagerUsesReminders {
 	
-	public List<ReminderAlert> returnReminderAlerts(DateTime now);
+	public List<BaseReminder> returnReminders(DateTime now);
 }

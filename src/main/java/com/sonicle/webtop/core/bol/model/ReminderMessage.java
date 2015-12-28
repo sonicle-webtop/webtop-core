@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.model;
 
 import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.bol.js.JsReminderAlert;
+import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
  */
 public class ReminderMessage extends ServiceMessage {
 
-	public ReminderMessage(JsReminderAlert data) {
+	public ReminderMessage(JsReminderInApp data) {
 		super(CoreManifest.ID, "reminderNotify", data);
 	}
 }

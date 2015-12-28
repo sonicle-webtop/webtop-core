@@ -158,9 +158,8 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	
 	/**
 	 * Gets the setting value indicated by the specified key using priority path:
-	 *  1 - ServiceSetting by domain/service/key
-	 *  2 - ServiceSetting by service/key
-	 *  3 - Setting(generic) by key ?????????????????
+	 *  1 - Setting by domain/service/key
+	 *  2 - Setting by service/key
 	 * Returns a null value if the key is not found.
 	 * @param domainId The domain ID.
 	 * @param serviceId The service ID.

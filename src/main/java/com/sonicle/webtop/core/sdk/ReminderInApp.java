@@ -33,36 +33,42 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import org.joda.time.DateTime;
+
 /**
  *
  * @author malbinola
  */
-public abstract class ReminderAlert {
-	protected String serviceId;
-	protected UserProfile.Id profileId;
-	protected String type;
-	protected String instanceId;
-	
-	public ReminderAlert(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
-		this.serviceId = serviceId;
-		this.profileId = profileId;
-		this.type = type;
-		this.instanceId = instanceId;
+public class ReminderInApp extends BaseReminder {
+	private String title;
+	private DateTime date;
+	private String timezone;
+
+	public ReminderInApp(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+		super(serviceId, profileId, type, instanceId);
 	}
 
-	public String getServiceId() {
-		return serviceId;
+	public String getTitle() {
+		return title;
 	}
 
-	public UserProfile.Id getProfileId() {
-		return profileId;
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
-	public String getType() {
-		return type;
+	public DateTime getDate() {
+		return date;
 	}
 
-	public String getInstanceId() {
-		return instanceId;
+	public void setDate(DateTime date) {
+		this.date = date;
+	}
+
+	public String getTimezone() {
+		return timezone;
+	}
+
+	public void setTimezone(String timezone) {
+		this.timezone = timezone;
 	}
 }

@@ -46,7 +46,7 @@ import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.js.JsReminderAlert;
+import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -126,18 +126,11 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		String providerName = css.getUserInfoProvider();
-		return UserInfoProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
+		return wta.getUserManager().getUserInfoProvider();
 	}
 	
 	public boolean isUserInfoProviderWritable() {
-		try {
-			return getUserInfoProvider().canWrite();
-		} catch(WTException ex) {
-			//TODO: logging?
-			return false;
-		}
+		return wta.getUserManager().isUserInfoProviderWritable();
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws Exception {
@@ -221,14 +214,12 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public String getInternetUserId(UserProfile.Id pid) throws Exception {
-		ODomain domain = getDomain(pid.getDomainId());
-		return new UserProfile.Id(domain.getDomainName(), pid.getUserId()).toString();
+	public String getInternetUserId(UserProfile.Id pid) throws WTException {
+		return wta.getUserManager().getInternetUserId(pid);
 	}
 	
-	public UserPersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws Exception {
-		UserInfoProviderBase uip = getUserInfoProvider();
-		return uip.getInfo(pid.getDomainId(), pid.getUserId());
+	public UserPersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
+		return wta.getUserManager().userPersonalInfo(pid);
 	}
 	
 	public String getUserDisplayName(UserProfile.Id pid) throws Exception {
@@ -250,7 +241,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public OUser addUser(OUser item) throws Exception {
-		UserInfoProviderBase uip = getUserInfoProvider();
+		UserInfoProviderBase uip = wta.getUserManager().getUserInfoProvider();
 		Connection con = null;
 		int ret;
 		
@@ -956,7 +947,7 @@ public class CoreManager extends BaseManager {
 		return services.contains(serviceId);
 	}
 	
-	public OSnoozedReminder snoozeReminder(UserProfile.Id profileId, JsReminderAlert reminder, DateTime remindOn) throws WTException {
+	public OSnoozedReminder snoozeReminder(UserProfile.Id profileId, JsReminderInApp reminder, DateTime remindOn) throws WTException {
 		SnoozedReminderDAO dao = SnoozedReminderDAO.getInstance();
 		Connection con = null;
 		

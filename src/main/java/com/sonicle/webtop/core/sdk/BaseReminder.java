@@ -31,46 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import com.sonicle.webtop.core.bol.OSnoozedReminder;
-import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
-import java.util.ArrayList;
-import org.joda.time.DateTime;
+package com.sonicle.webtop.core.sdk;
 
 /**
  *
  * @author malbinola
  */
-public class JsReminderAlert {
-	public String serviceId;
-	public String type;
-	public String instanceId;
-	public String title;
-	public DateTime date;
-	public String timezone;
+public abstract class BaseReminder {
+	protected String serviceId;
+	protected UserProfile.Id profileId;
+	protected String type;
+	protected String instanceId;
 	
-	public JsReminderAlert(ReminderAlertWeb rem) {
-		serviceId = rem.getServiceId();
-		type = rem.getType();
-		instanceId = rem.getInstanceId();
-		title = rem.getTitle();
-		date = rem.getDate();
-		timezone = rem.getTimezone();
+	public BaseReminder(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+		this.serviceId = serviceId;
+		this.profileId = profileId;
+		this.type = type;
+		this.instanceId = instanceId;
 	}
-	
-	public JsReminderAlert(OSnoozedReminder rem) {
-		serviceId = rem.getServiceId();
-		type = rem.getType();
-		instanceId = rem.getInstanceId();
-		title = rem.getTitle();
-		date = rem.getDate().withZone(rem.getDateTimeZone());
-		timezone = rem.getTimezone();
+
+	public String getServiceId() {
+		return serviceId;
 	}
-	
-	public static class List extends ArrayList<JsReminderAlert> {
-		public List() {
-			super();
-		}
+
+	public UserProfile.Id getProfileId() {
+		return profileId;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public String getInstanceId() {
+		return instanceId;
 	}
 }

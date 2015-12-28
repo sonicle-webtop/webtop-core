@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
@@ -194,6 +195,16 @@ public class WT {
 		try {
 			return getWTA().getUserManager().userData(profileId);
 		} catch(WTException ex) {
+			//TODO: logging
+			return null;
+		}
+	}
+	
+	public static UserPersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
+		try {
+			return getWTA().getUserManager().userPersonalInfo(profileId);
+		} catch(WTException ex) {
+			//TODO: logging
 			return null;
 		}
 	}

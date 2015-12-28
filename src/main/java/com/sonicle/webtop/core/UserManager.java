@@ -40,14 +40,20 @@ import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
+import com.sonicle.webtop.core.userinfo.UserInfoProviderFactory;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import javax.mail.internet.InternetAddress;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
@@ -77,6 +83,8 @@ public final class UserManager {
 	private final Object lock1 = new Object();
 	private HashMap<UserProfile.Id, UserUidBag> userToUidBagCache = null;
 	private final Object lock2 = new Object();
+	private HashMap<UserProfile.Id, UserPersonalInfo> userToPersonalInfoCache = null;
+	private final Object lock3 = new Object();
 	private HashMap<String, UserProfile.Id> uidToUserCache = null;
 	private HashMap<String, UserProfile.Id> roleUidToUserCache = null;
 	private HashMap<UserProfile.Id, UserProfile.Data> userToBagCache = null;
@@ -89,6 +97,7 @@ public final class UserManager {
 	private UserManager(WebTopApp wta) {
 		this.wta = wta;
 		userToUidBagCache = new HashMap<>();
+		userToPersonalInfoCache = new HashMap<>();
 		uidToUserCache = new HashMap<>();
 		roleUidToUserCache = new HashMap<>();
 		userToBagCache = new HashMap<>();
@@ -100,7 +109,7 @@ public final class UserManager {
 	 */
 	void cleanup() {
 		wta = null;
-		synchronized(lock2) {
+		synchronized(lock3) {
 			userToUidBagCache.clear();
 			uidToUserCache.clear();
 			roleUidToUserCache.clear();
@@ -110,12 +119,27 @@ public final class UserManager {
 	}
 	
 	void updateCache() {
-		synchronized(lock2) {
+		synchronized(lock3) {
 			try {
 				buildUidCache();
 			} catch(SQLException ex) {
 				logger.error("Unable to build UID cache", ex);
 			}
+		}
+	}
+	
+	public UserInfoProviderBase getUserInfoProvider() throws WTException {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
+		String providerName = css.getUserInfoProvider();
+		return UserInfoProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
+	}
+	
+	public boolean isUserInfoProviderWritable() {
+		try {
+			return getUserInfoProvider().canWrite();
+		} catch(WTException ex) {
+			//TODO: logging?
+			return false;
 		}
 	}
 	
@@ -125,42 +149,66 @@ public final class UserManager {
 				try {
 					OUser user = getUser(pid);
 					if(user == null) return null;
-					UserProfile.Data data = new UserProfile.Data(user);
+					UserPersonalInfo info = userPersonalInfo(pid);
+					InternetAddress ia = new InternetAddress(info.getEmail(), user.getDisplayName());
+					
+					UserProfile.Data data = new UserProfile.Data(user, ia);
 					userToBagCache.put(pid, data);
 					return data;
 				} catch(WTException ex) {
 					logger.error("Unable to find user [{}]", pid);
 					throw ex;
-				}	
+				} catch (UnsupportedEncodingException ex) {
+					logger.error("Unsupported encoding", ex);
+					throw new WTException(ex);
+				}
 			} else {
 				return userToBagCache.get(pid);
 			}
 		}
 	}
 	
-	public String userToUid(UserProfile.Id pid) {
+	public UserPersonalInfo userPersonalInfo(UserProfile.Id pid) throws WTException {
 		synchronized(lock2) {
+			if(!userToPersonalInfoCache.containsKey(pid)) {
+				try {
+					UserInfoProviderBase uip = getUserInfoProvider();
+					UserPersonalInfo info = uip.getInfo(pid.getDomainId(), pid.getUserId());
+					userToPersonalInfoCache.put(pid, info);
+					return info;
+				} catch(WTException ex) {
+					logger.error("Unable to find personal info for user [{}]", pid);
+					throw ex;
+				}	
+			} else {
+				return userToPersonalInfoCache.get(pid);
+			}
+		}
+	}
+	
+	public String userToUid(UserProfile.Id pid) {
+		synchronized(lock3) {
 			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
 			return userToUidBagCache.get(pid).userUid;
 		}
 	}
 	
 	public String userToRoleUid(UserProfile.Id pid) {
-		synchronized(lock2) {
+		synchronized(lock3) {
 			if(!userToUidBagCache.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
 			return userToUidBagCache.get(pid).roleUid;
 		}
 	}
 	
 	public UserProfile.Id uidToUser(String uid) {
-		synchronized(lock2) {
+		synchronized(lock3) {
 			if(!uidToUserCache.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
 			return uidToUserCache.get(uid);
 		}
 	}
 	
 	public UserProfile.Id roleUidToUser(String uid) {
-		synchronized(lock2) {
+		synchronized(lock3) {
 			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
 			return roleUidToUserCache.get(uid);
 		}
@@ -194,6 +242,11 @@ public final class UserManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public String getInternetUserId(UserProfile.Id pid) throws WTException {
+		ODomain domain = getDomain(pid.getDomainId());
+		return new UserProfile.Id(domain.getDomainName(), pid.getUserId()).toString();
 	}
 	
 	private void buildUidCache() throws SQLException {

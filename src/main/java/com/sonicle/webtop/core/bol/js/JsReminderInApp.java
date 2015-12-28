@@ -31,44 +31,46 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.webtop.core.bol.OSnoozedReminder;
+import com.sonicle.webtop.core.sdk.ReminderInApp;
+import java.util.ArrayList;
 import org.joda.time.DateTime;
 
 /**
  *
  * @author malbinola
  */
-public class ReminderAlertWeb extends ReminderAlert {
-	private String title;
-	private DateTime date;
-	private String timezone;
-
-	public ReminderAlertWeb(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
-		super(serviceId, profileId, type, instanceId);
+public class JsReminderInApp {
+	public String serviceId;
+	public String type;
+	public String instanceId;
+	public String title;
+	public DateTime date;
+	public String timezone;
+	
+	public JsReminderInApp(ReminderInApp rem) {
+		serviceId = rem.getServiceId();
+		type = rem.getType();
+		instanceId = rem.getInstanceId();
+		title = rem.getTitle();
+		date = rem.getDate();
+		timezone = rem.getTimezone();
 	}
-
-	public String getTitle() {
-		return title;
+	
+	public JsReminderInApp(OSnoozedReminder rem) {
+		serviceId = rem.getServiceId();
+		type = rem.getType();
+		instanceId = rem.getInstanceId();
+		title = rem.getTitle();
+		date = rem.getDate().withZone(rem.getDateTimeZone());
+		timezone = rem.getTimezone();
 	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public DateTime getDate() {
-		return date;
-	}
-
-	public void setDate(DateTime date) {
-		this.date = date;
-	}
-
-	public String getTimezone() {
-		return timezone;
-	}
-
-	public void setTimezone(String timezone) {
-		this.timezone = timezone;
+	
+	public static class List extends ArrayList<JsReminderInApp> {
+		public List() {
+			super();
+		}
 	}
 }

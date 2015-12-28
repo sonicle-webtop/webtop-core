@@ -181,15 +181,17 @@ public final class UserProfile {
 		private Locale locale;
 		private String timezoneId;
 		private DateTimeZone timezone;
+		private InternetAddress email;
 		
 		public Data() {}
 		
-		public Data(OUser user) {
+		public Data(OUser user, InternetAddress email) {
 			displayName = user.getDisplayName();
 			languageTag = user.getLanguageTag();
 			locale = user.getLocale();
 			timezoneId = user.getTimezone();
 			timezone = user.getTimeZone();
+			this.email = email;
 		}
 
 		public String getDisplayName() {
@@ -210,6 +212,10 @@ public final class UserProfile {
 		
 		public DateTimeZone getTimezone() {
 			return timezone;
+		}
+		
+		public InternetAddress getEmail() {
+			return email;
 		}
 	}
 	

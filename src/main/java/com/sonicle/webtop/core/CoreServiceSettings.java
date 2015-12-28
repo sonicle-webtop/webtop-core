@@ -13,7 +13,6 @@ import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.Locale;
 
 /**
- *
  * @author matteo
  */
 public class CoreServiceSettings extends BaseServiceSettings {
@@ -87,6 +86,20 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * If specified it overrides the generated one (see ServiceManager).
 	 */
 	public static final String PUBLIC_NAME = "public.name";
+	
+	/**
+	 * [string][system+domain]
+	 * Specifies if users can send feedbacks throught interface.
+	 */
+	public static final String FEEDBACK_ENABLED = "feedback.enabled";
+	
+	/**
+	 * [string][system+domain]
+	 * Specifies if what's new visualization to users is active
+	 */
+	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	
+	
 	
 	/**
 	 * [string][system+domain][*]
@@ -177,6 +190,27 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public String getUserInfoProvider() {
 		return getString(USERINFO_PROVIDER, DEFAULT_USERINFO_PROVIDER);
 	}
+	
+	public Boolean getFeedbackEnabled() {
+		return getBoolean(FEEDBACK_ENABLED, true);
+	}
+	
+	public Boolean getWhatsnewEnabled() {
+		return getBoolean(WHATSNEW_ENABLED, true);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public long getOTPProviderSonicleAuthKVI() {
 		return getLong(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);

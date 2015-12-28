@@ -34,15 +34,15 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
-import com.sonicle.webtop.core.bol.js.JsReminderAlert;
+import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobServiceTask;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.interfaces.IManagerUsesReminders;
-import com.sonicle.webtop.core.sdk.ReminderAlert;
-import com.sonicle.webtop.core.sdk.ReminderAlertWeb;
-import com.sonicle.webtop.core.sdk.ReminderAlertEmail;
+import com.sonicle.webtop.core.sdk.BaseReminder;
+import com.sonicle.webtop.core.sdk.ReminderInApp;
+import com.sonicle.webtop.core.sdk.ReminderEmail;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -108,23 +108,23 @@ public class JobService extends BaseJobService {
 			logger.trace("ReminderJob started [{}]", now);
 			
 			try {
-				ArrayList<ReminderAlert> alerts = new ArrayList<>();
+				ArrayList<BaseReminder> alerts = new ArrayList<>();
 
 				// Creates a manager instance for each service and calls it for reminders...
 				for(String sid : jobService.sidUsingReminders) {
 					BaseManager instance = jobService.core.getServiceManager().instantiateManager(sid, jobService.getRunContext());
 					IManagerUsesReminders manager = (IManagerUsesReminders)instance;
-					alerts.addAll(manager.returnReminderAlerts(now));
+					alerts.addAll(manager.returnReminders(now));
 				}
 
 				// Process returned reminders...
 				logger.trace("Processing {} returned alerts", alerts.size());
-				for(ReminderAlert alert : alerts) {
-					if(alert instanceof ReminderAlertEmail) {
+				for(BaseReminder alert : alerts) {
+					if(alert instanceof ReminderEmail) {
 						//TODO: inviare notifica per email
 
-					} else if(alert instanceof ReminderAlertWeb) {
-						ReminderMessage msg = new ReminderMessage(new JsReminderAlert((ReminderAlertWeb)alert));
+					} else if(alert instanceof ReminderInApp) {
+						ReminderMessage msg = new ReminderMessage(new JsReminderInApp((ReminderInApp)alert));
 						if(!byProfile.containsKey(alert.getProfileId())) {
 							byProfile.put(alert.getProfileId(), new ArrayList<ServiceMessage>());
 						}
@@ -141,7 +141,7 @@ public class JobService extends BaseJobService {
 				List<OSnoozedReminder> prems = jobService.core.listExpiredSnoozedReminders(now);
 				for(OSnoozedReminder prem : prems) {
 					UserProfile.Id pid = new UserProfile.Id(prem.getDomainId(), prem.getUserId());
-					ReminderMessage msg = new ReminderMessage(new JsReminderAlert(prem));
+					ReminderMessage msg = new ReminderMessage(new JsReminderInApp(prem));
 					if(!byProfile.containsKey(pid)) {
 						byProfile.put(pid, new ArrayList<ServiceMessage>());
 					}
