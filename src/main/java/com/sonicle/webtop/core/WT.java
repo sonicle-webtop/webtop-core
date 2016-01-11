@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.MessageFormat;
@@ -75,6 +76,10 @@ public class WT {
 	
 	public static boolean isLatestWebApp() {
 		return getWTA().isLastVersion();
+	}
+	
+	public static Charset getSystemCharset() {
+		return getWTA().getSystemCharset();
 	}
 	
 	public static List<AppLocale> getInstalledLocales() {

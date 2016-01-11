@@ -31,13 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.RcptType', {
-	extend: 'Ext.data.ArrayStore',
+Ext.define('Sonicle.String', {
+	singleton: true,
 	
-	model: 'WT.model.Simple',
-	data: [
-		['to', WT.res('store.rcptType.to')],
-		['cc', WT.res('store.rcptType.cc')],
-		['bcc', WT.res('store.rcptType.bcc')]
-	]
+	/**
+	 * 
+	 * @param {type} sep 
+	 * @param {Mixed...} values String values to join.
+	 * @returns {String} The joined string.
+	 */
+	join: function(sep, values) {
+		sep = sep || '';
+		var i, s = '';
+		for(i=1; i<arguments.length; i++) {
+			s = s.concat(arguments[i] || '', sep);
+		}
+		return Ext.String.trim(s);
+	}
 });

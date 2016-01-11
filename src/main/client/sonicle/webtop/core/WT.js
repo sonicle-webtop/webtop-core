@@ -226,7 +226,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 			str = id;
 			id = WT.ID;
 		}
-		if(str.startsWith('{') && str.endsWith('}')) {
+		if(Ext.isString(str) && str.startsWith('{') && str.endsWith('}')) {
 			var s = str.substr(1, str.length-2),
 					tokens = s.split('@');
 			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
@@ -561,26 +561,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 		var svc = this.getApp().getService(sid);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
 		return this.getApp().viewport.getController().createView(svc, name, opts);
-		
-		/*
-		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
-			mys: svc
-		});
-		view = Ext.create(name, opts.viewCfg);
-		dockCfg = view.getDockableConfig();
-		
-		opts.containerCfg = Ext.apply(opts.containerCfg || {}, {
-			xtype: 'window',
-			layout: 'fit',
-			items: [view]
-		}, {
-			width: dockCfg.width,
-			height: dockCfg.height,
-			modal: opts.modal || false
-		});
-		
-		return Ext.create(opts.containerCfg);
-		*/
 	},
 	
 	getTheme: function() {

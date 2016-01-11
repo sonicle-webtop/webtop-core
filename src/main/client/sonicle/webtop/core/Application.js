@@ -4,6 +4,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	requires: [
 		'Ext.ux.WebSocketManager',
 		'Ext.ux.WebSocket',
+		'Sonicle.String',
 		'Sonicle.Date',
 		'Sonicle.URLManager',
 		'Sonicle.PrintManager',

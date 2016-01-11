@@ -338,9 +338,9 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			mys: svc
 		});
 		view = Ext.create(svc.preNs(viewName), opts.viewCfg);
-		
-		dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
-		view.setDockableConfig(dockCfg);
+		//dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
+		//view.setDockableConfig(dockCfg);
+		dockCfg = view.getDockableConfig();
 		
 		win = Ext.create(Ext.apply({
 			xtype: 'wtwindow',

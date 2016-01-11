@@ -120,6 +120,10 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		var me = this;
 		// Defines a basic viewModel (eg. useful for binding)
 		//if(!me.viewModel) me.viewModel = Ext.create('Ext.app.ViewModel');
+		if(Ext.isObject(cfg.dockableConfig)) {
+			Ext.merge(me.config.dockableConfig, cfg.dockableConfig);
+			delete cfg.dockableConfig;
+		}
 		me.callParent([cfg]);
 	},
 	

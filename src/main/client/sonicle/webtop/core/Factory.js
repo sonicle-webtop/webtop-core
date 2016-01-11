@@ -677,6 +677,23 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
 			}
 		};
+	},
+	
+	multiRowSelection: function(checkbox) {
+		if(checkbox === true) {
+			return {
+				type: 'spreadsheet',
+				mode : 'MULTI',
+				checkboxSelect: true,
+				cellSelect: false,
+				rowNumbererHeaderWidth: 0
+			};
+		} else {
+			return {
+				type: 'rowmodel',
+				mode : 'MULTI'
+			};
+		}
 	}
 	
 	

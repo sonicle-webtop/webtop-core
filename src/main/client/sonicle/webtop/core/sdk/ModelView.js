@@ -168,39 +168,45 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	/**
-	 * Loads defined form and sets NEW mode.
+	 * Inits desired mode.
+	 * @param {String} mode
+	 * @param {Object} opts
+	 * @param {Object} opts.data
+	 */
+	begin: function(mode, opts) {
+		var me = this;
+		if([me.MODE_NEW, me.MODE_VIEW, me.MODE_EDIT].indexOf(mode) === -1) return;
+		
+		me.opts = opts || {};
+		me.setMode(mode);
+		me.loadView();
+	},
+	
+	/**
+	 * Loads defined model and sets NEW mode.
 	 * @param {Object} opts
 	 * @param {Object} opts.data
 	 */
 	beginNew: function(opts) {
-		var me = this;
-		me.opts = opts || {};
-		me.setMode(me.MODE_NEW);
-		me.loadView();
+		this.begin(this.MODE_NEW, opts);
 	},
 	
 	/**
-	 * Loads defined form and sets VIEW mode.
+	 * Loads defined model and sets VIEW mode.
 	 * @param {Object} opts
 	 * @param {Object} opts.data
 	 */
 	beginView: function(opts) {
-		var me = this;
-		me.opts = opts || {};
-		me.setMode(me.MODE_VIEW);
-		me.loadView();
+		this.begin(this.MODE_VIEW, opts);
 	},
 	
 	/**
-	 * Loads defined form and sets EDIT mode.
+	 * Loads defined model and sets EDIT mode.
 	 * @param {Object} opts
 	 * @param {Object} opts.data
 	 */
 	beginEdit: function(opts) {
-		var me = this;
-		me.opts = opts || {};
-		me.setMode(me.MODE_EDIT);
-		me.loadView();
+		this.begin(this.MODE_EDIT, opts);
 	},
 	
 	/**

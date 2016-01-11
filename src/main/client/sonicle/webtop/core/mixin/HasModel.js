@@ -121,14 +121,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	},
 	
 	/**
-	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
-	 * @returns {Object}
-	 */
-	getVMData: function() {
-		return this.getViewModel().data;
-	},
-	
-	/**
 	 * Returns the attached model.
 	 * @returns {Ext.data.Model}
 	 */

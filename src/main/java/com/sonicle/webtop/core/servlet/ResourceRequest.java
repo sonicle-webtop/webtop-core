@@ -568,7 +568,7 @@ public class ResourceRequest extends HttpServlet {
 		@Override
 		public InputStream getInputStream() throws IOException {
 			if(json == null) throw new WTRuntimeException("This method needs to be called after prepareContent()");
-			return IOUtils.toInputStream(json, Charset.forName("utf-8"));
+			return IOUtils.toInputStream(json, WT.getSystemCharset());
 		}
 		
 		@Override

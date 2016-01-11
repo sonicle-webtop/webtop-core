@@ -64,7 +64,9 @@ public abstract class BaseSettings {
 	}
 	
 	public <T> boolean setObject(String key, T value, Class<T> type) {
-		return setString(key, LangUtils.serialize(value, type));
+		String s = LangUtils.serialize(value, type);
+		if(s == null) return false;
+		return setString(key, s);
 	}
 	
 	public LocalTime getTime(String key, String defaultValue, String pattern) {

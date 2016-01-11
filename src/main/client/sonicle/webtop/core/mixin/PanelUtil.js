@@ -73,5 +73,21 @@ Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
 			if(!cmp) break;
 		}
 		return cmp;
+	},
+	
+	/**
+	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel}.
+	 * @returns {Ext.app.ViewModel}
+	 */
+	getVM: function() {
+		return this.getViewModel();
+	},
+	
+	/**
+	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
+	 * @returns {Object}
+	 */
+	getVMData: function() {
+		return this.getVM().data;
 	}
 });	

@@ -56,6 +56,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -113,6 +114,7 @@ public class WebTopApp {
 	
 	private final ServletContext servletContext;
 	private final String systemInfo;
+	private final Charset systemCharset;
 	private Locale systemLocale;
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
@@ -134,6 +136,7 @@ public class WebTopApp {
 	private WebTopApp(ServletContext context) {
 		servletContext = context;
 		systemInfo = buildSystemInfo();
+		systemCharset = Charset.forName("UTF-8");
 		init();
 	}
 	
@@ -146,8 +149,8 @@ public class WebTopApp {
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		// Locale Manager
-		String[] tags = new String[]{"it_IT", "en_EN"};
 		//TODO: caricare dinamicamente le lingue installate nel sistema
+		String[] tags = new String[]{"it_IT", "en_EN"};
 		i18nm = I18nManager.initialize(this, tags);
 		
 		// Template Engine
@@ -155,7 +158,7 @@ public class WebTopApp {
 		freemarkerCfg = new Configuration();
 		freemarkerCfg.setClassForTemplateLoading(this.getClass(), "/");
 		freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
-		freemarkerCfg.setDefaultEncoding("UTF-8");
+		freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
@@ -288,6 +291,10 @@ public class WebTopApp {
 	
 	public String getSystemInfo() {
 		return systemInfo;
+	}
+	
+	public Charset getSystemCharset() {
+		return systemCharset;
 	}
 	
 	public Locale getSystemLocale() {
@@ -451,10 +458,10 @@ public class WebTopApp {
 		
 		String jarFileName, jarEntryName;
 		try {
-			jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), "UTF-8");
+			jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), getSystemCharset().name());
 			jarEntryName = surl.substring(ix + 2);
 		} catch(UnsupportedEncodingException ex) {
-			throw new WTRuntimeException(ex, "UTF-8 encoding not supported");
+			throw new WTRuntimeException(ex, "{0} encoding not supported", getSystemCharset().name());
 		}
 		
 		File file = new File(jarFileName);
