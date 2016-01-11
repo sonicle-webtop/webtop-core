@@ -33,8 +33,10 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
@@ -44,6 +46,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -78,6 +81,14 @@ public class ServletHelper {
 	 */
 	public static String getSessionID(HttpSession session) {
 		return (session != null) ? session.getId() : "";
+	}
+	
+	public static String guessMediaType(String fileName) {
+		String mtype = WT.getMediaType(FilenameUtils.getExtension(fileName));
+		if(mtype != null) return mtype;
+		mtype = ServletUtils.guessMediaType(fileName);
+		if(mtype != null) return mtype;
+		return null;
 	}
 	
 	/*

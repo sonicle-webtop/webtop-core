@@ -317,19 +317,32 @@ public class WT {
 		return tempFile.delete();
 	}
 	
+	/**
+	 * Retrieves MediaType associated to a file extension from the local table.
+	 * @deprecated Use {@link #getMediaType()} instead.
+	 * @param extension The file extension.
+	 * @return MediaType string or null if no entry is present
+	 */
+	@Deprecated
 	public static String getContentType(String extension) {
+		return getMediaType(extension);
+	}
+	
+	/**
+	 * Retrieves MediaType associated to a file extension from the local table.
+	 * @param extension The file extension.
+	 * @return MediaType string or null if no entry is present
+	 */
+	public static String getMediaType(String extension) {
 		String ctype = null;
 		Connection con = null;
 		
         try {
-			extension = extension.toLowerCase();
-            con=getCoreConnection();
+			extension = StringUtils.lowerCase(extension);
+            con = getCoreConnection();
 			OContentType oct = ContentTypeDAO.getInstance().selectByExtension(con, extension);
-            if (oct!=null) {
-                ctype=oct.getContentType();
-                //logger.debug("Got content-type from db: {}={} ",extension,ctype);
-            }
-        } catch(SQLException exc) {
+            if(oct != null) ctype = oct.getContentType();
+        } catch(SQLException ex) {
 			//logger.error("Error looking up content type for extension {}",extension,exc);
         } finally {
             DbUtils.closeQuietly(con);
@@ -337,23 +350,21 @@ public class WT {
         return ctype;
 	}
 	
-	public static String getExtension(String ctype) {
-		String extension = null;
+	public static String getExtension(String mediaType) {
+		String ext = null;
 		Connection con = null;
 		
 		try {
-			ctype = ctype.toLowerCase();
-			con=getCoreConnection();
-			OContentType oct = ContentTypeDAO.getInstance().selectByContentType(con, ctype);
-			if (oct!=null) {
-				extension = oct.getExtension();
-			}
-		} catch(SQLException exc) {
+			mediaType = StringUtils.lowerCase(mediaType);
+			con = getCoreConnection();
+			OContentType oct = ContentTypeDAO.getInstance().selectByContentType(con, mediaType);
+			if(oct != null) ext = oct.getExtension();
+		} catch(SQLException ex) {
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-		return extension;
+		return ext;
 	}
 	
 	/**

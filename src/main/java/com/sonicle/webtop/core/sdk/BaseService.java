@@ -46,6 +46,7 @@ import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
+import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -62,6 +63,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -170,6 +172,22 @@ public abstract class BaseService extends BaseServiceBase {
 		}	
 	}
 	
+	private String findMediaType(FileItemStream fileItem) {
+		String mtype = ServletHelper.guessMediaType(fileItem.getName());
+		if(mtype == null) return mtype;
+		mtype = fileItem.getContentType();
+		if(mtype == null) return mtype;
+		return "application/octet-stream";
+	}
+	
+	private String findMediaType(FileItem fileItem) {
+		String mtype = ServletHelper.guessMediaType(fileItem.getName());
+		if(mtype == null) return mtype;
+		mtype = fileItem.getContentType();
+		if(mtype == null) return mtype;
+		return "application/octet-stream";
+	}
+	
 	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ServletFileUpload upload = null;
 		UploadedFile uploadedFile = null;
@@ -190,7 +208,7 @@ public abstract class BaseService extends BaseServiceBase {
 				while(fit.hasNext()) {
 					FileItemStream fis = fit.next();
 					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(WT.generateUUID(), fis.getName(), true);
+						uploadedFile = new UploadedFile(WT.generateUUID(), fis.getName(), findMediaType(fis), true);
 						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
 						env.wts.removeUploadedFile(uploadedFile);
@@ -210,6 +228,7 @@ public abstract class BaseService extends BaseServiceBase {
 				
 				// Defines the upload object
 				DiskFileItemFactory factory = new DiskFileItemFactory();
+				//TODO: valutare come imporre i limiti
 				//factory.setSizeThreshold(yourMaxMemorySize);
 				//factory.setRepository(yourTempDirectory);
 				upload = new ServletFileUpload(factory);
@@ -222,7 +241,7 @@ public abstract class BaseService extends BaseServiceBase {
 					FileItem fi = (FileItem)it.next();
 					if(!fi.isFormField()) {
 						File file = WT.createTempFile();
-						uploadedFile = new UploadedFile(file.getName(), fi.getName(), false);
+						uploadedFile = new UploadedFile(file.getName(), fi.getName(), findMediaType(fi), false);
 						env.wts.addUploadedFile(uploadedFile);
 						fi.write(file);
 						items.add(uploadedFile.id);

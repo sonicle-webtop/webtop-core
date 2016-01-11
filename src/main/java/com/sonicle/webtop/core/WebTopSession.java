@@ -479,11 +479,13 @@ public class WebTopSession {
 	public static class UploadedFile {
 		public String id;
 		public String filename;
+		public String mediaType;
 		public boolean virtual;
 		
-		public UploadedFile(String id, String filename, boolean virtual) {
+		public UploadedFile(String id, String filename, String mediaType, boolean virtual) {
 			this.id = id;
 			this.filename = filename;
+			this.mediaType = mediaType;
 			this.virtual = virtual;
 		}
 	}
