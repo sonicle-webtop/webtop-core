@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.WebTopSession;
 import java.util.List;
 import net.sf.uadetector.ReadableUserAgent;
@@ -44,9 +45,11 @@ import net.sf.uadetector.ReadableUserAgent;
 public class Environment {
 	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
 	protected final WebTopSession wts;
+	protected final CoreUserSettings cus;
 
 	public Environment(WebTopSession wts) {
 		this.wts = wts;
+		cus = new CoreUserSettings(wts.getUserProfile().getId());
 	}
 
 	public UserProfile getProfile() {
@@ -55,6 +58,10 @@ public class Environment {
 	
 	public UserProfile.Id getProfileId() {
 		return wts.getUserProfile().getId();
+	}
+	
+	public CoreUserSettings getCoreUserSettings() {
+		return cus;
 	}
 
 	public ReadableUserAgent getUserAgent() {
