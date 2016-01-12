@@ -42,9 +42,11 @@ import com.sonicle.webtop.core.sdk.UserProfile;
  * @author malbinola
  */
 public class CoreUserSettings extends BaseUserSettings {
+	private CoreServiceSettings ss;
 	
 	public CoreUserSettings(UserProfile.Id profileId) {
 		super(CoreManifest.ID, profileId);
+		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}
 
 	public CoreUserSettings(String serviceId, UserProfile.Id profileId) {
@@ -52,60 +54,57 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Theme name
 	 */
 	public static final String THEME = "theme";
-	public static final String DEFAULT_THEME = "crisp";
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Layout
 	 */
 	public static final String LAYOUT = "layout";
-	public static final String DEFAULT_LAYOUT = "default";
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Look and feel
 	 */
 	public static final String LAF = "laf";
-	public static final String DEFAULT_LAF = "default";
 	
 	/**
-	 * [boolean]
+	 * [boolean][default]
 	 * Right-to-left mode
 	 */
 	public static final String RTL = "rtl";
-	public static final boolean DEFAULT_RTL = false;
 	
 	/**
-	 * [int]
+	 * [int][default]
 	 * Week start day (0:sunday, 1:monday)
 	 */
 	public static final String START_DAY = "i18n.startDay";
-	public static final int DEFAULT_START_DAY = 1;
+	public static final int START_DAY_SUNDAY = 0;
+	public static final int START_DAY_MONDAY = 1;
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Short date format pattern
 	 */
 	public static final String SHORT_DATE_FORMAT = "i18n.format.date.short";
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Long date format pattern
 	 */
 	public static final String LONG_DATE_FORMAT = "i18n.format.date.long";
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Short time format pattern
 	 */
 	public static final String SHORT_TIME_FORMAT = "i18n.format.time.short";
 	
 	/**
-	 * [string]
+	 * [string][default]
 	 * Long time format pattern
 	 */
 	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
@@ -158,7 +157,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final Boolean DEFAULT_SYNC_DEVICES_ENABLED = true;
 	
 	public String getTheme() {
-		return getString(THEME, DEFAULT_THEME);
+		String value = getString(THEME, null);
+		if(value != null) return value;
+		return ss.getDefaultTheme();
 	}
 	
 	public boolean setTheme(String value) {
@@ -166,7 +167,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLayout() {
-		return getString(LAYOUT, DEFAULT_LAYOUT);
+		String value = getString(LAYOUT, null);
+		if(value != null) return value;
+		return ss.getDefaultLayout();
 	}
 	
 	public boolean setLayout(String value) {
@@ -174,7 +177,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLookAndFeel() {
-		return getString(LAF, DEFAULT_LAF);
+		String value = getString(LAF, null);
+		if(value != null) return value;
+		return ss.getDefaultLaf();
 	}
 	
 	public boolean setLookAndFeel(String value) {
@@ -182,11 +187,15 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean getRightToLeft() {
-		return getBoolean(RTL, DEFAULT_RTL);
+		Boolean value = getBoolean(RTL, null);
+		if(value != null) return value;
+		return ss.getDefaultRtl();
 	}
 	
 	public Integer getStartDay() {
-		return getInteger(START_DAY, DEFAULT_START_DAY);
+		Integer value = getInteger(START_DAY, null);
+		if(value != null) return value;
+		return ss.getDefaultStartDay();
 	}
 	
 	public boolean setStartDay(Integer value) {
@@ -194,7 +203,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getShortDateFormat() {
-		return getString(SHORT_DATE_FORMAT, "MM/dd/yyyy");
+		String value = getString(SHORT_DATE_FORMAT, null);
+		if(value != null) return value;
+		return ss.getDefaultShortDateFormat();
 	}
 	
 	public boolean setShortDateFormat(String value) {
@@ -202,7 +213,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLongDateFormat() {
-		return getString(LONG_DATE_FORMAT, "MM/dd/yyyy");
+		String value = getString(LONG_DATE_FORMAT, null);
+		if(value != null) return value;
+		return ss.getDefaultLongDateFormat();
 	}
 	
 	public boolean setLongDateFormat(String value) {
@@ -210,7 +223,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getShortTimeFormat() {
-		return getString(SHORT_TIME_FORMAT, "HH:mm");
+		String value = getString(SHORT_TIME_FORMAT, null);
+		if(value != null) return value;
+		return ss.getDefaultShortTimeFormat();
 	}
 	
 	public boolean setShortTimeFormat(String value) {
@@ -218,7 +233,9 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public String getLongTimeFormat() {
-		return getString(LONG_TIME_FORMAT, "HH:mm");
+		String value = getString(LONG_TIME_FORMAT, null);
+		if(value != null) return value;
+		return ss.getDefaultLongTimeFormat();
 	}
 	
 	public boolean setLongTimeFormat(String value) {

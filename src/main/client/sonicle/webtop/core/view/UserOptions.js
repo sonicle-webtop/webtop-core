@@ -38,6 +38,11 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'WT.model.Simple',
 		'WT.store.TFADelivery',
 		'WT.store.Timezone',
+		'WT.store.StartDay',
+		'WT.store.DateFmtShort',
+		'WT.store.DateFmtLong',
+		'WT.store.TimeFmtShort',
+		'WT.store.TimeFmtLong',
 		'Sonicle.form.field.Icon',
 		'Sonicle.plugin.FieldTooltip',
 		'Sonicle.webtop.core.ux.PermStatusField'
@@ -66,7 +71,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}
 			},
 			upiFieldEditable: function(get) {
-				return WT.getOption('upiProviderWritable') && get('record.canManageUpi');
+				return WT.getOption('wtUpiProviderWritable') && get('record.canManageUpi');
 			}
 		}
 	},
@@ -199,7 +204,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}, 
 			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.startDay}',
-				store: Ext.create('Sonicle.webtop.core.store.StartDay', {
+				store: Ext.create('WT.store.StartDay', {
 					autoLoad: true
 				}),
 				fieldLabel: WT.res('opts.i18n.fld-startDay.lbl'),
@@ -211,9 +216,12 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}
 				},
 				needReload: true
-			}), {
-				xtype: 'textfield',
+			}),
+			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.shortDateFormat}',
+				store: Ext.create('WT.store.DateFmtShort', {
+					autoLoad: true
+				}),
 				fieldLabel: WT.res('opts.i18n.fld-shortDateFormat.lbl'),
 				width: 280,
 				listeners: {
@@ -221,10 +229,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						fn: me.onBlurAutoSave,
 						scope: me
 					}
-				}
-			}, {
-				xtype: 'textfield',
+				},
+				needReload: true
+			}),
+			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.longDateFormat}',
+				store: Ext.create('WT.store.DateFmtLong', {
+					autoLoad: true
+				}),
 				fieldLabel: WT.res('opts.i18n.fld-longDateFormat.lbl'),
 				width: 280,
 				listeners: {
@@ -232,10 +244,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						fn: me.onBlurAutoSave,
 						scope: me
 					}
-				}
-			}, {
-				xtype: 'textfield',
+				},
+				needReload: true
+			}),
+			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.shortTimeFormat}',
+				store: Ext.create('WT.store.TimeFmtShort', {
+					autoLoad: true
+				}),
 				fieldLabel: WT.res('opts.i18n.fld-shortTimeFormat.lbl'),
 				width: 280,
 				listeners: {
@@ -243,10 +259,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						fn: me.onBlurAutoSave,
 						scope: me
 					}
-				}
-			}, {
-				xtype: 'textfield',
+				},
+				needReload: true
+			}),
+			WTF.lookupCombo('id', 'desc', {
 				bind: '{record.longTimeFormat}',
+				store: Ext.create('WT.store.TimeFmtLong', {
+					autoLoad: true
+				}),
 				fieldLabel: WT.res('opts.i18n.fld-longTimeFormat.lbl'),
 				width: 280,
 				listeners: {
@@ -254,8 +274,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						fn: me.onBlurAutoSave,
 						scope: me
 					}
-				}
-			}]
+				},
+				needReload: true
+			})]
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.upi.tit'),
@@ -555,7 +576,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.tfa.tit'),
-			disabled: WT.getOption('tfaEnabled'),
+			disabled: WT.getOption('wtTfaEnabled'),
 			items: [{
 				xtype: 'container',
 				layout: 'form',

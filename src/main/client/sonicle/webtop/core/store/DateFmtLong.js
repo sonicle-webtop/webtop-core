@@ -31,13 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.StartDay', {
-	alternateClassName: 'WT.store.StartDay',
+Ext.define('Sonicle.webtop.core.store.DateFmtLong', {
+	alternateClassName: 'WT.store.DateFmtLong',
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		[0, WT.res('store.startDay.0')],
-		[1, WT.res('store.startDay.1')]
+		['dd MMM yyyy', 'dd mmm yyyy'],
+		['dd MMMM yyyy', 'dd mmmm yyyy'],
+		['MMM dd, yyyy', 'mmm dd, yyyy'],
+		['MMMM dd, yyyy', 'mmmm dd, yyyy']
 	]
 });

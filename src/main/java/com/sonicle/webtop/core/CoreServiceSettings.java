@@ -18,7 +18,7 @@ import java.util.Locale;
 public class CoreServiceSettings extends BaseServiceSettings {
 	
 	// NB: please do not provide a constructor that defaults serviceId 
-	// because there are keys that can be applied widely across services
+	// because there are some keys that can be applied widely across services
 	
 	public CoreServiceSettings(String domainId, String serviceId) {
 		super(domainId, serviceId);
@@ -297,5 +297,41 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public static Locale getSystemLocale(SettingsManager setm) {
 		return new Locale(getSystemLanguage(setm), getSystemCountry(setm));
+	}
+	
+	public String getDefaultTheme() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.THEME, "crisp");
+	}
+	
+	public String getDefaultLayout() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.LAYOUT, "default");
+	}
+	
+	public String getDefaultLaf() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.LAF, "default");
+	}
+	
+	public boolean getDefaultRtl() {
+		return getBoolean(DEFAULT_PREFIX + CoreUserSettings.RTL, false);
+	}
+	
+	public int getDefaultStartDay() {
+		return getInteger(DEFAULT_PREFIX + CoreUserSettings.START_DAY, CoreUserSettings.START_DAY_MONDAY);
+	}
+	
+	public String getDefaultShortDateFormat() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.SHORT_DATE_FORMAT, "dd/MM/yyyy");
+	}
+	
+	public String getDefaultLongDateFormat() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.LONG_DATE_FORMAT, "dd MMM yyyy");
+	}
+	
+	public String getDefaultShortTimeFormat() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.SHORT_TIME_FORMAT, "HH:mm");
+	}
+	
+	public String getDefaultLongTimeFormat() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.LONG_TIME_FORMAT, "HH:mm:ss");
 	}
 }

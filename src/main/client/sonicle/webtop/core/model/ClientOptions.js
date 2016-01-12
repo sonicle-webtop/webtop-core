@@ -35,6 +35,11 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
+		WTF.field('wtUpiProviderWritable', 'boolean'),
+		WTF.field('wtFeedbackEnabled', 'boolean'),
+		WTF.field('wtWhatsnewEnabled', 'boolean'),
+		WTF.field('wtTfaEnabled', 'boolean'),
+		
 		WTF.field('profileId', 'string'), // Not a real option
 		WTF.field('domainId', 'string'), // Not a real option
 		WTF.field('userId', 'string'), // Not a real option
@@ -51,12 +56,7 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 		WTF.calcField('use24HourTime', 'boolean', 'shortTimeFormat', function(v, rec) {
 			var tf = rec.get('shortTimeFormat');
 			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
-		}),
-		WTF.field('upiProviderWritable', 'boolean'),
-		WTF.field('feedbackEnabled', 'boolean'),
-		WTF.field('whatsnewEnabled', 'boolean'),
-		
-		WTF.field('tfaEnabled', 'boolean')
+		})
 		
 		/*
 		'domainId', // Not a real option

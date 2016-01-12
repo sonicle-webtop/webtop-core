@@ -11,10 +11,11 @@ Ext.define('Sonicle.Date', {
 	javaFmtMapping: {
 		d: 'j',
 		dd: 'd',
+		y: 'Y',
 		yy: 'y',
+		yyy: 'Y',
 		yyyy: 'Y',
 		a: 'A',
-		//A: 'A',
 		M: 'n',
 		MM: 'm',
 		MMM: 'M',
@@ -32,7 +33,7 @@ Ext.define('Sonicle.Date', {
 		SSS: 'u',
 		E: 'D',
 		EEE: 'D',
-		EEEE: 'D',
+		EEEE: 'l',
 		D: 'z',
 		w: 'W',
 		ww: 'W',
@@ -45,17 +46,60 @@ Ext.define('Sonicle.Date', {
 		u: 'w'
 	},
 	
+	extFmtMapping: {
+		j: 'd',
+		d: 'dd',
+		y: 'yy',
+		Y: 'yyyy',
+		a: 'A',
+		A: 'A',
+		n: 'M',
+		m: 'MM',
+		M: 'MMM',
+		F: 'MMMM',
+		g: 'h',
+		h: 'hh',
+		G: 'H',
+		H: 'HH',
+		i: 'mm',
+		s: 'ss',
+		u: 'SSS',
+		D: 'EEE',
+		l: 'EEEE',
+		z: 'D',
+		W: 'ww',
+		T: 'zzz',
+		O: 'Z',
+		P: 'XXX',
+		w: 'u'
+	},
+	
 	/**
-	 * Translates the java date format String to a ExtJs format String.
-	 * @param {String} format The format String to be translated.
-	 * @returns {String}
+	 * Translates the Java date format string to a ExtJs format string.
+	 * @param {String} javaFmt The Java format String to be translated.
+	 * @returns {String} Equivalent ExtJs format string
 	 */
-	toExtJsFormat: function(format) {
-		var me = this;
-		if (!me.fmtCache[format]) {
-			me.fmtCache[format] = me.translateFormat(format, me.javaFmtMapping);
+	toExtFormat: function(javaFmt) {
+		var me = this, key = 'ext';
+		if(!me.fmtCache[key]) me.fmtCache[key] = {};
+		if(!me.fmtCache[key][javaFmt]) {
+			me.fmtCache[key][javaFmt] = me.translateFormat(javaFmt, me.javaFmtMapping);
 		}
-		return me.fmtCache[format];
+		return me.fmtCache[key][javaFmt];
+	},
+	
+	/**
+	 * Translates the ExtJs date format string to a Java format string.
+	 * @param {String} extFmt The format String to be translated.
+	 * @returns {String} Equivalent Java format string
+	 */
+	toJavaFormat: function(extFmt) {
+		var me = this, key = 'java';
+		if(!me.fmtCache[key]) me.fmtCache[key] = {};
+		if(!me.fmtCache[key][extFmt]) {
+			me.fmtCache[key][extFmt] = me.translateFormat(extFmt, me.extFmtMapping);
+		}
+		return me.fmtCache[key][extFmt];
 	},
 	
 	/**
@@ -76,7 +120,7 @@ Ext.define('Sonicle.Date', {
 		for(; i < len; i++) {
 			curCh = format.charAt(i);
 			if(lastCh === null || lastCh !== curCh) { // change detected
-				format = me._appendMappedString(format, mapping, beginIndex, i, result);
+				result = me._appendMappedString(format, mapping, beginIndex, i, result);
 				beginIndex = i;
 			}
 			lastCh = curCh;

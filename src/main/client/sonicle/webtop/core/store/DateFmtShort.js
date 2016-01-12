@@ -31,13 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.TimeFormat', {
-	alternateClassName: 'WT.store.TimeFormat',
+Ext.define('Sonicle.webtop.core.store.DateFmtShort', {
+	alternateClassName: 'WT.store.DateFmtShort',
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		['24h', WT.res('store.timeformat.24h')],
-		['12h', WT.res('store.timeformat.12h')]
+		['dd/MM/yyyy', 'dd/mm/yyyy'],
+		['dd-MM-yyyy', 'dd-mm-yyyy'],
+		['yyyy-MM-dd', 'yyyy-mm-dd'],
+		['MM/dd/yyyy', 'mm/dd/yyyy'],
+		['MM-dd-yyyy', 'mm-dd-yyyy'],
+		['MM.dd.yyyy', 'mm.dd.yyyy']
 	]
 });

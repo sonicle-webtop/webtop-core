@@ -118,6 +118,11 @@ public class Service extends BaseService {
 		UserProfile profile = getEnv().getProfile();
 		ClientOptions co = new ClientOptions();
 		
+		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
+		co.put("wtFeedbackEnabled", ss.getFeedbackEnabled());
+		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
+		co.put("wtTfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
+		
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
@@ -132,13 +137,6 @@ public class Service extends BaseService {
 		co.put("longDateFormat", us.getLongDateFormat());
 		co.put("shortTimeFormat", us.getShortTimeFormat());
 		co.put("longTimeFormat", us.getLongTimeFormat());
-		
-		co.put("upiProviderWritable", core.isUserInfoProviderWritable());
-		co.put("feedbackEnabled", ss.getFeedbackEnabled());
-		co.put("whatsnewEnabled", ss.getWhatsnewEnabled());
-		
-		co.put("tfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
-		
 		
 		return co;
 	}

@@ -563,55 +563,111 @@ Ext.define('Sonicle.webtop.core.WT', {
 		return this.getApp().viewport.getController().createView(svc, name, opts);
 	},
 	
+	/**
+	 * Returns the theme in use.
+	 * Value is taken from core options 'theme'.
+	 * @returns {String} The theme value.
+	 */
 	getTheme: function() {
 		return WT.getOption('theme');
 	},
 	
+	/**
+	 * Returns if a touch theme is in use.
+	 * @returns {Boolean}
+	 */
 	isTouchTheme: function() {
 		return (this.getTheme().indexOf('touch') !== -1);
 	},
 	
+	/**
+	 * Returns the layout in use.
+	 * Value is taken from core options 'layout'.
+	 * @returns {String} The layout value.
+	 */
 	getLayout: function() {
 		return WT.getOption('layout');
 	},
 	
+	/**
+	 * Returns the look&feel in use.
+	 * Value is taken from core options 'laf'.
+	 * @returns {String} The laf value.
+	 */
 	getLaf: function() {
 		return WT.getOption('laf');
 	},
 	
+	/**
+	 * Returns the startDay in use (0=Sunday, 1=Monday).
+	 * Value is taken from core options 'startDay'.
+	 * @returns {Integer} The startDay value.
+	 */
 	getStartDay: function() {
 		return WT.getOption('startDay');
 	},
 	
-	getUse24HourTime: function() {
-		return WT.getOption('use24HourTime');
-	},
-	
+	/**
+	 * Returns the timezone in use.
+	 * Value is taken from core options 'timezone'.
+	 * @returns {String} The timezone ID.
+	 */
 	getTimezone: function() {
 		return WT.getOption('timezone');
 	},
 	
+	/**
+	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
+	 * representing a short date. Remember that original option value follows 
+	 * Java style patterns. Value is taken from core options 'shortDateFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
 	getShortDateFmt: function() {
-		console.log('getShortDateFmt');
-		//TODO: restituire il valore localizzato (dalle options) convertendolo da quello java
-		//return WT.getOption('dateFormat');
-		return 'd/m/Y';
+		var fmt = WT.getOption('shortDateFormat');
+		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
+	/**
+	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
+	 * representing a long date. Remember that original option value follows 
+	 * Java style patterns. Value is taken from core options 'longDateFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
 	getLongDateFmt: function() {
-		return WT.getOption('longDateFormat');
+		var fmt = WT.getOption('longDateFormat');
+		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
+	/**
+	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
+	 * representing a short time. Remember that original option value follows 
+	 * Java style patterns. Value is taken from core options 'shortTimeFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
 	getShortTimeFmt: function() {
-		console.log('getShortTimeFmt');
-		//TODO: restituire il valore localizzato (dalle options) convertendolo da quello java
-		//return WT.getOption('timeFormat');
-		return 'H:i';
 		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
+		var fmt = WT.getOption('shortTimeFormat');
+		return (Ext.isEmpty(fmt)) ? 'H:i' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
+	/**
+	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
+	 * representing a long time. Remember that original option value follows 
+	 * Java style patterns. Value is taken from core options 'longTimeFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
 	getLongTimeFmt: function() {
-		return WT.getOption('longTimeFormat');
+		var fmt = WT.getOption('longTimeFormat');
+		return (Ext.isEmpty(fmt)) ? 'H:i:s' : Sonicle.Date.toExtFormat(fmt);
+	},
+	
+	/**
+	 * Returns if 24h time is in use.
+	 * Value is taken from core options 'use24HourTime'.
+	 * @returns {Boolean}
+	 */
+	getUse24HourTime: function() {
+		return WT.getOption('use24HourTime');
 	},
 	
 	print: function(html) {
