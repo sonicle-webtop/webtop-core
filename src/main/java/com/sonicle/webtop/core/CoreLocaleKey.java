@@ -49,6 +49,7 @@ public class CoreLocaleKey {
 	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
 	public static final String OTP_TITLE = "otp.title";
 	public static final String OTP_HELPTITLE = "otp.helptitle";
+	public static final String OTP_DELIVERY_TITLE = "otp.delivery.title";
 	public static final String OTP_DELIVERY_INFO = "otp.delivery.{0}.info";
 	public static final String OTP_CODE_PLACEHOLDER = "otp.code.placeholder";
 	public static final String OTP_SUBMIT_LABEL = "otp.submit.label";

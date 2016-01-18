@@ -173,6 +173,7 @@ public class Otp extends HttpServlet {
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);
 		tplMap.put("helpTitle", wta.lookupResource(locale, CoreLocaleKey.OTP_HELPTITLE, true));
+		tplMap.put("deliveryTitle", wta.lookupResource(locale, CoreLocaleKey.OTP_DELIVERY_TITLE, true));
 		tplMap.put("deliveryMode", deliveryMode);
 		tplMap.put("deliveryInfo", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.OTP_DELIVERY_INFO, deliveryMode), true));
 		tplMap.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.OTP_CODE_PLACEHOLDER, true));
