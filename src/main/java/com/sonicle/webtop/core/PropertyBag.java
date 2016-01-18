@@ -31,49 +31,34 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.UserOptions', {
-	extend: 'WT.sdk.model.UserOptions',
+package com.sonicle.webtop.core;
+
+import java.util.HashMap;
+
+/**
+ *
+ * @author malbinola
+ */
+public class PropertyBag {
+	private final HashMap<String, Object> props;
 	
-	proxy: WT.optionsProxy(WT.ID),
-	fields: [
-		WTF.field('displayName', 'string', false),
-		WTF.field('theme', 'string', false),
-		WTF.field('layout', 'string', false),
-		WTF.field('laf', 'string', false),
-		WTF.field('language', 'string', false),
-		WTF.field('timezone', 'string', false),
-		WTF.field('startDay', 'int', false),
-		WTF.field('shortDateFormat', 'string', false),
-		WTF.field('longDateFormat', 'string', false),
-		WTF.field('shortTimeFormat', 'string', false),
-		WTF.field('longTimeFormat', 'string', false),
-		WTF.field('upiTitle', 'string', true),
-		WTF.field('upiFirstName', 'string', true),
-		WTF.field('upiLastName', 'string', true),
-		WTF.field('upiNickname', 'string', true),
-		WTF.field('upiGender', 'string', true),
-		WTF.field('upiEmail', 'string', true),
-		WTF.field('upiTelephone', 'string', true),
-		WTF.field('upiFax', 'string', true),
-		WTF.field('upiPager', 'string', true),
-		WTF.field('upiMobile', 'string', true),
-		WTF.field('upiAddress', 'string', true),
-		WTF.field('upiCity', 'string', true),
-		WTF.field('upiPostalCode', 'string', true),
-		WTF.field('upiState', 'string', true),
-		WTF.field('upiCountry', 'string', true),
-		WTF.field('upiCompany', 'string', true),
-		WTF.field('upiFunction', 'string', true),
-		WTF.field('upiCustom1', 'string', true),
-		WTF.field('upiCustom2', 'string', true),
-		WTF.field('upiCustom3', 'string', true),
-		
-		WTF.roField('tfaDelivery', 'string'),
-		WTF.roField('tfaEmailAddress', 'string'),
-		WTF.roField('tfaDeviceIsTrusted', 'boolean'),
-		WTF.roField('tfaDeviceTrustedOn', 'string'),
-		
-		WTF.roField('canManageUpi', 'boolean', true),
-		WTF.roField('canSyncDevices', 'boolean', true)
-	]
-});
+	public PropertyBag() {
+		props = new HashMap<>();
+	}
+	
+	public void set(String key, Object value) {
+		props.put(key, value);
+	}
+	
+	public Object get(String key) {
+		return props.get(key);
+	}
+	
+	public boolean has(String key) {
+		return props.containsKey(key);
+	}
+	
+	public void clear(String key) {
+		props.remove(key);
+	}
+}

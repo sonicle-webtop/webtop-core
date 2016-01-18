@@ -55,7 +55,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		disableNavAtEnd: true,
 		applyButton: true,
 		doButtonText: WT.res('wizard.btn-do.lbl'),
-		doAction: '',
+		doAction: false,
 		lockDoAction: true,
 		endHeaderText: WT.res('wizard.end.hd')
 	},
@@ -99,12 +99,14 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 						if(me.getLockDoAction()) s.setDisabled(true);
 						me.onDoClick();
 					},
+					hidden: !me.hasDoAction(),
 					disabled: true
 				}, {
 					reference: 'btncancel',
 					xtype: 'button',
 					text: WT.res('wizard.btn-cancel.lbl'),
 					handler: function() {
+						if(!me.hasNext(1)) me.fireEvent('wizardcompleted', me);
 						me.closeView();
 					}
 				}
@@ -120,7 +122,6 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		return [{
 			itemId: 'end',
 			xtype: 'wtwizardpage',
-			layout: 'anchor',
 			items: [{
 				xtype: 'label',
 				html: me.getEndHeaderText()
@@ -153,23 +154,28 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		return this.getComponent(itemId);
 	},
 	
+	hasDoAction: function() {
+		return Ext.isString(this.getDoAction());
+	},
+	
 	/**
 	 * @private
+	 * @param {type} dir Navigation direction: 1 -> forward, -1 -> backward.
+	 * @param {type} [page] 
+	 * @return {String} The next page or null if there are no more pages.
 	 */
-	computeNext: function(page, dir) {
+	computeNext: function(dir, page) {
 		var me = this, index;
 		if(arguments.length === 1) {
-			dir = page;
-			page = null;
+			page = me.getActivePage();
 		}
-		if(Ext.isEmpty(page)) page = me.getActivePage();
 		index = me.getPageIndex(page) + dir;
 		return ((index >= 0) && (index < me.getPagesCount())) ? me.pages[index] : null;
 	},
 	
-	hasNext: function(page, dir) {
+	hasNext: function(dir, page) {
 		var me = this,
-				next = (arguments.length === 1) ? me.computeNext(page) : me.computeNext(page, dir);
+				next = (arguments.length === 1) ? me.computeNext(dir) : me.computeNext(dir, page);
 		return !Ext.isEmpty(next);
 	},
 	
@@ -192,8 +198,8 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				btnBack = me.lookupReference('btnback'),
 				btnForw = me.lookupReference('btnforw'),
 				btnDo = me.lookupReference('btndo'),
-				hasPrev = me.hasNext(page, -1),
-				hasNext = me.hasNext(page, 1);
+				hasPrev = me.hasNext(-1, page),
+				hasNext = me.hasNext(1, page);
 		
 		me.activatePage(page);
 		if(!hasNext && me.getDisableNavAtEnd()) {
@@ -203,7 +209,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			btnBack.setDisabled(!hasPrev);
 			btnForw.setDisabled(!hasNext);
 		}
-		btnDo.setDisabled(hasNext);
+		if(me.hasDoAction()) btnDo.setDisabled(hasNext);
 		if(!hasNext) btnCancel.setText(WT.res('wizard.btn-close.lbl'));
 		if(me.getUseTrail()) me.updateTrail();
 	},
@@ -227,6 +233,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		var me = this,
 				page = me.getPageCmp('end');
 		
+		if(!me.hasDoAction()) return;
 		me.wait();
 		WT.ajaxReq(me.mys.ID, me.getDoAction(), {
 			params: {

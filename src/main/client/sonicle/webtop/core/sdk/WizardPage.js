@@ -38,5 +38,6 @@ Ext.define('Sonicle.webtop.core.sdk.WizardPage', {
 	
 	viewModel: {},
 	referenceHolder: true,
-	border: false
+	border: false,
+	layout: 'anchor'
 });

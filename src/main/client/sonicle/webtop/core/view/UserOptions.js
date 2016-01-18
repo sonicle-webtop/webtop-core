@@ -51,25 +51,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	viewModel: {
 		formulas: {
 			isTFAActive: WTF.isEmptyFormula('record', 'tfaDelivery', true),
-			activeDelivery: {
-				bind: {bindTo: '{record.tfaDelivery}'},
-				get: function(val) {
-					return WTU.deflt(val, 'none');
-				}
-			},
-			activeThisDevice: {
-				bind: {bindTo: '{record.tfaDeviceIsTrusted}'},
-				get: function(val) {
-					return WTU.iif(val, 'trusted', 'nottrusted');
-				}
-			},
-			trustedTitle: {
-				bind: {bindTo: '{record.tfaDeviceTrustedOn}'},
-				get: function(val) {
-					var tit = WT.res('opts.tfa.thisdevice.trusted.tit');
-					return Ext.String.format(tit, val);
-				}
-			},
 			upiFieldEditable: function(get) {
 				return WT.getOption('wtUpiProviderWritable') && get('record.canManageUpi');
 			}
@@ -83,7 +64,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		vm = me.getViewModel();
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			areMine: function() {
-				return WT.getOption('profile') === me.profileId;
+				return WT.getOption('profileId') === me.profileId;
 			}
 		}));
 		
@@ -599,27 +580,33 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}, {
 						xtype: 'button',
 						bind: {
-							hidden: '{isTFAActive}'
+							hidden: '{record.tfaEnabled}'
 						},
 						text: WT.res('act-activate.lbl'),
 						menu: [{
 							itemId: 'email',
 							text: WT.res('store.tfadelivery.email'),
-							handler: me.onTFAActivateMenuClick,
+							handler: function() {
+								me.activateTFA('email');
+							},
 							scope: me
 						}, {
 							itemId: 'googleauth',
 							text: WT.res('store.tfadelivery.googleauth'),
-							handler: me.onTFAActivateMenuClick,
+							handler: function() {
+								me.activateTFA('googleauth');
+							},
 							scope: me
 						}]
 					}, {
 						xtype: 'button',
 						bind: {
-							hidden: '{!isTFAActive}'
+							hidden: '{!record.tfaEnabled}'
 						},
 						text: WT.res('act-deactivate.lbl'),
-						handler: me.onTFADeactivateMenuClick,
+						handler: function() {
+							me.deactivateTFA();
+						},
 						scope: me
 					}]
 				}]
@@ -627,9 +614,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'container',
 				reference: 'delivery',
 				layout: 'card',
-				bind: {
-					activeItem: '{activeDelivery}'
-				},
 				items: [{
 					xtype: 'container',
 					itemId: 'none'
@@ -662,9 +646,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'container',
 				reference: 'thisdevice',
 				layout: 'card',
-				bind: {
-					activeItem: '{activeThisDevice}'
-				},
 				items: [{
 					xtype: 'container',
 					itemId: 'trusted',
@@ -672,9 +653,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					items: [{
 						xtype: 'fieldset',
 						layout: 'form',
-						bind: {
-							title: '{trustedTitle}'
-						},
 						items: [{
 							xtype: 'component',
 							html: WT.res('opts.tfa.thisdevice.trusted.html')
@@ -682,9 +660,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							xtype: 'sospacer'
 						}, {
 							xtype: 'button',
+							bind: {
+								disabled: '{!areMine}'
+							},
 							text: WT.res('opts.tfa.btn-untrustthis.lbl'),
-							handler: me.onUntrustThisClick,
-							scope: me
+							handler: function() {
+								me.untrustThisTFA();
+							}
 						}]
 					}]
 				}, {
@@ -713,9 +695,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						xtype: 'sospacer'
 					}, {
 						xtype: 'button',
+						bind: {
+							disabled: '{!areMine}'
+						},
 						text: WT.res('opts.tfa.btn-untrustother.lbl'),
-						handler: me.onUntrustOtherClick,
-						scope: me
+						handler: function() {
+							me.untrustOtherTFA();
+						}
 					}]
 				}]
 			}]
@@ -808,6 +794,79 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}
 			}
 		});
+		vm.bind('{record.tfaDelivery}', me.onTFADeliveryChanged, me);
+		vm.bind('{record.tfaDeviceIsTrusted}', me.onTFADeviceIsTrusted, me);
+	},
+	
+	onTFADeliveryChanged: function(val) {
+		var tab = this.lref('delivery');
+		tab.getLayout().setActiveItem(WTU.deflt(val, 'none'));
+	},
+	
+	onTFADeviceIsTrusted: function(val) {
+		var me = this,
+				tab = me.lref('thisdevice'), tit;
+		tab.getLayout().setActiveItem(WTU.iif(val, 'trusted', 'nottrusted'));
+		if(val === true) {
+			tit = Ext.String.format(WT.res('opts.tfa.thisdevice.trusted.tit'), me.getModel().get('tfaDeviceTrustedOn'));
+			tab.getComponent('trusted').getComponent(0).setTitle(tit);
+		}
+	},
+	
+	activateTFA: function(delivery) {
+		var me = this,
+				view = (delivery === 'email') ? 'view.TFASetupEmail' : 'view.TFASetupGoogleAuth',
+				vw = WT.createView(me.ID, view, {
+					viewCfg: {
+						profileId: me.profileId
+					}
+				});
+		
+		vw.getView().on('wizardcompleted', function(s) {
+			me.loadModel();
+		});
+		vw.show();
+	},
+	
+	deactivateTFA: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {
+						operation: 'deactivate',
+						profileId: me.profileId
+					},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	untrustThisTFA: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {operation: 'untrustthis'},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	untrustOtherTFA: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageTFA', {
+					params: {operation: 'untrustothers'}
+				});
+			}
+		});
 	},
 	
 	refreshSyncDevices: function() {
@@ -845,47 +904,5 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				sto.remove(recs[0]);
 			}
 		}, me);
-	},
-	
-	onTFAActivateMenuClick: function(s) {
-		alert('TODO');
-	},
-	
-	onTFADeactivateMenuClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'DeactivateTFA', {
-					params: {options: true},
-					callback: function(success) {
-						if(success) me.loadModel();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustThisClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustthis'},
-					callback: function(success) {
-						if(success) me.loadModel();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustOtherClick: function() {
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustothers'}
-				});
-			}
-		});
 	}
 });

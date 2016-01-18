@@ -58,7 +58,6 @@ import org.slf4j.LoggerFactory;
  * @author gbulfon
  */
 public class WebTopFormAuthFilter extends FormAuthenticationFilter {
-
 	public static final Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
 	
 	@Override
@@ -107,13 +106,13 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	protected void setFailureAttribute(ServletRequest request, AuthenticationException ae) {
 		String value = null;
 		if(ae instanceof UnknownAccountException) {
-			value = Login.FAILURE_INVALID;
+			value = Login.LOGINFAILURE_INVALID;
 		} else if(ae instanceof IncorrectCredentialsException) {
-			value = Login.FAILURE_INVALID;
+			value = Login.LOGINFAILURE_INVALID;
 		} else if(ae instanceof LockedAccountException) {
-			value = Login.FAILURE_INVALID;
+			value = Login.LOGINFAILURE_INVALID;
 		} else { // AuthenticationException
-			value = Login.FAILURE_INVALID;
+			value = Login.LOGINFAILURE_INVALID;
 		}
 		request.setAttribute(getFailureKeyAttribute(), value);
 		//String message = ae.getMessage();

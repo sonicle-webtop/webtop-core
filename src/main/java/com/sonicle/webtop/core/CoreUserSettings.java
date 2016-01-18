@@ -127,7 +127,11 @@ public class CoreUserSettings extends BaseUserSettings {
 	 */
 	public static final String WHATSNEW_VERSION = "whatsnew.version";
 	
-	//public static final String OTP_ENABLED = "otp.enabled";
+	/**
+	 * [boolean]
+	 * Specifies if OTP is active.
+	 */
+	public static final String TFA_ENABLED = "tfa.enabled";
 	
 	/**
 	 * [string]
@@ -254,27 +258,35 @@ public class CoreUserSettings extends BaseUserSettings {
 		return getBoolean(WHATSNEW_ENABLED, true);
 	}
 	
-	public String getTFADelivery() {
+	public boolean getOTPEnabled() {
+		return getBoolean(TFA_ENABLED, false);
+	}
+	
+	public boolean setOTPEnabled(boolean value) {
+		return setBoolean(CoreUserSettings.TFA_ENABLED, value);
+	}
+	
+	public String getOTPDelivery() {
 		return getString(CoreUserSettings.TFA_DELIVERY, null);
 	}
 	
-	public boolean setTFADelivery(String value) {
+	public boolean setOTPDelivery(String value) {
 		return setString(CoreUserSettings.TFA_DELIVERY, value);
 	}
 	
-	public String getTFASecret() {
+	public String getOTPSecret() {
 		return getString(CoreUserSettings.TFA_SECRET, null);
 	}
 	
-	public boolean setTFASecret(String value) {
+	public boolean setOTPSecret(String value) {
 		return setString(CoreUserSettings.TFA_SECRET, value);
 	}
 	
-	public String getTFAEmailAddress() {
+	public String getOTPEmailAddress() {
 		return getString(CoreUserSettings.TFA_EMAILADDRESS, null);
 	}
 	
-	public boolean setTFAEmailAddress(String value) {
+	public boolean setOTPEmailAddress(String value) {
 		return setString(CoreUserSettings.TFA_EMAILADDRESS, value);
 	}
 	

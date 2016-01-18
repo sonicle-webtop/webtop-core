@@ -69,6 +69,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String LOGIN_HIDE_DOMAINS = "login.domains.hide";
 	
 	/**
+	 * [boolean][system]
+	 * Indicates whether to forcedly hide footprint details from login page
+	 */
+	public static final String LOGIN_HIDE_FOOTPRINT = "login.footprint.hide";
+	
+	/**
 	 * [boolean][system][*]
 	 * Indicates if system is under maintenance
 	 */
@@ -99,8 +105,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 */
 	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
 	
-	
-	
 	/**
 	 * [string][system+domain][*]
 	 * Overrides support email address
@@ -119,42 +123,37 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 * [string][system]
 	 */
 	public static final String USERINFO_PROVIDER = "userinfo.provider";
-	public static final String DEFAULT_USERINFO_PROVIDER = "WebTop";
-	
-	/**
-	 * [long][system]
-	 * Overrides default provider key validation interval (KVI).
-	 */
-	public static final String OTP_PROVIDER_SONICLEAUTH_KVI = "opt.provider.sonicleauth.kvi";
 	
 	/**
 	 * [boolean][system+domain]
 	 * 2FA enables status on the platform
 	 */
-	public static final String TFA_ENABLED = "tfa.enabled";
-	public static final Boolean DEFAULT_TFA_ENABLED = false;
+	public static final String OTP_ENABLED = "otp.enabled";
+	
+	/**
+	 * [long][system]
+	 * Overrides default provider key validation interval (KVI).
+	 */
+	public static final String OTP_PROVIDER_SONICLEAUTH_KVI = "otp.provider.sonicleauth.kvi";
 	
 	/**
 	 * [string[]][system+domain]
 	 */
-	public static final String TFA_TRUST_ADDRESSES = "tfa.trust.addresses";
+	public static final String OTP_TRUST_ADDRESSES = "otp.trust.addresses";
 	/**
 	 * [boolean][system+domain]
 	 */
-	public static final String TFA_TRUST_DEVICE_ENABLED = "tfa.trust.device.enabled";
-	public static final Boolean DEFAULT_TFA_TRUST_DEVICE_ENABLED = true;
+	public static final String OTP_TRUST_DEVICE_ENABLED = "otp.trust.device.enabled";
 	
 	/**
 	 * [integer][system+domain]
 	 */
-	public static final String TFA_TRUST_DEVICE_DURATION = "tfa.trust.device.duration";
-	public static final Integer DEFAULT_TFA_TRUST_DEVICE_DURATION = 0;
+	public static final String OTP_TRUST_DEVICE_DURATION = "otp.trust.device.duration";
 	
 	/**
 	 * [string][system]
 	 */
 	public static final String SYNC_DEVICES_SHELL_URI = "sync.devices.shell.uri";
-	public static final String DEFAULT_SYNC_DEVICES_SHELL_URI = "sh://localhost";
 	
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
@@ -187,8 +186,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_DOMAINS, false);
 	}
 	
+	public Boolean getHideLoginFootprint() {
+		return getBoolean(LOGIN_HIDE_FOOTPRINT, false);
+	}
+	
 	public String getUserInfoProvider() {
-		return getString(USERINFO_PROVIDER, DEFAULT_USERINFO_PROVIDER);
+		return getString(USERINFO_PROVIDER, "WebTop");
 	}
 	
 	public Boolean getFeedbackEnabled() {
@@ -212,34 +215,28 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	
 	
+	public boolean getOTPEnabled() {
+		return getBoolean(OTP_ENABLED, false);
+	}
+	
 	public long getOTPProviderSonicleAuthKVI() {
 		return getLong(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
 	}
 	
-	public boolean getTFAEnabled() {
-		return getBoolean(TFA_ENABLED, DEFAULT_TFA_ENABLED);
+	public String getOTPTrustedAddresses() {
+		return getString(OTP_TRUST_ADDRESSES, null);
 	}
 	
-	/*
-	public boolean setTFAEnabled(boolean value) {
-		return setBoolean(TFA_ENABLED, value);
-	}
-	*/
-	
-	public String getTFATrustedAddresses() {
-		return getString(TFA_TRUST_ADDRESSES, null);
+	public boolean getOTPDeviceTrustEnabled() {
+		return getBoolean(OTP_TRUST_DEVICE_ENABLED, true);
 	}
 	
-	public boolean getTFADeviceTrustEnabled() {
-		return getBoolean(TFA_TRUST_DEVICE_ENABLED, DEFAULT_TFA_TRUST_DEVICE_ENABLED);
-	}
-	
-	public int getTFADeviceTrustDuration() {
-		return getInteger(TFA_TRUST_DEVICE_DURATION, DEFAULT_TFA_TRUST_DEVICE_DURATION);
+	public int getOTPDeviceTrustDuration() {
+		return getInteger(OTP_TRUST_DEVICE_DURATION, 0);
 	}
 	
 	public String getSyncDevicesShellUri() {
-		return getString(SYNC_DEVICES_SHELL_URI, DEFAULT_SYNC_DEVICES_SHELL_URI);
+		return getString(SYNC_DEVICES_SHELL_URI, "sh://localhost");
 	}
 	
 	

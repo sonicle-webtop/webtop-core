@@ -38,6 +38,7 @@ import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.UserDAO;
 import java.io.UnsupportedEncodingException;

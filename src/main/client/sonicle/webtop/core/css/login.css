@@ -22,6 +22,11 @@ body {
 	margin-bottom: 0px;
 }
 
+.login .delivery {
+	height: 100px;
+	width: 125px;
+}
+
 /*
 .login .btn {
 	background: #eee;

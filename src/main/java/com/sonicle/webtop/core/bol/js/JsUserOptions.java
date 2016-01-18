@@ -73,6 +73,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String upiCustom2;
 	public String upiCustom3;
 	
+	public Boolean tfaEnabled;
 	public String tfaDelivery;
 	public String tfaEmailAddress;
 	public Boolean tfaDeviceIsTrusted;

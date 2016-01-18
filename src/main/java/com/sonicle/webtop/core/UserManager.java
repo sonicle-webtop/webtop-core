@@ -53,7 +53,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
@@ -149,18 +151,17 @@ public final class UserManager {
 				try {
 					OUser user = getUser(pid);
 					if(user == null) return null;
-					UserPersonalInfo info = userPersonalInfo(pid);
-					InternetAddress ia = new InternetAddress(info.getEmail(), user.getDisplayName());
+					ODomain domain = getDomain(pid.getDomainId());
+					if(domain == null) return null;
 					
+					UserPersonalInfo info = userPersonalInfo(pid);
+					InternetAddress ia = WT.buildInternetAddress(info.getEmail(), user.getDisplayName());
 					UserProfile.Data data = new UserProfile.Data(user, ia);
 					userToBagCache.put(pid, data);
 					return data;
 				} catch(WTException ex) {
 					logger.error("Unable to find user [{}]", pid);
 					throw ex;
-				} catch (UnsupportedEncodingException ex) {
-					logger.error("Unsupported encoding", ex);
-					throw new WTException(ex);
 				}
 			} else {
 				return userToBagCache.get(pid);

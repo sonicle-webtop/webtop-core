@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
+import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -73,7 +74,6 @@ import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
-import com.sonicle.webtop.core.userinfo.UserInfoProviderFactory;
 import com.sonicle.webtop.core.util.ZPushManager;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -86,6 +86,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import javax.mail.internet.InternetAddress;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -102,6 +104,11 @@ public class CoreManager extends BaseManager {
 		this.wta = wta;
 	}
 	
+	public CoreManager(RunContext context, UserProfile.Id targetProfileId, WebTopApp wta) {
+		super(context, targetProfileId);
+		this.wta = wta;
+	}
+	
 	@Override
 	protected Locale findLocale() {
 		try {
@@ -112,17 +119,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public ServiceManager getServiceManager() {
-		if(!getRunContext().getServiceId().equals(CoreManifest.ID)) {
-			throw new MethodAuthException("getServiceManager", getRunContext());
-		}
+		ensureService(CoreManifest.ID, "getServiceManager");
 		return wta.getServiceManager();
 	}
 	
-	public TFAManager getTFAManager() {
-		if(!getRunContext().getServiceId().equals(CoreManifest.ID)) {
-			throw new MethodAuthException("getTFAManager", getRunContext());
-		}
-		return wta.getTFAManager();
+	public OTPManager getOTPManager() {
+		ensureService(CoreManifest.ID, "getOTPManager");
+		return wta.getOTPManager();
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
@@ -275,205 +278,251 @@ public class CoreManager extends BaseManager {
 	
 	//TODO: remove user
 	
-	public List<ActivityGrid> listLiveActivities(Collection<String> domainIds) {
+	public List<ActivityGrid> listLiveActivities(Collection<String> domainIds) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			return dao.viewLiveByDomains(con, domainIds);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public List<OActivity> listLiveActivities(UserProfile.Id profileId) {
+	public List<OActivity> listLiveActivities(UserProfile.Id profileId) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			return dao.selectLiveByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public OActivity getActivity(int activityId) {
+	public OActivity getActivity(int activityId) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			return dao.select(con, activityId);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int insertActivity(OActivity item) {
+	public int addActivity(OActivity item) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			item.setActivityId(dao.getSequence(con).intValue());
 			return dao.insert(con, item);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int updateActivity(OActivity item) {
+	public int updateActivity(OActivity item) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			return dao.update(con, item);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int deleteActivity(int activityId) {
+	public int deleteActivity(int activityId) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
-			ActivityDAO dao = ActivityDAO.getInstance();
 			return dao.delete(con, activityId);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public List<CausalGrid> listLiveCausals(Collection<String> domainIds) {
+	public List<CausalGrid> listLiveCausals(Collection<String> domainIds) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			return dao.viewLiveByDomains(con, domainIds);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public List<OCausal> listLiveCausals(UserProfile.Id profileId, String customerId) {
+	public List<OCausal> listLiveCausals(UserProfile.Id profileId, String customerId) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			return dao.selectLiveByDomainUserCustomer(con, profileId.getDomainId(), profileId.getUserId(), customerId);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public OCausal getCausal(int causalId) {
+	public OCausal getCausal(int causalId) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			return dao.select(con, causalId);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int insertCausal(OCausal item) {
+	public int addCausal(OCausal item) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			item.setCausalId(dao.getSequence(con).intValue());
 			return dao.insert(con, item);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int updateCausal(OCausal item) {
+	public int updateCausal(OCausal item) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			return dao.update(con, item);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int deleteCausal(int causalId) {
+	public int deleteCausal(int causalId) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		
 		try {
+			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
-			CausalDAO dao = CausalDAO.getInstance();
 			return dao.delete(con, causalId);
 			
 		} catch(SQLException | DAOException ex) {
-			return -1;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public List<OCustomer> listCustomersByLike(String like) {
+	public List<OCustomer> listCustomersByLike(String like) throws WTException {
+		CustomerDAO dao = CustomerDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			CustomerDAO dao = CustomerDAO.getInstance();
 			return dao.viewByLike(con, like);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public OCustomer getCustomer(String customerId) {
+	public OCustomer getCustomer(String customerId) throws WTException {
+		CustomerDAO dao = CustomerDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			CustomerDAO dao = CustomerDAO.getInstance();
 			return dao.viewById(con, customerId);
 			
 		} catch(SQLException | DAOException ex) {
-			return null;
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public OTPManager.EmailConfig otpConfigureUsingEmail(String emailAddress) throws WTException {
+		//TODO: controllo accessi
+		ensureOwnerUser();
+		OTPManager otp = getOTPManager();
+		return otp.configureEmail(getTargetProfileId(), emailAddress);
+	}
+	
+	public OTPManager.GoogleAuthConfig otpConfigureUsingGoogleAuth(int qrCodeSize) throws WTException {
+		//TODO: controllo accessi
+		ensureOwnerUser();
+		OTPManager otp = getOTPManager();
+		return otp.configureGoogleAuth(getTargetProfileId(), qrCodeSize);
+	}
+	
+	public boolean otpActivate(OTPManager.Config config, int code) throws WTException {
+		//TODO: controllo accessi
+		ensureOwnerUser();
+		OTPManager otp = getOTPManager();
+		return otp.activate(getTargetProfileId(), config, code);
+	}
+	
+	public void otpDeactivate() throws WTException {
+		//TODO: controllo accessi
+		ensureOwnerUser();
+		OTPManager otp = getOTPManager();
+		otp.deactivateOTP(getTargetProfileId());
+	}
+	
+	public OTPManager.Config otpPrepareVerifyCode() throws WTException {
+		ensureService(CoreManifest.ID, "otpPrepareVerifyCode");
+		OTPManager otp = getOTPManager();
+		return otp.prepareCheckCode(getTargetProfileId());
+	}
+	
+	public boolean otpVerifyCode(OTPManager.Config params, int code) throws WTException {
+		ensureService(CoreManifest.ID, "otpVerifyCode");
+		OTPManager otp = getOTPManager();
+		return otp.checkCode(getTargetProfileId(), params, code);
 	}
 	
 	public List<IncomingShareRoot> listIncomingShareRoots(UserProfile.Id pid, String serviceId, String resource) throws WTException {

@@ -42,7 +42,6 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
-import com.sonicle.security.DomainAccount;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -55,7 +54,6 @@ import com.sonicle.webtop.core.bol.js.JsCausal;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
-import com.sonicle.webtop.core.bol.js.JsGridSync.JsGridSyncList;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
@@ -65,22 +63,24 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
-import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.WTException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -121,7 +121,7 @@ public class Service extends BaseService {
 		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
 		co.put("wtFeedbackEnabled", ss.getFeedbackEnabled());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
-		co.put("wtTfaEnabled", core.getTFAManager().isEnabled(profile.getDomainId()));
+		co.put("wtTfaEnabled", ss.getOTPEnabled());
 		
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
@@ -362,7 +362,7 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.insertActivity(pl.data);
+				core.addActivity(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
@@ -421,7 +421,7 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				core.insertCausal( pl.data);
+				core.addCausal( pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
@@ -454,8 +454,8 @@ public class Service extends BaseService {
 			new JsonResult("customers", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupCustomers", ex);
-			new JsonResult(false, "Unable to lookup customers").printTo(out);
+			logger.error("Error in LookupCustomers", ex);
+			new JsonResult(false, "Error in LookupCustomers").printTo(out);
 		}
 	}
 	
@@ -498,8 +498,8 @@ public class Service extends BaseService {
 			new JsonResult("customers", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupStatisticCustomers", ex);
-			new JsonResult(false, "Unable to lookup statistic customers").printTo(out);
+			logger.error("Error in LookupStatisticCustomers", ex);
+			new JsonResult(false, "Error in LookupStatisticCustomers").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -561,8 +561,8 @@ public class Service extends BaseService {
 			new JsonResult(data).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action GetOptionsServices", ex);
-			new JsonResult(false, "Unable to get option services").printTo(out);
+			logger.error("Error in GetOptionsServices", ex);
+			new JsonResult(false, "Error in GetOptionsServices").printTo(out);
 		}
 	}
 	
@@ -619,8 +619,8 @@ public class Service extends BaseService {
 			new JsonResult(tabs).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action GetWhatsnewTabs", ex);
-			new JsonResult(false, "Unable to get What's New info.").printTo(out);
+			logger.error("Error in GetWhatsnewTabs", ex);
+			new JsonResult(false, "Error in GetWhatsnewTabs").printTo(out);
 		}
 	}
 	
@@ -635,7 +635,7 @@ public class Service extends BaseService {
 			out.println(html);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action GetWhatsnewHTML", ex);
+			logger.error("Error in GetWhatsnewHTML", ex);
 		}
 	}
 	
@@ -650,7 +650,7 @@ public class Service extends BaseService {
 			}
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action TurnOffWhatsnew", ex);
+			logger.error("Error in TurnOffWhatsnew", ex);
 		} finally {
 			new JsonResult().printTo(out);
 		}
@@ -672,63 +672,97 @@ public class Service extends BaseService {
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing PosponeReminder", ex);
-			new JsonResult(false, "Error").printTo(out);
+			logger.error("Error int SnoozeReminder", ex);
+			new JsonResult(false, "Error int SnoozeReminder").printTo(out);
 		}
 	}
 	
 	public void processManageTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
-		UserProfile profile = getEnv().getProfile();
-		TFAManager tfam = core.getTFAManager();
+		UserProfile.Id pid = getEnv().getProfile().getId();
+		CoreManager corem = null;
 		
 		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals("generate")) {
-				String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-				if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_EMAIL)) {
-					String email = ServletUtils.getStringParameter(request, "emailAddress", true);
-					tfam.initTFAUsingEmail(wts, email);
+			String operation = ServletUtils.getStringParameter(request, "operation", true);
+			if(operation.equals("configure") || operation.equals("activate") || operation.equals("deactivate")) {
+				// These work only on a target user!
+				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+				
+				UserProfile.Id targetPid = new UserProfile.Id(profileId);
+				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(getRunContext(), targetPid);
+				
+				if(operation.equals("configure")) {
+					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
+					if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_EMAIL)) {
+						String address = ServletUtils.getStringParameter(request, "address", true);
+						if(WT.buildInternetAddress(address, null) == null) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
+						
+						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
+						logger.debug("{}", config.otp.getVerificationCode());
+						wts.getPropertyBag().set("OTP_SETUP", config);
+
+					} else if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_GOOGLEAUTH)) {
+						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
+						wts.getPropertyBag().set("OTP_SETUP", config);
+					}
+					new JsonResult(true).printTo(out);
 					
-				} else if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_GOOGLEAUTH)) {
-					tfam.initTFAUsingGoogleAuth(wts);
+				} else if(operation.equals("activate")) {
+					int code = ServletUtils.getIntParameter(request, "code", true);
+
+					OTPManager.Config config = (OTPManager.Config)wts.getPropertyBag().get("OTP_SETUP");
+					boolean enabled = corem.otpActivate(config, code);
+					if(!enabled) throw new WTException("Codice non valido"); //TODO: messaggio in lingua
+					wts.getPropertyBag().clear("OTP_SETUP");
+					
+					new JsonResult().printTo(out);
+
+				} else if(operation.equals("deactivate")) {
+					corem.otpDeactivate();
+					new JsonResult().printTo(out);
+
 				}
-				new JsonResult(true).printTo(out);
-				
-			} else if(crud.equals("activate")) {
-				String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-				Integer code = ServletUtils.getIntParameter(request, "code", true);
-				boolean enabled = tfam.activateTFA(wts, deliveryMode, code);
-				new JsonResult(enabled).printTo(out);
-				
-			} else if(crud.equals("untrustthis")) {
-				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(profile, request);
-				if(tdc == null) throw new Exception("This device is already untrusted");
-				tfam.removeTrustedDevice(profile, tdc.deviceId);
-				tfam.clearTrustedDeviceCookie(profile, response);
+			} else if(operation.equals("untrustthis")) {
+				// This works only on current session user!
+				OTPManager otpm = core.getOTPManager();
+				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(pid, request);
+				if(tdc != null) {
+					otpm.removeTrustedDevice(pid, tdc.deviceId);
+					otpm.clearTrustedDeviceCookie(pid, response);
+				}
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals("untrustothers")) {
-				TrustedDeviceCookie thistdc = tfam.readTrustedDeviceCookie(profile, request);
-				ArrayList<JsTrustedDevice> tds = tfam.getTrustedDevices(profile);
+			} else if(operation.equals("untrustothers")) {
+				// This works only on current session user!
+				OTPManager otpm = core.getOTPManager();
+				TrustedDeviceCookie thistdc = otpm.readTrustedDeviceCookie(pid, request);
+				List<JsTrustedDevice> tds = otpm.listTrustedDevices(pid);
 				for(JsTrustedDevice td: tds) {
 					if((thistdc != null) && (td.deviceId.equals(thistdc.deviceId))) continue;
-					tfam.removeTrustedDevice(profile, td.deviceId);
+					otpm.removeTrustedDevice(pid, td.deviceId);
 				}
 				new JsonResult().printTo(out);
 			}
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action ManageTFA", ex);
-			new JsonResult(false, "Error managing TFA").printTo(out);
+			logger.error("Error in ManageOTP", ex);
+			new JsonResult(false, "Error in ManageOTP").printTo(out);
+		}
+	}
+	
+	public void processGetTFAGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
+		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		
+		try {
+			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getPropertyBag().get("OTP_SETUP");
+			ServletUtils.writeContent(response, config.qrcode, config.qrcode.length, "image/png");
+			
+		} catch (Exception ex) {
+			logger.error("Error in GetOTPGoogleAuthQRCode", ex);
 		}
 	}
 	
 	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
-		UserProfile profile = getEnv().getProfile();
-		
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);

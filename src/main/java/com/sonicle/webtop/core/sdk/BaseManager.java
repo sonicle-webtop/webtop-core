@@ -113,4 +113,19 @@ public abstract class BaseManager {
 	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
 		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
 	}
+	
+	/**
+	 * Ensures that the call is coming from to a specific service.
+	 * The running context will be evaluated.
+	 * @param serviceId The service ID allowed.
+	 * @param methodName The method name for debugging purposes.
+	 */
+	protected void ensureService(String serviceId, String methodName) {
+		if(!getRunContext().getServiceId().equals(serviceId)) throw new MethodAuthException(methodName, getRunContext());
+	}
+	
+	protected void ensureOwnerUser() {
+		if(WT.isWebTopAdmin(getRunProfileId())) return;
+		if(!getRunProfileId().equals(getTargetProfileId())) throw new AuthException("");
+	}
 }

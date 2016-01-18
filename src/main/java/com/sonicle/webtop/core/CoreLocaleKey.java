@@ -38,7 +38,6 @@ package com.sonicle.webtop.core;
  * @author malbinola
  */
 public class CoreLocaleKey {
-	
 	public static final String LOGIN_TITLE = "login.title";
 	public static final String LOGIN_USERNAME_PLACEHOLDER = "login.username.placeholder";
 	public static final String LOGIN_PASSWORD_PLACEHOLDER = "login.password.placeholder";
@@ -48,6 +47,13 @@ public class CoreLocaleKey {
 	public static final String LOGIN_MAINTENANCE = "login.maintenance";
 	public static final String LOGIN_ERROR_MAINTENANCE = "login.error.maintenance";
 	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
+	public static final String OTP_TITLE = "otp.title";
+	public static final String OTP_HELPTITLE = "otp.helptitle";
+	public static final String OTP_DELIVERY_INFO = "otp.delivery.{0}.info";
+	public static final String OTP_CODE_PLACEHOLDER = "otp.code.placeholder";
+	public static final String OTP_SUBMIT_LABEL = "otp.submit.label";
+	public static final String OTP_TRUST_LABEL = "otp.trust.label";
+	public static final String OTP_ERROR_FAILURE = "otp.error.failure";
 	public static final String SERVICE_NAME = "service.name";
 	public static final String SERVICE_DESCRIPTION = "service.description";
 	public static final String LOCALE_X = "locale.{0}";

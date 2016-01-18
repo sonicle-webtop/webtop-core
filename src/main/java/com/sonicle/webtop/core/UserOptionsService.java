@@ -123,20 +123,22 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.upiCustom3 = upi.getCustom3();
 				
 				// TFA
-				TFAManager tfam = core.getTFAManager();
+				OTPManager otpm = core.getOTPManager();
+				jso.tfaEnabled = otpm.isEnabled(getTargetProfileId());
+				jso.tfaDelivery = otpm.getDeliveryMode(getTargetProfileId());
+				jso.tfaEmailAddress = otpm.getEmailAddress(getTargetProfileId());
+				
 				boolean isTrusted = false;
 				String trustedOn = null;
-				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(getTargetDomainId(), getTargetUserId(), user.getSecret(), request);
-				if(tfam.isThisDeviceTrusted(getTargetDomainId(), getTargetUserId(), tdc)) {
-					JsTrustedDevice td = tfam.getTrustedDevice(getTargetDomainId(), getTargetUserId(), tdc.deviceId);
+				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(getTargetProfileId(), request);
+				if(otpm.isThisDeviceTrusted(getTargetProfileId(), tdc)) {
+					JsTrustedDevice td = otpm.getTrustedDevice(getTargetProfileId(), tdc.deviceId);
 					if(td != null) {
 						isTrusted = true;
 						trustedOn = td.getISOTimestamp();
 					}
 				}
 				
-				jso.tfaDelivery = us.getTFADelivery();
-				jso.tfaEmailAddress = us.getTFAEmailAddress();
 				jso.tfaDeviceIsTrusted = isTrusted;
 				jso.tfaDeviceTrustedOn = trustedOn;
 				
@@ -218,12 +220,12 @@ public class UserOptionsService extends BaseUserOptionsService {
 		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
-			TFAManager tfam = core.getTFAManager();
-			tfam.deactivateTFA(getTargetProfileId());
+			OTPManager otpm = core.getOTPManager();
+			otpm.deactivateOTP(getTargetProfileId());
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action DeactivateTFA", ex);
+			logger.error("Error executing action DeactivateOTP", ex);
 			new JsonResult(false).printTo(out);
 		}
 	}
