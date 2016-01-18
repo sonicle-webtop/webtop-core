@@ -68,10 +68,10 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('upiCustom2', 'string', true),
 		WTF.field('upiCustom3', 'string', true),
 		
-		WTF.roField('tfaDelivery', 'string'),
-		WTF.roField('tfaEmailAddress', 'string'),
-		WTF.roField('tfaDeviceIsTrusted', 'boolean'),
-		WTF.roField('tfaDeviceTrustedOn', 'string'),
+		WTF.roField('otpDelivery', 'string'),
+		WTF.roField('otpEmailAddress', 'string'),
+		WTF.roField('otpDeviceIsTrusted', 'boolean'),
+		WTF.roField('otpDeviceTrustedOn', 'string'),
 		
 		WTF.roField('canManageUpi', 'boolean', true),
 		WTF.roField('canSyncDevices', 'boolean', true)

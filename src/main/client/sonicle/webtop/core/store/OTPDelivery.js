@@ -31,13 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.TFADelivery', {
-	alternateClassName: 'WT.store.TFADelivery',
+Ext.define('Sonicle.webtop.core.store.OTPDelivery', {
+	alternateClassName: 'WT.store.OTPDelivery',
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		['email', WT.res('store.tfadelivery.email')],
-		['googleauth', WT.res('store.tfadelivery.googleauth')]
+		['email', WT.res('store.otpdelivery.email')],
+		['googleauth', WT.res('store.otpdelivery.googleauth')]
 	]
 });

@@ -131,28 +131,28 @@ public class CoreUserSettings extends BaseUserSettings {
 	 * [boolean]
 	 * Specifies if OTP is active.
 	 */
-	public static final String TFA_ENABLED = "tfa.enabled";
+	public static final String OTP_ENABLED = "otp.enabled";
 	
 	/**
 	 * [string]
 	 * Specifies delivery method. One of: email, googleauth.
 	 */
-	public static final String TFA_DELIVERY = "tfa.delivery";
-	public static final String TFA_DELIVERY_EMAIL = "email";
-	public static final String TFA_DELIVERY_GOOGLEAUTH = "googleauth";
+	public static final String OTP_DELIVERY = "otp.delivery";
+	public static final String OTP_DELIVERY_EMAIL = "email";
+	public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
 	
 	/**
 	 * [string]
 	 * Specifies generated secret string within googleauth delivery.
 	 */
-	public static final String TFA_SECRET = "tfa.secret";
+	public static final String OTP_SECRET = "otp.secret";
 	
 	/**
 	 * [string]
 	 * Specifies choosen email address within email delivery.
 	 */
-	public static final String TFA_EMAILADDRESS = "tfa.emailaddress";
-	public static final String TFA_TRUSTED_DEVICE = "tfa.trusteddevice";
+	public static final String OTP_EMAILADDRESS = "otp.emailaddress";
+	public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
 	
 	/**
 	 * [boolean]
@@ -259,35 +259,35 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean getOTPEnabled() {
-		return getBoolean(TFA_ENABLED, false);
+		return getBoolean(OTP_ENABLED, false);
 	}
 	
 	public boolean setOTPEnabled(boolean value) {
-		return setBoolean(CoreUserSettings.TFA_ENABLED, value);
+		return setBoolean(CoreUserSettings.OTP_ENABLED, value);
 	}
 	
 	public String getOTPDelivery() {
-		return getString(CoreUserSettings.TFA_DELIVERY, null);
+		return getString(CoreUserSettings.OTP_DELIVERY, null);
 	}
 	
 	public boolean setOTPDelivery(String value) {
-		return setString(CoreUserSettings.TFA_DELIVERY, value);
+		return setString(CoreUserSettings.OTP_DELIVERY, value);
 	}
 	
 	public String getOTPSecret() {
-		return getString(CoreUserSettings.TFA_SECRET, null);
+		return getString(CoreUserSettings.OTP_SECRET, null);
 	}
 	
 	public boolean setOTPSecret(String value) {
-		return setString(CoreUserSettings.TFA_SECRET, value);
+		return setString(CoreUserSettings.OTP_SECRET, value);
 	}
 	
 	public String getOTPEmailAddress() {
-		return getString(CoreUserSettings.TFA_EMAILADDRESS, null);
+		return getString(CoreUserSettings.OTP_EMAILADDRESS, null);
 	}
 	
 	public boolean setOTPEmailAddress(String value) {
-		return setString(CoreUserSettings.TFA_EMAILADDRESS, value);
+		return setString(CoreUserSettings.OTP_EMAILADDRESS, value);
 	}
 	
 	public boolean getSyncDevicesEnabled() {

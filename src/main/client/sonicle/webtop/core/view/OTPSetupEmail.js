@@ -31,28 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.TFASetupGoogleAuth', {
+Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 	extend: 'WT.sdk.WizardView',
-	requires: [
-		'Sonicle.form.field.Image',
-		'Sonicle.form.field.DisplayImage',
-		'Sonicle.form.field.Icon'
-	],
 	
 	confirmMsg: WT.res('wizard.confirm.close'),
 	dockableConfig: {
-		title: '{tfa.setup.googleauth.tit}',
+		title: '{otp.setup.email.tit}',
 		width: 450,
-		height: 400,
+		height: 250,
 		modal: true
 	},
 	useTrail: true,
-	pages: ['step1','step2','step3','step4'],
+	pages: ['step1','step2','end'],
 	
 	viewModel: {
 		data: {
 			profileId: null,
-			image: null,
+			address: null,
 			code: null
 		}
 	},
@@ -68,52 +63,41 @@ Ext.define('Sonicle.webtop.core.view.TFASetupGoogleAuth', {
 	},
 	
 	createPages: function() {
+		var me = this;
+		
 		return [{
 			itemId: 'step1',
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step1.tit'),
+				html: WT.res('otp.setup.email.step1.tit'),
 				cls: 'x-window-header-title-default'
 			}, {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step1.txt')
+				html: WT.res('otp.setup.email.step1.txt')
+			}, {
+				xtype: 'sospacer'
+			}, {
+				xtype: 'textfield',
+				bind: '{address}',
+				allowBlank: false,
+				width: 300,
+				fieldLabel: WT.res('otp.setup.email.fld-address.lbl')
 			}]
 		}, {
 			itemId: 'step2',
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step2.tit'),
+				html: WT.res('otp.setup.email.step2.tit'),
 				cls: 'x-window-header-title-default'
 			}, {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step2.txt')
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'sodisplayimagefield',
-				bind: '{image}',
-				imageUrl: WTF.processBinUrl(WT.ID, 'GetTFAGoogleAuthQRCode'),
-				imageWidth: 200,
-				imageHeight: 200
-			}]
-		}, {
-			itemId: 'step3',
-			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step3.tit'),
-				cls: 'x-window-header-title-default'
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step3.txt')
+				html: WT.res('otp.setup.email.step2.txt')
 			}, {
 				xtype: 'sospacer'
 			}, {
@@ -121,20 +105,20 @@ Ext.define('Sonicle.webtop.core.view.TFASetupGoogleAuth', {
 				bind: '{code}',
 				allowBlank: false,
 				width: 200,
-				fieldLabel: WT.res('tfa.setup.googleauth.fld-code.lbl')
+				fieldLabel: WT.res('otp.setup.email.fld-code.lbl')
 			}]
 		}, {
-			itemId: 'step4',
+			itemId: 'end',
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step4.tit'),
+				html: WT.res('otp.setup.email.step3.tit'),
 				cls: 'x-window-header-title-default'
 			}, {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'label',
-				html: WT.res('tfa.setup.googleauth.step4.txt')
+				html: WT.res('otp.setup.email.step3.txt')
 			}]
 		}];
 	},
@@ -146,23 +130,22 @@ Ext.define('Sonicle.webtop.core.view.TFASetupGoogleAuth', {
 				vm = me.getVM();
 		
 		if(pp === 'step1') {
-			WT.ajaxReq(WT.ID, 'ManageTFA', {
+			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'configure',
-					delivery: 'googleauth',
-					profileId: vm.get('profileId')
+					delivery: 'email',
+					profileId: vm.get('profileId'),
+					address: vm.get('address')
 				},
 				callback: function(success, json) {
-					if(success) {
-						me.onNavigate(np);
-						vm.set('image', 1);
-					} else WT.error(json.message);
+					if(success) me.onNavigate(np);
+					else WT.error(json.message);
 				}
 			});
 			return false;
 			
-		} else if(pp === 'step3') {
-			WT.ajaxReq(WT.ID, 'ManageTFA', {
+		} else if(pp === 'step2') {
+			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'activate',
 					profileId: vm.get('profileId'),

@@ -35,15 +35,15 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
 	alternateClassName: 'WT.view.UserOptionsC',
 	extend: 'WT.sdk.UserOptionsController',
 	
-	onTFAEnableClick: function() {
+	onOTPEnableClick: function() {
 		alert('TODO');
 	},
 	
-	onTFADisableClick: function() {
+	onOTPDisableClick: function() {
 		var me = this;
 		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
 			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'DisableTFA', {
+				WT.ajaxReq(WT.ID, 'DisableOTP', {
 					params: {options: true},
 					callback: function(success) {
 						if(success) me.getView().loadForm();
@@ -57,7 +57,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
 		var me = this;
 		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
 			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
+				WT.ajaxReq(WT.ID, 'ManageOTP', {
 					params: {crud: 'untrustthis'},
 					callback: function(success) {
 						if(success) me.getView().loadForm();
@@ -70,7 +70,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
 	onUntrustOtherClick: function() {
 		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
 			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
+				WT.ajaxReq(WT.ID, 'ManageOTP', {
 					params: {crud: 'untrustothers'}
 				});
 			}

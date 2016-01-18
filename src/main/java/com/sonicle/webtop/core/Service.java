@@ -677,7 +677,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processManageTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processManageOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		UserProfile.Id pid = getEnv().getProfile().getId();
 		CoreManager corem = null;
@@ -693,7 +693,7 @@ public class Service extends BaseService {
 				
 				if(operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-					if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_EMAIL)) {
+					if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_EMAIL)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
 						if(WT.buildInternetAddress(address, null) == null) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
 						
@@ -701,7 +701,7 @@ public class Service extends BaseService {
 						logger.debug("{}", config.otp.getVerificationCode());
 						wts.getPropertyBag().set("OTP_SETUP", config);
 
-					} else if(deliveryMode.equals(CoreUserSettings.TFA_DELIVERY_GOOGLEAUTH)) {
+					} else if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
 						wts.getPropertyBag().set("OTP_SETUP", config);
 					}
@@ -750,7 +750,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processGetTFAGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
+	public void processGetOTPGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
 		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		
 		try {
