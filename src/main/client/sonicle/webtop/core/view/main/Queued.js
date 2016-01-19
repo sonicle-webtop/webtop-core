@@ -70,6 +70,7 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 			region: 'center',
 			xtype: 'container',
 			layout: 'border',
+			cls: 'wt-center-queued',
 			items: [{
 				region: 'center',
 				xtype: 'container',

@@ -94,6 +94,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 			region: 'center',
 			xtype: 'container',
 			layout: 'border',
+			cls: 'wt-center-stacked',
 			items: [{
 				region: 'center',
 				xtype: 'container',

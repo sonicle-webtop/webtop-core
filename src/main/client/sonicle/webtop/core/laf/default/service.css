@@ -50,6 +50,8 @@
 .wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
 .wt-icon-search-xs { background-image: url('search_16.png') !important; }
+.wt-icon-search-adv-xs { background-image: url('search-adv_16.gif') !important; }
+.wt-icon-search-multi-xs { background-image: url('search-multi_16.gif') !important; }
 .wt-icon-filter-xs { background-image: url('filter_16.png') !important; }
 .wt-icon-new-filter-xs { background-image: url('filter-add_16.png') !important; }
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }

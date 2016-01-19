@@ -1,11 +1,24 @@
 
 .wt-header {
-	//background-color: #105F99;
-	background-color: #2A6FA0
+/*	background-color: #dfeaf2;*/
 }
 .wt-launcher {
-	background-color: #3892d3;
+	/*background-color: #dfeaf2;*/
 }
+
+.wt-center-default {
+	border-top: 1px solid lightgray;
+	border-left: 1px solid lightgray;
+}
+
+.wt-center-stacked {
+	border-top: 1px solid lightgray;
+}
+
+.wt-center-queued {
+	border-top: 1px solid lightgray;
+}
+
 
 /*
  * Background: 1:light, 2:medium-dark, 3:dark/alternative
