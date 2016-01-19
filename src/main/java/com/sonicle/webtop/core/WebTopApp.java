@@ -124,7 +124,7 @@ public class WebTopApp {
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
-	private TFAManager tfam = null;
+	private OTPManager otpm = null;
 	private Scheduler scheduler = null;
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
@@ -169,8 +169,8 @@ public class WebTopApp {
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
-		// TFA Manager
-		tfam = TFAManager.initialize(this);
+		// OTP Manager
+		otpm = OTPManager.initialize(this);
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
@@ -209,9 +209,9 @@ public class WebTopApp {
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
 		}
-		// TFA Manager
-		tfam.cleanup();
-		tfam = null;
+		// OTP Manager
+		otpm.cleanup();
+		otpm = null;
 		// Settings Manager
 		setm.cleanup();
 		setm = null;
@@ -372,11 +372,11 @@ public class WebTopApp {
 	}
 	
 	/**
-	 * Returns the TFAManager.
-	 * @return TFAManager instance.
+	 * Returns the OTPManager.
+	 * @return OTPManager instance.
 	 */
-	public TFAManager getTFAManager() {
-		return tfam;
+	public OTPManager getOTPManager() {
+		return otpm;
 	}
 	
 	/**

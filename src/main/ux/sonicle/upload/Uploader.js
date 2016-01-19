@@ -263,6 +263,14 @@ Ext.define('Sonicle.upload.Uploader', {
 		this.updateProgress();
 	},
 	
+	enable: function() {
+		console.log('TODO: Uploader.enable()');
+	},
+	
+	disable: function() {
+		console.log('TODO: Uploader.disable()');
+	},
+	
 	/**
 	 * @private
 	 */

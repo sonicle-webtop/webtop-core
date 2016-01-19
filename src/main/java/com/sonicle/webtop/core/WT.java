@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -57,6 +58,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -92,6 +95,20 @@ public class WT {
 	
 	public static ServiceManifest getManifest(String serviceId) {
 		return getWTA().getServiceManager().getManifest(serviceId);
+	}
+	
+	public static InternetAddress buildInternetAddress(String local, String domain, String personal) {
+		return buildInternetAddress(local + "@" + domain, personal);
+	}
+	
+	public static InternetAddress buildInternetAddress(String address, String personal) {
+		try {
+			InternetAddress ia = new InternetAddress(address);
+			if(!StringUtils.isBlank(personal)) ia.setPersonal(personal, WT.getSystemCharset().name());
+			return ia;
+		} catch(AddressException | UnsupportedEncodingException ex) {
+			return null;
+		}
 	}
 	
 	public static ServiceManifest findManifest(Class clazz) {
@@ -130,6 +147,10 @@ public class WT {
 	
 	public static CoreManager getCoreManager(RunContext context) {
 		return new CoreManager(context, getWTA());
+	}
+	
+	public static CoreManager getCoreManager(RunContext context, UserProfile.Id targetProfileId) {
+		return new CoreManager(context, targetProfileId, getWTA());
 	}
 	
 	public static DataSource getCoreDataSource() throws SQLException {

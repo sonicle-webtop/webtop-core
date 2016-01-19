@@ -535,6 +535,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 				cxm = me.contextMenu;
 		if(cxm) {
 			me.contextMenu = null;
+			cxm.tag = {};
 			cxm.hide();
 		}
 	},

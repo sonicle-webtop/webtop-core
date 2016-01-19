@@ -120,14 +120,6 @@ public class ServletHelper {
 		return request.getServletPath().equals("/public");
 	}
 	
-	public static String getUserAgent(HttpServletRequest request) {
-		return request.getHeader("user-agent");
-	}
-	
-	public static String getReferer(HttpServletRequest request) {
-		return request.getHeader("referer");
-	}
-	
 	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
 		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
 		String title = wta.getCustomProperty("webtop.title");
@@ -138,7 +130,7 @@ public class ServletHelper {
 		tplMap.put("version", manifest.getVersion());
 	}
 	
-	public static void fillSystemInfoVars(Map tplMap, Locale locale, WebTopApp wta) {
+	public static void fillSystemVars(Map tplMap, Locale locale, WebTopApp wta) {
 		tplMap.put("systemInfo", wta.getSystemInfo());
 		tplMap.put("serverInfo", wta.getServerInfo());
 		tplMap.put("jdk", System.getProperty("java.version"));

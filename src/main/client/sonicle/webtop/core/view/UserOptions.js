@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	extend: 'WT.sdk.UserOptionsView',
 	requires: [
 		'WT.model.Simple',
-		'WT.store.TFADelivery',
+		'WT.store.OTPDelivery',
 		'WT.store.Timezone',
 		'WT.store.StartDay',
 		'WT.store.DateFmtShort',
@@ -50,26 +50,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	viewModel: {
 		formulas: {
-			isTFAActive: WTF.isEmptyFormula('record', 'tfaDelivery', true),
-			activeDelivery: {
-				bind: {bindTo: '{record.tfaDelivery}'},
-				get: function(val) {
-					return WTU.deflt(val, 'none');
-				}
-			},
-			activeThisDevice: {
-				bind: {bindTo: '{record.tfaDeviceIsTrusted}'},
-				get: function(val) {
-					return WTU.iif(val, 'trusted', 'nottrusted');
-				}
-			},
-			trustedTitle: {
-				bind: {bindTo: '{record.tfaDeviceTrustedOn}'},
-				get: function(val) {
-					var tit = WT.res('opts.tfa.thisdevice.trusted.tit');
-					return Ext.String.format(tit, val);
-				}
-			},
+			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
 			upiFieldEditable: function(get) {
 				return WT.getOption('wtUpiProviderWritable') && get('record.canManageUpi');
 			}
@@ -83,7 +64,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		vm = me.getViewModel();
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			areMine: function() {
-				return WT.getOption('profile') === me.profileId;
+				return WT.getOption('profileId') === me.profileId;
 			}
 		}));
 		
@@ -575,7 +556,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			}]
 		}, {
 			xtype: 'wtopttabsection',
-			title: WT.res('opts.tfa.tit'),
+			title: WT.res('opts.otp.tit'),
 			disabled: WT.getOption('wtTfaEnabled'),
 			items: [{
 				xtype: 'container',
@@ -583,11 +564,11 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				items: [{
 					xtype : 'fieldcontainer',
 					layout: 'hbox',
-					fieldLabel: WT.res('opts.tfa.fld-delivery.lbl'),
+					fieldLabel: WT.res('opts.otp.fld-delivery.lbl'),
 					items: [
 					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.tfaDelivery}',
-						store: Ext.create('WT.store.TFADelivery', {
+						bind: '{record.otpDelivery}',
+						store: Ext.create('WT.store.OTPDelivery', {
 							autoLoad: true
 						}),
 						readOnly: true,
@@ -599,27 +580,33 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}, {
 						xtype: 'button',
 						bind: {
-							hidden: '{isTFAActive}'
+							hidden: '{record.otpEnabled}'
 						},
 						text: WT.res('act-activate.lbl'),
 						menu: [{
 							itemId: 'email',
-							text: WT.res('store.tfadelivery.email'),
-							handler: me.onTFAActivateMenuClick,
+							text: WT.res('store.otpdelivery.email'),
+							handler: function() {
+								me.activateOTP('email');
+							},
 							scope: me
 						}, {
 							itemId: 'googleauth',
-							text: WT.res('store.tfadelivery.googleauth'),
-							handler: me.onTFAActivateMenuClick,
+							text: WT.res('store.otpdelivery.googleauth'),
+							handler: function() {
+								me.activateOTP('googleauth');
+							},
 							scope: me
 						}]
 					}, {
 						xtype: 'button',
 						bind: {
-							hidden: '{!isTFAActive}'
+							hidden: '{!record.otpEnabled}'
 						},
 						text: WT.res('act-deactivate.lbl'),
-						handler: me.onTFADeactivateMenuClick,
+						handler: function() {
+							me.deactivateOTP();
+						},
 						scope: me
 					}]
 				}]
@@ -627,9 +614,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'container',
 				reference: 'delivery',
 				layout: 'card',
-				bind: {
-					activeItem: '{activeDelivery}'
-				},
 				items: [{
 					xtype: 'container',
 					itemId: 'none'
@@ -639,7 +623,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					items: [{
 						xtype: 'component',
 						padding: '0 5 0 5',
-						html: WT.res('opts.tfa.googleauth.html')
+						html: WT.res('opts.otp.googleauth.html')
 					}]
 				}, {
 					xtype: 'container',
@@ -647,14 +631,14 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					items: [{
 						xtype: 'component',
 						padding: '0 5 0 5',
-						html: WT.res('opts.tfa.email.html')
+						html: WT.res('opts.otp.email.html')
 					}, {
 						xtype: 'container',
 						layout: 'form',
 						items: [{
 							xtype: 'displayfield',
-							bind: '{record.tfaEmailAddress}',
-							fieldLabel: WT.res('tfa.setup.email.fld-emailaddress.lbl')
+							bind: '{record.otpEmailAddress}',
+							fieldLabel: WT.res('otp.setup.email.fld-emailaddress.lbl')
 						}]
 					}]
 				}]
@@ -662,9 +646,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'container',
 				reference: 'thisdevice',
 				layout: 'card',
-				bind: {
-					activeItem: '{activeThisDevice}'
-				},
 				items: [{
 					xtype: 'container',
 					itemId: 'trusted',
@@ -672,19 +653,20 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					items: [{
 						xtype: 'fieldset',
 						layout: 'form',
-						bind: {
-							title: '{trustedTitle}'
-						},
 						items: [{
 							xtype: 'component',
-							html: WT.res('opts.tfa.thisdevice.trusted.html')
+							html: WT.res('opts.otp.thisdevice.trusted.html')
 						}, {
 							xtype: 'sospacer'
 						}, {
 							xtype: 'button',
-							text: WT.res('opts.tfa.btn-untrustthis.lbl'),
-							handler: me.onUntrustThisClick,
-							scope: me
+							bind: {
+								disabled: '{!areMine}'
+							},
+							text: WT.res('opts.otp.btn-untrustthis.lbl'),
+							handler: function() {
+								me.untrustThisOTP();
+							}
 						}]
 					}]
 				}, {
@@ -693,10 +675,10 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					layout: 'form',
 					items: [{
 						xtype: 'fieldset',
-						title: WT.res('opts.tfa.thisdevice.nottrusted.tit'),
+						title: WT.res('opts.otp.thisdevice.nottrusted.tit'),
 						items: [{
 							xtype: 'component',
-							html: WT.res('opts.tfa.thisdevice.nottrusted.html')
+							html: WT.res('opts.otp.thisdevice.nottrusted.html')
 						}]
 					}]
 				}]
@@ -705,17 +687,21 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				layout: 'form',
 				items: [{
 					xtype: 'fieldset',
-					title: WT.res('opts.tfa.otherdevices.tit'),
+					title: WT.res('opts.otp.otherdevices.tit'),
 					items: [{
 						xtype: 'component',
-						html: WT.res('opts.tfa.otherdevices.html')
+						html: WT.res('opts.otp.otherdevices.html')
 					}, {
 						xtype: 'sospacer'
 					}, {
 						xtype: 'button',
-						text: WT.res('opts.tfa.btn-untrustother.lbl'),
-						handler: me.onUntrustOtherClick,
-						scope: me
+						bind: {
+							disabled: '{!areMine}'
+						},
+						text: WT.res('opts.otp.btn-untrustother.lbl'),
+						handler: function() {
+							me.untrustOtherOTP();
+						}
 					}]
 				}]
 			}]
@@ -808,6 +794,79 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}
 			}
 		});
+		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
+		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);
+	},
+	
+	onOTPDeliveryChanged: function(val) {
+		var tab = this.lref('delivery');
+		tab.getLayout().setActiveItem(WTU.deflt(val, 'none'));
+	},
+	
+	onOTPDeviceIsTrusted: function(val) {
+		var me = this,
+				tab = me.lref('thisdevice'), tit;
+		tab.getLayout().setActiveItem(WTU.iif(val, 'trusted', 'nottrusted'));
+		if(val === true) {
+			tit = Ext.String.format(WT.res('opts.otp.thisdevice.trusted.tit'), me.getModel().get('otpDeviceTrustedOn'));
+			tab.getComponent('trusted').getComponent(0).setTitle(tit);
+		}
+	},
+	
+	activateOTP: function(delivery) {
+		var me = this,
+				view = (delivery === 'email') ? 'view.OTPSetupEmail' : 'view.OTPSetupGoogleAuth',
+				vw = WT.createView(me.ID, view, {
+					viewCfg: {
+						profileId: me.profileId
+					}
+				});
+		
+		vw.getView().on('wizardcompleted', function(s) {
+			me.loadModel();
+		});
+		vw.show();
+	},
+	
+	deactivateOTP: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageOTP', {
+					params: {
+						operation: 'deactivate',
+						profileId: me.profileId
+					},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	untrustThisOTP: function() {
+		var me = this;
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageOTP', {
+					params: {operation: 'untrustthis'},
+					callback: function(success) {
+						if(success) me.loadModel();
+					}
+				});
+			}
+		});
+	},
+	
+	untrustOtherOTP: function() {
+		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
+			if(bid === 'yes') {
+				WT.ajaxReq(WT.ID, 'ManageOTP', {
+					params: {operation: 'untrustothers'}
+				});
+			}
+		});
 	},
 	
 	refreshSyncDevices: function() {
@@ -845,47 +904,5 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				sto.remove(recs[0]);
 			}
 		}, me);
-	},
-	
-	onTFAActivateMenuClick: function(s) {
-		alert('TODO');
-	},
-	
-	onTFADeactivateMenuClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'DeactivateTFA', {
-					params: {options: true},
-					callback: function(success) {
-						if(success) me.loadModel();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustThisClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustthis'},
-					callback: function(success) {
-						if(success) me.loadModel();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustOtherClick: function() {
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageTFA', {
-					params: {crud: 'untrustothers'}
-				});
-			}
-		});
 	}
 });

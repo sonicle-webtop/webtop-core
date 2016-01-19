@@ -66,7 +66,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class AuthManager {
-	private static final Logger logger = WT.getLogger(TFAManager.class);
+	private static final Logger logger = WT.getLogger(OTPManager.class);
 	private static boolean initialized = false;
 	
 	/**

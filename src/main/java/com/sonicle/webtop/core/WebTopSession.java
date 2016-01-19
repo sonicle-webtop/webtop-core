@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -63,16 +64,19 @@ import org.slf4j.Logger;
 public class WebTopSession {
 	public static final String ATTRIBUTE = "webtopsession";
 	public static final String PROPERTY_SECURITY_TOKEN = "CSRFTOKEN";
+	public static final String PROPERTY_OTP_VERIFIED = "OTPVERIFIED";
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	
 	private final HttpSession httpSession;
 	private final WebTopApp wta;
-	private boolean initialized = false;
-	private final HashMap<String, Object> properties = new HashMap<>();
-	private UserProfile profile = null;
+	private final PropertyBag props = new PropertyBag();
 	private String refererURI = null;
 	private Locale userAgentLocale = null;
 	private ReadableUserAgent userAgentInfo = null;
+	private boolean initialized = false;
+	private boolean profileInitialized = false;
+	private boolean environmentInitialized = false;
+	private UserProfile profile = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
@@ -125,6 +129,14 @@ public class WebTopSession {
 	}
 	
 	/**
+	 * Gets the property bag container.
+	 * @return PropertyBag object.
+	 */
+	public PropertyBag getPropertyBag() {
+		return props;
+	}
+	
+	/**
 	 * Returns the session ID.
 	 * @return HttpSession unique identifier.
 	 */
@@ -167,41 +179,6 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Sets a property into session hashmap.
-	 * @param key The property key.
-	 * @param value The property value.
-	 */
-	public void setProperty(String key, Object value) {
-		properties.put(key, value);
-	}
-	
-	/**
-	 * Gets a property value from session hashmap.
-	 * @param key The property key.
-	 * @return Requested property value.
-	 */
-	public Object getProperty(String key) {
-		return properties.get(key);
-	}
-	
-	/**
-	 * Checks if session contains specified property.
-	 * @param key The property key.
-	 * @return True if property is found, false otherwise.
-	 */
-	public boolean hasProperty(String key) {
-		return properties.containsKey(key);
-	}
-	
-	/**
-	 * Clears/removes specified property.
-	 * @param key The property key.
-	 */
-	public void clearProperty(String key) {
-		properties.remove(key);
-	}
-	
-	/**
 	 * Returns the value of SECURITY_TOKEN property.
 	 * A token is generated for each session and this is used for securing 
 	 * each service requests, in order to not exposte CSRF vulnerability.
@@ -209,6 +186,61 @@ public class WebTopSession {
 	 */
 	public String getSecurityToken() {
 		return wta.getSessionManager().getSecurityToken(this);
+	}
+	
+	public synchronized void initProfile(HttpServletRequest request) throws Exception {
+		if(!profileInitialized) privateInitProfile(request);
+	}
+	
+	public synchronized void initEnvironment() throws Exception {
+		if(!environmentInitialized) privateInitEnvironment();
+	}
+	
+	private void privateInitProfile(HttpServletRequest request) throws Exception {
+		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
+		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		
+		refererURI = ServletUtils.getReferer(request);
+		userAgentLocale = ServletHelper.homogenizeLocale(request);
+		userAgentInfo = wta.getUserAgentInfo(ServletUtils.getUserAgent(request));
+		
+		// Defines useful instances (NB: keep code assignment order!!!)
+		profile = new UserProfile(core, principal);
+		
+		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
+		if(!otpEnabled) getPropertyBag().set(PROPERTY_OTP_VERIFIED, true);
+		
+		profileInitialized = true;
+	}
+	
+	private void privateInitEnvironment() throws Exception {
+		ServiceManager svcm = wta.getServiceManager();
+		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		
+		// Creates communication manager and registers this active session
+		comm = new SessionComManager(profile.getId());
+		wta.getSessionManager().registerSession(this);
+		
+		// Instantiates services
+		BaseService instance = null;
+		List<String> serviceIds = core.getPrivateServicesForUser(profile);
+		int count = 0;
+		// TODO: ordinamento lista servizi (scelta dall'utente?)
+		for(String serviceId : serviceIds) {
+			// Creates new instance
+			if(svcm.hasFullRights(serviceId)) {
+				instance = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
+			} else {
+				instance = svcm.instantiatePrivateService(serviceId, new Environment(this));
+			}
+			if(instance != null) {
+				addService(instance);
+				count++;
+			}
+		}
+		logger.debug("Instantiated {} services", count);
+		
+		environmentInitialized = true;
 	}
 	
 	/**
@@ -231,9 +263,9 @@ public class WebTopSession {
 		
 		logger.debug("Creating environment for {}", principal.getName());
 		
-		refererURI = ServletHelper.getReferer(request);
+		refererURI = ServletUtils.getReferer(request);
 		userAgentLocale = ServletHelper.homogenizeLocale(request);
-		userAgentInfo = wta.getUserAgentInfo(ServletHelper.getUserAgent(request));
+		userAgentInfo = wta.getUserAgentInfo(ServletUtils.getUserAgent(request));
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);

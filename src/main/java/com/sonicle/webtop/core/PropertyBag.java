@@ -31,13 +31,34 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.TFADelivery', {
-	alternateClassName: 'WT.store.TFADelivery',
-	extend: 'Ext.data.ArrayStore',
+package com.sonicle.webtop.core;
+
+import java.util.HashMap;
+
+/**
+ *
+ * @author malbinola
+ */
+public class PropertyBag {
+	private final HashMap<String, Object> props;
 	
-	model: 'WT.model.Simple',
-	data: [
-		['email', WT.res('store.tfadelivery.email')],
-		['googleauth', WT.res('store.tfadelivery.googleauth')]
-	]
-});
+	public PropertyBag() {
+		props = new HashMap<>();
+	}
+	
+	public void set(String key, Object value) {
+		props.put(key, value);
+	}
+	
+	public Object get(String key) {
+		return props.get(key);
+	}
+	
+	public boolean has(String key) {
+		return props.containsKey(key);
+	}
+	
+	public void clear(String key) {
+		props.remove(key);
+	}
+}

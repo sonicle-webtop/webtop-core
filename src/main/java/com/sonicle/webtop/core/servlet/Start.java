@@ -33,9 +33,15 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.PropertyBag;
+import com.sonicle.webtop.core.SettingsManager;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -48,6 +54,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
 
 /**
  *
@@ -58,14 +66,27 @@ public class Start extends HttpServlet {
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		WebTopSession wts = WebTopSession.get(request);
+		SettingsManager setm = wta.getSettingsManager();
 		
 		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
 		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");
 		boolean extdebug = WebTopApp.getPropExtDebug();
 		
 		try {
-			WebTopApp.logger.trace("Servlet: Start [{}]", ServletHelper.getSessionID(request));
-			wts.checkEnvironment(request);
+			WebTopApp.logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
+			
+			// Checks maintenance mode
+			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreServiceSettings.MAINTENANCE), false);
+			if(maintenance && false) throw new MaintenanceException();
+			
+			wts.initProfile(request);
+			
+			// Checks if otp page needs to be displayed
+			boolean isOtpVerified = wts.getPropertyBag().has(WebTopSession.PROPERTY_OTP_VERIFIED);
+			if(!isOtpVerified) throw new OtpException();
+			
+			wts.initEnvironment();
+			//wts.checkEnvironment(request);
 			CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId()); // Keep at this line!
 			
 			Locale locale = wts.getLocale();
@@ -93,8 +114,17 @@ public class Start extends HttpServlet {
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
 			tpl.process(vars, response.getWriter());
 			
+		} catch(MaintenanceException ex) {
+			SecurityUtils.getSubject().logout();
+			request.setAttribute(Login.ATTRIBUTE_LOGINFAILURE, Login.LOGINFAILURE_MAINTENANCE);
+			ServletUtils.forwardRequest(request, response, "login");
+			
+		} catch(OtpException ex) {
+			ServletUtils.forwardRequest(request, response, "otp");
+			
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in start servlet!", ex);
+			
 		} finally {
 			response.setHeader("Cache-Control", "private, no-cache");
 			ServletHelper.setPageContentType(response);
@@ -110,5 +140,17 @@ public class Start extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		processRequest(req, resp);
+	}
+	
+	private static class MaintenanceException extends Exception {
+		public MaintenanceException() {
+			super();
+		}
+	}
+	
+	private static class OtpException extends Exception {
+		public OtpException() {
+			super();
+		}
 	}
 }

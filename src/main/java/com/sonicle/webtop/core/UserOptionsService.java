@@ -122,23 +122,25 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.upiCustom2 = upi.getCustom2();
 				jso.upiCustom3 = upi.getCustom3();
 				
-				// TFA
-				TFAManager tfam = core.getTFAManager();
+				// OTP
+				OTPManager otpm = core.getOTPManager();
+				jso.otpEnabled = otpm.isEnabled(getTargetProfileId());
+				jso.otpDelivery = otpm.getDeliveryMode(getTargetProfileId());
+				jso.otpEmailAddress = otpm.getEmailAddress(getTargetProfileId());
+				
 				boolean isTrusted = false;
 				String trustedOn = null;
-				TrustedDeviceCookie tdc = tfam.readTrustedDeviceCookie(getTargetDomainId(), getTargetUserId(), user.getSecret(), request);
-				if(tfam.isThisDeviceTrusted(getTargetDomainId(), getTargetUserId(), tdc)) {
-					JsTrustedDevice td = tfam.getTrustedDevice(getTargetDomainId(), getTargetUserId(), tdc.deviceId);
+				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(getTargetProfileId(), request);
+				if(otpm.isThisDeviceTrusted(getTargetProfileId(), tdc)) {
+					JsTrustedDevice td = otpm.getTrustedDevice(getTargetProfileId(), tdc.deviceId);
 					if(td != null) {
 						isTrusted = true;
 						trustedOn = td.getISOTimestamp();
 					}
 				}
 				
-				jso.tfaDelivery = us.getTFADelivery();
-				jso.tfaEmailAddress = us.getTFAEmailAddress();
-				jso.tfaDeviceIsTrusted = isTrusted;
-				jso.tfaDeviceTrustedOn = trustedOn;
+				jso.otpDeviceIsTrusted = isTrusted;
+				jso.otpDeviceTrustedOn = trustedOn;
 				
 				// Sync
 				jso.canSyncDevices = WT.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
@@ -162,17 +164,6 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("longDateFormat")) us.setLongDateFormat(pl.data.longDateFormat);
 				if(pl.map.has("shortTimeFormat")) us.setShortTimeFormat(pl.data.shortTimeFormat);
 				if(pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
-				
-				// TFA
-				//TODO: gestire salvataggio TFA
-				/*
-				if(pl.map.has("mandatory")) {
-					//TODO: do check using shiro
-					if(getSessionProfile().isWebTopAdmin()) {
-						us.setTFAMandatory(pl.data.getBoolean("mandatory"));
-					}
-				}
-				*/
 				
 				// User personal info
 				if(provider.canWrite()) {
@@ -214,16 +205,16 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
-	public void processDeactivateTFA(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processDeactivateOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
-			TFAManager tfam = core.getTFAManager();
-			tfam.deactivateTFA(getTargetProfileId());
+			OTPManager otpm = core.getOTPManager();
+			otpm.deactivateOTP(getTargetProfileId());
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action DeactivateTFA", ex);
+			logger.error("Error executing action DeactivateOTP", ex);
 			new JsonResult(false).printTo(out);
 		}
 	}

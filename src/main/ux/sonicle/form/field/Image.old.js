@@ -32,13 +32,33 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.form.field.Image', {
-	extend: 'Sonicle.form.field.DisplayImage',
+	extend: 'Ext.form.field.Text',
 	alias: ['widget.soimagefield'],
 	requires: [
 		'Ext.ux.form.trigger.Clear',
 		'Sonicle.upload.Uploader'
 	],
 	
+	ariaRole: 'img',
+	focusable: false,
+	maskOnDisable: false,
+	
+	/**
+	 * @cfg {String} [fieldCls="x-form-image-field"]
+	 * The default CSS class for the field.
+	 */
+	fieldCls: Ext.baseCSSPrefix + 'form-image-field',
+	fieldBodyCls: Ext.baseCSSPrefix + 'form-image-field-body',
+	
+	fieldSubTpl: [
+		'<div id="{id}" role="{role}" {inputAttrTpl}',
+		'<tpl if="fieldStyle"> style="{fieldStyle}"</tpl>',
+		' class="{fieldCls} {fieldCls}-{ui}"></div>',
+		{
+			compiled: true,
+			disableFormats: true
+		}
+	],
 	postSubTpl: [
 			'</div>', // end inputWrap
 			'<tpl for="triggers">{[values.renderTrigger(parent)]}</tpl>',
@@ -48,6 +68,13 @@ Ext.define('Sonicle.form.field.Image', {
 	childEls: ['triggerWrap','inputWrap','pluWrap'],
 	
 	config: {
+		imageUrl: '',
+		urlParam: 'id',
+		blankImageUrl: Ext.BLANK_IMAGE_URL,
+
+		imageWidth: 100,
+		imageHeight: 100,
+		geometry: 'square',
 		uploadDisabled: false,
 		clearTriggerCls: '',
 		uploadTriggerCls: ''
@@ -128,6 +155,33 @@ Ext.define('Sonicle.form.field.Image', {
 		return ret;
 	},
 	
+	getFieldStyles: function() {
+		var styles = {
+			position: 'relative',
+			verticalAlign: 'bottom',
+			backgroundColor: '#FFFFFF',
+			backgroundRepeat: 'no-repeat',
+			backgroundPosition: 'center',
+			backgroundSize: 'cover',
+			backgroundClip: 'padding-box',
+			backgroundOrigin: 'padding-box'
+		};
+		Ext.apply(styles, this.getBorderRadius());
+		return Ext.dom.Helper.generateStyles(styles);
+	},
+	
+	getBorderRadius: function() {
+		return (this.getGeometry() === 'circle') ? {borderRadius: '50%'} : {};
+	},
+	
+	onRender: function() {
+		var me = this;
+		me.callParent();
+		//if(me.triggerWrap) me.triggerWrap.applyStyles(me.getBorderRadius());
+		if(me.inputWrap) me.inputWrap.applyStyles({padding: '5px'});
+		if(me.value) me.applyBackground(me.inputEl, me.value);
+	},
+	
 	/**
 	 * Sets the read-only state of this field.
 	 * @param {Boolean} readOnly True to prevent the user changing the field, explicitly
@@ -141,6 +195,31 @@ Ext.define('Sonicle.form.field.Image', {
 			if(readOnly) me.uploader.disable();
 			else me.uploader.enable();
 		}
+	},
+	
+	setValue: function(value) {
+		var me = this;
+		me.applyBackground(me.inputEl, value);
+		me.callParent(arguments);
+		return me;
+	},
+	
+	applyBackground: function(el, value) {
+		var me = this, url;
+		if(el) {
+			url = Ext.isEmpty(value) ? me.getBlankImageUrl() : me.buildBackgroundUrl(value);
+			el.applyStyles({
+				backgroundImage: 'url(' + url + ')',
+				width: me.getImageWidth() + 'px',
+				height: me.getImageHeight() + 'px'
+			});
+		}
+	},
+	
+	buildBackgroundUrl: function(value) {
+		var params = {};
+		params[this.getUrlParam()] = value;
+		return Ext.String.urlAppend(this.getImageUrl(), Ext.Object.toQueryString(params));
 	},
 	
 	onClearClick: function(me) {

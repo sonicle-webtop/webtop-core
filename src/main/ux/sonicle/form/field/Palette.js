@@ -39,6 +39,7 @@ Ext.define('Sonicle.form.field.Palette', {
 			el.setStyle({
 				color: color,
 				backgroundColor: color,
+				backgroundImage: 'none',
 				boxShadow: '0px 0px 0px 1px white inset'
 			});
 		}

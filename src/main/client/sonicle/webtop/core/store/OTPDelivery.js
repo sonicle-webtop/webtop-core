@@ -31,50 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.UserOptionsC', {
-	alternateClassName: 'WT.view.UserOptionsC',
-	extend: 'WT.sdk.UserOptionsController',
+Ext.define('Sonicle.webtop.core.store.OTPDelivery', {
+	alternateClassName: 'WT.store.OTPDelivery',
+	extend: 'Ext.data.ArrayStore',
 	
-	onOTPEnableClick: function() {
-		alert('TODO');
-	},
-	
-	onOTPDisableClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'DisableOTP', {
-					params: {options: true},
-					callback: function(success) {
-						if(success) me.getView().loadForm();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustThisClick: function() {
-		var me = this;
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageOTP', {
-					params: {crud: 'untrustthis'},
-					callback: function(success) {
-						if(success) me.getView().loadForm();
-					}
-				});
-			}
-		});
-	},
-	
-	onUntrustOtherClick: function() {
-		WT.confirm(WT.res('confirm.areyousure'), function(bid) {
-			if(bid === 'yes') {
-				WT.ajaxReq(WT.ID, 'ManageOTP', {
-					params: {crud: 'untrustothers'}
-				});
-			}
-		});
-	}
-	
+	model: 'WT.model.Simple',
+	data: [
+		['email', WT.res('store.otpdelivery.email')],
+		['googleauth', WT.res('store.otpdelivery.googleauth')]
+	]
 });

@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,15 +52,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
 public class Login extends HttpServlet {
-	
-	public static final String FAILURE_INVALID = "invalid";
-	public static final String FAILURE_MAINTENANCE = "maintenance";
+	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
+	public static final String LOGINFAILURE_INVALID = "invalid";
+	public static final String LOGINFAILURE_MAINTENANCE = "maintenance";
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
@@ -67,7 +69,7 @@ public class Login extends HttpServlet {
 		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
 		
 		try {
-			WebTopApp.logger.trace("Servlet: Login [{}]", ServletHelper.getSessionID(request));
+			WebTopApp.logger.trace("Servlet: login [{}]", ServletHelper.getSessionID(request));
 			Locale locale = ServletHelper.homogenizeLocale(request);
 			
 			//SettingsManager sm = wta.getSettingsManager();
@@ -76,21 +78,17 @@ public class Login extends HttpServlet {
 			boolean maintenance = true;
 			
 			// Defines messages...
-			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.LOGIN_MAINTENANCE, true) : "";
+			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.LOGIN_MAINTENANCE, true) : null;
 			
 			// Defines failure message
-			boolean failure = false;
-			String failureMessage = "";
-			String failureAttribute = ServletUtils.getStringAttribute(request, "loginFailure");
-			WebTopApp.logger.debug("failureAttribute is null? {}", failureAttribute==null);
+			String failureAttribute = ServletUtils.getStringAttribute(request, ATTRIBUTE_LOGINFAILURE);
+			String failureMessage = null;
 			if(failureAttribute != null) {
 				switch (failureAttribute) {
-					case Login.FAILURE_INVALID:
-						failure = true;
+					case Login.LOGINFAILURE_INVALID:
 						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_FAILURE, true);
 						break;
-					case Login.FAILURE_MAINTENANCE:
-						failure = true;
+					case Login.LOGINFAILURE_MAINTENANCE:
 						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_MAINTENANCE, true);
 						break;
 				}
@@ -103,26 +101,8 @@ public class Login extends HttpServlet {
 			for(ODomain dom : enabledDomains) {
 				domains.add(new HtmlSelect(dom.getDomainId(), dom.getDescription()));
 			}
-			boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 			
-			Map tplMap = new HashMap();
-			ServletHelper.fillPageVars(tplMap, locale, wta);
-			ServletHelper.fillSystemInfoVars(tplMap, locale, wta);
-			//tplMap.put("title", wta.lookupAndFormatResource(locale, LocaleKey.LOGIN_TITLE, true, "5"));
-			tplMap.put("failure", failure);
-			tplMap.put("failureMessage", failureMessage);
-			tplMap.put("maintenance", maintenance);
-			tplMap.put("maintenanceMessage", maintenanceMessage);
-			tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
-			tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
-			tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_LABEL, true));
-			tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_SUBMIT_LABEL, true));
-			tplMap.put("showDomain", showDomain);
-			tplMap.put("domains", domains);
-			
-			// Load and build template
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/login.html");
-			tpl.process(tplMap, response.getWriter());
+			buildPage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
 			
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in login servlet!", ex);
@@ -131,6 +111,29 @@ public class Login extends HttpServlet {
 			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
+	}
+	
+	private void buildPage(WebTopApp wta, CoreServiceSettings css, Locale locale, List<HtmlSelect> domains, String maintenanceMessage, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
+		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
+		
+		Map tplMap = new HashMap();
+		ServletHelper.fillPageVars(tplMap, locale, wta);
+		ServletHelper.fillSystemVars(tplMap, locale, wta);
+		tplMap.put("showFootprint", !css.getHideLoginFootprint());
+		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
+		tplMap.put("maintenanceMessage", maintenanceMessage);
+		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
+		tplMap.put("failureMessage", failureMessage);
+		tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
+		tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
+		tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_LABEL, true));
+		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_SUBMIT_LABEL, true));
+		tplMap.put("showDomain", showDomain);
+		tplMap.put("domains", domains);
+		
+		// Load and build template
+		Template tpl = wta.loadTemplate("com/sonicle/webtop/core/login.html");
+		tpl.process(tplMap, response.getWriter());
 	}
 
 	@Override
@@ -147,9 +150,7 @@ public class Login extends HttpServlet {
 		private String value;
 		private String description;
 
-		public HtmlSelect() {
-
-		}
+		public HtmlSelect() {}
 
 		public HtmlSelect(String value, String description) {
 			this.value = value;

@@ -105,7 +105,7 @@ public class SessionManager {
 			WebTopSession wts = new WebTopSession(httpSession);
 			// Generates and sets a security token for securing server 
 			// requests and protecting against CSRF.
-			wts.setProperty(WebTopSession.PROPERTY_SECURITY_TOKEN, generateSecurityToken());
+			wts.getPropertyBag().set(WebTopSession.PROPERTY_SECURITY_TOKEN, generateSecurityToken());
 			httpSession.setAttribute(ATTRIBUTE, wts);
 			logger.info("WTS created [{}]", sid);
 			return wts;
@@ -200,7 +200,7 @@ public class SessionManager {
 	}
 	
 	public String getSecurityToken(WebTopSession wts) {
-		return (String)wts.getProperty(WebTopSession.PROPERTY_SECURITY_TOKEN);
+		return (String)wts.getPropertyBag().get(WebTopSession.PROPERTY_SECURITY_TOKEN);
 	}
 	
 	public boolean checkSecurityToken(HttpSession httpSession, String token) {
