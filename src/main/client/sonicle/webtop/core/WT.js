@@ -522,8 +522,12 @@ Ext.define('Sonicle.webtop.core.WT', {
 		evt.stopEvent();
 		me.hideContextMenu();
 		if(!menu || !menu.isXType('menu')) return;
-		menu.tag = data;
+		menu.tag = data || {};
 		me.contextMenu = menu;
+		menu.on('hide', function(s) {
+			s.tag = {};
+			me.contextMenu = null;
+		}, me, {single: true});
 		menu.showAt(evt.getXY());
 	},
 	
@@ -531,13 +535,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * Hides currently visible context menu.
 	 */
 	hideContextMenu: function() {
-		var me = this,
-				cxm = me.contextMenu;
-		if(cxm) {
-			me.contextMenu = null;
-			cxm.tag = {};
-			cxm.hide();
-		}
+		var cxm = this.contextMenu;
+		if(cxm) cxm.hide();
 	},
 	
 	/**
@@ -545,7 +544,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @returns {Object} The data object.
 	 */
 	getContextMenuData: function() {
-		return (this.contextMenu) ? this.contextMenu.tag : null;
+		var cxm = this.contextMenu;
+		return (cxm) ? cxm.tag : null;
 	},
 	
 	/**
