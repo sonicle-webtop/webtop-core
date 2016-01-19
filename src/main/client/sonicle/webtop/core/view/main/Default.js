@@ -50,6 +50,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		return {
 			xtype: 'container',
 			layout: 'border',
+			cls: 'wt-center-default',
 			items: [{
 				region: 'west',
 				xtype: 'panel',
