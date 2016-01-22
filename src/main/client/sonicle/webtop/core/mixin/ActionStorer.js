@@ -55,6 +55,50 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	},
 	
 	/**
+	 * Creates an Action instance.
+	 * @param {String} name The action name.
+	 * @param {Object} obj Action config.
+	 * @returns {WT.ux.Action} The Action just created.
+	 */
+	createAction: function(name, obj) {
+		var me = this;
+		/*
+		var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
+				tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(obj.ID, name);
+		delete obj.ID;
+		delete obj.XID;
+		*/
+		/*
+		act = Ext.create('WT.ux.Action', Ext.applyIf({
+			text: Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
+			tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
+			iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
+			handler: obj.handler,
+			scope: obj.scope || this
+		}, obj));
+		*/
+		var txt = Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
+				tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
+				cls = Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
+				cb = obj.handler,
+				sco = obj.scope || this;
+
+		delete obj.text;
+		delete obj.tooltip;
+		delete obj.iconCls;
+		delete obj.handler;
+		delete obj.scope;
+
+		return Ext.create('WT.ux.Action', Ext.apply({
+			text: txt,
+			tooltip: tip,
+			iconCls: cls,
+			handler: cb,
+			scope: sco || this
+		}, obj));
+	},
+	
+	/**
 	 * Adds an action into the specified group.
 	 * @param {String} [group] The action group.
 	 * @param {String} name The action name.
@@ -62,7 +106,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @return {WT.ux.Action} The Action that were added.
 	 */
 	addAction: function(group, name, obj) {
-		var me = this;
+		var me = this, act;
 		if(arguments.length === 2) {
 			obj = name;
 			name = group;
@@ -70,45 +114,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		}
 		if(!me._actions[group]) me._actions[group] = {};
 		
-		var act = null;
-		if(WTU.isAction(obj)) { // Action is already instantiated
-			act = obj;
-		} else { // Instantiate action using config
-			/*
-			var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
-					tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(obj.ID, name);
-			delete obj.ID;
-			delete obj.XID;
-			*/
-			/*
-			act = Ext.create('WT.ux.Action', Ext.applyIf({
-				text: Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
-				tooltip: Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
-				iconCls: Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
-				handler: obj.handler,
-				scope: obj.scope || this
-			}, obj));
-			*/
-			var txt = Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
-					tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
-					cls = Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
-					cb = obj.handler,
-					sco = obj.scope || this;
-			
-			delete obj.text;
-			delete obj.tooltip;
-			delete obj.iconCls;
-			delete obj.handler;
-			delete obj.scope;
-			
-			act = Ext.create('WT.ux.Action', Ext.apply({
-				text: txt,
-				tooltip: tip,
-				iconCls: cls,
-				handler: cb,
-				scope: sco || this
-			}, obj));
-		}
+		act = WTU.isAction(obj) ? obj : me.createAction(name, obj);
 		me._actions[group][name] = act;
 		return act;
 	},
@@ -137,6 +143,25 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 */
 	getActions: function(group) {
 		return this._actions[group];
+	},
+	
+	/**
+	 * Sets disabled state for an action from the specified group.
+	 * If not provided, 'default' group is used.
+	 * @param {String} [group] The action group.
+	 * @param {String} name The action name.
+	 * @param {Boolean} disabled The disabled state.
+	 * @return {WT.ux.Action} The action.
+	 */
+	setActionDisabled: function(group, name, disabled) {
+		var me = this, act;
+		if(arguments.length === 2) {
+			disabled = name;
+			name = group;
+			group = me.DEFAULT_GROUP;
+		}
+		act = me.getAction(group, name);
+		if(act) act.setDisabled(disabled);
 	},
 	
 	/**

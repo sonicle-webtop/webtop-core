@@ -342,6 +342,22 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/**
+	 * Helper method for building a config object for foreign key {@link Ext.data.field.Field field}.
+	 * @param {String} type See {@link Ext.data.field.Field#type}
+	 * @param {String} parent Parent model.
+	 * @param {String} inverse Inverse name.
+	 * @returns {Object} The field config
+	 */
+	fkField: function(type, parent, inverse) {
+		return WTF.field('_fk', type, true, {
+			reference: {
+				parent: parent,
+				inverse: inverse
+			}
+		});
+	},
+	
+	/**
 	 * Creates an object config that properly configure field's formats for
 	 * reading and writing dates. ISO date pattern (Y-m-dTH:i:s.uO) will be used.
 	 * @param {Object} [cfg] Previous cfg to merge

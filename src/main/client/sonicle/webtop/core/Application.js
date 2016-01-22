@@ -65,6 +65,9 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.Log.debug('application:init');
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
+		Ext.getDoc().on('contextmenu', function(e) {
+			e.preventDefault(); // Disable browser context if no context menu is defined
+		});
 	},
 	
 	launch: function() {
@@ -229,5 +232,12 @@ Ext.override(Ext.data.proxy.Server, {
 		this.addListener('exception', function(proxy, resp, op) {
 			if(resp.status === 401) WT.reload();
 		});
+	}
+});
+
+Ext.override(Ext.menu.Item, {
+	onClick: function(e) {
+		e.tag = WT.getContextMenuData();
+		return this.callParent([e]);
 	}
 });

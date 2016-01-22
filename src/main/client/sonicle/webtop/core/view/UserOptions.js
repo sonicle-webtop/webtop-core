@@ -730,21 +730,30 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					store: {
 						autoSync: true,
 						model: 'WT.ux.data.EmptyModel',
-						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices')
+						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices'),
+						groupField: 'user'
 					},
 					columns: [{
 						dataIndex: 'device',
 						header: WT.res('opts.sync.gp-sync.device.lbl'),
-						width: 200
+						groupable: false,
+						flex: 1
 					}, {
 						dataIndex: 'user',
 						header: WT.res('opts.sync.gp-sync.user.lbl'),
-						width: 200
+						groupable: true,
+						flex: 1
 					}, {
 						dataIndex: 'info',
 						header: WT.res('opts.sync.gp-sync.info.lbl'),
-						//flex: 1
-						width: 200
+						groupable: false,
+						flex: 1
+					}],
+					features: [{
+						id: 'grouping',
+						ftype: 'grouping',
+						groupHeaderTpl: '{columnName}: {name} ({children.length})',
+						hideGroupedHeader: true
 					}],
 					tbar: [
 						me.addAction('showSyncDeviceInfo', {

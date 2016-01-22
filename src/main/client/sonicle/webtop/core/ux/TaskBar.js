@@ -132,11 +132,15 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 	},
 	
 	onButtonClick: function(s, e) {
-		this.fireEvent('buttonclick', this, s, e);
+		if(s.isComponent && s.isXType('wttaskbarbutton')) {
+			this.fireEvent('buttonclick', this, s, e);
+		}
 	},
 	
 	onButtonContextMenu: function(s, e) {
-		this.fireEvent('buttoncontextmenu', this, s, e);
+		if(s.isComponent && s.isXType('wttaskbarbutton')) {
+			this.fireEvent('buttoncontextmenu', this, s, e);
+		}
 	},
 	
 	updateButtonVisibility: function(sid, visible) {

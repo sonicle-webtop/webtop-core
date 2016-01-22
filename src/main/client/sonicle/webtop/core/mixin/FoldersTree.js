@@ -54,6 +54,15 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/**
 	 * @private
+	 * Returns folder that matches with my profileId.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getMyRoot: function(tree) {
+		return tree.getStore().findNode('_pid', WT.getOption('profileId'), false);
+	},
+	
+	/**
+	 * @private
 	 * Returns selected tree node.
 	 */
 	getSelectedNode: function(tree) {
@@ -74,14 +83,14 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		if(sel.length === 0) {
 			if(!force) return null;
 			// As default returns myFolder, which have id equals to principal option
-			return tree.getStore().findNode('_pid', WT.getOption('profileId'), false);
+			return this.getMyRoot(tree);
 		}
 		return (sel[0].get('_type') === 'root') ? sel[0] : sel[0].parentNode;
 	},
 	
 	/*
 	 * @private
-	 * Returns selected folder (calendar). If no selection is available, 
+	 * Returns selected folder. If no selection is available, 
 	 * this method tries to return the default folder and then the built-in one.
 	 * @returns {Ext.data.NodeInterface}
 	 */
@@ -92,15 +101,15 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		
 		if(sel.length > 0) {
 			if(sel[0].get('_type') === 'root') {
-				return me.getFolderByRoot(sel[0]);
+				node = me.getFolderByRoot(sel[0]);
+				if(node) return node;
 			} else {
 				return sel[0];
 			}
-		} else {
-			node = tree.getStore().findNode('_pid', WT.getOption('profileId'), false);
-			if(node) return me.getFolderByRoot(node);
 		}
-		return null;
+		
+		node = me.getMyRoot(tree);
+		return me.getFolderByRoot(node);
 	},
 	
 	/*
