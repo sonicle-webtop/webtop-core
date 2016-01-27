@@ -87,30 +87,51 @@ Ext.define('Sonicle.form.field.DisplayImage', {
 	onRender: function() {
 		var me = this;
 		me.callParent();
-		//if(me.triggerWrap) me.triggerWrap.applyStyles(me.getBorderRadius());
 		if(me.inputWrap) me.inputWrap.applyStyles({padding: '5px'});
-		if(me.value) me.applyBackground(me.inputEl, me.value);
+		if(me.inputEl && me.value) me.loadImage(me.inputEl, me.value);
 	},
 	
 	setValue: function(value) {
 		var me = this;
-		me.applyBackground(me.inputEl, value);
+		if(me.inputEl) me.loadImage(me.inputEl, value);
 		me.callParent(arguments);
 		return me;
 	},
 	
-	applyBackground: function(el, value) {
+	loadImage: function(el, value) {
 		var me = this, url;
-		if(el) {
-			url = Ext.isEmpty(value) ? me.getBlankImageUrl() : me.buildBackgroundUrl(value);
-			el.applyStyles({
-				backgroundImage: 'url(' + url + ')',
-				width: me.getImageWidth() + 'px',
-				height: me.getImageHeight() + 'px'
-			});
-		}
+		
+		el.applyStyles({
+			width: me.getImageWidth() + 'px',
+			height: me.getImageHeight() + 'px'
+		});
+		url = Ext.isEmpty(value) ? me.getBlankImageUrl() : me.buildBackgroundUrl(value);
+		me.displayLoading(true);
+		Ext.Ajax.request({
+			method: 'GET',
+			url: url,
+			success: function() {
+				me.displayLoading(false);
+				el.setStyle('background-image', 'url(' + url + ')');
+			},
+			failure: function() {
+				me.displayLoading(false);
+			}
+		});
 	},
 	
+	/*
+	 * @private
+	 */
+	displayLoading: function(visible) {
+		var me = this, obj = false;
+		if(visible) obj = {msg: '', msgWrapCls: ''};
+		me.setLoading(obj);
+	},
+	
+	/*
+	 * @private
+	 */
 	buildBackgroundUrl: function(value) {
 		var params = {};
 		params[this.getUrlParam()] = value;

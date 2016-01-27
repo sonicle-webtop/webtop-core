@@ -278,8 +278,8 @@ Ext.define('Sonicle.webtop.core.WT', {
 				hdrs = {};
 		
 		var obj = {
-			url: WTF.requestBaseUrl(),
 			method: 'POST',
+			url: WTF.requestBaseUrl(),
 			params: Ext.applyIf({
 				service: svc,
 				action: act
