@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.sdk.JsUserOptionsBase;
+import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 
 /**
  *

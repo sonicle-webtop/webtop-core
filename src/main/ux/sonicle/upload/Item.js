@@ -20,8 +20,8 @@ Ext.define('Sonicle.upload.Item', {
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
-		
 		me.uploader = Ext.create('Sonicle.upload.Uploader', me, me.initialConfig.uploaderConfig);
+		
 		if(me.getUploaderAutoInit()) {
 			me.on('afterrender', function() {
 				me.uploader.setBrowseButton(me.getId());

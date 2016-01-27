@@ -33,8 +33,12 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import java.util.ArrayList;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -44,15 +48,23 @@ public class JsGridSync {
 	public String id;
 	public String device;
 	public String user;
-	public String info;
+	public String lastSync;
 	
 	public JsGridSync() {}
 	
-	public JsGridSync(String device, String user, String info) {
+	public JsGridSync(String device, String user, DateTime lastSync, DateTimeFormatter fmt) {
 		this.id = new CompositeId(device, user).toString();
 		this.device = device;
 		this.user = user;
-		this.info = info;
+		if(lastSync != null) {
+			this.lastSync = fmt.print(lastSync);
+		} else {
+			this.lastSync = null;
+		}
+	}
+	
+	public static DateTimeFormatter createFormatter(DateTimeZone profileTz) {
+		return DateTimeUtils.createYmdHmFormatter(profileTz);
 	}
 	
 	public static class JsGridSyncList extends ArrayList<JsGridSync> {

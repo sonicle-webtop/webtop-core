@@ -45,9 +45,12 @@ import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -62,6 +65,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +89,10 @@ public class WT {
 		return getWTA().getSystemCharset();
 	}
 	
+	public static DateTimeZone getSystemTimeZone() {
+		return getWTA().getSystemTimeZone();
+	}
+	
 	public static List<AppLocale> getInstalledLocales() {
 		return getWTA().getI18nManager().getLocales();
 	}
@@ -95,6 +103,11 @@ public class WT {
 	
 	public static ServiceManifest getManifest(String serviceId) {
 		return getWTA().getServiceManager().getManifest(serviceId);
+	}
+	
+	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
+		String internetName = WT.getDomainInternetName(domainId);
+		return buildInternetAddress(local, internetName, personal);
 	}
 	
 	public static InternetAddress buildInternetAddress(String local, String domain, String personal) {
@@ -217,6 +230,15 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static String getDomainInternetName(String domainId) {
+		try {
+			return getWTA().getUserManager().getDomainInternetName(domainId);
+		} catch(WTException ex) {
+			//TODO: logging
+			return null;
+		}
+	}
+	
 	public static UserProfile.Data getUserData(UserProfile.Id profileId) {
 		try {
 			return getWTA().getUserManager().userData(profileId);
@@ -272,6 +294,17 @@ public class WT {
 		return getWTA().loadTemplate(path);
 	}
 	
+	public static String buildTemplate(String template, Object data) throws IOException, TemplateException {
+		return buildTemplate(CoreManifest.ID, template, data);
+	}
+	
+	public static String buildTemplate(String serviceId, String template, Object data) throws IOException, TemplateException {
+		Template tpl = WT.loadTemplate(serviceId, template);
+		Writer writer = new StringWriter();
+		tpl.process(data, writer);
+		return writer.toString();
+	}
+	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
 		nofity(profileId, message, false);
 	}
@@ -286,6 +319,13 @@ public class WT {
 	
 	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
+	}
+	
+	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress to, String subject, String body) {
+		//TODO: gestire invio email e implementari segnature diverse
+		WebTopApp.logger.debug("Invio email da {} a {}", from.toString(), to.toString());
+		WebTopApp.logger.debug("{}", subject);
+		WebTopApp.logger.debug("{}", body);
 	}
 	
 	public static String generateUUID() {

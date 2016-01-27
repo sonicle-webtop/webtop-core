@@ -36,9 +36,8 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 	
 	fields: [
 		WTF.field('wtUpiProviderWritable', 'boolean'),
-		WTF.field('wtFeedbackEnabled', 'boolean'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
-		WTF.field('wtTfaEnabled', 'boolean'),
+		WTF.field('wtOtpEnabled', 'boolean'),
 		
 		WTF.field('profileId', 'string'), // Not a real option
 		WTF.field('domainId', 'string'), // Not a real option

@@ -83,6 +83,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -119,9 +120,8 @@ public class Service extends BaseService {
 		ClientOptions co = new ClientOptions();
 		
 		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
-		co.put("wtFeedbackEnabled", ss.getFeedbackEnabled());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
-		co.put("wtTfaEnabled", ss.getOTPEnabled());
+		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
@@ -767,10 +767,12 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				ArrayList<JsGridSync> items = new ArrayList<>();
+				UserProfile.Data ud = core.getUserData(getRunContext().getProfileId());
+				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimezone());
 				List<SyncDevice> devices = core.listZPushDevices();
+				ArrayList<JsGridSync> items = new ArrayList<>();
 				for(SyncDevice device : devices) {
-					items.add(new JsGridSync(device.device, device.user, device.info));
+					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
 				}
 				new JsonResult(items).printTo(out);
 				

@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -333,6 +334,26 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public List<UserProfile.Id> listProfilesWith(String serviceId, String key, Object value) {
+		UserSettingDAO dao = UserSettingDAO.getInstance();
+		ArrayList<UserProfile.Id> profiles = new ArrayList<>();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			List<OUserSetting> sets = dao.selectByServiceKeyValue(con, serviceId, key, valueToString(value));
+			for(OUserSetting set : sets) {
+				profiles.add(new UserProfile.Id(set.getDomainId(), set.getUserId()));
+			}
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read settings (user) [{}, {}, {}]", serviceId, key, String.valueOf(value), ex);
+			throw new RuntimeException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return profiles;
 	}
 	
 	public List<OUserSetting> getUserSettings(String serviceId, String key, Object value) {

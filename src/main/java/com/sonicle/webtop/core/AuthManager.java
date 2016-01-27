@@ -57,6 +57,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
@@ -268,12 +270,12 @@ public class AuthManager {
 	
 	private Subject getSubject(UserProfile.Id pid) {
 		Subject subject = SecurityUtils.getSubject(); // Current user
-		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
-			// Requested subject is not the current one
+		if(StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
+			return subject;
+		} else { // Requested subject is not the current one
 			//TODO: instantiate a principal on-the-fly
-			return subject;
-		} else {
-			return subject;
+			PrincipalCollection principals = new SimplePrincipalCollection(pid.toString(), "com.sonicle.webtop.core.shiro.WTRealm");
+			return new Subject.Builder().principals(principals).buildSubject();
 		}
 	}
 	

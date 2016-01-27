@@ -31,26 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.model;
 
 /**
  *
  * @author malbinola
  */
-public class NestedClass {
-	private Object fk;
+public class EmailRecipients {
 	
-	public NestedClass() {}
-	
-	public NestedClass(Object fk) {
-		this.fk = fk;
-	}
-
-	public Object getFk() {
-		return fk;
-	}
-
-	public void setFk(Object fk) {
-		this.fk = fk;
-	}
 }

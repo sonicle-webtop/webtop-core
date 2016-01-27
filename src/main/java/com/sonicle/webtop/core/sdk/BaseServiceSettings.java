@@ -104,10 +104,4 @@ public abstract class BaseServiceSettings extends BaseSettings {
 	public boolean setLong(String key, Long value) {
 		return setm.setServiceSetting(domainId, serviceId, key, value);
 	}
-	
-	/*
-	public String getServiceSetting(String key) {
-		return setm.getServiceSetting(domainId, serviceId, key);
-	}
-	*/
 }

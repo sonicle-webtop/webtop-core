@@ -37,12 +37,13 @@ package com.sonicle.webtop.core.sdk.bol.js;
  *
  * @author malbinola
  */
-public class JsFkModel {
-	public Object _fk;
+public class JsUserOptionsBase {
+	public String id;
 	
-	public JsFkModel() {}
+	public JsUserOptionsBase() {
+	}
 	
-	public JsFkModel(Object fk) {
-		this._fk = fk;
+	public JsUserOptionsBase(String id) {
+		this.id = id;
 	}
 }

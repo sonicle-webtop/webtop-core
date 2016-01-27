@@ -557,7 +557,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.otp.tit'),
-			disabled: WT.getOption('wtTfaEnabled'),
+			disabled: WT.getOption('wtOtpEnabled'),
 			items: [{
 				xtype: 'container',
 				layout: 'form',
@@ -744,8 +744,10 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						groupable: true,
 						flex: 1
 					}, {
-						dataIndex: 'info',
-						header: WT.res('opts.sync.gp-sync.info.lbl'),
+						dataIndex: 'lastSync',
+						xtype: 'datecolumn',
+						format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
+						header: WT.res('opts.sync.gp-sync.lastSync.lbl'),
 						groupable: false,
 						flex: 1
 					}],

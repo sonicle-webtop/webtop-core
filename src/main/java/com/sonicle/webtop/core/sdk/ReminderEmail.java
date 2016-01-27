@@ -38,11 +38,21 @@ package com.sonicle.webtop.core.sdk;
  * @author malbinola
  */
 public class ReminderEmail extends BaseReminder {
+	protected boolean rich;
 	protected String subject;
 	protected String body;
 	
 	public ReminderEmail(String serviceId, UserProfile.Id profileId, String resource, String objectId) {
 		super(serviceId, profileId, resource, objectId);
+		this.rich = true;
+	}
+	
+	public boolean getRich() {
+		return rich;
+	}
+	
+	public void setRich(boolean rich) {
+		this.rich = rich;
 	}
 
 	public String getSubject() {

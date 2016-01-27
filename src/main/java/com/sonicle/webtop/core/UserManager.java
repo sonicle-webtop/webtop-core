@@ -46,17 +46,11 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderFactory;
-import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.logging.Level;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
-import org.apache.commons.lang.StringUtils;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -89,7 +83,7 @@ public final class UserManager {
 	private final Object lock3 = new Object();
 	private HashMap<String, UserProfile.Id> uidToUserCache = null;
 	private HashMap<String, UserProfile.Id> roleUidToUserCache = null;
-	private HashMap<UserProfile.Id, UserProfile.Data> userToBagCache = null;
+	private HashMap<UserProfile.Id, UserProfile.Data> userToDataCache = null;
 	
 	/**
 	 * Private constructor.
@@ -102,8 +96,8 @@ public final class UserManager {
 		userToPersonalInfoCache = new HashMap<>();
 		uidToUserCache = new HashMap<>();
 		roleUidToUserCache = new HashMap<>();
-		userToBagCache = new HashMap<>();
-		updateCache();
+		userToDataCache = new HashMap<>();
+		updateUserCache();
 	}
 	
 	/**
@@ -111,16 +105,20 @@ public final class UserManager {
 	 */
 	void cleanup() {
 		wta = null;
+		cleanupUserCache();
+		logger.info("UserManager destroyed");
+	}
+	
+	private void cleanupUserCache() {
 		synchronized(lock3) {
 			userToUidBagCache.clear();
 			uidToUserCache.clear();
 			roleUidToUserCache.clear();
-			userToBagCache.clear();
+			userToDataCache.clear();
 		}
-		logger.info("UserManager destroyed");
 	}
 	
-	void updateCache() {
+	void updateUserCache() {
 		synchronized(lock3) {
 			try {
 				buildUidCache();
@@ -147,7 +145,7 @@ public final class UserManager {
 	
 	public UserProfile.Data userData(UserProfile.Id pid) throws WTException {
 		synchronized(lock1) {
-			if(!userToBagCache.containsKey(pid)) {
+			if(!userToDataCache.containsKey(pid)) {
 				try {
 					OUser user = getUser(pid);
 					if(user == null) return null;
@@ -157,14 +155,14 @@ public final class UserManager {
 					UserPersonalInfo info = userPersonalInfo(pid);
 					InternetAddress ia = WT.buildInternetAddress(info.getEmail(), user.getDisplayName());
 					UserProfile.Data data = new UserProfile.Data(user, ia);
-					userToBagCache.put(pid, data);
+					userToDataCache.put(pid, data);
 					return data;
 				} catch(WTException ex) {
 					logger.error("Unable to find user [{}]", pid);
 					throw ex;
 				}
 			} else {
-				return userToBagCache.get(pid);
+				return userToDataCache.get(pid);
 			}
 		}
 	}
@@ -248,6 +246,11 @@ public final class UserManager {
 	public String getInternetUserId(UserProfile.Id pid) throws WTException {
 		ODomain domain = getDomain(pid.getDomainId());
 		return new UserProfile.Id(domain.getDomainName(), pid.getUserId()).toString();
+	}
+	
+	public String getDomainInternetName(String domainId) throws WTException {
+		ODomain domain = getDomain(domainId);
+		return domain.getDomainName();
 	}
 	
 	private void buildUidCache() throws SQLException {

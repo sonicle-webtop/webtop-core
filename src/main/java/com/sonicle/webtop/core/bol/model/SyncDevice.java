@@ -33,6 +33,14 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.util.ZPushManager.LastsyncRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+
 /**
  *
  * @author malbinola
@@ -40,15 +48,28 @@ package com.sonicle.webtop.core.bol.model;
 public class SyncDevice {
 	public String device;
 	public String user;
-	public String info;
+	public DateTime lastSync;
 	
-	public SyncDevice() {
-		
-	}
+	public SyncDevice() {}
 	
-	public SyncDevice(String device, String user, String info) {
+	public SyncDevice(String device, String user, String lastSync) {
 		this.device = device;
 		this.user = user;
-		this.info = info;
+		if(StringUtils.equals(lastSync, LastsyncRecord.LASTSYNCTIME_NEVER)) {
+			this.lastSync = null;
+		} else {
+			try {
+				DateTimeFormatter fmt = DateTimeUtils.createYmdHmFormatter(WT.getSystemTimeZone());
+				this.lastSync = fmt.parseDateTime(lastSync);
+			} catch(UnsupportedOperationException | IllegalArgumentException ex) {
+				this.lastSync = null;
+			}
+		}
+	}
+	
+	public SyncDevice(String device, String user, DateTime lastSync) {
+		this.device = device;
+		this.user = user;
+		this.lastSync = lastSync;
 	}
 }

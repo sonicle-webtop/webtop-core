@@ -223,14 +223,15 @@ public class ZPushManager {
 	}
 	
 	public static class LastsyncRecord {
+		public static final String LASTSYNCTIME_NEVER = "never";
 		public String device;
 		public String syncronizedUser;
 		public String lastSyncTime;
 		
 		public LastsyncRecord(String device, String syncronizedUser, String lastSyncTime) {
-			this.device = device;
-			this.syncronizedUser = syncronizedUser;
-			this.lastSyncTime = lastSyncTime;
+			this.device = StringUtils.trim(device);
+			this.syncronizedUser = StringUtils.trim(syncronizedUser);
+			this.lastSyncTime = StringUtils.trim(lastSyncTime);
 		}
 	}
 }

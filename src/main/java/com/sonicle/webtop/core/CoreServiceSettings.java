@@ -11,6 +11,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.Locale;
+import org.joda.time.LocalTime;
 
 /**
  * @author matteo
@@ -75,56 +76,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String LOGIN_HIDE_FOOTPRINT = "login.footprint.hide";
 	
 	/**
-	 * [boolean][system][*]
-	 * Indicates if system is under maintenance
-	 */
-	public static final String MAINTENANCE = "maintenance";
-	
-	/**
-	 * [string][system][*]
-	 * Stores installed service version
-	 */
-	public static final String MANIFEST_VERSION = "manifest.version";
-	
-	/**
-	 * [string][system][*]
-	 * Specifies the service public name to use typically in public URLs.
-	 * If specified it overrides the generated one (see ServiceManager).
-	 */
-	public static final String PUBLIC_NAME = "public.name";
-	
-	/**
-	 * [string][system+domain]
-	 * Specifies if users can send feedbacks throught interface.
-	 */
-	public static final String FEEDBACK_ENABLED = "feedback.enabled";
-	
-	/**
-	 * [string][system+domain]
-	 * Specifies if what's new visualization to users is active
-	 */
-	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	
-	/**
-	 * [string][system+domain][*]
-	 * Overrides support email address
-	 */
-	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
-	/**
-	 * [boolean][system]
-	 */
-	//public static final String DB_INIT_ENABLED = "db.init.enabled";
-	/**
-	 * [boolean][system]
-	 */
-	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
-	
-	/**
-	 * [string][system]
-	 */
-	public static final String USERINFO_PROVIDER = "userinfo.provider";
-	
-	/**
 	 * [boolean][system+domain]
 	 * 2FA enables status on the platform
 	 */
@@ -153,7 +104,62 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	/**
 	 * [string][system]
 	 */
-	public static final String SYNC_DEVICES_SHELL_URI = "sync.devices.shell.uri";
+	public static final String DEVICES_SYNC_SHELL_URI = "devices.sync.shell.uri";
+	
+	/**
+	 * [time(hh:mm)][system]
+	 * Time instant at which check devices syncronization status 
+	 * in order to send notification alerts.
+	 */
+	public static final String DEVICES_SYNC_CHECK_TIME = "devices.sync.check.time";
+	
+	/**
+	 * [string][system+domain]
+	 * Specifies if what's new visualization to users is active
+	 */
+	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
+	
+	
+	
+	
+	
+	/**
+	 * [boolean][system][*]
+	 * Indicates if system is under maintenance
+	 */
+	public static final String MAINTENANCE = "maintenance";
+	
+	/**
+	 * [string][system][*]
+	 * Stores installed service version
+	 */
+	public static final String MANIFEST_VERSION = "manifest.version";
+	
+	/**
+	 * [string][system][*]
+	 * Specifies the service public name to use typically in public URLs.
+	 * If specified it overrides the generated one (see ServiceManager).
+	 */
+	public static final String PUBLIC_NAME = "public.name";
+	
+	/**
+	 * [string][system+domain][*]
+	 * Overrides support email address
+	 */
+	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
+	/**
+	 * [boolean][system]
+	 */
+	//public static final String DB_INIT_ENABLED = "db.init.enabled";
+	/**
+	 * [boolean][system]
+	 */
+	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
+	
+	/**
+	 * [string][system]
+	 */
+	public static final String USERINFO_PROVIDER = "userinfo.provider";
 	
 	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
 	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
@@ -194,27 +200,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(USERINFO_PROVIDER, "WebTop");
 	}
 	
-	public Boolean getFeedbackEnabled() {
-		return getBoolean(FEEDBACK_ENABLED, true);
-	}
-	
-	public Boolean getWhatsnewEnabled() {
-		return getBoolean(WHATSNEW_ENABLED, true);
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
 	}
@@ -235,9 +220,29 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getInteger(OTP_TRUST_DEVICE_DURATION, 0);
 	}
 	
-	public String getSyncDevicesShellUri() {
-		return getString(SYNC_DEVICES_SHELL_URI, "sh://localhost");
+	public String getDevicesSyncShellUri() {
+		return getString(DEVICES_SYNC_SHELL_URI, "sh://localhost");
 	}
+	
+	public LocalTime getDevicesSyncCheckTime() {
+		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
+	}
+	
+	
+	
+	public Boolean getWhatsnewEnabled() {
+		return getBoolean(WHATSNEW_ENABLED, true);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+			
 	
 	
 	/*
@@ -330,5 +335,9 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getDefaultLongTimeFormat() {
 		return getString(DEFAULT_PREFIX + CoreUserSettings.LONG_TIME_FORMAT, "HH:mm:ss");
+	}
+	
+	public boolean getDefaultDevicesSyncAlertEnabled() {
+		return getBoolean(DEFAULT_PREFIX + CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, false);
 	}
 }

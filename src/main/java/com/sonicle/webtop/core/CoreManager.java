@@ -278,6 +278,11 @@ public class CoreManager extends BaseManager {
 	
 	//TODO: remove user
 	
+	public List<UserProfile.Id> listProfilesWithSetting(String serviceId, String key, Object value) throws WTException {
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.listProfilesWith(serviceId, key, value);
+	}
+	
 	public List<ActivityGrid> listLiveActivities(Collection<String> domainIds) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
@@ -1190,7 +1195,7 @@ public class CoreManager extends BaseManager {
 	private ZPushManager createZPushManager() throws WTException {
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		try {
-			URI uri = new URI(css.getSyncDevicesShellUri());
+			URI uri = new URI(css.getDevicesSyncShellUri());
 			return new ZPushManager(css.getPhpPath(), css.getZPushPath(), uri);
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid URI");

@@ -124,7 +124,7 @@ public class ServletHelper {
 		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
 		String title = wta.getCustomProperty("webtop.title");
 		if (StringUtils.isEmpty(title)) {
-			title = wta.lookupAndFormatResource(locale, CoreLocaleKey.LOGIN_TITLE, true, manifest.getVersion().getMajor());
+			title = wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PAGE_TITLE, true, manifest.getVersion().getMajor());
 		}
 		tplMap.put("title", title);
 		tplMap.put("version", manifest.getVersion());

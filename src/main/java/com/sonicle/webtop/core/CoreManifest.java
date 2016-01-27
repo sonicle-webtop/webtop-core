@@ -106,16 +106,23 @@ public class CoreManifest extends ServiceManifest {
 		*/
 		
 		/*
+			FEEDBACK
+			Resource that tracks feedback insertion form
+			- MANAGE: allow access to the form
+		*/
+		resources.add(new AuthResource("FEEDBACK", new String[]{AuthResource.ACTION_MANAGE}));
+		
+		/*
 			ACTIVITIES
-			Resource that 
-			Activities
-			- MANAGE: access to management form
+			Resource that tracks activities management form
+			- MANAGE: allow access to the form
 		*/
 		resources.add(new AuthResource("ACTIVITIES", new String[]{AuthResource.ACTION_MANAGE}));
 		
 		/*
 			Causals
-			- MANAGE: access to management form
+			Resource that tracks causals management form
+			- MANAGE: allow access to the form
 		*/
 		resources.add(new AuthResource("CAUSALS", new String[]{AuthResource.ACTION_MANAGE}));
 		

@@ -155,10 +155,17 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
 	
 	/**
-	 * [boolean]
+	 * [boolean][default]
+	 * Enables an email alert if device sync is broken 
 	 */
-	public static final String SYNC_DEVICES_ENABLED = "sync.devices.enabled";
-	public static final Boolean DEFAULT_SYNC_DEVICES_ENABLED = true;
+	public static final String DEVICES_SYNC_ALERT_ENABLED = "devices.sync.alert.enabled";
+	
+	/**
+	 * [int] (number of days)
+	 * Specified the maximum difference between current time and last-sync time 
+	 * before sending a notification alert
+	 */
+	public static final String DEVICES_SYNC_ALERT_TOLERANCE = "devices.sync.alert.tolerance";
 	
 	public String getTheme() {
 		String value = getString(THEME, null);
@@ -290,14 +297,23 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(CoreUserSettings.OTP_EMAILADDRESS, value);
 	}
 	
-	public boolean getSyncDevicesEnabled() {
-		return getBoolean(CoreUserSettings.SYNC_DEVICES_ENABLED, DEFAULT_SYNC_DEVICES_ENABLED);
+	public boolean getDevicesSyncAlertEnabled() {
+		Boolean value = getBoolean(CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, null);
+		if(value != null) return value;
+		return ss.getDefaultDevicesSyncAlertEnabled();
 	}
 	
-	public boolean setSyncDevicesEnabled(Boolean value) {
-		return setBoolean(CoreUserSettings.SYNC_DEVICES_ENABLED, value);
+	public boolean setDevicesSyncAlertEnabled(Boolean value) {
+		return setBoolean(CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, value);
 	}
 	
+	public int getDevicesSyncAlertTolerance() {
+		return getInteger(CoreUserSettings.DEVICES_SYNC_ALERT_TOLERANCE, 7);
+	}
+	
+	public boolean setDevicesSyncAlertTolerance(int value) {
+		return setInteger(CoreUserSettings.DEVICES_SYNC_ALERT_TOLERANCE, value);
+	}
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
 		return setm.getUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION);

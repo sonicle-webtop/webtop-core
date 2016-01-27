@@ -38,23 +38,30 @@ package com.sonicle.webtop.core;
  * @author malbinola
  */
 public class CoreLocaleKey {
-	public static final String LOGIN_TITLE = "login.title";
-	public static final String LOGIN_USERNAME_PLACEHOLDER = "login.username.placeholder";
-	public static final String LOGIN_PASSWORD_PLACEHOLDER = "login.password.placeholder";
-	public static final String LOGIN_DOMAIN_LABEL = "login.domain.label";
-	public static final String LOGIN_DOMAIN_PROMPT = "login.domain.prompt";
-	public static final String LOGIN_SUBMIT_LABEL = "login.submit.label";
-	public static final String LOGIN_MAINTENANCE = "login.maintenance";
-	public static final String LOGIN_ERROR_MAINTENANCE = "login.error.maintenance";
-	public static final String LOGIN_ERROR_FAILURE = "login.error.failure";
-	public static final String OTP_TITLE = "otp.title";
-	public static final String OTP_HELPTITLE = "otp.helptitle";
-	public static final String OTP_DELIVERY_TITLE = "otp.delivery.title";
-	public static final String OTP_DELIVERY_INFO = "otp.delivery.{0}.info";
-	public static final String OTP_CODE_PLACEHOLDER = "otp.code.placeholder";
-	public static final String OTP_SUBMIT_LABEL = "otp.submit.label";
-	public static final String OTP_TRUST_LABEL = "otp.trust.label";
-	public static final String OTP_ERROR_FAILURE = "otp.error.failure";
+	public static final String TPL_PAGE_TITLE = "tpl.page.title";
+	public static final String TPL_LOGIN_USERNAME_PLACEHOLDER = "tpl.login.username.placeholder";
+	public static final String TPL_LOGIN_PASSWORD_PLACEHOLDER = "tpl.login.password.placeholder";
+	public static final String TPL_LOGIN_DOMAIN_LABEL = "tpl.login.domain.label";
+	public static final String TPL_LOGIN_DOMAIN_PROMPT = "tpl.login.domain.prompt";
+	public static final String TPL_LOGIN_SUBMIT_LABEL = "tpl.login.submit.label";
+	public static final String TPL_LOGIN_MAINTENANCE = "tpl.login.maintenance";
+	public static final String TPL_LOGIN_ERROR_MAINTENANCE = "tpl.login.error.maintenance";
+	public static final String TPL_LOGIN_ERROR_FAILURE = "tpl.login.error.failure";
+	public static final String TPL_OTP_HELPTITLE = "tpl.otp.helptitle";
+	public static final String TPL_OTP_DELIVERY_TITLE = "tpl.otp.delivery.title";
+	public static final String TPL_OTP_DELIVERY_INFO = "tpl.otp.delivery.{0}.info";
+	public static final String TPL_OTP_CODE_PLACEHOLDER = "tpl.otp.code.placeholder";
+	public static final String TPL_OTP_SUBMIT_LABEL = "tpl.otp.submit.label";
+	public static final String TPL_OTP_TRUST_LABEL = "tpl.otp.trust.label";
+	public static final String TPL_OTP_ERROR_FAILURE = "tpl.otp.error.failure";
+	
+	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_HEADER = "tpl.notification.noreply.footer.header";
+	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE = "tpl.notification.noreply.footer.message";
+	public static final String TPL_NOTIFICATION_FOOTER_HEADER = "tpl.notification.footer.header";
+	public static final String TPL_NOTIFICATION_FOOTER_MESSAGE = "tpl.notification.footer.message";
+	public static final String DEVICESYNCCHECK_EMAIL_SUBJECT = "devicesSyncCheck.email.subject";
+	public static final String DEVICESYNCCHECK_TPL_EMAIL_BODYMESSAGE = "devicesSyncCheck.tpl.email.bodyMessage";
+	
 	public static final String SERVICE_NAME = "service.name";
 	public static final String SERVICE_DESCRIPTION = "service.description";
 	public static final String LOCALE_X = "locale.{0}";
@@ -76,4 +83,7 @@ public class CoreLocaleKey {
 	public static final String WORD_NONE_FEMALE = "word.none.female";
 	public static final String WORD_YES = "word.yes";
 	public static final String WORD_NO = "word.no";
+	
+	
+
 }

@@ -31,19 +31,73 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.sdk.bol.js;
+
+import com.sonicle.commons.web.json.MapItem;
+import java.util.Date;
+import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 
 /**
  *
  * @author malbinola
  */
-public class JsUserOptionsBase {
-	public String id;
+public class JsOptions extends MapItem {
 	
-	public JsUserOptionsBase() {
+	public JsOptions() {
+		super();
+	}
+
+	public String getString(String key) {
+		return (String) get(key);
 	}
 	
-	public JsUserOptionsBase(String id) {
-		this.id = id;
+	public Boolean getBoolean(String key) {
+		return (Boolean) get(key);
+	}
+	
+	public Integer getInteger(String key) {
+		return (Integer) get(key);
+	}
+	
+	public Float getFloat(String key) {
+		return (Float) get(key);
+	}
+	
+	public Double getDouble(String key) {
+		return (Double) get(key);
+	}
+	
+	public Long getLong(String key) {
+		return (Long) get(key);
+	}
+	
+	public Date getDate(String key) {
+		return (Date) get(key);
+	}
+	
+	/*
+	public void putPrefixed(String prefix, Map<? extends String, ? extends Object> m) {
+		for(Map.Entry<? extends String, ? extends Object> entry : m.entrySet()) {
+			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
+		}
+	}
+	*/
+	
+	public void putAllWithPrefix(String prefix, Map<String, Object> m) {
+		for(Map.Entry<String, Object> entry : m.entrySet()) {
+			put(prefix + WordUtils.capitalize(entry.getKey()), entry.getValue());
+		}
+	}
+	
+	public Map<String, Object> getWithPrefix(String prefix) {
+		JsOptions map = new JsOptions();
+		for(Map.Entry<String, Object> entry : entrySet()) {
+			if(StringUtils.startsWith(entry.getKey(), prefix)) {
+				map.put(WordUtils.uncapitalize(StringUtils.removeStart(entry.getKey(), prefix)), entry.getValue());
+			}
+		}
+		return map;
 	}
 }

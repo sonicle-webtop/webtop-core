@@ -109,7 +109,7 @@ public class Otp extends HttpServlet {
 				} else {
 					if(tries >= 3) throw new NoMoreTriesException();
 					wts.getPropertyBag().set("OTP_TRIES", tries); // Save for later...
-					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.OTP_ERROR_FAILURE, true);
+					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
 					buildPage(wta, css, locale, deliveryMode, failureMessage, response);
 				}
 			}
@@ -172,13 +172,13 @@ public class Otp extends HttpServlet {
 		ServletHelper.fillSystemVars(tplMap, locale, wta);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);
-		tplMap.put("helpTitle", wta.lookupResource(locale, CoreLocaleKey.OTP_HELPTITLE, true));
-		tplMap.put("deliveryTitle", wta.lookupResource(locale, CoreLocaleKey.OTP_DELIVERY_TITLE, true));
+		tplMap.put("helpTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE, true));
+		tplMap.put("deliveryTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_DELIVERY_TITLE, true));
 		tplMap.put("deliveryMode", deliveryMode);
-		tplMap.put("deliveryInfo", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.OTP_DELIVERY_INFO, deliveryMode), true));
-		tplMap.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.OTP_CODE_PLACEHOLDER, true));
-		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.OTP_SUBMIT_LABEL, true));
-		tplMap.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.OTP_TRUST_LABEL, true));
+		tplMap.put("deliveryInfo", wta.lookupResource(locale, MessageFormat.format(CoreLocaleKey.TPL_OTP_DELIVERY_INFO, deliveryMode), true));
+		tplMap.put("codePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_CODE_PLACEHOLDER, true));
+		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL, true));
+		tplMap.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL, true));
 		tplMap.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
 		
 		// Load and build template

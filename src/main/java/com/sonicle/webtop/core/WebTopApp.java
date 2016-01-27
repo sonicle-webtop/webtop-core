@@ -115,6 +115,7 @@ public class WebTopApp {
 	private final ServletContext servletContext;
 	private final String systemInfo;
 	private final Charset systemCharset;
+	private DateTimeZone systemTimeZone;
 	private Locale systemLocale;
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
@@ -137,6 +138,7 @@ public class WebTopApp {
 		servletContext = context;
 		systemInfo = buildSystemInfo();
 		systemCharset = Charset.forName("UTF-8");
+		systemTimeZone = DateTimeZone.getDefault();
 		init();
 	}
 	
@@ -295,6 +297,10 @@ public class WebTopApp {
 	
 	public Charset getSystemCharset() {
 		return systemCharset;
+	}
+	
+	public DateTimeZone getSystemTimeZone() {
+		return systemTimeZone;
 	}
 	
 	public Locale getSystemLocale() {

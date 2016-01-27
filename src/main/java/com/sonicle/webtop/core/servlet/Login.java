@@ -78,7 +78,7 @@ public class Login extends HttpServlet {
 			boolean maintenance = true;
 			
 			// Defines messages...
-			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.LOGIN_MAINTENANCE, true) : null;
+			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_MAINTENANCE, true) : null;
 			
 			// Defines failure message
 			String failureAttribute = ServletUtils.getStringAttribute(request, ATTRIBUTE_LOGINFAILURE);
@@ -86,10 +86,10 @@ public class Login extends HttpServlet {
 			if(failureAttribute != null) {
 				switch (failureAttribute) {
 					case Login.LOGINFAILURE_INVALID:
-						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_FAILURE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_FAILURE, true);
 						break;
 					case Login.LOGINFAILURE_MAINTENANCE:
-						failureMessage = wta.lookupResource(locale, CoreLocaleKey.LOGIN_ERROR_MAINTENANCE, true);
+						failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_ERROR_MAINTENANCE, true);
 						break;
 				}
 			}
@@ -97,7 +97,7 @@ public class Login extends HttpServlet {
 			// Prepare domains list
 			List<ODomain> enabledDomains = core.listDomains(true);
 			List<HtmlSelect> domains = new ArrayList<>();
-			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_PROMPT, true)));
+			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PROMPT, true)));
 			for(ODomain dom : enabledDomains) {
 				domains.add(new HtmlSelect(dom.getDomainId(), dom.getDescription()));
 			}
@@ -124,10 +124,10 @@ public class Login extends HttpServlet {
 		tplMap.put("maintenanceMessage", maintenanceMessage);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);
-		tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_USERNAME_PLACEHOLDER, true));
-		tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.LOGIN_PASSWORD_PLACEHOLDER, true));
-		tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_DOMAIN_LABEL, true));
-		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.LOGIN_SUBMIT_LABEL, true));
+		tplMap.put("usernamePlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_USERNAME_PLACEHOLDER, true));
+		tplMap.put("passwordPlaceholder", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_PASSWORD_PLACEHOLDER, true));
+		tplMap.put("domainLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_LABEL, true));
+		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
 		tplMap.put("showDomain", showDomain);
 		tplMap.put("domains", domains);
 		

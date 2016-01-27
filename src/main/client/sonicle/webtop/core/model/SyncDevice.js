@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.model.SyncDevice', {
 	identifier: 'negative',
 	idProperty: 'id',
 	fields: [
-		WTF.field('device', 'string', false),
-		WTF.field('user', 'string', false),
-		WTF.field('info', 'string', true)
+		WTF.roField('device', 'string'),
+		WTF.roField('user', 'string'),
+		WTF.roField('lasySync', 'string', {dateFormat: 'Y-m-d H:i'})
 	]
 });

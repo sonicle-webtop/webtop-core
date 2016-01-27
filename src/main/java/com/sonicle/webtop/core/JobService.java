@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
+import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobServiceTask;
 import com.sonicle.webtop.core.sdk.BaseManager;
@@ -46,11 +47,17 @@ import com.sonicle.webtop.core.sdk.ReminderEmail;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.util.NotificationHelper;
+import freemarker.template.TemplateException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import javax.mail.internet.InternetAddress;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalTime;
+import org.jooq.tools.StringUtils;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -82,10 +89,17 @@ public class JobService extends BaseJobService {
 		ArrayList<TaskDefinition> jobs = new ArrayList<>();
 		
 		// Reminder job
-		Trigger rjTrigger = TriggerBuilder.newTrigger()
+		Trigger remTrigger = TriggerBuilder.newTrigger()
 				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * * * ?")) // every minute of the hour
 				.build();
-		jobs.add(new TaskDefinition(ReminderJob.class, rjTrigger));
+		jobs.add(new TaskDefinition(ReminderJob.class, remTrigger));
+		
+		// Device syncronization check job
+		LocalTime time = new CoreServiceSettings("*", CoreManifest.ID).getDevicesSyncCheckTime();
+		Trigger syncTrigger = TriggerBuilder.newTrigger()
+				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(time.getHourOfDay(), time.getMinuteOfHour())) // every day at...
+				.build();
+		jobs.add(new TaskDefinition(DevicesSyncCheckJob.class, syncTrigger));
 		
 		return jobs;
 	}
@@ -121,8 +135,8 @@ public class JobService extends BaseJobService {
 				logger.trace("Processing {} returned alerts", alerts.size());
 				for(BaseReminder alert : alerts) {
 					if(alert instanceof ReminderEmail) {
-						//TODO: inviare notifica per email
-
+						sendEmail((ReminderEmail)alert);
+						
 					} else if(alert instanceof ReminderInApp) {
 						ReminderMessage msg = new ReminderMessage(new JsReminderInApp((ReminderInApp)alert));
 						if(!byProfile.containsKey(alert.getProfileId())) {
@@ -157,7 +171,91 @@ public class JobService extends BaseJobService {
 				WT.nofity(pid, byProfile.get(pid), true);
 			}
 			
-			logger.trace("ReminderJob finished");
+			logger.trace("ReminderJob finished [{}]", now);
+		}
+		
+		private void sendEmail(ReminderEmail reminder) {
+			try {
+				UserProfile.Data ud = jobService.core.getUserData(reminder.getProfileId());
+				InternetAddress from = WT.buildDomainInternetAddress(reminder.getProfileId().getDomainId(), "webtop-notification", null);
+				if(from == null) throw new WTException("Error building sender address");
+				InternetAddress to = ud.getEmail();
+				if(to == null) throw new WTException("Error building destination address");
+				WT.sendEmail(reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
+				
+			} catch(Exception ex) {
+				logger.error("Unable to send email", ex);
+			}
+		}
+	}
+	
+	public static class DevicesSyncCheckJob extends BaseJobServiceTask {
+		private JobService jobService = null;
+		
+		@Override
+		public void setJobService(BaseJobService jobService) {
+			// This method is automatically called by scheduler engine
+			// while instantiating this task.
+			this.jobService = (JobService)jobService;
+		}
+		
+		@Override
+		public void executeWork() {
+			DateTime now = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
+			List<SyncDevice> devices = null;
+			
+			logger.trace("DevicesSyncCheckJob started [{}]", now);
+			try {
+				List<UserProfile.Id> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, true);
+				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
+				for(UserProfile.Id pid : pids) {
+					// Skip profiles that don't have permission for syncing devices
+					if(!WT.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
+					
+					UserProfile.Data ud = jobService.core.getUserData(pid);
+					// Skip profiles that cannot receive email alerts
+					if(ud.getEmail() == null) continue;
+					
+					int tolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
+					if(!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, tolerance * 24)) {
+						sendEmail(pid.getDomainId(), ud);
+					}
+				}
+			} catch(WTException ex) {
+				logger.error("Unable to check device sync status", ex);
+			}
+			logger.trace("DevicesSyncCheckJob finished [{}]", now);
+		}
+		
+		private void sendEmail(String domainId, UserProfile.Data userData) {
+			try {
+				String mySubject = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_EMAIL_SUBJECT);
+				String source = NotificationHelper.buildSource(userData.getLocale(), jobService.SERVICE_ID);
+				String subject = NotificationHelper.buildSubject(userData.getLocale(), jobService.SERVICE_ID, mySubject);
+				String bodyMessage = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_TPL_EMAIL_BODYMESSAGE);
+				String html = NotificationHelper.buildNoReplayTpl(userData.getLocale(), source, null, bodyMessage);
+				
+				InternetAddress from = WT.buildDomainInternetAddress(domainId, "webtop-notification", null);
+				if(from == null) throw new WTException("Error building sender address");
+				InternetAddress to = userData.getEmail();
+				if(to == null) throw new WTException("Error building destination address");
+				WT.sendEmail(true, from, to, subject, html);
+				
+			} catch(IOException | TemplateException ex) {
+				logger.error("Unable to build email template", ex);
+			} catch(Exception ex) {
+				logger.error("Unable to send email", ex);
+			}
+		}
+		
+		private boolean checkSyncStatusForUser(List<SyncDevice> devices, String email, DateTime now, int hours) {
+			DateTime nowMinus = now.minusHours(hours);
+			for(SyncDevice device : devices) {
+				if(StringUtils.equals(device.user, email) && (device.lastSync.isAfter(nowMinus))) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 }
