@@ -24,8 +24,7 @@ Ext.define('Sonicle.upload.Item', {
 		
 		if(me.getUploaderAutoInit()) {
 			me.on('afterrender', function() {
-				me.uploader.setBrowseButton(me.getId());
-				me.uploader.init();
+				me.initUploader();
 			}, {single: true});
 		}
 		
