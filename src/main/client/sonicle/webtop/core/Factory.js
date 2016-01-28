@@ -198,12 +198,12 @@ Ext.define('Sonicle.webtop.core.Factory', {
 			writer: Ext.apply({
 				type: 'json'
 			}, opts.writer || {}),
-			listeners: {
+			listeners: Ext.merge({
 				exception: function(proxy, request, operation, eOpts) {
 					//TODO: localizzare il messaggio di errore
 					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
 				}
-			}
+			}, opts.listeners || {})
 		}, obj);
 	},
 	
@@ -223,12 +223,12 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}, opts.reader || {}),
-			listeners: {
+			listeners: Ext.merge({
 				exception: function(proxy, request, operation, eOpts) {
 					//TODO: localizzare il messaggio di errore
 					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
 				}
-			}
+			}, opts.listeners || {})
 		}, obj);
 		return obj;
 	},
