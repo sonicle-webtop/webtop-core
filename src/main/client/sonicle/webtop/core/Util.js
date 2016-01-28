@@ -197,6 +197,11 @@ Ext.define('Sonicle.webtop.core.Util', {
 		*/
 	},
 	
+	arrayAsParam: function(arr) {
+		arr = Ext.isArray(arr) ? arr : [arr];
+		return Ext.JSON.encode(arr);
+	},
+	
 	removeExtraParams: function(proxy, params) {
 		if(!Ext.isArray(params)) params = [params];
 		if(!proxy.isProxy && !proxy.isStore) return;
