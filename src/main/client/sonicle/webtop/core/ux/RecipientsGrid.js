@@ -83,7 +83,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	extend: 'Ext.grid.Panel',
 	alias: ['widget.wtrecipientsgrid'],
 	requires: [
-		'Sonicle.webtop.core.ux.SuggestCombo',
+		'Sonicle.webtop.core.ux.field.SuggestCombo',
 		'Sonicle.webtop.core.model.Simple'
 	],
 
@@ -95,9 +95,9 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	
 	/**
 	 * @cfg {String} action
-	 * Webtop action, if different from LookupContacts.
+	 * Webtop action, if different from LookupRecipients.
 	 */
-	action: 'LookupContacts',
+	action: 'LookupRecipients',
 	
 	/*
 	 * @cfg {String} store

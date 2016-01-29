@@ -565,6 +565,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Returns the ID of currently active (displayed) service.
+	 * @returns {String}
+	 */
+	getActiveService: function() {
+		return this.getApp().viewport.getController().active;
+	},
+	
+	/**
 	 * Returns the theme in use.
 	 * Value is taken from core options 'theme'.
 	 * @returns {String} The theme value.

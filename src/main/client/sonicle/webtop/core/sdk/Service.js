@@ -116,16 +116,32 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		}
 	},
 	
+	/**
+	 * Returns service's name.
+	 * @return {String}
+	 */
 	getName: function() {
 		return WT.getApp().getDescriptor(this.ID).getName();
 	},
 	
+	/**
+	 * Returns service's description.
+	 * @return {String}
+	 */
 	getDescription: function() {
 		return WT.getApp().getDescriptor(this.ID).getDescription();
 	},
 	
 	preNs: function(cn) {
 		return WT.preNs(WT.getApp().getDescriptor(this.ID).getNs(), cn);
+	},
+	
+	/**
+	 * Returns true if this service is currently activated (displayed)
+	 * @return {Boolean}
+	 */
+	isActive: function() {
+		return WT.getActiveService() === this.ID;
 	},
 	
 	/**

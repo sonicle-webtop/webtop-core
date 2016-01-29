@@ -31,8 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
-	alternateClassName: 'WT.ux.SuggestCombo',
+Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
+	alternateClassName: 'WT.ux.field.SuggestCombo',
 	extend: 'Ext.form.field.ComboBox',
 	alias: ['widget.wtsuggestcombo', 'widget.wtsuggestcombobox'],
 	
@@ -49,10 +49,13 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 	 * Webtop service ID.
 	 */
 	
-	/**
-	 * @cfg {String} suggestionContext
-	 * Suggestion context.
-	 */
+	config: {
+		/**
+		 * @cfg {String} suggestionContext
+		 * Suggestion context.
+		 */
+		suggestionContext: ''
+	},
 	
 	typeAhead: false,
 	minChars: 2,
@@ -73,7 +76,7 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 				model: 'WT.ux.data.ValueModel',
 				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
 					extraParams: {
-						context: me.suggestionContext
+						context: me.getSuggestionContext()
 					}
 				})
 			}
@@ -83,12 +86,21 @@ Ext.define('Sonicle.webtop.core.ux.SuggestCombo', {
 		me.on('specialkey', me._onSpecialKey);
 	},
 	
-	setSuggestionContext: function(value) {
+	updateSuggestionContext: function(nv) {
 		var me = this;
-		me.suggestionContext = value;
-		WTU.applyExtraParams(me.getStore(), {
-			context: value
-		});
+		if(me.store) {
+			WTU.applyExtraParams(me.store, {
+				context: nv
+			});
+		}
+	},
+	
+	onBlur: function(e) {
+		var me = this;
+		me.callParent(arguments);
+		// This avoids binding notify firing problems when typing into field
+		// and bluring out rapidly; checkChange method forces internal updates!
+		if(me.store && !me.store.isLoaded()) me.checkChange();
 	},
 	
 	/*
