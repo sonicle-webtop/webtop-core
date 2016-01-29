@@ -56,6 +56,7 @@ import java.util.List;
 import javax.mail.internet.InternetAddress;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Hours;
 import org.joda.time.LocalTime;
 import org.jooq.tools.StringUtils;
 import org.quartz.CronScheduleBuilder;
@@ -216,8 +217,8 @@ public class JobService extends BaseJobService {
 					// Skip profiles that cannot receive email alerts
 					if(ud.getEmail() == null) continue;
 					
-					int tolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
-					if(!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, tolerance * 24)) {
+					int daysTolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
+					if(!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, daysTolerance * 24)) {
 						sendEmail(pid.getDomainId(), ud);
 					}
 				}
@@ -249,11 +250,13 @@ public class JobService extends BaseJobService {
 		}
 		
 		private boolean checkSyncStatusForUser(List<SyncDevice> devices, String email, DateTime now, int hours) {
-			DateTime nowMinus = now.minusHours(hours);
 			for(SyncDevice device : devices) {
-				if(StringUtils.equals(device.user, email) && (device.lastSync.isAfter(nowMinus))) {
-					return false;
-				}
+				if(device.lastSync != null) {
+					int hoursDiff = Hours.hoursBetween(device.lastSync, now).getHours();
+					if(StringUtils.equals(device.user, email) && (hoursDiff > hours)) {
+						return false;
+					}
+				}	
 			}
 			return true;
 		}

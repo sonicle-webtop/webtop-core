@@ -50,10 +50,11 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	viewModel: {
 		formulas: {
-			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
 			upiFieldEditable: function(get) {
 				return WT.getOption('wtUpiProviderWritable') && get('record.canManageUpi');
-			}
+			},
+			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
+			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled')
 		}
 	},
 	
@@ -716,12 +717,49 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					region: 'north',
 					xtype: 'wtfieldspanel',
 					bodyPadding: 0,
-					height: 30,
+					height: 60,
 					items: [{
 						xtype: 'wtpermstatusfield',
 						bind: '{record.canSyncDevices}',
 						fieldLabel: WT.res('opts.sync.cansyncdevices'),
 						userText: me.profileId
+					}, {
+						xtype: 'fieldcontainer',
+						layout: 'hbox',
+						defaults: {
+							margin: '0 10 0 0'
+						},
+						items: [{
+							xtype: 'checkbox',
+							reference: 'fldsyncalertenabled', // Publishes field into viewmodel...
+							bind: '{syncAlertEnabled}',
+							margin: '0 20 0 0',
+							hideEmptyLabel: true,
+							boxLabel: WT.res('opts.sync.fld-syncAlertEnabled.lbl'),
+							listeners: {
+								blur: {
+									fn: me.onBlurAutoSave,
+									scope: me
+								}
+							}
+						}, {
+							xtype: 'numberfield',
+							bind: {
+								value: '{record.syncAlertTolerance}',
+								disabled: '{!fldsyncalertenabled.checked}'
+							},
+							minValue: 1,
+							maxValue: 30,
+							fieldLabel: WT.res('opts.sync.fld-syncAlertTolerance.lbl'),
+							labelWidth: 80,
+							width: 140,
+							listeners: {
+								blur: {
+									fn: me.onBlurAutoSave,
+									scope: me
+								}
+							}
+						}]
 					}]
 				}, {
 					region: 'center',

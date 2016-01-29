@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.WT;
@@ -220,18 +221,37 @@ public final class UserProfile {
 		}
 	}
 	
-	public static class Id {
+	public static class Id extends DomainAccount {
+		public Id(String id) {
+			super(id);
+		}
+		
+		public Id(String domainId, String userId) {
+			super(domainId, userId);
+		}
+		
+		public String getDomainId() {
+			return getDomain();
+		}
+		
+		public String getUserId() {
+			return getUser();
+		}
+	}
+	
+	/*
+	public static class Id2 {
 		private final String domainId;
 		private final String userId;
 		
-		public Id(String id) {
+		public Id2(String id) {
 			String[] tokens = StringUtils.split(id, "@", 2);
 			if(tokens.length != 2) throw new WTRuntimeException("Unable to parse specified profileId [{0}]", id);
 			this.domainId = tokens[1];
 			this.userId = tokens[0];
 		}
 		
-		public Id(String domainId, String userId) {
+		public Id2(String domainId, String userId) {
 			this.domainId = Check.notNull(domainId);
 			this.userId = Check.notNull(userId);
 		}
@@ -259,15 +279,16 @@ public final class UserProfile {
 		
 		@Override
 		public boolean equals(Object obj) {
-			if(obj instanceof Id == false) return false;
+			if(obj instanceof Id2 == false) return false;
 			if(this == obj) return true;
-			final Id otherObject = (Id) obj;
+			final Id2 otherObject = (Id2) obj;
 			return new EqualsBuilder()
 				.append(domainId, otherObject.domainId)
 				.append(userId, otherObject.userId)
 				.isEquals();
 		}
 	}
+	*/
 	
 	private String generateSecretKey() throws NoSuchAlgorithmException {
 		byte[] buffer = new byte[80/8];

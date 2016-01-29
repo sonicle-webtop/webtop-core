@@ -33,7 +33,11 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.RunContext;
 import com.sonicle.webtop.core.WebTopApp;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.support.SubjectThreadState;
+import org.apache.shiro.util.ThreadState;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -44,7 +48,6 @@ import org.quartz.JobExecutionException;
  * @author malbinola
  */
 public abstract class BaseJobServiceTask implements Job {
-	
 	private JobExecutionContext jec;
 	
 	public JobDataMap getData() {
@@ -55,10 +58,23 @@ public abstract class BaseJobServiceTask implements Job {
 	public final void execute(JobExecutionContext jec) throws JobExecutionException {
 		this.jec = jec;
 		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			executeWork();
+			RunContext cntx = ((BaseJobService)getData().get("jobService")).getRunContext();
+			Subject subject = WebTopApp.getInstance().getAuthManager().buildSubject(cntx);
+			ThreadState threadState = new SubjectThreadState(subject);
+			
+			try {
+				threadState.bind();
+				executeWork();
+			} finally {
+				threadState.clear();
+			}
 		}
 	}
 	
 	public abstract void setJobService(BaseJobService jobService);
+	
+	/**
+	 * Method that defines job work.
+	 */
 	public abstract void executeWork();
 }

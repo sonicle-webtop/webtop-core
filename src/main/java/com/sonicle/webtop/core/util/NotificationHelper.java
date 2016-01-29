@@ -75,7 +75,7 @@ public class NotificationHelper {
 	
 	public static String buildNoReplayTpl(Locale locale, String source, String bodyHeader, String bodyMessage) throws IOException, TemplateException {
 		Map map = generateNoReplayTplStrings(locale, source, bodyHeader, bodyMessage);
-		return WT.buildTemplate("tpl_emailNotification.html", map);
+		return WT.buildTemplate("tpl_notification.html", map);
 	}
 	
 	public static Map<String, String> generateNoReplayTplStrings(Locale locale, String source, String bodyHeader, String bodyMessage) {
@@ -89,7 +89,7 @@ public class NotificationHelper {
 	
 	public static String buildNotificationTpl(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String why) throws IOException, TemplateException {
 		Map map = generateNotificationTplStrings(locale, source, recipientEmail, bodyHeader, bodyMessage, why);
-		return WT.buildTemplate("tpl_emailNotification.html", map);
+		return WT.buildTemplate("tpl_notification.html", map);
 	}
 	
 	public static Map<String, String> generateNotificationTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String why) {

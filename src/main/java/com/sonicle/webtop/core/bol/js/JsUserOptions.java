@@ -73,6 +73,9 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String upiCustom2;
 	public String upiCustom3;
 	
+	public Boolean syncAlertEnabled;
+	public Integer syncAlertTolerance;
+	
 	public Boolean otpEnabled;
 	public String otpDelivery;
 	public String otpEmailAddress;

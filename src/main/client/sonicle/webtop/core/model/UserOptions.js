@@ -68,6 +68,9 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('upiCustom2', 'string', true),
 		WTF.field('upiCustom3', 'string', true),
 		
+		WTF.field('syncAlertEnabled', 'boolean', false),
+		WTF.field('syncAlertTolerance', 'int', false),
+		
 		WTF.roField('otpDelivery', 'string'),
 		WTF.roField('otpEmailAddress', 'string'),
 		WTF.roField('otpDeviceIsTrusted', 'boolean'),

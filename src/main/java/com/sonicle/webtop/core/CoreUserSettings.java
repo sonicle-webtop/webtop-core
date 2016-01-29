@@ -161,7 +161,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String DEVICES_SYNC_ALERT_ENABLED = "devices.sync.alert.enabled";
 	
 	/**
-	 * [int] (number of days)
+	 * [int] (number of days 1->30)
 	 * Specified the maximum difference between current time and last-sync time 
 	 * before sending a notification alert
 	 */

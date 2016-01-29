@@ -144,6 +144,8 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				// Sync
 				jso.canSyncDevices = WT.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
+				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
 				new JsonResult(jso).printTo(out);
 				
@@ -191,6 +193,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 						provider.setInfo(getTargetDomainId(), getTargetUserId(), upi);
 					}
 				}
+				
+				// sync
+				if(pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
+				if(pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
 				
 				udao.update(con, user);
 				

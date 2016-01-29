@@ -274,9 +274,18 @@ public class AuthManager {
 			return subject;
 		} else { // Requested subject is not the current one
 			//TODO: instantiate a principal on-the-fly
-			PrincipalCollection principals = new SimplePrincipalCollection(pid.toString(), "com.sonicle.webtop.core.shiro.WTRealm");
-			return new Subject.Builder().principals(principals).buildSubject();
+			return buildSubject(pid);
 		}
+	}
+	
+	public Subject buildSubject(RunContext context) {
+		return buildSubject(context.getProfileId());
+	}
+	
+	private Subject buildSubject(UserProfile.Id pid) {
+		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
+		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		return new Subject.Builder().principals(principals).buildSubject();
 	}
 	
 	public void ensureIsPermitted(UserProfile.Id pid, String resource) {

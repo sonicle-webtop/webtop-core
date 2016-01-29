@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.shiro.WTRealm;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -73,6 +74,8 @@ import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
@@ -167,6 +170,8 @@ public class WebTopApp {
 		// User Manager
 		usrm = UserManager.initialize(this);
 		// Auth Manager
+		DefaultSecurityManager sm = new DefaultSecurityManager(new WTRealm());
+		SecurityUtils.setSecurityManager(sm);
 		autm = AuthManager.initialize(this);
 		// Settings Manager
 		setm = SettingsManager.initialize(this);

@@ -47,6 +47,11 @@ public abstract class BaseJobService extends BaseServiceBase {
 	private boolean configured = false;
 	private RunContext context;
 	
+	/**
+	 * Method where implementation can return a set of task 
+	 * with their own execution triggers.
+	 * @return 
+	 */
 	public abstract List<TaskDefinition> returnTasks();
 	
 	public final void configure(RunContext context) {
