@@ -325,7 +325,7 @@ public class WT {
 		//TODO: gestire invio email e implementari segnature diverse
 		WebTopApp.logger.debug("Invio email da {} a {}", from.toString(), to.toString());
 		WebTopApp.logger.debug("{}", subject);
-		WebTopApp.logger.debug("{}", body);
+		//WebTopApp.logger.debug("{}", body);
 	}
 	
 	public static String generateUUID() {
