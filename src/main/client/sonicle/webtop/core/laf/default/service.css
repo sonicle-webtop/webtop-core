@@ -133,13 +133,13 @@
 }
 div.wt-wntitle {
 	margin-top: 1em;
-	//font-size: 220%;
+	/*font-size: 220%;*/
 	font-size: 150%;
 	font-weight: bold;
 }
 div.wt-wnsubtitle {
 	margin-top: 0em;
-	//font-size: 130%;
+	/*font-size: 130%;*/
 	font-size: 110%;
 	font-family: Georgia,"Times New Roman",Times,serif;
 	font-style: italic;
@@ -147,7 +147,7 @@ div.wt-wnsubtitle {
 }
 div.wt-wnlist {
 	margin-top: 1em;
-	//font-size: 110%;
+	/*font-size: 110%;*/
 }
 .wt-wnlist ul {
 	padding-left: 30px;
