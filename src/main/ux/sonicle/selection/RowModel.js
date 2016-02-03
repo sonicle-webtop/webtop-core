@@ -17,12 +17,31 @@ Ext.define('Sonicle.selection.RowModel', {
 	removeSelection: function(selection) {
 		var me=this,
 			s=selection||me.getSelection(),
+			st=me.store,
 			ix=me.store.indexOf(s[0]);
-		me.store.remove(s);
-		if (ix>=me.store.getCount()) --ix;
 		
-		if (ix>=0) me.select(ix);
+		if (st.remove) {
+			st.remove(s);
+			me._reselect(ix);
+		}
+		else {
+			st.reload({
+				callback: function() {
+					me._reselect(ix);
+				}
+			});
+		}
+		
 	},
+	
+	_reselect: function(ix) {
+		var me=this;
+		if (ix>=me.store.getCount()) --ix;
+		if (ix>=0) {
+			me.view.bufferedRenderer.scrollTo(ix, true);
+			me.select(ix);
+		}
+	}
 	
 	
 });
