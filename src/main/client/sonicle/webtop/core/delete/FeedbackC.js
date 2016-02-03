@@ -79,7 +79,7 @@ Ext.define('Sonicle.webtop.core.view.FeedbackC', {
 		var v = me.getView();
 		v.wait(WT.res('feedback.capturing'));
 		me.clearScreenshot();
-		WT.loadScriptAsync('js/html2canvas.js', function(success) {
+		WT.loadScriptAsync('resources/com.sonicle.webtop.core/js/html2canvas.js', function(success) {
 			if(success) {
 				html2canvas([document.body], {
 					onrendered: function(canvas) {

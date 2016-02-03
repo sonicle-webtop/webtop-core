@@ -737,8 +737,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							hideEmptyLabel: true,
 							boxLabel: WT.res('opts.sync.fld-syncAlertEnabled.lbl'),
 							listeners: {
-								blur: {
-									fn: me.onBlurAutoSave,
+								change: {
+									fn: function(s) {
+										//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+										Ext.defer(function() {
+											me.onBlurAutoSave(s);
+										}, 200);
+									},
 									scope: me
 								}
 							}

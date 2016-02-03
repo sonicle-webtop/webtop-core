@@ -322,11 +322,20 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/*
-	 * Builds the src url of a themed image for this service
-	 * @param {String} relPath The relative icon path
-	 * @return {String} the imageUrl
+	 * Builds the URL of a resource file this service.
+	 * @param {String} relPath The relative resource path.
+	 * @return {String} The URL
 	 */
-	imageUrl: function(relPath) {
+	fileUrl: function(relPath) {
+		return WTF.fileUrl(this.ID, relPath);
+	},
+	
+	/*
+	 * Builds the URL of a themed resource file this service.
+	 * @param {String} relPath The relative resource path.
+	 * @return {String} The URL
+	 */
+	resourceUrl: function(relPath) {
 		return WTF.resourceUrl(this.ID, relPath);
 	},
 	

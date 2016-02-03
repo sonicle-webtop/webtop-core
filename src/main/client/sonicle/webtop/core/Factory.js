@@ -93,6 +93,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/*
+	 * Builds the URL of a resource file for a service.
+	 * @param {String} sid The service ID.
+	 * @param {String} relPath The relative resource path.
+	 * @return {String} The URL
+	 */
+	fileUrl: function(sid, relPath) {
+		return Ext.String.format('resources/{0}/{1}', sid, relPath);
+	},
+	
+	/*
 	 * Builds the URL of a themed resource file (image, css, etc...) for a service.
 	 * @param {String} sid The service ID.
 	 * @param {String} relPath The relative resource path.

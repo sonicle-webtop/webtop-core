@@ -31,18 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-/**
- *
- * @author malbinola
- */
-public interface Resource {
-	public String getFilename();
-	public long getLastModified();
-	public long getSize();
-	public InputStream getInputStream() throws IOException;
-}
+Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
+	extend: 'WT.sdk.WizardView',
+	
+	
+	
+});

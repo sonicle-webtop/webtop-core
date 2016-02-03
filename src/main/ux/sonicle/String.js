@@ -47,5 +47,12 @@ Ext.define('Sonicle.String', {
 			s = s.concat(arguments[i] || '', sep);
 		}
 		return Ext.String.trim(s);
+	},
+	
+	coalesce: function(values) {
+		for(var i=0; i<arguments.length; i++) {
+			if((arguments[i] !== null) && (arguments[i] !== undefined)) return arguments[i];
+		}
+		return null;
 	}
 });

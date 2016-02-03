@@ -172,6 +172,21 @@
 			<artifactId>ical4j</artifactId>
 			<version>1.0.6</version>
 		</dependency>
+	 <dependency>
+	  <groupId>org.apache.poi</groupId>
+	  <artifactId>poi</artifactId>
+	  <version>3.13</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>org.apache.poi</groupId>
+	  <artifactId>poi-ooxml</artifactId>
+	  <version>3.13</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>org.apache.poi</groupId>
+	  <artifactId>poi-ooxml-schemas</artifactId>
+	  <version>3.13</version>
+	 </dependency>
 	</dependencies>
 	<build>
 		<resources>
@@ -180,6 +195,9 @@
 			</resource>
 			<resource>
 				<directory>src/main/client</directory>
+			</resource>
+			<resource>
+				<directory>src/main/client-resources</directory>
 			</resource>
 			<resource>
 				<directory>src/main/ux</directory>
