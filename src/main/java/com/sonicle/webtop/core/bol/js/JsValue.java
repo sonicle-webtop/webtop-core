@@ -40,9 +40,7 @@ package com.sonicle.webtop.core.bol.js;
 public class JsValue {
 	public String id;
 	
-	public JsValue() {
-		
-	}
+	public JsValue() {}
 	
 	public JsValue(String id) {
 		this.id = id;

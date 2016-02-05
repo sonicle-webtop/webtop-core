@@ -76,7 +76,7 @@ public class ExcelImportReader extends ImportRowsReader {
 		this.sheet = sheet;
 	}
 	
-	public List<String> getSheets(InputStream is) throws IOException {
+	public List<String> listSheets(InputStream is) throws IOException {
 		ArrayList<String> sheets = new ArrayList<>();
 		Workbook wb = createWorkbook(is);
 		for(int i=0; i<wb.getNumberOfSheets(); i++) {
@@ -86,7 +86,7 @@ public class ExcelImportReader extends ImportRowsReader {
 	}
 	
 	@Override
-	public HashMap<String, String> getColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
+	public HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, String> hm = new LinkedHashMap<>();
 		
 		Workbook wb = createWorkbook(is);

@@ -31,9 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
-	extend: 'WT.sdk.WizardView',
+Ext.define('Sonicle.webtop.core.store.TxtEncoding', {
+	alternateClassName: 'WT.store.TxtEncoding',
+	extend: 'Ext.data.Store',
 	
-	
-	
+	model: 'WT.model.Simple',
+	proxy: WTF.proxy(WT.ID, 'LookupTextEncodings', 'encodings')
 });

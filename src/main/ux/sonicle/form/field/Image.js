@@ -83,6 +83,15 @@ Ext.define('Sonicle.form.field.Image', {
 		me.callParent([cfg]);
 	},
 	
+	destroy: function() {
+		var me = this;
+		if(me.uploader) {
+			me.uploader.destroy();
+			me.uploader = null;
+		}
+		me.callParent();
+	},
+	
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);

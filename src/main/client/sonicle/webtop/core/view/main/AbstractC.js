@@ -255,6 +255,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	onMenuButtonClick: function(s) {
 		var me = this, wnd;
 		switch(s.getItemId()) {
+			case 'test':
+				var mys = WT.app.getService(WT.ID),
+						vw;
+
+				vw = me.createView(mys, 'sdk.ImportWizardView');
+				vw.show();
+				
+				break;
 			case 'logout':
 				WT.logout();
 				break;

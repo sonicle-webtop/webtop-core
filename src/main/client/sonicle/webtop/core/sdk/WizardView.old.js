@@ -60,20 +60,10 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		endHeaderText: WT.res('wizard.end.hd')
 	},
 	
-	pages: null,
-	
-	/**
-	 * @private
-	 */
-	isMultiPath: false,
+	pages: ['end'],
 	
 	initComponent: function() {
-		var me = this,
-				vm = me.getVM();
-		
-		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
-			pathgroup: WTF.radioGroupBind(null, 'path', me.getId()+'-pathgroup')
-		}));
+		var me = this;
 		
 		Ext.apply(me, {
 			tbar: [
@@ -116,97 +106,20 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 					xtype: 'button',
 					text: WT.res('wizard.btn-cancel.lbl'),
 					handler: function() {
-						if(!me.isPathSelection() && !me.hasNext(1)) me.fireEvent('wizardcompleted', me);
+						if(!me.hasNext(1)) me.fireEvent('wizardcompleted', me);
 						me.closeView();
 					}
 				}
 			]
 		});
 		me.callParent(arguments);
-		
-		me.isMultiPath = false;
-		if(!Ext.isArray(me.pages)) {
-			Ext.iterate(this.pages, function(k,v) {
-				if(!Ext.isArray(v)) Ext.Error.raise('Invalid pages definition object');
-			});
-			me.isMultiPath = true;
-		}
-		
-		if(me.isMultiPath) {
-			me.initPathPage();
-		} else {
-			me.initPages();
-		}
+		me.add(me.createPages());
+		me.onNavigate(me.pages[0]);
 	},
 	
-	initChooserPage: function() {
+	createPages: function() {
 		var me = this;
-		me.add(me.createPathPage('', {}));
-		me.onNavigate('path');
-	},
-	
-	initPages: function() {
-		var me = this,
-				curpath = me.getVM().get('path');
-		me.add(me.createPages(curpath));
-		me.onNavigate(me.getPages()[0]);
-	},
-	
-	getPages: function() {
-		var me = this,
-				curpath = me.getVM().get('path');
-		if(me.isMultiPath) {
-			return me.pages[curpath];
-		} else {
-			return me.pages;
-		}
-	},
-	
-	createPages: function(path) {
-		return [];
-	},
-	
-	createPathPage: function(title, fieldLabel, fieldItems) {
-		var me = this,
-				items = [];
-		
-		Ext.iterate(fieldItems, function(obj,i) {
-			items.push({
-				name: me.getId()+'-pathgroup',
-				inputValue: obj.value,
-				boxLabel: obj.label
-			});
-		});
-		
-		return {
-			itemId: 'path',
-			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: title
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'wtform',
-				items: [{
-					xtype: 'fieldset',
-					title: fieldLabel,
-					items: [{
-						xtype: 'radiogroup',
-						bind: {
-							value: '{pathgroup}'
-						},
-						columns: 1,
-						items: items
-					}]
-				}]
-			}]
-		};
-	},
-	
-	createEndPage: function() {
-		var me = this;
-		return {
+		return [{
 			itemId: 'end',
 			xtype: 'wtwizardpage',
 			items: [{
@@ -221,22 +134,15 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				readOnly: true,
 				anchor: '100% -40'
 			}]
-		};
-	},
-	
-	isPathSelection: function(page) {
-		page = page || this.getActivePage();
-		return page === 'path';
+		}];
 	},
 	
 	getPagesCount: function() {
-		var pages = this.getPages();
-		return pages ? pages.length : 0;
+		return this.pages.length;
 	},
 	
 	getPageIndex: function(page) {
-		var pages = this.getPages();
-		return pages ? pages.indexOf(page) : -1;
+		return this.pages.indexOf(page);
 	},
 	
 	getActivePage: function() {
@@ -252,12 +158,6 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		return Ext.isString(this.getDoAction());
 	},
 	
-	hasNext: function(dir, page) {
-		var me = this,
-				next = (arguments.length === 1) ? me.computeNext(dir) : me.computeNext(dir, page);
-		return !Ext.isEmpty(next);
-	},
-	
 	/**
 	 * @private
 	 * @param {type} dir Navigation direction: 1 -> forward, -1 -> backward.
@@ -270,7 +170,13 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			page = me.getActivePage();
 		}
 		index = me.getPageIndex(page) + dir;
-		return ((index >= 0) && (index < me.getPagesCount())) ? me.getPages()[index] : null;
+		return ((index >= 0) && (index < me.getPagesCount())) ? me.pages[index] : null;
+	},
+	
+	hasNext: function(dir, page) {
+		var me = this,
+				next = (arguments.length === 1) ? me.computeNext(dir) : me.computeNext(dir, page);
+		return !Ext.isEmpty(next);
 	},
 	
 	/**
@@ -280,14 +186,9 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		var me = this,
 				prev = me.getActivePage(),
 				next = me.computeNext(dir);
-		
-		if(me.isPathSelection(prev)) {
-			me.initPages();
-		} else {
-			if(me.fireEvent('beforenavigate', me, dir, next, prev) !== false) {
-				me.onNavigate(next);
-				me.fireEvent('navigate', me, dir, next, prev);
-			}
+		if(me.fireEvent('beforenavigate', me, dir, next, prev) !== false) {
+			me.onNavigate(next);
+			me.fireEvent('navigate', me, dir, next, prev);
 		}
 	},
 	
@@ -301,10 +202,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				hasNext = me.hasNext(1, page);
 		
 		me.activatePage(page);
-		if(me.isPathSelection()) {
-			btnBack.setDisabled(true);
-			btnForw.setDisabled(false);
-		} else if(!hasNext && me.getDisableNavAtEnd()) {
+		if(!hasNext && me.getDisableNavAtEnd()) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(true);
 		} else {
@@ -313,7 +211,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		}
 		if(me.hasDoAction()) btnDo.setDisabled(hasNext);
 		if(!hasNext) btnCancel.setText(WT.res('wizard.btn-close.lbl'));
-		if(!me.isPathSelection() && me.getUseTrail()) me.updateTrail();
+		if(me.getUseTrail()) me.updateTrail();
 	},
 	
 	updateTrail: function() {
@@ -354,10 +252,8 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	},
 	
 	canCloseView: function() {
-		var me = this;
 		// Returns false to stop view closing and to display a confirm message.
-		if(me.isPathSelection()) return true;
-		if(me.hasNext(1)) return false;
+		if(this.hasNext(1)) return false;
 		return true;
 	}
 });

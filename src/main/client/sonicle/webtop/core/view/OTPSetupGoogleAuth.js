@@ -47,7 +47,6 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 		modal: true
 	},
 	useTrail: true,
-	pages: ['step1','step2','step3','step4'],
 	
 	viewModel: {
 		data: {
@@ -55,6 +54,12 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 			image: null,
 			code: null
 		}
+	},
+	
+	constructor: function(config) {
+		var me = this;
+		me.pages = ['step1','step2','step3','step4'];
+		me.callParent([config]);
 	},
 	
 	initComponent: function() {
@@ -67,7 +72,7 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 		me.on('beforenavigate', me.onBeforeNavigate);
 	},
 	
-	createPages: function() {
+	createPages: function(path) {
 		return [{
 			itemId: 'step1',
 			xtype: 'wtwizardpage',

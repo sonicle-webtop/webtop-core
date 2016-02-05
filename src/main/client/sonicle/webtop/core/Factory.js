@@ -607,7 +607,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 */
 	checkboxBind: function(modelProp, fieldName) {
 		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
 				return val;
 			},
@@ -627,14 +627,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 */
 	checkboxGroupBind: function(modelProp, fieldName, objProp) {
 		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
-				var ret = {};
-				ret[objProp || fieldName] = val;
-				return ret;
+				var v = {};
+				v[objProp || fieldName] = val;
+				return v;
 			},
 			set: function(val) {
-				this.get(modelProp).set(fieldName, val[objProp || fieldName]);
+				var o = modelProp ? this.get(modelProp) : this,
+					v = val[objProp || fieldName];
+				if(v !== undefined) o.set(fieldName, v);
 			}
 		};
 	},
@@ -649,15 +651,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 */
 	radioGroupBind: function(modelProp, fieldName, objProp) {
 		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
-				var ret = {};
-				ret[objProp || fieldName] = val;
-				return ret;
+				var v = {};
+				v[objProp || fieldName] = val;
+				return v;
 			},
 			set: function(val) {
-				var val = val[objProp || fieldName];
-				if(val !== undefined) this.get(modelProp).set(fieldName, val);
+				var o = modelProp ? this.get(modelProp) : this,
+						v = val[objProp || fieldName];
+				if(v !== undefined) o.set(fieldName, v);
 			}
 		};
 	},
@@ -674,7 +677,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	equalsFormula: function(modelProp, fieldName, equalsTo, not) {
 		if(arguments.length === 3) not = false;
 		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
 				return (not === true) ? (val !== equalsTo) : (val === equalsTo);
 			}
@@ -692,7 +695,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	isEmptyFormula: function(modelProp, fieldName, not) {
 		if(arguments.length === 2) not = false;
 		return {
-			bind: {bindTo: '{'+modelProp+'.'+fieldName+'}'},
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
 				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
 			}

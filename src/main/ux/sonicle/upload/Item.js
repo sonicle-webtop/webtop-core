@@ -43,9 +43,19 @@ Ext.define('Sonicle.upload.Item', {
 		]);
 	},
 	
-	initUploader: function() {
+	destroy: function() {
 		var me = this;
-		me.uploader.setBrowseButton(me.getId());
+		if(me.uploader) {
+			me.uploader.destroy();
+			me.uploader = null;
+		}
+		me.callParent();
+	},
+	
+	initUploader: function(buttonId) {
+		var me = this;
+		buttonId = buttonId || me.getId();
+		me.uploader.setBrowseButton(buttonId);
 		me.uploader.init();
 	}
 });

@@ -11,6 +11,17 @@ Ext.define('Sonicle.upload.Button', {
 		'Sonicle.upload.Uploader'
 	],
 	
+	preventDefault: false,
+
+	// Button element *looks* focused but it should never really receive focus itself,
+	// and with it being a <div></div> we don't need to render tabindex attribute at all
+	tabIndex: null,
+	
+	autoEl: {
+		tag: 'div',
+		unselectable: 'on'
+	},
+	
 	config: {
 		uploaderAutoInit: true
 	},
@@ -49,9 +60,19 @@ Ext.define('Sonicle.upload.Button', {
 		]);
 	},
 	
-	initUploader: function() {
+	destroy: function() {
 		var me = this;
-		me.uploader.setBrowseButton(me.getId());
+		if(me.uploader) {
+			me.uploader.destroy();
+			me.uploader = null;
+		}
+		me.callParent();
+	},
+	
+	initUploader: function(buttonId) {
+		var me = this;
+		buttonId = buttonId || me.getId();
+		me.uploader.setBrowseButton(buttonId);
 		me.uploader.init();
 	}
 });

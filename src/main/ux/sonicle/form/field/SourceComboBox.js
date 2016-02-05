@@ -35,11 +35,6 @@ Ext.define('Sonicle.form.field.SourceComboBox', {
 			+ '<div style="text-align: right; width:100%">'
 			+ '{'+picker.sourceField+'}'
 			+ '</div>';
-	
-	
 			//this.tpl = '<tpl for="."><div class="x-combo-list-item"><div style="float:left; white-space: pre;">{' + this.displayField + '}</div><div style="text-align: right; width:100%">{' + this.sourceField + '}</div></div></tpl>';
 	}
-	
-	
-	
 });

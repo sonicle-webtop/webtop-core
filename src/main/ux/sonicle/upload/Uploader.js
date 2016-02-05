@@ -77,6 +77,21 @@ Ext.define('Sonicle.upload.Uploader', {
 		});
 	},
 	
+	destroy: function() {
+		var me = this;
+		if(me.uploader) {
+			me.uploader.unbindAll();
+			me.uploader.destroy();
+			me.uploader = null;
+			me.pluOptions = null;
+		}
+		if(me.store) {
+			me.store.destroy();
+			me.store = null;
+		}
+		me.callParent();
+	},
+	
 	mergeExtraParams: function(obj) {
 		var me = this;
 		me.setExtraParams(Ext.apply(me.getExtraParams() || {}, obj));
@@ -311,8 +326,8 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	_Refresh: function(uploader) {
-		Ext.each(uploader.files, function(v) {
-			this.updateStore(v);
+		Ext.each(uploader.files, function(file) {
+			this.updateStore(file);
 		}, this);
 	},
 	
@@ -377,14 +392,8 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	_FilesAdded: function(uploader, files) {
 		var me = this;
-		if(me.pluOptions.multi_selection !== true) {
-			if(me.store.data.length === 1) return false;
-			files = [files[0]];
-			uploader.files = [files[0]];
-		}
-		
-		Ext.each(files, function(v) {
-			me.updateStore(v);
+		Ext.each(files, function(file) {
+			me.updateStore(file);
 		});
 		
 		if(me.fireEvent('filesadded', me, files) !== false) {

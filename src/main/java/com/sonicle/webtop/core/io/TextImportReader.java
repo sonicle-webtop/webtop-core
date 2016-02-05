@@ -53,7 +53,6 @@ public class TextImportReader extends ImportRowsReader {
 	public static final String FIELD_DELIMITER_COMMA = "comma";
 	public static final String FIELD_DELIMITER_SPACE = "space";
 	public static final String FIELD_DELIMITER_SEMICOLON = "semicolon";
-	public static final String TEXT_QUALIFIER_NONE = "none";
 	public static final String TEXT_QUALIFIER_SINGLE_QUOTE = "quote";
 	public static final String TEXT_QUALIFIER_DOUBLE_QUOTE = "dblquote";
 	public static final String RECORD_SEPATATOR_CR = "cr";
@@ -73,7 +72,7 @@ public class TextImportReader extends ImportRowsReader {
 	}
 	
 	@Override
-	public HashMap<String, String> getColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
+	public HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, String> hm = new LinkedHashMap<>();
 		CsvListReader lr = new CsvListReader(new InputStreamReader(is, charset), pref);
 		
@@ -97,7 +96,7 @@ public class TextImportReader extends ImportRowsReader {
 		return hm;
 	}
 	
-	public HashMap<String, Integer> getColumnIndices(InputStream is) throws IOException, UnsupportedOperationException {
+	public HashMap<String, Integer> listColumnIndices(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, Integer> hm = new LinkedHashMap<>();
 		CsvListReader lr = new CsvListReader(new InputStreamReader(is, charset), pref);
 		
@@ -121,7 +120,11 @@ public class TextImportReader extends ImportRowsReader {
 		return hm;
 	}
 	
-	public static CsvPreference buildCsvPreference(String fieldDelimiter, String textQualifier, String recordSeparator) {
+	public static CsvPreference buildCsvPreference(String fieldDelimiter, String recordSeparator) {
+		return buildCsvPreference(fieldDelimiter, recordSeparator, null);
+	}
+	
+	public static CsvPreference buildCsvPreference(String fieldDelimiter, String recordSeparator, String textQualifier) {
 		int delimiterChar;
 		char quoteChar;
 		String endOfLineSymbols;
@@ -138,16 +141,6 @@ public class TextImportReader extends ImportRowsReader {
 			throw new UnsupportedOperationException("Field delimiter not supported [" + fieldDelimiter + "]");
 		}
 		
-		if(textQualifier.equals(TEXT_QUALIFIER_NONE)) {
-			quoteChar = ' ';
-		} else if(textQualifier.equals(TEXT_QUALIFIER_SINGLE_QUOTE)) {
-			quoteChar = '\'';
-		} else if(textQualifier.equals(TEXT_QUALIFIER_DOUBLE_QUOTE)) {
-			quoteChar = '"';
-		} else {
-			throw new UnsupportedOperationException("Text qualifier not supported [" + textQualifier + "]");
-		}
-		
 		if(recordSeparator.equals(RECORD_SEPATATOR_CR)) {
 			endOfLineSymbols = "\r";
 		} else if(recordSeparator.equals(RECORD_SEPATATOR_LF)) {
@@ -156,6 +149,16 @@ public class TextImportReader extends ImportRowsReader {
 			endOfLineSymbols = "\r\n";
 		} else {
 			throw new UnsupportedOperationException("Record separator not supported [" + recordSeparator + "]");
+		}
+		
+		if(textQualifier == null) {
+			quoteChar = ' ';
+		} else if(textQualifier.equals(TEXT_QUALIFIER_SINGLE_QUOTE)) {
+			quoteChar = '\'';
+		} else if(textQualifier.equals(TEXT_QUALIFIER_DOUBLE_QUOTE)) {
+			quoteChar = '"';
+		} else {
+			throw new UnsupportedOperationException("Text qualifier not supported [" + textQualifier + "]");
 		}
 		
 		return new CsvPreference.Builder(quoteChar, delimiterChar, endOfLineSymbols).build();

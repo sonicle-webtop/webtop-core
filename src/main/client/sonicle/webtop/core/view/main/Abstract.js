@@ -226,6 +226,11 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								tooltip: WT.res('menu.help.tip'),
 								iconCls: 'wt-menu-help'
 							}, {
+								itemId: 'test',
+								colspan: 2,
+								scale: 'small',
+								tooltip: 'TEST'
+							}, {
 								itemId: 'logout',
 								colspan: 2,
 								scale: 'small',

@@ -42,7 +42,6 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 		modal: true
 	},
 	useTrail: true,
-	pages: ['step1','step2','end'],
 	
 	viewModel: {
 		data: {
@@ -50,6 +49,12 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 			address: null,
 			code: null
 		}
+	},
+	
+	constructor: function(config) {
+		var me = this;
+		me.pages = ['step1','step2','end'];
+		me.callParent([config]);
 	},
 	
 	initComponent: function() {
@@ -62,7 +67,7 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 		me.on('beforenavigate', me.onBeforeNavigate);
 	},
 	
-	createPages: function() {
+	createPages: function(path) {
 		var me = this;
 		
 		return [{

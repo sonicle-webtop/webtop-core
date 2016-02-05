@@ -35,9 +35,12 @@ Ext.define('Sonicle.webtop.core.sdk.WizardPage', {
 	alternateClassName: 'WT.sdk.WizardPage',
 	extend: 'Ext.panel.Panel',
 	alias: 'widget.wtwizardpage',
+	mixins: [
+		'WT.mixin.PanelUtil'
+	],
 	
-	viewModel: {},
-	referenceHolder: true,
+	layout: 'anchor',
 	border: false,
-	layout: 'anchor'
+	referenceHolder: true,
+	viewModel: {}
 });

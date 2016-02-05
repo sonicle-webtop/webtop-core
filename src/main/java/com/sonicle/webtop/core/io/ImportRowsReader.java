@@ -49,7 +49,7 @@ public abstract class ImportRowsReader {
 	protected int firstDataRow = 2;
 	protected int lastDataRow = -1;
 	
-	public abstract HashMap<String, String> getColumnNames(InputStream is) throws IOException, UnsupportedOperationException;
+	public abstract HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException;
 	
 	public void setHeadersRow(int headersRow) {
 		if(headersRow < 0) {
@@ -77,13 +77,13 @@ public abstract class ImportRowsReader {
 		}
 	}
 	
-	public List<FieldMapping> getFieldMappings(InputStream is, String[] targetFields) throws IOException, UnsupportedOperationException {
-		return getFieldMappings(is, targetFields, false);
+	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields) throws IOException, UnsupportedOperationException {
+		return listFieldMappings(is, targetFields, false);
 	}
 	
-	public List<FieldMapping> getFieldMappings(InputStream is, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
+	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
 		ArrayList<FieldMapping> mappings = new ArrayList<>();
-		HashMap<String, String> cols = getColumnNames(is);
+		HashMap<String, String> cols = listColumnNames(is);
 		
 		String lwr, source = null;
 		for(int i=0; i<targetFields.length; i++) {

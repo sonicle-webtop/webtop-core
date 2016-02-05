@@ -31,29 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.String', {
-	singleton: true,
+Ext.define('Sonicle.webtop.core.store.TxtLineSeparator', {
+	alternateClassName: 'WT.store.TxtLineSeparator',
+	extend: 'Ext.data.ArrayStore',
 	
-	/**
-	 * 
-	 * @param {type} sep 
-	 * @param {Mixed...} values String values to join.
-	 * @returns {String} The joined string.
-	 */
-	join: function(sep, values) {
-		sep = sep || '';
-		var i, s = '';
-		for(i=1; i<arguments.length; i++) {
-			if(Ext.isEmpty(arguments[i])) continue;
-			s = s.concat(arguments[i] || '', (i === arguments.length-1) ? '' : sep);
-		}
-		return Ext.String.trim(s);
-	},
-	
-	coalesce: function(values) {
-		for(var i=0; i<arguments.length; i++) {
-			if((arguments[i] !== null) && (arguments[i] !== undefined)) return arguments[i];
-		}
-		return null;
-	}
+	model: 'WT.model.Simple',
+	data: [
+		['cr', 'CR (Carriage return)'],
+		['lf', 'LF (Line feed)'],
+		['crlf', 'CR+LF']
+	]
 });
