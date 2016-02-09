@@ -31,8 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Panel', {
-	alternateClassName: 'WT.ux.Panel',
+Ext.define('Sonicle.webtop.core.ux.panel.Panel', {
+	alternateClassName: 'WT.ux.panel.Panel',
 	extend: 'Ext.Panel',
 	alias: ['widget.wtpanel'],
 	mixins: ['WT.mixin.PanelUtil'],
