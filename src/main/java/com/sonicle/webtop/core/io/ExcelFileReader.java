@@ -33,12 +33,15 @@
  */
 package com.sonicle.webtop.core.io;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -53,17 +56,16 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  *
  * @author malbinola
  */
-public class ExcelImportReader extends ImportRowsReader {
-	
+public class ExcelFileReader extends FileRowsReader {
 	protected boolean binary = false;
 	protected String sheet = null;
 	protected DataFormatter fmt = null;
 	
-	public ExcelImportReader() {
+	public ExcelFileReader() {
 		this.fmt = new DataFormatter();
 	}
 	
-	public ExcelImportReader(boolean binary) {
+	public ExcelFileReader(boolean binary) {
 		this.binary = binary;
 		this.fmt = new DataFormatter();
 	}
@@ -76,6 +78,16 @@ public class ExcelImportReader extends ImportRowsReader {
 		this.sheet = sheet;
 	}
 	
+	public List<String> listSheets(File file) throws IOException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listSheets(fis);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
+	}
+	
 	public List<String> listSheets(InputStream is) throws IOException {
 		ArrayList<String> sheets = new ArrayList<>();
 		Workbook wb = createWorkbook(is);
@@ -83,6 +95,17 @@ public class ExcelImportReader extends ImportRowsReader {
 			sheets.add(wb.getSheetName(i));
 		}
 		return sheets;
+	}
+	
+	@Override
+	public HashMap<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listColumnNames(fis);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
 	}
 	
 	@Override
@@ -109,11 +132,44 @@ public class ExcelImportReader extends ImportRowsReader {
 		return hm;
 	}
 	
-	private Workbook createWorkbook(InputStream is) throws IOException {
+	public HashMap<String, Integer> listColumnIndexes(File file) throws IOException, UnsupportedOperationException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listColumnIndexes(fis);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
+	}
+	
+	public HashMap<String, Integer> listColumnIndexes(InputStream is) throws IOException, UnsupportedOperationException {
+		HashMap<String, Integer> hm = new LinkedHashMap<>();
+		
+		Workbook wb = createWorkbook(is);
+		if(wb.getNumberOfSheets() == 0) throw new UnsupportedOperationException("At least one sheet is required");
+		Sheet sh = getSheet(wb);
+		if(sh == null) throw new UnsupportedOperationException("Unable to find desired sheet");
+		
+		String name = null;
+		Row hrow = sh.getRow(headersRow-1);
+		for(Cell cell : hrow) {
+			if(headersRow == firstDataRow) {
+				name = "col_" + CellReference.convertNumToColString(cell.getColumnIndex());
+			} else {
+				name = fmt.formatCellValue(cell);
+				if(StringUtils.isBlank(name)) name = "col_" + CellReference.convertNumToColString(cell.getColumnIndex());
+			}
+			hm.put(name.toLowerCase(), cell.getColumnIndex());
+		}
+		
+		return hm;
+	}
+	
+	protected Workbook createWorkbook(InputStream is) throws IOException {
 		return (binary) ? new HSSFWorkbook(is) : new XSSFWorkbook(is);
 	}
 	
-	private Sheet getSheet(Workbook wb) {
+	protected Sheet getSheet(Workbook wb) {
 		if(StringUtils.isBlank(sheet)) {
 			return wb.getSheetAt(0);
 		} else {

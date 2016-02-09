@@ -36,14 +36,15 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 	requires: [
 		'Sonicle.form.field.Image',
 		'Sonicle.form.field.DisplayImage',
-		'Sonicle.form.field.Icon'
+		'Sonicle.form.field.Icon',
+		'WT.ux.panel.Form'
 	],
 	
 	confirmMsg: WT.res('wizard.confirm.close'),
 	dockableConfig: {
 		title: '{otp.setup.googleauth.tit}',
 		width: 450,
-		height: 400,
+		height: 420,
 		modal: true
 	},
 	useTrail: true,
@@ -56,12 +57,6 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 		}
 	},
 	
-	constructor: function(config) {
-		var me = this;
-		me.pages = ['step1','step2','step3','step4'];
-		me.callParent([config]);
-	},
-	
 	initComponent: function() {
 		var me = this,
 				ic = me.getInitialConfig();
@@ -70,6 +65,10 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 		if(!Ext.isEmpty(ic.address)) me.getVM().set('address', ic.address);
 		me.callParent(arguments);
 		me.on('beforenavigate', me.onBeforeNavigate);
+	},
+	
+	initPages: function() {
+		return ['step1','step2','step3','step4'];
 	},
 	
 	createPages: function(path) {
@@ -99,13 +98,16 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 				xtype: 'label',
 				html: WT.res('otp.setup.googleauth.step2.txt')
 			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'sodisplayimagefield',
-				bind: '{image}',
-				imageUrl: WTF.processBinUrl(WT.ID, 'GetOTPGoogleAuthQRCode'),
-				imageWidth: 200,
-				imageHeight: 200
+				xtype: 'container',
+				anchor: '100%',
+				layout: 'center',
+				items: [{
+					xtype: 'sodisplayimagefield',
+					bind: '{image}',
+					imageUrl: WTF.processBinUrl(WT.ID, 'GetOTPGoogleAuthQRCode'),
+					imageWidth: 200,
+					imageHeight: 200
+				}]
 			}]
 		}, {
 			itemId: 'step3',
@@ -122,11 +124,17 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 			}, {
 				xtype: 'sospacer'
 			}, {
-				xtype: 'textfield',
-				bind: '{code}',
-				allowBlank: false,
-				width: 200,
-				fieldLabel: WT.res('otp.setup.googleauth.fld-code.lbl')
+				xtype: 'wtform',
+				defaults: {
+					labelWidth: 120
+				},
+				items: [{
+					xtype: 'textfield',
+					bind: '{code}',
+					allowBlank: false,
+					width: 250,
+					fieldLabel: WT.res('otp.setup.googleauth.fld-code.lbl')
+				}]
 			}]
 		}, {
 			itemId: 'step4',
@@ -147,7 +155,8 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 	onBeforeNavigate: function(s, dir, np, pp) {
 		if(dir === -1) return;
 		var me = this,
-				pcmp = me.getPageCmp(pp),
+				ret = true,
+				ppcmp = me.getPageCmp(pp),
 				vm = me.getVM();
 		
 		if(pp === 'step1') {
@@ -167,6 +176,9 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 			return false;
 			
 		} else if(pp === 'step3') {
+			ret = ppcmp.down('wtform').isValid();
+			if(!ret) return false;
+			
 			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'activate',

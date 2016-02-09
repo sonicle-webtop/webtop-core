@@ -43,33 +43,127 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	bodyPadding: 5,
 	confirm: 'yn',
 	
-	config: {
-		//TODO: completare descrizioni config
-		
+	config: {		
 		/**
-		 * @cfg {Boolean} useTrail
+		 * @cfg {Boolean} [useTrail=true]
 		 * 'true' to enable display of step trails, 'false' otherwise. Default is true
 		 */
 		useTrail: true,
+		
+		/**
+		 * @cfg {Boolean} [infiniteTrail=false]
+		 * 'true' to hide the total number of pages in trail; a question mark is displayed instead.
+		 */
 		infiniteTrail: false,
+		
+		/**
+		 * @cfg {Boolean} [disableNavAtEnd=true]
+		 * 'true' to disable navigation buttons in the end page; 'false' otherwise.
+		 */
 		disableNavAtEnd: true,
-		applyButton: true,
-		doButtonText: WT.res('wizard.btn-do.lbl'),
-		doAction: false,
-		lockDoAction: true,
-		endHeaderText: WT.res('wizard.end.hd')
+		
+		/**
+		 * @cfg {Boolean} [disableNavOnSuccess=true]
+		 * 'true' to disable navigation buttons if doAction call was completed successfully; 'false' otherwise.
+		 */
+		disableNavOnSuccess: true,
+		
+		/**
+		 * @cfg {Boolean} [showDoButton=false]
+		 */
+		showDoButton: false,
+		
+		/**
+		 * @cfg {Boolean} [lockDoButton=true]
+		 * 'true' to automatically disable doButton after click; 'false' otherwise.
+		 */
+		lockDoButton: true,
+		
+		/**
+		 * @cfg {String} doButtonText
+		 * Text to display as doButton label. Default to resource string 'wizard.btn-do.lbl'.
+		 */
+		doButtonText: '{wizard.btn-do.lbl}',
+		
+		/**
+		 * @cfg {String} endPageHeaderText
+		 * Text to display as header in end page. Default to resource string 'wizard.end.hd'.
+		 */
+		endPageTitleText: '{wizard.end.tit}'
 	},
 	
+	/**
+	 * @method initPages
+	 * Override this in order to return pages definition.
+	 * With only a single path return a String array:
+	 *		['step1','step2','step3']
+	 *		
+	 * Alternatively using multipath return an Object:
+	 *		{
+	 *			path1: ['path1step1','path1step2','path1step3'],
+	 *			path2: ['path2step1','path2step2','path2step3']
+	 *		}
+	 *		
+	 * @return {String[]/Object} Definition object.
+	 */
+	initPages: Ext.emptyFn,
+	
+	/**
+	 * @method initAction
+	 * Override this in order to return remote action definition.
+	 * With only a single path return a String:
+	 *		'actionABC'
+	 *		
+	 * Alternatively using multipath return an Object:
+	 *		{
+	 *			path1: 'actionABC',
+	 *			path2: 'actionCDE'
+	 *		}
+	 *		
+	 * @return {String/Object} Definition object.
+	 */
+	initAction: Ext.emptyFn,
+	
+	/** 
+	 * @cfg {Function} doOperationParams
+	 * A custom function to be called during doAction call to obtain any 
+	 * additional extraParams to include into server request.
+	 * @return {Object} extraParams definition object
+	*/
+	
+	/**
+	 * @property {Array/Object} pages
+	 * Pages definition.
+	 */
 	pages: null,
+	
+	/**
+	 * @property {Array/Object} action
+	 * Ajax action definition.
+	 */
+	action: null,
 	
 	/**
 	 * @private
 	 */
 	isMultiPath: false,
 	
+	/**
+	 * @private
+	 */
+	doSuccess: false,
+	
+	/**
+	 * @private
+	 */
+	doCount: 0,
+	
 	initComponent: function() {
 		var me = this,
 				vm = me.getVM();
+		
+		me.pages = me.initPages();
+		me.action = me.initAction();
 		
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			pathgroup: WTF.radioGroupBind(null, 'path', me.getId()+'-pathgroup')
@@ -104,12 +198,13 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				}, {
 					reference: 'btndo',
 					xtype: 'button',
-					text: me.getDoButtonText(),
+					text: me.resDoButtonText(),
 					handler: function(s) {
-						if(me.getLockDoAction()) s.setDisabled(true);
+						//if(me.getLockDoButton()) s.setDisabled(true);
+						s.setDisabled(true); // Avoids multi-runs!
 						me.onDoClick();
 					},
-					hidden: !me.hasDoAction(),
+					hidden: !me.getShowDoButton(),
 					disabled: true
 				}, {
 					reference: 'btncancel',
@@ -126,40 +221,48 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		
 		me.isMultiPath = false;
 		if(!Ext.isArray(me.pages)) {
-			Ext.iterate(this.pages, function(k,v) {
+			Ext.iterate(me.pages, function(k,v) {
 				if(!Ext.isArray(v)) Ext.Error.raise('Invalid pages definition object');
 			});
 			me.isMultiPath = true;
 		}
 		
 		if(me.isMultiPath) {
-			me.initPathPage();
+			me.addPathPage();
 		} else {
-			me.initPages();
+			me.addPages();
 		}
 	},
 	
-	initChooserPage: function() {
+	getPages: function() {
+		var me = this;
+		if(me.isMultiPath) {
+			return me.pages[me.getVM().get('path')];
+		} else {
+			return me.pages;
+		}
+	},
+	
+	getAction: function() {
+		var me = this;
+		if(me.isMultiPath) {
+			return me.action[me.getVM().get('path')];
+		} else {
+			return me.action;
+		}
+	},
+	
+	addPathPage: function() {
 		var me = this;
 		me.add(me.createPathPage('', {}));
 		me.onNavigate('path');
 	},
 	
-	initPages: function() {
+	addPages: function() {
 		var me = this,
 				curpath = me.getVM().get('path');
 		me.add(me.createPages(curpath));
 		me.onNavigate(me.getPages()[0]);
-	},
-	
-	getPages: function() {
-		var me = this,
-				curpath = me.getVM().get('path');
-		if(me.isMultiPath) {
-			return me.pages[curpath];
-		} else {
-			return me.pages;
-		}
 	},
 	
 	createPages: function(path) {
@@ -169,7 +272,6 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	createPathPage: function(title, fieldLabel, fieldItems) {
 		var me = this,
 				items = [];
-		
 		Ext.iterate(fieldItems, function(obj,i) {
 			items.push({
 				name: me.getId()+'-pathgroup',
@@ -211,15 +313,15 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: me.getEndHeaderText()
+				html: me.resEndPageTitleText()
 			}, {
 				xtype: 'sospacer'
 			}, {
 				reference: 'log',
 				xtype: 'textarea',
-				hidden: !me.getApplyButton(),
+				hidden: !me.getShowDoButton(),
 				readOnly: true,
-				anchor: '100% -40'
+				anchor: '100% -50'
 			}]
 		};
 	},
@@ -246,10 +348,6 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	getPageCmp: function(itemId) {
 		return this.getComponent(itemId);
-	},
-	
-	hasDoAction: function() {
-		return Ext.isString(this.getDoAction());
 	},
 	
 	hasNext: function(dir, page) {
@@ -282,7 +380,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				next = me.computeNext(dir);
 		
 		if(me.isPathSelection(prev)) {
-			me.initPages();
+			me.addPages();
 		} else {
 			if(me.fireEvent('beforenavigate', me, dir, next, prev) !== false) {
 				me.onNavigate(next);
@@ -292,6 +390,13 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	},
 	
 	onNavigate: function(page) {
+		var me = this;
+		me.activatePage(page);
+		me.updateButtons(page);
+		if(!me.isPathSelection() && me.getUseTrail()) me.updateTrail();
+	},
+	
+	updateButtons: function(page) {
 		var me = this,
 				btnCancel = me.lookupReference('btncancel'),
 				btnBack = me.lookupReference('btnback'),
@@ -300,20 +405,27 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				hasPrev = me.hasNext(-1, page),
 				hasNext = me.hasNext(1, page);
 		
-		me.activatePage(page);
 		if(me.isPathSelection()) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(false);
-		} else if(!hasNext && me.getDisableNavAtEnd()) {
+		} else if(me.getDisableNavAtEnd() && !hasNext) {
+			btnBack.setDisabled(true);
+			btnForw.setDisabled(true);
+		} else if(me.getDisableNavOnSuccess() && me.doSuccess) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(true);
 		} else {
 			btnBack.setDisabled(!hasPrev);
 			btnForw.setDisabled(!hasNext);
 		}
-		if(me.hasDoAction()) btnDo.setDisabled(hasNext);
+		if(me.getShowDoButton()) {
+			if(me.getLockDoButton() && (me.doCount > 0)) {
+				btnDo.setDisabled(true);
+			} else {
+				btnDo.setDisabled(hasNext);
+			}
+		}
 		if(!hasNext) btnCancel.setText(WT.res('wizard.btn-close.lbl'));
-		if(!me.isPathSelection() && me.getUseTrail()) me.updateTrail();
 	},
 	
 	updateTrail: function() {
@@ -333,17 +445,24 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	onDoClick: function() {
 		var me = this,
-				page = me.getPageCmp('end');
+				page = me.getPageCmp('end'),
+				params = {op: 'do'},
+				obj;
 		
-		if(!me.hasDoAction()) return;
+		me.doCount++;
+		if(Ext.isFunction(me.doOperationParams)) {
+			obj = me.doOperationParams.call(me, []);
+			if(Ext.isObject(obj)) params = Ext.apply(params, obj);
+		}
+		
 		me.wait();
-		WT.ajaxReq(me.mys.ID, me.getDoAction(), {
-			params: {
-				step: 'end'
-			},
+		WT.ajaxReq(me.mys.ID, me.getAction(), {
+			params: params,
 			callback: function(success, json) {
 				me.unwait();
+				me.doSuccess = success;
 				page.lookupReference('log').setValue(json.data);
+				me.updateButtons('end');
 				if(success) {
 					me.fireEvent('dosuccess', me);
 				} else {
@@ -359,5 +478,17 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		if(me.isPathSelection()) return true;
 		if(me.hasNext(1)) return false;
 		return true;
+	},
+	
+	resDoButtonText: function() {
+		var me = this,
+				txt = WT.resTpl(me.mys.ID, me.getDoButtonText());
+		return (txt === undefined) ? WT.resTpl(WT.ID, me.getDoButtonText()) : txt;
+	},
+	
+	resEndPageTitleText: function() {
+		var me = this,
+				txt = WT.resTpl(me.mys.ID, me.getEndPageTitleText());
+		return (txt === undefined) ? WT.resTpl(WT.ID, me.getEndPageTitleText()) : txt;
 	}
 });

@@ -498,11 +498,11 @@ public class WebTopSession {
 		}
 	}
 	
-	public void removeUploadedFile(UploadedFile uploadedFile) {
-		removeUploadedFile(uploadedFile.id);
+	public void clearUploadedFile(UploadedFile uploadedFile) {
+		clearUploadedFile(uploadedFile.id);
 	}
 	
-	public void removeUploadedFile(String id) {
+	public void clearUploadedFile(String id) {
 		synchronized(uploads) {
 			uploads.remove(id);
 		}

@@ -32,6 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
+	alternateClassName: 'WT.sdk.ImportWizardView',
 	extend: 'WT.sdk.WizardView',
 	requires: [
 		'Sonicle.upload.Field',
@@ -43,56 +44,69 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		'WT.store.TxtEncoding'
 	],
 	
-	config: {
-		textAction: 'ImportText',
-		excelAction: 'ImportExcel'
-	},
+	/**
+	 * @property files
+	 * Object containing allowed files per path
+	 */
+	files: null,
 	
-	dockableConfig: {
-		title: 'ImportWizardView',
-		iconCls: 'wt-icon-causal-xs',
-		width: 480,
-		height: 380
-	},
-	
-	constructor: function(config) {
-		var me = this;
-		me.pages = {
-			txt: ['upload','s1','s2','mappings','mode','end'],
-			xls: ['upload','s1','mappings','mode','end'],
-			xlsx: ['upload','s1','mappings','mode','end']
-		};
-		me.callParent([config]);
-		me.on('beforenavigate', me.onBeforeNavigate);
-	},
+	disableNavAtEnd: false,
+	showDoButton: true,
+	endPageTitleText: '{importwiz.end.tit}',
 	
 	initComponent: function() {
 		var me = this,
 				vm = me.getVM();
 		
+		me.files = me.initFiles();
+		
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			delgroup: WTF.radioGroupBind(null, 'delimiter', me.getId()+'-delgroup'),
 			modegroup: WTF.radioGroupBind(null, 'importmode', me.getId()+'-modegroup')
 		}));
-		
+		me.on('beforenavigate', me.onBeforeNavigate);
 		me.callParent(arguments);
 	},
 	
-	initPathPage: function() {
-		var me = this;
+	initPages: function() {
+		return {
+			txt: ['upload','s1','s2','mappings','mode','end'],
+			xls: ['upload','s1','mappings','mode','end']
+		};
+	},
+	
+	initAction: function() {
+		return {
+			txt: 'ImportFromText',
+			xls: 'ImportFromExcel'
+		};
+	},
+	
+	initFiles: function() {
+		return {
+			txt: {label: WT.res('importwiz.path.fld-path.txt'), extensions: 'csv,txt'},
+			xls: {label: WT.res('importwiz.path.fld-path.xls'), extensions: 'xls,xlsx'}
+		};
+	},
+	
+	addPathPage: function() {
+		var me = this, itms = [];
+		Ext.iterate(me.files, function(k,v) {
+			itms.push({value: k, label: v.label});
+		});
+		
 		me.getVM().set('path', 'txt');
 		me.add(me.createPathPage(
 			WT.res('importwiz.path.tit'), 
-			WT.res('importwiz.path.fld-path.tit'), [
-			{value: 'txt', label: WT.res('importwiz.path.fld-path.txt')},
-			{value: 'xls', label: WT.res('importwiz.path.fld-path.xls')},
-			{value: 'xlsx', label: WT.res('importwiz.path.fld-path.xlsx')}
-		]));
+			WT.res('importwiz.path.fld-path.tit'), 
+			itms
+		));
 		me.onNavigate('path');
 	},
 	
-	createUploadPage: function(path, mimeTypes) {
-		var me = this;
+	createUploadPage: function(path) {
+		var me = this,
+				pfs = me.files[path];
 		return {
 			itemId: 'upload',
 			xtype: 'wtwizardpage',
@@ -108,10 +122,13 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				},
 				items: [{
 					xtype: 'souploadfield',
+					reference: 'fldfile',
 					bind: '{file}',
 					buttonConfig: {
 						uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
-							mimeTypes: mimeTypes,
+							mimeTypes: [
+								{title: pfs.label, extensions: pfs.extensions}
+							],
 							listeners: {
 								uploadstarted: function(up) {
 									me.wait();
@@ -134,9 +151,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		};
 	},
 	
-	createMappingsPage: function(path, action) {
+	createMappingsPage: function(path) {
 		var me = this;
-		
 		return {
 			itemId: 'mappings',
 			xtype: 'wtwizardpage',
@@ -150,12 +166,12 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				reference: 'gp',
 				store: {
 					model: 'Sonicle.webtop.core.model.ImportMapping',
-					proxy: WTF.proxy(me.mys.ID, action, 'mappings', {
+					proxy: WTF.proxy(me.mys.ID, me.getAction(), 'mappings', {
 						extraParams: {op: 'mappings'}
 					}),
 					listeners: {
 						beforeload: function(s,op) {
-							WTU.applyExtraParams(op.getProxy(), me.buildMappingsEP(path));
+							WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
 						}
 					}
 				},
@@ -173,12 +189,12 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 						store: {
 							autoLoad: false,
 							model: 'WT.ux.data.ValueModel',
-							proxy: WTF.proxy(me.mys.ID, action, 'columns', {
+							proxy: WTF.proxy(me.mys.ID, me.getAction(), 'columns', {
 								extraParams: {op: 'columns'}
 							}),
 							listeners: {
 								beforeload: function(s,op) {
-									WTU.applyExtraParams(op.getProxy(), me.buildMappingsEP(path));
+									WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
 								}
 							}
 						}
@@ -191,7 +207,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					ptype: 'cellediting',
 					clicksToEdit: 1
 				},
-				border: true
+				border: true,
+				anchor: '100% -50'
 			}]
 		};
 	},
@@ -247,10 +264,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 			me.getVM().set('importmode', 'append');
 			
 			return [
-				me.createUploadPage(path, [
-					{title: 'Text files', extensions: 'csv,txt'}
-				]),
-				me.createMappingsPage(path, me.textAction),
+				me.createUploadPage(path),
+				me.createMappingsPage(path),
 				me.createModePage(path, [
 					{value: 'append', label: WT.res('importwiz.mode.fld-importmode.append')},
 					{value: 'copy', label: WT.res('importwiz.mode.fld-importmode.copy')}
@@ -360,23 +375,17 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					}]
 				}
 			];
-		} else if(path === 'xls' || path === 'xlsx') {
+		} else if(path === 'xls') {
+			me.getVM().set('binary', false);
 			me.getVM().set('sheet', null);
 			me.getVM().set('headersrow', 1);
 			me.getVM().set('firstdatarow', 2);
 			me.getVM().set('lastdatarow', null);
 			me.getVM().set('importmode', 'append');
 			
-			var mm = null;
-			if(path === 'xls') {
-				mm = {title: 'Excel files', extensions: 'xls'};
-			} else {
-				mm = {title: 'Excel files (2007 or later)', extensions: 'xlsx'};
-			}
-			
 			return [
-				me.createUploadPage(path, [mm]),
-				me.createMappingsPage(path, me.excelAction),
+				me.createUploadPage(path),
+				me.createMappingsPage(path),
 				me.createModePage(path, [
 					{value: 'append', label: WT.res('importwiz.mode.fld-importmode.append')},
 					{value: 'copy', label: WT.res('importwiz.mode.fld-importmode.copy')}
@@ -401,12 +410,12 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 								reference: 'fldsheet',
 								store: {
 									model: 'WT.ux.data.ValueModel',
-									proxy: WTF.proxy(me.mys.ID, me.excelAction, 'sheets', {
+									proxy: WTF.proxy(me.mys.ID, me.getAction(), 'sheets', {
 										extraParams: {op: 'sheets'}
 									}),
 									listeners: {
 										beforeload: function(s,op) {
-											WTU.applyExtraParams(op.getProxy(), me.buildSheetsEP(path));
+											WTU.applyExtraParams(op.getProxy(), me.buildSheetsParams(path));
 										}
 									}
 								},
@@ -459,6 +468,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				ret = ppcmp.down('wtform').isValid();
 			} else if(pp == 's2') {
 				ret = ppcmp.down('wtform').isValid();
+			} else if(pp == 'mappings') {
+				vm.set('mappings', me.extractMappings(ppcmp.lref('gp')));
 			}
 			if(!ret) return false;
 			
@@ -467,15 +478,18 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				npcmp.lref('gp').getColumns()[1].getEditor().getStore().load();
 			}
 			
-		} else if(path === 'xls' || path === 'xlsx') {
+		} else if(path === 'xls') {
 			if(pp === 'upload') {
 				ret = ppcmp.down('wtform').isValid();
 			} else if(pp === 's1') {
 				ret = ppcmp.down('wtform').isValid();
+			} else if(pp == 'mappings') {
+				vm.set('mappings', me.extractMappings(ppcmp.lref('gp')));
 			}
 			if(!ret) return false;
 			
 			if(np === 's1') {
+				vm.set('binary', me.isExcelBinary(ppcmp.lref('fldfile')));
 				npcmp.lref('fldsheet').getStore().load();
 			} else if(np === 'mappings') {
 				npcmp.lref('gp').getStore().load();
@@ -485,13 +499,13 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		return true;
 	},
 	
-	buildSheetsEP: function(path) {
+	buildSheetsParams: function(path) {
 		var vm = this.getVM();
-		
-		if(path === 'xls' || path === 'xlsx') {
+		if(path === 'xls') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
+				binary: vm.get('binary'),
 				headersRow: vm.get('headersrow'),
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow')
@@ -499,9 +513,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		}
 	},
 	
-	buildMappingsEP: function(path) {
+	buildMappingsParams: function(path) {
 		var vm = this.getVM();
-		
 		if(path === 'txt') {
 			return {
 				path: path,
@@ -514,10 +527,11 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow')
 			};
-		} else if(path === 'xls' || path === 'xlsx') {
+		} else if(path === 'xls') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
+				binary: vm.get('binary'),
 				headersRow: vm.get('headersrow'),
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow'),
@@ -526,10 +540,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		}
 	},
 	
-	 buildDoEP: function(path) {
-		var vm = this.getVM(),
-				mappings = null;
-		
+	buildDoParams: function(path) {
+		var vm = this.getVM();
 		if(path === 'txt') {
 			return {
 				path: path,
@@ -541,20 +553,40 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				headersRow: vm.get('headersrow'),
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow'),
-				mappings: mappings,
+				mappings: vm.get('mappings'),
 				importMode: vm.get('importmode')
 			};
-		} else if(path === 'xls' || path === 'xlsx') {
+		} else if(path === 'xls') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
+				binary: vm.get('binary'),
 				headersRow: vm.get('headersrow'),
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow'),
 				sheet: vm.get('sheet'),
-				mappings: mappings,
+				mappings: vm.get('mappings'),
 				importMode: vm.get('importmode')
 			};
 		}
+	},
+	
+	doOperationParams: function() {
+		var me = this,
+				path = me.getVM().get('path');
+		return me.buildDoParams(path);
+	},
+	
+	isExcelBinary: function(fileFld) {
+		return Ext.String.endsWith(fileFld.getRawValue(), 'xls', true);
+	},
+	
+	extractMappings: function(gp) {
+		var coll = gp.getStore().getData(),
+				data = [];
+		coll.each(function(itm) {
+			data.push(itm.getData());
+		});
+		return Ext.JSON.encode(data);
 	}
 });

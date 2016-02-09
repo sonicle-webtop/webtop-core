@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.io;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,6 +42,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.prefs.CsvPreference;
@@ -48,7 +51,7 @@ import org.supercsv.prefs.CsvPreference;
  *
  * @author malbinola
  */
-public class TextImportReader extends ImportRowsReader {
+public class TextFileReader extends FileRowsReader {
 	public static final String FIELD_DELIMITER_TAB = "tab";
 	public static final String FIELD_DELIMITER_COMMA = "comma";
 	public static final String FIELD_DELIMITER_SPACE = "space";
@@ -62,13 +65,24 @@ public class TextImportReader extends ImportRowsReader {
 	protected CsvPreference pref;
 	protected Charset charset = Charset.defaultCharset();
 	
-	public TextImportReader(CsvPreference pref) {
+	public TextFileReader(CsvPreference pref) {
 		this.pref = pref;
 	}
 	
-	public TextImportReader(CsvPreference pref, String charsetName) {
+	public TextFileReader(CsvPreference pref, String charsetName) {
 		this.pref = pref;
 		this.charset = Charset.forName(charsetName);
+	}
+	
+	@Override
+	public HashMap<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listColumnNames(fis);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
 	}
 	
 	@Override
@@ -96,7 +110,17 @@ public class TextImportReader extends ImportRowsReader {
 		return hm;
 	}
 	
-	public HashMap<String, Integer> listColumnIndices(InputStream is) throws IOException, UnsupportedOperationException {
+	public HashMap<String, Integer> listColumnIndexes(File file) throws IOException, UnsupportedOperationException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listColumnIndexes(fis);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
+	}
+	
+	public HashMap<String, Integer> listColumnIndexes(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, Integer> hm = new LinkedHashMap<>();
 		CsvListReader lr = new CsvListReader(new InputStreamReader(is, charset), pref);
 		

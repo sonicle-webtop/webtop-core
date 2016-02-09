@@ -33,6 +33,9 @@
  */
 Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 	extend: 'WT.sdk.WizardView',
+	requires: [
+		'WT.ux.panel.Form'
+	],
 	
 	confirmMsg: WT.res('wizard.confirm.close'),
 	dockableConfig: {
@@ -51,12 +54,6 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 		}
 	},
 	
-	constructor: function(config) {
-		var me = this;
-		me.pages = ['step1','step2','end'];
-		me.callParent([config]);
-	},
-	
 	initComponent: function() {
 		var me = this,
 				ic = me.getInitialConfig();
@@ -67,9 +64,11 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 		me.on('beforenavigate', me.onBeforeNavigate);
 	},
 	
+	initPages: function() {
+		return ['step1','step2','end'];
+	},
+	
 	createPages: function(path) {
-		var me = this;
-		
 		return [{
 			itemId: 'step1',
 			xtype: 'wtwizardpage',
@@ -85,11 +84,14 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 			}, {
 				xtype: 'sospacer'
 			}, {
-				xtype: 'textfield',
-				bind: '{address}',
-				allowBlank: false,
-				width: 300,
-				fieldLabel: WT.res('otp.setup.email.fld-address.lbl')
+				xtype: 'wtform',
+				items: [{
+					xtype: 'textfield',
+					bind: '{address}',
+					allowBlank: false,
+					width: 350,
+					fieldLabel: WT.res('otp.setup.email.fld-address.lbl')
+				}]
 			}]
 		}, {
 			itemId: 'step2',
@@ -106,11 +108,17 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 			}, {
 				xtype: 'sospacer'
 			}, {
-				xtype: 'textfield',
-				bind: '{code}',
-				allowBlank: false,
-				width: 200,
-				fieldLabel: WT.res('otp.setup.email.fld-code.lbl')
+				xtype: 'wtform',
+				defaults: {
+					labelWidth: 120
+				},
+				items: [{
+					xtype: 'textfield',
+					bind: '{code}',
+					allowBlank: false,
+					width: 250,
+					fieldLabel: WT.res('otp.setup.email.fld-code.lbl')
+				}]
 			}]
 		}, {
 			itemId: 'end',
@@ -131,10 +139,14 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 	onBeforeNavigate: function(s, dir, np, pp) {
 		if(dir === -1) return;
 		var me = this,
-				pcmp = me.getPageCmp(pp),
+				ret = true,
+				ppcmp = me.getPageCmp(pp),
 				vm = me.getVM();
 		
 		if(pp === 'step1') {
+			ret = ppcmp.down('wtform').isValid();
+			if(!ret) return false;
+			
 			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'configure',
@@ -150,6 +162,9 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 			return false;
 			
 		} else if(pp === 'step2') {
+			ret = ppcmp.down('wtform').isValid();
+			if(!ret) return false;
+			
 			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'activate',

@@ -42,7 +42,6 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
-import com.sonicle.webtop.core.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -59,22 +58,16 @@ import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
-import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
-import com.sonicle.webtop.core.io.ExcelImportReader;
-import com.sonicle.webtop.core.io.ImportRowsReader.FieldMapping;
-import com.sonicle.webtop.core.io.TextImportReader;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -87,12 +80,10 @@ import java.util.SortedMap;
 import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
-import org.supercsv.prefs.CsvPreference;
 
 /**
  *
@@ -821,121 +812,6 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
 		}
 	}
-	
-	
-	
-	//TODO: TEST CODE...MOVE TO ANOTHER LOCATION
-	
-	public void processImportText(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		//UserProfile up = getEnv().getProfile();
-		FileInputStream fis = null;
-		
-		try {
-			String uploadId = ServletUtils.getStringParameter(request, "uploadId", true);
-			String path = ServletUtils.getStringParameter(request, "path", true);
-			String op = ServletUtils.getStringParameter(request, "op", true);
-			String encoding = ServletUtils.getStringParameter(request, "encoding", true);
-			String delimiter = ServletUtils.getStringParameter(request, "delimiter", true);
-			String lineSeparator = ServletUtils.getStringParameter(request, "lineSeparator", true);
-			String textQualifier = ServletUtils.getStringParameter(request, "textQualifier", null);
-			Integer hr = ServletUtils.getIntParameter(request, "headersRow", true);
-			Integer fdr = ServletUtils.getIntParameter(request, "firstDataRow", true);
-			Integer ldr = ServletUtils.getIntParameter(request, "lastDataRow", -1);
-			
-			UploadedFile upl = getUploadedFile(uploadId);
-			if(upl == null) throw new WTException("Uploaded file not found [{0}]", uploadId);
-			fis = new FileInputStream(new File(WT.getTempFolder(), upl.id));
-			
-			CsvPreference pref = TextImportReader.buildCsvPreference(delimiter, lineSeparator, textQualifier);
-			TextImportReader rea = new TextImportReader(pref, encoding);
-			rea.setHeadersRow(hr);
-			rea.setFirstDataRow(fdr);
-			if(ldr != null) rea.setLastDataRow(ldr);
-			
-			if(op.equals("columns")) {
-				ArrayList<JsValue> items = new ArrayList<>();
-				for(String sheet : rea.listColumnNames(fis).values()) {
-					items.add(new JsValue(sheet));
-				}
-				new JsonResult("columns", items).printTo(out);
-				
-			} else if(op.equals("mappings")) {
-				List<FieldMapping> items = rea.listFieldMappings(fis, new String[]{"TITLE","FIRSTNAME","LASTNAME"});
-				new JsonResult("mappings", items).printTo(out);
-				
-			} else if(op.equals("do")) {
-				
-				
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in action ImportText", ex);
-			new JsonResult(false, "Error").printTo(out);
-		} finally {
-			IOUtils.closeQuietly(fis);
-		}
-	}
-	
-	public void processImportExcel(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		//UserProfile up = getEnv().getProfile();
-		FileInputStream fis = null;
-		
-		try {
-			String uploadId = ServletUtils.getStringParameter(request, "uploadId", true);
-			String path = ServletUtils.getStringParameter(request, "path", true);
-			String op = ServletUtils.getStringParameter(request, "op", true);
-			
-			UploadedFile upl = getUploadedFile(uploadId);
-			if(upl == null) throw new WTException("Uploaded file not found [{0}]", uploadId);
-			fis = new FileInputStream(new File(WT.getTempFolder(), upl.id));
-			
-			if(op.equals("sheets")) {
-				ArrayList<JsValue> items = new ArrayList<>();				
-				ExcelImportReader rea = new ExcelImportReader(path.equals("xls"));
-				List<String> sheets = rea.listSheets(fis);
-				for(String sheet : sheets) {
-					items.add(new JsValue(sheet));
-				}
-				new JsonResult("sheets", items).printTo(out);
-				
-			} else {
-				String sheet = ServletUtils.getStringParameter(request, "sheet", true);
-				Integer hr = ServletUtils.getIntParameter(request, "headersRow", true);
-				Integer fdr = ServletUtils.getIntParameter(request, "firstDataRow", true);
-				Integer ldr = ServletUtils.getIntParameter(request, "lastDataRow", -1);
-				
-				ExcelImportReader rea = new ExcelImportReader(path.equals("xls"));
-				rea.setHeadersRow(hr);
-				rea.setFirstDataRow(fdr);
-				if(ldr != null) rea.setLastDataRow(ldr);
-				rea.setSheet(sheet);
-				
-				if(op.equals("columns")) {
-					ArrayList<JsValue> items = new ArrayList<>();
-					for(String col : rea.listColumnNames(fis).values()) {
-						items.add(new JsValue(col));
-					}
-					new JsonResult("columns", items).printTo(out);
-					
-				} else if(op.equals("mappings")) {
-					List<FieldMapping> items = rea.listFieldMappings(fis, new String[]{"TITLE","FIRSTNAME","LASTNAME"});
-					new JsonResult("mappings", items).printTo(out);
-					
-				} else if(op.equals("do")) {
-					
-					
-				}
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in action ImportExcel", ex);
-			new JsonResult(false, "Error").printTo(out);
-		} finally {
-			IOUtils.closeQuietly(fis);
-		}
-	}
-	
-	//TODO: TEST CODE...MOVE TO ANOTHER LOCATION
 	
 	
 	

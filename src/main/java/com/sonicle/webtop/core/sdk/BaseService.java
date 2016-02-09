@@ -121,8 +121,8 @@ public abstract class BaseService extends BaseServiceBase {
 		return env.wts.getUploadedFile(id);
 	}
 	
-	public final void removeUploadedFile(String id) {
-		env.wts.removeUploadedFile(id);
+	public final void clearUploadedFile(String id) {
+		env.wts.clearUploadedFile(id);
 	}
 	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -211,7 +211,7 @@ public abstract class BaseService extends BaseServiceBase {
 						uploadedFile = new UploadedFile(WT.generateUUID(), fis.getName(), findMediaType(fis), true);
 						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
-						env.wts.removeUploadedFile(uploadedFile);
+						env.wts.clearUploadedFile(uploadedFile);
 						succedeed = true;
 						// Plupload client-side will upload multiple file each in its own
 						// request; we can skip fileItems looping.
@@ -265,7 +265,7 @@ public abstract class BaseService extends BaseServiceBase {
 			
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			if(uploadedFile != null) env.wts.removeUploadedFile(uploadedFile);
+			if(uploadedFile != null) env.wts.clearUploadedFile(uploadedFile);
 			new JsonResult(false, "Error uploading").printTo(out);
 		}
 	}

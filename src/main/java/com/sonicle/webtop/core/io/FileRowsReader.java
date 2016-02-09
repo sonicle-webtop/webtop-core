@@ -33,22 +33,26 @@
  */
 package com.sonicle.webtop.core.io;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public abstract class ImportRowsReader {
+public abstract class FileRowsReader {
 	protected int headersRow = 1;
 	protected int firstDataRow = 2;
 	protected int lastDataRow = -1;
 	
+	public abstract HashMap<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException;
 	public abstract HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException;
 	
 	public void setHeadersRow(int headersRow) {
@@ -77,8 +81,22 @@ public abstract class ImportRowsReader {
 		}
 	}
 	
+	public List<FieldMapping> listFieldMappings(File file, String[] targetFields) throws IOException, UnsupportedOperationException {
+		return listFieldMappings(file, targetFields, false);
+	}
+	
 	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields) throws IOException, UnsupportedOperationException {
 		return listFieldMappings(is, targetFields, false);
+	}
+	
+	public List<FieldMapping> listFieldMappings(File file, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+			return listFieldMappings(fis, targetFields, strict);
+		} finally {
+			IOUtils.closeQuietly(fis);
+		}
 	}
 	
 	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
