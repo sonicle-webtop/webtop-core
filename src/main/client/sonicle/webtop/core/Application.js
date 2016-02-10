@@ -9,6 +9,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.URLManager',
 		'Sonicle.PrintManager',
 		'Sonicle.upload.Uploader',
+		'Sonicle.data.proxy.Ajax',
 		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.plugin.EnterKeyPlugin',
 		'Sonicle.plugin.FieldTooltip',
@@ -230,7 +231,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 Ext.override(Ext.data.proxy.Server, {
 	constructor: function(cfg) {
 		this.callOverridden([cfg]);
-		this.addListener('exception', function(proxy, resp, op) {
+		this.addListener('exception', function(s,resp,op) {
 			if(resp.status === 401) WT.reload();
 		});
 	}

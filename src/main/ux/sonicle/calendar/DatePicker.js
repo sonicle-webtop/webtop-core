@@ -309,10 +309,8 @@ Ext.define('Sonicle.calendar.DatePicker', {
 			if(!Ext.isEmpty(me.highlightCls)) {
 				if((dv >= tfrom) && (dv <= tto)) {
 					cell.first().addCls(me.highlightCls);
-					//cell.first().setStyle('background-color', '#eaf3fa');
 				} else {
 					cell.first().removeCls(me.highlightCls);
-					//cell.first().setStyle('background-color', '');
 				}
 			}
 			
@@ -337,6 +335,16 @@ Ext.define('Sonicle.calendar.DatePicker', {
 			}
 			if(me.showDayInfo) cell.dom.setAttribute('data-qtip', me.formatDayTip(d));
 		}
+	},
+	
+	handleDateClick: function(e,t) {
+		var me = this, day;
+		if(t.dateValue && me.highlightMode === 'w5') {
+			// Avoids click on saturday and sunday
+			day = new Date(t.dateValue).getDay();
+			if((day === 0) || (day === 6)) return;
+		}
+		me.callParent(arguments);
 	},
 	
 	formatDayTip: function(date) {

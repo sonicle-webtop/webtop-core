@@ -4,7 +4,7 @@
  * sonicle@sonicle.com
  * http://www.sonicle.com
  */
-Ext.define('Sonicle.MultiCalendar', {
+Ext.define('Sonicle.calendar.MultiCalendar', {
 	extend: 'Ext.panel.Panel',
 	alias: 'widget.somulticalendar',
 	
@@ -63,7 +63,7 @@ Ext.define('Sonicle.MultiCalendar', {
 	
 	/**
 	 * @cfg {String} highlightMode
-	 * One of: "d" day, "w5" work week, "w" week, "wa" week agenda, "m" month.
+	 * One of: "d" day, "w5" work week, "w" week, "dw" double-week, "m" month.
 	 */
 	highlightMode : 'w5',
 	
@@ -335,7 +335,7 @@ Ext.define('Sonicle.MultiCalendar', {
 			if(hm === 'd') {
 				int = eDate.DAY;
 				val = 1;
-			} else if((hm === 'w5') || (hm === 'w') || (hm === 'wa')) {
+			} else if((hm === 'w5') || (hm === 'w') || (hm === 'dw')) {
 				int = eDate.DAY;
 				val = 7;
 			} else {

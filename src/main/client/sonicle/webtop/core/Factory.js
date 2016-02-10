@@ -192,9 +192,10 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	proxy: function(sid, act, rootp, opts) {
 		opts = opts || {};
 		var obj = {};
+		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
 		if(opts.model) Ext.apply(obj, {model: opts.model});
 		return Ext.apply({
-			type: 'ajax',
+			type: 'soajax',
 			url: WTF.requestBaseUrl(),
 			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: sid,
@@ -209,9 +210,11 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				type: 'json'
 			}, opts.writer || {}),
 			listeners: Ext.merge({
-				exception: function(proxy, request, operation, eOpts) {
+				exception: function(s,req,op,eop) {
 					//TODO: localizzare il messaggio di errore
-					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+					if(!req.aborted) {
+						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+					}
 				}
 			}, opts.listeners || {})
 		}, obj);
@@ -220,9 +223,10 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	proxyReader: function(sid, act, rootp, opts) {
 		opts = opts || {};
 		var obj = {};
+		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
 		if(opts.model) Ext.apply(obj, {model: opts.model});
 		return Ext.apply({
-			type: 'ajax',
+			type: 'soajax',
 			url: WTF.requestBaseUrl(),
 			extraParams: Ext.apply(opts.extraParams || {}, {
 				service: sid,
@@ -234,13 +238,14 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				messageProperty: 'message'
 			}, opts.reader || {}),
 			listeners: Ext.merge({
-				exception: function(proxy, request, operation, eOpts) {
+				exception: function(s,req,op,eop) {
 					//TODO: localizzare il messaggio di errore
-					WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+					if(!req.aborted) {
+						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+					}
 				}
 			}, opts.listeners || {})
 		}, obj);
-		return obj;
 	},
 	
 	/**
@@ -254,11 +259,13 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @param {Object} [opts.writer]
 	 * @returns {Object} Object config
 	 */
-	apiProxy: function(svc, act, rootp, opts) {
-		rootp = rootp || 'data';
+	apiProxy: function(sid, act, rootp, opts) {
 		opts = opts || {};
-		return {
-			type: 'ajax',
+		var obj = {};
+		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
+		if(opts.model) Ext.apply(obj, {model: opts.model});
+		return Ext.apply({
+			type: 'soajax',
 			api: {
 				create: WTF.requestBaseUrl({crud: 'create'}),
 				read: WTF.requestBaseUrl({crud: 'read'}),
@@ -266,7 +273,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				destroy: WTF.requestBaseUrl({crud: 'delete'})
 			},
 			extraParams: Ext.apply(opts.extraParams || {}, {
-				service: svc,
+				service: sid,
 				action: act
 			}),
 			reader: Ext.apply({
@@ -279,12 +286,14 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				writeAllFields: true
 			}, opts.writer || {}),
 			listeners: {
-				exception: function(proxy, request, operation, eOpts) {
+				exception: function(s,req,op,eop) {
 					//TODO: localizzare il messaggio di errore
-					WT.error('Error during action "'+act+'" on service "'+svc+'"',"Ajax Error");
+					if(!req.aborted) {
+						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
+					}
 				}
 			}
-		};
+		}, obj);
 	},
 	
 	/**
