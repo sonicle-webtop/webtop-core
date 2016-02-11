@@ -98,7 +98,7 @@ Ext.define('Sonicle.form.field.Image', {
 		if(!iniCfg.uploadDisabled) {
 			triggers = Ext.apply(triggers, {
 				upload: {
-					type: 'hideable',
+					type: 'sohideable',
 					weight: -1,
 					hideOn: 'value',
 					cls: iniCfg.uploadTriggerCls,

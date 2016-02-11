@@ -28,7 +28,6 @@ Ext.define('Sonicle.calendar.Panel', {
 	],
 	
 	//layout: 'card',
-	
 	layout: {
 		type: 'card',
 		deferredRender: true

@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	alternateClassName: 'WT.view.Causal',
 	extend: 'WT.sdk.ModelView',
 	requires: [
-		'Ext.ux.form.trigger.Clear',
+		'Sonicle.form.trigger.Clear',
 		'Sonicle.webtop.core.model.Causal'
 	],
 	

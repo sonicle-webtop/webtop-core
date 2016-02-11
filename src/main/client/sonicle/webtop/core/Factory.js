@@ -482,7 +482,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	clearTrigger: function(cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
-			type: 'clear',
+			type: 'soclear',
 			weight: -1,
 			hideWhenEmpty: true,
 			hideWhenMouseOut: true

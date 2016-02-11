@@ -35,7 +35,7 @@ Ext.define('Sonicle.form.field.Image', {
 	extend: 'Sonicle.form.field.DisplayImage',
 	alias: ['widget.soimagefield'],
 	requires: [
-		'Ext.ux.form.trigger.Clear',
+		'Sonicle.form.trigger.Clear',
 		'Sonicle.upload.Uploader'
 	],
 	
@@ -62,7 +62,7 @@ Ext.define('Sonicle.form.field.Image', {
 		
 		triggers = Ext.apply(triggers, {
 			clear: {
-				type: 'clear',
+				type: 'soclear',
 				weight: -1,
 				cls: iniCfg.clearTriggerCls,
 				handler: me.onClearClick
@@ -71,7 +71,7 @@ Ext.define('Sonicle.form.field.Image', {
 		if(!iniCfg.uploadDisabled) {
 			triggers = Ext.apply(triggers, {
 				upload: {
-					type: 'hideable',
+					type: 'sohideable',
 					weight: -1,
 					hideOn: 'value',
 					cls: iniCfg.uploadTriggerCls,
@@ -125,7 +125,7 @@ Ext.define('Sonicle.form.field.Image', {
 		}
 	},
 	
-	initEvents: function(){
+	initEvents: function() {
         var me = this,
 				el = me.inputEl;
 		me.callParent();
