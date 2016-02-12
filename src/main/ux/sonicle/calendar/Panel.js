@@ -1,15 +1,8 @@
-/**
- * @class Sonicle.calendar.CalendarPanel
- * @extends Ext.Panel
- * <p>This is the default container for Ext calendar views. It supports day, week and month views as well
- * as a built-in event edit form. The only requirement for displaying a calendar is passing in a valid
- * {@link #calendarStore} config containing records of type {@link Sonicle.calendar.EventRecord EventRecord}. In order
- * to make the calendar interactive (enable editing, drag/drop, etc.) you can handle any of the various
- * events fired by the underlying views and exposed through the CalendarPanel.</p>
- * {@link #layoutConfig} option if needed.</p>
- * @constructor
- * @param {Object} config The config object
- * @xtype calendarpanel
+/*
+ * Sonicle ExtJs UX
+ * Copyright (C) 2015 Sonicle S.r.l.
+ * sonicle@sonicle.com
+ * http://www.sonicle.com
  */
 Ext.define('Sonicle.calendar.Panel', {
 	extend: 'Ext.panel.Panel',
@@ -27,7 +20,6 @@ Ext.define('Sonicle.calendar.Panel', {
 		'Ext.util.StoreHolder'
 	],
 	
-	//layout: 'card',
 	layout: {
 		type: 'card',
 		deferredRender: true

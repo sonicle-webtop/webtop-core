@@ -36,8 +36,16 @@ Ext.define('Sonicle.webtop.core.store.RcptType', {
 	
 	model: 'WT.model.Simple',
 	data: [
-		['to', WT.res('store.rcptType.to')],
-		['cc', WT.res('store.rcptType.cc')],
-		['bcc', WT.res('store.rcptType.bcc')]
-	]
+		['to', ''],
+		['cc', ''],
+		['bcc', '']
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.rcptType.'+row[0]);
+		});
+		me.callParent([cfg]);
+	}
 });

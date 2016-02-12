@@ -37,7 +37,15 @@ Ext.define('Sonicle.webtop.core.store.StartDay', {
 	
 	model: 'WT.model.Simple',
 	data: [
-		[0, WT.res('store.startDay.0')],
-		[1, WT.res('store.startDay.1')]
-	]
+		[0, ''],
+		[1, '']
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.startDay.'+row[0]);
+		});
+		me.callParent([cfg]);
+	}
 });

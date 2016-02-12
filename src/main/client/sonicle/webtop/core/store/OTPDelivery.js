@@ -37,7 +37,15 @@ Ext.define('Sonicle.webtop.core.store.OTPDelivery', {
 	
 	model: 'WT.model.Simple',
 	data: [
-		['email', WT.res('store.otpdelivery.email')],
-		['googleauth', WT.res('store.otpdelivery.googleauth')]
-	]
+		['email',''],
+		['googleauth','']
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.otpdelivery.'+row[0]);
+		});
+		me.callParent([cfg]);
+	}
 });

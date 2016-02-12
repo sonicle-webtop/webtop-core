@@ -63,6 +63,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 	},
 	
 	/**
+	 * Returns itself or the first element if obj is an Array.
+	 * @param {Mixed/Mixed[]} obj
+	 * @returns {Mixed}
+	 */
+	itselfOrFirst: function(obj) {
+		return Ext.isArray(obj) ? obj[0] : obj;
+	},
+	
+	/**
 	 * Null-safe method for checking xtype.
 	 * @param {Mixed} obj An object instance.
 	 * @param {String} xtype The xtype to check.

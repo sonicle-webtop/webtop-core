@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 			cn = ns;
 			ns = WT.NS;
 		}
-		return Ext.String.format('{0}.{1}', ns, cn);
+		return ns + '.' + cn;
 	},
 	
 	/**

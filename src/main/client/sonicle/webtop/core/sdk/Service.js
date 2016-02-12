@@ -132,6 +132,11 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		return WT.getApp().getDescriptor(this.ID).getDescription();
 	},
 	
+	/**
+	 * Prepends service's namespace to passed class name.
+	 * @param {String} cn The class name.
+	 * @return {String}
+	 */
 	preNs: function(cn) {
 		return WT.preNs(WT.getApp().getDescriptor(this.ID).getNs(), cn);
 	},

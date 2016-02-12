@@ -12,12 +12,6 @@ Ext.define('Sonicle.calendar.dd.StatusProxy', {
 	animRepair: true,
 	
 	/**
-	 * @cfg {String} dropAllowedMove
-	 * The CSS class to apply to the status element when drop is allowed (move mode).
-	 */
-	dropAllowedMove: Ext.baseCSSPrefix + 'dd-drop-ok',
-	
-	/**
 	 * @cfg {String} dropAllowedCopy
 	 * The CSS class to apply to the status element when drop is allowed (copy mode).
 	 */

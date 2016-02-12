@@ -36,8 +36,16 @@ Ext.define('Sonicle.webtop.core.store.Gender', {
 	
 	model: 'WT.model.Simple',
 	data: [
-		['male', WT.res('store.gender.male')],
-		['female', WT.res('store.gender.female')],
-		['other', WT.res('store.gender.other')]
-	]
+		['male',''],
+		['female',''],
+		['other','']
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.gender.'+row[0]);
+		});
+		me.callParent([cfg]);
+	}
 });
