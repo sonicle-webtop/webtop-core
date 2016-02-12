@@ -436,9 +436,9 @@ td.ext-cal-dtitle-today div {
 
 /* Default rounded event div (Gecko/Webkit/W3C) */
 .ext-cal-evr { /* rounded */
-    -moz-border-radius: 5px;
+    /*-moz-border-radius: 5px;
     -webkit-border-radius: 5px;
-    border-radius: 5px;
+    border-radius: 5px;*/
     overflow: hidden;
     padding: 2px 1px 2px 2px;
     white-space: nowrap;
@@ -509,8 +509,8 @@ td.ext-cal-dtitle-today div {
 }
 .ext-cal-evdm {
     border: 1px solid;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px
+    /*-moz-border-radius: 3px;
+    -webkit-border-radius: 3px*/
 }
 .ext-cal-evdm dt {
     margin-top: 0
@@ -540,45 +540,45 @@ td.ext-cal-dtitle-today div {
 .ext-cal-ev-spanleft,
 .ext-cal-ev-spanright,
 .ext-cal-ev-spanboth {
-    -moz-border-radius:0;
+    /*-moz-border-radius:0;
     -webkit-border-radius:0;
-    border-radius:0;
+    border-radius:0;*/
 	position: relative;
 }
 .ext-cal-ev-spantop {
-    -moz-border-radius-bottomleft:5px;
+    /*-moz-border-radius-bottomleft:5px;
     -moz-border-radius-bottomright:5px;
     -webkit-border-bottom-left-radius:5px;
     -webkit-border-bottom-right-radius:5px;
     border-bottom-left-radius:5px;
-    border-bottom-right-radius:5px;
+    border-bottom-right-radius:5px;*/
     xpadding-left:5px;
 }
 .ext-cal-ev-spanbottom {
-    -moz-border-radius-topleft:5px;
+    /*-moz-border-radius-topleft:5px;
     -moz-border-radius-topright:5px;
     -webkit-border-top-left-radius:5px;
     -webkit-border-top-right-radius:5px;
     border-top-left-radius:5px;
-    border-top-right-radius:5px;
+    border-top-right-radius:5px;*/
     xpadding-left:5px;
 }
 .ext-cal-ev-spanleft {
-    -moz-border-radius-topright:5px;
+    /*-moz-border-radius-topright:5px;
     -moz-border-radius-bottomright:5px;
     -webkit-border-top-right-radius:5px;
     -webkit-border-bottom-right-radius:5px;
     border-top-right-radius:5px;
-    border-bottom-right-radius:5px;
+    border-bottom-right-radius:5px;*/
     xpadding-left:5px;
 }
 .ext-cal-ev-spanright {
-    -moz-border-radius-topleft:5px;
+    /*-moz-border-radius-topleft:5px;
     -moz-border-radius-bottomleft:5px;
     -webkit-border-top-left-radius:5px;
     -webkit-border-bottom-left-radius:5px;
     border-top-left-radius:5px;
-    border-bottom-left-radius:5px;
+    border-bottom-left-radius:5px;*/
     xpadding-right:5px;
 }
 /* IE/ Opera: */
@@ -619,10 +619,10 @@ td.ext-cal-dtitle-today div {
 .ext-cal-ic {
     background-repeat:no-repeat;
     display:inline-block;
-	width:11px;
+	/*width:11px;*/
     height:11px;
     line-height:11px;
-    margin-right:2px;
+    /*margin-right:2px;*/
 }
 /*
 .ext-cal-ic {

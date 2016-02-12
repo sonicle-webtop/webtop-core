@@ -145,8 +145,7 @@ Ext.define('Sonicle.calendar.DatePicker', {
 						dz = dd.view.dropZone,
 						cellDate = self.extractDate(target),
 						newDate = Sonicle.Date.copyDate(cellDate, data.eventStart);
-				dz.updateProxy(e, data, newDate, newDate);
-				return self.dropAllowed;
+				return dz.updateProxy(e, data, newDate, newDate);
 			},
 			
 			onNodeDrop: function(target, dd, e, data) {

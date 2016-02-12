@@ -2,6 +2,9 @@
 	background: #f8f8f8;
 	padding: 0px;
 }
+.jumbotron p {
+	font-size: inherit; /* Remove the default font-size of .jumbotron */
+}
 .jumbotron.vertical-center {
 	margin-bottom: 0; /* Remove the default bottom margin of .jumbotron */
 }

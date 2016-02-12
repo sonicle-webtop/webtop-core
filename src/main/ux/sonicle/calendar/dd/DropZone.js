@@ -29,7 +29,8 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
     onNodeOver: function(n, dd, e, data) {
         var me = this,
 				soDate = Sonicle.Date,
-				eventDragText = (e.ctrlKey || e.altKey) ? me.copyText: me.moveText,
+				copy = e.ctrlKey || e.altKey,
+				eventDragText = copy ? me.copyText: me.moveText,
 				start = (data.type === 'eventdrag') ? n.date: soDate.min(data.start, n.date),
 				end = (data.type === 'eventdrag') ? soDate.add(n.date, {days: soDate.diffDays(data.eventStart, data.eventEnd)}) : soDate.max(data.start, n.date);
 
@@ -49,16 +50,16 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
 		//me.updateProxy(e, data, start, end);
 		var msg = Ext.String.format((data.type === 'eventdrag') ? eventDragText : me.createText, me.currentRange);
 		data.proxy.updateMsg(msg);
-        return this.dropAllowed;
+		return data.proxy.getDropAllowedCls(copy);
     },
 	
 	updateProxy: function(e, data, start, end) {
 		var me = this,
-				//timeFmt = (me.use24HourTime) ? 'G:i' : 'g:ia',
-				text,
-				dt;
+				copy = false,
+				text, dt;
 		
 		if(data.type === 'eventdrag') {
+			copy = e.ctrlKey || e.altKey;
 			text = (e.ctrlKey || e.altKey) ? me.copyText: me.moveText;
 		} else {
 			text = me.createText;
@@ -72,6 +73,7 @@ Ext.define('Sonicle.calendar.dd.DropZone', {
 		}
 		
 		data.proxy.updateMsg(Ext.String.format(text, dt));
+		return data.proxy.getDropAllowedCls(copy);
 	},
 
     shim: function(start, end) {
