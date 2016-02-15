@@ -1497,10 +1497,13 @@ Ext.define('Sonicle.calendar.view.AbstractCalendar', {
 	},
 	
 	onContextMenu: function(e, t) {
-		var el = e.getTarget(this.eventSelector, 5, true);
-		if(el) {
+		//var el = e.getTarget(this.eventSelector, 5, true);
+		var el = null;
+		if(el = e.getTarget(this.eventSelector, 5, true)) {
 			var id = this.getEventIdFromEl(el);
 			this.fireEvent('eventcontextmenu', this, this.getEventRecord(id), el, e);
+		} else {
+			this.fireEvent('contextmenu', this, e);
 		}
 	},
 	
