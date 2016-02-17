@@ -195,12 +195,11 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 						me.navigate(1);
 					},
 					disabled: true
-				}, {
+				}, ' ', {
 					reference: 'btndo',
 					xtype: 'button',
 					text: me.resDoButtonText(),
 					handler: function(s) {
-						//if(me.getLockDoButton()) s.setDisabled(true);
 						s.setDisabled(true); // Avoids multi-runs!
 						me.onDoClick();
 					},
@@ -211,7 +210,9 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 					xtype: 'button',
 					text: WT.res('wizard.btn-cancel.lbl'),
 					handler: function() {
-						if(!me.isPathSelection() && !me.hasNext(1)) me.fireEvent('wizardcompleted', me);
+						if(!me.isPathSelection() && !me.hasNext(1)) {
+							me.fireEvent('wizardcompleted', me);
+						}
 						me.closeView();
 					}
 				}
@@ -293,6 +294,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				items: [{
 					xtype: 'fieldset',
 					title: fieldLabel,
+					padding: '10px',
 					items: [{
 						xtype: 'radiogroup',
 						bind: {
@@ -321,6 +323,9 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				xtype: 'textarea',
 				hidden: !me.getShowDoButton(),
 				readOnly: true,
+				fieldStyle: {
+					fontSize: '12px'
+				},
 				anchor: '100% -50'
 			}]
 		};
@@ -351,22 +356,20 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	},
 	
 	hasNext: function(dir, page) {
-		var me = this,
-				next = (arguments.length === 1) ? me.computeNext(dir) : me.computeNext(dir, page);
-		return !Ext.isEmpty(next);
+		var me = this;
+		page = page || me.getActivePage();
+		return me.isPathSelection(page) ? false : !Ext.isEmpty(me.computeNext(dir, page));
 	},
 	
 	/**
 	 * @private
-	 * @param {type} dir Navigation direction: 1 -> forward, -1 -> backward.
-	 * @param {type} [page] 
+	 * @param {Integer} dir Navigation direction: 1 -> forward, -1 -> backward.
+	 * @param {String} [page] 
 	 * @return {String} The next page or null if there are no more pages.
 	 */
 	computeNext: function(dir, page) {
 		var me = this, index;
-		if(arguments.length === 1) {
-			page = me.getActivePage();
-		}
+		page = page || me.getActivePage();
 		index = me.getPageIndex(page) + dir;
 		return ((index >= 0) && (index < me.getPagesCount())) ? me.getPages()[index] : null;
 	},
@@ -419,7 +422,9 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			btnForw.setDisabled(!hasNext);
 		}
 		if(me.getShowDoButton()) {
-			if(me.getLockDoButton() && (me.doCount > 0)) {
+			if(me.isPathSelection(page)) {
+				btnDo.setDisabled(true);
+			} else if(me.getLockDoButton() && (me.doCount > 0)) {
 				btnDo.setDisabled(true);
 			} else {
 				btnDo.setDisabled(hasNext);
