@@ -238,6 +238,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				items: [{
 					xtype: 'fieldset',
 					title: WT.res('importwiz.mode.fld-importmode.lbl'),
+					padding: '10px',
 					items: [{
 						xtype: 'radiogroup',
 						bind: {

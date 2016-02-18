@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 	extend: 'Ext.grid.NavigationModel',
 	
 	//remove cell focus style
-	focusCls: '',
+	focusCls: ''
 	
 /*    initKeyNav: function(view) {
         var me = this;
@@ -178,7 +178,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	
 	addRecipient: function(rtype,email) {
 		this.getStore().add({ rtype: rtype, email: email});
-	},
+	}
 	
 /*	setValue: function(v) {
 		console.log("RecipientsGrid: setValue v="+v);

@@ -268,6 +268,6 @@ Ext.define('Sonicle.webtop.core.mixin.Formable', {
 		} else {
 			WT.error('Submit failure!');
 		}
-	},
+	}
 	
 });
