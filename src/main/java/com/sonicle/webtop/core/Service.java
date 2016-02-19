@@ -128,6 +128,8 @@ public class Service extends BaseService {
 		co.put("theme", us.getTheme());
 		co.put("layout", us.getLayout());
 		co.put("laf", us.getLookAndFeel());
+		co.put("desktopNotification", us.getDesktopNotification());
+		
 		co.put("language", profile.getLanguageTag());
 		co.put("timezone", profile.getTimeZone().getID());
 		co.put("startDay", us.getStartDay());

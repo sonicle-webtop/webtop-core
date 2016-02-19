@@ -31,51 +31,22 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Service', {
-	extend: 'WT.sdk.Service',
-	requires: [
-		'Sonicle.webtop.core.model.ClientOptions',
-		'Sonicle.webtop.core.view.Activities',
-		'Sonicle.webtop.core.view.Causals'
+Ext.define('Sonicle.webtop.core.store.DesktopNotification', {
+	alternateClassName: 'WT.store.DesktopNotification',
+	extend: 'Ext.data.ArrayStore',
+	
+	model: 'WT.model.Simple',
+	data: [
+		['never', ''],
+		['always', ''],
+		['auto', '']
 	],
 	
-	vwrem: null,
-	
-	init: function() {
+	constructor: function(cfg) {
 		var me = this;
-		WT.checkDesktopNotificationAuth();
-		me.onMessage('reminderNotify', function(msg) {
-			var pl = msg.payload;
-			me.showReminder(pl);
-			WT.showDesktopNotification(pl.serviceId, {
-				title: pl.title
-			});
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('store.desktopNotification.'+row[0]);
 		});
-	},
-	
-	showActivities: function() {
-		WT.createView(WT.ID, 'view.Activities').show();
-	},
-	
-	showCausals: function() {
-		WT.createView(WT.ID, 'view.Causals').show();
-	},
-	
-	showReminder: function(data) {
-		var me = this;
-		
-		if(me.vwrem) {
-			me.vwrem.getView().addReminder(data);
-		} else {
-			me.vwrem = WT.createView(WT.ID, 'view.Reminder');
-			me.vwrem.on('close', function() {
-				me.vwrem = null;
-			}, {single: true});
-			me.vwrem.show(false, function() {
-				Ext.defer(function() {
-					me.vwrem.getView().addReminder(data);
-				}, 200);
-			});
-		}
+		me.callParent([cfg]);
 	}
 });

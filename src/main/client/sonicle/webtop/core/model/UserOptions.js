@@ -40,6 +40,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('theme', 'string', false),
 		WTF.field('layout', 'string', false),
 		WTF.field('laf', 'string', false),
+		WTF.field('desktopNotification', 'string', false),
 		WTF.field('language', 'string', false),
 		WTF.field('timezone', 'string', false),
 		WTF.field('startDay', 'int', false),

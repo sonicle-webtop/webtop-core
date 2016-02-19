@@ -78,6 +78,15 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String RTL = "rtl";
 	
 	/**
+	 * [string][default]
+	 * Desktop notification
+	 */
+	public static final String DESKTOP_NOTIFICATION = "notifications.desktop";
+	public static final String DESKTOP_NOTIFICATION_NEVER = "never";
+	public static final String DESKTOP_NOTIFICATION_ALWAYS = "always";
+	public static final String DESKTOP_NOTIFICATION_BACKGROUND = "background";
+	
+	/**
 	 * [int][default]
 	 * Week start day (0:sunday, 1:monday)
 	 */
@@ -201,6 +210,16 @@ public class CoreUserSettings extends BaseUserSettings {
 		Boolean value = getBoolean(RTL, null);
 		if(value != null) return value;
 		return ss.getDefaultRtl();
+	}
+	
+	public String getDesktopNotification() {
+		String value = getString(DESKTOP_NOTIFICATION, null);
+		if(value != null) return value;
+		return ss.getDefaultDesktopNotification();
+	}
+	
+	public boolean setDesktopNotification(String value) {
+		return setString(DESKTOP_NOTIFICATION, value);
 	}
 	
 	public Integer getStartDay() {

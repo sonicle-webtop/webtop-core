@@ -6,6 +6,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Ext.ux.WebSocket',
 		'Sonicle.String',
 		'Sonicle.Date',
+		'Sonicle.DesktopNotificationMgr',
 		'Sonicle.URLManager',
 		'Sonicle.PrintManager',
 		'Sonicle.upload.Uploader',

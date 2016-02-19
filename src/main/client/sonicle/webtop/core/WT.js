@@ -461,7 +461,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Function} cb A callback function which is called after a choice.
 	 * @param {String} cb.buttonId The ID of the button pressed.
 	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
-	 * @param {Object} opts [opts] Config options.
+	 * @param {Object} [opts] Config options.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
@@ -482,12 +482,49 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Function} cb A callback function which is called after a choice.
 	 * @param {String} cb.buttonId The ID of the button pressed.
 	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
-	 * @param {Object} opts [opts] Config options.
+	 * @param {Object} [opts] Config options.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
 		this.confirm(msg, cb, scope, Ext.apply({
 			buttons: Ext.Msg.YESNOCANCEL
 		}, opts));
+	},
+	
+	/**
+	 * Shows a desktop notification using browser.
+	 * @param {String} sid The service ID.
+	 * @param {Object} [opts] Config options.
+	 * @param {Number} [opts.autoClose=5000] Auto close timeout in millis.
+	 * @param {String} opts.title Notification title.
+	 * @param {String} opts.body Notification body.
+	 * @returns {Object} A wrapper containing a close() method to hide the notification. 
+	 */
+	showDesktopNotification: function(sid, opts) {
+		opts = opts || {};
+		var dn = WT.getOption('desktopNotification'),
+				NtfMgr = Sonicle.DesktopNotificationMgr,
+				desc, ico;
+		
+		if(dn === 'always' || dn === 'auto') {
+			desc = WT.getApp().getDescriptor(sid);
+			ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
+			return NtfMgr.notify(opts.title, {
+				autoClose: opts.autoClose || 5000,
+				icon: WTF.globalImageUrl(ico),
+				body: opts.body || desc.getName()
+			});
+		}
+	},
+	
+	/**
+	 * Checks and if necessary display an authorization 
+	 * request for using desktop notifications.
+	 */
+	checkDesktopNotificationAuth: function() {
+		var dn = WT.getOption('desktopNotification');
+		if(dn === 'always' || dn === 'auto') {
+			Sonicle.DesktopNotificationMgr.ensureAuthorization();
+		}
 	},
 	
 	/**

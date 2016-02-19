@@ -244,12 +244,15 @@ public abstract class BaseService extends BaseServiceBase {
 						uploadedFile = new UploadedFile(file.getName(), fi.getName(), findMediaType(fi), false);
 						env.wts.addUploadedFile(uploadedFile);
 						fi.write(file);
+						
 						items.add(uploadedFile.id);
-						try {
-							uploadMethod.invoke(this, request, uploadedFile);
-						} catch(Throwable t) {
-							//TODO: aggiungere logging
-							t.printStackTrace();
+						if(uploadMethod != null) {
+							try {
+								uploadMethod.invoke(this, request, uploadedFile);
+							} catch(Throwable t) {
+								//TODO: aggiungere logging
+								t.printStackTrace();
+							}
 						}
 						succedeed = true;
 						// Plupload client-side will upload multiple file each in its own

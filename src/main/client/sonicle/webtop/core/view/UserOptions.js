@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	extend: 'WT.sdk.UserOptionsView',
 	requires: [
 		'WT.model.Simple',
+		'WT.store.DesktopNotification',
 		'WT.store.OTPDelivery',
 		'WT.store.Timezone',
 		'WT.store.StartDay',
@@ -59,7 +60,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	},
 	
 	initComponent: function() {
-		var me = this, vm;
+		var me = this, 
+				NtfMgr = Sonicle.DesktopNotificationMgr,
+				vm;
 		me.callParent(arguments);
 		
 		vm = me.getViewModel();
@@ -144,6 +147,28 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}
 				},
 				needReload: true
+			}), {
+				xtype: 'formseparator'
+			}, 
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.desktopNotification}',
+				store: Ext.create('WT.store.DesktopNotification', {
+					autoLoad: true
+				}),
+				disabled: !NtfMgr.isSupported || (NtfMgr.permissionLevel() === NtfMgr.PERM_DENIED),
+				fieldLabel: WT.res('opts.main.fld-desktopNotification.lbl'),
+				width: 340,
+				listeners: {
+					select: function(s,rec) {
+						if(rec.get('id') === 'always' || rec.get('id') === 'auto') {
+							NtfMgr.ensurePermission();
+						}
+					},
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			})]
 		}, {
 			xtype: 'wtopttabsection',

@@ -89,6 +89,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.theme = us.getTheme();
 				jso.layout = us.getLayout();
 				jso.laf = us.getLookAndFeel();
+				jso.desktopNotification = us.getDesktopNotification();
 				
 				// i18n
 				jso.language = user.getLanguageTag();
@@ -157,6 +158,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("theme")) us.setTheme(pl.data.theme);
 				if(pl.map.has("layout")) us.setLayout(pl.data.layout);
 				if(pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if(pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
 				
 				// i18n
 				if(pl.map.has("language")) user.setLanguageTag(pl.data.language);

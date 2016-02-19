@@ -317,6 +317,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(DEFAULT_PREFIX + CoreUserSettings.RTL, false);
 	}
 	
+	public String getDefaultDesktopNotification() {
+		return getString(DEFAULT_PREFIX + CoreUserSettings.DESKTOP_NOTIFICATION, CoreUserSettings.DESKTOP_NOTIFICATION_NEVER);
+	}
+	
 	public int getDefaultStartDay() {
 		return getInteger(DEFAULT_PREFIX + CoreUserSettings.START_DAY, CoreUserSettings.START_DAY_MONDAY);
 	}

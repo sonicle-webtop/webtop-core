@@ -44,6 +44,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String theme;
 	public String layout;
 	public String laf;
+	public String desktopNotification;
 	public String language;
 	public String timezone;
 	public Integer startDay;
