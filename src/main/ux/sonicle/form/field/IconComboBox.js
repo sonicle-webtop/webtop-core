@@ -42,6 +42,9 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 			tag: 'i', cls: 'so-picker-icon so-picker-main-icon'
 		});
 		me.icon = me.el.down('.so-picker-icon');
+		if(me.icon && !me.editable) {
+			me.icon.on('click', me.onTriggerClick, me);
+		}
 	},
 	
 	/**
@@ -102,10 +105,12 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 	updateEditable: function(editable, oldEditable) {
 		var me = this;
 		me.callParent(arguments);
-		if(!editable) {
-			me.icon.on('click', me.onTriggerClick, me);
-		} else {
-			me.icon.un('click', me.onTriggerClick, me);
+		if(me.icon) {
+			if(!editable) {
+				me.icon.on('click', me.onTriggerClick, me);
+			} else {
+				me.icon.un('click', me.onTriggerClick, me);
+			}
 		}
 	}
 });
