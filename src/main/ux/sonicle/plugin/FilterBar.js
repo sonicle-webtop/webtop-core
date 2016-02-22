@@ -30,6 +30,10 @@ Ext.define('Sonicle.plugin.FilterBar', {
      * @param {number}  The number of milliseconds to delay
      */
     delay: 800,
+	
+	containers: [],
+	
+	hidden: false,
 
 
     /**
@@ -98,10 +102,11 @@ Ext.define('Sonicle.plugin.FilterBar', {
                 Ext.apply(filter, me.getOperatorButtonPlugin());
             }
 
-            column.insert(0, Ext.create('Ext.container.Container', {
+            me.containers[me.containers.length]=column.insert(0, Ext.create('Ext.container.Container', {
                 width: '100%',
                 items: [filter],
                 padding: '0 10px',
+				hidden: me.hidden,
                 listeners: {
                     scope: me,
                     element: 'el',
@@ -117,8 +122,15 @@ Ext.define('Sonicle.plugin.FilterBar', {
         });
 
     },
-
-
+	
+	setHidden: function(hidden) {
+		var me=this;
+        Ext.Array.each(me.containers, function(container) {
+			container.setHidden(hidden);
+		});
+		me.hidden=hidden;
+	},
+	
     /**
      * Check if a column needs an Operator Button
      *
