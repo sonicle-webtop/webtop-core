@@ -89,5 +89,23 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 				me.icon.addCls(cls);
 			}
 		}
+	},
+	
+	onBindStore: function(store, initial){
+		var me = this;
+		me.callParent(arguments);
+		if(store && store.autoCreated) {
+			me.iconClsField = !store.expanded ? 'field3' : 'field2';
+		}
+	},
+	
+	updateEditable: function(editable, oldEditable) {
+		var me = this;
+		me.callParent(arguments);
+		if(!editable) {
+			me.icon.on('click', me.onTriggerClick, me);
+		} else {
+			me.icon.un('click', me.onTriggerClick, me);
+		}
 	}
 });
