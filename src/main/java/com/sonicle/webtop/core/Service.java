@@ -785,7 +785,7 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				UserProfile.Data ud = core.getUserData(getRunContext().getProfileId());
-				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimezone());
+				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimeZone());
 				List<SyncDevice> devices = core.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
 				for(SyncDevice device : devices) {

@@ -4,12 +4,11 @@
  * sonicle@sonicle.com
  * http://www.sonicle.com
  */
-Ext.define('Sonicle.PrintManager', {
+Ext.define('Sonicle.PrintMgr', {
 	singleton: true,
 	
 	constructor: function(cfg) {
 		var me = this;
-		
 		me.callParent([cfg]);
 		
 		if(!me.printer) {

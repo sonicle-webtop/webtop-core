@@ -148,6 +148,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				needReload: true
 			}), {
+				xtype: 'sospacer'
+			}, {
 				xtype: 'formseparator'
 			}, 
 			WTF.lookupCombo('id', 'desc', {

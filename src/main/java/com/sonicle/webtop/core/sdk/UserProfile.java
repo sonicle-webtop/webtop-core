@@ -144,6 +144,10 @@ public final class UserProfile {
 		return user.getSecret();
 	}
 	
+	public Data getData() {
+		return WT.getUserData(getId());
+	}
+	
 	public Locale getLocale() {
 		return user.getLocale();
 	}
@@ -208,11 +212,11 @@ public final class UserProfile {
 			return locale;
 		}
 
-		public String getTimezoneId() {
+		public String getTimeZoneId() {
 			return timezoneId;
 		}
 		
-		public DateTimeZone getTimezone() {
+		public DateTimeZone getTimeZone() {
 			return timezone;
 		}
 		

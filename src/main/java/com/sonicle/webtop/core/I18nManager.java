@@ -47,7 +47,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class I18nManager {
-	
 	private static final Logger logger = WT.getLogger(I18nManager.class);
 	private static boolean initialized = false;
 	

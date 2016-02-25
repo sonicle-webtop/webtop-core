@@ -38,6 +38,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
+import com.sonicle.webtop.core.io.AbstractReport;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -46,8 +47,10 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -64,6 +67,7 @@ import java.util.UUID;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.sql.DataSource;
+import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -305,6 +309,10 @@ public class WT {
 		return writer.toString();
 	}
 	
+	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
+		getWTA().getReportManager().generateToStream(report, outputType, outputStream);
+	}
+	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
 		nofity(profileId, message, false);
 	}
@@ -329,38 +337,23 @@ public class WT {
 	}
 	
 	public static String generateUUID() {
-		return UUID.randomUUID().toString();
+		return getWTA().generateUUID();
 	}
 	
 	public static String buildTempFilename() {
-		return buildTempFilename(null, null);
+		return getWTA().buildTempFilename(null, null);
 	}
 	
 	public static String buildTempFilename(String prefix, String suffix) {
-		String uuid = generateUUID();
-		if(StringUtils.isEmpty(suffix)) {
-			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
-		} else {
-			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
-		}
+		return getWTA().buildTempFilename(prefix, suffix);
 	}
 	
 	public static String getSystemTempPath() {
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		String path = css.getSystemTempPath();
-		if(StringUtils.isEmpty(path)) {
-			path = System.getProperty("java.io.tmpdir");
-			WebTopApp.logger.warn("System temporary folder not defined. Using default one '{}'", path);
-		}
-		return path;
+		return getWTA().getSystemTempPath();
 	}
 	
 	public static File getTempFolder() throws WTException {
-		File tempDir = new File(getSystemTempPath());
-		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
-			throw new WTException("Temp folder is not a directory or is write protected");
-		}
-		return tempDir;
+		return getWTA().getTempFolder();
 	}
 	
 	public static File createTempFile() throws WTException {
@@ -368,14 +361,11 @@ public class WT {
 	}
 	
 	public static File createTempFile(String prefix, String suffix) throws WTException {
-		File tempDir = getTempFolder();
-		return new File(tempDir, buildTempFilename(prefix, suffix));
+		return getWTA().createTempFile(prefix, suffix);
 	}
 	
 	public static boolean deleteTempFile(String filename) throws WTException {
-		File tempDir = getTempFolder();
-		File tempFile = new File(tempDir, filename);
-		return tempFile.delete();
+		return getWTA().deleteTempFile(filename);
 	}
 	
 	/**

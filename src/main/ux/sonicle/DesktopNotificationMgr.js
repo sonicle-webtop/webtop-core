@@ -29,9 +29,10 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 	
 	/**
 	 * @readonly
-	 * @property {Boolean} isSupported
+	 * @property {Boolean} api
 	 */
-	isSupported: null,
+	api: false,
+	
 	/**
 	 * @private
 	 * @property {Number} ieSeed
@@ -40,14 +41,19 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		me.initConfig(cfg);
 		me.callParent([cfg]);
 		me.ieSeed = Math.floor((Math.random()*10) +1),
-		me.isSupported = me.checkSupport();
+		me.api = me.checkApi();
+	},
+	
+	isSupported: function() {
+		return this.api;
 	},
 	
 	ensureAuthorization: function() {
 		var me = this;
-		if(me.isSupported && me.permissionLevel() === me.PERM_DEFAULT) {
+		if(me.api && me.permissionLevel() === me.PERM_DEFAULT) {
 			me.requestPermission();
 		}
 	},
@@ -58,7 +64,7 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 				auto = opts.autoClose || me.getAutoClose(),
 				ntf, ntfWrapper;
 		
-		if(!me.isSupported) return;
+		if(!me.api) return;
 		if(!Ext.isString(title)) Ext.Error.raise('Title is required');
 		if(!Ext.isDefined(opts.icon)) Ext.Error.raise('Icon is required');
 		
@@ -77,7 +83,7 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		var me = this,
 				win = window, cbFn;
 		
-		if(!me.isSupported) return;
+		if(!me.api) return;
 		cbFn = Ext.isFunction(callback) ? callback : Ext.emptyFn();
 		if(win.webkitNotifications && win.webkitNotifications.checkPermission) {
 			/**
@@ -119,7 +125,7 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 				win = window, ntf = null;
 		opts = opts || {};
 		
-		if(!me.isSupported) return;
+		if(!me.api) return;
 		if(win.Notification) { /* Chrome 22+, FF 22+, Safari 6+ */
 			ntf = new win.Notification(title, {
 				/**
@@ -158,7 +164,7 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 	permissionLevel: function() {
 		var me = this, win = window, arr;
 		
-		if(!me.isSupported) return;
+		if(!me.api) return;
 		if(win.Notification && win.Notification.permissionLevel) { /* Safari 6+ */
 			return win.Notification.permissionLevel;
 			
@@ -180,7 +186,7 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		}
 	},
 	
-	checkSupport: function() {
+	checkApi: function() {
 		try {
 			var win = window;
 			/**
@@ -197,213 +203,5 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		} catch (e) {
 			return false;
 		}
-	},
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	permissionLevel22: function() {
-		var me = this,
-				win = window, arr;
-		if((me.method === 'notification') && win.Notification.permissionLevel) { /* Safari 6 */
-			return win.Notification.permissionLevel();
-		} else if((me.method === 'notification') && win.Notification.permission) { /* Chrome (23+) */
-			return win.Notification.permission;
-		} else if((me.method === 'webkit') && win.webkitNotifications.checkPermission) { /* FF with html5Notifications plugin installed */
-			arr = [me.PERM_GRANTED, me.PERM_DEFAULT, me.PERM_DENIED];
-			return arr[win.webkitNotifications.checkPermission()];
-		} else if(me.method === 'navigator') { /* Firefox Mobile */
-			return me.PERM_GRANTED;
-		} else if(me.method === 'ie') { /* IE9+ */
-			return win.external.msIsSiteMode() ? me.PERM_GRANTED : me.PERM_DEFAULT;
-		} else {
-			return;
-		}
-	},
-	
-	createNotification22: function(title, opts) {
-		var me = this,
-				win = window, not;
-		opts = opts || {};
-		if(me.method === 'notification') { /* Safari 6, Chrome (23+) */
-			not = new win.Notification(title, {
-				/**
-				 * The notification's icon - For Chrome in Windows, Linux & Chrome OS
-				 */
-				
-				/**
-				 * The notification’s subtitle.
-				 */
-				body: opts.body || '',
-				/**
-				 * The notification’s unique identifier.
-				 * This prevents duplicate entries from appearing if the user has multiple instances of your website open at once.
-				 */
-				tag: opts.tag || ''
-			});
-		} else if(me.method === 'webkit') { /* FF with html5Notifications plugin installed */
-			not = win.webkitNotifications.createNotification(opts.icon, title, opts.body);
-			not.show();
-		} else if(me.method === 'navigator') { /* Firefox Mobile */
-			not = navigator.mozNotification.createNotification(title, opts.body, opts.icon);
-			not.show();
-		} else if(me.method === 'ie') { /* IE9+ */
-			win.external.msSiteModeClearIconOverlay(); // Clears any previous notification
-			win.external.msSiteModeSetIconOverlay((isString(options.icon) ? options.icon : options.icon.x16), title);
-			win.external.msSiteModeActivate();
-		}
-		return not;
-	},
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	checkSupport222: function() {
-		var win = window;
-		
-		try {
-			if(Ext.isChrome && Ext.chromeVersion < 22) { /* Chrome <22 */
-				return !!navigator.webkitNotifications;
-			} else if(Ext.isChrome && Ext.chromeVersion >= 22) { /* Chrome 22+ */
-				return !!win.Notification;
-			} else if(Ext.isGecko && Ext.firefoxVersion < 22) { /* FF <22 or FF + html5notifications plugin */
-				return !!(navigator.mozNotification || win.webkitNotifications);
-			} else if(Ext.isGecko && Ext.firefoxVersion >= 22) { /* FF 22+ */
-				return !!win.Notification;
-			} else if(Ext.isGecko) { /* FF + html5notifications plugin */
-				return !!win.webkitNotifications
-			}
-		} catch(e) {}
-		
-			
-		
-		try { /* Safari, Chrome */
-			if(!!win.Notification) method = 'notification';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* Chrome & ff-html5notifications plugin */
-			if(!!win.webkitNotifications) method = 'webkit';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* Firefox Mobile */
-			if(!!navigator.mozNotification) method = 'navigator';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* IE9+ */
-			if(win.external && win.external.msIsSiteMode() !== undefined) method = 'ie';
-		} catch(e) {}
-		return method;
-	},
-	
-	detectMethod22: function() {
-		var win = window,
-				method = null;
-		try { /* Safari, Chrome */
-			if(!!win.Notification) method = 'notification';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* Chrome & ff-html5notifications plugin */
-			if(!!win.webkitNotifications) method = 'webkit';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* Firefox Mobile */
-			if(!!navigator.mozNotification) method = 'navigator';
-		} catch(e) {}
-		if(method != null) return method;
-		try { /* IE9+ */
-			if(win.external && win.external.msIsSiteMode() !== undefined) method = 'ie';
-		} catch(e) {}
-		return method;
-	},
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	 * Checks is browser supports desktop notifications.
-	 * @returns {Boolean} true if browser is enabled, false otherwise.
-	 */
-	isSupported22: function() {
-		try {
-			var win = window;
-			return !!(win.Notification /* Safari, Chrome */
-					|| win.webkitNotifications /* Chrome & ff-html5notifications plugin */
-					|| navigator.mozNotification /* Firefox Mobile */
-					|| (win.external && win.external.msIsSiteMode() !== undefined) /* IE9+ */
-					);
-			/**
-			 * We cannot detect if msIsSiteMode method exists, as it is
-			 * a method of host object. In IE check for existing method of host
-			 * object returns undefined. So, we try to run it - if it runs
-			 * successfully - then it is IE9+, if not - an exceptions is thrown.
-			 */
-		} catch (e) {
-			return false;
-		}
 	}
-	
 });

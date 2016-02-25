@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.shiro.WTRealm;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.jar.JarFile;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -93,7 +95,8 @@ public class WebTopApp {
 	
 	public static final String ATTRIBUTE = "webtopapp";
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
-	private static final Object lock = new Object();
+	private static final Object lock1 = new Object();
+	private static final Object lock2 = new Object();
 	
 	private static WebTopApp instance = null;
 	
@@ -102,7 +105,7 @@ public class WebTopApp {
 	 * @param context ServletContext instance.
 	 */
 	public static void initialize(ServletContext context) {
-		synchronized(lock) {
+		synchronized(lock1) {
 			if(instance != null) throw new RuntimeException("WebTopApp initialization already done!");
 			instance = new WebTopApp(context);
 		}
@@ -110,7 +113,7 @@ public class WebTopApp {
 	}
 	
 	public static WebTopApp getInstance() {
-		synchronized(lock) {
+		synchronized(lock1) {
 			return instance;
 		}
 	}
@@ -129,6 +132,7 @@ public class WebTopApp {
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
 	private OTPManager otpm = null;
+	private ReportManager rptm = null;
 	private Scheduler scheduler = null;
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
@@ -178,6 +182,8 @@ public class WebTopApp {
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
 		// OTP Manager
 		otpm = OTPManager.initialize(this);
+		// Report Manager
+		rptm = ReportManager.initialize(this);
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
@@ -216,6 +222,9 @@ public class WebTopApp {
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
 		}
+		// Report Manager
+		rptm.cleanup();
+		rptm = null;
 		// OTP Manager
 		otpm.cleanup();
 		otpm = null;
@@ -391,6 +400,14 @@ public class WebTopApp {
 	}
 	
 	/**
+	 * Returns the ReportManager.
+	 * @return ReportManager instance.
+	 */
+	public ReportManager getReportManager() {
+		return rptm;
+	}
+	
+	/**
 	 * Returns the SessionManager.
 	 * @return SessionManager instance.
 	 */
@@ -413,18 +430,46 @@ public class WebTopApp {
 	}
 	*/
 	
+	/**
+	 * Returns the localized string for Core service bound to the specified key.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @return Localized string
+	 */
 	public String lookupResource(Locale locale, String key) {
 		return lookupResource(CoreManifest.ID, locale, key, false);
 	}
 	
+	/**
+	 * Returns the localized string for Core service bound to the specified key.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @param escapeHtml True to apply HTML escaping, false otherwise.
+	 * @return Localized string
+	 */
 	public String lookupResource(Locale locale, String key, boolean escapeHtml) {
 		return lookupResource(CoreManifest.ID, locale, key, escapeHtml);
 	}
 	
+	/**
+	 * Returns the localized string for desired service and bound to the specified key.
+	 * @param serviceId The service ID.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @return Localized string
+	 */
 	public String lookupResource(String serviceId, Locale locale, String key) {
 		return lookupResource(serviceId, locale, key, false);
 	}
 	
+	/**
+	 * Returns the localized string for desired service and bound to the specified key.
+	 * @param serviceId The service ID.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @param escapeHtml True to apply HTML escaping, false otherwise.
+	 * @return Localized string
+	 */
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		String baseName = MessageFormat.format("{0}/locale", StringUtils.replace(serviceId, ".", "/"));
 		String value = "";
@@ -441,13 +486,84 @@ public class WebTopApp {
 		}
 	}
 	
+	/**
+	 * Returns the localized string for Core service and bound to the specified key.
+	 * This method formats returned string using passed arguments.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @param escapeHtml True to apply HTML escaping, false otherwise.
+	 * @param arguments Arguments to use within MessageFormat.format
+	 * @return Localized string
+	 */
 	public String lookupAndFormatResource(Locale locale, String key, boolean escapeHtml, Object... arguments) {
 		return lookupAndFormatResource(CoreManifest.ID, locale, key, escapeHtml, arguments);
 	}
 	
+	/**
+	 * Returns the localized string for desired service and bound to the specified key.
+	 * This method formats returned string using passed arguments.
+	 * @param serviceId The service ID.
+	 * @param locale Desired locale.
+	 * @param key Resource key.
+	 * @param escapeHtml True to apply HTML escaping, false otherwise.
+	 * @param arguments Arguments to use within MessageFormat.format
+	 * @return Localized string
+	 */
 	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {
 		String value = lookupResource(serviceId, locale, key, escapeHtml);
 		return MessageFormat.format(value, arguments);
+	}
+	
+	public String generateUUID() {
+		synchronized(lock2) {
+			return UUID.randomUUID().toString();
+		}
+	}
+	
+	public String buildTempFilename() {
+		return buildTempFilename(null, null);
+	}
+	
+	public String buildTempFilename(String prefix, String suffix) {
+		String uuid = generateUUID();
+		if(StringUtils.isEmpty(suffix)) {
+			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
+		} else {
+			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
+		}
+	}
+	
+	public String getSystemTempPath() {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
+		String path = css.getSystemTempPath();
+		if(StringUtils.isEmpty(path)) {
+			path = System.getProperty("java.io.tmpdir");
+			logger.warn("System temporary folder not defined. Using default one '{}'", path);
+		}
+		return path;
+	}
+	
+	public File getTempFolder() throws WTException {
+		File tempDir = new File(getSystemTempPath());
+		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
+			throw new WTException("Temp folder is not a directory or is write protected");
+		}
+		return tempDir;
+	}
+	
+	public File createTempFile() throws WTException {
+		return createTempFile(null, null);
+	}
+	
+	public File createTempFile(String prefix, String suffix) throws WTException {
+		File tempDir = getTempFolder();
+		return new File(tempDir, buildTempFilename(prefix, suffix));
+	}
+	
+	public boolean deleteTempFile(String filename) throws WTException {
+		File tempDir = getTempFolder();
+		File tempFile = new File(tempDir, filename);
+		return tempFile.delete();
 	}
 	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {

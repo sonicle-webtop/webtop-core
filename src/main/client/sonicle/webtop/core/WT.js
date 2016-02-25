@@ -505,7 +505,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 				NtfMgr = Sonicle.DesktopNotificationMgr,
 				desc, ico;
 		
-		if(dn === 'always' || dn === 'auto') {
+		if(dn === 'always' || (dn === 'auto' && !PageMgr.isHidden())) {
 			desc = WT.getApp().getDescriptor(sid);
 			ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
 			return NtfMgr.notify(opts.title, {
@@ -514,6 +514,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 				body: opts.body || desc.getName()
 			});
 		}
+		return;
 	},
 	
 	/**
@@ -717,6 +718,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	print: function(html) {
-		Sonicle.PrintManager.print(html);
+		Sonicle.PrintMgr.print(html);
 	}
 });
