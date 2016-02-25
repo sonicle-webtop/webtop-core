@@ -553,17 +553,17 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * Any previous visible menu will be hide automatically.
 	 * @param {Ext.event.Event} evt The raw event object.
 	 * @param {Ext.menu.Menu} menu The menu component.
-	 * @param {Object} data Useful data to pass (data will be saved into menu.tag property).
+	 * @param {Object} data Useful data to pass (data will be saved into menu.menuData property).
 	 */
 	showContextMenu: function(evt, menu, data) {
 		var me = this;
 		evt.stopEvent();
 		me.hideContextMenu();
 		if(!menu || !menu.isXType('menu')) return;
-		menu.tag = data || {};
+		menu.menuData = data || {};
 		me.contextMenu = menu;
 		menu.on('hide', function(s) {
-			s.tag = {};
+			s.menuData = {};
 			me.contextMenu = null;
 		}, me, {single: true});
 		menu.showAt(evt.getXY());
@@ -578,12 +578,12 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
-	 * Returns context menu data previously saved into menu.tag property.
+	 * Returns context menu data previously saved into menu.menuData property.
 	 * @returns {Object} The data object.
 	 */
 	getContextMenuData: function() {
 		var cxm = this.contextMenu;
-		return (cxm) ? cxm.tag : null;
+		return (cxm) ? cxm.menuData : null;
 	},
 	
 	/**
