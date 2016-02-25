@@ -240,7 +240,7 @@ Ext.override(Ext.data.proxy.Server, {
 
 Ext.override(Ext.menu.Item, {
 	onClick: function(e) {
-		e.tag = WT.getContextMenuData();
+		e.menuData = WT.getContextMenuData();
 		return this.callParent([e]);
 	}
 });
