@@ -47,10 +47,19 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		me.api = me.checkApi();
 	},
 	
+	/**
+	 * Checks if Notification API is supported.
+	 * @return {Boolean}
+	 */
 	isSupported: function() {
 		return this.api;
 	},
 	
+	/*
+	 * Forces an authorization check.
+	 * If permission level is equal to {@link #PERM_DEFAULT default}, 
+	 * the authorization window will be prompted to the user.
+	 */
 	ensureAuthorization: function() {
 		var me = this;
 		if(me.api && me.permissionLevel() === me.PERM_DEFAULT) {
@@ -58,6 +67,20 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		}
 	},
 	
+	/**
+	 * Displays a desktop notification.
+	 * @param {String} title The notification's title.
+	 * @param {Object} opts
+	 * @param {String} opts.icon The notification's icon.
+	 * For IE needs to be an .ico resource with 16px max, otherwise an image of 32px.
+	 * @param {String} [opts.body] The notification’s subtitle.
+	 * @param {String} [opts.tag] The notification’s unique identifier.
+	 * This prevents duplicate entries from appearing if the user has multiple 
+	 * instances of your website open at once (only for Chrome 22+, FF 22+, Safari 6+).
+	 * @param {Number} [opts.autoClose] The number of milliseconds after that 
+	 * the notification will be automatically closed. Defaults to {@link #autoClose} value.
+	 * @return {Object} An object wrapper that defines the close() method.
+	 */
 	notify: function(title, opts) {
 		opts = opts || {};
 		var me = this, 
@@ -79,6 +102,10 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		return ntfWrapper;
 	},
 	
+	/**
+	 * Displays the authorization window to the user.
+	 * @param {Function} [callback] The callback function invoked after the authorization box is closed.
+	 */
 	requestPermission: function(callback) {
 		var me = this,
 				win = window, cbFn;
@@ -120,6 +147,9 @@ Ext.define('Sonicle.DesktopNotificationMgr', {
 		};
 	},
 	
+	/**
+	 * @private
+	 */
 	createNotification: function(title, opts) {
 		var me = this,
 				win = window, ntf = null;

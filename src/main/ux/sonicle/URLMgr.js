@@ -19,15 +19,45 @@ Ext.define('Sonicle.URLMgr', {
 		me.callParent([cfg]);
 	},
 	
-	open: function(url, blank) {
+	/**
+	 * Opens passed URL in a new window/tab.
+	 * @param {String} url The URL to be loaded.
+	 * @param {Boolean/String} blank 'true' to open in blank page, 'false' to self page. Otherwise a name to apply to the new window.
+	 * @param {String} [features] An optional parameter listing the features (size, position, scrollbars, etc.)
+	 * @returns {Window}
+	 */
+	open: function(url, blank, features) {
+		if(blank === undefined) blank = true;
+		var name = '_blank';
+		if(Ext.isBoolean(blank)) {
+			if(blank === false) name = '_self';
+		} else if(Ext.isString(blank)) {
+			name = blank;
+		}
+		return window.open(url, name, Ext.isString(features) ? features : null);
+		/*
 		blank = !!blank | true;
 		return window.open(url, blank ? '_blank' : '_self');
+		*/
 	},
 	
+	/**
+	 * 
+	 * @param {String} url The URL to be loaded.
+	 * @param {Object} opts
+	 * @param {String} opts.filename The file's name to be opened.
+	 * @param {Boolean} [opts.newWindow] 'true' to open the URL in a brand new window (no tab).
+	 * @param {String} [opts.winFeatures] Custom features to override default ones (see window.open method).
+	 */
 	openFile: function(url, opts) {
 		opts = opts || {};
-		var me = this;
-		me.open(me.urlWithFilename(url, opts.filename), true);
+		var me = this,
+				furl = me.urlWithFilename(url, opts.filename);
+		if(opts.newWindow) {
+			me.open(furl, opts.filename || '', 'toolbar=0,location=0,menubar=0');
+		} else {
+			me.open(furl, true);
+		}
 	},
 	
 	download: function(url, opts) {
@@ -37,7 +67,9 @@ Ext.define('Sonicle.URLMgr', {
 	/**
 	 * Forces passed URL download (without opening any window or tab).
 	 * HTTP response should set the content-disposition header to 'attachment'.
-	 * @param {String} url The resource URL
+	 * @param {String} url The URL to be downloaded.
+	 * @param {Object} opts
+	 * @param {String} opts.filename The file's name to be opened.
 	 */
 	downloadFile: function(url, opts) {
 		opts = opts || {};
