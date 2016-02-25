@@ -35,100 +35,139 @@ package com.sonicle.webtop.core.io;
 
 import java.util.Locale;
 import java.util.TimeZone;
+import org.joda.time.DateTimeZone;
 
 /**
  *
  * @author malbinola
  */
 public class ReportConfig {
-	protected Locale locale;
-	protected TimeZone timezone;
-	protected boolean hasResourceBundle;
-	protected String generatedBy;
-	protected String printedBy;
-	protected String dateFormatShort = "dd/MM/yyyy";
-	protected String dateFormatLong;
-	protected String timeFormatShort = "HH:mm";
-	protected String timeFormatLong;
+	private final Locale locale;
+	private final TimeZone timezone;
+	private final boolean hasResourceBundle;
+	private final String generatedBy;
+	private final String printedBy;
+	private final String dateFormatShort;
+	private final String dateFormatLong;
+	private final String timeFormatShort;
+	private final String timeFormatLong;
+	
+	protected ReportConfig(Builder builder) {
+		locale = builder.locale;
+		timezone = builder.timezone;
+		hasResourceBundle = builder.haveResourceBundle;
+		generatedBy = builder.generatedBy;
+		printedBy = builder.printedBy;
+		dateFormatShort = builder.dateFormatShort;
+		dateFormatLong = builder.dateFormatLong;
+		timeFormatShort = builder.timeFormatShort;
+		timeFormatLong = builder.timeFormatLong;
+	}
 	
 	public Locale getLocale() {
 		return this.locale;
-	}
-	
-	public ReportConfig setLocale(Locale locale) {
-		this.locale = locale;
-		return this;
 	}
 	
 	public TimeZone getTimeZone() {
 		return this.timezone;
 	}
 	
-	public ReportConfig setTimeZone(TimeZone timezone) {
-		this.timezone = timezone;
-		return this;
-	}
-	
 	public boolean getHasResourceBundle() {
 		return this.hasResourceBundle;
-	}
-	
-	public ReportConfig setHasResourceBundle(boolean hasResourceBundle) {
-		this.hasResourceBundle = hasResourceBundle;
-		return this;
 	}
 	
 	public String getGeneratedBy() {
 		return this.generatedBy;
 	}
 	
-	public ReportConfig setGeneratedBy(String generatedBy) {
-		this.generatedBy = generatedBy;
-		return this;
-	}
-	
 	public String getPrintedBy() {
 		return this.printedBy;
-	}
-	
-	public ReportConfig setPrintedBy(String printedBy) {
-		this.printedBy = printedBy;
-		return this;
 	}
 	
 	public String getDateFormatShort() {
 		return this.dateFormatShort;
 	}
 	
-	public ReportConfig setDateFormatShort(String dateFormatShort) {
-		this.dateFormatShort = dateFormatShort;
-		return this;
-	}
-	
 	public String getDateFormatLong() {
 		return this.dateFormatLong;
-	}
-	
-	public ReportConfig setDateFormatLong(String dateFormatLong) {
-		this.dateFormatLong = dateFormatLong;
-		return this;
 	}
 	
 	public String getTimeFormatShort() {
 		return this.timeFormatShort;
 	}
 	
-	public ReportConfig setTimeFormatShort(String timeFormatShort) {
-		this.timeFormatShort = timeFormatShort;
-		return this;
-	}
-	
 	public String getTimeFormatLong() {
 		return this.timeFormatLong;
 	}
 	
-	public ReportConfig setTimeFormatLong(String timeFormatLong) {
-		this.timeFormatLong = timeFormatLong;
-		return this;
+	public static class Builder<T extends Builder> {
+		private Locale locale;
+		private TimeZone timezone;
+		private boolean haveResourceBundle;
+		private String generatedBy;
+		private String printedBy;
+		private String dateFormatShort;
+		private String dateFormatLong;
+		private String timeFormatShort;
+		private String timeFormatLong;
+		
+		public Builder() {
+			locale = Locale.ENGLISH;
+			timezone = DateTimeZone.UTC.toTimeZone();
+			haveResourceBundle = false;
+			dateFormatShort = "yyyy-MM-dd";
+			dateFormatLong = "MMM dd, yyyy";
+			timeFormatShort = "HH:mm";
+			timeFormatLong = "HH:mm:ss";
+		}
+		
+		public T useLocale(Locale locale) {
+			this.locale = locale;
+			return (T)this;
+		}
+
+		public T useTimeZone(TimeZone timezone) {
+			this.timezone = timezone;
+			return (T)this;
+		}
+
+		public T haveResourceBundle(boolean haveResourceBundle) {
+			this.haveResourceBundle = haveResourceBundle;
+			return (T)this;
+		}
+
+		public T generatedBy(String generatedBy) {
+			this.generatedBy = generatedBy;
+			return (T)this;
+		}
+
+		public T printedBy(String printedBy) {
+			this.printedBy = printedBy;
+			return (T)this;
+		}
+
+		public T dateFormatShort(String dateFormatShort) {
+			this.dateFormatShort = dateFormatShort;
+			return (T)this;
+		}
+
+		public T dateFormatLong(String dateFormatLong) {
+			this.dateFormatLong = dateFormatLong;
+			return (T)this;
+		}
+
+		public T timeFormatShort(String timeFormatShort) {
+			this.timeFormatShort = timeFormatShort;
+			return (T)this;
+		}
+
+		public T timeFormatLong(String timeFormatLong) {
+			this.timeFormatLong = timeFormatLong;
+			return (T)this;
+		}
+		
+		public ReportConfig build() {
+			return new ReportConfig(this);
+		}
 	}
 }
