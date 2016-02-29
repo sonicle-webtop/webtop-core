@@ -31,48 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.util;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.SecurityUtils;
+import java.awt.Color;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends HttpServlet {
+public class JRHelper {
 	
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
-		ServletHelper.setCacheControl(response);
-		
+	public static Image colorAsImage(String hexColor) {
 		try {
-			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context
-			WebTopApp.logger.trace("Servlet: logout [{}]", ServletHelper.getSessionID(request));
-			WebTopSession wts = WebTopSession.get(request);
-			WebTopApp.setSessionLoggerDC(wts);
-			SecurityUtils.getSubject().logout();
-			ServletUtils.redirectRequest(request, response);
-			
-		} finally {
-			WebTopApp.clearLoggerDC();
+			BufferedImage bi = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+			bi.setRGB(0, 0, Color.decode("#" + hexColor).getRGB());
+			return bi;
+		} catch(Throwable t) {
+			t.printStackTrace();
+			return null;
 		}
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 }

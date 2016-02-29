@@ -210,7 +210,7 @@ public class Service extends BaseService {
 		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
-			items.add(new JsSimple("default", "WebTop"));
+			items.add(new JsSimple("default", WT.getPlatformName()));
 			items.add(new JsSimple("stacked", "Outlook 2007/2003"));
 			items.add(new JsSimple("queued", "Mozilla"));
 			new JsonResult("layouts", items, items.size()).printTo(out);
@@ -226,7 +226,7 @@ public class Service extends BaseService {
 		
 		try {
 			//TODO: handle lafs dinamically
-			items.add(new JsSimple("default", "WebTop"));
+			items.add(new JsSimple("default", WT.getPlatformName()));
 			new JsonResult("lafs", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {

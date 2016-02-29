@@ -187,7 +187,7 @@ public class OTPManager {
 		ODomain domain = wta.getUserManager().getDomain(pid.getDomainId());
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
-		String issuer = URLUtils.encodeQuietly(MessageFormat.format("WebTop ({0})", domain.getDomainName()));
+		String issuer = URLUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
 		InternetAddress ia = WT.buildInternetAddress(pid.getUserId(), domain.getDomainName(), null);
 		if(ia == null) throw new WTException("Unable to build account address");
 		

@@ -51,12 +51,11 @@ import org.apache.commons.lang3.StringUtils;
 public class NotificationHelper {
 	
 	public static String buildSource(Locale locale, String serviceId) {
-		String platform = "WebTop"; //TODO: valutare se rendere dinamico per rebranding
 		if(serviceId.equals(CoreManifest.ID)) {
-			return platform;
+			return WT.getPlatformName();
 		} else {
 			String serviceName = WT.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
-			return MessageFormat.format("{0} {1}", platform, serviceName);
+			return WT.getPlatformName() + " " + serviceName;
 		}
 	}
 	

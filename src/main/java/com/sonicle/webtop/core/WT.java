@@ -89,6 +89,10 @@ public class WT {
 		return getWTA().isLastVersion();
 	}
 	
+	public static String getPlatformName() {
+		return getWTA().getPlatformName();
+	}
+	
 	public static Charset getSystemCharset() {
 		return getWTA().getSystemCharset();
 	}

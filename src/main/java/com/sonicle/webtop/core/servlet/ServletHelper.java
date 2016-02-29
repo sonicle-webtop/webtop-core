@@ -134,6 +134,6 @@ public class ServletHelper {
 		tplMap.put("systemInfo", wta.getSystemInfo());
 		tplMap.put("serverInfo", wta.getServerInfo());
 		tplMap.put("jdk", System.getProperty("java.version"));
-		tplMap.put("appName", wta.getName());
+		tplMap.put("appName", wta.getWebAppName());
 	}
 }

@@ -154,7 +154,7 @@ public class WebTopApp {
 		logger.info("extdebug = {}", getPropExtDebug());
 		logger.info("scheduler.disabled = {}", getPropDisableScheduler());
 		
-		String webappName = getName();
+		String webappName = getWebAppName();
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		// Locale Manager
@@ -206,7 +206,7 @@ public class WebTopApp {
 	}
 	
 	public void destroy() {
-		String webappName = getName();
+		String webappName = getWebAppName();
 		logger.info("WTA shutdown started [{}]", webappName);
 		
 		// Service Manager
@@ -267,7 +267,7 @@ public class WebTopApp {
 	 * Returns webapp's name as configured in the application server.
 	 * @return Webapp's name
 	 */
-	public String getName() {
+	public String getWebAppName() {
 		return ServletHelper.getWebAppName(servletContext);
 	}
 	
@@ -276,7 +276,7 @@ public class WebTopApp {
 	 * @return True if this is the last version, false otherwise.
 	 */
 	public boolean isLastVersion() {
-		String webappName = getName();
+		String webappName = getWebAppName();
 		String webappBaseName = StringUtils.split(webappName, "##")[0];
 		String webappPath = servletContext.getRealPath("/");
 		String webappsDirPath = webappPath + "/..";
@@ -297,8 +297,9 @@ public class WebTopApp {
 		return webappName.equals(last);
 	}
 	
-	public URL getResource(String resource) throws MalformedURLException {
-		return servletContext.getResource(resource);
+	public String getPlatformName() {
+		//TODO: completare rebranding aggiungendo impostazione per override del nome
+		return "WebTop";
 	}
 	
 	public String getServerInfo() {
@@ -319,6 +320,10 @@ public class WebTopApp {
 	
 	public Locale getSystemLocale() {
 		return systemLocale;
+	}
+	
+	public URL getResource(String resource) throws MalformedURLException {
+		return servletContext.getResource(resource);
 	}
 	
 	public Template loadTemplate(String path) throws IOException {
