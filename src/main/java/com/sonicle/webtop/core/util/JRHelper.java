@@ -49,7 +49,6 @@ public class JRHelper {
 			bi.setRGB(0, 0, Color.decode("#" + hexColor).getRGB());
 			return bi;
 		} catch(Throwable t) {
-			t.printStackTrace();
 			return null;
 		}
 	}

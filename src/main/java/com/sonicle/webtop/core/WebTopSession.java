@@ -73,9 +73,10 @@ public class WebTopSession {
 	private String refererURI = null;
 	private Locale userAgentLocale = null;
 	private ReadableUserAgent userAgentInfo = null;
-	private boolean initialized = false;
-	private boolean profileInitialized = false;
-	private boolean environmentInitialized = false;
+	private int initStatus = 0;
+	//private boolean initialized = false;
+	//private boolean profileInitialized = false;
+	//private boolean environmentInitialized = false;
 	private UserProfile profile = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
@@ -87,6 +88,7 @@ public class WebTopSession {
 	}
 	
 	void destroy() throws Exception {
+		initStatus = -1;
 		ServiceManager svcm = wta.getServiceManager();
 		
 		// Cleanup services
@@ -108,6 +110,10 @@ public class WebTopSession {
 		
 		// Unregister this session
 		wta.getSessionManager().unregisterSession(this);
+	}
+	
+	public boolean isReady() {
+		return initStatus == 2;
 	}
 	
 	/**
@@ -189,11 +195,14 @@ public class WebTopSession {
 	}
 	
 	public synchronized void initProfile(HttpServletRequest request) throws Exception {
-		if(!profileInitialized) privateInitProfile(request);
+		if(initStatus < 0) return;
+		if(initStatus == 0) privateInitProfile(request);
 	}
 	
 	public synchronized void initEnvironment() throws Exception {
-		if(!environmentInitialized) privateInitEnvironment();
+		if(initStatus < 0) return;
+		if(initStatus == 0) throw new Exception("You need to call initProfile() before calling this method!");
+		if(initStatus == 1) privateInitEnvironment();
 	}
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
@@ -210,7 +219,7 @@ public class WebTopSession {
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
 		if(!otpEnabled) getPropertyBag().set(PROPERTY_OTP_VERIFIED, true);
 		
-		profileInitialized = true;
+		initStatus = 1;
 	}
 	
 	private void privateInitEnvironment() throws Exception {
@@ -240,60 +249,7 @@ public class WebTopSession {
 		}
 		logger.debug("Instantiated {} services", count);
 		
-		environmentInitialized = true;
-	}
-	
-	/**
-	 * Called from servlet package in order to init environment
-	 * @param request 
-	 * @throws java.lang.Exception 
-	 */
-	public synchronized void checkEnvironment(HttpServletRequest request) throws Exception {
-		if(!initialized) {
-			initializeEnvironment(request);
-		} else {
-			logger.debug("Environment aready initialized");
-		}
-	}
-	
-	private void initializeEnvironment(HttpServletRequest request) throws Exception {
-		ServiceManager svcm = wta.getServiceManager();
-		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
-		
-		logger.debug("Creating environment for {}", principal.getName());
-		
-		refererURI = ServletUtils.getReferer(request);
-		userAgentLocale = ServletHelper.homogenizeLocale(request);
-		userAgentInfo = wta.getUserAgentInfo(ServletUtils.getUserAgent(request));
-		
-		// Defines useful instances (NB: keep code assignment order!!!)
-		profile = new UserProfile(core, principal);
-		
-		// Creates communication manager and registers this active session
-		comm = new SessionComManager(profile.getId());
-		wta.getSessionManager().registerSession(this);
-		
-		// Instantiates services
-		BaseService instance = null;
-		List<String> serviceIds = core.getPrivateServicesForUser(profile);
-		int count = 0;
-		// TODO: ordinamento lista servizi (scelta dall'utente?)
-		for(String serviceId : serviceIds) {
-			// Creates new instance
-			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
-			} else {
-				instance = svcm.instantiatePrivateService(serviceId, new Environment(this));
-			}
-			if(instance != null) {
-				addService(instance);
-				count++;
-			}
-		}
-		logger.debug("Instantiated {} services", count);
-		
-		initialized = true;
+		initStatus = 2;
 	}
 	
 	/**
@@ -314,6 +270,7 @@ public class WebTopSession {
 	 * @return The service instance, if found.
 	 */
 	public BaseService getServiceById(String serviceId) {
+		if(!isReady()) return null;
 		synchronized(services) {
 			if(!services.containsKey(serviceId)) throw new WTRuntimeException("No service with ID [{0}]", serviceId);
 			return services.get(serviceId);
@@ -325,12 +282,14 @@ public class WebTopSession {
 	 * @return A list of service ids.
 	 */
 	public List<String> getServices() {
+		if(!isReady()) return null;
 		synchronized(services) {
 			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
 		}
 	}
 	
 	public void fillStartup(JsWTS js, String layout) {
+		if(!isReady()) return;
 		js.securityToken = getSecurityToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
@@ -450,16 +409,19 @@ public class WebTopSession {
 	}
 	
 	public boolean needWhatsnew(String serviceId, UserProfile profile) {
+		if(!isReady()) return false;
 		ServiceManager svcm = wta.getServiceManager();
 		return svcm.needWhatsnew(serviceId, profile);
 	}
 	
 	public String getWhatsnewHtml(String serviceId, UserProfile profile, boolean full) {
+		if(!isReady()) return null;
 		ServiceManager svcm = wta.getServiceManager();
 		return svcm.getWhatsnew(serviceId, profile, full);
 	}
 	
 	public void resetWhatsnew(String serviceId, UserProfile profile) {
+		if(!isReady()) return;
 		ServiceManager svcm = wta.getServiceManager();
 		svcm.resetWhatsnew(serviceId, profile);
 	}
@@ -469,40 +431,48 @@ public class WebTopSession {
 	}
 	
 	public void nofity(ServiceMessage message) {
+		if(!isReady()) return;
 		comm.nofity(message);
 	}
 	
 	public void nofity(List<ServiceMessage> messages) {
+		if(!isReady()) return;
 		comm.nofity(messages);
 	}
 	
 	public List<ServiceMessage> getEnqueuedMessages() {
+		if(!isReady()) return null;
 		return comm.popEnqueuedMessages();
 	}
 	
 	public void addUploadedFile(UploadedFile uploadedFile) {
+		if(!isReady()) return;
 		synchronized(uploads) {
 			uploads.put(uploadedFile.id, uploadedFile);
 		}
 	}
 	
 	public UploadedFile getUploadedFile(String id) {
+		if(!isReady()) return null;
 		synchronized(uploads) {
 			return uploads.get(id);
 		}
 	}
 	
 	public boolean hasUploadedFile(String id) {
+		if(!isReady()) return false;
 		synchronized(uploads) {
 			return uploads.containsKey(id);
 		}
 	}
 	
 	public void clearUploadedFile(UploadedFile uploadedFile) {
+		if(!isReady()) return;
 		clearUploadedFile(uploadedFile.id);
 	}
 	
 	public void clearUploadedFile(String id) {
+		if(!isReady()) return;
 		synchronized(uploads) {
 			uploads.remove(id);
 		}

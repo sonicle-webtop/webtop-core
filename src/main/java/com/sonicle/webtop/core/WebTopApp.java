@@ -257,7 +257,9 @@ public class WebTopApp {
 					logger.debug("Scheduling JobServices tasks...");
 					svcm.scheduleAllJobServicesTasks();
 					if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-				} catch (InterruptedException | SchedulerException ex) { /* Do nothing... */	}
+				} catch (InterruptedException | SchedulerException ex) {
+					logger.error("Error", ex);
+				}
 			}
 		});
 		engine.start();	
