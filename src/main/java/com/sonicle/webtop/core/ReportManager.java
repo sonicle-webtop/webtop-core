@@ -137,15 +137,17 @@ public class ReportManager {
 	
 	private ResourceBundle loadResourceBundle(AbstractReport report) throws WTException {
 		if(report.getConfig().getLocale() == null) throw new WTException("Locale is required if /'HasResourceBundle/' is set to true");
-		String pkgName = LangUtils.getClassPackageName(report.getClass());
-		String path = LangUtils.packageToPath(pkgName) + "/" + report.getName();
+		//String pkgName = LangUtils.getClassPackageName(report.getClass());
+		//String path = LangUtils.packageToPath(pkgName) + "/" + report.getName();
+		String path = report.getPath() + report.getName();
 		return ResourceBundle.getBundle(path, report.getConfig().getLocale());
 	}
 	
 	private InputStream loadReport(AbstractReport report) throws WTException {
 		String rptName = report.getName() + ".jasper";
-		String pkgName = LangUtils.getClassPackageName(report.getClass());
-		String path = LangUtils.packageToPath(pkgName) + "/" + rptName;
+		//String pkgName = LangUtils.getClassPackageName(report.getClass());
+		//String path = LangUtils.packageToPath(pkgName) + "/" + rptName;
+		String path = report.getPath() + rptName;
 		ClassLoader cl = LangUtils.findClassLoader(report.getClass());
 		InputStream is = cl.getResourceAsStream(path);
 		if(is == null) throw new WTException("Unable to load resource [{0}]", path);

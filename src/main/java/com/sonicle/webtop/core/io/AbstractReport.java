@@ -90,13 +90,14 @@ public abstract class AbstractReport {
 	}
 	
 	protected void buildPath() {
-		String pkg = LangUtils.getClassPackageName(this.getClass().getCanonicalName());
-		this.path = LangUtils.packageToPath(pkg);
+		String pkg = LangUtils.getClassPackageName(this.getClass());
+		this.path = LangUtils.packageToPath(pkg) + "/";
 	}
 	
 	protected void fillBuiltInParams() {
 		params.put(JRParameter.REPORT_LOCALE, config.getLocale());
 		params.put(JRParameter.REPORT_TIME_ZONE, config.getTimeZone());
+		params.put("REPORT_PATH", path);
 		params.put("WT_GENERATED_BY", config.getGeneratedBy());
 		params.put("WT_PRINTED_BY", config.getPrintedBy());
 		params.put("WT_DATE_FORMAT_SHORT", config.getDateFormatShort());
