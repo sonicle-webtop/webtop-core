@@ -90,7 +90,7 @@ public class ConnectionManager implements IConnectionProvider {
 		synchronized(pools) {
 			shutdown = true;
 			for(HikariDataSource pool: pools.values()) {
-				pool.shutdown();
+				pool.close();
 			}
 			pools.clear();
 		}
