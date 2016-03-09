@@ -44,7 +44,6 @@ import org.joda.time.DateTimeZone;
 public class ReportConfig {
 	private final Locale locale;
 	private final TimeZone timezone;
-	private final boolean hasResourceBundle;
 	private final String generatedBy;
 	private final String printedBy;
 	private final String dateFormatShort;
@@ -55,7 +54,6 @@ public class ReportConfig {
 	protected ReportConfig(Builder builder) {
 		locale = builder.locale;
 		timezone = builder.timezone;
-		hasResourceBundle = builder.haveResourceBundle;
 		generatedBy = builder.generatedBy;
 		printedBy = builder.printedBy;
 		dateFormatShort = builder.dateFormatShort;
@@ -70,10 +68,6 @@ public class ReportConfig {
 	
 	public TimeZone getTimeZone() {
 		return this.timezone;
-	}
-	
-	public boolean getHasResourceBundle() {
-		return this.hasResourceBundle;
 	}
 	
 	public String getGeneratedBy() {
@@ -103,7 +97,6 @@ public class ReportConfig {
 	public static class Builder<T extends Builder> {
 		private Locale locale;
 		private TimeZone timezone;
-		private boolean haveResourceBundle;
 		private String generatedBy;
 		private String printedBy;
 		private String dateFormatShort;
@@ -114,7 +107,6 @@ public class ReportConfig {
 		public Builder() {
 			locale = Locale.ENGLISH;
 			timezone = DateTimeZone.UTC.toTimeZone();
-			haveResourceBundle = false;
 			dateFormatShort = "yyyy-MM-dd";
 			dateFormatLong = "MMM dd, yyyy";
 			timeFormatShort = "HH:mm";
@@ -128,11 +120,6 @@ public class ReportConfig {
 
 		public T useTimeZone(TimeZone timezone) {
 			this.timezone = timezone;
-			return (T)this;
-		}
-
-		public T haveResourceBundle(boolean haveResourceBundle) {
-			this.haveResourceBundle = haveResourceBundle;
 			return (T)this;
 		}
 

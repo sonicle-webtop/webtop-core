@@ -115,7 +115,7 @@ public class ReportManager {
 		InputStream rptIs = null;
 		
 		try {
-			if(report.getConfig().getHasResourceBundle()) {
+			if(report.getHasResourceBundle()) {
 				ResourceBundle bundle = loadResourceBundle(report);
 				report.getParameters().put(JRParameter.REPORT_RESOURCE_BUNDLE, bundle);
 			}

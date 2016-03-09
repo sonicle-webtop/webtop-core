@@ -45,6 +45,7 @@ import net.sf.jasperreports.engine.JRParameter;
  */
 public abstract class AbstractReport {
 	protected String name;
+	protected boolean hasResourceBundle;
 	protected String path;
 	protected ReportConfig config;
 	protected Map<String, Object> params = new HashMap<>();
@@ -63,6 +64,10 @@ public abstract class AbstractReport {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public boolean getHasResourceBundle() {
+		return hasResourceBundle;
 	}
 	
 	public String getPath() {
