@@ -65,6 +65,7 @@ public class WebTopSession {
 	public static final String ATTRIBUTE = "webtopsession";
 	public static final String PROPERTY_SECURITY_TOKEN = "CSRFTOKEN";
 	public static final String PROPERTY_OTP_VERIFIED = "OTPVERIFIED";
+	public static final String PROP_REQUEST_DUMP = "REQUESTDUMP";
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	
 	private final HttpSession httpSession;
@@ -87,10 +88,31 @@ public class WebTopSession {
 		wta = WebTopApp.get(session.getServletContext());
 	}
 	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param request The http request
+	 * @return WebTopSession object
+	 */
+	public static WebTopSession get(HttpServletRequest request) {
+		return get(request.getSession());
+	}
+	
+	/**
+	 * Gets WebTopSession object stored as session's attribute.
+	 * @param session The http session
+	 * @return WebTopSession object
+	 */
+	public static WebTopSession get(HttpSession session) {
+		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
+	}
+	
 	void destroy() throws Exception {
 		initStatus = -1;
 		ServiceManager svcm = wta.getServiceManager();
 		
+		RequestDump dump = (RequestDump)popProperty(PROP_REQUEST_DUMP);
+		wta.authLog(profile.getId(), "LOGOUT", dump);
+			
 		// Cleanup services
 		synchronized(services) {
 			for(BaseService instance : services.values()) {
@@ -116,30 +138,40 @@ public class WebTopSession {
 		return initStatus == 2;
 	}
 	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param request The http request
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpServletRequest request) {
-		return get(request.getSession());
+	public void setProperty(String key, Object value) {
+		synchronized(props) {
+			props.set(key, value);
+		}
 	}
 	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param session The http session
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpSession session) {
-		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
+	public Object getProperty(String key) {
+		synchronized(props) {
+			return props.get(key);
+		}
 	}
 	
-	/**
-	 * Gets the property bag container.
-	 * @return PropertyBag object.
-	 */
-	public PropertyBag getPropertyBag() {
-		return props;
+	public Object popProperty(String key) {
+		synchronized(props) {
+			if(hasProperty(key)) {
+				Object value = props.get(key);
+				clearProperty(key);
+				return value;
+			} else {
+				return null;
+			}
+		}
+	}
+	
+	public void clearProperty(String key) {
+		synchronized(props) {
+			props.clear(key);
+		}
+	}
+	
+	public boolean hasProperty(String key) {
+		synchronized(props) {
+			return props.has(key);
+		}
 	}
 	
 	/**
@@ -166,6 +198,10 @@ public class WebTopSession {
 		return profile;
 	}
 	
+	public String getRefererURI() {
+		return refererURI;
+	}
+	
 	/**
 	 * Return current locale.
 	 * It can be the UserProfile's locale or the locale specified during
@@ -180,10 +216,6 @@ public class WebTopSession {
 		}
 	}
 	
-	public String getRefererURI() {
-		return refererURI;
-	}
-	
 	/**
 	 * Returns the value of SECURITY_TOKEN property.
 	 * A token is generated for each session and this is used for securing 
@@ -194,15 +226,21 @@ public class WebTopSession {
 		return wta.getSessionManager().getSecurityToken(this);
 	}
 	
+	public void dumpRequest(HttpServletRequest request) {
+		String remoteIp = ServletUtils.getClientIP(request);
+		String userAgent = ServletUtils.getUserAgent(request);
+		setProperty(PROP_REQUEST_DUMP, new RequestDump(remoteIp, userAgent));
+	}
+	
 	public synchronized void initProfile(HttpServletRequest request) throws Exception {
 		if(initStatus < 0) return;
 		if(initStatus == 0) privateInitProfile(request);
 	}
 	
-	public synchronized void initEnvironment() throws Exception {
+	public synchronized void initEnvironment(HttpServletRequest request) throws Exception {
 		if(initStatus < 0) return;
 		if(initStatus == 0) throw new Exception("You need to call initProfile() before calling this method!");
-		if(initStatus == 1) privateInitEnvironment();
+		if(initStatus == 1) privateInitEnvironment(request);
 	}
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
@@ -216,15 +254,19 @@ public class WebTopSession {
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
 		
+		wta.authLog(profile.getId(), "LOGIN", request);
+		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
-		if(!otpEnabled) getPropertyBag().set(PROPERTY_OTP_VERIFIED, true);
+		if(!otpEnabled) setProperty(PROPERTY_OTP_VERIFIED, true);
 		
 		initStatus = 1;
 	}
 	
-	private void privateInitEnvironment() throws Exception {
+	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		
+		wta.authLog(profile.getId(), "AUTHORIZED", request);
 		
 		// Creates communication manager and registers this active session
 		comm = new SessionComManager(profile.getId());
@@ -489,6 +531,16 @@ public class WebTopSession {
 			this.filename = filename;
 			this.mediaType = mediaType;
 			this.virtual = virtual;
+		}
+	}
+	
+	public static class RequestDump {
+		public String remoteIP;
+		public String userAgent;
+		
+		public RequestDump(String remoteIP, String userAgent) {
+			this.remoteIP = remoteIP;
+			this.userAgent = userAgent;
 		}
 	}
 }

@@ -716,21 +716,21 @@ public class Service extends BaseService {
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
 						logger.debug("{}", config.otp.getVerificationCode());
-						wts.getPropertyBag().set("OTP_SETUP", config);
+						wts.setProperty("OTP_SETUP", config);
 
 					} else if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
-						wts.getPropertyBag().set("OTP_SETUP", config);
+						wts.setProperty("OTP_SETUP", config);
 					}
 					new JsonResult(true).printTo(out);
 					
 				} else if(operation.equals("activate")) {
 					int code = ServletUtils.getIntParameter(request, "code", true);
 
-					OTPManager.Config config = (OTPManager.Config)wts.getPropertyBag().get("OTP_SETUP");
+					OTPManager.Config config = (OTPManager.Config)wts.getProperty("OTP_SETUP");
 					boolean enabled = corem.otpActivate(config, code);
 					if(!enabled) throw new WTException("Codice non valido"); //TODO: messaggio in lingua
-					wts.getPropertyBag().clear("OTP_SETUP");
+					wts.clearProperty("OTP_SETUP");
 					
 					new JsonResult().printTo(out);
 
@@ -771,7 +771,7 @@ public class Service extends BaseService {
 		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		
 		try {
-			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getPropertyBag().get("OTP_SETUP");
+			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getProperty("OTP_SETUP");
 			ServletUtils.writeContent(response, config.qrcode, config.qrcode.length, "image/png");
 			
 		} catch (Exception ex) {

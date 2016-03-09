@@ -58,7 +58,8 @@ public class Logout extends HttpServlet {
 			WebTopApp.logger.trace("Servlet: logout [{}]", ServletHelper.getSessionID(request));
 			WebTopSession wts = WebTopSession.get(request);
 			WebTopApp.setSessionLoggerDC(wts);
-			SecurityUtils.getSubject().logout();
+			wts.dumpRequest(request);
+			SecurityUtils.getSubject().logout(); // E' corretto qui?
 			ServletUtils.redirectRequest(request, response);
 			
 		} finally {

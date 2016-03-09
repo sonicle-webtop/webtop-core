@@ -82,11 +82,10 @@ public class Start extends HttpServlet {
 			wts.initProfile(request);
 			
 			// Checks if otp page needs to be displayed
-			boolean isOtpVerified = wts.getPropertyBag().has(WebTopSession.PROPERTY_OTP_VERIFIED);
+			boolean isOtpVerified = wts.hasProperty(WebTopSession.PROPERTY_OTP_VERIFIED);
 			if(!isOtpVerified) throw new OtpException();
 			
-			wts.initEnvironment();
-			//wts.checkEnvironment(request);
+			wts.initEnvironment(request);
 			CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId()); // Keep at this line!
 			
 			Locale locale = wts.getLocale();

@@ -35,8 +35,12 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.WebTopSession.RequestDump;
+import com.sonicle.webtop.core.bol.OAuthLog;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.dal.AuthLogDAO;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
@@ -60,6 +64,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -424,6 +429,40 @@ public class WebTopApp {
 	
 	public RunContext createAdminRunContext() {
 		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"));
+	}
+	
+	public void authLog(UserProfile.Id profileId, String action, RequestDump dump) {
+		String remoteIp = (dump != null) ? dump.remoteIP : null;
+		String userAgent = (dump != null) ? dump.userAgent : null;
+		authLog(profileId, action, remoteIp, userAgent);
+	}
+	
+	public void authLog(UserProfile.Id profileId, String action, HttpServletRequest request) {
+		String remoteIp = ServletUtils.getClientIP(request);
+		String userAgent = ServletUtils.getUserAgent(request);
+		authLog(profileId, action, remoteIp, userAgent);
+	}
+	
+	public void authLog(UserProfile.Id profileId, String action, String remoteIp, String userAgent) {
+		Connection con = null;
+		try {
+			con = WT.getCoreConnection();
+			AuthLogDAO dao = AuthLogDAO.getInstance();
+			OAuthLog item = new OAuthLog();
+			item.setAuthLogId(dao.getSequence(con));
+			item.setTimestamp(DateTime.now(DateTimeZone.UTC));
+			item.setDomainId(profileId.getDomainId());
+			item.setUserId(profileId.getUserId());
+			//item.setServiceId(); // Not used for now!
+			item.setAction(action);
+			item.setIpAddress(remoteIp);
+			item.setUserAgent(userAgent);
+			dao.insert(con, item);
+		} catch(SQLException ex) {
+			//TODO: logging
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	/*
