@@ -111,7 +111,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		
 		RequestDump dump = (RequestDump)popProperty(PROP_REQUEST_DUMP);
-		wta.authLog(profile.getId(), "LOGOUT", dump);
+		wta.writeAuthLog(profile.getId(), "LOGOUT", dump, getId());
 			
 		// Cleanup services
 		synchronized(services) {
@@ -254,8 +254,6 @@ public class WebTopSession {
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
 		
-		wta.authLog(profile.getId(), "LOGIN", request);
-		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
 		if(!otpEnabled) setProperty(PROPERTY_OTP_VERIFIED, true);
 		
@@ -266,7 +264,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
 		
-		wta.authLog(profile.getId(), "AUTHORIZED", request);
+		wta.writeAuthLog(profile.getId(), "AUTHENTICATED", request, getId());
 		
 		// Creates communication manager and registers this active session
 		comm = new SessionComManager(profile.getId());

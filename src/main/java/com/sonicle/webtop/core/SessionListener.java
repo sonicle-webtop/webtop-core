@@ -33,8 +33,6 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 

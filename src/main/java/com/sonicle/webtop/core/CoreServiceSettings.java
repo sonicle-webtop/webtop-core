@@ -52,6 +52,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String SYSTEM_PATH_PUBLIC = "system.path.public";
 	
 	/**
+	 * [string][system+domain]
+	 * Activate syslogs (user authentication tracking)
+	 */
+	public static final String SYSTEM_LOGS = "system.logs";
+	
+	/**
 	 * [string][system]
 	 * Defines system default language locale
 	 */
@@ -188,6 +194,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(SYSTEM_PATH_PUBLIC, null);
 	}
 	
+	public boolean getOTPEnabled() {
+		return getBoolean(OTP_ENABLED, false);
+	}
+	
 	public Boolean getHideLoginDomains() {
 		return getBoolean(LOGIN_HIDE_DOMAINS, false);
 	}
@@ -200,8 +210,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(USERINFO_PROVIDER, "WebTop");
 	}
 	
-	public boolean getOTPEnabled() {
-		return getBoolean(OTP_ENABLED, false);
+	public boolean getSysLogsEnabled() {
+		return getBoolean(SYSTEM_LOGS, true);
 	}
 	
 	public long getOTPProviderSonicleAuthKVI() {
