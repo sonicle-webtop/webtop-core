@@ -537,14 +537,14 @@ Ext.define('Sonicle.calendar.Panel', {
 	
 	/**
 	 * Set the active view, optionally specifying a new start date.
-	 * @param {String/Number} id The id of the view to activate (or the 0-based index of the view within 
+	 * @param {String/Number} type The type of the view to activate or the 0-based index of the view (within 
 	 * the CalendarPanel's internal card layout).
-	 * @param {Date} startDate (optional) The new view start date (defaults to the current start date)
+	 * @param {Date} [startDate] (optional) The new view start date (defaults to the current start date)
 	 */
-	setActiveView: function(id, startDate) {
+	setActiveView: function(type, startDate) {
 		var me = this,
 				l = me.layout,
-				idx = me.viewMap[id];
+				idx = me.viewMap[type];
 		
 		if(!Ext.isDefined(idx)) return;
 		

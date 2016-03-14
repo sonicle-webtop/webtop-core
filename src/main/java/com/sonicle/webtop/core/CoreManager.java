@@ -47,7 +47,6 @@ import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
-import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -69,7 +68,6 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
-import com.sonicle.webtop.core.sdk.MethodAuthException;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -86,8 +84,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import javax.mail.internet.InternetAddress;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -138,7 +134,6 @@ public class CoreManager extends BaseManager {
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws Exception {
 		Connection con = null;
-		
 		try {
 			con = WT.getCoreConnection();
 			DomainDAO dao = DomainDAO.getInstance();

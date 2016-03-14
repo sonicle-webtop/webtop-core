@@ -79,16 +79,16 @@ public class Otp extends HttpServlet {
 			OTPManager otpm = wta.getOTPManager();
 			String deliveryMode = otpm.getDeliveryMode(pid);
 			OTPManager.Config config = null;
-			if(!wts.getPropertyBag().has("OTP_CONFIG")) {
+			if(!wts.hasProperty("OTP_CONFIG")) {
 				config = otpm.prepareCheckCode(pid);
-				wts.getPropertyBag().set("OTP_CONFIG", config); // Save for later...
-				wts.getPropertyBag().set("OTP_TRIES", 0); // Save for later...
+				wts.setProperty("OTP_CONFIG", config); // Save for later...
+				wts.setProperty("OTP_TRIES", 0); // Save for later...
 				
 				buildPage(wta, css, locale, deliveryMode, null, response);
 				
 			} else {
-				config = (OTPManager.Config)wts.getPropertyBag().get("OTP_CONFIG");
-				Integer tries = (Integer)wts.getPropertyBag().get("OTP_TRIES");
+				config = (OTPManager.Config)wts.getProperty("OTP_CONFIG");
+				Integer tries = (Integer)wts.getProperty("OTP_TRIES");
 				if(tries == null) throw new NoMoreTriesException();
 				tries++;
 				
@@ -102,13 +102,13 @@ public class Otp extends HttpServlet {
 							otpm.writeTrustedDeviceCookie(pid, response, new TrustedDeviceCookie(js));
 						}
 					}
-					wts.getPropertyBag().clear("OTP_CONFIG");
-					wts.getPropertyBag().clear("OTP_TRIES");
+					wts.clearProperty("OTP_CONFIG");
+					wts.clearProperty("OTP_TRIES");
 					throw new SkipException();
 					
 				} else {
 					if(tries >= 3) throw new NoMoreTriesException();
-					wts.getPropertyBag().set("OTP_TRIES", tries); // Save for later...
+					wts.setProperty("OTP_TRIES", tries); // Save for later...
 					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
 					buildPage(wta, css, locale, deliveryMode, failureMessage, response);
 				}
@@ -116,10 +116,10 @@ public class Otp extends HttpServlet {
 			
 		} catch(NoMoreTriesException ex) {
 			SecurityUtils.getSubject().logout();
-			if(wts != null) wts.getPropertyBag().clear(WebTopSession.PROPERTY_OTP_VERIFIED);
+			if(wts != null) wts.clearProperty(WebTopSession.PROPERTY_OTP_VERIFIED);
 			ServletUtils.forwardRequest(request, response, "login");
 		} catch(SkipException ex) {
-			if(wts != null) wts.getPropertyBag().set(WebTopSession.PROPERTY_OTP_VERIFIED, true);
+			if(wts != null) wts.setProperty(WebTopSession.PROPERTY_OTP_VERIFIED, true);
 			ServletUtils.forwardRequest(request, response, "start");
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in otp servlet!", ex);
