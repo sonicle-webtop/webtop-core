@@ -34,6 +34,34 @@ Ext.define('Sonicle.selection.RowModel', {
 		
 	},
 	
+	/**
+	 * Remove passed IDs from store,
+	 * then automatically set the new selection near the first
+	 * record of the first removed ID
+	 * @param {String[]} [ids] The ids to be removed.
+	 */
+	removeIds: function(ids) {
+		var me=this,
+			st=me.store,
+			ix=me.store.indexOfId(ids[0]);
+		
+		if (st.remove) {
+			var recs=[];
+			Ext.each(ids,function(id) {
+				var r=st.getById(id);
+				if (r) recs[recs.length]=r;
+			});
+			st.remove(recs);
+		}
+		else {
+			st.reload({
+				callback: function() {
+					me._reselect(ix);
+				}
+			});
+		}
+	},
+	
 	_reselect: function(ix) {
 		var me=this;
 		if (ix>=me.store.getCount()) --ix;
