@@ -51,6 +51,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -115,7 +116,7 @@ public class ReportManager {
 		InputStream rptIs = null;
 		
 		try {
-			if(report.getHasResourceBundle()) {
+			if(!StringUtils.isBlank(report.getResourceBundleName())) {
 				ResourceBundle bundle = loadResourceBundle(report);
 				report.getParameters().put(JRParameter.REPORT_RESOURCE_BUNDLE, bundle);
 			}
@@ -137,16 +138,12 @@ public class ReportManager {
 	
 	private ResourceBundle loadResourceBundle(AbstractReport report) throws WTException {
 		if(report.getConfig().getLocale() == null) throw new WTException("Locale is required if /'HasResourceBundle/' is set to true");
-		//String pkgName = LangUtils.getClassPackageName(report.getClass());
-		//String path = LangUtils.packageToPath(pkgName) + "/" + report.getName();
-		String path = report.getPath() + report.getName();
+		String path = report.getPath() + report.getResourceBundleName();
 		return ResourceBundle.getBundle(path, report.getConfig().getLocale());
 	}
 	
 	private InputStream loadReport(AbstractReport report) throws WTException {
 		String rptName = report.getName() + ".jasper";
-		//String pkgName = LangUtils.getClassPackageName(report.getClass());
-		//String path = LangUtils.packageToPath(pkgName) + "/" + rptName;
 		String path = report.getPath() + rptName;
 		ClassLoader cl = LangUtils.findClassLoader(report.getClass());
 		InputStream is = cl.getResourceAsStream(path);
