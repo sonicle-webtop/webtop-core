@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.BaseBridge;
+import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BasePublicService;
@@ -43,7 +43,6 @@ import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.zaxxer.hikari.HikariConfig;
@@ -58,7 +57,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.commons.configuration.ConfigurationException;
@@ -283,14 +281,14 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Lists IDs of services which Manager implements specified class.
+	 * Lists IDs of services which Controller implements specified class.
 	 * @return List of services' IDs
 	 */
-	public List<String> listServicesWhichManagerImplements(Class clazz) {
+	public List<String> listServicesWhichControllerImplements(Class clazz) {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock) {
 			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.doesManagerImplements(clazz)) list.add(descr.getManifest().getId());
+				if(descr.doesControllerImplements(clazz)) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
@@ -471,18 +469,17 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseManager instantiateManager(String serviceId, RunContext runContext) {
+	public BaseController instantiateController(String serviceId, RunContext runContext) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasManager()) throw new RuntimeException("Service has no Manager class");
 		
-		// Creates manager instance
+		// Creates controller instance
 		try {
-			Class clazz = descr.getManagerClass();
-			Constructor<BaseManager> constructor = clazz.getConstructor(RunContext.class, UserProfile.Id.class);
+			Class clazz = descr.getControllerClass();
+			Constructor<BaseController> constructor = clazz.getConstructor(RunContext.class, UserProfile.Id.class);
 			return constructor.newInstance(runContext, runContext.getProfileId());
 			
 		} catch(Exception ex) {
-			logger.error("Error instantiating Manager [{}]", descr.getManifest().getManagerClassName(), ex);
+			logger.error("Error instantiating Controller [{}]", descr.getManifest().getControllerClassName(), ex);
 			return null;
 		}
 	}
@@ -609,7 +606,7 @@ public class ServiceManager {
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
-			logger.info("[manager:{}, private:{}, public:{}, job:{}, userOptions:{}]", desc.hasManager(), desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
+			logger.info("[private:{}, public:{}, job:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
 			// Register service's dataSources
 			try {

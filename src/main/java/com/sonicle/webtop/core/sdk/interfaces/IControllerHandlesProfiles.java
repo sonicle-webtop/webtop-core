@@ -33,14 +33,15 @@
  */
 package com.sonicle.webtop.core.sdk.interfaces;
 
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 
 /**
  *
  * @author malbinola
  */
-public interface IManagerProfileHooks {
+public interface IControllerHandlesProfiles {
 	
-	public void initializeProfile() throws WTException;
-	public void cleanupProfile(boolean deep) throws WTException;
+	public void initializeProfile(UserProfile.Id profileId) throws WTException;
+	public void cleanupProfile(UserProfile.Id profileId, boolean deep) throws WTException;
 }

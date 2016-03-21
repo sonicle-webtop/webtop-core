@@ -55,7 +55,11 @@ public class ServiceManifest {
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
-	protected String managerClassName;
+	protected String company;
+	protected String companyEmail;
+	protected String companyWebSite;
+	protected String supportEmail;
+	protected String controllerClassName;
 	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
@@ -65,10 +69,6 @@ public class ServiceManifest {
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
-	protected String company;
-	protected String companyEmail;
-	protected String companyWebSite;
-	protected String supportEmail;
 	protected ArrayList<AuthResource> resources;
 	
 	public ServiceManifest() {
@@ -102,9 +102,13 @@ public class ServiceManifest {
 		version = ver;
 		
 		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
+		company = StringUtils.defaultIfBlank(svcEl.getString("company"), null);
+		companyEmail = StringUtils.defaultIfBlank(svcEl.getString("companyEmail"), null);
+		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
+		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
 		
-		if(svcEl.containsKey("managerClassName")) {
-			managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+		if(svcEl.containsKey("controllerClassName")) {
+			controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
 		}
 		
 		if(svcEl.containsKey("serviceClassName")) {
@@ -129,10 +133,7 @@ public class ServiceManifest {
 		}
 		
 		hidden = svcEl.getBoolean("hidden", false);
-		company = StringUtils.defaultIfBlank(svcEl.getString("company"), null);
-		companyEmail = StringUtils.defaultIfBlank(svcEl.getString("companyEmail"), null);
-		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
-		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
+		
 		
 		resources = new ArrayList<>();
 		if(!svcEl.configurationsAt("resources").isEmpty()) {
@@ -230,8 +231,8 @@ public class ServiceManifest {
 		return buildDate;
 	}
 	
-	public String getManagerClassName() {
-		return managerClassName;
+	public String getControllerClassName() {
+		return controllerClassName;
 	}
 	
 	/**

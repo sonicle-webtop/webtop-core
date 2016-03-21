@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -57,7 +58,7 @@ import org.slf4j.Logger;
 class ServiceDescriptor {
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
-	private Class managerClass = null;
+	private Class controllerClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
@@ -68,10 +69,10 @@ class ServiceDescriptor {
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
 		
-		// Loads manager class
-		String className = manifest.getManagerClassName();
+		// Loads controller class
+		String className = manifest.getControllerClassName();
 		if(!StringUtils.isEmpty(className)) {
-			managerClass = loadClass(className, BaseManager.class, "Manager");
+			controllerClass = loadClass(className, BaseController.class, "Controller");
 		}
 		
 		// Loads (private) service class
@@ -100,16 +101,12 @@ class ServiceDescriptor {
 		return manifest;
 	}
 	
-	public boolean hasManager() {
-		return (managerClass != null);
+	public Class getControllerClass() {
+		return controllerClass;
 	}
 	
-	public Class getManagerClass() {
-		return managerClass;
-	}
-	
-	public boolean doesManagerImplements(Class clazz) {
-		return implementsInterface(managerClass, clazz);
+	public boolean doesControllerImplements(Class clazz) {
+		return implementsInterface(controllerClass, clazz);
 	}
 
 	public boolean hasPrivateService() {

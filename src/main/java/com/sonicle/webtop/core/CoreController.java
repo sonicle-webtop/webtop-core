@@ -31,32 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.RunContext;
-import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.sdk.BaseController;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseBridge {
-	public final String SERVICE_ID;
-	private final RunContext context;
+public class CoreController extends BaseController {
+	public static final Logger logger = WT.getLogger(CoreController.class);
 	
-	public abstract void initializeProfile(UserProfile.Id profileId) throws Exception;
-	public abstract void cleanupProfile(UserProfile.Id profileId, boolean deep) throws Exception;
-	
-	public BaseBridge(RunContext context) {
-		SERVICE_ID = WT.findServiceId(this.getClass());
-		this.context = context;
-	}
-	
-	public RunContext getRunContext() {
-		return context;
-	}
-	
-	public ServiceManifest getManifest() {
-		return WT.getManifest(SERVICE_ID);
+	public CoreController(RunContext context) {
+		super(context);
 	}
 }

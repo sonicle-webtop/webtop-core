@@ -37,16 +37,16 @@ import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
+import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobServiceTask;
-import com.sonicle.webtop.core.sdk.BaseManager;
-import com.sonicle.webtop.core.sdk.interfaces.IManagerUsesReminders;
 import com.sonicle.webtop.core.sdk.BaseReminder;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ReminderEmail;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesReminders;
 import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -71,17 +71,17 @@ import org.slf4j.Logger;
 public class JobService extends BaseJobService {
 	private static final Logger logger = WT.getLogger(JobService.class);
 	CoreManager core = null;
-	List<String> sidUsingReminders = null;
+	List<String> sidHandlingReminders = null;
 	
 	@Override
 	public void initialize() throws Exception {
 		core = WT.getCoreManager(getRunContext());
-		sidUsingReminders = core.getServiceManager().listServicesWhichManagerImplements(IManagerUsesReminders.class);
+		sidHandlingReminders = core.getServiceManager().listServicesWhichControllerImplements(IControllerHandlesReminders.class);
 	}
 
 	@Override
 	public void cleanup() throws Exception {
-		sidUsingReminders = null;
+		sidHandlingReminders = null;
 		core = null;
 	}
 	
@@ -124,12 +124,13 @@ public class JobService extends BaseJobService {
 			
 			try {
 				ArrayList<BaseReminder> alerts = new ArrayList<>();
-
-				// Creates a manager instance for each service and calls it for reminders...
-				for(String sid : jobService.sidUsingReminders) {
-					BaseManager instance = jobService.core.getServiceManager().instantiateManager(sid, jobService.getRunContext());
-					IManagerUsesReminders manager = (IManagerUsesReminders)instance;
-					alerts.addAll(manager.returnReminders(now));
+				
+				// Creates a controller instance for each service and calls it for reminders...
+				ServiceManager svcm = jobService.core.getServiceManager();
+				for(String sid : jobService.sidHandlingReminders) {
+					BaseController instance = svcm.instantiateController(sid, jobService.getRunContext());
+					IControllerHandlesReminders controller = (IControllerHandlesReminders)instance;
+					alerts.addAll(controller.returnReminders(now));
 				}
 
 				// Process returned reminders...
