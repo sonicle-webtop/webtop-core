@@ -38,7 +38,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
-import com.sonicle.webtop.core.io.AbstractReport;
+import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;

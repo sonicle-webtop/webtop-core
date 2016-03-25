@@ -31,16 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
+package com.sonicle.webtop.core.io.input;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -52,8 +49,7 @@ public abstract class FileRowsReader {
 	protected int firstDataRow = 2;
 	protected int lastDataRow = -1;
 	
-	public abstract HashMap<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException;
-	public abstract HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException;
+	public abstract HashMap<String, String> listColumnNames(File file) throws IOException, FileReaderException;
 	
 	public void setHeadersRow(int headersRow) {
 		if(headersRow < 0) {
@@ -81,27 +77,13 @@ public abstract class FileRowsReader {
 		}
 	}
 	
-	public List<FieldMapping> listFieldMappings(File file, String[] targetFields) throws IOException, UnsupportedOperationException {
+	public List<FieldMapping> listFieldMappings(File file, String[] targetFields) throws IOException, FileReaderException {
 		return listFieldMappings(file, targetFields, false);
 	}
 	
-	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields) throws IOException, UnsupportedOperationException {
-		return listFieldMappings(is, targetFields, false);
-	}
-	
-	public List<FieldMapping> listFieldMappings(File file, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream(file);
-			return listFieldMappings(fis, targetFields, strict);
-		} finally {
-			IOUtils.closeQuietly(fis);
-		}
-	}
-	
-	public List<FieldMapping> listFieldMappings(InputStream is, String[] targetFields, boolean strict) throws IOException, UnsupportedOperationException {
+	public List<FieldMapping> listFieldMappings(File file, String[] targetFields, boolean strict) throws IOException, FileReaderException {
 		ArrayList<FieldMapping> mappings = new ArrayList<>();
-		HashMap<String, String> cols = listColumnNames(is);
+		HashMap<String, String> cols = listColumnNames(file);
 		
 		String lwr, source = null;
 		for(int i=0; i<targetFields.length; i++) {

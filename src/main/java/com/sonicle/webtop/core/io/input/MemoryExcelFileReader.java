@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
+package com.sonicle.webtop.core.io.input;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,18 +56,18 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  *
  * @author malbinola
  */
-public class ExcelFileReader extends FileRowsReader {
+public class MemoryExcelFileReader extends FileRowsReader {
 	protected boolean binary = false;
 	protected String sheet = null;
 	protected DataFormatter fmt = null;
 	
-	public ExcelFileReader() {
+	public MemoryExcelFileReader() {
 		this.fmt = new DataFormatter();
 	}
 	
-	public ExcelFileReader(boolean binary) {
+	public MemoryExcelFileReader(boolean binary) {
+		this();
 		this.binary = binary;
-		this.fmt = new DataFormatter();
 	}
 	
 	public String getSheet() {
@@ -108,7 +108,6 @@ public class ExcelFileReader extends FileRowsReader {
 		}
 	}
 	
-	@Override
 	public HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, String> hm = new LinkedHashMap<>();
 		

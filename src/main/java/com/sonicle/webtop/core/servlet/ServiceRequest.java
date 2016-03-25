@@ -57,7 +57,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ServiceRequest extends BaseRequestServlet {
-	
 	private static final Logger logger = WT.getLogger(ServiceRequest.class);
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

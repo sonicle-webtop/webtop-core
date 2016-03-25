@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
+package com.sonicle.webtop.core.io.input;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -85,7 +85,6 @@ public class TextFileReader extends FileRowsReader {
 		}
 	}
 	
-	@Override
 	public HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, String> hm = new LinkedHashMap<>();
 		CsvListReader lr = new CsvListReader(new InputStreamReader(is, charset), pref);
@@ -96,10 +95,10 @@ public class TextFileReader extends FileRowsReader {
 			if(lr.getLineNumber() == headersRow) {
 				for(int i=0; i<line.size(); i++) {
 					if(headersRow == firstDataRow) {
-						name = "col_" + i+1;
+						name = "COL-" + i+1;
 					} else {
 						name = line.get(i);
-						if(StringUtils.isBlank(name)) name = "col_" + i+1;
+						if(StringUtils.isBlank(name)) name = "COL-" + i+1;
 					}
 					hm.put(name.toLowerCase(), name);
 				}
@@ -130,10 +129,10 @@ public class TextFileReader extends FileRowsReader {
 			if(lr.getLineNumber() == headersRow) {
 				for(int i=0; i<line.size(); i++) {
 					if(headersRow == firstDataRow) {
-						name = "col_" + i+1;
+						name = "COL-" + i+1;
 					} else {
 						name = line.get(i);
-						if(StringUtils.isBlank(name)) name = "col_" + i+1;
+						if(StringUtils.isBlank(name)) name = "COL-" + i+1;
 					}
 					hm.put(name, i);
 				}

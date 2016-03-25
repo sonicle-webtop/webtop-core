@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.io.AbstractReport;
+import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
