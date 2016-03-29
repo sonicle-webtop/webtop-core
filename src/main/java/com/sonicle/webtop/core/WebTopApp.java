@@ -35,12 +35,8 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.WebTopSession.RequestDump;
-import com.sonicle.webtop.core.bol.OAuthLog;
 import com.sonicle.webtop.core.bol.OMessageQueue;
-import com.sonicle.webtop.core.dal.AuthLogDAO;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
@@ -64,7 +60,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -131,6 +126,7 @@ public class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	private ConnectionManager conm = null;
+	private LogManager logm = null;
 	private UserManager usrm = null;
 	private AuthManager autm = null;
 	private SettingsManager setm = null;
@@ -176,6 +172,8 @@ public class WebTopApp {
 		
 		// Connection Manager
 		conm = ConnectionManager.initialize(this);
+		// Log Manager
+		logm = LogManager.initialize(this);
 		// User Manager
 		usrm = UserManager.initialize(this);
 		// Auth Manager
@@ -380,6 +378,14 @@ public class WebTopApp {
 	}
 	
 	/**
+	 * Returns the LogManager.
+	 * @return UserManager instance.
+	 */
+	public LogManager getLogManager() {
+		return logm;
+	}
+	
+	/**
 	 * Returns the UserManager.
 	 * @return UserManager instance.
 	 */
@@ -427,55 +433,12 @@ public class WebTopApp {
 		return sesm;
 	}
 	
-	public RunContext createAdminRunContext() {
-		return new RunContext(CoreManifest.ID, new UserProfile.Id("*", "admin"));
+	public RunContext createAdminRunContext(String sessionId) {
+		return createAdminRunContext(CoreManifest.ID, sessionId);
 	}
 	
-	public void writeAuthLog(UserProfile.Id profileId, String action, RequestDump dump, String sessionId) {
-		String remoteIp = (dump != null) ? dump.remoteIP : null;
-		String userAgent = (dump != null) ? dump.userAgent : null;
-		writeAuthLog(profileId, action, remoteIp, userAgent, sessionId);
-	}
-	
-	public void writeAuthLog(UserProfile.Id profileId, String action, String remoteIp, String userAgent, String sessionId) {
-		writeAuthLog(profileId.getDomainId(), profileId.getUserId(), action, remoteIp, userAgent, sessionId);
-	}
-	
-	public void writeAuthLog(UserProfile.Id profileId, String action, HttpServletRequest request, String sessionId) {
-		writeAuthLog(profileId.getDomainId(), profileId.getUserId(), action, request, sessionId);
-	}
-	
-	public void writeAuthLog(String domainId, String userId, String action, HttpServletRequest request, String sessionId) {
-		String remoteIp = ServletUtils.getClientIP(request);
-		String userAgent = ServletUtils.getUserAgent(request);
-		writeAuthLog(domainId, userId, action, remoteIp, userAgent, sessionId);
-	}
-	
-	public void writeAuthLog(String domainId, String userId, String action, String remoteIp, String userAgent, String sessionId) {
-		Connection con = null;
-		CoreServiceSettings css = new CoreServiceSettings(domainId, CoreManifest.ID);
-		if(!css.getSysLogsEnabled()) return;
-		
-		try {	
-			con = WT.getCoreConnection();
-			AuthLogDAO dao = AuthLogDAO.getInstance();
-			OAuthLog item = new OAuthLog();
-			item.setAuthLogId(dao.getSequence(con));
-			item.setTimestamp(DateTime.now(DateTimeZone.UTC));
-			item.setDomainId(domainId);
-			item.setUserId(userId);
-			//item.setServiceId(); // Not used for now!
-			item.setAction(action);
-			item.setIpAddress(remoteIp);
-			item.setUserAgent(userAgent);
-			item.setSessionId(sessionId);
-			dao.insert(con, item);
-		} catch(SQLException ex) {
-			//TODO: logging
-			ex.printStackTrace();
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+	public RunContext createAdminRunContext(String serviceId, String sessionId) {
+		return new RunContext(serviceId, new UserProfile.Id("*", "admin"), sessionId);
 	}
 	
 	/*

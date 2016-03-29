@@ -96,7 +96,7 @@ public class JobService extends BaseJobService {
 		jobs.add(new TaskDefinition(ReminderJob.class, remTrigger));
 		
 		// Device syncronization check job
-		LocalTime time = new CoreServiceSettings("*", CoreManifest.ID).getDevicesSyncCheckTime();
+		LocalTime time = new CoreServiceSettings(CoreManifest.ID, "*").getDevicesSyncCheckTime();
 		Trigger syncTrigger = TriggerBuilder.newTrigger()
 				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(time.getHourOfDay(), time.getMinuteOfHour())) // every day at...
 				.build();

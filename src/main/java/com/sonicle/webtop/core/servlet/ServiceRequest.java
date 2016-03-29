@@ -64,7 +64,7 @@ public class ServiceRequest extends BaseRequestServlet {
 		WebTopSession wts = WebTopSession.get(request);
 		
 		try {
-			logger.trace("Servlet: ServiceRequest [{}]", ServletHelper.getSessionID(request));
+			logger.trace("Servlet: ServiceRequest [{}]", wts.getId());
 			String csrf = ServletUtils.getStringParameter(request, "csrf", null);
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
@@ -97,7 +97,7 @@ public class ServiceRequest extends BaseRequestServlet {
 				
 				// Retrieves instantiated userOptions service (session context away)
 				UserProfile.Id pid = new UserProfile.Id(id);
-				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), service, pid);
+				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), wts.getId(), service, pid);
 				
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter, String.class);

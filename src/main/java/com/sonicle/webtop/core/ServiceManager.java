@@ -484,7 +484,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseService instantiatePrivateService(String serviceId, Environment env) {
+	public BaseService instantiatePrivateService(String serviceId, String sessionId, Environment env) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
@@ -497,7 +497,7 @@ public class ServiceManager {
 			return null;
 		}
 		UserProfile profile = env.getProfile();
-		instance.configure(new RunContext(serviceId, profile.getId()), env);
+		instance.configure(new RunContext(serviceId, profile.getId(), sessionId), env);
 		
 		// Calls initialization method
 		try {
@@ -524,7 +524,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String serviceId, UserProfile.Id targetProfileId) {
+	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfile.Id targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
 		
@@ -536,7 +536,7 @@ public class ServiceManager {
 			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, sessionProfile.getId()), sessionProfile, targetProfileId);
+		instance.configure(new RunContext(serviceId, sessionProfile.getId(), sessionId), sessionProfile, targetProfileId);
 		return instance;
 	}
 	
@@ -714,7 +714,7 @@ public class ServiceManager {
 			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
+		instance.configure(wta.createAdminRunContext(serviceId));
 		return instance;
 	}
 	
@@ -767,7 +767,7 @@ public class ServiceManager {
 			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin")));
+		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), null));
 		return instance;
 	}
 	

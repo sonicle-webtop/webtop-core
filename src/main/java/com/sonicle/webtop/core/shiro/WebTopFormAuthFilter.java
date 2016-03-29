@@ -34,7 +34,9 @@
 package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.servlet.Login;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -42,14 +44,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
-import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -138,7 +138,8 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	private void writeAuthLog(UsernamePasswordDomainToken token, HttpServletRequest request, String action) {
 		WebTopApp wta = WebTopApp.getInstance();
 		if(wta != null) {
-			wta.writeAuthLog(token.getDomain(), token.getUsername(), action, request, request.getRequestedSessionId());
+			UserProfile.Id pid = new UserProfile.Id(token.getDomain(), token.getUsername());
+			wta.getLogManager().write(pid, CoreManifest.ID, action, null, request, request.getRequestedSessionId(), null);
 		}
 	}
 	

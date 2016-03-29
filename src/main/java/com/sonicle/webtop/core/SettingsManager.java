@@ -57,7 +57,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public final class SettingsManager implements IServiceSettingReader, IServiceSettingManager, IUserSettingManager, ISettingManager {
-	
 	private static final Logger logger = WT.getLogger(SettingsManager.class);
 	private static boolean initialized = false;
 	

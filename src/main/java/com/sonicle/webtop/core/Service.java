@@ -103,7 +103,7 @@ public class Service extends BaseService {
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
 		core = new CoreManager(getRunContext(), getApp());
-		ss = new CoreServiceSettings(profile.getDomainId(), SERVICE_ID);
+		ss = new CoreServiceSettings(SERVICE_ID, profile.getDomainId());
 		us = new CoreUserSettings(profile.getId());
 	}
 

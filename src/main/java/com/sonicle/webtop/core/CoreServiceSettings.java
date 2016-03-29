@@ -21,8 +21,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	// NB: please do not provide a constructor that defaults serviceId 
 	// because there are some keys that can be applied widely across services
 	
-	public CoreServiceSettings(String domainId, String serviceId) {
-		super(domainId, serviceId);
+	public CoreServiceSettings(String serviceId, String domainId) {
+		super(serviceId, domainId);
 	}
 	
 	public static final String TMP = "tmp";
@@ -52,10 +52,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String SYSTEM_PATH_PUBLIC = "system.path.public";
 	
 	/**
-	 * [string][system+domain]
-	 * Activate syslogs (user authentication tracking)
+	 * [string][system+domain][*]
+	 * Activate syslog
 	 */
-	public static final String SYSTEM_LOGS = "system.logs";
+	public static final String SYSLOG_ENABLED = "syslog.enabled";
 	
 	/**
 	 * [string][system]
@@ -210,8 +210,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(USERINFO_PROVIDER, "WebTop");
 	}
 	
-	public boolean getSysLogsEnabled() {
-		return getBoolean(SYSTEM_LOGS, true);
+	public boolean getSysLogEnabled() {
+		return getBoolean(SYSLOG_ENABLED, false);
 	}
 	
 	public long getOTPProviderSonicleAuthKVI() {

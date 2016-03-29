@@ -124,6 +124,15 @@ public class CoreManager extends BaseManager {
 		return wta.getOTPManager();
 	}
 	
+	public boolean writeLog(String action, String remoteIp, String userAgent, String sessionId, String data) {
+		return wta.getLogManager().write(getRunProfileId(), getRunContext().getServiceId(), action, getSoftwareName(), remoteIp, userAgent, sessionId, data);
+	}
+	
+	public boolean writeLog(String action, String data) {
+		RunContext rc = getRunContext();
+		return wta.getLogManager().write(rc.getProfileId(), rc.getServiceId(), action, getSoftwareName(), null, null, rc.getSessionId(), data);
+	}
+	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
 		return wta.getUserManager().getUserInfoProvider();
 	}

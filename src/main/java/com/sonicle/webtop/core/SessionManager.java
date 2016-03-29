@@ -53,7 +53,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class SessionManager {
-	
 	private static final Logger logger = WT.getLogger(SessionManager.class);
 	private static boolean initialized = false;
 	
@@ -175,8 +174,12 @@ public class SessionManager {
 	}
 	
 	public WebTopSession getSession(HttpSession httpSession) {
+		return getSession(httpSession.getId());
+	}
+	
+	public WebTopSession getSession(String sessionId) {
 		synchronized(sessions) {
-			return sessions.get(httpSession.getId());
+			return sessions.get(sessionId);
 		}
 	}
 	

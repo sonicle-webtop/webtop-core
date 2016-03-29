@@ -111,7 +111,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		
 		RequestDump dump = (RequestDump)popProperty(PROP_REQUEST_DUMP);
-		wta.writeAuthLog(profile.getId(), "LOGOUT", dump, getId());
+		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "LOGOUT", null, dump, getId(), null);
 			
 		// Cleanup services
 		synchronized(services) {
@@ -245,7 +245,7 @@ public class WebTopSession {
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		CoreManager core = new CoreManager(wta.createAdminRunContext(getId()), wta);
 		
 		refererURI = ServletUtils.getReferer(request);
 		userAgentLocale = ServletHelper.homogenizeLocale(request);
@@ -262,9 +262,10 @@ public class WebTopSession {
 	
 	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
-		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		String sessionId = getId();
+		CoreManager core = new CoreManager(wta.createAdminRunContext(sessionId), wta);
 		
-		wta.writeAuthLog(profile.getId(), "AUTHENTICATED", request, getId());
+		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		
 		// Creates communication manager and registers this active session
 		comm = new SessionComManager(profile.getId());
@@ -278,9 +279,9 @@ public class WebTopSession {
 		for(String serviceId : serviceIds) {
 			// Creates new instance
 			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
+				instance = svcm.instantiatePrivateService(serviceId, sessionId, new CoreEnvironment(wta, this));
 			} else {
-				instance = svcm.instantiatePrivateService(serviceId, new Environment(this));
+				instance = svcm.instantiatePrivateService(serviceId, sessionId, new Environment(this));
 			}
 			if(instance != null) {
 				addService(instance);

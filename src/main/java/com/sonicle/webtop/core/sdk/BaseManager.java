@@ -47,6 +47,7 @@ public abstract class BaseManager {
 	public final String SERVICE_ID;
 	private final RunContext context;
 	private final UserProfile.Id targetProfile;
+	private String softwareName;
 	protected Locale locale;
 	
 	public BaseManager(RunContext context) {
@@ -56,7 +57,9 @@ public abstract class BaseManager {
 	public BaseManager(RunContext context, UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.context = Check.notNull(context);
+		//this.sessionId = sessionId;
 		this.targetProfile = targetProfileId;
+		this.softwareName = null;
 		locale = findLocale();
 	}
 	
@@ -79,6 +82,14 @@ public abstract class BaseManager {
 	
 	public UserProfile.Id getTargetProfileId() {
 		return (targetProfile != null) ? targetProfile : getRunProfileId();
+	}
+	
+	public String getSoftwareName() {
+		return softwareName;
+	}
+	
+	public void setSoftwareName(String softwareName) {
+		this.softwareName = softwareName;
 	}
 	
 	public Locale getLocale() {
@@ -124,6 +135,9 @@ public abstract class BaseManager {
 		if(!getRunContext().getServiceId().equals(serviceId)) throw new MethodAuthException(methodName, getRunContext());
 	}
 	
+	/**
+	 * Ensures that the running user (see runContext) and target user are the same.
+	 */
 	protected void ensureOwnerUser() {
 		if(WT.isWebTopAdmin(getRunProfileId())) return;
 		if(!getRunProfileId().equals(getTargetProfileId())) throw new AuthException("");

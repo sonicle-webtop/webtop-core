@@ -65,11 +65,12 @@ public class Login extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
+		String sessionId = ServletHelper.getSessionID(request);
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		CoreManager core = new CoreManager(wta.createAdminRunContext(), wta);
+		CoreManager core = new CoreManager(wta.createAdminRunContext(sessionId), wta);
 		
 		try {
-			WebTopApp.logger.trace("Servlet: login [{}]", ServletHelper.getSessionID(request));
+			WebTopApp.logger.trace("Servlet: login [{}]", sessionId);
 			Locale locale = ServletHelper.homogenizeLocale(request);
 			
 			//SettingsManager sm = wta.getSettingsManager();
