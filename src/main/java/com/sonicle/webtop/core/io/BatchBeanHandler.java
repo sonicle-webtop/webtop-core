@@ -34,14 +34,62 @@
 package com.sonicle.webtop.core.io;
 
 import com.sonicle.webtop.core.util.LogEntries;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  * @param <T> Bean type.
  */
-public abstract class DefaultBeanHandler<T> implements BeanHandler<T> {
-
+public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
+	protected LogEntries log;
+	protected int batchSize;
+	public int handledCount;
+	
+	public BatchBeanHandler(LogEntries log) {
+		this.log = log;
+		this.batchSize = 100;
+		this.handledCount = 0;
+	}
+	
+	protected abstract int getBeanStoreSize();
+	protected abstract void clearBeanStore();
+	protected abstract void addBeanToStore(T bean);
+	public abstract void handleStoredBeans() throws Exception;
+	
+	public LogEntries getLog() {
+		return log;
+	}
+	
+	public int getBatchSize() {
+		return batchSize;
+	}
+	
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+	
+	public void flush() throws Exception {
+		if(getBeanStoreSize() > 0) {
+			try {
+				handleStoredBeans();
+			} finally {
+				clearBeanStore();
+			}
+		}
+	}
+	
 	@Override
-	public abstract void handle(T bean, LogEntries log) throws Exception;
+	public void handle(T bean, LogEntries log) throws Exception {
+		handledCount++;
+		addBeanToStore(bean);
+		log.addAll(log);
+		if(getBeanStoreSize() == batchSize) {
+			try {
+				handleStoredBeans();
+			} finally {
+				clearBeanStore();
+			}
+		}
+	}
 }

@@ -38,9 +38,11 @@ import com.sonicle.commons.PropertiesEx;
 import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.ServiceManager;
 import com.sonicle.webtop.core.WT;
 import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.WebTopSession;
 import com.sonicle.webtop.core.io.Resource;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
@@ -52,7 +54,6 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,7 +73,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ResourceRequest extends HttpServlet {
-	
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
@@ -206,9 +206,9 @@ public class ResourceRequest extends HttpServlet {
 					return lookupLocaleJs(req, isVirtualUrl, subject, subjectPath, path, translUrl);
 				
 				} else {
-					//TODO: usare i file compressi se il debug è disattivato
-					return lookupJs(req, isVirtualUrl, translUrl, false);
-					//return lookupJs(req, isVirtualUrl, translUrl, !WebTopApp.systemIsDebug());
+					WebTopApp wta = WebTopApp.get(req);
+					String sessionId = ServletHelper.getSessionID(req);
+					return lookupJs(req, isVirtualUrl, translUrl, isDebug(wta, sessionId));
 				}
 			} else if(StringUtils.startsWith(path, "laf")) {
 				if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
@@ -218,6 +218,14 @@ public class ResourceRequest extends HttpServlet {
 				return lookupDefault(req, isVirtualUrl, translUrl);
 			}
 		}
+	}
+	
+	private boolean isDebug(WebTopApp wta, String sessionId) {
+		if(StringUtils.isBlank(sessionId)) return false;
+		WebTopSession wts = wta.getSessionManager().getSession(sessionId);
+		if(wts == null) return false;
+		CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId());
+		return cus.getSystemDebug();
 	}
 	
 	private URL getResURL(String name) {
@@ -324,6 +332,7 @@ public class ResourceRequest extends HttpServlet {
 	
 	private LookupResult lookupLocaleJs(HttpServletRequest request, boolean forceCaching, String serviceId, String subjectPath, String path, URL url) {
 		final String LOOKUP_URL = "/{0}/locale_{1}.properties";
+		WebTopApp wta = WebTopApp.get(request);
 		//String path = url.getPath();
 		URL fileUrl = null;
 		
@@ -341,13 +350,13 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			// Defines specific params
-			ServiceManager svcm = WebTopApp.get(request).getServiceManager();
+			ServiceManager svcm = wta.getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
 			String clazz = manifest.getJsPackageName() + "." + baseName;
 			String override = manifest.getPrivateServiceJsClassName(true);
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
-			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			Resource resFile = getFile(wta, fileUrl);
 			return new LocaleJsFile(clazz, override, fileUrl.toString(), forceCaching, resFile);
 			
 		} catch (ForbiddenException ex) {
@@ -359,15 +368,16 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean minified) {
+	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean debug) {
 		//logger.trace("Looking-up js file");
+		WebTopApp wta = WebTopApp.get(request);
 		String path = url.getPath();
 		URL fileUrl = null;
 		
 		try {
 			String dpath = null;
-			if(minified) {
-				dpath = path.substring(0, path.length() - 3) + "-compressed.js";
+			if(debug) {
+				dpath = path.substring(0, path.length() - 3) + ".debug.js";
 				fileUrl = this.getClass().getResource(dpath);
 			}
 			if (fileUrl != null) {
@@ -376,7 +386,7 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = this.getClass().getResource(path);
 			}
 			
-			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			Resource resFile = getFile(wta, fileUrl);
 			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
 		
 		} catch (ForbiddenException ex) {

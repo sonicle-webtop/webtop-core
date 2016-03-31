@@ -125,6 +125,13 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
 	
 	/**
+	 * [boolean][default]
+	 * Activates debug mode. If activated, client js files will be passed in  
+	 * plain text, so they are readable.
+	 */
+	public static final String SYSTEM_DEBUG = "system.debug";
+	
+	/**
 	 * [boolean]
 	 * Specifies if whatsnew window must be shown after a service upgrade
 	 */
@@ -278,6 +285,10 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean setViewportToolWidth(Integer value) {
 		return setInteger(CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
+	}
+	
+	public boolean getSystemDebug() {
+		return getBoolean(SYSTEM_DEBUG, false);
 	}
 	
 	public boolean getWhatsnewEnabled() {
