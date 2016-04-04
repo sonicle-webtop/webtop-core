@@ -548,7 +548,7 @@ public class WebTopApp {
 	
 	public String buildTempFilename(String prefix, String suffix) {
 		String uuid = generateUUID();
-		if(StringUtils.isEmpty(suffix)) {
+		if(StringUtils.isBlank(suffix)) {
 			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
 		} else {
 			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);

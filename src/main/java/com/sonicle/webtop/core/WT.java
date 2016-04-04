@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.MailUtils;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
@@ -47,24 +48,20 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.UUID;
-import javax.mail.internet.AddressException;
+import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -115,21 +112,7 @@ public class WT {
 	
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
 		String internetName = WT.getDomainInternetName(domainId);
-		return buildInternetAddress(local, internetName, personal);
-	}
-	
-	public static InternetAddress buildInternetAddress(String local, String domain, String personal) {
-		return buildInternetAddress(local + "@" + domain, personal);
-	}
-	
-	public static InternetAddress buildInternetAddress(String address, String personal) {
-		try {
-			InternetAddress ia = new InternetAddress(address);
-			if(!StringUtils.isBlank(personal)) ia.setPersonal(personal, WT.getSystemCharset().name());
-			return ia;
-		} catch(AddressException | UnsupportedEncodingException ex) {
-			return null;
-		}
+		return MailUtils.buildInternetAddress(local, internetName, personal);
 	}
 	
 	public static ServiceManifest findManifest(Class clazz) {
@@ -306,8 +289,8 @@ public class WT {
 		return buildTemplate(CoreManifest.ID, template, data);
 	}
 	
-	public static String buildTemplate(String serviceId, String template, Object data) throws IOException, TemplateException {
-		Template tpl = WT.loadTemplate(serviceId, template);
+	public static String buildTemplate(String serviceId, String templateRelativePath, Object data) throws IOException, TemplateException {
+		Template tpl = WT.loadTemplate(serviceId, templateRelativePath);
 		Writer writer = new StringWriter();
 		tpl.process(data, writer);
 		return writer.toString();
@@ -334,11 +317,16 @@ public class WT {
 	}
 	
 	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress to, String subject, String body) {
+		sendEmail(rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
+	}
+	
+	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, String subject, String body, Part[] parts) {
 		//TODO: gestire invio email e implementari segnature diverse
 		WebTopApp.logger.debug("Invio email da {} a {}", from.toString(), to.toString());
 		WebTopApp.logger.debug("{}", subject);
 		//WebTopApp.logger.debug("{}", body);
 	}
+	
 	
 	public static String generateUUID() {
 		return getWTA().generateUUID();

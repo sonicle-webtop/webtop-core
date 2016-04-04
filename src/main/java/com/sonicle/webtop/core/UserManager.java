@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
@@ -153,7 +154,7 @@ public final class UserManager {
 					if(domain == null) return null;
 					
 					UserPersonalInfo info = userPersonalInfo(pid);
-					InternetAddress ia = WT.buildInternetAddress(info.getEmail(), user.getDisplayName());
+					InternetAddress ia = MailUtils.buildInternetAddress(info.getEmail(), user.getDisplayName());
 					UserProfile.Data data = new UserProfile.Data(user, ia);
 					userToDataCache.put(pid, data);
 					return data;

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
@@ -188,7 +189,7 @@ public class OTPManager {
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
 		String issuer = URLUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
-		InternetAddress ia = WT.buildInternetAddress(pid.getUserId(), domain.getDomainName(), null);
+		InternetAddress ia = MailUtils.buildInternetAddress(pid.getUserId(), domain.getDomainName(), null);
 		if(ia == null) throw new WTException("Unable to build account address");
 		
 		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getKey(), ia.getAddress());

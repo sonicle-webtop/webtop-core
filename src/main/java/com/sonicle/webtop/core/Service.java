@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
@@ -78,6 +79,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TimeZone;
+import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -712,7 +714,8 @@ public class Service extends BaseService {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
 					if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_EMAIL)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
-						if(WT.buildInternetAddress(address, null) == null) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
+						InternetAddress ia = MailUtils.buildInternetAddress(address, null);
+						if(!MailUtils.isAddressValid(ia)) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
 						logger.debug("{}", config.otp.getVerificationCode());

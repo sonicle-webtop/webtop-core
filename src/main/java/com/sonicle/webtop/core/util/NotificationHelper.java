@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManifest;
 import com.sonicle.webtop.core.WT;
@@ -73,11 +74,14 @@ public class NotificationHelper {
 	}
 	
 	public static String buildNoReplayTpl(Locale locale, String source, String bodyHeader, String bodyMessage) throws IOException, TemplateException {
-		Map map = generateNoReplayTplStrings(locale, source, bodyHeader, bodyMessage);
-		return WT.buildTemplate("tpl_notification.html", map);
+		MapItem i18nMap = new MapItem();
+		i18nMap.putAll(generateNoReplayI18nTplStrings(locale, source, bodyHeader, bodyMessage));
+		MapItem map = new MapItem();
+		map.put("i18n", i18nMap);
+		return WT.buildTemplate("tpl/notification.html", map);
 	}
 	
-	public static Map<String, String> generateNoReplayTplStrings(Locale locale, String source, String bodyHeader, String bodyMessage) {
+	public static Map<String, String> generateNoReplayI18nTplStrings(Locale locale, String source, String bodyHeader, String bodyMessage) {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
 		map.put("bodyMessage", StringUtils.defaultString(bodyMessage));
@@ -86,18 +90,21 @@ public class NotificationHelper {
 		return map;
 	}
 	
-	public static String buildNotificationTpl(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String why) throws IOException, TemplateException {
-		Map map = generateNotificationTplStrings(locale, source, recipientEmail, bodyHeader, bodyMessage, why);
-		return WT.buildTemplate("tpl_notification.html", map);
+	public static String buildNotificationTpl(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String becauseString) throws IOException, TemplateException {
+		MapItem i18nMap = new MapItem();
+		i18nMap.putAll(generateNotificationI18nTplStrings(locale, source, recipientEmail, bodyHeader, bodyMessage, becauseString));
+		MapItem map = new MapItem();
+		map.put("i18n", i18nMap);
+		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
+		return WT.buildTemplate("tpl/notification.html", map);
 	}
 	
-	public static Map<String, String> generateNotificationTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String why) {
+	public static Map<String, String> generateNotificationI18nTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String becauseString) {
 		HashMap<String, String> map = new HashMap<>();
-		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
 		map.put("bodyMessage", StringUtils.defaultString(bodyMessage));
 		map.put("footerHeader", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_HEADER), source));
-		map.put("footerMessage", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_MESSAGE), recipientEmail, why));
+		map.put("footerMessage", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_MESSAGE), recipientEmail, becauseString));
 		return map;
 	}
 }
