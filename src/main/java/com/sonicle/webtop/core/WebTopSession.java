@@ -53,6 +53,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
@@ -111,6 +112,9 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		
 		RequestDump dump = (RequestDump)popProperty(PROP_REQUEST_DUMP);
+		//TODO: rimuovere le seguenti due istruzioni...
+		if(wta == null) logger.error("wta is nulllllll");
+		if(profile == null) logger.error("profile is nulllllll");
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "LOGOUT", null, dump, getId(), null);
 			
 		// Cleanup services
@@ -398,11 +402,11 @@ public class WebTopSession {
 				manifest.getUserOptionsModelJsClassName(true)
 			);
 		}
-		jssvc.name = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME);
-		jssvc.description = wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION);
+		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME));
+		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION));
 		jssvc.version = manifest.getVersion().toString();
 		jssvc.build = manifest.getBuildDate();
-		jssvc.company = manifest.getCompany();
+		jssvc.company = StringEscapeUtils.escapeJson(manifest.getCompany());
 		jssvc.maintenance = svcm.isInMaintenance(serviceId);
 		
 		js.services.add(jssvc);

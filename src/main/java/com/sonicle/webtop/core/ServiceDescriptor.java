@@ -71,28 +71,27 @@ class ServiceDescriptor {
 		
 		// Loads controller class
 		String className = manifest.getControllerClassName();
-		if(!StringUtils.isEmpty(className)) {
+		if(!StringUtils.isBlank(className)) {
 			controllerClass = loadClass(className, BaseController.class, "Controller");
 		}
-		
 		// Loads (private) service class
 		className = manifest.getPrivateServiceClassName();
-		if(!StringUtils.isEmpty(className)) {
+		if(!StringUtils.isBlank(className)) {
 			privateServiceClass = loadClass(className, BaseService.class, "Service");
 		}
 		// Loads public service class
 		className = manifest.getPublicServiceClassName();
-		if(!StringUtils.isEmpty(className)) {
+		if(!StringUtils.isBlank(className)) {
 			publicServiceClass = loadClass(className, BasePublicService.class, "PublicService");
 		}
 		// Loads job service class
 		className = manifest.getJobServiceClassName();
-		if(!StringUtils.isEmpty(className)) {
+		if(!StringUtils.isBlank(className)) {
 			jobServiceClass = loadClass(className, BaseJobService.class, "JobService");
 		}
 		// Loads userOptions service class
 		className = manifest.getUserOptionsServiceClassName();
-		if(!StringUtils.isEmpty(className)) {
+		if(!StringUtils.isBlank(className)) {
 			userOptionsServiceClass = loadClass(className, BaseUserOptionsService.class, "UserOptionsService");
 		}
 	}
@@ -161,6 +160,8 @@ class ServiceDescriptor {
 			logger.debug("{} class not found [{}]", description, className);
 		} catch(ClassCastException ex) {
 			logger.warn("A valid {} class must extends '{}' class", description, apiClass.toString());
+		} catch(Throwable t) {
+			logger.error("Unable to load class [{}]", className, t);
 		}
 		return null;
 	}

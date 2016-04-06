@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PropertiesEx;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OMessageQueue;
@@ -332,7 +333,11 @@ public class WebTopApp {
 	}
 	
 	public Template loadTemplate(String path) throws IOException {
-		return freemarkerCfg.getTemplate(path);
+		return freemarkerCfg.getTemplate(path, getSystemCharset().name());
+	}
+	
+	public Template loadTemplate(String path, String encoding) throws IOException {
+		return freemarkerCfg.getTemplate(path, encoding);
 	}
 	
 	/**

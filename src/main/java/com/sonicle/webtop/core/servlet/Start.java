@@ -55,6 +55,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.shiro.SecurityUtils;
 
 /**
@@ -107,7 +108,7 @@ public class Start extends HttpServlet {
 			// Startup variables
 			JsWTS jswts = new JsWTS();
 			wts.fillStartup(jswts, layout);
-			vars.put("WTS", JsonResult.gson.toJson(jswts));
+			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			
 			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");

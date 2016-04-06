@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.web.json.JsonResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -49,6 +50,10 @@ public class JsWTS {
 	public ArrayList<Settings> servicesOptions = new ArrayList<>();
 	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
 	public String defaultService;
+	
+	public String toJson() {
+		return JsonResult.gson.toJson(this);
+	}
 	
 	public static class ServiceUserOptions {
 		public String viewClassName;
