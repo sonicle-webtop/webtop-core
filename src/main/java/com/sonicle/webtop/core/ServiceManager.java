@@ -475,8 +475,8 @@ public class ServiceManager {
 		// Creates controller instance
 		try {
 			Class clazz = descr.getControllerClass();
-			Constructor<BaseController> constructor = clazz.getConstructor(RunContext.class, UserProfile.Id.class);
-			return constructor.newInstance(runContext, runContext.getProfileId());
+			Constructor<BaseController> constructor = clazz.getConstructor(RunContext.class);
+			return constructor.newInstance(runContext);
 			
 		} catch(Exception ex) {
 			logger.error("Error instantiating Controller [{}]", descr.getManifest().getControllerClassName(), ex);
