@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.SettingsManager;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import java.util.ArrayList;
 import java.util.HashMap;

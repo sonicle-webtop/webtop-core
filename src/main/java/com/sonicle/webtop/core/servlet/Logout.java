@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

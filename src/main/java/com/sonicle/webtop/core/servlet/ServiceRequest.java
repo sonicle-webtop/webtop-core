@@ -36,10 +36,10 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
-import com.sonicle.webtop.core.ServiceManager;
-import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.app.ServiceManager;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
@@ -56,7 +56,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ServiceRequest extends BaseRequestServlet {
+public class ServiceRequest extends BaseServiceRequest {
 	private static final Logger logger = WT.getLogger(ServiceRequest.class);
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

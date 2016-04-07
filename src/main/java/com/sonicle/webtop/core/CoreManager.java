@@ -35,6 +35,15 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.webtop.core.app.AuthManager;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.ServiceManager;
+import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -47,6 +56,7 @@ import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
+import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -141,13 +151,43 @@ public class CoreManager extends BaseManager {
 		return wta.getUserManager().isUserInfoProviderWritable();
 	}
 	
-	public List<ODomain> listDomains(boolean enabledOnly) throws Exception {
+	public List<JsSimple> listThemes() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		//TODO: gestire i temi dinamicamente
+		items.add(new JsSimple("aria", "Aria"));
+		items.add(new JsSimple("classic", "Classic"));
+		items.add(new JsSimple("crisp", "Crisp"));
+		items.add(new JsSimple("crisp-touch", "Crisp Touch"));
+		items.add(new JsSimple("gray", "Gray"));
+		items.add(new JsSimple("neptune", "Neptune"));
+		items.add(new JsSimple("neptune-touch", "Neptune Touch"));
+		return items;
+	}
+	
+	public List<JsSimple> listLayouts() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		items.add(new JsSimple("default", WT.getPlatformName()));
+		items.add(new JsSimple("stacked", "Outlook 2007/2003"));
+		items.add(new JsSimple("queued", "Mozilla"));
+		return items;
+	}
+	
+	public List<JsSimple> listLAFs() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		//TODO: gestire i look&feel (lafs) dinamicamente
+		items.add(new JsSimple("default", WT.getPlatformName()));
+		return items;
+	}
+	
+	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
 		Connection con = null;
 		try {
 			con = WT.getCoreConnection();
 			DomainDAO dao = DomainDAO.getInstance();
 			return (enabledOnly) ? dao.selectEnabled(con) : dao.selectAll(con);
 			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -519,7 +559,7 @@ public class CoreManager extends BaseManager {
 		//TODO: controllo accessi
 		ensureOwnerUser();
 		OTPManager otp = getOTPManager();
-		otp.deactivateOTP(getTargetProfileId());
+		otp.deactivate(getTargetProfileId());
 	}
 	
 	public OTPManager.Config otpPrepareVerifyCode() throws WTException {

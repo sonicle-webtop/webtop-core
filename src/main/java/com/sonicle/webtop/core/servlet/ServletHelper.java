@@ -35,9 +35,9 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.File;
 import java.util.Locale;

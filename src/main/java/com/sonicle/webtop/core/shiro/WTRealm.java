@@ -35,9 +35,9 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.security.Principal;
 import com.sonicle.security.SonicleLogin;
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.AuthManager;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.AuthManager;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.Role;

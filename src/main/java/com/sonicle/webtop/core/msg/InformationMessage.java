@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.msg;
 
-import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**

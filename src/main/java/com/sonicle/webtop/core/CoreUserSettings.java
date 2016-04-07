@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 

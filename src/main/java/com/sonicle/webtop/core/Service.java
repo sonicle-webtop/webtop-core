@@ -43,6 +43,11 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.app.CoreEnvironment;
+import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -188,18 +193,10 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsSimple> items = new ArrayList<>();
+		List<JsSimple> items = null;
 		
 		try {
-			//TODO: handle themes dinamically
-			items.add(new JsSimple("aria", "Aria"));
-			items.add(new JsSimple("classic", "Classic"));
-			items.add(new JsSimple("crisp", "Crisp"));
-			items.add(new JsSimple("crisp-touch", "Crisp Touch"));
-			items.add(new JsSimple("gray", "Gray"));
-			items.add(new JsSimple("neptune", "Neptune"));
-			items.add(new JsSimple("neptune-touch", "Neptune Touch"));
-			
+			items = core.listThemes();
 			new JsonResult("themes", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
@@ -209,12 +206,10 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupLayouts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsSimple> items = new ArrayList<>();
+		List<JsSimple> items = null;
 		
 		try {
-			items.add(new JsSimple("default", WT.getPlatformName()));
-			items.add(new JsSimple("stacked", "Outlook 2007/2003"));
-			items.add(new JsSimple("queued", "Mozilla"));
+			items = core.listLayouts();
 			new JsonResult("layouts", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
@@ -224,11 +219,10 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupLAFs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<JsSimple> items = new ArrayList<>();
+		List<JsSimple> items = null;
 		
 		try {
-			//TODO: handle lafs dinamically
-			items.add(new JsSimple("default", WT.getPlatformName()));
+			items = core.listLAFs();
 			new JsonResult("lafs", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {

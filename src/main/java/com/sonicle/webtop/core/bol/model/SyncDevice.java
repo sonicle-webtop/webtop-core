@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.model;
 
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.ZPushManager.LastsyncRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
 import java.net.MalformedURLException;
 import javax.servlet.http.HttpServletRequest;

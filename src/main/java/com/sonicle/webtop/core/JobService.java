@@ -33,6 +33,9 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;

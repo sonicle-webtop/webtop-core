@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WebTopApp;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;

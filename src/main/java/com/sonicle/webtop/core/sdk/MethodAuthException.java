@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
+import com.sonicle.webtop.core.app.RunContext;
 
 /**
  *

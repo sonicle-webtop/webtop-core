@@ -35,8 +35,8 @@ package com.sonicle.webtop.core.util;
 
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.WT;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.WT;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;

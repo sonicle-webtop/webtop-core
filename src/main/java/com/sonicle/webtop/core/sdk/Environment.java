@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.app.WebTopSession;
 import java.util.List;
 import net.sf.uadetector.ReadableUserAgent;
 

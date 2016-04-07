@@ -39,6 +39,9 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
@@ -218,7 +221,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 		
 		try {
 			OTPManager otpm = core.getOTPManager();
-			otpm.deactivateOTP(getTargetProfileId());
+			otpm.deactivate(getTargetProfileId());
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 

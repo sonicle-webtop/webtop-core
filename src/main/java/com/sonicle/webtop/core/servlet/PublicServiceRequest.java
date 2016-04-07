@@ -35,10 +35,10 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
@@ -62,7 +62,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class PublicServiceRequest extends BaseRequestServlet {
+public class PublicServiceRequest extends BaseServiceRequest {
 	
 	private static final Logger logger = WT.getLogger(PublicServiceRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";

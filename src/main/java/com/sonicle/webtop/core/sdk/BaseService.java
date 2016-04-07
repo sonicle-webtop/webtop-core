@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.RunContext;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
@@ -41,9 +41,9 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.WT;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession.UploadedFile;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.servlet.ServletHelper;

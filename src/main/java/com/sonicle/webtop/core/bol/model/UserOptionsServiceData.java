@@ -46,9 +46,7 @@ public class UserOptionsServiceData {
 	public String viewClassName;
 	public String modelClassName;
 	
-	public UserOptionsServiceData() {
-		
-	}
+	public UserOptionsServiceData() {}
 	
 	public UserOptionsServiceData(String id, String xid, String name, String viewClassName, String modelClassName) {
 		this.id = id;

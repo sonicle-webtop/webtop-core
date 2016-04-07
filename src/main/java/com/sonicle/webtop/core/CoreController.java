@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.BaseController;
 import org.slf4j.Logger;
 

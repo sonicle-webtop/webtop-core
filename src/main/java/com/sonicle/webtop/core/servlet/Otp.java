@@ -35,11 +35,11 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
-import com.sonicle.webtop.core.CoreManifest;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.OTPManager;
-import com.sonicle.webtop.core.WebTopApp;
-import com.sonicle.webtop.core.WebTopSession;
+import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;

@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.CoreManifest;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.servlet.Login;
 import java.io.IOException;

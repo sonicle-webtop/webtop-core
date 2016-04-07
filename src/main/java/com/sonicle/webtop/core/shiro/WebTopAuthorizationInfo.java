@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopApp;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
