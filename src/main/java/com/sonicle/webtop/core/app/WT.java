@@ -33,13 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.ConnectionManager;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
@@ -66,6 +64,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
@@ -223,6 +222,14 @@ public class WT {
 	
 	public static String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
+	}
+	
+	public static CoreServiceSettings getCoreServiceSettings(String domainId)  {
+		return getWTA().getCoreServiceSettings(domainId);
+	}
+	
+	public static Session getMailSession(String domainId) {
+		return getWTA().getMailSession(domainId);
 	}
 	
 	public static String getDomainInternetName(String domainId) {
