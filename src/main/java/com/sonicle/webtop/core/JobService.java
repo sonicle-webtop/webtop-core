@@ -186,7 +186,7 @@ public class JobService extends BaseJobService {
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = ud.getEmail();
 				if(to == null) throw new WTException("Error building destination address");
-				WT.sendEmail(reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
+				WT.sendEmail(reminder.getProfileId(), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
 				
 			} catch(Exception ex) {
 				logger.error("Unable to send email", ex);
@@ -223,7 +223,7 @@ public class JobService extends BaseJobService {
 					
 					int daysTolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
 					if(!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, daysTolerance * 24)) {
-						sendEmail(pid.getDomainId(), ud);
+						sendEmail(pid, ud);
 					}
 				}
 			} catch(WTException ex) {
@@ -232,7 +232,7 @@ public class JobService extends BaseJobService {
 			logger.trace("DevicesSyncCheckJob finished [{}]", now);
 		}
 		
-		private void sendEmail(String domainId, UserProfile.Data userData) {
+		private void sendEmail(UserProfile.Id pid, UserProfile.Data userData) {
 			try {
 				String mySubject = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_EMAIL_SUBJECT);
 				String source = NotificationHelper.buildSource(userData.getLocale(), jobService.SERVICE_ID);
@@ -240,11 +240,11 @@ public class JobService extends BaseJobService {
 				String bodyMessage = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_TPL_EMAIL_BODYMESSAGE);
 				String html = NotificationHelper.buildNoReplayTpl(userData.getLocale(), source, null, bodyMessage);
 				
-				InternetAddress from = WT.buildDomainInternetAddress(domainId, "webtop-notification", null);
+				InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = userData.getEmail();
 				if(to == null) throw new WTException("Error building destination address");
-				WT.sendEmail(true, from, to, subject, html);
+				WT.sendEmail(pid, true, from, to, subject, html);
 				
 			} catch(IOException | TemplateException ex) {
 				logger.error("Unable to build email template", ex);

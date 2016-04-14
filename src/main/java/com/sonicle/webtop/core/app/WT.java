@@ -63,9 +63,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -327,17 +329,29 @@ public class WT {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
-	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress to, String subject, String body) {
-		sendEmail(rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
+	public static void sendEmail(UserProfile.Id pid, boolean rich, String from, String to, String subject, String body) throws MessagingException {
+		sendEmail(pid, rich, from, new String[]{to}, null, null, subject, body);
 	}
 	
-	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, String subject, String body, Part[] parts) {
-		//TODO: gestire invio email e implementari segnature diverse
-		WebTopApp.logger.debug("Invio email da {} a {}", from.toString(), to.toString());
-		WebTopApp.logger.debug("{}", subject);
-		//WebTopApp.logger.debug("{}", body);
+	public static void sendEmail(UserProfile.Id pid, boolean rich, InternetAddress from, InternetAddress to, String subject, String body) throws MessagingException {
+		sendEmail(pid, rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
 	}
 	
+	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+			String from, String[] to, String[] cc, String[] bcc, 
+				String subject, String body) throws MessagingException {
+		
+		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body);
+		
+	}
+	
+	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
+				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
+		
+		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body, parts);
+		
+	}
 	
 	public static String generateUUID() {
 		return getWTA().generateUUID();
