@@ -33,13 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.ConnectionManager;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
@@ -65,8 +63,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -225,6 +226,14 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static CoreServiceSettings getCoreServiceSettings(String domainId)  {
+		return getWTA().getCoreServiceSettings(domainId);
+	}
+	
+	public static Session getMailSession(String domainId) {
+		return getWTA().getMailSession(domainId);
+	}
+	
 	public static String getDomainInternetName(String domainId) {
 		try {
 			return getWTA().getUserManager().getDomainInternetName(domainId);
@@ -320,15 +329,26 @@ public class WT {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
-	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress to, String subject, String body) {
-		sendEmail(rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
+	public static void sendEmail(UserProfile.Id pid, boolean rich, String from, String to, String subject, String body) throws MessagingException {
+		sendEmail(pid, rich, from, new String[]{to}, null, null, subject, body);
 	}
 	
-	public static void sendEmail(boolean rich, InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, String subject, String body, Part[] parts) {
-		//TODO: gestire invio email e implementari segnature diverse
-		WebTopApp.logger.debug("Invio email da {} a {}", from.toString(), to.toString());
-		WebTopApp.logger.debug("{}", subject);
-		//WebTopApp.logger.debug("{}", body);
+	public static void sendEmail(UserProfile.Id pid, boolean rich, InternetAddress from, InternetAddress to, String subject, String body) throws MessagingException {
+		sendEmail(pid, rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
+	}
+	
+	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+			String from, String[] to, String[] cc, String[] bcc, 
+				String subject, String body) throws MessagingException {
+		
+		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body);
+	}
+	
+	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
+				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
+		
+		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
 	public static String buildTempFilename() {

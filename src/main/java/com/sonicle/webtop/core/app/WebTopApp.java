@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.PropertiesEx;
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.CoreServiceSettings;
@@ -68,9 +68,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.jar.JarFile;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Part;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
@@ -135,9 +146,11 @@ public class WebTopApp {
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
+	private final HashMap<String,CoreServiceSettings> cssCache = new HashMap();
 	private OTPManager otpm = null;
 	private ReportManager rptm = null;
 	private Scheduler scheduler = null;
+	private final HashMap<String,Session> sessionCache = new HashMap();
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
 	
 	/**
@@ -185,6 +198,7 @@ public class WebTopApp {
 		autm = AuthManager.initialize(this);
 		// Settings Manager
 		setm = SettingsManager.initialize(this);
+		
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
 		// OTP Manager
 		otpm = OTPManager.initialize(this);
@@ -209,6 +223,7 @@ public class WebTopApp {
 		svcm = ServiceManager.initialize(this, scheduler);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
+				
 	}
 	
 	public void destroy() {
@@ -557,7 +572,7 @@ public class WebTopApp {
 	}
 	
 	public String getSystemTempPath() {
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
+		CoreServiceSettings css = getCoreServiceSettings("*");
 		String path = css.getSystemTempPath();
 		if(StringUtils.isEmpty(path)) {
 			path = System.getProperty("java.io.tmpdir");
@@ -654,6 +669,145 @@ public class WebTopApp {
 	public String getCustomProperty(String name) {
 		return null;
 	}
+	
+	public CoreServiceSettings getCoreServiceSettings(String domainId) {
+		CoreServiceSettings css;
+		synchronized(cssCache) {
+			css=cssCache.get(domainId);
+			if (css==null) {
+				css=new CoreServiceSettings(CoreManifest.ID,domainId);
+				cssCache.put(domainId, css);
+			}
+		}
+		return css;
+	}
+	
+	public Session getMailSession(String domainId) {
+		Session session;
+		synchronized(sessionCache) {
+			CoreServiceSettings css=getCoreServiceSettings(domainId);
+			String smtphost=css.getSMTPHost();
+			int smtpport=css.getSMTPPort();
+			String key=smtphost+":"+smtpport;
+			session=sessionCache.get(key);
+			if (session==null) {
+				Properties props = System.getProperties();
+				//props.setProperty("mail.imap.parse.debug", "true");
+				props.setProperty("mail.smtp.host", smtphost);
+				props.setProperty("mail.smtp.port", ""+smtpport);
+				//props.setProperty("mail.socket.debug", "true");
+				props.setProperty("mail.imaps.ssl.trust", "*");
+				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
+				props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
+				//support idle events
+				props.setProperty("mail.imap.enableimapevents", "true");
+				
+				session=Session.getInstance(props, null);
+				sessionCache.put(key,session);
+				
+				logger.info("Created javax.mail.Session for "+key);
+			}
+		}
+		return session;
+	}
+	
+	public void sendEmail(UserProfile.Id pid, boolean rich, 
+			String from, String[] to, String[] cc, String[] bcc, 
+			String subject, String body) throws MessagingException {
+		
+		InternetAddress iafrom=MailUtils.buildInternetAddress(from);
+		InternetAddress iato[]=null;
+		InternetAddress iacc[]=null;
+		InternetAddress iabcc[]=null;
+		
+        if (to!=null) {
+			iato=new InternetAddress[to.length];
+			int i=0;
+            for(String addr: to) {
+                iato[i++]=MailUtils.buildInternetAddress(addr);
+            }
+		}
+		
+        if (cc!=null) {
+			iacc=new InternetAddress[cc.length];
+			int i=0;
+            for(String addr: cc) {
+                iacc[i++]=MailUtils.buildInternetAddress(addr);
+            }
+		}
+		
+        if (bcc!=null) {
+			iabcc=new InternetAddress[bcc.length];
+			int i=0;
+            for(String addr: bcc) {
+                iabcc[i++]=MailUtils.buildInternetAddress(addr);
+            }
+		}
+		
+		sendEmail(pid,rich,iafrom,iato,iacc,iabcc,subject,body,null);
+		
+	}
+	
+	public void sendEmail(UserProfile.Id pid, boolean rich, 
+			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
+				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
+		
+		Session session=getMailSession(pid.getDomainId());
+        MimeMessage msg=new MimeMessage(session);
+        try {
+          subject=MimeUtility.encodeText(subject);
+        } catch(Exception exc) {}
+        msg.setSubject(subject);
+        msg.addFrom(new InternetAddress[] { from });
+        
+        if (to!=null)
+            for(InternetAddress addr: to) {
+                msg.addRecipient(Message.RecipientType.TO, addr);
+            }
+        
+        if (cc!=null)
+            for(InternetAddress addr: cc) {
+                msg.addRecipient(Message.RecipientType.CC, addr);
+            }
+        
+        if (bcc!=null)
+            for(InternetAddress addr: bcc) {
+                msg.addRecipient(Message.RecipientType.BCC, addr);
+            }
+        
+        MimeMultipart mp=new MimeMultipart("mixed");
+		if (rich) {
+			MimeMultipart alternative=new MimeMultipart("alternative");
+			MimeBodyPart mbp2=new MimeBodyPart();
+			mbp2.setText(body, "UTF-8");
+			mbp2.setHeader("Content-type", "text/html");
+			MimeBodyPart mbp1=new MimeBodyPart();
+			mbp1.setText(MailUtils.htmlToText(MailUtils.htmlunescapesource(body)));
+			mbp1.setHeader("Content-type", "text/plain");
+			alternative.addBodyPart(mbp1);
+			alternative.addBodyPart(mbp2);
+			MimeBodyPart altbody=new MimeBodyPart();
+			altbody.setContent(alternative);
+			mp.addBodyPart(altbody);
+		} else {
+			MimeBodyPart mbp1=new MimeBodyPart();
+			mbp1.setText(body);
+			mbp1.setHeader("Content-type", "text/plain");
+			mp.addBodyPart(mbp1);
+		}
+		
+		if (parts!=null) {
+			for(MimeBodyPart part: parts)
+				mp.addBodyPart(part);
+		}
+		
+        msg.setContent(mp);
+        
+        msg.setSentDate(new java.util.Date());
+        
+        Transport.send(msg);
+	}
+	
 	
 	public static boolean getPropDisableScheduler() {
 		String prop = System.getProperties().getProperty("com.sonicle.webtop.disable.scheduler");

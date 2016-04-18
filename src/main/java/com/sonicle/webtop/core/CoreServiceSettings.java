@@ -123,6 +123,18 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system+domain]
+	 * Defines smtp server host
+	 */
+	public static final String SMTP_HOST = "smtp.host";
+	
+	/**
+	 * [string][system+domain]
+	 * Defines smtp server port
+	 */
+	public static final String SMTP_PORT = "smtp.port";
+	
+	/**
+	 * [string][system+domain]
 	 * Specifies if what's new visualization to users is active
 	 */
 	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
@@ -240,7 +252,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
-	
+    public String getSMTPHost() {
+        return getString(SMTP_HOST,"localhost");
+    }
+    
+    public int getSMTPPort() {
+        return getInteger(SMTP_PORT,25);
+    }    
 	
 	public Boolean getWhatsnewEnabled() {
 		return getBoolean(WHATSNEW_ENABLED, true);
