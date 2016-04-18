@@ -45,7 +45,7 @@ public class SessionListener implements HttpSessionListener {
 	@Override
 	public void sessionCreated(HttpSessionEvent hse) {
 		WebTopApp wta = WebTopApp.getInstance();
-		wta.getSessionManager().createSession(hse.getSession());
+		//wta.getSessionManager().createSession(hse.getSession());
 		
 		/*
 		HttpSession session = hse.getSession();
@@ -65,7 +65,7 @@ public class SessionListener implements HttpSessionListener {
 	@Override
 	public void sessionDestroyed(HttpSessionEvent hse) {
 		WebTopApp wta = WebTopApp.getInstance();
-		wta.getSessionManager().destroySession(hse.getSession());
+		//wta.getSessionManager().destroySession(hse.getSession());
 		
 		/*
 		HttpSession session = hse.getSession();

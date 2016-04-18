@@ -31,61 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.shiro;
 
-import java.io.IOException;
-import javax.servlet.http.HttpSession;
-import javax.websocket.EndpointConfig;
-import javax.websocket.OnClose;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
-import javax.websocket.server.ServerEndpoint;
-import org.slf4j.Logger;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-		
-@ServerEndpoint(value = "/websocket", configurator = WebSocketConfigurator.class)
-public class WebSocket {
+public interface WTSubject extends Subject {
 	
-	public final static Logger logger = WT.getLogger(WebSocket.class);
-	
-    private Session wsSession;
-	private WebTopSession wts;
-	
-	private HttpSession getHttpSession(EndpointConfig config) {
-		return (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
-	}
-	
-	@OnOpen
-    public void onOpen(Session session, EndpointConfig config) {
-        wsSession = session;
-		wts = WebTopSession.get(getHttpSession(config));
-		wts.setWebSocketEndpoint(this);
-		logger.trace("Connection established");
-    }
-	
-	@OnClose
-	public void onClose(Session session) {
-		logger.trace("Connection closed");
-	}
-	
-	@OnMessage
-	public void onMessage(String json) {
-		
-	}
-	
-	public void send(String rawMessage) throws IOException {
-		if ((wsSession != null) && wsSession.isOpen()) {
-			if(!rawMessage.isEmpty() && !rawMessage.equals("[]")) {
-				logger.trace("Sending WS data [{}]", rawMessage);
-				wsSession.getBasicRemote().sendText(rawMessage);
-			}
-		} else {
-			throw new IOException("WebSocket is not open!");
-		}
-	}
+	public UserProfile.Id getProfileId();
 }

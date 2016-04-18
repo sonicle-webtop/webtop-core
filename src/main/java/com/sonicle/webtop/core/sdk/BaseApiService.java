@@ -33,58 +33,10 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
-
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
+public abstract class BaseApiService {
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
-	}
-	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
-	}
-
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
-	}
-
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
-	}
 }

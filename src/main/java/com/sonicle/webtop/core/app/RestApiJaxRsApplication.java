@@ -33,21 +33,27 @@
  */
 package com.sonicle.webtop.core.app;
 
-import javax.servlet.http.HttpSession;
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
-import javax.websocket.server.ServerEndpointConfig;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
+import org.secnod.shiro.jersey.SubjectFactory;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-public class WebSocketConfigurator extends ServerEndpointConfig.Configurator {
+public class RestApiJaxRsApplication extends ResourceConfig {
 	
-    @Override
-    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
-    {
-        HttpSession httpSession = (HttpSession)request.getHttpSession();
-        config.getUserProperties().put(HttpSession.class.getName(),httpSession);
-    }
+	public RestApiJaxRsApplication() {
+		super();
+		register(new SubjectFactory());
+		register(new ShiroExceptionMapper());
+		
+		// Loads Api endpoints implementation dinamically
+		WebTopApp wta = WebTopApp.getInstance();
+		ServiceManager svcm = wta.getServiceManager();
+		for(String serviceId : svcm.getRegisteredServices()) {
+			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
+			if(sd.hasRestApi()) register(sd.getRestApiClass());
+		}
+	}
 }

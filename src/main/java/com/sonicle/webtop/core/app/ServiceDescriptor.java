@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.BaseApiService;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -59,6 +60,7 @@ class ServiceDescriptor {
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
 	private Class controllerClass = null;
+	private Class restApiClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
@@ -73,6 +75,11 @@ class ServiceDescriptor {
 		String className = manifest.getControllerClassName();
 		if(!StringUtils.isBlank(className)) {
 			controllerClass = loadClass(className, BaseController.class, "Controller");
+		}
+		// Loads api service class
+		className = manifest.getRestApiClassName();
+		if(!StringUtils.isBlank(className)) {
+			restApiClass = loadClass(className, BaseApiService.class, "RestApi");
 		}
 		// Loads (private) service class
 		className = manifest.getPrivateServiceClassName();
@@ -106,6 +113,14 @@ class ServiceDescriptor {
 	
 	public boolean doesControllerImplements(Class clazz) {
 		return implementsInterface(controllerClass, clazz);
+	}
+	
+	public boolean hasRestApi() {
+		return (restApiClass != null);
+	}
+
+	public Class getRestApiClass() {
+		return restApiClass;
 	}
 
 	public boolean hasPrivateService() {

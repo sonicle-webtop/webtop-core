@@ -31,60 +31,45 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import java.io.IOException;
+import java.util.HashSet;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
+public class RestApiFilter implements Filter {
+	private final HashSet<String> validIds = new HashSet<>();
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
-	}
-	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
+	@Override
+	public void init(FilterConfig fc) throws ServletException {
+		WebTopApp wta = WebTopApp.get(fc.getServletContext());
+		ServiceManager svcm = wta.getServiceManager();
+		for(String serviceId : svcm.getRegisteredServices()) {
+			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
+			if(sd.hasRestApi()) validIds.add(serviceId);
+		}
 	}
 
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		//TODO: implementare filtro di controllo se la porzione di url è valida
+		chain.doFilter(request, response);
+		//HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+		//RequestDispatcher requestDispatcher = httpServletRequest.getRequestDispatcher("/com.sonicle.webtop.core");
+		//requestDispatcher.forward(request, response);
 	}
 
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
+	@Override
+	public void destroy() {
+		validIds.clear();
 	}
 }

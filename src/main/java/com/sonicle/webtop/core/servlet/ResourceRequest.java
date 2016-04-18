@@ -222,7 +222,7 @@ public class ResourceRequest extends HttpServlet {
 	
 	private boolean isDebug(WebTopApp wta, String sessionId) {
 		if(StringUtils.isBlank(sessionId)) return false;
-		WebTopSession wts = wta.getSessionManager().getSession(sessionId);
+		WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
 		if(wts == null) return false;
 		CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId());
 		return cus.getSystemDebug();

@@ -48,6 +48,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.shiro.WTRealm;
+import com.sonicle.webtop.core.util.IdentifierUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -542,18 +543,12 @@ public class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
-	public String generateUUID() {
-		synchronized(lock2) {
-			return UUID.randomUUID().toString();
-		}
-	}
-	
 	public String buildTempFilename() {
 		return buildTempFilename(null, null);
 	}
 	
 	public String buildTempFilename(String prefix, String suffix) {
-		String uuid = generateUUID();
+		String uuid = IdentifierUtils.getUUID();
 		if(StringUtils.isBlank(suffix)) {
 			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
 		} else {
@@ -624,7 +619,7 @@ public class WebTopApp {
 	}
 	
 	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
-		List<WebTopSession> sessions = sesm.getSessions(profileId);
+		List<WebTopSession> sessions = sesm.getWebTopSessions(profileId);
 		if(!sessions.isEmpty()) {
 			for(WebTopSession session : sessions) {
 				session.nofity(messages);

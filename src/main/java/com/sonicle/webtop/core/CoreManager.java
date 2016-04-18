@@ -63,6 +63,7 @@ import com.sonicle.webtop.core.bol.model.SharePermsElements;
 import com.sonicle.webtop.core.bol.model.SharePermsFolder;
 import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
@@ -141,6 +142,11 @@ public class CoreManager extends BaseManager {
 	public boolean writeLog(String action, String data) {
 		RunContext rc = getRunContext();
 		return wta.getLogManager().write(rc.getProfileId(), rc.getServiceId(), action, getSoftwareName(), null, null, rc.getSessionId(), data);
+	}
+	
+	public List<SessionInfo> listSessions() throws WTException {
+		//TODO: impostare permessi
+		return wta.getSessionManager().listSessions();
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {

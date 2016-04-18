@@ -31,60 +31,61 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.shiro.test;
 
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import com.sonicle.commons.web.ServletUtils;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.codec.binary.Base32;
+import org.apache.shiro.session.mgt.SimpleSession;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
+public class WTSession extends SimpleSession {
+	public static final String ATTRIBUTE_CSRF = "csrfToken";
+	public static final String ATTRIBUTE_USER_AGENT = "userAgent";
+	
+	public WTSession() {
+		super();
+		setAttribute(ATTRIBUTE_CSRF, createCsrfToken());
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
+	public WTSession(String host) {
+		super(host);
+		setAttribute(ATTRIBUTE_CSRF, createCsrfToken());
 	}
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
-	}
-
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
-	}
-
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
+	public WTSession(String host, String userAgent) {
+		this(host);
+		setAttribute(ATTRIBUTE_USER_AGENT, userAgent);
 	}
 	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
+	public String getCsrfToken() {
+		return (String)getAttribute(ATTRIBUTE_CSRF);
 	}
 	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
+	public String getUserAgent() {
+		return (String)getAttribute(ATTRIBUTE_USER_AGENT);
 	}
 	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
+	private String createCsrfToken() {
+		String csrf = "";
+		try {
+			csrf = generateSecurityToken();
+		} catch(NoSuchAlgorithmException ex) { /* Do nothing... */ }
 		return csrf;
+	}
+	
+	private String generateSecurityToken() throws NoSuchAlgorithmException {
+		byte[] buffer = new byte[80/8];
+		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+		sr.nextBytes(buffer);
+		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+		byte[] encodedKey = new Base32().encode(secretKey);
+		return new String(encodedKey).toLowerCase();
 	}
 }

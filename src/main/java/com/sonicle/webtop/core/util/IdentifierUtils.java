@@ -31,46 +31,65 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.util;
 
-import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.UUID;
+import org.apache.commons.codec.binary.Base32;
+import org.jooq.tools.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class ContextListener implements ServletContextListener {
-
-	@Override
-	public void contextInitialized(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
-		
+public class IdentifierUtils {
+	private static final char[] VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
+	
+	public static synchronized String getUUID() {
+		return getUUID(false);
+	}
+	
+	/**
+	 * Generates a characters UUID.
+	 * With noHiphens at False, resulting string will be 36 characters length; 32 otherwise.
+	 * @param noHiphens
+	 * @return 
+	 */
+	public static synchronized String getUUID(boolean noHiphens) {
+		String uuid = UUID.randomUUID().toString();
+		return (noHiphens) ? StringUtils.replace(uuid, "-", "") : uuid;
+	}
+	
+	public static synchronized String getCRSFToken() {
 		try {
-			WebTopApp.initialize(context);
-			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
-		} catch(Exception ex) {
-			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
+			byte[] buffer = new byte[80/8];
+			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+			sr.nextBytes(buffer);
+			byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+			byte[] encodedKey = new Base32().encode(secretKey);
+			return new String(encodedKey).toLowerCase();
+		} catch(NoSuchAlgorithmException ex) {
+			return null;
 		}
 	}
-
-	@Override
-	public void contextDestroyed(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
-		
+	
+	public static synchronized String getRandomAlphaNumericString(int length) {
 		try {
-			WebTopApp wta = (WebTopApp)context.getAttribute(WebTopApp.ATTRIBUTE);
-			if(wta != null) wta.destroy();
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error destroying WTA context for {}", webappName, ex);
-		} finally {
-			context.removeAttribute(WebTopApp.ATTRIBUTE);
+			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+			Random rand = new Random();
+			char buff[] = new char[length];
+			for(int i = 0; i < length; ++i) {
+				// reseed rand once you've used up all available entropy bits
+				if ((i % 10) == 0) rand.setSeed(sr.nextLong()); // 64 bits of random!
+				buff[i] = VALID_CHARACTERS[rand.nextInt(VALID_CHARACTERS.length)];
+			}
+			return new String(buff);
+		} catch(NoSuchAlgorithmException ex) {
+			return null;
 		}
 	}
 }

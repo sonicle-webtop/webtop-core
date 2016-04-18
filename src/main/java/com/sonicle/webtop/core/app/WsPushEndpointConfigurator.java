@@ -33,21 +33,23 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.CoreApi;
-import java.util.HashSet;
-import java.util.Set;
-import javax.ws.rs.core.Application;
+import javax.websocket.HandshakeResponse;
+import javax.websocket.server.HandshakeRequest;
+import javax.websocket.server.ServerEndpointConfig;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
  * @author malbinola
  */
-public class RESTApplication extends Application {
-
-	@Override
-	public Set<Class<?>> getClasses() {
-		Set<Class<?>> classes = new HashSet<>();
-		classes.add(CoreApi.class);
-		return classes;
-	}
+public class WsPushEndpointConfigurator extends ServerEndpointConfig.Configurator {
+	
+    @Override
+    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
+    {
+		Subject subject = SecurityUtils.getSubject();
+		config.getUserProperties().put("sessionId", subject.getSession().getId().toString());
+		//config.getUserProperties().put("shiroSession", subject.getSession());
+    }
 }

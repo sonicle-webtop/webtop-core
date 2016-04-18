@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.security.auth.login.LoginException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -91,18 +92,29 @@ public class WTRealm extends AuthorizingRealm {
 		WebTopApp wta = WebTopApp.getInstance();
 		SonicleLogin login = new SonicleLogin(wta.getConnectionManager().getDataSource());
 		
-		UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
-		//logger.debug("isRememberMe={}",upt.isRememberMe());
-		char[] creds = (char[])token.getCredentials();
-		WebTopApp.logger.debug("validating user {}", (String)token.getPrincipal());
-		Principal p = login.validateUser((String)token.getPrincipal() + "@" + upt.getDomain(), creds);
-		/*
-		ArrayList<GroupPrincipal> groups = p.getGroups();
-		for(GroupPrincipal group: groups) {
-			WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
+		if(token instanceof UsernamePasswordDomainToken) {
+			UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
+			//logger.debug("isRememberMe={}",upt.isRememberMe());
+			char[] password = (char[])token.getCredentials();
+			WebTopApp.logger.debug("validating user {}", (String)token.getPrincipal());
+			Principal p = login.validateUser((String)token.getPrincipal() + "@" + upt.getDomain(), password);
+			/*
+			ArrayList<GroupPrincipal> groups = p.getGroups();
+			for(GroupPrincipal group: groups) {
+				WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
+			}
+			*/
+			return new WebTopAuthenticationInfo(p, password, this.getName());
+			
+		} else {
+			String username = (String)token.getPrincipal();
+			char[] password = (char[])token.getCredentials();
+			boolean canBeToken = (password.length == 36);
+			
+			WebTopApp.logger.debug("validating user {}", username);
+			Principal principal = login.validateUser(username, password);
+			return new WebTopAuthenticationInfo(principal, password, getName());
 		}
-		*/
-		return new WebTopAuthenticationInfo(p, creds, this.getName());
 	}
 	
 	protected WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {

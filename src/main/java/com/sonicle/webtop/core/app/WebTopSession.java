@@ -48,17 +48,18 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.util.SessionUtils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 
 /**
@@ -66,13 +67,11 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class WebTopSession {
-	public static final String ATTRIBUTE = "webtopsession";
-	public static final String PROPERTY_SECURITY_TOKEN = "CSRFTOKEN";
+	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	public static final String PROPERTY_OTP_VERIFIED = "OTPVERIFIED";
 	public static final String PROP_REQUEST_DUMP = "REQUESTDUMP";
-	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	
-	private final HttpSession httpSession;
+	private Session session;
 	private final WebTopApp wta;
 	private final PropertyBag props = new PropertyBag();
 	private String refererURI = null;
@@ -87,30 +86,12 @@ public class WebTopSession {
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
 	
-	WebTopSession(HttpSession session) {
-		httpSession = session;
-		wta = WebTopApp.get(session.getServletContext());
+	WebTopSession(WebTopApp wta, Session session) {
+		this.wta = wta;
+		this.session = session;
 	}
 	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param request The http request
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpServletRequest request) {
-		return get(request.getSession());
-	}
-	
-	/**
-	 * Gets WebTopSession object stored as session's attribute.
-	 * @param session The http session
-	 * @return WebTopSession object
-	 */
-	public static WebTopSession get(HttpSession session) {
-		return (WebTopSession)(session.getAttribute(ATTRIBUTE));
-	}
-	
-	void destroy() throws Exception {
+	void cleanup() throws Exception {
 		initStatus = -1;
 		ServiceManager svcm = wta.getServiceManager();
 		
@@ -135,9 +116,10 @@ public class WebTopSession {
 			}
 			uploads.clear();
 		}
-		
-		// Unregister this session
-		wta.getSessionManager().unregisterSession(this);
+	}
+	
+	Session getSession() {
+		return session;
 	}
 	
 	public boolean isReady() {
@@ -185,7 +167,7 @@ public class WebTopSession {
 	 * @return HttpSession unique identifier.
 	 */
 	public String getId() {
-		return httpSession.getId();
+		return session.getId().toString();
 	}
 	
 	/**
@@ -220,16 +202,6 @@ public class WebTopSession {
 		} else {
 			return userAgentLocale;
 		}
-	}
-	
-	/**
-	 * Returns the value of SECURITY_TOKEN property.
-	 * A token is generated for each session and this is used for securing 
-	 * each service requests, in order to not exposte CSRF vulnerability.
-	 * @return Property value
-	 */
-	public String getSecurityToken() {
-		return wta.getSessionManager().getSecurityToken(this);
 	}
 	
 	public void dumpRequest(HttpServletRequest request) {
@@ -268,14 +240,13 @@ public class WebTopSession {
 	
 	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
+		SessionManager sesm = wta.getSessionManager();
 		String sessionId = getId();
 		CoreManager core = new CoreManager(wta.createAdminRunContext(sessionId), wta);
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
-		
-		// Creates communication manager and registers this active session
-		comm = new SessionComManager(profile.getId());
-		wta.getSessionManager().registerSession(this);
+		sesm.registerWebTopSession(sessionId, this);
+		comm = new SessionComManager(sesm, sessionId, profile.getId());
 		
 		// Instantiates services
 		BaseService instance = null;
@@ -337,7 +308,7 @@ public class WebTopSession {
 	
 	public void fillStartup(JsWTS js, String layout) {
 		if(!isReady()) return;
-		js.securityToken = getSecurityToken();
+		js.securityToken = SessionUtils.getCSRFToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		// Evaluate services
@@ -471,10 +442,6 @@ public class WebTopSession {
 		if(!isReady()) return;
 		ServiceManager svcm = wta.getServiceManager();
 		svcm.resetWhatsnew(serviceId, profile);
-	}
-	
-	public void setWebSocketEndpoint(WebSocket wsm) {
-		comm.setWebSocketEndpoint(wsm);
 	}
 	
 	public void nofity(ServiceMessage message) {

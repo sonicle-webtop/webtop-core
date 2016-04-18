@@ -31,60 +31,43 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import java.io.IOException;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
+public class CSRFFilter implements Filter {
 
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
+	@Override
+	public void init(FilterConfig fc) throws ServletException {}
 
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
-	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
-	}
-	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		HttpServletRequest httpRequest = (HttpServletRequest) request;
+		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		
+		String csrf = ServletUtils.getStringParameter(httpRequest, "csrf", null);
+		if(StringUtils.equals(SessionUtils.getCSRFToken(), csrf)) {
+			chain.doFilter(request, response);
+		} else {
+			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
+		}
 	}
 
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
-	}
-
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
-	}
+	@Override
+	public void destroy() {}
 }

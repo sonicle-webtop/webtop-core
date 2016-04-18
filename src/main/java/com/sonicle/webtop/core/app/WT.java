@@ -331,11 +331,6 @@ public class WT {
 		//WebTopApp.logger.debug("{}", body);
 	}
 	
-	
-	public static String generateUUID() {
-		return getWTA().generateUUID();
-	}
-	
 	public static String buildTempFilename() {
 		return getWTA().buildTempFilename(null, null);
 	}

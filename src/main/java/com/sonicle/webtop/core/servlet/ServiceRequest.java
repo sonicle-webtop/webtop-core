@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.util.SessionUtils;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.servlet.ServletException;
@@ -61,19 +62,22 @@ public class ServiceRequest extends BaseServiceRequest {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = WebTopSession.get(request);
+		WebTopSession wts = SessionUtils.getWebTopSession();
 		
 		try {
 			logger.trace("Servlet: ServiceRequest [{}]", wts.getId());
-			String csrf = ServletUtils.getStringParameter(request, "csrf", null);
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
 			
-			if(!wta.getSessionManager().checkSecurityToken(wts, csrf)) {
+			// TODO: rimuovere le seguenti righe. il controllo csrf è stato affidato ad un filtro
+			/*
+			String csrf = ServletUtils.getStringParameter(request, "csrf", null);
+			if(!StringUtils.equals(SessionUtils.getCSRFToken(), csrf)) {
 				throw new Exception("Unable to authenticate current request. Provided security token is not valid.");
 			}
+			*/
 			
 			if(!options) {
 				// Retrieves instantiated service

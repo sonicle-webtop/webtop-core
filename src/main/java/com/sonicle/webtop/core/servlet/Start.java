@@ -35,16 +35,14 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.PropertyBag;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
+import com.sonicle.webtop.core.util.SessionUtils;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,8 +52,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.shiro.SecurityUtils;
 
 /**
@@ -66,8 +62,8 @@ public class Start extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = WebTopSession.get(request);
 		SettingsManager setm = wta.getSettingsManager();
+		WebTopSession wts = SessionUtils.getWebTopSession();
 		
 		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
 		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");

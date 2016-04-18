@@ -31,60 +31,44 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import org.apache.shiro.mgt.DefaultSubjectFactory;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.SubjectContext;
+import org.apache.shiro.web.subject.WebSubjectContext;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
+public class WTSubjectFactory extends DefaultSubjectFactory {
+	
+	public WTSubjectFactory() {
+		super();
+	}
+	
+	@Override
+	public Subject createSubject(SubjectContext context) {
+		if (!(context instanceof WebSubjectContext)) {
+			return super.createSubject(context);
+		}
+		WebSubjectContext wsc = (WebSubjectContext) context;
+		SecurityManager securityManager = wsc.resolveSecurityManager();
+		Session session = wsc.resolveSession();
+		boolean sessionEnabled = wsc.isSessionCreationEnabled();
+		PrincipalCollection principals = wsc.resolvePrincipals();
+		boolean authenticated = wsc.resolveAuthenticated();
+		String host = wsc.resolveHost();
+		ServletRequest request = wsc.resolveServletRequest();
+		ServletResponse response = wsc.resolveServletResponse();
 
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
-	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
-	}
-	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
-	}
-
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
-	}
-
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
+		return new WTWebDelegatingSubject(null, principals, authenticated, host, session, sessionEnabled,
+				request, response, securityManager);
 	}
 }

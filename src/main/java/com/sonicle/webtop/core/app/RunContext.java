@@ -44,7 +44,7 @@ public class RunContext {
 	private final UserProfile.Id profile;
 	private final String sessionId;
 	
-	RunContext(String serviceId, UserProfile.Id profile, String sessionId) {
+	public RunContext(String serviceId, UserProfile.Id profile, String sessionId) {
 		this.serviceId = serviceId;
 		this.profile = profile;
 		this.sessionId = sessionId;

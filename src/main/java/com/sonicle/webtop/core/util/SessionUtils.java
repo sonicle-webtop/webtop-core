@@ -31,60 +31,41 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.util;
 
-import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.util.List;
-import net.sf.uadetector.ReadableUserAgent;
+import com.sonicle.webtop.core.shiro.WTSubject;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = SessionUtils.getCSRFToken();
-		cus = new CoreUserSettings(wts.getUserProfile().getId());
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
+public class SessionUtils {
+	
+	public static WTSubject getSubject() {
+		return (WTSubject)SecurityUtils.getSubject();
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getUserProfile().getId();
+	public static Session getSession() {
+		Subject subject = getSubject();
+		return (subject == null) ? null : (Session)subject.getSession();
 	}
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
-	}
-
-	public ReadableUserAgent getUserAgent() {
-		return wts.getUserAgent();
-	}
-
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
+	public static String getCSRFToken() {
+		Session session = getSession();
+		return (session == null) ? null : SessionManager.getCSRFToken(session);
 	}
 	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
+	public static WebTopSession getWebTopSession() {
+		Session session = getSession();
+		return (session == null) ? null : SessionManager.getWebTopSession(session);
 	}
 	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
+	public static void logout() {
+		getSubject().logout();
 	}
 }

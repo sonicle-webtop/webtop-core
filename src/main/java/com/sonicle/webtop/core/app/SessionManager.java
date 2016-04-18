@@ -33,19 +33,23 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import com.sonicle.webtop.core.util.IdentifierUtils;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import javax.servlet.http.HttpSession;
-import org.apache.commons.codec.binary.Base32;
-import org.jooq.tools.StringUtils;
+import java.util.Map;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.session.SessionException;
+import org.apache.shiro.session.mgt.DefaultSessionKey;
+import org.apache.shiro.session.mgt.SessionKey;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
 /**
@@ -70,10 +74,12 @@ public class SessionManager {
 		return sesm;
 	}
 	
-	public static final String ATTRIBUTE = "webtopsession";
+	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
+	public static final String ATTRIBUTE_CSRF_TOKEN = "csrf";
 	private WebTopApp wta = null;
-	private final HashMap<String, WebTopSession> sessions = new HashMap<>();
-	private final HashMap<String, ProfileSids> profileSidsCache = new HashMap<>();
+	private final HashMap<String, WebTopSession> onlineSessions = new HashMap<>();
+	private final HashMap<String, Integer> wsPushSessions = new HashMap<>();
+	private final HashMap<UserProfile.Id, ProfileSids> profileSidsCache = new HashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -90,137 +96,191 @@ public class SessionManager {
 	protected void cleanup() {
 		// Internal structures should be empty during this method call.
 		// Sessions listeners should have called session destroy!
-		if(!sessions.isEmpty() || !profileSidsCache.isEmpty()) logger.warn("Internal structures should be empty... Why is this not true?");
-		sessions.clear();
+		if(!onlineSessions.isEmpty() || !profileSidsCache.isEmpty()) logger.warn("Internal structures should be empty... Why is this not true?");
+		onlineSessions.clear();
+		wsPushSessions.clear();
 		profileSidsCache.clear();
 		wta = null;
 		logger.info("SessionManager destroyed");
 	}
 	
-	public WebTopSession createSession(HttpSession httpSession) {
-		String sid = ServletHelper.getSessionID(httpSession);
-		
+	public static WebTopSession getWebTopSession(Session session) {
+		return (WebTopSession)session.getAttribute(ATTRIBUTE_WEBTOP_SESSION);
+	}
+	
+	public static String getCSRFToken(Session session) {
+		return (String)session.getAttribute(ATTRIBUTE_CSRF_TOKEN);
+	}
+	
+	void shiroSessionStarted(Session session) {
 		try {
-			WebTopSession wts = new WebTopSession(httpSession);
-			// Generates and sets a security token for securing server 
-			// requests and protecting against CSRF.
-			wts.setProperty(WebTopSession.PROPERTY_SECURITY_TOKEN, generateSecurityToken());
-			httpSession.setAttribute(ATTRIBUTE, wts);
-			logger.info("WTS created [{}]", sid);
-			return wts;
-			
-		} catch(Exception ex) {
-			logger.error("Error creating WTS [{}]", sid, ex);
-			return null;
+			startShiroSession(session);
+		} catch (Exception ex) {
+			logger.error("Error starting session [{}]", session.getId().toString(), ex);
 		}
 	}
 	
-	public void destroySession(HttpSession httpSession) {
-		String sid = ServletHelper.getSessionID(httpSession);
-		
+	void shiroSessionStopped(Session session) {
 		try {
-			WebTopSession wts = (WebTopSession)(httpSession.getAttribute(ATTRIBUTE));
-			if(wts != null) {
-				httpSession.removeAttribute(ATTRIBUTE);
-				wts.destroy();
-				logger.info("WTS destroyed [{}]", sid);
-			}
-		} catch(Exception ex) {
-			logger.error("Error destroying WTS [{}]", sid, ex);
+			stopShiroSession(session);
+		} catch (Exception ex) {
+			logger.error("Error stopping session [{}]", session.getId().toString(), ex);
 		}
 	}
 	
-	void registerSession(WebTopSession session) throws Exception {
-		String sid = session.getId();
-		
-		synchronized(sessions) {
-			if(sessions.containsKey(sid)) {
-				logger.error("Session [{}] is already registered", sid);
-				throw new WTException("Session [{0}] is already registered", sid);
-			} else {
-				if(session.getUserProfile() == null) {
-					logger.error("Session [{}] is not bound to a user", sid);
-					throw new WTException("Session [{0}] is not bound to a user", sid);
-				} else {
-					String pid = session.getUserProfile().getStringId();
-					sessions.put(sid, session);
-					if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
-					profileSidsCache.get(pid).add(sid);
-					logger.debug("Session registered [{}, {}]", pid, sid);
-				}
-			}
+	void shiroSessionExpired(Session session) {
+		try {
+			stopShiroSession(session);
+		} catch (Exception ex) {
+			logger.error("Error expiring session [{}]", session.getId().toString(), ex);
 		}
 	}
 	
-	void unregisterSession(WebTopSession session) throws Exception {
-		String sid = session.getId();
+	void wsSessionOpened(String sessionId, javax.websocket.Session ws) throws WTException {
+		registerWsPushSession(sessionId, ws);
+	}
+	
+	void wsSessionClosed(String sessionId) throws WTException {
+		try {
+			unregisterWsPushSession(sessionId);
+		} catch (Exception ex) {
+			logger.error("Error unregistering push websocket session [{}]", sessionId, ex);
+		}
+	}
+	
+	private void startShiroSession(Session session) throws Exception {
+		WebTopSession wts = new WebTopSession(wta, session);
+		session.setAttribute(ATTRIBUTE_WEBTOP_SESSION, wts);
+		session.setAttribute(ATTRIBUTE_CSRF_TOKEN, IdentifierUtils.getCRSFToken());
+		logger.info("WTS created [{}]", session.getId());
+	}
+	
+	private void stopShiroSession(Session session) throws Exception {
+		WebTopSession wts = SessionManager.getWebTopSession(session);
+		if(wts == null) throw new Exception("WTS is null");
 		
-		synchronized(sessions) {
-			if(sessions.containsKey(sid)) {
-				if(session.getUserProfile() == null) {
-					logger.error("Session [{}] is not bound to a user", sid);
-					throw new WTException("Session [{0}] is not bound to a user", sid);
-				} else {
-					String pid = session.getUserProfile().getStringId();
-					sessions.remove(sid);
-					if(profileSidsCache.get(pid) != null) {
-						profileSidsCache.get(pid).remove(sid);
-						if(profileSidsCache.get(pid).isEmpty()) profileSidsCache.remove(pid);
+		UserProfile.Id pid = wts.getUserProfile().getId(); // Extract userProfile info before cleaning session!
+		wts.cleanup();
+		String sid = session.getId().toString();
+		unregisterWebTopSession(sid, pid);
+		//session.removeAttribute(ATTRIBUTE_WEBTOP_SESSION);
+		//session.removeAttribute(ATTRIBUTE_CSRF_TOKEN);
+		logger.info("WTS destroyed [{}]", sid);
+	}
+	
+	void registerWebTopSession(String sid, WebTopSession wts) throws WTException {
+		synchronized(onlineSessions) {
+			if(onlineSessions.containsKey(sid)) throw new WTException("Session [{0}] is already registered", sid);
+			UserProfile.Id pid = wts.getUserProfile().getId();
+			if(pid == null) throw new WTException("Session [{0}] is not bound to a user", sid);
+			onlineSessions.put(sid, wts);
+			if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
+			profileSidsCache.get(pid).add(sid);
+			logger.debug("Session registered [{}, {}]", sid, pid);
+		}
+	}
+	
+	private void unregisterWebTopSession(String sessionId, UserProfile.Id profileId) throws WTException {
+		synchronized(onlineSessions) {
+			if(onlineSessions.containsKey(sessionId)) {
+				if(profileId != null) {
+					if(profileSidsCache.get(profileId) != null) {
+						profileSidsCache.get(profileId).remove(sessionId);
+						if(profileSidsCache.get(profileId).isEmpty()) profileSidsCache.remove(profileId);
 					}
-					logger.debug("Session unregistered [{}, {}]", pid, sid);
+					onlineSessions.remove(sessionId);
+				} else {
+					logger.warn("Session [{}] is not bound to a user", sessionId);
 				}
 			}
 		}
 	}
 	
-	public WebTopSession getSession(HttpSession httpSession) {
-		return getSession(httpSession.getId());
-	}
-	
-	public WebTopSession getSession(String sessionId) {
-		synchronized(sessions) {
-			return sessions.get(sessionId);
+	private void registerWsPushSession(String sessionId, javax.websocket.Session ws)  throws WTException {
+		synchronized(onlineSessions) {
+			if(!onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] not found", sessionId);
+			
+			int count = 0;
+			if(wsPushSessions.containsKey(sessionId)) count = wsPushSessions.get(sessionId);
+			wsPushSessions.put(sessionId, count+1);
+			if(count == 0) {
+				WebTopSession wts = onlineSessions.get(sessionId);
+				pushData(sessionId, wts.getEnqueuedMessages());
+			}
+			logger.debug("Push channel associated [{}, count:{}]", sessionId, count+1);
 		}
 	}
 	
-	public List<WebTopSession> getSessions(UserProfile.Id profileId) {
+	private int countWsPushSessions(String sessionId) {
+		synchronized(onlineSessions) {
+			return wsPushSessions.containsKey(sessionId) ? wsPushSessions.get(sessionId) : 0;
+		}
+	}
+	
+	private void unregisterWsPushSession(String sessionId) throws WTException {
+		synchronized(onlineSessions) {
+			if(wsPushSessions.containsKey(sessionId)) {
+				int count = wsPushSessions.get(sessionId);
+				if(count == 1) {
+					wsPushSessions.remove(sessionId);
+				} else {
+					wsPushSessions.put(sessionId, count-1);
+				}
+				logger.debug("Push channel disconnected [{}, count:{}]", sessionId, count-1);
+			}
+		}
+	}
+	
+	
+		
+	
+	public boolean pushData(String sessionId, Object data) {
+		try {
+			if(WsPushEndpoint.hasSessions(sessionId)) {
+				WsPushEndpoint.send(sessionId, JsonResult.gson.toJson(data));
+				return true;
+			}
+		} catch(IOException ex) {
+			logger.error("Unable to send through push channel", ex);
+		}
+		return false;
+	}
+	
+	public WebTopSession getWebTopSession(String sessionId) {
+		synchronized(onlineSessions) {
+			return onlineSessions.get(sessionId);
+		}
+	}
+	
+	public List<WebTopSession> getWebTopSessions(UserProfile.Id profileId) {
 		List<WebTopSession> list = new ArrayList<>();
-		synchronized(sessions) {
-			String pid = profileId.toString();
-			if(profileSidsCache.get(pid) != null) {
-				for(String sid : profileSidsCache.get(pid)) {
-					list.add(sessions.get(sid));
+		synchronized(onlineSessions) {
+			if(profileSidsCache.get(profileId) != null) {
+				for(String sid : profileSidsCache.get(profileId)) {
+					list.add(onlineSessions.get(sid));
 				}
 			}
 		}
 		return list;
 	}
 	
-	public String getSecurityToken(HttpSession httpSession) {
-		WebTopSession wts = getSession(httpSession);
-		if(wts == null) return null;
-		return getSecurityToken(wts);
+	public List<SessionInfo> listSessions() {
+		ArrayList<SessionInfo> items = new ArrayList<>();
+		synchronized(onlineSessions) {
+			DateTime now = DateTime.now();
+			for(Map.Entry<String, WebTopSession> entry : onlineSessions.entrySet()) {
+				WebTopSession wts = entry.getValue();
+				int count = countWsPushSessions(wts.getId());
+				items.add(new SessionInfo(now, wts.getSession(), wts.getUserProfile().getId(), count));
+			}
+		}
+		return items;
 	}
 	
-	public String getSecurityToken(WebTopSession wts) {
-		return (String)wts.getProperty(WebTopSession.PROPERTY_SECURITY_TOKEN);
-	}
-	
-	public boolean checkSecurityToken(HttpSession httpSession, String token) {
-		return StringUtils.equals(getSecurityToken(httpSession), token);
-	}
-	
-	public boolean checkSecurityToken(WebTopSession wts, String token) {
-		return StringUtils.equals(getSecurityToken(wts), token);
-	}
-	
-	private String generateSecurityToken() throws NoSuchAlgorithmException {
-		byte[] buffer = new byte[80/8];
-		SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-		sr.nextBytes(buffer);
-		byte[] secretKey = Arrays.copyOf(buffer, 80/8);
-		byte[] encodedKey = new Base32().encode(secretKey);
-		return new String(encodedKey).toLowerCase();
+	public void invalidateSession(String sessionId) throws SessionException {
+		DefaultSessionKey sk = new DefaultSessionKey(sessionId);
+		Session session = SecurityUtils.getSecurityManager().getSession(sk);
+		if(session != null) session.stop();
 	}
 	
 	private static class ProfileSids extends HashSet<String> {
@@ -228,53 +288,4 @@ public class SessionManager {
 			super();
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	/*
-	protected void registerSession(String httpSessionId, WebTopSession session) {
-		synchronized(sessions) {
-			if(sessions.containsKey(httpSessionId)) {
-				logger.warn("Session [{}] is already registered", httpSessionId);
-			} else {
-				sessions.put(httpSessionId, session);
-			}
-		}
-	}
-	
-	protected void unregisterSession(WebTopSession session) {
-		String sid = session.getId();
-		synchronized(sessions) {
-			if(sessions.containsKey(sid)) {
-				WebTopSession removed = sessions.remove(sid);
-				if(removed == null) logger.warn("Session not registered [{}]", sid);
-				
-				// Removes cached pid->sid targetting session just unregistered
-				for(Map.Entry<String, String> entry : pidToSidCache.entrySet()) {
-					if(StringUtils.equals(sid, entry.getValue())) {
-						pidToSidCache.remove(entry.getKey());
-					}
-				}
-			}
-		}
-	}
-	
-	public WebTopSession getSession(HttpSession httpSession) {
-		synchronized(sessions) {
-			return sessions.get(httpSession.getId());
-		}
-	}
-	
-	public WebTopSession getSession(UserProfile.Id profileId) {
-		synchronized(sessions) {
-			if() {
-				
-			}
-		}
-	}
-	*/
 }

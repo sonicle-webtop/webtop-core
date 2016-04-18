@@ -53,15 +53,15 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class SessionComManager {
-	
 	private final static Logger logger = WT.getLogger(SessionComManager.class);
+	private SessionManager sesm = null;
+	private final String sessionId;
 	private final UserProfile.Id profileId;
-	private final Object wsmlock = new Object();
-	private WebSocket ws = null;
 	private final ArrayDeque<ServiceMessage> messageQueue = new ArrayDeque<>();
-	//private final ArrayDeque<String> messageQueue = new ArrayDeque<>();
 	
-	public SessionComManager(UserProfile.Id profileId) {
+	public SessionComManager(SessionManager sesm, String sessionId, UserProfile.Id profileId) {
+		this.sesm = sesm;
+		this.sessionId = sessionId;
 		this.profileId = profileId;
 		
 		Connection con = null;
@@ -101,32 +101,13 @@ public class SessionComManager {
 		}
 	}
 	
-	public void setWebSocketEndpoint(WebSocket ws) {
-		synchronized(wsmlock) {
-			this.ws = ws;
-			// Sends previously enqueued messages...
-			send(popEnqueuedMessages());
-		}
-	}
-	
-	private void send(Object data) {
-		try {
-			ws.send(JsonResult.gson.toJson(data));
-		} catch(IOException ex) {
-			logger.error("Unable to send using websocket", ex);
-		}
-	}
-	
 	public void nofity(ServiceMessage message) {
 		nofity(Arrays.asList(new ServiceMessage[]{message}));
 	}
 	
 	public void nofity(List<ServiceMessage> messages) {
-		synchronized(wsmlock) {
-			if (ws != null) {
-				send(messages);
-			}
-			else enqueueMessages(messages);
+		if(!sesm.pushData(sessionId, messages)) {
+			enqueueMessages(messages);
 		}
 	}
 	
@@ -166,9 +147,6 @@ public class SessionComManager {
 		}
 	}
 	*/
-	
-	
-	
 	
 	public List<ServiceMessage> popEnqueuedMessages() {
 		ArrayList<ServiceMessage> messages = new ArrayList();

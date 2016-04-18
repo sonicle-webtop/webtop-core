@@ -60,6 +60,7 @@ public class ServiceManifest {
 	protected String companyWebSite;
 	protected String supportEmail;
 	protected String controllerClassName;
+	protected String restApiClassName;
 	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
@@ -109,6 +110,10 @@ public class ServiceManifest {
 		
 		if(svcEl.containsKey("controllerClassName")) {
 			controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+		}
+		
+		if(svcEl.containsKey("restApiClassName")) {
+			restApiClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("restApiClassName"), "RestApi"));
 		}
 		
 		if(svcEl.containsKey("serviceClassName")) {
@@ -236,7 +241,16 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of server-side service implementation.
+	 * Gets the class name of server-side REST Api implementation.
+	 * (eg. com.sonicle.webtop.core.CoreRestApi)
+	 * @return The value.
+	 */
+	public String getRestApiClassName() {
+		return restApiClassName;
+	}
+	
+	/**
+	 * Gets the class name of server-side private (authenticated) service implementation.
 	 * (eg. com.sonicle.webtop.core.CoreService)
 	 * @return The value.
 	 */

@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -207,7 +208,7 @@ public abstract class BaseService extends BaseServiceBase {
 				while(fit.hasNext()) {
 					FileItemStream fis = fit.next();
 					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(WT.generateUUID(), fis.getName(), findMediaType(fis), true);
+						uploadedFile = new UploadedFile(IdentifierUtils.getUUID(), fis.getName(), findMediaType(fis), true);
 						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
 						env.wts.clearUploadedFile(uploadedFile);

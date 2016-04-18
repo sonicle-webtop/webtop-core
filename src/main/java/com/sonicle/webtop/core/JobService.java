@@ -90,22 +90,22 @@ public class JobService extends BaseJobService {
 	
 	@Override
 	public List<TaskDefinition> returnTasks() {
-		ArrayList<TaskDefinition> jobs = new ArrayList<>();
+		ArrayList<TaskDefinition> tasks = new ArrayList<>();
 		
-		// Reminder job
+		// Reminder task
 		Trigger remTrigger = TriggerBuilder.newTrigger()
 				.withSchedule(CronScheduleBuilder.cronSchedule("0 0/1 * * * ?")) // every minute of the hour
 				.build();
-		jobs.add(new TaskDefinition(ReminderJob.class, remTrigger));
+		tasks.add(new TaskDefinition(ReminderJob.class, remTrigger));
 		
-		// Device syncronization check job
+		// Device syncronization check task
 		LocalTime time = new CoreServiceSettings(CoreManifest.ID, "*").getDevicesSyncCheckTime();
 		Trigger syncTrigger = TriggerBuilder.newTrigger()
 				.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(time.getHourOfDay(), time.getMinuteOfHour())) // every day at...
 				.build();
-		jobs.add(new TaskDefinition(DevicesSyncCheckJob.class, syncTrigger));
+		tasks.add(new TaskDefinition(DevicesSyncCheckJob.class, syncTrigger));
 		
-		return jobs;
+		return tasks;
 	}
 	
 	public static class ReminderJob extends BaseJobServiceTask {

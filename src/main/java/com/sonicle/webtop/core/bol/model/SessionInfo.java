@@ -31,43 +31,37 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.bol.model;
 
-import java.io.IOException;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import org.apache.shiro.session.Session;
+import org.joda.time.DateTime;
+import org.joda.time.Seconds;
 
 /**
  *
  * @author malbinola
  */
-public class ApiFilter implements Filter {
-	private WebTopApp wta = null;
+public class SessionInfo {
+	public String sessionId;
+	public Integer timeout;
+	public DateTime creationTime;
+	public DateTime lastAccessTime;
+	public Integer usedTime;
+	public Integer ttl;
+	public String profileId;
+	public int pushSessionsCount;
 	
-	@Override
-	public void init(FilterConfig fc) throws ServletException {
-		wta = WebTopApp.get(fc.getServletContext());
-	}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		
-		
-		chain.doFilter(request, response);
-		//HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-		//RequestDispatcher requestDispatcher = httpServletRequest.getRequestDispatcher("/com.sonicle.webtop.core");
-		//requestDispatcher.forward(request, response);
-	}
-
-	@Override
-	public void destroy() {
-		wta = null;
-	}
+	public SessionInfo() {}
 	
+	public SessionInfo(DateTime now, Session session, UserProfile.Id profileId, int pushSessionsCount) {
+		this.sessionId = session.getId().toString();
+		this.timeout = (session.getTimeout() < 0) ? -1 : (int)session.getTimeout()/1000;
+		this.creationTime = new DateTime(session.getStartTimestamp());
+		this.lastAccessTime = new DateTime(session.getLastAccessTime());
+		this.usedTime = Math.abs(Seconds.secondsBetween(creationTime, now).getSeconds());
+		this.ttl = (timeout < 0) ? -1 : timeout - Math.abs(Seconds.secondsBetween(lastAccessTime, now).getSeconds());
+		this.profileId = profileId.toString();
+		this.pushSessionsCount = pushSessionsCount;
+	}
 }
