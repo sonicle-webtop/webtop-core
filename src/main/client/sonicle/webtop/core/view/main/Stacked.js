@@ -131,7 +131,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 			cmp = l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
 				handler: 'onLauncherButtonClick'
 			}));
-			cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
 			// Toolbar item real height depends on theme (touch or not) and on
 			// choosen scale. We need to measure it getting current height 
 			// during first item insertion.
@@ -142,7 +142,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				scale: 'small',
 				handler: 'onLauncherButtonClick'
 			}));
-			cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
 			// Toolbar item real height depends on theme (touch or not) and on
 			// choosen scale. We need to measure it getting current height 
 			// during first item insertion.
