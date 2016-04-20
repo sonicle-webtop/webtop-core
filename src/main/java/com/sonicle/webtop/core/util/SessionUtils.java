@@ -64,8 +64,4 @@ public class SessionUtils {
 		Session session = getSession();
 		return (session == null) ? null : SessionManager.getWebTopSession(session);
 	}
-	
-	public static void logout() {
-		getSubject().logout();
-	}
 }

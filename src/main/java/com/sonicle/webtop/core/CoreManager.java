@@ -146,6 +146,7 @@ public class CoreManager extends BaseManager {
 	
 	public List<SessionInfo> listSessions() throws WTException {
 		//TODO: impostare permessi
+		RunContext.ensureIsSysAdmin();
 		return wta.getSessionManager().listSessions();
 	}
 	

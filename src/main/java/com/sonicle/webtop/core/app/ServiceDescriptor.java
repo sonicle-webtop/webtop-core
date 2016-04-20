@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.BaseApiService;
+import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -79,7 +79,7 @@ class ServiceDescriptor {
 		// Loads api service class
 		className = manifest.getRestApiClassName();
 		if(!StringUtils.isBlank(className)) {
-			restApiClass = loadClass(className, BaseApiService.class, "RestApi");
+			restApiClass = loadClass(className, BaseRestApi.class, "RestApi");
 		}
 		// Loads (private) service class
 		className = manifest.getPrivateServiceClassName();
