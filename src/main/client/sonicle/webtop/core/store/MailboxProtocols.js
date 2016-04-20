@@ -31,22 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.Gender', {
-	alternateClassName: 'WT.store.Gender',
+Ext.define('Sonicle.webtop.core.store.MailboxProtocols', {
+	alternateClassName: 'WT.store.MailboxProtocols',
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		['male',''],
-		['female',''],
-		['other','']
-	],
+		['imap','IMAP'],
+		['imaps','IMAPS']
+	]
 	
-	constructor: function(cfg) {
-		var me = this;
-		Ext.each(me.config.data, function(row) {
-			row[1] = WT.res('store.gender.'+row[0]);
-		});
-		me.callParent([cfg]);
-	}
 });

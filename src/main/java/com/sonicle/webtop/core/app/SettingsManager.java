@@ -395,28 +395,33 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	@Override
 	public boolean setUserSetting(String domainId, String userId, String serviceId, String key, Object value) {
-		UserSettingDAO dao = UserSettingDAO.getInstance();
-		Connection con = null;
-		OUserSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = new OUserSetting();
-			item.setDomainId(domainId);
-			item.setUserId(userId);
-			item.setServiceId(serviceId);
-			item.setKey(key);
-			item.setValue(valueToString(value));
-			
-			int ret = dao.update(con, item);
-			if(ret == 0) ret = dao.insert(con, item);
-			return true;
+		if (value!=null) {
+			UserSettingDAO dao = UserSettingDAO.getInstance();
+			Connection con = null;
+			OUserSetting item = null;
 
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to set setting (user) [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
+			try {
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				item = new OUserSetting();
+				item.setDomainId(domainId);
+				item.setUserId(userId);
+				item.setServiceId(serviceId);
+				item.setKey(key);
+				item.setValue(valueToString(value));
+
+				int ret = dao.update(con, item);
+				if(ret == 0) ret = dao.insert(con, item);
+				return true;
+
+			} catch (Exception ex) {
+				WebTopApp.logger.error("Unable to set setting (user) [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
+				return false;
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		} else {
+			deleteUserSetting(domainId,userId,serviceId,key);
+			return true;
 		}
 	}
 	

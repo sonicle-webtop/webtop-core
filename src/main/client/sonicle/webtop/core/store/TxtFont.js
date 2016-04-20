@@ -31,22 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.Gender', {
-	alternateClassName: 'WT.store.Gender',
+Ext.define('Sonicle.webtop.core.store.TxtFont', {
+	alternateClassName: 'WT.store.TxtFont',
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		['male',''],
-		['female',''],
-		['other','']
-	],
-	
-	constructor: function(cfg) {
-		var me = this;
-		Ext.each(me.config.data, function(row) {
-			row[1] = WT.res('store.gender.'+row[0]);
-		});
-		me.callParent([cfg]);
-	}
+		['Arial', 'Arial'],
+		['Comic Sans MS', 'Comic Sans MS'],
+		['Courier New', 'Courier New'],
+		['Tahoma', 'Tahoma'],
+		['Times New Roman', 'Times New Roman'],
+		['Verdana', 'Verdana']
+	]
 });
