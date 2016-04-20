@@ -273,13 +273,15 @@ public class WebTopApp {
 		Thread engine = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					Thread.sleep(5000);
-					logger.debug("Scheduling JobServices tasks...");
-					svcm.scheduleAllJobServicesTasks();
-					if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-				} catch (InterruptedException | SchedulerException ex) {
-					logger.error("Error", ex);
+				if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
+					try {
+						Thread.sleep(5000);
+						logger.debug("Scheduling JobServices tasks...");
+						svcm.scheduleAllJobServicesTasks();
+						if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
+					} catch (InterruptedException | SchedulerException ex) {
+						logger.error("Error", ex);
+					}
 				}
 			}
 		});
