@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.app;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
 import org.secnod.shiro.jersey.SubjectFactory;
@@ -53,7 +55,9 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 		ServiceManager svcm = wta.getServiceManager();
 		for(String serviceId : svcm.getRegisteredServices()) {
 			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
-			if(sd.hasRestApi()) register(sd.getRestApiClass());
+			if(sd.hasRestApi()) {
+				register(svcm.instantiateRestApi(serviceId));
+			}
 		}
 	}
 }

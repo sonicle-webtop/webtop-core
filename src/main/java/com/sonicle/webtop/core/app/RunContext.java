@@ -33,7 +33,15 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.shiro.WTSubject;
+import com.sonicle.webtop.core.util.SessionUtils;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
@@ -44,7 +52,13 @@ public class RunContext {
 	private final UserProfile.Id profile;
 	private final String sessionId;
 	
-	public RunContext(String serviceId, UserProfile.Id profile, String sessionId) {
+	public RunContext(String serviceId) {
+		this.serviceId = serviceId;
+		profile = null;
+		sessionId = null;
+	}
+	
+	RunContext(String serviceId, UserProfile.Id profile, String sessionId) {
 		this.serviceId = serviceId;
 		this.profile = profile;
 		this.sessionId = sessionId;
@@ -60,5 +74,66 @@ public class RunContext {
 	
 	public String getSessionId() {
 		return sessionId;
+	}
+	
+	public static void ensureIsSysAdmin() {
+		if(!isSysAdmin()) throw new AuthException("SysAdmin is required");
+	}
+	
+	public static void ensureIsWebTopAdmin() {
+		if(!isWebTopAdmin()) throw new AuthException("WebTopAdmin is required");
+	}
+	
+	public static boolean isSysAdmin() {
+		WTSubject subject = SessionUtils.getSubject();
+		return subject.isPermitted(AuthManager.SYSADMIN_PSTRING);
+	}
+	
+	public static boolean isWebTopAdmin() {
+		WTSubject subject = SessionUtils.getSubject();
+		return subject.isPermitted(AuthManager.WTADMIN_PSTRING);
+	}
+	
+	public static boolean isPermitted(String authResource) {
+		return isPermitted(SessionUtils.getSubject(), authResource);
+	}
+	
+	public static boolean isPermitted(String authResource, String action) {
+		return isPermitted(SessionUtils.getSubject(), authResource, action);
+	}
+	
+	public static boolean isPermitted(String authResource, String action, String instance) {
+		return isPermitted(SessionUtils.getSubject(), authResource, action, instance);
+	}
+	
+	public static boolean isPermitted(UserProfile.Id profileId, String authResource) {
+		return isPermitted(buildSubject(profileId), authResource);
+	}
+	
+	public static boolean isPermitted(UserProfile.Id profileId, String authResource, String action) {
+		return isPermitted(buildSubject(profileId), authResource, action);
+	}
+	
+	public static boolean isPermitted(UserProfile.Id profileId, String authResource, String action, String instance) {
+		return isPermitted(buildSubject(profileId), authResource, action, instance);
+	}
+	
+	public static boolean isPermitted(Subject subject, String authResource) {
+		return isPermitted(subject, authResource, "ACCESS", "*");
+	}
+	
+	public static boolean isPermitted(Subject subject, String authResource, String action) {
+		return isPermitted(subject, authResource, action, "*");
+	}
+	
+	public static boolean isPermitted(Subject subject, String authResource, String action, String instance) {
+		if(subject.isPermitted(AuthManager.WTADMIN_PSTRING)) return true;
+		return subject.isPermitted(AuthResource.permissionString(authResource, action, instance));
+	}
+	
+	private static Subject buildSubject(UserProfile.Id pid) {
+		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
+		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		return new Subject.Builder().principals(principals).buildSubject();
 	}
 }

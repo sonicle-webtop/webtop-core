@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
@@ -496,6 +497,21 @@ public class ServiceManager {
 			
 		} catch(Exception ex) {
 			logger.error("Error instantiating Controller [{}]", descr.getManifest().getControllerClassName(), ex);
+			return null;
+		}
+	}
+	
+	public BaseRestApi instantiateRestApi(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		
+		// Creates rest api instance
+		try {
+			Class clazz = descr.getRestApiClass();
+			Constructor<BaseRestApi> constructor = clazz.getConstructor(RunContext.class);
+			return constructor.newInstance(new RunContext(serviceId));
+			
+		} catch(Exception ex) {
+			logger.error("Error instantiating RestApi [{}]", descr.getManifest().getRestApiClassName(), ex);
 			return null;
 		}
 	}

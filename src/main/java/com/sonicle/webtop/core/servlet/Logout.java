@@ -42,7 +42,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.SecurityUtils;
 
 /**
  *
@@ -60,7 +59,7 @@ public class Logout extends HttpServlet {
 			if(wts == null) throw new ServletException("WTS is null!");
 			WebTopApp.setSessionLoggerDC(wts);
 			wts.dumpRequest(request);
-			SessionUtils.logout();
+			SessionUtils.getSubject().logout();
 			ServletUtils.redirectRequest(request, response);
 			
 		} finally {

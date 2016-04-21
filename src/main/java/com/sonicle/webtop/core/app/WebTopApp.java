@@ -169,7 +169,7 @@ public class WebTopApp {
 	private void init() {
 		logger.info("wtdebug = {}", getPropWTDebug());
 		logger.info("extdebug = {}", getPropExtDebug());
-		logger.info("scheduler.disabled = {}", getPropDisableScheduler());
+		logger.info("scheduler.disabled = {}", getPropSchedulerDisabled());
 		
 		String webappName = getWebAppName();
 		logger.info("WTA initialization started [{}]", webappName);
@@ -209,7 +209,7 @@ public class WebTopApp {
 			//TODO: gestire le opzioni di configurazione dello scheduler
 			SchedulerFactory sf = new StdSchedulerFactory();
 			scheduler = sf.getScheduler();
-			if(WebTopApp.getPropDisableScheduler()) {
+			if(WebTopApp.getPropSchedulerDisabled()) {
 				logger.warn("Scheduler startup disabled");
 			} else {
 				scheduler.start();
@@ -273,13 +273,15 @@ public class WebTopApp {
 		Thread engine = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					Thread.sleep(5000);
-					logger.debug("Scheduling JobServices tasks...");
-					svcm.scheduleAllJobServicesTasks();
-					if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-				} catch (InterruptedException | SchedulerException ex) {
-					logger.error("Error", ex);
+				if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
+					try {
+						Thread.sleep(5000);
+						logger.debug("Scheduling JobServices tasks...");
+						svcm.scheduleAllJobServicesTasks();
+						if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
+					} catch (InterruptedException | SchedulerException ex) {
+						logger.error("Error", ex);
+					}
 				}
 			}
 		});
@@ -809,8 +811,8 @@ public class WebTopApp {
 	}
 	
 	
-	public static boolean getPropDisableScheduler() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.disable.scheduler");
+	public static boolean getPropSchedulerDisabled() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
 		return LangUtils.value(prop, false);
 		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 	}

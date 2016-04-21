@@ -709,6 +709,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
+	 * Returns the date+time format representing a short date+time.
+	 * @returns {String} ExtJs format string.
+	 */
+	getShortDateTimeFmt: function() {
+		return WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(); 
+	},
+	
+	/**
 	 * Returns if 24h time is in use.
 	 * Value is taken from core options 'use24HourTime'.
 	 * @returns {Boolean}

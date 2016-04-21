@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.util.SessionUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -85,8 +86,8 @@ public class AuthManager {
 		return autm;
 	}
 	
-	private static final String SYSADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
-	private static final String WTADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
+	public static final String SYSADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
+	public static final String WTADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	private WebTopApp wta = null;
 	
 	/**

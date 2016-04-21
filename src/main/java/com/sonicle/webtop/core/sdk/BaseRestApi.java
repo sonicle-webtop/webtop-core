@@ -33,10 +33,28 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WT;
+import net.sf.qualitycheck.Check;
+
 /**
  *
  * @author malbinola
  */
-public abstract class BaseApiService {
+public abstract class BaseRestApi {
+	public final String SERVICE_ID;
+	private final RunContext context;
 	
+	public BaseRestApi(RunContext context) {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+		this.context = Check.notNull(context);
+	}
+	
+	public RunContext getRunContext() {
+		return context;
+	}
+	
+	public ServiceManifest getManifest() {
+		return WT.getManifest(SERVICE_ID);
+	}
 }

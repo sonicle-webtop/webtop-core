@@ -33,10 +33,14 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.util.ArrayList;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -47,25 +51,39 @@ public class JsReminderInApp {
 	public String type;
 	public String instanceId;
 	public String title;
-	public DateTime date;
+	public String date;
 	public String timezone;
 	
 	public JsReminderInApp(ReminderInApp rem) {
+		//DateTimeFormatter ymdhmsFmt = DateTimeUtils.createYmdHmsFormatter(DateTimeZone.forID(rem.getTimezone()));
+		DateTimeZone tz = DateTimeZone.forID(rem.getTimezone());
 		serviceId = rem.getServiceId();
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		date = rem.getDate();
+		date = DateTimeUtils.printYmdHmsWithZone(rem.getDate(), tz);
+		//if(rem.getDate() != null) date = ymdhmsFmt.print(rem.getDate());
 		timezone = rem.getTimezone();
 	}
 	
 	public JsReminderInApp(OSnoozedReminder rem) {
+		//DateTimeFormatter ymdhmsFmt = DateTimeUtils.createYmdHmsFormatter(rem.getDateTimeZone());
+		DateTimeZone tz = DateTimeZone.forID(rem.getTimezone());
 		serviceId = rem.getServiceId();
 		type = rem.getType();
 		instanceId = rem.getInstanceId();
 		title = rem.getTitle();
-		date = rem.getDate().withZone(rem.getDateTimeZone());
+		date = DateTimeUtils.printYmdHmsWithZone(rem.getDate(), tz);
+		//if(rem.getDate() != null) date = ymdhmsFmt.print(rem.getDate());
 		timezone = rem.getTimezone();
+	}
+	
+	public static ReminderInApp createReminderInApp(UserProfile.Id profileId, JsReminderInApp js) {
+		ReminderInApp rem = new ReminderInApp(js.serviceId, profileId, js.type, js.instanceId);
+		rem.setTitle(js.title);
+		rem.setDate(DateTimeUtils.parseYmdHmsWithZone(js.date, DateTimeZone.forID(js.timezone)));
+		rem.setTimezone(js.timezone);
+		return rem;
 	}
 	
 	public static class List extends ArrayList<JsReminderInApp> {

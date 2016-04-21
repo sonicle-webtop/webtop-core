@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
-import com.sonicle.webtop.core.sdk.BaseApiService;
+import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.util.SessionUtils;
@@ -56,8 +56,12 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 @Path("com.sonicle.webtop.core")
-public class CoreRestApi extends BaseApiService {
+public class CoreRestApi extends BaseRestApi {
 	private static final Logger logger = WT.getLogger(CoreRestApi.class);
+
+	public CoreRestApi(RunContext context) {
+		super(context);
+	}
 	
 	@GET
 	@Path("/sessions")
@@ -79,7 +83,6 @@ public class CoreRestApi extends BaseApiService {
 	public Response themesList() {
 		try {
 			logger.debug("{}", SessionUtils.getSubject().toString());
-			
 			CoreManager core = WT.getCoreManager(getRunContext());
 			List<JsSimple> items = core.listThemes();
 			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
@@ -131,9 +134,12 @@ public class CoreRestApi extends BaseApiService {
 		}
 	}
 	
+	/*
 	private RunContext getRunContext() {
 		//return null;
 		//TODO: valutare come generare il runcontext
-		return new RunContext("com.sonicle.webtop.core", new UserProfile.Id("sonicleldap", "matteo.albinola"), null);
+		//return new RunContext("com.sonicle.webtop.core", new UserProfile.Id("sonicleldap", "matteo.albinola"), null);
+		return new RunContext("com.sonicle.webtop.core");
 	}
+	*/
 }
