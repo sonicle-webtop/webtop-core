@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.model.ReminderAlert', {
 		WTF.roField('type', 'string'),
 		WTF.roField('instanceId', 'string'),
 		WTF.roField('title', 'string'),
-		WTF.roField('date', 'date', WTF.isoDateFieldCfg()),
+		WTF.roField('date', 'date', WTF.dateFieldYmdHisCfg()),
 		WTF.roField('timezone', 'string')
 	]
 });

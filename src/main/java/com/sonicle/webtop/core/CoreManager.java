@@ -79,6 +79,7 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -1052,7 +1053,7 @@ public class CoreManager extends BaseManager {
 		return services.contains(serviceId);
 	}
 	
-	public OSnoozedReminder snoozeReminder(UserProfile.Id profileId, JsReminderInApp reminder, DateTime remindOn) throws WTException {
+	public OSnoozedReminder snoozeReminder(ReminderInApp reminder, DateTime remindOn) throws WTException {
 		SnoozedReminderDAO dao = SnoozedReminderDAO.getInstance();
 		Connection con = null;
 		
@@ -1060,15 +1061,15 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			
 			OSnoozedReminder item = new OSnoozedReminder();
-			item.setDomainId(profileId.getDomainId());
-			item.setUserId(profileId.getUserId());
-			item.setServiceId(reminder.serviceId);
-			item.setType(reminder.type);
-			item.setInstanceId(reminder.instanceId);
+			item.setDomainId(reminder.getProfileId().getDomain());
+			item.setUserId(reminder.getProfileId().getUserId());
+			item.setServiceId(reminder.getServiceId());
+			item.setType(reminder.getType());
+			item.setInstanceId(reminder.getInstanceId());
 			item.setRemindOn(remindOn);
-			item.setTitle(reminder.title);
-			item.setDate(reminder.date);
-			item.setTimezone(reminder.timezone);
+			item.setTitle(reminder.getTitle());
+			item.setDate(reminder.getDate());
+			item.setTimezone(reminder.getTimezone());
 			
 			item.setSnoozedReminderId(dao.getSequence(con).intValue());
 			dao.insert(con, item);

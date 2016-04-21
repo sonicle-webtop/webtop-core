@@ -378,11 +378,23 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	
 	/**
 	 * Creates an object config that properly configure field's formats for
+	 * reading and writing dates. Full date (Y-m-d H:i:s, like ISO) with no timezone.
+	 * @param {Object} [cfg] Previous cfg to merge
+	 * @returns {Object} An object config
+	 */
+	dateFieldYmdHisCfg: function(cfg) {
+		return Ext.apply(cfg || {}, {
+			dateFormat: 'Y-m-d H:i:s'
+		});
+	},
+	
+	/**
+	 * Creates an object config that properly configure field's formats for
 	 * reading and writing dates. ISO date pattern (Y-m-dTH:i:s.uO) will be used.
 	 * @param {Object} [cfg] Previous cfg to merge
 	 * @returns {Object} An object config
 	 */
-	isoDateFieldCfg: function(cfg) {
+	dateFieldISOCfg: function(cfg) {
 		return Ext.apply(cfg || {}, {
 			dateReadFormat: 'Y-m-dTH:i:s.uO',
 			dateWriteFormat: 'Y-m-d\\TH:i:s.uO'

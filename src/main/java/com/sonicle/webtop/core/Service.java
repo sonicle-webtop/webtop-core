@@ -71,6 +71,7 @@ import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -89,6 +90,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -672,21 +674,18 @@ public class Service extends BaseService {
 	public void processSnoozeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			String now = ServletUtils.getStringParameter(request, "now", true);
 			Integer snooze = ServletUtils.getIntParameter(request, "snooze", 5);
 			PayloadAsList<JsReminderInApp.List> pl = ServletUtils.getPayloadAsList(request, JsReminderInApp.List.class);
 			
-			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(getEnv().getProfile().getTimeZone());
-			DateTime remindOn = fmt.parseDateTime(now).plusMinutes(snooze);
-			
-			for(JsReminderInApp reminder : pl.data) {
-				core.snoozeReminder(getEnv().getProfileId(), reminder, remindOn);
+			DateTime remindOn = DateTimeUtils.now(false).plusMinutes(snooze);
+			for(JsReminderInApp js : pl.data) {
+				core.snoozeReminder(JsReminderInApp.createReminderInApp(getEnv().getProfileId(), js), remindOn);
 			}
 			new JsonResult().printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error int SnoozeReminder", ex);
-			new JsonResult(false, "Error int SnoozeReminder").printTo(out);
+			logger.error("Error in SnoozeReminder", ex);
+			new JsonResult(false, "Error in SnoozeReminder").printTo(out);
 		}
 	}
 	
