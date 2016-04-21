@@ -216,7 +216,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
-	public void processDeactivateOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+/*	public void processDeactivateOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		CoreManager core = WT.getCoreManager(getRunContext());
 		
 		try {
@@ -228,5 +228,5 @@ public class UserOptionsService extends BaseUserOptionsService {
 			logger.error("Error executing action DeactivateOTP", ex);
 			new JsonResult(false).printTo(out);
 		}
-	}
+	}*/
 }
