@@ -22,6 +22,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ux.data.ArrayStore',
 		
 		'Sonicle.webtop.core.WT',
+		'Sonicle.webtop.core.ThemeMetrics',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
@@ -125,7 +126,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({
-			totalServices: me.services.count()
+			servicesCount: me.services.count()-1 //TODO: calcolare il numero di servizi visibili
 		});
 		vpc = me.viewport.getController();
 		
