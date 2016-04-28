@@ -147,9 +147,9 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					  store: {
 						  model: "Sonicle.webtop.core.model.Simple",
 						  data: [
-							  { id: 'to', desc: WT.res('recipienttype.to') },
-							  { id: 'cc', desc: WT.res('recipienttype.cc') },
-							  { id: 'bcc', desc: WT.res('recipienttype.bcc') }
+							  { id: 'to', desc: WT.res('store.rcptType.to') },
+							  { id: 'cc', desc: WT.res('store.rcptType.cc') },
+							  { id: 'bcc', desc: WT.res('store.rcptType.bcc') }
 						  ]
 					  },
 					  value: 'to',
@@ -166,7 +166,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					editor: Ext.create({
 						xtype: 'wtsuggestcombo',
 						sid: 'com.sonicle.webtop.mail',
-						context: 'recipient'
+						suggestionContext: 'recipient'
 						//width: 400,
 					})
 				}
