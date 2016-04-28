@@ -34,10 +34,12 @@
 package com.sonicle.webtop.core.io.output;
 
 import com.sonicle.commons.LangUtils;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 /**
  *
@@ -92,6 +94,10 @@ public abstract class AbstractReport {
 	
 	public void setDataSource(JRDataSource dataSource) {
 		this.dataSource = dataSource;
+	}
+	
+	public void setDataSource(Collection<?> beanCollection) {
+		setDataSource(new JRBeanCollectionDataSource(beanCollection, false));
 	}
 	
 	protected void buildPath() {
