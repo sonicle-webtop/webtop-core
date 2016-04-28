@@ -70,11 +70,9 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.UUID;
 import java.util.jar.JarFile;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -92,6 +90,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
@@ -106,7 +105,6 @@ import org.slf4j.MDC;
  * @author malbinola
  */
 public class WebTopApp {
-	
 	public static final String ATTRIBUTE = "webtopapp";
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static final Object lock1 = new Object();
@@ -132,6 +130,7 @@ public class WebTopApp {
 		}
 	}
 	
+	private Subject adminSubject;
 	private final ServletContext servletContext;
 	private final String systemInfo;
 	private final Charset systemCharset;
@@ -273,13 +272,16 @@ public class WebTopApp {
 		Thread engine = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException ex) {}
+				
 				if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
 					try {
-						Thread.sleep(5000);
 						logger.debug("Scheduling JobServices tasks...");
 						svcm.scheduleAllJobServicesTasks();
 						if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-					} catch (InterruptedException | SchedulerException ex) {
+					} catch (SchedulerException ex) {
 						logger.error("Error", ex);
 					}
 				}
@@ -364,7 +366,7 @@ public class WebTopApp {
 	 * @param userAgentHeader HTTP Header string.
 	 * @return Object representation of the parsed string.
 	 */
-	public ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
+	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
 		synchronized(userAgentsCache) {
 			if(userAgentsCache.containsKey(userAgentHeader)) {
 				return userAgentsCache.get(userAgentHeader);
@@ -457,24 +459,24 @@ public class WebTopApp {
 		return sesm;
 	}
 	
-	public RunContext createAdminRunContext(String sessionId) {
-		return createAdminRunContext(CoreManifest.ID, sessionId);
+	private Subject getAdminSubject() {
+		synchronized(lock2) {
+			if(adminSubject == null) {
+				adminSubject = autm.buildSubject(new UserProfile.Id("*", "admin"));
+			}
+			return adminSubject;
+		}
 	}
 	
-	public RunContext createAdminRunContext(String serviceId, String sessionId) {
-		return new RunContext(serviceId, new UserProfile.Id("*", "admin"), sessionId);
+	public RunContext createAdminRunContext() {
+		return createAdminRunContext(new ServiceContext(CoreManifest.ID));
 	}
 	
-	/*
-	public String registerTask(String minutes, String hours, String daysOfMonth, String months, String daysOfWeek, BaseTask task) {
-		String[] tokens = new String[]{minutes, hours, daysOfMonth, months, daysOfWeek};
-		return scheduler.schedule(StringUtils.join(tokens, " "), task);
+	public RunContext createAdminRunContext(ServiceContext serviceContext) {
+		//UserProfile.Id adminProfile = new UserProfile.Id("*", "admin");
+		//Subject adminSubject = ContextUtils.buildSubject(adminProfile, true);
+		return new RunContext(serviceContext, getAdminSubject());
 	}
-	
-	public void unregisterTask(String taskId) {
-		scheduler.deschedule(taskId);
-	}
-	*/
 	
 	/**
 	 * Returns the localized string for Core service bound to the specified key.

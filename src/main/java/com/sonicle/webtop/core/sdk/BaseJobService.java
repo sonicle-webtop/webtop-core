@@ -43,16 +43,9 @@ import org.quartz.Trigger;
  *
  * @author malbinola
  */
-public abstract class BaseJobService extends BaseServiceBase {
+public abstract class BaseJobService extends AbstractBaseService {
 	private boolean configured = false;
 	private RunContext context;
-	
-	/**
-	 * Method where implementation can return a set of task 
-	 * with their own execution triggers.
-	 * @return 
-	 */
-	public abstract List<TaskDefinition> returnTasks();
 	
 	public final void configure(RunContext context) {
 		if(configured) return;
@@ -61,9 +54,16 @@ public abstract class BaseJobService extends BaseServiceBase {
 	}
 	
 	@Override
-	public RunContext getRunContext() {
+	public final RunContext getRunContext() {
 		return context;
 	}
+	
+	/**
+	 * Method where implementation can return a set of task 
+	 * with their own execution triggers.
+	 * @return 
+	 */
+	public abstract List<TaskDefinition> returnTasks();
 	
 	public static class TaskDefinition {
 		public Class clazz;

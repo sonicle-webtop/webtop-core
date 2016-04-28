@@ -38,10 +38,67 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 		'WT.ux.StackServiceButton'
 	],
 	
+	l1ButtonsLimit: 5,
 	measuredL1Height: null,
 	measuredL2Height: null,
+	addedCount: 0,
 	
 	createWestCmp: function() {
+		var me = this, items;
+		items = [{
+			region: 'center',
+			xtype: 'toolbar',
+			reference: 'launcher1',
+			vertical: true,
+			border: false,
+			layout: {
+				type: 'vbox',
+				align: 'stretch'
+			},
+			items: []
+		}];
+		if(me.getServicesCount() > me.l1ButtonsLimit) {
+			items.push({
+				region: 'south',
+				xtype: 'toolbar',
+				reference: 'launcher2',
+				hidden: true,
+				enableOverflow: true,
+				border: false,
+				items: []
+			});
+		}
+		
+		return {
+			xtype: 'panel',
+			referenceHolder: true,
+			split: true,
+			collapsible: true,
+			border: false,
+			width: 200,
+			minWidth: 100,
+			layout: 'border',
+			items: [{
+				xtype: 'container',
+				region: 'center',
+				reference: 'tool',
+				layout: 'card',
+				items: []
+			}, {
+				region: 'south',
+				xtype: 'container',
+				reference: 'launchers',
+				//height: 155,
+				height: 100,
+				layout: 'border',
+				items: items
+			}],
+			listeners: {
+				resize: 'onToolResize'
+			}
+		};
+		
+		/*
 		return {
 			xtype: 'panel',
 			referenceHolder: true,
@@ -87,6 +144,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				resize: 'onToolResize'
 			}
 		};
+		*/
 	},
 	
 	createCenterCmp: function() {
@@ -127,41 +185,43 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				l2 = west.lookupReference('launcher2'),
 				cmp;
 		
-		if(l1.items.getCount() < 3) {
+		me.addedCount++;
+		if(l1.items.getCount() <= me.l1ButtonsLimit) {
 			cmp = l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
 				handler: 'onLauncherButtonClick'
 			}));
 			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
-			// Toolbar item real height depends on theme (touch or not) and on
-			// choosen scale. We need to measure it getting current height 
-			// during first item insertion.
-			if(!me.measuredL1Height) me.measuredL1Height = cmp.getHeight();
-			
 		} else {
 			cmp = l2.add(Ext.create('WT.ux.ServiceButton', desc, {
 				scale: 'small',
 				handler: 'onLauncherButtonClick'
 			}));
-			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+		}
+		
+		// When last service is added...
+		if(me.addedCount === me.getServicesCount()) {
 			// Toolbar item real height depends on theme (touch or not) and on
 			// choosen scale. We need to measure it getting current height 
 			// during first item insertion.
-			if(!me.measuredL2Height) me.measuredL2Height = cmp.getHeight();
+			l.setHeight(me.calculateHeight(l1, l2));
+			l.updateLayout();
 		}
-		l.setHeight(me.calculateHeight(l1, l2));
-		l.updateLayout();
 	},
 	
 	calculateHeight: function(l1, l2) {
-		var me = this,
-				height1 = me.measuredL1Height || 0,
-				height2 = me.measuredL2Height || 0,
-				l1Rows = l1.items.getCount();
+		var theme = WT.getTheme(),
+				tbMarginTop = WT.ThemeMetrics.get(theme, 'toolbar', 'marginTop') || 6,
+				tbMarginBottom = WT.ThemeMetrics.get(theme, 'toolbar', 'marginBottom') || 6,
+				tbItemsSpacing = WT.ThemeMetrics.get(theme, 'toolbar', 'itemsSpacing') || 6,
+				l1CmpH = l1.getComponent(0).getHeight() || 0,
+				l1Items = l1.items.getCount(),
+				l2CmpH = l2 ? l2.getComponent(0).getHeight() : 0;
+		
+		return (tbMarginTop + tbMarginBottom) // l1 toolbar top&bottom margins
+			+ (l1CmpH * l1Items) // l1 toolbar height
+			+ ((l1Items-1) * tbItemsSpacing) // l1 toolbar items spacing
+			+ (l2 ? (tbMarginTop + tbMarginBottom) : 0) // l2 toolbar top&bottom margins
+			+ (l2 ? l2CmpH : 0); // l2 toolbar height
 		// 24 -> 32 -> 38
-		return (6 + 6) // l1 toolbar top&bottom margins
-				+ (height1 * l1Rows) // l1 toolbar height
-				+ (6 * (l1Rows -1)) // l1 toolbar items spacing
-				+ (6 + 6) // l2 toolbar top&bottom margins
-				+ ((l2.items.getCount() > 0) ? height2 : 0); // l2 toolbar height
 	}
 });

@@ -31,43 +31,51 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
-
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.util.SessionUtils;
-import java.io.IOException;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
-
-/**
- *
- * @author malbinola
- */
-public class CSRFFilter implements Filter {
-
-	@Override
-	public void init(FilterConfig fc) throws ServletException {}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		HttpServletResponse httpResponse = (HttpServletResponse) response;
-		
-		String csrf = ServletUtils.getStringParameter(httpRequest, "csrf", null);
-		if(StringUtils.equals(SessionUtils.getCSRFToken(), csrf)) {
-			chain.doFilter(request, response);
-		} else {
-			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
+Ext.define('Sonicle.webtop.core.ThemeMetrics', {
+	singleton: true,
+	alternateClassName: ['WT.ThemeMetrics'],
+	
+	hierarchy: {
+		'neptune': 'neptune',
+		'neptune-touch': 'neptune',
+		'crisp': 'neptune',
+		'crisp-touch': 'crisp',
+		'classic': 'classic',
+		'gray': 'classic'
+	},
+	
+	metrics: {
+		'neptune': {
+			'toolbar': {
+				'marginTop': 6,
+				'marginBottom': 6,
+				'itemsSpacing': 6
+			}
+		},
+		'classic': {
+			'toolbar': {
+				'marginTop': 2,
+				'marginBottom': 2,
+				'itemsSpacing': 2
+			}
 		}
+	},
+	
+	getThemeMetrics: function(theme) {
+		var me = this,
+				deep = arguments[1] || 0, o;
+		if(!theme) return undefined;
+		o = me.metrics[theme];
+		if(o) {
+			return o;
+		} else {
+			return (deep === 3) ? undefined : me.getThemeMetrics(me.hierarchy[theme], deep+1);
+		}
+	},
+	
+	get: function(theme, xtype, prop) {
+		var o = this.getThemeMetrics(theme),
+				xt = o ? o[xtype] : undefined;
+		return xt ? xt[prop] : undefined;
 	}
-
-	@Override
-	public void destroy() {}
-}
+});

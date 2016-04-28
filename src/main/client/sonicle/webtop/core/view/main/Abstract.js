@@ -49,7 +49,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	referenceHolder: true,
 	
 	config: {
-		totalServices: -1
+		servicesCount: -1
 	},
 	
 	createWestCmp: Ext.emptyFn,

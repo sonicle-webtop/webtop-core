@@ -44,7 +44,7 @@ import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.util.SessionUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.servlet.ServletException;
@@ -62,7 +62,7 @@ public class ServiceRequest extends BaseServiceRequest {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = SessionUtils.getWebTopSession();
+		WebTopSession wts = ContextUtils.getWebTopSession();
 		
 		try {
 			logger.trace("Servlet: ServiceRequest [{}]", wts.getId());

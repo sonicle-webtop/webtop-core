@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.app.ContextUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.ServiceManager;
@@ -215,7 +216,7 @@ public class JobService extends BaseJobService {
 				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
 				for(UserProfile.Id pid : pids) {
 					// Skip profiles that don't have permission for syncing devices
-					if(!WT.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
+					if(!ContextUtils.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
 					
 					UserProfile.Data ud = jobService.core.getUserData(pid);
 					// Skip profiles that cannot receive email alerts

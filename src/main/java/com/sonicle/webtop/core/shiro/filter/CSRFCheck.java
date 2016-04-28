@@ -31,35 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.shiro.filter;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import org.apache.shiro.mgt.SecurityManager;
-import org.apache.shiro.session.Session;
-import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.web.subject.support.WebDelegatingSubject;
+import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.util.WebUtils;
 
 /**
  *
  * @author malbinola
  */
-public class WTWebDelegatingSubject extends WebDelegatingSubject implements WTSubject {
-	protected UserProfile.Id profileId;
-
-	public WTWebDelegatingSubject(UserProfile.Id profileId, PrincipalCollection principals, boolean authenticated, String host, Session session, ServletRequest request, ServletResponse response, SecurityManager securityManager) {
-		super(principals, authenticated, host, session, request, response, securityManager);
-		this.profileId = profileId;
-	}
-
-	public WTWebDelegatingSubject(UserProfile.Id profileId, PrincipalCollection principals, boolean authenticated, String host, Session session, boolean sessionEnabled, ServletRequest request, ServletResponse response, SecurityManager securityManager) {
-		super(principals, authenticated, host, session, sessionEnabled, request, response, securityManager);
-		this.profileId = profileId;
-	}
+public class CSRFCheck extends PathMatchingFilter {
 
 	@Override
-	public UserProfile.Id getProfileId() {
-		return profileId;
+	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
+		String csrf = ServletUtils.getStringParameter(request, "csrf", null);
+		if(StringUtils.equals(ContextUtils.getCSRFToken(), csrf)) {
+			return true;
+		} else {
+			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "CSRF security token not valid");
+			return false;
+		}
 	}
 }

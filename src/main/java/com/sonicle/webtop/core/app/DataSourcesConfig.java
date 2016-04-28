@@ -124,7 +124,7 @@ public class DataSourcesConfig {
 		return config;
 	}
 	
-	public static class HikariConfigMap extends HashMap<String, HikariConfig> {
+	public class HikariConfigMap extends HashMap<String, HikariConfig> {
 		public HikariConfigMap() {
 			super();
 		}

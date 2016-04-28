@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.app.WebTopSession.RequestDump;
 import com.sonicle.webtop.core.bol.OSysLog;
 import com.sonicle.webtop.core.dal.SysLogDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -92,12 +91,6 @@ public class LogManager {
 		CoreServiceSettings css = new CoreServiceSettings(serviceId, domainId);
 		//TODO: valutare se introdurre il caching
 		return css.getSysLogEnabled();
-	}
-	
-	public boolean write(UserProfile.Id profileId, String serviceId, String action, String softwareName, RequestDump requestDump, String sessionId, String data) {
-		String remoteIp = (requestDump != null) ? requestDump.remoteIP : null;
-		String userAgent = (requestDump != null) ? requestDump.userAgent : null;
-		return write(profileId, serviceId, action, softwareName, remoteIp, userAgent, sessionId, data);
 	}
 	
 	public boolean write(UserProfile.Id profileId, String serviceId, String action, String softwareName, HttpServletRequest request, String sessionId, String data) {

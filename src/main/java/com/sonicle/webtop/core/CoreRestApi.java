@@ -42,7 +42,7 @@ import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.util.SessionUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -58,9 +58,9 @@ import org.slf4j.Logger;
 @Path("com.sonicle.webtop.core")
 public class CoreRestApi extends BaseRestApi {
 	private static final Logger logger = WT.getLogger(CoreRestApi.class);
-
-	public CoreRestApi(RunContext context) {
-		super(context);
+	
+	public CoreRestApi() {
+		super();
 	}
 	
 	@GET
@@ -82,7 +82,7 @@ public class CoreRestApi extends BaseRestApi {
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response themesList() {
 		try {
-			logger.debug("{}", SessionUtils.getSubject().toString());
+			logger.debug("{}", ContextUtils.getSubject().toString());
 			CoreManager core = WT.getCoreManager(getRunContext());
 			List<JsSimple> items = core.listThemes();
 			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
@@ -133,13 +133,4 @@ public class CoreRestApi extends BaseRestApi {
 			return Response.serverError().build();
 		}
 	}
-	
-	/*
-	private RunContext getRunContext() {
-		//return null;
-		//TODO: valutare come generare il runcontext
-		//return new RunContext("com.sonicle.webtop.core", new UserProfile.Id("sonicleldap", "matteo.albinola"), null);
-		return new RunContext("com.sonicle.webtop.core");
-	}
-	*/
 }

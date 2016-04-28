@@ -42,7 +42,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.util.SessionUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -63,7 +63,7 @@ public class Start extends HttpServlet {
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		SettingsManager setm = wta.getSettingsManager();
-		WebTopSession wts = SessionUtils.getWebTopSession();
+		WebTopSession wts = ContextUtils.getWebTopSession();
 		
 		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
 		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");

@@ -31,37 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.util;
-
-import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.shiro.WTSubject;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.Session;
-import org.apache.shiro.subject.Subject;
+package com.sonicle.webtop.core.app;
 
 /**
  *
  * @author malbinola
  */
-public class SessionUtils {
+public class ServiceContext {
+	private final String serviceId;
 	
-	public static WTSubject getSubject() {
-		return (WTSubject)SecurityUtils.getSubject();
+	ServiceContext(String serviceId) {
+		this.serviceId = serviceId;
 	}
 	
-	public static Session getSession() {
-		Subject subject = getSubject();
-		return (subject == null) ? null : (Session)subject.getSession();
-	}
-	
-	public static String getCSRFToken() {
-		Session session = getSession();
-		return (session == null) ? null : SessionManager.getCSRFToken(session);
-	}
-	
-	public static WebTopSession getWebTopSession() {
-		Session session = getSession();
-		return (session == null) ? null : SessionManager.getWebTopSession(session);
+	public String getServiceId() {
+		return serviceId;
 	}
 }

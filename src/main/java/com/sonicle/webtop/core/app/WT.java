@@ -261,38 +261,6 @@ public class WT {
 		}
 	}
 	
-	public static boolean isSysAdmin(UserProfile.Id profileId) {
-		return getWTA().getAuthManager().isSysAdmin(profileId);
-	}
-	
-	public static boolean isWebTopAdmin(UserProfile.Id profileId) {
-		return getWTA().getAuthManager().isWebTopAdmin(profileId);
-	}
-	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource) {
-		return getWTA().getAuthManager().isPermitted(profileId, AuthResource.namespacedName(serviceId, resource));
-	}
-	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource, String action) {
-		return getWTA().getAuthManager().isPermitted(profileId, AuthResource.namespacedName(serviceId, resource), action);
-	}
-	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource, String action, String instanceId) {
-		return getWTA().getAuthManager().isPermitted(profileId, AuthResource.namespacedName(serviceId, resource), action, instanceId);
-	}
-	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource) {
-		getWTA().getAuthManager().ensureIsPermitted(profileId, AuthResource.namespacedName(serviceId, resource));
-	}
-	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource, String action) {
-		getWTA().getAuthManager().ensureIsPermitted(profileId, AuthResource.namespacedName(serviceId, resource), action);
-	}
-	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource, String action, String instanceId) {
-		getWTA().getAuthManager().ensureIsPermitted(profileId, AuthResource.namespacedName(serviceId, resource), action, instanceId);
-	}
-	
 	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
 		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
 		return getWTA().loadTemplate(path);
