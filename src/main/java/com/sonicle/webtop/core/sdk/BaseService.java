@@ -69,15 +69,13 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
  *
  * @author malbinola
  */
-public abstract class BaseService extends BaseServiceBase {
+public abstract class BaseService extends AbstractBaseService {
 	private boolean configured = false;
-	private RunContext context;
 	private Environment env;
 	
-	public final void configure(RunContext context, Environment env) {
+	public final void configure(Environment env) {
 		if(configured) return;
 		configured = true;
-		this.context = context;
 		this.env = env;
 	}
 	
@@ -86,8 +84,8 @@ public abstract class BaseService extends BaseServiceBase {
 	}
 	
 	@Override
-	public RunContext getRunContext() {
-		return context;
+	public final RunContext getRunContext() {
+		return new RunContext(getServiceContext());
 	}
 	
 	public ClientOptions returnClientOptions() {

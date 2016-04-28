@@ -34,7 +34,9 @@
 package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.servlet.Login;
@@ -50,6 +52,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -62,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * @author gbulfon
  */
 public class WebTopFormAuthFilter extends FormAuthenticationFilter {
-	public static final Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
+	private static final Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
@@ -83,7 +86,7 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 			if(StringUtils.contains(url, "service-request")
 					|| StringUtils.contains(url, "ServiceRequest")
 					|| StringUtils.contains(url, "keep-alive")
-					| StringUtils.contains(url, "websocket")) {
+					|| StringUtils.contains(url, "push")) {
 				((HttpServletResponse)response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
 			} else {
 				// Do a forward instead of classic redirect. It avoids ugly URL suffixes.

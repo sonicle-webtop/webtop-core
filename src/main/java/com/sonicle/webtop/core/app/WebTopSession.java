@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -47,8 +46,6 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.util.SessionUtils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -60,6 +57,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
+import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 
 /**
@@ -74,13 +72,7 @@ public class WebTopSession {
 	private Session session;
 	private final WebTopApp wta;
 	private final PropertyBag props = new PropertyBag();
-	private String refererURI = null;
-	private Locale userAgentLocale = null;
-	private ReadableUserAgent userAgentInfo = null;
 	private int initStatus = 0;
-	//private boolean initialized = false;
-	//private boolean profileInitialized = false;
-	//private boolean environmentInitialized = false;
 	private UserProfile profile = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
@@ -94,11 +86,6 @@ public class WebTopSession {
 	void cleanup() throws Exception {
 		initStatus = -1;
 		ServiceManager svcm = wta.getServiceManager();
-		
-		RequestDump dump = (RequestDump)popProperty(PROP_REQUEST_DUMP);
-		if(profile != null) {
-			wta.getLogManager().write(profile.getId(), CoreManifest.ID, "LOGOUT", null, dump, getId(), null);
-		}
 			
 		// Cleanup services
 		synchronized(services) {
@@ -118,8 +105,20 @@ public class WebTopSession {
 		}
 	}
 	
-	Session getSession() {
+	/**
+	 * Returns the associated user session.
+	 * @return Session object
+	 */
+	public Session getSession() {
 		return session;
+	}
+	
+	/**
+	 * Returns the session ID.
+	 * @return Session unique identifier
+	 */
+	public String getId() {
+		return session.getId().toString();
 	}
 	
 	public boolean isReady() {
@@ -163,31 +162,11 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Returns the session ID.
-	 * @return HttpSession unique identifier.
-	 */
-	public String getId() {
-		return session.getId().toString();
-	}
-	
-	/**
 	 * Gets parsed user-agent info.
 	 * @return A readable ReadableUserAgent object. 
 	 */
 	public ReadableUserAgent getUserAgent() {
-		return userAgentInfo;
-	}
-	
-	/**
-	 * Gets the user profile associated to the session.
-	 * @return The UserProfile.
-	 */
-	public UserProfile getUserProfile() {
-		return profile;
-	}
-	
-	public String getRefererURI() {
-		return refererURI;
+		return SessionManager.getClientReadableUserAgent(session);
 	}
 	
 	/**
@@ -200,14 +179,24 @@ public class WebTopSession {
 		if(profile != null) {
 			return profile.getLocale();
 		} else {
-			return userAgentLocale;
+			return SessionManager.getClientLocale(session);
 		}
 	}
 	
-	public void dumpRequest(HttpServletRequest request) {
-		String remoteIp = ServletUtils.getClientIP(request);
-		String userAgent = ServletUtils.getUserAgent(request);
-		setProperty(PROP_REQUEST_DUMP, new RequestDump(remoteIp, userAgent));
+	public String getRefererURI() {
+		return SessionManager.getRefererUri(session);
+	}
+	
+	public UserProfile.Id getProfileId() {
+		return (profile == null) ? null : profile.getId();
+	}
+	
+	/**
+	 * Gets the user profile associated to the session.
+	 * @return The UserProfile.
+	 */
+	public UserProfile getUserProfile() {
+		return profile;
 	}
 	
 	public synchronized void initProfile(HttpServletRequest request) throws Exception {
@@ -223,11 +212,7 @@ public class WebTopSession {
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = new CoreManager(wta.createAdminRunContext(getId()), wta);
-		
-		refererURI = ServletUtils.getReferer(request);
-		userAgentLocale = ServletHelper.homogenizeLocale(request);
-		userAgentInfo = wta.getUserAgentInfo(ServletUtils.getUserAgent(request));
+		CoreManager core = WT.getCoreManager(wta.createAdminRunContext());
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
@@ -242,7 +227,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		String sessionId = getId();
-		CoreManager core = new CoreManager(wta.createAdminRunContext(sessionId), wta);
+		CoreManager core = WT.getCoreManager(wta.createAdminRunContext(), profile.getId());
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(sessionId, this);
@@ -250,7 +235,7 @@ public class WebTopSession {
 		
 		// Instantiates services
 		BaseService instance = null;
-		List<String> serviceIds = core.getPrivateServicesForUser(profile);
+		List<String> serviceIds = core.listPrivateServices();
 		int count = 0;
 		// TODO: ordinamento lista servizi (scelta dall'utente?)
 		for(String serviceId : serviceIds) {
@@ -308,7 +293,7 @@ public class WebTopSession {
 	
 	public void fillStartup(JsWTS js, String layout) {
 		if(!isReady()) return;
-		js.securityToken = SessionUtils.getCSRFToken();
+		js.securityToken = ContextUtils.getCSRFToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		// Evaluate services
@@ -333,7 +318,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
-		UserProfile.Id pid = profile.getId();
+		Subject subject = ContextUtils.getSubject();
 		Locale locale = getLocale();
 		
 		JsWTS.Permissions perms = new JsWTS.Permissions();
@@ -342,7 +327,7 @@ public class WebTopSession {
 			if(res instanceof AuthResourceShare) continue;
 			JsWTS.Actions acts = new JsWTS.Actions();
 			for(String act : res.getActions()) {
-				if(WT.isPermitted(pid, serviceId, res.getName(), act)) {
+				if(ContextUtils.isPermitted(subject, serviceId, res.getName(), act)) {
 					acts.put(act, true);
 				}
 			}
@@ -503,16 +488,6 @@ public class WebTopSession {
 			this.filename = filename;
 			this.mediaType = mediaType;
 			this.virtual = virtual;
-		}
-	}
-	
-	public static class RequestDump {
-		public String remoteIP;
-		public String userAgent;
-		
-		public RequestDump(String remoteIP, String userAgent) {
-			this.remoteIP = remoteIP;
-			this.userAgent = userAgent;
 		}
 	}
 }

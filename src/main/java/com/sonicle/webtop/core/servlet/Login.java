@@ -38,6 +38,9 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
@@ -53,6 +56,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.session.Session;
 
 /**
  *
@@ -65,13 +69,12 @@ public class Login extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		String sessionId = ServletHelper.getSessionID(request);
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		CoreManager core = new CoreManager(wta.createAdminRunContext(sessionId), wta);
+		CoreManager core = WT.getCoreManager(wta.createAdminRunContext());
 		
 		try {
-			WebTopApp.logger.trace("Servlet: login [{}]", sessionId);
-			Locale locale = ServletHelper.homogenizeLocale(request);
+			Session session = ContextUtils.getSession();
+			Locale locale = SessionManager.getClientLocale(session);
 			
 			//SettingsManager sm = wta.getSettingsManager();
 			//ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);

@@ -31,16 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
-
-import com.sonicle.webtop.core.sdk.UserProfile;
-import org.apache.shiro.subject.Subject;
+package com.sonicle.webtop.core.app;
 
 /**
  *
  * @author malbinola
  */
-public interface WTSubject extends Subject {
+public abstract class AbstractService {
+	public final String SERVICE_ID;
+	private final ServiceContext serviceContext;
 	
-	public UserProfile.Id getProfileId();
+	public abstract RunContext getRunContext();
+	
+	public AbstractService() {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+		serviceContext = new ServiceContext(SERVICE_ID);
+	}
+	
+	public final ServiceContext getServiceContext() {
+		return serviceContext;
+	}
 }

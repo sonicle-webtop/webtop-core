@@ -40,8 +40,7 @@ package com.sonicle.webtop.core.sdk.bol.js;
 public class JsUserOptionsBase {
 	public String id;
 	
-	public JsUserOptionsBase() {
-	}
+	public JsUserOptionsBase() {}
 	
 	public JsUserOptionsBase(String id) {
 		this.id = id;

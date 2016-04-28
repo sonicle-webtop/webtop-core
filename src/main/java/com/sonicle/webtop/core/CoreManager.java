@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.app.AuthManager;
+import com.sonicle.webtop.core.app.ContextUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.RunContext;
@@ -127,12 +128,12 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public ServiceManager getServiceManager() {
-		ensureService(CoreManifest.ID, "getServiceManager");
+		getRunContext().ensureService(SERVICE_ID, "getServiceManager");
 		return wta.getServiceManager();
 	}
 	
 	public OTPManager getOTPManager() {
-		ensureService(CoreManifest.ID, "getOTPManager");
+		getRunContext().ensureService(SERVICE_ID, "getOTPManager");
 		return wta.getOTPManager();
 	}
 	
@@ -142,13 +143,13 @@ public class CoreManager extends BaseManager {
 	
 	public boolean writeLog(String action, String data) {
 		RunContext rc = getRunContext();
-		return wta.getLogManager().write(rc.getProfileId(), rc.getServiceId(), action, getSoftwareName(), null, null, rc.getSessionId(), data);
+		return wta.getLogManager().write(rc.getProfileId(), rc.getServiceId(), action, getSoftwareName(), null, null, null, data);
 	}
 	
 	public List<SessionInfo> listSessions() throws WTException {
-		//TODO: impostare permessi
-		RunContext.ensureIsSysAdmin();
-		return wta.getSessionManager().listSessions();
+		//TODO: rimuovere commento
+		//getRunContext().ensureIsSysAdmin();
+		return wta.getSessionManager().listOnlineSessions();
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
@@ -381,7 +382,7 @@ public class CoreManager extends BaseManager {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
 			item.setActivityId(dao.getSequence(con).intValue());
 			return dao.insert(con, item);
@@ -397,7 +398,7 @@ public class CoreManager extends BaseManager {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
 			return dao.update(con, item);
 			
@@ -412,7 +413,7 @@ public class CoreManager extends BaseManager {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "ACTIVITIES", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
 			con = WT.getCoreConnection();
 			return dao.delete(con, activityId);
 			
@@ -469,7 +470,7 @@ public class CoreManager extends BaseManager {
 		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
 			item.setCausalId(dao.getSequence(con).intValue());
 			return dao.insert(con, item);
@@ -485,7 +486,7 @@ public class CoreManager extends BaseManager {
 		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
 			return dao.update(con, item);
 			
@@ -501,7 +502,7 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			WT.ensureIsPermitted(getRunProfileId(), SERVICE_ID, "CAUSALS", "MANAGE");
+			getRunContext().ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
 			con = WT.getCoreConnection();
 			return dao.delete(con, causalId);
 			
@@ -544,77 +545,76 @@ public class CoreManager extends BaseManager {
 	
 	public OTPManager.EmailConfig otpConfigureUsingEmail(String emailAddress) throws WTException {
 		//TODO: controllo accessi
-		ensureOwnerUser();
+		ensureUser();
 		OTPManager otp = getOTPManager();
 		return otp.configureEmail(getTargetProfileId(), emailAddress);
 	}
 	
 	public OTPManager.GoogleAuthConfig otpConfigureUsingGoogleAuth(int qrCodeSize) throws WTException {
 		//TODO: controllo accessi
-		ensureOwnerUser();
+		ensureUser();
 		OTPManager otp = getOTPManager();
 		return otp.configureGoogleAuth(getTargetProfileId(), qrCodeSize);
 	}
 	
 	public boolean otpActivate(OTPManager.Config config, int code) throws WTException {
 		//TODO: controllo accessi
-		ensureOwnerUser();
+		ensureUser();
 		OTPManager otp = getOTPManager();
 		return otp.activate(getTargetProfileId(), config, code);
 	}
 	
 	public void otpDeactivate() throws WTException {
 		//TODO: controllo accessi
-		ensureOwnerUser();
+		ensureUser();
 		OTPManager otp = getOTPManager();
 		otp.deactivate(getTargetProfileId());
 	}
 	
 	public OTPManager.Config otpPrepareVerifyCode() throws WTException {
-		ensureService(CoreManifest.ID, "otpPrepareVerifyCode");
+		getRunContext().ensureService(SERVICE_ID, "otpPrepareVerifyCode");
 		OTPManager otp = getOTPManager();
 		return otp.prepareCheckCode(getTargetProfileId());
 	}
 	
 	public boolean otpVerifyCode(OTPManager.Config params, int code) throws WTException {
-		ensureService(CoreManifest.ID, "otpVerifyCode");
+		getRunContext().ensureService(SERVICE_ID, "otpVerifyCode");
 		OTPManager otp = getOTPManager();
 		return otp.checkCode(getTargetProfileId(), params, code);
 	}
 	
 	public List<IncomingShareRoot> listIncomingShareRoots(UserProfile.Id pid, String serviceId, String resource) throws WTException {
-		String rootShareRes = OShare.buildRootResource(resource);
-		String folderShareRes = OShare.buildFolderResource(resource);
-		String rootPermRes = AuthResourceShare.buildRootPermissionResource(resource);
-		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
-		String elementsPermRes = AuthResourceShare.buildElementsPermissionResource(resource);
+		String resRootShare = OShare.buildRootResource(resource);
+		String resFolderShare = OShare.buildFolderResource(resource);
+		String resRootPerm = AuthResourceShare.buildRootPermissionResource(resource);
+		String resFolderPerm = AuthResourceShare.buildFolderPermissionResource(resource);
+		String resElementsPerm = AuthResourceShare.buildElementsPermissionResource(resource);
 		UserManager usrm = wta.getUserManager();
 		AuthManager authm = wta.getAuthManager();
 		Connection con = null;
 		
 		try {
-			
-			String puid = usrm.userToUid(pid);
+			String profileUid = usrm.userToUid(pid);
 			List<String> roleUids = authm.getRolesAsString(pid, true, true);
 			
 			con = WT.getCoreConnection();
 			ShareDAO shadao = ShareDAO.getInstance();
 			UserDAO usedao = UserDAO.getInstance();
 			
-			// In order to find incoming root, we need to pass throught folders
+			// In order to find incoming root, we need to pass through folders
 			// that have at least a permission, getting incoming uids.
 			// We look into permission returning each share instance that have 
 			// "*_FOLDER" as resource and satisfies a set of roles. Then we can
 			// get a list of unique uids (from shares table) that owns the share.
-			List<String> permRes = Arrays.asList(rootPermRes, folderPermRes, elementsPermRes);
-			List<String> originUids = shadao.viewOriginByRoleServiceResource(con, roleUids, serviceId, folderShareRes, permRes);
+			List<String> resPerm = Arrays.asList(resRootPerm, resFolderPerm, resElementsPerm);
+			List<String> originUids = shadao.viewOriginByRoleServiceResource(con, roleUids, serviceId, resFolderShare, resPerm);
 			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
 			for(String uid : originUids) {
-				if(uid.equals(puid)) continue; // Skip self role
+				if(uid.equals(profileUid)) continue; // Skip self role
 				
 				// Foreach incoming uid we have to find the root share and then
 				// test if READ right is allowed
-				OShare root = shadao.selectByUserServiceResourceInstance(con, uid, serviceId, rootShareRes, OShare.ROOT_INSTANCE);
+				OShare root = shadao.selectByUserServiceResourceInstance(con, uid, serviceId, resRootShare, OShare.ROOT_INSTANCE);
 				if(root == null) continue;
 				
 				OUser user = usedao.selectByUid(con, uid);
@@ -636,8 +636,6 @@ public class CoreManager extends BaseManager {
 		String folderPermRes = AuthResourceShare.buildFolderPermissionResource(resource);
 		
 		try {
-			AuthManager auth = wta.getAuthManager();
-			
 			con = WT.getCoreConnection();
 			ShareDAO shadao = ShareDAO.getInstance();
 			
@@ -647,7 +645,7 @@ public class CoreManager extends BaseManager {
 			ArrayList<OShare> folders = new ArrayList<>();
 			List<OShare> shares = shadao.selectByUserServiceResource(con, rootShare.getUserUid(), serviceId, folderShareRes);
 			for(OShare share : shares) {
-				if(auth.isPermitted(pid, AuthResource.namespacedName(serviceId, folderPermRes), AuthResource.ACTION_READ, share.getShareId().toString())) {
+				if(ContextUtils.isPermitted(pid, serviceId, folderPermRes, AuthResource.ACTION_READ, share.getShareId().toString())) {
 					folders.add(share);
 				}
 			}
@@ -660,7 +658,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean[] isSharePermitted(UserProfile.Id pid, String serviceId, String permResource, String[] actions, String shareId) throws WTException {
+	public boolean[] areActionsPermittedOnShare(UserProfile.Id pid, String serviceId, String permResource, String[] actions, String shareId) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -668,7 +666,7 @@ public class CoreManager extends BaseManager {
 			ShareDAO shadao = ShareDAO.getInstance();
 			OShare share = shadao.selectById(con, Integer.valueOf(shareId));
 			if(share == null) throw new WTException("Unable to find share [{0}]", shareId);
-			return isSharePermitted(pid, share, permResource, actions);
+			return areActionsPermittedOnShare(pid, share, permResource, actions);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -677,48 +675,46 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean[] isSharePermitted(UserProfile.Id pid, OShare share, String permResource, String[] actions) throws WTException {
-		AuthManager auth = wta.getAuthManager();
-		String authRes = AuthResource.namespacedName(share.getServiceId(), permResource);
+	public boolean[] areActionsPermittedOnShare(UserProfile.Id pid, OShare share, String permResource, String[] actions) throws WTException {
 		String instance = String.valueOf(share.getShareId());
 		
 		boolean[] perms = new boolean[actions.length];
 		for(int i=0; i<actions.length; i++) {
-			perms[i] = auth.isPermitted(pid, authRes, actions[i], instance);
+			perms[i] = ContextUtils.isPermitted(pid, share.getServiceId(), permResource, actions[i], instance);
 		}
 		return perms;
 	}
 	
 	public boolean isShareRootPermitted(UserProfile.Id pid, String serviceId, String resource, String action, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildRootPermissionResource(resource);
-		return isSharePermitted(pid, serviceId, permRes, new String[]{action}, shareId)[0];
+		return CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, new String[]{action}, shareId)[0];
 	}
 	
 	public boolean isShareFolderPermitted(UserProfile.Id pid, String serviceId, String resource, String action, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildFolderPermissionResource(resource);
-		return isSharePermitted(pid, serviceId, permRes, new String[]{action}, shareId)[0];
+		return CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, new String[]{action}, shareId)[0];
 	}
 	
 	public boolean isShareElementsPermitted(UserProfile.Id pid, String serviceId, String resource, String action, String shareId) throws WTException {;
 		String permRes = AuthResourceShare.buildElementsPermissionResource(resource);
-		return isSharePermitted(pid, serviceId, permRes, new String[]{action}, shareId)[0];
+		return CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, new String[]{action}, shareId)[0];
 	}
 	
 	public SharePermsRoot getShareRootPermissions(UserProfile.Id pid, String serviceId, String resource, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildRootPermissionResource(resource);
-		boolean[] bools = isSharePermitted(pid, serviceId, permRes, SharePermsRoot.ACTIONS, shareId);
+		boolean[] bools = CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, SharePermsRoot.ACTIONS, shareId);
 		return new SharePermsRoot(SharePermsRoot.ACTIONS, bools);
 	}
 	
 	public SharePermsFolder getShareFolderPermissions(UserProfile.Id pid, String serviceId, String resource, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildFolderPermissionResource(resource);
-		boolean[] bools = isSharePermitted(pid, serviceId, permRes, SharePermsFolder.ACTIONS, shareId);
+		boolean[] bools = CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, SharePermsFolder.ACTIONS, shareId);
 		return new SharePermsFolder(SharePermsFolder.ACTIONS, bools);
 	}
 	
 	public SharePermsElements getShareElementsPermissions(UserProfile.Id pid, String serviceId, String resource, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildElementsPermissionResource(resource);
-		boolean[] bools = isSharePermitted(pid, serviceId, permRes, SharePermsElements.ACTIONS, shareId);
+		boolean[] bools = CoreManager.this.areActionsPermittedOnShare(pid, serviceId, permRes, SharePermsElements.ACTIONS, shareId);
 		return new SharePermsElements(SharePermsElements.ACTIONS, bools);
 	}
 	
@@ -1005,37 +1001,32 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<String> getPrivateServicesForUser(UserProfile profile) {
-		return getPrivateServicesForUser(profile.getId());
-	}
 	
-	public List<String> getPrivateServicesForUser(UserProfile.Id pid) {
+	public List<String> listPrivateServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<String> items = new ArrayList<>();
 		
+		UserProfile.Id pid = getTargetProfileId();
 		List<String> ids = svcm.listPrivateServices();
 		for(String id : ids) {
 			// Checks user rights on service...
-			if(WT.isPermitted(pid, CoreManifest.ID, "SERVICE", "ACCESS", id)) {
+			if(getRunContext().isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) {
 				items.add(id);
 			}
 		}
 		return items;
 	}
 	
-	public List<UserOptionsServiceData> getUserOptionServicesForUser(UserProfile profile) {
-		return getUserOptionServicesForUser(profile.getId());
-	}
-	
-	public List<UserOptionsServiceData> getUserOptionServicesForUser(UserProfile.Id pid) {
+	public List<UserOptionsServiceData> listUserOptionServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
 		UserOptionsServiceData uos = null;
 		
+		UserProfile.Id pid = getTargetProfileId();
 		List<String> ids = svcm.listUserOptionServices();
 		for(String id : ids) {
 			// Checks user rights on service...
-			if(WT.isPermitted(pid, CoreManifest.ID, "SERVICE", "ACCESS", id)) {
+			if(getRunContext().isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) {
 				uos = new UserOptionsServiceData(svcm.getManifest(id));
 				uos.name = wta.lookupResource(id, Locale.ITALIAN, CoreLocaleKey.SERVICE_NAME);
 				items.add(uos);
@@ -1044,12 +1035,8 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
-	public boolean hasPrivateService(UserProfile profile, String serviceId) {
-		return hasPrivateService(profile.getId(), serviceId);
-	}
-	
-	public boolean hasPrivateService(UserProfile.Id pid, String serviceId) {
-		List<String> services = getPrivateServicesForUser(pid);
+	public boolean hasPrivateService(String serviceId) {
+		List<String> services = listPrivateServices();
 		return services.contains(serviceId);
 	}
 	
@@ -1209,7 +1196,7 @@ public class CoreManager extends BaseManager {
 			UserProfile.Id runPid = getRunContext().getProfileId();
 			ZPushManager zpush = createZPushManager();
 			
-			boolean sysadmin = WT.isSysAdmin(runPid);
+			boolean sysadmin = getRunContext().isSysAdmin();
 			String internetId = (sysadmin) ? null : getInternetUserId(runPid);
 
 			ArrayList<SyncDevice> devices = new ArrayList<>();

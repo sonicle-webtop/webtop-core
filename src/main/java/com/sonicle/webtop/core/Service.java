@@ -256,8 +256,7 @@ public class Service extends BaseService {
 		
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
-			
-			if(WT.isSysAdmin(up.getId())) {
+			if(getRunContext().isSysAdmin()) {
 				// WebTopAdmin can access to all domains
 				if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 				List<ODomain> domains = core.listDomains(true);
@@ -288,7 +287,7 @@ public class Service extends BaseService {
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
-			if(!WT.isSysAdmin(up.getId())) {
+			if(!getRunContext().isSysAdmin()) {
 				domainId = up.getDomainId();
 			}
 			
@@ -315,7 +314,7 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
 			List<OUser> users = null;
-			if(WT.isSysAdmin(up.getId())) {
+			if(getRunContext().isSysAdmin()) {
 				if(!StringUtils.isEmpty(domainId)) {
 					users = core.listUsers(domainId, true);
 				} else {
@@ -361,14 +360,13 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageActivities(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		UserProfile up = getEnv().getProfile();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<ActivityGrid> items = core.listLiveActivities(queryDomains(up));
+					List<ActivityGrid> items = core.listLiveActivities(queryDomains());
 					new JsonResult("activities", items, items.size()).printTo(out);
 				} else {
 					OActivity item = core.getActivity(id);
@@ -420,14 +418,13 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		UserProfile up = getEnv().getProfile();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<CausalGrid> items =  core.listLiveCausals(queryDomains(up));
+					List<CausalGrid> items =  core.listLiveCausals(queryDomains());
 					new JsonResult("causals", items, items.size()).printTo(out);
 				} else {
 					OCausal item = core.getCausal(id);
@@ -562,11 +559,18 @@ public class Service extends BaseService {
 	*/
 	
 	public void processGetOptionsServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<UserOptionsServiceData> data = null;
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
+			UserProfile.Id targetPid = new UserProfile.Id(id);
+			if(getRunContext().getProfileId().equals(targetPid)) {
+				data = core.listUserOptionServices();
+			} else {
+				CoreManager xcore = WT.getCoreManager(getRunContext(), targetPid);
+				data = xcore.listUserOptionServices();
+			}
 			
-			List<UserOptionsServiceData> data = core.getUserOptionServicesForUser(new UserProfile.Id(id));
 			/*
 			//TODO: aggiornare l'implementazione
 			data.add(new UserOptionsServiceData("com.sonicle.webtop.core", "wt", "WebTop Services", "Sonicle.webtop.core.view.CoreOptions"));
@@ -813,10 +817,10 @@ public class Service extends BaseService {
 	
 	
 	
-	private List<String> queryDomains(UserProfile profile) {
+	private List<String> queryDomains() {
 		List<String> domains = new ArrayList<>();
-		if(WT.isWebTopAdmin(profile.getId())) domains.add("*");
-		domains.add(profile.getDomainId());
+		if(getRunContext().isWebTopAdmin()) domains.add("*");
+		domains.add(getRunContext().getProfileId().getDomainId());
 		return domains;
 	}
 	

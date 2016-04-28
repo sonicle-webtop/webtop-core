@@ -507,8 +507,8 @@ public class ServiceManager {
 		// Creates rest api instance
 		try {
 			Class clazz = descr.getRestApiClass();
-			Constructor<BaseRestApi> constructor = clazz.getConstructor(RunContext.class);
-			return constructor.newInstance(new RunContext(serviceId));
+			Constructor<BaseRestApi> constructor = clazz.getConstructor();
+			return constructor.newInstance();
 			
 		} catch(Exception ex) {
 			logger.error("Error instantiating RestApi [{}]", descr.getManifest().getRestApiClassName(), ex);
@@ -528,8 +528,7 @@ public class ServiceManager {
 			logger.error("Error instantiating PrivateService [{}]", descr.getManifest().getPrivateServiceClassName(), ex);
 			return null;
 		}
-		UserProfile profile = env.getProfile();
-		instance.configure(new RunContext(serviceId, profile.getId(), sessionId), env);
+		instance.configure(env);
 		
 		// Calls initialization method
 		try {
@@ -568,7 +567,7 @@ public class ServiceManager {
 			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, sessionProfile.getId(), sessionId), sessionProfile, targetProfileId);
+		instance.configure(sessionProfile, targetProfileId);
 		return instance;
 	}
 	
@@ -746,7 +745,7 @@ public class ServiceManager {
 			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(wta.createAdminRunContext(serviceId));
+		instance.configure(wta.createAdminRunContext(new ServiceContext(serviceId)));
 		return instance;
 	}
 	
@@ -799,7 +798,7 @@ public class ServiceManager {
 			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
 			return null;
 		}
-		instance.configure(new RunContext(serviceId, new UserProfile.Id("*", "admin"), null));
+		instance.configure(wta.createAdminRunContext(new ServiceContext(serviceId)));
 		return instance;
 	}
 	

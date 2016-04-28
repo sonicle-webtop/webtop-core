@@ -49,7 +49,6 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.util.SessionUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -245,6 +244,15 @@ public class AuthManager {
 		}
 	}
 	
+	public Subject buildSubject(UserProfile.Id pid) {
+		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
+		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		return new Subject.Builder().principals(principals).buildSubject();
+	}
+	
+	
+	
+	/*
 	public boolean isPermitted(UserProfile.Id pid, String authResource) {
 		return isPermitted(pid, authResource, "ACCESS", "*");
 	}
@@ -300,6 +308,13 @@ public class AuthManager {
 	public void ensureIsPermitted(UserProfile.Id pid, String resource, String action, String instance) {
 		if(!isPermitted(pid, resource, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, resource, instance);
 	}
+	*/
+	
+	
+	
+	
+	
+	
 	
 	/*
 	public boolean hasRole(UserProfile.Id pid, String roleName) {

@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.util.SessionUtils;
+import com.sonicle.webtop.core.app.ContextUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -66,10 +66,9 @@ public class Otp extends HttpServlet {
 	
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = SessionUtils.getWebTopSession();
+		WebTopSession wts = ContextUtils.getWebTopSession();
 		
 		try {
-			WebTopApp.logger.trace("Servlet: otp [{}]", ServletHelper.getSessionID(request));
 			UserProfile.Id pid = wts.getUserProfile().getId();
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			Locale locale = wts.getLocale();

@@ -57,7 +57,6 @@ public abstract class BaseManager {
 	public BaseManager(RunContext context, UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.context = Check.notNull(context);
-		//this.sessionId = sessionId;
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		locale = findLocale();
@@ -84,10 +83,18 @@ public abstract class BaseManager {
 		return (targetProfile != null) ? targetProfile : getRunProfileId();
 	}
 	
+	/**
+	 * Returns specified software name that is using this manager. Defaults to null.
+	 * @return provided software name, or null if no value is provided
+	 */
 	public String getSoftwareName() {
 		return softwareName;
 	}
 	
+	/**
+	 * Sets the current software name value.
+	 * @param softwareName 
+	 */
 	public void setSoftwareName(String softwareName) {
 		this.softwareName = softwareName;
 	}
@@ -100,6 +107,10 @@ public abstract class BaseManager {
 		this.locale = locale;
 	}
 	
+	/**
+	 * Returns the manifest associated to the service owning this manager.
+	 * @return The service's manifest
+	 */
 	public ServiceManifest getManifest() {
 		return WT.getManifest(SERVICE_ID);
 	}
@@ -126,20 +137,11 @@ public abstract class BaseManager {
 	}
 	
 	/**
-	 * Ensures that the call is coming from to a specific service.
-	 * The running context will be evaluated.
-	 * @param serviceId The service ID allowed.
-	 * @param methodName The method name for debugging purposes.
+	 * Checks if the running profile (see runContext) and target profile are the same.
+	 * @throws AuthException When the running profile does not match the target profile
 	 */
-	protected void ensureService(String serviceId, String methodName) {
-		if(!getRunContext().getServiceId().equals(serviceId)) throw new MethodAuthException(methodName, getRunContext());
-	}
-	
-	/**
-	 * Ensures that the running user (see runContext) and target user are the same.
-	 */
-	protected void ensureOwnerUser() {
-		if(WT.isWebTopAdmin(getRunProfileId())) return;
+	protected void ensureUser() throws AuthException {
+		if(getRunContext().isWebTopAdmin()) return;
 		if(!getRunProfileId().equals(getTargetProfileId())) throw new AuthException("");
 	}
 }

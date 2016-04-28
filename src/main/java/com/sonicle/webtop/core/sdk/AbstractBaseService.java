@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.AbstractService;
 import com.sonicle.webtop.core.app.WT;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -43,17 +43,15 @@ import java.util.Locale;
  *
  * @author malbinola
  */
-public abstract class BaseServiceBase {
+public abstract class AbstractBaseService extends AbstractService {
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
-	public final String SERVICE_ID;
 	
 	public abstract void initialize() throws Exception;
 	public abstract void cleanup() throws Exception;
-	public abstract RunContext getRunContext();
 	
-	public BaseServiceBase() {
-		SERVICE_ID = WT.findServiceId(this.getClass());
+	public AbstractBaseService() {
+		super();
 	}
 	
 	/**
