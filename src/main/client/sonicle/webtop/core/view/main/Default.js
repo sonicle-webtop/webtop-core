@@ -101,6 +101,6 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		west.add(Ext.create('WT.ux.ServiceButton', desc, {
 			scale: 'large',
 			handler: 'onLauncherButtonClick'
-		})).setBadgeText(Ext.Number.randomInt(0,99)+'');
+		}));//.setBadgeText(Ext.Number.randomInt(0,99)+'');
 	}
 });

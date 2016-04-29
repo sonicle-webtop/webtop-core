@@ -22,10 +22,10 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ux.data.ArrayStore',
 		
 		'Sonicle.webtop.core.WT',
-		'Sonicle.webtop.core.ThemeMetrics',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
+		'Sonicle.webtop.core.ThemeMgr',
 		'Sonicle.webtop.core.ComManager',
 		'Sonicle.webtop.core.ServiceDescriptor',
 		

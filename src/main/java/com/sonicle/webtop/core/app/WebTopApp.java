@@ -70,6 +70,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.jar.JarFile;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -118,7 +120,7 @@ public class WebTopApp {
 	 */
 	public static void initialize(ServletContext context) {
 		synchronized(lock1) {
-			if(instance != null) throw new RuntimeException("WebTopApp initialization already done!");
+			if(instance != null) throw new RuntimeException("Initialization already done");
 			instance = new WebTopApp(context);
 		}
 		instance.afterInit();
@@ -151,6 +153,7 @@ public class WebTopApp {
 	private Scheduler scheduler = null;
 	private final HashMap<String,Session> sessionCache = new HashMap();
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
+	private Timer adminTouchTimer = null;
 	
 	/**
 	 * Private constructor.
@@ -222,12 +225,17 @@ public class WebTopApp {
 		svcm = ServiceManager.initialize(this, scheduler);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
-				
 	}
 	
 	public void destroy() {
 		String webappName = getWebAppName();
 		logger.info("WTA shutdown started [{}]", webappName);
+		
+		// Destroy admin session
+		if(adminTouchTimer != null) adminTouchTimer.cancel();
+		synchronized(lock2) {
+			adminSubject.logout();
+		}
 		
 		// Service Manager
 		svcm.cleanup();
@@ -269,25 +277,60 @@ public class WebTopApp {
 	
 	private void afterInit() {
 		svcm.onWebTopAppInit();
-		Thread engine = new Thread(new Runnable() {
+		
+		// Define delayed init
+		new Timer("delayedInit").schedule(new TimerTask() {
 			@Override
 			public void run() {
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException ex) {}
-				
-				if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
-					try {
-						logger.debug("Scheduling JobServices tasks...");
-						svcm.scheduleAllJobServicesTasks();
-						if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-					} catch (SchedulerException ex) {
-						logger.error("Error", ex);
-					}
-				}
+				delayedInit();
 			}
-		});
-		engine.start();	
+		}, 5000);	
+	}
+	
+	private void delayedInit() {
+		if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
+			try {
+				logger.debug("Scheduling JobServices tasks...");
+				svcm.scheduleAllJobServicesTasks();
+				if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
+			} catch (SchedulerException ex) {
+				logger.error("Error", ex);
+			}
+		}
+	}
+	
+	private Subject getAdminSubject() {
+		synchronized(lock2) {
+			if(adminSubject == null) {
+				adminSubject = autm.buildSubject(new UserProfile.Id("*", "admin"));
+				org.apache.shiro.session.Session session = adminSubject.getSession(false);
+				logger.info("Admin session created [{}]", session.getId().toString());
+				scheduleAdminTouchTask(session.getTimeout());
+			}
+			return adminSubject;
+		}
+	}
+	
+	private void scheduleAdminTouchTask(long sessionTimeout) {
+		long period = (sessionTimeout < 600000) ? sessionTimeout/2 : (long)(sessionTimeout*0.9);
+		logger.trace("Scheduling adminTouch task to renew session every {} sec", period/1000);
+		adminTouchTimer = new Timer("adminTouch");
+		adminTouchTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				synchronized(lock2) {
+					if(adminSubject != null) {
+						org.apache.shiro.session.Session session = adminSubject.getSession(false);
+						if(session != null) {
+							session.touch();
+							logger.trace("Renewalling admin session [{}]", session.getLastAccessTime());
+						} else {
+							logger.warn("Admin session not found");
+						}
+					}
+				}	
+			}
+		}, period, period);
 	}
 	
 	/**
@@ -457,15 +500,6 @@ public class WebTopApp {
 	 */
 	public SessionManager getSessionManager() {
 		return sesm;
-	}
-	
-	private Subject getAdminSubject() {
-		synchronized(lock2) {
-			if(adminSubject == null) {
-				adminSubject = autm.buildSubject(new UserProfile.Id("*", "admin"));
-			}
-			return adminSubject;
-		}
 	}
 	
 	public RunContext createAdminRunContext() {
