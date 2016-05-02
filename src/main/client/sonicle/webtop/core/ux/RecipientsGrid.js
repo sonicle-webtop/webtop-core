@@ -156,7 +156,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					  valueField: 'id'
 					}),
 					renderer: function(value, md, record, ri, ci, s, view) {
-						return '<font color="black">'+WT.res('recipienttype.'+value)+'</font>';
+						return '<font color="black">'+WT.res('store.rcptType.'+value)+'</font>';
 					}
 				},
 				{
