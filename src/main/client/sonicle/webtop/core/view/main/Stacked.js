@@ -38,9 +38,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 		'WT.ux.StackServiceButton'
 	],
 	
-	l1ButtonsLimit: 5,
-	measuredL1Height: null,
-	measuredL2Height: null,
+	l1ButtonsLimit: 3,
 	addedCount: 0,
 	
 	createWestCmp: function() {
@@ -62,7 +60,6 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				region: 'south',
 				xtype: 'toolbar',
 				reference: 'launcher2',
-				hidden: true,
 				enableOverflow: true,
 				border: false,
 				items: []
@@ -88,8 +85,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				region: 'south',
 				xtype: 'container',
 				reference: 'launchers',
-				//height: 155,
-				height: 100,
+				height: 100, // Real height will be calculated later...
 				layout: 'border',
 				items: items
 			}],
@@ -97,54 +93,6 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				resize: 'onToolResize'
 			}
 		};
-		
-		/*
-		return {
-			xtype: 'panel',
-			referenceHolder: true,
-			split: true,
-			collapsible: true,
-			border: false,
-			width: 200,
-			minWidth: 100,
-			layout: 'border',
-			items: [{
-				xtype: 'container',
-				region: 'center',
-				reference: 'tool',
-				layout: 'card',
-				items: []
-			}, {
-				region: 'south',
-				xtype: 'container',
-				reference: 'launchers',
-				height: 155,
-				layout: 'border',
-				items: [{
-					region: 'center',
-					xtype: 'toolbar',
-					reference: 'launcher1',
-					vertical: true,
-					border: false,
-					layout: {
-						type: 'vbox',
-						align: 'stretch'
-					},
-					items: []
-				}, {
-					region: 'south',
-					xtype: 'toolbar',
-					reference: 'launcher2',
-					enableOverflow: true,
-					border: false,
-					items: []
-				}]
-			}],
-			listeners: {
-				resize: 'onToolResize'
-			}
-		};
-		*/
 	},
 	
 	createCenterCmp: function() {
@@ -186,7 +134,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				cmp;
 		
 		me.addedCount++;
-		if(l1.items.getCount() <= me.l1ButtonsLimit) {
+		if(me.addedCount <= me.l1ButtonsLimit) {
 			cmp = l1.add(Ext.create('WT.ux.StackServiceButton', desc, {
 				handler: 'onLauncherButtonClick'
 			}));
@@ -210,9 +158,9 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	
 	calculateHeight: function(l1, l2) {
 		var theme = WT.getTheme(),
-				tbMarginTop = WT.ThemeMetrics.get(theme, 'toolbar', 'marginTop') || 6,
-				tbMarginBottom = WT.ThemeMetrics.get(theme, 'toolbar', 'marginBottom') || 6,
-				tbItemsSpacing = WT.ThemeMetrics.get(theme, 'toolbar', 'itemsSpacing') || 6,
+				tbMarginTop = WT.ThemeMgr.getMetric(theme, 'toolbar', 'marginTop') || 6,
+				tbMarginBottom = WT.ThemeMgr.getMetric(theme, 'toolbar', 'marginBottom') || 6,
+				tbItemsSpacing = WT.ThemeMgr.getMetric(theme, 'toolbar', 'itemsSpacing') || 6,
 				l1CmpH = l1.getComponent(0).getHeight() || 0,
 				l1Items = l1.items.getCount(),
 				l2CmpH = l2 ? l2.getComponent(0).getHeight() : 0;

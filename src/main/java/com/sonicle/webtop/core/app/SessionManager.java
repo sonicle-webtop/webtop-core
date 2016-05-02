@@ -201,7 +201,7 @@ public class SessionManager {
 			session.setAttribute(ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
 			session.setAttribute(ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
 		}
-		logger.info("WTS created [{}]", session.getId());
+		logger.trace("WTS created [{}]", session.getId());
 	}
 	
 	private void stopShiroSession(Session session) throws Exception {
@@ -215,7 +215,7 @@ public class SessionManager {
 			unregisterWebTopSession(sid, pid);
 			wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, getClientIP(session), getClientUserAgent(session), sid, null);
 		}
-		logger.info("WTS destroyed [{}]", sid);
+		logger.trace("WTS destroyed [{}]", sid);
 	}
 	
 	void registerWebTopSession(String sid, WebTopSession wts) throws WTException {
@@ -226,7 +226,7 @@ public class SessionManager {
 			onlineSessions.put(sid, wts);
 			if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
 			profileSidsCache.get(pid).add(sid);
-			logger.debug("Session registered [{}, {}]", sid, pid);
+			logger.trace("Session registered [{}, {}]", sid, pid);
 		}
 	}
 	
@@ -257,7 +257,7 @@ public class SessionManager {
 				WebTopSession wts = onlineSessions.get(sessionId);
 				pushData(sessionId, wts.getEnqueuedMessages());
 			}
-			logger.debug("Push channel associated [{}, count:{}]", sessionId, count+1);
+			logger.trace("Push channel associated [{}, count:{}]", sessionId, count+1);
 		}
 	}
 	
@@ -276,7 +276,7 @@ public class SessionManager {
 				} else {
 					wsPushSessions.put(sessionId, count-1);
 				}
-				logger.debug("Push channel disconnected [{}, count:{}]", sessionId, count-1);
+				logger.trace("Push channel disconnected [{}, count:{}]", sessionId, count-1);
 			}
 		}
 	}

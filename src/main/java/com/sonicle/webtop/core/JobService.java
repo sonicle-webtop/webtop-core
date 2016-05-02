@@ -138,17 +138,21 @@ public class JobService extends BaseJobService {
 				}
 
 				// Process returned reminders...
-				logger.trace("Processing {} returned alerts", alerts.size());
-				for(BaseReminder alert : alerts) {
-					if(alert instanceof ReminderEmail) {
-						sendEmail((ReminderEmail)alert);
-						
-					} else if(alert instanceof ReminderInApp) {
-						ReminderMessage msg = new ReminderMessage(new JsReminderInApp((ReminderInApp)alert));
-						if(!byProfile.containsKey(alert.getProfileId())) {
-							byProfile.put(alert.getProfileId(), new ArrayList<ServiceMessage>());
+				if(alerts.isEmpty()) {
+					logger.trace("No alerts to process");
+				} else {
+					logger.trace("Processing {} alerts", alerts.size());
+					for(BaseReminder alert : alerts) {
+						if(alert instanceof ReminderEmail) {
+							sendEmail((ReminderEmail)alert);
+
+						} else if(alert instanceof ReminderInApp) {
+							ReminderMessage msg = new ReminderMessage(new JsReminderInApp((ReminderInApp)alert));
+							if(!byProfile.containsKey(alert.getProfileId())) {
+								byProfile.put(alert.getProfileId(), new ArrayList<ServiceMessage>());
+							}
+							byProfile.get(alert.getProfileId()).add(msg);
 						}
-						byProfile.get(alert.getProfileId()).add(msg);
 					}
 				}
 				

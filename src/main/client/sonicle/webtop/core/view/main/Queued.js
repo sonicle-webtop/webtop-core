@@ -105,6 +105,6 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 			scale: 'medium',
 			handler: 'onLauncherButtonClick'
 		}));
-		cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+		//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
 	}
 });
