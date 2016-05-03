@@ -36,8 +36,60 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 	extend: 'Ext.grid.NavigationModel',
 	
 	//remove cell focus style
-	focusCls: ''
+	focusCls: '',
 	
+	startEdit: function(view,record,c) {
+		view.grid.plugins[0].startEdit(record, view.ownerCt.getColumnManager().getHeaderAtIndex(c));
+	},
+	
+	onKeyUp: function(ke) {
+		var me=this,
+			c=ke.position.colIdx;
+	
+		me.callParent(arguments);
+		if (c===1) me.startEdit(ke.view, me.record, 1);
+	},
+	
+	onKeyDown: function(ke) {
+		var me=this,
+			c=ke.position.colIdx;
+
+		this.callParent(arguments);
+		if (c===1) me.startEdit(ke.view, me.record, 1);
+    },	
+	
+	moveUp: function() {
+		var me=this,
+			ppos=me.previousPosition;
+	
+		if (ppos.rowIdx>0) {
+			me.setPosition(ppos);
+			var newpos=me.move("up");
+			if (newpos) {
+			  me.setPosition(newpos);	
+			  me.startEdit(newpos.view, newpos.record, 1);
+			  return true;
+			}
+		}
+		return false;
+	},
+	
+	moveDown: function() {
+		var me=this,
+			ppos=me.previousPosition,
+			lastr=ppos.view.store.getCount()-1;
+	
+		if (ppos.rowIdx<lastr) {
+			me.setPosition(me.previousPosition);
+			var newpos=me.move("down");
+			if (newpos) {
+			  me.setPosition(newpos);	
+			  me.startEdit(newpos.view, newpos.record, 1);
+			  return true;
+			}
+		}
+		return false;
+	}
 /*    initKeyNav: function(view) {
         var me = this;
 		//me.callParent(arguments);
@@ -75,8 +127,47 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
             },
             scope: me
         });
-    }	*/
+    }*/
 });
+
+
+Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
+	extend: 'Ext.grid.plugin.CellEditing',
+	alias: 'plugin.socellediting',
+	
+    onSpecialKey: function(ed, field, e) {
+        var me=this,sm,k=e.getKey();
+ 
+        if (k === e.TAB || k === e.ENTER) {
+            e.stopEvent();
+
+			var moved;
+			if (e.shiftKey && k === e.TAB) {
+				moved=me.navigationModel.moveUp();
+			} else {
+				moved=me.navigationModel.moveDown();
+			}
+			
+			if (!moved) {
+				/*if (ed) {
+					// Allow the field to act on tabs before onEditorTab, which ends
+					// up calling completeEdit. This is useful for picker type fields.
+					ed.onEditorTab(e);
+				}
+
+				sm = ed.getRefOwner().getSelectionModel();
+				return sm.onEditorTab(ed.editingPlugin, e);*/
+			}
+			return true;
+        }
+		else if (k === e.UP) {
+			return me.navigationModel.moveUp();
+		} else if (k === e.DOWN) {
+			return me.navigationModel.moveDown();
+		}
+    }
+});
+
 
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WT.ux.RegipientsGrid',
@@ -119,18 +210,20 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	//messageId: null,
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+			navModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{ grid: me });
 		
 		Ext.apply(me, {
 			selModel: 'cellmodel',
 			hideHeaders: true,
 			viewConfig: {
-				navigationModel: Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{ grid: me }),
+				navigationModel: navModel,
 				scrollable: true
 			},
 			plugins: {
-				ptype: 'cellediting',
-				clicksToEdit: 1
+				ptype: 'socellediting',
+				clicksToEdit: 1,
+				navigationModel: navModel
 			},
 			columns: [
 				{
@@ -160,7 +253,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					}
 				},
 				{
-					width: 400,
+					flex: 1,
 					dataIndex: me.fields.email, 
 					//editor: 'textfield'
 					editor: Ext.create({
