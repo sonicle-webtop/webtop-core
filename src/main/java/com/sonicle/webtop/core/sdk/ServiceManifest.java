@@ -108,9 +108,8 @@ public class ServiceManifest {
 		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
 		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
 		
-		if(svcEl.containsKey("controllerClassName")) {
-			controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
-		}
+		if(!svcEl.containsKey("controllerClassName")) throw new Exception("Invalid value for property [controllerClassName]");
+		controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
 		
 		if(svcEl.containsKey("restApiClassName")) {
 			restApiClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("restApiClassName"), "RestApi"));

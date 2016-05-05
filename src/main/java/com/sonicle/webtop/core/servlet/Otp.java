@@ -37,13 +37,14 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -52,7 +53,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -62,11 +62,12 @@ import org.apache.shiro.SecurityUtils;
  *
  * @author malbinola
  */
-public class Otp extends HttpServlet {
+public class Otp extends AbstractServlet {
 	
+	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = ContextUtils.getWebTopSession();
+		WebTopApp wta = getWebTopApp(request);
+		WebTopSession wts = RunContext.getWebTopSession();
 		
 		try {
 			UserProfile.Id pid = wts.getUserProfile().getId();
@@ -184,16 +185,6 @@ public class Otp extends HttpServlet {
 		// Load and build template
 		Template tpl = wta.loadTemplate("com/sonicle/webtop/core/otp.html");
 		tpl.process(tplMap, response.getWriter());
-	}
-	
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 	
 	private static class NoMoreTriesException extends Exception {

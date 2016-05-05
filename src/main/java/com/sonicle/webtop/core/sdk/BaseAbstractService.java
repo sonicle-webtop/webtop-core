@@ -43,14 +43,14 @@ import java.util.Locale;
  *
  * @author malbinola
  */
-public abstract class AbstractBaseService extends AbstractService {
+public abstract class BaseAbstractService extends AbstractService {
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
 	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
 	
 	public abstract void initialize() throws Exception;
 	public abstract void cleanup() throws Exception;
 	
-	public AbstractBaseService() {
+	public BaseAbstractService() {
 		super();
 	}
 	
@@ -59,7 +59,7 @@ public abstract class AbstractBaseService extends AbstractService {
 	 * @return The manifest.
 	 */
 	public final ServiceManifest getManifest() {
-		return WT.findManifest(this.getClass());
+		return WT.getManifest(SERVICE_ID);
 	}
 	
 	/**

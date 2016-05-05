@@ -63,7 +63,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PublicServiceRequest extends BaseServiceRequest {
-	
 	private static final Logger logger = WT.getLogger(PublicServiceRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
@@ -111,6 +110,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 		}
 	}
 	
+	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
 		
@@ -147,15 +147,5 @@ public class PublicServiceRequest extends BaseServiceRequest {
 		String[] tokens = StringUtils.split(pathInfo, "/", 2);
 		if(tokens.length < 1) throw new MalformedURLException("No service provided");
 		return new String[]{tokens[0], (tokens.length == 2) ? tokens[1] : ""};
-	}
-	
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 }

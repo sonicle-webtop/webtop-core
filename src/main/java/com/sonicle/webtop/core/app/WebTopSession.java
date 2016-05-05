@@ -212,7 +212,7 @@ public class WebTopSession {
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = WT.getCoreManager(wta.createAdminRunContext());
+		CoreManager core = WT.getCoreManager(wta.createCoreServiceContext());
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
@@ -227,7 +227,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		String sessionId = getId();
-		CoreManager core = WT.getCoreManager(wta.createAdminRunContext(), profile.getId());
+		CoreManager core = WT.getCoreManager(wta.createCoreServiceContext(), profile.getId());
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(sessionId, this);
@@ -293,7 +293,7 @@ public class WebTopSession {
 	
 	public void fillStartup(JsWTS js, String layout) {
 		if(!isReady()) return;
-		js.securityToken = ContextUtils.getCSRFToken();
+		js.securityToken = RunContext.getCSRFToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		// Evaluate services
@@ -318,7 +318,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
-		Subject subject = ContextUtils.getSubject();
+		Subject subject = RunContext.getSubject();
 		Locale locale = getLocale();
 		
 		JsWTS.Permissions perms = new JsWTS.Permissions();
@@ -327,7 +327,7 @@ public class WebTopSession {
 			if(res instanceof AuthResourceShare) continue;
 			JsWTS.Actions acts = new JsWTS.Actions();
 			for(String act : res.getActions()) {
-				if(ContextUtils.isPermitted(subject, serviceId, res.getName(), act)) {
+				if(RunContext.isPermitted(subject, serviceId, res.getName(), act)) {
 					acts.put(act, true);
 				}
 			}

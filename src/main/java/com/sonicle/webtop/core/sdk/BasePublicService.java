@@ -33,31 +33,30 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
 import java.net.MalformedURLException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.subject.Subject;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BasePublicService extends AbstractBaseService {
+public abstract class BasePublicService extends BaseAbstractService {
 	private boolean configured = false;
-	private RunContext context;
+	private Subject subject;
 	
-	public final void configure(RunContext context) {
+	public final void configure(Subject subject) {
 		if(configured) return;
 		configured = true;
-		this.context = Check.notNull(context);
+		this.subject = Check.notNull(subject);
 	}
 	
-	@Override
-	public final RunContext getRunContext() {
-		return context;
+	public final Subject getSubject() {
+		return subject;
 	}
 	
 	public abstract void processDefault(HttpServletRequest request, HttpServletResponse response) throws Exception;

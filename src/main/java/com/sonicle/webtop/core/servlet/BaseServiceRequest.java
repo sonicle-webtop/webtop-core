@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.WTException;
 import edu.emory.mathcs.backport.java.util.Arrays;
@@ -42,7 +43,6 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public abstract class BaseServiceRequest extends HttpServlet {
+public abstract class BaseServiceRequest extends AbstractServlet {
 	
 	protected String[] splitPath(String pathInfo) throws MalformedURLException {
 		String[] tokens = StringUtils.split(pathInfo, "/", 2);

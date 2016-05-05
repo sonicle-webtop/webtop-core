@@ -35,12 +35,12 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -62,18 +61,19 @@ import org.apache.shiro.session.Session;
  *
  * @author malbinola
  */
-public class Login extends HttpServlet {
+public class Login extends AbstractServlet {
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";
 	public static final String LOGINFAILURE_MAINTENANCE = "maintenance";
 	
+	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
+		WebTopApp wta = getWebTopApp(request);
+		UserManager usem = wta.getUserManager();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		CoreManager core = WT.getCoreManager(wta.createAdminRunContext());
 		
 		try {
-			Session session = ContextUtils.getSession();
+			Session session = RunContext.getSession();
 			Locale locale = SessionManager.getClientLocale(session);
 			
 			//SettingsManager sm = wta.getSettingsManager();
@@ -99,7 +99,7 @@ public class Login extends HttpServlet {
 			}
 			
 			// Prepare domains list
-			List<ODomain> enabledDomains = core.listDomains(true);
+			List<ODomain> enabledDomains = usem.listDomains(true);
 			List<HtmlSelect> domains = new ArrayList<>();
 			if(enabledDomains.size() > 1) domains.add(new HtmlSelect("", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_DOMAIN_PROMPT, true)));
 			for(ODomain dom : enabledDomains) {
@@ -138,16 +138,6 @@ public class Login extends HttpServlet {
 		// Load and build template
 		Template tpl = wta.loadTemplate("com/sonicle/webtop/core/login.html");
 		tpl.process(tplMap, response.getWriter());
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 	
 	public static class HtmlSelect {

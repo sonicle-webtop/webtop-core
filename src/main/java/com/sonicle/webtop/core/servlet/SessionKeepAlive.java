@@ -33,9 +33,9 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.webtop.core.app.AbstractServlet;
 import java.io.IOException;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -46,12 +46,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class SessionKeepAlive extends HttpServlet {
-
+public class SessionKeepAlive extends AbstractServlet {
 	private static final Logger logger = LoggerFactory.getLogger(SessionKeepAlive.class);
 
 	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// Access session object without creating new one. This maintains the session alive!
 		HttpSession session = request.getSession(false);
 		if(logger.isTraceEnabled()) logger.trace("Session keep-alive [{}]", session.getId());

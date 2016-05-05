@@ -40,7 +40,6 @@ import org.apache.shiro.authc.UsernamePasswordToken;
  * @author malbinola
  */
 public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	
 	private String domain;
 	
 	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.ServiceContext;
 import com.sonicle.webtop.core.app.WT;
 import java.util.Locale;
 import net.sf.qualitycheck.Check;
@@ -45,16 +46,16 @@ import net.sf.qualitycheck.Check;
  */
 public abstract class BaseManager {
 	public final String SERVICE_ID;
-	private final RunContext context;
+	private final ServiceContext context;
 	private final UserProfile.Id targetProfile;
 	private String softwareName;
 	protected Locale locale;
 	
-	public BaseManager(RunContext context) {
-		this(context, null);
+	public BaseManager(ServiceContext context) {
+		this(context, RunContext.getProfileId());
 	}
 	
-	public BaseManager(RunContext context, UserProfile.Id targetProfileId) {
+	public BaseManager(ServiceContext context, UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.context = Check.notNull(context);
 		this.targetProfile = targetProfileId;
@@ -71,16 +72,12 @@ public abstract class BaseManager {
 		}
 	} 
 	
-	public RunContext getRunContext() {
+	public ServiceContext getServiceContext() {
 		return context;
 	}
 	
-	public UserProfile.Id getRunProfileId() {
-		return context.getProfileId();
-	}
-	
 	public UserProfile.Id getTargetProfileId() {
-		return (targetProfile != null) ? targetProfile : getRunProfileId();
+		return targetProfile;
 	}
 	
 	/**
@@ -141,7 +138,8 @@ public abstract class BaseManager {
 	 * @throws AuthException When the running profile does not match the target profile
 	 */
 	protected void ensureUser() throws AuthException {
-		if(getRunContext().isWebTopAdmin()) return;
-		if(!getRunProfileId().equals(getTargetProfileId())) throw new AuthException("");
+		UserProfile.Id runningProfile = RunContext.getProfileId();
+		if(RunContext.isWebTopAdmin(runningProfile)) return;
+		if(!runningProfile.equals(getTargetProfileId())) throw new AuthException("");
 	}
 }

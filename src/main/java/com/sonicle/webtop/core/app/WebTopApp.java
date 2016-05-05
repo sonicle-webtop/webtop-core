@@ -37,11 +37,18 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.provider.IDomainRecipientsProvider;
+import com.sonicle.webtop.core.app.provider.IGlobalRecipientsProvider;
+import com.sonicle.webtop.core.app.provider.IProfileRecipientsProvider;
+import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
+import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -64,6 +71,7 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -92,7 +100,11 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.support.SubjectThreadState;
+import org.apache.shiro.util.ThreadState;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
@@ -106,7 +118,7 @@ import org.slf4j.MDC;
  *
  * @author malbinola
  */
-public class WebTopApp {
+public final class WebTopApp {
 	public static final String ATTRIBUTE = "webtopapp";
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static final Object lock1 = new Object();
@@ -132,14 +144,18 @@ public class WebTopApp {
 		}
 	}
 	
-	private Subject adminSubject;
 	private final ServletContext servletContext;
 	private final String systemInfo;
 	private final Charset systemCharset;
 	private DateTimeZone systemTimeZone;
 	private Locale systemLocale;
+	
+	private Subject adminSubject;
+	private Timer adminTouchTimer = null;
+	
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
+	private ComponentsManager comm = null;
 	private ConnectionManager conm = null;
 	private LogManager logm = null;
 	private UserManager usrm = null;
@@ -153,7 +169,6 @@ public class WebTopApp {
 	private Scheduler scheduler = null;
 	private final HashMap<String,Session> sessionCache = new HashMap();
 	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
-	private Timer adminTouchTimer = null;
 	
 	/**
 	 * Private constructor.
@@ -165,10 +180,7 @@ public class WebTopApp {
 		systemInfo = buildSystemInfo();
 		systemCharset = Charset.forName("UTF-8");
 		systemTimeZone = DateTimeZone.getDefault();
-		init();
-	}
-	
-	private void init() {
+		
 		logger.info("wtdebug = {}", getPropWTDebug());
 		logger.info("extdebug = {}", getPropExtDebug());
 		logger.info("scheduler.disabled = {}", getPropSchedulerDisabled());
@@ -176,6 +188,29 @@ public class WebTopApp {
 		String webappName = getWebAppName();
 		logger.info("WTA initialization started [{}]", webappName);
 		
+		init1();
+		ThreadState threadState = new SubjectThreadState(getAdminSubject());
+		threadState.bind();
+		try {
+			init2();
+		} finally {
+			threadState.clear();
+		}
+		
+		logger.info("WTA initialization completed [{}]", webappName);
+	}
+	
+	private void init1() {
+		conm = ConnectionManager.initialize(this); // Connection Manager
+		sesm = SessionManager.initialize(this); // Session Manager
+		
+		// Auth Manager
+		DefaultSecurityManager sm = new DefaultSecurityManager(new WTRealm());
+		SecurityUtils.setSecurityManager(sm);
+		autm = AuthManager.initialize(this);
+	}
+	
+	private void init2() {
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
 		String[] tags = new String[]{"it_IT", "en_EN"};
@@ -188,24 +223,15 @@ public class WebTopApp {
 		freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
 		freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
-		// Connection Manager
-		conm = ConnectionManager.initialize(this);
-		// Log Manager
-		logm = LogManager.initialize(this);
-		// User Manager
-		usrm = UserManager.initialize(this);
-		// Auth Manager
-		DefaultSecurityManager sm = new DefaultSecurityManager(new WTRealm());
-		SecurityUtils.setSecurityManager(sm);
-		autm = AuthManager.initialize(this);
-		// Settings Manager
-		setm = SettingsManager.initialize(this);
+		comm = ComponentsManager.initialize(this); // Components Manager
+		logm = LogManager.initialize(this); // Log Manager
+		usrm = UserManager.initialize(this); // User Manager
 		
+		setm = SettingsManager.initialize(this); // Settings Manager
 		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
-		// OTP Manager
-		otpm = OTPManager.initialize(this);
-		// Report Manager
-		rptm = ReportManager.initialize(this);
+		otpm = OTPManager.initialize(this); // OTP Manager
+		rptm = ReportManager.initialize(this); // Report Manager
+		
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
@@ -219,12 +245,8 @@ public class WebTopApp {
 		} catch(SchedulerException ex) {
 			throw new WTRuntimeException(ex, "Error starting scheduler");
 		}
-		// Session Manager
-		sesm = SessionManager.initialize(this);
-		// Service Manager
-		svcm = ServiceManager.initialize(this, scheduler);
 		
-		logger.info("WTA initialization completed [{}]", webappName);
+		svcm = ServiceManager.initialize(this, scheduler); // Service Manager
 	}
 	
 	public void destroy() {
@@ -296,18 +318,6 @@ public class WebTopApp {
 			} catch (SchedulerException ex) {
 				logger.error("Error", ex);
 			}
-		}
-	}
-	
-	private Subject getAdminSubject() {
-		synchronized(lock2) {
-			if(adminSubject == null) {
-				adminSubject = autm.buildSubject(new UserProfile.Id("*", "admin"));
-				org.apache.shiro.session.Session session = adminSubject.getSession(false);
-				logger.info("Admin session created [{}]", session.getId().toString());
-				scheduleAdminTouchTask(session.getTimeout());
-			}
-			return adminSubject;
 		}
 	}
 	
@@ -392,36 +402,6 @@ public class WebTopApp {
 		return systemLocale;
 	}
 	
-	public URL getResource(String resource) throws MalformedURLException {
-		return servletContext.getResource(resource);
-	}
-	
-	public Template loadTemplate(String path) throws IOException {
-		return freemarkerCfg.getTemplate(path, getSystemCharset().name());
-	}
-	
-	public Template loadTemplate(String path, String encoding) throws IOException {
-		return freemarkerCfg.getTemplate(path, encoding);
-	}
-	
-	/**
-	 * Parses a User-Agent HTTP Header string looking for useful client information.
-	 * @param userAgentHeader HTTP Header string.
-	 * @return Object representation of the parsed string.
-	 */
-	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
-		synchronized(userAgentsCache) {
-			if(userAgentsCache.containsKey(userAgentHeader)) {
-				return userAgentsCache.get(userAgentHeader);
-			} else {
-				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
-				ReadableUserAgent rua = parser.parse(userAgentHeader);
-				userAgentsCache.put(userAgentHeader, rua);
-				return rua;
-			}
-		}
-	}
-	
 	/**
 	 * Returns the I18nManager.
 	 * @return I18nManager instance.
@@ -431,19 +411,27 @@ public class WebTopApp {
 	}
 	
 	/**
-	 * Returns the SettingsManager.
-	 * @return SettingsManager instance.
-	 */
-	public SettingsManager getSettingsManager() {
-		return setm;
-	}
-	
-	/**
 	 * Returns the ConnectionManager.
 	 * @return ConnectionManager instance.
 	 */
 	public ConnectionManager getConnectionManager() {
 		return conm;
+	}
+			
+	/**
+	 * Returns the ComponentsManager.
+	 * @return ComponentsManager instance.
+	 */
+	public ComponentsManager getComponentsManager() {
+		return comm;
+	}
+	
+	/**
+	 * Returns the SettingsManager.
+	 * @return SettingsManager instance.
+	 */
+	public SettingsManager getSettingsManager() {
+		return setm;
 	}
 	
 	/**
@@ -502,14 +490,68 @@ public class WebTopApp {
 		return sesm;
 	}
 	
+	private Subject buildSubject(UserProfile.Id pid) {
+		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
+		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		return new Subject.Builder().principals(principals).buildSubject();
+	}
+	
+	Subject getAdminSubject() {
+		synchronized(lock2) {
+			if(adminSubject == null) {
+				adminSubject = buildSubject(new UserProfile.Id("*", "admin"));
+				org.apache.shiro.session.Session session = adminSubject.getSession(false);
+				logger.info("Admin session created [{}]", session.getId().toString());
+				scheduleAdminTouchTask(session.getTimeout());
+			}
+			return adminSubject;
+		}
+	}
+	
+	public ServiceContext createCoreServiceContext() {
+		return new ServiceContext(CoreManifest.ID);
+	}
+	
+	/*
 	public RunContext createAdminRunContext() {
-		return createAdminRunContext(new ServiceContext(CoreManifest.ID));
+		return createAdminRunContext(createCoreServiceContext());
 	}
 	
 	public RunContext createAdminRunContext(ServiceContext serviceContext) {
 		//UserProfile.Id adminProfile = new UserProfile.Id("*", "admin");
 		//Subject adminSubject = ContextUtils.buildSubject(adminProfile, true);
 		return new RunContext(serviceContext, getAdminSubject());
+	}
+	*/
+	
+	/**
+	 * Parses a User-Agent HTTP Header string looking for useful client information.
+	 * @param userAgentHeader HTTP Header string.
+	 * @return Object representation of the parsed string.
+	 */
+	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
+		synchronized(userAgentsCache) {
+			if(userAgentsCache.containsKey(userAgentHeader)) {
+				return userAgentsCache.get(userAgentHeader);
+			} else {
+				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
+				ReadableUserAgent rua = parser.parse(userAgentHeader);
+				userAgentsCache.put(userAgentHeader, rua);
+				return rua;
+			}
+		}
+	}
+	
+	public URL getResource(String resource) throws MalformedURLException {
+		return servletContext.getResource(resource);
+	}
+	
+	public Template loadTemplate(String path) throws IOException {
+		return freemarkerCfg.getTemplate(path, getSystemCharset().name());
+	}
+	
+	public Template loadTemplate(String path, String encoding) throws IOException {
+		return freemarkerCfg.getTemplate(path, encoding);
 	}
 	
 	/**
@@ -704,10 +746,6 @@ public class WebTopApp {
 		}
 	}
 	
-	public String getCustomProperty(String name) {
-		return null;
-	}
-	
 	public CoreServiceSettings getCoreServiceSettings(String domainId) {
 		CoreServiceSettings css;
 		synchronized(cssCache) {
@@ -845,6 +883,44 @@ public class WebTopApp {
         
         Transport.send(msg);
 	}
+	
+	
+	
+	public List<InternetRecipient> listInternetRecipients(List<String> serviceIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {
+		ArrayList<InternetRecipient> items = new ArrayList<>();
+		
+		for(String sid : serviceIds) {
+			RecipientsProviderBase provider = comm.getRecipientsProvider(sid);
+			if(provider != null) {
+				if(incGlobal && (provider instanceof IGlobalRecipientsProvider)) {
+					try {
+						items.addAll(((IGlobalRecipientsProvider)provider).getRecipients(text));
+					} catch(Throwable t) {
+						
+					}	
+				}
+				if(!StringUtils.isBlank(incDomainId) && (provider instanceof IDomainRecipientsProvider)) {
+					try {
+						items.addAll(((IDomainRecipientsProvider)provider).getRecipients(incDomainId, text));
+					} catch(Throwable t) {
+						
+					}
+				}
+				if((incProfileId != null) && (provider instanceof IProfileRecipientsProvider)) {
+					try {
+						items.addAll(((IProfileRecipientsProvider)provider).getRecipients(incProfileId, text));
+					} catch(Throwable t) {
+						
+					}
+				}
+				
+			}
+		}
+		return items;
+	}
+	
+	
+	
 	
 	
 	public static boolean getPropSchedulerDisabled() {

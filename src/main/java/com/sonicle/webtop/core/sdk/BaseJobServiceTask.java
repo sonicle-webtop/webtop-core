@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopApp;
+import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
 import org.quartz.Job;
@@ -57,8 +57,8 @@ public abstract class BaseJobServiceTask implements Job {
 	public final void execute(JobExecutionContext jec) throws JobExecutionException {
 		this.jec = jec;
 		if(WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			RunContext rc = ((BaseJobService)getData().get("jobService")).getRunContext();
-			ThreadState threadState = new SubjectThreadState(rc.getSubject());
+			Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
+			ThreadState threadState = new SubjectThreadState(subject);
 			
 			try {
 				threadState.bind();

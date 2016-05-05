@@ -43,6 +43,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
@@ -111,7 +112,7 @@ public class Service extends BaseService {
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
-		core = new CoreManager(getRunContext(), getApp());
+		core = new CoreManager(getServiceContext(), getApp());
 		ss = new CoreServiceSettings(SERVICE_ID, profile.getDomainId());
 		us = new CoreUserSettings(profile.getId());
 	}
@@ -256,6 +257,7 @@ public class Service extends BaseService {
 		
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			/*
 			if(getRunContext().isSysAdmin()) {
 				// WebTopAdmin can access to all domains
 				if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
@@ -268,7 +270,15 @@ public class Service extends BaseService {
 				ODomain domain = core.getDomain(up.getDomainId());
 				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
 			}
+			*/
 			
+			if(wildcard && RunContext.isSysAdmin()) {
+				items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			}
+			List<ODomain> domains = core.listDomains(true);
+			for(ODomain domain : domains) {
+				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
+			}
 			new JsonResult("domains", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
@@ -287,7 +297,7 @@ public class Service extends BaseService {
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
-			if(!getRunContext().isSysAdmin()) {
+			if(!RunContext.isSysAdmin()) {
 				domainId = up.getDomainId();
 			}
 			
@@ -314,7 +324,7 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
 			List<OUser> users = null;
-			if(getRunContext().isSysAdmin()) {
+			if(RunContext.isSysAdmin()) {
 				if(!StringUtils.isEmpty(domainId)) {
 					users = core.listUsers(domainId, true);
 				} else {
@@ -564,10 +574,10 @@ public class Service extends BaseService {
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			UserProfile.Id targetPid = new UserProfile.Id(id);
-			if(getRunContext().getProfileId().equals(targetPid)) {
+			if(RunContext.getProfileId().equals(targetPid)) {
 				data = core.listUserOptionServices();
 			} else {
-				CoreManager xcore = WT.getCoreManager(getRunContext(), targetPid);
+				CoreManager xcore = WT.getCoreManager(getServiceContext(), targetPid);
 				data = xcore.listUserOptionServices();
 			}
 			
@@ -705,7 +715,7 @@ public class Service extends BaseService {
 				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 				
 				UserProfile.Id targetPid = new UserProfile.Id(profileId);
-				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(getRunContext(), targetPid);
+				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(getServiceContext(), targetPid);
 				
 				if(operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
@@ -784,7 +794,7 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				UserProfile.Data ud = core.getUserData(getRunContext().getProfileId());
+				UserProfile.Data ud = core.getUserData(RunContext.getProfileId());
 				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimeZone());
 				List<SyncDevice> devices = core.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
@@ -819,8 +829,8 @@ public class Service extends BaseService {
 	
 	private List<String> queryDomains() {
 		List<String> domains = new ArrayList<>();
-		if(getRunContext().isWebTopAdmin()) domains.add("*");
-		domains.add(getRunContext().getProfileId().getDomainId());
+		if(RunContext.isWebTopAdmin()) domains.add("*");
+		domains.add(RunContext.getProfileId().getDomainId());
 		return domains;
 	}
 	

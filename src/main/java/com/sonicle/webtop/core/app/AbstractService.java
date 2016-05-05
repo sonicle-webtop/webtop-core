@@ -41,8 +41,6 @@ public abstract class AbstractService {
 	public final String SERVICE_ID;
 	private final ServiceContext serviceContext;
 	
-	public abstract RunContext getRunContext();
-	
 	public AbstractService() {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		serviceContext = new ServiceContext(SERVICE_ID);

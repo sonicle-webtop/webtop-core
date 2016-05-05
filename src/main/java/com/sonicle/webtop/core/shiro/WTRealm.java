@@ -110,7 +110,7 @@ public class WTRealm extends AuthorizingRealm {
 			String username = (String)token.getPrincipal();
 			char[] password = (char[])token.getCredentials();
 			boolean canBeToken = (password.length == 36);
-			
+			//TODO: completare l'implementazione aggiungendo la login tramite token
 			WebTopApp.logger.debug("validating user {}", username);
 			Principal principal = login.validateUser(username, password);
 			return new WebTopAuthenticationInfo(principal, password, getName());

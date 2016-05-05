@@ -39,7 +39,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
@@ -69,7 +69,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 	@Override
 	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
 		Connection con = null;
-		CoreManager core = WT.getCoreManager(getRunContext());
+		CoreManager core = WT.getCoreManager(getServiceContext());
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
@@ -105,7 +105,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.longTimeFormat = us.getLongTimeFormat();
 				
 				// profileInfo
-				jso.canManageUpi = ContextUtils.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
+				jso.canManageUpi = RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
 				jso.upiTitle = upi.getTitle();
 				jso.upiFirstName = upi.getFirstName();
 				jso.upiLastName = upi.getLastName();
@@ -148,7 +148,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.otpDeviceTrustedOn = trustedOn;
 				
 				// Sync
-				jso.canSyncDevices = ContextUtils.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.canSyncDevices = RunContext.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
@@ -175,7 +175,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				// User personal info
 				if(provider.canWrite()) {
-					if(ContextUtils.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", AuthResource.ACTION_MANAGE)) {
+					if(RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", AuthResource.ACTION_MANAGE)) {
 						if(pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
 						if(pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
 						if(pl.map.has("upiLastName")) upi.setLastName(pl.data.upiLastName);

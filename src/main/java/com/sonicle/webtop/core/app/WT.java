@@ -111,15 +111,21 @@ public class WT {
 		return getWTA().getI18nManager().getTimezones();
 	}
 	
-	public static ServiceManifest getManifest(String serviceId) {
-		return getWTA().getServiceManager().getManifest(serviceId);
-	}
-	
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
 		String internetName = WT.getDomainInternetName(domainId);
 		return MailUtils.buildInternetAddress(local, internetName, personal);
 	}
 	
+	public static ServiceManifest getManifest(String serviceId) {
+		return getWTA().getServiceManager().getManifest(serviceId);
+	}
+	
+	public static ServiceManifest getManifest(Class clazz) {
+		String sid = findServiceId(clazz);
+		return (sid != null) ? getManifest(sid) : null;
+	}
+	
+	/*
 	public static ServiceManifest findManifest(Class clazz) {
 		String cname = clazz.getName();
 		synchronized(manifestCache) {
@@ -136,6 +142,7 @@ public class WT {
 		}
 		return null;
 	}
+	*/
 	
 	public static String findServiceId(Class clazz) {
 		String cname = clazz.getName();
@@ -154,11 +161,11 @@ public class WT {
 		return null;
 	}
 	
-	public static CoreManager getCoreManager(RunContext context) {
+	public static CoreManager getCoreManager(ServiceContext context) {
 		return new CoreManager(context, getWTA());
 	}
 	
-	public static CoreManager getCoreManager(RunContext context, UserProfile.Id targetProfileId) {
+	public static CoreManager getCoreManager(ServiceContext context, UserProfile.Id targetProfileId) {
 		return new CoreManager(context, targetProfileId, getWTA());
 	}
 	

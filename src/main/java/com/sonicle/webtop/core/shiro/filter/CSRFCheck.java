@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.shiro.filter;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
@@ -51,10 +51,10 @@ public class CSRFCheck extends PathMatchingFilter {
 	@Override
 	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
 		String csrf = ServletUtils.getStringParameter(request, "csrf", null);
-		if(StringUtils.equals(ContextUtils.getCSRFToken(), csrf)) {
+		if(StringUtils.equals(RunContext.getCSRFToken(), csrf)) {
 			return true;
 		} else {
-			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "CSRF security token not valid");
+			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
 			return false;
 		}
 	}

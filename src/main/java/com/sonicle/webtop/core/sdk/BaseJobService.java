@@ -33,9 +33,9 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
 import java.util.List;
 import net.sf.qualitycheck.Check;
+import org.apache.shiro.subject.Subject;
 import org.quartz.JobDataMap;
 import org.quartz.Trigger;
 
@@ -43,19 +43,18 @@ import org.quartz.Trigger;
  *
  * @author malbinola
  */
-public abstract class BaseJobService extends AbstractBaseService {
+public abstract class BaseJobService extends BaseAbstractService {
 	private boolean configured = false;
-	private RunContext context;
+	private Subject subject;
 	
-	public final void configure(RunContext context) {
+	public final void configure(Subject subject) {
 		if(configured) return;
 		configured = true;
-		this.context = Check.notNull(context);
+		this.subject = Check.notNull(subject);
 	}
 	
-	@Override
-	public final RunContext getRunContext() {
-		return context;
+	public final Subject getSubject() {
+		return subject;
 	}
 	
 	/**

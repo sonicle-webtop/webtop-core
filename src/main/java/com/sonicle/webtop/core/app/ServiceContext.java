@@ -33,6 +33,10 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.sdk.AuthException;
+import com.sonicle.webtop.core.sdk.MethodAuthException;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  *
  * @author malbinola
@@ -46,5 +50,16 @@ public class ServiceContext {
 	
 	public String getServiceId() {
 		return serviceId;
+	}
+	
+	/**
+	 * Checks if service of this runContext matches the passed one.
+	 * For example, in order to ensure that call is coming from a specific service.
+	 * @param callingServiceId The service ID allowed
+	 * @param methodName The method name for debugging purposes
+	 * @throws AuthException When the running service does not match the passed one
+	 */
+	public void ensureService(String callingServiceId, String methodName) throws MethodAuthException {
+		if(!StringUtils.equals(getServiceId(), callingServiceId)) throw new MethodAuthException(methodName, this, RunContext.getProfileId());
 	}
 }

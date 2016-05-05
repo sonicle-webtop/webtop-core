@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;

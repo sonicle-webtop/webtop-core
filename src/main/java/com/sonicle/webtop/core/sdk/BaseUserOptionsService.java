@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.AbstractService;
-import com.sonicle.webtop.core.app.RunContext;
 import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -57,11 +56,6 @@ public abstract class BaseUserOptionsService extends AbstractService {
 		configured = true;
 		this.sessionProfile = sessionProfile;
 		this.targetProfileId = targetProfileId;
-	}
-	
-	@Override
-	public final RunContext getRunContext() {
-		return new RunContext(getServiceContext());
 	}
 	
 	public UserProfile getSessionProfile() {

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.ServiceManager;
@@ -79,7 +79,7 @@ public class JobService extends BaseJobService {
 	
 	@Override
 	public void initialize() throws Exception {
-		core = WT.getCoreManager(getRunContext());
+		core = WT.getCoreManager(getServiceContext());
 		sidHandlingReminders = core.getServiceManager().listServicesWhichControllerImplements(IControllerHandlesReminders.class);
 	}
 
@@ -132,7 +132,8 @@ public class JobService extends BaseJobService {
 				// Creates a controller instance for each service and calls it for reminders...
 				ServiceManager svcm = jobService.core.getServiceManager();
 				for(String sid : jobService.sidHandlingReminders) {
-					BaseController instance = svcm.instantiateController(sid, jobService.getRunContext());
+					//BaseController instance = svcm.instantiateController(sid, jobService.getRunContext());
+					BaseController instance = svcm.getController(sid);
 					IControllerHandlesReminders controller = (IControllerHandlesReminders)instance;
 					alerts.addAll(controller.returnReminders(now));
 				}
@@ -220,7 +221,7 @@ public class JobService extends BaseJobService {
 				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
 				for(UserProfile.Id pid : pids) {
 					// Skip profiles that don't have permission for syncing devices
-					if(!ContextUtils.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
+					if(!RunContext.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
 					
 					UserProfile.Data ud = jobService.core.getUserData(pid);
 					// Skip profiles that cannot receive email alerts

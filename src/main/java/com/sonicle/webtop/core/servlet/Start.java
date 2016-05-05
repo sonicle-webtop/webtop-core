@@ -38,18 +38,18 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
@@ -58,12 +58,13 @@ import org.apache.shiro.SecurityUtils;
  *
  * @author malbinola
  */
-public class Start extends HttpServlet {
+public class Start extends AbstractServlet {
 	
+	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
+		WebTopApp wta = getWebTopApp(request);
 		SettingsManager setm = wta.getSettingsManager();
-		WebTopSession wts = ContextUtils.getWebTopSession();
+		WebTopSession wts = RunContext.getWebTopSession();
 		
 		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
 		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");
@@ -126,16 +127,6 @@ public class Start extends HttpServlet {
 			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 	
 	private static class MaintenanceException extends Exception {

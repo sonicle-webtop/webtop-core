@@ -31,17 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk.interfaces;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.sdk.WTException;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  *
  * @author malbinola
  */
-public interface IControllerHandlesProfiles {
+public abstract class AbstractServlet extends HttpServlet {
 	
-	public void addProfile(UserProfile.Id profileId) throws WTException;
-	public void removeProfile(UserProfile.Id profileId, boolean deep) throws WTException;
+	protected abstract void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
+	
+	protected WebTopApp getWebTopApp(HttpServletRequest request) {
+		return WebTopApp.get(request);
+	}
+	
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
+	}
 }

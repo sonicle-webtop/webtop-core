@@ -34,12 +34,12 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import java.io.IOException;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,32 +47,23 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author malbinola
  */
-public class Logout extends HttpServlet {
+public class Logout extends AbstractServlet {
 	
+	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = WebTopApp.get(request);
+		WebTopApp wta = getWebTopApp(request);
 		ServletHelper.setCacheControl(response);
 		
 		try {
 			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context
-			WebTopSession wts = ContextUtils.getWebTopSession();
+			WebTopSession wts = RunContext.getWebTopSession();
 			if(wts == null) throw new ServletException("WTS is null!");
 			WebTopApp.setSessionLoggerDC(wts);
-			ContextUtils.getSubject().logout();
+			RunContext.getSubject().logout();
 			ServletUtils.redirectRequest(request, response);
 			
 		} finally {
 			WebTopApp.clearLoggerDC();
 		}
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		processRequest(req, resp);
 	}
 }

@@ -31,12 +31,22 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
+package com.sonicle.webtop.core.app;
 
 /**
  *
  * @author malbinola
  */
-public class EmailRecipients {
+public abstract class AbstractController {
+	public final String SERVICE_ID;
+	private final ServiceContext serviceContext;
 	
+	public AbstractController() {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+		serviceContext = new ServiceContext(SERVICE_ID);
+	}
+	
+	public final ServiceContext getServiceContext() {
+		return serviceContext;
+	}
 }
