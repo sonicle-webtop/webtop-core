@@ -194,7 +194,6 @@ Ext.define('Sonicle.ColorUtils', function (ColorUtils) {
 		
 		/**
 		 * Calculates best contrast color depending on passed background color.
-		 * (see http://www.w3.org/TR/AERT#color-contrast)
 		 * A luminance boundary value of 125 is used as default.
 		 * @param {type} color Background color value.
 		 * @param {type} [lumBound] Luminance boundary value.
@@ -205,7 +204,8 @@ Ext.define('Sonicle.ColorUtils', function (ColorUtils) {
 			var cobj = this.parseColor(color);
 			if(!cobj) return '#000000';
 			// Counting the perceptive luminance - human eye favors green color...
-			if(Math.round(((cobj.r * 299) + (cobj.g * 587) + (cobj.b * 114))/1000) > lumBound) {
+			//if(Math.round(((cobj.r * 299) + (cobj.g * 587) + (cobj.b * 114))/1000) > lumBound) { // W3 formula (http://www.w3.org/TR/AERT#color-contrast)
+			if(Math.round(((cobj.r * 212) + (cobj.g * 715) + (cobj.b * 73))/1000) > lumBound) { // ITU-R BT.709 (https://en.wikipedia.org/wiki/Relative_luminance)
 				return '#000000';
 			} else {
 				return '#FFFFFF';
