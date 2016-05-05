@@ -34,12 +34,14 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
@@ -279,7 +281,7 @@ public class ServiceManager {
 	 * Lists IDs of registered services.
 	 * @return List of services' IDs.
 	 */
-	public List<String> getRegisteredServices() {
+	public List<String> listRegisteredServices() {
 		synchronized(lock) {
 			return Arrays.asList(descriptors.keySet().toArray(new String[descriptors.size()]));
 		}
@@ -294,6 +296,7 @@ public class ServiceManager {
 	
 	/**
 	 * Lists IDs of services which Controller implements specified class.
+	 * @param clazz The interface class to implement
 	 * @return List of services' IDs
 	 */
 	public List<String> listServicesWhichControllerImplements(Class clazz) {
@@ -503,11 +506,10 @@ public class ServiceManager {
 				controllers.put(serviceId, inst);
 				for(Class<?> clazz : inst.getRegisteredComponents()) {
 					try {
-						wta.getComponentsManager().register(new ServiceContext(serviceId), clazz);
+						wta.getComponentsManager().register(clazz);
 					} catch(Throwable t) {
 						logger.error("Unable to instantiate component class [{}]", clazz.getCanonicalName());
 					}
-					
 				}	
 				return true;
 			} else {
@@ -521,25 +523,28 @@ public class ServiceManager {
 		
 		try {
 			return (BaseController)descr.getControllerClass().newInstance();
-			
-		} catch(Exception ex) {
-			logger.error("Controller: instantiation failure [{}]", descr.getManifest().getControllerClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("Controller: instantiation failure [{}]", descr.getManifest().getControllerClassName(), t);
 			return null;
 		}
 	}
 	
-	/*
-	private void initializeController(BaseController instance) {
+	public CoreManager instantiateCoreManager(UserProfile.Id targetProfileId) {
+		return new CoreManager(wta, targetProfileId);
+	}
+	
+	public BaseManager instantiateServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		
 		try {
-			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
-			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("Controller: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			Class clazz = descr.getManagerClass();
+			Constructor<BaseManager> constructor = clazz.getConstructor(UserProfile.Id.class);
+			return constructor.newInstance(targetProfileId);
+		} catch(Throwable t) {
+			logger.error("Manager: instantiation failure [{}]", descr.getManifest().getManagerClassName(), t);
+			return null;
 		}
 	}
-	*/
 	
 	public BaseRestApi instantiateRestApi(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
@@ -548,9 +553,8 @@ public class ServiceManager {
 			Class clazz = descr.getRestApiClass();
 			Constructor<BaseRestApi> constructor = clazz.getConstructor();
 			return constructor.newInstance();
-			
-		} catch(Exception ex) {
-			logger.error("RestApi: instantiation failure [{}]", descr.getManifest().getRestApiClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("RestApi: instantiation failure [{}]", descr.getManifest().getRestApiClassName(), t);
 			return null;
 		}
 	}
@@ -563,8 +567,8 @@ public class ServiceManager {
 		BaseService instance = null;
 		try {
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("PrivateService: instantiation failure [{}]", descr.getManifest().getPrivateServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: instantiation failure [{}]", descr.getManifest().getPrivateServiceClassName(), t);
 			return null;
 		}
 		instance.configure(env);
@@ -573,8 +577,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
 			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("PrivateService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -586,8 +590,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();
-		} catch(Throwable ex) {
-			logger.error("PrivateService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -600,8 +604,8 @@ public class ServiceManager {
 		BaseUserOptionsService instance = null;
 		try {
 			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("UserOptions: instantiation failure [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("UserOptions: instantiation failure [{}]", descr.getManifest().getUserOptionsServiceClassName(), t);
 			return null;
 		}
 		instance.configure(sessionProfile, targetProfileId);
@@ -628,8 +632,8 @@ public class ServiceManager {
 		BasePublicService instance = null;
 		try {
 			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("PublicService: instantiation failure [{}]", descr.getManifest().getPublicServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("PublicService: instantiation failure [{}]", descr.getManifest().getPublicServiceClassName(), t);
 			return null;
 		}
 		instance.configure(wta.getAdminSubject());
@@ -640,8 +644,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("PublicService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), ex);
+		} catch(Throwable t) {
+			logger.error("PublicService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -651,8 +655,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();
-		} catch(Exception ex) {
-			logger.error("PublicService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), ex);
+		} catch(Throwable t) {
+			logger.error("PublicService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -678,8 +682,8 @@ public class ServiceManager {
 		BaseJobService instance = null;
 		try {
 			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("JobService: instantiation failure [{}]", descr.getManifest().getJobServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("JobService: instantiation failure [{}]", descr.getManifest().getJobServiceClassName(), t);
 			return null;
 		}
 		instance.configure(wta.getAdminSubject());
@@ -690,8 +694,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("JobService: initialize() throws errors [{}]", ex);
+		} catch(Throwable t) {
+			logger.error("JobService: initialize() throws errors [{}]", t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -701,8 +705,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();
-		} catch(Exception ex) {
-			logger.error("JobService: cleanup() throws errors [{}]", ex);
+		} catch(Throwable t) {
+			logger.error("JobService: cleanup() throws errors [{}]", t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}

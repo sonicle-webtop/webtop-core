@@ -95,17 +95,19 @@ public class ComponentsManager {
 		return baseClass.isAssignableFrom(clazz);
 	}
 	
-	public void register(ServiceContext context, Class clazz) {
+	public void register(Class clazz) {
 		String className = clazz.getCanonicalName();
 		
+		/*
 		if(isAssignableTo(clazz, RecipientsProviderBase.class)) {
 			synchronized(recipientsProviders) {
-				if(recipientsProviders.containsKey(context.getServiceId())) throw new WTRuntimeException("RecipientsProvider already registered for service [{0}]", context.getServiceId());
-				recipientsProviders.put(context.getServiceId(), instantiateRecipientsProvider(clazz));
+				if(recipientsProviders.containsKey()) throw new WTRuntimeException("RecipientsProvider already registered for service [{0}]", context.getServiceId());
+				recipientsProviders.put(instantiateRecipientsProvider(clazz));
 			}
 		} else {
 			throw new WTRuntimeException("Class cannot be registered [{0}]", className);
 		}
+		*/
 	}
 	
 	public RecipientsProviderBase getRecipientsProvider(String serviceId) {
@@ -125,7 +127,7 @@ public class ComponentsManager {
 	private RecipientsProviderBase instantiateRecipientsProvider(Class clazz) {
 		try {
 			Constructor<RecipientsProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
-			return constructor.newInstance(wta.createCoreServiceContext(), wta.getConnectionManager(), wta.getSettingsManager());
+			return constructor.newInstance(wta.getConnectionManager(), wta.getSettingsManager());
 		} catch(Exception ex) {
 			logger.error("Error instantiating RecipientsProvider [{}]", clazz.getCanonicalName(), ex);
 			throw new WTRuntimeException("Error instantiating RecipientsProvider [{0}]", clazz.getCanonicalName());

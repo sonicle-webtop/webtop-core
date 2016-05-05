@@ -135,7 +135,7 @@ public abstract class BaseService extends BaseAbstractService {
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		UserProfile up = env.getProfile();
-		CoreManager core = WT.getCoreManager(getServiceContext());
+		CoreManager core = WT.getCoreManager();
 		
 		try {
 			String cntx = ServletUtils.getStringParameter(request, "context", true);	

@@ -67,7 +67,7 @@ public class CoreRestApi extends BaseRestApi {
 	}
 	
 	private CoreManager getManager() {
-		return WT.getCoreManager(getServiceContext());
+		return WT.getCoreManager();
 	}
 	
 	@GET

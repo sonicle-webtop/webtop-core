@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.io.output.AbstractReport;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -161,12 +162,43 @@ public class WT {
 		return null;
 	}
 	
-	public static CoreManager getCoreManager(ServiceContext context) {
-		return new CoreManager(context, getWTA());
+	public static CoreManager getCoreManager() {
+		WebTopSession session = RunContext.getWebTopSession();
+		if(session != null) {
+			return session.getCoreManager();
+		} else {
+			// For admin subject during application startup
+			return getWTA().getServiceManager().instantiateCoreManager(RunContext.getProfileId());
+		}
+		//return RunContext.getWebTopSession().getCoreManager();
 	}
 	
-	public static CoreManager getCoreManager(ServiceContext context, UserProfile.Id targetProfileId) {
-		return new CoreManager(context, targetProfileId, getWTA());
+	public static CoreManager getCoreManager(UserProfile.Id targetProfileId) {
+		if(targetProfileId.equals(RunContext.getProfileId())) {
+			return getCoreManager();
+		} else {
+			return getWTA().getServiceManager().instantiateCoreManager(targetProfileId);
+		}
+	}
+	
+	public static BaseManager getServiceManager(String serviceId) {
+		WebTopSession session = RunContext.getWebTopSession();
+		if(session != null) {
+			return session.getServiceManager(serviceId);
+		} else {
+			// For admin subject during application startup
+			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, RunContext.getProfileId());
+		}
+		//return RunContext.getWebTopSession().getServiceManager(serviceId);
+	}
+	
+	public static BaseManager getServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+		if(targetProfileId.equals(RunContext.getProfileId())) {
+			return getServiceManager(serviceId);
+		} else {
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, targetProfileId);
+		}
 	}
 	
 	public static DataSource getCoreDataSource() throws SQLException {

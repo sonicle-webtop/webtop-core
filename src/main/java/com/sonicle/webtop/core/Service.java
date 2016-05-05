@@ -72,7 +72,6 @@ import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -91,7 +90,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
@@ -112,7 +110,7 @@ public class Service extends BaseService {
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
-		core = new CoreManager(getServiceContext(), getApp());
+		core = new CoreManager(getApp());
 		ss = new CoreServiceSettings(SERVICE_ID, profile.getDomainId());
 		us = new CoreUserSettings(profile.getId());
 	}
@@ -577,7 +575,7 @@ public class Service extends BaseService {
 			if(RunContext.getProfileId().equals(targetPid)) {
 				data = core.listUserOptionServices();
 			} else {
-				CoreManager xcore = WT.getCoreManager(getServiceContext(), targetPid);
+				CoreManager xcore = WT.getCoreManager(targetPid);
 				data = xcore.listUserOptionServices();
 			}
 			
@@ -715,7 +713,7 @@ public class Service extends BaseService {
 				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 				
 				UserProfile.Id targetPid = new UserProfile.Id(profileId);
-				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(getServiceContext(), targetPid);
+				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(targetPid);
 				
 				if(operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);

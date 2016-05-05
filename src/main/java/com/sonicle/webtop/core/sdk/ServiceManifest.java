@@ -60,6 +60,7 @@ public class ServiceManifest {
 	protected String companyWebSite;
 	protected String supportEmail;
 	protected String controllerClassName;
+	protected String managerClassName;
 	protected String restApiClassName;
 	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
@@ -110,6 +111,10 @@ public class ServiceManifest {
 		
 		if(!svcEl.containsKey("controllerClassName")) throw new Exception("Invalid value for property [controllerClassName]");
 		controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+		
+		if(svcEl.containsKey("managerClassName")) {
+			managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+		}
 		
 		if(svcEl.containsKey("restApiClassName")) {
 			restApiClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("restApiClassName"), "RestApi"));
@@ -237,6 +242,15 @@ public class ServiceManifest {
 	
 	public String getControllerClassName() {
 		return controllerClassName;
+	}
+	
+	/**
+	 * Gets the class name of server-side Manager implementation.
+	 * (eg. com.sonicle.webtop.core.CoreManager)
+	 * @return The value.
+	 */
+	public String getManagerClassName() {
+		return managerClassName;
 	}
 	
 	/**

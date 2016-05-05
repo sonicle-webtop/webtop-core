@@ -60,6 +60,7 @@ class ServiceDescriptor {
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
 	private Class controllerClass = null;
+	private Class managerClass = null;
 	private Class restApiClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
@@ -75,6 +76,11 @@ class ServiceDescriptor {
 		String className = manifest.getControllerClassName();
 		if(!StringUtils.isBlank(className)) {
 			controllerClass = loadClass(className, BaseController.class, "Controller");
+		}
+		// Loads manager class
+		className = manifest.getManagerClassName();
+		if(!StringUtils.isBlank(className)) {
+			managerClass = loadClass(className, BaseManager.class, "Manager");
 		}
 		// Loads api service class
 		className = manifest.getRestApiClassName();
@@ -113,6 +119,14 @@ class ServiceDescriptor {
 	
 	public boolean doesControllerImplements(Class clazz) {
 		return implementsInterface(controllerClass, clazz);
+	}
+	
+	public boolean hasManager() {
+		return (managerClass != null);
+	}
+
+	public Class getManagerClass() {
+		return managerClass;
 	}
 	
 	public boolean hasRestApi() {

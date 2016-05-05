@@ -58,7 +58,7 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 		// Loads Api endpoints implementation dinamically
 		WebTopApp wta = WebTopApp.getInstance();
 		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.getRegisteredServices()) {
+		for(String serviceId : svcm.listRegisteredServices()) {
 			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
 			if(sd.hasRestApi()) {
 				register(svcm.instantiateRestApi(serviceId));

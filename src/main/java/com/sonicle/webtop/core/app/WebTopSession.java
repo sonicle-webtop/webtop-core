@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.bol.model.AuthResourceShare;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -74,6 +75,8 @@ public class WebTopSession {
 	private final PropertyBag props = new PropertyBag();
 	private int initStatus = 0;
 	private UserProfile profile = null;
+	private final HashMap<String, BaseManager> managers = new HashMap<>();
+	private List<String> allowedServices = null;
 	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
@@ -212,7 +215,12 @@ public class WebTopSession {
 	
 	private void privateInitProfile(HttpServletRequest request) throws Exception {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
-		CoreManager core = WT.getCoreManager(wta.createCoreServiceContext());
+		
+		Subject subject = RunContext.getSubject();
+		UserProfile.Id profileId = RunContext.getProfileId(subject);
+		
+		CoreManager core = wta.createCoreManager(profileId);
+		registerServiceManager(CoreManifest.ID, core);
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
@@ -226,13 +234,49 @@ public class WebTopSession {
 	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
+		CoreManager core = WT.getCoreManager(profile.getId());
 		String sessionId = getId();
-		CoreManager core = WT.getCoreManager(wta.createCoreServiceContext(), profile.getId());
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(sessionId, this);
 		comm = new SessionComManager(sesm, sessionId, profile.getId());
 		
+		allowedServices = core.listAllowedServices();
+		
+		int managerCount = 1, privateCount = 0;
+		BaseManager managerInst = null;
+		BaseService privateInst = null;
+		for(String serviceId : allowedServices) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			if(!serviceId.equals(CoreManifest.ID)) {
+				// Skip core service... its manager has already been instantiated (see above: privateInitProfile)
+				if(descriptor.hasManager()) {
+					managerInst = svcm.instantiateServiceManager(serviceId, profile.getId());
+					if(managerInst != null) {
+						registerServiceManager(serviceId, managerInst);
+						managerCount++;
+					}
+				}
+			}
+			
+			if(descriptor.hasPrivateService()) {
+				// Creates new instance
+				if(svcm.hasFullRights(serviceId)) {
+					privateInst = svcm.instantiatePrivateService(serviceId, sessionId, new CoreEnvironment(wta, this));
+				} else {
+					privateInst = svcm.instantiatePrivateService(serviceId, sessionId, new Environment(this));
+				}
+				if(privateInst != null) {
+					registerPrivateService(privateInst);
+					privateCount++;
+				}
+			}
+		}
+		
+		logger.debug("Instantiated {} managers", managers.size());
+		logger.debug("Instantiated {} private services", services.size());
+		
+		/*
 		// Instantiates services
 		BaseService instance = null;
 		List<String> serviceIds = core.listPrivateServices();
@@ -246,20 +290,40 @@ public class WebTopSession {
 				instance = svcm.instantiatePrivateService(serviceId, sessionId, new Environment(this));
 			}
 			if(instance != null) {
-				addService(instance);
+				registerPrivateService(instance);
 				count++;
 			}
 		}
+		
 		logger.debug("Instantiated {} services", count);
+		*/
 		
 		initStatus = 2;
+	}
+	
+	private void registerServiceManager(String serviceId, BaseManager manager) {
+		synchronized(managers) {
+			if(managers.containsKey(serviceId)) throw new WTRuntimeException("Cannot add manager twice");
+			managers.put(serviceId, manager);
+		}
+	}
+	
+	public BaseManager getServiceManager(String serviceId) {
+		synchronized(managers) {
+			if(!managers.containsKey(serviceId)) throw new WTRuntimeException("No manager found for service [{0}]", serviceId);
+			return managers.get(serviceId);
+		}
+	}
+	
+	public CoreManager getCoreManager() {
+		return (CoreManager)getServiceManager(CoreManifest.ID);
 	}
 	
 	/**
 	 * Stores service instance into this session.
 	 * @param service 
 	 */
-	private void addService(BaseService service) {
+	private void registerPrivateService(BaseService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(services) {
 			if(services.containsKey(serviceId)) throw new WTRuntimeException("Cannot add service twice");

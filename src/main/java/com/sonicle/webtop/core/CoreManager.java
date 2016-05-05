@@ -39,13 +39,11 @@ import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
-import com.sonicle.webtop.core.app.ServiceContext;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -110,13 +108,12 @@ public class CoreManager extends BaseManager {
 	private WebTopApp wta = null;
 	private final HashSet<String> cachePermittedServices = new HashSet<>();
 	
-	public CoreManager(ServiceContext context, WebTopApp wta) {
-		super(context);
-		this.wta = wta;
+	public CoreManager(WebTopApp wta) {
+		this(wta, RunContext.getProfileId());
 	}
 	
-	public CoreManager(ServiceContext context, UserProfile.Id targetProfileId, WebTopApp wta) {
-		super(context, targetProfileId);
+	public CoreManager(WebTopApp wta, UserProfile.Id targetProfileId) {
+		super(targetProfileId);
 		this.wta = wta;
 	}
 	
@@ -149,21 +146,23 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public ServiceManager getServiceManager() {
-		getServiceContext().ensureService(SERVICE_ID, "getServiceManager");
+		ensureCallerService(SERVICE_ID, "getServiceManager");
 		return wta.getServiceManager();
 	}
 	
 	public OTPManager getOTPManager() {
-		getServiceContext().ensureService(SERVICE_ID, "getOTPManager");
+		ensureCallerService(SERVICE_ID, "getOTPManager");
 		return wta.getOTPManager();
 	}
 	
 	public boolean writeLog(String action, String remoteIp, String userAgent, String sessionId, String data) {
-		return wta.getLogManager().write(RunContext.getProfileId(), getServiceContext().getServiceId(), action, getSoftwareName(), remoteIp, userAgent, sessionId, data);
+		//TODO: trovare modo di completare serviceId (ora a "")
+		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), remoteIp, userAgent, sessionId, data);
 	}
 	
 	public boolean writeLog(String action, String data) {
-		return wta.getLogManager().write(RunContext.getProfileId(), getServiceContext().getServiceId(), action, getSoftwareName(), null, null, null, data);
+		//TODO: trovare modo di completare serviceId (ora a "")
+		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), null, null, null, data);
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
@@ -586,13 +585,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public OTPManager.Config otpPrepareVerifyCode() throws WTException {
-		getServiceContext().ensureService(SERVICE_ID, "otpPrepareVerifyCode");
+		ensureCallerService(SERVICE_ID, "otpPrepareVerifyCode");
 		OTPManager otp = getOTPManager();
 		return otp.prepareCheckCode(getTargetProfileId());
 	}
 	
 	public boolean otpVerifyCode(OTPManager.Config params, int code) throws WTException {
-		getServiceContext().ensureService(SERVICE_ID, "otpVerifyCode");
+		ensureCallerService(SERVICE_ID, "otpVerifyCode");
 		OTPManager otp = getOTPManager();
 		return otp.checkCode(getTargetProfileId(), params, code);
 	}
@@ -1050,6 +1049,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	*/
+	
+	public List<String> listAllowedServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		ArrayList<String> items = new ArrayList<>();
+		
+		for(String id : svcm.listRegisteredServices()) {
+			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) items.add(id);
+		}
+		return items;
+	}
 	
 	public List<String> listPrivateServices() {
 		ServiceManager svcm = wta.getServiceManager();

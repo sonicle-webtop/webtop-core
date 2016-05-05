@@ -79,7 +79,7 @@ public class JobService extends BaseJobService {
 	
 	@Override
 	public void initialize() throws Exception {
-		core = WT.getCoreManager(getServiceContext());
+		core = WT.getCoreManager();
 		sidHandlingReminders = core.getServiceManager().listServicesWhichControllerImplements(IControllerHandlesReminders.class);
 	}
 

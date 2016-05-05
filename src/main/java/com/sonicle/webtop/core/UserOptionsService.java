@@ -69,7 +69,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 	@Override
 	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
 		Connection con = null;
-		CoreManager core = WT.getCoreManager(getServiceContext());
+		CoreManager core = WT.getCoreManager();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);

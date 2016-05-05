@@ -53,7 +53,7 @@ public class RestApiFilter implements Filter {
 	public void init(FilterConfig fc) throws ServletException {
 		WebTopApp wta = WebTopApp.get(fc.getServletContext());
 		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.getRegisteredServices()) {
+		for(String serviceId : svcm.listRegisteredServices()) {
 			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
 			if(sd.hasRestApi()) validIds.add(serviceId);
 		}

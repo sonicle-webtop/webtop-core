@@ -38,6 +38,7 @@ import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.provider.IDomainRecipientsProvider;
 import com.sonicle.webtop.core.app.provider.IGlobalRecipientsProvider;
@@ -135,7 +136,14 @@ public final class WebTopApp {
 			if(instance != null) throw new RuntimeException("Initialization already done");
 			instance = new WebTopApp(context);
 		}
-		instance.afterInit();
+		
+		ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
+		threadState.bind();
+		try {
+			instance.afterInit();
+		} finally {
+			threadState.clear();
+		}
 	}
 	
 	public static WebTopApp getInstance() {
@@ -508,8 +516,12 @@ public final class WebTopApp {
 		}
 	}
 	
-	public ServiceContext createCoreServiceContext() {
-		return new ServiceContext(CoreManifest.ID);
+	public CoreManager createCoreManager() {
+		return new CoreManager(this);
+	}
+	
+	public CoreManager createCoreManager(UserProfile.Id targetProfileId) {
+		return new CoreManager(this, targetProfileId);
 	}
 	
 	/*

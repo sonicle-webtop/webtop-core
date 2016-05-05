@@ -35,10 +35,10 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.ServiceContext;
 import com.sonicle.webtop.core.app.WT;
 import java.util.Locale;
-import net.sf.qualitycheck.Check;
+import org.apache.commons.lang3.StringUtils;
+import sun.reflect.Reflection;
 
 /**
  *
@@ -46,18 +46,12 @@ import net.sf.qualitycheck.Check;
  */
 public abstract class BaseManager {
 	public final String SERVICE_ID;
-	private final ServiceContext context;
 	private final UserProfile.Id targetProfile;
 	private String softwareName;
 	protected Locale locale;
 	
-	public BaseManager(ServiceContext context) {
-		this(context, RunContext.getProfileId());
-	}
-	
-	public BaseManager(ServiceContext context, UserProfile.Id targetProfileId) {
+	public BaseManager(UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
-		this.context = Check.notNull(context);
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		locale = findLocale();
@@ -65,19 +59,37 @@ public abstract class BaseManager {
 	
 	protected Locale findLocale() {
 		try {
-			CoreManager core = WT.getCoreManager(context);
+			CoreManager core = WT.getCoreManager();
 			return core.getUserData(getTargetProfileId()).getLocale();
 		} catch(Exception ex) {
 			return Locale.ENGLISH;
 		}
-	} 
-	
-	public ServiceContext getServiceContext() {
-		return context;
 	}
 	
 	public UserProfile.Id getTargetProfileId() {
 		return targetProfile;
+	}
+	
+	/**
+	 * Checks if service of this runContext matches the passed one.
+	 * For example, in order to ensure that call is coming from a specific service.
+	 * @param callerServiceIdMustBe The service ID allowed
+	 * @param methodName The method name for debugging purposes
+	 * @throws AuthException When the running service does not match the passed one
+	 */
+	public void ensureCallerService(String callerServiceIdMustBe, String methodName) throws MethodAuthException {
+		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+		if(!StringUtils.equals(callerServiceId, callerServiceIdMustBe)) throw new MethodAuthException(methodName, callerServiceId, RunContext.getProfileId());
+	}
+	
+	/**
+	 * Checks if the running profile (see runContext) and target profile are the same.
+	 * @throws AuthException When the running profile does not match the target profile
+	 */
+	protected void ensureUser() throws AuthException {
+		UserProfile.Id runningProfile = RunContext.getProfileId();
+		if(RunContext.isWebTopAdmin(runningProfile)) return;
+		if(!runningProfile.equals(getTargetProfileId())) throw new AuthException("");
 	}
 	
 	/**
@@ -131,15 +143,5 @@ public abstract class BaseManager {
 	 */
 	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
 		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
-	}
-	
-	/**
-	 * Checks if the running profile (see runContext) and target profile are the same.
-	 * @throws AuthException When the running profile does not match the target profile
-	 */
-	protected void ensureUser() throws AuthException {
-		UserProfile.Id runningProfile = RunContext.getProfileId();
-		if(RunContext.isWebTopAdmin(runningProfile)) return;
-		if(!runningProfile.equals(getTargetProfileId())) throw new AuthException("");
 	}
 }
