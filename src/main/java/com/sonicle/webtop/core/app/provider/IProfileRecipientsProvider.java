@@ -31,56 +31,17 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.app.provider;
 
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class SessionListener implements HttpSessionListener {
-
-	@Override
-	public void sessionCreated(HttpSessionEvent hse) {
-		WebTopApp wta = WebTopApp.getInstance();
-		//wta.getSessionManager().createSession(hse.getSession());
-		
-		/*
-		HttpSession session = hse.getSession();
-		String sid = ServletHelper.getSessionID(session);
-		
-		try {
-			WebTopSession wts = new WebTopSession(session);
-			session.setAttribute(WebTopSession.ATTRIBUTE, wts);
-			//session.setAttribute(ServletHelper.WEBTOPSESSION_ATTRIBUTE, wts);
-			WebTopApp.logger.info("WTS initialized [{}]", sid);
-		} catch(Exception ex) {
-			WebTopApp.logger.error("WTS initialization error [{}]", sid, ex);
-		}
-		*/
-	}
-
-	@Override
-	public void sessionDestroyed(HttpSessionEvent hse) {
-		WebTopApp wta = WebTopApp.getInstance();
-		//wta.getSessionManager().destroySession(hse.getSession());
-		
-		/*
-		HttpSession session = hse.getSession();
-		String sid = ServletHelper.getSessionID(session);
-		
-		try {
-			WebTopSession wts = WebTopSession.get(session);
-			//WebTopSession wts = ServletHelper.getWebTopSession(session);
-			if(wts != null) wts.destroy();
-			WebTopApp.logger.info("WTS destroyed: {}", sid);
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error destroying WTS for {}", sid, ex);
-		} finally {
-			session.removeAttribute(WebTopSession.ATTRIBUTE);
-		}
-		*/
-	}
+public interface IProfileRecipientsProvider {
+	
+	public List<InternetRecipient> getRecipients(UserProfile.Id profileId, String text);
 }

@@ -31,17 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk.interfaces;
+package com.sonicle.webtop.core.app.provider;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public interface IControllerHandlesProfiles {
+public interface IDomainRecipientsProvider {
 	
-	public void addProfile(UserProfile.Id profileId) throws WTException;
-	public void removeProfile(UserProfile.Id profileId, boolean deep) throws WTException;
+	public List<InternetRecipient> getRecipients(String domainId, String text);
 }

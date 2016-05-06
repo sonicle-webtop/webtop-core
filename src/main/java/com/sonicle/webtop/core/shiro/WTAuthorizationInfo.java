@@ -43,7 +43,6 @@ import org.apache.shiro.authz.Permission;
  * @author malbinola
  */
 public class WTAuthorizationInfo implements AuthorizationInfo {
-	
 	protected Set<String> roles;
 	protected Set<String> stringPermissions;
 	protected Set<Permission> objectPermissions;

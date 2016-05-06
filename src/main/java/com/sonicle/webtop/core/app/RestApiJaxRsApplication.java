@@ -33,8 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.process.internal.RequestScoped;
+import com.sonicle.webtop.core.sdk.AuthException;
+import com.sonicle.webtop.core.sdk.WTException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
 import org.secnod.shiro.jersey.SubjectFactory;
@@ -49,15 +52,33 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 		super();
 		register(new SubjectFactory());
 		register(new ShiroExceptionMapper());
+		register(new AuthExceptionMapper());
+		register(new WTExceptionMapper());
 		
 		// Loads Api endpoints implementation dinamically
 		WebTopApp wta = WebTopApp.getInstance();
 		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.getRegisteredServices()) {
+		for(String serviceId : svcm.listRegisteredServices()) {
 			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
 			if(sd.hasRestApi()) {
 				register(svcm.instantiateRestApi(serviceId));
 			}
+		}
+	}
+	
+	public class AuthExceptionMapper implements ExceptionMapper<AuthException> {
+
+		@Override
+		public Response toResponse(AuthException e) {
+			return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
+		}
+	}
+	
+	public class WTExceptionMapper implements ExceptionMapper<WTException> {
+
+		@Override
+		public Response toResponse(WTException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}
 }

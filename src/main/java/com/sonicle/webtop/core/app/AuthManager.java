@@ -244,12 +244,6 @@ public class AuthManager {
 		}
 	}
 	
-	public Subject buildSubject(UserProfile.Id pid) {
-		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
-		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		return new Subject.Builder().principals(principals).buildSubject();
-	}
-	
 	
 	
 	/*

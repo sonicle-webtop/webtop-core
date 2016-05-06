@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.AbstractService;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 
 /**
@@ -45,11 +44,6 @@ public abstract class BaseRestApi extends AbstractService {
 	
 	public BaseRestApi() {
 		super();
-	}
-	
-	@Override
-	public final RunContext getRunContext() {
-		return new RunContext(getServiceContext());
 	}
 	
 	/**

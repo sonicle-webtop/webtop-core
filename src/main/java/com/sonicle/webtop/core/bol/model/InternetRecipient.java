@@ -31,17 +31,56 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk.interfaces;
-
-import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.sdk.WTException;
+package com.sonicle.webtop.core.bol.model;
 
 /**
  *
  * @author malbinola
  */
-public interface IControllerHandlesProfiles {
+public class InternetRecipient {
+	private String source;
+	private String type;
+	private String personal;
+	private String address;
 	
-	public void addProfile(UserProfile.Id profileId) throws WTException;
-	public void removeProfile(UserProfile.Id profileId, boolean deep) throws WTException;
+	public InternetRecipient() {}
+	
+	public InternetRecipient(String source, String type, String personal, String address) {
+		this.source = source;
+		this.type = type;
+		this.personal = personal;
+		this.address = address;
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getPersonal() {
+		return personal;
+	}
+
+	public void setPersonal(String personal) {
+		this.personal = personal;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
 }

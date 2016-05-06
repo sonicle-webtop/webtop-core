@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
@@ -69,7 +68,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
  *
  * @author malbinola
  */
-public abstract class BaseService extends AbstractBaseService {
+public abstract class BaseService extends BaseAbstractService {
 	private boolean configured = false;
 	private Environment env;
 	
@@ -81,11 +80,6 @@ public abstract class BaseService extends AbstractBaseService {
 	
 	public final Environment getEnv() {
 		return env;
-	}
-	
-	@Override
-	public final RunContext getRunContext() {
-		return new RunContext(getServiceContext());
 	}
 	
 	public ClientOptions returnClientOptions() {
@@ -141,7 +135,7 @@ public abstract class BaseService extends AbstractBaseService {
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		UserProfile up = env.getProfile();
-		CoreManager core = WT.getCoreManager(getRunContext());
+		CoreManager core = WT.getCoreManager();
 		
 		try {
 			String cntx = ServletUtils.getStringParameter(request, "context", true);	

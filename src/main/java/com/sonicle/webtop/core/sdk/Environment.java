@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.app.ContextUtils;
+import com.sonicle.webtop.core.app.RunContext;
 import java.util.List;
 import net.sf.uadetector.ReadableUserAgent;
 
@@ -51,7 +51,7 @@ public class Environment {
 
 	public Environment(WebTopSession wts) {
 		this.wts = wts;
-		csrf = ContextUtils.getCSRFToken();
+		csrf = RunContext.getCSRFToken();
 		cus = new CoreUserSettings(wts.getUserProfile().getId());
 	}
 

@@ -33,8 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
-
 /**
  *
  * @author malbinola
@@ -45,7 +43,7 @@ public class MethodAuthException extends AuthException {
 		super("Method [{0}] cannot be accessed", methodName);
 	}
 	
-	public MethodAuthException(String methodName, RunContext runContext) {
-		super("Method [{0}] cannot be accessed by [{1}, {2}]", methodName, runContext.getServiceId(), runContext.getProfileId().toString());
+	public MethodAuthException(String methodName, String serviceId, UserProfile.Id runningProfile) {
+		super("Method [{0}] cannot be accessed by [{1}, {2}]", methodName, serviceId, runningProfile.toString());
 	}
 }

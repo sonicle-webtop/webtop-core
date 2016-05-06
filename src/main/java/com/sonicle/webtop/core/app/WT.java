@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.bol.OContentType;
 import com.sonicle.webtop.core.bol.model.AuthResource;
 import com.sonicle.webtop.core.dal.ContentTypeDAO;
 import com.sonicle.webtop.core.io.output.AbstractReport;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -111,15 +112,21 @@ public class WT {
 		return getWTA().getI18nManager().getTimezones();
 	}
 	
-	public static ServiceManifest getManifest(String serviceId) {
-		return getWTA().getServiceManager().getManifest(serviceId);
-	}
-	
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
 		String internetName = WT.getDomainInternetName(domainId);
 		return MailUtils.buildInternetAddress(local, internetName, personal);
 	}
 	
+	public static ServiceManifest getManifest(String serviceId) {
+		return getWTA().getServiceManager().getManifest(serviceId);
+	}
+	
+	public static ServiceManifest getManifest(Class clazz) {
+		String sid = findServiceId(clazz);
+		return (sid != null) ? getManifest(sid) : null;
+	}
+	
+	/*
 	public static ServiceManifest findManifest(Class clazz) {
 		String cname = clazz.getName();
 		synchronized(manifestCache) {
@@ -136,6 +143,7 @@ public class WT {
 		}
 		return null;
 	}
+	*/
 	
 	public static String findServiceId(Class clazz) {
 		String cname = clazz.getName();
@@ -154,12 +162,43 @@ public class WT {
 		return null;
 	}
 	
-	public static CoreManager getCoreManager(RunContext context) {
-		return new CoreManager(context, getWTA());
+	public static CoreManager getCoreManager() {
+		WebTopSession session = RunContext.getWebTopSession();
+		if(session != null) {
+			return session.getCoreManager();
+		} else {
+			// For admin subject during application startup
+			return getWTA().getServiceManager().instantiateCoreManager(RunContext.getProfileId());
+		}
+		//return RunContext.getWebTopSession().getCoreManager();
 	}
 	
-	public static CoreManager getCoreManager(RunContext context, UserProfile.Id targetProfileId) {
-		return new CoreManager(context, targetProfileId, getWTA());
+	public static CoreManager getCoreManager(UserProfile.Id targetProfileId) {
+		if(targetProfileId.equals(RunContext.getProfileId())) {
+			return getCoreManager();
+		} else {
+			return getWTA().getServiceManager().instantiateCoreManager(targetProfileId);
+		}
+	}
+	
+	public static BaseManager getServiceManager(String serviceId) {
+		WebTopSession session = RunContext.getWebTopSession();
+		if(session != null) {
+			return session.getServiceManager(serviceId);
+		} else {
+			// For admin subject during application startup
+			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, RunContext.getProfileId());
+		}
+		//return RunContext.getWebTopSession().getServiceManager(serviceId);
+	}
+	
+	public static BaseManager getServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+		if(targetProfileId.equals(RunContext.getProfileId())) {
+			return getServiceManager(serviceId);
+		} else {
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, targetProfileId);
+		}
 	}
 	
 	public static DataSource getCoreDataSource() throws SQLException {

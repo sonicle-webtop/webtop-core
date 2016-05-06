@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.BaseController;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ import org.slf4j.Logger;
 public class CoreController extends BaseController {
 	public static final Logger logger = WT.getLogger(CoreController.class);
 	
-	public CoreController(RunContext context) {
-		super(context);
+	public CoreController() {
+		super();
 	}
 }

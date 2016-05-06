@@ -33,18 +33,31 @@
  */
 package com.sonicle.webtop.core.app;
 
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  *
  * @author malbinola
  */
-public class ServiceContext {
-	private final String serviceId;
+public abstract class AbstractServlet extends HttpServlet {
 	
-	ServiceContext(String serviceId) {
-		this.serviceId = serviceId;
+	protected abstract void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
+	
+	protected WebTopApp getWebTopApp(HttpServletRequest request) {
+		return WebTopApp.get(request);
 	}
 	
-	public String getServiceId() {
-		return serviceId;
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		processRequest(request, response);
 	}
 }

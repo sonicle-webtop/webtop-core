@@ -33,28 +33,49 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.AbstractController;
+import com.sonicle.webtop.core.app.ComponentsManager;
 import com.sonicle.webtop.core.app.WT;
-import net.sf.qualitycheck.Check;
+import java.util.HashSet;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseController {
-	public final String SERVICE_ID;
-	private final RunContext context;
+public abstract class BaseController extends AbstractController {
+	private final HashSet<Class<?>> registeredClasses = new HashSet<>();
 	
-	public BaseController(RunContext context) {
-		SERVICE_ID = WT.findServiceId(this.getClass());
-		this.context = Check.notNull(context);
+	public BaseController() {
+		super();
 	}
 	
-	public RunContext getRunContext() {
-		return context;
-	}
-	
-	public ServiceManifest getManifest() {
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
 		return WT.getManifest(SERVICE_ID);
+	}
+	
+	public void registerComponent(Class clazz) {
+		synchronized(registeredClasses) {
+			if(registeredClasses.contains(clazz)) throw new WTRuntimeException("Class already registered [{0}]", clazz.getCanonicalName());
+			if(ComponentsManager.canBeRegistered(clazz)) {
+				registeredClasses.add(clazz);
+			} else {
+				throw new WTRuntimeException("Class cannot be registered [{0}]", clazz.getCanonicalName());
+			}
+		}
+	}
+	
+	public HashSet<Class<?>> getRegisteredComponents() {
+		synchronized(registeredClasses) {
+			return registeredClasses;
+		}
+	}
+	
+	private boolean isAssignableTo(Class clazz, Class baseClass) {
+		if(clazz == null) return false;
+		return baseClass.isAssignableFrom(clazz);
 	}
 }

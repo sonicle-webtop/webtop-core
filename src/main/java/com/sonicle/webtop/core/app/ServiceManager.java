@@ -34,12 +34,14 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
+import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.Environment;
@@ -107,6 +109,7 @@ public class ServiceManager {
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
 	private final HashMap<String, String> xidToServiceId = new HashMap<>();
 	private final HashMap<String, String> serviceIdToJsPath = new HashMap<>();
+	private final LinkedHashMap<String, BaseController> controllers = new LinkedHashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
@@ -175,6 +178,7 @@ public class ServiceManager {
 		// Register discovered services
 		for(ServiceManifest manifest : manifests) {
 			registerService(manifest);
+			createController(manifest.getId());
 		}
 		
 		// Initialize public/job services
@@ -277,14 +281,22 @@ public class ServiceManager {
 	 * Lists IDs of registered services.
 	 * @return List of services' IDs.
 	 */
-	public List<String> getRegisteredServices() {
+	public List<String> listRegisteredServices() {
 		synchronized(lock) {
 			return Arrays.asList(descriptors.keySet().toArray(new String[descriptors.size()]));
 		}
 	}
 	
+	public BaseController getController(String serviceId) {
+		synchronized(controllers) {
+			if(!controllers.containsKey(serviceId)) throw new WTRuntimeException("Unable to get controller for service [{0}]", serviceId);
+			return controllers.get(serviceId);
+		}
+	}
+	
 	/**
 	 * Lists IDs of services which Controller implements specified class.
+	 * @param clazz The interface class to implement
 	 * @return List of services' IDs
 	 */
 	public List<String> listServicesWhichControllerImplements(Class clazz) {
@@ -486,17 +498,50 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseController instantiateController(String serviceId, RunContext runContext) {
+	private boolean createController(String serviceId) {
+		synchronized(controllers) {
+			if(controllers.containsKey(serviceId)) throw new RuntimeException("Cannot add controller twice");
+			BaseController inst = instantiateController(serviceId);
+			if(inst != null) {
+				controllers.put(serviceId, inst);
+				for(Class<?> clazz : inst.getRegisteredComponents()) {
+					try {
+						wta.getComponentsManager().register(clazz);
+					} catch(Throwable t) {
+						logger.error("Unable to instantiate component class [{}]", clazz.getCanonicalName());
+					}
+				}	
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	private BaseController instantiateController(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
-		// Creates controller instance
 		try {
-			Class clazz = descr.getControllerClass();
-			Constructor<BaseController> constructor = clazz.getConstructor(RunContext.class);
-			return constructor.newInstance(runContext);
-			
-		} catch(Exception ex) {
-			logger.error("Error instantiating Controller [{}]", descr.getManifest().getControllerClassName(), ex);
+			return (BaseController)descr.getControllerClass().newInstance();
+		} catch(Throwable t) {
+			logger.error("Controller: instantiation failure [{}]", descr.getManifest().getControllerClassName(), t);
+			return null;
+		}
+	}
+	
+	public CoreManager instantiateCoreManager(UserProfile.Id targetProfileId) {
+		return new CoreManager(wta, targetProfileId);
+	}
+	
+	public BaseManager instantiateServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		
+		try {
+			Class clazz = descr.getManagerClass();
+			Constructor<BaseManager> constructor = clazz.getConstructor(UserProfile.Id.class);
+			return constructor.newInstance(targetProfileId);
+		} catch(Throwable t) {
+			logger.error("Manager: instantiation failure [{}]", descr.getManifest().getManagerClassName(), t);
 			return null;
 		}
 	}
@@ -504,14 +549,12 @@ public class ServiceManager {
 	public BaseRestApi instantiateRestApi(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
-		// Creates rest api instance
 		try {
 			Class clazz = descr.getRestApiClass();
 			Constructor<BaseRestApi> constructor = clazz.getConstructor();
 			return constructor.newInstance();
-			
-		} catch(Exception ex) {
-			logger.error("Error instantiating RestApi [{}]", descr.getManifest().getRestApiClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("RestApi: instantiation failure [{}]", descr.getManifest().getRestApiClassName(), t);
 			return null;
 		}
 	}
@@ -524,8 +567,8 @@ public class ServiceManager {
 		BaseService instance = null;
 		try {
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating PrivateService [{}]", descr.getManifest().getPrivateServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: instantiation failure [{}]", descr.getManifest().getPrivateServiceClassName(), t);
 			return null;
 		}
 		instance.configure(env);
@@ -534,8 +577,8 @@ public class ServiceManager {
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
 			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("Initialization method returns errors", ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -544,12 +587,11 @@ public class ServiceManager {
 	}
 	
 	public void cleanupPrivateService(BaseService instance) {
-		// Calls cleanup method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();
-		} catch(Exception ex) {
-			logger.error("Cleanup method returns errors", ex);
+		} catch(Throwable t) {
+			logger.error("PrivateService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
@@ -559,19 +601,116 @@ public class ServiceManager {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
 		
-		// Creates userOptions service instance
 		BaseUserOptionsService instance = null;
 		try {
 			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating userOptions service [{}]", descr.getManifest().getUserOptionsServiceClassName(), ex);
+		} catch(Throwable t) {
+			logger.error("UserOptions: instantiation failure [{}]", descr.getManifest().getUserOptionsServiceClassName(), t);
 			return null;
 		}
 		instance.configure(sessionProfile, targetProfileId);
 		return instance;
 	}
 	
+	private boolean createPublicService(String serviceId) {
+		synchronized(publicServices) {
+			if(publicServices.containsKey(serviceId)) throw new RuntimeException("Cannot add public service twice");
+			BasePublicService inst = instantiatePublicService(serviceId);
+			if(inst != null) {
+				publicServices.put(serviceId, inst);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
 	
+	private BasePublicService instantiatePublicService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(!descr.hasPublicService()) throw new RuntimeException("Service has no public class");
+		
+		BasePublicService instance = null;
+		try {
+			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
+		} catch(Throwable t) {
+			logger.error("PublicService: instantiation failure [{}]", descr.getManifest().getPublicServiceClassName(), t);
+			return null;
+		}
+		instance.configure(wta.getAdminSubject());
+		return instance;
+	}
+	
+	private void initializePublicService(BasePublicService instance) {
+		try {
+			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+			instance.initialize();
+		} catch(Throwable t) {
+			logger.error("PublicService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
+	
+	private void cleanupPublicService(BasePublicService instance) {
+		try {
+			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			instance.cleanup();
+		} catch(Throwable t) {
+			logger.error("PublicService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
+	
+	private boolean createJobService(String serviceId) {
+		synchronized(jobServices) {
+			if(jobServices.containsKey(serviceId)) throw new RuntimeException("Cannot add job service twice");
+			BaseJobService inst = instantiateJobService(serviceId);
+			if(inst != null) {
+				jobServices.put(serviceId, inst);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	private BaseJobService instantiateJobService(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(!descr.hasJobService()) throw new RuntimeException("Service has no job class");
+		
+		BaseJobService instance = null;
+		try {
+			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
+		} catch(Throwable t) {
+			logger.error("JobService: instantiation failure [{}]", descr.getManifest().getJobServiceClassName(), t);
+			return null;
+		}
+		instance.configure(wta.getAdminSubject());
+		return instance;
+	}
+	
+	private void initializeJobService(BaseJobService instance) {
+		try {
+			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+			instance.initialize();
+		} catch(Throwable t) {
+			logger.error("JobService: initialize() throws errors [{}]", t);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
+	
+	private void cleanupJobService(BaseJobService instance) {
+		try {
+			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			instance.cleanup();
+		} catch(Throwable t) {
+			logger.error("JobService: cleanup() throws errors [{}]", t);
+		} finally {
+			WebTopApp.unsetServiceLoggerDC();
+		}
+	}
 	
 	
 	
@@ -720,111 +859,7 @@ public class ServiceManager {
 		}
 	}
 	
-	private boolean createPublicService(String serviceId) {
-		synchronized(publicServices) {
-			if(publicServices.containsKey(serviceId)) throw new RuntimeException("Cannot add public service twice");
-			BasePublicService inst = instantiatePublicService(serviceId);
-			if(inst != null) {
-				publicServices.put(serviceId, inst);
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
 	
-	private BasePublicService instantiatePublicService(String serviceId) {
-		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasPublicService()) throw new RuntimeException("Service has no public class");
-		
-		// Creates service instance
-		BasePublicService instance = null;
-		try {
-			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating PublicService [{}]", descr.getManifest().getPublicServiceClassName(), ex);
-			return null;
-		}
-		instance.configure(wta.createAdminRunContext(new ServiceContext(serviceId)));
-		return instance;
-	}
-	
-	private void initializePublicService(BasePublicService instance) {
-		// Calls initialization method
-		try {
-			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
-			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("PublicService method returns errors [initialize()]", ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
-		}
-	}
-	
-	private void cleanupPublicService(BasePublicService instance) {
-		// Calls cleanup method
-		try {
-			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
-			instance.cleanup();
-		} catch(Exception ex) {
-			logger.error("PublicService method returns errors [cleanup()]", ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
-		}
-	}
-	
-	private boolean createJobService(String serviceId) {
-		synchronized(jobServices) {
-			if(jobServices.containsKey(serviceId)) throw new RuntimeException("Cannot add job service twice");
-			BaseJobService inst = instantiateJobService(serviceId);
-			if(inst != null) {
-				jobServices.put(serviceId, inst);
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-	
-	private BaseJobService instantiateJobService(String serviceId) {
-		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasJobService()) throw new RuntimeException("Service has no job class");
-		
-		// Creates service instance
-		BaseJobService instance = null;
-		try {
-			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
-		} catch(Exception ex) {
-			logger.error("Error instantiating JobService [{}]", descr.getManifest().getJobServiceClassName(), ex);
-			return null;
-		}
-		instance.configure(wta.createAdminRunContext(new ServiceContext(serviceId)));
-		return instance;
-	}
-	
-	private void initializeJobService(BaseJobService instance) {
-		// Calls initialization method
-		try {
-			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
-			instance.initialize();
-		} catch(Throwable ex) {
-			logger.error("JobService method returns errors [initialize()]", ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
-		}
-	}
-	
-	private void cleanupJobService(BaseJobService instance) {
-		// Calls cleanup method
-		try {
-			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
-			instance.cleanup();
-		} catch(Exception ex) {
-			logger.error("JobService method returns errors [cleanup()]", ex);
-		} finally {
-			WebTopApp.unsetServiceLoggerDC();
-		}
-	}
 	
 	private void postponeJobsInitialization() {
 		Thread engine = new Thread(new Runnable() {

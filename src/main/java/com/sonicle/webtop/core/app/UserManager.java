@@ -145,6 +145,86 @@ public final class UserManager {
 		}
 	}
 	
+	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
+		DomainDAO dao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			if(enabledOnly) {
+				return dao.selectActive(con);
+			} else {
+				return dao.selectAll(con);
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ODomain getDomain(String domainId) throws WTException {
+		DomainDAO dao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return dao.selectById(con, domainId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			if(enabledOnly) {
+				return dao.selectActiveByDomain(con, domainId);
+			} else {
+				return dao.selectByDomain(con, domainId);
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OUser getUser(UserProfile.Id pid) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public UserProfile.Data userData(UserProfile.Id pid) throws WTException {
 		synchronized(lock1) {
 			if(!userToDataCache.containsKey(pid)) {
@@ -212,36 +292,6 @@ public final class UserManager {
 		synchronized(lock3) {
 			if(!roleUidToUserCache.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
 			return roleUidToUserCache.get(uid);
-		}
-	}
-	
-	public ODomain getDomain(String domainId) throws WTException {
-		DomainDAO dao = DomainDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			return dao.selectById(con, domainId);
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public OUser getUser(UserProfile.Id pid) throws WTException {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			return dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
 		}
 	}
 	

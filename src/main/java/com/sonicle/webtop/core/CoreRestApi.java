@@ -34,18 +34,17 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.web.json.RestJsonResult;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
-import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.app.ContextUtils;
 import java.util.List;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -63,74 +62,65 @@ public class CoreRestApi extends BaseRestApi {
 		super();
 	}
 	
-	@GET
-	@Path("/sessions")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response sessionsList() {
-		try {
-			CoreManager core = WT.getCoreManager(getRunContext());
-			List<SessionInfo> items = core.listSessions();
-			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
-			
-		} catch(WTException ex) {
-			return Response.serverError().build();
-		}
+	private Response ok(RestJsonResult result) {
+		return Response.ok(result.print()).build();
+	}
+	
+	private CoreManager getManager() {
+		return WT.getCoreManager();
 	}
 	
 	@GET
 	@Path("/themes")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response themesList() {
-		try {
-			logger.debug("{}", ContextUtils.getSubject().toString());
-			CoreManager core = WT.getCoreManager(getRunContext());
-			List<JsSimple> items = core.listThemes();
-			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
-			
-		} catch(WTException ex) {
-			return Response.serverError().build();
-		}
+	public Response themesList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listThemes();
+		return ok(new RestJsonResult(items, items.size()));
 	}
 	
 	@GET
 	@Path("/layouts")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response layoutsList() {
-		try {
-			CoreManager core = WT.getCoreManager(getRunContext());
-			List<JsSimple> items = core.listLayouts();
-			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
-			
-		} catch(WTException ex) {
-			return Response.serverError().build();
-		}
+	public Response layoutsList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listLayouts();
+		return ok(new RestJsonResult(items, items.size()));
 	}
 	
 	@GET
 	@Path("/lafs")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response lafsList() {
-		try {
-			CoreManager core = WT.getCoreManager(getRunContext());
-			List<JsSimple> items = core.listLAFs();
-			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
-			
-		} catch(WTException ex) {
-			return Response.serverError().build();
-		}
+	public Response lafsList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listLAFs();
+		return ok(new RestJsonResult(items, items.size()));
+	}
+	
+	@GET
+	@Path("/sessions")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response sessionsList() throws WTException {
+		CoreManager core = getManager();
+		List<SessionInfo> items = core.listSessions();
+		return ok(new RestJsonResult(items, items.size()));
+	}
+	
+	@DELETE
+	@Path("/session/{id}")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response sessionDelete(@PathParam("id")String id) throws WTException {
+		CoreManager core = getManager();
+		core.invalidateSession(id);
+		return ok(new RestJsonResult());
 	}
 	
 	@GET
 	@Path("/domains")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response domainsList() {
-		try {
-			CoreManager core = WT.getCoreManager(getRunContext());
-			List<ODomain> items = core.listDomains(true);
-			return Response.ok(new RestJsonResult(items, items.size()).print()).build();
-			
-		} catch(WTException ex) {
-			return Response.serverError().build();
-		}
+	public Response domainsList() throws WTException {
+		CoreManager core = getManager();
+		List<ODomain> items = core.listDomains(true);
+		return ok(new RestJsonResult(items, items.size()));
 	}
 }
