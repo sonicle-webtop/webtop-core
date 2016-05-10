@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 	extend: 'Ext.grid.NavigationModel',
 	
 	//remove cell focus style
-	focusCls: '',
+	//focusCls: '',
 	
 	startEdit: function(record,c) {
 		this.view.grid.getPlugin('socellediting').startEdit(record, this.view.ownerCt.getColumnManager().getHeaderAtIndex(c));
@@ -74,7 +74,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 		return false;
 	},
 	
-	moveDown: function() {
+	moveDown: function(stopExitFocus) {
 		var me=this,
 			ppos=me.previousPosition;
 
@@ -95,11 +95,15 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 		} else {
 			var email=ppos.record.get("email");
 			if (email==="") {
-				me.view.grid.fireExitFocus();
+				if (!stopExitFocus)
+					me.view.grid.fireExitFocus();
 			} else {
-				var rt=ppos.record.get(me.view.grid.fields.recipientType);
-				var rec=me.view.grid.addRecipient(rt,'');
+				var g=me.view.grid,
+					rt=ppos.record.get(g.fields.recipientType),
+					rec=g.addRecipient(rt,'');
+				me.setPosition(ppos.rowIdx+1,1,null,null,true);
 				me.startEdit(rec,1);
+				return true;
 			}
 		}
 		return false;
@@ -143,7 +147,7 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 		else if (k === e.UP) {
 			return me.navigationModel.moveUp();
 		} else if (k === e.DOWN) {
-			return me.navigationModel.moveDown();
+			return me.navigationModel.moveDown(true);
 		}
     },
 	
@@ -151,7 +155,7 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 		var me=this;
     	me.callParent(arguments);
 		if (me.wasEnterKey) {
-			me.navigationModel.moveDown();
+			me.navigationModel.moveDown(true);
 			me.wasEnterKey=false;
 		}
 		
