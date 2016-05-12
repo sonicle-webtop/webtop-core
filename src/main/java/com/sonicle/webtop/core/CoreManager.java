@@ -717,7 +717,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public <T>T getIncomingShareData(String shareId, Class<T> type) throws WTException {
+	public <T>T getIncomingShareFolderData(String shareId, Class<T> type) throws WTException {
 		UserManager usrm = wta.getUserManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		ShareDataDAO shddao = ShareDataDAO.getInstance();
@@ -732,7 +732,7 @@ public class CoreManager extends BaseManager {
 			
 			//return areActionsPermittedOnShare(share, permissionResource, actions);
 			
-			OShareData data = shddao.selectByShareUser(con, shareId, profileUid);
+			OShareData data = shddao.selectByShareUser(con, Integer.valueOf(shareId), profileUid);
 			if(data != null) {
 				return LangUtils.value(data.getValue(), null, type);
 			} else {
@@ -784,7 +784,7 @@ public class CoreManager extends BaseManager {
 		return areActionsPermittedOnShare(serviceId, permRes, new String[]{action}, shareId)[0];
 	}
 	
-	public boolean isShareElementsPermitted(String serviceId, String resource, String action, String shareId) throws WTException {;
+	public boolean isShareElementsPermitted(String serviceId, String resource, String action, String shareId) throws WTException {
 		String permRes = AuthResourceShare.buildElementsPermissionResource(resource);
 		return areActionsPermittedOnShare(serviceId, permRes, new String[]{action}, shareId)[0];
 	}
