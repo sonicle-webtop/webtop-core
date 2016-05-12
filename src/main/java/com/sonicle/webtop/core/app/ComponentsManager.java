@@ -38,8 +38,12 @@ import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
+import org.apache.commons.collections.map.MultiValueMap;
 import org.slf4j.Logger;
 
 /**
@@ -82,8 +86,8 @@ public class ComponentsManager {
 		wta = null;
 	}
 	
-	private final HashSet<String> registeredClasses = new HashSet<>();
-	private final LinkedHashMap<String, RecipientsProviderBase> recipientsProviders = new LinkedHashMap<>();
+	private final HashSet<Class<?>> registeredClasses = new HashSet<>();
+	private static final MultiValueMap recipientsProviderClasses = MultiValueMap.decorate(new LinkedHashMap<String, Class<RecipientsProviderBase>>());
 	
 	public static boolean canBeRegistered(final Class<?> clazz) {
 		if(isAssignableTo(clazz, RecipientsProviderBase.class)) return true;
@@ -95,39 +99,39 @@ public class ComponentsManager {
 		return baseClass.isAssignableFrom(clazz);
 	}
 	
-	public void register(Class clazz) {
+	public void register(String providerId, Class clazz) {
 		String className = clazz.getCanonicalName();
-		
-		/*
-		if(isAssignableTo(clazz, RecipientsProviderBase.class)) {
-			synchronized(recipientsProviders) {
-				if(recipientsProviders.containsKey()) throw new WTRuntimeException("RecipientsProvider already registered for service [{0}]", context.getServiceId());
-				recipientsProviders.put(instantiateRecipientsProvider(clazz));
+		synchronized(registeredClasses) {
+			if(registeredClasses.contains(clazz)) throw new WTRuntimeException("Class already registered [{0}]", clazz.getCanonicalName());
+			if(canBeRegistered(clazz)) {
+				registeredClasses.add(clazz);
+			} else {
+				throw new WTRuntimeException("Class cannot be registered [{0}]", clazz.getCanonicalName());
 			}
-		} else {
-			throw new WTRuntimeException("Class cannot be registered [{0}]", className);
+			
+			if(isAssignableTo(clazz, RecipientsProviderBase.class)) {
+				recipientsProviderClasses.put(providerId, clazz);
+			} else {
+				throw new WTRuntimeException("Class cannot be registered [{0}]", className);
+			}
 		}
-		*/
 	}
 	
-	public RecipientsProviderBase getRecipientsProvider(String serviceId) {
+	public List<Class<RecipientsProviderBase>> getRecipientsProviderClasses(String providerId) {
 		synchronized(registeredClasses) {
-			return recipientsProviders.get(serviceId);
+			if(recipientsProviderClasses.containsKey(providerId)) {
+				return new ArrayList<>((Collection<Class<RecipientsProviderBase>>)recipientsProviderClasses.get(providerId));
+			} else {
+				return null;
+			}
 		}
 	}
 	
-	/*
-	public List<RecipientsProviderBase> getRecipientsProviders() {
-		synchronized(registeredClasses) {
-			return new ArrayList<>(recipientsProviders.values());
-		}
-	}
-	*/
-	
-	private RecipientsProviderBase instantiateRecipientsProvider(Class clazz) {
+	public RecipientsProviderBase instantiateRecipientsProvider(Class<RecipientsProviderBase> clazz) {
 		try {
-			Constructor<RecipientsProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
-			return constructor.newInstance(wta.getConnectionManager(), wta.getSettingsManager());
+			//Constructor<RecipientsProviderBase> constructor = clazz.getConstructor(IConnectionProvider.class, IServiceSettingReader.class);
+			//return constructor.newInstance(wta.getConnectionManager(), wta.getSettingsManager());
+			return (RecipientsProviderBase)clazz.newInstance();
 		} catch(Exception ex) {
 			logger.error("Error instantiating RecipientsProvider [{}]", clazz.getCanonicalName(), ex);
 			throw new WTRuntimeException("Error instantiating RecipientsProvider [{0}]", clazz.getCanonicalName());

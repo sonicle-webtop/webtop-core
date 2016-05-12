@@ -27,8 +27,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		super(serviceId, domainId);
 	}
 	
-	public static final String TMP = "tmp";
-	
 	/**
 	 * [string][system]
 	 * Defines server path in which PHP is installed
@@ -43,15 +41,9 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system]
-	 * Defines system temp path in which temporarly store files
+	 * Defines webtop home path
 	 */
-	public static final String SYSTEM_PATH_TEMP = "system.path.temp";
-	
-	/**
-	 * [string][system]
-	 * Defines system public path in which store public services resources
-	 */
-	public static final String SYSTEM_PATH_PUBLIC = "system.path.public";
+	public static final String HOME_PATH = "home.path";
 	
 	/**
 	 * [string][system+domain][*]
@@ -188,10 +180,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";
 	
-	public String getTempPath() {
-		return getString(TMP, null);
-	}
-	
 	public String getPhpPath() {
 		return getString(PHP_PATH, null);
 	}
@@ -200,12 +188,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(ZPUSH_PATH, null);
 	}
 	
-	public String getSystemTempPath() {
-		return getString(SYSTEM_PATH_TEMP, null);
-	}
-	
-	public String getSystemPublicPath() {
-		return getString(SYSTEM_PATH_PUBLIC, null);
+	public String getHomePath() {
+		return getString(HOME_PATH, null);
 	}
 	
 	public boolean getOTPEnabled() {

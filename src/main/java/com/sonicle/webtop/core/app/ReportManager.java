@@ -94,8 +94,8 @@ public class ReportManager {
 		JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
 	}
 	
-	private void exportReportToHtmlStream(JasperPrint jasperPrint, OutputStream outputStream) throws JRException, WTException {
-		File temp = wta.createTempFile();
+	private void exportReportToHtmlStream(String domainId, JasperPrint jasperPrint, OutputStream outputStream) throws JRException, WTException {
+		File temp = wta.createTempFile(domainId);
 		FileInputStream fis = null;
 		try {
 			JasperExportManager.exportReportToHtmlFile(jasperPrint, temp.getAbsolutePath());
@@ -105,11 +105,11 @@ public class ReportManager {
 			throw new WTException(ex);
 		} finally {
 			IOUtils.closeQuietly(fis);
-			wta.deleteTempFile(temp.getName());
+			wta.deleteTempFile(domainId, temp.getName());
 		}
 	}
 	
-	public void generateToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
+	public void generateToStream(String domainId, AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
 		InputStream rptIs = null;
 		
 		try {
@@ -122,7 +122,7 @@ public class ReportManager {
 			JasperPrint jp = JasperFillManager.fillReport(rptIs, report.getParameters(), report.getDataSource());
 			switch(outputType) {
 				case HTML:
-					exportReportToHtmlStream(jp, outputStream);
+					exportReportToHtmlStream(domainId, jp, outputStream);
 					break;
 				case PDF:
 					exportReportToPdfStream(jp, outputStream);

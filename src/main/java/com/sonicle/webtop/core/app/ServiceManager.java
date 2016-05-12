@@ -504,13 +504,15 @@ public class ServiceManager {
 			BaseController inst = instantiateController(serviceId);
 			if(inst != null) {
 				controllers.put(serviceId, inst);
-				for(Class<?> clazz : inst.getRegisteredComponents()) {
+				/*
+				for(Class<?> clazz : ((AbstractController)inst).getRegisteredClasses()) {
 					try {
-						wta.getComponentsManager().register(clazz);
+						wta.getComponentsManager().register(serviceId, clazz);
 					} catch(Throwable t) {
 						logger.error("Unable to instantiate component class [{}]", clazz.getCanonicalName());
 					}
-				}	
+				}
+				*/
 				return true;
 			} else {
 				return false;
@@ -535,6 +537,7 @@ public class ServiceManager {
 	
 	public BaseManager instantiateServiceManager(String serviceId, UserProfile.Id targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(!descr.hasManager()) return null;
 		
 		try {
 			Class clazz = descr.getManagerClass();

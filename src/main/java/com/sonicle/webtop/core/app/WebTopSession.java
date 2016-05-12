@@ -98,13 +98,14 @@ public class WebTopSession {
 			services.clear();
 		}
 		// Cleanup uploads
-		synchronized(uploads) {
-			for(UploadedFile file : uploads.values()) {
-				if(!file.virtual) {
-					WT.deleteTempFile(file.id);
+		if(profile != null) {
+			String domainId = getProfileId().getDomain();
+			synchronized(uploads) {
+				for(UploadedFile file : uploads.values()) {
+					if(!file.virtual) wta.deleteTempFile(domainId, file.id);
 				}
+				uploads.clear();
 			}
-			uploads.clear();
 		}
 	}
 	
@@ -310,7 +311,7 @@ public class WebTopSession {
 	
 	public BaseManager getServiceManager(String serviceId) {
 		synchronized(managers) {
-			if(!managers.containsKey(serviceId)) throw new WTRuntimeException("No manager found for service [{0}]", serviceId);
+			if(!managers.containsKey(serviceId)) return null;
 			return managers.get(serviceId);
 		}
 	}

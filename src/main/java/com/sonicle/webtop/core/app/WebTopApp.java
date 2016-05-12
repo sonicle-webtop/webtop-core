@@ -40,16 +40,10 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.app.provider.IDomainRecipientsProvider;
-import com.sonicle.webtop.core.app.provider.IGlobalRecipientsProvider;
-import com.sonicle.webtop.core.app.provider.IProfileRecipientsProvider;
-import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.OMessageQueue;
-import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
-import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -72,7 +66,6 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -163,7 +156,7 @@ public final class WebTopApp {
 	
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
-	private ComponentsManager comm = null;
+	//private ComponentsManager comm = null;
 	private ConnectionManager conm = null;
 	private LogManager logm = null;
 	private UserManager usrm = null;
@@ -231,7 +224,7 @@ public final class WebTopApp {
 		freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
 		freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
-		comm = ComponentsManager.initialize(this); // Components Manager
+		//comm = ComponentsManager.initialize(this); // Components Manager
 		logm = LogManager.initialize(this); // Log Manager
 		usrm = UserManager.initialize(this); // User Manager
 		
@@ -430,9 +423,11 @@ public final class WebTopApp {
 	 * Returns the ComponentsManager.
 	 * @return ComponentsManager instance.
 	 */
+	/*
 	public ComponentsManager getComponentsManager() {
 		return comm;
 	}
+	*/
 	
 	/**
 	 * Returns the SettingsManager.
@@ -650,6 +645,46 @@ public final class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
+	
+	
+	private String substitutePathVariables(String path, String domainId) {
+		return StringUtils.replace(path, "{DOMAIN_ID}", domainId);
+	}
+	
+	public String getHomePath(String domainId) {
+		CoreServiceSettings css = getCoreServiceSettings("*");
+		return substitutePathVariables(css.getHomePath(), domainId);
+	}
+	
+	public String getTempPath(String domainId) {
+		return getHomePath(domainId) + "temp/";
+	}
+	
+	public String getPublicPath(String domainId) {
+		return getHomePath(domainId) + "public/";
+	}
+	
+	public File getTempFolder(String domainId) throws WTException {
+		File tempDir = new File(getTempPath(domainId));
+		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
+			throw new WTException("Temp folder is not a directory or is write protected");
+		}
+		return tempDir;
+	}
+	
+	public File createTempFile(String domainId) throws WTException {
+		return createTempFile(domainId, null, null);
+	}
+	
+	public File createTempFile(String domainId, String prefix, String suffix) throws WTException {
+		return new File(getTempFolder(domainId), buildTempFilename(prefix, suffix));
+	}
+	
+	public boolean deleteTempFile(String domainId, String filename) throws WTException {
+		File tempFile = new File(getTempFolder(domainId), filename);
+		return tempFile.delete();
+	}
+	
 	public String buildTempFilename() {
 		return buildTempFilename(null, null);
 	}
@@ -662,6 +697,9 @@ public final class WebTopApp {
 			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
 		}
 	}
+	
+	
+	/*
 	
 	public String getSystemTempPath() {
 		CoreServiceSettings css = getCoreServiceSettings("*");
@@ -695,6 +733,8 @@ public final class WebTopApp {
 		File tempFile = new File(tempDir, filename);
 		return tempFile.delete();
 	}
+	
+	*/
 	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
 		if(!url.getProtocol().equals("file")) throw new MalformedURLException("Protocol must be 'file'");
@@ -897,7 +937,7 @@ public final class WebTopApp {
 	}
 	
 	
-	
+	/*
 	public List<InternetRecipient> listInternetRecipients(List<String> serviceIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
 		
@@ -930,7 +970,7 @@ public final class WebTopApp {
 		}
 		return items;
 	}
-	
+	*/
 	
 	
 	

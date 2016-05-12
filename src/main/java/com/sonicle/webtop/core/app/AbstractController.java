@@ -33,14 +33,37 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.util.HashSet;
+
 /**
  *
  * @author malbinola
  */
 public abstract class AbstractController {
 	public final String SERVICE_ID;
+	//private final HashSet<Class<?>> registeredClasses = new HashSet<>();
 	
 	public AbstractController() {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 	}
+	
+	/*
+	HashSet<Class<?>> getRegisteredClasses() {
+		synchronized(registeredClasses) {
+			return registeredClasses;
+		}
+	}
+	
+	public void registerComponent(Class clazz) {
+		synchronized(registeredClasses) {
+			if(registeredClasses.contains(clazz)) throw new WTRuntimeException("Class already registered [{0}]", clazz.getCanonicalName());
+			if(ComponentsManager.canBeRegistered(clazz)) {
+				registeredClasses.add(clazz);
+			} else {
+				throw new WTRuntimeException("Class cannot be registered [{0}]", clazz.getCanonicalName());
+			}
+		}
+	}
+	*/
 }

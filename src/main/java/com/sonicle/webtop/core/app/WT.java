@@ -317,7 +317,8 @@ public class WT {
 	}
 	
 	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
-		getWTA().getReportManager().generateToStream(report, outputType, outputStream);
+		UserProfile.Id runPid = RunContext.getProfileId();
+		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
 	}
 	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
@@ -358,6 +359,37 @@ public class WT {
 		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
+	
+	
+	public static String getHomePath() {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getHomePath(runPid.getDomain());
+	}
+	
+	public static String getTempPath() {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getTempPath(runPid.getDomain());
+	}
+	
+	public static File getTempFolder() throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getTempFolder(runPid.getDomain());
+	}
+	
+	public static File createTempFile() throws WTException {
+		return createTempFile(null, null);
+	}
+	
+	public static File createTempFile(String prefix, String suffix) throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
+	}
+	
+	public static boolean deleteTempFile(String filename) throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().deleteTempFile(runPid.getDomain(), filename);
+	}
+	
 	public static String buildTempFilename() {
 		return getWTA().buildTempFilename(null, null);
 	}
@@ -366,25 +398,7 @@ public class WT {
 		return getWTA().buildTempFilename(prefix, suffix);
 	}
 	
-	public static String getSystemTempPath() {
-		return getWTA().getSystemTempPath();
-	}
 	
-	public static File getTempFolder() throws WTException {
-		return getWTA().getTempFolder();
-	}
-	
-	public static File createTempFile() throws WTException {
-		return createTempFile(null, null);
-	}
-	
-	public static File createTempFile(String prefix, String suffix) throws WTException {
-		return getWTA().createTempFile(prefix, suffix);
-	}
-	
-	public static boolean deleteTempFile(String filename) throws WTException {
-		return getWTA().deleteTempFile(filename);
-	}
 	
 	/**
 	 * Retrieves MediaType associated to a file extension from the local table.
