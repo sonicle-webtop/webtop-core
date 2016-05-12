@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.app.AuthManager;
@@ -55,6 +56,7 @@ import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
+import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.model.AuthResource;
@@ -77,6 +79,7 @@ import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
+import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
@@ -707,6 +710,34 @@ public class CoreManager extends BaseManager {
 			}
 			return folders;
 			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public <T>T getIncomingShareData(String shareId, Class<T> type) throws WTException {
+		UserManager usrm = wta.getUserManager();
+		ShareDAO shadao = ShareDAO.getInstance();
+		ShareDataDAO shddao = ShareDataDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String profileUid = usrm.userToUid(getTargetProfileId());
+			con = WT.getCoreConnection();
+			
+			OShare share = shadao.selectById(con, Integer.valueOf(shareId));
+			if(share == null) throw new WTException("Unable to find share [{0}]", shareId);
+			
+			//return areActionsPermittedOnShare(share, permissionResource, actions);
+			
+			OShareData data = shddao.selectByShareUser(con, shareId, profileUid);
+			if(data != null) {
+				return LangUtils.value(data.getValue(), null, type);
+			} else {
+				return null;
+			}
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
