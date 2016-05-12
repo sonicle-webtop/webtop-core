@@ -33,19 +33,29 @@
  */
 package com.sonicle.webtop.core.app.provider;
 
-import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
-import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
+import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
 public abstract class RecipientsProviderBase {
-	protected final IConnectionProvider conp;
-	protected final IServiceSettingReader setm;
+	private final String id;
+	private final String description;
 	
-	public RecipientsProviderBase(IConnectionProvider conp, IServiceSettingReader setm) {
-		this.conp = conp;
-		this.setm = setm;
+	public RecipientsProviderBase(String id, String description) {
+		this.id = id;
+		this.description = description;
 	}
+	
+	public String getId() {
+		return id;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
+	
+	public abstract List<InternetRecipient> getRecipients(String queryText, int max);
 }

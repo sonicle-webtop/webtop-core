@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.ActivityGrid;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -61,6 +62,7 @@ import com.sonicle.webtop.core.bol.model.AuthResourceShare;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
 import com.sonicle.webtop.core.bol.model.SharePermsFolder;
 import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
+import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.Sharing;
@@ -82,6 +84,7 @@ import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.interfaces.IRecipientsProvidersSource;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import com.sonicle.webtop.core.util.ZPushManager;
 import java.net.URI;
@@ -92,6 +95,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -99,14 +103,15 @@ import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
 public class CoreManager extends BaseManager {
+	private static final Logger logger = WT.getLogger(CoreManager.class);
 	private WebTopApp wta = null;
-	private final HashSet<String> cachePermittedServices = new HashSet<>();
 	
 	public CoreManager(WebTopApp wta) {
 		this(wta, RunContext.getProfileId());
@@ -117,24 +122,51 @@ public class CoreManager extends BaseManager {
 		this.wta = wta;
 	}
 	
-	/*
-	private boolean cacheRecipientsProviderIsReady = false;
-	private final HashSet<RecipientsProviderBase> cacheRecipientsProvider = new HashSet<>();
-	*/
+	private final HashSet<String> cacheReady = new HashSet<>();
+	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
+	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
 	
-	/*
-	private HashSet<RecipientsProviderBase> getRecipientsProviders() {
-		
-		synchronized(cacheRecipientsProvider) {
-			if(!cacheRecipientsProviderIsOk) {
-				
-				wta.getServiceManager()
-				cacheRecipientsProviderIsOk = true;
-			}
-			return cacheRecipientsProvider;
+	private void buildAllowedServicesCache() {
+		ServiceManager svcm = wta.getServiceManager();
+		for(String id : svcm.listRegisteredServices()) {
+			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) cacheAllowedServices.add(id);
 		}
 	}
-	*/
+	
+	public List<String> listAllowedServices() {
+		synchronized(cacheAllowedServices) {
+			if(!cacheReady.contains("cacheAllowedServices")) {
+				buildAllowedServicesCache();
+				cacheReady.add("cacheAllowedServices");
+			}
+			return cacheAllowedServices;
+		}
+	}
+	
+	private void buildProfileRecipientsProviderCache() {
+		for(String serviceId : listAllowedServices()) {
+			BaseManager manager = WT.getServiceManager(serviceId, getTargetProfileId());
+			if(manager instanceof IRecipientsProvidersSource) {
+				List<RecipientsProviderBase> providers = ((IRecipientsProvidersSource)manager).returnRecipientsProviders();
+				if(providers == null) continue;
+				
+				for(RecipientsProviderBase provider : providers) {
+					CompositeId cid = new CompositeId(serviceId, provider.getId());
+					cacheProfileRecipientsProvider.put(cid.toString(), provider);
+				}
+			}
+		}
+	}
+	
+	private LinkedHashMap<String, RecipientsProviderBase> getProfileRecipientsProviders() {
+		synchronized(cacheProfileRecipientsProvider) {
+			if(!cacheReady.contains("cacheProfileRecipientsProvider")) {
+				buildProfileRecipientsProviderCache();
+				cacheReady.add("cacheProfileRecipientsProvider");
+			}
+			return cacheProfileRecipientsProvider;
+		}
+	}
 	
 	@Override
 	protected Locale findLocale() {
@@ -1050,6 +1082,7 @@ public class CoreManager extends BaseManager {
 	}
 	*/
 	
+	/*
 	public List<String> listAllowedServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<String> items = new ArrayList<>();
@@ -1059,6 +1092,7 @@ public class CoreManager extends BaseManager {
 		}
 		return items;
 	}
+	*/
 	
 	public List<String> listPrivateServices() {
 		ServiceManager svcm = wta.getServiceManager();
@@ -1161,7 +1195,7 @@ public class CoreManager extends BaseManager {
 			}
 		
 		} catch(SQLException | DAOException ex) {
-			WebTopApp.logger.error("Error querying servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
+			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
 			return new ArrayList<>();
 			
 		} finally {
@@ -1196,7 +1230,7 @@ public class CoreManager extends BaseManager {
 			}
 			
 		} catch(SQLException | DAOException ex) {
-			WebTopApp.logger.error("Error adding servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -1212,7 +1246,7 @@ public class CoreManager extends BaseManager {
 			sedao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			
 		} catch(SQLException | DAOException ex) {
-			WebTopApp.logger.error("Error deleting servicestore entry [{}]", pid, ex);
+			logger.error("Error deleting servicestore entry [{}]", pid, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1227,7 +1261,7 @@ public class CoreManager extends BaseManager {
 			sedao.deleteByDomainUserService(con, pid.getDomainId(), pid.getUserId(), serviceId);
 			
 		} catch(SQLException | DAOException ex) {
-			WebTopApp.logger.error("Error deleting servicestore entry [{}, {}]", pid, serviceId, ex);
+			logger.error("Error deleting servicestore entry [{}, {}]", pid, serviceId, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1242,29 +1276,79 @@ public class CoreManager extends BaseManager {
 			sedao.delete(con, pid.getDomainId(), pid.getUserId(), serviceId, context, key);
 			
 		} catch(SQLException | DAOException ex) {
-			WebTopApp.logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", pid, serviceId, context, key, ex);
+			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", pid, serviceId, context, key, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
+	public List<String> listInternetRecipientsSources() throws WTException {
+		return new ArrayList<>(getProfileRecipientsProviders().keySet());
+	}
+	
+	public List<InternetRecipient> listProfileInternetRecipients(String queryText, int max) throws WTException {
+		return listProfileInternetRecipients(listInternetRecipientsSources(), queryText, max);
+	}
+	
+	public List<InternetRecipient> listProfileInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
+		ArrayList<InternetRecipient> items = new ArrayList<>();
+		List<InternetRecipient> recipients = null;
+		
+		int limit = max;
+		for(String soid : sourceIds) {
+			RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
+			if(provider == null) continue;
+			
+			recipients = provider.getRecipients(queryText, limit);
+			if(recipients != null) {
+				if(recipients.size() > limit) {
+					items.addAll(recipients.subList(0, limit-1));
+					break;
+				} else {
+					limit -=  recipients.size();
+					items.addAll(recipients);
+				}
+			}
+		}
+		return items;
+	}
+	
 	
 	/*
-	public List<InternetRecipient> listInternetRecipients() {
-		HashSet<String> permittedIds = listPermittedServices();
+	public List<InternetRecipient> listInternetRecipients(List<String> providerIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {
+		ArrayList<InternetRecipient> items = new ArrayList<>();
 		
-		
-		wta.listInternetRecipients(null, true, SERVICE_ID, null, SERVICE_ID)
-		
+		for(String proid : providerIds) {
+			for(RecipientsProviderBase provider : getProfileRecipientsProviders()) {
+				if(provider != null) {
+					if(incGlobal && (provider instanceof IGlobalRecipientsProvider)) {
+						try {
+							items.addAll(((IGlobalRecipientsProvider)provider).getRecipients(text));
+						} catch(Throwable t) {
+							logger.error("Error querying provider", t);
+						}	
+					}
+					if(!StringUtils.isBlank(incDomainId) && (provider instanceof IDomainRecipientsProvider)) {
+						try {
+							items.addAll(((IDomainRecipientsProvider)provider).getRecipients(incDomainId, text));
+						} catch(Throwable t) {
+							logger.error("Error querying provider", t);
+						}
+					}
+					if((incProfileId != null) && (provider instanceof IProfileRecipientsProvider)) {
+						try {
+							items.addAll(((IProfileRecipientsProvider)provider).getRecipients(incProfileId, text));
+						} catch(Throwable t) {
+							logger.error("Error querying provider", t);
+						}
+					}
+
+				}
+			}
+		}
+		return items;
 	}
 	*/
-	
-	
-	
-	
-	
-	
-	
 	
 	public List<SyncDevice> listZPushDevices() throws WTException {
 		try {

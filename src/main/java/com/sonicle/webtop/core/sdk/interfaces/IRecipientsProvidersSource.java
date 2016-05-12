@@ -31,16 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.provider;
+package com.sonicle.webtop.core.sdk.interfaces;
 
-import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public interface IGlobalRecipientsProvider {
+public interface IRecipientsProvidersSource {
 	
-	public List<InternetRecipient> getRecipients(String text);
+	public List<RecipientsProviderBase> returnRecipientsProviders();
 }
