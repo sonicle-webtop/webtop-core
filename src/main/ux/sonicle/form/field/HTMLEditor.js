@@ -129,6 +129,10 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		
     },
 	
+	focusEditor: function() {
+		this.tmce.focus();
+	},
+	
 	getToolbar: function() {
 		return this.toolbar;
 	},

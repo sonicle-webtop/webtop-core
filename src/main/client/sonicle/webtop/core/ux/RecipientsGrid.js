@@ -202,7 +202,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	
 	initComponent: function() {
 		var me = this,
-			navModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel');
+			navModel = this.navigationModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel');
 		
 		Ext.apply(me, {
 			selModel: 'cellmodel',
@@ -268,6 +268,18 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 		obj[me.fields.email]=email;
 		var recs=me.getStore().add(obj);
 		return recs[0];
+	},
+	
+	getRecipientsCount: function() {
+		return this.getStore().getCount();
+	},
+	
+	getRecipientAt: function(row) {
+		return this.getStore().getAt(row).get("email");
+	},
+	
+	startEditAt: function(row) {
+		this.navigationModel.startEdit(this.getStore().getAt(row),1);
 	},
 	
 	fireExitFocus: function() {
