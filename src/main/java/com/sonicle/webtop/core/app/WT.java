@@ -253,6 +253,64 @@ public class WT {
 		return conm.getConnection(manifest.getId(), dataSourceName);
 	}
 	
+	public static String getHomePath() {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getHomePath(runPid.getDomain());
+	}
+	
+	public static String getTempPath() {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getTempPath(runPid.getDomain());
+	}
+	
+	public static File getTempFolder() throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getTempFolder(runPid.getDomain());
+	}
+	
+	public static File createTempFile() throws WTException {
+		return createTempFile(null, null);
+	}
+	
+	public static File createTempFile(String prefix, String suffix) throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
+	}
+	
+	public static boolean deleteTempFile(String filename) throws WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().deleteTempFile(runPid.getDomain(), filename);
+	}
+	
+	public static String buildTempFilename() {
+		return getWTA().buildTempFilename(null, null);
+	}
+	
+	public static String buildTempFilename(String prefix, String suffix) {
+		return getWTA().buildTempFilename(prefix, suffix);
+	}
+	
+	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
+		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
+		return getWTA().loadTemplate(path);
+	}
+	
+	public static String buildTemplate(String template, Object data) throws IOException, TemplateException {
+		return buildTemplate(CoreManifest.ID, template, data);
+	}
+	
+	public static String buildTemplate(String serviceId, String templateRelativePath, Object data) throws IOException, TemplateException {
+		Template tpl = WT.loadTemplate(serviceId, templateRelativePath);
+		Writer writer = new StringWriter();
+		tpl.process(data, writer);
+		return writer.toString();
+	}
+	
+	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
+	}
+	
 	public static String lookupCoreResource(Locale locale, String key) {
 		return getWTA().lookupResource(CoreManifest.ID, locale, key);
 	}
@@ -300,27 +358,6 @@ public class WT {
 		}
 	}
 	
-	public static Template loadTemplate(String serviceId, String relativePath) throws IOException {
-		String path = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
-		return getWTA().loadTemplate(path);
-	}
-	
-	public static String buildTemplate(String template, Object data) throws IOException, TemplateException {
-		return buildTemplate(CoreManifest.ID, template, data);
-	}
-	
-	public static String buildTemplate(String serviceId, String templateRelativePath, Object data) throws IOException, TemplateException {
-		Template tpl = WT.loadTemplate(serviceId, templateRelativePath);
-		Writer writer = new StringWriter();
-		tpl.process(data, writer);
-		return writer.toString();
-	}
-	
-	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
-	}
-	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
 		nofity(profileId, message, false);
 	}
@@ -358,47 +395,6 @@ public class WT {
 		
 		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body, parts);
 	}
-	
-	
-	
-	public static String getHomePath() {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		return getWTA().getHomePath(runPid.getDomain());
-	}
-	
-	public static String getTempPath() {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		return getWTA().getTempPath(runPid.getDomain());
-	}
-	
-	public static File getTempFolder() throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		return getWTA().getTempFolder(runPid.getDomain());
-	}
-	
-	public static File createTempFile() throws WTException {
-		return createTempFile(null, null);
-	}
-	
-	public static File createTempFile(String prefix, String suffix) throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
-	}
-	
-	public static boolean deleteTempFile(String filename) throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
-		return getWTA().deleteTempFile(runPid.getDomain(), filename);
-	}
-	
-	public static String buildTempFilename() {
-		return getWTA().buildTempFilename(null, null);
-	}
-	
-	public static String buildTempFilename(String prefix, String suffix) {
-		return getWTA().buildTempFilename(prefix, suffix);
-	}
-	
-	
 	
 	/**
 	 * Retrieves MediaType associated to a file extension from the local table.
