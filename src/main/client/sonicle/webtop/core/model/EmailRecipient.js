@@ -1,5 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
+ * webtop-calendar is a WebTop Service developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,26 +27,17 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
- * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
+ * feasible for technical reasons, the Appropriate Legal Notices must display
+ * the words "Powered by Sonicle WebTop".
  */
-Ext.define('Sonicle.webtop.core.store.RcptType', {
-	extend: 'Ext.data.ArrayStore',
-	alternateClassName: 'WT.store.RcptType',
+Ext.define('Sonicle.webtop.core.model.EmailRecipient', {
+	alternateClassName: 'WT.model.EmailRecipient',
+	extend: 'WT.model.Base',
 	
-	model: 'WT.model.Simple',
-	data: [
-		['to', ''],
-		['cc', ''],
-		['bcc', '']
-	],
-	
-	constructor: function(cfg) {
-		var me = this;
-		Ext.each(me.config.data, function(row) {
-			row[1] = WT.res('store.rcptType.'+row[0]);
-		});
-		me.callParent([cfg]);
-	}
+	identifier: 'negative',
+	fields: [
+		WTF.field('recipientType', 'string', false),
+		WTF.field('email', 'string', true)
+	]
 });

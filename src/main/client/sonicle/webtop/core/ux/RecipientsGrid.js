@@ -36,10 +36,10 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 	extend: 'Ext.grid.NavigationModel',
 	
 	//remove cell focus style
-	focusCls: '',
+	//focusCls: '',
 	
-	startEdit: function(view,record,c) {
-		view.grid.plugins[0].startEdit(record, view.ownerCt.getColumnManager().getHeaderAtIndex(c));
+	startEdit: function(record,c) {
+		this.view.grid.getPlugin('socellediting').startEdit(record, this.view.ownerCt.getColumnManager().getHeaderAtIndex(c));
 	},
 	
 	onKeyUp: function(ke) {
@@ -47,7 +47,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 			c=ke.position.colIdx;
 	
 		me.callParent(arguments);
-		if (c===1) me.startEdit(ke.view, me.record, 1);
+		if (c===1) me.startEdit(me.record, 1);
 	},
 	
 	onKeyDown: function(ke) {
@@ -55,7 +55,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 			c=ke.position.colIdx;
 
 		this.callParent(arguments);
-		if (c===1) me.startEdit(ke.view, me.record, 1);
+		if (c===1) me.startEdit(me.record, 1);
     },	
 	
 	moveUp: function() {
@@ -67,67 +67,47 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 			var newpos=me.move("up");
 			if (newpos) {
 			  me.setPosition(newpos);	
-			  me.startEdit(newpos.view, newpos.record, 1);
+			  me.startEdit(newpos.record, 1);
 			  return true;
 			}
 		}
 		return false;
 	},
 	
-	moveDown: function() {
+	moveDown: function(stopExitFocus) {
 		var me=this,
-			ppos=me.previousPosition,
-			lastr=ppos.view.store.getCount()-1;
+			ppos=me.previousPosition;
+
+		//depending on key event moment, previousPosition may be invalid
+		//while it is valid current position
+		if (!ppos.rowIdx) ppos=me.position;
+
+		var lastr=me.view.store.getCount()-1;
 	
 		if (ppos.rowIdx<lastr) {
-			me.setPosition(me.previousPosition);
+			me.setPosition(ppos);
 			var newpos=me.move("down");
 			if (newpos) {
 			  me.setPosition(newpos);	
-			  me.startEdit(newpos.view, newpos.record, 1);
+			  me.startEdit(newpos.record, 1);
 			  return true;
+			}
+		} else {
+			var email=ppos.record.get("email");
+			if (email==="") {
+				if (!stopExitFocus)
+					me.view.grid.fireExitFocus();
+			} else {
+				var g=me.view.grid,
+					rt=ppos.record.get(g.fields.recipientType),
+					rec=g.addRecipient(rt,'');
+				me.setPosition(ppos.rowIdx+1,1,null,null,true);
+				me.startEdit(rec,1);
+				return true;
 			}
 		}
 		return false;
 	}
-/*    initKeyNav: function(view) {
-        var me = this;
-		//me.callParent(arguments);
-		me.position = new Ext.grid.CellContext(view);
-
-        // Change keynav because default stops any cursor key
-		// even when inside the editor
-        me.keyNav = new Ext.util.KeyNav({
-            target: view,
-            ignoreInputFields: true,
-            eventName: 'itemkeydown',
-            //defaultEventAction: 'stopEvent',
-			defaultEventAction: false,
-
-            // Every key event is tagged with the source view, so the NavigationModel is independent.
-            processEvent: function(view, record, row, recordIndex, event) {
-                return event;
-            },
-            up: me.onKeyUp,
-            down: me.onKeyDown,
-            right: me.onKeyRight,
-            left: me.onKeyLeft,
-            pageDown: me.onKeyPageDown,
-            pageUp: me.onKeyPageUp,
-            home: me.onKeyHome,
-            end: me.onKeyEnd,
-            tab: me.onKeyTab,
-            space: me.onKeySpace,
-            enter: me.onKeyEnter,
-            A: {
-                ctrl: true,
-                // Need a separate function because we don't want the key
-                // events passed on to selectAll (causes event suppression).
-                handler: me.onSelectAllKeyPress
-            },
-            scope: me
-        });
-    }*/
 });
 
 
@@ -137,12 +117,16 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 	
     onSpecialKey: function(ed, field, e) {
         var me=this,sm,k=e.getKey();
- 
-        if (k === e.TAB || k === e.ENTER) {
+
+		if (k === e.ENTER) {
+			me.wasEnterKey=true;
+			return true;
+		}
+		else if (k === e.TAB) {
             e.stopEvent();
 
 			var moved;
-			if (e.shiftKey && k === e.TAB) {
+			if (e.shiftKey) {
 				moved=me.navigationModel.moveUp();
 			} else {
 				moved=me.navigationModel.moveDown();
@@ -163,9 +147,20 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 		else if (k === e.UP) {
 			return me.navigationModel.moveUp();
 		} else if (k === e.DOWN) {
-			return me.navigationModel.moveDown();
+			return me.navigationModel.moveDown(true);
 		}
+    },
+	
+    onEditComplete : function(ed, value, startValue) {
+		var me=this;
+    	me.callParent(arguments);
+		if (me.wasEnterKey) {
+			me.navigationModel.moveDown(true);
+			me.wasEnterKey=false;
+		}
+		
     }
+	
 });
 
 
@@ -175,7 +170,8 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alias: ['widget.wtrecipientsgrid'],
 	requires: [
 		'Sonicle.webtop.core.ux.field.SuggestCombo',
-		'Sonicle.webtop.core.model.Simple'
+		'Sonicle.webtop.core.model.Simple',
+		'Sonicle.webtop.core.store.RcptType'
 	],
 
 	/**
@@ -189,18 +185,13 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	 * Webtop action, if different from LookupRecipients.
 	 */
 	action: 'LookupRecipients',
-	
-	/*
-	 * @cfg {String} store
-	 * Provides the store to the recipients
-	 */
-	
-	/*
+
+	/**
 	 * @cfg {Object} fields
-	 * Provides { recipientType: 'name', email: 'name' }
-	 * field names to be found in the store
+	 * The default field names on the underlying store
 	 */
 	fields: { recipientType: 'recipientType', email: 'email' },
+
 	
 	/**
 	 * @cfg {String} suggestionContext
@@ -211,17 +202,19 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	
 	initComponent: function() {
 		var me = this,
-			navModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{ grid: me });
+			navModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel');
 		
 		Ext.apply(me, {
 			selModel: 'cellmodel',
 			hideHeaders: true,
 			viewConfig: {
 				navigationModel: navModel,
-				scrollable: true
+				scrollable: true,
+				markDirty: false
 			},
 			plugins: {
 				ptype: 'socellediting',
+				pluginId: 'socellediting',
 				clicksToEdit: 1,
 				navigationModel: navModel
 			},
@@ -237,14 +230,14 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					  //selectOnFocus: true,
 					  width: 30,
 					  //editable: false,
-					  store: {
+					  store: Ext.create('WT.store.RcptType',{ autoLoad: true })/*{
 						  model: "Sonicle.webtop.core.model.Simple",
 						  data: [
 							  { id: 'to', desc: WT.res('store.rcptType.to') },
 							  { id: 'cc', desc: WT.res('store.rcptType.cc') },
 							  { id: 'bcc', desc: WT.res('store.rcptType.bcc') }
 						  ]
-					  },
+					  }*/,
 					  value: 'to',
 					  valueField: 'id'
 					}),
@@ -270,7 +263,15 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	},
 	
 	addRecipient: function(rtype,email) {
-		this.getStore().add({ rtype: rtype, email: email});
+		var me=this,obj={};
+		obj[me.fields.recipientType]=rtype;
+		obj[me.fields.email]=email;
+		var recs=me.getStore().add(obj);
+		return recs[0];
+	},
+	
+	fireExitFocus: function() {
+		this.fireEvent('exitfocus',this);
 	}
 	
 /*	setValue: function(v) {
