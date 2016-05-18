@@ -516,6 +516,17 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		return this.tmce.getValue();
 	},*/
 	
+    initHtmlValue: function(html) {
+		var me=this;
+        me.setValue(html);
+        me.initValue=me.getValue();
+    },
+
+    isDirty: function() {
+        return this.getValue()!=this.initValue;
+    },
+	
+	
 	syncValue: function() {
 		//do nothing here for now
 	},

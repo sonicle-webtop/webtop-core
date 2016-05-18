@@ -80,7 +80,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 
 		//depending on key event moment, previousPosition may be invalid
 		//while it is valid current position
-		if (!ppos.rowIdx) ppos=me.position;
+		if (ppos.rowIdx===null) ppos=me.position;
 
 		var lastr=me.view.store.getCount()-1;
 	
