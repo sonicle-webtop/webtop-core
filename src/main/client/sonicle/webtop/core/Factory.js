@@ -361,19 +361,47 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	},
 	
 	/**
-	 * Helper method for building a config object for foreign key {@link Ext.data.field.Field field}.
+	 * Helper method for building a config object for a 
+	 * foreign key {@link Ext.data.field.Field field}.
+	 * Direct association needs to be defined using hasMany in parent model.
+	 * @param {String} type See {@link Ext.data.field.Field#type}
+	 * @returns {Object} The field config
+	 */
+	fkField: function(type) {
+		return WTF.field('_fk', type, true);
+	},
+	
+	/**
+	 * Helper method for building a config object for an inverse 
+	 * foreign key {@link Ext.data.field.Field field}.
+	 * Inverse association is only defined using this method in child model.
 	 * @param {String} type See {@link Ext.data.field.Field#type}
 	 * @param {String} parent Parent model.
 	 * @param {String} inverse Inverse name.
 	 * @returns {Object} The field config
 	 */
-	fkField: function(type, parent, inverse) {
+	fkInvField: function(type, parent, inverse) {
 		return WTF.field('_fk', type, true, {
 			reference: {
 				parent: parent,
 				inverse: inverse
 			}
 		});
+	},
+	
+	/**
+	 * Helper method for building a config object for a hasMany relation.
+	 * @param {String} field The field name
+	 * @param {String} model The linked model name
+	 * @returns {Object} The hasMany config
+	 */
+	hasMany: function(field, model) {
+		return {
+			name: field,
+			//associationKey: field,
+			model: model,
+			foreignKey: '_fk'
+		};
 	},
 	
 	/**

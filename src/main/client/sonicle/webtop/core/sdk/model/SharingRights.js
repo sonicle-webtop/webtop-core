@@ -31,20 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
-	alternateClassName: 'WT.sdk.model.Sharing',
+Ext.define('Sonicle.webtop.core.sdk.model.SharingRights', {
+	alternateClassName: 'WT.sdk.model.SharingRights',
 	extend: 'WT.model.Base',
-	requires: [
-		'Sonicle.webtop.core.sdk.model.SharingRights'
-	],
 	
 	identifier: 'negativestring',
-	idProperty: 'id',
+	idProperty: 'roleUid',
 	fields: [
-		WTF.field('id', 'string', false),
-		WTF.roField('level', 'int')
-	],
-	hasMany: [
-		WTF.hasMany('rights', 'Sonicle.webtop.core.sdk.model.SharingRights')
+		/*
+		WTF.field('_fk', 'string', true, {
+			reference: {
+				parent: 'Sonicle.webtop.core.sdk.model.Sharing',
+				inverse: 'rights'
+			}
+		}),
+		*/
+		WTF.fkField('string'),
+		WTF.field('roleUid', 'string', false),
+		WTF.field('rootManage', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderRead', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderUpdate', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderDelete', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsCreate', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsUpdate', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsDelete', 'boolean', false, {defaultValue: false})
 	]
 });
