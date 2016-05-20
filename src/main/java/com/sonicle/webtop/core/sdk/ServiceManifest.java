@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.bol.model.AuthResource;
-import com.sonicle.webtop.core.bol.model.AuthResourceShare;
+import com.sonicle.webtop.core.bol.model.AuthSharedResource;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -155,7 +155,7 @@ public class ServiceManifest {
 					
 					String type = elResource.getString("[@type]", "default");
 					if(type.equals("share")) { // Shared resource
-						resources.add(new AuthResourceShare(name));
+						resources.add(new AuthSharedResource(name));
 					} else if(type.equals("default")) { // Classic resource (not shared)
 						if(elResource.containsKey("[@actions]")) {
 							String[] actions = StringUtils.split(elResource.getString("[@actions]"), ",");

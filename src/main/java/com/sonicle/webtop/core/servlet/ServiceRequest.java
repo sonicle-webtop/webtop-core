@@ -66,19 +66,10 @@ public class ServiceRequest extends BaseServiceRequest {
 		WebTopSession wts = RunContext.getWebTopSession();
 		
 		try {
-			logger.trace("Servlet: ServiceRequest [{}]", wts.getId());
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
-			
-			// TODO: rimuovere le seguenti righe. il controllo csrf è stato affidato ad un filtro
-			/*
-			String csrf = ServletUtils.getStringParameter(request, "csrf", null);
-			if(!StringUtils.equals(SessionUtils.getCSRFToken(), csrf)) {
-				throw new Exception("Unable to authenticate current request. Provided security token is not valid.");
-			}
-			*/
 			
 			if(!options) {
 				// Retrieves instantiated service

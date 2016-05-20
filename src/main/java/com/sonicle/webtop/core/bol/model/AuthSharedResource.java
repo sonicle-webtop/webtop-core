@@ -33,30 +33,40 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import java.text.MessageFormat;
-
 /**
  *
  * @author malbinola
  */
-public class AuthResourceShare extends AuthResource {
-	public static final String ROOT_SUFFIX = "_SHARE_ROOT";
-	public static final String FOLDER_SUFFIX = "_SHARE_FOLDER";
-	public static final String ELEMENTS_SUFFIX = "_SHARE_ELEMENTS";
+public class AuthSharedResource extends AuthResource {
+	public static final String PERMISSION_TYPE_ROOT = "ROOT";
+	public static final String PERMISSION_TYPE_FOLDER = "FOLDER";
+	public static final String PERMISSION_TYPE_ELEMENTS= "ELEMENTS";
 	
-	public AuthResourceShare(String name) {
+	public AuthSharedResource(String name) {
 		super(name);
 	}
 	
+	public static String buildPermissionResource(String type, String name) {
+		if(type.equals(PERMISSION_TYPE_ROOT)) {
+			return buildRootPermissionResource(name);
+		} else if(type.equals(PERMISSION_TYPE_FOLDER)) {
+			return buildFolderPermissionResource(name);
+		} else if(type.equals(PERMISSION_TYPE_ELEMENTS)) {
+			return buildElementsPermissionResource(name);
+		} else {
+			return null;
+		}
+	}
+	
 	public static String buildRootPermissionResource(String name) {
-		return name + ROOT_SUFFIX;
+		return name + "_SHARE_" + PERMISSION_TYPE_ROOT;
 	}
 	
 	public static String buildFolderPermissionResource(String name) {
-		return name + FOLDER_SUFFIX;
+		return name + "_SHARE_" + PERMISSION_TYPE_FOLDER;
 	}
 	
 	public static String buildElementsPermissionResource(String name) {
-		return name + ELEMENTS_SUFFIX;
+		return name + "_SHARE_" + PERMISSION_TYPE_ELEMENTS;
 	}
 }
