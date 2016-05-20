@@ -645,19 +645,19 @@ public class CoreManager extends BaseManager {
 			
 			String rootKey = OShare.buildRootKey(resource);
 			String folderKey = OShare.buildFolderKey(resource);
-			String rootPermResource = AuthSharedResource.buildRootPermissionResource(resource);
-			String folderPermResource = AuthSharedResource.buildFolderPermissionResource(resource);
-			String elementsPermResource = AuthSharedResource.buildElementsPermissionResource(resource);
+			String rootPermissionKey = AuthSharedResource.buildRootPermissionKey(resource);
+			String folderPermissionKey = AuthSharedResource.buildFolderPermissionKey(resource);
+			String elementsPermissionKey = AuthSharedResource.buildElementsPermissionKey(resource);
 			
 			con = WT.getCoreConnection();
 			
 			// In order to find incoming root, we need to pass through folders
 			// that have at least a permission, getting incoming uids.
 			// We look into permission returning each share instance that have 
-			// "*_FOLDER" as resource and satisfies a set of roles. Then we can
+			// "*@FOLDER" as key and satisfies a set of roles. Then we can
 			// get a list of unique uids (from shares table) that owns the share.
-			List<String> resPerm = Arrays.asList(rootPermResource, folderPermResource, elementsPermResource);
-			List<String> originUids = shadao.viewOriginByRoleServiceResource(con, roleUids, serviceId, folderKey, resPerm);
+			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
+			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
 			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
 			for(String uid : originUids) {
 				if(uid.equals(profileUid)) continue; // Skip self role
@@ -699,13 +699,13 @@ public class CoreManager extends BaseManager {
 			OShare rootShare = shadao.selectById(con, Integer.valueOf(rootShareId));
 			if(rootShare == null) throw new WTException("Unable to find root share [{0}]", rootShareId);
 			
-			String folderKey = OShare.buildFolderKey(resource);
-			String folderPermResource = AuthSharedResource.buildFolderPermissionResource(resource);
+			String folderShareKey = OShare.buildFolderKey(resource);
+			String folderPermissionKey = AuthSharedResource.buildFolderPermissionKey(resource);
 			
 			ArrayList<OShare> folders = new ArrayList<>();
-			List<OShare> shares = shadao.selectByUserServiceKey(con, rootShare.getUserUid(), rootShare.getServiceId(), folderKey);
+			List<OShare> shares = shadao.selectByUserServiceKey(con, rootShare.getUserUid(), rootShare.getServiceId(), folderShareKey);
 			for(OShare share : shares) {
-				if(RunContext.isPermitted(getTargetProfileId(), rootShare.getServiceId(), folderPermResource, AuthResource.ACTION_READ, share.getShareId().toString())) {
+				if(RunContext.isPermitted(getTargetProfileId(), rootShare.getServiceId(), folderPermissionKey, AuthResource.ACTION_READ, share.getShareId().toString())) {
 					folders.add(share);
 				}
 			}
@@ -768,7 +768,7 @@ public class CoreManager extends BaseManager {
 	public boolean[] areActionsPermittedOnShare(OShare share, String sharedResourcePermissionType, String[] actions) throws WTException {
 		String instance = String.valueOf(share.getShareId());
 		String resource = OShare.extractResourceFromKey(share.getKey());
-		String permKey = AuthSharedResource.buildPermissionResource(sharedResourcePermissionType, resource);
+		String permKey = AuthSharedResource.buildPermissionKey(sharedResourcePermissionType, resource);
 		
 		UserProfile.Id targetPid = getTargetProfileId();
 		boolean[] perms = new boolean[actions.length];
@@ -811,11 +811,11 @@ public class CoreManager extends BaseManager {
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
-		String rootKey = OShare.buildRootKey(resource);
-		String rootPermKey = AuthSharedResource.buildRootPermissionResource(resource);
-		String folderKey = OShare.buildFolderKey(resource);
-		String folderPermKey = AuthSharedResource.buildFolderPermissionResource(resource);
-		String elementsPermRes = AuthSharedResource.buildElementsPermissionResource(resource);
+		String rootShareKey = OShare.buildRootKey(resource);
+		String folderShareKey = OShare.buildFolderKey(resource);
+		String rootPermissionKey = AuthSharedResource.buildRootPermissionKey(resource);
+		String folderPermissionKey = AuthSharedResource.buildFolderPermissionKey(resource);
+		String elementsPermissionKey = AuthSharedResource.buildElementsPermissionKey(resource);
 		
 		try {
 			CompositeId cid = new CompositeId().parse(shareId);
@@ -828,7 +828,7 @@ public class CoreManager extends BaseManager {
 			OShare rootShare = null;
 			if(rootId.equals("0")) {
 				String puid = usrm.userToUid(getTargetProfileId());
-				rootShare = shadao.selectByUserServiceKeyInstance(con, puid, serviceId, rootKey, OShare.INSTANCE_ROOT);
+				rootShare = shadao.selectByUserServiceKeyInstance(con, puid, serviceId, rootShareKey, OShare.INSTANCE_ROOT);
 			} else {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
 			}
@@ -840,25 +840,25 @@ public class CoreManager extends BaseManager {
 			if(rootShare != null) { // A rootShare must be defined in order to continue...
 				if(level == 0) {
 					LinkedHashSet<String> roleUids = new LinkedHashSet<>();
-					roleUids.addAll(listRoles(serviceId, rootPermKey, rootShare.getShareId().toString()));
+					roleUids.addAll(listRoles(serviceId, rootPermissionKey, rootShare.getShareId().toString()));
 					
-					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderKey, OShare.INSTANCE_WILDCARD);
-					if(folderShare != null) roleUids.addAll(listRoles(serviceId, folderPermKey, folderShare.getShareId().toString()));
+					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderShareKey, OShare.INSTANCE_WILDCARD);
+					if(folderShare != null) roleUids.addAll(listRoles(serviceId, folderPermissionKey, folderShare.getShareId().toString()));
 
 					for(String roleUid : roleUids) {
 						// Root...
 						SharePermsRoot rperms = new SharePermsRoot();
-						for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, rootPermKey, rootShare.getShareId().toString())) {
+						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, rootPermissionKey, rootShare.getShareId().toString())) {
 							rperms.parse(perm.getAction());
 						}
 						// Folder...
 						SharePermsFolder fperms = new SharePermsFolder();
-						for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, folderPermKey, folderShare.getShareId().toString())) {
+						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
 							fperms.parse(perm.getAction());
 						}
 						// Elements...
 						SharePermsElements eperms = new SharePermsElements();
-						for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, elementsPermRes, folderShare.getShareId().toString())) {
+						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
 							eperms.parse(perm.getAction());
 						}
 						outshare.getRights().add(new Sharing.RoleRights(roleUid, rperms, fperms, eperms));
@@ -867,19 +867,19 @@ public class CoreManager extends BaseManager {
 
 				} else if(level == 1) {
 					String folderId = cid.getToken(1);
-					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderKey, folderId);
+					OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderShareKey, folderId);
 
 					if(folderShare != null) {
-						List<String> roleUids = listRoles(serviceId, folderPermKey, folderShare.getShareId().toString());
+						List<String> roleUids = listRoles(serviceId, folderPermissionKey, folderShare.getShareId().toString());
 						for(String roleUid : roleUids) {
 							// Folder...
 							SharePermsFolder fperms = new SharePermsFolder();
-							for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, folderPermKey, folderShare.getShareId().toString())) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
 								fperms.parse(perm.getAction());
 							}
 							// Elements...
 							SharePermsElements eperms = new SharePermsElements();
-							for(ORolePermission perm : rpedao.selectByRoleServiceResourceInstance(con, roleUid, serviceId, elementsPermRes, folderShare.getShareId().toString())) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
 								eperms.parse(perm.getAction());
 							}
 							outshare.getRights().add(new Sharing.RoleRights(roleUid, null, fperms, eperms));
@@ -910,6 +910,9 @@ public class CoreManager extends BaseManager {
 			
 			String rootKey = OShare.buildRootKey(resource);
 			String folderKey = OShare.buildFolderKey(resource);
+			String rootPermRes = AuthSharedResource.buildRootPermissionKey(resource);
+			String folderPermRes = AuthSharedResource.buildFolderPermissionKey(resource);
+			String elementsPermRes = AuthSharedResource.buildElementsPermissionKey(resource);
 			
 			con = WT.getCoreConnection();
 			
@@ -921,10 +924,6 @@ public class CoreManager extends BaseManager {
 				rootShare = shadao.selectById(con, Integer.valueOf(rootId));
 			}
 			if(rootShare == null) rootShare = addRootShare(con, puid, serviceId, rootKey);
-			
-			String rootPermRes = AuthSharedResource.buildRootPermissionResource(resource);
-			String folderPermRes = AuthSharedResource.buildFolderPermissionResource(resource);
-			String elementsPermRes = AuthSharedResource.buildElementsPermissionResource(resource);
 			
 			if(level == 0) {
 				OShare folderShare = shadao.selectByUserServiceKeyInstance(con, rootShare.getUserUid(), serviceId, folderKey, OShare.INSTANCE_WILDCARD);
@@ -996,12 +995,12 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	private ORolePermission addSharePermission(Connection con, String roleUid, String service, String permResource, String action, String instance) throws DAOException {
+	private ORolePermission addSharePermission(Connection con, String roleUid, String service, String key, String action, String instance) throws DAOException {
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
 		ORolePermission rp = new ORolePermission();
 		rp.setRoleUid(roleUid);
 		rp.setServiceId(service);
-		rp.setResource(permResource);
+		rp.setKey(key);
 		rp.setAction(action);
 		rp.setInstance(instance);
 		rp.setRolePermissionId(rpedao.getSequence(con).intValue());
@@ -1010,9 +1009,9 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private void removeRootSharePermissions(Connection con, String shareId, String serviceId, String resource) throws DAOException {
-		String rootPermRes = AuthSharedResource.buildRootPermissionResource(resource);
+		String rootPermissionKey = AuthSharedResource.buildRootPermissionKey(resource);
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
-		rpedao.deleteByServiceResourceInstance(con, serviceId, rootPermRes, shareId);
+		rpedao.deleteByServiceKeyInstance(con, serviceId, rootPermissionKey, shareId);
 	}
 	
 	private void removeFolderShare(Connection con, String shareId, String serviceId, String resource) throws DAOException {
@@ -1026,11 +1025,11 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private void removeFolderSharePermissions(Connection con, String shareId, String serviceId, String resource) throws DAOException {
-		String folderPermRes = AuthSharedResource.buildFolderPermissionResource(resource);
-		String elementsPermRes = AuthSharedResource.buildElementsPermissionResource(resource);
+		String folderPermissionKey = AuthSharedResource.buildFolderPermissionKey(resource);
+		String elementsPermissionKey = AuthSharedResource.buildElementsPermissionKey(resource);
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
-		rpedao.deleteByServiceResourceInstance(con, serviceId, folderPermRes, shareId);
-		rpedao.deleteByServiceResourceInstance(con, serviceId, elementsPermRes, shareId);
+		rpedao.deleteByServiceKeyInstance(con, serviceId, folderPermissionKey, shareId);
+		rpedao.deleteByServiceKeyInstance(con, serviceId, elementsPermissionKey, shareId);
 	}
 	
 	private OShare addRootShare(Connection con, String userUid, String serviceId, String shareKey) throws DAOException {
@@ -1074,13 +1073,13 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<String> listRoles(String serviceId, String permResource, String instance) throws WTException {
+	public List<String> listRoles(String serviceId, String permissionKey, String instance) throws WTException {
 		RolePermissionDAO dao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			return dao.selectRolesByServiceResourceInstance(con, serviceId, permResource, instance);
+			return dao.selectRolesByServiceKeyInstance(con, serviceId, permissionKey, instance);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");

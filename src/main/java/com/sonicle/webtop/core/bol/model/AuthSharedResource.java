@@ -46,27 +46,27 @@ public class AuthSharedResource extends AuthResource {
 		super(name);
 	}
 	
-	public static String buildPermissionResource(String type, String name) {
+	public static String buildPermissionKey(String type, String name) {
 		if(type.equals(PERMISSION_TYPE_ROOT)) {
-			return buildRootPermissionResource(name);
+			return buildRootPermissionKey(name);
 		} else if(type.equals(PERMISSION_TYPE_FOLDER)) {
-			return buildFolderPermissionResource(name);
+			return buildFolderPermissionKey(name);
 		} else if(type.equals(PERMISSION_TYPE_ELEMENTS)) {
-			return buildElementsPermissionResource(name);
+			return buildElementsPermissionKey(name);
 		} else {
 			return null;
 		}
 	}
 	
-	public static String buildRootPermissionResource(String name) {
-		return name + "_SHARE_" + PERMISSION_TYPE_ROOT;
+	public static String buildRootPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_ROOT;
 	}
 	
-	public static String buildFolderPermissionResource(String name) {
-		return name + "_SHARE_" + PERMISSION_TYPE_FOLDER;
+	public static String buildFolderPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_FOLDER;
 	}
 	
-	public static String buildElementsPermissionResource(String name) {
-		return name + "_SHARE_" + PERMISSION_TYPE_ELEMENTS;
+	public static String buildElementsPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_ELEMENTS;
 	}
 }

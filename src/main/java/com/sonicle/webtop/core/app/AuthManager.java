@@ -202,16 +202,16 @@ public class AuthManager {
 		return roles;
 	}
 	
-	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws WTException {
 		UserManager usrm = wta.getUserManager();
-		return addPermission(con, usrm.userToRoleUid(pid), serviceId, resource, action, instance);
+		return addPermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
 	}
 	
-	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
+	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
 		ORolePermission perm = new ORolePermission();
 		perm.setRoleUid(roleUid);
 		perm.setServiceId(serviceId);
-		perm.setResource(resource);
+		perm.setKey(key);
 		perm.setAction(action);
 		perm.setInstance(instance);
 		
@@ -221,14 +221,14 @@ public class AuthManager {
 		return perm;
 	}
 	
-	public void deletePermission(Connection con, UserProfile.Id pid, String serviceId, String resource, String action, String instance) throws WTException {
+	public void deletePermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws WTException {
 		UserManager usrm = wta.getUserManager();
-		deletePermission(con, usrm.userToRoleUid(pid), serviceId, resource, action, instance);
+		deletePermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
 	}
 	
-	public void deletePermission(Connection con, String roleUid, String serviceId, String resource, String action, String instance) throws WTException {
+	public void deletePermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		rpdao.deleteByRoleServiceResourceActionInstance(con, roleUid, serviceId, resource, action, instance);
+		rpdao.deleteByRoleServiceKeyActionInstance(con, roleUid, serviceId, key, action, instance);
 	}
 	
 	public List<ORolePermission> listRolePermissions(String roleSid) throws Exception {

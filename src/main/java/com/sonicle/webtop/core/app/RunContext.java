@@ -85,43 +85,43 @@ public class RunContext {
 		return (session == null) ? null : SessionManager.getWebTopSession(session);
 	}
 	
-	public static boolean isPermitted(String serviceId, String resource) {
-		return isPermitted(getSubject(), serviceId, resource);
+	public static boolean isPermitted(String serviceId, String key) {
+		return isPermitted(getSubject(), serviceId, key);
 	}
 	
-	public static boolean isPermitted(String serviceId, String resource, String action) {
-		return isPermitted(getSubject(), serviceId, resource, action);
+	public static boolean isPermitted(String serviceId, String key, String action) {
+		return isPermitted(getSubject(), serviceId, key, action);
 	}
 	
-	public static boolean isPermitted(String serviceId, String resource, String action, String instance) {
-		return isPermitted(getSubject(), serviceId, resource, action, instance);
+	public static boolean isPermitted(String serviceId, String key, String action, String instance) {
+		return isPermitted(getSubject(), serviceId, key, action, instance);
 	}
 	
-	public static boolean isPermitted(Subject subject, String serviceId, String resource) {
+	public static boolean isPermitted(Subject subject, String serviceId, String key) {
 		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, resource);
+		return !principals.isEmpty() && isPermitted(principals, serviceId, key);
 	}
 	
-	public static boolean isPermitted(Subject subject, String serviceId, String resource, String action) {
+	public static boolean isPermitted(Subject subject, String serviceId, String key, String action) {
 		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, resource, action);
+		return !principals.isEmpty() && isPermitted(principals, serviceId, key, action);
 	}
 	
-	public static boolean isPermitted(Subject subject, String serviceId, String resource, String action, String instance) {
+	public static boolean isPermitted(Subject subject, String serviceId, String key, String action, String instance) {
 		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, resource, action, instance);
+		return !principals.isEmpty() && isPermitted(principals, serviceId, key, action, instance);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, resource);
+	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key) {
+		return isPermitted(buildPrincipalCollection(profileId), serviceId, key);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource, String action) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, resource, action);
+	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key, String action) {
+		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String resource, String action, String instance) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, resource, action, instance);
+	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key, String action, String instance) {
+		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
 	}
 	
 	public static boolean isSysAdmin() {
@@ -150,40 +150,40 @@ public class RunContext {
 		return isWebTopAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	public static void ensureIsPermitted(String serviceId, String resource) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, resource);
+	public static void ensureIsPermitted(String serviceId, String key) throws AuthException {
+		ensureIsPermitted(getSubject(), serviceId, key);
 	}
 	
-	public static void ensureIsPermitted(String serviceId, String resource, String action) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, resource, action);
+	public static void ensureIsPermitted(String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(getSubject(), serviceId, key, action);
 	}
 	
-	public static void ensureIsPermitted(String serviceId, String resource, String action, String instance) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, resource, action, instance);
+	public static void ensureIsPermitted(String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(getSubject(), serviceId, key, action, instance);
 	}
 	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String resource) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, resource);
+	public static void ensureIsPermitted(Subject subject, String serviceId, String key) throws AuthException {
+		ensureIsPermitted(subject.getPrincipals(), serviceId, key);
 	}
 	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String resource, String action) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, resource, action);
+	public static void ensureIsPermitted(Subject subject, String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(subject.getPrincipals(), serviceId, key, action);
 	}
 	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String resource, String action, String instance) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, resource, action, instance);
+	public static void ensureIsPermitted(Subject subject, String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(subject.getPrincipals(), serviceId, key, action, instance);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, resource);
+	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key) throws AuthException {
+		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource, String action) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, resource, action);
+	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String resource, String action, String instance) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, resource, action, instance);
+	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
 	}
 		
 	public static void ensureIsSysAdmin() throws AuthException {
@@ -220,18 +220,18 @@ public class RunContext {
 		}
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String resource) {
-		return isPermitted(principals, serviceId, resource, "ACCESS", "*");
+	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key) {
+		return isPermitted(principals, serviceId, key, "ACCESS", "*");
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String resource, String action) {
-		return isPermitted(principals, serviceId, resource, action, "*");
+	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action) {
+		return isPermitted(principals, serviceId, key, action, "*");
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String resource, String action, String instance) {
+	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) {
 		SecurityManager manager = SecurityUtils.getSecurityManager();
 		if(manager.isPermitted(principals, AuthManager.WTADMIN_PSTRING)) return true;
-		return manager.isPermitted(principals, AuthResource.permissionString(AuthResource.namespacedName(serviceId, resource), action, instance));
+		return manager.isPermitted(principals, AuthResource.permissionString(AuthResource.namespacedName(serviceId, key), action, instance));
 	}
 	
 	private static boolean isSysAdmin(PrincipalCollection principals) {
@@ -244,16 +244,16 @@ public class RunContext {
 		return manager.isPermitted(principals, AuthManager.WTADMIN_PSTRING);
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String resource) throws AuthException {
-		if(!isPermitted(principals, serviceId, resource)) throw new AuthException("ACCESS permission on {0} is required", resource);
+	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key) throws AuthException {
+		if(!isPermitted(principals, serviceId, key)) throw new AuthException("ACCESS permission on {0} is required", key);
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String resource, String action) throws AuthException {
-		if(!isPermitted(principals, serviceId, resource, action)) throw new AuthException("{0} permission on {1} is required", action, resource);
+	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key, String action) throws AuthException {
+		if(!isPermitted(principals, serviceId, key, action)) throw new AuthException("{0} permission on {1} is required", action, key);
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String resource, String action, String instance) throws AuthException {
-		if(!isPermitted(principals, serviceId, resource, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, resource, instance);
+	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) throws AuthException {
+		if(!isPermitted(principals, serviceId, key, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, key, instance);
 	}
 	
 	private static void ensureIsSysAdmin(PrincipalCollection principals) throws AuthException {

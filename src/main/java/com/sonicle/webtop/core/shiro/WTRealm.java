@@ -143,7 +143,7 @@ public class WTRealm extends AuthorizingRealm {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 
 				// will become "com.sonicle.webtop.core.TEST"
-				authRes = AuthResource.namespacedName(perm.getServiceId(), perm.getResource());
+				authRes = AuthResource.namespacedName(perm.getServiceId(), perm.getKey());
 				// Generate permission string that shiro can understand 
 				// under the form: {resource}:{action}:{instance}
 				perms.add(AuthResource.permissionString(authRes, perm.getAction(), perm.getInstance()));
