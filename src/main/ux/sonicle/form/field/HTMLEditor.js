@@ -129,6 +129,10 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		
     },
 	
+	focusEditor: function() {
+		this.tmce.focus();
+	},
+	
 	getToolbar: function() {
 		return this.toolbar;
 	},
@@ -511,6 +515,17 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	getHtml: function() {
 		return this.tmce.getValue();
 	},*/
+	
+    initHtmlValue: function(html) {
+		var me=this;
+        me.setValue(html);
+        me.initValue=me.getValue();
+    },
+
+    isDirty: function() {
+        return this.getValue()!=this.initValue;
+    },
+	
 	
 	syncValue: function() {
 		//do nothing here for now
