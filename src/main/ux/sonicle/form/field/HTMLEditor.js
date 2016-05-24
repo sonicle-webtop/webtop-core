@@ -120,7 +120,8 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 				//toolbar2: "cut copy paste | searchreplace | bullist numlist | outdent indent blockquote | undo redo | link unlink anchor image media code | inserttime preview | forecolor backcolor",
 				//toolbar3: "table | hr removeformat | subscript superscript | charmap emoticons | print fullscreen | ltr rtl | spellchecker | visualchars visualblocks nonbreaking template pagebreak restoredraft",
 				menubar: false,
-				toolbar_items_size: 'small'
+				toolbar_items_size: 'small',
+				forced_root_block: false
 			}/*,
 			value: 'This is the WebTop-TinyMCE HTML Editor'*/
 
@@ -175,7 +176,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			var fontData=[];
 			for(i=0;i<me.fontFamilies.length;++i) {
 				var fn=me.fontFamilies[i];
-				fontData[i]={ id: fn.toLowerCase(), fn: fn };
+				fontData[i]={ id: fn };
 			}
 			
             items.push(
@@ -183,17 +184,16 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					xtype: 'combo', 
 					width: 140,
 					store: Ext.create('Ext.data.Store', {
-						fields: ['id','fn'],
+						fields: ['id'],
 						data : fontData
 					}),
-					forceSelection: true,
 					autoSelect: true,
-					displayField: 'fn',
+					displayField: 'id',
 					valueField: 'id',
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
-							me.execCommand('fontname',false,r.get('fn'));
+							me.execCommand('fontname',false,r.get('id'));
 						}
 					}
 				}),
@@ -205,22 +205,22 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			items.push(
 				me.fontSizeCombo=Ext.widget({
 					xtype: 'combo', 
-					width: 50,
+					width: 70,
 					store: Ext.create('Ext.data.Store', {
-						fields: ['id','fs'],
+						fields: ['id'],
 						data : [
-							{ id: 1, fs: "8" },
-							{ id: 2, fs: "10"},
-							{ id: 3, fs: "12"},
-							{ id: 4, fs: "14"},
-							{ id: 5, fs: "18"},
-							{ id: 6, fs: "24"},
-							{ id: 7, fs: "36"}
+							{ id: "8px" },
+							{ id: "10px" },
+							{ id: "12px" },
+							{ id: "14px" },
+							{ id: "16px" },
+							{ id: "18px" },
+							{ id: "24px" },
+							{ id: "36px" }
 						]
 					}),
-					forceSelection: true,
 					autoSelect: true,
-					displayField: 'fs',
+					displayField: 'id',
 					valueField: 'id',
 					queryMode: 'local',
 					listeners: {
@@ -413,6 +413,19 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		this.updateToolbar();
 	},
 	
+	getComputedProperty: function(propname) {
+		var ed=this.getTinyMCEEditor();
+		var sel=ed.getDoc().getSelection();
+		if (sel.rangeCount>0) {
+			var el=sel.getRangeAt(0).commonAncestorContainer;
+			if (el.nodeType == 3) {
+				el=el.parentElement;
+			}
+			return window.getComputedStyle(el,null)[propname];
+		}
+		return "";
+	},
+	
     /**
      * Triggers a toolbar update by reading the markup state of the current selection in the editor.
      * @protected
@@ -442,22 +455,24 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		if (!doc) return;
 
         if (me.enableFont && !Ext.isSafari2) {
-            // When querying the fontName, Chrome may return an Array of font names
+/*            // When querying the fontName, Chrome may return an Array of font names
             // with those containing spaces being placed between single-quotes.
             queriedName = doc.queryCommandValue('fontName');
             name = (queriedName ? queriedName.split(",")[0].replace(me.reStripQuotes, '') : me.defaultFont).toLowerCase();
             fontCombo = me.fontCombo;
             if (name !== fontCombo.getValue() || name !== queriedName) {
                 fontCombo.setValue(name);
-            }
+            }*/
+			me.fontCombo.setValue(me.getComputedProperty("fontFamily"));
         }
         if (me.enableFontSize && !Ext.isSafari2) {
-            var six = doc.queryCommandValue('fontSize'),
-				fontSizeCombo = me.fontSizeCombo;
-			var ix=parseInt(six)+1;
-            if (ix !== fontSizeCombo.getValue()) {
-                fontSizeCombo.setValue(ix);
-            }
+            //var six = doc.queryCommandValue('fontSize'),
+			//	fontSizeCombo = me.fontSizeCombo;
+			//var ix=parseInt(six)+1;
+            //if (ix !== fontSizeCombo.getValue()) {
+            //    fontSizeCombo.setValue(ix);
+            //}
+			me.fontSizeCombo.setValue(me.getComputedProperty("fontSize"));
         }
 
         function updateButtons() {
@@ -516,16 +531,27 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		return this.tmce.getValue();
 	},*/
 	
-    initHtmlValue: function(html) {
+    /*initHtmlValue: function(html) {
 		var me=this;
         me.setValue(html);
-        me.initValue=me.getValue();
+        //me.initValue=me.getValue();
     },
 
     isDirty: function() {
         return this.getValue()!=this.initValue;
-    },
+    },*/
 	
+	getTinyMCEEditor: function() {
+		return tinymce.get(this.tmce.getInputId());
+	},
+	
+	cleanUpHtml: function(html) {
+		return this.getTinyMCEEditor().serializer.serialize(Ext.DomHelper.createDom({html: html}), { format: 'html', get: true, getInner: true });
+	},
+	
+	cleanUpHtmlFromDom: function(dom) {
+		return this.getTinyMCEEditor().serializer.serialize(dom, { format: 'html', get: true, getInner: true });
+	},
 	
 	syncValue: function() {
 		//do nothing here for now
