@@ -193,8 +193,14 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
-							me.execCommand('fontname',false,r.get('id'));
-						}
+							//me.execCommand('fontname',false,r.get('id'));
+							me.setSelectionStyle('font-family: '+r.get('id'));
+						},
+						'specialkey': function(f,e) {
+							if (e.getKey() == e.ENTER) {
+								me.setSelectionStyle('font-family: '+r.get('id'));
+							}
+						}						
 					}
 				}),
 				'-'
@@ -225,7 +231,13 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
-							me.execCommand('fontsize',false,r.get('id'));
+							//me.execCommand('fontsize',false,r.get('id'));
+							me.setSelectionStyle('font-size: '+r.get('id'));
+						},
+						'specialkey': function(f,e) {
+							if (e.getKey() == e.ENTER) {
+								me.setSelectionStyle('font-size: '+r.get('id'));
+							}
 						}
 					}
 				}),
@@ -424,6 +436,21 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			return window.getComputedStyle(el,null)[propname];
 		}
 		return "";
+	},
+	
+	setSelectionStyle: function(style) {
+		var ed=this.getTinyMCEEditor(),
+		    doc=ed.getDoc(),
+			sel=doc.getSelection();
+		if (sel.rangeCount>0) {
+			var xspan=doc.createElement("span"),
+			    range=sel.getRangeAt(0);
+			range.surroundContents(xspan);
+			sel.removeAllRanges();
+			xspan.setAttribute("style",style);
+			range.selectNodeContents(xspan);
+			sel.addRange(range);
+		}
 	},
 	
     /**
