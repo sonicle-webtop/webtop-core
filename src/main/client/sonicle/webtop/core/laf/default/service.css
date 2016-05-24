@@ -186,6 +186,7 @@ div.wt-wnlist {
 	padding-right: 2px !important;
 }
 
-.mce-container {
-	border: 0px !important;
+/* TinyMCE */
+.mce-tinymce.mce-container {
+	border-width: 0px !important;
 }

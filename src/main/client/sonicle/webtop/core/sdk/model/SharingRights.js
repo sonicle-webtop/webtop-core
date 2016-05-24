@@ -31,32 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
-
-import java.text.MessageFormat;
-
-/**
- *
- * @author malbinola
- */
-public class AuthResourceShare extends AuthResource {
-	public static final String ROOT_SUFFIX = "_SHARE_ROOT";
-	public static final String FOLDER_SUFFIX = "_SHARE_FOLDER";
-	public static final String ELEMENTS_SUFFIX = "_SHARE_ELEMENTS";
+Ext.define('Sonicle.webtop.core.sdk.model.SharingRights', {
+	alternateClassName: 'WT.sdk.model.SharingRights',
+	extend: 'WT.model.Base',
 	
-	public AuthResourceShare(String name) {
-		super(name);
-	}
-	
-	public static String buildRootPermissionResource(String name) {
-		return name + ROOT_SUFFIX;
-	}
-	
-	public static String buildFolderPermissionResource(String name) {
-		return name + FOLDER_SUFFIX;
-	}
-	
-	public static String buildElementsPermissionResource(String name) {
-		return name + ELEMENTS_SUFFIX;
-	}
-}
+	identifier: 'negativestring',
+	idProperty: 'roleUid',
+	fields: [
+		/*
+		WTF.field('_fk', 'string', true, {
+			reference: {
+				parent: 'Sonicle.webtop.core.sdk.model.Sharing',
+				inverse: 'rights'
+			}
+		}),
+		*/
+		WTF.fkField('string'),
+		WTF.field('roleUid', 'string', false),
+		WTF.field('rootManage', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderRead', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderUpdate', 'boolean', false, {defaultValue: false}),
+		WTF.field('folderDelete', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsCreate', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsUpdate', 'boolean', false, {defaultValue: false}),
+		WTF.field('elementsDelete', 'boolean', false, {defaultValue: false})
+	]
+});

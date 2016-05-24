@@ -31,20 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
-	alternateClassName: 'WT.sdk.model.Sharing',
-	extend: 'WT.model.Base',
-	requires: [
-		'Sonicle.webtop.core.sdk.model.SharingRights'
-	],
+package com.sonicle.webtop.core.bol.model;
+
+/**
+ *
+ * @author malbinola
+ */
+public class AuthSharedResource extends AuthResource {
+	public static final String PERMISSION_TYPE_ROOT = "ROOT";
+	public static final String PERMISSION_TYPE_FOLDER = "FOLDER";
+	public static final String PERMISSION_TYPE_ELEMENTS= "ELEMENTS";
 	
-	identifier: 'negativestring',
-	idProperty: 'id',
-	fields: [
-		WTF.field('id', 'string', false),
-		WTF.roField('level', 'int')
-	],
-	hasMany: [
-		WTF.hasMany('rights', 'Sonicle.webtop.core.sdk.model.SharingRights')
-	]
-});
+	public AuthSharedResource(String name) {
+		super(name);
+	}
+	
+	public static String buildPermissionKey(String type, String name) {
+		if(type.equals(PERMISSION_TYPE_ROOT)) {
+			return buildRootPermissionKey(name);
+		} else if(type.equals(PERMISSION_TYPE_FOLDER)) {
+			return buildFolderPermissionKey(name);
+		} else if(type.equals(PERMISSION_TYPE_ELEMENTS)) {
+			return buildElementsPermissionKey(name);
+		} else {
+			return null;
+		}
+	}
+	
+	public static String buildRootPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_ROOT;
+	}
+	
+	public static String buildFolderPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_FOLDER;
+	}
+	
+	public static String buildElementsPermissionKey(String name) {
+		return name + "@SHARE_" + PERMISSION_TYPE_ELEMENTS;
+	}
+}

@@ -54,15 +54,15 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	 */
 	
 	/**
+	 * @cfg {String} rightsModelName
+	 * The model used to create record for collecting role rights.
+	 */
+	rightsModelName: 'WT.sdk.model.SharingRights',
+	
+	/**
 	 * @cfg {String} fieldTitle
 	 * Please provide a value for this config.
 	 * For more info see {@link WT.sdk.ModelView#fieldTitle}.
-	 */
-	
-	/**
-	 * @cfg {String} rightsModelName
-	 * The model used to create record for collecting role rights.
-	 * Please provide a value for this config.
 	 */
 	
 	viewModel: {
