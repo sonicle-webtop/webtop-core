@@ -198,7 +198,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
-								me.setSelectionStyle('font-family: '+r.get('id'));
+								me.setSelectionStyle('font-family: '+f.getValue());
 							}
 						}						
 					}
@@ -236,7 +236,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
-								me.setSelectionStyle('font-size: '+r.get('id'));
+								me.setSelectionStyle('font-size: '+f.getValue());
 							}
 						}
 					}
@@ -423,6 +423,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			buffer:100
 		});
 		this.updateToolbar();
+		me.fireEvent('init',me);
 	},
 	
 	getComputedProperty: function(propname) {
@@ -570,6 +571,10 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	
 	getTinyMCEEditor: function() {
 		return tinymce.get(this.tmce.getInputId());
+	},
+	
+	getDoc: function() {
+		return this.getTinyMCEEditor().getDoc();
 	},
 	
 	cleanUpHtml: function(html) {
