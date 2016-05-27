@@ -142,6 +142,15 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
+	 * Builds a state ID string prepending a name with service's XID.
+	 * @param {type} name The component or unique reference name.
+	 * @return {String} A string ID
+	 */
+	buildStateId: function(name) {
+		return this.XID + '-' + name;
+	},
+	
+	/**
 	 * Returns true if this service is currently activated (displayed)
 	 * @return {Boolean}
 	 */

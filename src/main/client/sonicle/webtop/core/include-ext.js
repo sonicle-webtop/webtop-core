@@ -138,6 +138,8 @@
 		document.write('<link rel="stylesheet" type="text/css" href="' +
 				soUxCSSPath + 'iconcombobox.css' + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
+				soUxCSSPath + 'colorcombobox.css' + '"/>');
+		document.write('<link rel="stylesheet" type="text/css" href="' +
 				soUxCSSPath + 'colorcolumn.css' + '"/>');
 	}
 	

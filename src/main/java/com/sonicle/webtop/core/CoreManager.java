@@ -146,6 +146,12 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/*
+	private LinkedHashMap<String, RecipientsProviderBase> getDomainRecipientsProviders() {
+		
+	}
+	*/
+	
 	private void buildProfileRecipientsProviderCache() {
 		for(String serviceId : listAllowedServices()) {
 			BaseManager manager = WT.getServiceManager(serviceId, getTargetProfileId());
@@ -1316,11 +1322,11 @@ public class CoreManager extends BaseManager {
 		return new ArrayList<>(getProfileRecipientsProviders().keySet());
 	}
 	
-	public List<InternetRecipient> listProfileInternetRecipients(String queryText, int max) throws WTException {
-		return listProfileInternetRecipients(listInternetRecipientsSources(), queryText, max);
+	public List<InternetRecipient> listInternetRecipients(String queryText, int max) throws WTException {
+		return listInternetRecipients(listInternetRecipientsSources(), queryText, max);
 	}
 	
-	public List<InternetRecipient> listProfileInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
+	public List<InternetRecipient> listInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
 		List<InternetRecipient> recipients = null;
 		
@@ -1328,7 +1334,6 @@ public class CoreManager extends BaseManager {
 		for(String soid : sourceIds) {
 			RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
 			if(provider == null) continue;
-			
 			recipients = provider.getRecipients(queryText, limit);
 			if(recipients != null) {
 				if(recipients.size() > limit) {
@@ -1342,7 +1347,12 @@ public class CoreManager extends BaseManager {
 		}
 		return items;
 	}
-	
+	/*
+	public List<InternetRecipient> listDomainInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
+		
+		
+	}
+	*/
 	
 	/*
 	public List<InternetRecipient> listInternetRecipients(List<String> providerIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {

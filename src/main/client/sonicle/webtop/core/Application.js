@@ -73,6 +73,15 @@ Ext.define('Sonicle.webtop.core.Application', {
 		Ext.getDoc().on('contextmenu', function(e) {
 			e.preventDefault(); // Disable browser context if no context menu is defined
 		});
+		
+		// Inits state provider
+		if(Ext.util.LocalStorage.supported) {
+			Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider());
+		} else {
+			Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
+				expires: new Date(Ext.Date.now() + (1000*60*60*24*90)) // 90 days
+			}));
+		}
 	},
 	
 	launch: function() {

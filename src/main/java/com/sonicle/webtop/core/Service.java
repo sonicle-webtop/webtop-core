@@ -829,7 +829,15 @@ public class Service extends BaseService {
 		List<InternetRecipient> items = null;
 		
 		try {
-			items = core.listProfileInternetRecipients("", 100);
+			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
+			String query = ServletUtils.getStringParameter(request, "query", "");
+			int limit = ServletUtils.getIntParameter(request, "limit", 100);
+			
+			if(sources.isEmpty()) {
+				items = core.listInternetRecipients(query, limit);
+			} else {
+				items = core.listInternetRecipients(sources, query, limit);
+			}
 			new JsonResult("recipients", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
