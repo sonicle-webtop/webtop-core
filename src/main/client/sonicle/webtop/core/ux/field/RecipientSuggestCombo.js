@@ -44,17 +44,12 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		'sofieldtooltip'
 	],
 	
-	/**
-	 * @cfg {String} sid
-	 * Webtop service ID.
-	 */
-	
 	config: {
 		/**
 		 * @cfg {String[]} sources
 		 * contacts sources, or null for anything.
 		 */
-		sources: null,
+		sources: [],
 
 		/**
 		 * @cfg {int} limit
@@ -72,8 +67,9 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	selectOnFocus: true,
 	editable: true,
 	hideTrigger: true,
-	valueField: 'address',
-	displayField: 'address',
+	valueField: 'description',
+	displayField: 'description',
+	sourceField: 'sourceName',
 	
 	initComponent: function() {
 		var me = this;

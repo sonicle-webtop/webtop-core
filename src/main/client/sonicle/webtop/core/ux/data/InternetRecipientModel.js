@@ -35,5 +35,18 @@ Ext.define('Sonicle.webtop.core.ux.data.InternetRecipientModel', {
 	alternateClassName: 'WT.ux.data.InternetRecipientModel',
 	extend: 'WT.ux.data.BaseModel',
 	
-	fields: ['source','type','personal','address']
+	fields: [
+		'source',
+		'sourceName',
+		'type',
+		'personal',
+		'address',
+		WTF.calcField('description','string',['personal','address'],function(v,rec) {
+			var p=rec.get("personal"),
+				a=rec.get("address");
+				
+			if (Ext.isEmpty(p)) return a; 
+			return p+" &lt;"+a+"&gt;";
+		})
+	]
 });

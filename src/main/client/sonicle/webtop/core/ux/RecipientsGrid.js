@@ -163,31 +163,12 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 	
 });
 
-Ext.define('Sonicle.webtop.core.ux.RecipientsSuggestCombo',{
-	extend: 'Sonicle.webtop.core.ux.field.SuggestCombo',
-	
-	doApplyConfig: function() {
-		var me = this;
-		Ext.apply(me, {
-			store: {
-				model: 'WT.ux.data.InternetRecipientModel',
-				proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients', {
-					extraParams: {
-						sources: ''
-					}
-				})
-			}
-		});
-	}
-
-});
-
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WT.ux.RegipientsGrid',
 	extend: 'Ext.grid.Panel',
 	alias: ['widget.wtrecipientsgrid'],
 	requires: [
-		'Sonicle.webtop.core.ux.field.SuggestCombo',
+		'WT.ux.field.RecipientSuggestCombo',
 		'Sonicle.webtop.core.model.Simple',
 		'Sonicle.webtop.core.store.RcptType'
 	],
@@ -268,9 +249,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					dataIndex: me.fields.email, 
 					//editor: 'textfield'
 					editor: Ext.create({
-						xtype: 'wtsuggestcombo',
-						sid: 'com.sonicle.webtop.mail',
-						suggestionContext: 'recipient'
+						xtype: 'wtrcptsuggestcombo'
 						//width: 400,
 					})
 				}

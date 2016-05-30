@@ -39,14 +39,16 @@ package com.sonicle.webtop.core.bol.model;
  */
 public class InternetRecipient {
 	private String source;
+	private String sourceName;
 	private String type;
 	private String personal;
 	private String address;
 	
 	public InternetRecipient() {}
 	
-	public InternetRecipient(String source, String type, String personal, String address) {
+	public InternetRecipient(String source, String sourceName, String type, String personal, String address) {
 		this.source = source;
+		this.sourceName = sourceName;
 		this.type = type;
 		this.personal = personal;
 		this.address = address;
@@ -58,6 +60,14 @@ public class InternetRecipient {
 
 	public void setSource(String source) {
 		this.source = source;
+	}
+
+	public String getSourceName() {
+		return sourceName;
+	}
+
+	public void setSourceName(String sourceName) {
+		this.sourceName = sourceName;
 	}
 
 	public String getType() {
