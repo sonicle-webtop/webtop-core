@@ -108,12 +108,12 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 			style: { border: '0' },
 			tinyMCEConfig: {
 				plugins: [
-				"advlist autolink lists link image charmap print preview hr anchor pagebreak",
-				"searchreplace visualblocks visualchars code fullscreen",
-				"insertdatetime media nonbreaking save table contextmenu directionality",
-				"emoticons template paste textcolor"
+					'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+					'searchreplace visualblocks visualchars code fullscreen',
+					'insertdatetime media nonbreaking save table contextmenu directionality',
+					'emoticons template paste textcolor'
 				],
-
+				skin: Ext.themeName || 'lightgray',
 				toolbar: false,
 				statusbar: false,
 				//toolbar1: "newdocument fullpage | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | styleselect formatselect fontselect fontsizeselect",

@@ -70,6 +70,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.Log.debug('application:init');
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
+		Ext.themeName = WTS.servicesOptions[0].theme;
 		Ext.getDoc().on('contextmenu', function(e) {
 			e.preventDefault(); // Disable browser context if no context menu is defined
 		});
