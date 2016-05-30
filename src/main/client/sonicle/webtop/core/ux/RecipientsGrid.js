@@ -163,6 +163,24 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 	
 });
 
+Ext.define('Sonicle.webtop.core.ux.RecipientsSuggestCombo',{
+	extend: 'Sonicle.webtop.core.ux.field.SuggestCombo',
+	
+	doApplyConfig: function() {
+		var me = this;
+		Ext.apply(me, {
+			store: {
+				model: 'WT.ux.data.InternetRecipientModel',
+				proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients', {
+					extraParams: {
+						sources: ''
+					}
+				})
+			}
+		});
+	}
+
+});
 
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WT.ux.RegipientsGrid',

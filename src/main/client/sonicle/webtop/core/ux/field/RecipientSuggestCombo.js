@@ -31,13 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
-	alternateClassName: 'WT.ux.field.SuggestCombo',
-	extend: 'Ext.form.field.ComboBox',
-	alias: ['widget.wtsuggestcombo', 'widget.wtsuggestcombobox'],
+Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
+	alternateClassName: 'WT.ux.field.RecipientSuggestCombo',
+	extend: 'Sonicle.form.field.SourceComboBox',
+	alias: ['widget.wtrcptsuggestcombo', 'widget.wtrcptsuggestcombobox'],
 	
 	requires: [
-		'WT.ux.data.ValueModel'
+		'WT.ux.data.InternetRecipientModel'
 	],
 	plugins: [
 		'soenterkeyplugin',
@@ -51,10 +51,16 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	
 	config: {
 		/**
-		 * @cfg {String} suggestionContext
-		 * Suggestion context.
+		 * @cfg {String[]} sources
+		 * contacts sources, or null for anything.
 		 */
-		suggestionContext: ''
+		sources: null,
+
+		/**
+		 * @cfg {int} limit
+		 * limit records number.
+		 */
+		limit: 100
 	},
 	
 	typeAhead: false,
@@ -66,8 +72,8 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	selectOnFocus: true,
 	editable: true,
 	hideTrigger: true,
-	valueField: 'id',
-	displayField: 'id',
+	valueField: 'address',
+	displayField: 'address',
 	
 	initComponent: function() {
 		var me = this;
@@ -80,10 +86,11 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 		var me = this;
 		Ext.apply(me, {
 			store: {
-				model: 'WT.ux.data.ValueModel',
-				proxy: WTF.apiProxy(me.sid, 'ManageSuggestions', 'data', {
+				model: 'WT.ux.data.InternetRecipientModel',
+				proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients', {
 					extraParams: {
-						context: me.getSuggestionContext()
+						sources: me.getSources(),
+						limit: me.getLimit()
 					}
 				})
 			}
