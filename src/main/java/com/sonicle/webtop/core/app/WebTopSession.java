@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -59,6 +60,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -545,13 +548,17 @@ public class WebTopSession {
 	public static class UploadedFile {
 		public String id;
 		public String filename;
+		public Long size;
 		public String mediaType;
+		public DateTime timestamp;
 		public boolean virtual;
 		
-		public UploadedFile(String id, String filename, String mediaType, boolean virtual) {
+		public UploadedFile(String id, String filename, Long size, String mediaType, boolean virtual) {
 			this.id = id;
 			this.filename = filename;
+			this.size = size;
 			this.mediaType = mediaType;
+			this.timestamp = DateTimeUtils.now(true);
 			this.virtual = virtual;
 		}
 	}

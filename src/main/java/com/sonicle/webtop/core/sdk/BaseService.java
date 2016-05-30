@@ -200,7 +200,7 @@ public abstract class BaseService extends BaseAbstractService {
 				while(fit.hasNext()) {
 					FileItemStream fis = fit.next();
 					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(IdentifierUtils.getUUID(), fis.getName(), findMediaType(fis), true);
+						uploadedFile = new UploadedFile(IdentifierUtils.getUUID(), fis.getName(), null, findMediaType(fis), true);
 						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
 						env.wts.clearUploadedFile(uploadedFile);
@@ -233,7 +233,7 @@ public abstract class BaseService extends BaseAbstractService {
 					FileItem fi = (FileItem)it.next();
 					if(!fi.isFormField()) {
 						File file = WT.createTempFile();
-						uploadedFile = new UploadedFile(file.getName(), fi.getName(), findMediaType(fi), false);
+						uploadedFile = new UploadedFile(file.getName(), fi.getName(), fi.getSize(), findMediaType(fi), false);
 						env.wts.addUploadedFile(uploadedFile);
 						fi.write(file);
 						
