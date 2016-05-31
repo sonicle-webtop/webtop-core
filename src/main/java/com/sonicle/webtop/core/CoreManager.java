@@ -1330,20 +1330,31 @@ public class CoreManager extends BaseManager {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
 		List<InternetRecipient> recipients = null;
 		
-		int limit = max;
+		int remaining = max;
 		for(String soid : sourceIds) {
 			RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
 			if(provider == null) continue;
-			recipients = provider.getRecipients(queryText, limit);
+			recipients = provider.getRecipients(queryText, remaining);
+			if(recipients == null) continue;
+			
+			for(InternetRecipient recipient : recipients) {
+				remaining--;
+				if(remaining < 0) break; 
+				recipient.setSource(soid); // Force composed id
+				items.add(recipient);
+			}
+			if(remaining <= 0) break;
+			/*
 			if(recipients != null) {
-				if(recipients.size() > limit) {
-					items.addAll(recipients.subList(0, limit-1));
+				if(recipients.size() > remaining) {
+					items.addAll(recipients.subList(0, remaining-1));
 					break;
 				} else {
-					limit -=  recipients.size();
+					remaining -=  recipients.size();
 					items.addAll(recipients);
 				}
 			}
+			*/
 		}
 		return items;
 	}
