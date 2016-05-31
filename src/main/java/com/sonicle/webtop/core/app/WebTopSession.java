@@ -50,9 +50,11 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -104,8 +106,8 @@ public class WebTopSession {
 		if(profile != null) {
 			String domainId = getProfileId().getDomain();
 			synchronized(uploads) {
-				for(UploadedFile file : uploads.values()) {
-					if(!file.virtual) wta.deleteTempFile(domainId, file.id);
+				for(UploadedFile upf : uploads.values()) {
+					if(!upf.isVirtual()) wta.deleteTempFile(domainId, upf.getUploadId());
 				}
 				uploads.clear();
 			}
@@ -515,51 +517,98 @@ public class WebTopSession {
 	public void addUploadedFile(UploadedFile uploadedFile) {
 		if(!isReady()) return;
 		synchronized(uploads) {
-			uploads.put(uploadedFile.id, uploadedFile);
+			uploads.put(uploadedFile.getUploadId(), uploadedFile);
 		}
 	}
 	
-	public UploadedFile getUploadedFile(String id) {
+	public UploadedFile getUploadedFile(String uploadId) {
 		if(!isReady()) return null;
 		synchronized(uploads) {
-			return uploads.get(id);
+			return uploads.get(uploadId);
 		}
 	}
 	
-	public boolean hasUploadedFile(String id) {
+	public boolean hasUploadedFile(String uploadId) {
 		if(!isReady()) return false;
 		synchronized(uploads) {
-			return uploads.containsKey(id);
+			return uploads.containsKey(uploadId);
 		}
 	}
 	
 	public void clearUploadedFile(UploadedFile uploadedFile) {
 		if(!isReady()) return;
-		clearUploadedFile(uploadedFile.id);
+		clearUploadedFile(uploadedFile.getUploadId());
 	}
 	
-	public void clearUploadedFile(String id) {
+	public void clearUploadedFile(String uploadId) {
 		if(!isReady()) return;
 		synchronized(uploads) {
-			uploads.remove(id);
+			uploads.remove(uploadId);
+		}
+	}
+	
+	public void clearUploadedFiles(String tag) {
+		if(!isReady()) return;
+		synchronized(uploads) {
+			Iterator<Map.Entry<String, UploadedFile>> it = uploads.entrySet().iterator();
+			while(it.hasNext()) {
+				Map.Entry<String, UploadedFile> entry = it.next();
+				if(StringUtils.equals(entry.getValue().getTag(), tag)) it.remove();
+			}
 		}
 	}
 	
 	public static class UploadedFile {
-		public String id;
-		public String filename;
-		public Long size;
-		public String mediaType;
-		public DateTime timestamp;
-		public boolean virtual;
+		private final boolean virtual;
+		private final String serviceId;
+		private final String uploadId;
+		private final String tag;
+		private final String filename;
+		private final Long size;
+		private final String mediaType;
+		private final DateTime uploadedOn;
 		
-		public UploadedFile(String id, String filename, Long size, String mediaType, boolean virtual) {
-			this.id = id;
+		public UploadedFile(boolean virtual, String serviceId, String uploadId, String tag, String filename, Long size, String mediaType) {
+			this.virtual = virtual;
+			this.serviceId = serviceId;
+			this.uploadId = uploadId;
+			this.tag = tag;
 			this.filename = filename;
 			this.size = size;
 			this.mediaType = mediaType;
-			this.timestamp = DateTimeUtils.now(true);
-			this.virtual = virtual;
+			this.uploadedOn = DateTimeUtils.now(true);
+		}
+		
+		public boolean isVirtual() {
+			return virtual;
+		}
+		
+		public String getServiceId() {
+			return serviceId;
+		}
+
+		public String getUploadId() {
+			return uploadId;
+		}
+		
+		public String getTag() {
+			return tag;
+		}
+
+		public String getFilename() {
+			return filename;
+		}
+
+		public Long getSize() {
+			return size;
+		}
+
+		public String getMediaType() {
+			return mediaType;
+		}
+
+		public DateTime getUploadedOn() {
+			return uploadedOn;
 		}
 	}
 }

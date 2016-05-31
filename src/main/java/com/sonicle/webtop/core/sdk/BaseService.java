@@ -105,16 +105,20 @@ public abstract class BaseService extends BaseAbstractService {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
-	public final boolean hasUploadedFile(String id) {
-		return env.wts.hasUploadedFile(id);
+	public final boolean hasUploadedFile(String uploadId) {
+		return env.wts.hasUploadedFile(uploadId);
 	}
 	
-	public final UploadedFile getUploadedFile(String id) {
-		return env.wts.getUploadedFile(id);
+	public final UploadedFile getUploadedFile(String uploadId) {
+		return env.wts.getUploadedFile(uploadId);
 	}
 	
-	public final void clearUploadedFile(String id) {
-		env.wts.clearUploadedFile(id);
+	public final void clearUploadedFile(String uploadId) {
+		env.wts.clearUploadedFile(uploadId);
+	}
+	
+	public final void clearUploadedFiles(String tag) {
+		env.wts.clearUploadedFiles(tag);
 	}
 	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -185,7 +189,9 @@ public abstract class BaseService extends BaseAbstractService {
 		UploadedFile uploadedFile = null;
 		
 		try {
+			String service = ServletUtils.getStringParameter(request, "service", true);
 			String cntx = ServletUtils.getStringParameter(request, "context", true);
+			String tag = ServletUtils.getStringParameter(request, "tag", null);
 			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
 			
 			Method streamMethod = getUploadStreamMethod(cntx);
@@ -200,7 +206,7 @@ public abstract class BaseService extends BaseAbstractService {
 				while(fit.hasNext()) {
 					FileItemStream fis = fit.next();
 					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(IdentifierUtils.getUUID(), fis.getName(), null, findMediaType(fis), true);
+						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), null, findMediaType(fis));
 						env.wts.addUploadedFile(uploadedFile);
 						data = streamMethod.invoke(this, request, fis.openStream());
 						env.wts.clearUploadedFile(uploadedFile);
@@ -233,11 +239,11 @@ public abstract class BaseService extends BaseAbstractService {
 					FileItem fi = (FileItem)it.next();
 					if(!fi.isFormField()) {
 						File file = WT.createTempFile();
-						uploadedFile = new UploadedFile(file.getName(), fi.getName(), fi.getSize(), findMediaType(fi), false);
+						uploadedFile = new UploadedFile(false, service, file.getName(), fi.getName(), tag, fi.getSize(), findMediaType(fi));
 						env.wts.addUploadedFile(uploadedFile);
 						fi.write(file);
 						
-						items.add(uploadedFile.id);
+						items.add(uploadedFile.getUploadId());
 						if(uploadMethod != null) {
 							try {
 								uploadMethod.invoke(this, request, uploadedFile);
@@ -262,6 +268,18 @@ public abstract class BaseService extends BaseAbstractService {
 			ex.printStackTrace();
 			if(uploadedFile != null) env.wts.clearUploadedFile(uploadedFile);
 			new JsonResult(false, "Error uploading").printTo(out);
+		}
+	}
+	
+	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String tag = ServletUtils.getStringParameter(request, "tag", true);
+			clearUploadedFiles(tag);
+			new JsonResult().printTo(out);
+			
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error in CleanupUploadedFiles", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out); //TODO: error message
 		}
 	}
 	
