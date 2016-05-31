@@ -66,6 +66,11 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		}));
 		me.on('beforenavigate', me.onBeforeNavigate);
 		me.callParent(arguments);
+		me.on('viewclose', me.onViewClose);
+	},
+	
+	onViewClose: function(s) {
+		this.mys.cleanupUploadedFile(s.getId());
 	},
 	
 	initPages: function() {
@@ -126,6 +131,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					bind: '{file}',
 					buttonConfig: {
 						uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
+							extraParams: {tag: me.getId()},
 							mimeTypes: [
 								{title: pfs.label, extensions: pfs.extensions}
 							],

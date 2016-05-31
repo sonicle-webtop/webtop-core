@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -528,6 +529,11 @@ public class WebTopSession {
 		}
 	}
 	
+	/**
+	 * Checks if there is an uploaded file entry with specified ID.
+	 * @param uploadId Uploaded file ID
+	 * @return True if present, false otherwise.
+	 */
 	public boolean hasUploadedFile(String uploadId) {
 		if(!isReady()) return false;
 		synchronized(uploads) {
@@ -535,25 +541,56 @@ public class WebTopSession {
 		}
 	}
 	
-	public void clearUploadedFile(UploadedFile uploadedFile) {
-		if(!isReady()) return;
-		clearUploadedFile(uploadedFile.getUploadId());
+	/**
+	 * Removes the uploaded file entry from the storage.
+	 * @param uploadedFile The entry to remove
+	 * @param deleteTempFile True to remove also corresponding fisical file from Temp
+	 */
+	public void removeUploadedFile(UploadedFile uploadedFile, boolean deleteTempFile) {
+		removeUploadedFile(uploadedFile.getUploadId(), deleteTempFile);
 	}
 	
-	public void clearUploadedFile(String uploadId) {
+	/**
+	 * Removes the uploaded file entry from the storage.
+	 * @param uploadId Uploaded file ID
+	 * @param deleteTempFile True to remove also corresponding physical file from Temp
+	 */
+	public void removeUploadedFile(String uploadId, boolean deleteTempFile) {
 		if(!isReady()) return;
 		synchronized(uploads) {
-			uploads.remove(uploadId);
+			UploadedFile upf = uploads.get(uploadId);
+			if(upf != null) {
+				if(deleteTempFile && !upf.isVirtual()) {
+					String domainId = getProfileId().getDomain();
+					try {
+						wta.deleteTempFile(domainId, uploadId);
+					} catch(WTException ex) { /* Do nothing... */ }
+				}
+				uploads.remove(uploadId);
+			}
 		}
 	}
 	
-	public void clearUploadedFiles(String tag) {
+	/**
+	 * Remove uploaded files by tag value.
+	 * Files will be also deleted from Temp directory.
+	 * @param tag 
+	 */
+	public void removeUploadedFileByTag(String tag) {
 		if(!isReady()) return;
 		synchronized(uploads) {
 			Iterator<Map.Entry<String, UploadedFile>> it = uploads.entrySet().iterator();
 			while(it.hasNext()) {
 				Map.Entry<String, UploadedFile> entry = it.next();
-				if(StringUtils.equals(entry.getValue().getTag(), tag)) it.remove();
+				if(StringUtils.equals(entry.getValue().getTag(), tag)) {
+					if(!entry.getValue().isVirtual()) {
+						String domainId = getProfileId().getDomain();
+						try {
+							wta.deleteTempFile(domainId, entry.getValue().getUploadId());
+						} catch(WTException ex) { /* Do nothing... */ }
+					}
+					it.remove();
+				}
 			}
 		}
 	}
@@ -564,11 +601,11 @@ public class WebTopSession {
 		private final String uploadId;
 		private final String tag;
 		private final String filename;
-		private final Long size;
+		private final long size;
 		private final String mediaType;
 		private final DateTime uploadedOn;
 		
-		public UploadedFile(boolean virtual, String serviceId, String uploadId, String tag, String filename, Long size, String mediaType) {
+		public UploadedFile(boolean virtual, String serviceId, String uploadId, String tag, String filename, long size, String mediaType) {
 			this.virtual = virtual;
 			this.serviceId = serviceId;
 			this.uploadId = uploadId;

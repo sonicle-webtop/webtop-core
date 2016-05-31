@@ -376,6 +376,18 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		};
 	},
 	
+	/**
+	 * Performs cleanup of uploaded file that have specified tag value.
+	 * @param {String} tag Reference value
+	 */
+	cleanupUploadedFile: function(tag) {
+		WT.ajaxReq(this.ID, 'CleanupUploadedFiles', {
+			params: {
+				tag: tag
+			}
+		});
+	},
+	
 	/*
 	 * Get the mapped function for a websocket action name
 	 * The passed function will be called with a config object

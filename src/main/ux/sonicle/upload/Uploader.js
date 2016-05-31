@@ -369,9 +369,7 @@ Ext.define('Sonicle.upload.Uploader', {
 				response = Ext.JSON.decode(status.response);
 		
 		if(response.success === true) {
-			if(response.data && (response.data.temp === true)) {
-				file.uploadId = response.data.uploadId;
-			}
+			if(response.data) file.server_response = response.data;
 			file.server_error = 0;
 			me.updateStore(file);
 			me.succeeded.push(file);

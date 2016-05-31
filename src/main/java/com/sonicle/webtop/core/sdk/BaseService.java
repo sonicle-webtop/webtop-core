@@ -45,6 +45,8 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.File;
@@ -71,6 +73,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 public abstract class BaseService extends BaseAbstractService {
 	private boolean configured = false;
 	private Environment env;
+	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
+	private final HashMap<String, IServiceUploadStreamListener> uploadStreamListeners = new HashMap<>();
 	
 	public final void configure(Environment env) {
 		if(configured) return;
@@ -105,6 +109,30 @@ public abstract class BaseService extends BaseAbstractService {
 		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
 	}
 	
+	public final void registerUploadListener(String context, IServiceUploadListener listener) {
+		synchronized(uploadListeners) {
+			uploadListeners.put(context, listener);
+		}
+	}
+	
+	public final void registerUploadListener(String context, IServiceUploadStreamListener listener) {
+		synchronized(uploadStreamListeners) {
+			uploadStreamListeners.put(context, listener);
+		}
+	}
+	
+	private IServiceUploadListener getUploadListener(String context) {
+		synchronized(uploadListeners) {
+			return uploadListeners.get(context);
+		}
+	}
+	
+	private IServiceUploadStreamListener getUploadStreamListener(String context) {
+		synchronized(uploadStreamListeners) {
+			return uploadStreamListeners.get(context);
+		}
+	}
+	
 	public final boolean hasUploadedFile(String uploadId) {
 		return env.wts.hasUploadedFile(uploadId);
 	}
@@ -113,12 +141,12 @@ public abstract class BaseService extends BaseAbstractService {
 		return env.wts.getUploadedFile(uploadId);
 	}
 	
-	public final void clearUploadedFile(String uploadId) {
-		env.wts.clearUploadedFile(uploadId);
+	public final void removeUploadedFile(String uploadId) {
+		env.wts.removeUploadedFile(uploadId, true);
 	}
 	
-	public final void clearUploadedFiles(String tag) {
-		env.wts.clearUploadedFiles(tag);
+	public final void removeUploadedFileByTag(String tag) {
+		env.wts.removeUploadedFileByTag(tag);
 	}
 	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -194,6 +222,208 @@ public abstract class BaseService extends BaseAbstractService {
 			String tag = ServletUtils.getStringParameter(request, "tag", null);
 			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
 			
+			IServiceUploadStreamListener istream = getUploadStreamListener(cntx);
+			if(istream != null) {
+				try {
+					MapItem data = new MapItem(); // Empty response data
+					
+					// Defines the upload object
+					upload = new ServletFileUpload();
+					FileItemIterator it = upload.getItemIterator(request);
+					while(it.hasNext()) {
+						FileItemStream fis = it.next();
+						if(fis.isFormField()) continue; // Skip until first non-field item...
+						
+						// Creates uploaded object
+						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
+						
+						// Fill response data
+						data.add("virtual", uploadedFile.isVirtual());
+						
+						// Handle listener, its implementation can stop
+						// file upload throwing a UploadException.
+						try {
+							env.wts.addUploadedFile(uploadedFile);
+							istream.onUpload(cntx, request, uploadedFile, fis.openStream(), data);
+						} finally {
+							env.wts.removeUploadedFile(uploadedFile, false);
+						}
+						
+						// Plupload component (client-side) will upload multiple  
+						// file each in its own request. So we can skip loop!
+						break;
+					}
+					new JsonResult(data).printTo(out);
+					
+				} catch(UploadException ex1) {
+					new JsonResult(false, ex1.getMessage()).printTo(out);
+				} catch(Exception ex1) {
+					throw ex1;
+				}
+				
+			} else {
+				try {
+					MapItem data = new MapItem(); // Empty response data
+					IServiceUploadListener iupload = getUploadListener(cntx);
+					
+					// Defines the upload object
+					DiskFileItemFactory factory = new DiskFileItemFactory();
+					//TODO: valutare come imporre i limiti
+					//factory.setSizeThreshold(yourMaxMemorySize);
+					//factory.setRepository(yourTempDirectory);
+					upload = new ServletFileUpload(factory);
+					List<FileItem> files = upload.parseRequest(request);
+					
+					// Plupload component (client-side) will upload multiple file 
+					// each in its own request. So we can skip loop on files.
+					Iterator it = files.iterator();
+					while(it.hasNext()) {
+						FileItem fi = (FileItem)it.next();
+						if(fi.isFormField()) continue; // Skip until first non-field item...
+						
+						// Writes content into a temp file
+						File file = WT.createTempFile();
+						fi.write(file);
+						
+						// Creates uploaded object
+						uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
+						env.wts.addUploadedFile(uploadedFile);
+						
+						// Fill response data
+						data.add("virtual", uploadedFile.isVirtual());
+						data.add("uploadId", uploadedFile.getUploadId());
+						
+						// Handle listener (if present), its implementation can stop
+						// file upload throwing a UploadException.
+						if(iupload != null) {
+							try {
+								iupload.onUpload(cntx, request, uploadedFile, data);
+							} catch(UploadException ex2) {
+								env.wts.removeUploadedFile(uploadedFile, true);
+								throw ex2;
+							}
+						}
+						
+						// Plupload component (client-side) will upload multiple  
+						// file each in its own request. So we can skip loop!
+						break;
+					}	
+					new JsonResult(data).printTo(out);
+					
+				} catch(UploadException ex1) {
+					new JsonResult(false, ex1.getMessage()).printTo(out);
+				}
+			}
+			
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Error uploading", ex);
+			new JsonResult(false, "Error uploading").printTo(out);
+		}
+		
+		
+		/*
+		try {
+			String service = ServletUtils.getStringParameter(request, "service", true);
+			String cntx = ServletUtils.getStringParameter(request, "context", true);
+			String tag = ServletUtils.getStringParameter(request, "tag", null);
+			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
+			
+			IServiceUploadStreamListener istream = getUploadStreamListener(cntx);
+			if(istream != null) {
+				// Defines the upload object
+				upload = new ServletFileUpload();
+				
+				// Process files...
+				Object data = null;
+				boolean succedeed = false;
+				FileItemIterator fit = upload.getItemIterator(request);
+				while(fit.hasNext()) {
+					FileItemStream fis = fit.next();
+					if(!fis.isFormField()) {
+						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), null, findMediaType(fis));
+						env.wts.addUploadedFile(uploadedFile);
+						data = istream.onUpload(cntx, request, uploadedFile, fis.openStream());
+						env.wts.clearUploadedFile(uploadedFile);
+						succedeed = true;
+						// Plupload client-side will upload multiple file each in its own
+						// request; we can skip fileItems looping.
+						break;
+					}
+				}
+				
+				if(!succedeed) throw new Exception("No file has been uploaded");
+				new JsonResult(data).printTo(out);
+				
+			} else {
+				ArrayList<String> items = new ArrayList<>();
+				IServiceUploadListener iupload = getUploadListener(cntx);
+				
+				// Defines the upload object
+				DiskFileItemFactory factory = new DiskFileItemFactory();
+				//TODO: valutare come imporre i limiti
+				//factory.setSizeThreshold(yourMaxMemorySize);
+				//factory.setRepository(yourTempDirectory);
+				upload = new ServletFileUpload(factory);
+				
+				
+				// Process files...
+				boolean succedeed = false;
+				List<FileItem> files = upload.parseRequest(request);
+				Iterator it = files.iterator();
+				while(it.hasNext()) {
+					FileItem fi = (FileItem)it.next();
+					if(!fi.isFormField()) {
+						// Writes content into a temp file
+						File file = WT.createTempFile();
+						fi.write(file);
+						
+						// Creates uploaded object
+						uploadedFile = new UploadedFile(false, service, file.getName(), fi.getName(), tag, fi.getSize(), findMediaType(fi));
+						env.wts.addUploadedFile(uploadedFile);
+						
+						// Handle listener (if present), implementation can 
+						if(iupload != null) {
+							try {
+								iupload.onUpload(cntx, request, uploadedFile);
+							} catch(UploadException ex1) {
+								env.wts.clearUploadedFile(uploadedFile);
+							} catch(Throwable t) {
+								env.wts.clearUploadedFile(uploadedFile);
+							}
+						}
+						
+						items.add(uploadedFile.getUploadId());
+						if(iupload != null) {
+							try {
+								iupload.onUpload(cntx, request, uploadedFile);
+							} catch(Throwable t) {
+								//TODO: aggiungere logging
+								t.printStackTrace();
+							}
+						}
+						succedeed = true;
+						// Plupload client-side will upload multiple file each in its own
+						// request; we can skip fileItems looping.
+						break;
+					}
+				}
+				
+				if(!succedeed) throw new Exception("No file has been uploaded");
+				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
+				new JsonResult(mi).printTo(out);
+			}
+			
+			
+			
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			if(uploadedFile != null) env.wts.clearUploadedFile(uploadedFile);
+			new JsonResult(false, "Error uploading").printTo(out);
+		}
+		*/
+		
+		/*
 			Method streamMethod = getUploadStreamMethod(cntx);
 			if(streamMethod != null) {
 				// Defines the upload object
@@ -263,23 +493,18 @@ public abstract class BaseService extends BaseAbstractService {
 				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
 				new JsonResult(mi).printTo(out);
 			}
-			
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			if(uploadedFile != null) env.wts.clearUploadedFile(uploadedFile);
-			new JsonResult(false, "Error uploading").printTo(out);
-		}
+			*/
 	}
 	
 	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			String tag = ServletUtils.getStringParameter(request, "tag", true);
-			clearUploadedFiles(tag);
+			removeUploadedFileByTag(tag);
 			new JsonResult().printTo(out);
 			
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in CleanupUploadedFiles", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out); //TODO: error message
+			new JsonResult(false, ex.getMessage()).printTo(out);
 		}
 	}
 	

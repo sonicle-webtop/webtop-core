@@ -170,7 +170,9 @@ Ext.define('Sonicle.upload.Field', {
 	doSetValue: function(file) {
 		var me = this;
 		me.setRawValue(file.name);
-		me.mixins.field.setValue.call(me, file.uploadId);
+		if(file.server_response) {
+			me.mixins.field.setValue.call(me, file.server_response.uploadId);
+		}
 		me.applyEmptyText();
 		return me;
 	},
