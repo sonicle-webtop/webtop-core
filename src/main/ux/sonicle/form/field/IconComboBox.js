@@ -37,11 +37,11 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 		me.callParent(arguments);
 		
 		me.wrap = me.el.down('.x-form-text-wrap');
-		me.wrap.addCls('so-icon-combo');
+		me.wrap.addCls('so-iconcombo');
 		Ext.DomHelper.append(me.wrap, {
-			tag: 'i', cls: 'so-picker-icon so-picker-main-icon'
+			tag: 'i', cls: 'so-iconcombo-icon'
 		});
-		me.icon = me.el.down('.so-picker-icon');
+		me.icon = me.el.down('.so-iconcombo-icon');
 		if(me.icon && !me.editable) {
 			me.icon.on('click', me.onTriggerClick, me);
 		}
@@ -62,9 +62,9 @@ Ext.define('Sonicle.form.field.IconComboBox', {
 	 */
 	getListItemTpl: function(displayField){
 		var picker = this.pickerField;
-		return '<div class="x-combo-list-item">'
-			+ '<i class="so-picker-icon {'+picker.iconClsField+'}">&#160;</i>'
-			+ '{'+displayField+'}'
+		return '<div class="so-iconcombo x-combo-list-item">'
+			+ '<div class="so-iconcombo-icon {'+picker.iconClsField+'}"></div>'
+			+ '<span>{'+displayField+'}</span>'
 			+ '</div>';
 	},
 	

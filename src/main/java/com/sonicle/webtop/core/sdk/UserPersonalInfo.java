@@ -42,7 +42,6 @@ import java.util.Map;
  * @author malbinola
  */
 public class UserPersonalInfo {
-	
 	private String title = null;
 	private String firstName = null;
 	private String lastName = null;
@@ -64,9 +63,7 @@ public class UserPersonalInfo {
 	private String custom2 = null;
 	private String custom3 = null;
 	
-	public UserPersonalInfo() {
-		
-	}
+	public UserPersonalInfo() {}
 
 	public String getTitle() {
 		return title;

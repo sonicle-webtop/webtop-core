@@ -37,11 +37,11 @@ Ext.define('Sonicle.form.field.ColorComboBox', {
 		me.callParent(arguments);
 		
 		me.wrap = me.el.down('.x-form-text-wrap');
-		me.wrap.addCls('so-icon-combo');
+		me.wrap.addCls('so-colorcombo');
 		Ext.DomHelper.append(me.wrap, {
-			tag: 'i', cls: 'so-picker-marker so-picker-field-marker'
+			tag: 'i', cls: 'so-colorcombo-marker'
 		});
-		me.marker = me.el.down('.so-picker-marker');
+		me.marker = me.el.down('.so-colorcombo-marker');
 		if(me.marker && !me.editable) {
 			me.marker.on('click', me.onTriggerClick, me);
 		}
@@ -65,10 +65,11 @@ Ext.define('Sonicle.form.field.ColorComboBox', {
 				styles = picker.buildMarkerStyles(picker.geometry, '{'+picker.colorField+'}'),
 				style = Ext.dom.Helper.generateStyles(styles);
 		
-		return '<div class="x-combo-list-item">'
-			+ '<i class="so-picker-marker" style="'+style+'">&#160;</i>'
-			+ '{'+displayField+'}'
-			+ '</div>';
+		return '<div class="so-colorcombo x-combo-list-item">'
+			+ '<div class="so-colorcombo-marker" style="'+style+'"></div>'
+			+ '<span>{'+displayField+'}</span>'
+			+ '</div>'
+		;
 	},
 	
 	/**

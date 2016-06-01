@@ -1,23 +1,23 @@
 
-.so-icon-combo {
-	position: relative;
+.so-iconcombo .x-form-text {
+	padding-left: 24px;
 }
 
-.so-icon-combo .x-form-text {
-	padding-left: 23px;
-}
-
-.so-picker-main-icon {
-	position: absolute !important;
-	float: none !important;
-	left: 3px;
-}
-
-.so-picker-icon {
-	position: relative;
-	float: left;
-	top: 1px;
+.so-iconcombo-icon {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	margin-top: auto;
+	margin-bottom: auto;
 	width: 16px;
 	height: 16px;
-	margin-right:5px;
+	margin-left: 5px;
+}
+
+.so-iconcombo.x-combo-list-item > .so-iconcombo-icon {
+	margin-left: 0px;
+}
+
+.so-iconcombo.x-combo-list-item > span {
+	padding-left: 21px;
 }
