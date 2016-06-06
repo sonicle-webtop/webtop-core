@@ -136,13 +136,13 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 								{title: pfs.label, extensions: pfs.extensions}
 							],
 							listeners: {
-								uploadstarted: function(up) {
+								uploadstarted: function() {
 									me.wait();
 								},
-								uploadcomplete: function(up) {
+								uploadcomplete: function() {
 									me.unwait();
 								},
-								uploaderror: function(up) {
+								uploaderror: function() {
 									me.unwait();
 								}
 							}
