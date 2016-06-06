@@ -49,6 +49,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	
 	tmce: null,
 	toolbar: null,
+	tmceNotification: null,
 	
     /**
      * @cfg {String} defaultButtonUI
@@ -387,6 +388,34 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             }
         }; 
     },	
+	
+	showProgress: function(text) {
+		var me=this;
+		
+		if (!me.tmceNotification) {
+			me.tmceNotification=me.tmce.openNotification({
+				text: text,
+				progressBar: true
+			});
+		}
+	},
+	
+	setProgress: function(value) {
+		var me=this;
+		
+		if (me.tmceNotification) {
+			me.tmceNotification.progressBar.value(value);
+		}
+	},
+	
+	hideProgress: function() {
+		var me=this;
+		
+		if (me.tmceNotification) {
+			me.tmceNotification.close();
+			me.tmceNotification=null;
+		}
+	},
 
     disableItems: function(disabled) {
         var items = this.getToolbar().items.items,
