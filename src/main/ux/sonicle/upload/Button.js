@@ -46,16 +46,16 @@ Ext.define('Sonicle.upload.Button', {
 		}
 		
 		me.relayEvents(me.uploader, [
-			'beforestart',
-			'uploadready',
+			'uploaderready',
+			'beforeuploaderstart',
+			'overallprogress',
+			'filesadded',
+			'fileuploaded',
+			'beforeupload',
 			'uploadstarted',
 			'uploadcomplete',
-			'uploaderror',
-			'filesadded',
-			'beforeupload',
-			'fileuploaded',
-			'updateprogress',
 			'uploadprogress',
+			'uploaderror',
 			'storeempty'
 		]);
 	},

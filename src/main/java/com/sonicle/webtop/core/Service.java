@@ -281,7 +281,7 @@ public class Service extends BaseService {
 			new JsonResult("domains", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupDomains", ex);
+			logger.error("Error in LookupDomains", ex);
 			new JsonResult(false, "Unable to lookup domains").printTo(out);
 		}
 	}
@@ -309,7 +309,7 @@ public class Service extends BaseService {
 			new JsonResult("roles", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupDomainRoles", ex);
+			logger.error("Error in LookupDomainRoles", ex);
 			new JsonResult(false, "Unable to lookup roles").printTo(out);
 		}
 	}
@@ -342,7 +342,7 @@ public class Service extends BaseService {
 			new JsonResult("users", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupUsers", ex);
+			logger.error("Error in LookupUsers", ex);
 			new JsonResult(false, "Unable to lookup users").printTo(out);
 		}
 	}
@@ -363,7 +363,7 @@ public class Service extends BaseService {
 			new JsonResult("activities", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupActivities", ex);
+			logger.error("Error in LookupActivities", ex);
 			new JsonResult(false, "Unable to lookup activities").printTo(out);
 		}
 	}
@@ -399,7 +399,7 @@ public class Service extends BaseService {
 			}
 			
 		} catch(Exception ex) {
-			logger.error("Error executing action ManageActivities", ex);
+			logger.error("Error in ManageActivities", ex);
 			new JsonResult(false, "Error").printTo(out);
 			
 		}
@@ -421,7 +421,7 @@ public class Service extends BaseService {
 			new JsonResult("causals", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupCausals", ex);
+			logger.error("Error in LookupCausals", ex);
 			new JsonResult(false, "Unable to lookup causals").printTo(out);
 		}
 	}

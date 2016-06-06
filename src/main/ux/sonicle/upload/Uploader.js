@@ -12,6 +12,78 @@ Ext.define('Sonicle.upload.Uploader', {
 		'Ext.mixin.Observable'
 	],
 	
+	/**
+	 * @event uploaderready
+	 * When the underlying uploader component has been inited
+	 * @param {Sonicle.upload.Uploader} this
+	 */
+	
+	/**
+	 * @event beforeuploaderstart
+	 * Before start() method is called on the uploader component
+	 * @param {Sonicle.upload.Uploader} this
+	 */
+	
+	/**
+	 * @event overallprogress
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Number} percent Overall process percentage
+	 * @param {Number} total Total count of handled files (in any state)
+	 * @param {Number} succeeded Total count of succeded uploads
+	 * @param {Number} failed Total count of failed uploads
+	 * @param {Number} queued Total count of queued uploads
+	 * @param {Number} speed Overall process speed
+	 */
+	
+	/**
+	 * @event filesadded
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object[]} files Current files data
+	 */
+	
+	/**
+	 * @event fileuploaded
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object} file File data
+	 * @param {Object} json Server response
+	 * @param {Object} json.data Custom response data
+	 */
+	
+	/**
+	 * @event beforeupload
+	 * Before upload process has been started
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object} file File data
+	 */
+	
+	/**
+	 * @event uploadstarted
+	 * When a file upload has been started
+	 * @param {Sonicle.upload.Uploader} this
+	 */
+	
+	/**
+	 * @event uploadcomplete
+	 * When an upload has been completed
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object[]} succeededfiles Succeeded files data
+	 * @param {Object[]} failedfiles Failed files data
+	 */
+	
+	/**
+	 * @event uploadprogress
+	 * When an upload has been completed
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object} file File data
+	 * @param {Number} percent Current upload process percentage
+	 */
+	
+	/**
+	 * @event uploaderror
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object} status Status data object
+	 */
+	
 	statics: {
 		/**
 		 * Adds passed mimeType and related extensions to mOxie internal 
@@ -129,7 +201,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	start: function() {
 		var me = this;
-		me.fireEvent('beforestart', me);
+		me.fireEvent('beforeuploaderstart', me);
 		me.uploader.start();
 	},
 	
@@ -219,11 +291,10 @@ Ext.define('Sonicle.upload.Uploader', {
 				total = me.store.data.length,
 				failed = me.failed.length,
 				succeeded = me.succeeded.length,
-				sent = failed + succeeded,
-				queued = total - succeeded - failed,
+				queued = total - (succeeded + failed),
 				percent = progress.percent;
 		
-		me.fireEvent('updateprogress', me, total, percent, sent, succeeded, failed, queued, speed);		
+		me.fireEvent('overallprogress', me, percent, total, succeeded, failed, queued, speed);		
 	},
 	
 	/**
@@ -318,7 +389,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	_Init: function(uploader, data) {
 		this.runtime = data.runtime;
-		this.fireEvent('uploadready', this);
+		this.fireEvent('uploaderready', this);
 	},
 	
 	_PostInit: function(uploader) {
@@ -346,7 +417,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	_BeforeUpload: function(uploader, file) {
-		this.fireEvent('beforeupload', this, uploader, file);
+		this.fireEvent('beforeupload', this, file);
 	},
 	
 	_UploadFile: function(uploader, file) {
@@ -355,25 +426,22 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	_UploadProgress: function(uploader, file) {
 		var me = this,
-				name = file.name,
-				size = file.size,
 				percent = file.percent;
 		
-		me.fireEvent('uploadprogress', me, file, name, size, percent);
+		me.fireEvent('uploadprogress', me, file, percent);
 		if(file.server_error) file.status = 4;
 		me.updateStore(file);
 	},
 	
 	_FileUploaded: function(uploader, file, status) {
 		var me = this,
-				response = Ext.JSON.decode(status.response);
+				json = Ext.JSON.decode(status.response);
 		
-		if(response.success === true) {
-			if(response.data) file.server_response = response.data;
+		if(json.success === true) {
 			file.server_error = 0;
 			me.updateStore(file);
 			me.succeeded.push(file);
-			me.fireEvent('fileuploaded', me, file, response);
+			me.fireEvent('fileuploaded', me, file, json);
 		} else {
 			//if(response.message) file.msg = '<span style="color: red">' + response.message + '</span>';
 			file.server_error = 1;

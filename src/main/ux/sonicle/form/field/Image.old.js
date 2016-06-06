@@ -127,15 +127,15 @@ Ext.define('Sonicle.form.field.Image', {
 			}, {single: true});
 
 			me.relayEvents(me.uploader, [
-				'beforestart',
-				'uploadready',
+				'uploaderready',
+				'beforeuploaderstart',
 				'uploadstarted',
 				'uploadcomplete',
 				'uploaderror',
 				'filesadded',
 				'beforeupload',
 				'fileuploaded',
-				'updateprogress',
+				'overallprogress',
 				'uploadprogress',
 				'storeempty'
 			]);
