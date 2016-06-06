@@ -55,6 +55,6 @@ public class JsSimple {
 	}
 	
 	public static String description(String description, String parenthesis) {
-		return MessageFormat.format("{0} ({1})", description, parenthesis);
+		return MessageFormat.format("{0} [{1}]", description, parenthesis);
 	}
 }
