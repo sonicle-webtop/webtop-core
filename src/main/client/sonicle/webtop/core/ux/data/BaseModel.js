@@ -40,7 +40,6 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 	schema: {
 		namespace: 'Sonicle.webtop.core.model',
 		proxy: {
-			
 			type: 'memory',
 			extraParams: {
 				service: 'no.service',

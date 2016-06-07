@@ -859,13 +859,18 @@ public class CoreManager extends BaseManager {
 						}
 						// Folder...
 						SharePermsFolder fperms = new SharePermsFolder();
-						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
-							fperms.parse(perm.getAction());
+						if(folderShare != null) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
+								fperms.parse(perm.getAction());
+							}
 						}
+							
 						// Elements...
 						SharePermsElements eperms = new SharePermsElements();
-						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
-							eperms.parse(perm.getAction());
+						if(folderShare != null) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
+								eperms.parse(perm.getAction());
+							}
 						}
 						outshare.getRights().add(new Sharing.RoleRights(roleUid, rperms, fperms, eperms));
 					}

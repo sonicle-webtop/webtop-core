@@ -167,8 +167,8 @@ public class ServiceManager {
 			Collections.sort(manifests, new Comparator<ServiceManifest>() {
 				@Override
 				public int compare(ServiceManifest o1, ServiceManifest o2) {
-					//return o1.getId().compareTo(o2.getId());
-					return o2.getId().compareTo(o1.getId());
+					return o1.getId().compareTo(o2.getId()); // a->z
+					//return o2.getId().compareTo(o1.getId()); // z->a
 				}
 			});
 		} catch (IOException ex) {

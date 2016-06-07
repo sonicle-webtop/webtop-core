@@ -43,8 +43,10 @@ Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
 	fields: [
 		WTF.field('id', 'string', false),
 		WTF.roField('level', 'int')
-	],
+	]
+	/*
 	hasMany: [
 		WTF.hasMany('rights', 'Sonicle.webtop.core.sdk.model.SharingRights')
 	]
+	*/
 });
