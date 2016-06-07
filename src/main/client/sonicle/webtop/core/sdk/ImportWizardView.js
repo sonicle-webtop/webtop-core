@@ -70,7 +70,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	},
 	
 	onViewClose: function(s) {
-		this.mys.cleanupUploadedFile(s.getId());
+		this.mys.cleanupUploadedFiles(s.getId());
 	},
 	
 	initPages: function() {
