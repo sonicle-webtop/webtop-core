@@ -209,6 +209,16 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	/**
+	 * Return the default Core connection.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(boolean autoCommit) throws SQLException {
+		return getConnection(CoreManifest.ID, autoCommit);
+	}
+	
+	/**
 	 * Returns the default connection from desired namespace.
 	 * @param namespace The pool namespace.
 	 * @return A ready Connection object.
@@ -220,6 +230,17 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	/**
+	 * Returns the default connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(String namespace, boolean autoCommit) throws SQLException {
+		return getConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
+	}
+	
+	/**
 	 * Returns a connection from desired namespace.
 	 * @param namespace The pool namespace.
 	 * @param dataSourceName The dataSource name.
@@ -228,7 +249,21 @@ public class ConnectionManager implements IConnectionProvider {
 	 */
 	@Override
 	public Connection getConnection(String namespace, String dataSourceName) throws SQLException {
-		return getPool(poolName(namespace, dataSourceName)).getConnection();
+		return getConnection(namespace, dataSourceName, true);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(String namespace, String dataSourceName, boolean autoCommit) throws SQLException {
+		Connection con = getPool(poolName(namespace, dataSourceName)).getConnection();
+		con.setAutoCommit(autoCommit);
+		return con;
 	}
 	
 	private void addPool(String poolName, HikariConfig config) {
