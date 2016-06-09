@@ -196,6 +196,7 @@ public class CoreManager extends BaseManager {
 		return wta.getOTPManager();
 	}
 	
+	/*
 	public boolean writeLog(String action, String remoteIp, String userAgent, String sessionId, String data) {
 		//TODO: trovare modo di completare serviceId (ora a "")
 		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), remoteIp, userAgent, sessionId, data);
@@ -205,6 +206,7 @@ public class CoreManager extends BaseManager {
 		//TODO: trovare modo di completare serviceId (ora a "")
 		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), null, null, null, data);
 	}
+	*/
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
 		return wta.getUserManager().getUserInfoProvider();
@@ -859,13 +861,18 @@ public class CoreManager extends BaseManager {
 						}
 						// Folder...
 						SharePermsFolder fperms = new SharePermsFolder();
-						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
-							fperms.parse(perm.getAction());
+						if(folderShare != null) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, folderPermissionKey, folderShare.getShareId().toString())) {
+								fperms.parse(perm.getAction());
+							}
 						}
+							
 						// Elements...
 						SharePermsElements eperms = new SharePermsElements();
-						for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
-							eperms.parse(perm.getAction());
+						if(folderShare != null) {
+							for(ORolePermission perm : rpedao.selectByRoleServiceKeyInstance(con, roleUid, serviceId, elementsPermissionKey, folderShare.getShareId().toString())) {
+								eperms.parse(perm.getAction());
+							}
 						}
 						outshare.getRights().add(new Sharing.RoleRights(roleUid, rperms, fperms, eperms));
 					}

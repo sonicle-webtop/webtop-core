@@ -144,4 +144,8 @@ public abstract class BaseManager {
 	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
 		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
 	}
+	
+	public final void writeLog(String action, String data) {
+		WT.writeLog(action, softwareName, data);
+	}
 }

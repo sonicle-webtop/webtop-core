@@ -75,6 +75,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.Reflection;
 
 /**
  *
@@ -234,23 +235,21 @@ public class WT {
 		}
 	}
 	
-	public static Connection getConnection(String serviceId, String dataSourceName) throws SQLException {
+	public static Connection getConnection(String serviceId, boolean autoCommit) throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection(serviceId, dataSourceName);
-	}
-	
-	public static Connection getConnection(ServiceManifest manifest) throws SQLException {
-		ConnectionManager conm = getWTA().getConnectionManager();
-		if (conm.isRegistered(manifest.getId(), ConnectionManager.DEFAULT_DATASOURCE)) {
-			return conm.getConnection(manifest.getId(), ConnectionManager.DEFAULT_DATASOURCE);
+		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
+			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE, autoCommit);
 		} else {
-			return conm.getConnection();
+			return conm.getConnection(autoCommit);
 		}
 	}
 	
-	public static Connection getConnection(ServiceManifest manifest, String dataSourceName) throws SQLException {
-		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection(manifest.getId(), dataSourceName);
+	public static Connection getConnection(String serviceId, String dataSourceName) throws SQLException {
+		return getWTA().getConnectionManager().getConnection(serviceId, dataSourceName);
+	}
+	
+	public static Connection getConnection(String serviceId, String dataSourceName, boolean autoCommit) throws SQLException {
+		return getWTA().getConnectionManager().getConnection(serviceId, dataSourceName, autoCommit);
 	}
 	
 	public static String getHomePath() {
@@ -356,6 +355,16 @@ public class WT {
 			//TODO: logging
 			return null;
 		}
+	}
+	
+	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
+		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+		return getWTA().getLogManager().write(RunContext.getProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
+	}
+	
+	public static boolean writeLog(String action, String softwareName, String data) {
+		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+		return getWTA().getLogManager().write(RunContext.getProfileId(), callerServiceId, action, softwareName, null, null, null, data);
 	}
 	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {

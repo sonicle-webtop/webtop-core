@@ -54,12 +54,6 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	 */
 	
 	/**
-	 * @cfg {String} rightsModelName
-	 * The model used to create record for collecting role rights.
-	 */
-	rightsModelName: 'WT.sdk.model.SharingRights',
-	
-	/**
 	 * @cfg {String} fieldTitle
 	 * Please provide a value for this config.
 	 * For more info see {@link WT.sdk.ModelView#fieldTitle}.
@@ -85,8 +79,6 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
-		
-		if(Ext.isEmpty(me.rightsModelName)) Ext.Error.raise('rightsModelName need to be defined');
 		
 		me.add({
 			region: 'north',
@@ -254,11 +246,17 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				rec;
 		
 		if(sto.indexOfId(roleUid) !== -1) return null;
-		rec = Ext.create(me.rightsModelName, {
+		/*
+		rec = sto.createModel({
 			roleUid: roleUid,
 			folderRead: true
 		});
 		sto.add(rec);
+		*/
+		rec = sto.add({
+			roleUid: roleUid,
+			folderRead: true
+		})[0];
 		return rec;
 	},
 	

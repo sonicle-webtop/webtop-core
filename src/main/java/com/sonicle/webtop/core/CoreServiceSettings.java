@@ -46,6 +46,27 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String HOME_PATH = "home.path";
 	
 	/**
+	 * [string][system]
+	 * Defines Dropbox
+	 */
+	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
+	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
+	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
+	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
+	
+	/**
+	 * [string][system+domain]
+	 * Defines SMTP server host
+	 */
+	public static final String SMTP_HOST = "smtp.host";
+	
+	/**
+	 * [string][system+domain]
+	 * Defines SMTP server port
+	 */
+	public static final String SMTP_PORT = "smtp.port";
+	
+	/**
 	 * [string][system+domain][*]
 	 * Activate syslog
 	 */
@@ -115,18 +136,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	/**
 	 * [string][system+domain]
-	 * Defines smtp server host
-	 */
-	public static final String SMTP_HOST = "smtp.host";
-	
-	/**
-	 * [string][system+domain]
-	 * Defines smtp server port
-	 */
-	public static final String SMTP_PORT = "smtp.port";
-	
-	/**
-	 * [string][system+domain]
 	 * Specifies if what's new visualization to users is active
 	 */
 	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
@@ -173,10 +182,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	 */
 	public static final String USERINFO_PROVIDER = "userinfo.provider";
 	
-	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
-	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
-	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
-	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";
 	

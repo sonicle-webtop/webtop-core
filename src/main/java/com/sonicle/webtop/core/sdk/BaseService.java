@@ -65,6 +65,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.jooq.tools.StringUtils;
 
 /**
  *
@@ -198,17 +199,17 @@ public abstract class BaseService extends BaseAbstractService {
 	
 	private String findMediaType(FileItemStream fileItem) {
 		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(mtype == null) return mtype;
+		if(!StringUtils.isBlank(mtype)) return mtype;
 		mtype = fileItem.getContentType();
-		if(mtype == null) return mtype;
+		if(!StringUtils.isBlank(mtype)) return mtype;
 		return "application/octet-stream";
 	}
 	
 	private String findMediaType(FileItem fileItem) {
 		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(mtype == null) return mtype;
+		if(!StringUtils.isBlank(mtype)) return mtype;
 		mtype = fileItem.getContentType();
-		if(mtype == null) return mtype;
+		if(!StringUtils.isBlank(mtype)) return mtype;
 		return "application/octet-stream";
 	}
 	
