@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -646,6 +647,10 @@ public class WebTopSession {
 
 		public DateTime getUploadedOn() {
 			return uploadedOn;
+		}
+		
+		public File getFile() throws WTException {
+			return new File(WT.getTempFolder(), getUploadId());
 		}
 	}
 }
