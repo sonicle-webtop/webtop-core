@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.ux.data.InternetRecipientModel', {
 				a=rec.get("address");
 				
 			if (Ext.isEmpty(p)) return a; 
-			return p+" &lt;"+a+"&gt;";
+			return p+" <"+a+">";
 		})
 	]
 });

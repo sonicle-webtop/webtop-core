@@ -172,7 +172,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 		'Sonicle.webtop.core.model.Simple',
 		'Sonicle.webtop.core.store.RcptType'
 	],
-
+	
 	/**
 	 * @cfg {String} sid
 	 * Webtop service ID, if different from Contacts sid.
@@ -215,7 +215,8 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 				ptype: 'socellediting',
 				pluginId: 'socellediting',
 				clicksToEdit: 1,
-				navigationModel: navModel
+				navigationModel: navModel,
+				autoEncode: true
 			},
 			columns: [
 				{
@@ -251,7 +252,8 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					editor: Ext.create({
 						xtype: 'wtrcptsuggestcombo'
 						//width: 400,
-					})
+					}),
+					renderer: Ext.util.Format.htmlEncode
 				}
 			]
 		});

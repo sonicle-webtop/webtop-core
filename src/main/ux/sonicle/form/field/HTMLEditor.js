@@ -598,6 +598,10 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
         return this.getValue()!=this.initValue;
     },*/
 	
+	isReady: function() {
+		return this.getTinyMCEEditor();
+	},
+	
 	getTinyMCEEditor: function() {
 		return tinymce.get(this.tmce.getInputId());
 	},
