@@ -50,10 +50,10 @@ import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -65,6 +65,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 import org.jooq.tools.StringUtils;
 
 /**
@@ -197,22 +198,6 @@ public abstract class BaseService extends BaseAbstractService {
 		}	
 	}
 	
-	private String findMediaType(FileItemStream fileItem) {
-		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		mtype = fileItem.getContentType();
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		return "application/octet-stream";
-	}
-	
-	private String findMediaType(FileItem fileItem) {
-		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		mtype = fileItem.getContentType();
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		return "application/octet-stream";
-	}
-	
 	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ServletFileUpload upload = null;
 		UploadedFile uploadedFile = null;
@@ -234,13 +219,10 @@ public abstract class BaseService extends BaseAbstractService {
 					while(it.hasNext()) {
 						FileItemStream fis = it.next();
 						if(fis.isFormField()) continue; // Skip until first non-field item...
-						
 						// Creates uploaded object
 						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
-						
 						// Fill response data
 						data.add("virtual", uploadedFile.isVirtual());
-						
 						// Handle listener, its implementation can stop
 						// file upload throwing a UploadException.
 						try {
@@ -249,7 +231,6 @@ public abstract class BaseService extends BaseAbstractService {
 						} finally {
 							env.wts.removeUploadedFile(uploadedFile, false);
 						}
-						
 						// Plupload component (client-side) will upload multiple  
 						// file each in its own request. So we can skip loop!
 						break;
@@ -281,19 +262,15 @@ public abstract class BaseService extends BaseAbstractService {
 					while(it.hasNext()) {
 						FileItem fi = (FileItem)it.next();
 						if(fi.isFormField()) continue; // Skip until first non-field item...
-						
 						// Writes content into a temp file
 						File file = WT.createTempFile();
 						fi.write(file);
-						
 						// Creates uploaded object
 						uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
 						env.wts.addUploadedFile(uploadedFile);
-						
 						// Fill response data
 						data.add("virtual", uploadedFile.isVirtual());
 						data.add("uploadId", uploadedFile.getUploadId());
-						
 						// Handle listener (if present), its implementation can stop
 						// file upload throwing a UploadException.
 						if(iupload != null) {
@@ -304,7 +281,6 @@ public abstract class BaseService extends BaseAbstractService {
 								throw ex2;
 							}
 						}
-						
 						// Plupload component (client-side) will upload multiple  
 						// file each in its own request. So we can skip loop!
 						break;
@@ -320,181 +296,6 @@ public abstract class BaseService extends BaseAbstractService {
 			WebTopApp.logger.error("Error uploading", ex);
 			new JsonResult(false, "Error uploading").printTo(out);
 		}
-		
-		
-		/*
-		try {
-			String service = ServletUtils.getStringParameter(request, "service", true);
-			String cntx = ServletUtils.getStringParameter(request, "context", true);
-			String tag = ServletUtils.getStringParameter(request, "tag", null);
-			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
-			
-			IServiceUploadStreamListener istream = getUploadStreamListener(cntx);
-			if(istream != null) {
-				// Defines the upload object
-				upload = new ServletFileUpload();
-				
-				// Process files...
-				Object data = null;
-				boolean succedeed = false;
-				FileItemIterator fit = upload.getItemIterator(request);
-				while(fit.hasNext()) {
-					FileItemStream fis = fit.next();
-					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), null, findMediaType(fis));
-						env.wts.addUploadedFile(uploadedFile);
-						data = istream.onUpload(cntx, request, uploadedFile, fis.openStream());
-						env.wts.clearUploadedFile(uploadedFile);
-						succedeed = true;
-						// Plupload client-side will upload multiple file each in its own
-						// request; we can skip fileItems looping.
-						break;
-					}
-				}
-				
-				if(!succedeed) throw new Exception("No file has been uploaded");
-				new JsonResult(data).printTo(out);
-				
-			} else {
-				ArrayList<String> items = new ArrayList<>();
-				IServiceUploadListener iupload = getUploadListener(cntx);
-				
-				// Defines the upload object
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-				//TODO: valutare come imporre i limiti
-				//factory.setSizeThreshold(yourMaxMemorySize);
-				//factory.setRepository(yourTempDirectory);
-				upload = new ServletFileUpload(factory);
-				
-				
-				// Process files...
-				boolean succedeed = false;
-				List<FileItem> files = upload.parseRequest(request);
-				Iterator it = files.iterator();
-				while(it.hasNext()) {
-					FileItem fi = (FileItem)it.next();
-					if(!fi.isFormField()) {
-						// Writes content into a temp file
-						File file = WT.createTempFile();
-						fi.write(file);
-						
-						// Creates uploaded object
-						uploadedFile = new UploadedFile(false, service, file.getName(), fi.getName(), tag, fi.getSize(), findMediaType(fi));
-						env.wts.addUploadedFile(uploadedFile);
-						
-						// Handle listener (if present), implementation can 
-						if(iupload != null) {
-							try {
-								iupload.onUpload(cntx, request, uploadedFile);
-							} catch(UploadException ex1) {
-								env.wts.clearUploadedFile(uploadedFile);
-							} catch(Throwable t) {
-								env.wts.clearUploadedFile(uploadedFile);
-							}
-						}
-						
-						items.add(uploadedFile.getUploadId());
-						if(iupload != null) {
-							try {
-								iupload.onUpload(cntx, request, uploadedFile);
-							} catch(Throwable t) {
-								//TODO: aggiungere logging
-								t.printStackTrace();
-							}
-						}
-						succedeed = true;
-						// Plupload client-side will upload multiple file each in its own
-						// request; we can skip fileItems looping.
-						break;
-					}
-				}
-				
-				if(!succedeed) throw new Exception("No file has been uploaded");
-				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
-				new JsonResult(mi).printTo(out);
-			}
-			
-			
-			
-			
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			if(uploadedFile != null) env.wts.clearUploadedFile(uploadedFile);
-			new JsonResult(false, "Error uploading").printTo(out);
-		}
-		*/
-		
-		/*
-			Method streamMethod = getUploadStreamMethod(cntx);
-			if(streamMethod != null) {
-				// Defines the upload object
-				upload = new ServletFileUpload();
-				
-				// Process files...
-				Object data = null;
-				boolean succedeed = false;
-				FileItemIterator fit = upload.getItemIterator(request);
-				while(fit.hasNext()) {
-					FileItemStream fis = fit.next();
-					if(!fis.isFormField()) {
-						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), null, findMediaType(fis));
-						env.wts.addUploadedFile(uploadedFile);
-						data = streamMethod.invoke(this, request, fis.openStream());
-						env.wts.clearUploadedFile(uploadedFile);
-						succedeed = true;
-						// Plupload client-side will upload multiple file each in its own
-						// request; we can skip fileItems looping.
-						break;
-					}
-				}
-				
-				if(!succedeed) throw new Exception("No file has been uploaded");
-				new JsonResult(data).printTo(out);
-				
-			} else {
-				ArrayList<String> items = new ArrayList<>();
-				Method uploadMethod = getUploadMethod(cntx);
-				
-				// Defines the upload object
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-				//TODO: valutare come imporre i limiti
-				//factory.setSizeThreshold(yourMaxMemorySize);
-				//factory.setRepository(yourTempDirectory);
-				upload = new ServletFileUpload(factory);
-				
-				// Process files...
-				boolean succedeed = false;
-				List<FileItem> files = upload.parseRequest(request);
-				Iterator it = files.iterator();
-				while(it.hasNext()) {
-					FileItem fi = (FileItem)it.next();
-					if(!fi.isFormField()) {
-						File file = WT.createTempFile();
-						uploadedFile = new UploadedFile(false, service, file.getName(), fi.getName(), tag, fi.getSize(), findMediaType(fi));
-						env.wts.addUploadedFile(uploadedFile);
-						fi.write(file);
-						
-						items.add(uploadedFile.getUploadId());
-						if(uploadMethod != null) {
-							try {
-								uploadMethod.invoke(this, request, uploadedFile);
-							} catch(Throwable t) {
-								//TODO: aggiungere logging
-								t.printStackTrace();
-							}
-						}
-						succedeed = true;
-						// Plupload client-side will upload multiple file each in its own
-						// request; we can skip fileItems looping.
-						break;
-					}
-				}
-				
-				if(!succedeed) throw new Exception("No file has been uploaded");
-				MapItem mi = new MapItem().add("temp", true).add("uploadId", items.get(0));
-				new JsonResult(mi).printTo(out);
-			}
-			*/
 	}
 	
 	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -509,22 +310,35 @@ public abstract class BaseService extends BaseAbstractService {
 		}
 	}
 	
-	private Method getUploadMethod(String context) {
-		String methodName = MessageFormat.format("processUpload{0}", context);
+	public void addAsUploadedFile(String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
+		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
+		File file = WT.createTempFile();
+		FileOutputStream fos = null;
+		long size = -1;
 		try {
-			return getClass().getMethod(methodName, HttpServletRequest.class, UploadedFile.class);
-		} catch(NoSuchMethodException ex) {
-			return null;
+			fos = new FileOutputStream(file);
+			size = IOUtils.copy(is, fos);
+		} finally {
+			IOUtils.closeQuietly(fos);
 		}
+		UploadedFile uploadedFile = new UploadedFile(false, SERVICE_ID, file.getName(), tag, filename, size, mtype);
+		env.wts.addUploadedFile(uploadedFile);
 	}
 	
-	private Method getUploadStreamMethod(String context) {
-		String methodName = MessageFormat.format("processUploadStream{0}", context);
-		try {
-			return getClass().getMethod(methodName, HttpServletRequest.class, InputStream.class);
-		} catch(NoSuchMethodException ex) {
-			return null;
-		}
+	private String findMediaType(FileItemStream fileItem) {
+		String mtype = ServletHelper.guessMediaType(fileItem.getName());
+		if(!StringUtils.isBlank(mtype)) return mtype;
+		mtype = fileItem.getContentType();
+		if(!StringUtils.isBlank(mtype)) return mtype;
+		return "application/octet-stream";
+	}
+	
+	private String findMediaType(FileItem fileItem) {
+		String mtype = ServletHelper.guessMediaType(fileItem.getName());
+		if(!StringUtils.isBlank(mtype)) return mtype;
+		mtype = fileItem.getContentType();
+		if(!StringUtils.isBlank(mtype)) return mtype;
+		return "application/octet-stream";
 	}
 	
 	public static class ClientOptions extends HashMap<String, Object> {

@@ -266,7 +266,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Boolean} opts.callback.success
 	 * @param {Object} opts.callback.json
 	 * @param {Object} opts.callback.opts
-	 * @param {Object} [opts.scope] The scope (this) for the supplied callbacks.
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback.
 	 */
 	ajaxReq: function(svc, act, opts) {
 		opts = opts || {};

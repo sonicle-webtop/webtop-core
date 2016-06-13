@@ -83,12 +83,16 @@ public class ServletHelper {
 		return (session != null) ? session.getId() : "";
 	}
 	
-	public static String guessMediaType(String fileName) {
-		String mtype = WT.getMediaType(FilenameUtils.getExtension(fileName));
+	public static String guessMediaType(String filename) {
+		return guessMediaType(filename, false);
+	}
+	
+	public static String guessMediaType(String filename, boolean fallback) {
+		String mtype = WT.getMediaType(FilenameUtils.getExtension(filename));
 		if(mtype != null) return mtype;
-		mtype = ServletUtils.guessMediaType(fileName);
+		mtype = ServletUtils.guessMediaType(filename);
 		if(mtype != null) return mtype;
-		return null;
+		return fallback ? "application/octet-stream" : null;
 	}
 	
 	/*
