@@ -46,13 +46,18 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	public static final String HOME_PATH = "home.path";
 	
 	/**
-	 * [string][system]
-	 * Defines Dropbox
+	 * [string][system+domain]
+	 * Defines Dropbox API credentials
 	 */
-	//public static final String DROPBOX_APP_KEY = "dropbox.appkey";
-	//public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
-	//public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
-	//public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
+	public static final String DROPBOX_APP_KEY = "dropbox.appkey";
+	public static final String DROPBOX_APP_SECRET = "dropbox.appsecret";
+	
+	/**
+	 * [string][system+domain]
+	 * Defines GoogleDrive API credentials
+	 */
+	public static final String GOOGLE_DRIVE_CLIENT_ID = "googledrive.clientid";
+	public static final String GOOGLE_DRIVE_CLIENT_SECRET = "googledrive.clientsecret";
 	
 	/**
 	 * [string][system+domain]
@@ -195,6 +200,22 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getHomePath() {
 		return getString(HOME_PATH, null);
+	}
+	
+	public String getDropboxAppKey() {
+		return getString(DROPBOX_APP_KEY, null);
+	}
+
+	public String getDropboxAppSecret() {
+		return getString(DROPBOX_APP_SECRET, null);
+	}
+	
+	public String getGoogleDriveClientID() {
+		return getString(GOOGLE_DRIVE_CLIENT_ID, null);
+	}
+	
+	public String getGoogleDriveClientSecret() {
+		return getString(GOOGLE_DRIVE_CLIENT_SECRET, null);
 	}
 	
 	public boolean getOTPEnabled() {
