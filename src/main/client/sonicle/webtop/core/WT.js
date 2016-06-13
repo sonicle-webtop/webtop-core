@@ -167,7 +167,24 @@ Ext.define('Sonicle.webtop.core.WT', {
 	},
 	
 	/**
-	 * Gets the initial setting value bound to key.
+	 * Sets the initial setting value bound to key.
+	 * @param {String} [id] The service ID.
+	 * @param {String} key The key.
+	 * @param {Mixed} value The value.
+	 * @return {Mixed} Setting value.
+	 */
+	setOption: function(id, key, value) {
+		if(arguments.length === 2) {
+			opts = id;
+			id = WT.ID;
+		}
+		var svc = this.getApp().getService(id);
+		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		return svc.setOption(key,value);
+	},
+	
+	/**
+	 * Sets the initial setting value bound to key.
 	 * @param {String} [id] The service ID.
 	 * @param {Object} opts Key/Value pairs object.
 	 * @return {Mixed} Setting value.
