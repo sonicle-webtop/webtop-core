@@ -310,7 +310,7 @@ public abstract class BaseService extends BaseAbstractService {
 		}
 	}
 	
-	public void addAsUploadedFile(String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
+	public UploadedFile addAsUploadedFile(String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
 		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
 		File file = WT.createTempFile();
 		FileOutputStream fos = null;
@@ -323,6 +323,7 @@ public abstract class BaseService extends BaseAbstractService {
 		}
 		UploadedFile uploadedFile = new UploadedFile(false, SERVICE_ID, file.getName(), tag, filename, size, mtype);
 		env.wts.addUploadedFile(uploadedFile);
+		return uploadedFile;
 	}
 	
 	private String findMediaType(FileItemStream fileItem) {
