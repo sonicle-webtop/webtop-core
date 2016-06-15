@@ -33,7 +33,16 @@
  */
 Ext.define('Sonicle.webtop.core.model.Base', {
 	alternateClassName: 'WT.model.Base',
-	extend: 'WT.ux.data.BaseModel'
+	extend: 'WT.ux.data.BaseModel',
+    
+    setExtraParams: function(params) {
+        var me=this,
+            proxy=me.getProxy();
+    
+        if (proxy) {
+            WTU.applyExtraParams(proxy,params);
+        }
+    }
 	/*
 	extend: 'Sonicle.data.Model',
 	
