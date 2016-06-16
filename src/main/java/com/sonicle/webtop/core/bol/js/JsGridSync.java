@@ -53,7 +53,7 @@ public class JsGridSync {
 	public JsGridSync() {}
 	
 	public JsGridSync(String device, String user, DateTime lastSync, DateTimeFormatter fmt) {
-		this.id = new CompositeId(device, user).toString();
+		this.id = new CompositeId().setTokens(device, user).toString();
 		this.device = device;
 		this.user = user;
 		if(lastSync != null) {

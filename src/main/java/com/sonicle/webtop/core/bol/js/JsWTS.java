@@ -52,7 +52,7 @@ public class JsWTS {
 	public String defaultService;
 	
 	public String toJson() {
-		return JsonResult.gsonNoHtmlEscape.toJson(this);
+		return JsonResult.GSON.toJson(this);
 	}
 	
 	public static class ServiceUserOptions {

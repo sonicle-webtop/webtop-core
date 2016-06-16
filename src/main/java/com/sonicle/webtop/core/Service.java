@@ -805,14 +805,14 @@ public class Service extends BaseService {
 			} else if(crud.equals(Crud.DELETE)) {
 				//PayloadAsList<JsGridSyncList> pl = ServletUtils.getPayloadAsList(request, JsGridSyncList.class);
 				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
-				CompositeId cid = new CompositeId(pl.data.id);
+				CompositeId cid = new CompositeId().parse(pl.data.id);
 				
 				core.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals("info")) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
-				CompositeId cid = new CompositeId(id);
+				CompositeId cid = new CompositeId().parse(id);
 				
 				String info = core.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
 				new JsonResult(info).printTo(out);

@@ -160,7 +160,7 @@ public class CoreManager extends BaseManager {
 				if(providers == null) continue;
 				
 				for(RecipientsProviderBase provider : providers) {
-					CompositeId cid = new CompositeId(serviceId, provider.getId());
+					CompositeId cid = new CompositeId().setTokens(serviceId, provider.getId());
 					cacheProfileRecipientsProvider.put(cid.toString(), provider);
 				}
 			}
@@ -827,7 +827,7 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			CompositeId cid = new CompositeId().parse(shareId);
-			int level = cid.getHowManyTokens()-1;
+			int level = cid.getSize()-1;
 			String rootId = cid.getToken(0);
 			
 			con = WT.getCoreConnection();
@@ -918,7 +918,7 @@ public class CoreManager extends BaseManager {
 		try {
 			String puid = usrm.userToUid(getTargetProfileId());
 			CompositeId cid = new CompositeId().parse(sharing.getId());
-			int level = cid.getHowManyTokens()-1;
+			int level = cid.getSize()-1;
 			String rootId = cid.getToken(0);
 			
 			String rootKey = OShare.buildRootKey(resource);

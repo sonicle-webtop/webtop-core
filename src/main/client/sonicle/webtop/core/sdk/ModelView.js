@@ -114,6 +114,28 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	opts: null,
 	
+	
+	/**
+	 * @event viewload
+	 * @param {WT.sdk.ModelView} this
+	 * @param {Boolean} success Whether the operation was successful or not.
+	 * @param {Ext.data.Model} model The loaded model.
+	 */
+	
+	/*
+	 * @event viewsave
+	 * @param {WT.sdk.ModelView} this
+	 * @param {Boolean} success Whether the operation was successful or not.
+	 * @param {Ext.data.Model} model The saved model.
+	 */
+	
+	/**
+	 * @event modechange
+	 * @param {WT.sdk.ModelView} this
+	 * @param {String} nm The current (activated) mode
+	 * @param {String} om The previous mode
+	 */
+	
 	constructor: function(config) {
 		var me = this;
 		
