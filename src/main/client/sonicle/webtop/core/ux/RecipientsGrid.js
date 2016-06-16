@@ -41,6 +41,10 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 	startEdit: function(record,c) {
 		this.view.grid.getPlugin('socellediting').startEdit(record, this.view.ownerCt.getColumnManager().getHeaderAtIndex(c));
 	},
+    
+    completeEdit: function() {
+        this.view.grid.getPlugin('socellediting').completeEdit();
+    },
 	
 	onKeyUp: function(ke) {
 		var me=this,
@@ -281,6 +285,10 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 		this.navigationModel.startEdit(this.getStore().getAt(row),1);
 	},
 	
+	completeEdit: function() {
+		this.navigationModel.completeEdit();
+	},
+    
 	fireExitFocus: function() {
 		this.fireEvent('exitfocus',this);
 	}

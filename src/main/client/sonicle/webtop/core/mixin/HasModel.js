@@ -137,6 +137,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * @param {Object} opts 
 	 * @param {Object} opts.data Initial data
 	 * @param {Object} opts.pass Custom parameters to pass to events callbacks
+	 * @param {Function} [opts.callback] The callback function to call
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback
 	 */
 	loadModel: function(opts) {
 		opts = opts || {};
@@ -149,6 +151,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			model.load({
 				callback: function(rec, op, success) {
 					me.fireEvent('modelload', me, success, model, opts.pass);
+					Ext.callback(opts.callback, opts.scope||me, [ success, model ]);
 				},
 				scope: me
 			});
@@ -171,6 +174,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 						reader = mdl.getProxy().getReader(),
 						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
 				me.fireEvent('modelload', me, success, mdl, opts.pass);
+				Ext.callback(opts.callback, opts.scope||me, [ success, mdl ]);
 			});
 			
 			// Apply linking...
@@ -202,6 +206,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * Saves configured model.
 	 * @param {Object} opts 
 	 * @param {Object} opts.pass Custom parameters to pass to events callbacks
+	 * @param {Function} [opts.callback] The callback function to call
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback
 	 * @returns {Boolean} 'true' if the async operation started, 'false' otherwise
 	 */
 	saveModel: function(opts) {
@@ -215,6 +221,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			model.save({
 				callback: function(rec, op, success) {
 					me.fireEvent('modelsave', me, op, success, model, opts.pass);
+					Ext.callback(opts.callback, opts.scope||me, [ success, model ]);
 				},
 				scope: me
 			});

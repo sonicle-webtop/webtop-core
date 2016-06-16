@@ -197,11 +197,23 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Updates are only valid for client, no server sync is done using this method.
 	 * @param {Object} opts Key/Value pairs object.
 	 */
+	setOption: function(key,value) {
+		var o={};
+		o[key]=value;
+		this.setOptions(o);
+	},
+	
+	/**
+	 * Sets one of startup option set.
+	 * Updates are only valid for client, no server sync is done using this method.
+	 * @param {Object} opts Key/Value pairs object.
+	 */
 	setOptions: function(opts) {
 		var me = this;
 		opts = opts || {};
 		me.options.beginEdit();
 		Ext.iterate(opts, function(k, v) {
+			if (me.options.get(k) === 'undefined') return;
 			me.options.set(k, v);
 		});
 		me.options.endEdit();

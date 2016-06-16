@@ -605,6 +605,7 @@ public class WebTopSession {
 		private final long size;
 		private final String mediaType;
 		private final DateTime uploadedOn;
+		private HashMap<String,Object> properties=null;
 		
 		public UploadedFile(boolean virtual, String serviceId, String uploadId, String tag, String filename, long size, String mediaType) {
 			this.virtual = virtual;
@@ -651,6 +652,16 @@ public class WebTopSession {
 		
 		public File getFile() throws WTException {
 			return new File(WT.getTempFolder(), getUploadId());
+		}
+		
+		public void setProperty(String key, Object value) {
+			if (properties==null) properties=new HashMap();
+			properties.put(key, value);
+		}
+		
+		public Object getProperty(String key) {
+			if (properties==null) return null;
+			return properties.get(key);
 		}
 	}
 }

@@ -85,17 +85,23 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	},
 	
 	onBlurAutoSave: function(s) {
-		var me = this, name;
+		var me = this, name, model=me.getModel();
 		
+		if (!model) return;
+		
+		name = me._extrField(s.getInitialConfig().bind);
 		if(s.needLogin || s.needReload) {
-			name = me._extrField(s.getInitialConfig().bind);
 			if(me.getModel().isModified(name)) {
 				if(s.needLogin) me.needLogin = true;
 				if(s.needReload) me.needReload = true;
 			}
 		}
-		if(me.getModel().dirty) {
-			me.saveModel();
+		if(model.dirty) {
+			me.saveModel({
+				callback: function(success,model) {
+					if (success && me.profileId===WT.getOption('profileId')) WT.setOption(me.ID,name,model.get(name));
+				}
+			});
 		}
 	},
 	
