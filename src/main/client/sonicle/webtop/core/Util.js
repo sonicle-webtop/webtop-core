@@ -71,6 +71,11 @@ Ext.define('Sonicle.webtop.core.Util', {
 		return Ext.isArray(obj) ? obj[0] : obj;
 	},
 	
+	arrayAsParam: function(arr) {
+		arr = Ext.isArray(arr) ? arr : [arr];
+		return Ext.JSON.encode(arr);
+	},
+	
 	/**
 	 * Null-safe method for checking xtype.
 	 * @param {Mixed} obj An object instance.
@@ -170,6 +175,7 @@ Ext.define('Sonicle.webtop.core.Util', {
 	},
 	
 	/*
+	 * @deprecated Use {@link Sonicle.String#humanReadableSize} instead
 	 * Converts passed value in bytes in a human readable format.(eg. like '10 KB' or '100 MB')
 	 * @param {int} bytes The value in bytes
 	 * @param {Boolean} [opts.si] Whether to use the SI multiple (1000) or binary one (1024)
@@ -178,39 +184,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * @return {String} The formatted string
 	 */
 	humanReadableSize: function(bytes, opts) {
-		opts = opts || {};
-		opts.unitSeparator = opts.unitSeparator || '';
-		var thresh = (opts.si) ? 1000 : 1024,
-				units = (opts.siUnits) ? ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'] : ['kB','MB','GB','TB','PB','EB','ZB','YB'],
-				u;
-		if(Math.abs(bytes) < thresh) return bytes + opts.unitSeparator + 'B';
-		
-		u = -1;
-		do {
-			bytes /= thresh;
-			++u;
-		} while(Math.abs(bytes) >= thresh && u < units.length - 1);
-		return bytes.toFixed(1) + opts.unitSeparator + units[u];
-		
-		/*
-		var s = bytes;
-		bytes = parseInt(bytes/1024);
-		if(bytes > 0) {
-			if(bytes < 1024) {
-				s = bytes + "KB";
-			} else {
-				s = parseInt(bytes/1024) + "MB";
-			}
-		}
-		return s;
-		*/
+		return Sonicle.String.humanReadableSize(arguments);
 	},
 	
-	arrayAsParam: function(arr) {
-		arr = Ext.isArray(arr) ? arr : [arr];
-		return Ext.JSON.encode(arr);
-	},
-	
+	/*
+	 * 
+	 * @param {type} proxy
+	 * @param {type} params
+	 * @returns {undefined}
+	 */
 	removeExtraParams: function(proxy, params) {
 		if(!Ext.isArray(params)) params = [params];
 		if(!proxy.isProxy && !proxy.isStore) return;
@@ -246,6 +228,15 @@ Ext.define('Sonicle.webtop.core.Util', {
 		if(!store.isStore) return;
 		WTU.applyExtraParams(store, params, overwrite);
 		store.load();
+	},
+	
+	/**
+	 * Applies provided formula definition to passed ViewModel.
+	 * @param {Ext.app.ViewModel} vm ViewModel instance.
+	 * @param {Object} formulas Formulas configuration
+	 */
+	applyFormulas: function(vm, formulas) {
+		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, formulas));
 	},
 	
 	removeHeader: function(cmp) {

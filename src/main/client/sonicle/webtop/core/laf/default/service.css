@@ -115,6 +115,35 @@
 .wt-palette-C2C2C2 { background-image: url('palette/C2C2C2.png') !important; }
 .wt-palette-FFFFFF { background-image: url('palette/FFFFFF.png') !important; }
 
+.wt-ftype-folder-xs { background-image: url('ftypes/folder_16.png') }
+.wt-ftype-folder-s { background-image: url('ftypes/folder_24.png') }
+.wt-ftype-folder-m { background-image: url('ftypes/folder_32.png') }
+.wt-ftype-file-xs { background-image: url('ftypes/file_16.png') }
+.wt-ftype-file-s { background-image: url('ftypes/file_24.png') }
+.wt-ftype-file-m { background-image: url('ftypes/file_32.png') }
+.wt-ftype-text-xs { background-image: url('ftypes/text_16.png') }
+.wt-ftype-text-s { background-image: url('ftypes/text_24.png') }
+.wt-ftype-text-m { background-image: url('ftypes/text_32.png') }
+.wt-ftype-document-xs { background-image: url('ftypes/document_16.png') }
+.wt-ftype-document-s { background-image: url('ftypes/document_24.png') }
+.wt-ftype-document-m { background-image: url('ftypes/document_32.png') }
+.wt-ftype-document-excel-xs { background-image: url('ftypes/document-excel_16.png') }
+.wt-ftype-document-excel-s { background-image: url('ftypes/document-excel_24.png') }
+.wt-ftype-document-excel-m { background-image: url('ftypes/document-excel_32.png') }
+.wt-ftype-document-pdf-xs { background-image: url('ftypes/document-pdf_16.png') }
+.wt-ftype-document-pdf-s { background-image: url('ftypes/document-pdf_24.png') }
+.wt-ftype-document-pdf-m { background-image: url('ftypes/document-pdf_32.png') }
+.wt-ftype-document-word-xs { background-image: url('ftypes/document-word_16.png') }
+.wt-ftype-document-word-s { background-image: url('ftypes/document-word_24.png') }
+.wt-ftype-document-word-m { background-image: url('ftypes/document-word_32.png') }
+.wt-ftype-audio-xs { background-image: url('ftypes/audio_16.png') }
+.wt-ftype-audio-s { background-image: url('ftypes/audio_24.png') }
+.wt-ftype-audio-m { background-image: url('ftypes/audio_32.png') }
+.wt-ftype-video-xs { background-image: url('ftypes/video_16.png') }
+.wt-ftype-video-s { background-image: url('ftypes/video_24.png') }
+.wt-ftype-video-m { background-image: url('ftypes/video_32.png') }
+
+
 /* VIEWPORT */
 .wt-header {
 	

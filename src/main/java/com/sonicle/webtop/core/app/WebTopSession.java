@@ -367,6 +367,7 @@ public class WebTopSession {
 		if(!isReady()) return;
 		js.securityToken = RunContext.getCSRFToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
+		js.fileTypes = wta.getFileTypes().toString();
 		
 		// Evaluate services
 		JsWTS.Service last = null;

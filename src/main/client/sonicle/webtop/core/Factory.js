@@ -109,7 +109,8 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @return {String} The URL
 	 */
 	resourceUrl: function(sid, relPath) {
-		return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
+		return 'resources/'+sid+'/laf/'+WT.getOption('laf')+'/'+relPath;
+		//return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
 	},
 	
 	/*
@@ -118,7 +119,21 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @return {String} The URL
 	 */
 	globalImageUrl: function(relPath) {
-		return Ext.String.format('resources/{0}/images/{1}', WT.ID, relPath);
+		return 'resources/'+WT.ID+'/images/'+relPath;
+		//return Ext.String.format('resources/{0}/images/{1}', WT.ID, relPath);
+	},
+	
+	/**
+	 * Builds the URL of the fileType image.
+	 * @param {String} sid The service ID.
+	 * @param {String} [size] Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
+	 * @param {String} ext The file extension.
+	 * @returns {String} The fileType image URL
+	 */
+	fileTypeImageUrl: function(sid, ext, size) {
+		var ftype = WT.FileTypes.getFileType(ext),
+				px = WTU.imgSizeToPx(size || 'xs');
+		return this.resourceUrl(sid, 'filetypes/'+ftype+'_'+px+'.png');
 	},
 	
 	/*
@@ -155,7 +170,8 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssCls: function(xid, name) {
-		return Ext.String.format('{0}-{1}', xid, name);
+		return xid+'-'+name;
+		//return Ext.String.format('{0}-{1}', xid, name);
 	},
 	
 	/**
@@ -171,11 +187,19 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 */
 	cssIconCls: function(xid, name, size) {
 		if(size === undefined) {
-			return Ext.String.format('{0}-icon-{1}', xid, name);
+			return xid+'-icon-'+name;
+			//return Ext.String.format('{0}-icon-{1}', xid, name);
 		} else {
-			return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
+			return xid+'-icon-'+name+'-'+size;
+			//return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
 		}
 	},
+	
+	fileTypeCssIconCls: function(ext, size) {
+		var ftype = WT.FileTypes.getFileType(ext);
+		return WT.XID+'-ftype-'+ftype+'-'+size;
+	},
+	
 	
 	/**
 	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy}.
@@ -670,6 +694,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
 	 * to perform a two-way binding between checkboxgroup and a model's field.
 	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * Specify as empty string if you're working directly with viewModel.
 	 * @param {String} fieldName Model's field name.
 	 * @param {String} [objProp] Property name to set into value object. Defaults to fieldName.
 	 * @returns {Object} Formula configuration object
@@ -694,6 +719,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
 	 * to perform a two-way binding between radiogroup and a model's field.
 	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * Specify as empty string if you're working directly with viewModel.
 	 * @param {String} fieldName Model's field name.
 	 * @param {String} [objProp] Property name to set into value object. Defaults to fieldName.
 	 * @returns {Object} Formula configuration object

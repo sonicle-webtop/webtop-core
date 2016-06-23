@@ -55,5 +55,42 @@ Ext.define('Sonicle.String', {
 			if((arguments[i] !== null) && (arguments[i] !== undefined)) return arguments[i];
 		}
 		return null;
+	},
+	
+	/*
+	 * Converts passed value in bytes in a human readable format.(eg. like '10 KB' or '100 MB')
+	 * @param {int} bytes The value in bytes
+	 * @param {Boolean} [opts.si] Whether to use the SI multiple (1000) or binary one (1024)
+	 * @param {Boolean} [opts.siUnits] Whether to use the SI units labels or binary ones
+	 * @param {String} [opts.unitSeparator] Separator to use between value and unit
+	 * @return {String} The formatted string
+	 */
+	humanReadableSize: function(bytes, opts) {
+		opts = opts || {};
+		opts.unitSeparator = opts.unitSeparator || ' ';
+		var thresh = (opts.si) ? 1000 : 1024,
+				units = (opts.siUnits) ? ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'] : ['kB','MB','GB','TB','PB','EB','ZB','YB'],
+				u;
+		if(Math.abs(bytes) < thresh) return bytes + opts.unitSeparator + 'B';
+		
+		u = -1;
+		do {
+			bytes /= thresh;
+			++u;
+		} while(Math.abs(bytes) >= thresh && u < units.length - 1);
+		return bytes.toFixed(1) + opts.unitSeparator + units[u];
+		
+		/*
+		var s = bytes;
+		bytes = parseInt(bytes/1024);
+		if(bytes > 0) {
+			if(bytes < 1024) {
+				s = bytes + "KB";
+			} else {
+				s = parseInt(bytes/1024) + "MB";
+			}
+		}
+		return s;
+		*/
 	}
 });

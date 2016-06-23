@@ -31,73 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
-	alternateClassName: 'WT.mixin.PanelUtil',
-	extend: 'Ext.Mixin',
-	mixinConfig: {
-		id: 'panelutil'
+Ext.define('Sonicle.webtop.core.FileTypes', {
+	alternateClassName: 'WT.FileTypes',
+	singleton: true,
+	
+	extToFileType: null,
+	
+	/**
+	 * Inits internal mapping table using provided JSON.
+	 * @param {String} json JSON string
+	 */
+	init: function(json) {
+		this.extToFileType = Ext.JSON.decode(json);
 	},
 	
 	/**
-	 * Generates an `id` concatenating {@link Ext.Component#getId component's id}
-	 * with provided string suffix.
-	 * @param {String} suffix The suffix to append.
-	 * @returns {String} The generated `id`.
+	 * Returns, if present, the corresponding fileType classification for 
+	 * the provided file extension.
+	 * @param {String} ext The file extension.
+	 * @returns {String} The fileType
 	 */
-	sufId: function(suffix) {
-		return this.getId()+'-'+suffix;
-	},
-	
-	/**
-	 * Convenience method to get the toolbar docked on 'top'.
-	 * @returns {Ext.toolbar.Toolbar}
-	 */
-	getTopBar: function() {
-		var ret = this.getDockedItems('toolbar[dock="top"]');
-		return (ret && (ret.length > 0)) ? ret[0] : null;
-	},
-	
-	/**
-	 * Convenience method to get the toolbar docked on 'bottom'.
-	 * @returns {Ext.toolbar.Toolbar}
-	 */
-	getBottomBar: function() {
-		var ret = this.getDockedItems('toolbar[dock="bottom"]');
-		return (ret && (ret.length > 0)) ? ret[0] : null;
-	},
-	
-	/**
-	 * Convenience method for getting a reference to a container.
-	 * @param {Ext.container.Container} cmp The component on which calling {@link Ext.container.Container#lookupReference}
-	 * @param {String} path Reference path to follow
-	 * @returns {Ext.container.Container}
-	 */
-	lref: function(cmp, path) {
-		if(arguments.length === 1) {
-			path = cmp;
-			cmp = this;
-		}
-		var i, keys = path.split('.');
-		for(i=0; i<keys.length; i++) {
-			cmp = cmp.lookupReference(keys[i]);
-			if(!cmp) break;
-		}
-		return cmp;
-	},
-	
-	/**
-	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel}.
-	 * @returns {Ext.app.ViewModel}
-	 */
-	getVM: function() {
-		return this.getViewModel();
-	},
-	
-	/**
-	 * Convenience method that returns {@link Ext.app.ViewModel#data viewModel data}.
-	 * @returns {Object}
-	 */
-	getVMData: function() {
-		return this.getVM().data;
+	getFileType: function(ext) {
+		var ftype = this.extToFileType[ext];
+		return ftype || 'file';
 	}
-});	
+});

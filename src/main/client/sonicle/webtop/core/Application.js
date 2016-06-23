@@ -22,6 +22,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ux.data.ArrayStore',
 		
 		'Sonicle.webtop.core.WT',
+		'Sonicle.webtop.core.FileTypes',
 		'Sonicle.webtop.core.Factory',
 		'Sonicle.webtop.core.Util',
 		'Sonicle.webtop.core.Log',
@@ -83,6 +84,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 				expires: new Date(Ext.Date.now() + (1000*60*60*24*90)) // 90 days
 			}));
 		}
+		
+		WT.FileTypes.init(WTS.fileTypes);
 	},
 	
 	launch: function() {

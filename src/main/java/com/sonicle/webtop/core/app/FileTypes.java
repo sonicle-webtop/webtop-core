@@ -31,71 +31,81 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
-import java.util.ArrayList;
+import com.sonicle.webtop.core.bol.OFileType;
+import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.FileTypeDAO;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class JsWTS {
-	public String securityToken;
-	public String layoutClassName;
-	public String fileTypes;
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTS.Service> services = new ArrayList<>();
-	public ArrayList<Settings> servicesOptions = new ArrayList<>();
-	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
-	public String defaultService;
+public class FileTypes {
+	private final HashMap<String, String> extToFileType = new HashMap<>();
 	
-	public String toJson() {
-		return JsonResult.GSON.toJson(this);
-	}
+	private FileTypes() {}
 	
-	public static class ServiceUserOptions {
-		public String viewClassName;
-		public String modelClassName;
-		
-		public ServiceUserOptions(String viewClassName, String modelClassName) {
-			this.viewClassName = viewClassName;
-			this.modelClassName = modelClassName;
+	public boolean containsExtension(String extension) {
+		synchronized(extToFileType) {
+			return extToFileType.containsKey(extension);
 		}
 	}
 	
-	public static class Permissions extends HashMap<String, Actions> {
-		
+	public String getFileType(String extension) {
+		synchronized(extToFileType) {
+			return extToFileType.get(extension);
+		}
 	}
 	
-	public static class Actions extends HashMap<String, Object> {
-		
+	public void update(IConnectionProvider conp) {
+		synchronized(extToFileType) {
+			load(conp);
+		}
 	}
 	
-	public static class Service {
-		public int index;
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String localeClassName;
-		public String serviceClassName;
-		public String clientOptionsClassName;
-		public ServiceUserOptions userOptions;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
-		public boolean maintenance;
+	private void load(IConnectionProvider conp) {
+		FileTypeDAO dao = FileTypeDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = conp.getConnection();
+			List<OFileType> ftypes = dao.selectAll(con);
+			extToFileType.clear();
+			for(OFileType ftype : ftypes) {
+				if(!ftype.getExtension().isEmpty() && !ftype.getType().isEmpty()) {
+					if(!ftype.getSubtype().isEmpty()) {
+						extToFileType.put(ftype.getExtension(), ftype.getType()+"-"+ftype.getSubtype());
+					} else {
+						extToFileType.put(ftype.getExtension(), ftype.getType());
+					}
+				}
+			}
+		} catch(SQLException | DAOException ex) {
+			throw new WTRuntimeException(ex, "Unable to load fileTypes");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
+	public static FileTypes init(IConnectionProvider conp) {
+		FileTypes o = new FileTypes();
+		o.update(conp);
+		return o;
+	}
+	
+	@Override
+	public String toString() {
+		synchronized(extToFileType) {
+			return JsonResult.GSON_WONULLS.toJson(extToFileType);
 		}
 	}
 }

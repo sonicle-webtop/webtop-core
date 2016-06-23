@@ -60,10 +60,10 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		
 		me.files = me.initFiles();
 		
-		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
+		WTU.applyFormulas(vm, {
 			delgroup: WTF.radioGroupBind(null, 'delimiter', me.getId()+'-delgroup'),
 			modegroup: WTF.radioGroupBind(null, 'importmode', me.getId()+'-modegroup')
-		}));
+		});
 		me.on('beforenavigate', me.onBeforeNavigate);
 		me.callParent(arguments);
 		me.on('viewclose', me.onViewClose);

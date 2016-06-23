@@ -13,6 +13,11 @@ Ext.define('Sonicle.grid.column.Icon', {
 	
 	iconField: null,
 	tipField: null,
+	
+	/**
+	 * @cfg {Number} iconSize
+	 * The icon size in px.
+	 */
 	iconSize: 16,
 	
 	constructor: function() {

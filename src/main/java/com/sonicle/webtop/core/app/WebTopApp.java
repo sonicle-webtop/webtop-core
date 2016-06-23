@@ -154,6 +154,8 @@ public final class WebTopApp {
 	private Subject adminSubject;
 	private Timer adminTouchTimer = null;
 	
+	private MediaTypes mediaTypes = null;
+	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
 	//private ComponentsManager comm = null;
@@ -194,11 +196,12 @@ public final class WebTopApp {
 		threadState.bind();
 		try {
 			init2();
+		} catch(Throwable t) {
+			logger.error("WTA initialization ERROR", t);
 		} finally {
 			threadState.clear();
+			logger.info("WTA initialization completed [{}]", webappName);
 		}
-		
-		logger.info("WTA initialization completed [{}]", webappName);
 	}
 	
 	private void init1() {
@@ -212,6 +215,9 @@ public final class WebTopApp {
 	}
 	
 	private void init2() {
+		mediaTypes = MediaTypes.init(conm);
+		fileTypes = FileTypes.init(conm);
+		
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
 		String[] tags = new String[]{"it_IT", "en_EN"};
@@ -401,6 +407,14 @@ public final class WebTopApp {
 	
 	public Locale getSystemLocale() {
 		return systemLocale;
+	}
+	
+	public MediaTypes getMediaTypes() {
+		return mediaTypes;
+	}
+	
+	public FileTypes getFileTypes() {
+		return fileTypes;
 	}
 	
 	/**
@@ -935,43 +949,6 @@ public final class WebTopApp {
         
         Transport.send(msg);
 	}
-	
-	
-	/*
-	public List<InternetRecipient> listInternetRecipients(List<String> serviceIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {
-		ArrayList<InternetRecipient> items = new ArrayList<>();
-		
-		for(String sid : serviceIds) {
-			RecipientsProviderBase provider = comm.getRecipientsProvider(sid);
-			if(provider != null) {
-				if(incGlobal && (provider instanceof IGlobalRecipientsProvider)) {
-					try {
-						items.addAll(((IGlobalRecipientsProvider)provider).getRecipients(text));
-					} catch(Throwable t) {
-						
-					}	
-				}
-				if(!StringUtils.isBlank(incDomainId) && (provider instanceof IDomainRecipientsProvider)) {
-					try {
-						items.addAll(((IDomainRecipientsProvider)provider).getRecipients(incDomainId, text));
-					} catch(Throwable t) {
-						
-					}
-				}
-				if((incProfileId != null) && (provider instanceof IProfileRecipientsProvider)) {
-					try {
-						items.addAll(((IProfileRecipientsProvider)provider).getRecipients(incProfileId, text));
-					} catch(Throwable t) {
-						
-					}
-				}
-				
-			}
-		}
-		return items;
-	}
-	*/
-	
 	
 	
 	
