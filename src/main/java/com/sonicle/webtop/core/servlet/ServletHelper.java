@@ -129,10 +129,7 @@ public class ServletHelper {
 	
 	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
 		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
-		String title = wta.getWebAppName();
-		if (StringUtils.isEmpty(title)) {
-			title = wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PAGE_TITLE, true, manifest.getVersion().getMajor());
-		}
+		String title = wta.getPlatformName() + " " + manifest.getVersion().getMajor();
 		tplMap.put("title", title);
 		tplMap.put("version", manifest.getVersion());
 	}
