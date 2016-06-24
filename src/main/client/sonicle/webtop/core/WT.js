@@ -27,41 +27,6 @@ Ext.define('Sonicle.webtop.core.WT', {
 		'FFFFFF'
 	],
 	
-	filetypes: {
-		pdf:    'acrobat',
-		wav:    'audio',
-		mp3:    'audio',
-		aiff:   'audio',
-		au:     'audio',
-		wma:    'audio',
-		ogg:    'audio',
-		bin:    'binary',
-		bmp:    'bmp',
-		tar:    'compressed',
-		zip:    'compressed',
-		gz:     'compressed',
-		z:      'compressed',
-		doc:    'document',
-		eml:    'envelope',
-		png:    'gif',
-		gif:    'gif',
-		html:   'html',
-		jpg:    'jpeg',
-		jpeg:   'jpeg',
-		ppt:    'presentation',
-		xls:    'spreadsheet',
-		txt:    'text',
-		csv:    'text',
-		tif:    'tif',
-		wmv:    'video',
-		avi:    'video',
-		divx:   'video',
-		mpeg:   'video',
-		mp4:    'video',
-		mov:    'video',
-		asf:    'video'
-	},
-	
 	loadedCss: null,
 	
 	constructor: function(cfg) {

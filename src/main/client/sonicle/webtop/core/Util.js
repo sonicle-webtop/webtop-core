@@ -123,17 +123,14 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * @param {String} filename The file name
 	 * @return {String} The recognized file type name, as in WT.filtypes, "bin" if not
 	 */
-	normalizeFileType: function(filename) {
+	getFileExtension: function(filename) {
 		var ix=filename.lastIndexOf('.'),
 			extension="bin";
 	
 		if (ix>=0) extension=filename.substring(ix+1).toLowerCase();
-		var ft=WT.filetypes;
-		var typename=ft[extension];
-		if (!typename) typename=ft["bin"];
-		return typename;
+        return extension;
 	},
-	
+    
 	humanReadableDuration: function(seconds, opts) {
 		opts = opts || {};
 		opts.unitSeparator = opts.unitSeparator || ' ';
