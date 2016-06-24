@@ -181,7 +181,7 @@ Ext.define('Sonicle.webtop.core.Util', {
 	 * @return {String} The formatted string
 	 */
 	humanReadableSize: function(bytes, opts) {
-		return Sonicle.String.humanReadableSize(arguments);
+		return Sonicle.String.humanReadableSize(bytes, opts);
 	},
 	
 	/*
