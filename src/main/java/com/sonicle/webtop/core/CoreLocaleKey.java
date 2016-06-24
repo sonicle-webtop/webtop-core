@@ -38,7 +38,6 @@ package com.sonicle.webtop.core;
  * @author malbinola
  */
 public class CoreLocaleKey {
-	public static final String TPL_PAGE_TITLE = "tpl.page.title";
 	public static final String TPL_LOGIN_USERNAME_PLACEHOLDER = "tpl.login.username.placeholder";
 	public static final String TPL_LOGIN_PASSWORD_PLACEHOLDER = "tpl.login.password.placeholder";
 	public static final String TPL_LOGIN_DOMAIN_LABEL = "tpl.login.domain.label";
