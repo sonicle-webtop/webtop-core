@@ -193,6 +193,20 @@ Ext.define('Sonicle.webtop.core.Factory', {
 		}
 	},
 	
+	fileTypeCssIconCls: function(ext, size) {
+		var ftype = WT.FileTypes.getFileType(ext);
+		return WT.XID+'-ftype-'+ftype+'-'+size;
+	},
+	
+	headerWithGlyphIcon: function(iconCls) {
+		return '<i class="'+iconCls+'" aria-hidden="true">\u00a0</i>';
+	},
+	
+	/**
+	 * Returns a gridColumn's header properly configured for displaying an icon.
+	 * @param {type} iconCls
+	 * @returns {String}
+	 */
 	headerWithIcon: function(iconCls) {
 		return '<i class="wt-grid-header-icon '+iconCls+'">\u00a0\u00a0\u00a0\u00a0\u00a0</i>';
 	},

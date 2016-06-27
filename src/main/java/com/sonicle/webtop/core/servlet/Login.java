@@ -79,7 +79,7 @@ public class Login extends AbstractServlet {
 			//SettingsManager sm = wta.getSettingsManager();
 			//ServiceManifest manifest = wta.getServiceManifest(ServicesManager.MAIN_SERVICE_ID);
 			//boolean maintenance = LangUtils.value(sm.getServiceSetting(ServicesManager.MAIN_SERVICE_ID, Settings.MAINTENANCE), false);
-			boolean maintenance = true;
+			boolean maintenance = false;
 			
 			// Defines messages...
 			String maintenanceMessage = (maintenance) ? wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_MAINTENANCE, true) : null;
