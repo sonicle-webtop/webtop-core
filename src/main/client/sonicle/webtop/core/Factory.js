@@ -188,18 +188,14 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	cssIconCls: function(xid, name, size) {
 		if(size === undefined) {
 			return xid+'-icon-'+name;
-			//return Ext.String.format('{0}-icon-{1}', xid, name);
 		} else {
 			return xid+'-icon-'+name+'-'+size;
-			//return Ext.String.format('{0}-icon-{1}-{2}', xid, name, size);
 		}
 	},
 	
-	fileTypeCssIconCls: function(ext, size) {
-		var ftype = WT.FileTypes.getFileType(ext);
-		return WT.XID+'-ftype-'+ftype+'-'+size;
+	headerWithIcon: function(iconCls) {
+		return '<i class="wt-grid-header-icon '+iconCls+'">\u00a0\u00a0\u00a0\u00a0\u00a0</i>';
 	},
-	
 	
 	/**
 	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy}.

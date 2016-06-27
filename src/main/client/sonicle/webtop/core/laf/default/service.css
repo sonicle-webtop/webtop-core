@@ -155,6 +155,30 @@
 .wt-ftype-video-s { background-image: url('ftypes/video_24.png') }
 .wt-ftype-video-m { background-image: url('ftypes/video_32.png') }
 
+.wt-grid-header-icon {
+	background-repeat: no-repeat;
+	background-position: center;
+}
+.wt-img-xs {
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+}
+.wt-img-s {
+	background-repeat: no-repeat;
+	width: 24px;
+	height: 24px;
+}
+.wt-img-m {
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+}
+.wt-img-l {
+	background-repeat: no-repeat;
+	width: 48px;
+	height: 48px;
+}
 
 /* VIEWPORT */
 .wt-header {

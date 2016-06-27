@@ -58,8 +58,9 @@ Ext.define('Sonicle.String', {
 	},
 	
 	/*
-	 * Converts passed value in bytes in a human readable format.(eg. like '10 KB' or '100 MB')
+	 * Converts passed value in bytes in a human readable format.(eg. like '10 kB' or '100 MB')
 	 * @param {int} bytes The value in bytes
+	 * @param {si|binary|uppercase} [opts.prefixes=si]
 	 * @param {Boolean} [opts.si] Whether to use the SI multiple (1000) or binary one (1024)
 	 * @param {Boolean} [opts.siUnits] Whether to use the SI units labels or binary ones
 	 * @param {String} [opts.unitSeparator] Separator to use between value and unit
@@ -68,6 +69,22 @@ Ext.define('Sonicle.String', {
 	humanReadableSize: function(bytes, opts) {
 		opts = opts || {};
 		opts.unitSeparator = opts.unitSeparator || ' ';
+		var mul = (opts.prefixes === 'binary') ? 1024 : 1000,
+				units = (opts.prefixes === 'binary') ? ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'] : ['kB','MB','GB','TB','PB','EB','ZB','YB'],
+				u;
+		
+		if(opts.prefixes === 'uppercase') units[0] = units[0].toUpperCase();
+		if(Math.abs(bytes) < mul) return bytes + opts.unitSeparator + 'B';
+		u = -1;
+		do {
+			bytes /= mul;
+			++u;
+		} while(Math.abs(bytes) >= mul && u < units.length - 1);
+		return bytes.toFixed(1) + opts.unitSeparator + units[u];
+		
+		
+		
+		/*
 		var thresh = (opts.si) ? 1000 : 1024,
 				units = (opts.siUnits) ? ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'] : ['kB','MB','GB','TB','PB','EB','ZB','YB'],
 				u;
@@ -79,6 +96,7 @@ Ext.define('Sonicle.String', {
 			++u;
 		} while(Math.abs(bytes) >= thresh && u < units.length - 1);
 		return bytes.toFixed(1) + opts.unitSeparator + units[u];
+		*/
 		
 		/*
 		var s = bytes;
