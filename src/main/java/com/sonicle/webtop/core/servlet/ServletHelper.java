@@ -90,7 +90,7 @@ public class ServletHelper {
 	public static String guessMediaType(String filename, boolean fallback) {
 		String ext = FilenameUtils.getExtension(filename);
 		if(!StringUtils.isBlank(ext)) {
-			String mtype = WT.getMediaType(ext);
+			String mtype = WT.getOverriddenMediaType(ext);
 			if(mtype != null) return mtype;
 			mtype = ServletUtils.guessMediaType(filename);
 			if(mtype != null) return mtype;

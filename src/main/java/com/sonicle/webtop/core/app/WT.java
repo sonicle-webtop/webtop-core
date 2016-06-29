@@ -408,26 +408,8 @@ public class WT {
 	 * @param extension The file extension.
 	 * @return MediaType string or null if no entry is present
 	 */
-	public static String getMediaType(String extension) {
+	public static String getOverriddenMediaType(String extension) {
 		return getWTA().getMediaTypes().getMediaType(extension);
-	}
-	
-	public static String getMediaTypeExtension(String mediaType) {
-		MediaTypeDAO dao = MediaTypeDAO.getInstance();
-		Connection con = null;
-		String ext = null;
-		
-		try {
-			mediaType = StringUtils.lowerCase(mediaType);
-			con = getCoreConnection();
-			OMediaType oct = dao.selectByMediaType(con, mediaType);
-			if(oct != null) ext = oct.getExtension();
-		} catch(Exception ex) {
-			
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-		return ext;
 	}
 	
 	/**
