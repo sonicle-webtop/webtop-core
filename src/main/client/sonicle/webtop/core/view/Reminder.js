@@ -98,7 +98,10 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 					store: '{reminders}'
 				},
 				border: true,
-				selModel: WTF.multiRowSelection(true),
+				selModel: {
+					type: 'checkboxmodel',
+					mode : 'MULTI'
+				},
 				columns: [{
 					xtype: 'soiconcolumn',
 					iconField: function(v,rec) {

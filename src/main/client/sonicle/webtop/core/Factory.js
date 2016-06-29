@@ -511,7 +511,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * It renders a combobox with a local filtered drop-down list.
 	 * @param {String} valueField See {@link Ext.form.field.ComboBox#valueField}
 	 * @param {String} displayField See {@link Ext.form.field.ComboBox#displayField}
-	 * @param {type} [cfg] Custom config to apply.
+	 * @param {Object} [cfg] Custom config to apply.
 	 * @returns {Object} The field config
 	 */
 	localCombo: function(valueField, displayField, cfg) {
@@ -785,23 +785,6 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
 			}
 		};
-	},
-	
-	multiRowSelection: function(checkbox) {
-		if(checkbox === true) {
-			return {
-				type: 'spreadsheet',
-				mode : 'MULTI',
-				checkboxSelect: true,
-				cellSelect: false,
-				rowNumbererHeaderWidth: 0
-			};
-		} else {
-			return {
-				type: 'rowmodel',
-				mode : 'MULTI'
-			};
-		}
 	}
 	
 	

@@ -29,8 +29,8 @@ Ext.define('Sonicle.grid.column.Icon', {
 		var me = this,
 				cssPrefix = 'so-',
 				cls = cssPrefix + 'grid-iconcolumn',
-				rec = cellValues.record,
 				size = me.iconSize,
+				rec = cellValues ? cellValues.record : null,
 				ico = me.evalField(me.iconField, value, rec),
 				ttip = me.evalField(me.tipField, value, rec);
 		
@@ -45,7 +45,7 @@ Ext.define('Sonicle.grid.column.Icon', {
 	evalField: function(field, value, rec) {
 		if(Ext.isFunction(field)) {
 			return field.bind(this, value, rec)();
-		} else if(Ext.isString(field)) {
+		} else if(rec && !Ext.isEmpty(field)) {
 			return rec.get(field);
 		} else {
 			return value;

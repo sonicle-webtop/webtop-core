@@ -158,6 +158,15 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	 */
 	doCount: 0,
 	
+	viewModel: {
+		data: {
+			/**
+			 * Save here resulting data after wizard completion
+			 */
+			result: null
+		}
+	},
+	
 	initComponent: function() {
 		var me = this,
 				vm = me.getVM();
@@ -466,10 +475,11 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			callback: function(success, json) {
 				me.unwait();
 				me.doSuccess = success;
-				page.lookupReference('log').setValue(json.data);
 				me.updateButtons('end');
+				page.lookupReference('log').setValue(json.data.log);
 				if(success) {
-					me.fireEvent('dosuccess', me);
+					me.getVM().set('result', json.data.result);
+					me.fireEvent('dosuccess', me, json.data.result);
 				} else {
 					me.fireEvent('dofailure', me, json.data);
 				}

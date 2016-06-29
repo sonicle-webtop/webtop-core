@@ -38,9 +38,8 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.bol.OContentType;
-import com.sonicle.webtop.core.bol.model.AuthResource;
-import com.sonicle.webtop.core.dal.ContentTypeDAO;
+import com.sonicle.webtop.core.bol.OMediaType;
+import com.sonicle.webtop.core.dal.MediaTypeDAO;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -65,7 +64,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -407,47 +405,24 @@ public class WT {
 	
 	/**
 	 * Retrieves MediaType associated to a file extension from the local table.
-	 * @deprecated Use {@link #getMediaType()} instead.
-	 * @param extension The file extension.
-	 * @return MediaType string or null if no entry is present
-	 */
-	@Deprecated
-	public static String getContentType(String extension) {
-		return getMediaType(extension);
-	}
-	
-	/**
-	 * Retrieves MediaType associated to a file extension from the local table.
 	 * @param extension The file extension.
 	 * @return MediaType string or null if no entry is present
 	 */
 	public static String getMediaType(String extension) {
-		String ctype = null;
-		Connection con = null;
-		
-        try {
-			extension = StringUtils.lowerCase(extension);
-            con = getCoreConnection();
-			OContentType oct = ContentTypeDAO.getInstance().selectByExtension(con, extension);
-            if(oct != null) ctype = oct.getContentType();
-        } catch(SQLException ex) {
-			//logger.error("Error looking up content type for extension {}",extension,exc);
-        } finally {
-            DbUtils.closeQuietly(con);
-        }
-        return ctype;
+		return getWTA().getMediaTypes().getMediaType(extension);
 	}
 	
-	public static String getExtension(String mediaType) {
-		String ext = null;
+	public static String getMediaTypeExtension(String mediaType) {
+		MediaTypeDAO dao = MediaTypeDAO.getInstance();
 		Connection con = null;
+		String ext = null;
 		
 		try {
 			mediaType = StringUtils.lowerCase(mediaType);
 			con = getCoreConnection();
-			OContentType oct = ContentTypeDAO.getInstance().selectByContentType(con, mediaType);
+			OMediaType oct = dao.selectByMediaType(con, mediaType);
 			if(oct != null) ext = oct.getExtension();
-		} catch(SQLException ex) {
+		} catch(Exception ex) {
 			
 		} finally {
 			DbUtils.closeQuietly(con);
