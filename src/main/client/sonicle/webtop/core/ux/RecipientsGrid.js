@@ -149,9 +149,9 @@ Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
 			return true;
         }
 		else if (k === e.UP) {
-			return me.navigationModel.moveUp();
+			if (!me.activeColumn.getEditor().isExpanded) return me.navigationModel.moveUp();
 		} else if (k === e.DOWN) {
-			return me.navigationModel.moveDown(true);
+			if (!me.activeColumn.getEditor().isExpanded) return me.navigationModel.moveDown(true);
 		}
     },
 	
