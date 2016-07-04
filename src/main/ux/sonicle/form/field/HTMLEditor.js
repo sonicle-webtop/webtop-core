@@ -196,10 +196,12 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 						'select': function(c,r,o) {
 							//me.execCommand('fontname',false,r.get('id'));
 							me.setSelectionStyle('font-family: '+r.get('id'));
+                            me.focusEditor();
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
 								me.setSelectionStyle('font-family: '+f.getValue());
+                                me.focusEditor();
 							}
 						}						
 					}
@@ -234,10 +236,12 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 						'select': function(c,r,o) {
 							//me.execCommand('fontsize',false,r.get('id'));
 							me.setSelectionStyle('font-size: '+r.get('id'));
+                            me.focusEditor();
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
 								me.setSelectionStyle('font-size: '+f.getValue());
+                                me.focusEditor();
 							}
 						}
 					}
