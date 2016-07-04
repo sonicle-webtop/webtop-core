@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.SQLException;
@@ -126,13 +126,13 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> perms = new HashSet<>();
 		
 		if(Principal.xisAdmin(pid.toString())) {
-			perms.add(AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), AuthResource.ACTION_ACCESS, "*"));
-			perms.add(AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), AuthResource.ACTION_ACCESS, "*"));
+			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
+			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		}
 		
 		// Force core private service permission for any principal
-		String authRes = AuthResource.namespacedName(CoreManifest.ID, "SERVICE");
-		perms.add(AuthResource.permissionString(authRes, AuthResource.ACTION_ACCESS, CoreManifest.ID));
+		String authRes = ServicePermission.namespacedName(CoreManifest.ID, "SERVICE");
+		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
 		Set<Role> userRoles = autm.getRolesForUser(pid, true, true);
 		for(Role role : userRoles) {
@@ -143,10 +143,10 @@ public class WTRealm extends AuthorizingRealm {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 
 				// will become "com.sonicle.webtop.core.TEST"
-				authRes = AuthResource.namespacedName(perm.getServiceId(), perm.getKey());
+				authRes = ServicePermission.namespacedName(perm.getServiceId(), perm.getKey());
 				// Generate permission string that shiro can understand 
 				// under the form: {resource}:{action}:{instance}
-				perms.add(AuthResource.permissionString(authRes, perm.getAction(), perm.getInstance()));
+				perms.add(ServicePermission.permissionString(authRes, perm.getAction(), perm.getInstance()));
 			}
 		}
 		

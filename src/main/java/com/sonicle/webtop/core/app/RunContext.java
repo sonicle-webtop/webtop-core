@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import org.apache.shiro.SecurityUtils;
@@ -231,7 +231,7 @@ public class RunContext {
 	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) {
 		SecurityManager manager = SecurityUtils.getSecurityManager();
 		if(manager.isPermitted(principals, AuthManager.WTADMIN_PSTRING)) return true;
-		return manager.isPermitted(principals, AuthResource.permissionString(AuthResource.namespacedName(serviceId, key), action, instance));
+		return manager.isPermitted(principals, ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, key), action, instance));
 	}
 	
 	private static boolean isSysAdmin(PrincipalCollection principals) {

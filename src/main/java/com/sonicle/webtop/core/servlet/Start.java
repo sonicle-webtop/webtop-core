@@ -37,6 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -74,7 +75,7 @@ public class Start extends AbstractServlet {
 			WebTopApp.logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
 			
 			// Checks maintenance mode
-			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreServiceSettings.MAINTENANCE), false);
+			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
 			if(maintenance && false) throw new MaintenanceException();
 			
 			wts.initProfile(request);
@@ -101,6 +102,7 @@ public class Start extends AbstractServlet {
 			vars.put("laf", lookAndFeel);
 			vars.put("rtl", String.valueOf(cus.getRightToLeft()));
 			vars.put("debug", ""+extdebug);
+			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));
 			
 			// Startup variables
 			JsWTS jswts = new JsWTS();

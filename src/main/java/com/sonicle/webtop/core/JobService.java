@@ -217,7 +217,7 @@ public class JobService extends BaseJobService {
 			
 			logger.trace("DevicesSyncCheckJob started [{}]", now);
 			try {
-				List<UserProfile.Id> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, true);
+				List<UserProfile.Id> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreSettings.DEVICES_SYNC_ALERT_ENABLED, true);
 				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
 				for(UserProfile.Id pid : pids) {
 					// Skip profiles that don't have permission for syncing devices

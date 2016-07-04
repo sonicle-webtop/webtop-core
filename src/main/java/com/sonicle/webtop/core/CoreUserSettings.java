@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
@@ -54,136 +55,6 @@ public class CoreUserSettings extends BaseUserSettings {
 	public CoreUserSettings(String serviceId, UserProfile.Id profileId) {
 		super(serviceId, profileId);
 	}
-	
-	/**
-	 * [string][default]
-	 * Theme name
-	 */
-	public static final String THEME = "theme";
-	
-	/**
-	 * [string][default]
-	 * Layout
-	 */
-	public static final String LAYOUT = "layout";
-	
-	/**
-	 * [string][default]
-	 * Look and feel
-	 */
-	public static final String LAF = "laf";
-	
-	/**
-	 * [boolean][default]
-	 * Right-to-left mode
-	 */
-	public static final String RTL = "rtl";
-	
-	/**
-	 * [string][default]
-	 * Desktop notification
-	 */
-	public static final String DESKTOP_NOTIFICATION = "notifications.desktop";
-	public static final String DESKTOP_NOTIFICATION_NEVER = "never";
-	public static final String DESKTOP_NOTIFICATION_ALWAYS = "always";
-	public static final String DESKTOP_NOTIFICATION_BACKGROUND = "background";
-	
-	/**
-	 * [int][default]
-	 * Week start day (0:sunday, 1:monday)
-	 */
-	public static final String START_DAY = "i18n.startDay";
-	public static final int START_DAY_SUNDAY = 0;
-	public static final int START_DAY_MONDAY = 1;
-	
-	/**
-	 * [string][default]
-	 * Short date format pattern
-	 */
-	public static final String SHORT_DATE_FORMAT = "i18n.format.date.short";
-	
-	/**
-	 * [string][default]
-	 * Long date format pattern
-	 */
-	public static final String LONG_DATE_FORMAT = "i18n.format.date.long";
-	
-	/**
-	 * [string][default]
-	 * Short time format pattern
-	 */
-	public static final String SHORT_TIME_FORMAT = "i18n.format.time.short";
-	
-	/**
-	 * [string][default]
-	 * Long time format pattern
-	 */
-	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
-	
-	/**
-	 * [string][*]
-	 * Saves width of tool component
-	 */
-	public static final String VIEWPORT_TOOL_WIDTH = "viewport.tool.width";
-	
-	/**
-	 * [boolean][default]
-	 * Activates debug mode. If activated, client js files will be passed in  
-	 * plain text, so they are readable.
-	 */
-	public static final String SYSTEM_DEBUG = "system.debug";
-	
-	/**
-	 * [boolean]
-	 * Specifies if whatsnew window must be shown after a service upgrade
-	 */
-	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	
-	/**
-	 * [string][*]
-	 * Saves last seen service version for whatsnew handling
-	 */
-	public static final String WHATSNEW_VERSION = "whatsnew.version";
-	
-	/**
-	 * [boolean]
-	 * Specifies if OTP is active.
-	 */
-	public static final String OTP_ENABLED = "otp.enabled";
-	
-	/**
-	 * [string]
-	 * Specifies delivery method. One of: email, googleauth.
-	 */
-	public static final String OTP_DELIVERY = "otp.delivery";
-	public static final String OTP_DELIVERY_EMAIL = "email";
-	public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
-	
-	/**
-	 * [string]
-	 * Specifies generated secret string within googleauth delivery.
-	 */
-	public static final String OTP_SECRET = "otp.secret";
-	
-	/**
-	 * [string]
-	 * Specifies choosen email address within email delivery.
-	 */
-	public static final String OTP_EMAILADDRESS = "otp.emailaddress";
-	public static final String OTP_TRUSTED_DEVICE = "otp.trusteddevice";
-	
-	/**
-	 * [boolean][default]
-	 * Enables an email alert if device sync is broken 
-	 */
-	public static final String DEVICES_SYNC_ALERT_ENABLED = "devices.sync.alert.enabled";
-	
-	/**
-	 * [int] (number of days 1->30)
-	 * Specified the maximum difference between current time and last-sync time 
-	 * before sending a notification alert
-	 */
-	public static final String DEVICES_SYNC_ALERT_TOLERANCE = "devices.sync.alert.tolerance";
 	
 	public String getTheme() {
 		String value = getString(THEME, null);
@@ -282,19 +153,19 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public Integer getViewportToolWidth() {
-		return LangUtils.value(getSetting(CoreUserSettings.VIEWPORT_TOOL_WIDTH), Integer.class);
+		return LangUtils.value(getSetting(VIEWPORT_TOOL_WIDTH), Integer.class);
 	}
 	
 	public boolean setViewportToolWidth(Integer value) {
-		return setInteger(CoreUserSettings.VIEWPORT_TOOL_WIDTH, value);
+		return setInteger(VIEWPORT_TOOL_WIDTH, value);
 	}
 	
 	public boolean getSystemDebug() {
 		return getBoolean(SYSTEM_DEBUG, false);
 	}
 	
-	public boolean getWhatsnewEnabled() {
-		return getBoolean(WHATSNEW_ENABLED, true);
+	public boolean getWhatsnewNeeded() {
+		return getBoolean(WHATSNEW_NEEDED, true);
 	}
 	
 	public boolean getOTPEnabled() {
@@ -302,57 +173,57 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean setOTPEnabled(boolean value) {
-		return setBoolean(CoreUserSettings.OTP_ENABLED, value);
+		return setBoolean(OTP_ENABLED, value);
 	}
 	
 	public String getOTPDelivery() {
-		return getString(CoreUserSettings.OTP_DELIVERY, null);
+		return getString(OTP_DELIVERY, null);
 	}
 	
 	public boolean setOTPDelivery(String value) {
-		return setString(CoreUserSettings.OTP_DELIVERY, value);
+		return setString(OTP_DELIVERY, value);
 	}
 	
 	public String getOTPSecret() {
-		return getString(CoreUserSettings.OTP_SECRET, null);
+		return getString(OTP_SECRET, null);
 	}
 	
 	public boolean setOTPSecret(String value) {
-		return setString(CoreUserSettings.OTP_SECRET, value);
+		return setString(OTP_SECRET, value);
 	}
 	
 	public String getOTPEmailAddress() {
-		return getString(CoreUserSettings.OTP_EMAILADDRESS, null);
+		return getString(OTP_EMAILADDRESS, null);
 	}
 	
 	public boolean setOTPEmailAddress(String value) {
-		return setString(CoreUserSettings.OTP_EMAILADDRESS, value);
+		return setString(OTP_EMAILADDRESS, value);
 	}
 	
 	public boolean getDevicesSyncAlertEnabled() {
-		Boolean value = getBoolean(CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, null);
+		Boolean value = getBoolean(DEVICES_SYNC_ALERT_ENABLED, null);
 		if(value != null) return value;
 		return ss.getDefaultDevicesSyncAlertEnabled();
 	}
 	
 	public boolean setDevicesSyncAlertEnabled(Boolean value) {
-		return setBoolean(CoreUserSettings.DEVICES_SYNC_ALERT_ENABLED, value);
+		return setBoolean(DEVICES_SYNC_ALERT_ENABLED, value);
 	}
 	
 	public int getDevicesSyncAlertTolerance() {
-		return getInteger(CoreUserSettings.DEVICES_SYNC_ALERT_TOLERANCE, 7);
+		return getInteger(DEVICES_SYNC_ALERT_TOLERANCE, 7);
 	}
 	
 	public boolean setDevicesSyncAlertTolerance(int value) {
-		return setInteger(CoreUserSettings.DEVICES_SYNC_ALERT_TOLERANCE, value);
+		return setInteger(DEVICES_SYNC_ALERT_TOLERANCE, value);
 	}
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
-		return setm.getUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION);
+		return setm.getUserSetting(profile, serviceId, WHATSNEW_VERSION);
 	}
 	
 	public static boolean setWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId, String value) {
-		return setm.setUserSetting(profile, serviceId, CoreUserSettings.WHATSNEW_VERSION, value);
+		return setm.setUserSetting(profile, serviceId, WHATSNEW_VERSION, value);
 	}
 	
 	

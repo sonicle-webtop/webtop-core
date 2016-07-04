@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
@@ -258,12 +259,12 @@ public class ServiceManager {
 	
 	public boolean isInMaintenance(String serviceId) {
 		SettingsManager setm = wta.getSettingsManager();
-		return LangUtils.value(setm.getServiceSetting(serviceId, CoreServiceSettings.MAINTENANCE), false);
+		return LangUtils.value(setm.getServiceSetting(serviceId, CoreSettings.MAINTENANCE), false);
 	}
 	
 	public void setMaintenance(String serviceId, boolean maintenance) {
 		SettingsManager setm = wta.getSettingsManager();
-		setm.setServiceSetting(serviceId,CoreServiceSettings.MAINTENANCE, maintenance);
+		setm.setServiceSetting(serviceId, CoreSettings.MAINTENANCE, maintenance);
 	}
 	
 	/**
@@ -832,7 +833,7 @@ public class ServiceManager {
 	
 	private String generatePublicName(String serviceId) {
 		SettingsManager setm = wta.getSettingsManager();
-		String overriddenPublicName = setm.getServiceSetting(serviceId, CoreServiceSettings.PUBLIC_NAME);
+		String overriddenPublicName = setm.getServiceSetting(serviceId, CoreSettings.PUBLIC_NAME);
 		
 		if(!StringUtils.isEmpty(overriddenPublicName)) {
 			return overriddenPublicName;
@@ -848,13 +849,13 @@ public class ServiceManager {
 		
 		// Gets current service's version info
 		manifestVer = manifest.getVersion();
-		currentVer = new ServiceVersion(setm.getServiceSetting(manifest.getId(), CoreServiceSettings.MANIFEST_VERSION));
+		currentVer = new ServiceVersion(setm.getServiceSetting(manifest.getId(), CoreSettings.MANIFEST_VERSION));
 		
 		// Upgrade check!
 		if(manifestVer.compareTo(currentVer) > 0) {
 			logger.info("Upgraded! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
 			manifest.setOldVersion(currentVer);
-			setm.setServiceSetting(manifest.getId(), CoreServiceSettings.MANIFEST_VERSION, manifestVer.toString());
+			setm.setServiceSetting(manifest.getId(), CoreSettings.MANIFEST_VERSION, manifestVer.toString());
 			return true;
 		} else {
 			logger.info("Not upgraded! [{} = {}]", manifestVer.toString(), currentVer.toString());

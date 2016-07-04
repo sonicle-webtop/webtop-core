@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public class CoreManifest extends ServiceManifest {
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
 		
-		resources = new ArrayList<>();
+		permissions = new ArrayList<>();
 		
 		/*
 			SYSADMIN
@@ -99,7 +99,7 @@ public class CoreManifest extends ServiceManifest {
 			Mark WebTop admins (users that can act as admins)
 			- ACCESS: can manage webtop palform
 		*/
-		resources.add(new AuthResource("WTADMIN", new String[]{AuthResource.ACTION_ACCESS}));
+		permissions.add(new ServicePermission("WTADMIN", new String[]{ServicePermission.ACTION_ACCESS}));
 		
 		/*
 			SERVICE
@@ -112,32 +112,32 @@ public class CoreManifest extends ServiceManifest {
 			Resource that tracks feedback insertion form
 			- MANAGE: allow access to the form
 		*/
-		resources.add(new AuthResource("FEEDBACK", new String[]{AuthResource.ACTION_MANAGE}));
+		permissions.add(new ServicePermission("FEEDBACK", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
 			ACTIVITIES
 			Resource that tracks activities management form
 			- MANAGE: allow access to the form
 		*/
-		resources.add(new AuthResource("ACTIVITIES", new String[]{AuthResource.ACTION_MANAGE}));
+		permissions.add(new ServicePermission("ACTIVITIES", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
 			Causals
 			Resource that tracks causals management form
 			- MANAGE: allow access to the form
 		*/
-		resources.add(new AuthResource("CAUSALS", new String[]{AuthResource.ACTION_MANAGE}));
+		permissions.add(new ServicePermission("CAUSALS", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
 			User personal info (via Options)
 			- WRITE: user can update/change its data (if provider supports it)
 		*/
-		resources.add(new AuthResource("USER_PROFILE_INFO", new String[]{AuthResource.ACTION_MANAGE}));
+		permissions.add(new ServicePermission("USER_PROFILE_INFO", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
 			Device synchroniztion
 			- ACCESS: ability to sync data with devices
 		*/
-		resources.add(new AuthResource("DEVICES_SYNC", new String[]{AuthResource.ACTION_ACCESS}));
+		permissions.add(new ServicePermission("DEVICES_SYNC", new String[]{ServicePermission.ACTION_ACCESS}));
 	}
 }

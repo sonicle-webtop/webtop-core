@@ -33,40 +33,50 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import java.util.LinkedHashSet;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  *
  * @author malbinola
  */
-public class AuthSharedResource extends AuthResource {
-	public static final String PERMISSION_TYPE_ROOT = "ROOT";
-	public static final String PERMISSION_TYPE_FOLDER = "FOLDER";
-	public static final String PERMISSION_TYPE_ELEMENTS= "ELEMENTS";
+public class ServicePermission {
+	public static final String ACTION_ACCESS = "ACCESS";
+	public static final String ACTION_MANAGE = "MANAGE";
+	public static final String ACTION_CREATE = "CREATE";
+	public static final String ACTION_READ = "READ";
+	public static final String ACTION_UPDATE = "UPDATE";
+	public static final String ACTION_DELETE = "DELETE";
 	
-	public AuthSharedResource(String name) {
-		super(name);
+	private final String groupName;
+	private final LinkedHashSet<String> actions = new LinkedHashSet<>();
+	
+	public ServicePermission(String groupName) {
+		this.groupName = groupName.toUpperCase();
 	}
 	
-	public static String buildPermissionKey(String type, String name) {
-		if(type.equals(PERMISSION_TYPE_ROOT)) {
-			return buildRootPermissionKey(name);
-		} else if(type.equals(PERMISSION_TYPE_FOLDER)) {
-			return buildFolderPermissionKey(name);
-		} else if(type.equals(PERMISSION_TYPE_ELEMENTS)) {
-			return buildElementsPermissionKey(name);
-		} else {
-			return null;
+	public ServicePermission(String groupName, String[] actions) {
+		this(groupName);
+		for(String action : actions) {
+			if(!StringUtils.isEmpty(action)) {
+				this.actions.add(action.trim());
+			}
 		}
 	}
-	
-	public static String buildRootPermissionKey(String name) {
-		return name + "@SHARE_" + PERMISSION_TYPE_ROOT;
+
+	public String getGroupName() {
+		return groupName;
 	}
 	
-	public static String buildFolderPermissionKey(String name) {
-		return name + "@SHARE_" + PERMISSION_TYPE_FOLDER;
+	public String[] getActions() {
+		return actions.toArray(new String[actions.size()]);
 	}
 	
-	public static String buildElementsPermissionKey(String name) {
-		return name + "@SHARE_" + PERMISSION_TYPE_ELEMENTS;
+	public static String namespacedName(String serviceId, String groupName) {
+		return serviceId + "." + groupName;
+	}
+	
+	public static String permissionString(String groupName, String action, String instance) {
+		return groupName + ":" + StringUtils.defaultString(action, "*") + ":" + StringUtils.defaultString(instance, "*");
 	}
 }
