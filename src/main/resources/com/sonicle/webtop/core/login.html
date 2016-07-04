@@ -6,7 +6,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 		<title>${title}</title>
-		<link rel="icon" href="resources/com.sonicle.webtop.core/images/favicon.png" type="image/png" />
+		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/favicon.ico" />
 		
 		<!-- Bootstrap -->
 		<link href="resources/com.sonicle.webtop.core/css/bootstrap.min.css" rel="stylesheet">
@@ -18,15 +18,20 @@
 		<![endif]-->
 		
 		<link href="resources/com.sonicle.webtop.core/css/login.css" rel="stylesheet">
+        <script type="text/javascript" src="resources/com.sonicle.webtop.core/js/jquery-3.0.0.min.js"></script>
 		<script type="text/javascript">
-			function onBodyLoad() {
-				setTimeout(function() {
-					document.getElementById("wtusername").focus();
-				}, 100);
-			}
+            $(function() {
+                setTimeout(function() {
+                    $('#wtusername').focus();
+                }, 100);
+                $('#wtsubmit').bind('click tap', function() {
+                    $('form[name="login"]').submit();
+                    $(this).prop("disabled", true);
+                });
+            });
 		</script>
 	</head>
-	<body onload="onBodyLoad()">
+	<body>
 		<div class="jumbotron vertical-center">
 			<div id="login" class="container">
 				<div class="row">
@@ -74,7 +79,7 @@
 								</div>
 								<br>
 								<!--<button class="btn btn-default full-width" type="sumbit"><span class="glyphicon glyphicon-ok"></span></button>-->
-								<button class="btn btn-primary" type="sumbit">${submitLabel}</button>
+								<button class="btn btn-primary" id="wtsubmit" type="sumbit">${submitLabel}</button>
 							</div>
 						</form>
 					</div>

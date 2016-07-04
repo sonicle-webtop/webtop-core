@@ -47,6 +47,7 @@ import com.sonicle.security.otp.provider.GoogleAuth;
 import com.sonicle.security.otp.provider.GoogleAuthOTPKey;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUserSetting;
@@ -131,9 +132,9 @@ public class OTPManager {
 	
 	public void deactivate(UserProfile.Id pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
-		cus.clear(CoreUserSettings.OTP_SECRET);
-		cus.clear(CoreUserSettings.OTP_EMAILADDRESS);
-		cus.clear(CoreUserSettings.OTP_DELIVERY);
+		cus.clear(CoreSettings.OTP_SECRET);
+		cus.clear(CoreSettings.OTP_EMAILADDRESS);
+		cus.clear(CoreSettings.OTP_DELIVERY);
 		cus.setOTPEnabled(false);
 	}
 	
@@ -165,7 +166,7 @@ public class OTPManager {
 			
 			if(te.check(code, config.otp.getVerificationCode(), Long.valueOf(config.otp.getKey()), interval)) {
 				cus.setOTPEmailAddress(((EmailConfig)config).emailAddress);
-				cus.setOTPDelivery(CoreUserSettings.OTP_DELIVERY_EMAIL);
+				cus.setOTPDelivery(CoreSettings.OTP_DELIVERY_EMAIL);
 				cus.setOTPEnabled(true);
 				return true;
 			} else {
@@ -176,7 +177,7 @@ public class OTPManager {
 			
 			if(ga.check(code, config.otp.getKey())) {
 				cus.setOTPSecret(config.otp.getKey());
-				cus.setOTPDelivery(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH);
+				cus.setOTPDelivery(CoreSettings.OTP_DELIVERY_GOOGLEAUTH);
 				cus.setOTPEnabled(true);
 				return true;
 			} else {
@@ -201,7 +202,7 @@ public class OTPManager {
 	
 	public Config prepareCheckCode(UserProfile.Id pid) throws WTException {
 		String deliveryMode = getDeliveryMode(pid);
-		if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_EMAIL)) {
+		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			UserProfile.Data ud = wta.getUserManager().userData(pid);
 			if(ud.getEmail() == null) throw new WTException("Valid email address is required");
@@ -210,15 +211,15 @@ public class OTPManager {
 			//TODO: find a way to send email
 			//wta.sendOtpMail(wts, profile.getWebTopDomain(), profile, profile.getLocale(), getEmailAddress(profile), String.valueOf(otp.getVerificationCode()));
 			logger.debug("Verification code {}", otp.getVerificationCode());
-			return new Config(CoreUserSettings.OTP_DELIVERY_EMAIL, otp);
+			return new Config(CoreSettings.OTP_DELIVERY_EMAIL, otp);
 		} else {
-			return new Config(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH, null);
+			return new Config(CoreSettings.OTP_DELIVERY_GOOGLEAUTH, null);
 		}
 	}
 	
 	public boolean checkCode(UserProfile.Id pid, Config data, int code) {
 		String deliveryMode = getDeliveryMode(pid);
-		if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_EMAIL)) {
+		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			long interval = css.getOTPProviderSonicleAuthKVI();
@@ -231,25 +232,25 @@ public class OTPManager {
 	
 	public void registerTrustedDevice(UserProfile.Id pid, JsTrustedDevice td) {
 		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreUserSettings.OTP_TRUSTED_DEVICE + "@" + td.deviceId;
+		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + td.deviceId;
 		sm.setUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key, JsonResult.gson.toJson(td));
 	}
 	
 	public boolean removeTrustedDevice(UserProfile.Id pid, String deviceId) {
 		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreUserSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
+		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
 		return sm.deleteUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key);
 	}
 	
 	public JsTrustedDevice getTrustedDevice(UserProfile.Id pid, String deviceId) {
 		SettingsManager sm = wta.getSettingsManager();
-		String key = CoreUserSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
+		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
 		return LangUtils.value(sm.getUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key), null, JsTrustedDevice.class);
 	}
 	
 	public ArrayList<JsTrustedDevice> listTrustedDevices(UserProfile.Id pid) {
 		SettingsManager sm = wta.getSettingsManager();
-		List<OUserSetting> items = sm.getUserSettings(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, CoreUserSettings.OTP_TRUSTED_DEVICE+"%");
+		List<OUserSetting> items = sm.getUserSettings(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, CoreSettings.OTP_TRUSTED_DEVICE+"%");
 		return JsTrustedDevice.asList(items);
 	}
 	
@@ -338,7 +339,7 @@ public class OTPManager {
 		public String emailAddress;
 		
 		private EmailConfig(OTPKey otp, String emailAddress) {
-			super(CoreUserSettings.OTP_DELIVERY_EMAIL, otp);
+			super(CoreSettings.OTP_DELIVERY_EMAIL, otp);
 			this.emailAddress = emailAddress;
 		}
 	}
@@ -347,7 +348,7 @@ public class OTPManager {
 		public byte[] qrcode;
 		
 		private GoogleAuthConfig(OTPKey otp, byte[] qrcode) {
-			super(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH, otp);
+			super(CoreSettings.OTP_DELIVERY_GOOGLEAUTH, otp);
 			this.qrcode = qrcode;
 		}
 	}

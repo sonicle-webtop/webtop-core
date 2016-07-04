@@ -41,9 +41,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class SharePermsElements extends SharePerms {
 	public static final String[] ACTIONS = new String[]{
-		AuthResource.ACTION_CREATE,
-		AuthResource.ACTION_UPDATE,
-		AuthResource.ACTION_DELETE
+		ServicePermission.ACTION_CREATE,
+		ServicePermission.ACTION_UPDATE,
+		ServicePermission.ACTION_DELETE
 	};
 	
 	public SharePermsElements(String... actions) {

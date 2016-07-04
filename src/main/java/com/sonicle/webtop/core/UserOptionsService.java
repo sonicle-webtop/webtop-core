@@ -47,7 +47,7 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
-import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
@@ -175,7 +175,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				// User personal info
 				if(provider.canWrite()) {
-					if(RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", AuthResource.ACTION_MANAGE)) {
+					if(RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
 						if(pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
 						if(pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
 						if(pl.map.has("upiLastName")) upi.setLastName(pl.data.upiLastName);

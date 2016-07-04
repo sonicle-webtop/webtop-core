@@ -1,0 +1,23 @@
+html, body { height: 100%; }
+#wt-loading-mask {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #f8f8f8;
+	z-index: 1;
+}
+#wt-loading {
+	position: absolute;
+	top: 40%;
+	left: 45%;
+	z-index: 2;
+}
+#wt-loading span {
+	display: block;
+	padding-left: 40px;
+	line-height: 35px;
+	font-family: helvetica, arial, verdana, sans-serif;
+	background: url('../images/elica-anim_32.gif') no-repeat left center;
+}

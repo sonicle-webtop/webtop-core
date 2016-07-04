@@ -33,51 +33,40 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import java.text.MessageFormat;
-import java.util.LinkedHashSet;
-import org.jooq.tools.StringUtils;
-
 /**
  *
  * @author malbinola
  */
-public class AuthResource {
-	public static final String ACTION_ACCESS = "ACCESS";
-	public static final String ACTION_MANAGE = "MANAGE";
-	public static final String ACTION_CREATE = "CREATE";
-	public static final String ACTION_READ = "READ";
-	public static final String ACTION_UPDATE = "UPDATE";
-	public static final String ACTION_DELETE = "DELETE";
+public class ServiceSharePermission extends ServicePermission {
+	public static final String TARGET_ROOT = "ROOT";
+	public static final String TARGET_FOLDER = "FOLDER";
+	public static final String TARGET_ELEMENTS= "ELEMENTS";
 	
-	private final String name;
-	private final LinkedHashSet<String> actions = new LinkedHashSet<>();
-	
-	public AuthResource(String name) {
-		this.name = name.toUpperCase();
+	public ServiceSharePermission(String groupName) {
+		super(groupName);
 	}
 	
-	public AuthResource(String name, String[] actions) {
-		this(name);
-		for(String action : actions) {
-			if(!StringUtils.isEmpty(action)) {
-				this.actions.add(action.trim());
-			}
+	public static String buildPermissionKey(String target, String groupName) {
+		if(target.equals(TARGET_ROOT)) {
+			return buildRootPermissionKey(groupName);
+		} else if(target.equals(TARGET_FOLDER)) {
+			return buildFolderPermissionKey(groupName);
+		} else if(target.equals(TARGET_ELEMENTS)) {
+			return buildElementsPermissionKey(groupName);
+		} else {
+			return null;
 		}
 	}
-
-	public String getName() {
-		return name;
+	
+	public static String buildRootPermissionKey(String groupName) {
+		return groupName + "@SHARE_" + TARGET_ROOT;
 	}
 	
-	public String[] getActions() {
-		return actions.toArray(new String[actions.size()]);
+	public static String buildFolderPermissionKey(String groupName) {
+		return groupName + "@SHARE_" + TARGET_FOLDER;
 	}
 	
-	public static String namespacedName(String serviceId, String resourceName) {
-		return MessageFormat.format("{0}.{1}", serviceId, resourceName);
-	}
-	
-	public static String permissionString(String resource, String action, String instance) {
-		return MessageFormat.format("{0}:{1}:{2}", resource, StringUtils.defaultString(action, "*"), StringUtils.defaultString(instance, "*"));
+	public static String buildElementsPermissionKey(String groupName) {
+		return groupName + "@SHARE_" + TARGET_ELEMENTS;
 	}
 }

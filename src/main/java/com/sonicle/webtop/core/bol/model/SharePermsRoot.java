@@ -41,7 +41,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class SharePermsRoot extends SharePerms {
 	public static final String[] ACTIONS = new String[]{
-		AuthResource.ACTION_MANAGE
+		ServicePermission.ACTION_MANAGE
 	};
 	
 	public SharePermsRoot(String... actions) {

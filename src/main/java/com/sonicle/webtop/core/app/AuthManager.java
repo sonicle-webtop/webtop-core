@@ -39,7 +39,7 @@ import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.model.AuthResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.GroupDAO;
@@ -85,8 +85,8 @@ public class AuthManager {
 		return autm;
 	}
 	
-	public static final String SYSADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
-	public static final String WTADMIN_PSTRING = AuthResource.permissionString(AuthResource.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
+	public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
+	public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	private WebTopApp wta = null;
 	
 	/**

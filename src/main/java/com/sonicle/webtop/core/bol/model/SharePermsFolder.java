@@ -41,9 +41,9 @@ import org.apache.commons.lang.StringUtils;
  */
 public class SharePermsFolder extends SharePerms {
 	public static final String[] ACTIONS = new String[]{
-		AuthResource.ACTION_READ,
-		AuthResource.ACTION_UPDATE,
-		AuthResource.ACTION_DELETE
+		ServicePermission.ACTION_READ,
+		ServicePermission.ACTION_UPDATE,
+		ServicePermission.ACTION_DELETE
 	};
 	
 	public SharePermsFolder(String... actions) {

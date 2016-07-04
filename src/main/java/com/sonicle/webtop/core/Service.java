@@ -129,6 +129,7 @@ public class Service extends BaseService {
 		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
+		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
 		
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
@@ -718,7 +719,7 @@ public class Service extends BaseService {
 				
 				if(operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-					if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_EMAIL)) {
+					if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
 						InternetAddress ia = MailUtils.buildInternetAddress(address, null);
 						if(!MailUtils.isAddressValid(ia)) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
@@ -727,7 +728,7 @@ public class Service extends BaseService {
 						logger.debug("{}", config.otp.getVerificationCode());
 						wts.setProperty("OTP_SETUP", config);
 
-					} else if(deliveryMode.equals(CoreUserSettings.OTP_DELIVERY_GOOGLEAUTH)) {
+					} else if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
 						wts.setProperty("OTP_SETUP", config);
 					}

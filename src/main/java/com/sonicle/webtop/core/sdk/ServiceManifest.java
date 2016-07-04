@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.bol.model.AuthResource;
-import com.sonicle.webtop.core.bol.model.AuthSharedResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,8 @@ public class ServiceManifest {
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
-	protected ArrayList<AuthResource> resources;
+	protected ArrayList<ServicePermission> permissions;
+	
 	
 	public ServiceManifest() {
 		version = new ServiceVersion();
@@ -81,7 +82,7 @@ public class ServiceManifest {
 		companyEmail = "sonicle@sonicle.com";
 		companyWebSite = "http://www.sonicle.com";
 		supportEmail = "sonicle@sonicle.com";
-		resources = new ArrayList<>();
+		permissions = new ArrayList<>();
 	}
 	
 	public ServiceManifest(HierarchicalConfiguration svcEl) throws Exception {
@@ -144,29 +145,31 @@ public class ServiceManifest {
 		hidden = svcEl.getBoolean("hidden", false);
 		
 		
-		resources = new ArrayList<>();
-		if(!svcEl.configurationsAt("resources").isEmpty()) {
-			List<HierarchicalConfiguration> elResources = svcEl.configurationsAt("resources.resource");
-			for(HierarchicalConfiguration elResource : elResources) {
-				if(elResource.containsKey("[@name]")) {
-					String name = elResource.getString("[@name]");
-					if(StringUtils.isEmpty(name)) throw new Exception("Resource must have a valid uppercase name");
-					name = name.toUpperCase();
+		permissions = new ArrayList<>();
+		if(!svcEl.configurationsAt("permissions").isEmpty()) {
+			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
+			for(HierarchicalConfiguration elPerm : elPerms) {
+				if(elPerm.containsKey("[@group]")) {
+					String groupName = elPerm.getString("[@group]");
+					if(StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
 					
-					String type = elResource.getString("[@type]", "default");
-					if(type.equals("share")) { // Shared resource
-						resources.add(new AuthSharedResource(name));
-					} else if(type.equals("default")) { // Classic resource (not shared)
-						if(elResource.containsKey("[@actions]")) {
-							String[] actions = StringUtils.split(elResource.getString("[@actions]"), ",");
-							if(actions.length == 0) throw new Exception("Resource must declare at least 1 action");
-							resources.add(new AuthResource(name, actions));
-						} else {
-							throw new Exception("Resource must declare supported actions");
-						}
+					if(elPerm.containsKey("[@actions]")) {
+						String[] actions = StringUtils.split(elPerm.getString("[@actions]"), ",");
+						if(actions.length == 0) throw new Exception("Resource must declare at least 1 action");
+						permissions.add(new ServicePermission(groupName, actions));
 					} else {
-						throw new WTException("Invalid resource type [{}]", type);
+						throw new Exception("Permission must declare actions supported on group");
 					}
+				}
+			}
+			
+			List<HierarchicalConfiguration> elShPerms = svcEl.configurationsAt("permissions.sharePermission");
+			for(HierarchicalConfiguration elShPerm : elShPerms) {
+				if(elShPerm.containsKey("[@group]")) {
+					String groupName = elShPerm.getString("[@group]");
+					if(StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
+					
+					permissions.add(new ServiceSharePermission(groupName));
 				}
 			}
 		}
@@ -348,7 +351,7 @@ public class ServiceManifest {
 		return supportEmail;
 	}
 	
-	public ArrayList<AuthResource> getResources() {
-		return resources;
+	public ArrayList<ServicePermission> getDeclaredPermissions() {
+		return permissions;
 	}
 }

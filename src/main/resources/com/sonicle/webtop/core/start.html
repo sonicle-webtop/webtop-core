@@ -5,16 +5,24 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<link rel="icon" type="image/png" href="resources/com.sonicle.webtop.core/images/favicon.png">
+		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/favicon.ico" />
 		<link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/font-awesome.min.css">
-		<!--
+        <link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/loading.css">
+		<title>${title}</title>
+    </head>
+    <body>
+        <!--
+        <div id="wt-loading-mask"></div>
+        <div id="wt-loading">
+            <span id="wt-loading-message">${loadingMessage}</span>
+        </div>
+        -->
+        
+        <!--
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/moxie.js"></script>
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.dev.js"></script>
 		-->
         <script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.full.min.js"></script>
-        <!--
-        <script type="text/javascript" src="resources/tinymce/tinymce.min.js"></script>
-        -->
 		<script type="text/javascript" src="resources/tinymce/tinymce.min.js"></script>
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/include-ext.js?language=${language}&theme=${theme}&laf=${laf}&rtl=${rtl}&debug=${debug}"></script>
 		<script type="text/javascript">
@@ -22,8 +30,5 @@
 			WTS = ${WTS};
 		</script>
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/app.js"></script>
-		<title>${title}</title>
-    </head>
-    <body>
     </body>
 </html>

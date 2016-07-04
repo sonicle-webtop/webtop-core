@@ -40,8 +40,8 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.bol.js.JsWTS;
-import com.sonicle.webtop.core.bol.model.AuthResource;
-import com.sonicle.webtop.core.bol.model.AuthSharedResource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -65,7 +65,6 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -395,16 +394,18 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		
 		JsWTS.Permissions perms = new JsWTS.Permissions();
+		
 		// Generates service auth permissions
-		for(AuthResource res : manifest.getResources()) {
-			if(res instanceof AuthSharedResource) continue;
+		for(ServicePermission perm : manifest.getDeclaredPermissions()) {
+			if(perm instanceof ServiceSharePermission) continue;
+			
 			JsWTS.Actions acts = new JsWTS.Actions();
-			for(String act : res.getActions()) {
-				if(RunContext.isPermitted(subject, serviceId, res.getName(), act)) {
+			for(String act : perm.getActions()) {
+				if(RunContext.isPermitted(subject, serviceId, perm.getGroupName(), act)) {
 					acts.put(act, true);
 				}
 			}
-			if(!acts.isEmpty()) perms.put(res.getName(), acts);
+			if(!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
 		}
 		
 		if(svcm.isCoreService(serviceId)) {

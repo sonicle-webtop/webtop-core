@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 		WTF.field('wtUpiProviderWritable', 'boolean'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
 		WTF.field('wtOtpEnabled', 'boolean'),
+		WTF.field('wtUploadMaxFileSize', 'int'),
 		
 		WTF.field('profileId', 'string'), // Not a real option
 		WTF.field('domainId', 'string'), // Not a real option
@@ -57,29 +58,5 @@ Ext.define('Sonicle.webtop.core.model.ClientOptions', {
 			var tf = rec.get('shortTimeFormat');
 			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
 		})
-		
-		/*
-		'domainId', // Not a real option
-		'userId', // Not a real option
-		'profileId', // Not a real option
-		'theme',
-		'layout',
-		'laf',
-		'language',
-		'timezone',
-		'startDay',
-		'shortDateFormat',
-		'longDateFormat',
-		'shortTimeFormat',
-		'longTimeFormat',
-		{name: 'use24HourTime', type: 'boolean', 
-			depends: 'shortTimeFormat', 
-			convert: function(v, rec) {
-				var tf = rec.get('shortTimeFormat');
-				return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
-			}
-		},
-		'upiProviderWritable'
-		*/
 	]
 });

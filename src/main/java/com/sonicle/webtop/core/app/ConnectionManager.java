@@ -100,7 +100,7 @@ public class ConnectionManager implements IConnectionProvider {
 	
 	private void init() {
 		// Loads dataSources configuration
-		String configResource = "/META-INF/sources.xml";
+		String configResource = "/META-INF/dataSources.xml";
 		config = new DataSourcesConfig();
 		try {
 			logger.debug("Loading dataSources configuration at [{}]", configResource);

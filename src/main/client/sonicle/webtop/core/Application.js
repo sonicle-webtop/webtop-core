@@ -93,6 +93,25 @@ Ext.define('Sonicle.webtop.core.Application', {
 				co = WTS.servicesOptions[0],
 				desc, deps = [];
 		
+		//TODO: Completare animazione
+		//Ext.fly('wt-loading-mask').animate();
+		/*
+		//  Hide loading message
+     loading.fadeOut({ duration: 0.2, remove: true });
+
+     //  Hide loading mask
+     loadingMask.setOpacity(0.9);
+     loadingMask.shift({
+          xy: loading.getXY(),
+          width: loading.getWidth(),
+          height: loading.getHeight(),
+          remove: true,
+          duration: 1,
+          opacity: 0.1,
+          easing: 'bounceOut'
+     });
+		*/
+		
 		// Loads service descriptors from startup object
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WT.ServiceDescriptor', {

@@ -34,13 +34,16 @@
 package com.sonicle.webtop.core.app;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.util.PropertyElf;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.plist.ParseException;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -73,7 +76,7 @@ public class DataSourcesConfig {
 			List<HierarchicalConfiguration> elSources = elService.configurationsAt("dataSource");
 			for(HierarchicalConfiguration elSource : elSources) {
 				sourceName = elSource.getString("[@name]", ConnectionManager.DEFAULT_DATASOURCE);
-				
+				logger.trace("name: {}", sourceName);
 				try {
 					sources.put(sourceName, parseDataSource(elSource));
 				} catch(ParseException ex) {
@@ -102,13 +105,32 @@ public class DataSourcesConfig {
 		if(dsEl.containsKey("[@username]")) config.setUsername(dsEl.getString("[@username]"));
 		if(dsEl.containsKey("[@password]")) config.setPassword(dsEl.getString("[@password]"));
 		
+		if(!dsEl.isEmpty()) {
+			List<HierarchicalConfiguration> elProps = dsEl.configurationsAt("property");
+			Properties props = new Properties();
+			for(HierarchicalConfiguration elProp : elProps) {
+				if(elProp.containsKey("[@name]") && elProp.containsKey("[@value]")) {
+					final String name = elProp.getString("[@name]");
+					final String value = elProp.getString("[@value]");
+					if(!StringUtils.isBlank(name)) {
+						props.setProperty(name, value);
+						logger.trace("property: {} -> {}", name, value);
+					}
+				}
+			}
+			PropertyElf.setTargetFromProperties(config, props);
+		}
+		
+		
 		// Common configs...
+		/*
 		if(dsEl.containsKey("[@autoCommit]")) config.setAutoCommit(dsEl.getBoolean("[@autoCommit]"));
 		if(dsEl.containsKey("[@connectionTimeout]")) config.setConnectionTimeout(dsEl.getLong("[@connectionTimeout]"));
 		if(dsEl.containsKey("[@idleTimeout]")) config.setIdleTimeout(dsEl.getLong("[@idleTimeout]"));
 		if(dsEl.containsKey("[@maxLifetime]")) config.setMaxLifetime(dsEl.getLong("[@maxLifetime]"));
 		if(dsEl.containsKey("[@minimumIdle]")) config.setMinimumIdle(dsEl.getInt("[@minimumIdle]"));
 		if(dsEl.containsKey("[@maximumPoolSize]")) config.setMaximumPoolSize(dsEl.getInt("[@maximumPoolSize]"));
+		*/
 		
 		return config;
 	}
@@ -118,8 +140,8 @@ public class DataSourcesConfig {
 		
 		//TODO: applicare gli eventuali parametri di default e renderli dinamici
 		// Our custom default configs
-		config.setMaximumPoolSize(10);
-		config.setMinimumIdle(config.getMaximumPoolSize());
+		//config.setMaximumPoolSize(10);
+		//config.setMinimumIdle(config.getMaximumPoolSize());
 		
 		return config;
 	}
