@@ -1,4 +1,6 @@
-/* TREE ICONS for this LAF */
+/* Pretty folder icons */
 .x-tree-icon { background-image: url(folder_16.png) }
 .x-grid-tree-node-expanded .x-tree-icon { background-image: url(folder-open_16.png) }
 
+/* Avoids annoying focus border on focused cells */
+.x-grid-item-focused .x-grid-cell-inner:before { display: none; }
