@@ -168,7 +168,6 @@ public abstract class BaseService extends BaseAbstractService {
 	
 	public void processManageSuggestions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
-		UserProfile up = env.getProfile();
 		CoreManager core = WT.getCoreManager();
 		
 		try {
@@ -178,7 +177,7 @@ public abstract class BaseService extends BaseAbstractService {
 				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				items = new ArrayList<>();
-				List<OServiceStoreEntry> entries = core.listServiceStoreEntriesByQuery(up.getId(), SERVICE_ID, cntx, query, 50);
+				List<OServiceStoreEntry> entries = core.listServiceStoreEntriesByQuery(SERVICE_ID, cntx, query, 50);
 				for(OServiceStoreEntry entry : entries) {
 					items.add(new String[]{entry.getValue()});
 				}
@@ -188,7 +187,7 @@ public abstract class BaseService extends BaseAbstractService {
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsValue> pl = ServletUtils.getPayload(request, JsValue.class);
 				
-				core.deleteServiceStoreEntry(up.getId(), SERVICE_ID, cntx, pl.data.id);
+				core.deleteServiceStoreEntry(SERVICE_ID, cntx, pl.data.id);
 				new JsonResult().printTo(out);
 			}
 			

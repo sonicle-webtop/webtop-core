@@ -1225,20 +1225,21 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(UserProfile.Id profileId, String serviceId, String context, String query, int limit) {
+	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(String serviceId, String context, String query, int max) {
+		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			if(query == null) {
-				return sedao.selectKeyValueByLimit(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, limit);
+				return sedao.selectKeyValueByLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, max);
 			} else {
-				return sedao.selectKeyValueByLikeKeyLimit(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, "%"+query+"%", limit);
+				return sedao.selectKeyValueByLikeKeyLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, "%"+query+"%", max);
 			}
 		
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, query, ex);
+			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, query, ex);
 			return new ArrayList<>();
 			
 		} finally {
@@ -1246,13 +1247,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void addServiceStoreEntry(UserProfile.Id profileId, String serviceId, String context, String key, String value) {
+	public void addServiceStoreEntry(String serviceId, String context, String key, String value) {
+		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			OServiceStoreEntry entry = sedao.select(con, profileId.getDomainId(), profileId.getUserId(), serviceId, context, key);
+			OServiceStoreEntry entry = sedao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			
 			DateTime now = DateTime.now(DateTimeZone.UTC);
 			if(entry == null) {
@@ -1262,8 +1264,8 @@ public class CoreManager extends BaseManager {
 				
 			} else {
 				entry = new OServiceStoreEntry();
-				entry.setDomainId(profileId.getDomainId());
-				entry.setUserId(profileId.getUserId());
+				entry.setDomainId(targetPid.getDomainId());
+				entry.setUserId(targetPid.getUserId());
 				entry.setServiceId(serviceId);
 				entry.setContext(context);
 				entry.setKey(StringUtils.upperCase(key));
@@ -1273,53 +1275,56 @@ public class CoreManager extends BaseManager {
 			}
 			
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", profileId, serviceId, context, key, ex);
+			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceStoreEntry(UserProfile.Id pid) {
+	public void deleteServiceStoreEntry() {
+		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			sedao.deleteByDomainUser(con, targetPid.getDomainId(), targetPid.getUserId());
 			
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting servicestore entry [{}]", pid, ex);
+			logger.error("Error deleting servicestore entry [{}]", targetPid, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceStoreEntry(UserProfile.Id pid, String serviceId) {
+	public void deleteServiceStoreEntry(String serviceId) {
+		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.deleteByDomainUserService(con, pid.getDomainId(), pid.getUserId(), serviceId);
+			sedao.deleteByDomainUserService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
 			
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting servicestore entry [{}, {}]", pid, serviceId, ex);
+			logger.error("Error deleting servicestore entry [{}, {}]", targetPid, serviceId, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteServiceStoreEntry(UserProfile.Id pid, String serviceId, String context, String key) {
+	public void deleteServiceStoreEntry(String serviceId, String context, String key) {
+		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.delete(con, pid.getDomainId(), pid.getUserId(), serviceId, context, key);
+			sedao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", pid, serviceId, context, key, ex);
+			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
