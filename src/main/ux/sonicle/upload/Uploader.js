@@ -487,5 +487,7 @@ Ext.define('Sonicle.upload.Uploader', {
 			me.updateStore(data.file);
 		}
 		me.fireEvent('uploaderror', me, data);
+		if(data.code === -600) me.fireEvent('invalidfilesize', me, data);
+		if(data.code === -700) me.fireEvent('invalidfileext', me, data);
 	}
 });

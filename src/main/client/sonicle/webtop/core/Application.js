@@ -88,15 +88,46 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.FileTypes.init(WTS.fileTypes);
 	},
 	
-	launch: function() {
-		var me = this,
-				co = WTS.servicesOptions[0],
-				desc, deps = [];
+	removeLoading: function() {
+		Ext.fly('wt-loading').animate({
+			to: {opacity: 0},
+			duration: 200,
+			remove: true
+		});
+		Ext.fly('wt-loading-mask').animate({
+			to: {opacity: 0.4},
+			easing: 'bounceOut',
+			duration: 1000,
+			remove: true
+		});
 		
-		//TODO: Completare animazione
-		//Ext.fly('wt-loading-mask').animate();
 		/*
-		//  Hide loading message
+		var el = Ext.get('wt-loading'),
+				box = el.getBox();
+		el.animate({
+			to: {opacity: 0},
+			duration: 2500,
+			remove: true
+		});
+		Ext.get('wt-loading-mask').animate({
+			to: {
+				x: box.x,
+				y: box.y,
+				width: box.width,
+				height: box.height,
+				opacity: 0
+			},
+			easing: 'bounceOut',
+			duration: 5000,
+			remove: true
+		});
+		*/
+	
+		/*
+		     var loadingMask = Ext.get('loading-mask');
+     var loading = Ext.get('loading');
+
+     //  Hide loading message
      loading.fadeOut({ duration: 0.2, remove: true });
 
      //  Hide loading mask
@@ -111,6 +142,12 @@ Ext.define('Sonicle.webtop.core.Application', {
           easing: 'bounceOut'
      });
 		*/
+	},
+	
+	launch: function() {
+		var me = this,
+				co = WTS.servicesOptions[0],
+				desc, deps = [];
 		
 		// Loads service descriptors from startup object
 		Ext.each(WTS.services, function(obj) {
@@ -202,6 +239,8 @@ Ext.define('Sonicle.webtop.core.Application', {
 			WT.warn(WT.res('connectionlost'));
 		});
 		WT.ComManager.connect();
+		
+		me.removeLoading();
 	},
 	
 	/**

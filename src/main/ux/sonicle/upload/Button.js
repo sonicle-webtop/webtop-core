@@ -56,7 +56,9 @@ Ext.define('Sonicle.upload.Button', {
 			'uploadcomplete',
 			'uploadprogress',
 			'uploaderror',
-			'storeempty'
+			'storeempty',
+			'invalidfilesize',
+			'invalidfileext'
 		]);
 	},
 	
