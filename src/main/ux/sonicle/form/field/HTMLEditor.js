@@ -122,7 +122,8 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 				//toolbar3: "table | hr removeformat | subscript superscript | charmap emoticons | print fullscreen | ltr rtl | spellchecker | visualchars visualblocks nonbreaking template pagebreak restoredraft",
 				menubar: false,
 				toolbar_items_size: 'small',
-				forced_root_block: false
+				forced_root_block: false,
+                extended_valid_elements: 'span[style]'
 			}/*,
 			value: 'This is the WebTop-TinyMCE HTML Editor'*/
 
@@ -194,13 +195,12 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
-							//me.execCommand('fontname',false,r.get('id'));
-							me.setSelectionStyle('font-family: '+r.get('id'));
+							me.execCommand('fontname',false,r.get('id'));
                             me.focusEditor();
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
-								me.setSelectionStyle('font-family: '+f.getValue());
+                                me.execCommand('fontname',false,f.getValue());
                                 me.focusEditor();
 							}
 						}						
@@ -234,13 +234,12 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					queryMode: 'local',
 					listeners: {
 						'select': function(c,r,o) {
-							//me.execCommand('fontsize',false,r.get('id'));
-							me.setSelectionStyle('font-size: '+r.get('id'));
+							me.execCommand('fontsize',false,r.get('id'));
                             me.focusEditor();
 						},
 						'specialkey': function(f,e) {
 							if (e.getKey() == e.ENTER) {
-								me.setSelectionStyle('font-size: '+f.getValue());
+                                me.execCommand('fontsize',false,f.getValue());
                                 me.focusEditor();
 							}
 						}
@@ -473,18 +472,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 	},
 	
 	setSelectionStyle: function(style) {
-		var ed=this.getTinyMCEEditor(),
-		    doc=ed.getDoc(),
-			sel=doc.getSelection();
-		if (sel.rangeCount>0) {
-			var xspan=doc.createElement("span"),
-			    range=sel.getRangeAt(0);
-			range.surroundContents(xspan);
-			sel.removeAllRanges();
-			xspan.setAttribute("style",style);
-			range.selectNodeContents(xspan);
-			sel.addRange(range);
-		}
+		this.tmce.setSelectionStyle(style);
 	},
 	
     /**
@@ -524,7 +512,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
             if (name !== fontCombo.getValue() || name !== queriedName) {
                 fontCombo.setValue(name);
             }*/
-			me.fontCombo.setValue(me.getComputedProperty("fontFamily"));
+			me.fontCombo.setValue(me.getComputedProperty("fontFamily").replace(/['"]+/g, ''));
         }
         if (me.enableFontSize && !Ext.isSafari2) {
             //var six = doc.queryCommandValue('fontSize'),
