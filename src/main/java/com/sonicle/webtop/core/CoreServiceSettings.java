@@ -170,7 +170,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	private Integer getDefaultUploadMaxFileSize() {
-		return getInteger(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, 10000000);
+		return getInteger(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, 20971520);
 	}
 	
 	public String getDefaultTheme() {
