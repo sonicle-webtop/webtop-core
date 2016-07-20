@@ -33,7 +33,10 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.RestJsonResult;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsSimple;
@@ -48,6 +51,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.StatusType;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -62,8 +68,30 @@ public class CoreRestApi extends BaseRestApi {
 		super();
 	}
 	
-	private Response ok(RestJsonResult result) {
-		return Response.ok(result.print()).build();
+	private Response ok(Object data) {
+		return Response.ok(JsonResult.GSON.toJson(data)).build();
+	}
+	
+	private Response error() {
+		return error(Status.INTERNAL_SERVER_ERROR.getStatusCode(), null);
+	}
+	
+	private Response error(int status) {
+		return error(status, null);
+	}
+	
+	private Response error(int status, String message) {
+		if(StringUtils.isBlank(message)) {
+			return Response.status(status)
+					.entity(new MapItem())
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		} else {
+			return Response.status(status)
+					.entity(new MapItem().add("message", message))
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		}
 	}
 	
 	private CoreManager getManager() {
@@ -76,7 +104,7 @@ public class CoreRestApi extends BaseRestApi {
 	public Response themesList() throws WTException {
 		CoreManager core = getManager();
 		List<JsSimple> items = core.listThemes();
-		return ok(new RestJsonResult(items, items.size()));
+		return ok(items);
 	}
 	
 	@GET
@@ -85,7 +113,7 @@ public class CoreRestApi extends BaseRestApi {
 	public Response layoutsList() throws WTException {
 		CoreManager core = getManager();
 		List<JsSimple> items = core.listLayouts();
-		return ok(new RestJsonResult(items, items.size()));
+		return ok(items);
 	}
 	
 	@GET
@@ -94,33 +122,41 @@ public class CoreRestApi extends BaseRestApi {
 	public Response lafsList() throws WTException {
 		CoreManager core = getManager();
 		List<JsSimple> items = core.listLAFs();
-		return ok(new RestJsonResult(items, items.size()));
+		return ok(items);
 	}
 	
 	@GET
 	@Path("/sessions")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response sessionsList() throws WTException {
+	public Response listSessions() throws WTException {
 		CoreManager core = getManager();
 		List<SessionInfo> items = core.listSessions();
-		return ok(new RestJsonResult(items, items.size()));
+		return ok(items);
 	}
 	
 	@DELETE
-	@Path("/session/{id}")
+	@Path("/sessions/{id}")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response sessionDelete(@PathParam("id")String id) throws WTException {
+	public Response deleteSession(@PathParam("id")String id) throws WTException {
 		CoreManager core = getManager();
 		core.invalidateSession(id);
-		return ok(new RestJsonResult());
+		return ok(new MapItem());
 	}
 	
 	@GET
 	@Path("/domains")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response domainsList() throws WTException {
+	public Response listDomains() throws WTException {
 		CoreManager core = getManager();
 		List<ODomain> items = core.listDomains(true);
-		return ok(new RestJsonResult(items, items.size()));
+		return ok(items);
+	}
+	
+	@GET
+	@Path("/me/devicesSynchronization/enabled")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response isDeviceSynchronizationEnabled() throws WTException {
+		boolean bool = RunContext.isPermitted(SERVICE_ID, "DEVICES_SYNC");
+		return ok(new MapItem().add("response", bool));
 	}
 }
