@@ -129,6 +129,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					xtype: 'souploadfield',
 					reference: 'fldfile',
 					bind: '{file}',
+					serverResponsePropertyAsValue: 'uploadId',
 					buttonConfig: {
 						uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
 							extraParams: {tag: me.getId()},
@@ -473,9 +474,9 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				ret = ppcmp.down('wtform').isValid();
 			} else if(pp === 's1') {
 				ret = ppcmp.down('wtform').isValid();
-			} else if(pp == 's2') {
+			} else if(pp === 's2') {
 				ret = ppcmp.down('wtform').isValid();
-			} else if(pp == 'mappings') {
+			} else if(pp === 'mappings') {
 				vm.set('mappings', me.extractMappings(ppcmp.lref('gp')));
 			}
 			if(!ret) return false;
@@ -490,7 +491,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				ret = ppcmp.down('wtform').isValid();
 			} else if(pp === 's1') {
 				ret = ppcmp.down('wtform').isValid();
-			} else if(pp == 'mappings') {
+			} else if(pp === 'mappings') {
 				vm.set('mappings', me.extractMappings(ppcmp.lref('gp')));
 			}
 			if(!ret) return false;

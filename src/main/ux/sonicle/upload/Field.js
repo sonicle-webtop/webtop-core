@@ -21,6 +21,8 @@ Ext.define('Sonicle.upload.Field', {
 		}
 	},
 	
+	serverResponsePropertyAsValue: '',
+	
 	/**
 	 * @cfg {String} buttonText
 	 * The button text to display on the upload button. Note that if you supply a value for
@@ -168,11 +170,16 @@ Ext.define('Sonicle.upload.Field', {
 	 * @private
 	 */
 	doSetValue: function(file) {
-		var me = this;
+		var me = this,
+				srpas = me.serverResponsePropertyAsValue,
+				val;
 		me.setRawValue(file.name);
-		if(file.server_response) {
-			me.mixins.field.setValue.call(me, file.server_response.uploadId);
+		if(file.server_response && !Ext.isEmpty(srpas)) {
+			val = file.server_response[srpas];
+		} else {
+			val = file.name;
 		}
+		me.mixins.field.setValue.call(me, val);
 		me.applyEmptyText();
 		return me;
 	},

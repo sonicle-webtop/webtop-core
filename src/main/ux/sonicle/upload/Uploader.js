@@ -439,12 +439,13 @@ Ext.define('Sonicle.upload.Uploader', {
 		
 		if(json.success === true) {
 			file.server_error = 0;
+			file.server_response = json.data;
 			me.updateStore(file);
 			me.succeeded.push(file);
 			me.fireEvent('fileuploaded', me, file, json);
 		} else {
-			//if(response.message) file.msg = '<span style="color: red">' + response.message + '</span>';
 			file.server_error = 1;
+			file.server_response = json.message;
 			me.failed.push(file);
 			me.fireEvent('uploaderror', me, Ext.apply(status, {
 				file: file

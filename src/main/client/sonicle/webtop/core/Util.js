@@ -366,6 +366,19 @@ Ext.define('Sonicle.webtop.core.Util', {
 		if(dock === 'left') return 'lbar';
 		if(dock === 'right') return 'rbar';
 		return null;
+	},
+	
+	/**
+	 * 
+	 * @param {Ext.selection.Model} selModel The SelectionModel.
+	 * @param {Boolean} requireSingle True to return null in case of multi-selection.
+	 * @returns {undefined}
+	 */
+	getSelected: function(selModel, requireSingle) {
+		if(requireSingle === undefined) requireSingle = true;
+		var sel = selModel.getSelection();
+		if(requireSingle && sel.length !== 1) return null;
+		return (sel.length > 0) ? sel[0] : null;
 	}
 	
 	/**

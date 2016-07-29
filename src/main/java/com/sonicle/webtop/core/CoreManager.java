@@ -1257,7 +1257,7 @@ public class CoreManager extends BaseManager {
 			OServiceStoreEntry entry = sedao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			
 			DateTime now = DateTime.now(DateTimeZone.UTC);
-			if(entry != null) {
+			if(entry == null) {
 				entry.setValue(value);
 				entry.setFrequency(entry.getFrequency()+1);
 				entry.setLastUpdate(now);
