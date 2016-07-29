@@ -287,7 +287,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	updateProgress: function() {
 		var me = this,
 				progress = me.uploader.total,
-				speed = Ext.util.Format.fileSize(progress.bytesPerSec),
+				speed = progress.bytesPerSec,
 				total = me.store.data.length,
 				failed = me.failed.length,
 				succeeded = me.succeeded.length,

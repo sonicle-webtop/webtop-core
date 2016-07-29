@@ -260,6 +260,11 @@ public class WT {
 		return getWTA().getTempPath(runPid.getDomain());
 	}
 	
+	public static String getServiceHomePath(String serviceId) {
+		UserProfile.Id runPid = RunContext.getProfileId();
+		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
+	}
+	
 	public static File getTempFolder() throws WTException {
 		UserProfile.Id runPid = RunContext.getProfileId();
 		return getWTA().getTempFolder(runPid.getDomain());

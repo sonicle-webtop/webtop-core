@@ -14,6 +14,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 
 /**
@@ -36,8 +37,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(ZPUSH_PATH, null);
 	}
 	
-	public String getHomePath() {
-		return getString(HOME_PATH, null);
+	public String getHomePath(HomePathTemplateValues tpl) {
+		String value = getString(HOME_PATH, null);
+		value = StringUtils.replace(value, "{DOMAIN_ID}", tpl.DOMAIN_ID);
+		return value;
 	}
 	
 	public String getDropboxAppKey() {

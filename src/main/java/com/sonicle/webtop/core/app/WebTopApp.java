@@ -40,6 +40,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
@@ -659,19 +660,19 @@ public final class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
-	
-	
-	private String substitutePathVariables(String path, String domainId) {
-		return StringUtils.replace(path, "{DOMAIN_ID}", domainId);
-	}
-	
 	public String getHomePath(String domainId) {
 		CoreServiceSettings css = getCoreServiceSettings("*");
-		return substitutePathVariables(css.getHomePath(), domainId);
+		CoreSettings.HomePathTemplateValues values = new CoreSettings.HomePathTemplateValues();
+		values.DOMAIN_ID = domainId;
+		return css.getHomePath(values);
 	}
 	
 	public String getTempPath(String domainId) {
 		return getHomePath(domainId) + "temp/";
+	}
+	
+	public String getServiceHomePath(String domainId, String serviceId) {
+		return getHomePath(domainId) + serviceId + "/";
 	}
 	
 	public String getPublicPath(String domainId) {

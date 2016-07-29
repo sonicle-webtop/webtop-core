@@ -55,10 +55,13 @@ public class CoreSettings {
 	
 	/**
 	 * [system]
-	 * [string]
+	 * [string][templatable]
 	 * Defines webtop home path
 	 */
 	public static final String HOME_PATH = "home.path";
+	public static class HomePathTemplateValues {
+		public String DOMAIN_ID;
+	}
 	
 	/**
 	 * [domain+system]

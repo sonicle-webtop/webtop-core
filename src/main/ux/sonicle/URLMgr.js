@@ -42,10 +42,13 @@ Ext.define('Sonicle.URLMgr', {
 	},
 	
 	/**
-	 * 
+	 * Opens passed file URL in a new window/tab. Server should specify 
+	 * contentDisposition header to control browser behaviour. You should use 
+	 * this method (over the {@link #downloadFile}) if you want to inject custom
+	 * error-handling JS into the response.
 	 * @param {String} url The URL to be loaded.
-	 * @param {Object} opts
-	 * @param {String} opts.filename The file's name to be opened.
+	 * @param {Object} opts Options object
+	 * @param {String} opts.filename The preferred file's name to be opened.
 	 * @param {Boolean} [opts.newWindow] 'true' to open the URL in a brand new window (no tab).
 	 * @param {String} [opts.winFeatures] Custom features to override default ones (see window.open method).
 	 */
@@ -68,8 +71,8 @@ Ext.define('Sonicle.URLMgr', {
 	 * Forces passed URL download (without opening any window or tab).
 	 * HTTP response should set the content-disposition header to 'attachment'.
 	 * @param {String} url The URL to be downloaded.
-	 * @param {Object} opts
-	 * @param {String} opts.filename The file's name to be opened.
+	 * @param {Object} opts Options object
+	 * @param {String} opts.filename The preferred file's name to be opened.
 	 */
 	downloadFile: function(url, opts) {
 		opts = opts || {};

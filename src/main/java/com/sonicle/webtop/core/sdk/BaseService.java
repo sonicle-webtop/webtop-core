@@ -218,18 +218,25 @@ public abstract class BaseService extends BaseAbstractService {
 					while(it.hasNext()) {
 						FileItemStream fis = it.next();
 						if(fis.isFormField()) continue; // Skip until first non-field item...
+						
 						// Creates uploaded object
 						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
+						
 						// Fill response data
 						data.add("virtual", uploadedFile.isVirtual());
+						
 						// Handle listener, its implementation can stop
 						// file upload throwing a UploadException.
+						InputStream is = null;
 						try {
 							env.wts.addUploadedFile(uploadedFile);
-							istream.onUpload(cntx, request, uploadedFile, fis.openStream(), data);
+							is = fis.openStream();
+							istream.onUpload(cntx, request, uploadedFile, is, data);
 						} finally {
+							IOUtils.closeQuietly(is);
 							env.wts.removeUploadedFile(uploadedFile, false);
 						}
+						
 						// Plupload component (client-side) will upload multiple  
 						// file each in its own request. So we can skip loop!
 						break;
@@ -261,15 +268,19 @@ public abstract class BaseService extends BaseAbstractService {
 					while(it.hasNext()) {
 						FileItem fi = (FileItem)it.next();
 						if(fi.isFormField()) continue; // Skip until first non-field item...
+						
 						// Writes content into a temp file
 						File file = WT.createTempFile();
 						fi.write(file);
+						
 						// Creates uploaded object
 						uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
 						env.wts.addUploadedFile(uploadedFile);
+						
 						// Fill response data
 						data.add("virtual", uploadedFile.isVirtual());
 						data.add("uploadId", uploadedFile.getUploadId());
+						
 						// Handle listener (if present), its implementation can stop
 						// file upload throwing a UploadException.
 						if(iupload != null) {
@@ -280,6 +291,7 @@ public abstract class BaseService extends BaseAbstractService {
 								throw ex2;
 							}
 						}
+						
 						// Plupload component (client-side) will upload multiple  
 						// file each in its own request. So we can skip loop!
 						break;
