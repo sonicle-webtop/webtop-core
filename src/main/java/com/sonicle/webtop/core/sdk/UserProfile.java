@@ -110,8 +110,9 @@ public final class UserProfile {
 			if(upi != null) personalInfo = upi;
 			
 		} catch(Exception ex) {
-			DbUtils.closeQuietly(con);
 			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
