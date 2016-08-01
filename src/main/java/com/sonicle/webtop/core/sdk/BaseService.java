@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -200,6 +201,7 @@ public abstract class BaseService extends BaseAbstractService {
 	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ServletFileUpload upload = null;
 		UploadedFile uploadedFile = null;
+		HashMap<String, String> multipartParams = new HashMap<>();
 		
 		try {
 			String service = ServletUtils.getStringParameter(request, "service", true);
@@ -215,31 +217,40 @@ public abstract class BaseService extends BaseAbstractService {
 					// Defines the upload object
 					upload = new ServletFileUpload();
 					FileItemIterator it = upload.getItemIterator(request);
+					
 					while(it.hasNext()) {
 						FileItemStream fis = it.next();
-						if(fis.isFormField()) continue; // Skip until first non-field item...
 						
-						// Creates uploaded object
-						uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
-						
-						// Fill response data
-						data.add("virtual", uploadedFile.isVirtual());
-						
-						// Handle listener, its implementation can stop
-						// file upload throwing a UploadException.
-						InputStream is = null;
-						try {
-							env.wts.addUploadedFile(uploadedFile);
-							is = fis.openStream();
-							istream.onUpload(cntx, request, uploadedFile, is, data);
-						} finally {
-							IOUtils.closeQuietly(is);
-							env.wts.removeUploadedFile(uploadedFile, false);
+						if(fis.isFormField()) {
+							// Read multipart form params
+							InputStream is = null;
+							try {
+								is = fis.openStream();
+								String key = fis.getFieldName();
+								String value = IOUtils.toString(is, "UTF-8");
+								multipartParams.put(key, value);
+							} finally {
+								IOUtils.closeQuietly(is);
+							}
+						} else {
+							// Creates uploaded object
+							uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
+
+							// Fill response data
+							data.add("virtual", uploadedFile.isVirtual());
+
+							// Handle listener, its implementation can stop
+							// file upload throwing a UploadException.
+							InputStream is = null;
+							try {
+								env.wts.addUploadedFile(uploadedFile);
+								is = fis.openStream();
+								istream.onUpload(cntx, request, multipartParams, uploadedFile, is, data);
+							} finally {
+								IOUtils.closeQuietly(is);
+								env.wts.removeUploadedFile(uploadedFile, false);
+							}
 						}
-						
-						// Plupload component (client-side) will upload multiple  
-						// file each in its own request. So we can skip loop!
-						break;
 					}
 					new JsonResult(data).printTo(out);
 					
@@ -267,34 +278,42 @@ public abstract class BaseService extends BaseAbstractService {
 					Iterator it = files.iterator();
 					while(it.hasNext()) {
 						FileItem fi = (FileItem)it.next();
-						if(fi.isFormField()) continue; // Skip until first non-field item...
 						
-						// Writes content into a temp file
-						File file = WT.createTempFile();
-						fi.write(file);
-						
-						// Creates uploaded object
-						uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
-						env.wts.addUploadedFile(uploadedFile);
-						
-						// Fill response data
-						data.add("virtual", uploadedFile.isVirtual());
-						data.add("uploadId", uploadedFile.getUploadId());
-						
-						// Handle listener (if present), its implementation can stop
-						// file upload throwing a UploadException.
-						if(iupload != null) {
+						if(fi.isFormField()) {
+							// Read multipart form params
+							InputStream is = null;
 							try {
-								iupload.onUpload(cntx, request, uploadedFile, data);
-							} catch(UploadException ex2) {
-								env.wts.removeUploadedFile(uploadedFile, true);
-								throw ex2;
+								is = fi.getInputStream();
+								String key = fi.getFieldName();
+								String value = IOUtils.toString(is, "UTF-8");
+								multipartParams.put(key, value);
+							} finally {
+								IOUtils.closeQuietly(is);
+							}
+						} else {
+							// Writes content into a temp file
+							File file = WT.createTempFile();
+							fi.write(file);
+
+							// Creates uploaded object
+							uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
+							env.wts.addUploadedFile(uploadedFile);
+
+							// Fill response data
+							data.add("virtual", uploadedFile.isVirtual());
+							data.add("uploadId", uploadedFile.getUploadId());
+
+							// Handle listener (if present), its implementation can stop
+							// file upload throwing a UploadException.
+							if(iupload != null) {
+								try {
+									iupload.onUpload(cntx, request, multipartParams, uploadedFile, data);
+								} catch(UploadException ex2) {
+									env.wts.removeUploadedFile(uploadedFile, true);
+									throw ex2;
+								}
 							}
 						}
-						
-						// Plupload component (client-side) will upload multiple  
-						// file each in its own request. So we can skip loop!
-						break;
 					}	
 					new JsonResult(data).printTo(out);
 					

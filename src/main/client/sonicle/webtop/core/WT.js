@@ -179,13 +179,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 			key = id;
 			id = WT.ID;
 		}
+		var ExArr = Ext.Array,
+				loc = WT.getApp().getLocale(id);
 		
-		var loc = WT.getApp().getLocale(id);
 		if(!loc) return undefined;
 		if(arguments.length > 2) {
 			var str = loc.strings[key],
-					args = Ext.Array.slice(arguments, 2);
-			return (Ext.isDefined(str)) ? Ext.String.format(str, args) : loc.strings[key];
+					args = ExArr.merge([str], ExArr.slice(arguments, 2));
+			return Ext.isDefined(str) ? Ext.String.format.apply(this, args) : loc.strings[key];
 		} else {
 			return loc.strings[key];
 		}

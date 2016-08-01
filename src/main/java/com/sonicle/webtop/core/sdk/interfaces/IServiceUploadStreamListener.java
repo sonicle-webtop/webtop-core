@@ -37,6 +37,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.UploadException;
 import java.io.InputStream;
+import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -45,5 +46,5 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface IServiceUploadStreamListener {
 	
-	public void onUpload(String context, HttpServletRequest request, WebTopSession.UploadedFile file, InputStream is, MapItem responseData) throws UploadException;
+	public void onUpload(String context, HttpServletRequest request, HashMap<String, String> multipartParams, WebTopSession.UploadedFile file, InputStream is, MapItem responseData) throws UploadException;
 }

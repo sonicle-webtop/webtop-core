@@ -25,17 +25,6 @@ Ext.define('Sonicle.upload.Uploader', {
 	 */
 	
 	/**
-	 * @event overallprogress
-	 * @param {Sonicle.upload.Uploader} this
-	 * @param {Number} percent Overall process percentage
-	 * @param {Number} total Total count of handled files (in any state)
-	 * @param {Number} succeeded Total count of succeded uploads
-	 * @param {Number} failed Total count of failed uploads
-	 * @param {Number} queued Total count of queued uploads
-	 * @param {Number} speed Overall process speed
-	 */
-	
-	/**
 	 * @event filesadded
 	 * @param {Sonicle.upload.Uploader} this
 	 * @param {Object[]} files Current files data
@@ -43,10 +32,21 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	/**
 	 * @event fileuploaded
+	 * When a file is successfully uploaded
 	 * @param {Sonicle.upload.Uploader} this
 	 * @param {Object} file File data
 	 * @param {Object} json Server response
 	 * @param {Object} json.data Custom response data
+	 * @param {Object} response The server raw HTTP response object
+	 */
+	
+	/**
+	 * @event uploaderror
+	 * When a file upload encounters an error
+	 * @param {Sonicle.upload.Uploader} this
+	 * @param {Object} file File data
+	 * @param {String} message Error message returned in server response
+	 * @param {Object} response The server raw HTTP response object
 	 */
 	
 	/**
@@ -64,7 +64,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	/**
 	 * @event uploadcomplete
-	 * When an upload has been completed
+	 * When an upload has been completed (status changed to completed)
 	 * @param {Sonicle.upload.Uploader} this
 	 * @param {Object[]} succeededfiles Succeeded files data
 	 * @param {Object[]} failedfiles Failed files data
@@ -72,16 +72,21 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	/**
 	 * @event uploadprogress
-	 * When an upload has been completed
+	 * When an upload is in progress
 	 * @param {Sonicle.upload.Uploader} this
 	 * @param {Object} file File data
 	 * @param {Number} percent Current upload process percentage
 	 */
 	
 	/**
-	 * @event uploaderror
+	 * @event overallprogress
 	 * @param {Sonicle.upload.Uploader} this
-	 * @param {Object} status Status data object
+	 * @param {Number} percent Overall process percentage
+	 * @param {Number} total Total count of handled files (in any state)
+	 * @param {Number} succeeded Total count of succeded uploads
+	 * @param {Number} failed Total count of failed uploads
+	 * @param {Number} queued Total count of queued uploads
+	 * @param {Number} speed Overall process speed
 	 */
 	
 	statics: {
@@ -122,6 +127,8 @@ Ext.define('Sonicle.upload.Uploader', {
 		silverlightXapUrl: null,
 		pluploadConfig: null // Direct config to apply
 	},
+	
+	fileExtraParams: null,
 	
 	pluOptions: null,
 	
@@ -387,24 +394,24 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.uploader.init();
 	},
 	
-	_Init: function(uploader, data) {
+	_Init: function(upl, data) {
 		this.runtime = data.runtime;
 		this.fireEvent('uploaderready', this);
 	},
 	
-	_PostInit: function(uploader) {
+	_PostInit: function(upl) {
 		// Do nothing...
 	},
 	
-	_Refresh: function(uploader) {
-		Ext.each(uploader.files, function(file) {
+	_Refresh: function(upl) {
+		Ext.each(upl.files, function(file) {
 			this.updateStore(file);
 		}, this);
 	},
 	
-	_StateChanged: function(uploader) {
+	_StateChanged: function(upl) {
 		var me = this;
-		if(uploader.state === 2) {
+		if(upl.state === 2) {
 			me.fireEvent('uploadstarted', me);
 		} else {
 			me.fireEvent('uploadcomplete', me, me.succeeded, me.failed);
@@ -412,44 +419,43 @@ Ext.define('Sonicle.upload.Uploader', {
 		}
 	},
 	
-	_QueueChanged: function(uploader) {
+	_QueueChanged: function(upl) {
 		// Do nothing...
 	},
 	
-	_BeforeUpload: function(uploader, file) {
+	_BeforeUpload: function(upl, file) {
+		upl.setOption('multipart_params', file._extraParams || {});
 		this.fireEvent('beforeupload', this, file);
 	},
 	
-	_UploadFile: function(uploader, file) {
+	_UploadFile: function(upl, file) {
 		// Do nothing...
 	},
 	
-	_UploadProgress: function(uploader, file) {
+	_UploadProgress: function(upl, file) {
 		var me = this,
 				percent = file.percent;
 		
 		me.fireEvent('uploadprogress', me, file, percent);
-		if(file.server_error) file.status = 4;
+		if(file._serverError) file.status = 4;
 		me.updateStore(file);
 	},
 	
-	_FileUploaded: function(uploader, file, status) {
+	_FileUploaded: function(upl, file, response) {
 		var me = this,
-				json = Ext.JSON.decode(status.response);
+				json = Ext.JSON.decode(response.response);
 		
 		if(json.success === true) {
-			file.server_error = 0;
-			file.server_response = json.data;
+			file._serverError = 0;
+			file._serverResponse = json.data;
 			me.updateStore(file);
 			me.succeeded.push(file);
-			me.fireEvent('fileuploaded', me, file, json);
+			me.fireEvent('fileuploaded', me, file, json, response);
 		} else {
-			file.server_error = 1;
-			file.server_response = json.message;
+			file._serverError = 1;
+			file._serverResponse = json.message;
 			me.failed.push(file);
-			me.fireEvent('uploaderror', me, Ext.apply(status, {
-				file: file
-			}));
+			me.fireEvent('uploaderror', me, file, json.message, response);
 		}
 	},
 	
@@ -457,14 +463,18 @@ Ext.define('Sonicle.upload.Uploader', {
 		// Do nothing...
 	},
 	
-	_FilesAdded: function(uploader, files) {
-		var me = this;
+	_FilesAdded: function(upl, files) {
+		var me = this,
+			fep = Ext.isFunction(me.fileExtraParams) ? me.fileExtraParams.apply(me, [files]) : null
+			//sfep = fep ? Ext.JSON.encode(fep) : '';
+		
 		Ext.each(files, function(file) {
+			if(fep) file._extraParams = fep;
 			me.updateStore(file);
 		});
 		
 		if(me.fireEvent('filesadded', me, files) !== false) {
-			if(me.getAutoStart() && uploader.state !== 2) {
+			if(me.getAutoStart() && upl.state !== 2) {
 				Ext.defer(function() {
 					me.start();
 				});
@@ -472,14 +482,14 @@ Ext.define('Sonicle.upload.Uploader', {
 		}
 	},
 	
-	_FilesRemoved: function(uploader, files) {
+	_FilesRemoved: function(upl, files) {
 		var me = this;
 		Ext.each(files, function(file) {
 			me.store.remove(me.store.getById(file.id));
 		}, me);
 	},
 	
-	_Error: function(uploader, data) {
+	_Error: function(upl, data) {
 		var me = this;
 		
 		if(data.file) {
