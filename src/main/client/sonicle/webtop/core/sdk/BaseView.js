@@ -34,6 +34,9 @@
 Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	alternateClassName: 'WT.sdk.BaseView',
 	extend: 'Ext.panel.Panel',
+	requires: [
+		'Sonicle.plugin.NoAutocomplete'
+	],
 	mixins: [
 		'WT.mixin.PanelUtil',
 		'WT.mixin.Waitable',

@@ -394,12 +394,12 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.uploader.init();
 	},
 	
-	_Init: function(upl, data) {
+	_Init: function(plu, data) {
 		this.runtime = data.runtime;
 		this.fireEvent('uploaderready', this);
 	},
 	
-	_PostInit: function(upl) {
+	_PostInit: function(plu) {
 		// Do nothing...
 	},
 	
@@ -409,9 +409,9 @@ Ext.define('Sonicle.upload.Uploader', {
 		}, this);
 	},
 	
-	_StateChanged: function(upl) {
+	_StateChanged: function(plu) {
 		var me = this;
-		if(upl.state === 2) {
+		if(plu.state === 2) {
 			me.fireEvent('uploadstarted', me);
 		} else {
 			me.fireEvent('uploadcomplete', me, me.succeeded, me.failed);
@@ -419,20 +419,20 @@ Ext.define('Sonicle.upload.Uploader', {
 		}
 	},
 	
-	_QueueChanged: function(upl) {
+	_QueueChanged: function(plu) {
 		// Do nothing...
 	},
 	
-	_BeforeUpload: function(upl, file) {
-		upl.setOption('multipart_params', file._extraParams || {});
+	_BeforeUpload: function(plu, file) {
+		plu.setOption('multipart_params', file._extraParams || {});
 		this.fireEvent('beforeupload', this, file);
 	},
 	
-	_UploadFile: function(upl, file) {
+	_UploadFile: function(plu, file) {
 		// Do nothing...
 	},
 	
-	_UploadProgress: function(upl, file) {
+	_UploadProgress: function(plu, file) {
 		var me = this,
 				percent = file.percent;
 		
@@ -441,7 +441,7 @@ Ext.define('Sonicle.upload.Uploader', {
 		me.updateStore(file);
 	},
 	
-	_FileUploaded: function(upl, file, response) {
+	_FileUploaded: function(plu, file, response) {
 		var me = this,
 				json = Ext.JSON.decode(response.response);
 		
@@ -463,7 +463,7 @@ Ext.define('Sonicle.upload.Uploader', {
 		// Do nothing...
 	},
 	
-	_FilesAdded: function(upl, files) {
+	_FilesAdded: function(plu, files) {
 		var me = this,
 			fep = Ext.isFunction(me.fileExtraParams) ? me.fileExtraParams.apply(me, [files]) : null
 			//sfep = fep ? Ext.JSON.encode(fep) : '';
@@ -474,7 +474,7 @@ Ext.define('Sonicle.upload.Uploader', {
 		});
 		
 		if(me.fireEvent('filesadded', me, files) !== false) {
-			if(me.getAutoStart() && upl.state !== 2) {
+			if(me.getAutoStart() && plu.state !== 2) {
 				Ext.defer(function() {
 					me.start();
 				});
@@ -482,14 +482,14 @@ Ext.define('Sonicle.upload.Uploader', {
 		}
 	},
 	
-	_FilesRemoved: function(upl, files) {
+	_FilesRemoved: function(plu, files) {
 		var me = this;
 		Ext.each(files, function(file) {
 			me.store.remove(me.store.getById(file.id));
 		}, me);
 	},
 	
-	_Error: function(upl, data) {
+	_Error: function(plu, data) {
 		var me = this;
 		
 		if(data.file) {

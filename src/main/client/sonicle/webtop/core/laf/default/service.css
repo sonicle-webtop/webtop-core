@@ -154,6 +154,12 @@
 .wt-ftype-video-xs { background-image: url('ftypes/video_16.png') }
 .wt-ftype-video-s { background-image: url('ftypes/video_24.png') }
 .wt-ftype-video-m { background-image: url('ftypes/video_32.png') }
+.wt-ftype-script-xs { background-image: url('ftypes/script_16.png') }
+.wt-ftype-script-s { background-image: url('ftypes/script_24.png') }
+.wt-ftype-script-m { background-image: url('ftypes/script_32.png') }
+.wt-ftype-application-xs { background-image: url('ftypes/application_16.png') }
+.wt-ftype-application-s { background-image: url('ftypes/application_24.png') }
+.wt-ftype-application-m { background-image: url('ftypes/application_32.png') }
 
 .wt-grid-header-icon {
 	background-repeat: no-repeat;

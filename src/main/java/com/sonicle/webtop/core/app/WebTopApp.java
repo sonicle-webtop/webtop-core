@@ -660,6 +660,12 @@ public final class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
+	/**
+	 * Return the configured HOME path for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @return The HOME path
+	 */
 	public String getHomePath(String domainId) {
 		CoreServiceSettings css = getCoreServiceSettings("*");
 		CoreSettings.HomePathTemplateValues values = new CoreSettings.HomePathTemplateValues();
@@ -667,10 +673,23 @@ public final class WebTopApp {
 		return css.getHomePath(values);
 	}
 	
+	/**
+	 * Return the TEMP path (relative to the HOME) for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @return The TEMP path 
+	 */
 	public String getTempPath(String domainId) {
 		return getHomePath(domainId) + "temp/";
 	}
 	
+	/**
+	 * Return the configured service's HOME path for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @return The service's HOME path 
+	 */
 	public String getServiceHomePath(String domainId, String serviceId) {
 		return getHomePath(domainId) + serviceId + "/";
 	}

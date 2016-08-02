@@ -8,6 +8,7 @@ package com.sonicle.webtop.core;
 
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -30,17 +31,17 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public String getPhpPath() {
-		return getString(PHP_PATH, null);
+		return PathUtils.ensureTrailingSeparator(getString(PHP_PATH, null));
 	}
 	
 	public String getZPushPath() {
-		return getString(ZPUSH_PATH, null);
+		return PathUtils.ensureTrailingSeparator(getString(ZPUSH_PATH, null));
 	}
 	
 	public String getHomePath(HomePathTemplateValues tpl) {
 		String value = getString(HOME_PATH, null);
 		value = StringUtils.replace(value, "{DOMAIN_ID}", tpl.DOMAIN_ID);
-		return value;
+		return PathUtils.ensureTrailingSeparator(value);
 	}
 	
 	public String getDropboxAppKey() {

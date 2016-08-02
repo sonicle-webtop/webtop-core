@@ -7,7 +7,7 @@
  */
 Ext.define('Sonicle.plugin.FileDrop', {
     extend: 'Ext.AbstractPlugin',
-    alias: 'plugin.filedrop',
+    alias: 'plugin.sofiledrop',
 	
 	text: 'Drop files here',
 	
