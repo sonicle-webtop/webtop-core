@@ -43,6 +43,12 @@ Ext.define('Sonicle.grid.column.Icon', {
 	 */
 	iconSize: 16,
 	
+	/**
+	 * @cfg {Boolean} hideText
+	 * False to display column's value next to the icon.
+	 */
+	hideText: true,
+	
 	constructor: function() {
 		this.scope = this;
 		this.callParent(arguments);
@@ -51,18 +57,21 @@ Ext.define('Sonicle.grid.column.Icon', {
 	defaultRenderer: function(value, cellValues) {
 		var me = this,
 				cssPrefix = 'so-',
-				cls = cssPrefix + 'grid-iconcolumn',
+				clsico = cssPrefix + 'iconcolumn-icon',
+				clstxt = cssPrefix + 'iconcolumn-text',
 				size = me.iconSize,
 				rec = cellValues ? cellValues.record : null,
 				ico = me.evalValue(me.getIconCls, me.iconClsField, value, rec),
-				ttip = me.evalValue(me.getTip, me.tipField, value, rec, null);
+				ttip = me.evalValue(me.getTip, me.tipField, value, rec, null),
+				text = '';
 		
-		if(ico) cls += ' ' + ico;
-		return '<div class="'+cls+'" style="width:'+size+'px;height:'+size+'px"'+(ttip ? ' data-qtip="'+ttip+'"' : '')+' />';
+		if(ico) clsico += ' ' + ico;
+		if(!me.hideText) text = '<span class="'+clstxt+'">'+value+'</span>';
+		return '<div class="'+clsico+'" style="width:'+size+'px;height:'+size+'px"'+(ttip ? ' data-qtip="'+ttip+'"' : '')+'></div>'+text;
 	},
 	
 	evalValue: function(getFn, field, value, rec, fallback) {
-		if(Ext.isFunction(getFn)) {
+		if(rec && Ext.isFunction(getFn)) {
 			return getFn.apply(this, [value, rec]);
 		} else if(rec && !Ext.isEmpty(field)) {
 			return rec.get(field);

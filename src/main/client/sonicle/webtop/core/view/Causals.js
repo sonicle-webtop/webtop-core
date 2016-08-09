@@ -34,6 +34,7 @@
 Ext.define('Sonicle.webtop.core.view.Causals', {
 	extend: 'WT.sdk.DockableView',
 	requires: [
+		'Sonicle.grid.column.Icon',
 		'Sonicle.webtop.core.model.CausalGrid'
 		//'Sonicle.webtop.core.view.Causal'
 	],
@@ -48,6 +49,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	
 	initComponent: function() {
 		var me = this;
+		/*
 		Ext.apply(me, {
 			tbar: [
 				me.addAction('add', {
@@ -68,6 +70,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				})
 			]
 		});
+		*/
 		me.callParent(arguments);
 		
 		me.add({
@@ -84,14 +87,15 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 			columns: [{
 				xtype: 'rownumberer'	
 			}, {
+				xtype: 'soiconcolumn',
 				dataIndex: 'causalId',
-				renderer: WTF.iconColRenderer({
-					iconField: function(rec) {
-						return (rec.get('readOnly')) ? ['causal-ro', me.mys.res('causals.gp.readOnly.true')] : null;
-					},
-					xid: me.mys.XID,
-					size: 'xs'
-				}),
+				getIconCls: function(v,rec) {
+					return rec.get('readOnly') ? me.mys.cssIconCls('causal-ro', 'xs') : null;
+				},
+				getTip: function(v,rec) {
+					return rec.get('readOnly') ? me.mys.res('causals.gp.readOnly.true') : null;
+				},
+				iconSize: WTU.imgSizeToPx('xs'),
 				header: '',
 				width: 30
 			}, {
@@ -119,6 +123,33 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				hidden: true,
 				tpl: '{domainDescription} ({domainId})'
 			}],
+			tbar: [
+				me.addAction('add', {
+					text: WT.res('act-add.lbl'),
+					iconCls: 'wt-icon-add-xs',
+					handler: function() {
+						me.addCausal(WT.getOption('domainId'));
+					}
+				}),
+				me.addAction('remove', {
+					text: WT.res('act-remove.lbl'),
+					iconCls: 'wt-icon-remove-xs',
+					disabled: true,
+					handler: function() {
+						var sm = me.lref('gp').getSelectionModel();
+						me.deleteCausal(sm.getSelection()[0]);
+					}
+				}),
+				'->',
+				me.addAction('refresh', {
+					text: '',
+					tooltip: WT.res('act-refresh.lbl'),
+					iconCls: 'wt-icon-refresh-xs',
+					handler: function() {
+						me.lref('gp').getStore().load();
+					}
+				})
+			],
 			listeners: {
 				rowdblclick: function(s, rec) {
 					me.editCausal(rec.get('causalId'));
@@ -164,7 +195,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	
 	deleteCausal: function(rec) {
 		var me = this,
-				grid = me.lookupReference('gp'),
+				grid = me.lref('gp'),
 				sto = grid.getStore();
 		
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
@@ -175,7 +206,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	},
 	
 	onCausalViewSave: function(s) {
-		this.lookupReference('gp').getStore().load();
+		this.lref('gp').getStore().load();
 	},
 	
 	_createCausalView: function(cfg) {

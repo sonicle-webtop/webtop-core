@@ -64,7 +64,7 @@ Ext.define('Sonicle.grid.column.Color', {
 	},
 	
 	evalValue: function(getFn, field, value, rec, fallback) {
-		if(Ext.isFunction(getFn)) {
+		if(rec && Ext.isFunction(getFn)) {
 			return getFn.apply(this, [value, rec]);
 		} else if(rec && !Ext.isEmpty(field)) {
 			return rec.get(field);

@@ -35,6 +35,8 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	alternateClassName: 'WT.sdk.BaseView',
 	extend: 'Ext.panel.Panel',
 	requires: [
+		'Sonicle.form.Separator',
+		'Sonicle.form.trigger.Clear',
 		'Sonicle.plugin.NoAutocomplete'
 	],
 	mixins: [

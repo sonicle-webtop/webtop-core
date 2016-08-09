@@ -132,15 +132,7 @@
 		document.write('<link rel="stylesheet" type="text/css" href="' + 
 				chartsCSSPath + (useDebug ? '-debug.css' : '.css') + '"/>');
 		document.write('<link rel="stylesheet" type="text/css" href="' +
-				soUxCSSPath + 'calendar.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				soUxCSSPath + 'multicalendar.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				soUxCSSPath + 'iconcombobox.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				soUxCSSPath + 'colorcombobox.css' + '"/>');
-		document.write('<link rel="stylesheet" type="text/css" href="' +
-				soUxCSSPath + 'colorcolumn.css' + '"/>');
+				soUxCSSPath + 'index.css' + '"/>');
 	}
 	
 	extPrefix = useDebug ? '/ext-all-debug' : '/ext-all';

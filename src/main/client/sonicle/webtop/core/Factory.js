@@ -620,14 +620,43 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * Configures a renderer for adding an icon.
 	 * Class name will be calculated using {@link WTF.cssIconCls}.
 	 * @param {Object} cfg Custom configuration object.
+	 * @param {String} [cfg.iconField] Specifies the field from which getting icon name instead of current field.
+	 * @param {Function} [cfg.getIcon] A function which returns a calculated icon name.
+	 * @param {String} [tipField] Specifies the field from which getting tooltip value.
+	 * @param {Function} [cfg.getTip] A function which returns a calculated tooltip.
+	 * 
 	 * @param {String/Function} cfg.iconField Specifies the field from which getting name value instead of current one.
 	 * @param {String} [cfg.tooltipField] Specifies the field from which getting tooltip value.
+	 * 
 	 * @param {String} cfg.xid Service short ID.
 	 * @param {String} cfg.size Icon size (one of xs->16x16, s->24x24, m->32x32, l->48x48).
 	 * @returns {Function} The renderer function
 	 */
 	iconColRenderer: function(cfg) {
 		cfg = cfg || {};
+		var evalValueFn = function(getFn, field, value, rec, fallback) {
+			if(Ext.isFunction(getFn)) {
+				return getFn(value, rec);
+			} else if(rec && !Ext.isEmpty(field)) {
+				return rec.get(field);
+			} else {
+				return (fallback === undefined) ? value : fallback;
+			}
+		};
+		
+		return function(value,meta,rec) {
+			var ico = evalValueFn(cfg.getIcon, cfg.iconField, value, rec),
+					ttip = evalValueFn(cfg.getTip, cfg.tipField, value, rec, null),
+					cls = (ico) ? WTF.cssIconCls(cfg.xid, ico, cfg.size) : '',
+					size = WTU.imgSizeToPx(cfg.size);
+			if(ttip) {
+				return '<div title="'+ttip+'" class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+			} else {
+				return '<div class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
+			}
+		};
+		
+		/*
 		var icoFn = Ext.isFunction(cfg.iconField);
 		return function(value,meta,rec) {
 			var data = (icoFn) ? cfg.iconField(rec) : ((cfg.iconField) ? rec.get(cfg.iconField) : value),
@@ -641,6 +670,7 @@ Ext.define('Sonicle.webtop.core.Factory', {
 				return '<div class="'+cls+'" style="width:'+size+'px;height:'+size+'px" />';
 			}
 		};
+		*/
 	},
 	
 	/**

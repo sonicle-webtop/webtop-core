@@ -848,10 +848,10 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							},
 							disabled: true
 						}),
-						'-',
+						'->',
 						me.addAction('refreshSyncDevices', {
-							text: WT.res('act-refresh.lbl'),
-							tooltip: null,
+							text: null,
+							tooltip: WT.res('act-refresh.lbl'),
 							iconCls: 'wt-icon-refresh-xs',
 							handler: function() {
 								me.refreshSyncDevices();
@@ -951,9 +951,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	},
 	
 	refreshSyncDevices: function() {
-		var me = this,
-				sto = me.lref('gpsync').getStore();
-		sto.load();
+		this.lref('gpsync').getStore().load();
 	},
 	
 	showSyncDeviceInfo: function(rec) {
