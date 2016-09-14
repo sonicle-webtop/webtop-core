@@ -86,6 +86,7 @@ public class WebTopSession {
 	private final HashMap<String, BaseManager> managers = new HashMap<>();
 	private List<String> allowedServices = null;
 	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
+	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
 	
@@ -240,18 +241,22 @@ public class WebTopSession {
 		return (profile == null) ? null : profile.getUserId();
 	}
 	
-	public synchronized void initPrivate(HttpServletRequest request) throws Exception {
+	public synchronized void initPrivate(HttpServletRequest request) throws WTException {
 		if(initLevel < 0) return;
 		if(initLevel == 0) internalInitPrivate(request);
 	}
 	
-	public synchronized void initPrivateEnvironment(HttpServletRequest request) throws Exception {
+	public synchronized void initPrivateEnvironment(HttpServletRequest request) throws WTException {
 		if(initLevel < 0) return;
-		if(initLevel == 0) throw new Exception("You need to call initPrivate() before calling this method!");
-		if(initLevel == 1) privateInitEnvironment(request);
+		if(initLevel == 0) throw new WTException("You need to call initPrivate() before calling this method!");
+		if(initLevel == 1) internalInitPrivateEnvironment(request);
 	}
 	
-	private void internalInitPrivate(HttpServletRequest request) throws Exception {
+	public synchronized void initPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
+		internalInitPublicEnvironment(request, publicServiceId);
+	}
+	
+	private void internalInitPrivate(HttpServletRequest request) throws WTException {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
@@ -269,7 +274,7 @@ public class WebTopSession {
 		initLevel = 1;
 	}
 	
-	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
+	private void internalInitPrivateEnvironment(HttpServletRequest request) throws WTException {
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		CoreManager core = WT.getCoreManager(profile.getId());
@@ -298,9 +303,9 @@ public class WebTopSession {
 			if(descriptor.hasPrivateService()) {
 				// Creates new instance
 				if(svcm.hasFullRights(serviceId)) {
-					privateInst = svcm.instantiatePrivateService(serviceId, sessionId, new CoreEnvironment(wta, this));
+					privateInst = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
 				} else {
-					privateInst = svcm.instantiatePrivateService(serviceId, sessionId, new Environment(this));
+					privateInst = svcm.instantiatePrivateService(serviceId, new Environment(this));
 				}
 				if(privateInst != null) {
 					registerPrivateService(privateInst);
@@ -336,6 +341,26 @@ public class WebTopSession {
 		initLevel = 2;
 	}
 	
+	private void internalInitPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
+		ServiceManager svcm = wta.getServiceManager();
+		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
+		
+		int count = 0;
+		BasePublicService publicInst = null;
+		for(String serviceId : serviceIds) {
+			if(!hasPublicService(serviceId)) {
+				publicInst = svcm.instantiatePublicService(serviceId);
+				if(publicInst != null) {
+					registerPublicService(publicInst);
+					count++;
+				}
+			}
+		}
+		
+		logger.debug("Instantiated {} public services", count);
+	}
+	
+	
 	private void registerServiceManager(String serviceId, BaseManager manager) {
 		synchronized(managers) {
 			if(managers.containsKey(serviceId)) throw new WTRuntimeException("Cannot add manager twice");
@@ -361,7 +386,7 @@ public class WebTopSession {
 	private void registerPrivateService(BaseService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(privateServices) {
-			if(privateServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add service twice");
+			if(privateServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add private service twice");
 			privateServices.put(serviceId, service);
 		}
 	}
@@ -371,10 +396,10 @@ public class WebTopSession {
 	 * @param serviceId The service ID.
 	 * @return The service instance, if found.
 	 */
-	public BaseService getServiceById(String serviceId) {
+	public BaseService getPrivateServiceById(String serviceId) {
 		if(!isReady()) return null;
 		synchronized(privateServices) {
-			if(!privateServices.containsKey(serviceId)) throw new WTRuntimeException("No service with ID [{0}]", serviceId);
+			if(!privateServices.containsKey(serviceId)) throw new WTRuntimeException("No private service with ID [{0}]", serviceId);
 			return privateServices.get(serviceId);
 		}
 	}
@@ -387,6 +412,51 @@ public class WebTopSession {
 		if(!isReady()) return null;
 		synchronized(privateServices) {
 			return Arrays.asList(privateServices.keySet().toArray(new String[privateServices.size()]));
+		}
+	}
+	
+	/**
+	 * Stores public service instance into this session.
+	 * @param service 
+	 */
+	private void registerPublicService(BasePublicService service) {
+		String serviceId = service.getManifest().getId();
+		synchronized(publicServices) {
+			if(publicServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add public service twice");
+			publicServices.put(serviceId, service);
+		}
+	}
+	
+	/**
+	 * Checks if a public service instance exists.
+	 * @param serviceId The service ID.
+	 * @return True if instance is present, false otherwise.
+	 */
+	public boolean hasPublicService(String serviceId) {
+		synchronized(publicServices) {
+			return publicServices.containsKey(serviceId);
+		}
+	}
+	
+	/**
+	 * Gets a public service instance by ID.
+	 * @param serviceId The service ID.
+	 * @return The service instance, if found.
+	 */
+	public BasePublicService getPublicServiceById(String serviceId) {
+		synchronized(publicServices) {
+			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID [{0}]", serviceId);
+			return publicServices.get(serviceId);
+		}
+	}
+	
+	/**
+	 * Gets instantiated public services list.
+	 * @return A list of service ids.
+	 */
+	public List<String> getPublicServices() {
+		synchronized(publicServices) {
+			return Arrays.asList(publicServices.keySet().toArray(new String[publicServices.size()]));
 		}
 	}
 	
@@ -403,6 +473,8 @@ public class WebTopSession {
 		String deflt = null;
 		for(String serviceId : getPrivateServices()) {
 			fillStartupForService(js, serviceId, locale);
+			last = js.services.get(js.services.size()-1);
+			//TODO: gestire la manutenzione
 			if((deflt == null) && !last.id.equals(CoreManifest.ID) && !last.maintenance) {
 				// Candidate startup (default) service must not be in maintenance
 				// and id should not be equal to core service!
@@ -475,13 +547,13 @@ public class WebTopSession {
 	}
 	
 	private JsWTSPrivate.Vars getServiceVars(String serviceId) {
-		BaseService svc = getServiceById(serviceId);
+		BaseService svc = getPrivateServiceById(serviceId);
+		BaseService.ServiceVars vars = null;
 		
-		// Gets initial settings from instantiated service
-		HashMap<String, Object> hm = null;
+		// Retrieves initial vars from instantiated service
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
-			hm = svc.returnServiceVars();
+			vars = svc.returnServiceVars();
 		} catch(Exception ex) {
 			logger.error("returnServiceVars method returns errors", ex);
 		} finally {
@@ -489,7 +561,7 @@ public class WebTopSession {
 		}
 		
 		JsWTSPrivate.Vars is = new JsWTSPrivate.Vars();
-		if(hm != null) is.putAll(hm);
+		if(vars != null) is.putAll(vars);
 		
 		// Built-in settings
 		if(serviceId.equals(CoreManifest.ID)) {
@@ -547,10 +619,10 @@ public class WebTopSession {
 	}
 	
 	private JsWTSPublic.Vars getPublicServiceVars(String serviceId) {
-		BasePublicService svc = wta.getServiceManager().getPublicService(serviceId);
+		BasePublicService svc = getPublicServiceById(serviceId);
 		BasePublicService.ServiceVars vars = null;
 		
-		// Gets initial settings from instantiated service
+		// Retrieves initial vars from instantiated service
 		if(svc != null) {
 			try {
 				WebTopApp.setServiceLoggerDC(serviceId);

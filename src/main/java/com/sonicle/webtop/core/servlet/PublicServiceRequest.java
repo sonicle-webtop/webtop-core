@@ -119,18 +119,20 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
+		WebTopSession wts = RunContext.getWebTopSession();
 		
 		try {
-			String service = ServletUtils.getStringParameter(request, "service", null);
+			String serviceId = ServletUtils.getStringParameter(request, "service", null);
 			
 			String relativePath = null;
-			if(service != null) { // Checks if service ID is valid
-				if(!wta.getServiceManager().hasPublicService(service)) throw new WTRuntimeException("Unknown public service [{0}]", service);
+			if(serviceId != null) { // Checks if service ID is valid
+				wts.initPublicEnvironment(request, serviceId);
 				
 			} else { // Retrieves public service ID using its public name
 				String[] urlParts = splitPath(request.getPathInfo());
-				service = wta.getServiceManager().getServiceIdByPublicName(urlParts[0]);
-				if(service == null) throw new WTRuntimeException("Unknown public service [{0}]", urlParts[0]);
+				serviceId = wta.getServiceManager().getServiceIdByPublicName(urlParts[0]);
+				if(serviceId == null) throw new WTRuntimeException("Public name not known [{0}]", urlParts[0]);
+				wts.initPublicEnvironment(request, serviceId);
 				relativePath = urlParts[1];
 			}
 			
@@ -142,7 +144,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 			*/
 			
 			// Returns direct stream if pathInfo points to a real file
-			Resource resource = getPublicFile(wta, service, relativePath);
+			Resource resource = getPublicFile(wta, serviceId, relativePath);
 			//Resource resource = getPublicFile(wta, service, urlParts[1]);
 			if(resource != null) {
 				writeFile(request, response, resource);
@@ -152,16 +154,16 @@ public class PublicServiceRequest extends BaseServiceRequest {
 				Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 				
 				// Retrieves instantiated service
-				BasePublicService instance = wta.getServiceManager().getPublicService(service);
+				BasePublicService instance = wts.getPublicServiceById(serviceId);
 
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), service, action, nowriter);
+				Method method = getMethod(instance.getClass(), serviceId, action, nowriter);
 				
 				Subject subject = getWebTopApp(request).bindAdminSubjectToSession(RunContext.getSessionId());
 				ThreadState threadState = new SubjectThreadState(subject);
 				threadState.bind();
 				try {
-					invokeMethod(instance, method, service, nowriter, request, response, false);
+					invokeMethod(instance, method, serviceId, nowriter, request, response, false);
 				} finally {
 					threadState.clear();
 				}

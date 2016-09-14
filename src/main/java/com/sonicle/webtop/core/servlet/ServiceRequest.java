@@ -73,7 +73,7 @@ public class ServiceRequest extends BaseServiceRequest {
 			
 			if(!options) {
 				// Retrieves instantiated service
-				BaseService instance = wts.getServiceById(service);
+				BaseService instance = wts.getPrivateServiceById(service);
 				
 				// Gets method and invokes it...
 				Method method = getMethod(instance.getClass(), service, action, nowriter);

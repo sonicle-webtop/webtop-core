@@ -112,7 +112,6 @@ public class ServiceManager {
 	private final HashMap<String, String> serviceIdToJsPath = new HashMap<>();
 	private final LinkedHashMap<String, BaseController> controllers = new LinkedHashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
-	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
 	
 	/**
@@ -135,9 +134,6 @@ public class ServiceManager {
 		BasePublicService publicInst = null;
 		BaseJobService jobInst = null;
 		for(String serviceId : listPrivateServices()) {
-			// Cleanup public service
-			publicInst = publicServices.remove(serviceId);
-			if(publicInst != null) cleanupPublicService(publicInst);
 			// Cleanup job service
 			//TODO: effettuare lo shutdown dei task
 			jobInst = jobServices.remove(serviceId);
@@ -145,7 +141,6 @@ public class ServiceManager {
 		}
 		
 		jobServices.clear();
-		publicServices.clear();
 		descriptors.clear();
 		xidToServiceId.clear();
 		serviceIdToJsPath.clear();
@@ -182,19 +177,9 @@ public class ServiceManager {
 			createController(manifest.getId());
 		}
 		
-		// Initialize public/job services
-		int okPublics = 0, failPublics = 0, okJobs = 0, failJobs = 0;
+		// Initialize job services
+		int okJobs = 0, failJobs = 0;
 		for(String serviceId : listPrivateServices()) {
-			if(getDescriptor(serviceId).hasPublicService()) {
-				if(!isInMaintenance(serviceId)) {
-					if(createPublicService(serviceId)) {
-						okPublics++;
-					} else {
-						failPublics++;
-						//TODO: invalidare startup servizio, public non inizializzato?
-					}
-				}
-			}
 			if(getDescriptor(serviceId).hasJobService()) {
 				if(!isInMaintenance(serviceId)) {
 					if(createJobService(serviceId)) {
@@ -206,20 +191,11 @@ public class ServiceManager {
 				}
 			}
 		}
-		logger.debug("Instantiated {} of {} public services", okPublics, (okPublics+failPublics));
 		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
 		//postponeDeamonsInitialization(); // Postpone initialization because init methods can require WebTopApp, not set yet!
 	}
 	
 	public void onWebTopAppInit() {
-		
-		// Inits public services
-		synchronized(publicServices) {
-			for(Entry<String, BasePublicService> entry : publicServices.entrySet()) {
-				initializePublicService(entry.getValue());
-			}
-		}
-		
 		// Inits job services
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
@@ -378,19 +354,6 @@ public class ServiceManager {
 			}
 		}
 		return list;
-	}
-	
-	public boolean hasPublicService(String serviceId) {
-		synchronized(publicServices) {
-			return publicServices.containsKey(serviceId);
-		}
-	}
-	
-	public BasePublicService getPublicService(String serviceId) {
-		synchronized(publicServices) {
-			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID: ''{0}''", serviceId);
-			return publicServices.get(serviceId);
-		}
 	}
 	
 	/**
@@ -569,7 +532,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseService instantiatePrivateService(String serviceId, String sessionId, Environment env) {
+	public BaseService instantiatePrivateService(String serviceId, Environment env) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
@@ -622,22 +585,9 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	private boolean createPublicService(String serviceId) {
-		synchronized(publicServices) {
-			if(publicServices.containsKey(serviceId)) throw new RuntimeException("Cannot add public service twice");
-			BasePublicService inst = instantiatePublicService(serviceId);
-			if(inst != null) {
-				publicServices.put(serviceId, inst);
-				return true;
-			} else {
-				return false;
-			}
-		}
-	}
-	
-	private BasePublicService instantiatePublicService(String serviceId) {
+	public BasePublicService instantiatePublicService(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasPublicService()) throw new RuntimeException("Service has no public class");
+		if(!descr.hasPublicService()) throw new WTRuntimeException("Service [{}] has no public class", serviceId);
 		
 		BasePublicService instance = null;
 		try {
@@ -647,10 +597,8 @@ public class ServiceManager {
 			return null;
 		}
 		instance.configure(wta.getAdminSubject());
-		return instance;
-	}
-	
-	private void initializePublicService(BasePublicService instance) {
+		
+		// Calls initialization method
 		try {
 			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 			instance.initialize();
@@ -659,6 +607,8 @@ public class ServiceManager {
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
+		
+		return instance;
 	}
 	
 	private void cleanupPublicService(BasePublicService instance) {
