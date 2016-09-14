@@ -31,11 +31,75 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.model.ClientOptions', {
-	alternateClassName: 'WT.sdk.model.ClientOptions',
-	extend: 'Ext.data.Model',
+Ext.define('Sonicle.webtop.core.view.public.Viewport', {
+	alternateClassName: 'WT.view.public.Viewport',
+	extend: 'Ext.container.Viewport',
 	
-	fields: [
-		'viewportToolWidth'
-	]
+	layout: 'border',
+	referenceHolder: true,
+	
+	mainmap: null,
+	
+	constructor: function() {
+		var me = this;
+		me.mainmap = {};
+		me.callParent(arguments);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.callParent(arguments);
+		me.mainmap = null;
+	},
+	
+	/**
+	 * Adds passed service to wiewport's layout.
+	 * @param {WT.sdk.PublicService} svc The service instance.
+	 */
+	addService: function(svc) {
+		var me = this,
+				id = svc.ID,
+				main = null;
+		
+		if(me.mainmap[id]) return; // Checks if service has been already added
+		
+		// Retrieves service components
+		if(Ext.isFunction(svc.getMainComponent)) {
+			main = svc.getMainComponent.call(svc);
+		}
+		me.addServiceComponents(svc, main);
+	},
+	
+	addServiceComponents: function(svc, main) {
+		var me = this;
+		
+		if(!main || !main.isXType('container')) {
+			main = Ext.create({xtype: 'panel'});
+		}
+		me.mainmap[svc.ID] = main.getId();
+		me.addToRegion('center', main);
+	},
+	
+	/*
+	 * @private
+	 * Adds passed config to chosen layout region.
+	 * @param {String} region Border layout region
+	 * @param {Ext.Component} cmp The component to add
+	 */
+	addToRegion: function(region, cmp) {
+		var me = this;
+		if(cmp) {
+			if(cmp.isComponent) {
+				cmp.setRegion(region);
+				cmp.setReference(region);
+			} else {
+				Ext.apply(cmp, {
+					region: region,
+					reference: region,
+					referenceHolder: true
+				});
+			}
+			me.add(cmp);
+		}
+	}
 });

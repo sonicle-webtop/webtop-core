@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WT.sdk.Service',
 	requires: [
-		'Sonicle.webtop.core.model.ClientOptions',
+		'Sonicle.webtop.core.model.ServiceVars',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals'
 	],

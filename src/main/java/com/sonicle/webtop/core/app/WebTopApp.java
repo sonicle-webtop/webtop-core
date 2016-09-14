@@ -509,9 +509,17 @@ public final class WebTopApp {
 	}
 	
 	private Subject buildSubject(UserProfile.Id pid) {
+		return buildSubject(pid, null);
+	}
+	
+	private Subject buildSubject(UserProfile.Id pid, String sessionId) {
 		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
 		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		return new Subject.Builder().principals(principals).buildSubject();
+		if(StringUtils.isBlank(sessionId)) {
+			return new Subject.Builder().principals(principals).buildSubject();
+		} else {
+			return new Subject.Builder().principals(principals).sessionId(sessionId).buildSubject();
+		}
 	}
 	
 	Subject getAdminSubject() {
@@ -524,6 +532,10 @@ public final class WebTopApp {
 			}
 			return adminSubject;
 		}
+	}
+	
+	public Subject bindAdminSubjectToSession(String sessionId) {
+		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
 	}
 	
 	public CoreManager createCoreManager() {

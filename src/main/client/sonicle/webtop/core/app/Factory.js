@@ -31,9 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Factory', {
+Ext.define('Sonicle.webtop.core.app.Factory', {
 	singleton: true,
 	alternateClassName: ['WT.Factory', 'WTF'],
+	requires: [
+		'Sonicle.String'
+	],
 	
 	/**
 	 * Builds base url for requests.
@@ -41,7 +44,8 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @returns {String} The encoded URL
 	 */
 	requestBaseUrl: function(params) {
-		var url = Ext.String.format('service-request?csrf={0}', WTS.securityToken);
+		var url = (WT.isPublic ? 'public' : 'service-request') + '?csrf=' + WT.securityToken;
+		//var url = Ext.String.format('service-request?csrf={0}', WT.securityToken);
 		return (params) ? Ext.String.urlAppend(url, Ext.Object.toQueryString(params)) : url;
 	},
 	
@@ -52,10 +56,16 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @returns {Object} The params object
 	 */
 	processParams: function(sid, act) {
-		return {
-			service: sid,
-			action: act
-		};
+		if(WT.isPublic) {
+			return {
+				action: act
+			};
+		} else {
+			return {
+				service: sid,
+				action: act
+			};
+		}
 	},
 	
 	/*
@@ -109,8 +119,8 @@ Ext.define('Sonicle.webtop.core.Factory', {
 	 * @return {String} The URL
 	 */
 	resourceUrl: function(sid, relPath) {
-		return 'resources/'+sid+'/laf/'+WT.getOption('laf')+'/'+relPath;
-		//return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getOption('laf'), relPath);
+		return 'resources/'+sid+'/laf/'+WT.getVar('laf')+'/'+relPath;
+		//return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getVar('laf'), relPath);
 	},
 	
 	/*

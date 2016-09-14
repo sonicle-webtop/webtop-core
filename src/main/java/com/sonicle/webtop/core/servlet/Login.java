@@ -111,7 +111,7 @@ public class Login extends AbstractServlet {
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in login servlet!", ex);
 		} finally {
-			ServletHelper.setCacheControl(response);
+			ServletHelper.setPrivateCache(response);
 			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
@@ -121,8 +121,8 @@ public class Login extends AbstractServlet {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
 		Map tplMap = new HashMap();
-		ServletHelper.fillPageVars(tplMap, locale, wta);
-		ServletHelper.fillSystemVars(tplMap, locale, wta);
+		AbstractServlet.fillPageVars(tplMap, locale, wta, "");
+		AbstractServlet.fillSystemVars(tplMap, locale, wta);
 		tplMap.put("showFootprint", !css.getHideLoginFootprint());
 		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
 		tplMap.put("maintenanceMessage", maintenanceMessage);

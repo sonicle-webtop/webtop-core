@@ -31,10 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
-	alternateClassName: 'WT.ServiceDescriptor',
+Ext.define('Sonicle.webtop.core.app.DescriptorPublic', {
+	alternateClassName: 'WT.DescriptorPublic',
 	requires: [
-		'Sonicle.webtop.core.sdk.Service'
+		'Sonicle.webtop.core.sdk.PublicService'
 	],
 	
 	config: {
@@ -44,11 +44,8 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 		xid: null,
 		ns: null,
 		path: null,
-		version: null,
-		build: null,
 		serviceClassName: null,
-		clientOptionsClassName: null,
-		userOptions: null,
+		serviceVarsClassName: null,
 		name: null,
 		desription: null,
 		company: null
@@ -72,9 +69,8 @@ Ext.define('Sonicle.webtop.core.ServiceDescriptor', {
 				me.instance = Ext.create(cn, {
 					ID: me.getId(),
 					XID: me.getXid(),
-					clientOptionsClassName: me.getClientOptionsClassName(),
-					permsData: WTS.servicesPerms[me.getIndex()],
-					optionsData: WTS.servicesOptions[me.getIndex()]
+					serviceVarsClassName: me.getServiceVarsClassName(),
+					varsData: WTS.servicesVars[me.getIndex()]
 				});
 			} catch(e) {
 				WT.Log.error('Unable to instantiate service class [{0}]', cn);

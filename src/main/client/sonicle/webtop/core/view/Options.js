@@ -112,7 +112,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		var me = this,
 				data = [], uo = null;
 		
-		if(WT.getOption('profileId') === me.profileId) {
+		if(WT.getVar('profileId') === me.profileId) {
 			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
 				uo = desc.getUserOptions();
 				if(uo) {

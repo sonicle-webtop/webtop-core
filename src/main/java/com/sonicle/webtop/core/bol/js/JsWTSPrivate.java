@@ -31,64 +31,70 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopSession;
-import java.util.List;
+import com.sonicle.commons.web.json.JsonResult;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreServiceSettings css;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = RunContext.getCSRFToken();
-		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
-		UserProfile.Id pid = wts.getProfileId();
-		cus = (pid != null) ? new CoreUserSettings(pid) : null;
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
+public class JsWTSPrivate {
+	public String securityToken;
+	public String layoutClassName;
+	public String fileTypes;
+	public HashMap<String, String> appPaths = new HashMap<>();
+	public ArrayList<String> appRequires = new ArrayList<>();
+	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
+	public ArrayList<Vars> servicesVars = new ArrayList<>();
+	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
+	public String defaultService;
+	
+	public String toJson() {
+		return JsonResult.GSON.toJson(this);
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getProfileId();
+	public static class ServiceUserOptions {
+		public String viewClassName;
+		public String modelClassName;
+		
+		public ServiceUserOptions(String viewClassName, String modelClassName) {
+			this.viewClassName = viewClassName;
+			this.modelClassName = modelClassName;
+		}
 	}
 	
-	public CoreServiceSettings getCoreServiceSettings() {
-		return css;
+	public static class Permissions extends HashMap<String, Actions> {
+		
 	}
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
+	public static class Actions extends HashMap<String, Object> {
+		
 	}
 	
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
+	public static class Service {
+		public int index;
+		public String id;
+		public String xid;
+		public String ns;
+		public String path;
+		public String localeClassName;
+		public String serviceClassName;
+		public String serviceVarsClassName;
+		public ServiceUserOptions userOptions;
+		public String name;
+		public String description;
+		public String version;
+		public String build;
+		public String company;
+		public boolean maintenance;
 	}
 	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
+	public static class Vars extends HashMap<String, Object> {
+		public Vars() {
+			super();
+		}
 	}
 }

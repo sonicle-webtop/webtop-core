@@ -53,9 +53,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.SessionException;
 import org.apache.shiro.session.mgt.DefaultSessionKey;
-import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.web.subject.support.WebDelegatingSubject;
-import org.apache.shiro.web.util.WebUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 

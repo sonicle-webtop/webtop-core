@@ -31,64 +31,78 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopSession;
-import java.util.List;
-
-/**
- *
- * @author malbinola
- */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreServiceSettings css;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = RunContext.getCSRFToken();
-		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
-		UserProfile.Id pid = wts.getProfileId();
-		cus = (pid != null) ? new CoreUserSettings(pid) : null;
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
+Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
+	alternateClassName: 'WT.ServiceDescriptor',
+	requires: [
+		'Sonicle.webtop.core.sdk.Service'
+	],
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getProfileId();
-	}
+	config: {
+		index: null,
+		maintenance: null,
+		id: null,
+		xid: null,
+		ns: null,
+		path: null,
+		version: null,
+		build: null,
+		serviceClassName: null,
+		serviceVarsClassName: null,
+		userOptions: null,
+		name: null,
+		desription: null,
+		company: null
+	},
 	
-	public CoreServiceSettings getCoreServiceSettings() {
-		return css;
-	}
+	instance: null,
+	inited: false,
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
-	}
+	constructor: function(cfg) {
+		var me = this;
+		me.initConfig(cfg);
+		me.callParent(arguments);
+	},
 	
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
+	getInstance: function() {
+		var me = this;
+		if(!me.instance) {
+			var cn = me.getServiceClassName();
+			if(!Ext.isString(cn)) return null;
+			try {
+				me.instance = Ext.create(cn, {
+					ID: me.getId(),
+					XID: me.getXid(),
+					serviceVarsClassName: me.getServiceVarsClassName(),
+					permsData: WTS.servicesPerms[me.getIndex()],
+					varsData: WTS.servicesVars[me.getIndex()]
+				});
+			} catch(e) {
+				WT.Log.error('Unable to instantiate service class [{0}]', cn);
+				WT.Log.exception(e);
+			}
+		}
+		return me.instance;
+	},
 	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
+	initService: function() {
+		var me = this;
+		WT.Log.debug('Initializing service [{0}]', me.getId());
+		var svc = me.getInstance();
+		if(svc === null) return false;
+		
+		// Calls initialization method
+		try {
+			svc.init.call(svc);
+			me.inited = true;
+			return true;
+		} catch(e) {
+			WT.Log.error('Error while calling init() method');
+			WT.Log.exception(e);
+			return false;
+		}
+	},
 	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
+	isInited: function() {
+		return this.inited;
 	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
-	}
-}
+});

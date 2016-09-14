@@ -105,14 +105,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {String} key The key.
 	 * @return {Mixed} Setting value.
 	 */
-	getOption: function(id, key) {
+	getVar: function(id, key) {
 		if(arguments.length === 1) {
 			key = id;
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
-		return svc.getOption(key);
+		return svc.getVar(key);
 	},
 	
 	/**
@@ -121,14 +121,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {String} key The key.
 	 * @return {Mixed} Setting value object.
 	 */
-	getOptionAsObject: function(id,key) {
+	getVarAsObject: function(id,key) {
 		if(arguments.length === 1) {
 			key = id;
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
-		return svc.getOptionAsObject(key);
+		return svc.getVarAsObject(key);
 	},
 	
 	/**
@@ -138,14 +138,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Mixed} value The value.
 	 * @return {Mixed} Setting value.
 	 */
-	setOption: function(id, key, value) {
+	setVar: function(id, key, value) {
 		if(arguments.length === 2) {
 			opts = id;
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
-		return svc.setOption(key,value);
+		return svc.setVar(key,value);
 	},
 	
 	/**
@@ -154,14 +154,14 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * @param {Object} opts Key/Value pairs object.
 	 * @return {Mixed} Setting value.
 	 */
-	setOptions: function(id, opts) {
+	setVars: function(id, opts) {
 		if(arguments.length === 1) {
 			opts = id;
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
 		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
-		return svc.setOptions(opts);
+		return svc.setVars(opts);
 	},
 	
 	/**
@@ -484,7 +484,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 */
 	showDesktopNotification: function(sid, opts) {
 		opts = opts || {};
-		var dn = WT.getOption('desktopNotification'),
+		var dn = WT.getVar('desktopNotification'),
 				NtfMgr = Sonicle.DesktopNotificationMgr,
 				desc, ico;
 		
@@ -505,7 +505,7 @@ Ext.define('Sonicle.webtop.core.WT', {
 	 * request for using desktop notifications.
 	 */
 	checkDesktopNotificationAuth: function() {
-		var dn = WT.getOption('desktopNotification');
+		var dn = WT.getVar('desktopNotification');
 		if(dn === 'always' || dn === 'auto') {
 			Sonicle.DesktopNotificationMgr.ensureAuthorization();
 		}
@@ -595,11 +595,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns the theme in use.
-	 * Value is taken from core options 'theme'.
+	 * Value is taken from core variable 'theme'.
 	 * @returns {String} The theme value.
 	 */
 	getTheme: function() {
-		return WT.getOption('theme');
+		return WT.getVar('theme');
 	},
 	
 	/**
@@ -612,82 +612,82 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns the layout in use.
-	 * Value is taken from core options 'layout'.
+	 * Value is taken from core variable 'layout'.
 	 * @returns {String} The layout value.
 	 */
 	getLayout: function() {
-		return WT.getOption('layout');
+		return WT.getVar('layout');
 	},
 	
 	/**
 	 * Returns the look&feel in use.
-	 * Value is taken from core options 'laf'.
+	 * Value is taken from core variable 'laf'.
 	 * @returns {String} The laf value.
 	 */
 	getLaf: function() {
-		return WT.getOption('laf');
+		return WT.getVar('laf');
 	},
 	
 	/**
 	 * Returns the startDay in use (0=Sunday, 1=Monday).
-	 * Value is taken from core options 'startDay'.
+	 * Value is taken from core variable 'startDay'.
 	 * @returns {Integer} The startDay value.
 	 */
 	getStartDay: function() {
-		return WT.getOption('startDay');
+		return WT.getVar('startDay');
 	},
 	
 	/**
 	 * Returns the timezone in use.
-	 * Value is taken from core options 'timezone'.
+	 * Value is taken from core variable 'timezone'.
 	 * @returns {String} The timezone ID.
 	 */
 	getTimezone: function() {
-		return WT.getOption('timezone');
+		return WT.getVar('timezone');
 	},
 	
 	/**
 	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
 	 * representing a short date. Remember that original option value follows 
-	 * Java style patterns. Value is taken from core options 'shortDateFormat'.
+	 * Java style patterns. Value is taken from core variable 'shortDateFormat'.
 	 * @returns {String} ExtJs format string.
 	 */
 	getShortDateFmt: function() {
-		var fmt = WT.getOption('shortDateFormat');
+		var fmt = WT.getVar('shortDateFormat');
 		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
 	/**
 	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
 	 * representing a long date. Remember that original option value follows 
-	 * Java style patterns. Value is taken from core options 'longDateFormat'.
+	 * Java style patterns. Value is taken from core variable 'longDateFormat'.
 	 * @returns {String} ExtJs format string.
 	 */
 	getLongDateFmt: function() {
-		var fmt = WT.getOption('longDateFormat');
+		var fmt = WT.getVar('longDateFormat');
 		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
 	/**
 	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
 	 * representing a short time. Remember that original option value follows 
-	 * Java style patterns. Value is taken from core options 'shortTimeFormat'.
+	 * Java style patterns. Value is taken from core variable 'shortTimeFormat'.
 	 * @returns {String} ExtJs format string.
 	 */
 	getShortTimeFmt: function() {
 		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
-		var fmt = WT.getOption('shortTimeFormat');
+		var fmt = WT.getVar('shortTimeFormat');
 		return (Ext.isEmpty(fmt)) ? 'H:i' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
 	/**
 	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
 	 * representing a long time. Remember that original option value follows 
-	 * Java style patterns. Value is taken from core options 'longTimeFormat'.
+	 * Java style patterns. Value is taken from core variable 'longTimeFormat'.
 	 * @returns {String} ExtJs format string.
 	 */
 	getLongTimeFmt: function() {
-		var fmt = WT.getOption('longTimeFormat');
+		var fmt = WT.getVar('longTimeFormat');
 		return (Ext.isEmpty(fmt)) ? 'H:i:s' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
@@ -701,11 +701,11 @@ Ext.define('Sonicle.webtop.core.WT', {
 	
 	/**
 	 * Returns if 24h time is in use.
-	 * Value is taken from core options 'use24HourTime'.
+	 * Value is taken from core variable 'use24HourTime'.
 	 * @returns {Boolean}
 	 */
 	getUse24HourTime: function() {
-		return WT.getOption('use24HourTime');
+		return WT.getVar('use24HourTime');
 	},
 	
 	print: function(html) {

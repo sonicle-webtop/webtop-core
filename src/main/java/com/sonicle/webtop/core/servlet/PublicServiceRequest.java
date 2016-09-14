@@ -37,8 +37,10 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
@@ -56,6 +58,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.support.SubjectThreadState;
+import org.apache.shiro.util.ThreadState;
 import org.slf4j.Logger;
 
 /**
@@ -68,6 +73,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {
 		try {
+			if(StringUtils.isBlank(relativePath)) return null;
 			Resource resource = getExternalPublicFile(wta, serviceId, relativePath);
 			if(resource == null) resource = getInternalPublicFile(wta, serviceId, relativePath);
 			return resource;
@@ -98,9 +104,9 @@ public class PublicServiceRequest extends BaseServiceRequest {
 			os = ServletUtils.prepareForStreamCopy(request, response, mimeType, (int)resource.getSize(), 4*1024);
 			ServletUtils.setContentTypeHeader(response, mimeType);
 			if(StringUtils.startsWith(mimeType, "image")) {
-				ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24);
+				ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24);
 			} else {
-				ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+				ServletUtils.setCacheControlPrivateNoCache(response);
 			}
 			is = resource.getInputStream();
 			ServletUtils.transferStreams(is, os);
@@ -115,23 +121,50 @@ public class PublicServiceRequest extends BaseServiceRequest {
 		WebTopApp wta = WebTopApp.get(request);
 		
 		try {
+			String service = ServletUtils.getStringParameter(request, "service", null);
+			
+			String relativePath = null;
+			if(service != null) { // Checks if service ID is valid
+				if(!wta.getServiceManager().hasPublicService(service)) throw new WTRuntimeException("Unknown public service [{0}]", service);
+				
+			} else { // Retrieves public service ID using its public name
+				String[] urlParts = splitPath(request.getPathInfo());
+				service = wta.getServiceManager().getServiceIdByPublicName(urlParts[0]);
+				if(service == null) throw new WTRuntimeException("Unknown public service [{0}]", urlParts[0]);
+				relativePath = urlParts[1];
+			}
+			
+			/*
 			String[] urlParts = splitPath(request.getPathInfo());
 			String publicName = urlParts[0];
 			String service = wta.getServiceManager().getServiceIdByPublicName(publicName);
 			if(service == null) throw new WTRuntimeException("Unknown public service [{0}]", publicName);
+			*/
 			
 			// Returns direct stream if pathInfo points to a real file
-			Resource resource = getPublicFile(wta, service, urlParts[1]);
+			Resource resource = getPublicFile(wta, service, relativePath);
+			//Resource resource = getPublicFile(wta, service, urlParts[1]);
 			if(resource != null) {
 				writeFile(request, response, resource);
 				
 			} else {
+				String action = ServletUtils.getStringParameter(request, "action", false);
+				Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
+				
 				// Retrieves instantiated service
 				BasePublicService instance = wta.getServiceManager().getPublicService(service);
 
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), service, "Default", true);
-				invokeMethod(instance, method, service, true, request, response);
+				Method method = getMethod(instance.getClass(), service, action, nowriter);
+				
+				Subject subject = getWebTopApp(request).bindAdminSubjectToSession(RunContext.getSessionId());
+				ThreadState threadState = new SubjectThreadState(subject);
+				threadState.bind();
+				try {
+					invokeMethod(instance, method, service, nowriter, request, response, false);
+				} finally {
+					threadState.clear();
+				}
 			}
 			
 		} catch(Exception ex) {

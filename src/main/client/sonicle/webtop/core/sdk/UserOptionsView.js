@@ -99,7 +99,7 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 		if(model.dirty) {
 			me.saveModel({
 				callback: function(success,model) {
-					if (success && me.profileId===WT.getOption('profileId')) WT.setOption(me.ID,name,model.get(name));
+					if (success && me.profileId===WT.getVar('profileId')) WT.setVar(me.ID, name, model.get(name));
 				}
 			});
 		}

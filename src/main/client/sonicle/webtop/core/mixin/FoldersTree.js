@@ -58,7 +58,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	 * @returns {Ext.data.NodeInterface}
 	 */
 	getMyRoot: function(tree) {
-		return tree.getStore().findNode('_pid', WT.getOption('profileId'), false);
+		return tree.getStore().findNode('_pid', WT.getVar('profileId'), false);
 	},
 	
 	/**

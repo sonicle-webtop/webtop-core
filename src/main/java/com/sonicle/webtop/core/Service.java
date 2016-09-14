@@ -100,6 +100,8 @@ import org.slf4j.Logger;
  */
 public class Service extends BaseService {
 	private static final Logger logger = WT.getLogger(Service.class);
+	public static final String WTSPROP_OTP_SETUP = "OTPSETUP";
+	
 	private CoreManager core;
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
@@ -122,9 +124,9 @@ public class Service extends BaseService {
 	}
 
 	@Override
-	public ClientOptions returnClientOptions() {
+	public ServiceVars returnServiceVars() {
 		UserProfile profile = getEnv().getProfile();
-		ClientOptions co = new ClientOptions();
+		ServiceVars co = new ServiceVars();
 		
 		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
@@ -136,8 +138,8 @@ public class Service extends BaseService {
 		co.put("userId", profile.getUserId());
 		
 		co.put("theme", us.getTheme());
-		co.put("layout", us.getLayout());
 		co.put("laf", us.getLookAndFeel());
+		co.put("layout", us.getLayout());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
 		co.put("language", profile.getLanguageTag());
@@ -600,7 +602,7 @@ public class Service extends BaseService {
 		Locale locale = wts.getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
-		List<String> ids = wts.getServices();
+		List<String> ids = wts.getPrivateServices();
 		for(String id : ids) {
 			items.add(new JsSimple(id, WT.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
 		}
@@ -634,7 +636,7 @@ public class Service extends BaseService {
 			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
 			
 			tabs = new ArrayList<>();
-			List<String> ids = wts.getServices();
+			List<String> ids = wts.getPrivateServices();
 			for(String id : ids) {
 				if(full || wts.needWhatsnew(id, profile)) {
 					html = wts.getWhatsnewHtml(id, profile, full);
@@ -673,7 +675,7 @@ public class Service extends BaseService {
 		
 		try {
 			UserProfile profile = getEnv().getProfile();
-			List<String> ids = wts.getServices();
+			List<String> ids = wts.getPrivateServices();
 			for(String id : ids) {
 				wts.resetWhatsnew(id, profile);
 			}
@@ -726,21 +728,21 @@ public class Service extends BaseService {
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
 						logger.debug("{}", config.otp.getVerificationCode());
-						wts.setProperty("OTP_SETUP", config);
+						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 
 					} else if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
-						wts.setProperty("OTP_SETUP", config);
+						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 					}
 					new JsonResult(true).printTo(out);
 					
 				} else if(operation.equals("activate")) {
 					int code = ServletUtils.getIntParameter(request, "code", true);
 
-					OTPManager.Config config = (OTPManager.Config)wts.getProperty("OTP_SETUP");
+					OTPManager.Config config = (OTPManager.Config)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					boolean enabled = corem.otpActivate(config, code);
 					if(!enabled) throw new WTException("Codice non valido"); //TODO: messaggio in lingua
-					wts.clearProperty("OTP_SETUP");
+					wts.clearProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					
 					new JsonResult().printTo(out);
 
@@ -781,7 +783,7 @@ public class Service extends BaseService {
 		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
 		
 		try {
-			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getProperty("OTP_SETUP");
+			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 			ServletUtils.writeContent(response, config.qrcode, config.qrcode.length, "image/png");
 			
 		} catch (Exception ex) {

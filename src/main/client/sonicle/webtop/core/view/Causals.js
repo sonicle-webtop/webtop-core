@@ -56,7 +56,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addCausal(WT.getOption('domainId'));
+						me.addCausal(WT.getVar('domainId'));
 					}
 				}),
 				me.addAction('remove', {
@@ -128,7 +128,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addCausal(WT.getOption('domainId'));
+						me.addCausal(WT.getVar('domainId'));
 					}
 				}),
 				me.addAction('remove', {

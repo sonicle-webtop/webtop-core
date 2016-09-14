@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	viewModel: {
 		formulas: {
 			upiFieldEditable: function(get) {
-				return WT.getOption('wtUpiProviderWritable') && get('record.canManageUpi');
+				return WT.getVar('wtUpiProviderWritable') && get('record.canManageUpi');
 			},
 			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
 			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled')
@@ -68,7 +68,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		vm = me.getViewModel();
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			areMine: function() {
-				return WT.getOption('profileId') === me.profileId;
+				return WT.getVar('profileId') === me.profileId;
 			}
 		}));
 		
@@ -585,7 +585,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.otp.tit'),
-			disabled: WT.getOption('wtOtpEnabled'),
+			disabled: WT.getVar('wtOtpEnabled'),
 			items: [{
 				xtype: 'container',
 				layout: 'form',

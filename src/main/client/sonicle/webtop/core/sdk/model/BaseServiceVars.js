@@ -31,32 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.ClientOptions', {
+Ext.define('Sonicle.webtop.core.sdk.model.BaseServiceVars', {
+	alternateClassName: 'WT.sdk.model.BaseServiceVars',
 	extend: 'Ext.data.Model',
 	
 	fields: [
-		WTF.field('wtUpiProviderWritable', 'boolean'),
-		WTF.field('wtWhatsnewEnabled', 'boolean'),
-		WTF.field('wtOtpEnabled', 'boolean'),
-		WTF.field('wtUploadMaxFileSize', 'int'),
-		
-		WTF.field('profileId', 'string'), // Not a real option
-		WTF.field('domainId', 'string'), // Not a real option
-		WTF.field('userId', 'string'), // Not a real option
-		WTF.field('theme', 'string'),
-		WTF.field('layout', 'string'),
-		WTF.field('laf', 'string'),
-		WTF.field('desktopNotification', 'string'),
-		WTF.field('language', 'string'),
-		WTF.field('timezone', 'string'),
-		WTF.field('startDay', 'int'),
-		WTF.field('shortDateFormat', 'string'),
-		WTF.field('longDateFormat', 'string'),
-		WTF.field('shortTimeFormat', 'string'),
-		WTF.field('longTimeFormat', 'string'),
-		WTF.calcField('use24HourTime', 'boolean', 'shortTimeFormat', function(v, rec) {
-			var tf = rec.get('shortTimeFormat');
-			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
-		})
+		'theme',
+		'laf'
 	]
 });

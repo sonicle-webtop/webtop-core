@@ -33,8 +33,21 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.PathUtils;
+import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.BaseAbstractService;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.sf.qualitycheck.Check;
@@ -55,25 +68,46 @@ public abstract class BasePublicService extends BaseAbstractService {
 		this.subject = Check.notNull(subject);
 	}
 	
-	public final Subject getSubject() {
-		return subject;
+	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws Exception;
+	
+	public ServiceVars returnServiceVars() {
+		return null;
 	}
 	
-	public abstract void processDefault(HttpServletRequest request, HttpServletResponse response) throws Exception;
-	
-	protected String extractPublicName(String pathInfo) throws MalformedURLException {
-		String[] tokens = StringUtils.split(pathInfo, "/", 2);
-		if(tokens.length != 2) throw new MalformedURLException("Invalid URL");
-		return tokens[0];
-	}
-	
-	protected String extractContext(String pathInfo) throws MalformedURLException {
-		String[] tokens = StringUtils.split(pathInfo, "/", 2);
-		if(tokens.length != 2) throw new MalformedURLException("Invalid URL");
-		return tokens[1];
+	public void writePage(String baseUrl, Map vars, Locale locale, PrintWriter out) throws IOException, TemplateException {
+		AbstractServlet.fillPageVars(vars, WT.getPlatformName(), PathUtils.ensureTrailingSeparator(baseUrl));
+		AbstractServlet.fillIncludeVars(vars, locale, DEFAULTVAR_THEME, DEFAULTVAR_LAF, false, WebTopApp.getPropExtDebug());
+		Template tpl = WT.loadTemplate(CoreManifest.ID, "public.html");
+		tpl.process(vars, out);
 	}
 	
 	protected String getPublicResourcesBaseUrl() {
 		return PublicServiceRequest.PUBLIC_RESOURCES;
+	}
+	
+	
+	
+	protected PublicPath parsePathInfo(String pathInfo) throws MalformedURLException {
+		String[] tokens = StringUtils.split(pathInfo, "/", 3);
+		if(tokens.length < 2) throw new MalformedURLException("Invalid URL");
+		return new PublicPath(tokens[0], tokens[1], (tokens.length == 2) ? null : tokens[2]);
+	}
+	
+	public static class PublicPath {
+		public final String publicName;
+		public final String context;
+		public final String relative;
+		
+		public PublicPath(String publicName, String context, String relative) {
+			this.publicName = publicName;
+			this.context = context;
+			this.relative = relative;
+		}
+	}
+	
+	public static class ServiceVars extends HashMap<String, Object> {
+		public ServiceVars() {
+			super();
+		}
 	}
 }

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.app.BaseAbstractService;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
@@ -89,7 +90,7 @@ public abstract class BaseService extends BaseAbstractService {
 		return env;
 	}
 	
-	public ClientOptions returnClientOptions() {
+	public ServiceVars returnServiceVars() {
 		return null;
 	}
     
@@ -372,8 +373,8 @@ public abstract class BaseService extends BaseAbstractService {
 		return "application/octet-stream";
 	}
 	
-	public static class ClientOptions extends HashMap<String, Object> {
-		public ClientOptions() {
+	public static class ServiceVars extends HashMap<String, Object> {
+		public ServiceVars() {
 			super();
 		}
 	}

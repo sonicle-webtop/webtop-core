@@ -63,6 +63,9 @@ import org.apache.shiro.SecurityUtils;
  * @author malbinola
  */
 public class Otp extends AbstractServlet {
+	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
+	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
+	public static final String WTSPROP_OTP_VERIFIED = "OTPVERIFIED";
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -80,16 +83,16 @@ public class Otp extends AbstractServlet {
 			OTPManager otpm = wta.getOTPManager();
 			String deliveryMode = otpm.getDeliveryMode(pid);
 			OTPManager.Config config = null;
-			if(!wts.hasProperty("OTP_CONFIG")) {
+			if(!wts.hasProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG)) {
 				config = otpm.prepareCheckCode(pid);
-				wts.setProperty("OTP_CONFIG", config); // Save for later...
-				wts.setProperty("OTP_TRIES", 0); // Save for later...
+				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG, config); // Save for later...
+				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, 0); // Save for later...
 				
 				buildPage(wta, css, locale, deliveryMode, null, response);
 				
 			} else {
-				config = (OTPManager.Config)wts.getProperty("OTP_CONFIG");
-				Integer tries = (Integer)wts.getProperty("OTP_TRIES");
+				config = (OTPManager.Config)wts.getProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG);
+				Integer tries = (Integer)wts.getProperty(CoreManifest.ID, WTSPROP_OTP_TRIES);
 				if(tries == null) throw new NoMoreTriesException();
 				tries++;
 				
@@ -103,13 +106,13 @@ public class Otp extends AbstractServlet {
 							otpm.writeTrustedDeviceCookie(pid, response, new TrustedDeviceCookie(js));
 						}
 					}
-					wts.clearProperty("OTP_CONFIG");
-					wts.clearProperty("OTP_TRIES");
+					wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG);
+					wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_TRIES);
 					throw new SkipException();
 					
 				} else {
 					if(tries >= 3) throw new NoMoreTriesException();
-					wts.setProperty("OTP_TRIES", tries); // Save for later...
+					wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, tries); // Save for later...
 					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
 					buildPage(wta, css, locale, deliveryMode, failureMessage, response);
 				}
@@ -117,16 +120,16 @@ public class Otp extends AbstractServlet {
 			
 		} catch(NoMoreTriesException ex) {
 			SecurityUtils.getSubject().logout();
-			if(wts != null) wts.clearProperty(WebTopSession.PROPERTY_OTP_VERIFIED);
+			if(wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
 			ServletUtils.forwardRequest(request, response, "login");
 		} catch(SkipException ex) {
-			if(wts != null) wts.setProperty(WebTopSession.PROPERTY_OTP_VERIFIED, true);
+			if(wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
 			ServletUtils.forwardRequest(request, response, "start");
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in otp servlet!", ex);
 			//TODO: pagina di errore
 		} finally {
-			ServletHelper.setCacheControl(response);
+			ServletHelper.setPrivateCache(response);
 			ServletHelper.setPageContentType(response);
 			WebTopApp.clearLoggerDC();
 		}
@@ -169,8 +172,8 @@ public class Otp extends AbstractServlet {
 	
 	private void buildPage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
-		ServletHelper.fillPageVars(tplMap, locale, wta);
-		ServletHelper.fillSystemVars(tplMap, locale, wta);
+		AbstractServlet.fillPageVars(tplMap, locale, wta, "");
+		AbstractServlet.fillSystemVars(tplMap, locale, wta);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);
 		tplMap.put("helpTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_HELPTITLE, true));

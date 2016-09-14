@@ -31,62 +31,6 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ThemeMgr', {
-	singleton: true,
-	alternateClassName: ['WT.ThemeMgr'],
-	
-	hierarchy: {
-		'neptune': 'neptune',
-		'neptune-touch': 'neptune',
-		'crisp': 'neptune',
-		'crisp-touch': 'crisp',
-		'classic': 'classic',
-		'gray': 'classic'
-	},
-	
-	metrics: {
-		'neptune': {
-			'toolbar': {
-				'marginTop': 6,
-				'marginBottom': 6,
-				'itemsSpacing': 6
-			}
-		},
-		'classic': {
-			'toolbar': {
-				'marginTop': 2,
-				'marginBottom': 2,
-				'itemsSpacing': 2
-			}
-		}
-	},
-	
-	/**
-	 * Get desired component's metric for a theme.
-	 * Note: this method is able to return metric following the theme hierarchy.
-	 * @param {String} theme The theme name
-	 * @param {String} xtype The component xtype
-	 * @param {String} metric The metric name to get
-	 * @returns {Mixed} Desired metric
-	 */
-	getMetric: function(theme, xtype, metric) {
-		var o = this.getThemeMetrics(theme),
-				xt = o ? o[xtype] : undefined;
-		return xt ? xt[metric] : undefined;
-	},
-	
-	/**
-	 * @private
-	 */
-	getThemeMetrics: function(theme) {
-		var me = this,
-				deep = arguments[1] || 0, o;
-		if(!theme) return undefined;
-		o = me.metrics[theme];
-		if(o) {
-			return o;
-		} else {
-			return (deep === 3) ? undefined : me.getThemeMetrics(me.hierarchy[theme], deep+1);
-		}
-	}
+Ext.define('Sonicle.webtop.core.model.PublicServiceVars', {
+	extend: 'Ext.data.Model'
 });

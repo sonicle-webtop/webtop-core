@@ -106,11 +106,11 @@ public class ServletHelper {
 	}
 	*/
 	
-	static void setCacheControl(HttpServletResponse response) {
+	public static void setPrivateCache(HttpServletResponse response) {
 		response.setHeader("Cache-Control", "private");
 	}
 	
-	static void setPageContentType(HttpServletResponse response) {
+	public static void setPageContentType(HttpServletResponse response) {
 		response.setContentType("text/html;charset=UTF-8");
 	}
 	
@@ -125,19 +125,5 @@ public class ServletHelper {
 	
 	public static boolean isPublic(HttpServletRequest request) {
 		return request.getServletPath().equals("/public");
-	}
-	
-	public static void fillPageVars(Map tplMap, Locale locale, WebTopApp wta) {
-		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
-		String title = wta.getPlatformName() + " " + manifest.getVersion().getMajor();
-		tplMap.put("title", title);
-		tplMap.put("version", manifest.getVersion());
-	}
-	
-	public static void fillSystemVars(Map tplMap, Locale locale, WebTopApp wta) {
-		tplMap.put("systemInfo", wta.getSystemInfo());
-		tplMap.put("serverInfo", wta.getServerInfo());
-		tplMap.put("jdk", System.getProperty("java.version"));
-		tplMap.put("appName", wta.getWebAppName());
 	}
 }

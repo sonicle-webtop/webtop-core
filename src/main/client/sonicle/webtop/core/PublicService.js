@@ -31,28 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.FileTypes', {
-	alternateClassName: 'WT.FileTypes',
-	singleton: true,
-	
-	extToFileType: null,
-	
-	/**
-	 * Inits internal mapping table using provided JSON.
-	 * @param {String} json JSON string
-	 */
-	init: function(json) {
-		this.extToFileType = Ext.JSON.decode(json);
-	},
-	
-	/**
-	 * Returns, if present, the corresponding fileType classification for 
-	 * the provided file extension.
-	 * @param {String} ext The file extension.
-	 * @returns {String} The fileType
-	 */
-	getFileType: function(ext) {
-		var ftype = this.extToFileType[ext];
-		return ftype || 'file';
-	}
+Ext.define('Sonicle.webtop.core.PublicService', {
+	extend: 'WT.sdk.PublicService'
+
 });

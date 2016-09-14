@@ -522,12 +522,12 @@ public class ResourceRequest extends HttpServlet {
 				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
 				ServletUtils.setContentTypeHeader(response, mimeType);
 				if(forceCaching) {
-					ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24*365); // infinite
+					ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24*365); // infinite
 				} else {
 					if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
-						ServletUtils.setCacheControlHeaderPrivateMaxAge(response, 60*60*24); // 1 day
+						ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24); // 1 day
 					} else {
-						ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+						ServletUtils.setCacheControlPrivateNoCache(response);
 					}
 				}
 					

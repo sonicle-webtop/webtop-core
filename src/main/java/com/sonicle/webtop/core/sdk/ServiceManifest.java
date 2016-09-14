@@ -67,7 +67,9 @@ public class ServiceManifest {
 	protected String publicServiceClassName;
 	protected String jobServiceClassName;
 	protected String privateServiceJsClassName;
-	protected String clientOptionsModelJsClassName;
+	protected String privateServiceVarsModelJsClassName;
+	protected String publicServiceJsClassName;
+	protected String publicServiceVarsModelJsClassName;
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
@@ -125,11 +127,14 @@ public class ServiceManifest {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
 			privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
 			privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
-			clientOptionsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("clientOptionsModelJsClassName"), "model.ClientOptions");
+			privateServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceVarsModelJsClassName"), "model.ServiceVars");
 		}
 		
 		if(svcEl.containsKey("publicServiceClassName")) {
+			String cn = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService");
 			publicServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("publicServiceClassName"), "PublicService"));
+			publicServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceJsClassName"), cn);
+			publicServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceVarsModelJsClassName"), "model.PublicServiceVars");
 		}
 		
 		if(svcEl.containsKey("jobServiceClassName")) {
@@ -306,8 +311,22 @@ public class ServiceManifest {
 		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceJsClassName) : privateServiceJsClassName;
 	}
 	
-	public String getClientOptionsModelJsClassName(boolean full) {
-		return (full) ? LangUtils.buildClassName(jsPackage, clientOptionsModelJsClassName) : clientOptionsModelJsClassName;
+	public String getPrivateServiceVarsModelJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceVarsModelJsClassName) : privateServiceVarsModelJsClassName;
+	}
+	
+	/**
+	 * Gets the class name of client-side service implementation.
+	 * (eg. Sonicle.webtop.mail.MailService)
+	 * @param full True to include js package.
+	 * @return The value.
+	 */
+	public String getPublicServiceJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, publicServiceJsClassName) : publicServiceJsClassName;
+	}
+	
+	public String getPublicServiceVarsModelJsClassName(boolean full) {
+		return (full) ? LangUtils.buildClassName(jsPackage, publicServiceVarsModelJsClassName) : publicServiceVarsModelJsClassName;
 	}
 	
 	public String getUserOptionsViewJsClassName(boolean full) {

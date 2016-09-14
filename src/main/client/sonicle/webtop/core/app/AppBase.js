@@ -31,71 +31,71 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import com.sonicle.commons.web.json.JsonResult;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-/**
- *
- * @author malbinola
- */
-public class JsWTS {
-	public String securityToken;
-	public String layoutClassName;
-	public String fileTypes;
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
-	public ArrayList<JsWTS.Service> services = new ArrayList<>();
-	public ArrayList<Settings> servicesOptions = new ArrayList<>();
-	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
-	public String defaultService;
+Ext.define('Sonicle.webtop.core.app.AppBase', {
+	extend: 'Ext.app.Application',
 	
-	public String toJson() {
-		return JsonResult.GSON.toJson(this);
-	}
+	/**
+	 * @property {Ext.util.HashMap} locales
+	 * A collection of locale classes.
+	 */
+	locales: null,
 	
-	public static class ServiceUserOptions {
-		public String viewClassName;
-		public String modelClassName;
-		
-		public ServiceUserOptions(String viewClassName, String modelClassName) {
-			this.viewClassName = viewClassName;
-			this.modelClassName = modelClassName;
-		}
-	}
+	/**
+	 * @property {Ext.util.Collection} services
+	 * A collection of service descriptors.
+	 */
+	services: null,
 	
-	public static class Permissions extends HashMap<String, Actions> {
-		
-	}
+	constructor: function() {
+		var me = this;
+		WT.app = me;
+		WT.securityToken = WTS.securityToken;
+		me.locales = Ext.create('Ext.util.HashMap');
+		me.services = Ext.create('Ext.util.Collection');
+		me.callParent(arguments);
+	},
 	
-	public static class Actions extends HashMap<String, Object> {
-		
-	}
+	/**
+	 * Returns desired locale instance.
+	 * @param {String} id The service ID.
+	 * @returns {WT.Locale}
+	 */
+	getLocale: function(id) {
+		return this.locales.get(id);
+	},
 	
-	public static class Service {
-		public int index;
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String localeClassName;
-		public String serviceClassName;
-		public String clientOptionsClassName;
-		public ServiceUserOptions userOptions;
-		public String name;
-		public String description;
-		public String version;
-		public String build;
-		public String company;
-		public boolean maintenance;
-	}
+	/**
+	 * Returns loaded service descriptors.
+	 * @param {Boolean} [skip] False to include core descriptor. Default to true.
+	 * @returns {WT.ServiceDescriptor[]}
+	 */
+	getDescriptors: function(skip) {
+		if(!Ext.isDefined(skip)) skip = true;
+		var ret = [];
+		this.services.each(function(desc) {
+			if(!skip || (desc.getIndex() !== 0)) { // Skip core descriptor at index 0
+				Ext.Array.push(ret, desc);
+			}
+		});
+		return ret;
+	},
 	
-	public static class Settings extends HashMap<String, Object> {
-		
-		public Settings() {
-			super();
-		}
+	/**
+	 * Returns a service descriptor.
+	 * @param {String} id The service ID.
+	 * @returns {WT.ServiceDescriptor} The instance or undefined if not found. 
+	 */
+	getDescriptor: function(id) {
+		return this.services.get(id);
+	},
+	
+	/**
+	 * Returns a service instance.
+	 * @param {String} id The service ID.
+	 * @returns {WT.sdk.Service} The instance or null if not found. 
+	 */
+	getService: function(id) {
+		var desc = this.getDescriptor(id);
+		return (desc) ? desc.getInstance() : null;
 	}
-}
+});

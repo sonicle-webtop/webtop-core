@@ -33,7 +33,10 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.io.IOException;
+import java.util.Locale;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -59,5 +62,33 @@ public abstract class AbstractServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		processRequest(request, response);
+	}
+	
+	public static void fillSystemVars(Map vars, Locale locale, WebTopApp wta) {
+		vars.put("systemInfo", wta.getSystemInfo());
+		vars.put("serverInfo", wta.getServerInfo());
+		vars.put("jdk", System.getProperty("java.version"));
+		vars.put("appName", wta.getWebAppName());
+	}
+	
+	public static void fillPageVars(Map vars, Locale locale, WebTopApp wta, String baseUrl) {
+		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
+		String title = wta.getPlatformName() + " " + manifest.getVersion().getMajor();
+		vars.put("title", title);
+		vars.put("version", manifest.getVersion());
+		vars.put("baseUrl", baseUrl);
+	}
+	
+	public static void fillPageVars(Map vars, String title, String baseUrl) {
+		vars.put("title", title);
+		vars.put("baseUrl", baseUrl);
+	}
+	
+	public static void fillIncludeVars(Map vars, Locale locale, String theme, String lookAndFeel, boolean rightToLeft, boolean extJsDebug) {
+		vars.put("language", locale.getLanguage());
+		vars.put("theme", theme);
+		vars.put("laf", lookAndFeel);
+		vars.put("rtl", String.valueOf(rightToLeft));
+		vars.put("debug", String.valueOf(extJsDebug));
 	}
 }

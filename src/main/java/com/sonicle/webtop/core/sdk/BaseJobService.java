@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.app.BaseAbstractService;
 import java.util.List;
 import net.sf.qualitycheck.Check;
 import org.apache.shiro.subject.Subject;

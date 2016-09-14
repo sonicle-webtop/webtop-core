@@ -60,7 +60,7 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 		return tokens;
 	}
 	
-	protected void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response, Object... args) throws Exception {
+	protected void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response, boolean defaultHeaders, Object... args) throws Exception {
 		PrintWriter out = null;
 		try {
 			try {
@@ -69,9 +69,11 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 				ArrayList<Object> invokeArgs = new ArrayList<>();
 				invokeArgs.add(request);
 				invokeArgs.add(response);
-				if(!nowriter) {
-					ServletUtils.setCacheControlHeaderPrivateNoCache(response);
+				if(defaultHeaders) {
+					ServletUtils.setCacheControlPrivateNoCache(response);
 					ServletUtils.setJsonContentTypeHeader(response);
+				}
+				if(!nowriter) {
 					out = response.getWriter();
 					invokeArgs.add(out);
 				}

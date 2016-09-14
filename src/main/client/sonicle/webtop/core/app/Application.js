@@ -1,5 +1,5 @@
 
-Ext.define('Sonicle.webtop.core.Application', {
+Ext.define('Sonicle.webtop.core.app.Application', {
 	extend: 'Ext.app.Application',
 	requires: [
 		'Ext.ux.WebSocketManager',
@@ -22,13 +22,13 @@ Ext.define('Sonicle.webtop.core.Application', {
 		'Sonicle.webtop.core.ux.data.ArrayStore',
 		
 		'Sonicle.webtop.core.WT',
-		'Sonicle.webtop.core.FileTypes',
-		'Sonicle.webtop.core.Factory',
-		'Sonicle.webtop.core.Util',
-		'Sonicle.webtop.core.Log',
-		'Sonicle.webtop.core.ThemeMgr',
-		'Sonicle.webtop.core.ComManager',
-		'Sonicle.webtop.core.ServiceDescriptor',
+		'Sonicle.webtop.core.app.FileTypes',
+		'Sonicle.webtop.core.app.Factory',
+		'Sonicle.webtop.core.app.Util',
+		'Sonicle.webtop.core.app.Log',
+		'Sonicle.webtop.core.app.ThemeMgr',
+		'Sonicle.webtop.core.app.ComManager',
+		'Sonicle.webtop.core.app.ServiceDescriptor',
 		
 		'Sonicle.webtop.core.ux.panel.Panel',
 		'Sonicle.webtop.core.ux.panel.Fields',
@@ -71,7 +71,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		WT.Log.debug('application:init');
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
-		Ext.themeName = WTS.servicesOptions[0].theme;
+		Ext.themeName = WTS.servicesVars[0].theme;
 		Ext.getDoc().on('contextmenu', function(e) {
 			e.preventDefault(); // Disable browser context if no context menu is defined
 		});
@@ -146,7 +146,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 	
 	launch: function() {
 		var me = this,
-				co = WTS.servicesOptions[0],
+				sv = WTS.servicesVars[0],
 				desc, deps = [];
 		
 		// Loads service descriptors from startup object
@@ -161,18 +161,18 @@ Ext.define('Sonicle.webtop.core.Application', {
 				version: obj.version,
 				build: obj.build,
 				serviceClassName: obj.serviceClassName,
+				serviceVarsClassName: obj.serviceVarsClassName,
 				localeClassName: obj.localeClassName,
-				clientOptionsClassName: obj.clientOptionsClassName,
 				userOptions: obj.userOptions,
 				name: obj.name,
 				description: obj.description,
 				company: obj.company
 			});
 			
-			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service.css');
-			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override.css');
-			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-'+co['theme']+'.css');
-			WT.loadCss(desc.getPath()+'/laf/'+co['laf']+'/service-override-'+co['theme']+'.css');
+			WT.loadCss(desc.getPath()+'/laf/'+sv['laf']+'/service.css');
+			WT.loadCss(desc.getPath()+'/laf/'+sv['laf']+'/service-override.css');
+			WT.loadCss(desc.getPath()+'/laf/'+sv['laf']+'/service-'+sv['theme']+'.css');
+			WT.loadCss(desc.getPath()+'/laf/'+sv['laf']+'/service-override-'+sv['theme']+'.css');
 			
 			me.locales.add(obj.id, Ext.create(obj.localeClassName));
 			me.services.add(desc);
@@ -222,7 +222,7 @@ Ext.define('Sonicle.webtop.core.Application', {
 		if(def !== null) me.activateService(def);
 		
 		// If necessary, show whatsnew
-		if(WT.getOption('isWhatsnewNeeded')) {
+		if(WT.getVar('isWhatsnewNeeded')) {
 			vpc.showWhatsnew(false);
 		}
 		

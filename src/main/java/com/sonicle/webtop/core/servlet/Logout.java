@@ -52,7 +52,7 @@ public class Logout extends AbstractServlet {
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = getWebTopApp(request);
-		ServletHelper.setCacheControl(response);
+		ServletHelper.setPrivateCache(response);
 		
 		try {
 			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context

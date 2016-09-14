@@ -56,7 +56,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addActivity(WT.getOption('domainId'));
+						me.addActivity(WT.getVar('domainId'));
 					}
 				}),
 				me.addAction('remove', {
@@ -123,7 +123,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addActivity(WT.getOption('domainId'));
+						me.addActivity(WT.getVar('domainId'));
 					}
 				}),
 				me.addAction('remove', {

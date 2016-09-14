@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Util', {
+Ext.define('Sonicle.webtop.core.app.Util', {
 	singleton: true,
 	alternateClassName: ['WT.Util', 'WTU'],
 	

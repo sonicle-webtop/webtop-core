@@ -39,16 +39,19 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.bol.js.JsWTS;
+import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
+import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.servlet.Otp;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,17 +76,16 @@ import org.slf4j.Logger;
  */
 public class WebTopSession {
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
-	public static final String PROPERTY_OTP_VERIFIED = "OTPVERIFIED";
 	public static final String PROP_REQUEST_DUMP = "REQUESTDUMP";
 	
 	private Session session;
 	private final WebTopApp wta;
 	private final PropertyBag props = new PropertyBag();
-	private int initStatus = 0;
+	private int initLevel = 0;
 	private UserProfile profile = null;
 	private final HashMap<String, BaseManager> managers = new HashMap<>();
 	private List<String> allowedServices = null;
-	private final LinkedHashMap<String, BaseService> services = new LinkedHashMap<>();
+	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
 	
@@ -93,19 +95,19 @@ public class WebTopSession {
 	}
 	
 	void cleanup() throws Exception {
-		initStatus = -1;
+		initLevel = -1;
 		ServiceManager svcm = wta.getServiceManager();
 			
 		// Cleanup services
-		synchronized(services) {
-			for(BaseService instance : services.values()) {
+		synchronized(privateServices) {
+			for(BaseService instance : privateServices.values()) {
 				svcm.cleanupPrivateService(instance);
 			}
-			services.clear();
+			privateServices.clear();
 		}
 		// Cleanup uploads
 		if(profile != null) {
-			String domainId = getProfileId().getDomain();
+			String domainId = getProfileDomainId();
 			synchronized(uploads) {
 				for(UploadedFile upf : uploads.values()) {
 					if(!upf.isVirtual()) wta.deleteTempFile(domainId, upf.getUploadId());
@@ -131,27 +133,24 @@ public class WebTopSession {
 		return session.getId().toString();
 	}
 	
-	public boolean isReady() {
-		return initStatus == 2;
-	}
-	
-	public void setProperty(String key, Object value) {
+	public Object setProperty(String serviceId, String key, Object value) {
 		synchronized(props) {
 			props.set(key, value);
+			return value;
 		}
 	}
 	
-	public Object getProperty(String key) {
+	public Object getProperty(String serviceId, String key) {
 		synchronized(props) {
 			return props.get(key);
 		}
 	}
 	
-	public Object popProperty(String key) {
+	public Object popProperty(String serviceId, String key) {
 		synchronized(props) {
-			if(hasProperty(key)) {
+			if(hasProperty(serviceId, key)) {
 				Object value = props.get(key);
-				clearProperty(key);
+				clearProperty(serviceId, key);
 				return value;
 			} else {
 				return null;
@@ -159,13 +158,13 @@ public class WebTopSession {
 		}
 	}
 	
-	public void clearProperty(String key) {
+	public void clearProperty(String serviceId, String key) {
 		synchronized(props) {
 			props.clear(key);
 		}
 	}
 	
-	public boolean hasProperty(String key) {
+	public boolean hasProperty(String serviceId, String key) {
 		synchronized(props) {
 			return props.has(key);
 		}
@@ -197,8 +196,8 @@ public class WebTopSession {
 		return SessionManager.getRefererUri(session);
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return (profile == null) ? null : profile.getId();
+	public boolean isReady() {
+		return initLevel == 2;
 	}
 	
 	/**
@@ -209,18 +208,50 @@ public class WebTopSession {
 		return profile;
 	}
 	
-	public synchronized void initProfile(HttpServletRequest request) throws Exception {
-		if(initStatus < 0) return;
-		if(initStatus == 0) privateInitProfile(request);
+	/**
+	 * Gets the UserProfile's ID.
+	 * Note that this can be null if the user is not authenticated. (eg. public area)
+	 * @return The UserProfile's ID
+	 */
+	public UserProfile.Id getProfileId() {
+		return (profile == null) ? null : profile.getId();
 	}
 	
-	public synchronized void initEnvironment(HttpServletRequest request) throws Exception {
-		if(initStatus < 0) return;
-		if(initStatus == 0) throw new Exception("You need to call initProfile() before calling this method!");
-		if(initStatus == 1) privateInitEnvironment(request);
+	/**
+	 * Gets Profile's Domain ID.
+	 * Note that if the user is not authenticated the virtual domain ID is returned instead.
+	 * @return The profile's domain ID
+	 */
+	public String getProfileDomainId() {
+		if(profile == null) {
+			//TODO: restituire l'id del dominio decodificato dall'host
+			return null;
+		} else {
+			return profile.getDomainId();
+		}
 	}
 	
-	private void privateInitProfile(HttpServletRequest request) throws Exception {
+	/**
+	 * Gets Profile's User ID.
+	 * Note that this can be null if the user is not authenticated. (eg. public area)
+	 * @return The profile's user ID
+	 */
+	public String getProfileUserId() {
+		return (profile == null) ? null : profile.getUserId();
+	}
+	
+	public synchronized void initPrivate(HttpServletRequest request) throws Exception {
+		if(initLevel < 0) return;
+		if(initLevel == 0) internalInitPrivate(request);
+	}
+	
+	public synchronized void initPrivateEnvironment(HttpServletRequest request) throws Exception {
+		if(initLevel < 0) return;
+		if(initLevel == 0) throw new Exception("You need to call initPrivate() before calling this method!");
+		if(initLevel == 1) privateInitEnvironment(request);
+	}
+	
+	private void internalInitPrivate(HttpServletRequest request) throws Exception {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
@@ -233,9 +264,9 @@ public class WebTopSession {
 		profile = new UserProfile(core, principal);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
-		if(!otpEnabled) setProperty(PROPERTY_OTP_VERIFIED, true);
+		if(!otpEnabled) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
 		
-		initStatus = 1;
+		initLevel = 1;
 	}
 	
 	private void privateInitEnvironment(HttpServletRequest request) throws Exception {
@@ -250,18 +281,16 @@ public class WebTopSession {
 		
 		allowedServices = core.listAllowedServices();
 		
-		int managerCount = 1, privateCount = 0;
 		BaseManager managerInst = null;
 		BaseService privateInst = null;
 		for(String serviceId : allowedServices) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
 			if(!serviceId.equals(CoreManifest.ID)) {
-				// Skip core service... its manager has already been instantiated (see above: privateInitProfile)
+				// Skip core service... its manager has already been instantiated (see above: internalInitPrivate)
 				if(descriptor.hasManager()) {
 					managerInst = svcm.instantiateServiceManager(serviceId, profile.getId());
 					if(managerInst != null) {
 						registerServiceManager(serviceId, managerInst);
-						managerCount++;
 					}
 				}
 			}
@@ -275,13 +304,12 @@ public class WebTopSession {
 				}
 				if(privateInst != null) {
 					registerPrivateService(privateInst);
-					privateCount++;
 				}
 			}
 		}
 		
 		logger.debug("Instantiated {} managers", managers.size());
-		logger.debug("Instantiated {} private services", services.size());
+		logger.debug("Instantiated {} private services", privateServices.size());
 		
 		/*
 		// Instantiates services
@@ -305,7 +333,7 @@ public class WebTopSession {
 		logger.debug("Instantiated {} services", count);
 		*/
 		
-		initStatus = 2;
+		initLevel = 2;
 	}
 	
 	private void registerServiceManager(String serviceId, BaseManager manager) {
@@ -327,27 +355,27 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Stores service instance into this session.
+	 * Stores private service instance into this session.
 	 * @param service 
 	 */
 	private void registerPrivateService(BaseService service) {
 		String serviceId = service.getManifest().getId();
-		synchronized(services) {
-			if(services.containsKey(serviceId)) throw new WTRuntimeException("Cannot add service twice");
-			services.put(serviceId, service);
+		synchronized(privateServices) {
+			if(privateServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add service twice");
+			privateServices.put(serviceId, service);
 		}
 	}
 	
 	/**
-	 * Gets a service instance by ID.
+	 * Gets a private service instance by ID.
 	 * @param serviceId The service ID.
 	 * @return The service instance, if found.
 	 */
 	public BaseService getServiceById(String serviceId) {
 		if(!isReady()) return null;
-		synchronized(services) {
-			if(!services.containsKey(serviceId)) throw new WTRuntimeException("No service with ID [{0}]", serviceId);
-			return services.get(serviceId);
+		synchronized(privateServices) {
+			if(!privateServices.containsKey(serviceId)) throw new WTRuntimeException("No service with ID [{0}]", serviceId);
+			return privateServices.get(serviceId);
 		}
 	}
 	
@@ -355,28 +383,26 @@ public class WebTopSession {
 	 * Gets instantiated services list.
 	 * @return A list of service ids.
 	 */
-	public List<String> getServices() {
+	public List<String> getPrivateServices() {
 		if(!isReady()) return null;
-		synchronized(services) {
-			return Arrays.asList(services.keySet().toArray(new String[services.size()]));
+		synchronized(privateServices) {
+			return Arrays.asList(privateServices.keySet().toArray(new String[privateServices.size()]));
 		}
 	}
 	
-	public void fillStartup(JsWTS js, String layout) {
+	public void fillStartup(JsWTSPrivate js, String layout) {
 		if(!isReady()) return;
+		
+		Locale locale = getLocale();
 		js.securityToken = RunContext.getCSRFToken();
 		js.layoutClassName = StringUtils.capitalize(layout);
 		js.fileTypes = wta.getFileTypes().toString();
 		
 		// Evaluate services
-		JsWTS.Service last = null;
+		JsWTSPrivate.Service last = null;
 		String deflt = null;
-		int index;
-		for(String serviceId : getServices()) {
-			fillStartupForService(js, serviceId);
-			index = js.services.size()-1; // Last inserted
-			last = js.services.get(index);
-			last.index = index; // Position is (for convenience) also saved inside!
+		for(String serviceId : getPrivateServices()) {
+			fillStartupForService(js, serviceId, locale);
 			if((deflt == null) && !last.id.equals(CoreManifest.ID) && !last.maintenance) {
 				// Candidate startup (default) service must not be in maintenance
 				// and id should not be equal to core service!
@@ -386,20 +412,19 @@ public class WebTopSession {
 		js.defaultService = deflt;
 	}
 	
-	private JsWTS.Service fillStartupForService(JsWTS js, String serviceId) {
+	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		Subject subject = RunContext.getSubject();
-		Locale locale = getLocale();
 		
-		JsWTS.Permissions perms = new JsWTS.Permissions();
+		JsWTSPrivate.Permissions perms = new JsWTSPrivate.Permissions();
 		
 		// Generates service auth permissions
 		for(ServicePermission perm : manifest.getDeclaredPermissions()) {
 			if(perm instanceof ServiceSharePermission) continue;
 			
-			JsWTS.Actions acts = new JsWTS.Actions();
+			JsWTSPrivate.Actions acts = new JsWTSPrivate.Actions();
 			for(String act : perm.getActions()) {
 				if(RunContext.isPermitted(subject, serviceId, perm.getGroupName(), act)) {
 					acts.put(act, true);
@@ -420,16 +445,17 @@ public class WebTopSession {
 		}
 		
 		// Completes service info
-		JsWTS.Service jssvc = new JsWTS.Service();
+		JsWTSPrivate.Service jssvc = new JsWTSPrivate.Service();
+		jssvc.index = js.services.size();
 		jssvc.id = manifest.getId();
 		jssvc.xid = manifest.getXId();
 		jssvc.ns = manifest.getJsPackageName();
 		jssvc.path = manifest.getJsBaseUrl();
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
 		jssvc.serviceClassName = manifest.getPrivateServiceJsClassName(true);
-		jssvc.clientOptionsClassName = manifest.getClientOptionsModelJsClassName(true);
+		jssvc.serviceVarsClassName = manifest.getPrivateServiceVarsModelJsClassName(true);
 		if(sdesc.hasUserOptionsService()) {
-			jssvc.userOptions = new JsWTS.ServiceUserOptions(
+			jssvc.userOptions = new JsWTSPrivate.ServiceUserOptions(
 				manifest.getUserOptionsViewJsClassName(true),
 				manifest.getUserOptionsModelJsClassName(true)
 			);
@@ -442,27 +468,27 @@ public class WebTopSession {
 		jssvc.maintenance = svcm.isInMaintenance(serviceId);
 		
 		js.services.add(jssvc);
-		js.servicesOptions.add(getClientOptions(serviceId));
+		js.servicesVars.add(getServiceVars(serviceId));
 		js.servicesPerms.add(perms);
 		
 		return jssvc;
 	}
 	
-	private JsWTS.Settings getClientOptions(String serviceId) {
+	private JsWTSPrivate.Vars getServiceVars(String serviceId) {
 		BaseService svc = getServiceById(serviceId);
 		
 		// Gets initial settings from instantiated service
 		HashMap<String, Object> hm = null;
 		try {
 			WebTopApp.setServiceLoggerDC(serviceId);
-			hm = svc.returnClientOptions();
+			hm = svc.returnServiceVars();
 		} catch(Exception ex) {
-			logger.error("returnStartupOptions method returns errors", ex);
+			logger.error("returnServiceVars method returns errors", ex);
 		} finally {
 			WebTopApp.unsetServiceLoggerDC();
 		}
 		
-		JsWTS.Settings is = new JsWTS.Settings();
+		JsWTSPrivate.Vars is = new JsWTSPrivate.Vars();
 		if(hm != null) is.putAll(hm);
 		
 		// Built-in settings
@@ -476,10 +502,75 @@ public class WebTopSession {
 		return is;
 	}
 	
+	public void fillStartup(JsWTSPublic js, String publicServiceId) {
+		Locale locale = getLocale();
+		js.fileTypes = wta.getFileTypes().toString();
+		fillStartupForPublicService(js, CoreManifest.ID, locale);
+		fillStartupForPublicService(js, publicServiceId, locale);
+	}
+	
+	private JsWTSPublic.Service fillStartupForPublicService(JsWTSPublic js, String serviceId, Locale locale) {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
+		ServiceManifest manifest = sdesc.getManifest();
+		
+		if(svcm.isCoreService(serviceId)) {
+			// Defines paths and requires
+			js.appRequires.add(manifest.getPublicServiceJsClassName(true));
+			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
+		} else {
+			// Defines paths and requires
+			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
+			js.appRequires.add(manifest.getPublicServiceJsClassName(true));
+			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
+		}
+		
+		// Completes service info
+		JsWTSPublic.Service jssvc = new JsWTSPublic.Service();
+		jssvc.index = js.services.size();
+		jssvc.id = manifest.getId();
+		jssvc.xid = manifest.getXId();
+		jssvc.ns = manifest.getJsPackageName();
+		jssvc.path = manifest.getJsBaseUrl();
+		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
+		jssvc.serviceClassName = manifest.getPublicServiceJsClassName(true);
+		jssvc.serviceVarsClassName = manifest.getPublicServiceVarsModelJsClassName(true);
+		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME));
+		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION));
+		jssvc.company = StringEscapeUtils.escapeJson(manifest.getCompany());
+		jssvc.maintenance = svcm.isInMaintenance(serviceId);
+		
+		js.services.add(jssvc);
+		js.servicesVars.add(getPublicServiceVars(serviceId));
+		
+		return jssvc;
+	}
+	
+	private JsWTSPublic.Vars getPublicServiceVars(String serviceId) {
+		BasePublicService svc = wta.getServiceManager().getPublicService(serviceId);
+		BasePublicService.ServiceVars vars = null;
+		
+		// Gets initial settings from instantiated service
+		if(svc != null) {
+			try {
+				WebTopApp.setServiceLoggerDC(serviceId);
+				vars = svc.returnServiceVars();
+			} catch(Exception ex) {
+				logger.error("returnServiceVars method returns errors", ex);
+			} finally {
+				WebTopApp.unsetServiceLoggerDC();
+			}
+		}
+		
+		JsWTSPublic.Vars is = new JsWTSPublic.Vars();
+		if(vars != null) is.putAll(vars);
+		return is;
+	}
+	
 	private boolean isWhatsnewNeeded() {
 		ServiceManager svcm = wta.getServiceManager();
 		boolean needWhatsnew = false;
-		for(String serviceId : getServices()) {
+		for(String serviceId : getPrivateServices()) {
 			needWhatsnew = needWhatsnew | svcm.needWhatsnew(serviceId, profile);
 		}
 		return needWhatsnew;
@@ -564,7 +655,7 @@ public class WebTopSession {
 			UploadedFile upf = uploads.get(uploadId);
 			if(upf != null) {
 				if(deleteTempFile && !upf.isVirtual()) {
-					String domainId = getProfileId().getDomain();
+					String domainId = getProfileDomainId();
 					try {
 						wta.deleteTempFile(domainId, uploadId);
 					} catch(WTException ex) { /* Do nothing... */ }
@@ -587,7 +678,7 @@ public class WebTopSession {
 				Map.Entry<String, UploadedFile> entry = it.next();
 				if(StringUtils.equals(entry.getValue().getTag(), tag)) {
 					if(!entry.getValue().isVirtual()) {
-						String domainId = getProfileId().getDomain();
+						String domainId = getProfileDomainId();
 						try {
 							wta.deleteTempFile(domainId, entry.getValue().getUploadId());
 						} catch(WTException ex) { /* Do nothing... */ }

@@ -211,7 +211,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		tStack.getLayout().setActiveItem(me.toolmap[svc.ID]);
 		active = tStack.getLayout().getActiveItem();
 		if(active) side.setTitle(active.getTitle());
-		side.setWidth(svc.getOption('viewportToolWidth') || 200);
+		side.setWidth(svc.getVar('viewportToolWidth') || 200);
 		mStack.getLayout().setActiveItem(me.mainmap[svc.ID]);
 	},
 	
@@ -383,18 +383,18 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	showOptions: function() {
 		var me = this,
-				mys = WT.app.getService(WT.ID);
+				mys = WT.getApp().getService(WT.ID);
 		
 		me.createView(mys, 'view.Options', {
 			viewCfg: {
-				profileId: WT.getOption('profileId')
+				profileId: WT.getVar('profileId')
 			}
 		}).show();
 	},
 	
 	showWhatsnew: function(full) {
 		var me = this,
-				mys = WT.app.getService(WT.ID);
+				mys = WT.getApp().getService(WT.ID);
 		
 		me.createView(mys, 'view.Whatsnew', {
 			viewCfg: {
@@ -405,7 +405,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	showFeedback: function() {
 		var me = this,
-				mys = WT.app.getService(WT.ID),
+				mys = WT.getApp().getService(WT.ID),
 				vw;
 		
 		vw = me.createView(mys, 'view.Feedback');

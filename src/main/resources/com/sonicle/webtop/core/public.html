@@ -5,16 +5,12 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/favicon.ico" />
+        <base href="${baseUrl}" target="_blank">
+		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/favicon.ico">
 		<link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/font-awesome.min.css">
-        <link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/loading.css">
 		<title>${title}</title>
     </head>
     <body>
-        <div id="wt-loading-mask"></div>
-        <div id="wt-loading">
-            <span id="wt-loading-message">${loadingMessage}</span>
-        </div>
         <!--
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/moxie.js"></script>
 		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.dev.js"></script>
@@ -26,6 +22,6 @@
 			Ext.ns('WTS');
 			WTS = ${WTS};
 		</script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/app-private.js"></script>
+		<script type="text/javascript" src="resources/com.sonicle.webtop.core/app-public.js"></script>
     </body>
 </html>

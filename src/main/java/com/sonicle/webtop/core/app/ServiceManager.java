@@ -380,9 +380,15 @@ public class ServiceManager {
 		return list;
 	}
 	
+	public boolean hasPublicService(String serviceId) {
+		synchronized(publicServices) {
+			return publicServices.containsKey(serviceId);
+		}
+	}
+	
 	public BasePublicService getPublicService(String serviceId) {
 		synchronized(publicServices) {
-			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID: '{0}'", serviceId);
+			if(!publicServices.containsKey(serviceId)) throw new WTRuntimeException("No public service with ID: ''{0}''", serviceId);
 			return publicServices.get(serviceId);
 		}
 	}

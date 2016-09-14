@@ -31,64 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopSession;
-import java.util.List;
-
-/**
- *
- * @author malbinola
- */
-public class Environment {
-	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
-	protected final CoreServiceSettings css;
-	protected final CoreUserSettings cus;
-	protected final String csrf;
-
-	public Environment(WebTopSession wts) {
-		this.wts = wts;
-		csrf = RunContext.getCSRFToken();
-		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
-		UserProfile.Id pid = wts.getProfileId();
-		cus = (pid != null) ? new CoreUserSettings(pid) : null;
-	}
-
-	public UserProfile getProfile() {
-		return wts.getUserProfile();
-	}
+Ext.define('Sonicle.webtop.core.app.FileTypes', {
+	alternateClassName: 'WT.FileTypes',
+	singleton: true,
 	
-	public UserProfile.Id getProfileId() {
-		return wts.getProfileId();
-	}
+	extToFileType: null,
 	
-	public CoreServiceSettings getCoreServiceSettings() {
-		return css;
-	}
+	/**
+	 * Inits internal mapping table using provided JSON.
+	 * @param {String} json JSON string
+	 */
+	init: function(json) {
+		this.extToFileType = Ext.JSON.decode(json);
+	},
 	
-	public CoreUserSettings getCoreUserSettings() {
-		return cus;
+	/**
+	 * Returns, if present, the corresponding fileType classification for 
+	 * the provided file extension.
+	 * @param {String} ext The file extension.
+	 * @returns {String} The fileType
+	 */
+	getFileType: function(ext) {
+		var ftype = this.extToFileType[ext];
+		return ftype || 'file';
 	}
-	
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
-	public void notify(ServiceMessage message) {
-		wts.nofity(message);
-	}
-	
-	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
-	}
-}
+});

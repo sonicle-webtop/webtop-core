@@ -62,6 +62,11 @@ public class RunContext {
 		return (subject == null) ? null : (Session)subject.getSession(false);
 	}
 	
+	public static String getSessionId() {
+		Session session = getSession();
+		return (session != null) ? session.getId().toString() : null;
+	}
+	
 	public static UserProfile.Id getProfileId() {
 		return getProfileId(getSubject());
 	}

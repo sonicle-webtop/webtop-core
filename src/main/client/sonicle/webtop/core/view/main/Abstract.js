@@ -215,7 +215,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 							}, {
 								itemId: 'whatsnew',
 								tooltip: WT.res('menu.whatsnew.tip'),
-								disabled: !WT.getOption('wtWhatsnewEnabled'),
+								disabled: !WT.getVar('wtWhatsnewEnabled'),
 								iconCls: 'wt-menu-whatsnew'
 							}, {
 								itemId: 'options',

@@ -32,9 +32,10 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.sdk.Service', {
+	extend: 'Sonicle.webtop.core.sdk.BaseService',
 	alternateClassName: 'WT.sdk.Service',
 	requires: [
-		'WT.sdk.model.ClientOptions'
+		'WT.sdk.model.ServiceVars'
 	],
 	mixins: [
 		'Ext.mixin.Observable',
@@ -50,28 +51,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
-	 * @property {String} ID
-	 * Service ID.
-	 */
-	ID: null,
-	
-	/**
-	 * @property {String} XID
-	 * Service short ID.
-	 */
-	XID: null,
-	
-	/**
 	 * @property {Object} perms
 	 * A object carring user's permission.
 	 */
 	perms: null,
-	
-	/**
-	 * @property {WT.sdk.model.ClientOptions} options
-	 * A model representing service's options pushed at startup time.
-	 */
-	options: null,
 	
 	/**
 	 * @private
@@ -81,73 +64,26 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	msgListeners: null,
 	
 	/**
-	 * @method
-	 * Called automatically when the service is initialized by the framework.
-	 * This is the principal hook point.
-	 */
-	init: Ext.emptyFn,
-	
-	/**
 	 * @event activate
 	 * Fires after the Service has been activated.
 	 */
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.ID = cfg.ID;
-		me.XID = cfg.XID;
-		me.msgListeners = {};
-		me.initConfig(cfg);
-		me.mixins.observable.constructor.call(me, cfg);
-		me.mixins.refstorer.constructor.call(me, cfg);
-		me.mixins.actionstorer.constructor.call(me, cfg);
 		me.callParent(arguments);
 		
 		me.perms = cfg.permsData;
 		delete cfg.permsData;
+		me.msgListeners = {};
 		
 		// Creates options using configured model
 		try {
-			me.options = Ext.create(cfg.clientOptionsClassName, cfg.optionsData);
+			me.vars = Ext.create(cfg.serviceVarsClassName, cfg.varsData);
 			
 		} catch(err) {
-			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', cfg.clientOptionsClassName));
-			me.options = Ext.create('WT.sdk.model.ClientOptions', cfg.optionsData);
+			Ext.log.warn(Ext.String.format('Unable to instantiale specified model [{0}], using default one.', cfg.serviceVarsClassName));
+			me.options = Ext.create('WT.sdk.model.ServiceVars', cfg.varsData);
 		}
-	},
-	
-	/**
-	 * Returns service's name.
-	 * @return {String}
-	 */
-	getName: function() {
-		return WT.getApp().getDescriptor(this.ID).getName();
-	},
-	
-	/**
-	 * Returns service's description.
-	 * @return {String}
-	 */
-	getDescription: function() {
-		return WT.getApp().getDescriptor(this.ID).getDescription();
-	},
-	
-	/**
-	 * Prepends service's namespace to passed class name.
-	 * @param {String} cn The class name.
-	 * @return {String}
-	 */
-	preNs: function(cn) {
-		return WT.preNs(WT.getApp().getDescriptor(this.ID).getNs(), cn);
-	},
-	
-	/**
-	 * Builds a state ID string prepending a name with service's XID.
-	 * @param {type} name The component or unique reference name.
-	 * @return {String} A string ID
-	 */
-	buildStateId: function(name) {
-		return this.XID + '-' + name;
 	},
 	
 	/**
@@ -167,74 +103,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	isPermitted: function(resource, action) {
 		var r = this.perms[resource];
 		return (r) ? (r[action] === true) : false;
-	},
-	
-	/**
-	 * Returns an option defined during startup set.
-	 * Some built-in options are defined in model {@link WT.sdk.model.ClientOptions}.
-	 * @param {String} key The option key.
-	 * @param {Mixed} [ifEmpty] The fallback value
-	 * @return {Mixed} The option value.
-	 */
-	getOption: function(key, ifEmpty) {
-		var v = this.options.get(key);
-		return (arguments.length === 2) ? WTU.deflt(v, ifEmpty) : v;
-	},
-	
-	/**
-	 * Returns an option as an object defined during startup set.
-	 * Some built-in options are defined in model {@link WT.sdk.model.ClientOptions}.
-	 * @param {String} key The option key.
-	 * @return {Mixed} The option value object.
-	 */
-	getOptionAsObject: function(key) {
-		return Ext.JSON.decode(this.getOption(key,'{}'));
-	},
-	
-	
-	/**
-	 * Sets one of startup option set.
-	 * Updates are only valid for client, no server sync is done using this method.
-	 * @param {Object} opts Key/Value pairs object.
-	 */
-	setOption: function(key,value) {
-		var o={};
-		o[key]=value;
-		this.setOptions(o);
-	},
-	
-	/**
-	 * Sets one of startup option set.
-	 * Updates are only valid for client, no server sync is done using this method.
-	 * @param {Object} opts Key/Value pairs object.
-	 */
-	setOptions: function(opts) {
-		var me = this;
-		opts = opts || {};
-		me.options.beginEdit();
-		Ext.iterate(opts, function(k, v) {
-			if (me.options.get(k) === 'undefined') return;
-			me.options.set(k, v);
-		});
-		me.options.endEdit();
-	},
-	
-	/**
-	 * Returns the localized string associated to the key.
-	 * Values arguments will be used to replace tokens in source string.
-	 * @param {String} key The key.
-	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @return {String} The translated (optionally formatted) string, or undefined if not found.
-	 */
-	res: function(key) {
-		var me = this,
-				ExArr = Ext.Array;
-		if(arguments.length === 1) {
-			return WT.res(me.ID, key);
-		} else {
-			var args = ExArr.slice(arguments, 1);
-			return WT.res.apply(me, ExArr.merge([me.ID, key], args));
-		}
 	},
 	
 	/**
@@ -322,47 +190,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	getToolboxActions: function() {
 		var acts = this.getActions(WT.sdk.Service.ACTION_GROUP_TOOLBOX);
 		return (acts) ? Ext.Object.getValues(acts) : [];
-	},
-	
-	/**
-	 * Builds CSS class name namespacing it using service xid.
-	 * @param {String} name The CSS class name part.
-	 * @return {String} The concatenated CSS class name.
-	 */
-	cssCls: function(name) {
-		return WTF.cssCls(this.XID, name);
-	},
-	
-	/**
-	 * Builds CSS class name for icons namespacing it using service xid.
-	 * For example, using 'service' as name, it will return '{xid}-icon-service'.
-	 * Using 'service-l' as name it will return '{xid}-icon-service-l'.
-	 * Likewise, using 'service' as name and 'l' as size it will return the
-	 * same value: '{xid}-icon-service-l'.
-	 * @param {String} name The icon name part.
-	 * @param {String} [size] Icon size (one of xs,s,m,l).
-	 * @return {String} The concatenated CSS class name.
-	 */
-	cssIconCls: function(name, size) {
-		return WTF.cssIconCls(this.XID, name, size);
-	},
-	
-	/*
-	 * Builds the URL of a resource file this service.
-	 * @param {String} relPath The relative resource path.
-	 * @return {String} The URL
-	 */
-	fileUrl: function(relPath) {
-		return WTF.fileUrl(this.ID, relPath);
-	},
-	
-	/*
-	 * Builds the URL of a themed resource file this service.
-	 * @param {String} relPath The relative resource path.
-	 * @return {String} The URL
-	 */
-	resourceUrl: function(relPath) {
-		return WTF.resourceUrl(this.ID, relPath);
 	},
 	
 	/**

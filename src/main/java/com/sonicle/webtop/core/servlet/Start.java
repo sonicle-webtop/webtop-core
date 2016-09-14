@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.bol.js.JsWTS;
+import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
 import freemarker.template.Template;
 import java.io.IOException;
@@ -78,34 +78,28 @@ public class Start extends AbstractServlet {
 			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
 			if(maintenance && false) throw new MaintenanceException();
 			
-			wts.initProfile(request);
+			wts.initPrivate(request);
 			
 			// Checks if otp page needs to be displayed
-			boolean isOtpVerified = wts.hasProperty(WebTopSession.PROPERTY_OTP_VERIFIED);
+			boolean isOtpVerified = wts.hasProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED);
 			if(!isOtpVerified) throw new OtpException();
 			
-			wts.initEnvironment(request);
+			wts.initPrivateEnvironment(request);
 			CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId()); // Keep at this line!
 			
 			Locale locale = wts.getLocale();
-			String theme = cus.getTheme();
 			String layout = cus.getLayout();
-			String lookAndFeel = cus.getLookAndFeel();
 			
 			Map vars = new HashMap();
 			
 			// Page + loader variables
-			ServletHelper.fillPageVars(vars, locale, wta);
-			vars.put("language", locale.getLanguage());
-			vars.put("theme", theme);
-			vars.put("layout", layout);
-			vars.put("laf", lookAndFeel);
-			vars.put("rtl", String.valueOf(cus.getRightToLeft()));
-			vars.put("debug", ""+extdebug);
+			AbstractServlet.fillPageVars(vars, locale, wta, "");
+			AbstractServlet.fillIncludeVars(vars, locale, cus.getTheme(), cus.getLookAndFeel(), cus.getRightToLeft(), extdebug);
+			vars.put("layout", cus.getLayout());
 			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));
 			
 			// Startup variables
-			JsWTS jswts = new JsWTS();
+			JsWTSPrivate jswts = new JsWTSPrivate();
 			wts.fillStartup(jswts, layout);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			//vars.put("WTS", jswts.toJson());
