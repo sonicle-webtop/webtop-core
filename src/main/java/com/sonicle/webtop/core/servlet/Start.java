@@ -102,7 +102,6 @@ public class Start extends AbstractServlet {
 			JsWTSPrivate jswts = new JsWTSPrivate();
 			wts.fillStartup(jswts, layout);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
-			//vars.put("WTS", jswts.toJson());
 			
 			// Load and build template
 			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");

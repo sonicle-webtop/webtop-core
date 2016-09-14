@@ -136,16 +136,8 @@ public class PublicServiceRequest extends BaseServiceRequest {
 				relativePath = urlParts[1];
 			}
 			
-			/*
-			String[] urlParts = splitPath(request.getPathInfo());
-			String publicName = urlParts[0];
-			String service = wta.getServiceManager().getServiceIdByPublicName(publicName);
-			if(service == null) throw new WTRuntimeException("Unknown public service [{0}]", publicName);
-			*/
-			
 			// Returns direct stream if pathInfo points to a real file
 			Resource resource = getPublicFile(wta, serviceId, relativePath);
-			//Resource resource = getPublicFile(wta, service, urlParts[1]);
 			if(resource != null) {
 				writeFile(request, response, resource);
 				
@@ -157,13 +149,13 @@ public class PublicServiceRequest extends BaseServiceRequest {
 				BasePublicService instance = wts.getPublicServiceById(serviceId);
 
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), serviceId, action, nowriter);
+				MethodInfo meinfo = getMethod(instance.getClass(), serviceId, action, nowriter);
 				
 				Subject subject = getWebTopApp(request).bindAdminSubjectToSession(RunContext.getSessionId());
 				ThreadState threadState = new SubjectThreadState(subject);
 				threadState.bind();
 				try {
-					invokeMethod(instance, method, serviceId, nowriter, request, response, false);
+					invokeMethod(instance, meinfo, serviceId, request, response);
 				} finally {
 					threadState.clear();
 				}

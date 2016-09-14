@@ -76,8 +76,8 @@ public class ServiceRequest extends BaseServiceRequest {
 				BaseService instance = wts.getPrivateServiceById(service);
 				
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), service, action, nowriter);
-				invokeMethod(instance, method, service, nowriter, request, response, !nowriter);
+				MethodInfo meinfo = getMethod(instance.getClass(), service, action, nowriter);
+				invokeMethod(instance, meinfo, service, request, response);
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
@@ -96,8 +96,8 @@ public class ServiceRequest extends BaseServiceRequest {
 				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), wts.getId(), service, pid);
 				
 				// Gets method and invokes it...
-				Method method = getMethod(instance.getClass(), service, action, nowriter, String.class);
-				invokeMethod(instance, method, service, nowriter, request, response, !nowriter, payload);
+				MethodInfo meinfo = getMethod(instance.getClass(), service, action, nowriter, String.class);
+				invokeMethod(instance, meinfo, service, request, response, payload);
 			}
 			
 		} catch(Exception ex) {

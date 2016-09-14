@@ -68,17 +68,17 @@ public abstract class BasePublicService extends BaseAbstractService {
 		this.subject = Check.notNull(subject);
 	}
 	
-	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws Exception;
+	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response) throws Exception;
 	
 	public ServiceVars returnServiceVars() {
 		return null;
 	}
 	
-	public void writePage(String baseUrl, Map vars, Locale locale, PrintWriter out) throws IOException, TemplateException {
+	public void writePage(String baseUrl, Map vars, Locale locale, HttpServletResponse response) throws IOException, TemplateException {
 		AbstractServlet.fillPageVars(vars, WT.getPlatformName(), PathUtils.ensureTrailingSeparator(baseUrl));
 		AbstractServlet.fillIncludeVars(vars, locale, DEFAULTVAR_THEME, DEFAULTVAR_LAF, false, WebTopApp.getPropExtDebug());
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "public.html");
-		tpl.process(vars, out);
+		tpl.process(vars, response.getWriter());
 	}
 	
 	protected String getPublicResourcesBaseUrl() {

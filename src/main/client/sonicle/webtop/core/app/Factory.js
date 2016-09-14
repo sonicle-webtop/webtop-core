@@ -44,8 +44,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @returns {String} The encoded URL
 	 */
 	requestBaseUrl: function(params) {
-		var url = (WT.isPublic ? 'public' : 'service-request') + '?csrf=' + WT.securityToken;
-		//var url = Ext.String.format('service-request?csrf={0}', WT.securityToken);
+		var url = (WT.isPublic ? 'public' : 'service-request') + '?csrf=' + WTS.securityToken;
+		//var url = Ext.String.format('service-request?csrf={0}', WTS.securityToken);
 		return (params) ? Ext.String.urlAppend(url, Ext.Object.toQueryString(params)) : url;
 	},
 	

@@ -60,7 +60,38 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 		return tokens;
 	}
 	
-	protected void invokeMethod(Object instance, Method method, String service, boolean nowriter, HttpServletRequest request, HttpServletResponse response, boolean defaultHeaders, Object... args) throws Exception {
+	protected MethodInfo getMethod(Class clazz, String service, String action, boolean nowriter, Class<?>... args) throws WTException {
+		String methodName = null;
+		ArrayList<Class<?>> classArgs = new ArrayList<>();
+		classArgs.add(HttpServletRequest.class);
+		classArgs.add(HttpServletResponse.class);
+		
+		if(nowriter) {
+			methodName = MessageFormat.format("process{0}", action);
+		} else {
+			if(StringUtils.isEmpty(action)) {
+				action = "DefaultAction";
+				nowriter = true;
+			}
+			//action = StringUtils.isEmpty(action) ? "DefaultAction" : action;
+			methodName = MessageFormat.format("process{0}", action);
+			if(!nowriter) classArgs.add(PrintWriter.class);
+		}
+		if(args.length > 0) classArgs.addAll(Arrays.asList(args));
+		
+		try {
+			return new MethodInfo(clazz.getMethod(methodName, classArgs.toArray(new Class<?>[classArgs.size()])), nowriter);
+			//return clazz.getMethod(methodName, classArgs.toArray(new Class<?>[classArgs.size()]));
+		} catch(NoSuchMethodException ex) {
+			if(nowriter) {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,...) not found in {3}]", service, action, methodName, clazz.getName());
+			} else {
+				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out,...) not found in {3}]", service, action, methodName, clazz.getName());
+			}
+		}
+	}
+	
+	protected void invokeMethod(Object instance, MethodInfo methodInfo, String service, HttpServletRequest request, HttpServletResponse response, Object... args) throws Exception {
 		PrintWriter out = null;
 		try {
 			try {
@@ -69,16 +100,14 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 				ArrayList<Object> invokeArgs = new ArrayList<>();
 				invokeArgs.add(request);
 				invokeArgs.add(response);
-				if(defaultHeaders) {
+				if(!methodInfo.nowriter) {
 					ServletUtils.setCacheControlPrivateNoCache(response);
 					ServletUtils.setJsonContentTypeHeader(response);
-				}
-				if(!nowriter) {
 					out = response.getWriter();
 					invokeArgs.add(out);
 				}
 				if(args.length > 0) invokeArgs.addAll(Arrays.asList(args));
-				method.invoke(instance, invokeArgs.toArray());
+				methodInfo.method.invoke(instance, invokeArgs.toArray());
 				
 			} finally {
 				if(out != null) out.flush();
@@ -91,49 +120,15 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 		}
 	}
 	
-	protected Method getMethod(Class clazz, String service, String action, boolean nowriter, Class<?>... args) throws WTException {
-		String methodName = null;
-		ArrayList<Class<?>> classArgs = new ArrayList<>();
-		classArgs.add(HttpServletRequest.class);
-		classArgs.add(HttpServletResponse.class);
+	public static class MethodInfo {
+		public Method method;
+		public boolean nowriter;
 		
-		if(nowriter) {
-			methodName = MessageFormat.format("process{0}", action);
-		} else {
-			action = StringUtils.isEmpty(action) ? "DefaultAction" : action;
-			methodName = MessageFormat.format("process{0}", action);
-			classArgs.add(PrintWriter.class);
-		}
-		if(args.length > 0) classArgs.addAll(Arrays.asList(args));
+		public MethodInfo() {};
 		
-		try {
-			return clazz.getMethod(methodName, classArgs.toArray(new Class<?>[classArgs.size()]));
-		} catch(NoSuchMethodException ex) {
-			if(nowriter) {
-				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,...) not found in {3}]", service, action, methodName, clazz.getName());
-			} else {
-				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out,...) not found in {3}]", service, action, methodName, clazz.getName());
-			}
-		}
-	}
-	
-	protected Method getMethodOld(Class clazz, String service, String action, boolean nowriter) throws WTException {
-		String methodName = null;
-		if(nowriter) {
-			methodName = MessageFormat.format("process{0}", action);
-			try {
-				return clazz.getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
-			} catch(NoSuchMethodException ex) {
-				throw new WTException("Service {0} has no action with name {1} [{2}(request,response) not found in {3}]", service, action, methodName, clazz.getName());
-			}
-		} else {
-			action = StringUtils.isEmpty(action) ? "DefaultAction" : action;
-			methodName = MessageFormat.format("process{0}", action);
-			try {
-				return clazz.getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class, PrintWriter.class);
-			} catch(NoSuchMethodException ex) {
-				throw new WTException("Service {0} has no action with name {1} [{2}(request,response,out) not found in {3}]", service, action, methodName, clazz.getName());
-			}
+		public MethodInfo(Method method, boolean nowriter) {
+			this.method = method;
+			this.nowriter = nowriter;
 		}
 	}
 }

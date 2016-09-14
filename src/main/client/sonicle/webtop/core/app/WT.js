@@ -52,8 +52,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	NS: 'Sonicle.webtop.core',
 	
 	app: null,
-	securityToken: null,
-	baseUrl: null,
 	
 	loadedCss: null,
 	
@@ -71,6 +69,20 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	getApp: function() {
 		return this.app;
 		//return Sonicle.webtop.core.getApplication();
+	},
+	
+	/**
+	 * Returns the base URL of the application.
+	 */
+	getAppBaseUrl: function() {
+		return WTS.baseUrl;
+	},
+	
+	/**
+	 * Returns the security token used to protect calls against CSRF attaks.
+	 */
+	getSecurityToken: function() {
+		return WTS.securityToken;
 	},
 	
 	/**

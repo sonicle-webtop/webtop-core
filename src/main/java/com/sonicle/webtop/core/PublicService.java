@@ -45,7 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 public class PublicService extends BasePublicService {
 
 	@Override
-	public void processDefaultAction(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws Exception {
+	public void processDefaultAction(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
