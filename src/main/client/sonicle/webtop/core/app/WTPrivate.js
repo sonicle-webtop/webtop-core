@@ -45,10 +45,6 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return this.palette;
 	},
 	
-	reload: function() {
-		window.location.reload();
-	},
-	
 	logout: function() {
 		window.location = 'logout';
 	},

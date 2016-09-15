@@ -558,6 +558,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		Ext.Ajax.request(obj);
 	},
 	
+	reload: function() {
+		window.location.reload();
+	},
+	
 	/**
 	 * Returns the theme in use.
 	 * Value is taken from core variable 'theme'.

@@ -35,7 +35,6 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
@@ -111,6 +110,7 @@ public class ServiceManager {
 	private final HashMap<String, String> xidToServiceId = new HashMap<>();
 	private final HashMap<String, String> serviceIdToJsPath = new HashMap<>();
 	private final LinkedHashMap<String, BaseController> controllers = new LinkedHashMap<>();
+	private final HashMap<String, String> serviceIdToPublicName = new HashMap<>();
 	private final HashMap<String, String> publicNameToServiceId = new HashMap<>();
 	private final LinkedHashMap<String, BaseJobService> jobServices = new LinkedHashMap<>();
 	
@@ -144,6 +144,7 @@ public class ServiceManager {
 		descriptors.clear();
 		xidToServiceId.clear();
 		serviceIdToJsPath.clear();
+		serviceIdToPublicName.clear();
 		publicNameToServiceId.clear();
 		scheduler = null;
 		wta = null;
@@ -206,6 +207,10 @@ public class ServiceManager {
 	
 	public String getServiceJsPath(String serviceId) {
 		return serviceIdToJsPath.get(serviceId);
+	}
+	
+	public String getPublicName(String serviceId) {
+		return serviceIdToPublicName.get(serviceId);
 	}
 	
 	public String getServiceIdByPublicName(String publicName) {
@@ -780,6 +785,7 @@ public class ServiceManager {
 				logger.warn("Service public name [{}] conflict! [{} hides {}]", publicName, serviceId, publicNameToServiceId.get(publicName));
 				//TODO: valutare se portare il servizio in manutenzione
 			}
+			serviceIdToPublicName.put(serviceId, publicName);
 			publicNameToServiceId.put(publicName, serviceId);
 			
 			// Adds service references into static map in order to facilitate ID lookup

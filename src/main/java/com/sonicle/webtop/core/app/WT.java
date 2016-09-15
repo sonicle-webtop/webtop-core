@@ -125,6 +125,10 @@ public class WT {
 		return (sid != null) ? getManifest(sid) : null;
 	}
 	
+	public static String getServicePublicName(String serviceId) {
+		return getWTA().getServiceManager().getPublicName(serviceId);
+	}
+	
 	/*
 	public static ServiceManifest findManifest(Class clazz) {
 		String cname = clazz.getName();

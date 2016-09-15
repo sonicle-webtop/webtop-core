@@ -64,6 +64,14 @@ public abstract class BaseAbstractService extends AbstractService {
 	}
 	
 	/**
+	 * Gets WebTop Public Service public name (useful in URLs).
+	 * @return The public name or null if no public service is defined.
+	 */
+	public final String getPublicName() {
+		return WT.getServicePublicName(SERVICE_ID);
+	}
+	
+	/**
 	 * Gets WebTop Service's db connection.
 	 * @return The db connection.
 	 * @throws SQLException 

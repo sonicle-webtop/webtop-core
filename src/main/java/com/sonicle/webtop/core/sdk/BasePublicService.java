@@ -85,23 +85,35 @@ public abstract class BasePublicService extends BaseAbstractService {
 		return PublicServiceRequest.PUBLIC_RESOURCES;
 	}
 	
-	
-	
-	protected PublicPath parsePathInfo(String pathInfo) throws MalformedURLException {
-		String[] tokens = StringUtils.split(pathInfo, "/", 3);
-		if(tokens.length < 2) throw new MalformedURLException("Invalid URL");
-		return new PublicPath(tokens[0], tokens[1], (tokens.length == 2) ? null : tokens[2]);
+	public static class PublicPath extends PathTokens {
+		
+		public PublicPath(String pathInfo) throws MalformedURLException {
+			super(StringUtils.split(pathInfo, "/", 3));
+			if(tokens.length < 2) throw new MalformedURLException("Invalid URL");
+		}
+		
+		public String getPublicName() {
+			return getTokenAt(0);
+		}
+		
+		public String getContext() {
+			return getTokenAt(1);
+		}
+		
+		public String getRemainingPath() {
+			return getTokenAt(2);
+		}
 	}
 	
-	public static class PublicPath {
-		public final String publicName;
-		public final String context;
-		public final String relative;
+	public static class PathTokens {
+		public final String[] tokens;
 		
-		public PublicPath(String publicName, String context, String relative) {
-			this.publicName = publicName;
-			this.context = context;
-			this.relative = relative;
+		public PathTokens(String[] tokens) {
+			this.tokens = tokens;
+		}
+		
+		public String getTokenAt(int index) {
+			return (index < tokens.length) ? tokens[index] : null;
 		}
 	}
 	
