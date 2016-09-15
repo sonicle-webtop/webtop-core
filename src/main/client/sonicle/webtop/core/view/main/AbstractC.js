@@ -237,7 +237,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				},
 				callback: function(success) {
 					// Updates option locally...
-					if(success) WT.setOptions(active, {'viewportToolWidth': w});
+					if(success) WT.setVars(active, {'viewportToolWidth': w});
 				}
 			});
 		}
