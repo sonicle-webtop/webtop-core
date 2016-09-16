@@ -139,6 +139,9 @@
 .wt-ftype-folder-xs { background-image: url('ftypes/folder_16.png') }
 .wt-ftype-folder-s { background-image: url('ftypes/folder_24.png') }
 .wt-ftype-folder-m { background-image: url('ftypes/folder_32.png') }
+.wt-ftype-folderroot-xs { background-image: url('ftypes/folderroot_16.png') }
+.wt-ftype-folderroot-s { background-image: url('ftypes/folderroot_24.png') }
+.wt-ftype-folderroot-m { background-image: url('ftypes/folderroot_32.png') }
 .wt-ftype-image-xs { background-image: url('ftypes/image_16.png') }
 .wt-ftype-image-s { background-image: url('ftypes/image_24.png') }
 .wt-ftype-image-m { background-image: url('ftypes/image_32.png') }
