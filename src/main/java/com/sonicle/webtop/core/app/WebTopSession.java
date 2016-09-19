@@ -345,11 +345,13 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
 		
+		EnvironmentBase env = new EnvironmentBase(this);
+		
 		int count = 0;
 		BasePublicService publicInst = null;
 		for(String serviceId : serviceIds) {
 			if(!hasPublicService(serviceId)) {
-				publicInst = svcm.instantiatePublicService(serviceId);
+				publicInst = svcm.instantiatePublicService(serviceId, env);
 				if(publicInst != null) {
 					registerPublicService(publicInst);
 					count++;

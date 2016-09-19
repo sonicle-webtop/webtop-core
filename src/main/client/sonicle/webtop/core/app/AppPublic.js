@@ -67,7 +67,7 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 		
 	].concat(WTS.appRequires || []),
 	views: [
-		'WT.view.public.Viewport'
+		'WT.view.pub.Viewport'
 	],
 	refs: {
 		viewport: 'viewport'

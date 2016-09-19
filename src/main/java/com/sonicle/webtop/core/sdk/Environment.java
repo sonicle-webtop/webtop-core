@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.EnvironmentBase;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopSession;
 import java.util.List;
@@ -44,15 +45,14 @@ import java.util.List;
  *
  * @author malbinola
  */
-public class Environment {
+public class Environment extends EnvironmentBase {
 	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
-	protected final WebTopSession wts;
 	protected final CoreServiceSettings css;
 	protected final CoreUserSettings cus;
 	protected final String csrf;
 
 	public Environment(WebTopSession wts) {
-		this.wts = wts;
+		super(wts);
 		csrf = RunContext.getCSRFToken();
 		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
 		UserProfile.Id pid = wts.getProfileId();

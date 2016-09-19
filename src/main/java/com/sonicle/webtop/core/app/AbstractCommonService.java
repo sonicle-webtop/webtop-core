@@ -42,7 +42,7 @@ import java.util.Locale;
  *
  * @author malbinola
  */
-public abstract class BaseAbstractService extends AbstractService {
+public abstract class AbstractCommonService extends AbstractService {
 	public static final String DEFAULTVAR_THEME = "crisp";
 	public static final String DEFAULTVAR_LAF = "default";
 	public static final String RESOURCE_SERVICE_NAME = "service.name";
@@ -51,7 +51,7 @@ public abstract class BaseAbstractService extends AbstractService {
 	public abstract void initialize() throws Exception;
 	public abstract void cleanup() throws Exception;
 	
-	public BaseAbstractService() {
+	public AbstractCommonService() {
 		super();
 	}
 	

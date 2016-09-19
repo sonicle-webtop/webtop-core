@@ -31,59 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
-
-import com.sonicle.webtop.core.app.AbstractCommonService;
-import java.util.List;
-import net.sf.qualitycheck.Check;
-import org.apache.shiro.subject.Subject;
-import org.quartz.JobDataMap;
-import org.quartz.Trigger;
+package com.sonicle.webtop.core.app;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseJobService extends AbstractCommonService {
-	private boolean configured = false;
-	private Subject subject;
+public class EnvironmentBase {
+	protected final WebTopSession wts;
 	
-	public final void configure(Subject subject) {
-		if(configured) return;
-		configured = true;
-		this.subject = Check.notNull(subject);
+	public EnvironmentBase(WebTopSession wts) {
+		this.wts = wts;
 	}
 	
-	public final Subject getSubject() {
-		return subject;
-	}
-	
-	/**
-	 * Method where implementation can return a set of task 
-	 * with their own execution triggers.
-	 * @return 
-	 */
-	public abstract List<TaskDefinition> returnTasks();
-	
-	public static class TaskDefinition {
-		public Class clazz;
-		public JobDataMap data;
-		public Trigger trigger;
-		public String description;
-		
-		public TaskDefinition(Class clazz, Trigger trigger) {
-			this(clazz, null, trigger, null);
-		}
-		
-		public TaskDefinition(Class clazz, JobDataMap data, Trigger trigger) {
-			this(clazz, data, trigger, null);
-		}
-		
-		public TaskDefinition(Class clazz, JobDataMap data, Trigger trigger, String description) {
-			this.clazz = clazz;
-			this.data = data;
-			this.trigger = trigger;
-			this.description = description;
-		}
+	public WebTopSession getWebTopSession() {
+		return wts;
 	}
 }

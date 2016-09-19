@@ -33,39 +33,41 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.BaseAbstractService;
+import com.sonicle.webtop.core.app.AbstractCommonService;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.EnvironmentBase;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.subject.Subject;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BasePublicService extends BaseAbstractService {
+public abstract class BasePublicService extends AbstractCommonService {
 	private boolean configured = false;
-	private Subject subject;
+	private EnvironmentBase env;
 	
-	public final void configure(Subject subject) {
+	public final void configure(EnvironmentBase env) {
 		if(configured) return;
 		configured = true;
-		this.subject = Check.notNull(subject);
+		this.env = env;
 	}
 	
 	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response) throws Exception;
@@ -74,7 +76,22 @@ public abstract class BasePublicService extends BaseAbstractService {
 		return null;
 	}
 	
-	public void writePage(String baseUrl, Map vars, Locale locale, HttpServletResponse response) throws IOException, TemplateException {
+	public final EnvironmentBase getEnv() {
+		return env;
+	}
+	
+	public void writePage(HttpServletResponse response, WebTopSession wts, JsWTSPublic.Vars serviceVars, String baseUrl) throws IOException, TemplateException {
+		Map vars = new HashMap();
+		JsWTSPublic jswts = new JsWTSPublic();
+		wts.fillStartup(jswts, SERVICE_ID);
+		jswts.servicesVars.get(1).putAll(serviceVars);
+		vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
+		writePage(response, baseUrl, vars, wts.getLocale());
+		ServletUtils.setCacheControlPrivate(response);
+		ServletUtils.setHtmlContentType(response);
+	}
+	
+	public void writePage(HttpServletResponse response, String baseUrl, Map vars, Locale locale) throws IOException, TemplateException {
 		AbstractServlet.fillPageVars(vars, WT.getPlatformName(), PathUtils.ensureTrailingSeparator(baseUrl));
 		AbstractServlet.fillIncludeVars(vars, locale, DEFAULTVAR_THEME, DEFAULTVAR_LAF, false, WebTopApp.getPropExtDebug());
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "public.html");

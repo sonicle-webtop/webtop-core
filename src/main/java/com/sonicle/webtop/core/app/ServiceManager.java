@@ -537,7 +537,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseService instantiatePrivateService(String serviceId, Environment env) {
+	public BaseService instantiatePrivateService(String serviceId, Environment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
@@ -549,7 +549,7 @@ public class ServiceManager {
 			logger.error("PrivateService: instantiation failure [{}]", descr.getManifest().getPrivateServiceClassName(), t);
 			return null;
 		}
-		instance.configure(env);
+		instance.configure(environment);
 		
 		// Calls initialization method
 		try {
@@ -590,7 +590,7 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	public BasePublicService instantiatePublicService(String serviceId) {
+	public BasePublicService instantiatePublicService(String serviceId, EnvironmentBase environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPublicService()) throw new WTRuntimeException("Service [{}] has no public class", serviceId);
 		
@@ -601,7 +601,7 @@ public class ServiceManager {
 			logger.error("PublicService: instantiation failure [{}]", descr.getManifest().getPublicServiceClassName(), t);
 			return null;
 		}
-		instance.configure(wta.getAdminSubject());
+		instance.configure(environment);
 		
 		// Calls initialization method
 		try {
