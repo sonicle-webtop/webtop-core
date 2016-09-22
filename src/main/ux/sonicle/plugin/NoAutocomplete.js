@@ -8,6 +8,9 @@ Ext.define('Sonicle.plugin.NoAutocomplete', {
 	extend: 'Ext.plugin.Abstract',
 	alias: 'plugin.sonoautocomplete',
 	
+	attValue: 'nope',
+	//attValue: 'off'
+	
 	init: function(field) {
 		var me = this;
 		me.setCmp(field);
@@ -18,7 +21,7 @@ Ext.define('Sonicle.plugin.NoAutocomplete', {
 		var me = this,
 				el = me.getCmp().getEl(), attrs;
 		if(el) {
-			attrs = {autocomplete: 'off'};
+			attrs = {autocomplete: me.attValue};
 			//if(!me.enabled) Ext.apply(attrs, {readOnly: true});
 			el.set(attrs);
 		}
