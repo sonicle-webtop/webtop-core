@@ -166,12 +166,12 @@ public class WT {
 	}
 	
 	public static CoreManager getCoreManager() {
-		WebTopSession session = RunContext.getWebTopSession();
-		if(session != null) {
-			return session.getCoreManager();
+		WebTopSession wts = RunContext.getWebTopSession();
+		if(wts != null) {
+			return (CoreManager)wts.getServiceManager(CoreManifest.ID);
 		} else {
 			// For admin subject during application startup
-			return getWTA().getServiceManager().instantiateCoreManager(RunContext.getProfileId());
+			return getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getProfileId());
 		}
 		//return RunContext.getWebTopSession().getCoreManager();
 	}
@@ -180,7 +180,7 @@ public class WT {
 		if(targetProfileId.equals(RunContext.getProfileId())) {
 			return getCoreManager();
 		} else {
-			return getWTA().getServiceManager().instantiateCoreManager(targetProfileId);
+			return getWTA().getServiceManager().instantiateCoreManager(false, targetProfileId);
 		}
 	}
 	
@@ -191,7 +191,7 @@ public class WT {
 		} else {
 			// For admin subject during application startup
 			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, RunContext.getProfileId());
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, RunContext.getProfileId());
 		}
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
 	}
@@ -200,7 +200,7 @@ public class WT {
 		if(targetProfileId.equals(RunContext.getProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, targetProfileId);
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, targetProfileId);
 		}
 	}
 	

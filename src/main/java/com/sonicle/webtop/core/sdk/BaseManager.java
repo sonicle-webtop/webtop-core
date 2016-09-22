@@ -47,11 +47,13 @@ import sun.reflect.Reflection;
 public abstract class BaseManager {
 	public final String SERVICE_ID;
 	private final UserProfile.Id targetProfile;
+	protected final boolean fastInit;
 	private String softwareName;
 	protected Locale locale;
 	
-	public BaseManager(UserProfile.Id targetProfileId) {
+	public BaseManager(boolean fastInit, UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
+		this.fastInit = fastInit;
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		locale = findLocale();

@@ -42,35 +42,32 @@ Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
 	
 	initComponent: function() {
 		Ext.apply(this, {
-			store: {
-				model: 'Sonicle.upload.Model'
-			},
 			selModel: {
 				type: 'rowmodel'
 			},
 			columns: [{
 				xtype: 'gridcolumn',
 				dataIndex: 'name',
-				header: WT.res('wtuploadedgrid.name.lbl'),
+				header: WT.res('wtuploadedgrid.name'),
 				sortable: false,
-				flex: 1
+				flex: 2
 			}, {
 				xtype: 'sobytescolumn',
 				dataIndex: 'size',
-				header: WT.res('wtuploadedgrid.size.lbl'),
+				header: WT.res('wtuploadedgrid.size'),
 				sortable: false,
-				width: 110
+				flex: 1
 			}, {
 				xtype: 'widgetcolumn',
 				dataIndex: 'progress',
-				header: '',
+				header: '&nbsp;',
 				widget: {
 					xtype: 'progressbarwidget',
 					textTpl: ['{percent:number("0")}%']
 				},
 				sortable: false,
-				width: 100
-			}, {
+				flex: 1
+			}/*, {
 				xtype: 'actioncolumn',
 				header: '',
 				flex: 1,
@@ -81,7 +78,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.UploadedGrid', {
 
 					}
 				}]
-			}]
+			}*/]
 		});
 		this.callParent(arguments);
 	}

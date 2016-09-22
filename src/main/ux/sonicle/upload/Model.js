@@ -11,6 +11,11 @@ Ext.define('Sonicle.upload.Model', {
 		{name: 'name', type: 'string'},
 		{name: 'size', type: 'int'},
 		{name: 'percent', type: 'int'},
+		{name: 'progress', type: 'number', depends: 'percent',
+			convert: function(v,rec) {
+				return rec.get('percent') * 0.01;
+			}
+		},
 		{name: 'status', type: 'int'},
 		{name: 'loaded', type: 'int'},
 		{name: 'uploadId', type: 'string'}

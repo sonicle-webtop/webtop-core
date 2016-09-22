@@ -37,9 +37,9 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.AbstractCommonService;
+import com.sonicle.webtop.core.app.AbstractEnvironmentService;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.EnvironmentBase;
+import com.sonicle.webtop.core.app.PublicEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -60,24 +60,12 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public abstract class BasePublicService extends AbstractCommonService {
-	private boolean configured = false;
-	private EnvironmentBase env;
-	
-	public final void configure(EnvironmentBase env) {
-		if(configured) return;
-		configured = true;
-		this.env = env;
-	}
+public abstract class BasePublicService extends AbstractEnvironmentService<PublicEnvironment> {
 	
 	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response) throws Exception;
 	
 	public ServiceVars returnServiceVars() {
 		return null;
-	}
-	
-	public final EnvironmentBase getEnv() {
-		return env;
 	}
 	
 	public void writePage(HttpServletResponse response, WebTopSession wts, JsWTSPublic.Vars serviceVars, String baseUrl) throws IOException, TemplateException {
@@ -102,7 +90,7 @@ public abstract class BasePublicService extends AbstractCommonService {
 		return PublicServiceRequest.PUBLIC_RESOURCES;
 	}
 	
-	public static class PublicPath extends PathTokens {
+	public static class PublicPath extends UrlPathTokens {
 		
 		public PublicPath(String pathInfo) throws MalformedURLException {
 			super(StringUtils.split(pathInfo, "/", 3));
@@ -122,10 +110,10 @@ public abstract class BasePublicService extends AbstractCommonService {
 		}
 	}
 	
-	public static class PathTokens {
+	public static class UrlPathTokens {
 		public final String[] tokens;
 		
-		public PathTokens(String[] tokens) {
+		public UrlPathTokens(String[] tokens) {
 			this.tokens = tokens;
 		}
 		

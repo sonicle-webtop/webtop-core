@@ -58,8 +58,8 @@ public class CoreLocaleKey {
 	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE = "tpl.notification.noreply.footer.message";
 	public static final String TPL_NOTIFICATION_FOOTER_HEADER = "tpl.notification.footer.header";
 	public static final String TPL_NOTIFICATION_FOOTER_MESSAGE = "tpl.notification.footer.message";
-	public static final String DEVICESYNCCHECK_EMAIL_SUBJECT = "devicesSyncCheck.email.subject";
-	public static final String DEVICESYNCCHECK_TPL_EMAIL_BODYMESSAGE = "devicesSyncCheck.tpl.email.bodyMessage";
+	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER = "tpl.email.devicesSyncCheck.body.header";
+	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE = "tpl.email.devicesSyncCheck.body.message";
 	
 	public static final String SERVICE_NAME = "service.name";
 	public static final String SERVICE_DESCRIPTION = "service.description";

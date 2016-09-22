@@ -85,7 +85,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	 * @param {Number} total Total count of handled files (in any state)
 	 * @param {Number} succeeded Total count of succeded uploads
 	 * @param {Number} failed Total count of failed uploads
-	 * @param {Number} queued Total count of queued uploads
+	 * @param {Number} pending Total count of pending uploads
 	 * @param {Number} speed Overall process speed
 	 */
 	
@@ -169,6 +169,10 @@ Ext.define('Sonicle.upload.Uploader', {
 			me.store = null;
 		}
 		me.callParent();
+	},
+	
+	getStore: function() {
+		return this.store;
 	},
 	
 	mergeExtraParams: function(obj) {
@@ -291,17 +295,17 @@ Ext.define('Sonicle.upload.Uploader', {
 	/**
 	 * @private
 	 */
-	updateProgress: function() {
+	fireOverallProgress: function() {
 		var me = this,
 				progress = me.uploader.total,
 				speed = progress.bytesPerSec,
 				total = me.store.data.length,
 				failed = me.failed.length,
 				succeeded = me.succeeded.length,
-				queued = total - (succeeded + failed),
+				pending = total - (succeeded + failed),
 				percent = progress.percent;
 		
-		me.fireEvent('overallprogress', me, percent, total, succeeded, failed, queued, speed);		
+		me.fireEvent('overallprogress', me, percent, total, succeeded, failed, pending, speed);		
 	},
 	
 	/**
@@ -330,7 +334,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	},
 	
 	onStoreLoad: function(sto, rec, op) {
-		this.updateProgress();
+		this.fireOverallProgress();
 	},
 	
 	onStoreRemove: function(sto, rec, op) {
@@ -349,11 +353,11 @@ Ext.define('Sonicle.upload.Uploader', {
 			if(v && v.id === id) Ext.Array.remove(me.failed, v);
 		});
 		
-		me.updateProgress();
+		me.fireOverallProgress();
 	},
 	
 	onStoreUpdate: function(sto, rec, op) {
-		this.updateProgress();
+		this.fireOverallProgress();
 	},
 	
 	enable: function() {
@@ -450,11 +454,13 @@ Ext.define('Sonicle.upload.Uploader', {
 			file._serverResponse = json.data;
 			me.updateStore(file);
 			me.succeeded.push(file);
+			me.fireOverallProgress();
 			me.fireEvent('fileuploaded', me, file, json, response);
 		} else {
 			file._serverError = 1;
 			file._serverResponse = json.message;
 			me.failed.push(file);
+			me.fireOverallProgress();
 			me.fireEvent('uploaderror', me, file, json.message, response);
 		}
 	},
@@ -465,7 +471,7 @@ Ext.define('Sonicle.upload.Uploader', {
 	
 	_FilesAdded: function(plu, files) {
 		var me = this,
-			fep = Ext.isFunction(me.fileExtraParams) ? me.fileExtraParams.apply(me, [files]) : null
+			fep = Ext.isFunction(me.fileExtraParams) ? me.fileExtraParams.apply(me, [files]) : null;
 			//sfep = fep ? Ext.JSON.encode(fep) : '';
 		
 		Ext.each(files, function(file) {

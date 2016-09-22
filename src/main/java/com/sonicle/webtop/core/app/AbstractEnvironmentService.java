@@ -64,7 +64,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public abstract class AbstractEnvironmentService<E extends EnvironmentBase> extends AbstractCommonService {
+public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> extends AbstractCommonService {
 	private boolean configured = false;
 	private E env;
 	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
@@ -246,7 +246,7 @@ public abstract class AbstractEnvironmentService<E extends EnvironmentBase> exte
 			
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Error uploading", ex);
-			new JsonResult(false, "Error uploading").printTo(out);
+			new JsonResult(false, "").printTo(out);
 		}
 	}
 	

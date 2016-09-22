@@ -37,14 +37,19 @@ package com.sonicle.webtop.core.app;
  *
  * @author malbinola
  */
-public class EnvironmentBase {
-	protected final WebTopSession wts;
-	
-	public EnvironmentBase(WebTopSession wts) {
-		this.wts = wts;
+public class CorePrivateEnvironment extends PrivateEnvironment {
+	protected final WebTopApp wta;
+
+	public CorePrivateEnvironment(WebTopApp wta, WebTopSession wts) {
+		super(wts);
+		this.wta = wta;
 	}
 	
-	public WebTopSession getWebTopSession() {
+	public WebTopApp getApp() {
+		return wta;
+	}
+	
+	public WebTopSession getSession() {
 		return wts;
 	}
 }

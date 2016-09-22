@@ -240,11 +240,9 @@ public class JobService extends BaseJobService {
 		
 		private void sendEmail(UserProfile.Id pid, UserProfile.Data userData) {
 			try {
-				String mySubject = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_EMAIL_SUBJECT);
-				String source = NotificationHelper.buildSource(userData.getLocale(), jobService.SERVICE_ID);
-				String subject = NotificationHelper.buildSubject(userData.getLocale(), jobService.SERVICE_ID, mySubject);
-				String bodyMessage = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.DEVICESYNCCHECK_TPL_EMAIL_BODYMESSAGE);
-				String html = NotificationHelper.buildNoReplayTpl(userData.getLocale(), source, null, bodyMessage);
+				String bodyHeader = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER);
+				String subject = NotificationHelper.buildSubject(userData.getLocale(), jobService.SERVICE_ID, bodyHeader);
+				String html = TplHelper.buildDeviceSyncCheckEmail(userData.getLocale());
 				
 				InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
 				if(from == null) throw new WTException("Error building sender address");

@@ -116,12 +116,12 @@ public class CoreManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	private WebTopApp wta = null;
 	
-	public CoreManager(WebTopApp wta) {
-		this(wta, RunContext.getProfileId());
+	public CoreManager(WebTopApp wta, boolean fastInit) {
+		this(wta, fastInit, RunContext.getProfileId());
 	}
 	
-	public CoreManager(WebTopApp wta, UserProfile.Id targetProfileId) {
-		super(targetProfileId);
+	public CoreManager(WebTopApp wta, boolean fastInit, UserProfile.Id targetProfileId) {
+		super(fastInit, targetProfileId);
 		this.wta = wta;
 	}
 	

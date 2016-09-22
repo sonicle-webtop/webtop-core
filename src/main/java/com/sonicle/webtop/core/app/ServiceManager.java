@@ -44,7 +44,6 @@ import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
-import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -506,18 +505,18 @@ public class ServiceManager {
 		}
 	}
 	
-	public CoreManager instantiateCoreManager(UserProfile.Id targetProfileId) {
-		return new CoreManager(wta, targetProfileId);
+	public CoreManager instantiateCoreManager(boolean fastInit, UserProfile.Id targetProfileId) {
+		return new CoreManager(wta, fastInit, targetProfileId);
 	}
 	
-	public BaseManager instantiateServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfile.Id targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasManager()) return null;
 		
 		try {
 			Class clazz = descr.getManagerClass();
-			Constructor<BaseManager> constructor = clazz.getConstructor(UserProfile.Id.class);
-			return constructor.newInstance(targetProfileId);
+			Constructor<BaseManager> constructor = clazz.getConstructor(boolean.class, UserProfile.Id.class);
+			return constructor.newInstance(fastInit, targetProfileId);
 		} catch(Throwable t) {
 			logger.error("Manager: instantiation failure [{}]", descr.getManifest().getManagerClassName(), t);
 			return null;
@@ -537,7 +536,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseService instantiatePrivateService(String serviceId, Environment environment) {
+	public BaseService instantiatePrivateService(String serviceId, PrivateEnvironment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
 		
@@ -590,7 +589,7 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	public BasePublicService instantiatePublicService(String serviceId, EnvironmentBase environment) {
+	public BasePublicService instantiatePublicService(String serviceId, PublicEnvironment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasPublicService()) throw new WTRuntimeException("Service [{}] has no public class", serviceId);
 		
@@ -616,7 +615,7 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	private void cleanupPublicService(BasePublicService instance) {
+	public void cleanupPublicService(BasePublicService instance) {
 		try {
 			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
 			instance.cleanup();

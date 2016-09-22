@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractCommonService;
+import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.Payload;
@@ -41,53 +41,23 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.AbstractEnvironmentService;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.js.JsValue;
-import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
-import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.util.IdentifierUtils;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.IOUtils;
-import org.jooq.tools.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseService extends AbstractCommonService {
-	private boolean configured = false;
-	private Environment env;
-	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
-	private final HashMap<String, IServiceUploadStreamListener> uploadStreamListeners = new HashMap<>();
-	
-	public final void configure(Environment env) {
-		if(configured) return;
-		configured = true;
-		this.env = env;
-	}
-	
-	public final Environment getEnv() {
-		return env;
-	}
+public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvironment> {
 	
 	public ServiceVars returnServiceVars() {
 		return null;
@@ -99,7 +69,7 @@ public abstract class BaseService extends AbstractCommonService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key) {
-		return lookupResource(env.getProfile().getLocale(), key);
+		return lookupResource(getEnv().getProfile().getLocale(), key);
 	}
     
 	/**
@@ -109,54 +79,14 @@ public abstract class BaseService extends AbstractCommonService {
 	 * @return The translated string, or null if not found.
 	 */
 	public final String lookupResource(String key, boolean escapeHtml) {
-		return lookupResource(env.getProfile().getLocale(), key, escapeHtml);
-	}
-	
-	public final void registerUploadListener(String context, IServiceUploadListener listener) {
-		synchronized(uploadListeners) {
-			uploadListeners.put(context, listener);
-		}
-	}
-	
-	public final void registerUploadListener(String context, IServiceUploadStreamListener listener) {
-		synchronized(uploadStreamListeners) {
-			uploadStreamListeners.put(context, listener);
-		}
-	}
-	
-	private IServiceUploadListener getUploadListener(String context) {
-		synchronized(uploadListeners) {
-			return uploadListeners.get(context);
-		}
-	}
-	
-	private IServiceUploadStreamListener getUploadStreamListener(String context) {
-		synchronized(uploadStreamListeners) {
-			return uploadStreamListeners.get(context);
-		}
-	}
-	
-	public final boolean hasUploadedFile(String uploadId) {
-		return env.getWebTopSession().hasUploadedFile(uploadId);
-	}
-	
-	public final UploadedFile getUploadedFile(String uploadId) {
-		return env.getWebTopSession().getUploadedFile(uploadId);
-	}
-	
-	public final void removeUploadedFile(String uploadId) {
-		env.getWebTopSession().removeUploadedFile(uploadId, true);
-	}
-	
-	public final void removeUploadedFileByTag(String tag) {
-		env.getWebTopSession().removeUploadedFileByTag(tag);
+		return lookupResource(getEnv().getProfile().getLocale(), key, escapeHtml);
 	}
 	
 	public void processSetToolComponentWidth(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
 			Integer width = ServletUtils.getIntParameter(request, "width", true);
 			
-			UserProfile up = env.getProfile();
+			UserProfile up = getEnv().getProfile();
 			CoreUserSettings cusx = new CoreUserSettings(SERVICE_ID, up.getId());
 			cusx.setViewportToolWidth(width);
 			new JsonResult().printTo(out);
@@ -196,180 +126,6 @@ public abstract class BaseService extends AbstractCommonService {
 			WebTopApp.logger.error("Error executing action ManageSuggestions", ex);
 			new JsonResult(false, "Error").printTo(out); //TODO: error message
 		}	
-	}
-	
-	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ServletFileUpload upload = null;
-		UploadedFile uploadedFile = null;
-		HashMap<String, String> multipartParams = new HashMap<>();
-		
-		try {
-			String service = ServletUtils.getStringParameter(request, "service", true);
-			String cntx = ServletUtils.getStringParameter(request, "context", true);
-			String tag = ServletUtils.getStringParameter(request, "tag", null);
-			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
-			
-			IServiceUploadStreamListener istream = getUploadStreamListener(cntx);
-			if(istream != null) {
-				try {
-					MapItem data = new MapItem(); // Empty response data
-					
-					// Defines the upload object
-					upload = new ServletFileUpload();
-					FileItemIterator it = upload.getItemIterator(request);
-					
-					while(it.hasNext()) {
-						FileItemStream fis = it.next();
-						
-						if(fis.isFormField()) {
-							// Read multipart form params
-							InputStream is = null;
-							try {
-								is = fis.openStream();
-								String key = fis.getFieldName();
-								String value = IOUtils.toString(is, "UTF-8");
-								multipartParams.put(key, value);
-							} finally {
-								IOUtils.closeQuietly(is);
-							}
-						} else {
-							// Creates uploaded object
-							uploadedFile = new UploadedFile(true, service, IdentifierUtils.getUUID(), tag, fis.getName(), -1, findMediaType(fis));
-
-							// Fill response data
-							data.add("virtual", uploadedFile.isVirtual());
-
-							// Handle listener, its implementation can stop
-							// file upload throwing a UploadException.
-							InputStream is = null;
-							try {
-								env.getWebTopSession().addUploadedFile(uploadedFile);
-								is = fis.openStream();
-								istream.onUpload(cntx, request, multipartParams, uploadedFile, is, data);
-							} finally {
-								IOUtils.closeQuietly(is);
-								env.getWebTopSession().removeUploadedFile(uploadedFile, false);
-							}
-						}
-					}
-					new JsonResult(data).printTo(out);
-					
-				} catch(UploadException ex1) {
-					new JsonResult(false, ex1.getMessage()).printTo(out);
-				} catch(Exception ex1) {
-					throw ex1;
-				}
-				
-			} else {
-				try {
-					MapItem data = new MapItem(); // Empty response data
-					IServiceUploadListener iupload = getUploadListener(cntx);
-					
-					// Defines the upload object
-					DiskFileItemFactory factory = new DiskFileItemFactory();
-					//TODO: valutare come imporre i limiti
-					//factory.setSizeThreshold(yourMaxMemorySize);
-					//factory.setRepository(yourTempDirectory);
-					upload = new ServletFileUpload(factory);
-					List<FileItem> files = upload.parseRequest(request);
-					
-					// Plupload component (client-side) will upload multiple file 
-					// each in its own request. So we can skip loop on files.
-					Iterator it = files.iterator();
-					while(it.hasNext()) {
-						FileItem fi = (FileItem)it.next();
-						
-						if(fi.isFormField()) {
-							// Read multipart form params
-							InputStream is = null;
-							try {
-								is = fi.getInputStream();
-								String key = fi.getFieldName();
-								String value = IOUtils.toString(is, "UTF-8");
-								multipartParams.put(key, value);
-							} finally {
-								IOUtils.closeQuietly(is);
-							}
-						} else {
-							// Writes content into a temp file
-							File file = WT.createTempFile();
-							fi.write(file);
-
-							// Creates uploaded object
-							uploadedFile = new UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
-							env.getWebTopSession().addUploadedFile(uploadedFile);
-
-							// Fill response data
-							data.add("virtual", uploadedFile.isVirtual());
-							data.add("uploadId", uploadedFile.getUploadId());
-
-							// Handle listener (if present), its implementation can stop
-							// file upload throwing a UploadException.
-							if(iupload != null) {
-								try {
-									iupload.onUpload(cntx, request, multipartParams, uploadedFile, data);
-								} catch(UploadException ex2) {
-									env.getWebTopSession().removeUploadedFile(uploadedFile, true);
-									throw ex2;
-								}
-							}
-						}
-					}	
-					new JsonResult(data).printTo(out);
-					
-				} catch(UploadException ex1) {
-					new JsonResult(false, ex1.getMessage()).printTo(out);
-				}
-			}
-			
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Error uploading", ex);
-			new JsonResult(false, "Error uploading").printTo(out);
-		}
-	}
-	
-	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			String tag = ServletUtils.getStringParameter(request, "tag", true);
-			removeUploadedFileByTag(tag);
-			new JsonResult().printTo(out);
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in CleanupUploadedFiles", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out);
-		}
-	}
-	
-	public UploadedFile addAsUploadedFile(String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
-		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
-		File file = WT.createTempFile();
-		FileOutputStream fos = null;
-		long size = -1;
-		try {
-			fos = new FileOutputStream(file);
-			size = IOUtils.copy(is, fos);
-		} finally {
-			IOUtils.closeQuietly(fos);
-		}
-		UploadedFile uploadedFile = new UploadedFile(false, SERVICE_ID, file.getName(), tag, filename, size, mtype);
-		env.getWebTopSession().addUploadedFile(uploadedFile);
-		return uploadedFile;
-	}
-	
-	private String findMediaType(FileItemStream fileItem) {
-		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		mtype = fileItem.getContentType();
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		return "application/octet-stream";
-	}
-	
-	private String findMediaType(FileItem fileItem) {
-		String mtype = ServletHelper.guessMediaType(fileItem.getName());
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		mtype = fileItem.getContentType();
-		if(!StringUtils.isBlank(mtype)) return mtype;
-		return "application/octet-stream";
 	}
 	
 	public static class ServiceVars extends HashMap<String, Object> {

@@ -51,6 +51,7 @@ public class CoreManifest extends ServiceManifest {
 	public static final String VERSION = "5.0.0";
 	public static final String BUILD_DATE = "07/10/2014";
 	public static final String CONTROLLER_CLASSNAME = "com.sonicle.webtop.core.CoreController";
+	public static final String MANAGER_CLASSNAME = "com.sonicle.webtop.core.CoreManager";
 	public static final String REST_API_CLASSNAME = "com.sonicle.webtop.core.CoreRestApi";
 	public static final String PRIVATE_SERVICE_CLASSNAME = "com.sonicle.webtop.core.Service";
 	public static final String PRIVATE_SERVICE_JS_CLASSNAME = "Service";
@@ -76,6 +77,7 @@ public class CoreManifest extends ServiceManifest {
 		version = new ServiceVersion(VERSION);
 		buildDate = BUILD_DATE;
 		controllerClassName = CONTROLLER_CLASSNAME;
+		managerClassName = MANAGER_CLASSNAME;
 		restApiClassName = REST_API_CLASSNAME;
 		privateServiceClassName = PRIVATE_SERVICE_CLASSNAME;
 		privateServiceJsClassName = PRIVATE_SERVICE_JS_CLASSNAME;

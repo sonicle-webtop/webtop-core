@@ -8,26 +8,32 @@ Ext.define('Sonicle.grid.column.Bytes', {
 	extend: 'Ext.grid.column.Column',
 	alias: 'widget.sobytescolumn',
 	
-	requires: ['Sonicle.String'],
+	requires: [
+		'Sonicle.Bytes'
+	],
 	producesHTML: false,
 	
 	/**
-	 * @cfg {Boolean} siUnits
-	 * Whether to use the SI units labels or the binary ones.
+	 * @cfg {err|iec|si} [units=null]
+	 * Specity unit representation (see {@link Sonicle.Bytes#format}).
 	 */
-	siUnits: false,
+	units: null,
 	
 	/**
-	 * @cfg {String} [unitSeparator]
-	 * Separator to use between value and unit.
+	 * @cfg {String} [separator=null]
+	 * Separator to use between value and symbol.
 	 */
-	unitSeparator: ' ',
+	separator: null,
 	
 	defaultRenderer: function(value) {
-		return (value === -1) ? '' : Sonicle.String.humanReadableSize(value, {siUnits: this.siUnits, unitSeparator: this.unitSeparator});
+		return this._readableBytes(value);
 	},
 	
 	updater: function(cell, value) {
-		cell.firstChild.innerHTML = Ext.grid.column.Number.prototype.defaultRenderer.call(this, value);
+		cell.firstChild.innerHTML = this._readableBytes(value);
+	},
+	
+	_readableBytes: function(value) {
+		return (value === -1) ? '' : Sonicle.Bytes.format(value, {units: this.units, separator: this.separator});
 	}
 });

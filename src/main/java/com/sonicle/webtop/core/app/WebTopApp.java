@@ -538,14 +538,6 @@ public final class WebTopApp {
 		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
 	}
 	
-	public CoreManager createCoreManager() {
-		return new CoreManager(this);
-	}
-	
-	public CoreManager createCoreManager(UserProfile.Id targetProfileId) {
-		return new CoreManager(this, targetProfileId);
-	}
-	
 	/*
 	public RunContext createAdminRunContext() {
 		return createAdminRunContext(createCoreServiceContext());

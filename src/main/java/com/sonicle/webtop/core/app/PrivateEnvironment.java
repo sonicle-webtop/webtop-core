@@ -31,27 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.EnvironmentBase;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class Environment extends EnvironmentBase {
+public class PrivateEnvironment extends AbstractEnvironment {
 	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
 	protected final CoreServiceSettings css;
 	protected final CoreUserSettings cus;
 	protected final String csrf;
 
-	public Environment(WebTopSession wts) {
+	public PrivateEnvironment(WebTopSession wts) {
 		super(wts);
 		csrf = RunContext.getCSRFToken();
 		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());

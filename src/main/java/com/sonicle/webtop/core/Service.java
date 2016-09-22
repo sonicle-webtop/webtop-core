@@ -44,7 +44,7 @@ import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.CoreEnvironment;
+import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -107,13 +107,13 @@ public class Service extends BaseService {
 	private CoreUserSettings us;
 	
 	private WebTopApp getApp() {
-		return ((CoreEnvironment)getEnv()).getApp();
+		return ((CorePrivateEnvironment)getEnv()).getApp();
 	}
 	
 	@Override
 	public void initialize() throws Exception {
 		UserProfile profile = getEnv().getProfile();
-		core = new CoreManager(getApp());
+		core = new CoreManager(getApp(), false);
 		ss = new CoreServiceSettings(SERVICE_ID, profile.getDomainId());
 		us = new CoreUserSettings(profile.getId());
 	}
@@ -157,7 +157,7 @@ public class Service extends BaseService {
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
-		Locale locale = ((CoreEnvironment)getEnv()).getSession().getLocale();
+		Locale locale = ((CorePrivateEnvironment)getEnv()).getSession().getLocale();
 		Locale loc = null;
 		String lang = null;
 		
@@ -598,7 +598,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupSessionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		Locale locale = wts.getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -626,7 +626,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetWhatsnewTabs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		ArrayList<JsWhatsnewTab> tabs = null;
 		JsWhatsnewTab tab = null;
 		String html = null;
@@ -656,7 +656,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
@@ -671,7 +671,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processTurnOffWhatsnew(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		
 		try {
 			UserProfile profile = getEnv().getProfile();
@@ -706,7 +706,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		UserProfile.Id pid = getEnv().getProfile().getId();
 		CoreManager corem = null;
 		
@@ -780,7 +780,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processGetOTPGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
-		WebTopSession wts = ((CoreEnvironment)getEnv()).getSession();
+		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		
 		try {
 			OTPManager.GoogleAuthConfig config = (OTPManager.GoogleAuthConfig)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
@@ -866,7 +866,7 @@ public class Service extends BaseService {
 		List<ServiceMessage> messages = new ArrayList();
 		
 		try {
-			messages = ((CoreEnvironment)getEnv()).getSession().getEnqueuedMessages();
+			messages = ((CorePrivateEnvironment)getEnv()).getSession().getEnqueuedMessages();
 			
 		} catch (Exception ex) {
 			logger.error("Error executing action ServerEvents", ex);

@@ -45,7 +45,6 @@ import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
-import com.sonicle.webtop.core.sdk.Environment;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -83,6 +82,9 @@ public class WebTopSession {
 	private final PropertyBag props = new PropertyBag();
 	private int initLevel = 0;
 	private UserProfile profile = null;
+	private PrivateEnvironment privateEnv = null;
+	private CorePrivateEnvironment privateCoreEnv = null;
+	private PublicEnvironment publicEnv = null;
 	private final HashMap<String, BaseManager> managers = new HashMap<>();
 	private List<String> allowedServices = null;
 	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
@@ -97,18 +99,14 @@ public class WebTopSession {
 	
 	void cleanup() throws Exception {
 		initLevel = -1;
-		ServiceManager svcm = wta.getServiceManager();
-			
-		// Cleanup services
-		synchronized(privateServices) {
-			for(BaseService instance : privateServices.values()) {
-				svcm.cleanupPrivateService(instance);
-			}
-			privateServices.clear();
-		}
+		
+		emptyPrivateServices();
+		emptyPublicServices();
+		emptyServiceManagers();
+		
 		// Cleanup uploads
-		if(profile != null) {
-			String domainId = getProfileDomainId();
+		String domainId = getProfileDomainId();
+		if(domainId != null) {
 			synchronized(uploads) {
 				for(UploadedFile upf : uploads.values()) {
 					if(!upf.isVirtual()) wta.deleteTempFile(domainId, upf.getUploadId());
@@ -136,21 +134,21 @@ public class WebTopSession {
 	
 	public Object setProperty(String serviceId, String key, Object value) {
 		synchronized(props) {
-			props.set(key, value);
+			props.set(serviceId+"@"+key, value);
 			return value;
 		}
 	}
 	
 	public Object getProperty(String serviceId, String key) {
 		synchronized(props) {
-			return props.get(key);
+			return props.get(serviceId+"@"+key);
 		}
 	}
 	
 	public Object popProperty(String serviceId, String key) {
 		synchronized(props) {
 			if(hasProperty(serviceId, key)) {
-				Object value = props.get(key);
+				Object value = props.get(serviceId+"@"+key);
 				clearProperty(serviceId, key);
 				return value;
 			} else {
@@ -161,18 +159,34 @@ public class WebTopSession {
 	
 	public void clearProperty(String serviceId, String key) {
 		synchronized(props) {
-			props.clear(key);
+			props.clear(serviceId+"@"+key);
 		}
 	}
 	
 	public boolean hasProperty(String serviceId, String key) {
 		synchronized(props) {
-			return props.has(key);
+			return props.has(serviceId+"@"+key);
 		}
 	}
 	
 	/**
-	 * Gets parsed user-agent info.
+	 * Returns client's IP address.
+	 * @return The network address. 
+	 */
+	public String getRemoteIP() {
+		return SessionManager.getClientIP(session);
+	}
+	
+	/**
+	 * Returns plain client's user-agent info.
+	 * @return Bowser user-agent. 
+	 */
+	public String getPlainUserAgent() {
+		return SessionManager.getClientUserAgent(session);
+	}
+	
+	/**
+	 * Returns parsed client's user-agent info.
 	 * @return A readable ReadableUserAgent object. 
 	 */
 	public ReadableUserAgent getUserAgent() {
@@ -257,13 +271,16 @@ public class WebTopSession {
 	}
 	
 	private void internalInitPrivate(HttpServletRequest request) throws WTException {
+		ServiceManager svcm = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
 		UserProfile.Id profileId = RunContext.getProfileId(subject);
 		
-		CoreManager core = wta.createCoreManager(profileId);
-		registerServiceManager(CoreManifest.ID, core);
+		emptyServiceManagers();
+		
+		CoreManager core = svcm.instantiateCoreManager(false, profileId);
+		cacheServiceManager(CoreManifest.ID, core);
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
@@ -275,10 +292,14 @@ public class WebTopSession {
 	}
 	
 	private void internalInitPrivateEnvironment(HttpServletRequest request) throws WTException {
+		// Calling method MUST be synchronized!
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		CoreManager core = WT.getCoreManager(profile.getId());
 		String sessionId = getId();
+		
+		privateCoreEnv = new CorePrivateEnvironment(wta, this);
+		privateEnv = new PrivateEnvironment(this);
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(sessionId, this);
@@ -290,25 +311,26 @@ public class WebTopSession {
 		BaseService privateInst = null;
 		for(String serviceId : allowedServices) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			// Manager
+			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
 			if(!serviceId.equals(CoreManifest.ID)) {
-				// Skip core service... its manager has already been instantiated (see above: internalInitPrivate)
 				if(descriptor.hasManager()) {
-					managerInst = svcm.instantiateServiceManager(serviceId, profile.getId());
+					managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
 					if(managerInst != null) {
-						registerServiceManager(serviceId, managerInst);
+						cacheServiceManager(serviceId, managerInst);
 					}
 				}
 			}
-			
+			// PrivateService
 			if(descriptor.hasPrivateService()) {
 				// Creates new instance
 				if(svcm.hasFullRights(serviceId)) {
-					privateInst = svcm.instantiatePrivateService(serviceId, new CoreEnvironment(wta, this));
+					privateInst = svcm.instantiatePrivateService(serviceId, privateCoreEnv);
 				} else {
-					privateInst = svcm.instantiatePrivateService(serviceId, new Environment(this));
+					privateInst = svcm.instantiatePrivateService(serviceId, privateEnv);
 				}
 				if(privateInst != null) {
-					registerPrivateService(privateInst);
+					cachePrivateService(privateInst);
 				}
 			}
 		}
@@ -343,30 +365,54 @@ public class WebTopSession {
 	
 	private void internalInitPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
 		ServiceManager svcm = wta.getServiceManager();
-		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
 		
-		EnvironmentBase env = new EnvironmentBase(this);
+		if(!isServiceManagerCached(CoreManifest.ID)) {
+			CoreManager core = svcm.instantiateCoreManager(false, RunContext.getProfileId());
+			cacheServiceManager(CoreManifest.ID, core);
+		}
+		if(publicEnv == null) publicEnv = new PublicEnvironment(this);
 		
-		int count = 0;
+		int managersCount = 0, publicCount = 0;
+		BaseManager managerInst = null;
 		BasePublicService publicInst = null;
+		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
 		for(String serviceId : serviceIds) {
-			if(!hasPublicService(serviceId)) {
-				publicInst = svcm.instantiatePublicService(serviceId, env);
+			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			// Manager
+			if(!serviceId.equals(CoreManifest.ID)) {
+				if(descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
+					managerInst = svcm.instantiateServiceManager(serviceId, true, RunContext.getProfileId());
+					if(managerInst != null) {
+						cacheServiceManager(serviceId, managerInst);
+						managersCount++;
+					}
+				}
+			}
+			// PublicService
+			if(descriptor.hasPublicService() && !isPublicServiceCached(serviceId)) {
+				publicInst = svcm.instantiatePublicService(serviceId, publicEnv);
 				if(publicInst != null) {
-					registerPublicService(publicInst);
-					count++;
+					cachePublicService(publicInst);
+					publicCount++;
 				}
 			}
 		}
 		
-		logger.debug("Instantiated {} public services", count);
+		logger.debug("Instantiated {} managers", managersCount);
+		logger.debug("Instantiated {} public services", publicCount);
 	}
 	
 	
-	private void registerServiceManager(String serviceId, BaseManager manager) {
+	private void cacheServiceManager(String serviceId, BaseManager manager) {
 		synchronized(managers) {
 			if(managers.containsKey(serviceId)) throw new WTRuntimeException("Cannot add manager twice");
 			managers.put(serviceId, manager);
+		}
+	}
+	
+	public boolean isServiceManagerCached(String serviceId) {
+		synchronized(managers) {
+			return managers.containsKey(serviceId);
 		}
 	}
 	
@@ -377,15 +423,17 @@ public class WebTopSession {
 		}
 	}
 	
-	public CoreManager getCoreManager() {
-		return (CoreManager)getServiceManager(CoreManifest.ID);
+	private void emptyServiceManagers() {
+		synchronized(managers) {
+			managers.clear();
+		}
 	}
 	
 	/**
 	 * Stores private service instance into this session.
 	 * @param service 
 	 */
-	private void registerPrivateService(BaseService service) {
+	private void cachePrivateService(BaseService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(privateServices) {
 			if(privateServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add private service twice");
@@ -417,11 +465,21 @@ public class WebTopSession {
 		}
 	}
 	
+	private void emptyPrivateServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		synchronized(privateServices) {
+			for(BaseService instance : privateServices.values()) {
+				svcm.cleanupPrivateService(instance);
+			}
+			privateServices.clear();
+		}
+	}
+	
 	/**
 	 * Stores public service instance into this session.
 	 * @param service 
 	 */
-	private void registerPublicService(BasePublicService service) {
+	private void cachePublicService(BasePublicService service) {
 		String serviceId = service.getManifest().getId();
 		synchronized(publicServices) {
 			if(publicServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add public service twice");
@@ -434,7 +492,7 @@ public class WebTopSession {
 	 * @param serviceId The service ID.
 	 * @return True if instance is present, false otherwise.
 	 */
-	public boolean hasPublicService(String serviceId) {
+	public boolean isPublicServiceCached(String serviceId) {
 		synchronized(publicServices) {
 			return publicServices.containsKey(serviceId);
 		}
@@ -459,6 +517,16 @@ public class WebTopSession {
 	public List<String> getPublicServices() {
 		synchronized(publicServices) {
 			return Arrays.asList(publicServices.keySet().toArray(new String[publicServices.size()]));
+		}
+	}
+	
+	private void emptyPublicServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		synchronized(publicServices) {
+			for(BasePublicService instance : publicServices.values()) {
+				svcm.cleanupPublicService(instance);
+			}
+			publicServices.clear();
 		}
 	}
 	
