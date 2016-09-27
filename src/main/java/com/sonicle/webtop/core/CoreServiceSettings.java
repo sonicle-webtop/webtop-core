@@ -44,6 +44,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return PathUtils.ensureTrailingSeparator(value);
 	}
 	
+	public String getPublicBaseUrl() {
+		return getString(PUBLIC_BASE_URL, null);
+	}
+	
 	public String getDropboxAppKey() {
 		return getString(DROPBOX_APP_KEY, null);
 	}

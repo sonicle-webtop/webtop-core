@@ -69,6 +69,7 @@ import org.slf4j.Logger;
  */
 public class PublicServiceRequest extends BaseServiceRequest {
 	private static final Logger logger = WT.getLogger(PublicServiceRequest.class);
+	public static final String URL_PART = "public";
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {

@@ -66,6 +66,13 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
+	 * Defines how the webapp is reachable from outside
+	 */
+	public static final String PUBLIC_BASE_URL = "public.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
 	 * Defines Dropbox API credentials
 	 */
 	public static final String DROPBOX_APP_KEY = "dropbox.appkey";

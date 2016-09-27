@@ -67,9 +67,9 @@ public class NotificationHelper {
 	public static String buildSubject(Locale locale, String serviceId, String title, String reference) {
 		String source = buildSource(locale, serviceId);
 		if(StringUtils.isBlank(reference)) {
-			return MessageFormat.format("{0} - {1}", source, title);
+			return MessageFormat.format("[{0}] {1}", source, title);
 		} else {
-			return MessageFormat.format("{0} - {1} [{2}]", source, title, reference);
+			return MessageFormat.format("[{0}] {1} [{2}]", source, title, reference);
 		}
 	}
 	
@@ -81,7 +81,7 @@ public class NotificationHelper {
 	 * @param bodyMessage
 	 * @return 
 	 */
-	public static Map<String, String> createNoReplaySimpleTplStrings(Locale locale, String source, String bodyHeader, String bodyMessage) {
+	public static Map<String, String> createNoReplayDefaultBodyTplStrings(Locale locale, String source, String bodyHeader, String bodyMessage) {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
 		map.put("bodyMessage", StringUtils.defaultString(bodyMessage));
@@ -91,17 +91,17 @@ public class NotificationHelper {
 	}
 	
 	/**
-	 * Creates strings map (No-Reply version) for notification (complex body) template
+	 * Creates strings map (No-Reply version) for notification (custom body) template
 	 * @param locale
 	 * @param source
 	 * @param bodyHeader
-	 * @param complexBody
+	 * @param customBody
 	 * @return 
 	 */
-	public static Map<String, String> createNoReplayComplexTplStrings(Locale locale, String source, String bodyHeader, String complexBody) {
+	public static Map<String, String> createNoReplayCustomBodyTplStrings(Locale locale, String source, String bodyHeader, String customBody) {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
-		map.put("complexBody", StringUtils.defaultString(complexBody));
+		map.put("customBody", StringUtils.defaultString(customBody));
 		map.put("footerHeader", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_HEADER), source));
 		map.put("footerMessage", WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE));
 		return map;
@@ -117,7 +117,7 @@ public class NotificationHelper {
 	 * @param becauseString
 	 * @return 
 	 */
-	public static Map<String, String> createSimpleTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String becauseString) {
+	public static Map<String, String> createDefaultBodyTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String becauseString) {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
 		map.put("bodyMessage", StringUtils.defaultString(bodyMessage));
@@ -132,79 +132,74 @@ public class NotificationHelper {
 	 * @param source
 	 * @param recipientEmail
 	 * @param bodyHeader
-	 * @param complexBody
+	 * @param customBody
 	 * @param becauseString
 	 * @return 
 	 */
-	public static Map<String, String> createComplexTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String complexBody, String becauseString) {
+	public static Map<String, String> createCustomBodyTplStrings(Locale locale, String source, String recipientEmail, String bodyHeader, String customBody, String becauseString) {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("bodyHeader", StringUtils.defaultString(bodyHeader));
-		map.put("complexBody", StringUtils.defaultString(complexBody));
+		map.put("customBody", StringUtils.defaultString(customBody));
 		map.put("footerHeader", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_HEADER), source));
 		map.put("footerMessage", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_MESSAGE), recipientEmail, becauseString));
 		return map;
 	}
 	
-	/**
-	 * Builds notification template (No-Reply version).
-	 * According to complexBody parameter, body can be a simple message or a compiled template (in case of complex).
-	 * @param locale
-	 * @param complexBody
-	 * @param source
-	 * @param bodyHeader
-	 * @param body
-	 * @return
-	 * @throws IOException
-	 * @throws TemplateException 
-	 */
-	public static String buildNoReplayTpl(Locale locale, boolean complexBody, String source, String bodyHeader, String body) throws IOException, TemplateException {
-		MapItem notMap = new MapItem();
-		if(complexBody) {
-			notMap.putAll(createNoReplayComplexTplStrings(locale, source, bodyHeader, body));
-		} else {
-			notMap.putAll(createNoReplaySimpleTplStrings(locale, source, bodyHeader, body));
-		}
-		
-		MapItem map = new MapItem();
-		map.put("notification", notMap);
-		
-		if(complexBody) {
-			return WT.buildTemplate("tpl/email/notification-complexbody.html", map);
-		} else {
-			return WT.buildTemplate("tpl/email/notification-simplebody.html", map);
-		}
+	public static String builDefaultBodyTpl(MapItem notificationMap, MapItem map) throws IOException, TemplateException {
+		MapItem vars = new MapItem();
+		vars.put("notification", notificationMap);
+		if(map != null) vars.putAll(map);
+		return WT.buildTemplate("tpl/email/notification.html", vars);
+	}
+	
+	public static String buildCustomBodyTpl(MapItem notificationMap, MapItem map) throws IOException, TemplateException {
+		MapItem vars = new MapItem();
+		vars.put("notification", notificationMap);
+		if(map != null) vars.putAll(map);
+		return WT.buildTemplate("tpl/email/notification.html", vars);
 	}
 	
 	/**
 	 * Builds notification template (No-Reply version).
-	 * According to complexBody parameter, body can be a simple message or a compiled template (in case of complex).
-	 * @param locale
-	 * @param complexBody
-	 * @param source
-	 * @param recipientEmail
-	 * @param bodyHeader
-	 * @param body
-	 * @param becauseString
-	 * @return
-	 * @throws IOException
-	 * @throws TemplateException 
+	 * This uses the default body that specifies a simple message.
 	 */
-	public static String buildTpl(Locale locale, boolean complexBody, String source, String recipientEmail, String bodyHeader, String body, String becauseString) throws IOException, TemplateException {
+	public static String buildDefaultBodyTplForNoReplay(Locale locale, String source, String bodyHeader, String bodyMessage) throws IOException, TemplateException {
 		MapItem notMap = new MapItem();
-		if(complexBody) {
-			notMap.putAll(createComplexTplStrings(locale, source, recipientEmail, bodyHeader, body, becauseString));
-		} else {
-			notMap.putAll(createSimpleTplStrings(locale, source, recipientEmail, bodyHeader, body, becauseString));
-		}
-		
+		notMap.putAll(createNoReplayDefaultBodyTplStrings(locale, source, bodyHeader, bodyMessage));
+		return builDefaultBodyTpl(notMap, null);
+	}
+	
+	/**
+	 * Builds notification template (No-Reply version).
+	 * This uses a custom body that supports a custom html body.
+	 */
+	public static String buildCustomBodyTplForNoReplay(Locale locale, String source, String bodyHeader, String customBodyHtml) throws IOException, TemplateException {
+		MapItem notMap = new MapItem();
+		notMap.putAll(createNoReplayCustomBodyTplStrings(locale, source, bodyHeader, customBodyHtml));
+		return buildCustomBodyTpl(notMap, null);
+	}
+	
+	/**
+	 * Builds notification template.
+	 * This uses the default body that specifies a simple message.
+	 */
+	public static String buildDefaultBodyTpl(Locale locale, String source, String recipientEmail, String bodyHeader, String bodyMessage, String becauseString) throws IOException, TemplateException {
+		MapItem notMap = new MapItem();
+		notMap.putAll(createDefaultBodyTplStrings(locale, source, recipientEmail, bodyHeader, bodyMessage, becauseString));
 		MapItem map = new MapItem();
-		map.put("notification", notMap);
 		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
-		
-		if(complexBody) {
-			return WT.buildTemplate("tpl/email/notification-complexbody.html", map);
-		} else {
-			return WT.buildTemplate("tpl/email/notification-simplebody.html", map);
-		}
+		return builDefaultBodyTpl(notMap, map);
+	}
+	
+	/**
+	 * Builds notification template.
+	 * This uses a custom body that supports a custom html body.
+	 */
+	public static String buildCustomBodyTpl(Locale locale, String source, String recipientEmail, String bodyHeader, String customBodyHtml, String becauseString) throws IOException, TemplateException {
+		MapItem notMap = new MapItem();
+		notMap.putAll(createCustomBodyTplStrings(locale, source, recipientEmail, bodyHeader, customBodyHtml, becauseString));
+		MapItem map = new MapItem();
+		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
+		return buildCustomBodyTpl(notMap, map);
 	}
 }

@@ -50,6 +50,6 @@ public class TplHelper {
 		String source = NotificationHelper.buildSource(locale, CoreManifest.ID);
 		String bodyMessage = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE);
 		
-		return NotificationHelper.buildNoReplayTpl(locale, false, source, null, bodyMessage);
+		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
 	}
 }

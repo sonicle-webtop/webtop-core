@@ -1,0 +1,36 @@
+<br>
+<table cellspacing="0" cellpadding="8" border="0" summary="" style="width:100%;font-family:Arial,Sans-serif;border:1px Solid #ccc;border-width:1px 1px 1px 1px;background-color:#fff;">
+    <tbody>
+        <tr>
+            <td>
+                <div style="padding:2px;">
+                    <#if notification.greyMessage??>
+                    <h4 style="padding:6px 10px;margin:0 0 4px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #ccc;background:#f6f6f6;color:#222;font-weight:bold;">${notification.redMessage}</h4><br>
+                    </#if>
+                    <#if notification.greenMessage??>
+                    <h4 style="padding:6px 10px;margin:0 0 4px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #aed581;background:#dcedc8;color:#222;font-weight:bold;">${notification.greenMessage}</h4><br>
+                    </#if>
+                    <#if notification.yellowMessage??>
+                    <h4 style="padding:6px 10px;margin:0 0 4px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #fbc02d;background:#ffecb3;color:#222;font-weight:bold;">${notification.yellowMessage}</h4><br>
+                    </#if>
+                    <#if notification.redMessage??>
+                    <h4 style="padding:6px 10px;margin:0 0 4px 0;font-family:Arial,Sans-serif;font-size:13px;line-height:1.4;border:1px Solid #ff8a65;background:#ffccbc;color:#222;font-weight:bold;">${notification.redMessage}</h4><br>
+                    </#if>
+                    <h3 style="padding:0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:16px;font-weight:bold;color:#222">${notification.bodyHeader}</h3>
+                    <#if notification.bodyMessage??>
+                    <p style="padding: 0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:14px;color:#222;">${notification.bodyMessage}</p>
+                    </#if>
+                    <#if notification.customBody??>
+                    ${notification.customBody}
+                    </#if>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color:#f6f6f6;color: #888;border-top:1px Solid #ccc;font-family:Arial,Sans-serif;font-size:11px;">
+                <p>${notification.footerHeader}</p>
+                <p>${notification.footerMessage}</p>
+            </td>
+        </tr>
+    </tbody>
+</table>

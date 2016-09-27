@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.bol.OMediaType;
@@ -48,6 +49,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.servlet.PublicServiceRequest;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.File;
@@ -125,8 +127,18 @@ public class WT {
 		return (sid != null) ? getManifest(sid) : null;
 	}
 	
+	public static String getPublicBaseUrl(String domainId) {
+		return getCoreServiceSettings(domainId).getPublicBaseUrl();
+	}
+	
 	public static String getServicePublicName(String serviceId) {
 		return getWTA().getServiceManager().getPublicName(serviceId);
+	}
+	
+	public static String getServicePublicUrl(String domainId, String serviceId) {
+		String baseUrl = getPublicBaseUrl(domainId);
+		String publicName = getServicePublicName(serviceId);
+		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL_PART, publicName);
 	}
 	
 	/*

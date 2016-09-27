@@ -428,10 +428,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		
 		if(dn === 'always' || (dn === 'auto' && !PageMgr.isHidden())) {
 			desc = WT.getApp().getDescriptor(sid);
-			ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
+			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
 			return NtfMgr.notify(opts.title, {
 				autoClose: opts.autoClose || 5000,
-				icon: WTF.globalImageUrl(ico),
+				icon: WTF.globalImageUrl('wt.ico'),
 				body: opts.body || desc.getName()
 			});
 		}
