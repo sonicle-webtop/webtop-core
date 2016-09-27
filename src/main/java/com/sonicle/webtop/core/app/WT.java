@@ -118,6 +118,10 @@ public class WT {
 		return MailUtils.buildInternetAddress(local, internetName, personal);
 	}
 	
+	public static InternetAddress getNotificationAddress(String domainId) {
+		return buildDomainInternetAddress(domainId, "webtop-notification", null);
+	}
+	
 	public static ServiceManifest getManifest(String serviceId) {
 		return getWTA().getServiceManager().getManifest(serviceId);
 	}

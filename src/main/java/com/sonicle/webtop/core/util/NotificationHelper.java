@@ -145,14 +145,7 @@ public class NotificationHelper {
 		return map;
 	}
 	
-	public static String builDefaultBodyTpl(MapItem notificationMap, MapItem map) throws IOException, TemplateException {
-		MapItem vars = new MapItem();
-		vars.put("notification", notificationMap);
-		if(map != null) vars.putAll(map);
-		return WT.buildTemplate("tpl/email/notification.html", vars);
-	}
-	
-	public static String buildCustomBodyTpl(MapItem notificationMap, MapItem map) throws IOException, TemplateException {
+	public static String builTpl(MapItem notificationMap, MapItem map) throws IOException, TemplateException {
 		MapItem vars = new MapItem();
 		vars.put("notification", notificationMap);
 		if(map != null) vars.putAll(map);
@@ -166,7 +159,7 @@ public class NotificationHelper {
 	public static String buildDefaultBodyTplForNoReplay(Locale locale, String source, String bodyHeader, String bodyMessage) throws IOException, TemplateException {
 		MapItem notMap = new MapItem();
 		notMap.putAll(createNoReplayDefaultBodyTplStrings(locale, source, bodyHeader, bodyMessage));
-		return builDefaultBodyTpl(notMap, null);
+		return builTpl(notMap, null);
 	}
 	
 	/**
@@ -176,7 +169,7 @@ public class NotificationHelper {
 	public static String buildCustomBodyTplForNoReplay(Locale locale, String source, String bodyHeader, String customBodyHtml) throws IOException, TemplateException {
 		MapItem notMap = new MapItem();
 		notMap.putAll(createNoReplayCustomBodyTplStrings(locale, source, bodyHeader, customBodyHtml));
-		return buildCustomBodyTpl(notMap, null);
+		return builTpl(notMap, null);
 	}
 	
 	/**
@@ -188,7 +181,7 @@ public class NotificationHelper {
 		notMap.putAll(createDefaultBodyTplStrings(locale, source, recipientEmail, bodyHeader, bodyMessage, becauseString));
 		MapItem map = new MapItem();
 		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
-		return builDefaultBodyTpl(notMap, map);
+		return builTpl(notMap, map);
 	}
 	
 	/**
@@ -200,6 +193,6 @@ public class NotificationHelper {
 		notMap.putAll(createCustomBodyTplStrings(locale, source, recipientEmail, bodyHeader, customBodyHtml, becauseString));
 		MapItem map = new MapItem();
 		map.put("recipientEmail", StringUtils.defaultString(recipientEmail));
-		return buildCustomBodyTpl(notMap, map);
+		return builTpl(notMap, map);
 	}
 }
