@@ -33,43 +33,58 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class ContextListener implements ServletContextListener {
-
-	@Override
-	public void contextInitialized(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
+public class SysInfo {
+	
+	public static String build() {
+		String host = getCmdOutput("uname -n");
+		String domainName = StringUtils.defaultString(getCmdOutput("domainname"));
+		String osName = getCmdOutput("uname -s");
+		if(StringUtils.isEmpty(osName)) osName = System.getProperty("os.name");
+		String osRelease = getCmdOutput("uname -r");
+		if(StringUtils.isEmpty(osRelease)) osRelease = System.getProperty("os.version");
+		String osVersion = StringUtils.defaultString(getCmdOutput("uname -v"));
+		String osArch = getCmdOutput("uname -m");
+		if(StringUtils.isEmpty(osArch)) osArch = System.getProperty("os.arch");
 		
-		try {
-			WebTopApp.start(context);
-			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
-		} catch(Exception ex) {
-			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
+		// Builds string
+		StringBuilder sb = new StringBuilder();
+		if(new File("/sonicle/etc/xstream.conf").exists()) {
+			sb.append("Sonicle XStream Server");
+			sb.append(" - ");
 		}
+		sb.append(host);
+		if(!StringUtils.isEmpty(domainName)) {
+			sb.append(" at ");
+			sb.append(domainName);
+		}
+		sb.append(" - ");
+		sb.append(osName);
+		sb.append(" ");
+		sb.append(osRelease);
+		sb.append(" ");
+		sb.append(osVersion);
+		sb.append(" ");
+		sb.append(osArch);
+		return sb.toString();
 	}
-
-	@Override
-	public void contextDestroyed(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
-		
+	
+	public static String getCmdOutput(String command) {
+		String output = null;
 		try {
-			WebTopApp wta = (WebTopApp)context.getAttribute(WebTopApp.ATTRIBUTE);
-			if(wta != null) wta.destroy();
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error destroying WTA context for {}", webappName, ex);
-		} finally {
-			context.removeAttribute(WebTopApp.ATTRIBUTE);
-		}
+			Process pro = Runtime.getRuntime().exec(command);
+			BufferedReader br = new BufferedReader(new InputStreamReader(pro.getInputStream()));
+			output = br.readLine();
+			pro.waitFor();
+		} catch (Throwable th) { /* Do nothing! */ }
+		return output;
 	}
 }

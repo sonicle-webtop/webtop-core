@@ -130,6 +130,13 @@ public class CoreSettings {
 	
 	/**
 	 * [system]
+	 * [string]
+	 * Defines the URI to access to tomcat manager
+	 */
+	public static final String TOMCAT_MANAGER_URI = "tomcat.manager.uri";
+	
+	/**
+	 * [system]
 	 * [boolean]
 	 * Indicates whether to forcedly hide domain selection from login page
 	 */

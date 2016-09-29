@@ -90,7 +90,7 @@ public class WT {
 	}
 	
 	public static boolean isLatestWebApp() {
-		return getWTA().isLastVersion();
+		return getWTA().isLatest();
 	}
 	
 	public static String getPlatformName() {

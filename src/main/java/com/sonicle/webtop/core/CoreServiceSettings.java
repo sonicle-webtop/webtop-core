@@ -177,6 +177,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return new Locale(getSystemLanguage(setm), getSystemCountry(setm));
 	}
 	
+	public static String getTomcatManagerUri(SettingsManager setm) {
+		return LangUtils.value(setm.getServiceSetting(CoreManifest.ID, TOMCAT_MANAGER_URI), (String)null);
+	}
+	
 	private Integer getDefaultUploadMaxFileSize() {
 		return getInteger(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, 20971520);
 	}

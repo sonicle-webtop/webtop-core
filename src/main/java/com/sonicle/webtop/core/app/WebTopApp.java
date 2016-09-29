@@ -37,8 +37,8 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.bol.OMessageQueue;
@@ -55,10 +55,8 @@ import com.sonicle.webtop.core.util.IdentifierUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -90,6 +88,7 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -104,7 +103,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -116,32 +114,62 @@ import org.slf4j.MDC;
 public final class WebTopApp {
 	public static final String ATTRIBUTE = "webtopapp";
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
-	private static final Object lock1 = new Object();
-	private static final Object lock2 = new Object();
-	
 	private static WebTopApp instance = null;
+	private static final Object lockInstance = new Object();
+	
+	private static Subject buildSubject(UserProfile.Id pid) {
+		return buildSubject(pid, null);
+	}
+	
+	private static Subject buildSubject(UserProfile.Id pid, String sessionId) {
+		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
+		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		if(StringUtils.isBlank(sessionId)) {
+			return new Subject.Builder().principals(principals).buildSubject();
+		} else {
+			return new Subject.Builder().principals(principals).sessionId(sessionId).buildSubject();
+		}
+	}
+	
+	Subject getAdminSubject() {
+		return adminSubject;
+	}
 	
 	/**
-	 * Initialization method. This method should be called once.
+	 * Start method. This method should be called once.
 	 * @param context ServletContext instance.
 	 */
-	public static void initialize(ServletContext context) {
-		synchronized(lock1) {
-			if(instance != null) throw new RuntimeException("Initialization already done");
-			instance = new WebTopApp(context);
-		}
-		
-		ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
-		threadState.bind();
-		try {
-			instance.afterInit();
-		} finally {
-			threadState.clear();
+	public static void start(ServletContext context) {
+		synchronized(lockInstance) {
+			if(instance != null) throw new RuntimeException("Application must be started once");
+			SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
+			Subject adminSubject = buildSubject(new UserProfile.Id("*", "admin"));
+			
+			ThreadState threadState = new SubjectThreadState(adminSubject);
+			try {
+				threadState.bind();
+				instance = new WebTopApp(context, adminSubject);
+			} finally {
+				threadState.clear();
+			}
+			
+			new Timer("onAppReady").schedule(new TimerTask() {
+				@Override
+				public void run() {
+					ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
+					try {
+						threadState.bind();
+						instance.onAppReady();
+					} finally {
+						threadState.clear();
+					}
+				}
+			}, 5000);
 		}
 	}
 	
 	public static WebTopApp getInstance() {
-		synchronized(lock1) {
+		synchronized(lockInstance) {
 			return instance;
 		}
 	}
@@ -153,13 +181,18 @@ public final class WebTopApp {
 	private Locale systemLocale;
 	
 	private Subject adminSubject;
+	private final Object lockAdminSubject = new Object();
 	private Timer adminTouchTimer = null;
+	
+	private TomcatManager tomcat = null;
+	private String webappName;
+	private boolean webappIsLatest;
+	private Timer webappVersionCheckTimer = null;
 	
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nm = null;
-	//private ComponentsManager comm = null;
 	private ConnectionManager conm = null;
 	private LogManager logm = null;
 	private UserManager usrm = null;
@@ -167,105 +200,139 @@ public final class WebTopApp {
 	private SettingsManager setm = null;
 	private ServiceManager svcm = null;
 	private SessionManager sesm = null;
-	private final HashMap<String,CoreServiceSettings> cssCache = new HashMap();
 	private OTPManager otpm = null;
 	private ReportManager rptm = null;
 	private Scheduler scheduler = null;
-	private final HashMap<String,Session> sessionCache = new HashMap();
-	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>();
+	private final HashMap<String, Session> mailSessionCache = new HashMap();
+	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>(); //TODO: decidere politica conservazione
+	private final HashMap<String,CoreServiceSettings> cssCache = new HashMap();
 	
 	/**
 	 * Private constructor.
-	 * Instances of this class must be created using static initialize method.
-	 * @param @param context ServletContext instance.
+	 * Instances of this class must be created using static start method.
 	 */
-	private WebTopApp(ServletContext context) {
-		servletContext = context;
-		systemInfo = buildSystemInfo();
-		systemCharset = Charset.forName("UTF-8");
-		systemTimeZone = DateTimeZone.getDefault();
+	private WebTopApp(ServletContext context, Subject adminSubject) {
+		this.servletContext = context;
+		this.adminSubject = adminSubject;
+		this.systemInfo = SysInfo.build();
+		this.systemCharset = Charset.forName("UTF-8");
+		this.systemTimeZone = DateTimeZone.getDefault();
 		
 		logger.info("wtdebug = {}", getPropWTDebug());
 		logger.info("extdebug = {}", getPropExtDebug());
 		logger.info("scheduler.disabled = {}", getPropSchedulerDisabled());
 		
-		String webappName = getWebAppName();
+		this.webappName = ServletHelper.getWebAppName(context);
+		this.webappIsLatest = false;
+		
 		logger.info("WTA initialization started [{}]", webappName);
 		
-		init1();
-		ThreadState threadState = new SubjectThreadState(getAdminSubject());
-		threadState.bind();
-		try {
-			init2();
-		} catch(Throwable t) {
-			logger.error("WTA initialization ERROR", t);
-		} finally {
-			threadState.clear();
-			logger.info("WTA initialization completed [{}]", webappName);
-		}
-	}
-	
-	private void init1() {
-		conm = ConnectionManager.initialize(this); // Connection Manager
-		sesm = SessionManager.initialize(this); // Session Manager
+		this.conm = ConnectionManager.initialize(this); // Connection Manager
+		this.sesm = SessionManager.initialize(this); // Session Manager
+		this.autm = AuthManager.initialize(this); // Auth Manager
 		
-		// Auth Manager
-		DefaultSecurityManager sm = new DefaultSecurityManager(new WTRealm());
-		SecurityUtils.setSecurityManager(sm);
-		autm = AuthManager.initialize(this);
-	}
-	
-	private void init2() {
-		mediaTypes = MediaTypes.init(conm);
-		fileTypes = FileTypes.init(conm);
+		this.mediaTypes = MediaTypes.init(conm);
+		this.fileTypes = FileTypes.init(conm);
 		
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
 		String[] tags = new String[]{"it_IT", "en_EN"};
-		i18nm = I18nManager.initialize(this, tags);
+		this.i18nm = I18nManager.initialize(this, tags);
 		
 		// Template Engine
-		logger.info("Initializing template engine.");
-		freemarkerCfg = new Configuration();
-		freemarkerCfg.setClassForTemplateLoading(this.getClass(), "/");
-		freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
-		freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
+		logger.info("Initializing template engine");
+		this.freemarkerCfg = new Configuration();
+		this.freemarkerCfg.setClassForTemplateLoading(this.getClass(), "/");
+		this.freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
+		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		logm = LogManager.initialize(this); // Log Manager
-		usrm = UserManager.initialize(this); // User Manager
+		this.logm = LogManager.initialize(this); // Log Manager
+		this.usrm = UserManager.initialize(this); // User Manager
 		
-		setm = SettingsManager.initialize(this); // Settings Manager
-		systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
-		otpm = OTPManager.initialize(this); // OTP Manager
-		rptm = ReportManager.initialize(this); // Report Manager
+		this.setm = SettingsManager.initialize(this); // Settings Manager
+		this.systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
+		this.otpm = OTPManager.initialize(this); // OTP Manager
+		this.rptm = ReportManager.initialize(this); // Report Manager
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
-			SchedulerFactory sf = new StdSchedulerFactory();
-			scheduler = sf.getScheduler();
+			this.scheduler = new StdSchedulerFactory().getScheduler();
 			if(WebTopApp.getPropSchedulerDisabled()) {
-				logger.warn("Scheduler startup disabled");
+				logger.warn("Scheduler startup forcibly disabled");
 			} else {
-				scheduler.start();
+				this.scheduler.start();
 			}
 		} catch(SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Error starting scheduler");
+			throw new WTRuntimeException(ex, "Unable to start scheduler");
 		}
 		
-		svcm = ServiceManager.initialize(this, scheduler); // Service Manager
+		this.svcm = ServiceManager.initialize(this, this.scheduler); // Service Manager
+		
+		org.apache.shiro.session.Session session = adminSubject.getSession(false);
+		logger.info("Admin session created [{}]", session.getId().toString());
+		scheduleAdminTouchTask(session.getTimeout());
+		
+		logger.info("WTA initialization completed [{}]", webappName);
+	}
+	
+	private void onAppReady() {
+		logger.trace("onAppReady...");
+		try {
+			// Check webapp version
+			logger.info("Checking webapp version...");
+			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
+			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setm);
+			if(StringUtils.isBlank(tomcatUri)) {
+				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
+				this.webappIsLatest = true;
+			} else {
+				try {
+					this.tomcat = new TomcatManager(tomcatUri);
+					this.tomcat.testConnection();
+					this.webappIsLatest = checkIsLastestWebapp(webappName);
+					scheduleWebappVersionCheckTask();
+					
+				} catch(URISyntaxException ex1) {
+					logger.warn("Invalid configuration for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
+					this.webappIsLatest = false;
+				} catch(Exception ex1) {
+					logger.error("Error connecting to TomcatManager", ex1);
+					this.webappIsLatest = false;
+				}
+			}
+			if(webappVersionCheckTimer == null) {
+				logger.warn("Webapp version automatic check will NOT be performed!");
+			}
+			if(webappIsLatest) {
+				logger.info("This webapp [{}] is the latest", webappName);
+			} else {
+				logger.info("This webapp [{}] is NOT the latest", webappName);
+			}
+			
+			svcm.initializeJobServices();
+			try {
+				logger.info("Scheduling JobServices tasks...");
+				svcm.scheduleAllJobServicesTasks();
+				if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
+			} catch (SchedulerException ex) {
+				logger.error("Error", ex);
+			}
+			
+		} catch(IllegalStateException ex) {
+			// Due to NB redeploys in development...simply ignore this!
+		}
 	}
 	
 	public void destroy() {
-		String webappName = getWebAppName();
 		logger.info("WTA shutdown started [{}]", webappName);
 		
-		// Destroy admin session
+		// Destroy timers
+		if(webappVersionCheckTimer != null) webappVersionCheckTimer.cancel();
 		if(adminTouchTimer != null) adminTouchTimer.cancel();
-		synchronized(lock2) {
-			adminSubject.logout();
-		}
+		
+		tomcat = null;
 		
 		// Service Manager
 		svcm.cleanup();
@@ -302,87 +369,129 @@ public final class WebTopApp {
 		//I18nManager.cleanup();
 		i18nm = null;
 		
-		logger.info("WTA shutdown completed [{}]", webappName);
-	}
-	
-	private void afterInit() {
-		svcm.onWebTopAppInit();
-		
-		// Define delayed init
-		new Timer("delayedInit").schedule(new TimerTask() {
-			@Override
-			public void run() {
-				delayedInit();
-			}
-		}, 5000);	
-	}
-	
-	private void delayedInit() {
-		if(svcm != null) { // <- Check to avoid nullpointerexception in development during redeploy
-			try {
-				logger.debug("Scheduling JobServices tasks...");
-				svcm.scheduleAllJobServicesTasks();
-				if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-			} catch (SchedulerException ex) {
-				logger.error("Error", ex);
-			}
+		// Destroy admin session
+		synchronized(lockAdminSubject) {
+			adminSubject.logout();
 		}
+		
+		logger.info("WTA shutdown completed [{}]", webappName);
 	}
 	
 	private void scheduleAdminTouchTask(long sessionTimeout) {
 		long period = (sessionTimeout < 600000) ? sessionTimeout/2 : (long)(sessionTimeout*0.9);
-		logger.trace("Scheduling adminTouch task to renew session every {} sec", period/1000);
 		adminTouchTimer = new Timer("adminTouch");
 		adminTouchTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				synchronized(lock2) {
-					if(adminSubject != null) {
-						org.apache.shiro.session.Session session = adminSubject.getSession(false);
-						if(session != null) {
-							session.touch();
-							logger.trace("Renewalling admin session [{}]", session.getLastAccessTime());
-						} else {
-							logger.warn("Admin session not found");
-						}
-					}
-				}	
+				onAdminTouch();
 			}
 		}, period, period);
+		logger.info("adminTouch task scheduled [{}sec]", period/1000);
 	}
+	
+	private void onAdminTouch() {
+		logger.trace("onAdminTouch...");
+		synchronized(lockAdminSubject) {
+			if(adminSubject != null) {
+				org.apache.shiro.session.Session session = adminSubject.getSession(false);
+				if(session != null) {
+					session.touch();
+					logger.trace("Renewalling admin session [{}]", session.getLastAccessTime());
+				} else {
+					logger.warn("Admin session not found");
+				}
+			}
+		}
+	}
+	
+	private void scheduleWebappVersionCheckTask() {
+		long period = 60000;
+		webappVersionCheckTimer = new Timer("webappVersionCheck");
+		adminTouchTimer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
+				try {
+					threadState.bind();
+					instance.onWebappVersionCheck();
+				} finally {
+					threadState.clear();
+				}
+			}
+		}, period, period);
+		logger.info("webappVersionCheck task scheduled [{}sec]", period/1000);
+	}
+	
+	private void onWebappVersionCheck() {
+		logger.trace("onWebappVersionCheck...");
+		if(tomcat == null) return;
+		
+		logger.trace("Checking webapp version...");
+		boolean oldLatest = webappIsLatest;
+		webappIsLatest = checkIsLastestWebapp(webappName);
+		if(webappIsLatest && !oldLatest) {
+			logger.info("This webapp [{}] is the latest", webappName);
+			svcm.scheduleAllJobServicesTasks();
+		} else if(!webappIsLatest && oldLatest) {
+			logger.info("This webapp [{}] is NOT the latest", webappName);
+		} else {
+			logger.trace("No changes!");
+		}
+	}
+	
+	private boolean checkIsLastestWebapp(String appName) {
+		try {
+			ListOrderedSet names = new ListOrderedSet();
+			for(TomcatManager.DeployedApp app : tomcat.listDeployedApplications(appName)) {
+				if(app.isRunning) {
+					names.add(app.name);
+				} else {
+					if(app.name.equals(appName)) names.add(app.name);
+				}
+			}
+			String last = (String)names.get(names.size()-1);
+			return appName.equals(last);
+			
+		} catch(Exception ex) {
+			logger.error("Unable to query TomcatManager", ex);
+			return false;
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	public Subject bindAdminSubjectToSession(String sessionId) {
+		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * Returns webapp's name as configured in the application server.
 	 * @return Webapp's name
 	 */
 	public String getWebAppName() {
-		return ServletHelper.getWebAppName(servletContext);
+		return webappName;
 	}
 	
 	/**
 	 * Checks if this webapp is the latest version in the application server.
 	 * @return True if this is the last version, false otherwise.
 	 */
-	public boolean isLastVersion() {
-		String webappName = getWebAppName();
-		String webappBaseName = StringUtils.split(webappName, "##")[0];
-		String webappPath = servletContext.getRealPath("/");
-		String webappsDirPath = webappPath + "/..";
-		
-		// Cycles webapps folders into application server webapps directory
-		// and extract app names that matches with base name.
-		File webappsDir = new File(webappsDirPath);
-		ListOrderedSet names = new ListOrderedSet();
-		for(File file : webappsDir.listFiles()) {
-			if(file.isDirectory()) {
-				if(StringUtils.startsWith(file.getName(), webappBaseName)) {
-					names.add(file.getName());
-				}
-			}
-		}
-		
-		String last = (String)names.get(names.size()-1);
-		return webappName.equals(last);
+	public boolean isLatest() {
+		return webappIsLatest;
 	}
 	
 	public String getPlatformName() {
@@ -433,16 +542,6 @@ public final class WebTopApp {
 	public ConnectionManager getConnectionManager() {
 		return conm;
 	}
-			
-	/**
-	 * Returns the ComponentsManager.
-	 * @return ComponentsManager instance.
-	 */
-	/*
-	public ComponentsManager getComponentsManager() {
-		return comm;
-	}
-	*/
 	
 	/**
 	 * Returns the SettingsManager.
@@ -508,61 +607,20 @@ public final class WebTopApp {
 		return sesm;
 	}
 	
-	private Subject buildSubject(UserProfile.Id pid) {
-		return buildSubject(pid, null);
-	}
-	
-	private Subject buildSubject(UserProfile.Id pid, String sessionId) {
-		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
-		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		if(StringUtils.isBlank(sessionId)) {
-			return new Subject.Builder().principals(principals).buildSubject();
-		} else {
-			return new Subject.Builder().principals(principals).sessionId(sessionId).buildSubject();
-		}
-	}
-	
-	Subject getAdminSubject() {
-		synchronized(lock2) {
-			if(adminSubject == null) {
-				adminSubject = buildSubject(new UserProfile.Id("*", "admin"));
-				org.apache.shiro.session.Session session = adminSubject.getSession(false);
-				logger.info("Admin session created [{}]", session.getId().toString());
-				scheduleAdminTouchTask(session.getTimeout());
-			}
-			return adminSubject;
-		}
-	}
-	
-	public Subject bindAdminSubjectToSession(String sessionId) {
-		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
-	}
-	
-	/*
-	public RunContext createAdminRunContext() {
-		return createAdminRunContext(createCoreServiceContext());
-	}
-	
-	public RunContext createAdminRunContext(ServiceContext serviceContext) {
-		//UserProfile.Id adminProfile = new UserProfile.Id("*", "admin");
-		//Subject adminSubject = ContextUtils.buildSubject(adminProfile, true);
-		return new RunContext(serviceContext, getAdminSubject());
-	}
-	*/
-	
 	/**
 	 * Parses a User-Agent HTTP Header string looking for useful client information.
 	 * @param userAgentHeader HTTP Header string.
 	 * @return Object representation of the parsed string.
 	 */
 	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
+		String hash = DigestUtils.md5Hex(userAgentHeader);
 		synchronized(userAgentsCache) {
-			if(userAgentsCache.containsKey(userAgentHeader)) {
-				return userAgentsCache.get(userAgentHeader);
+			if(userAgentsCache.containsKey(hash)) {
+				return userAgentsCache.get(hash);
 			} else {
 				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
 				ReadableUserAgent rua = parser.parse(userAgentHeader);
-				userAgentsCache.put(userAgentHeader, rua);
+				userAgentsCache.put(hash, rua);
 				return rua;
 			}
 		}
@@ -736,44 +794,6 @@ public final class WebTopApp {
 		}
 	}
 	
-	
-	/*
-	
-	public String getSystemTempPath() {
-		CoreServiceSettings css = getCoreServiceSettings("*");
-		String path = css.getSystemTempPath();
-		if(StringUtils.isEmpty(path)) {
-			path = System.getProperty("java.io.tmpdir");
-			logger.warn("System temporary folder not defined. Using default one '{}'", path);
-		}
-		return path;
-	}
-	
-	public File getTempFolder() throws WTException {
-		File tempDir = new File(getSystemTempPath());
-		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
-			throw new WTException("Temp folder is not a directory or is write protected");
-		}
-		return tempDir;
-	}
-	
-	public File createTempFile() throws WTException {
-		return createTempFile(null, null);
-	}
-	
-	public File createTempFile(String prefix, String suffix) throws WTException {
-		File tempDir = getTempFolder();
-		return new File(tempDir, buildTempFilename(prefix, suffix));
-	}
-	
-	public boolean deleteTempFile(String filename) throws WTException {
-		File tempDir = getTempFolder();
-		File tempFile = new File(tempDir, filename);
-		return tempFile.delete();
-	}
-	
-	*/
-	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
 		if(!url.getProtocol().equals("file")) throw new MalformedURLException("Protocol must be 'file'");
 		File file = new File(url.toURI());
@@ -803,59 +823,14 @@ public final class WebTopApp {
 		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
-	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
-		List<WebTopSession> sessions = sesm.getWebTopSessions(profileId);
-		if(!sessions.isEmpty()) {
-			for(WebTopSession session : sessions) {
-				session.nofity(messages);
-			}
-		} else { // No user active sessions found!
-			if(enqueueIfOffline) {
-				Connection con = null;
-				
-				try {
-					MessageQueueDAO mqdao = MessageQueueDAO.getInstance();
-					con = conm.getConnection();
-					OMessageQueue queued = null;
-					for(ServiceMessage message : messages) {
-						queued = new OMessageQueue();
-						queued.setQueueId(mqdao.getSequence(con).intValue());
-						queued.setDomainId(profileId.getDomainId());
-						queued.setUserId(profileId.getUserId());
-						queued.setMessageType(message.getClass().getName());
-						queued.setMessageRaw(JsonResult.gson.toJson(message));
-						queued.setQueuedOn(DateTime.now(DateTimeZone.UTC));
-						mqdao.insert(con, queued);
-					}
-				} catch(Exception ex) {
-					ex.printStackTrace();
-				} finally {
-					DbUtils.closeQuietly(con);
-				}
-			}
-		}
-	}
-	
-	public CoreServiceSettings getCoreServiceSettings(String domainId) {
-		CoreServiceSettings css;
-		synchronized(cssCache) {
-			css=cssCache.get(domainId);
-			if (css==null) {
-				css=new CoreServiceSettings(CoreManifest.ID,domainId);
-				cssCache.put(domainId, css);
-			}
-		}
-		return css;
-	}
-	
 	public Session getMailSession(String domainId) {
 		Session session;
-		synchronized(sessionCache) {
+		synchronized(mailSessionCache) {
 			CoreServiceSettings css=getCoreServiceSettings(domainId);
 			String smtphost=css.getSMTPHost();
 			int smtpport=css.getSMTPPort();
 			String key=smtphost+":"+smtpport;
-			session=sessionCache.get(key);
+			session=mailSessionCache.get(key);
 			if (session==null) {
 				Properties props = System.getProperties();
 				//props.setProperty("mail.imap.parse.debug", "true");
@@ -869,7 +844,7 @@ public final class WebTopApp {
 				props.setProperty("mail.imap.enableimapevents", "true");
 				
 				session=Session.getInstance(props, null);
-				sessionCache.put(key,session);
+				mailSessionCache.put(key,session);
 				
 				logger.info("Created javax.mail.Session for "+key);
 			}
@@ -974,7 +949,50 @@ public final class WebTopApp {
         Transport.send(msg);
 	}
 	
+	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+		List<WebTopSession> sessions = sesm.getWebTopSessions(profileId);
+		if(!sessions.isEmpty()) {
+			for(WebTopSession session : sessions) {
+				session.nofity(messages);
+			}
+		} else { // No user active sessions found!
+			if(enqueueIfOffline) {
+				Connection con = null;
+				
+				try {
+					MessageQueueDAO mqdao = MessageQueueDAO.getInstance();
+					con = conm.getConnection();
+					OMessageQueue queued = null;
+					for(ServiceMessage message : messages) {
+						queued = new OMessageQueue();
+						queued.setQueueId(mqdao.getSequence(con).intValue());
+						queued.setDomainId(profileId.getDomainId());
+						queued.setUserId(profileId.getUserId());
+						queued.setMessageType(message.getClass().getName());
+						queued.setMessageRaw(JsonResult.gson.toJson(message));
+						queued.setQueuedOn(DateTime.now(DateTimeZone.UTC));
+						mqdao.insert(con, queued);
+					}
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				} finally {
+					DbUtils.closeQuietly(con);
+				}
+			}
+		}
+	}
 	
+	public CoreServiceSettings getCoreServiceSettings(String domainId) {
+		CoreServiceSettings css;
+		synchronized(cssCache) {
+			css=cssCache.get(domainId);
+			if (css==null) {
+				css=new CoreServiceSettings(CoreManifest.ID,domainId);
+				cssCache.put(domainId, css);
+			}
+		}
+		return css;
+	}
 	
 	public static boolean getPropSchedulerDisabled() {
 		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
@@ -1114,50 +1132,6 @@ public final class WebTopApp {
 	public static void unsetServiceCustomLoggerDC() {
 		MDC.remove("custom");
 		WebTopApp.updateAutoLoggerDC();
-	}
-	
-	private String buildSystemInfo() {
-		String host = getCmdOutput("uname -n");
-		String domainName = StringUtils.defaultString(getCmdOutput("domainname"));
-		String osName = getCmdOutput("uname -s");
-		if(StringUtils.isEmpty(osName)) osName = System.getProperty("os.name");
-		String osRelease = getCmdOutput("uname -r");
-		if(StringUtils.isEmpty(osRelease)) osRelease = System.getProperty("os.version");
-		String osVersion = StringUtils.defaultString(getCmdOutput("uname -v"));
-		String osArch = getCmdOutput("uname -m");
-		if(StringUtils.isEmpty(osArch)) osArch = System.getProperty("os.arch");
-		
-		// Builds string
-		StringBuilder sb = new StringBuilder();
-		if(new File("/sonicle/etc/xstream.conf").exists()) {
-			sb.append("Sonicle XStream Server");
-			sb.append(" - ");
-		}
-		sb.append(host);
-		if(!StringUtils.isEmpty(domainName)) {
-			sb.append(" at ");
-			sb.append(domainName);
-		}
-		sb.append(" - ");
-		sb.append(osName);
-		sb.append(" ");
-		sb.append(osRelease);
-		sb.append(" ");
-		sb.append(osVersion);
-		sb.append(" ");
-		sb.append(osArch);
-		return sb.toString();
-	}
-	
-	public static String getCmdOutput(String command) {
-		String output = null;
-		try {
-			Process pro = Runtime.getRuntime().exec(command);
-			BufferedReader br = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-			output = br.readLine();
-			pro.waitFor();
-		} catch (Throwable th) { /* Do nothing! */ }
-		return output;
 	}
 	
 	/**

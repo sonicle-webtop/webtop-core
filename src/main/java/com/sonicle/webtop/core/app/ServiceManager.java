@@ -177,7 +177,7 @@ public class ServiceManager {
 			createController(manifest.getId());
 		}
 		
-		// Initialize job services
+		// Instantiate job services
 		int okJobs = 0, failJobs = 0;
 		for(String serviceId : listPrivateServices()) {
 			if(getDescriptor(serviceId).hasJobService()) {
@@ -192,10 +192,13 @@ public class ServiceManager {
 			}
 		}
 		logger.debug("Instantiated {} of {} job services", okJobs, (okJobs+failJobs));
-		//postponeDeamonsInitialization(); // Postpone initialization because init methods can require WebTopApp, not set yet!
 	}
 	
-	public void onWebTopAppInit() {
+	/**
+	 * Initialize each JobService instance.
+	 * Postpone this methos call, WebTopApp instance must be set!
+	 */
+	public void initializeJobServices() {
 		// Inits job services
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
@@ -447,7 +450,7 @@ public class ServiceManager {
 	
 	
 	public void scheduleAllJobServicesTasks() {
-		if(!wta.isLastVersion()) return; // Make sure we are in latest webapp
+		if(!wta.isLatest()) return; // Make sure we are in latest webapp
 		synchronized(jobServices) {
 			for(Entry<String, BaseJobService> entry : jobServices.entrySet()) {
 				scheduleJobServiceTasks(entry.getKey(), entry.getValue());
@@ -464,7 +467,7 @@ public class ServiceManager {
 	}
 	
 	public boolean canExecuteTaskWork(JobKey taskKey) {
-		if(wta.isLastVersion()) {
+		if(wta.isLatest()) {
 			return true;
 		} else {
 			unscheduleAllJobServicesTasks();
