@@ -46,6 +46,7 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
+import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -106,16 +107,17 @@ public class Service extends BaseService {
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
 	
+	/*
 	private WebTopApp getApp() {
 		return ((CorePrivateEnvironment)getEnv()).getApp();
 	}
+	*/
 	
 	@Override
 	public void initialize() throws Exception {
-		UserProfile profile = getEnv().getProfile();
-		core = new CoreManager(getApp(), false);
-		ss = new CoreServiceSettings(SERVICE_ID, profile.getDomainId());
-		us = new CoreUserSettings(profile.getId());
+		core = (CoreManager)WT.getServiceManager(SERVICE_ID);
+		ss = new CoreServiceSettings(SERVICE_ID, getEnv().getProfileId().getDomainId());
+		us = new CoreUserSettings(getEnv().getProfileId());
 	}
 
 	@Override
@@ -153,18 +155,18 @@ public class Service extends BaseService {
 		return co;
 	}
 	
-	
+	private WebTopSession getWts() {
+		return getEnv().getWebTopSession();
+	}
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
-		Locale locale = ((CorePrivateEnvironment)getEnv()).getSession().getLocale();
-		Locale loc = null;
-		String lang = null;
+		Locale locale = getEnv().getWebTopSession().getLocale();
 		
 		try {
 			for(AppLocale apploc : WT.getInstalledLocales()) {
-				loc = apploc.getLocale();
-				lang = loc.getLanguage();
+				final Locale loc = apploc.getLocale();
+				final String lang = loc.getLanguage();
 				if(!items.containsKey(lang)) {
 					//items.put(lang, new JsSimple(lang, loc.getDisplayLanguage(locale)));
 					items.put(lang, new JsSimple(apploc.getId(), apploc.getLocale().getDisplayName(locale)));
@@ -173,7 +175,7 @@ public class Service extends BaseService {
 			new JsonResult("languages", items.values(), items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupLanguages", ex);
+			logger.error("Error in LookupLanguages", ex);
 			new JsonResult(false, "Unable to lookup languages").printTo(out);
 		}
 	}
@@ -181,18 +183,17 @@ public class Service extends BaseService {
 	public void processLookupTimezones(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsSimple> items = new ArrayList<>();
 		
-		try {	
-			String normId = null;
+		try {
 			int off;
 			for(TimeZone tz : WT.getTimezones()) {
-				normId = StringUtils.replace(tz.getID(), "_", " ");
+				final String normId = StringUtils.replace(tz.getID(), "_", " ");
 				off = tz.getRawOffset()/3600000;
 				items.add(new JsSimple(tz.getID(), MessageFormat.format("{0} (GMT{1}{2})", normId, (off<0) ? "-" : "+", Math.abs(off))));
 			}
 			new JsonResult("timezones", items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupTimezones", ex);
+			logger.error("Error in LookupTimezones", ex);
 			new JsonResult(false, "Unable to lookup timezones").printTo(out);
 		}
 	}
@@ -205,7 +206,7 @@ public class Service extends BaseService {
 			new JsonResult("themes", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupThemes", ex);
+			logger.error("Error in LookupThemes", ex);
 			new JsonResult(false, "Unable to lookup themes").printTo(out);
 		}
 	}
@@ -218,7 +219,7 @@ public class Service extends BaseService {
 			new JsonResult("layouts", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupLayouts", ex);
+			logger.error("Error in LookupLayouts", ex);
 			new JsonResult(false, "Unable to lookup layouts").printTo(out);
 		}
 	}
@@ -231,7 +232,7 @@ public class Service extends BaseService {
 			new JsonResult("lafs", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupLAFs", ex);
+			logger.error("Error in LookupLAFs", ex);
 			new JsonResult(false, "Unable to lookup look&feels").printTo(out);
 		}
 	}
@@ -248,10 +249,23 @@ public class Service extends BaseService {
 			new JsonResult("encodings", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
-			logger.error("Error executing action LookupTextEncodings", ex);
+			logger.error("Error in LookupTextEncodings", ex);
 			new JsonResult(false, "Unable to lookup available text encodings").printTo(out);
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public void processLookupDomains(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsSimple> items = new ArrayList<>();
@@ -325,7 +339,7 @@ public class Service extends BaseService {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
-			List<OUser> users = null;
+			List<OUser> users;
 			if(RunContext.isSysAdmin()) {
 				if(!StringUtils.isEmpty(domainId)) {
 					users = core.listUsers(domainId, true);
@@ -575,8 +589,9 @@ public class Service extends BaseService {
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
+			
 			UserProfile.Id targetPid = new UserProfile.Id(id);
-			if(RunContext.getProfileId().equals(targetPid)) {
+			if(getWts().getProfileId().equals(targetPid)) {
 				data = core.listUserOptionServices();
 			} else {
 				CoreManager xcore = WT.getCoreManager(targetPid);
@@ -796,7 +811,7 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				UserProfile.Data ud = core.getUserData(RunContext.getProfileId());
+				UserProfile.Data ud = core.getUserData(getWts().getProfileId());
 				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimeZone());
 				List<SyncDevice> devices = core.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
@@ -854,7 +869,7 @@ public class Service extends BaseService {
 	private List<String> queryDomains() {
 		List<String> domains = new ArrayList<>();
 		if(RunContext.isWebTopAdmin()) domains.add("*");
-		domains.add(RunContext.getProfileId().getDomainId());
+		domains.add(getWts().getProfileId().getDomainId());
 		return domains;
 	}
 	

@@ -63,6 +63,7 @@ import org.apache.shiro.SecurityUtils;
  * @author malbinola
  */
 public class Otp extends AbstractServlet {
+	public static final String URL = "otp"; // This must reflect web.xml!
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
 	public static final String WTSPROP_OTP_VERIFIED = "OTPVERIFIED";
@@ -172,7 +173,7 @@ public class Otp extends AbstractServlet {
 	
 	private void buildPage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, wta, "");
+		AbstractServlet.fillPageVars(tplMap, locale, wta, null);
 		AbstractServlet.fillSystemVars(tplMap, locale, wta);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);

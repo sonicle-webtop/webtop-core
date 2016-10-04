@@ -76,12 +76,10 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 	},
 	
 	initWebSocket: function() {
-		var me = this,
-				path = window.location.pathname;
+		var me = this;
 		
-		path = path.substring(0, path.lastIndexOf('/'));
 		me.ws = Ext.create('Ext.ux.WebSocket', {
-			url: Ext.String.format('ws://{0}:{1}{2}/push', window.location.hostname, window.location.port, path),
+			url: WT.getWsPushUrl(),
 			autoReconnect: true,
 			autoReconnectInterval: me.getWsReconnectInterval(),
 			listeners: {

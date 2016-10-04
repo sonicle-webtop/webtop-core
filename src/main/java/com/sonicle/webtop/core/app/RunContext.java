@@ -67,11 +67,11 @@ public class RunContext {
 		return (session != null) ? session.getId().toString() : null;
 	}
 	
-	public static UserProfile.Id getProfileId() {
-		return getProfileId(getSubject());
+	public static UserProfile.Id getRunProfileId() {
+		return getRunProfileId(getSubject());
 	}
 	
-	public static UserProfile.Id getProfileId(Subject subject) {
+	public static UserProfile.Id getRunProfileId(Subject subject) {
 		if(subject == null) return null;
 		if(subject.getPrincipal() == null) return null;
 		return new UserProfile.Id(((Principal)subject.getPrincipal()).getName());
@@ -217,7 +217,7 @@ public class RunContext {
 	
 	static PrincipalCollection buildPrincipalCollection(UserProfile.Id pid) {
 		Subject subject = getSubject();
-		if((subject != null) && pid.equals(getProfileId(subject))) {
+		if((subject != null) && pid.equals(getRunProfileId(subject))) {
 			return subject.getPrincipals();
 		} else {
 			Principal principal = new Principal(pid.getDomainId(), pid.getUserId());

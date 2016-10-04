@@ -33,15 +33,12 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.CoreLocaleKey;
-import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.app.WsPushEndpoint;
 import java.io.File;
 import java.util.Locale;
-import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -121,6 +118,23 @@ public class ServletHelper {
 		} else {
 			return new Locale("en", "EN");
 		}
+	}
+	
+	public static String sanitizeBaseUrl(String url) {
+		url = StringUtils.substringBefore(url, Login.URL);
+		url = StringUtils.substringBefore(url, Logout.URL);
+		url = StringUtils.substringBefore(url, Otp.URL);
+		url = StringUtils.substringBefore(url, Start.URL);
+		url = StringUtils.substringBefore(url, SessionKeepAlive.URL);
+		url = StringUtils.substringBefore(url, ResourceRequest.URL);
+		url = StringUtils.substringBefore(url, ServiceRequest.URL);
+		url = StringUtils.substringBefore(url, PublicServiceRequest.URL);
+		url = StringUtils.substringBefore(url, RestApiServlet.URL);
+		return url;
+	}
+	
+	public static String toWsUrl(String baseUrl) {
+		return PathUtils.concatPaths(StringUtils.replaceOnce(baseUrl, "http", "ws"), WsPushEndpoint.URL);
 	}
 	
 	public static boolean isPublic(HttpServletRequest request) {

@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class SessionKeepAlive extends AbstractServlet {
+	public static final String URL = "keep-alive"; // This must reflect web.xml!
 	private static final Logger logger = LoggerFactory.getLogger(SessionKeepAlive.class);
 
 	@Override

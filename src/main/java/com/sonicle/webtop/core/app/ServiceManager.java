@@ -154,6 +154,7 @@ public class ServiceManager {
 		
 		// Progamatically register the core's manifest
 		registerService(new CoreManifest());
+		registerService(new CoreAdminManifest());
 		
 		// Loads services' manifest files from classpath
 		logger.debug("Starting services discovery...");

@@ -62,6 +62,7 @@ import org.apache.shiro.session.Session;
  * @author malbinola
  */
 public class Login extends AbstractServlet {
+	public static final String URL = "login"; // This must reflect web.xml!
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";
 	public static final String LOGINFAILURE_MAINTENANCE = "maintenance";
@@ -121,7 +122,7 @@ public class Login extends AbstractServlet {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, locale, wta, "");
+		AbstractServlet.fillPageVars(tplMap, locale, wta, null);
 		AbstractServlet.fillSystemVars(tplMap, locale, wta);
 		tplMap.put("showFootprint", !css.getHideLoginFootprint());
 		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));

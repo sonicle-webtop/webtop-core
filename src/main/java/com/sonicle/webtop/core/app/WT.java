@@ -142,7 +142,7 @@ public class WT {
 	public static String getServicePublicUrl(String domainId, String serviceId) {
 		String baseUrl = getPublicBaseUrl(domainId);
 		String publicName = getServicePublicName(serviceId);
-		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL_PART, publicName);
+		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL, publicName);
 	}
 	
 	/*
@@ -170,15 +170,16 @@ public class WT {
 			if(cnameToServiceIdCache.containsKey(cname)) {
 				return cnameToServiceIdCache.get(cname);
 			} else {
+				String matchingSid = null;
 				for(String sid : manifestCache.keySet()) {
-					if(StringUtils.startsWith(cname, sid)) {
-						cnameToServiceIdCache.put(cname, sid);
-						return sid;
-					}
+					// Stopping to the first match is not enought, we have to
+					// check all installed services
+					if(StringUtils.startsWith(cname, sid)) matchingSid = sid;
 				}
+				if(matchingSid != null) cnameToServiceIdCache.put(cname, matchingSid);
+				return matchingSid;
 			}
 		}
-		return null;
 	}
 	
 	public static CoreManager getCoreManager() {
@@ -187,13 +188,13 @@ public class WT {
 			return (CoreManager)wts.getServiceManager(CoreManifest.ID);
 		} else {
 			// For admin subject during application startup
-			return getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getProfileId());
+			return getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getRunProfileId());
 		}
 		//return RunContext.getWebTopSession().getCoreManager();
 	}
 	
 	public static CoreManager getCoreManager(UserProfile.Id targetProfileId) {
-		if(targetProfileId.equals(RunContext.getProfileId())) {
+		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getCoreManager();
 		} else {
 			return getWTA().getServiceManager().instantiateCoreManager(false, targetProfileId);
@@ -207,13 +208,13 @@ public class WT {
 		} else {
 			// For admin subject during application startup
 			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, RunContext.getProfileId());
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, RunContext.getRunProfileId());
 		}
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, UserProfile.Id targetProfileId) {
-		if(targetProfileId.equals(RunContext.getProfileId())) {
+		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
 			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, targetProfileId);
@@ -271,22 +272,22 @@ public class WT {
 	}
 	
 	public static String getHomePath() {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getHomePath(runPid.getDomain());
 	}
 	
 	public static String getTempPath() {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getTempPath(runPid.getDomain());
 	}
 	
 	public static String getServiceHomePath(String serviceId) {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
 	}
 	
 	public static File getTempFolder() throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getTempFolder(runPid.getDomain());
 	}
 	
@@ -295,12 +296,12 @@ public class WT {
 	}
 	
 	public static File createTempFile(String prefix, String suffix) throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
 	}
 	
 	public static boolean deleteTempFile(String filename) throws WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().deleteTempFile(runPid.getDomain(), filename);
 	}
 	
@@ -329,7 +330,7 @@ public class WT {
 	}
 	
 	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
-		UserProfile.Id runPid = RunContext.getProfileId();
+		UserProfile.Id runPid = RunContext.getRunProfileId();
 		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
 	}
 	
@@ -382,12 +383,12 @@ public class WT {
 	
 	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		return getWTA().getLogManager().write(RunContext.getProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
+		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
 	}
 	
 	public static boolean writeLog(String action, String softwareName, String data) {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		return getWTA().getLogManager().write(RunContext.getProfileId(), callerServiceId, action, softwareName, null, null, null, data);
+		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, null, null, null, data);
 	}
 	
 	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {

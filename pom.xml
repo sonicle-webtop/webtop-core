@@ -235,6 +235,9 @@
 				<directory>src/main/client</directory>
 			</resource>
 			<resource>
+				<directory>src/main/client-admin</directory>
+			</resource>
+			<resource>
 				<directory>src/main/client-resources</directory>
 			</resource>
 			<resource>

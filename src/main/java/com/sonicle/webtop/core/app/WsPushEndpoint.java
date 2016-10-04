@@ -50,8 +50,9 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 		
-@ServerEndpoint(value = "/push", configurator = WsPushEndpointConfigurator.class)
+@ServerEndpoint(value = "/"+WsPushEndpoint.URL, configurator = WsPushEndpointConfigurator.class)
 public class WsPushEndpoint {
+	public static final String URL = "push"; // This must reflect web.xml!
 	private static final Logger logger = WT.getLogger(WsPushEndpoint.class);
 	private static final MultiValueMap sessions = MultiValueMap.decorate(new HashMap<String, Session>());
 	private WebTopApp wta;

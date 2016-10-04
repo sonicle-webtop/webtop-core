@@ -37,6 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.app.AuthManager;
+import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
@@ -67,6 +68,7 @@ import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
+import com.sonicle.webtop.core.bol.model.Setting;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
@@ -116,35 +118,156 @@ public class CoreManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	private WebTopApp wta = null;
 	
-	public CoreManager(WebTopApp wta, boolean fastInit) {
-		this(wta, fastInit, RunContext.getProfileId());
-	}
-	
-	public CoreManager(WebTopApp wta, boolean fastInit, UserProfile.Id targetProfileId) {
-		super(fastInit, targetProfileId);
-		this.wta = wta;
-	}
-	
 	private final HashSet<String> cacheReady = new HashSet<>();
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
 	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
 	
-	private void buildAllowedServicesCache() {
-		ServiceManager svcm = wta.getServiceManager();
-		for(String id : svcm.listRegisteredServices()) {
-			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) cacheAllowedServices.add(id);
+	public CoreManager(WebTopApp wta, boolean fastInit, UserProfile.Id targetProfileId) {
+		super(fastInit, targetProfileId);
+		this.wta = wta;
+		
+		if(!fastInit) {
+			initAllowedServices();
 		}
+	}
+	
+	private void initAllowedServices() {
+		synchronized(cacheAllowedServices) {
+			cacheAllowedServices.addAll(doListAllowedServices());
+			cacheReady.add("cacheAllowedServices");
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	public List<JsSimple> listThemes() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		//TODO: gestire i temi dinamicamente
+		items.add(new JsSimple("aria", "Aria"));
+		items.add(new JsSimple("classic", "Classic"));
+		items.add(new JsSimple("crisp", "Crisp"));
+		items.add(new JsSimple("crisp-touch", "Crisp Touch"));
+		items.add(new JsSimple("gray", "Gray"));
+		items.add(new JsSimple("neptune", "Neptune"));
+		items.add(new JsSimple("neptune-touch", "Neptune Touch"));
+		return items;
+	}
+	
+	public List<JsSimple> listLayouts() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		items.add(new JsSimple("default", WT.getPlatformName()));
+		items.add(new JsSimple("stacked", "Outlook 2007/2003"));
+		items.add(new JsSimple("queued", "Mozilla"));
+		return items;
+	}
+	
+	public List<JsSimple> listLAFs() throws WTException {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		//TODO: gestire i look&feel (lafs) dinamicamente
+		items.add(new JsSimple("default", WT.getPlatformName()));
+		return items;
+	}
+	
+	public List<SessionInfo> listSessions() throws WTException {
+		RunContext.ensureIsSysAdmin();
+		return wta.getSessionManager().listOnlineSessions();
+	}
+	
+	public void invalidateSession(String sessionId) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		wta.getSessionManager().invalidateSession(sessionId);
+	}
+	
+	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
+		UserManager usem = wta.getUserManager();
+		
+		if(RunContext.isSysAdmin()) {
+			return usem.listDomains(enabledOnly);
+		} else {
+			ODomain domain = usem.getDomain(RunContext.getRunProfileId().getDomain());
+			return domain.getEnabled() ? Arrays.asList(domain) : new ArrayList<ODomain>();
+		}
+	}
+	
+	public ODomain getDomain(String domainId) throws WTException {
+		UserManager usem = wta.getUserManager();
+		
+		if(RunContext.isSysAdmin()) {
+			return usem.getDomain(domainId);
+		} else {
+			ensureUserDomain();
+			return usem.getDomain(domainId);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	public List<Setting> listSystemSettings() {
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.listSettings();
 	}
 	
 	public List<String> listAllowedServices() {
 		synchronized(cacheAllowedServices) {
 			if(!cacheReady.contains("cacheAllowedServices")) {
-				buildAllowedServicesCache();
-				cacheReady.add("cacheAllowedServices");
+				initAllowedServices();
 			}
 			return cacheAllowedServices;
 		}
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private List<String> doListAllowedServices() {
+		ArrayList<String> ids = new ArrayList<>();
+		
+		ensureUserDomain();
+		if(RunContext.isSysAdmin()) {
+			ids.add(CoreManifest.ID);
+			ids.add(CoreAdminManifest.ID);
+		} else {
+			ServiceManager svcm = wta.getServiceManager();
+			for(String id : svcm.listRegisteredServices()) {
+				if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+			}
+		}
+		return ids;
+	}
+	
+	
+
 	
 	/*
 	private LinkedHashMap<String, RecipientsProviderBase> getDomainRecipientsProviders() {
@@ -216,65 +339,11 @@ public class CoreManager extends BaseManager {
 		return wta.getUserManager().isUserInfoProviderWritable();
 	}
 	
-	public List<JsSimple> listThemes() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		//TODO: gestire i temi dinamicamente
-		items.add(new JsSimple("aria", "Aria"));
-		items.add(new JsSimple("classic", "Classic"));
-		items.add(new JsSimple("crisp", "Crisp"));
-		items.add(new JsSimple("crisp-touch", "Crisp Touch"));
-		items.add(new JsSimple("gray", "Gray"));
-		items.add(new JsSimple("neptune", "Neptune"));
-		items.add(new JsSimple("neptune-touch", "Neptune Touch"));
-		return items;
-	}
 	
-	public List<JsSimple> listLayouts() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		items.add(new JsSimple("default", WT.getPlatformName()));
-		items.add(new JsSimple("stacked", "Outlook 2007/2003"));
-		items.add(new JsSimple("queued", "Mozilla"));
-		return items;
-	}
 	
-	public List<JsSimple> listLAFs() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		//TODO: gestire i look&feel (lafs) dinamicamente
-		items.add(new JsSimple("default", WT.getPlatformName()));
-		return items;
-	}
 	
-	public List<SessionInfo> listSessions() throws WTException {
-		RunContext.ensureIsSysAdmin();
-		return wta.getSessionManager().listOnlineSessions();
-	}
 	
-	public void invalidateSession(String sessionId) throws WTException {
-		RunContext.ensureIsSysAdmin();
-		wta.getSessionManager().invalidateSession(sessionId);
-	}
 	
-	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
-		UserManager usem = wta.getUserManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return usem.listDomains(enabledOnly);
-		} else {
-			ODomain domain = usem.getDomain(RunContext.getProfileId().getDomain());
-			return domain.getEnabled() ? Arrays.asList(domain) : new ArrayList<ODomain>();
-		}
-	}
-	
-	public ODomain getDomain(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return usem.getDomain(domainId);
-		} else {
-			if(!RunContext.getProfileId().hasDomain(domainId)) throw new AuthException("You cannot access to domain [{0}]", domainId);
-			return usem.getDomain(domainId);
-		}
-	}
 	
 	public UserProfile.Id userUidToProfileId(String userUid) {
 		return wta.getUserManager().uidToUser(userUid);
@@ -290,7 +359,7 @@ public class CoreManager extends BaseManager {
 		if(RunContext.isSysAdmin()) {
 			return usem.listUsers(domainId, enabledOnly);
 		} else {
-			if(!RunContext.getProfileId().hasDomain(domainId)) throw new AuthException("You cannot access to domain [{0}]", domainId);
+			ensureUserDomain();
 			return usem.listUsers(domainId, enabledOnly);
 		}
 	}
@@ -301,7 +370,7 @@ public class CoreManager extends BaseManager {
 		if(RunContext.isSysAdmin()) {
 			return usem.listUsers(getTargetProfileId().getDomain(), enabledOnly);
 		} else {
-			return usem.listUsers(RunContext.getProfileId().getDomain(), enabledOnly);
+			return usem.listUsers(RunContext.getRunProfileId().getDomain(), enabledOnly);
 		}
 	}
 	
@@ -311,7 +380,7 @@ public class CoreManager extends BaseManager {
 		if(RunContext.isSysAdmin()) {
 			return usem.getUser(pid);
 		} else {
-			if(!RunContext.getProfileId().hasDomain(pid.getDomain())) throw new AuthException("You cannot access to domain [{0}]", pid.getDomain());
+			ensureUserDomain();
 			return usem.getUser(pid);
 		}
 	}
@@ -1415,11 +1484,10 @@ public class CoreManager extends BaseManager {
 	
 	public List<SyncDevice> listZPushDevices() throws WTException {
 		try {
-			UserProfile.Id runPid = RunContext.getProfileId();
 			ZPushManager zpush = createZPushManager();
 			
 			boolean sysadmin = RunContext.isSysAdmin();
-			String internetId = (sysadmin) ? null : getInternetUserId(runPid);
+			String internetId = (sysadmin) ? null : getInternetUserId(getTargetProfileId());
 
 			ArrayList<SyncDevice> devices = new ArrayList<>();
 			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();

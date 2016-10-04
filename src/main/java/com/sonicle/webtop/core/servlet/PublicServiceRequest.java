@@ -35,8 +35,6 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -50,7 +48,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import javax.servlet.ServletException;
@@ -68,8 +65,8 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PublicServiceRequest extends BaseServiceRequest {
+	public static final String URL = "public"; // This must reflect web.xml!
 	private static final Logger logger = WT.getLogger(PublicServiceRequest.class);
-	public static final String URL_PART = "public";
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {

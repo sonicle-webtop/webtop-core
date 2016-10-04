@@ -46,7 +46,6 @@ import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.app.RunContext;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +57,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ServiceRequest extends BaseServiceRequest {
+	public static final String URL = "service-request"; // This must reflect web.xml!
 	private static final Logger logger = WT.getLogger(ServiceRequest.class);
 	
 	@Override

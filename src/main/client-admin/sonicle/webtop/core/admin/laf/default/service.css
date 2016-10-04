@@ -1,0 +1,13 @@
+.wta-icon-service-xs { background-image: url('service_16.png') !important; }
+.wta-icon-service-s { background-image: url('service_24.png') !important; }
+.wta-icon-service-m { background-image: url('service_32.png') !important; }
+.wta-icon-service-l { background-image: url('service_48.png') !important; }
+
+.wta-icon-domains-xs { background-image: url('domains_16.png') !important; }
+.wta-icon-domain-xs { background-image: url('domain_16.png') !important; }
+.wta-icon-domainGroups-xs { background-image: url('domainGroups_16.png') !important; }
+.wta-icon-domainUsers-xs { background-image: url('domainUsers_16.png') !important; }
+.wta-icon-domainRoles-xs { background-image: url('domainRoles_16.png') !important; }
+.wta-icon-domainSettings-xs { background-image: url('domainSettings_16.png') !important; }
+.wta-icon-settings-xs { background-image: url('settings_16.png') !important; }
+.wta-icon-dbUpdater-xs { background-image: url('dbUpdater_16.png') !important; }

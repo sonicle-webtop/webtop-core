@@ -86,6 +86,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Returns the Push URL for websocket.
+	 */
+	getWsPushUrl: function() {
+		return WTS.wsPushUrl;
+	},
+	
+	/**
 	 * Loads a CSS file by adding in the page a new link element.
 	 * @param {String} url The URL from which to load the CSS.
 	 */

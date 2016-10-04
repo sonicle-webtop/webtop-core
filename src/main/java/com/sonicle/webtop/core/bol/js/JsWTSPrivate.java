@@ -43,6 +43,7 @@ import java.util.HashMap;
  */
 public class JsWTSPrivate {
 	public String securityToken;
+	public String wsPushUrl;
 	public String layoutClassName;
 	public String fileTypes;
 	public HashMap<String, String> appPaths = new HashMap<>();

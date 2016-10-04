@@ -73,6 +73,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ResourceRequest extends HttpServlet {
+	public static final String URL = "resources"; // This must reflect web.xml!
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;

@@ -60,6 +60,7 @@ import org.apache.shiro.SecurityUtils;
  * @author malbinola
  */
 public class Start extends AbstractServlet {
+	public static final String URL = "start"; // This must reflect web.xml!
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -93,7 +94,7 @@ public class Start extends AbstractServlet {
 			Map vars = new HashMap();
 			
 			// Page + loader variables
-			AbstractServlet.fillPageVars(vars, locale, wta, "");
+			AbstractServlet.fillPageVars(vars, locale, wta, null);
 			AbstractServlet.fillIncludeVars(vars, locale, cus.getTheme(), cus.getLookAndFeel(), cus.getRightToLeft(), extdebug);
 			vars.put("layout", cus.getLayout());
 			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));

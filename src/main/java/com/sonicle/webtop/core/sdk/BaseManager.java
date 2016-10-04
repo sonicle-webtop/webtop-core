@@ -81,17 +81,29 @@ public abstract class BaseManager {
 	 */
 	public void ensureCallerService(String callerServiceIdMustBe, String methodName) throws MethodAuthException {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		if(!StringUtils.equals(callerServiceId, callerServiceIdMustBe)) throw new MethodAuthException(methodName, callerServiceId, RunContext.getProfileId());
+		if(!StringUtils.equals(callerServiceId, callerServiceIdMustBe)) throw new MethodAuthException(methodName, callerServiceId, RunContext.getRunProfileId());
 	}
 	
 	/**
 	 * Checks if the running profile (see runContext) and target profile are the same.
-	 * @throws AuthException When the running profile does not match the target profile
+	 * This security check is skipped for SysAdmin.
+	 * @throws AuthException When profiles not match.
 	 */
-	protected void ensureUser() throws AuthException {
-		UserProfile.Id runningProfile = RunContext.getProfileId();
-		if(RunContext.isWebTopAdmin(runningProfile)) return;
-		if(!runningProfile.equals(getTargetProfileId())) throw new AuthException("");
+	public void ensureUser() throws AuthException {
+		UserProfile.Id runPid = RunContext.getRunProfileId();
+		if(RunContext.isWebTopAdmin(runPid)) return;
+		if(!runPid.equals(getTargetProfileId())) throw new AuthException("");
+	}
+	
+	/**
+	 * Checks if the running profile's domain ID (see runContext) and target profile's domain ID are the same.
+	 * This security check is skipped for SysAdmin.
+	 * @throws AuthException When domain IDs do not match.
+	 */
+	public void ensureUserDomain() throws AuthException {
+		UserProfile.Id runPid = RunContext.getRunProfileId();
+		if(RunContext.isWebTopAdmin(runPid)) return;
+		if(!runPid.hasDomain(getTargetProfileId().getDomainId())) throw new AuthException("Domain ID for the running profile [{0}] does not match with the target [{1}]", runPid.getDomainId(), getTargetProfileId().getDomainId());
 	}
 	
 	/**

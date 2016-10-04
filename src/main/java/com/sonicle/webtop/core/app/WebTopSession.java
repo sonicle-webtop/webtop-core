@@ -51,6 +51,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
+import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,6 +78,7 @@ public class WebTopSession {
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	public static final String PROP_REQUEST_DUMP = "REQUESTDUMP";
 	
+	private final Object lock = new Object();
 	private Session session;
 	private final WebTopApp wta;
 	private final PropertyBag props = new PropertyBag();
@@ -97,7 +99,7 @@ public class WebTopSession {
 		this.session = session;
 	}
 	
-	void cleanup() throws Exception {
+	synchronized void cleanup() throws Exception {
 		initLevel = -1;
 		
 		emptyPrivateServices();
@@ -130,43 +132,6 @@ public class WebTopSession {
 	 */
 	public String getId() {
 		return session.getId().toString();
-	}
-	
-	public Object setProperty(String serviceId, String key, Object value) {
-		synchronized(props) {
-			props.set(serviceId+"@"+key, value);
-			return value;
-		}
-	}
-	
-	public Object getProperty(String serviceId, String key) {
-		synchronized(props) {
-			return props.get(serviceId+"@"+key);
-		}
-	}
-	
-	public Object popProperty(String serviceId, String key) {
-		synchronized(props) {
-			if(hasProperty(serviceId, key)) {
-				Object value = props.get(serviceId+"@"+key);
-				clearProperty(serviceId, key);
-				return value;
-			} else {
-				return null;
-			}
-		}
-	}
-	
-	public void clearProperty(String serviceId, String key) {
-		synchronized(props) {
-			props.clear(serviceId+"@"+key);
-		}
-	}
-	
-	public boolean hasProperty(String serviceId, String key) {
-		synchronized(props) {
-			return props.has(serviceId+"@"+key);
-		}
 	}
 	
 	/**
@@ -204,6 +169,74 @@ public class WebTopSession {
 			return profile.getLocale();
 		} else {
 			return SessionManager.getClientLocale(session);
+		}
+	}
+	
+	/**
+	 * Associates an object to this session, using the key specified.
+	 * @param serviceId The service ID to which the object is bound.
+	 * @param key The key to which the object is mapped.
+	 * @param value The object to be mapped.
+	 * @return The object just associated.
+	 */
+	public Object setProperty(String serviceId, String key, Object value) {
+		synchronized(props) {
+			props.set(serviceId+"@"+key, value);
+			return value;
+		}
+	}
+	
+	/**
+	 * Returns the object to which the specified key is mapped, or null if no object is mapped under the key.
+	 * @param serviceId The service ID to which the object is mapped.
+	 * @param key The key to which the object is mapped.
+	 * @return If found, the object to which the specified key is mapped.
+	 */
+	public Object getProperty(String serviceId, String key) {
+		synchronized(props) {
+			return props.get(serviceId+"@"+key);
+		}
+	}
+	
+	/**
+	 * Returns the object to which the specified key is mapped, or null if no object is mapped under the key.
+	 * Mapping will be cleared when the object is returned.
+	 * @param serviceId The service ID to which the object is mapped.
+	 * @param key The key to which the object is mapped.
+	 * @return If found, the object to which the specified key is mapped.
+	 */
+	public Object popProperty(String serviceId, String key) {
+		synchronized(props) {
+			if(hasProperty(serviceId, key)) {
+				Object value = props.get(serviceId+"@"+key);
+				clearProperty(serviceId, key);
+				return value;
+			} else {
+				return null;
+			}
+		}
+	}
+	
+	/**
+	 * Clears the object mapped to the specified key.
+	 * @param serviceId The service ID to which the object is mapped.
+	 * @param key The key to which the object is mapped.
+	 */
+	public void clearProperty(String serviceId, String key) {
+		synchronized(props) {
+			props.clear(serviceId+"@"+key);
+		}
+	}
+	
+	/**
+	 * Checks if this session contains a mapping for the specified key.
+	 * @param serviceId The service ID to which the object is mapped.
+	 * @param key The key to which the object is mapped.
+	 * @return True if a mapping is found, false otherwise.
+	 */
+	public boolean hasProperty(String serviceId, String key) {
+		synchronized(props) {
+			return props.has(serviceId+"@"+key);
 		}
 	}
 	
@@ -266,16 +299,13 @@ public class WebTopSession {
 		if(initLevel == 1) internalInitPrivateEnvironment(request);
 	}
 	
-	public synchronized void initPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
-		internalInitPublicEnvironment(request, publicServiceId);
-	}
-	
 	private void internalInitPrivate(HttpServletRequest request) throws WTException {
+		// Synchronization on caller method!
 		ServiceManager svcm = wta.getServiceManager();
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
-		UserProfile.Id profileId = RunContext.getProfileId(subject);
+		UserProfile.Id profileId = RunContext.getRunProfileId(subject);
 		
 		emptyServiceManagers();
 		
@@ -291,8 +321,19 @@ public class WebTopSession {
 		initLevel = 1;
 	}
 	
+	public void internalCleanupPrivateEnvironment() {
+		// Synchronization on caller method!
+		
+		allowedServices = null;
+		
+		
+		
+		privateCoreEnv = null;
+		privateEnv = null;
+	}
+	
 	private void internalInitPrivateEnvironment(HttpServletRequest request) throws WTException {
-		// Calling method MUST be synchronized!
+		// Synchronization on caller method!
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		CoreManager core = WT.getCoreManager(profile.getId());
@@ -363,11 +404,24 @@ public class WebTopSession {
 		initLevel = 2;
 	}
 	
+	public synchronized void initPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
+		internalInitPublicEnvironment(request, publicServiceId);
+	}
+	
+	public void internalCleanupPublicEnvironment() {
+		// Synchronization on caller method!
+		emptyPublicServices();
+		publicEnv = null;
+	}
+	
 	private void internalInitPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
+		// Synchronization on caller method!
+		
+		if(isPublicServiceCached(publicServiceId)) return;
 		ServiceManager svcm = wta.getServiceManager();
 		
 		if(!isServiceManagerCached(CoreManifest.ID)) {
-			CoreManager core = svcm.instantiateCoreManager(false, RunContext.getProfileId());
+			CoreManager core = svcm.instantiateCoreManager(true, RunContext.getRunProfileId());
 			cacheServiceManager(CoreManifest.ID, core);
 		}
 		if(publicEnv == null) publicEnv = new PublicEnvironment(this);
@@ -378,10 +432,10 @@ public class WebTopSession {
 		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
 		for(String serviceId : serviceIds) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
-			// Manager
+			// Manager (skip core)
 			if(!serviceId.equals(CoreManifest.ID)) {
 				if(descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
-					managerInst = svcm.instantiateServiceManager(serviceId, true, RunContext.getProfileId());
+					managerInst = svcm.instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
 					if(managerInst != null) {
 						cacheServiceManager(serviceId, managerInst);
 						managersCount++;
@@ -492,10 +546,8 @@ public class WebTopSession {
 	 * @param serviceId The service ID.
 	 * @return True if instance is present, false otherwise.
 	 */
-	public boolean isPublicServiceCached(String serviceId) {
-		synchronized(publicServices) {
-			return publicServices.containsKey(serviceId);
-		}
+	private boolean isPublicServiceCached(String serviceId) {
+		return publicServices.containsKey(serviceId);
 	}
 	
 	/**
@@ -535,6 +587,7 @@ public class WebTopSession {
 		
 		Locale locale = getLocale();
 		js.securityToken = RunContext.getCSRFToken();
+		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);
 		js.fileTypes = wta.getFileTypes().toString();
 		

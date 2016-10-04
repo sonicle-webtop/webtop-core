@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
 import com.sonicle.webtop.core.bol.OUserSetting;
+import com.sonicle.webtop.core.bol.model.Setting;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
@@ -462,6 +463,32 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 			DbUtils.closeQuietly(con);
 		}
 	}
+	
+	
+	
+	public List<Setting> listSettings() {
+		ArrayList<Setting> items = new ArrayList<>();
+		SettingDAO dao = SettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			for(OSetting setting : dao.selectAll(con)) {
+				items.add(new Setting(setting));
+			}
+			return items;
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read settings", ex);
+			throw new RuntimeException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	
+	
+	
 	
 	private String valueToString(Object value) {
 		return String.valueOf(value);

@@ -85,6 +85,7 @@ public class SessionManager {
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
 	public static final String ATTRIBUTE_CLIENT_RA_USERAGENT = "clientReadableUA";
 	public static final String ATTRIBUTE_CLIENT_LOCALE = "clientLocale";
+	public static final String ATTRIBUTE_CLIENT_URL = "clientUrl";
 	public static final String ATTRIBUTE_REFERER_URI = "refererUri";
 	
 	private WebTopApp wta = null;
@@ -137,6 +138,15 @@ public class SessionManager {
 	
 	public static Locale getClientLocale(Session session) {
 		return (Locale)session.getAttribute(ATTRIBUTE_CLIENT_LOCALE);
+	}
+	
+	public static String getClientUrl(Session session) {
+		return (String)session.getAttribute(ATTRIBUTE_CLIENT_URL);
+	}
+	
+	public static void setClientUrl(Session session, String clientUrl) {
+		logger.trace("ClientUrl: {}", clientUrl); //TODO: rimuovere logging
+		session.setAttribute(ATTRIBUTE_CLIENT_URL, clientUrl);
 	}
 	
 	public static String getRefererUri(Session session) {

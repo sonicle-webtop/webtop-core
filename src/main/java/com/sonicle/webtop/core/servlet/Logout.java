@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author malbinola
  */
 public class Logout extends AbstractServlet {
+	public static final String URL = "logout"; // This must reflect web.xml!
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
