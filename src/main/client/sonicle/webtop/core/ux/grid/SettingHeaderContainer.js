@@ -31,26 +31,77 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.SettingsTab', {
-	extend: 'Sonicle.webtop.core.admin.view.ChildTab',
-	requires: [
-		'Sonicle.grid.Property',
-		'Sonicle.webtop.core.admin.model.Setting'
-	],
+Ext.define('Sonicle.webtop.core.ux.grid.SettingHeaderContainer', {
+	alternateClassName: 'WT.ux.grid.SettingHeaderContainer',
+	extend: 'Ext.grid.header.Container',
 	
-	initComponent: function() {
+	trueText: 'true',
+	falseText: 'false',
+	
+	constructor :function(gp, sto) {
 		var me = this;
-		me.callParent(arguments);
-		me.add({
-			xtype: 'sopropertygrid',
-			region: 'center',
-			store: {
-					model: 'Sonicle.webtop.core.admin.model.Setting',
-					proxy: WTF.apiProxy(me.mys.ID, 'ManageSettings', 'settings')
+		me.grid = gp;
+		me.store = sto;
+		me.callParent([{
+			isRootHeader: true,
+			items: [{
+				itemId: gp.groupField,
+				header: gp.groupText,
+				dataIndex: gp.groupField,
+				scope: me,
+				sortable: false,
+				menuDisabled: true,
+				flex: 1
+			}, {
+				itemId: gp.keyField,
+				header: gp.keyText,
+				dataIndex: gp.keyField,
+				editor: {
+					xtype: 'textfield',
+					selectOnFocus: true,
+					allowBlank: false
 				},
-			nameField: 'key',
-			valueField: 'value',
-			typeField: 'type'
-		});
+				scope: me,
+				menuDisabled: true,
+				flex: 1
+			}, {
+				itemId: gp.valueField,
+				header: gp.valueText,
+				dataIndex: gp.valueField,
+				renderer: me.cellRenderer,
+				getEditor: me.getCellEditor.bind(me),
+				scope: me,
+				menuDisabled: true,
+				flex: 2
+			}]
+		}]);
+		me.grid.keyColumn = me.items.getAt(1);
+		me.grid.valueColumn = me.items.getAt(2);
+	},
+	
+	getCellEditor: function(rec){
+		return this.grid.getCellEditor(rec, this);
+	},
+	
+	cellRenderer: function(val, meta, rec) {
+		var me = this,
+				grid = me.grid,
+				type = rec.get(grid.typeField),
+				result = val;
+		
+		if(type === 'boolean') {
+			result = me.booleanRenderer(val);
+		} else if(type === 'date') {
+			result = me.dateRenderer(val);
+		}
+		return Ext.util.Format.htmlEncode(result);
+	},
+	
+	booleanRenderer: function(val) {
+		return this[val ? 'trueText' : 'falseText'];
+	},
+	
+	dateRenderer: function(val) {
+		return Ext.util.Format.date(val, this.format);
 	}
 });

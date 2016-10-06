@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	extend: 'WT.sdk.Service',
 	requires: [
 		'Sonicle.webtop.core.admin.model.AdminNode',
-		'Sonicle.webtop.core.admin.view.SettingsTab'
+		'Sonicle.webtop.core.admin.view.Settings'
 	],
 	
 	init: function() {
@@ -126,9 +126,10 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		tab = pnl.getComponent(node.getId());
 		if(!tab) {
-			pnl.add(Ext.create('Sonicle.webtop.core.admin.view.SettingsTab', {
+			pnl.add(Ext.create('Sonicle.webtop.core.admin.view.Settings', {
 				mys: me,
-				itemId: node.getId()
+				itemId: node.getId(),
+				closable: true
 			}));
 		}
 		pnl.setActiveTab(tab);

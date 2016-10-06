@@ -37,15 +37,21 @@ import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.model.Setting;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
@@ -67,6 +73,10 @@ public class Service extends BaseService {
 	@Override
 	public void cleanup() throws Exception {
 		manager = null;
+	}
+	
+	private WebTopApp getWta() {
+		return ((CorePrivateEnvironment)getEnv()).getApp();
 	}
 	
 	private ExtTreeNode createTreeNode(String id, String type, String text, boolean leaf, String iconClass) {
@@ -140,43 +150,68 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processLookupInstalledServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Locale locale = getEnv().getWebTopSession().getLocale();
+		ArrayList<JsSimple> items = new ArrayList<>();
+		
+		for(String id : manager.listInstalledServices()) {
+			items.add(new JsSimple(id, WT.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
+		}
+		new JsonResult(items).printTo(out);
+	}
+	
 	public void processManageSettings(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				List<Setting> items = manager.listSystemSettings();
-				new JsonResult("settings", items, items.size()).printTo(out);
+				new JsonResult(items, items.size()).printTo(out);
 				
-				/*
-				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				if(id == null) {
-					List<ActivityGrid> items = core.listLiveActivities(queryDomains());
-					new JsonResult("activities", items, items.size()).printTo(out);
-				} else {
-					OActivity item = core.getActivity(id);
-					new JsonResult(item).printTo(out);
+			} else if(crud.equals(Crud.CREATE)) {
+				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
+				Setting setting = pl.data.get(0);
+				
+				if(!manager.setSystemSetting(setting.serviceId, setting.key, setting.value)) {
+					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
 				}
-				*/
-				
-			}/* else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.addActivity(pl.data);
-				new JsonResult().printTo(out);
+				setting = new Setting(setting.serviceId, setting.key, setting.value, null, null);
+				new JsonResult(setting).printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.updateActivity(pl.data);
+				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
+				
+				for(Setting setting : pl.data) {
+					final CompositeId ci = new CompositeId(2).parse(setting.id);
+					final String sid = ci.getToken(0);
+					final String key = ci.getToken(1);
+					
+					if(!manager.setSystemSetting(sid, setting.key, setting.value)) {
+						throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
+					}
+					if(!StringUtils.equals(key, setting.key)) {
+						manager.deleteSystemSetting(sid, key);
+					}
+				}
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.deleteActivity(pl.data.getActivityId());
+				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
+				
+				for(Setting setting : pl.data) {
+					final CompositeId ci = new CompositeId(2).parse(setting.id);
+					final String sid = ci.getToken(0);
+					final String key = ci.getToken(1);
+					
+					if(!manager.deleteSystemSetting(sid, key)) {
+						throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
+					}
+				}
 				new JsonResult().printTo(out);
-			}*/
+			}
 			
 		} catch(Exception ex) {
-			logger.error("Error in ManageActivities", ex);
+			logger.error("Error in ManageSettings", ex);
 			new JsonResult(false, "Error").printTo(out);
 			
 		}

@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.ux.panel.Tab', {
 	alternateClassName: 'WT.ux.panel.Tab',
 	extend: 'Ext.tab.Panel',
-	alias: ['widget.wttabpanel'],
+	alias: 'widget.wttabpanel',
 	
 	border: false
 });

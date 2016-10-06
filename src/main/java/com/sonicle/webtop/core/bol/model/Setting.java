@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.bol.model;
 
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.bol.OSetting;
+import java.util.ArrayList;
 
 /**
  *
@@ -46,14 +47,26 @@ public class Setting {
 	public String key;
 	public String value;
 	public String type;
-	public String description;
+	public String help;
+	
+	public Setting() {}
+	
+	public Setting(String serviceId, String key, String value, String type, String help) {
+		this.id = new CompositeId(serviceId, key).toString();
+		this.serviceId = serviceId;
+		this.key = key;
+		this.value = value;
+		this.type = "string";
+		this.help = "<b>Questa</b> è una descrizione del setting";
+	}
 	
 	public Setting(OSetting setting) {
-		id = new CompositeId(setting.getServiceId(), setting.getKey()).toString();
-		serviceId = setting.getServiceId();
-		key = setting.getKey();
-		value = setting.getValue();
-		type = "string";
-		description = null;
+		this(setting.getServiceId(), setting.getKey(), setting.getValue(), null, null);
+	}
+	
+	public static class List extends ArrayList<Setting> {
+		public List() {
+			super();
+		}
 	}
 }

@@ -39,8 +39,10 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
@@ -203,9 +205,10 @@ public final class WebTopApp {
 	private OTPManager otpm = null;
 	private ReportManager rptm = null;
 	private Scheduler scheduler = null;
-	private final HashMap<String, Session> mailSessionCache = new HashMap();
-	private static final HashMap<String, ReadableUserAgent> userAgentsCache =  new HashMap<>(); //TODO: decidere politica conservazione
-	private final HashMap<String,CoreServiceSettings> cssCache = new HashMap();
+	private final HashMap<String, String> cacheDomainByFQDN = new HashMap<>();
+	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
+	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazione
+	private final HashMap<String, CoreServiceSettings> cacheCss = new HashMap();
 	
 	/**
 	 * Private constructor.
@@ -280,6 +283,12 @@ public final class WebTopApp {
 	private void onAppReady() {
 		logger.trace("onAppReady...");
 		try {
+			try {
+				initCacheDomainByFQDN();
+			} catch(WTException ex) {
+				logger.warn("Unable to create domains FQDN cache", ex);
+			}
+			
 			// Check webapp version
 			logger.info("Checking webapp version...");
 			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
@@ -458,7 +467,16 @@ public final class WebTopApp {
 		}
 	}
 	
-	
+	private void initCacheDomainByFQDN() throws WTException {
+		//TODO: ricreare cache dopo aggiornamento tabella domini
+		synchronized(cacheDomainByFQDN) {
+			CoreManager core = WT.getCoreManager();
+			cacheDomainByFQDN.clear();
+			for(ODomain domain : core.listDomains(true)) {
+				cacheDomainByFQDN.put(domain.getDomainName(), domain.getDomainId());
+			}
+		}
+	}
 	
 	
 	
@@ -614,13 +632,13 @@ public final class WebTopApp {
 	 */
 	public static ReadableUserAgent getUserAgentInfo(String userAgentHeader) {
 		String hash = DigestUtils.md5Hex(userAgentHeader);
-		synchronized(userAgentsCache) {
-			if(userAgentsCache.containsKey(hash)) {
-				return userAgentsCache.get(hash);
+		synchronized(cacheUserAgents) {
+			if(cacheUserAgents.containsKey(hash)) {
+				return cacheUserAgents.get(hash);
 			} else {
 				UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
 				ReadableUserAgent rua = parser.parse(userAgentHeader);
-				userAgentsCache.put(hash, rua);
+				cacheUserAgents.put(hash, rua);
 				return rua;
 			}
 		}
@@ -823,14 +841,20 @@ public final class WebTopApp {
 		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
+	public String getDomainIdByFQDN(String domainId) {
+		synchronized(cacheDomainByFQDN) {
+			return cacheDomainByFQDN.get(domainId);
+		}
+	}
+	
 	public Session getMailSession(String domainId) {
 		Session session;
-		synchronized(mailSessionCache) {
+		synchronized(cacheMailSessionByDomain) {
 			CoreServiceSettings css=getCoreServiceSettings(domainId);
 			String smtphost=css.getSMTPHost();
 			int smtpport=css.getSMTPPort();
 			String key=smtphost+":"+smtpport;
-			session=mailSessionCache.get(key);
+			session=cacheMailSessionByDomain.get(key);
 			if (session==null) {
 				Properties props = System.getProperties();
 				//props.setProperty("mail.imap.parse.debug", "true");
@@ -844,7 +868,7 @@ public final class WebTopApp {
 				props.setProperty("mail.imap.enableimapevents", "true");
 				
 				session=Session.getInstance(props, null);
-				mailSessionCache.put(key,session);
+				cacheMailSessionByDomain.put(key,session);
 				
 				logger.info("Created javax.mail.Session for "+key);
 			}
@@ -984,11 +1008,11 @@ public final class WebTopApp {
 	
 	public CoreServiceSettings getCoreServiceSettings(String domainId) {
 		CoreServiceSettings css;
-		synchronized(cssCache) {
-			css=cssCache.get(domainId);
+		synchronized(cacheCss) {
+			css=cacheCss.get(domainId);
 			if (css==null) {
 				css=new CoreServiceSettings(CoreManifest.ID,domainId);
-				cssCache.put(domainId, css);
+				cacheCss.put(domainId, css);
 			}
 		}
 		return css;

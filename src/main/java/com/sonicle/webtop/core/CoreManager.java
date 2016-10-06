@@ -127,7 +127,7 @@ public class CoreManager extends BaseManager {
 		this.wta = wta;
 		
 		if(!fastInit) {
-			initAllowedServices();
+			//initAllowedServices();
 		}
 	}
 	
@@ -215,13 +215,45 @@ public class CoreManager extends BaseManager {
 		return setm.listSettings();
 	}
 	
+	public boolean setSystemSetting(String serviceId, String key, Object value) {
+		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "setSystemSetting");
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.setServiceSetting(serviceId, key, value);
+	}
+	
+	public boolean deleteSystemSetting(String serviceId, String key) {
+		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "deleteSystemSetting");
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.deleteServiceSetting(serviceId, key);
+	}
+	
+	public List<String> listInstalledServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.listRegisteredServices();
+	}
+	
 	public List<String> listAllowedServices() {
+		ArrayList<String> ids = new ArrayList<>();
+		
+		ensureUserDomain();
+		if(RunContext.isSysAdmin()) {
+			ids.add(CoreManifest.ID);
+			ids.add(CoreAdminManifest.ID);
+		} else {
+			ServiceManager svcm = wta.getServiceManager();
+			for(String id : svcm.listRegisteredServices()) {
+				if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+			}
+		}
+		return ids;
+		/*
 		synchronized(cacheAllowedServices) {
 			if(!cacheReady.contains("cacheAllowedServices")) {
 				initAllowedServices();
 			}
 			return cacheAllowedServices;
 		}
+		*/
 	}
 	
 	
@@ -1170,56 +1202,6 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	/*
-	public HashSet<String> listPermittedServices() {
-		boolean isSysAdmin = ContextUtils.isSysAdmin();
-		synchronized(cachePermittedServices) {
-			if(cachePermittedServices.isEmpty()) {
-				ServiceManager svcm = wta.getServiceManager();
-				for(String sid : svcm.getRegisteredServices()) {
-					// Checks user rights on service...
-					boolean permitted = false;
-					if(isSysAdmin) {
-						permitted = ContextUtils.isPermitted(null, sid, sid)
-					} else {
-						permitted = getRunContext().isPermitted(SERVICE_ID, "SERVICE", "ACCESS", sid);
-					}
-					if(getRunContext().isPermitted(SERVICE_ID, "SERVICE", "ACCESS", sid)) {
-						cachePermittedServices.add(sid);
-					}
-				}
-			}
-			return cachePermittedServices;
-		}
-	}
-	*/
-	
-	/*
-	public List<String> listAllowedServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		ArrayList<String> items = new ArrayList<>();
-		
-		for(String id : svcm.listRegisteredServices()) {
-			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) items.add(id);
-		}
-		return items;
-	}
-	*/
-	
-	public List<String> listPrivateServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		ArrayList<String> items = new ArrayList<>();
-		
-		//HashSet<String> permittedIds = listPermittedServices();
-		for(String id : svcm.listPrivateServices()) {
-			//if(permittedIds.contains(id)) items.add(id);
-			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) {
-				items.add(id);
-			}
-		}
-		return items;
-	}
-	
 	public List<UserOptionsServiceData> listUserOptionServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
@@ -1236,11 +1218,6 @@ public class CoreManager extends BaseManager {
 			}
 		}
 		return items;
-	}
-	
-	public boolean hasPrivateService(String serviceId) {
-		List<String> services = listPrivateServices();
-		return services.contains(serviceId);
 	}
 	
 	public OSnoozedReminder snoozeReminder(ReminderInApp reminder, DateTime remindOn) throws WTException {

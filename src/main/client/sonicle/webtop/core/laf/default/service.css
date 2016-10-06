@@ -246,9 +246,10 @@ div.wt-wnlist {
 }
 
 
-
-
-
+.wt-setting-grid .x-grid-rowbody p {
+	font-size: smaller;
+	margin: .2em 0;
+}
 
 .x-toolbar .x-toolbar-item {
     margin-right: 2px;

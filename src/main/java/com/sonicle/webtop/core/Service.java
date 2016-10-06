@@ -613,7 +613,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupSessionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
+		WebTopSession wts = getEnv().getWebTopSession();
 		Locale locale = wts.getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();

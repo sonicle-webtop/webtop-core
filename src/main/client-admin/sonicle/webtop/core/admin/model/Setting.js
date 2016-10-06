@@ -42,6 +42,6 @@ Ext.define('Sonicle.webtop.core.admin.model.Setting', {
 		WTF.field('key', 'string', false),
 		WTF.field('value', 'string', true),
 		WTF.roField('type', 'string'),
-		WTF.roField('description', 'string')
+		WTF.roField('help', 'string')
 	]
 });

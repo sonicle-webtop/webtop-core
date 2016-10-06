@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	alternateClassName: 'WT.sdk.DockableView',
 	extend: 'WT.sdk.BaseView',
 	
-	viewModel: {},
 	config: {
 		dockableConfig: {
 			/**
@@ -116,6 +115,8 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @param {WT.sdk.DockableView} this
 	 */
 	
+	viewModel: {},
+	
 	constructor: function(cfg) {
 		var me = this;
 		// Defines a basic viewModel (eg. useful for binding)
@@ -128,9 +129,11 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+				cfg = me.getDockableConfig();
 		
 		me.title = me.resTitle();
+		if(cfg.iconCls) me.iconCls = cfg.iconCls;
 		me.callParent(arguments);
 		me.on('titlechange', me.onTitleChange);
 		me.on('added', function(s,ct) {

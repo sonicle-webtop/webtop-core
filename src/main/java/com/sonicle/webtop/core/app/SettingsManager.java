@@ -95,7 +95,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	}
 	
 	/**
-	 * Gets the setting value indicated by the specified key.
+	 * Gets the setting (system) value indicated by the specified key.
 	 * Returns a null value if the key is not found.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
@@ -120,7 +120,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	}
 
 	/**
-	 * Gets the setting value indicated by the specified key.
+	 * Gets the setting (domain) value indicated by the specified key.
 	 * Returns a null value if the key is not found.
 	 * @param domainId The domain ID.
 	 * @param serviceId The service ID.
@@ -143,6 +143,102 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	/**
+	 * Gets the setting (user) value indicated by the specified key.
+	 * Returns a null value if the key is not found.
+	 * @param domainId The domain ID.
+	 * @param userId The user ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return The string value of the setting.
+	 */
+	private String getSetting(String domainId, String userId, String serviceId, String key) {
+		UserSettingDAO dao = UserSettingDAO.getInstance();
+		Connection con = null;
+		OUserSetting item = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			item = dao.selectByDomainUserServiceKey(con, domainId, userId, serviceId, key);
+			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read user setting [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
+			throw new RuntimeException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Deletes the setting (domain) value indicated by the specified key.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	private boolean deleteSetting(String serviceId, String key) {
+		SettingDAO dao = SettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			int ret = dao.deleteByServiceKey(con, serviceId, key);
+			return (ret > 0);
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to delete setting (system) [{}, {}]", serviceId, key, ex);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Deletes the setting (domain) value indicated by the specified key.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	private boolean deleteSetting(String domainId, String serviceId, String key) {
+		DomainSettingDAO dao = DomainSettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			int ret = dao.deleteByDomainServiceKey(con, domainId, serviceId, key);
+			return (ret > 0);
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to delete setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Deletes the setting (system) value indicated by the specified key.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	public boolean deleteServiceSetting(String serviceId, String key) {
+		return deleteSetting(serviceId, key);
+	}
+	
+	/**
+	 * Deletes the setting (domain) value indicated by the specified key.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	public boolean deleteServiceSetting(String domainId, String serviceId, String key) {
+		return deleteSetting(domainId, serviceId, key);
 	}
 	
 	/**
@@ -235,33 +331,6 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to write setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
 			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Gets the setting value indicated by the specified key.
-	 * Returns a null value if the key is not found.
-	 * @param domainId The domain ID.
-	 * @param userId The user ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return The string value of the setting.
-	 */
-	private String getSetting(String domainId, String userId, String serviceId, String key) {
-		UserSettingDAO dao = UserSettingDAO.getInstance();
-		Connection con = null;
-		OUserSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = dao.selectByDomainUserServiceKey(con, domainId, userId, serviceId, key);
-			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to read user setting [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
-			throw new RuntimeException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
