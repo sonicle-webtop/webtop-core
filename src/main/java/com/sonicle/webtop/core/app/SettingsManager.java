@@ -36,13 +36,18 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.bol.DomainSettingRow;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
 import com.sonicle.webtop.core.bol.OSetting;
+import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUserSetting;
-import com.sonicle.webtop.core.bol.model.Setting;
+import com.sonicle.webtop.core.bol.SettingRow;
+import com.sonicle.webtop.core.bol.model.DomainSetting;
+import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
+import com.sonicle.webtop.core.dal.SettingDbDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
@@ -500,7 +505,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @param userProfile The user profile to extract domain and user information.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
-	 * @return True if setting was succesfully written, otherwise false.
+	 * @return True if setting was succesfully deleted, otherwise false.
 	 */
 	@Override
 	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key) {
@@ -533,17 +538,15 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
-	
-	
-	public List<Setting> listSettings() {
-		ArrayList<Setting> items = new ArrayList<>();
+	public List<SystemSetting> listSettings(boolean hidden) {
+		ArrayList<SystemSetting> items = new ArrayList<>();
 		SettingDAO dao = SettingDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			for(OSetting setting : dao.selectAll(con)) {
-				items.add(new Setting(setting));
+			for(SettingRow setting : dao.selectAll(con, hidden)) {
+				items.add(new SystemSetting(setting));
 			}
 			return items;
 
@@ -555,9 +558,41 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
+	public List<DomainSetting> listSettings(String domainId, boolean hidden) {
+		ArrayList<DomainSetting> items = new ArrayList<>();
+		DomainSettingDAO dao = DomainSettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			for(DomainSettingRow setting : dao.selectAll(con, hidden)) {
+				items.add(new DomainSetting(setting));
+			}
+			return items;
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read settings", ex);
+			throw new RuntimeException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
-	
-	
+	public OSettingDb getSettingInfo(String serviceId, String key) {
+		SettingDbDAO dao = SettingDbDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			return dao.selectByServiceKey(con, serviceId, key);
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to read setting info", ex);
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
 	private String valueToString(Object value) {
 		return String.valueOf(value);

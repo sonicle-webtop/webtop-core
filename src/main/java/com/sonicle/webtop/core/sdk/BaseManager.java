@@ -107,6 +107,17 @@ public abstract class BaseManager {
 	}
 	
 	/**
+	 * Checks if the running profile's domain ID (see runContext) and passed domain ID matches.
+	 * @param domainId Required domain ID.
+	 * @throws AuthException When domain IDs do not match.
+	 */
+	public void ensureUserDomain(String domainId) throws AuthException {
+		UserProfile.Id runPid = RunContext.getRunProfileId();
+		if(RunContext.isWebTopAdmin(runPid)) return;
+		if(!runPid.hasDomain(domainId)) throw new AuthException("Domain ID for the running profile [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
+	}
+	
+	/**
 	 * Returns specified software name that is using this manager. Defaults to null.
 	 * @return provided software name, or null if no value is provided
 	 */

@@ -51,14 +51,16 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 	],
 	
 	groupField: 'serviceId',
-	groupText: 'Servizio',
 	keyField: 'key',
-	keyText: 'Chiave',
 	valueField: 'value',
-	valueText: 'Valore',
 	typeField: 'type',
-	typeText: 'Tipo',
 	helpField: 'help',
+	
+	groupText: null,
+	keyText: null,
+	valueText: null,
+	typeText: null,
+	
 	clicksToEdit: 2,
 	
 	gridCls: 'wt-setting-grid',
@@ -66,32 +68,22 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 	initComponent : function() {
 		var me = this;
 		
+		me.groupText = me.groupText || WT.res('wtsettinggrid.group.lbl');
+		me.keyText = me.keyText || WT.res('wtsettinggrid.key.lbl');
+		me.valueText = me.valueText || WT.res('wtsettinggrid.value.lbl');
+		me.typeText = me.typeText || WT.res('wtsettinggrid.type.lbl');
+		
 		me.addCls(me.gridCls);
+		
 		me.plugins = me.plugins || [];
 		me.plugins.push({
 			ptype: 'cellediting',
 			clicksToEdit: me.clicksToEdit
 		});
 		
-		me.plugins.push({
-			ptype: 'rowexpander',
-			expandOnEnter: false,
-			expandOnDblClick: false,
-			rowBodyTpl : new Ext.XTemplate(
-					'<p><b>Tipo dato:</b> {'+me.typeField+'}</p>',
-					'<p>{'+me.helpField+':this.formatHelp}</p>',
-			{
-				formatHelp: function(v) {
-					return v;
-				}
-			})
-		});
-		
 		me.features = me.features || [];
 		me.features.push({
-			ftype:'grouping',
-			collapsible: false,
-			collapseTip: null // Fix wrong tooltip display if collapsible=false
+			ftype:'grouping'
 		});
 		
 		me.selModel = {
@@ -104,6 +96,38 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 		};
 		
 		me.columns = new WT.ux.grid.SettingHeaderContainer(me, me.store);
+		
+		me.dockedItems = me.dockedItems || [];
+		me.dockedItems.push({
+			dock: 'bottom',
+			xtype: 'panel',
+			layout: {
+				type: 'vbox',
+				align: 'stretch'
+			},
+			itemId: 'details',
+			height: 150,
+			bodyCls: 'x-panel-header-default',
+			bodyPadding: '5 10',
+			items: [{
+				xtype: 'displayfield',
+				itemId: 'title',
+				hideEmptyLabel: true
+			}, {
+				xtype: 'textarea',
+				itemId: 'text',
+				editable: false,
+				hideEmptyLabel: true,
+				fieldStyle: 'background:none;',
+				flex: 1,
+				listeners: {
+					afterrender: function(s) {
+						s.triggerWrap.setStyle({border: 'none'});
+					}
+				}
+			}]
+		});
+		
 		me.callParent();
 		
 		// Inject a custom implementation of walkCells which only goes up or down
@@ -125,6 +149,39 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 		var me = this;
 		me.callParent();
 		me.destroyEditors(me.editors);
+	},
+	
+	bindStore: function(store, initial) {
+		var me = this;
+		me.callParent(arguments);
+		if(store) {
+			me.mon(store, 'update', me.onStoreRecUpdate, me);
+		}
+	},
+	
+	onStoreRecUpdate: function(s, rec) {
+		var sel = this.getSelection();
+		this.updateDetails((sel.length === 1) ? sel[0] : null);
+	},
+	
+	updateBindSelection: function(selModel, selection) {
+		var me = this;
+		me.callParent(arguments);
+		me.updateDetails((selection.length === 1) ? selection[0] : null);
+	},
+	
+	updateDetails: function(rec) {
+		var me = this,
+				details = me.getDockedComponent('details'),
+				title, type, help;
+		if(rec) {
+			type = rec.get(me.typeField);
+			help = rec.get(me.helpField);
+			title = '<b>' + rec.get(me.keyField) + '</b>';
+			if(!Ext.isEmpty(type)) title += ' :: ' + type;
+		}
+		details.getComponent('title').setValue(title);
+		details.getComponent('text').setValue(help);
 	},
 	
 	// Custom implementation of walkCells which only goes up and down. 

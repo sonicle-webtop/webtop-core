@@ -41,6 +41,10 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		me.callParent(cfg);
 	},
 	
+	forItemId: function(s) {
+		return s.replace(/\|/g, '-');
+	},
+	
 	/**
 	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
 	 * @param {Mixed} value The value

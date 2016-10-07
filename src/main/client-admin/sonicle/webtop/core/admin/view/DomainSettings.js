@@ -31,18 +31,20 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.Settings', {
+Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 	extend: 'WT.sdk.DockableView',
 	requires: [
 		'Sonicle.grid.Property',
 		'Sonicle.menu.StoreMenu',
 		'WT.ux.data.SimpleModel',
 		'WT.ux.grid.Setting',
-		'Sonicle.webtop.core.admin.model.SystemSetting'
+		'Sonicle.webtop.core.admin.model.DomainSetting'
 	],
 	
+	domainId: null,
+	
 	dockableConfig: {
-		title: '{settings.tit}',
+		title: '{domainSettings.tit}',
 		iconCls: 'wta-icon-settings-xs'
 	},
 	
@@ -57,8 +59,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 			store: {
 				autoLoad: true,
 				autoSync: true,
-				model: 'Sonicle.webtop.core.admin.model.SystemSetting',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageSystemSettings', null, {
+				model: 'Sonicle.webtop.core.admin.model.DomainSetting',
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainSettings', null, {
+					extraParams: {
+						domainId: me.domainId
+					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
 					}
@@ -72,7 +77,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 			},
 			tbar: [{
 					xtype: 'splitbutton',
-					text: me.mys.res('settings.act-add.lbl'),
+					text: me.mys.res('domainSettings.act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function(s) {
 						s.maybeShowMenu();
@@ -87,7 +92,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 						textField: 'id',
 						listeners: {
 							click: function(s,itm) {
-								me.addSettingUI(itm.getItemId());
+								me.addSettingUI(me.domainId, itm.getItemId());
 							}
 						}
 					}
@@ -120,7 +125,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		});
 	},
 	
-	addSettingUI: function(serviceId) {
+	addSettingUI: function(domainId, serviceId) {
 		var gp = this.lref('gp'),
 				ce = gp.findPlugin('cellediting'),
 				sto = gp.getStore(),
@@ -129,6 +134,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		indx = sto.findExact('serviceId', serviceId);
 		ce.cancelEdit();
 		rec = sto.createModel({
+			domainId: domainId,
 			serviceId: serviceId,
 			key: null,
 			value: null

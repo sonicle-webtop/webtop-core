@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -697,12 +698,11 @@ public final class WebTopApp {
 	 * @return Localized string
 	 */
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
-		String baseName = MessageFormat.format("{0}/locale", StringUtils.replace(serviceId, ".", "/"));
 		String value = "";
 		
 		try {
+			String baseName = StringUtils.replace(serviceId, ".", "/") + "/locale";
 			value = ResourceBundle.getBundle(baseName, locale).getString(key);
-			//value = new String(value.getBytes("ISO-8859-1"), "UTF-8");
 			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
 		} catch(MissingResourceException ex) {
 			//TODO: abilitare logging

@@ -56,10 +56,12 @@ import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
+import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
+import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -68,7 +70,7 @@ import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
-import com.sonicle.webtop.core.bol.model.Setting;
+import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
@@ -207,24 +209,88 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	
-	
-	
-	public List<Setting> listSystemSettings() {
+	public OSettingDb getSettingInfo(String serviceId, String key) {
 		SettingsManager setm = wta.getSettingsManager();
-		return setm.listSettings();
+		return setm.getSettingInfo(serviceId, key);
 	}
 	
-	public boolean setSystemSetting(String serviceId, String key, Object value) {
-		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "setSystemSetting");
+	/**
+	 * Lists all system settings.
+	 * @param includeHidden True to also return settings marked as hidden.
+	 * @return The settings list.
+	 */
+	public List<SystemSetting> listSystemSettings(boolean includeHidden) {
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.listSettings(includeHidden);
+	}
+	
+	/**
+	 * Updates (or inserts) a system setting for a specific service.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @param value The value to set.
+	 * @return True if setting was succesfully written, otherwise false.
+	 */
+	public boolean updateSystemSetting(String serviceId, String key, Object value) {
+		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "updateSystemSetting");
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.setServiceSetting(serviceId, key, value);
 	}
 	
+	/**
+	 * Clears a system setting.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
 	public boolean deleteSystemSetting(String serviceId, String key) {
 		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "deleteSystemSetting");
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.deleteServiceSetting(serviceId, key);
+	}
+	
+	/**
+	 * Lists all settings for a specific platform domain.
+	 * @param domainId The domain ID.
+	 * @param includeHidden True to also return settings marked as hidden.
+	 * @return The settings list.
+	 */
+	public List<DomainSetting> listDomainSettings(String domainId, boolean includeHidden) {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.listSettings(domainId, includeHidden);
+	}
+	
+	/**
+	 * Updates (or inserts) a domain setting for a specific service.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @param value The value to set.
+	 * @return True if setting was succesfully written, otherwise false.
+	 */
+	public boolean updateDomainSetting(String domainId, String serviceId, String key, Object value) {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "updateDomainSetting");
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.setServiceSetting(domainId, serviceId, key, value);
+	}
+	
+	/**
+	 * Clears a domain setting.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	public boolean deleteDomainSetting(String domainId, String serviceId, String key) {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "deleteDomainSetting");
+		SettingsManager setm = wta.getSettingsManager();
+		return setm.deleteServiceSetting(domainId, serviceId, key);
 	}
 	
 	public List<String> listInstalledServices() {

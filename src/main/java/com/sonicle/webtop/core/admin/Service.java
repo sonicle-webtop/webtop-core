@@ -44,8 +44,10 @@ import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.js.JsSimple;
-import com.sonicle.webtop.core.bol.model.Setting;
+import com.sonicle.webtop.core.bol.model.DomainSetting;
+import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
@@ -114,6 +116,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageAdminTree(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Locale locale = getEnv().getWebTopSession().getLocale();
 		ArrayList<ExtTreeNode> children = new ArrayList<>();
 		
 		try {
@@ -122,17 +125,17 @@ public class Service extends BaseService {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
 				if(nodeId.equals("root")) { // Admin roots...
-					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, "Proprietà", true, "wta-icon-settings-xs"));
-					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, "Domini", false, "wta-icon-domains-xs"));
-					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, "DB Upgrade", true, "wta-icon-dbUpgrader-xs"));
+					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, lookupResource(CoreAdminLocale.TREE_ADMIN_SETTINGS), true, "wta-icon-settings-xs"));
+					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAINS), false, "wta-icon-domains-xs"));
+					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, lookupResource(CoreAdminLocale.TREE_ADMIN_DBUPGRADER), true, "wta-icon-dbUpgrader-xs"));
 				} else {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
 					if(cid.getToken(0).equals("domains")) {
 						if(cid.hasToken(1)) {
-							children.add(createDomainChildNode(nodeId, "Gruppi", "wta-icon-domainGroups-xs", NTYPE_GROUPS, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, "Utenti", "wta-icon-domainUsers-xs", NTYPE_USERS, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, "Ruoli", "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, "Proprietà", "wta-icon-domainSettings-xs", NTYPE_SETTINGS, cid.getToken(1)));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wta-icon-settings-xs", NTYPE_SETTINGS, cid.getToken(1)));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-domainGroups-xs", NTYPE_GROUPS, cid.getToken(1)));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-domainUsers-xs", NTYPE_USERS, cid.getToken(1)));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
 						} else { // Availbale webtop domains
 							for(ODomain domain : manager.listDomains(false)) {
 								children.add(createDomainNode(nodeId, domain));
@@ -160,53 +163,117 @@ public class Service extends BaseService {
 		new JsonResult(items).printTo(out);
 	}
 	
-	public void processManageSettings(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processManageSystemSettings(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				List<Setting> items = manager.listSystemSettings();
+				List<SystemSetting> items = manager.listSystemSettings(false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
-				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
-				Setting setting = pl.data.get(0);
+				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
+				SystemSetting setting = pl.data.get(0);
 				
-				if(!manager.setSystemSetting(setting.serviceId, setting.key, setting.value)) {
+				if(!manager.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
 				}
-				setting = new Setting(setting.serviceId, setting.key, setting.value, null, null);
+				
+				OSettingDb info = manager.getSettingInfo(setting.serviceId, setting.key);
+				if(info != null) {
+					setting = new SystemSetting(setting.serviceId, setting.key, setting.value, info.getType(), info.getHelp());
+				} else {
+					setting = new SystemSetting(setting.serviceId, setting.key, setting.value, null, null);
+				}
 				new JsonResult(setting).printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
-				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
+				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
+				SystemSetting setting = pl.data.get(0);
 				
-				for(Setting setting : pl.data) {
-					final CompositeId ci = new CompositeId(2).parse(setting.id);
-					final String sid = ci.getToken(0);
-					final String key = ci.getToken(1);
-					
-					if(!manager.setSystemSetting(sid, setting.key, setting.value)) {
-						throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
-					}
-					if(!StringUtils.equals(key, setting.key)) {
-						manager.deleteSystemSetting(sid, key);
-					}
+				final CompositeId ci = new CompositeId(2).parse(setting.id);
+				final String sid = ci.getToken(0);
+				final String key = ci.getToken(1);
+
+				if(!manager.updateSystemSetting(sid, setting.key, setting.value)) {
+					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				}
+				if(!StringUtils.equals(key, setting.key)) {
+					manager.deleteSystemSetting(sid, key);
+				}
+				
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
-				PayloadAsList<Setting.List> pl = ServletUtils.getPayloadAsList(request, Setting.List.class);
+				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
+				SystemSetting setting = pl.data.get(0);
 				
-				for(Setting setting : pl.data) {
-					final CompositeId ci = new CompositeId(2).parse(setting.id);
-					final String sid = ci.getToken(0);
-					final String key = ci.getToken(1);
-					
-					if(!manager.deleteSystemSetting(sid, key)) {
-						throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
-					}
+				final CompositeId ci = new CompositeId(2).parse(setting.id);
+				final String sid = ci.getToken(0);
+				final String key = ci.getToken(1);
+
+				if(!manager.deleteSystemSetting(sid, key)) {
+					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
 				}
+				
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageSettings", ex);
+			new JsonResult(false, "Error").printTo(out);
+			
+		}
+	}
+	
+	public void processManageDomainSettings(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				List<DomainSetting> items = manager.listDomainSettings(domainId, false);
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
+				DomainSetting setting = pl.data.get(0);
+				
+				if(!manager.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
+					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
+				}
+				setting = new DomainSetting(setting.domainId, setting.serviceId, setting.key, setting.value, null, null);
+				new JsonResult(setting).printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
+				DomainSetting setting = pl.data.get(0);
+				
+				final CompositeId ci = new CompositeId(2).parse(setting.id);
+				final String sid = ci.getToken(0);
+				final String key = ci.getToken(1);
+
+				if(!manager.updateSystemSetting(sid, setting.key, setting.value)) {
+					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
+				}
+				if(!StringUtils.equals(key, setting.key)) {
+					manager.deleteSystemSetting(sid, key);
+				}
+					
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
+				DomainSetting setting = pl.data.get(0);
+				
+				final CompositeId ci = new CompositeId(2).parse(setting.id);
+				final String sid = ci.getToken(0);
+				final String key = ci.getToken(1);
+
+				if(!manager.deleteSystemSetting(sid, key)) {
+					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
+				}
+				
 				new JsonResult().printTo(out);
 			}
 			

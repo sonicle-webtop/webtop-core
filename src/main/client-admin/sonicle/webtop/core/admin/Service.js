@@ -86,9 +86,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 					itemclick: function(s, rec, itm, i, e) {
 						console.log('itemclick');
 						
-						var type = rec.get('_type');
+						var type = rec.get('_type'), domainId;
 						if(type === 'settings') {
-							me.showSettings(rec);
+							domainId = rec.get('_domainId');
+							if(domainId) {
+								me.showDomainSettings(rec);
+							} else {
+								me.showSettings(rec);
+							}
 						}
 						
 					},
@@ -121,17 +126,39 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	
 	showSettings: function(node) {
 		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.Settings', {
+				mys: me,
+				itemId: itemId,
+				closable: true
+			});
+		});
+	},
+	
+	showDomainSettings: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		console.log('showDomainSettings');
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainSettings', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showTab: function(itemId, createFn) {
+		var me = this,
 				pnl = me.getMainComponent(),
 				tab;
 		
-		tab = pnl.getComponent(node.getId());
-		if(!tab) {
-			pnl.add(Ext.create('Sonicle.webtop.core.admin.view.Settings', {
-				mys: me,
-				itemId: node.getId(),
-				closable: true
-			}));
-		}
+		tab = pnl.getComponent(itemId);
+		if(!tab) tab = pnl.add(createFn());
 		pnl.setActiveTab(tab);
 	}
 });

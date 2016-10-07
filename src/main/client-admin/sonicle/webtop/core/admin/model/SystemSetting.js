@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.Setting', {
+Ext.define('Sonicle.webtop.core.admin.model.SystemSetting', {
 	extend: 'Ext.data.Model',
 	
 	identifier: 'negativestring',

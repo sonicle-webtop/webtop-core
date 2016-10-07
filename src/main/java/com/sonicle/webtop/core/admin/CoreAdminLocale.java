@@ -31,42 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.model;
-
-import com.sonicle.commons.web.json.CompositeId;
-import com.sonicle.webtop.core.bol.OSetting;
-import java.util.ArrayList;
+package com.sonicle.webtop.core.admin;
 
 /**
  *
  * @author malbinola
  */
-public class Setting {
-	public String id;
-	public String serviceId;
-	public String key;
-	public String value;
-	public String type;
-	public String help;
-	
-	public Setting() {}
-	
-	public Setting(String serviceId, String key, String value, String type, String help) {
-		this.id = new CompositeId(serviceId, key).toString();
-		this.serviceId = serviceId;
-		this.key = key;
-		this.value = value;
-		this.type = "string";
-		this.help = "<b>Questa</b> è una descrizione del setting";
-	}
-	
-	public Setting(OSetting setting) {
-		this(setting.getServiceId(), setting.getKey(), setting.getValue(), null, null);
-	}
-	
-	public static class List extends ArrayList<Setting> {
-		public List() {
-			super();
-		}
-	}
+public class CoreAdminLocale {
+	public static final String TREE_ADMIN_SETTINGS = "tree.admin.settings";
+	public static final String TREE_ADMIN_DOMAINS = "tree.admin.domains";
+	public static final String TREE_ADMIN_DBUPGRADER = "tree.admin.dbupgrader";
+	public static final String TREE_ADMIN_DOMAIN_SETTINGS = "tree.admin.domain.settings";
+	public static final String TREE_ADMIN_DOMAIN_GROUPS = "tree.admin.domain.groups";
+	public static final String TREE_ADMIN_DOMAIN_USERS = "tree.admin.domain.users";
+	public static final String TREE_ADMIN_DOMAIN_ROLES = "tree.admin.domain.roles";
 }
