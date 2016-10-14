@@ -604,22 +604,21 @@ public class ResourceRequest extends HttpServlet {
 			BufferedReader br = null;
 			
 			try {
+				/*
 				Properties properties = new Properties();
 				properties.load(new InputStreamReader(is, "UTF-8"));
 				for(final String name: properties.stringPropertyNames()) {
 					final String s = "\"" + name + "\"" + ":" + "\"" + properties.getProperty(name) + "\"";
 					strings.add(s);
 				}
+				*/
 				
-				
-				/*
 				PropertiesEx properties = new PropertiesEx();
 				properties.load(is, true); // Important! True to preserve unicode escapes found in properties
 				for(final String name: properties.stringPropertyNames()) {
 					final String s = "\"" + name + "\"" + ":" + "\"" + properties.getProperty(name) + "\"";
 					strings.add(s);
 				}
-				*/
 				
 				// Alternative way to preserve escapes...
 				/*
