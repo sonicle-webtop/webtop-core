@@ -273,7 +273,19 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
           easing: 'bounceOut'
      });
 		*/
+	},
+	
+	/**
+	 * Returns the Service API interface.
+	 * @param {String} id The service ID.
+	 * @returns {Object} The service API object or null if service is not valid.
+	 */
+	getServiceAPI: function(id) {
+		var svc=this.getService(id);
+		if (svc) return svc.getAPI();
+		return null;
 	}
+	
 });
 
 Ext.override(Ext.data.proxy.Server, {
