@@ -593,5 +593,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getLaf: function() {
 		return WT.getVar('laf');
+	},
+	
+	/**
+	 * Returns the Service API interface.
+	 * @param {String} id The service ID.
+	 * @returns {Object} The service API object.
+	 */
+	getServiceAPI: function(id) {
+		return WT.getApp().getServiceAPI(id);
 	}
 });

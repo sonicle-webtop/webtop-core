@@ -75,6 +75,13 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	},
 	
 	/**
+	 * Override to return the Service API interface.
+	 * @param {String} id The service ID.
+	 * @returns {Object} The service API object or null if service is not valid.
+	 */
+	getAPI: Ext.emptyFn,
+	
+	/**
 	 * Returns service's name.
 	 * @return {String}
 	 */

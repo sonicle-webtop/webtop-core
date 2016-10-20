@@ -246,7 +246,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 			
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Error uploading", ex);
-			new JsonResult(false, "").printTo(out);
+			new JsonResult(false, ex.getMessage()).printTo(out);
 		}
 	}
 	
