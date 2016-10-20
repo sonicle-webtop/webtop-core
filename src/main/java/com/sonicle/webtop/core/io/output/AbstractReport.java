@@ -53,11 +53,6 @@ public abstract class AbstractReport {
 	protected Map<String, Object> params = new HashMap<>();
 	protected JRDataSource dataSource;
 	
-	public static enum OutputType {
-		PDF,
-		HTML
-	}
-	
 	public AbstractReport(ReportConfig config) {
 		this.config = config;
 		buildPath();
@@ -115,5 +110,10 @@ public abstract class AbstractReport {
 		params.put("WT_DATE_FORMAT_LONG", config.getDateFormatLong());
 		params.put("WT_TIME_FORMAT_SHORT", config.getTimeFormatShort());
 		params.put("WT_TIME_FORMAT_LONG", config.getTimeFormatLong());
+	}
+	
+	public static enum OutputType {
+		PDF,
+		HTML
 	}
 }

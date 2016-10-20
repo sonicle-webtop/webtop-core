@@ -31,26 +31,37 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
+import java.text.MessageFormat;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsRoleLkp extends JsSimple {
+	public String source;
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
-	},
+	public JsRoleLkp() {}
 	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	public JsRoleLkp(Object id, String description, String source) {
+		super(id, description);
+		this.source = source;
 	}
-});
+	
+	public JsRoleLkp(Role role, String source) {
+		super(role.getRoleUid(), JsSimple.description(role.getName(), role.getDescription()));
+		this.source = source;
+	}
+	
+	public JsRoleLkp(RoleWithSource role) {
+		super(role.getRoleUid(), JsSimple.description(role.getName(), role.getDescription()));
+		source = role.getSource();
+	}
+	
+	public static JsRoleLkp wildcard(String description) {
+		return new JsRoleLkp("*", MessageFormat.format("(*) {0}", description), null);
+	}
+}

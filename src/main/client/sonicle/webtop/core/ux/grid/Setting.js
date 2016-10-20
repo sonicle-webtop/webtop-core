@@ -41,7 +41,6 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 	],
 	uses: [
 		'Ext.grid.plugin.CellEditing',
-		'Ext.grid.plugin.RowExpander',
 		'Ext.XTemplate',
 		'Ext.grid.CellEditor',
 		'Ext.form.field.Date',

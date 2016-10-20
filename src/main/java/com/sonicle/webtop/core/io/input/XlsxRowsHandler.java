@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.io.input;
 
 import java.io.InputStream;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 
 /**
@@ -74,6 +75,7 @@ public class XlsxRowsHandler extends XlsxColumnsHandler {
 	public void cell(String cellReference, String formattedValue, XSSFComment comment) {
 		super.cell(cellReference, formattedValue, comment);
 		if(isInRange) {
+			final int col = new CellReference(cellReference).getCol();
 			rowValues.put(col, formattedValue);
 		}
 	}

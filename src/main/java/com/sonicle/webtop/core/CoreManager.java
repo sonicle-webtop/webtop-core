@@ -47,7 +47,7 @@ import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
-import com.sonicle.webtop.core.bol.ActivityGrid;
+import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
@@ -69,6 +69,8 @@ import com.sonicle.webtop.core.bol.model.SharePermsFolder;
 import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleEntity;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.Sharing;
@@ -88,6 +90,7 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -293,6 +296,101 @@ public class CoreManager extends BaseManager {
 		return setm.deleteServiceSetting(domainId, serviceId, key);
 	}
 	
+	public List<Role> listRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		AuthManager authm = wta.getAuthManager();
+		try {
+			return authm.listRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
+		}
+	}
+	
+	public List<Role> listUsersRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		AuthManager authm = wta.getAuthManager();
+		try {
+			return authm.listUsersRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
+		}
+	}
+	
+	public List<Role> listGroupsRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		AuthManager authm = wta.getAuthManager();
+		try {
+			return authm.listGroupsRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
+		}
+	}
+	
+	public RoleEntity getRole(String uid) throws WTException {
+		AuthManager authm = wta.getAuthManager();
+		
+		String domainId = authm.getRoleDomain(uid);
+		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			return authm.getRole(uid);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot delete role [{0}]", uid);
+		}
+	}
+	
+	public void addRole(RoleEntity role) throws WTException {
+		AuthManager authm = wta.getAuthManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(role.getDomainId());
+		
+		try {
+			authm.addRole(role);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot add role");
+		}
+	}
+	
+	public void updateRole(RoleEntity role) throws WTException {
+		AuthManager authm = wta.getAuthManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(role.getDomainId());
+		
+		try {
+			authm.updateRole(role);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
+		}
+	}
+	
+	public void deleteRole(String uid) throws WTException {
+		AuthManager authm = wta.getAuthManager();
+		
+		String domainId = authm.getRoleDomain(uid);
+		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			authm.deleteRole(uid);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot delete role [{0}]", uid);
+		}
+		
+	}
+	
 	public List<String> listInstalledServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		return svcm.listRegisteredServices();
@@ -322,7 +420,12 @@ public class CoreManager extends BaseManager {
 		*/
 	}
 	
-	
+	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceManifest manifest = svcm.getManifest(serviceId);
+		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
+		return manifest.getDeclaredPermissions();
+	}
 	
 	
 	
@@ -483,15 +586,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<Role> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		
-		try {
-			return authm.listRoles(domainId, fromUsers, fromGroups);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list roles [{0}, {1}, {2}]", domainId, fromUsers, fromGroups);
-		}
-	}
+	
 	
 	public String getInternetUserId(UserProfile.Id pid) throws WTException {
 		return wta.getUserManager().getInternetUserId(pid);
@@ -559,7 +654,7 @@ public class CoreManager extends BaseManager {
 		return setm.listProfilesWith(serviceId, key, value);
 	}
 	
-	public List<ActivityGrid> listLiveActivities(Collection<String> domainIds) throws WTException {
+	public List<VActivity> listLiveActivities(Collection<String> domainIds) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
@@ -816,7 +911,7 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			String profileUid = usrm.userToUid(targetPid);
-			List<String> roleUids = authm.getRolesAsString(targetPid, true, true);
+			List<String> roleUids = authm.getRolesAsStringByUser(targetPid, true, true);
 			
 			String rootKey = OShare.buildRootKey(groupName);
 			String folderKey = OShare.buildFolderKey(groupName);

@@ -129,7 +129,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					xtype: 'souploadfield',
 					reference: 'fldfile',
 					bind: '{file}',
-					serverResponsePropertyAsValue: 'uploadId',
+					responseValueProperty: 'uploadId',
 					buttonConfig: {
 						uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
 							extraParams: {tag: me.getId()},

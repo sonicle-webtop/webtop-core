@@ -31,26 +31,54 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+package com.sonicle.webtop.core.bol.model;
+
+import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.ORole;
+import com.sonicle.webtop.core.bol.OUser;
+
+/**
+ *
+ * @author malbinola
+ */
+public class RoleWithSource extends Role {
+	public static final String SOURCE_ROLE = "role";
+	public static final String SOURCE_USER = "user";
+	public static final String SOURCE_GROUP = "group";
+	public static final String SOURCE_TRANSITIVE = "trans";
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
-	},
+	private String source;
 	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	public RoleWithSource(String source, String roleUid, String domainId, String name, String description) {
+		super(roleUid, domainId, name, description);
+		this.source = source;
 	}
-});
+	
+	public RoleWithSource(ORole o) {
+		super(o);
+		this.source = SOURCE_ROLE;
+	}
+	
+	public RoleWithSource(String source, ORole o) {
+		super(o);
+		this.source = source;
+	}
+	
+	public RoleWithSource(OGroup o) {
+		super(o);
+		this.source = SOURCE_GROUP;
+	}
+	
+	public RoleWithSource(OUser o) {
+		super(o);
+		this.source = SOURCE_USER;
+	}
+	
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+}

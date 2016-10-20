@@ -213,8 +213,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	saveModel: function(opts) {
 		opts = opts || {};
 		var me = this,
-				model = me.getModel(),
-				proxy;
+				model = me.getModel();
 		
 		if(model && model.isValid()) {
 			me.fireEvent('beforemodelsave', me, model, opts.pass);

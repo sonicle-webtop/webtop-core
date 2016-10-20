@@ -33,6 +33,9 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.ORole;
+import com.sonicle.webtop.core.bol.OUser;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -41,28 +44,55 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  * @author malbinola
  */
 public class Role {
-	public static final String SOURCE_USER = "user";
-	public static final String SOURCE_GROUP = "group";
-	public static final String SOURCE_ROLE = "role";
-	public static final String SOURCE_TRANSITIVE = "trans";
-	private String uid;
+	private String roleUid;
+	private String domainId;
 	private String name;
-	private String source;
 	private String description;
 	
-	public Role(String uid, String name, String source, String description) {
-		this.uid = uid;
+	public Role() {}
+	
+	public Role(String roleUid, String domainId, String name, String description) {
+		this.roleUid = roleUid;
+		this.domainId = domainId;
 		this.name = name;
-		this.source = source;
 		this.description = description;
 	}
-
-	public String getUid() {
-		return uid;
+	
+	public Role(ORole o) {
+		this.roleUid = o.getRoleUid();
+		this.domainId = o.getDomainId();
+		this.name = o.getName();
+		this.description = o.getDescription();
+	}
+	
+	public Role(OGroup o) {
+		this.roleUid = o.getRoleUid();
+		this.domainId = o.getDomainId();
+		this.name = o.getUserId();
+		this.description = o.getDisplayName();
+	}
+	
+	public Role(OUser o) {
+		this.roleUid = o.getRoleUid();
+		this.domainId = o.getDomainId();
+		this.name = o.getUserId();
+		this.description = o.getDisplayName();
+	}
+	
+	public String getRoleUid() {
+		return roleUid;
 	}
 
-	public void setId(String uid) {
-		this.uid = uid;
+	public void setRoleUid(String roleUid) {
+		this.roleUid = roleUid;
+	}
+
+	public String getDomainId() {
+		return domainId;
+	}
+
+	public void setDomainId(String domainId) {
+		this.domainId = domainId;
 	}
 	
 	public String getName() {
@@ -71,14 +101,6 @@ public class Role {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-	
-	public String getSource() {
-		return source;
-	}
-
-	public void setSource(String source) {
-		this.source = source;
 	}
 
 	public String getDescription() {
@@ -97,7 +119,7 @@ public class Role {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-			.append(uid)
+			.append(roleUid)
 			.toHashCode();
 	}
 
@@ -107,7 +129,7 @@ public class Role {
 		if(this == obj) return true;
 		final Role otherObject = (Role) obj;
 		return new EqualsBuilder()
-			.append(uid, otherObject.uid)
+			.append(roleUid, otherObject.roleUid)
 			.isEquals();
 	}
 }

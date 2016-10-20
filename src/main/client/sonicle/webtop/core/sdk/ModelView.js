@@ -62,23 +62,23 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		fieldTitle: false,
 		
 		/**
-		 * @cfg {String} fieldTitleFormat
-		 * Formatting string used to insert a model's field in title.
-		 */
-		fieldTitleFormat: '{0} [{1}]',
-		
-		/**
 		 * @cgf {Boolean} [modeTitle = false]
 		 * Pass as `false` to prevent current operative mode from being included in title.
 		 */
-		modeTitle: true,
-		
-		/**
-		 * @cfg {String} modeTitleFormat
-		 * Formatting string used to insert current operative mode in title.
-		 */
-		modeTitleFormat: '{0}: {1}'
+		modeTitle: true
 	},
+	
+	/**
+	 * @cfg {String} fieldTitleFormat
+	 * Formatting string used to insert a model's field in title.
+	 */
+	fieldTitleFormat: ' [{0}]',
+	
+	/**
+	 * @cfg {String} modeTitleFormat
+	 * Formatting string used to insert current operative mode in title.
+	 */
+	modeTitleFormat: ': {0}',
 	
 	/**
 	 * @property {String} MODE_NEW
@@ -136,13 +136,34 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 * @param {String} om The previous mode
 	 */
 	
-	constructor: function(config) {
-		var me = this;
+	viewModel: {
+		data: {
+			_fieldTitle: '',
+			_modeTitle: ''
+		}
+	},
+	
+	constructor: function(cfg) {
+		var me = this, vm;
 		
 		if(me.getInitialConfig('viewModel') === undefined) {
 			me.config.viewModel = Ext.create('Ext.app.ViewModel');
 		}
-		this.callParent([config]);
+		me.callParent([cfg]);
+		
+		if(!cfg.title) {
+			me.setBind({
+				title: '{_viewTitle}{_fieldTitle}{_modeTitle}'
+			});
+		}
+		
+		vm = me.getVM();
+		if(me.getFieldTitle()) {
+			vm.set('_fieldTitle', me.formatFieldTitle(null));
+		}
+		if(me.getModeTitle()) {
+			vm.set('_modeTitle', me.formatModeTitle(null));
+		}
 	},
 	
 	initComponent: function() {
@@ -276,8 +297,11 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	onModelLoad: function(s, success, model) {
+		var me = this;
 		s.unwait();
-		if(s.fieldTitle) s.updateTitle();
+		if((me.getFieldTitle() === true) || Ext.isString(me.getFieldTitle())) {
+			me.getVM().set('_fieldTitle', me.formatFieldTitle(me.getModel()));
+		}
 		s.fireEvent('viewload', s, success, model);
 	},
 	
@@ -293,7 +317,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	onModeChange: function(nm, om) {
 		var me = this;
-		if(me.modeTitle) me.updateTitle();
+		if(me.getModeTitle() === true) {
+			me.getVM().set('_modeTitle', me.formatModeTitle(me.mode));
+		}
 		me.fireEvent('modechange', me, nm, om);
 	},
 	
@@ -310,35 +336,31 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		return true;
 	},
 	
-	updateTitle: function() {
-		var me = this,
-				title = me.getTitle(),
-				model, arg1;
-		
-		if((me.fieldTitle === true) || Ext.isString(me.fieldTitle)) {
-			model = me.getModel();
-			if(model) {
-				arg1 = Ext.isString(me.fieldTitle) ? model.get(me.fieldTitle) : model.getId();
-				title = Ext.String.format(me.fieldTitleFormat, title, (!Ext.isEmpty(arg1) ? arg1+'' : ''));
+	formatFieldTitle: function(model) {
+		var me = this, s = null;
+		if(model) {
+			if(Ext.isString(me.getFieldTitle())) {
+				s = model.get(me.getFieldTitle());
+			} else if(me.getFieldTitle() === true) {
+				s = model.getId();
 			}
 		}
-		
-		if(me.modeTitle === true) {
-			switch(me.mode) {
-				case me.MODE_VIEW:
-					arg1 = WT.res('act-view.lbl');
-					break;
-				case me.MODE_NEW:
-					arg1 = WT.res('act-new.lbl');
-					break;
-				case me.MODE_EDIT:
-					arg1 = WT.res('act-edit.lbl');
-					break;
-				default:
-					arg1 = null;
-			}
-			if(arg1) title = Ext.String.format(me.modeTitleFormat, title, arg1);
+		return Ext.String.format(this.fieldTitleFormat, s || '');
+	},
+	
+	formatModeTitle: function(mode) {
+		var me = this, s = null;
+		switch(mode) {
+			case me.MODE_VIEW:
+				s = WT.res('act-view.lbl');
+				break;
+			case me.MODE_NEW:
+				s = WT.res('act-new.lbl');
+				break;
+			case me.MODE_EDIT:
+				s = WT.res('act-edit.lbl');
+				break;
 		}
-		me.setViewTitle(title);
+		return Ext.String.format(this.modeTitleFormat, s || '');
 	}
 });

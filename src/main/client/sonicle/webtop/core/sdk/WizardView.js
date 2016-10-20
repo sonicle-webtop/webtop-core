@@ -471,17 +471,18 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		
 		me.wait();
 		WT.ajaxReq(me.mys.ID, me.getAction(), {
+			timeout: 1000*60*5,
 			params: params,
 			callback: function(success, json) {
 				me.unwait();
 				me.doSuccess = success;
 				me.updateButtons('end');
-				page.lookupReference('log').setValue(json.data.log);
+				page.lookupReference('log').setValue(json ? json.data.log : null);
 				if(success) {
 					me.getVM().set('result', json.data.result);
 					me.fireEvent('dosuccess', me, json.data.result);
 				} else {
-					me.fireEvent('dofailure', me, json.data);
+					me.fireEvent('dofailure', me, json ? json.data : null);
 				}
 			}
 		});

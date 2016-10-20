@@ -34,10 +34,9 @@
 Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 	extend: 'WT.sdk.DockableView',
 	requires: [
-		'Sonicle.grid.Property',
 		'Sonicle.menu.StoreMenu',
-		'WT.ux.data.SimpleModel',
 		'WT.ux.grid.Setting',
+		'Sonicle.webtop.core.model.ServiceLkp',
 		'Sonicle.webtop.core.admin.model.DomainSetting'
 	],
 	
@@ -46,6 +45,17 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 	dockableConfig: {
 		title: '{domainSettings.tit}',
 		iconCls: 'wta-icon-settings-xs'
+	},
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+		
+		if(!cfg.title) {
+			me.setBind({
+				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
+			});
+		}
 	},
 	
 	initComponent: function() {
@@ -71,6 +81,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 				groupField: 'serviceId',
 				listeners: {
 					remove: function(s, recs) {
+						// Fix for updating selection
 						me.lref('gp').getSelectionModel().deselect(recs);
 					}
 				}
@@ -86,10 +97,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 						xtype: 'sostoremenu',
 						store: {
 							autoLoad: true,
-							model: 'WT.ux.data.SimpleModel',
-							proxy: WTF.proxy(me.mys.ID, 'LookupInstalledServices')
+							model: 'Sonicle.webtop.core.model.ServiceLkp',
+							proxy: WTF.proxy(WT.ID, 'LookupServices')
 						},
-						textField: 'id',
+						textField: 'label',
 						listeners: {
 							click: function(s,itm) {
 								me.addSettingUI(me.domainId, itm.getItemId());

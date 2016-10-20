@@ -31,26 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
+	alternateClassName: 'WT.ux.ViewWindow',
+	extend: 'Sonicle.webtop.core.ux.Window',
+	alias: ['widget.wtviewwindow'],
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
+	getView: function() {
+		return this.getComponent(0);
 	},
 	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	getDockableConfig: function() {
+		return this.getView().getDockableConfig();
 	}
 });

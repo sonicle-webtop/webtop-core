@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.eventusermodel.XSSFSheetXMLHandler.SheetContentsHandler;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 
@@ -56,7 +57,6 @@ public class XlsxColumnsHandler extends XlsxBaseHandler implements SheetContents
 	@Override
 	public void startRow(int i) {
 		row = i;
-		col = -1;
 		isHeader = (row == headersRow);
 		if(isHeader) {
 			columnNames = new LinkedHashMap<>();
@@ -72,10 +72,10 @@ public class XlsxColumnsHandler extends XlsxBaseHandler implements SheetContents
 
 	@Override
 	public void cell(String cellReference, String formattedValue, XSSFComment comment) {
-		col++;
 		if(isHeader) {
 			String name = (headersRow == firstDataRow) ? cellReference : StringUtils.defaultIfBlank(formattedValue, cellReference);
 			columnNames.put(name.toLowerCase(), name);
+			final int col = new CellReference(cellReference).getCol();
 			columnIndexes.put(name, col);
 
 			/*

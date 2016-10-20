@@ -33,29 +33,84 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.bol.model.Role;
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.bol.ORolePermission;
+import com.sonicle.webtop.core.bol.model.RoleEntity;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class JsRole extends JsSimple {
-	public String source;
+public class JsRole {
+	public String roleUid;
+	public String domainId;
+	public String name;
+	public String description;
+	public ArrayList<Permission> permissions = new ArrayList<>();
+	public ArrayList<Permission> svcPermissions = new ArrayList<>();
 	
 	public JsRole() {}
 	
-	public JsRole(Object id, String description, String source) {
-		super(id, description);
-		this.source = source;
+	public JsRole(RoleEntity o) {
+		roleUid = o.getRoleUid();
+		domainId = o.getDomainId();
+		name = o.getName();
+		description = o.getDescription();
+		for(ORolePermission perm : o.getPermissions()) {
+			permissions.add(new Permission(roleUid, perm));
+		}
+		for(ORolePermission perm : o.getServicesPermissions()) {
+			svcPermissions.add(new Permission(roleUid, perm));
+		}
 	}
 	
-	public JsRole(Role role) {
-		super(role.getUid(), JsSimple.description(role.getName(), role.getDescription()));
-		source = role.getSource();
+	public static class Permission extends JsFkModel {
+		public Integer rolePermissionId;
+		public String serviceId;
+		public String groupName;
+		public String action;
+		public String instance;
+		
+		public Permission() {}
+		
+		public Permission(String fk, ORolePermission o) {
+			super(fk);
+			rolePermissionId = o.getRolePermissionId();
+			serviceId = o.getServiceId();
+			groupName = o.getKey();
+			action = o.getAction();
+			instance = o.getInstance();
+		}
 	}
 	
-	public static JsRole wildcard(String description) {
-		return new JsRole("*", MessageFormat.format("(*) {0}", description), null);
+	public static RoleEntity buildContactsList(JsRole js) {
+		RoleEntity re = new RoleEntity();
+		re.setRoleUid(js.roleUid);
+		re.setDomainId(js.domainId);
+		re.setName(js.name);
+		re.setDescription(js.description);
+		
+		for(Permission jsPerm : js.permissions) {
+			final ORolePermission perm = new ORolePermission();
+			perm.setRolePermissionId(jsPerm.rolePermissionId);
+			perm.setServiceId(jsPerm.serviceId);
+			perm.setKey(jsPerm.groupName);
+			perm.setAction(jsPerm.action);
+			perm.setInstance(jsPerm.instance);
+			
+			re.getPermissions().add(perm);
+		}
+		for(Permission jsPerm : js.svcPermissions) {
+			final ORolePermission perm = new ORolePermission();
+			perm.setRolePermissionId(jsPerm.rolePermissionId);
+			perm.setServiceId(jsPerm.serviceId);
+			perm.setKey(jsPerm.groupName);
+			perm.setAction(jsPerm.action);
+			perm.setInstance(jsPerm.instance);
+			
+			re.getServicesPermissions().add(perm);
+		}
+		
+		return re;
 	}
 }

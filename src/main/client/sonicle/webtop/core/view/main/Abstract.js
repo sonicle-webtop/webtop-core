@@ -38,7 +38,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WT.view.main.AbstractC',
 		'WT.ux.TaskBar',
 		'WT.ux.ServiceButton',
-		'WT.ux.Window'
+		'WT.ux.ViewWindow'
 	],
 	mixins: [
 		'WT.mixin.RefStorer'
