@@ -114,6 +114,7 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 					'insertdatetime media nonbreaking save table contextmenu directionality',
 					'emoticons template paste textcolor'
 				],
+				paste_block_drop: true,
 				skin: Ext.themeName || 'lightgray',
 				toolbar: false,
 				statusbar: false,
