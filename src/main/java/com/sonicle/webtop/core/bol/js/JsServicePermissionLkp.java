@@ -31,26 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.web.json.CompositeId;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsServicePermissionLkp {
+	public String id;
+	public String serviceId;
+	public String groupName;
+	public String action;
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
-	},
+	public JsServicePermissionLkp() {}
 	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	public JsServicePermissionLkp(String serviceId, String groupName, String action) {
+		this.id = new CompositeId(serviceId, groupName, action).toString();
+		this.serviceId = serviceId;
+		this.groupName = groupName;
+		this.action = action;
 	}
-});
+}

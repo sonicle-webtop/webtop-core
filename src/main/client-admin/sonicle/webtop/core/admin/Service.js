@@ -94,6 +94,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							} else {
 								me.showSettings(rec);
 							}
+						} else if(type === 'roles') {
+							me.showDomainRoles(rec);
 						}
 						
 					},
@@ -141,13 +143,60 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
-		console.log('showDomainSettings');
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainSettings', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
 				closable: true
+			});
+		});
+	},
+	
+	showDomainRoles: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainRoles', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	addRole: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Role');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId
+				}
+			});
+		});
+	},
+	
+	editRole: function(roleUid, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Role');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					roleUid: roleUid
+				}
 			});
 		});
 	},

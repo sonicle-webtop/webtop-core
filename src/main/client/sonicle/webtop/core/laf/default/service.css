@@ -70,6 +70,8 @@
 .wt-icon-item-enable-xs { background-image: url('item-enable_16.png') !important; }
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
+.wt-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
+.wt-icon-permission-xs { background-image: url('permission_16.png') !important; }
 .wt-icon-permission-allowed-xs { background-image: url('permission-allowed_16.png') !important; }
 .wt-icon-permission-denied-xs { background-image: url('permission-denied_16.png') !important; }
 

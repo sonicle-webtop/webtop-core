@@ -21,7 +21,7 @@ Ext.define('Sonicle.upload.Field', {
 		}
 	},
 	
-	serverResponsePropertyAsValue: '',
+	responseValueProperty: '',
 	
 	/**
 	 * @cfg {String} buttonText
@@ -171,11 +171,11 @@ Ext.define('Sonicle.upload.Field', {
 	 */
 	doSetValue: function(file) {
 		var me = this,
-				srpas = me.serverResponsePropertyAsValue,
+				srpas = me.responseValueProperty,
 				val;
 		me.setRawValue(file.name);
-		if(file.server_response && !Ext.isEmpty(srpas)) {
-			val = file.server_response[srpas];
+		if(file._serverResponse && !Ext.isEmpty(srpas)) {
+			val = file._serverResponse[srpas];
 		} else {
 			val = file.name;
 		}

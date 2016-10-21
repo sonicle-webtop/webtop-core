@@ -46,7 +46,6 @@ public abstract class XlsxBaseHandler {
 	protected final int firstDataRow;
 	protected final int lastDataRow;
 	protected int row = -1;
-	protected int col = -1;
 	protected boolean isHeader = false;
 
 	public XlsxBaseHandler(InputStream is, int headersRow, int firstDataRow, int lastDataRow) {

@@ -31,26 +31,39 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+package com.sonicle.webtop.core.bol.model;
+
+import com.sonicle.webtop.core.bol.ORole;
+import com.sonicle.webtop.core.bol.ORolePermission;
+import java.util.ArrayList;
+
+/**
+ *
+ * @author malbinola
+ */
+public class RoleEntity extends Role {
+	private ArrayList<ORolePermission> permissions = new ArrayList<>();
+	private ArrayList<ORolePermission> servicesPermissions = new ArrayList<>();
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
-	},
+	public RoleEntity() {}
 	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	public RoleEntity(ORole role) {
+		super(role);
 	}
-});
+
+	public ArrayList<ORolePermission> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(ArrayList<ORolePermission> permissions) {
+		this.permissions = permissions;
+	}
+
+	public ArrayList<ORolePermission> getServicesPermissions() {
+		return servicesPermissions;
+	}
+
+	public void setServicesPermissions(ArrayList<ORolePermission> servicesPermissions) {
+		this.servicesPermissions = servicesPermissions;
+	}
+}

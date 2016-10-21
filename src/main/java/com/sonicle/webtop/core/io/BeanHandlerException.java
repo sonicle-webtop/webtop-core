@@ -31,26 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.Window', {
-	alternateClassName: 'WT.ux.Window',
-	extend: 'Ext.window.Window',
-	alias: ['widget.wtwindow'],
+package com.sonicle.webtop.core.io;
+
+/**
+ *
+ * @author malbinola
+ */
+public class BeanHandlerException extends Exception {
 	
-	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
-	},
-	
-	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
-	},
-	
-	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
-	},
-	
-	minimize: function() {
-		var me = this;
-		if(!me.canMinimize()) return;
-		me.hide();
+	public BeanHandlerException() {
+		super();
 	}
-});
+	
+	public BeanHandlerException(Throwable cause) {
+		super(cause);
+	}
+}

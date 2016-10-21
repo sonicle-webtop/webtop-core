@@ -37,6 +37,8 @@ import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.webtop.core.CoreManager;
@@ -45,8 +47,11 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OSettingDb;
-import com.sonicle.webtop.core.bol.js.JsSimple;
+import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
+import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
+import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -153,16 +158,6 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processLookupInstalledServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Locale locale = getEnv().getWebTopSession().getLocale();
-		ArrayList<JsSimple> items = new ArrayList<>();
-		
-		for(String id : manager.listInstalledServices()) {
-			items.add(new JsSimple(id, WT.lookupResource(id, locale, BaseService.RESOURCE_SERVICE_NAME)));
-		}
-		new JsonResult(items).printTo(out);
-	}
-	
 	public void processManageSystemSettings(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
@@ -222,7 +217,6 @@ public class Service extends BaseService {
 		} catch(Exception ex) {
 			logger.error("Error in ManageSettings", ex);
 			new JsonResult(false, "Error").printTo(out);
-			
 		}
 	}
 	
@@ -279,6 +273,61 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageSettings", ex);
+			new JsonResult(false, "Error").printTo(out);
+			
+		}
+	}
+	
+	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+
+				List<JsGridDomainRole> items = new ArrayList<>();
+				for(Role role : manager.listRoles(domainId)) {
+					items.add(new JsGridDomainRole(role));
+				}
+				new JsonResult("roles", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				PayloadAsList<JsGridDomainRole.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainRole.List.class);
+				JsGridDomainRole role = pl.data.get(0);
+				
+				manager.deleteRole(role.roleUid);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomainRoles", ex);
+			new JsonResult(false, "Error").printTo(out);
+			
+		}
+	}
+	
+	public void processManageRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				RoleEntity role = manager.getRole(id);
+				new JsonResult(new JsRole(role)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
+				manager.addRole(JsRole.buildContactsList(pl.data));
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
+				manager.updateRole(JsRole.buildContactsList(pl.data));
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageRoles", ex);
 			new JsonResult(false, "Error").printTo(out);
 			
 		}

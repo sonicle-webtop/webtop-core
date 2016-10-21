@@ -43,6 +43,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
@@ -50,7 +51,7 @@ import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.bol.ActivityGrid;
+import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
@@ -63,13 +64,16 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
-import com.sonicle.webtop.core.bol.js.JsRole;
+import com.sonicle.webtop.core.bol.js.JsRoleLkp;
+import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
+import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -254,9 +258,43 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processLookupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Locale locale = getEnv().getWebTopSession().getLocale();
+		ArrayList<JsSimple> items = new ArrayList<>();
+		
+		try {
+			Boolean assignableOnly = ServletUtils.getBooleanParameter(request, "assignableOnly", false);
+			
+			for(String sid : core.listInstalledServices()) {
+				if(assignableOnly && sid.equals(CoreManifest.ID)) continue;
+				items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in LookupServices", ex);
+			new JsonResult(false, "Error").printTo(out);
+		}
+	}
 	
-	
-	
+	public void processLookupServicesPermissions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsServicePermissionLkp> items = new ArrayList<>();
+		
+		try {
+			for(String sid : core.listInstalledServices()) {
+				for(ServicePermission perm : core.listServicePermissions(sid)) {
+					for(String action : perm.getActions()) {
+						items.add(new JsServicePermissionLkp(sid, perm.getGroupName(), action));
+					}
+				}
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in LookupServicesPermissions", ex);
+			new JsonResult(false, "Error").printTo(out);
+		}
+	}
 	
 	
 	
@@ -304,23 +342,30 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsRole> items = new ArrayList<>();
+		List<JsRoleLkp> items = new ArrayList<>();
 		UserProfile up = getEnv().getProfile();
 		
 		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			boolean users = ServletUtils.getBooleanParameter(request, "users", true);
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
-			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
-			if(!RunContext.isSysAdmin()) {
-				domainId = up.getDomainId();
+			//if(!RunContext.isSysAdmin()) domainId = up.getDomainId();
+			
+			if(wildcard) items.add(JsRoleLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			if(users) {
+				for(Role role : core.listUsersRoles(domainId)) {
+					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_USER));
+				}
 			}
-			
-			if(wildcard) items.add(JsRole.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
-			List<Role> roles = core.listRoles(domainId, users, groups);
-			for(Role role : roles) {
-				items.add(new JsRole(role));
+			if(groups) {
+				for(Role role : core.listGroupsRoles(domainId)) {
+					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_GROUP));
+				}
+			}
+			for(Role role : core.listRoles(domainId)) {
+				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
 			}
 			
 			new JsonResult("roles", items, items.size()).printTo(out);
@@ -392,7 +437,7 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<ActivityGrid> items = core.listLiveActivities(queryDomains());
+					List<VActivity> items = core.listLiveActivities(queryDomains());
 					new JsonResult("activities", items, items.size()).printTo(out);
 				} else {
 					OActivity item = core.getActivity(id);
@@ -459,7 +504,7 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				core.addCausal( pl.data);
+				core.addCausal(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {

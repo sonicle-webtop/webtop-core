@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  *
  * @author malbinola
@@ -69,4 +71,13 @@ public class ServiceSharePermission extends ServicePermission {
 	public static String buildElementsPermissionKey(String groupName) {
 		return groupName + "@SHARE_" + TARGET_ELEMENTS;
 	}
+	
+	/*
+	public static boolean checkName(String groupName) {
+		if(StringUtils.endsWith(groupName, "@SHARE_" + TARGET_ROOT)) return true;
+		if(StringUtils.endsWith(groupName, "@SHARE_" + TARGET_FOLDER)) return true;
+		if(StringUtils.endsWith(groupName, "@SHARE_" + TARGET_ELEMENTS)) return true;
+		return false;
+	}
+	*/
 }

@@ -31,18 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.Settings', {
+Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 	extend: 'WT.sdk.DockableView',
 	requires: [
-		'Sonicle.menu.StoreMenu',
-		'WT.ux.grid.Setting',
-		'Sonicle.webtop.core.model.ServiceLkp',
-		'Sonicle.webtop.core.admin.model.SystemSetting'
+		'Sonicle.webtop.core.admin.model.GridDomainRole'
 	],
 	
+	domainId: null,
+	
 	dockableConfig: {
-		title: '{settings.tit}',
-		iconCls: 'wta-icon-settings-xs'
+		title: '{domainRoles.tit}',
+		iconCls: 'wta-icon-domainRoles-xs'
+	},
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+		
+		if(!cfg.title) {
+			me.setBind({
+				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
+			});
+		}
 	},
 	
 	initComponent: function() {
@@ -51,18 +61,20 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtsettinggrid',
+			xtype: 'grid',
 			reference: 'gp',
 			store: {
 				autoLoad: true,
 				autoSync: true,
-				model: 'Sonicle.webtop.core.admin.model.SystemSetting',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageSystemSettings', null, {
+				model: 'Sonicle.webtop.core.admin.model.GridDomainRole',
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainRoles', 'roles', {
+					extraParams: {
+						domainId: me.domainId
+					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
 					}
 				}),
-				groupField: 'serviceId',
 				listeners: {
 					remove: function(s, recs) {
 						// Fix for updating selection
@@ -70,35 +82,38 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 					}
 				}
 			},
-			tbar: [{
-					xtype: 'splitbutton',
-					text: me.mys.res('settings.act-add.lbl'),
+			columns: [{
+				xtype: 'rownumberer'	
+			}, {
+				dataIndex: 'name',
+				header: me.mys.res('domainRoles.gp.name.lbl'),
+				flex: 1
+			}, {
+				dataIndex: 'description',
+				header: me.mys.res('domainRoles.gp.description.lbl'),
+				flex: 2
+			}, {
+				dataIndex: 'roleUid',
+				header: me.mys.res('domainRoles.gp.roleUid.lbl'),
+				tdCls: 'x-selectable',
+				hidden: true,
+				flex: 2
+			}],
+			tbar: [
+				me.addAction('add', {
+					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
-					handler: function(s) {
-						s.maybeShowMenu();
-					},
-					menu: {
-						xtype: 'sostoremenu',
-						store: {
-							autoLoad: true,
-							model: 'Sonicle.webtop.core.model.ServiceLkp',
-							proxy: WTF.proxy(WT.ID, 'LookupServices')
-						},
-						textField: 'label',
-						listeners: {
-							click: function(s,itm) {
-								me.addSettingUI(itm.getItemId());
-							}
-						}
+					handler: function() {
+						me.addRoleUI(me.domainId);
 					}
-				},
+				}),
 				me.addAction('remove', {
 					text: WT.res('act-remove.lbl'),
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
 					handler: function() {
 						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteSettingUI(rec);
+						if(rec) me.deleteRoleUI(rec);
 					}
 				}),
 				'->',
@@ -110,7 +125,12 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 						me.lref('gp').getStore().load();
 					}
 				})
-			]
+			],
+			listeners: {
+				rowdblclick: function(s, rec) {
+					me.editRoleUI(rec);
+				}
+			}
 		});
 		
 		me.getViewModel().bind({
@@ -120,24 +140,30 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		});
 	},
 	
-	addSettingUI: function(serviceId) {
-		var gp = this.lref('gp'),
-				ce = gp.findPlugin('cellediting'),
-				sto = gp.getStore(),
-				indx, rec;
-		
-		indx = sto.findExact('serviceId', serviceId);
-		ce.cancelEdit();
-		rec = sto.createModel({
-			serviceId: serviceId,
-			key: null,
-			value: null
+	addRoleUI: function(domainId) {
+		var me = this;
+		me.mys.addRole(domainId, {
+			callback: function(success) {
+				if(success) {
+					me.lref('gp').getStore().load();
+				}
+			}
 		});
-		sto.insert(indx, rec);
-		ce.startEdit(rec, gp.keyColumn);
 	},
 	
-	deleteSettingUI: function(rec) {
+	editRoleUI: function(rec) {
+		var me = this,
+				roleUid = rec.get('roleUid');
+		me.mys.editRole(roleUid, {
+			callback: function(success) {
+				if(success) {
+					me.lref('gp').getStore().load();
+				}
+			}
+		});
+	},
+	
+	deleteRoleUI: function(rec) {
 		var me = this,
 				sto = me.lref('gp').getStore();
 		

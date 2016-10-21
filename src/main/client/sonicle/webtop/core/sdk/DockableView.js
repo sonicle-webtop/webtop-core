@@ -115,10 +115,14 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @param {WT.sdk.DockableView} this
 	 */
 	
-	viewModel: {},
+	viewModel: {
+		data: {
+			_viewTitle: ''
+		}
+	},
 	
 	constructor: function(cfg) {
-		var me = this;
+		var me = this, vm, dcfg;
 		// Defines a basic viewModel (eg. useful for binding)
 		//if(!me.viewModel) me.viewModel = Ext.create('Ext.app.ViewModel');
 		if(Ext.isObject(cfg.dockableConfig)) {
@@ -126,13 +130,26 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 			delete cfg.dockableConfig;
 		}
 		me.callParent([cfg]);
+		
+		if(!cfg.title) {
+			me.setBind({
+				title: '{_viewTitle}'
+			});
+		}
+		
+		vm = me.getVM();
+		dcfg = me.getDockableConfig();
+		if(cfg.title) {
+			vm.set('_viewTitle', '');
+		} else {
+			vm.set('_viewTitle', me.resTitle() || '');
+		}
 	},
 	
 	initComponent: function() {
 		var me = this,
 				cfg = me.getDockableConfig();
 		
-		me.title = me.resTitle();
 		if(cfg.iconCls) me.iconCls = cfg.iconCls;
 		me.callParent(arguments);
 		me.on('titlechange', me.onTitleChange);
@@ -210,7 +227,12 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @private
 	 */
 	onTitleChange: function(s,nv) {
-		this.setViewTitle(nv);
+		var me = this;
+		if(me.ctInited) {
+			if(me.ownerCt.isXType('window')) {
+				me.ownerCt.setTitle(nv);
+			}
+		}
 	},
 	
 	/**
@@ -278,16 +300,6 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 			me.wg.hideAll();
 		}
 		*/
-	},
-	
-	getViewTitle: function() {
-		var me = this;
-		return (me.ctInited) ? me.ownerCt.getTitle() : null; 
-	},
-	
-	setViewTitle: function(title) {
-		var me = this;
-		if(me.ctInited) me.ownerCt.setTitle(title);
 	},
 	
 	/**

@@ -33,20 +33,23 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.LangUtils.CollectionChangeSet;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleEntity;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.GroupDAO;
+import com.sonicle.webtop.core.dal.RoleAssociationDAO;
 import com.sonicle.webtop.core.dal.RoleDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.sql.Connection;
@@ -56,11 +59,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.apache.shiro.subject.Subject;
-import org.jooq.tools.StringUtils;
+import java.util.UUID;
 import org.slf4j.Logger;
 
 /**
@@ -106,93 +105,84 @@ public class AuthManager {
 		logger.info("AuthManager destroyed");
 	}
 	
-	public List<String> getRolesAsString(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
-		ArrayList<String> uids = new ArrayList<>();
-		Set<Role> roles = getRolesForUser(pid, self, transitive);
-		for(Role role : roles) {
-			uids.add(role.getUid());
-		}
-		return uids;
-	}
-	
-	public Set<Role> getRolesForUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
-		UserManager usrm = wta.getUserManager();
+	public List<Role> listRoles(String domainId) throws WTException {
+		RoleDAO dao = RoleDAO.getInstance();
+		ArrayList<Role> items = new ArrayList<>();
 		Connection con = null;
-		HashSet<String> roleMap = new HashSet<>();
-		LinkedHashSet<Role> roles = new LinkedHashSet<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			String userSid = usrm.userToUid(pid);
-			String roleSid = usrm.userToRoleUid(pid);
 			
-			if(self) {
-				UserDAO usedao = UserDAO.getInstance();
-				OUser user = usedao.selectByUid(con, userSid);
-				roles.add(new Role(roleSid, pid.getUserId(), Role.SOURCE_USER, user.getDisplayName()));
-			}
+			List<ORole> roles = dao.selectByDomain(con, domainId);
+			for(ORole erole : roles) items.add(new Role(erole));
 			
-			RoleDAO roldao = RoleDAO.getInstance();
-			
-			// Gets by group
-			List<ORole> groles = roldao.selectFromGroupsByUser(con, userSid);
-			for(ORole role : groles) {
-				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleUid());
-				roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_GROUP, role.getDescription()));
-			}
-			
-			// Gets direct assigned roles
-			List<ORole> droles = roldao.selectDirectByUser(con, userSid);
-			for(ORole role : droles) {
-				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-				roleMap.add(role.getRoleUid());
-				roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_ROLE, role.getDescription()));
-			}
-			
-			// Get transivite roles (belonging to groups)
-			if(transitive) {
-				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userSid);
-				for(ORole role : troles) {
-					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
-					roleMap.add(role.getRoleUid());
-					roles.add(new Role(role.getRoleUid(), role.getName(), Role.SOURCE_TRANSITIVE, role.getDescription()));
-				}
-			}
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-		return roles;
+		return items;
 	}
 	
-	public List<Role> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
+	public List<Role> listUsersRoles(String domainId) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
+		ArrayList<Role> items = new ArrayList<>();
 		Connection con = null;
-		ArrayList<Role> roles = new ArrayList<>();
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			
+			List<OUser> users = dao.selectActiveByDomain(con, domainId);
+			for(OUser user: users) items.add(new Role(user));
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return items;
+	}
+	
+	public List<Role> listGroupsRoles(String domainId) throws WTException {
+		GroupDAO dao = GroupDAO.getInstance();
+		ArrayList<Role> items = new ArrayList<>();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			
+			List<OGroup> groups = dao.selectByDomain(con, domainId);
+			for(OGroup group: groups) items.add(new Role(group));
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return items;
+	}
+	
+	/*
+	public List<Role2> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
+		Connection con = null;
+		ArrayList<Role2> roles = new ArrayList<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			if(fromUsers) {
 				UserDAO usedao = UserDAO.getInstance();
 				List<OUser> users = usedao.selectActiveByDomain(con, domainId);
-				for(OUser user: users) {
-					roles.add(new Role(user.getRoleUid(), user.getUserId(), Role.SOURCE_USER, user.getDisplayName()));
-				}
+				for(OUser user: users) roles.add(new Role2(user));
 			}
 			if(fromUsers) {
 				GroupDAO grpdao = GroupDAO.getInstance();
-				List<OGroup> groups = grpdao.selectActiveByDomain(con, domainId);
-				for(OGroup group: groups) {
-					roles.add(new Role(group.getRoleUid(), group.getUserId(), Role.SOURCE_GROUP, group.getDisplayName()));
-				}
+				List<OGroup> groups = grpdao.selectByDomain(con, domainId);
+				for(OGroup group: groups) roles.add(new Role2(group));
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
 			List<ORole> eroles = roldao.selectByDomain(con, domainId);
-			for(ORole erole : eroles) {
-				roles.add(new Role(erole.getRoleUid(), erole.getName(), Role.SOURCE_ROLE, erole.getDescription()));
-			}
+			for(ORole erole : eroles) roles.add(new Role2(erole));
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -201,6 +191,245 @@ public class AuthManager {
 		}
 		return roles;
 	}
+	*/
+	
+	public String getRoleDomain(String uid) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			
+			RoleDAO roldao = RoleDAO.getInstance();
+			ORole role = roldao.selectByUid(con, uid);
+			if(role != null) return role.getDomainId();
+			
+			UserDAO usedao = UserDAO.getInstance();
+			OUser user = usedao.selectByUid(con, uid);
+			if(user != null) return user.getDomainId();
+			
+			GroupDAO grpdao = GroupDAO.getInstance();
+			OGroup group = grpdao.selectByUid(con, uid);
+			if(group != null) return group.getDomainId();
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return null;
+	}
+	
+	public RoleEntity getRole(String uid) throws WTException {
+		RoleDAO roldao = RoleDAO.getInstance();
+		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			
+			ORole orole = roldao.selectByUid(con, uid);
+			if(orole == null) throw new WTException("Cannot retrieve role [{0}]", uid);
+			List<ORolePermission> operms = rolperdao.selectByRole(con, uid);
+			
+			ArrayList<ORolePermission> perms = new ArrayList<>();
+			ArrayList<ORolePermission> svcPerms = new ArrayList<>();
+			for(ORolePermission operm : operms) {
+				if(operm.getInstance().equals("*")) {
+					perms.add(operm);
+				} else {
+					if(operm.getServiceId().equals(CoreManifest.ID) && operm.getKey().equals("SERVICE") && operm.getAction().equals("ACCESS")) {
+						svcPerms.add(operm);
+					}
+				}
+			}
+			
+			RoleEntity role = new RoleEntity(orole);
+			role.setPermissions(perms);
+			role.setServicesPermissions(svcPerms);
+			
+			return role;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addRole(RoleEntity role) throws WTException {
+		RoleDAO roldao = RoleDAO.getInstance();
+		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID, false);
+			
+			ORole orole = new ORole();
+			orole.setRoleUid(UUID.randomUUID().toString());
+			orole.setDomainId(role.getDomainId());
+			orole.setName(role.getName());
+			orole.setDescription(role.getDescription());
+			roldao.insert(con, orole);
+			
+			for(ORolePermission perm : role.getPermissions()) {
+				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
+				perm.setRoleUid(orole.getRoleUid());
+				perm.setInstance("*");
+				rolperdao.insert(con, perm);
+			}
+			for(ORolePermission perm : role.getServicesPermissions()) {
+				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
+				perm.setRoleUid(orole.getRoleUid());
+				perm.setServiceId(CoreManifest.ID);
+				perm.setKey("SERVICE");
+				perm.setAction(ServicePermission.ACTION_ACCESS);
+				rolperdao.insert(con, perm);
+			}
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updateRole(RoleEntity role) throws WTException {
+		RoleDAO roldao = RoleDAO.getInstance();
+		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			RoleEntity oldRole = getRole(role.getRoleUid());
+			
+			con = WT.getConnection(CoreManifest.ID, false);
+			
+			ORole orole = new ORole();
+			orole.setRoleUid(role.getRoleUid());
+			orole.setName(role.getName());
+			orole.setDescription(role.getDescription());
+			roldao.update(con, orole);
+			
+			CollectionChangeSet<ORolePermission> changeSet1 = LangUtils.getCollectionChanges(oldRole.getPermissions(), role.getPermissions());
+			for(ORolePermission perm : changeSet1.deleted) {
+				rolperdao.deleteById(con, perm.getRolePermissionId());
+			}
+			for(ORolePermission perm : changeSet1.inserted) {
+				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
+				perm.setRoleUid(orole.getRoleUid());
+				perm.setInstance("*");
+				rolperdao.insert(con, perm);
+			}
+			
+			CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldRole.getServicesPermissions(), role.getServicesPermissions());
+			for(ORolePermission perm : changeSet2.deleted) {
+				rolperdao.deleteById(con, perm.getRolePermissionId());
+			}
+			for(ORolePermission perm : changeSet2.inserted) {
+				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
+				perm.setRoleUid(orole.getRoleUid());
+				perm.setServiceId(CoreManifest.ID);
+				perm.setKey("SERVICE");
+				perm.setAction(ServicePermission.ACTION_ACCESS);
+				rolperdao.insert(con, perm);
+			}
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteRole(String uid) throws WTException {
+		RoleDAO roldao = RoleDAO.getInstance();
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID, false);
+			
+			roldao.deleteByUid(con, uid);
+			rolassdao.deleteByRole(con, uid);
+			rolperdao.deleteByRole(con, uid);
+			DbUtils.commitQuietly(con);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<String> getRolesAsStringByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+		ArrayList<String> uids = new ArrayList<>();
+		Set<RoleWithSource> roles = getRolesByUser(pid, self, transitive);
+		for(RoleWithSource role : roles) {
+			uids.add(role.getRoleUid());
+		}
+		return uids;
+	}
+	
+	public Set<RoleWithSource> getRolesByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+		UserManager usrm = wta.getUserManager();
+		Connection con = null;
+		HashSet<String> roleMap = new HashSet<>();
+		LinkedHashSet<RoleWithSource> roles = new LinkedHashSet<>();
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID);
+			String userUid = usrm.userToUid(pid);
+			String userRoleUid = usrm.userToRoleUid(pid);
+			
+			if(self) {
+				UserDAO usedao = UserDAO.getInstance();
+				OUser user = usedao.selectByUid(con, userUid);
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userRoleUid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
+			}
+			
+			RoleDAO roldao = RoleDAO.getInstance();
+			
+			// Gets by group
+			List<ORole> groles = roldao.selectFromGroupsByUser(con, userUid);
+			for(ORole role : groles) {
+				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_GROUP, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+			}
+			
+			// Gets direct assigned roles
+			List<ORole> droles = roldao.selectDirectByUser(con, userUid);
+			for(ORole role : droles) {
+				if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+				roleMap.add(role.getRoleUid());
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_ROLE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+			}
+			
+			// Get transivite roles (belonging to groups)
+			if(transitive) {
+				List<ORole> troles = roldao.selectTransitiveFromGroupsByUser(con, userUid);
+				for(ORole role : troles) {
+					if(roleMap.contains(role.getRoleUid())) continue; // Skip duplicates
+					roleMap.add(role.getRoleUid());
+					roles.add(new RoleWithSource(RoleWithSource.SOURCE_TRANSITIVE, role.getRoleUid(), role.getDomainId(), role.getName(), role.getDescription()));
+				}
+			}
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		return roles;
+	}
+	
+	
 	
 	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws WTException {
 		UserManager usrm = wta.getUserManager();

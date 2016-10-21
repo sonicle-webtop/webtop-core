@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.Role;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -134,11 +135,11 @@ public class WTRealm extends AuthorizingRealm {
 		String authRes = ServicePermission.namespacedName(CoreManifest.ID, "SERVICE");
 		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
-		Set<Role> userRoles = autm.getRolesForUser(pid, true, true);
-		for(Role role : userRoles) {
-			roles.add(role.getUid());
+		Set<RoleWithSource> userRoles = autm.getRolesByUser(pid, true, true);
+		for(RoleWithSource role : userRoles) {
+			roles.add(role.getRoleUid());
 
-			List<ORolePermission> rolePerms = autm.listRolePermissions(role.getUid());
+			List<ORolePermission> rolePerms = autm.listRolePermissions(role.getRoleUid());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 

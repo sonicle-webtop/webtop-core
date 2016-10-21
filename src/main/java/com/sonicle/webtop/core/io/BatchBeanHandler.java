@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.io;
 
 import com.sonicle.webtop.core.util.LogEntries;
-import java.util.ArrayList;
 
 /**
  *
@@ -55,7 +54,7 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	protected abstract int getBeanStoreSize();
 	protected abstract void clearBeanStore();
 	protected abstract void addBeanToStore(T bean);
-	public abstract void handleStoredBeans() throws Exception;
+	public abstract void handleStoredBeans() throws BeanHandlerException;
 	
 	public LogEntries getLog() {
 		return log;
@@ -69,7 +68,7 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 		this.batchSize = batchSize;
 	}
 	
-	public void flush() throws Exception {
+	public void flush() throws BeanHandlerException {
 		if(getBeanStoreSize() > 0) {
 			try {
 				handleStoredBeans();
@@ -80,7 +79,7 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	}
 	
 	@Override
-	public void handle(T bean, LogEntries log) throws Exception {
+	public void handle(T bean, LogEntries log) throws BeanHandlerException {
 		handledCount++;
 		addBeanToStore(bean);
 		log.addAll(log);

@@ -343,7 +343,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		dockCfg = view.getDockableConfig();
 		
 		win = Ext.create(Ext.apply({
-			xtype: 'wtwindow',
+			xtype: 'wtviewwindow',
 			layout: 'fit',
 			width: dockCfg.width,
 			height: dockCfg.height,
