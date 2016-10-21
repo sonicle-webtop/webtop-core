@@ -194,6 +194,8 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	 * The default field names on the underlying store
 	 */
 	fields: { recipientType: 'recipientType', email: 'email' },
+	
+	rcb: null,
 
 	
 	/**
@@ -253,7 +255,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					flex: 1,
 					dataIndex: me.fields.email, 
 					//editor: 'textfield'
-					editor: Ext.create({
+					editor: me.rcb=Ext.create({
 						xtype: 'wtrcptsuggestcombo'
 						//width: 400,
 					}),
@@ -291,7 +293,17 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
     
 	fireExitFocus: function() {
 		this.fireEvent('exitfocus',this);
-	}
+	},
+	
+    isRecipientComboAutoSaveDirty: function() {
+        return this.autoSaveRcbValue!=this.rcb.getValue();
+    },
+    
+    clearAutoSaveDirty: function() {
+        this.autoSaveRcbValue=this.rcb.getValue();
+    },    
+
+	
 	
 /*	setValue: function(v) {
 		console.log("RecipientsGrid: setValue v="+v);
