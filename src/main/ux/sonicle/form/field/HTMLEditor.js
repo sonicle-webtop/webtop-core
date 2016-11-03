@@ -572,6 +572,17 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		}
 	},
 	
+    isAutoSaveDirty: function() {
+		var me=this,ed=me.tmce.getEditor();
+        if (ed) return ed.getContent()!=me.autoSaveValue;
+		return false;
+    },
+    
+    clearAutoSaveDirty: function() {
+		var me=this,ed=me.tmce.getEditor();
+        if (ed) me.autoSaveValue=ed.getContent();
+    },
+	
 /*	setHtml: function(html) {
 		//Ext.Error.raise('Stop here!');
 		this.tmce.setValue(html);

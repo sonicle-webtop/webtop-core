@@ -50,6 +50,7 @@ import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -78,6 +79,7 @@ import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.dal.ActivityDAO;
+import com.sonicle.webtop.core.dal.AutosaveDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -1344,7 +1346,7 @@ public class CoreManager extends BaseManager {
 				entry.setValue(value);
 				entry.setFrequency(entry.getFrequency()+1);
 				entry.setLastUpdate(now);
-				
+				sedao.update(con, entry);
 			} else {
 				entry = new OServiceStoreEntry();
 				entry.setDomainId(targetPid.getDomainId());
@@ -1355,6 +1357,7 @@ public class CoreManager extends BaseManager {
 				entry.setValue(value);
 				entry.setFrequency(1);
 				entry.setLastUpdate(now);
+				sedao.insert(con, entry);
 			}
 			
 		} catch(SQLException | DAOException ex) {
@@ -1408,6 +1411,37 @@ public class CoreManager extends BaseManager {
 			
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addAutosaveData(String serviceId, String context, String key, String value) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			OAutosave data = asdao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			
+			if(data != null) {
+				data.setValue(value);
+				asdao.update(con, data);
+			} else {
+				data = new OAutosave();
+				data.setDomainId(targetPid.getDomainId());
+				data.setUserId(targetPid.getUserId());
+				data.setServiceId(serviceId);
+				data.setContext(context);
+				data.setKey(StringUtils.upperCase(key));
+				data.setValue(value);
+				asdao.insert(con, data);
+			}
+			
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
+			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

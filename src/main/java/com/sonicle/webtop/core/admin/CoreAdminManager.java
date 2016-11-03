@@ -73,6 +73,10 @@ public class CoreAdminManager extends BaseManager {
 		return wta.getSessionManager().listOnlineSessions();
 	}
 	
+	public boolean isOnlineSession(String sessionId) {
+		return wta.getSessionManager().isOnline(sessionId);
+	}
+	
 	public void invalidateSession(String sessionId) throws WTException {
 		RunContext.ensureIsSysAdmin();
 		wta.getSessionManager().invalidateSession(sessionId);

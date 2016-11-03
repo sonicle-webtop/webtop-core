@@ -128,6 +128,20 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 		}	
 	}
 	
+	public void processAutoSave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<String[]> items = null;
+		CoreManager core = WT.getCoreManager();
+		
+		try {
+			String cntx = ServletUtils.getStringParameter(request, "context", true);	
+			String key = ServletUtils.getStringParameter(request, "key", true);
+			String value = ServletUtils.getStringParameter(request, "value", true);
+		} catch(Exception ex) {
+			WebTopApp.logger.error("Error executing action AutoSave", ex);
+			new JsonResult(false, "Error").printTo(out); //TODO: error message
+		}	
+	}
+	
 	public static class ServiceVars extends HashMap<String, Object> {
 		public ServiceVars() {
 			super();

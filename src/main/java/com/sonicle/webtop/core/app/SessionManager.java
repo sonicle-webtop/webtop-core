@@ -337,6 +337,10 @@ public class SessionManager {
 		return items;
 	}
 	
+	public boolean isOnline(String sessionId) {
+		return onlineSessions.containsKey(sessionId);
+	}
+	
 	public void invalidateSession(String sessionId) throws SessionException {
 		Session session = getSession(sessionId);
 		if(session != null) session.stop();
