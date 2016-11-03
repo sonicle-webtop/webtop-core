@@ -31,11 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.shiro.old;
 
-import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
-import com.sonicle.security.SonicleLogin;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopApp;
 import java.sql.SQLException;
@@ -53,8 +51,8 @@ import org.apache.shiro.subject.PrincipalCollection;
  *
  * @author malbinola
  */
-public class WebTopRealm extends AuthorizingRealm {
-	
+public class WebTopRealm /*extends AuthorizingRealm*/ {
+/*	
 	private final WebTopApp wta;
 	
 	SonicleLogin sonicleLogin=null;
@@ -126,4 +124,6 @@ public class WebTopRealm extends AuthorizingRealm {
 		}
 		return authzinfo;
 	}
+
+*/
 }

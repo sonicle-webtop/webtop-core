@@ -35,8 +35,7 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
-import com.sonicle.security.SonicleLogin;
-import com.sonicle.security.auth.AuthenticationDomain2;
+import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -116,13 +115,13 @@ public class WTRealm extends AuthorizingRealm {
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		UserManager usem = wta.getUserManager();
-		AuthenticationDomain2 ad = null;
+		AuthenticationDomain ad = null;
 		
 		try {
 			DirectoryManager dirManager = DirectoryManager.getManager();
 			
 			if(isSysAdmin(internetDomain, username)) {
-				ad = new AuthenticationDomain2("*", null, "webtop://localhost", null, null);
+				ad = new AuthenticationDomain("*", null, "webtop://localhost", null, null);
 				
 			} else {
 				ODomain domain = null;
@@ -135,7 +134,7 @@ public class WTRealm extends AuthorizingRealm {
 					domain = usem.getDomain(domainId);
 					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
-				ad = new AuthenticationDomain2(domain);
+				ad = new AuthenticationDomain(domain);
 			}
 			
 			DirectoryOptions opts = createDirectoryOptions(wta, ad);
@@ -166,40 +165,40 @@ public class WTRealm extends AuthorizingRealm {
 		}
 	}
 	
-	 
-	
-	
-	
-	
-	
-	protected AuthenticationInfo loadAuthenticationInfo(AuthenticationToken token) throws LoginException, SQLException {
-		WebTopApp wta = WebTopApp.getInstance();
-		SonicleLogin login = new SonicleLogin(wta.getConnectionManager().getDataSource());
-		
-		if(token instanceof UsernamePasswordDomainToken) {
-			UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
-			//logger.debug("isRememberMe={}",upt.isRememberMe());
-			char[] password = (char[])token.getCredentials();
-			WebTopApp.logger.debug("validating user {}", (String)token.getPrincipal());
-			Principal p = login.validateUser((String)token.getPrincipal() + "@" + upt.getDomain(), password);
-			/*
-			ArrayList<GroupPrincipal> groups = p.getGroups();
-			for(GroupPrincipal group: groups) {
-				WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
-			}
-			*/
-			return new WebTopAuthenticationInfo(p, password, this.getName());
-			
-		} else {
-			String username = (String)token.getPrincipal();
-			char[] password = (char[])token.getCredentials();
-			boolean canBeToken = (password.length == 36);
-			//TODO: completare l'implementazione aggiungendo la login tramite token
-			WebTopApp.logger.debug("validating user {}", username);
-			Principal principal = login.validateUser(username, password);
-			return new WebTopAuthenticationInfo(principal, password, getName());
-		}
-	}
+//	 
+//	
+//	
+//	
+//	
+//	
+//	protected AuthenticationInfo loadAuthenticationInfo(AuthenticationToken token) throws LoginException, SQLException {
+//		WebTopApp wta = WebTopApp.getInstance();
+//		SonicleLogin login = new SonicleLogin(wta.getConnectionManager().getDataSource());
+//		
+//		if(token instanceof UsernamePasswordDomainToken) {
+//			UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
+//			//logger.debug("isRememberMe={}",upt.isRememberMe());
+//			char[] password = (char[])token.getCredentials();
+//			WebTopApp.logger.debug("validating user {}", (String)token.getPrincipal());
+//			Principal p = login.validateUser((String)token.getPrincipal() + "@" + upt.getDomain(), password);
+//			/*
+//			ArrayList<GroupPrincipal> groups = p.getGroups();
+//			for(GroupPrincipal group: groups) {
+//				WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
+//			}
+//			*/
+//			return new WebTopAuthenticationInfo(p, password, this.getName());
+//			
+//		} else {
+//			String username = (String)token.getPrincipal();
+//			char[] password = (char[])token.getCredentials();
+//			boolean canBeToken = (password.length == 36);
+//			//TODO: completare l'implementazione aggiungendo la login tramite token
+//			WebTopApp.logger.debug("validating user {}", username);
+//			Principal principal = login.validateUser(username, password);
+//			return new WebTopAuthenticationInfo(principal, password, getName());
+//		}
+//	}
 	
 	protected WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
@@ -237,7 +236,7 @@ public class WTRealm extends AuthorizingRealm {
 		return new WTAuthorizationInfo(roles, perms);
 	}
 	
-	public static DirectoryOptions createDirectoryOptions(WebTopApp wta, AuthenticationDomain2 ad) {
+	public static DirectoryOptions createDirectoryOptions(WebTopApp wta, AuthenticationDomain ad) {
 		DirectoryOptions opts = new DirectoryOptions();
 		URI authUri = ad.getAuthUri();
 		switch(authUri.getScheme()) {
