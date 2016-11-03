@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.DomainAccount;
@@ -63,7 +64,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public final class UserProfile {
-	
 	private static final Logger logger = WT.getLogger(UserProfile.class);
 	private final CoreManager core;
 	private final Principal principal;
@@ -150,15 +150,15 @@ public final class UserProfile {
 	}
 	
 	public Locale getLocale() {
-		return user.getLocale();
+		return WT.getUserData(getId()).getLocale();
 	}
 	
 	public String getLanguageTag() {
-		return user.getLanguageTag();
+		return WT.getUserData(getId()).getLanguageTag();
 	}
 	
 	public DateTimeZone getTimeZone() {
-		return user.getTimeZone();
+		return WT.getUserData(getId()).getTimeZone();
 	}
 	
 	public String getDisplayName() {
@@ -192,12 +192,12 @@ public final class UserProfile {
 		
 		public Data() {}
 		
-		public Data(OUser user, InternetAddress email) {
-			displayName = user.getDisplayName();
-			languageTag = user.getLanguageTag();
-			locale = user.getLocale();
-			timezoneId = user.getTimezone();
-			timezone = user.getTimeZone();
+		public Data(String displayName, String languageTag, String timezone, InternetAddress email) {
+			this.displayName = displayName;
+			this.languageTag = languageTag;
+			this.locale = LangUtils.languageTagToLocale(languageTag);
+			this.timezoneId = timezone;
+			this.timezone = DateTimeZone.forID(timezone);
 			this.email = email;
 		}
 

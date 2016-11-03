@@ -61,6 +61,7 @@ import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
+import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
@@ -70,7 +71,6 @@ import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.Sharing;
@@ -87,7 +87,6 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
-import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -178,16 +177,6 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
-	public List<SessionInfo> listSessions() throws WTException {
-		RunContext.ensureIsSysAdmin();
-		return wta.getSessionManager().listOnlineSessions();
-	}
-	
-	public void invalidateSession(String sessionId) throws WTException {
-		RunContext.ensureIsSysAdmin();
-		wta.getSessionManager().invalidateSession(sessionId);
-	}
-	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
 		UserManager usem = wta.getUserManager();
 		
@@ -210,93 +199,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	
-	
-	public OSettingDb getSettingInfo(String serviceId, String key) {
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.getSettingInfo(serviceId, key);
-	}
-	
 	/**
-	 * Lists all system settings.
-	 * @param includeHidden True to also return settings marked as hidden.
-	 * @return The settings list.
+	 * Lists domain real roles (those defined as indipendent role).
+	 * Target domain ID is taken from manager targetProfile's domain ID.
+	 * @return The role list.
+	 * @throws WTException If something go wrong.
 	 */
-	public List<SystemSetting> listSystemSettings(boolean includeHidden) {
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.listSettings(includeHidden);
-	}
-	
-	/**
-	 * Updates (or inserts) a system setting for a specific service.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @param value The value to set.
-	 * @return True if setting was succesfully written, otherwise false.
-	 */
-	public boolean updateSystemSetting(String serviceId, String key, Object value) {
-		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "updateSystemSetting");
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.setServiceSetting(serviceId, key, value);
-	}
-	
-	/**
-	 * Clears a system setting.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	public boolean deleteSystemSetting(String serviceId, String key) {
-		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "deleteSystemSetting");
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.deleteServiceSetting(serviceId, key);
-	}
-	
-	/**
-	 * Lists all settings for a specific platform domain.
-	 * @param domainId The domain ID.
-	 * @param includeHidden True to also return settings marked as hidden.
-	 * @return The settings list.
-	 */
-	public List<DomainSetting> listDomainSettings(String domainId, boolean includeHidden) {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.listSettings(domainId, includeHidden);
-	}
-	
-	/**
-	 * Updates (or inserts) a domain setting for a specific service.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @param value The value to set.
-	 * @return True if setting was succesfully written, otherwise false.
-	 */
-	public boolean updateDomainSetting(String domainId, String serviceId, String key, Object value) {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "updateDomainSetting");
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.setServiceSetting(domainId, serviceId, key, value);
-	}
-	
-	/**
-	 * Clears a domain setting.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	public boolean deleteDomainSetting(String domainId, String serviceId, String key) {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		if(!RunContext.isSysAdmin()) ensureCallerService(serviceId, "deleteDomainSetting");
-		SettingsManager setm = wta.getSettingsManager();
-		return setm.deleteServiceSetting(domainId, serviceId, key);
-	}
-	
-	public List<Role> listRoles(String domainId) throws WTException {
+	public List<Role> listRoles() throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
@@ -308,7 +219,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<Role> listUsersRoles(String domainId) throws WTException {
+	/**
+	 * Lists domain users roles (those coming from a user).
+	 * Target domain ID is taken from manager targetProfile's domain ID.
+	 * @return The role list.
+	 * @throws WTException If something go wrong.
+	 */
+	public List<Role> listUsersRoles() throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
@@ -320,7 +239,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<Role> listGroupsRoles(String domainId) throws WTException {
+	/**
+	 * Lists domain groups roles (those coming from a group).
+	 * Target domain ID is taken from manager targetProfile's domain ID.
+	 * @return The role list.
+	 * @throws WTException If something go wrong.
+	 */
+	public List<Role> listGroupsRoles() throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
@@ -332,64 +259,43 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public RoleEntity getRole(String uid) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		
-		String domainId = authm.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
+	public List<OUser> listUsers(boolean enabledOnly) throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		UserManager usem = wta.getUserManager();
 		
 		try {
-			return authm.getRole(uid);
+			return usem.listUsers(domainId, enabledOnly);
 		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot delete role [{0}]", uid);
+			throw new WTException(ex, "Unable to list users [{0}]", domainId);
 		}
 	}
 	
-	public void addRole(RoleEntity role) throws WTException {
-		AuthManager authm = wta.getAuthManager();
+	public OUser getUser(UserProfile.Id pid) throws WTException {
+		UserManager usem = wta.getUserManager();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(role.getDomainId());
-		
-		try {
-			authm.addRole(role);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot add role");
+		if(RunContext.isSysAdmin()) {
+			return usem.getUser(pid);
+		} else {
+			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+			ensureUserDomain(pid.getDomainId());
+			return usem.getUser(pid);
 		}
 	}
 	
-	public void updateRole(RoleEntity role) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(role.getDomainId());
-		
-		try {
-			authm.updateRole(role);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
-		}
-	}
 	
-	public void deleteRole(String uid) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		
-		String domainId = authm.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		try {
-			authm.deleteRole(uid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot delete role [{0}]", uid);
-		}
-		
-	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public List<String> listInstalledServices() {
 		ServiceManager svcm = wta.getServiceManager();
@@ -554,37 +460,7 @@ public class CoreManager extends BaseManager {
 		return wta.getUserManager().userData(pid);
 	}
 	
-	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
-		UserManager usem = wta.getUserManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return usem.listUsers(domainId, enabledOnly);
-		} else {
-			ensureUserDomain();
-			return usem.listUsers(domainId, enabledOnly);
-		}
-	}
 	
-	public List<OUser> listUsers(boolean enabledOnly) throws WTException {
-		UserManager usem = wta.getUserManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return usem.listUsers(getTargetProfileId().getDomain(), enabledOnly);
-		} else {
-			return usem.listUsers(RunContext.getRunProfileId().getDomain(), enabledOnly);
-		}
-	}
-	
-	public OUser getUser(UserProfile.Id pid) throws WTException {
-		UserManager usem = wta.getUserManager();
-		
-		if(RunContext.isSysAdmin()) {
-			return usem.getUser(pid);
-		} else {
-			ensureUserDomain();
-			return usem.getUser(pid);
-		}
-	}
 	
 	
 	

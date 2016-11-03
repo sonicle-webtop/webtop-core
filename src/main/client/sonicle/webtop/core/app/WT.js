@@ -72,24 +72,37 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Returns the base URL of the application.
+	 * Returns the plaftorm name (according to re-branding options).
+	 * @returns {String}
 	 */
-	getAppBaseUrl: function() {
-		return WTS.baseUrl;
+	getPlatformName: function() {
+		return this.getApp().platformName;
 	},
 	
 	/**
-	 * Returns the security token used to protect calls against CSRF attaks.
+	 * Returns the base URL of the application.
+	 * @returns {String}
 	 */
-	getSecurityToken: function() {
-		return WTS.securityToken;
+	getAppBaseUrl: function() {
+		return this.getApp().baseUrl;
+		//return WTS.baseUrl;
 	},
 	
 	/**
 	 * Returns the Push URL for websocket.
+	 * @returns {String}
 	 */
 	getWsPushUrl: function() {
-		return WTS.wsPushUrl;
+		return this.getApp().wsPushUrl;
+		//return WTS.wsPushUrl;
+	},
+	
+	/**
+	 * Returns the security token used to protect calls against CSRF attaks.
+	 * @returns {String}
+	 */
+	getSecurityToken: function() {
+		return WTS.securityToken;
 	},
 	
 	/**

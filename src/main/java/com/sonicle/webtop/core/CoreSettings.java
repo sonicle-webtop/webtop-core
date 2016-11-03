@@ -295,6 +295,20 @@ public class CoreSettings {
 	public static final String DESKTOP_NOTIFICATION_BACKGROUND = "background";
 	
 	/**
+	 * [user][default]
+	 * [string]
+	 * Language tag (es. it_IT, en_EN)
+	 */
+	public static final String LANGUAGE_TAG = "i18n.languageTag";
+	
+	/**
+	 * [user][default]
+	 * [string]
+	 * Timezone
+	 */
+	public static final String TIMEZONE = "i18n.timezone";
+	
+	/**
 	 * [user][user][default]
 	 * [int]
 	 * Week start day (0:sunday, 1:monday)

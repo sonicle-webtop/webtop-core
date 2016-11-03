@@ -33,14 +33,13 @@
  */
 package com.sonicle.webtop.core.util;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
 import org.apache.commons.codec.binary.Base32;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -65,6 +64,19 @@ public class IdentifierUtils {
 	}
 	
 	public static synchronized String getCRSFToken() {
+		try {
+			byte[] buffer = new byte[80/8];
+			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+			sr.nextBytes(buffer);
+			byte[] secretKey = Arrays.copyOf(buffer, 80/8);
+			byte[] encodedKey = new Base32().encode(secretKey);
+			return new String(encodedKey).toLowerCase();
+		} catch(NoSuchAlgorithmException ex) {
+			return null;
+		}
+	}
+	
+	public static synchronized String generateSecretKey() {
 		try {
 			byte[] buffer = new byte[80/8];
 			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");

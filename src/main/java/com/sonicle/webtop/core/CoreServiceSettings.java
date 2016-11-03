@@ -205,6 +205,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(DEFAULT_PREFIX + DESKTOP_NOTIFICATION, DESKTOP_NOTIFICATION_NEVER);
 	}
 	
+	public String getDefaultLanguageTag() {
+		return getString(DEFAULT_PREFIX + LANGUAGE_TAG, "it_IT");
+	}
+	
+	public String getDefaultTimezone() {
+		return getString(DEFAULT_PREFIX + TIMEZONE, "Europe/Rome");
+	}
+	
 	public int getDefaultStartDay() {
 		return getInteger(DEFAULT_PREFIX + START_DAY, START_DAY_MONDAY);
 	}

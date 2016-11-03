@@ -31,30 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.Role', {
+Ext.define('Sonicle.webtop.core.admin.model.GridDomainUser', {
 	extend: 'WT.ux.data.BaseModel',
-	requires: [
-		'Sonicle.data.writer.Json',
-		'Sonicle.webtop.core.admin.model.RolePermission',
-		'Sonicle.webtop.core.admin.model.RoleSvcPermission'
-	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageRoles', 'data', {
-		writer: {
-			type: 'sojson',
-			writeAssociations: true
-		}
-	}),
 	
-	identifier: 'negativestring',
-	idProperty: 'roleUid',
+	idProperty: 'profileId',
 	fields: [
-		WTF.field('roleUid', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('name', 'string', false),
-		WTF.field('description', 'string', true)
-	],
-	hasMany: [
-		WTF.hasMany('othersPerms', 'Sonicle.webtop.core.admin.model.RolePermission'),
-		WTF.hasMany('servicesPerms', 'Sonicle.webtop.core.admin.model.RoleSvcPermission')
+		WTF.field('profileId', 'string', false),
+		WTF.roField('userId', 'string'),
+		WTF.roField('displayName', 'string'),
+		WTF.roField('exist', 'boolean'),
+		WTF.roField('enabled', 'boolean'),
+		WTF.roField('dirDisplayName', 'string')
 	]
 });

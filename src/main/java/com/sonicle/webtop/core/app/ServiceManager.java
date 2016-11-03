@@ -37,6 +37,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
@@ -511,6 +512,10 @@ public class ServiceManager {
 	
 	public CoreManager instantiateCoreManager(boolean fastInit, UserProfile.Id targetProfileId) {
 		return new CoreManager(wta, fastInit, targetProfileId);
+	}
+	
+	public CoreAdminManager instantiateCoreAdminManager(boolean fastInit, UserProfile.Id targetProfileId) {
+		return new CoreAdminManager(wta, fastInit, targetProfileId);
 	}
 	
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfile.Id targetProfileId) {

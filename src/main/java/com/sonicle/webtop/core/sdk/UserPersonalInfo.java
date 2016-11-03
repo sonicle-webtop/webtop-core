@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.bol.OUserInfo;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,11 +60,34 @@ public class UserPersonalInfo {
 	private String country = null;
 	private String company = null;
 	private String function = null;
-	private String custom1 = null;
-	private String custom2 = null;
-	private String custom3 = null;
+	private String custom01 = null;
+	private String custom02 = null;
+	private String custom03 = null;
 	
 	public UserPersonalInfo() {}
+	
+	public UserPersonalInfo(OUserInfo o) {
+		setTitle(o.getTitle());
+		setFirstName(o.getFirstName());
+		setLastName(o.getLastName());
+		setNickname(o.getNickname());
+		setGender(o.getGender());
+		setEmail(o.getEmail());
+		setTelephone(o.getTelephone());
+		setFax(o.getFax());
+		setPager(o.getPager());
+		setMobile(o.getMobile());
+		setAddress(o.getAddress());
+		setCity(o.getCity());
+		setPostalCode(o.getPostalCode());
+		setState(o.getState());
+		setCountry(o.getCountry());
+		setCompany(o.getCompany());
+		setFunction(o.getFunction());
+		setCustom01(o.getCustom1());
+		setCustom02(o.getCustom2());
+		setCustom03(o.getCustom3());
+	}
 
 	public String getTitle() {
 		return title;
@@ -201,28 +225,28 @@ public class UserPersonalInfo {
 		this.function = function;
 	}
 
-	public String getCustom1() {
-		return custom1;
+	public String getCustom01() {
+		return custom01;
 	}
 
-	public void setCustom1(String custom1) {
-		this.custom1 = custom1;
+	public void setCustom01(String custom01) {
+		this.custom01 = custom01;
 	}
 
-	public String getCustom2() {
-		return custom2;
+	public String getCustom02() {
+		return custom02;
 	}
 
-	public void setCustom2(String custom2) {
-		this.custom2 = custom2;
+	public void setCustom02(String custom02) {
+		this.custom02 = custom02;
 	}
 
-	public String getCustom3() {
-		return custom3;
+	public String getCustom03() {
+		return custom03;
 	}
 
-	public void setCustom3(String custom3) {
-		this.custom3 = custom3;
+	public void setCustom03(String custom03) {
+		this.custom03 = custom03;
 	}
 	
 	
@@ -246,9 +270,9 @@ public class UserPersonalInfo {
 		map.put("country", country);
 		map.put("company", company);
 		map.put("function", function);
-		map.put("custom1", custom1);
-		map.put("custom2", custom2);
-		map.put("custom3", custom3);
+		map.put("custom1", custom01);
+		map.put("custom2", custom02);
+		map.put("custom3", custom03);
 		return map;
 	}
 	
@@ -270,8 +294,8 @@ public class UserPersonalInfo {
 		country =  String.valueOf(LangUtils.ifValue(map, "country", country));
 		company =  String.valueOf(LangUtils.ifValue(map, "company", company));
 		function =  String.valueOf(LangUtils.ifValue(map, "function", function));
-		custom1 =  String.valueOf(LangUtils.ifValue(map, "custom1", custom1));
-		custom2 =  String.valueOf(LangUtils.ifValue(map, "custom2", custom2));
-		custom3 =  String.valueOf(LangUtils.ifValue(map, "custom3", custom3));
+		custom01 =  String.valueOf(LangUtils.ifValue(map, "custom1", custom01));
+		custom02 =  String.valueOf(LangUtils.ifValue(map, "custom2", custom02));
+		custom03 =  String.valueOf(LangUtils.ifValue(map, "custom3", custom03));
 	}
 }

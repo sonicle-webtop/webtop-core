@@ -43,6 +43,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
@@ -107,7 +108,7 @@ public class Service extends BaseService {
 	private static final Logger logger = WT.getLogger(Service.class);
 	public static final String WTSPROP_OTP_SETUP = "OTPSETUP";
 	
-	private CoreManager core;
+	private CoreManager coreMgr;
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
 	
@@ -119,9 +120,17 @@ public class Service extends BaseService {
 	
 	@Override
 	public void initialize() throws Exception {
-		core = (CoreManager)WT.getServiceManager(SERVICE_ID);
+		coreMgr = getCoreManager();
 		ss = new CoreServiceSettings(SERVICE_ID, getEnv().getProfileId().getDomainId());
 		us = new CoreUserSettings(getEnv().getProfileId());
+	}
+	
+	private CoreManager getCoreManager() {
+		return (CoreManager)WT.getServiceManager(SERVICE_ID);
+	}
+	
+	private CoreAdminManager getCoreAdminManager() {
+		return (CoreAdminManager)WT.getServiceManager(SERVICE_ID);
 	}
 
 	@Override
@@ -134,7 +143,7 @@ public class Service extends BaseService {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars co = new ServiceVars();
 		
-		co.put("wtUpiProviderWritable", core.isUserInfoProviderWritable());
+		co.put("wtUpiProviderWritable", coreMgr.isUserInfoProviderWritable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
@@ -148,8 +157,8 @@ public class Service extends BaseService {
 		co.put("layout", us.getLayout());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
-		co.put("language", profile.getLanguageTag());
-		co.put("timezone", profile.getTimeZone().getID());
+		co.put("language", us.getLanguageTag());
+		co.put("timezone", us.getTimezone());
 		co.put("startDay", us.getStartDay());
 		co.put("shortDateFormat", us.getShortDateFormat());
 		co.put("longDateFormat", us.getLongDateFormat());
@@ -206,7 +215,7 @@ public class Service extends BaseService {
 		List<JsSimple> items = null;
 		
 		try {
-			items = core.listThemes();
+			items = coreMgr.listThemes();
 			new JsonResult("themes", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
@@ -219,7 +228,7 @@ public class Service extends BaseService {
 		List<JsSimple> items = null;
 		
 		try {
-			items = core.listLayouts();
+			items = coreMgr.listLayouts();
 			new JsonResult("layouts", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
@@ -232,7 +241,7 @@ public class Service extends BaseService {
 		List<JsSimple> items = null;
 		
 		try {
-			items = core.listLAFs();
+			items = coreMgr.listLAFs();
 			new JsonResult("lafs", items, items.size()).printTo(out);
 
 		} catch (Exception ex) {
@@ -265,7 +274,7 @@ public class Service extends BaseService {
 		try {
 			Boolean assignableOnly = ServletUtils.getBooleanParameter(request, "assignableOnly", false);
 			
-			for(String sid : core.listInstalledServices()) {
+			for(String sid : coreMgr.listInstalledServices()) {
 				if(assignableOnly && sid.equals(CoreManifest.ID)) continue;
 				items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
 			}
@@ -281,8 +290,8 @@ public class Service extends BaseService {
 		ArrayList<JsServicePermissionLkp> items = new ArrayList<>();
 		
 		try {
-			for(String sid : core.listInstalledServices()) {
-				for(ServicePermission perm : core.listServicePermissions(sid)) {
+			for(String sid : coreMgr.listInstalledServices()) {
+				for(ServicePermission perm : coreMgr.listServicePermissions(sid)) {
 					for(String action : perm.getActions()) {
 						items.add(new JsServicePermissionLkp(sid, perm.getGroupName(), action));
 					}
@@ -329,7 +338,7 @@ public class Service extends BaseService {
 			if(wildcard && RunContext.isSysAdmin()) {
 				items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			}
-			List<ODomain> domains = core.listDomains(true);
+			List<ODomain> domains = coreMgr.listDomains(true);
 			for(ODomain domain : domains) {
 				items.add(new JsSimple(domain.getDomainId(), JsSimple.description(domain.getDescription(), domain.getDomainId())));
 			}
@@ -346,25 +355,22 @@ public class Service extends BaseService {
 		UserProfile up = getEnv().getProfile();
 		
 		try {
-			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			boolean users = ServletUtils.getBooleanParameter(request, "users", true);
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
 			
-			//if(!RunContext.isSysAdmin()) domainId = up.getDomainId();
-			
 			if(wildcard) items.add(JsRoleLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			if(users) {
-				for(Role role : core.listUsersRoles(domainId)) {
+				for(Role role : coreMgr.listUsersRoles()) {
 					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_USER));
 				}
 			}
 			if(groups) {
-				for(Role role : core.listGroupsRoles(domainId)) {
+				for(Role role : coreMgr.listGroupsRoles()) {
 					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_GROUP));
 				}
 			}
-			for(Role role : core.listRoles(domainId)) {
+			for(Role role : coreMgr.listRoles()) {
 				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
 			}
 			
@@ -387,13 +393,13 @@ public class Service extends BaseService {
 			List<OUser> users;
 			if(RunContext.isSysAdmin()) {
 				if(!StringUtils.isEmpty(domainId)) {
-					users = core.listUsers(domainId, true);
+					CoreAdminManager coreAdmMgr = getCoreAdminManager();
+					users = coreAdmMgr.listUsers(domainId, true);
 				} else {
-					users = core.listUsers(true);
+					users = coreMgr.listUsers(true);
 				}
-			} else {
-				// Domain users can only see users belonging to their own domain
-				users = core.listUsers(up.getDomainId(), true);
+			} else { // Domain users can only see users belonging to their own domain
+				users = coreMgr.listUsers(true);
 			}
 			
 			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
@@ -417,7 +423,7 @@ public class Service extends BaseService {
 			UserProfile.Id pid = new UserProfile.Id(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OActivity> activities = core.listLiveActivities(pid);
+			List<OActivity> activities = coreMgr.listLiveActivities(pid);
 			for(OActivity activity : activities) {
 				items.add(new JsActivity(activity));
 			}
@@ -437,26 +443,26 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<VActivity> items = core.listLiveActivities(queryDomains());
+					List<VActivity> items = coreMgr.listLiveActivities(queryDomains());
 					new JsonResult("activities", items, items.size()).printTo(out);
 				} else {
-					OActivity item = core.getActivity(id);
+					OActivity item = coreMgr.getActivity(id);
 					new JsonResult(item).printTo(out);
 				}
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.addActivity(pl.data);
+				coreMgr.addActivity(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.updateActivity(pl.data);
+				coreMgr.updateActivity(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				core.deleteActivity(pl.data.getActivityId());
+				coreMgr.deleteActivity(pl.data.getActivityId());
 				new JsonResult().printTo(out);
 			}
 			
@@ -476,7 +482,7 @@ public class Service extends BaseService {
 			UserProfile.Id pid = new UserProfile.Id(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OCausal> causals = core.listLiveCausals( pid, customerId);
+			List<OCausal> causals = coreMgr.listLiveCausals( pid, customerId);
 			for(OCausal causal : causals) {
 				items.add(new JsCausal(causal));
 			}
@@ -495,26 +501,26 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				Integer id = ServletUtils.getIntParameter(request, "id", null);
 				if(id == null) {
-					List<CausalGrid> items =  core.listLiveCausals(queryDomains());
+					List<CausalGrid> items =  coreMgr.listLiveCausals(queryDomains());
 					new JsonResult("causals", items, items.size()).printTo(out);
 				} else {
-					OCausal item = core.getCausal(id);
+					OCausal item = coreMgr.getCausal(id);
 					new JsonResult(item).printTo(out);
 				}
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				core.addCausal(pl.data);
+				coreMgr.addCausal(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				core.updateCausal(pl.data);
+				coreMgr.updateCausal(pl.data);
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				core.deleteCausal(pl.data.getCausalId());
+				coreMgr.deleteCausal(pl.data.getCausalId());
 				new JsonResult().printTo(out);
 			}
 			
@@ -530,7 +536,7 @@ public class Service extends BaseService {
 		try {
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			
-			List<OCustomer> customers = core.listCustomersByLike("%" + query + "%");
+			List<OCustomer> customers = coreMgr.listCustomersByLike("%" + query + "%");
 			for(OCustomer customer : customers) {
 				items.add(new JsSimple(customer.getCustomerId(), customer.getDescription()));
 			}
@@ -637,7 +643,7 @@ public class Service extends BaseService {
 			
 			UserProfile.Id targetPid = new UserProfile.Id(id);
 			if(getWts().getProfileId().equals(targetPid)) {
-				data = core.listUserOptionServices();
+				data = coreMgr.listUserOptionServices();
 			} else {
 				CoreManager xcore = WT.getCoreManager(targetPid);
 				data = xcore.listUserOptionServices();
@@ -755,7 +761,7 @@ public class Service extends BaseService {
 			
 			DateTime remindOn = DateTimeUtils.now(false).plusMinutes(snooze);
 			for(JsReminderInApp js : pl.data) {
-				core.snoozeReminder(JsReminderInApp.createReminderInApp(getEnv().getProfileId(), js), remindOn);
+				coreMgr.snoozeReminder(JsReminderInApp.createReminderInApp(getEnv().getProfileId(), js), remindOn);
 			}
 			new JsonResult().printTo(out);
 			
@@ -777,7 +783,7 @@ public class Service extends BaseService {
 				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 				
 				UserProfile.Id targetPid = new UserProfile.Id(profileId);
-				corem = (targetPid.equals(core.getTargetProfileId())) ? core : WT.getCoreManager(targetPid);
+				corem = (targetPid.equals(coreMgr.getTargetProfileId())) ? coreMgr : WT.getCoreManager(targetPid);
 				
 				if(operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
@@ -813,7 +819,7 @@ public class Service extends BaseService {
 				}
 			} else if(operation.equals("untrustthis")) {
 				// This works only on current session user!
-				OTPManager otpm = core.getOTPManager();
+				OTPManager otpm = coreMgr.getOTPManager();
 				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(pid, request);
 				if(tdc != null) {
 					otpm.removeTrustedDevice(pid, tdc.deviceId);
@@ -823,7 +829,7 @@ public class Service extends BaseService {
 				
 			} else if(operation.equals("untrustothers")) {
 				// This works only on current session user!
-				OTPManager otpm = core.getOTPManager();
+				OTPManager otpm = coreMgr.getOTPManager();
 				TrustedDeviceCookie thistdc = otpm.readTrustedDeviceCookie(pid, request);
 				List<JsTrustedDevice> tds = otpm.listTrustedDevices(pid);
 				for(JsTrustedDevice td: tds) {
@@ -856,9 +862,9 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				UserProfile.Data ud = core.getUserData(getWts().getProfileId());
+				UserProfile.Data ud = coreMgr.getUserData(getWts().getProfileId());
 				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimeZone());
-				List<SyncDevice> devices = core.listZPushDevices();
+				List<SyncDevice> devices = coreMgr.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
 				for(SyncDevice device : devices) {
 					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
@@ -870,14 +876,14 @@ public class Service extends BaseService {
 				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
 				CompositeId cid = new CompositeId().parse(pl.data.id);
 				
-				core.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
+				coreMgr.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals("info")) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
 				CompositeId cid = new CompositeId().parse(id);
 				
-				String info = core.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
+				String info = coreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
 				new JsonResult(info).printTo(out);
 			}
 			
@@ -897,9 +903,9 @@ public class Service extends BaseService {
 			int limit = ServletUtils.getIntParameter(request, "limit", 100);
 			
 			if(sources.isEmpty()) {
-				items = core.listInternetRecipients(query, limit);
+				items = coreMgr.listInternetRecipients(query, limit);
 			} else {
-				items = core.listInternetRecipients(sources, query, limit);
+				items = coreMgr.listInternetRecipients(sources, query, limit);
 			}
 			new JsonResult("recipients", items, items.size()).printTo(out);
 

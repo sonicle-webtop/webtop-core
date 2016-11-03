@@ -147,9 +147,9 @@ public class WebTopUserInfoProvider extends UserInfoProviderBase {
 		upi.setCountry(info.getCountry());
 		upi.setCompany(info.getCompany());
 		upi.setFunction(info.getFunction());
-		upi.setCustom1(info.getCustom1());
-		upi.setCustom2(info.getCustom2());
-		upi.setCustom3(info.getCustom3());
+		upi.setCustom01(info.getCustom1());
+		upi.setCustom02(info.getCustom2());
+		upi.setCustom03(info.getCustom3());
 		return upi;
 	}
 	
@@ -175,9 +175,9 @@ public class WebTopUserInfoProvider extends UserInfoProviderBase {
 		ui.setCountry(info.getCountry());
 		ui.setCompany(info.getCompany());
 		ui.setFunction(info.getFunction());
-		ui.setCustom1(info.getCustom1());
-		ui.setCustom2(info.getCustom2());
-		ui.setCustom3(info.getCustom3());
+		ui.setCustom1(info.getCustom01());
+		ui.setCustom2(info.getCustom02());
+		ui.setCustom3(info.getCustom03());
 		return ui;
 	}
 }

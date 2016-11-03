@@ -538,6 +538,23 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
+	public boolean clearUserSettings(String domainId, String userId) {
+		UserSettingDAO dao = UserSettingDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			int ret = dao.deleteByDomainUser(con, domainId, userId);
+			return (ret > 0);
+
+		} catch (Exception ex) {
+			WebTopApp.logger.error("Unable to clear settings (user) [{}, {}]", domainId, userId, ex);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public List<SystemSetting> listSettings(boolean hidden) {
 		ArrayList<SystemSetting> items = new ArrayList<>();
 		SettingDAO dao = SettingDAO.getInstance();

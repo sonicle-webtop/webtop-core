@@ -34,33 +34,43 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.bol.model.RoleEntity;
+import com.sonicle.webtop.core.bol.model.UserEntity;
 import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class JsRole {
-	public String roleUid;
+public class JsUser {
+	public String profileId;
 	public String domainId;
-	public String name;
-	public String description;
+	public String userId;
+	public Boolean enabled;
+	public String password; // Only useful during insertion
+	public String password2; // Only useful during insertion
+	public String firstName;
+	public String lastName;
+	public String displayName;
 	public ArrayList<Permission> othersPerms = new ArrayList<>();
 	public ArrayList<Permission> servicesPerms = new ArrayList<>();
 	
-	public JsRole() {}
+	public JsUser() {}
 	
-	public JsRole(RoleEntity o) {
-		roleUid = o.getRoleUid();
+	public JsUser(UserEntity o) {
+		profileId = o.getProfileId().toString();
 		domainId = o.getDomainId();
-		name = o.getName();
-		description = o.getDescription();
+		userId = o.getUserId();
+		enabled = o.getEnabled();
+		password = null;
+		password2 = null;
+		firstName = o.getFirstName();
+		lastName = o.getLastName();
+		displayName = o.getDisplayName();
 		for(ORolePermission perm : o.getPermissions()) {
-			othersPerms.add(new Permission(roleUid, perm));
+			othersPerms.add(new Permission(profileId, perm));
 		}
 		for(ORolePermission perm : o.getServicesPermissions()) {
-			servicesPerms.add(new Permission(roleUid, perm));
+			servicesPerms.add(new Permission(profileId, perm));
 		}
 	}
 	
@@ -83,12 +93,14 @@ public class JsRole {
 		}
 	}
 	
-	public static RoleEntity buildRoleEntity(JsRole js) {
-		RoleEntity re = new RoleEntity();
-		re.setRoleUid(js.roleUid);
-		re.setDomainId(js.domainId);
-		re.setName(js.name);
-		re.setDescription(js.description);
+	public static UserEntity buildUserEntity(JsUser js) {
+		UserEntity ue = new UserEntity();
+		ue.setDomainId(js.domainId);
+		ue.setUserId(js.userId);
+		ue.setEnabled(js.enabled);
+		ue.setFirstName(js.firstName);
+		ue.setLastName(js.lastName);
+		ue.setDisplayName(js.displayName);
 		
 		for(Permission jsPerm : js.othersPerms) {
 			final ORolePermission perm = new ORolePermission();
@@ -98,7 +110,7 @@ public class JsRole {
 			perm.setAction(jsPerm.action);
 			perm.setInstance(jsPerm.instance);
 			
-			re.getPermissions().add(perm);
+			ue.getPermissions().add(perm);
 		}
 		for(Permission jsPerm : js.servicesPerms) {
 			final ORolePermission perm = new ORolePermission();
@@ -108,9 +120,9 @@ public class JsRole {
 			perm.setAction(jsPerm.action);
 			perm.setInstance(jsPerm.instance);
 			
-			re.getServicesPermissions().add(perm);
+			ue.getServicesPermissions().add(perm);
 		}
 		
-		return re;
+		return ue;
 	}
 }

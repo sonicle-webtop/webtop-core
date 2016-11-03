@@ -31,27 +31,37 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.bol.model;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.webtop.core.bol.OUser;
 
 /**
  *
  * @author malbinola
  */
-public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	private String domain;
+public class DirectoryUser {
+	private String domainId;
+	private AbstractDirectory.UserEntry dirUser;
+	private OUser wtUser;
 	
-	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {
-		super(username, password, rememberMe, host);
-		this.domain = domain;
+	public DirectoryUser() {}
+	
+	public DirectoryUser(String domainId, AbstractDirectory.UserEntry dirUser, OUser wtUser) {
+		this.domainId = domainId;
+		this.dirUser = dirUser;
+		this.wtUser = wtUser;
 	}
-	
-	public String getDomain() {
-		return this.domain;
+
+	public String getDomainId() {
+		return domainId;
 	}
-	
-	public void setDomain(String value) {
-		this.domain = value;
+
+	public AbstractDirectory.UserEntry getDirUser() {
+		return dirUser;
+	}
+
+	public OUser getWtUser() {
+		return wtUser;
 	}
 }

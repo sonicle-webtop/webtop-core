@@ -36,6 +36,7 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.RestJsonResult;
+import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -125,6 +126,7 @@ public class CoreRestApi extends BaseRestApi {
 		return ok(items);
 	}
 	
+	/*
 	@GET
 	@Path("/sessions")
 	@Produces({MediaType.APPLICATION_JSON})
@@ -133,7 +135,9 @@ public class CoreRestApi extends BaseRestApi {
 		List<SessionInfo> items = core.listSessions();
 		return ok(items);
 	}
+	*/
 	
+	/*
 	@DELETE
 	@Path("/sessions/{id}")
 	@Produces({MediaType.APPLICATION_JSON})
@@ -142,6 +146,7 @@ public class CoreRestApi extends BaseRestApi {
 		core.invalidateSession(id);
 		return ok(new MapItem());
 	}
+	*/
 	
 	@GET
 	@Path("/domains")

@@ -102,6 +102,26 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(DESKTOP_NOTIFICATION, value);
 	}
 	
+	public String getLanguageTag() {
+		String value = getString(LANGUAGE_TAG, null);
+		if(value != null) return value;
+		return ss.getDefaultLanguageTag();
+	}
+	
+	public boolean setLanguageTag(String value) {
+		return setString(LANGUAGE_TAG, value);
+	}
+	
+	public String getTimezone() {
+		String value = getString(TIMEZONE, null);
+		if(value != null) return value;
+		return ss.getDefaultTimezone();
+	}
+	
+	public boolean setTimezone(String value) {
+		return setString(TIMEZONE, value);
+	}
+	
 	public Integer getStartDay() {
 		Integer value = getInteger(START_DAY, null);
 		if(value != null) return value;

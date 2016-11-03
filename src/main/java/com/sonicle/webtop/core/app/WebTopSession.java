@@ -39,6 +39,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
@@ -311,6 +312,8 @@ public class WebTopSession {
 		
 		CoreManager core = svcm.instantiateCoreManager(false, profileId);
 		cacheServiceManager(CoreManifest.ID, core);
+		CoreAdminManager coreadmin = svcm.instantiateCoreAdminManager(false, profileId);
+		cacheServiceManager(CoreAdminManifest.ID, coreadmin);
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
@@ -354,8 +357,8 @@ public class WebTopSession {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
 			// Manager
 			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
-			if(!serviceId.equals(CoreManifest.ID)) {
-				if(descriptor.hasManager()) {
+			if(!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
+				if(descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
 					managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
 					if(managerInst != null) {
 						cacheServiceManager(serviceId, managerInst);
@@ -586,6 +589,7 @@ public class WebTopSession {
 		if(!isReady()) return;
 		
 		Locale locale = getLocale();
+		js.platformName = wta.getPlatformName();
 		js.securityToken = RunContext.getCSRFToken();
 		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);
@@ -699,6 +703,7 @@ public class WebTopSession {
 	
 	public void fillStartup(JsWTSPublic js, String publicServiceId) {
 		Locale locale = getLocale();
+		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
 		fillStartupForPublicService(js, CoreManifest.ID, locale);
 		fillStartupForPublicService(js, publicServiceId, locale);

@@ -34,6 +34,12 @@
 Ext.define('Sonicle.webtop.core.app.AppBase', {
 	extend: 'Ext.app.Application',
 	
+	platformName: null,
+	
+	baseUrl: null,
+	
+	wsPushUrl: null,
+	
 	/**
 	 * @property {Ext.util.HashMap} locales
 	 * A collection of locale classes.
@@ -49,6 +55,9 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	constructor: function() {
 		var me = this;
 		WT.app = me;
+		me.platformName = WTS.platformName;
+		me.baseUrl = WTS.baseUrl;
+		me.wsPushUrl = WTS.wsPushUrl;
 		me.locales = Ext.create('Ext.util.HashMap');
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);

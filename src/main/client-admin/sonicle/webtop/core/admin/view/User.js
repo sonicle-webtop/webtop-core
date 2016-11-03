@@ -31,21 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.Role', {
+Ext.define('Sonicle.webtop.core.admin.view.User', {
 	extend: 'WT.sdk.ModelView',
 	requires: [
+		'Sonicle.FakeInput',
+		'Sonicle.form.Spacer',
+		'Sonicle.plugin.NoAutocomplete',
 		'Sonicle.webtop.core.ux.grid.RolePermissions',
 		'Sonicle.webtop.core.ux.grid.RoleSvcPermissions'
 	],
 	
 	dockableConfig: {
-		title: '{role.tit}',
-		iconCls: 'wta-icon-role-xs',
+		title: '{user.tit}',
+		iconCls: 'wta-icon-user-xs',
 		width: 650,
 		height: 500
 	},
-	fieldTitle: 'name',
-	modelName: 'Sonicle.webtop.core.admin.model.Role',
+	fieldTitle: 'userId',
+	modelName: 'Sonicle.webtop.core.admin.model.User',
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+		
+		WTU.applyFormulas(me.getVM(), {
+			foEnabled: WTF.checkboxBind('record', 'enabled')
+		});
+	},
 	
 	initComponent: function() {
 		var me = this;
@@ -65,16 +77,57 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 					labelWidth: 100
 				},
 				items: [{
+					xtype: 'sofakeinput' // Disable Chrome autofill
+				}, {
+					xtype: 'sofakeinput', // Disable Chrome autofill
+					type: 'password'
+				}, {
 					xtype: 'textfield',
-					reference: 'fldname',
-					bind: '{record.name}',
-					fieldLabel: me.mys.res('role.fld-name.lbl'),
+					reference: 'flduserid',
+					bind: '{record.userId}',
+					disabled: true,
+					plugins: 'sonoautocomplete',
+					fieldLabel: me.mys.res('user.fld-userId.lbl'),
 					width: 300
 				}, {
-					xtype: 'textareafield',
-					bind: '{record.description}',
-					fieldLabel: me.mys.res('role.fld-description.lbl'),
-					anchor: '100%'
+					xtype: 'textfield',
+					reference: 'fldpassword',
+					bind: '{record.password}',
+					inputType: 'password',
+					plugins: 'sonoautocomplete',
+					fieldLabel: me.mys.res('user.fld-password.lbl'),
+					width: 300
+				}, {
+					xtype: 'textfield',
+					reference: 'fldpassword2',
+					bind: '{record.password2}',
+					inputType: 'password',
+					plugins: 'sonoautocomplete',
+					hideEmptyLabel: false,
+					emptyText: me.mys.res('user.fld-password2.emp'),
+					width: 300
+				}, {
+					xtype: 'sospacer'
+				}, {
+					xtype: 'checkbox',
+					bind: '{foEnabled}',
+					hideEmptyLabel: false,
+					boxLabel: me.mys.res('user.fld-enabled.lbl')
+				}, {
+					xtype: 'textfield',
+					bind: '{record.firstName}',
+					fieldLabel: me.mys.res('user.fld-firstName.lbl'),
+					width: 400
+				}, {
+					xtype: 'textfield',
+					bind: '{record.lastName}',
+					fieldLabel: me.mys.res('user.fld-lastName.lbl'),
+					width: 400
+				}, {
+					xtype: 'textfield',
+					bind: '{record.displayName}',
+					fieldLabel: me.mys.res('user.fld-displayName.lbl'),
+					width: 400
 				}]
 			}, {
 				xtype: 'tabpanel',
@@ -82,7 +135,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				activeTab: 0,
 				items: [{
 					xtype: 'wtrolesvcpermissionsgrid',
-					title: me.mys.res('role.servicesPerms.tit'),
+					title: me.mys.res('user.servicesPerms.tit'),
 					iconCls: 'wt-icon-service-module-xs',
 					bind: {
 						store: '{record.servicesPerms}'
@@ -101,7 +154,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 					}
 				}, {
 					xtype: 'wtrolepermissionsgrid',
-					title: me.mys.res('role.othersPerms.tit'),
+					title: me.mys.res('user.othersPerms.tit'),
 					iconCls: 'wt-icon-permission-xs',
 					bind: {
 						store: '{record.othersPerms}'
@@ -128,6 +181,15 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	onViewLoad: function(s, success) {
 		if(!success) return;
 		var me = this;
-		me.lref('fldname').focus(true);
+		if(me.isMode(me.MODE_NEW)) {
+			me.lref('flduserid').setDisabled(false);
+			me.lref('fldpassword').setHidden(false);
+			me.lref('fldpassword2').setHidden(false);
+			me.lref('flduserid').focus(true);
+		} else {
+			me.lref('flduserid').setDisabled(true);
+			me.lref('fldpassword').setHidden(true);
+			me.lref('fldpassword2').setHidden(true);
+		}
 	}
 });

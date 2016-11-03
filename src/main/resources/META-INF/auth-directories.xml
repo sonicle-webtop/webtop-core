@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<authDirectories>
+	<authDirectory scheme="webtop" class-name="com.sonicle.webtop.core.app.auth.WebTopDirectory" />
+	<authDirectory scheme="webtopldap" class-name="com.sonicle.webtop.core.app.auth.WebTopLdapDirectory" />
+	<authDirectory scheme="ldapWebTop" class-name="com.sonicle.webtop.core.app.auth.WebTopLdapDirectory" />
+</authDirectories>

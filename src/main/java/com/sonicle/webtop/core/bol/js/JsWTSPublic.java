@@ -42,6 +42,7 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTSPublic {
+	public String platformName;
 	public String fileTypes;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();

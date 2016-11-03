@@ -96,8 +96,8 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.desktopNotification = us.getDesktopNotification();
 				
 				// i18n
-				jso.language = user.getLanguageTag();
-				jso.timezone = user.getTimezone();
+				jso.language = us.getLanguageTag();
+				jso.timezone = us.getTimezone();
 				jso.startDay = us.getStartDay();
 				jso.shortDateFormat = us.getShortDateFormat();
 				jso.longDateFormat = us.getLongDateFormat();
@@ -123,9 +123,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.upiCountry = upi.getCountry();
 				jso.upiCompany = upi.getCompany();
 				jso.upiFunction = upi.getFunction();
-				jso.upiCustom1 = upi.getCustom1();
-				jso.upiCustom2 = upi.getCustom2();
-				jso.upiCustom3 = upi.getCustom3();
+				jso.upiCustom1 = upi.getCustom01();
+				jso.upiCustom2 = upi.getCustom02();
+				jso.upiCustom3 = upi.getCustom03();
 				
 				// OTP
 				OTPManager otpm = core.getOTPManager();
@@ -165,8 +165,8 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
 				
 				// i18n
-				if(pl.map.has("language")) user.setLanguageTag(pl.data.language);
-				if(pl.map.has("timezone")) user.setTimezone(pl.data.timezone);
+				if(pl.map.has("language")) us.setLanguageTag(pl.data.language);
+				if(pl.map.has("timezone")) us.setTimezone(pl.data.timezone);
 				if(pl.map.has("startDay")) us.setStartDay(pl.data.startDay);
 				if(pl.map.has("shortDateFormat")) us.setShortDateFormat(pl.data.shortDateFormat);
 				if(pl.map.has("longDateFormat")) us.setLongDateFormat(pl.data.longDateFormat);
@@ -193,9 +193,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 						if(pl.map.has("upiCountry")) upi.setCountry(pl.data.upiCountry);
 						if(pl.map.has("upiCompany")) upi.setCompany(pl.data.upiCompany);
 						if(pl.map.has("upiFunction")) upi.setFunction(pl.data.upiFunction);
-						if(pl.map.has("upiCustom1")) upi.setCustom1(pl.data.upiCustom1);
-						if(pl.map.has("upiCustom2")) upi.setCustom2(pl.data.upiCustom2);
-						if(pl.map.has("upiCustom3")) upi.setCustom3(pl.data.upiCustom3);
+						if(pl.map.has("upiCustom1")) upi.setCustom01(pl.data.upiCustom1);
+						if(pl.map.has("upiCustom2")) upi.setCustom02(pl.data.upiCustom2);
+						if(pl.map.has("upiCustom3")) upi.setCustom03(pl.data.upiCustom3);
 						provider.setInfo(getTargetDomainId(), getTargetUserId(), upi);
 					}
 				}
@@ -204,7 +204,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
 				if(pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
 				
-				udao.update(con, user);
+				udao.updateDisplayName(con, user);
 				
 				new JsonResult().printTo(out);
 			}

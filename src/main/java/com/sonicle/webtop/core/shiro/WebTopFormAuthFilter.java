@@ -115,17 +115,7 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	@Override
 	protected AuthenticationToken createToken(String username, String password, ServletRequest request, ServletResponse response) {
 		boolean rememberMe = isRememberMe(request);
-		String host = getHost(request);
-		
-		// If domain param is provided, it has precedence over any domain info
-		// explicited in username. So, appends it to the provided username.
-		String domain = getDomain(request);
-		/*
-		if(!StringUtils.isEmpty(domain)) {
-			username = Principal.appendDomain(username, domain);
-		}
-		*/
-		return createToken(username, password, domain, rememberMe, host);
+		return createToken(username, password, getDomain(request), rememberMe, getHost(request));
 	}
 	
 	protected AuthenticationToken createToken(String username, String password, String domain, boolean rememberMe, String host) {

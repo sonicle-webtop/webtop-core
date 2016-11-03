@@ -35,7 +35,10 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	extend: 'WT.sdk.Service',
 	requires: [
 		'Sonicle.webtop.core.admin.model.AdminNode',
-		'Sonicle.webtop.core.admin.view.Settings'
+		'Sonicle.webtop.core.admin.view.Settings',
+		'Sonicle.webtop.core.admin.view.DomainSettings',
+		'Sonicle.webtop.core.admin.view.DomainUsers',
+		'Sonicle.webtop.core.admin.view.DomainRoles'
 	],
 	
 	init: function() {
@@ -94,6 +97,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							} else {
 								me.showSettings(rec);
 							}
+						} else if(type === 'users') {
+							me.showDomainUsers(rec);
 						} else if(type === 'roles') {
 							me.showDomainRoles(rec);
 						}
@@ -153,6 +158,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
+	showDomainUsers: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainUsers', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
 	showDomainRoles: function(node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
@@ -198,6 +217,76 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 					roleUid: roleUid
 				}
 			});
+		});
+	},
+	
+	addUser: function(domainId, userId, firstName, lastName, displayName, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.User');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId,
+					userId: userId,
+					enabled: true,
+					firstName: firstName,
+					lastName: lastName,
+					displayName: displayName
+				}
+			});
+		});
+	},
+	
+	editUser: function(profileId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.User');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					profileId: profileId
+				}
+			});
+		});
+	},
+	
+	updateUsersStatus: function(domainId, userIds, enabled, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomainUsers', {
+			params: {
+				crud: enabled ? 'enable' : 'disable',
+				domainId: domainId,
+				userIds: WTU.arrayAsParam(userIds)
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	deleteUsers: function(deep, domainId, userIds, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomainUsers', {
+			params: {
+				crud: 'delete',
+				deep: deep,
+				domainId: domainId,
+				userIds: WTU.arrayAsParam(userIds)
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
 		});
 	},
 	

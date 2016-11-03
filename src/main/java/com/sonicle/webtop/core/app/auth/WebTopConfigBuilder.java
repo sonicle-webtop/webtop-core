@@ -31,27 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.auth;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import com.sonicle.security.auth.directory.AbstractConfigBuilder;
+import com.sonicle.security.auth.directory.DirectoryOptions;
+import com.sonicle.webtop.core.app.WebTopApp;
 
 /**
  *
  * @author malbinola
  */
-public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	private String domain;
+public class WebTopConfigBuilder extends AbstractConfigBuilder {
+	private static final WebTopConfigBuilder BUILDER = new WebTopConfigBuilder();
+	private static final String WTA = "wta";
 	
-	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {
-		super(username, password, rememberMe, host);
-		this.domain = domain;
+	public static WebTopConfigBuilder getInstance() {
+		return BUILDER;
 	}
 	
-	public String getDomain() {
-		return this.domain;
+	public WebTopApp getWebTopApp(DirectoryOptions opts) {
+		return (WebTopApp)getParam(opts, WTA);
 	}
 	
-	public void setDomain(String value) {
-		this.domain = value;
+	public void setWebTopApp(DirectoryOptions opts, WebTopApp wta) {
+		setParam(opts, WTA, wta);
 	}
 }

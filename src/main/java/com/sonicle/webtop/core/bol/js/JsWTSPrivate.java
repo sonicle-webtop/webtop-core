@@ -42,6 +42,7 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTSPrivate {
+	public String platformName;
 	public String securityToken;
 	public String wsPushUrl;
 	public String layoutClassName;

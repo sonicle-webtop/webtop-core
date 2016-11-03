@@ -31,27 +31,46 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.bol.js;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import com.sonicle.webtop.core.bol.model.DirectoryUser;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	private String domain;
+public class JsGridDomainUser {
+	public String profileId;
+	public String userId;
+	public String displayName;
+	public Boolean exist;
+	public Boolean enabled;
+	public String dirFirstName;
+	public String dirLastName;
+	public String dirDisplayName;
 	
-	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {
-		super(username, password, rememberMe, host);
-		this.domain = domain;
+	public JsGridDomainUser(DirectoryUser du) {
+		profileId = new UserProfile.Id(du.getDomainId(), du.getDirUser().userId).toString();
+		userId = du.getDirUser().userId;
+		if(du.getWtUser() != null) {
+			displayName = du.getWtUser().getDisplayName();
+			exist = true;
+			enabled = du.getWtUser().getEnabled();
+		} else {
+			displayName = null;
+			exist = false;
+			enabled = null;
+		}
+		dirFirstName = du.getDirUser().firstName;
+		dirLastName = du.getDirUser().lastName;
+		dirDisplayName = du.getDirUser().displayName;
 	}
 	
-	public String getDomain() {
-		return this.domain;
-	}
-	
-	public void setDomain(String value) {
-		this.domain = value;
+	public static class List extends ArrayList<JsGridDomainUser> {
+		public List() {
+			super();
+		}
 	}
 }

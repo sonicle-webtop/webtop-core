@@ -48,12 +48,17 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
+import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsRole;
+import com.sonicle.webtop.core.bol.js.JsUser;
+import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
+import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -70,16 +75,18 @@ import org.slf4j.Logger;
  */
 public class Service extends BaseService {
 	private static final Logger logger = WT.getLogger(Service.class);
-	private CoreManager manager;
+	private CoreManager core;
+	private CoreAdminManager coreadm;
 	
 	@Override
 	public void initialize() throws Exception {
-		manager = WT.getCoreManager();
+		core = WT.getCoreManager();
+		coreadm = (CoreAdminManager)WT.getServiceManager(SERVICE_ID);
 	}
 
 	@Override
 	public void cleanup() throws Exception {
-		manager = null;
+		core = null;
 	}
 	
 	private WebTopApp getWta() {
@@ -142,7 +149,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-domainUsers-xs", NTYPE_USERS, cid.getToken(1)));
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
 						} else { // Availbale webtop domains
-							for(ODomain domain : manager.listDomains(false)) {
+							for(ODomain domain : core.listDomains(false)) {
 								children.add(createDomainNode(nodeId, domain));
 							}
 						}
@@ -163,18 +170,18 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				List<SystemSetting> items = manager.listSystemSettings(false);
+				List<SystemSetting> items = coreadm.listSystemSettings(false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
 				SystemSetting setting = pl.data.get(0);
 				
-				if(!manager.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
+				if(!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
 				}
 				
-				OSettingDb info = manager.getSettingInfo(setting.serviceId, setting.key);
+				OSettingDb info = coreadm.getSettingInfo(setting.serviceId, setting.key);
 				if(info != null) {
 					setting = new SystemSetting(setting.serviceId, setting.key, setting.value, info.getType(), info.getHelp());
 				} else {
@@ -190,11 +197,11 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!manager.updateSystemSetting(sid, setting.key, setting.value)) {
+				if(!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				}
 				if(!StringUtils.equals(key, setting.key)) {
-					manager.deleteSystemSetting(sid, key);
+					coreadm.deleteSystemSetting(sid, key);
 				}
 				
 				new JsonResult().printTo(out);
@@ -207,7 +214,7 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!manager.deleteSystemSetting(sid, key)) {
+				if(!coreadm.deleteSystemSetting(sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
 				}
 				
@@ -226,14 +233,14 @@ public class Service extends BaseService {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				List<DomainSetting> items = manager.listDomainSettings(domainId, false);
+				List<DomainSetting> items = coreadm.listDomainSettings(domainId, false);
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
 				DomainSetting setting = pl.data.get(0);
 				
-				if(!manager.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
+				if(!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
 				}
 				setting = new DomainSetting(setting.domainId, setting.serviceId, setting.key, setting.value, null, null);
@@ -247,11 +254,11 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!manager.updateSystemSetting(sid, setting.key, setting.value)) {
+				if(!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				}
 				if(!StringUtils.equals(key, setting.key)) {
-					manager.deleteSystemSetting(sid, key);
+					coreadm.deleteSystemSetting(sid, key);
 				}
 					
 				new JsonResult().printTo(out);
@@ -264,7 +271,7 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!manager.deleteSystemSetting(sid, key)) {
+				if(!coreadm.deleteSystemSetting(sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
 				}
 				
@@ -278,6 +285,93 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			String newPassword = ServletUtils.getStringParameter(request, "password", true);
+			
+			
+		} catch(Exception ex) {
+			logger.error("Error in UpdateUserPassword", ex);
+			new JsonResult(false, "Error").printTo(out);
+		}
+	}
+	
+	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				
+				List<JsGridDomainUser> items = new ArrayList<>();
+				for(DirectoryUser dirUser : coreadm.listDirectoryUsers(domainId)) {
+					items.add(new JsGridDomainUser(dirUser));
+				}
+				new JsonResult("users", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				boolean deep = ServletUtils.getBooleanParameter(request, "deep", false);
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "userIds", ServletUtils.StringArray.class, true);
+				
+				UserProfile.Id pid = new UserProfile.Id(domainId, userIds.get(0));
+				coreadm.deleteUser(deep, pid);
+				
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("enable") || crud.equals("disable")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "userIds", ServletUtils.StringArray.class, true);
+				
+				UserProfile.Id pid = new UserProfile.Id(domainId, userIds.get(0));
+				coreadm.updateUser(pid, crud.equals("enable"));
+				
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomainUsers", ex);
+			new JsonResult(false, "Error").printTo(out);
+		}
+	}
+	
+	public void processManageUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				
+				UserProfile.Id pid = new UserProfile.Id(id);
+				UserEntity user = coreadm.getUser(pid);
+				new JsonResult(new JsUser(user)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
+				coreadm.addUser(JsUser.buildUserEntity(pl.data), pl.data.password.toCharArray());
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
+				coreadm.updateUser(JsUser.buildUserEntity(pl.data));
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageUsers", ex);
+			new JsonResult(false, "Error").printTo(out);
+			
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
@@ -286,7 +380,7 @@ public class Service extends BaseService {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 
 				List<JsGridDomainRole> items = new ArrayList<>();
-				for(Role role : manager.listRoles(domainId)) {
+				for(Role role : coreadm.listRoles(domainId)) {
 					items.add(new JsGridDomainRole(role));
 				}
 				new JsonResult("roles", items, items.size()).printTo(out);
@@ -295,14 +389,13 @@ public class Service extends BaseService {
 				PayloadAsList<JsGridDomainRole.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainRole.List.class);
 				JsGridDomainRole role = pl.data.get(0);
 				
-				manager.deleteRole(role.roleUid);
+				coreadm.deleteRole(role.roleUid);
 				new JsonResult().printTo(out);
 			}
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageDomainRoles", ex);
 			new JsonResult(false, "Error").printTo(out);
-			
 		}
 	}
 	
@@ -312,17 +405,17 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
-				RoleEntity role = manager.getRole(id);
+				RoleEntity role = coreadm.getRole(id);
 				new JsonResult(new JsRole(role)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
-				manager.addRole(JsRole.buildContactsList(pl.data));
+				coreadm.addRole(JsRole.buildRoleEntity(pl.data));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsRole> pl = ServletUtils.getPayload(request, JsRole.class);
-				manager.updateRole(JsRole.buildContactsList(pl.data));
+				coreadm.updateRole(JsRole.buildRoleEntity(pl.data));
 				new JsonResult().printTo(out);
 			}
 			

@@ -52,6 +52,7 @@ import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,7 +60,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import org.slf4j.Logger;
 
 /**
@@ -132,7 +132,7 @@ public class AuthManager {
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			
-			List<OUser> users = dao.selectActiveByDomain(con, domainId);
+			List<OUser> users = dao.selectEnabledByDomain(con, domainId);
 			for(OUser user: users) items.add(new Role(user));
 			
 		} catch(SQLException | DAOException ex) {
@@ -221,31 +221,18 @@ public class AuthManager {
 	
 	public RoleEntity getRole(String uid) throws WTException {
 		RoleDAO roldao = RoleDAO.getInstance();
-		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			
 			ORole orole = roldao.selectByUid(con, uid);
-			if(orole == null) throw new WTException("Cannot retrieve role [{0}]", uid);
-			List<ORolePermission> operms = rolperdao.selectByRole(con, uid);
+			if(orole == null) throw new WTException("Role not found [{0}]", uid);
 			
-			ArrayList<ORolePermission> perms = new ArrayList<>();
-			ArrayList<ORolePermission> svcPerms = new ArrayList<>();
-			for(ORolePermission operm : operms) {
-				if(operm.getInstance().equals("*")) {
-					perms.add(operm);
-				} else {
-					if(operm.getServiceId().equals(CoreManifest.ID) && operm.getKey().equals("SERVICE") && operm.getAction().equals("ACCESS")) {
-						svcPerms.add(operm);
-					}
-				}
-			}
-			
+			EntityPermissions perms = extractPermissions(con, uid);
 			RoleEntity role = new RoleEntity(orole);
-			role.setPermissions(perms);
-			role.setServicesPermissions(svcPerms);
+			role.setPermissions(perms.others);
+			role.setServicesPermissions(perms.services);
 			
 			return role;
 			
@@ -258,32 +245,23 @@ public class AuthManager {
 	
 	public void addRole(RoleEntity role) throws WTException {
 		RoleDAO roldao = RoleDAO.getInstance();
-		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID, false);
 			
 			ORole orole = new ORole();
-			orole.setRoleUid(UUID.randomUUID().toString());
+			orole.setRoleUid(IdentifierUtils.getUUID());
 			orole.setDomainId(role.getDomainId());
 			orole.setName(role.getName());
 			orole.setDescription(role.getDescription());
 			roldao.insert(con, orole);
 			
 			for(ORolePermission perm : role.getPermissions()) {
-				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
-				perm.setRoleUid(orole.getRoleUid());
-				perm.setInstance("*");
-				rolperdao.insert(con, perm);
+				addPermission(con, orole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 			}
 			for(ORolePermission perm : role.getServicesPermissions()) {
-				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
-				perm.setRoleUid(orole.getRoleUid());
-				perm.setServiceId(CoreManifest.ID);
-				perm.setKey("SERVICE");
-				perm.setAction(ServicePermission.ACTION_ACCESS);
-				rolperdao.insert(con, perm);
+				addPermission(con, orole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 			}
 			
 			DbUtils.commitQuietly(con);
@@ -303,6 +281,7 @@ public class AuthManager {
 		
 		try {
 			RoleEntity oldRole = getRole(role.getRoleUid());
+			if(oldRole == null) throw new WTException("Role not found [{0}]", role.getRoleUid());
 			
 			con = WT.getConnection(CoreManifest.ID, false);
 			
@@ -317,10 +296,7 @@ public class AuthManager {
 				rolperdao.deleteById(con, perm.getRolePermissionId());
 			}
 			for(ORolePermission perm : changeSet1.inserted) {
-				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
-				perm.setRoleUid(orole.getRoleUid());
-				perm.setInstance("*");
-				rolperdao.insert(con, perm);
+				addPermission(con, oldRole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 			}
 			
 			CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldRole.getServicesPermissions(), role.getServicesPermissions());
@@ -328,12 +304,7 @@ public class AuthManager {
 				rolperdao.deleteById(con, perm.getRolePermissionId());
 			}
 			for(ORolePermission perm : changeSet2.inserted) {
-				perm.setRolePermissionId(rolperdao.getSequence(con).intValue());
-				perm.setRoleUid(orole.getRoleUid());
-				perm.setServiceId(CoreManifest.ID);
-				perm.setKey("SERVICE");
-				perm.setAction(ServicePermission.ACTION_ACCESS);
-				rolperdao.insert(con, perm);
+				addPermission(con, oldRole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 			}
 			
 			DbUtils.commitQuietly(con);
@@ -437,120 +408,79 @@ public class AuthManager {
 	}
 	
 	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		
 		ORolePermission perm = new ORolePermission();
+		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
 		perm.setRoleUid(roleUid);
 		perm.setServiceId(serviceId);
 		perm.setKey(key);
 		perm.setAction(action);
 		perm.setInstance(instance);
 		
-		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		perm.setRolePermissionId(rpdao.getSequence(con).intValue());
 		rpdao.insert(con, perm);
 		return perm;
 	}
 	
-	public void deletePermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws WTException {
-		UserManager usrm = wta.getUserManager();
-		deletePermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
-	}
-	
-	public void deletePermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
+	public int deletePermission(Connection con, int permissionId) throws DAOException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
-		rpdao.deleteByRoleServiceKeyActionInstance(con, roleUid, serviceId, key, action, instance);
+		return rpdao.deleteById(con, permissionId);
 	}
 	
-	public List<ORolePermission> listRolePermissions(String roleSid) throws Exception {
+	public int deletePermission(Connection con, String roleUid) throws DAOException {
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		return rpdao.deleteByRole(con, roleUid);
+	}
+	
+	public int deletePermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws DAOException {
+		UserManager usrm = wta.getUserManager();
+		return deletePermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
+	}
+	
+	public int deletePermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws DAOException {
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		return rpdao.deleteByRoleServiceKeyActionInstance(con, roleUid, serviceId, key, action, instance);
+	}
+	
+	public List<ORolePermission> listRolePermissions(String roleUid) throws Exception {
 		Connection con = null;
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			RolePermissionDAO dao = RolePermissionDAO.getInstance();
-			return dao.selectByRole(con, roleSid);
+			return dao.selectByRoleUid(con, roleUid);
 		
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	
-	
-	/*
-	public boolean isPermitted(UserProfile.Id pid, String authResource) {
-		return isPermitted(pid, authResource, "ACCESS", "*");
+	public EntityPermissions extractPermissions(Connection con, String roleUid) throws WTException {
+		RolePermissionDAO rolperdao = RolePermissionDAO.getInstance();
+		
+		List<ORolePermission> operms = rolperdao.selectByRoleUid(con, roleUid);
+		ArrayList<ORolePermission> othersPerms = new ArrayList<>();
+		ArrayList<ORolePermission> servicesPerms = new ArrayList<>();
+		for(ORolePermission operm : operms) {
+			if(operm.getInstance().equals("*")) {
+				othersPerms.add(operm);
+			} else {
+				if(operm.getServiceId().equals(CoreManifest.ID) && operm.getKey().equals("SERVICE") && operm.getAction().equals("ACCESS")) {
+					servicesPerms.add(operm);
+				}
+			}
+		}
+		
+		return new EntityPermissions(othersPerms, servicesPerms);
 	}
 	
-	public boolean isPermitted(UserProfile.Id pid, String authResource, String action) {
-		return isPermitted(pid, authResource, action, "*");
-	}
-	
-	public boolean isPermitted(UserProfile.Id pid, String authResource, String action, String instance) {
-		Subject subject = getSubject(pid);
-		if(subject.isPermitted(WTADMIN_PSTRING)) return true;
-		return subject.isPermitted(AuthResource.permissionString(authResource, action, instance));
-	}
-	
-	public boolean isSysAdmin(UserProfile.Id pid) {
-		Subject subject = getSubject(pid);
-		return subject.isPermitted(SYSADMIN_PSTRING);
-	}
-	
-	public boolean isWebTopAdmin(UserProfile.Id pid) {
-		Subject subject = getSubject(pid);
-		return subject.isPermitted(WTADMIN_PSTRING);
-	}
-	
-	private Subject getSubject(UserProfile.Id pid) {
-		Subject subject = SecurityUtils.getSubject(); // Current user
-		if(StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
-			return subject;
-		} else { // Requested subject is not the current one
-			//TODO: instantiate a principal on-the-fly
-			return buildSubject(pid);
+	public static class EntityPermissions {
+		public ArrayList<ORolePermission> others;
+		public ArrayList<ORolePermission> services;
+		
+		public EntityPermissions(ArrayList<ORolePermission> others, ArrayList<ORolePermission> services) {
+			this.others = others;
+			this.services = services;
 		}
 	}
-	
-	public Subject buildSubject(RunContext context) {
-		return buildSubject(context.getProfileId());
-	}
-	
-	private Subject buildSubject(UserProfile.Id pid) {
-		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
-		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		return new Subject.Builder().principals(principals).buildSubject();
-	}
-	
-	public void ensureIsPermitted(UserProfile.Id pid, String resource) {
-		if(!isPermitted(pid, resource)) throw new AuthException("ACCESS permission on {0} is required", resource);
-	}
-	
-	public void ensureIsPermitted(UserProfile.Id pid, String resource, String action) {
-		if(!isPermitted(pid, resource, action)) throw new AuthException("{0} permission on {1} is required", action, resource);
-	}
-	
-	public void ensureIsPermitted(UserProfile.Id pid, String resource, String action, String instance) {
-		if(!isPermitted(pid, resource, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, resource, instance);
-	}
-	*/
-	
-	
-	
-	
-	
-	
-	
-	/*
-	public boolean hasRole(UserProfile.Id pid, String roleName) {
-		Subject subject = SecurityUtils.getSubject(); // Current user
-		if(!StringUtils.equals(((Principal)subject.getPrincipal()).getName(), pid.toString())) {
-			// Requested subject is not the current one
-			//TODO: instantiate a principal on-the-fly
-		}
-		return subject.hasRole(roleName);
-	}
-	
-	public void ensureHasRole(UserProfile.Id pid, String roleName) {
-		if(!hasRole(pid, roleName)) throw new AuthException("{0} role is required", roleName);
-	}
-	*/
 }

@@ -130,7 +130,7 @@
 			<version>1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
+			<groupId>com.sonicle.webtop</groupId>
 			<artifactId>webtop-tinymce</artifactId>
 			<version>5.0.0</version>
 		</dependency>

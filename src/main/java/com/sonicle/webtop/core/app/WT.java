@@ -34,13 +34,11 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.bol.OMediaType;
-import com.sonicle.webtop.core.dal.MediaTypeDAO;
+import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -199,6 +197,11 @@ public class WT {
 		} else {
 			return getWTA().getServiceManager().instantiateCoreManager(false, targetProfileId);
 		}
+	}
+	
+	public static CoreAdminManager getCoreAdminManager(UserProfile.Id targetProfileId) {
+		//TODO: verificare
+		return getWTA().getServiceManager().instantiateCoreAdminManager(false, targetProfileId);
 	}
 	
 	public static BaseManager getServiceManager(String serviceId) {

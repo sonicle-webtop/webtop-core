@@ -31,27 +31,50 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.auth;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import com.sonicle.security.auth.DirectoryException;
+import com.sonicle.security.auth.directory.DirectoryOptions;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import java.util.List;
+import java.util.regex.Pattern;
+import org.ldaptive.LdapAttribute;
 
 /**
  *
  * @author malbinola
  */
-public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	private String domain;
+public class WebTopLdapDirectory extends LdapDirectory {
+	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
+	public static final Pattern PATTERN_PASSWORD_ULETTERS = Pattern.compile(".*[A-Z].*");
+	public static final Pattern PATTERN_PASSWORD_LLETTERS = Pattern.compile(".*[a-z].*");
+	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
+	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
-	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {
-		super(username, password, rememberMe, host);
-		this.domain = domain;
+	@Override
+	public WebTopLdapConfigBuilder getConfigBuilder() {
+		return WebTopLdapConfigBuilder.getInstance();
 	}
 	
-	public String getDomain() {
-		return this.domain;
+	@Override
+	public boolean validatePasswordPolicy(DirectoryOptions opts, char[] password) {
+		int count = 0;
+		final String cs = new String(password);
+		if(PATTERN_PASSWORD_LENGTH.matcher(cs).matches()) {
+			if(PATTERN_PASSWORD_ULETTERS.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_LLETTERS.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_NUMBERS.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_SPECIAL.matcher(cs).matches()) count++;
+		}
+		return count >= 3;
 	}
 	
-	public void setDomain(String value) {
-		this.domain = value;
+	@Override
+	protected List<LdapAttribute> createLdapAddAttrs(UserEntry userEntry) throws DirectoryException {
+		List<LdapAttribute> attrs = super.createLdapAddAttrs(userEntry);
+		LdapAttribute objectClass = new LdapAttribute("objectClass");
+		objectClass.addStringValue("inetOrgPerson", "top");
+		attrs.add(objectClass);
+		return attrs;
 	}
 }
