@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.security.auth.AuthenticationDomain2;
+import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.EntryException;
@@ -284,7 +284,7 @@ public final class UserManager {
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
 			
-			AuthenticationDomain2 ad = new AuthenticationDomain2(domain);
+			AuthenticationDomain ad = new AuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad);
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			
@@ -443,7 +443,7 @@ public final class UserManager {
 			ODomain domain = getDomain(pid.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			
-			AuthenticationDomain2 ad = new AuthenticationDomain2(domain);
+			AuthenticationDomain ad = new AuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad);
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			
@@ -480,7 +480,7 @@ public final class UserManager {
 				ODomain domain = getDomain(pid.getDomainId());
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 
-				AuthenticationDomain2 ad = new AuthenticationDomain2(domain);
+				AuthenticationDomain ad = new AuthenticationDomain(domain);
 				AbstractDirectory directory = getAuthDirectory(ad);
 				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 				
@@ -514,7 +514,7 @@ public final class UserManager {
 		}
 	}
 	
-	private AbstractDirectory getAuthDirectory(AuthenticationDomain2 ad) throws WTException {
+	private AbstractDirectory getAuthDirectory(AuthenticationDomain ad) throws WTException {
 		DirectoryManager dirManager = DirectoryManager.getManager();
 		AbstractDirectory directory = dirManager.getDirectory(ad.getAuthUri().getScheme());
 		if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getAuthUri().getScheme());
@@ -526,7 +526,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			AuthenticationDomain2 ad = new AuthenticationDomain2(domain);
+			AuthenticationDomain ad = new AuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad);
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			

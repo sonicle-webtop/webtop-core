@@ -31,10 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.shiro.old;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.security.GroupPrincipal;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.app.WebTopApp;
 import java.sql.Connection;
@@ -96,19 +95,19 @@ public class WebTopAuthorizationInfo implements AuthorizationInfo {
 			}
 			*/
 
-			for(GroupPrincipal gp: principal.getGroups()) {
+/*			for(GroupPrincipal gp: principal.getGroups()) {
 				if (gp.equals("admins")) {
 					roles.add("admin");
 				}
-				/*
+				
 				List<OGroupRole> groles=null;GroupRoleDAO.getInstance().selectByGroupId(con, gp.getDomainId(),gp.getSubjectId());
 				for(OGroupRole grole: groles) {
 					String roleId=grole.getRoleId();
 					roles.add(roleId);
 					WebTopApp.logger.debug("added role {} from group {}",roleId,gp.getSubjectId());
 				}
-				*/
-			}
+				
+			}*/
 		} catch(SQLException exc) {
 			WebTopApp.logger.error("error getting roles for user {}@{}",principal.getSubjectId(),principal.getDomainId(),exc);
 		} finally {
