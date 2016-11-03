@@ -73,6 +73,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.mail.internet.InternetAddress;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -124,6 +125,10 @@ public final class UserManager {
 		cleanupUidCache();
 		cleanupUserCache();
 		logger.info("UserManager destroyed");
+	}
+	
+	public static String generateSecretKey() {
+		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
@@ -304,6 +309,7 @@ public final class UserManager {
 			ouser.setUserUid(IdentifierUtils.getUUID());
 			ouser.setRoleUid(IdentifierUtils.getUUID());
 			ouser.setDisplayName(user.getDisplayName());
+			ouser.setSecret(generateSecretKey());
 			udao.insert(con, ouser);
 			
 			// Insert UserInfo record

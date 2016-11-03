@@ -41,6 +41,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
+import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
@@ -115,6 +116,7 @@ public class Service extends BaseService {
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		node.put("_internetDomain", domain.getDomainName());
+		//node.put("_directoryReadOnly")
 		return node;
 	}
 	
@@ -129,6 +131,7 @@ public class Service extends BaseService {
 	
 	public void processManageAdminTree(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Locale locale = getEnv().getWebTopSession().getLocale();
+		DirectoryManager dirMgr = DirectoryManager.getManager();
 		ArrayList<ExtTreeNode> children = new ArrayList<>();
 		
 		try {
@@ -150,6 +153,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
 						} else { // Availbale webtop domains
 							for(ODomain domain : core.listDomains(false)) {
+								//dirMgr.getDirectory(domain.())
 								children.add(createDomainNode(nodeId, domain));
 							}
 						}

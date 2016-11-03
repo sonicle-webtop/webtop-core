@@ -36,6 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.security.auth.DirectoryManager;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
