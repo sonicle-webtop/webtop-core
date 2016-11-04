@@ -110,6 +110,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -1452,7 +1453,9 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<InternetRecipient> listInternetRecipients(String queryText, int max) throws WTException {
-		return listInternetRecipients(listInternetRecipientsSources(), queryText, max);
+		List<String> list=listInternetRecipientsSources();
+		list.add(0,"");
+		return listInternetRecipients(list, queryText, max);
 	}
 	
 	public List<InternetRecipient> listInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
@@ -1461,10 +1464,24 @@ public class CoreManager extends BaseManager {
 		
 		int remaining = max;
 		for(String soid : sourceIds) {
-			RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
-			if(provider == null) continue;
-			recipients = provider.getRecipients(queryText, remaining);
-			if(recipients == null) continue;
+			//zero length source id means auto learnt
+			if (soid.length()==0) {
+				List<OServiceStoreEntry> entries=listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+				recipients=new ArrayList<InternetRecipient>();
+				for(OServiceStoreEntry entry: entries) {
+					try {
+						InternetAddress ia=new InternetAddress(entry.getValue());
+						recipients.add(new InternetRecipient("","auto","",ia.getPersonal(),ia.getAddress()));
+					} catch(AddressException exc) {
+						
+					}
+				}
+			} else {
+				RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
+				if(provider == null) continue;
+				recipients = provider.getRecipients(queryText, remaining);
+				if(recipients == null) continue;
+			}
 			
 			for(InternetRecipient recipient : recipients) {
 				remaining--;
@@ -1487,6 +1504,11 @@ public class CoreManager extends BaseManager {
 		}
 		return items;
 	}
+	
+	public void learnInternetRecipient(String email) {
+		addServiceStoreEntry(SERVICE_ID, "recipients", email.toUpperCase(),email);
+	}
+	
 	/*
 	public List<InternetRecipient> listDomainInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
 		
