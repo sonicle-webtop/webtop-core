@@ -73,6 +73,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.mail.internet.InternetAddress;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -124,6 +125,10 @@ public final class UserManager {
 		cleanupUidCache();
 		cleanupUserCache();
 		logger.info("UserManager destroyed");
+	}
+	
+	public static String generateSecretKey() {
+		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
@@ -235,14 +240,25 @@ public final class UserManager {
 	}
 	
 	public UserEntity getUserEntity(UserProfile.Id pid) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		UserDAO dao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
+			return getUserEntity(con, pid);
 			
+		} catch(SQLException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private UserEntity getUserEntity(Connection con, UserProfile.Id pid) throws WTException {
+		AuthManager authm = wta.getAuthManager();
+		UserDAO dao = UserDAO.getInstance();
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		
+		try {
 			OUser ouser = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
 			
@@ -256,21 +272,21 @@ public final class UserManager {
 			
 			return user;
 			
-		} catch(SQLException | DAOException ex) {
+		} catch(DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private UserEntry createUserEntry(UserEntity user) {
-		return new UserEntry(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
+	
+	
+	public void addUser(UserEntity user) throws WTException {
+		addUser(false, user, null);
 	}
 	
-	public void addUser(UserEntity user, char[] password) throws WTException {
+	public void addUser(boolean updateDirectory, UserEntity user, char[] password) throws WTException {
 		AuthManager authm = wta.getAuthManager();
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
 		try {
@@ -279,72 +295,47 @@ public final class UserManager {
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
 			
-			AuthenticationDomain ad = new AuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad);
-			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
-			
-			if(!directory.isReadOnly()) {
-				if(!directory.validateUsername(opts, user.getUserId())) {
-					throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+			OUser ouser = null;
+			if(updateDirectory) {
+				AuthenticationDomain ad = new AuthenticationDomain(domain);
+				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
+				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
+				
+				if(!directory.isReadOnly()) {
+					if(!directory.validateUsername(opts, user.getUserId())) {
+						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+					}
+					if(domain.getWebtopAdvSecurity() && !directory.validatePasswordPolicy(opts, password)) {
+						throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+					}
 				}
-				if(domain.getWebtopAdvSecurity() && !directory.validatePasswordPolicy(opts, password)) {
-					throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+				
+				ouser = doUserInsert(con, domain, user);
+				
+				// Insert user in directory (if necessary)
+				if(!directory.isReadOnly()) {
+					logger.debug("Adding user into directory");
+					try {
+						directory.addUser(opts, createUserEntry(user));
+					} catch(EntryException ex1) {
+						logger.debug("Skipped: already exists!");
+					}
+					logger.debug("Updating its password");
+					directory.updateUserPassword(opts, user.getUserId(), password);
 				}
-			}
-			
-			InternetAddress email = MailUtils.buildInternetAddress(user.getUserId(), domain.getDomainName(), null);
-			if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getDomainName());
-			
-			// Insert User record
-			logger.debug("Inserting User");
-			OUser ouser = new OUser();
-			ouser.setDomainId(user.getDomainId());
-			ouser.setUserId(user.getUserId());
-			ouser.setEnabled(user.getEnabled());
-			ouser.setUserUid(IdentifierUtils.getUUID());
-			ouser.setRoleUid(IdentifierUtils.getUUID());
-			ouser.setDisplayName(user.getDisplayName());
-			udao.insert(con, ouser);
-			
-			// Insert UserInfo record
-			logger.debug("Inserting UserInfo");
-			OUserInfo oui = new OUserInfo();
-			oui.setDomainId(user.getDomainId());
-			oui.setUserId(user.getUserId());
-			oui.setFirstName(user.getFirstName());
-			oui.setLastName(user.getLastName());
-			oui.setEmail(email.getAddress());
-			uidao.insert(con, oui);
-			
-			// Insert permissions
-			logger.debug("Inserting permissions");
-			for(ORolePermission perm : user.getPermissions()) {
-				authm.addPermission(con, ouser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-			}
-			for(ORolePermission perm : user.getServicesPermissions()) {
-				authm.addPermission(con, ouser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-			}
-			
-			// Insert user in directory (if required)
-			if(!directory.isReadOnly()) {
-				logger.debug("Adding user into directory");
-				try {
-					directory.addUser(opts, createUserEntry(user));
-				} catch(EntryException ex1) {
-					logger.debug("Skipped: already exists!");
-				}
-				logger.debug("Updating its password");
-				directory.updateUserPassword(opts, user.getUserId(), password);
+				
+			} else {
+				ouser = doUserInsert(con, domain, user);
 			}
 			
 			DbUtils.commitQuietly(con);
 			
 			// Update cache
-			addToUidCache(new UserUid(user.getDomainId(), user.getUserId(), ouser.getUserUid(), ouser.getRoleUid()));
-			
+			addToUidCache(new UserUid(ouser.getDomainId(), user.getUserId(), ouser.getUserUid(), ouser.getRoleUid()));
+
 			// Explicitly sets some important (locale & timezone) user settings to their defaults
-			UserProfile.Id pid = new UserProfile.Id(user.getDomainId(), user.getUserId());
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, user.getDomainId());
+			UserProfile.Id pid = new UserProfile.Id(ouser.getDomainId(), ouser.getUserId());
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, ouser.getDomainId());
 			CoreUserSettings cus = new CoreUserSettings(pid);
 			cus.setLanguageTag(css.getDefaultLanguageTag());
 			cus.setTimezone(css.getDefaultTimezone());
@@ -361,50 +352,32 @@ public final class UserManager {
 		}
 	}
 	
-	public void updateUser(UserEntity user) throws WTException {
-		AuthManager authm = wta.getAuthManager();
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
+	public boolean existUser(UserProfile.Id pid) throws WTException {
+		return existUser(pid.getDomainId(), pid.getUserId());
+	}
+	
+	public boolean existUser(String domainId, String userId) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			UserEntity oldUser = getUserEntity(user.getProfileId());
-			if(oldUser == null) throw new WTException("User not found [{0}]", user.getProfileId().toString());
+			con = wta.getConnectionManager().getConnection();
+			return dao.existByDomainUser(con, domainId, userId);
 			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updateUser(UserEntity user) throws WTException {
+		Connection con = null;
+		
+		try {
 			con = WT.getConnection(CoreManifest.ID, false);
 			
-			logger.debug("Updating User");
-			OUser ouser = new OUser();
-			ouser.setDomainId(user.getDomainId());
-			ouser.setUserId(user.getUserId());
-			ouser.setEnabled(user.getEnabled());
-			ouser.setDisplayName(user.getDisplayName());
-			udao.updateEnabledDisplayName(con, ouser);
-			
-			logger.debug("Updating UserInfo");
-			OUserInfo ouseri = new OUserInfo();
-			ouseri.setDomainId(user.getDomainId());
-			ouseri.setUserId(user.getUserId());
-			ouseri.setFirstName(user.getFirstName());
-			ouseri.setLastName(user.getLastName());
-			uidao.updateFirstLastName(con, ouseri);
-			
-			logger.debug("Updating permissions");
-			LangUtils.CollectionChangeSet<ORolePermission> changeSet1 = LangUtils.getCollectionChanges(oldUser.getPermissions(), user.getPermissions());
-			for(ORolePermission perm : changeSet1.deleted) {
-				authm.deletePermission(con, perm.getRolePermissionId());
-			}
-			for(ORolePermission perm : changeSet1.inserted) {
-				authm.addPermission(con, oldUser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-			}
-			
-			LangUtils.CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
-			for(ORolePermission perm : changeSet2.deleted) {
-				authm.deletePermission(con, perm.getRolePermissionId());
-			}
-			for(ORolePermission perm : changeSet2.inserted) {
-				authm.addPermission(con, oldUser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-			}
+			doUserUpdate(con, user);
 			
 			DbUtils.commitQuietly(con);
 			
@@ -432,13 +405,14 @@ public final class UserManager {
 	}
 	
 	public void updateUserPassword(UserProfile.Id pid, char[] oldPassword, char[] newPassword) throws WTException {
+		AuthManager authm = wta.getAuthManager();
 		
 		try {
 			ODomain domain = getDomain(pid.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			
 			AuthenticationDomain ad = new AuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad);
+			AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			
 			if(oldPassword != null) {
@@ -475,7 +449,7 @@ public final class UserManager {
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 
 				AuthenticationDomain ad = new AuthenticationDomain(domain);
-				AbstractDirectory directory = getAuthDirectory(ad);
+				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 				
 				if(!directory.isReadOnly()) {
@@ -508,20 +482,14 @@ public final class UserManager {
 		}
 	}
 	
-	private AbstractDirectory getAuthDirectory(AuthenticationDomain ad) throws WTException {
-		DirectoryManager dirManager = DirectoryManager.getManager();
-		AbstractDirectory directory = dirManager.getDirectory(ad.getAuthUri().getScheme());
-		if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getAuthUri().getScheme());
-		return directory;
-	}
-	
 	public List<DirectoryUser> listDirectoryUsers(ODomain domain) throws WTException {
+		AuthManager authm = wta.getAuthManager();
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			AuthenticationDomain ad = new AuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad);
+			AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			
 			con = wta.getConnectionManager().getConnection();
@@ -690,6 +658,99 @@ public final class UserManager {
 	}
 	
 	
+	
+	
+	
+	
+	
+	
+	private UserEntry createUserEntry(UserEntity user) {
+		return new UserEntry(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
+	}
+	
+	private void doUserUpdate(Connection con, UserEntity user) throws DAOException, WTException {
+		AuthManager authm = wta.getAuthManager();
+		UserDAO udao = UserDAO.getInstance();
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		
+		UserEntity oldUser = getUserEntity(con, user.getProfileId());
+		if(oldUser == null) throw new WTException("User not found [{0}]", user.getProfileId().toString());
+		
+		logger.debug("Updating User");
+		OUser ouser = new OUser();
+		ouser.setDomainId(user.getDomainId());
+		ouser.setUserId(user.getUserId());
+		ouser.setEnabled(user.getEnabled());
+		ouser.setDisplayName(user.getDisplayName());
+		udao.updateEnabledDisplayName(con, ouser);
+
+		logger.debug("Updating UserInfo");
+		OUserInfo ouseri = new OUserInfo();
+		ouseri.setDomainId(user.getDomainId());
+		ouseri.setUserId(user.getUserId());
+		ouseri.setFirstName(user.getFirstName());
+		ouseri.setLastName(user.getLastName());
+		uidao.updateFirstLastName(con, ouseri);
+
+		logger.debug("Updating permissions");
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet1 = LangUtils.getCollectionChanges(oldUser.getPermissions(), user.getPermissions());
+		for(ORolePermission perm : changeSet1.deleted) {
+			authm.deletePermission(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet1.inserted) {
+			authm.addPermission(con, oldUser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+		}
+
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
+		for(ORolePermission perm : changeSet2.deleted) {
+			authm.deletePermission(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet2.inserted) {
+			authm.addPermission(con, oldUser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+		}
+	}
+	
+	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
+		AuthManager authm = wta.getAuthManager();
+		UserDAO udao = UserDAO.getInstance();
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		
+		InternetAddress email = MailUtils.buildInternetAddress(user.getUserId(), domain.getDomainName(), null);
+		if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getDomainName());
+		
+		// Insert User record
+		logger.debug("Inserting User");
+		OUser ouser = new OUser();
+		ouser.setDomainId(user.getDomainId());
+		ouser.setUserId(user.getUserId());
+		ouser.setEnabled(user.getEnabled());
+		ouser.setUserUid(IdentifierUtils.getUUID());
+		ouser.setRoleUid(IdentifierUtils.getUUID());
+		ouser.setDisplayName(user.getDisplayName());
+		ouser.setSecret(generateSecretKey());
+		udao.insert(con, ouser);
+		
+		// Insert UserInfo record
+		logger.debug("Inserting UserInfo");
+		OUserInfo oui = new OUserInfo();
+		oui.setDomainId(user.getDomainId());
+		oui.setUserId(user.getUserId());
+		oui.setFirstName(user.getFirstName());
+		oui.setLastName(user.getLastName());
+		oui.setEmail(email.getAddress());
+		uidao.insert(con, oui);
+		
+		// Insert permissions
+		logger.debug("Inserting permissions");
+		for(ORolePermission perm : user.getPermissions()) {
+			authm.addPermission(con, ouser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+		}
+		for(ORolePermission perm : user.getServicesPermissions()) {
+			authm.addPermission(con, ouser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+		}
+		
+		return ouser;
+	}
 	
 	private UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
 		CoreUserSettings cus = new CoreUserSettings(pid);

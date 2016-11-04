@@ -41,6 +41,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
+import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
@@ -108,13 +109,14 @@ public class Service extends BaseService {
 	private static final String NTYPE_ROLES = "roles";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
 	
-	private ExtTreeNode createDomainNode(String parentId, ODomain domain) {
+	private ExtTreeNode createDomainNode(String parentId, ODomain domain, boolean isDirRO) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass("wta-icon-domain-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		node.put("_internetDomain", domain.getDomainName());
+		node.put("_dirReadOnly", isDirRO);
 		return node;
 	}
 	
@@ -129,6 +131,7 @@ public class Service extends BaseService {
 	
 	public void processManageAdminTree(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Locale locale = getEnv().getWebTopSession().getLocale();
+		//DirectoryManager dirMgr = DirectoryManager.getManager();
 		ArrayList<ExtTreeNode> children = new ArrayList<>();
 		
 		try {
@@ -150,7 +153,8 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
 						} else { // Availbale webtop domains
 							for(ODomain domain : core.listDomains(false)) {
-								children.add(createDomainNode(nodeId, domain));
+								final boolean isDirRO = core.getAuthDirectory(domain).isReadOnly();
+								children.add(createDomainNode(nodeId, domain, isDirRO));
 							}
 						}
 						

@@ -36,6 +36,8 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.security.auth.DirectoryManager;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
@@ -178,6 +180,10 @@ public class CoreManager extends BaseManager {
 		//TODO: gestire i look&feel (lafs) dinamicamente
 		items.add(new JsSimple("default", WT.getPlatformName()));
 		return items;
+	}
+	
+	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
+		return wta.getAuthManager().getAuthDirectory(domain.getAuthUri());
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
