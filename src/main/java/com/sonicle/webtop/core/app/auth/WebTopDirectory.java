@@ -91,23 +91,32 @@ public class WebTopDirectory extends AbstractDirectory {
 		}
 		return count >= 3;
 	}
+	
+	protected UserEntry createUserEntry(OUser ouser) {
+		UserEntry userEntry = new UserEntry();
+		userEntry.userId = ouser.getUserId();
+		userEntry.firstName = null;
+		userEntry.lastName = null;
+		userEntry.displayName = ouser.getDisplayName();
+		return userEntry;
+	}
 
 	@Override
-	public Principal authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
+	public UserEntry authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
 		WebTopApp wta = builder.getWebTopApp(opts);
 		
 		try {
 			UserManager usem = wta.getUserManager();
 			UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
-			OUser user = usem.getUser(pid);
-			if(user == null) throw new DirectoryException("User not found [{0}]", pid.toString());
-			principal.setDisplayName(user.getDisplayName());
+			OUser ouser = usem.getUser(pid);
+			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
 			
-			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(user.getPasswordType());
-			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), user.getPassword());
+			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());
+			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), ouser.getPassword());
 			if(!result) throw new DirectoryException("Provided password is not valid");
-			return principal;
+			
+			return createUserEntry(ouser);
 			
 		} catch(WTException ex) {
 			throw new DirectoryException(ex);

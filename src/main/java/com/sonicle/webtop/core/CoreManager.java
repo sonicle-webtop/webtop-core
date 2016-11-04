@@ -181,6 +181,10 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
+	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
+		return wta.getAuthManager().getAuthDirectory(domain.getAuthUri());
+	}
+	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
 		UserManager usem = wta.getUserManager();
 		

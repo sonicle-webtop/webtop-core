@@ -36,6 +36,8 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.LangUtils.CollectionChangeSet;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.security.auth.DirectoryManager;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORolePermission;
@@ -53,6 +55,8 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -103,6 +107,21 @@ public class AuthManager {
 	void cleanup() {
 		wta = null;
 		logger.info("AuthManager destroyed");
+	}
+	
+	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
+		try {
+			return getAuthDirectory(new URI(authUri));
+		} catch(URISyntaxException ex) {
+			throw new WTException(ex, "Invalid authentication URI [{0}]", authUri);
+		}
+	}
+	
+	public AbstractDirectory getAuthDirectory(URI authUri) throws WTException {
+		DirectoryManager dirManager = DirectoryManager.getManager();
+		AbstractDirectory directory = dirManager.getDirectory(authUri.getScheme());
+		if(directory == null) throw new WTException("Directory not supported [{0}]", authUri.getScheme());
+		return directory;
 	}
 	
 	public List<Role> listRoles(String domainId) throws WTException {

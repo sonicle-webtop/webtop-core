@@ -346,7 +346,7 @@ public class CoreAdminManager extends BaseManager {
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.addUser(user, password);
+			usem.addUser(true, user, password);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
 		}

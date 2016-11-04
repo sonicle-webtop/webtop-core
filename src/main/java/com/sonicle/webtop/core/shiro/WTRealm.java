@@ -39,6 +39,7 @@ import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.security.auth.directory.LdapConfigBuilder;
 import com.sonicle.security.auth.directory.NethLdapConfigBuilder;
@@ -52,16 +53,14 @@ import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.security.auth.login.LoginException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -76,6 +75,7 @@ import org.apache.shiro.subject.PrincipalCollection;
  * @author malbinola
  */
 public class WTRealm extends AuthorizingRealm {
+	private final Object lock1 = new Object();
 	
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
@@ -95,19 +95,6 @@ public class WTRealm extends AuthorizingRealm {
 		}
 	}
 	
-	/*
-	@Override
-	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-		try {
-			WebTopApp.logger.debug("doGetAuthenticationInfo - {}", token.getPrincipal());
-			return loadAuthenticationInfo(token);
-			
-		} catch(Exception ex) {
-			throw new AuthorizationException(ex);
-		}
-	}
-	*/
-	
 	private boolean isSysAdmin(String internetDomain, String username) {
 		return StringUtils.equals(StringUtils.lowerCase(username), "admin") && StringUtils.isBlank(internetDomain);
 	}
@@ -116,6 +103,7 @@ public class WTRealm extends AuthorizingRealm {
 		WebTopApp wta = WebTopApp.getInstance();
 		UserManager usem = wta.getUserManager();
 		AuthenticationDomain ad = null;
+		boolean autoCreate = false;
 		
 		try {
 			DirectoryManager dirManager = DirectoryManager.getManager();
@@ -135,6 +123,7 @@ public class WTRealm extends AuthorizingRealm {
 					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
 				ad = new AuthenticationDomain(domain);
+				autoCreate = domain.getUserAutoCreation();
 			}
 			
 			DirectoryOptions opts = createDirectoryOptions(wta, ad);
@@ -143,12 +132,34 @@ public class WTRealm extends AuthorizingRealm {
 			
 			String sntzUsername = directory.sanitizeUsername(opts, username);
 			Principal principal = new Principal(ad, ad.getDomainId(), sntzUsername, password);
-			principal = directory.authenticate(opts, principal);
+			UserEntry userEntry = directory.authenticate(opts, principal);
+			principal.setDisplayName(userEntry.displayName);
+			
+			boolean exist = usem.existUser(domainId, principal.getUserId());
+			if(autoCreate && !exist) {
+				synchronized(lock1) {
+					usem.addUser(createUserEntity(domainId, userEntry));
+				}
+			} else if(!exist) {
+				throw new WTException("User does not exist [{0}]", principal.getSubjectId());
+			}
+			
 			return principal;
 			
 		} catch(URISyntaxException | WTException | DirectoryException ex) {
 			throw new AuthenticationException(ex);
 		}	
+	}
+	
+	private UserEntity createUserEntity(String domainId, UserEntry userEntry) {
+		UserEntity ue = new UserEntity();
+		ue.setDomainId(domainId);
+		ue.setUserId(userEntry.userId);
+		ue.setEnabled(true);
+		ue.setFirstName(userEntry.firstName);
+		ue.setLastName(userEntry.lastName);
+		ue.setDisplayName(userEntry.displayName);
+		return ue;
 	}
 	
 	@Override
@@ -164,6 +175,20 @@ public class WTRealm extends AuthorizingRealm {
 			throw new AuthorizationException(ex);
 		}
 	}
+	
+	
+	/*
+	@Override
+	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
+		try {
+			WebTopApp.logger.debug("doGetAuthenticationInfo - {}", token.getPrincipal());
+			return loadAuthenticationInfo(token);
+			
+		} catch(Exception ex) {
+			throw new AuthorizationException(ex);
+		}
+	}
+	*/
 	
 //	 
 //	
