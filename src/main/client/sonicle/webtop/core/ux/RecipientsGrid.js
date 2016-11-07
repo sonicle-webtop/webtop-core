@@ -295,12 +295,12 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 		this.fireEvent('exitfocus',this);
 	},
 	
-    isRecipientComboAutoSaveDirty: function() {
-        return this.autoSaveRcbValue!=this.rcb.getValue();
+    isRecipientComboAutosaveDirty: function() {
+        return this.autosaveRcbValue!=this.rcb.getValue();
     },
     
-    clearAutoSaveDirty: function() {
-        this.autoSaveRcbValue=this.rcb.getValue();
+    clearAutosaveDirty: function() {
+        this.autosaveRcbValue=this.rcb.getValue();
     },    
 
 	

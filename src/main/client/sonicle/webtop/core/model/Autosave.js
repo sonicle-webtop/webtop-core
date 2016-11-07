@@ -31,31 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.AutoSave', {
-	alternateClassName: 'WT.model.AutoSave',
+Ext.define('Sonicle.webtop.core.model.Autosave', {
+	alternateClassName: 'WT.model.Autosave',
 	extend: 'WT.model.Base',
 	
-	autoSaveDirty: false,
+	autosaveDirty: false,
     
 	set: function() {
 		var me=this;
 		
-		me.setAutoSaveDirty();
+		me.setAutosaveDirty();
 		me.callParent(arguments);
 	},
 	
-	isAutoSaveDirty: function() {
-		return this.autoSaveDirty;
+	isAutosaveDirty: function() {
+		return this.autosaveDirty;
 	},
 	
-	setAutoSaveDirty: function() {
+	setAutosaveDirty: function() {
 		var me=this,
 			as=me.store?me.store.getAssociatedEntity():null;
-		me.autoSaveDirty=true;
-		if (as) as.setAutoSaveDirty();
+		me.autosaveDirty=true;
+		if (as) as.setAutosaveDirty();
 	},
 	
-	clearAutoSaveDirty: function() {
-		this.autoSaveDirty=false;
+	clearAutosaveDirty: function() {
+		this.autosaveDirty=false;
 	}
 });
