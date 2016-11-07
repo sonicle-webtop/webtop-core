@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	requires: [
 		'Sonicle.FakeInput',
 		'Sonicle.form.Spacer',
+		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
 		'Sonicle.webtop.core.ux.grid.RolePermissions',
 		'Sonicle.webtop.core.ux.grid.RoleSvcPermissions'
@@ -49,6 +50,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	},
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.User',
+	
+	passwordPolicy: false,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -90,24 +93,21 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					fieldLabel: me.mys.res('user.fld-userId.lbl'),
 					width: 300
 				}, {
-					xtype: 'textfield',
+					xtype: 'sopasswordfield',
 					reference: 'fldpassword',
 					bind: '{record.password}',
-					inputType: 'password',
 					plugins: 'sonoautocomplete',
 					fieldLabel: me.mys.res('user.fld-password.lbl'),
 					width: 300
 				}, {
-					xtype: 'textfield',
+					xtype: 'sopasswordfield',
 					reference: 'fldpassword2',
 					bind: '{record.password2}',
-					inputType: 'password',
 					plugins: 'sonoautocomplete',
+					eye: false,
 					hideEmptyLabel: false,
 					emptyText: me.mys.res('user.fld-password2.emp'),
 					width: 300
-				}, {
-					xtype: 'sospacer'
 				}, {
 					xtype: 'checkbox',
 					bind: '{foEnabled}',
@@ -180,8 +180,18 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	
 	onViewLoad: function(s, success) {
 		if(!success) return;
-		var me = this;
+		var me = this, mo;
 		if(me.isMode(me.MODE_NEW)) {
+			mo = me.getModel();
+			mo.getField('password').constructValidators([{
+				type: 'sopassword',
+				complex: me.passwordPolicy
+			}]);
+			mo.getField('password2').constructValidators([{
+				type: 'soequality',
+				equalField: 'password',
+				fieldLabel: me.mys.res('user.fld-password.lbl')
+			}]);
 			me.lref('flduserid').setDisabled(false);
 			me.lref('fldpassword').setHidden(false);
 			me.lref('fldpassword2').setHidden(false);

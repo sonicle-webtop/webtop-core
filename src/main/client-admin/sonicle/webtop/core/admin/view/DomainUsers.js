@@ -38,7 +38,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	],
 	
 	domainId: null,
-	directoryReadOnly: true,
+	passwordPolicy: false,
+	dirCapPasswordWrite: false,
+	dirCapUsersWrite: false,
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
@@ -122,7 +124,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					menu: [
 						me.addAction('addEmpty', {
 							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
-							disabled: me.directoryReadOnly,
+							disabled: !me.dirCapUsersWrite,
 							handler: function() {
 								me.addUserUI(null);
 							}
@@ -225,7 +227,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				fn = copy ? rec.get('dirFirstName') : null,
 				ln = copy ? rec.get('dirLastName') : null,
 				dn = copy ? rec.get('dirDisplayName') : null;
-		me.mys.addUser(me.domainId, usi, fn, ln, dn, {
+		me.mys.addUser(me.passwordPolicy, me.domainId, usi, fn, ln, dn, {
 			callback: function(success) {
 				if(success) {
 					me.lref('gp').getStore().load();
@@ -252,7 +254,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		
 		WT.confirm(me.mys.res(key), function(bid) {
 			if(bid === 'yes') {
-				me.mys.deleteUsers(deep, me.domainId, [rec.get('userId')], {
+				me.mys.deleteUsers(deep, [rec.get('profileId')], {
 					callback: function(success) {
 						if(success) {
 							if(deep) {
@@ -269,14 +271,22 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	},
 	
 	changePasswordUI: function(rec) {
-		
+		var me = this,
+				vct = WT.createView(me.mys.ID, 'view.ChangePassword', {
+					viewCfg: {
+						showOldPassword: false,
+						passwordPolicy: me.passwordPolicy,
+						profileId: rec.get('profileId')
+					}
+				});
+		vct.show();
 	},
 	
 	updateUserStatusUI: function(rec, enabled) {
 		var me = this, doFn;
 		
 		doFn = function() {
-			me.mys.updateUsersStatus(me.domainId, [rec.get('userId')], enabled, {
+			me.mys.updateUsersStatus([rec.get('profileId')], enabled, {
 				callback: function(success) {
 					if(success) {
 						rec.set('enabled', enabled);
@@ -327,6 +337,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					return true;
 				}
 			case 'changePassword':
+				if(!me.dirCapPasswordWrite) return true;
 				sel = me.getSelectedUser();
 				if(sel) {
 					return !sel.get('exist');

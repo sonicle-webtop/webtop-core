@@ -181,6 +181,13 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
+	public AbstractDirectory getAuthDirectory(String domainId) throws WTException {
+		ODomain domain = getDomain(domainId);
+		if(domain == null) throw new WTException("Domain not found [{0}]", domainId);
+		
+		return getAuthDirectory(domain);
+	}
+	
 	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
 		return wta.getAuthManager().getAuthDirectory(domain.getAuthUri());
 	}

@@ -31,40 +31,6 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.User', {
-	extend: 'WT.ux.data.BaseModel',
-	requires: [
-		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.Equality',
-		'Sonicle.data.validator.Username',
-		'Sonicle.data.validator.Password',
-		'Sonicle.webtop.core.admin.model.RolePermission',
-		'Sonicle.webtop.core.admin.model.RoleSvcPermission'
-	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageUsers', 'data', {
-		writer: {
-			type: 'sojson',
-			writeAssociations: true
-		}
-	}),
-	
-	identifier: 'negativestring',
-	idProperty: 'profileId',
-	fields: [
-		WTF.field('profileId', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('userId', 'string', false, {
-			validators: ['sousername']
-		}),
-		WTF.field('enabled', 'boolean', true),
-		WTF.field('password', 'string', true),
-		WTF.field('password2', 'string', true),
-		WTF.field('firstName', 'string', false),
-		WTF.field('lastName', 'string', false),
-		WTF.field('displayName', 'string', false)
-	],
-	hasMany: [
-		WTF.hasMany('othersPerms', 'Sonicle.webtop.core.admin.model.RolePermission'),
-		WTF.hasMany('servicesPerms', 'Sonicle.webtop.core.admin.model.RoleSvcPermission')
-	]
+Ext.define('Sonicle.webtop.core.admin.view.ChangePassword', {
+	extend: 'Sonicle.webtop.core.view.ChangePassword'
 });

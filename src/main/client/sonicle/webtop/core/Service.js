@@ -53,6 +53,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
+	
+	
 	showActivities: function() {
 		WT.createView(WT.ID, 'view.Activities').show();
 	},

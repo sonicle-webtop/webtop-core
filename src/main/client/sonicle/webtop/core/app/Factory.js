@@ -374,7 +374,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		cfg = cfg || {};
 		var validators = [];
 		if(!allowBlank) validators.push('presence');
-		cfg.validators = (Ext.isArray(cfg.validators)) ? Ext.Array.push(cfg.validators, validators) : validators;
+		cfg.validators = Ext.isArray(cfg.validators) ? Ext.Array.push(cfg.validators, validators) : validators;
 		
 		return Ext.apply({
 			name: name,

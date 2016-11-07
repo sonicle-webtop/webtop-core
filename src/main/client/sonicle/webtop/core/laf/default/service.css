@@ -22,6 +22,7 @@
 
 .wt-icon-feedback-xs { background-image: url('feedback_16.png') !important; }
 .wt-icon-whatsnew-xs { background-image: url('whatsnew_16.png') !important; }
+.wt-icon-changePassword-xs { background-image: url('password_16.png') !important; }
 .wt-icon-options-xs { background-image: url('options_16.png') !important; }
 .wt-icon-reminder-xs { background-image: url('reminder_16.png') !important; }
 .wt-icon-activity-xs { background-image: url('activity_16.png') !important; }
@@ -70,7 +71,6 @@
 .wt-icon-item-enable-xs { background-image: url('item-enable_16.png') !important; }
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
-.wt-icon-changePassword-xs { background-image: url('changePassword_16.png') !important; }
 .wt-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
 .wt-icon-permission-xs { background-image: url('permission_16.png') !important; }
 .wt-icon-permission-allowed-xs { background-image: url('permission-allowed_16.png') !important; }

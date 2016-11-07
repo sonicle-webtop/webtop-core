@@ -34,16 +34,27 @@
 package com.sonicle.webtop.core.app.auth;
 
 import com.sonicle.commons.RegexUtils;
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.CredentialAlgorithm;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.DirectoryException;
+import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -63,9 +74,20 @@ public class WebTopDirectory extends AbstractDirectory {
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
+	static final Collection<DirectoryCapability> CAPABILITIES = Collections.unmodifiableCollection(
+		EnumSet.of(
+			DirectoryCapability.PASSWORD_WRITE
+		)
+	);
+	
 	@Override
 	public WebTopConfigBuilder getConfigBuilder() {
 		return WebTopConfigBuilder.getInstance();
+	}
+	
+	@Override
+	public Collection<DirectoryCapability> getCapabilities() {
+		return CAPABILITIES;
 	}
 	
 	@Override
@@ -91,15 +113,6 @@ public class WebTopDirectory extends AbstractDirectory {
 		}
 		return count >= 3;
 	}
-	
-	protected UserEntry createUserEntry(OUser ouser) {
-		UserEntry userEntry = new UserEntry();
-		userEntry.userId = ouser.getUserId();
-		userEntry.firstName = null;
-		userEntry.lastName = null;
-		userEntry.displayName = ouser.getDisplayName();
-		return userEntry;
-	}
 
 	@Override
 	public UserEntry authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
@@ -116,6 +129,12 @@ public class WebTopDirectory extends AbstractDirectory {
 			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), ouser.getPassword());
 			if(!result) throw new DirectoryException("Provided password is not valid");
 			
+			if(algo.equals(CredentialAlgorithm.PLAIN)) {
+				logger.debug("Encrypting PLAIN password");
+				CredentialAlgorithm newAlgo = CredentialAlgorithm.SHA;
+				updatePassword(wta, pid, newAlgo.name(), CredentialAlgorithm.encrypt(newAlgo, ouser.getPassword()));
+			}
+			
 			return createUserEntry(ouser);
 			
 		} catch(WTException ex) {
@@ -124,37 +143,81 @@ public class WebTopDirectory extends AbstractDirectory {
 	}
 	
 	@Override
-	public void updateUserPassword(DirectoryOptions opts, String userId, char[] newPassword) throws DirectoryException {
-		updateUserPassword(opts, userId, null, newPassword);
+	public void updateUserPassword(DirectoryOptions opts, String domainId, String userId, char[] newPassword) throws DirectoryException {
+		updateUserPassword(opts, domainId, userId, null, newPassword);
 	}
 	
 	@Override
-	public void updateUserPassword(DirectoryOptions opts, String userId, char[] oldPassword, char[] newPassword) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public void updateUserPassword(DirectoryOptions opts, String domainId, String userId, char[] oldPassword, char[] newPassword) throws EntryException, DirectoryException {
+		WebTopConfigBuilder builder = getConfigBuilder();
+		WebTopApp wta = builder.getWebTopApp(opts);
+		
+		try {
+			UserManager usem = wta.getUserManager();
+			UserProfile.Id pid = new UserProfile.Id(domainId, userId);
+			OUser ouser = usem.getUser(pid);
+			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
+			
+			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());
+			
+			if(oldPassword != null) {
+				boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), ouser.getPassword());
+				if(!result) throw new EntryException("Old password does not match the current one");
+			}
+			
+			updatePassword(wta, pid, algo.name(), CredentialAlgorithm.encrypt(algo, ouser.getPassword()));
+			
+		} catch(WTException ex) {
+			throw new DirectoryException(ex);
+		}
 	}
 	
 	@Override
-	public List<UserEntry> listUsers(DirectoryOptions opts) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported on this directory");
+	public List<UserEntry> listUsers(DirectoryOptions opts, String domainId) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
 	}
 	
 	@Override
-	public void addUser(DirectoryOptions opts, UserEntry entry) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public void addUser(DirectoryOptions opts, String domainId, UserEntry entry) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
 	}
 
 	@Override
-	public void updateUser(DirectoryOptions opts, UserEntry entry) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public void updateUser(DirectoryOptions opts, String domainId, UserEntry entry) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
 	}
 
 	@Override
-	public void deleteUser(DirectoryOptions opts, String userId) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	public void deleteUser(DirectoryOptions opts, String domainId, String userId) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
 	}
 
 	@Override
-	public List<String> listGroups(DirectoryOptions opts) throws DirectoryException {
-		throw new UnsupportedOperationException("Not supported on this directory");
+	public List<String> listGroups(DirectoryOptions opts, String domainId) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
+	}
+	
+	private void updatePassword(WebTopApp wta, UserProfile.Id pid, String passwordType, String password) {
+		UserDAO dao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			dao.updatePasswordByDomainUser(con, pid.getDomainId(), pid.getUserId(), passwordType, password);
+			
+		} catch(SQLException | DAOException ex) {
+			logger.warn("Unable to encrypt password");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	protected UserEntry createUserEntry(OUser ouser) {
+		UserEntry userEntry = new UserEntry();
+		userEntry.userId = ouser.getUserId();
+		userEntry.firstName = null;
+		userEntry.lastName = null;
+		userEntry.displayName = ouser.getDisplayName();
+		return userEntry;
 	}
 }

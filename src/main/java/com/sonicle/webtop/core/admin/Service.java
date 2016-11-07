@@ -42,6 +42,8 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.security.auth.DirectoryManager;
+import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
@@ -109,23 +111,27 @@ public class Service extends BaseService {
 	private static final String NTYPE_ROLES = "roles";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
 	
-	private ExtTreeNode createDomainNode(String parentId, ODomain domain, boolean isDirRO) {
+	private ExtTreeNode createDomainNode(String parentId, ODomain domain) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass("wta-icon-domain-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		node.put("_internetDomain", domain.getDomainName());
-		node.put("_dirReadOnly", isDirRO);
+		//node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
+		//node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId) {
+	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, type);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), text, true);
 		node.setIconClass(iconClass);
 		node.put("_type", type);
 		node.put("_domainId", domainId);
+		node.put("_passwordPolicy", passwordPolicy);
+		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
+		node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
 	}
 	
@@ -147,23 +153,27 @@ public class Service extends BaseService {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
 					if(cid.getToken(0).equals("domains")) {
 						if(cid.hasToken(1)) {
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wta-icon-settings-xs", NTYPE_SETTINGS, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-domainGroups-xs", NTYPE_GROUPS, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-domainUsers-xs", NTYPE_USERS, cid.getToken(1)));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, cid.getToken(1)));
+							String domainId = cid.getToken(1);
+							ODomain domain = core.getDomain(domainId);
+							AbstractDirectory dir = core.getAuthDirectory(domain);
+							boolean passwordPolicy = domain.getWebtopAdvSecurity();
+							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
+							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
+							
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wta-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-domainGroups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-domainUsers-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+						
 						} else { // Availbale webtop domains
 							for(ODomain domain : core.listDomains(false)) {
-								final boolean isDirRO = core.getAuthDirectory(domain).isReadOnly();
-								children.add(createDomainNode(nodeId, domain, isDirRO));
+								children.add(createDomainNode(nodeId, domain));
 							}
 						}
-						
 					}
 				}
-				
 				new JsonResult("children", children).printTo(out);
 			}
-			
 		} catch(Exception ex) {
 			logger.error("Error in ManageStoresTree", ex);
 		}
@@ -289,18 +299,6 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
-			String newPassword = ServletUtils.getStringParameter(request, "password", true);
-			
-			
-		} catch(Exception ex) {
-			logger.error("Error in UpdateUserPassword", ex);
-			new JsonResult(false, "Error").printTo(out);
-		}
-	}
-	
 	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
@@ -316,19 +314,17 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				boolean deep = ServletUtils.getBooleanParameter(request, "deep", false);
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "userIds", ServletUtils.StringArray.class, true);
+				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
 				
-				UserProfile.Id pid = new UserProfile.Id(domainId, userIds.get(0));
+				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
 				coreadm.deleteUser(deep, pid);
 				
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals("enable") || crud.equals("disable")) {
-				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				ServletUtils.StringArray userIds = ServletUtils.getObjectParameter(request, "userIds", ServletUtils.StringArray.class, true);
+				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
 				
-				UserProfile.Id pid = new UserProfile.Id(domainId, userIds.get(0));
+				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
 				coreadm.updateUser(pid, crud.equals("enable"));
 				
 				new JsonResult().printTo(out);
@@ -364,12 +360,25 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageUsers", ex);
-			new JsonResult(false, "Error").printTo(out);
-			
+			new JsonResult(false, "Error").printTo(out);	
 		}
 	}
 	
-	
+	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
+			
+			UserProfile.Id pid = new UserProfile.Id(profileId);
+			coreadm.updateUserPassword(pid, newPassword);
+			
+			new JsonResult().printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in ChangeUserPassword", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		}
+	}
 	
 	
 	

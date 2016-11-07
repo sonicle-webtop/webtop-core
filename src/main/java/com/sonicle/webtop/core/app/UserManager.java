@@ -42,6 +42,7 @@ import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
@@ -274,8 +275,6 @@ public final class UserManager {
 			
 		} catch(DAOException ex) {
 			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
 		}
 	}
 	
@@ -301,10 +300,12 @@ public final class UserManager {
 				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 				
-				if(!directory.isReadOnly()) {
+				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if(!directory.validateUsername(opts, user.getUserId())) {
 						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
 					}
+				}
+				if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					if(domain.getWebtopAdvSecurity() && !directory.validatePasswordPolicy(opts, password)) {
 						throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
 					}
@@ -313,15 +314,17 @@ public final class UserManager {
 				ouser = doUserInsert(con, domain, user);
 				
 				// Insert user in directory (if necessary)
-				if(!directory.isReadOnly()) {
+				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					logger.debug("Adding user into directory");
 					try {
-						directory.addUser(opts, createUserEntry(user));
+						directory.addUser(opts, domain.getDomainId(), createUserEntry(user));
 					} catch(EntryException ex1) {
 						logger.debug("Skipped: already exists!");
 					}
+				}
+				if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					logger.debug("Updating its password");
-					directory.updateUserPassword(opts, user.getUserId(), password);
+					directory.updateUserPassword(opts, domain.getDomainId(), user.getUserId(), password);
 				}
 				
 			} else {
@@ -352,17 +355,18 @@ public final class UserManager {
 		}
 	}
 	
-	public boolean existUser(UserProfile.Id pid) throws WTException {
-		return existUser(pid.getDomainId(), pid.getUserId());
+	public CheckUserResult checkUser(UserProfile.Id pid) throws WTException {
+		return checkUser(pid.getDomainId(), pid.getUserId());
 	}
 	
-	public boolean existUser(String domainId, String userId) throws WTException {
+	public CheckUserResult checkUser(String domainId, String userId) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			return dao.existByDomainUser(con, domainId, userId);
+			OUser o = dao.selectByDomainUser(con, domainId, userId);
+			return new CheckUserResult(o != null, o != null ? o.getEnabled() : false);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -415,10 +419,12 @@ public final class UserManager {
 			AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 			
-			if(oldPassword != null) {
-				directory.updateUserPassword(opts, pid.getUserId(), oldPassword, newPassword);
-			} else {
-				directory.updateUserPassword(opts, pid.getUserId(), newPassword);
+			if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				if(oldPassword != null) {
+					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), oldPassword, newPassword);
+				} else {
+					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), newPassword);
+				}
 			}
 			
 		} catch(URISyntaxException ex) {
@@ -452,8 +458,8 @@ public final class UserManager {
 				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
 				
-				if(!directory.isReadOnly()) {
-					directory.deleteUser(opts, pid.getUserId());
+				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
 				}
 			}
 			
@@ -496,8 +502,17 @@ public final class UserManager {
 			Map<String, OUser> wtUsers = dao.selectByDomain2(con, domain.getDomainId());
 			
 			ArrayList<DirectoryUser> items = new ArrayList<>();
-			for(UserEntry userEntry : directory.listUsers(opts)) {
-				items.add(new DirectoryUser(domain.getDomainId(), userEntry, wtUsers.get(userEntry.userId)));
+			
+			if(directory.hasCapability(DirectoryCapability.USERS_READ)) {
+				for(UserEntry userEntry : directory.listUsers(opts, domain.getDomainId())) {
+					items.add(new DirectoryUser(domain.getDomainId(), userEntry, wtUsers.get(userEntry.userId)));
+				}
+				
+			} else {
+				for(OUser ouser : wtUsers.values()) {
+					final AbstractDirectory.UserEntry userEntry = new AbstractDirectory.UserEntry(ouser.getUserId(), null, null, ouser.getDisplayName(), null);
+					items.add(new DirectoryUser(domain.getDomainId(), userEntry, ouser));
+				}
 			}
 			
 			return items;
@@ -862,6 +877,16 @@ public final class UserManager {
 				cacheUserUidToUser.remove(bag.userUid);
 				cacheRoleUidToUser.remove(bag.roleUid);
 			}
+		}
+	}
+	
+	public static class CheckUserResult {
+		public boolean exist;
+		public boolean enabled;
+		
+		public CheckUserResult(boolean exist, boolean enabled) {
+			this.exist = exist;
+			this.enabled = enabled;
 		}
 	}
 	

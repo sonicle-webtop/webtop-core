@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 		'Sonicle.upload.Uploader',
 		'Sonicle.data.proxy.Ajax',
 		'Sonicle.data.identifier.NegativeString',
+		'Sonicle.form.field.VTypes',
 		'Sonicle.plugin.EnterKeyPlugin',
 		'Sonicle.plugin.FieldTooltip',
 		

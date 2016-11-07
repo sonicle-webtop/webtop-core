@@ -69,12 +69,15 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
 public class WTRealm extends AuthorizingRealm {
+	private final static Logger logger = (Logger)LoggerFactory.getLogger(WTRealm.class);
 	private final Object lock1 = new Object();
 	
 	@Override
@@ -87,6 +90,7 @@ public class WTRealm extends AuthorizingRealm {
 			String sprincipal = (String)upt.getPrincipal();
 			String internetDomain = StringUtils.lowerCase(StringUtils.substringAfterLast(sprincipal, "@"));
 			String username = StringUtils.substringBeforeLast(sprincipal, "@");
+			logger.debug("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
 			
 			Principal principal = authenticateUser(domainId, internetDomain, username, upt.getPassword());
 			return new WebTopAuthenticationInfo(principal, upt.getPassword(), this.getName());
@@ -108,6 +112,7 @@ public class WTRealm extends AuthorizingRealm {
 		try {
 			DirectoryManager dirManager = DirectoryManager.getManager();
 			
+			logger.debug("Building the authentication domain");
 			if(isSysAdmin(internetDomain, username)) {
 				ad = new AuthenticationDomain("*", null, "webtop://localhost", null, null);
 				
@@ -131,22 +136,27 @@ public class WTRealm extends AuthorizingRealm {
 			if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getAuthUri().getScheme());
 			
 			String sntzUsername = directory.sanitizeUsername(opts, username);
+			logger.debug("Authenticating principal [{}, {}]", ad.getDomainId(), sntzUsername);
 			Principal principal = new Principal(ad, ad.getDomainId(), sntzUsername, password);
 			UserEntry userEntry = directory.authenticate(opts, principal);
 			principal.setDisplayName(userEntry.displayName);
 			
-			boolean exist = usem.existUser(domainId, principal.getUserId());
-			if(autoCreate && !exist) {
+			UserManager.CheckUserResult chk = usem.checkUser(principal.getDomainId(), principal.getUserId());
+			if(autoCreate && !chk.exist) {
+				logger.debug("Creating user [{}]", principal.getSubjectId());
 				synchronized(lock1) {
-					usem.addUser(createUserEntity(domainId, userEntry));
+					usem.addUser(createUserEntity(principal.getDomainId(), userEntry));
 				}
-			} else if(!exist) {
+			} else if(!chk.exist) {
 				throw new WTException("User does not exist [{0}]", principal.getSubjectId());
+			} else if(chk.exist && !chk.enabled) {
+				throw new WTException("User is disabled [{0}]", principal.getSubjectId());
 			}
 			
 			return principal;
 			
 		} catch(URISyntaxException | WTException | DirectoryException ex) {
+			logger.error("Authentication error", ex);
 			throw new AuthenticationException(ex);
 		}	
 	}

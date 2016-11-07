@@ -167,6 +167,9 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
+				passwordPolicy: node.get('_passwordPolicy'),
+				dirCapPasswordWrite: node.get('_dirCapPasswordWrite'),
+				dirCapUsersWrite: node.get('_dirCapUsersWrite'),
 				closable: true
 			});
 		});
@@ -220,10 +223,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addUser: function(domainId, userId, firstName, lastName, displayName, opts) {
+	addUser: function(passwordPolicy, domainId, userId, firstName, lastName, displayName, opts) {
 		opts = opts || {};
 		var me = this,
-				vct = WT.createView(me.ID, 'view.User');
+				vct = WT.createView(me.ID, 'view.User', {
+					viewCfg: {
+						passwordPolicy: passwordPolicy
+					}
+				});
 		
 		vct.getView().on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -259,14 +266,13 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	updateUsersStatus: function(domainId, userIds, enabled, opts) {
+	updateUsersStatus: function(profileIds, enabled, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageDomainUsers', {
 			params: {
 				crud: enabled ? 'enable' : 'disable',
-				domainId: domainId,
-				userIds: WTU.arrayAsParam(userIds)
+				profileIds: WTU.arrayAsParam(profileIds)
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
@@ -274,15 +280,29 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	deleteUsers: function(deep, domainId, userIds, opts) {
+	changeUserPassword: function(profileId, oldPassword, newPassword, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ChangeUserPassword', {
+			params: {
+				profileId: profileId,
+				oldPassword: oldPassword,
+				newPassword: newPassword
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
+	deleteUsers: function(deep, profileIds, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageDomainUsers', {
 			params: {
 				crud: 'delete',
 				deep: deep,
-				domainId: domainId,
-				userIds: WTU.arrayAsParam(userIds)
+				profileIds: WTU.arrayAsParam(profileIds)
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);

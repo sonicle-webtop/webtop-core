@@ -52,15 +52,18 @@ public class JsGridDomainUser {
 	public String dirDisplayName;
 	
 	public JsGridDomainUser(DirectoryUser du) {
+		this(du, du.getWtUser() != null);
+	}
+	
+	public JsGridDomainUser(DirectoryUser du, boolean exist) {
 		profileId = new UserProfile.Id(du.getDomainId(), du.getDirUser().userId).toString();
 		userId = du.getDirUser().userId;
+		this.exist = exist;
 		if(du.getWtUser() != null) {
 			displayName = du.getWtUser().getDisplayName();
-			exist = true;
 			enabled = du.getWtUser().getEnabled();
 		} else {
 			displayName = null;
-			exist = false;
 			enabled = null;
 		}
 		dirFirstName = du.getDirUser().firstName;

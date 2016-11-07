@@ -43,7 +43,6 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
  * @author gbulfon
  */
 public class WebTopAuthenticationInfo implements AuthenticationInfo {
-	
 	private final Principal soniclePrincipal;
 	private final char[] credentials;
 	private final SimplePrincipalCollection principals = new SimplePrincipalCollection();

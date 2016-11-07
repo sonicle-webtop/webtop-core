@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.admin.model.AdminNode', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
-		WTF.roField('_type', 'string')
+		WTF.roField('_type', 'string'),
+		WTF.roField('_domainId', 'string')
 	]
 });
