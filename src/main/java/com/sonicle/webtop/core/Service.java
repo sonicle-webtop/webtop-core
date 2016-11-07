@@ -892,8 +892,7 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
 		}
 	}
-	
-	
+		
 	public void processLookupInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<InternetRecipient> items = null;
 		

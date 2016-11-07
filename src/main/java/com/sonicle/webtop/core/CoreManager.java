@@ -1423,7 +1423,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void addAutosaveData(String serviceId, String context, String key, String value) {
+	public void updateAutosaveData(String serviceId, String context, String key, String value) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1454,6 +1454,22 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public void deleteAutosaveData(String serviceId, String context, String key) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			asdao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public List<String> listInternetRecipientsSources() throws WTException {
 		return new ArrayList<>(getProfileRecipientsProviders().keySet());
 	}
@@ -1477,7 +1493,7 @@ public class CoreManager extends BaseManager {
 				for(OServiceStoreEntry entry: entries) {
 					try {
 						InternetAddress ia=new InternetAddress(entry.getValue());
-						recipients.add(new InternetRecipient("","auto","",ia.getPersonal(),ia.getAddress()));
+						recipients.add(new InternetRecipient("","["+lookupResource(locale, "word.automatic")+"]","",ia.getPersonal(),ia.getAddress()));
 					} catch(AddressException exc) {
 						
 					}

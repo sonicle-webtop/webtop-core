@@ -572,15 +572,21 @@ Ext.define('Sonicle.form.field.HTMLEditor', {
 		}
 	},
 	
-    isAutoSaveDirty: function() {
+	getEditingValue: function() {
 		var me=this,ed=me.tmce.getEditor();
-        if (ed) return ed.getContent()!=me.autoSaveValue;
+		if (ed) return ed.getContent();
+		return null;
+	},
+	
+    isAutosaveDirty: function() {
+		var me=this,ed=me.tmce.getEditor();
+        if (ed) return ed.getContent()!=me.autosaveValue;
 		return false;
     },
     
-    clearAutoSaveDirty: function() {
+    clearAutosaveDirty: function() {
 		var me=this,ed=me.tmce.getEditor();
-        if (ed) me.autoSaveValue=ed.getContent();
+        if (ed) me.autosaveValue=ed.getContent();
     },
 	
 /*	setHtml: function(html) {
