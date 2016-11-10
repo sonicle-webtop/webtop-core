@@ -310,8 +310,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		s.fireEvent('viewsave', s, success, model);
 		if(success) {
 			if(pass.closeAfter) s.closeView(false);
-		} else {
-			WT.error(op.getError());
 		}
 	},
 	

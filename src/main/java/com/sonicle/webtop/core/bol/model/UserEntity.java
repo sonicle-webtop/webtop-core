@@ -33,11 +33,14 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import com.sonicle.webtop.core.bol.AssignedGroup;
+import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -48,12 +51,13 @@ public class UserEntity {
 	private String userId;
 	private Boolean enabled;
 	private String userUid;
-	private String roleUid;
 	private String firstName;
 	private String lastName;
 	private String displayName;
-	private ArrayList<ORolePermission> permissions = new ArrayList<>();
-	private ArrayList<ORolePermission> servicesPermissions = new ArrayList<>();
+	private List<AssignedGroup> assingedGroups = new ArrayList<>();
+	private List<AssignedRole> assignedRoles = new ArrayList<>();
+	private List<ORolePermission> permissions = new ArrayList<>();
+	private List<ORolePermission> servicesPermissions = new ArrayList<>();
 	
 	public UserEntity() {}
 	
@@ -62,7 +66,6 @@ public class UserEntity {
 		userId = o.getUserId();
 		enabled = o.getEnabled();
 		userUid = o.getUserUid();
-		roleUid = o.getRoleUid();
 		firstName = oi.getFirstName();
 		lastName = oi.getLastName();
 		displayName = o.getDisplayName();
@@ -104,14 +107,6 @@ public class UserEntity {
 		this.userUid = userUid;
 	}
 
-	public String getRoleUid() {
-		return roleUid;
-	}
-
-	public void setRoleUid(String roleUid) {
-		this.roleUid = roleUid;
-	}
-
 	public String getFirstName() {
 		return firstName;
 	}
@@ -136,19 +131,35 @@ public class UserEntity {
 		this.displayName = displayName;
 	}
 	
-	public ArrayList<ORolePermission> getPermissions() {
+	public List<AssignedGroup> getAssignedGroups() {
+		return assingedGroups;
+	}
+
+	public void setAssignedGroups(List<AssignedGroup> groups) {
+		this.assingedGroups = groups;
+	}
+	
+	public List<AssignedRole> getAssignedRoles() {
+		return assignedRoles;
+	}
+
+	public void setAssignedRoles(List<AssignedRole> roles) {
+		this.assignedRoles = roles;
+	}
+	
+	public List<ORolePermission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(ArrayList<ORolePermission> permissions) {
+	public void setPermissions(List<ORolePermission> permissions) {
 		this.permissions = permissions;
 	}
 
-	public ArrayList<ORolePermission> getServicesPermissions() {
+	public List<ORolePermission> getServicesPermissions() {
 		return servicesPermissions;
 	}
 
-	public void setServicesPermissions(ArrayList<ORolePermission> servicesPermissions) {
+	public void setServicesPermissions(List<ORolePermission> servicesPermissions) {
 		this.servicesPermissions = servicesPermissions;
 	}
 }

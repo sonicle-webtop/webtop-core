@@ -38,7 +38,6 @@ import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
-import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
@@ -46,16 +45,24 @@ import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.bol.AssignedGroup;
+import com.sonicle.webtop.core.bol.AssignedRole;
+import com.sonicle.webtop.core.bol.GroupUid;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.OUserAssociation;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
+import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainDAO;
+import com.sonicle.webtop.core.dal.GroupDAO;
+import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
@@ -101,10 +108,16 @@ public final class UserManager {
 	
 	private WebTopApp wta = null;
 	
+	public static final String USERID_USERS = "users";
+	public static final String USERID_ADMINISTRATORS = "administrators";
+	
 	private final Object lock1 = new Object();
-	private final HashMap<UserProfile.Id, UserUidBag> cacheUserToUidBag = new HashMap<>();
+	private final HashMap<UserProfile.Id, String> cacheUserToUserUid = new HashMap<>();
 	private final HashMap<String, UserProfile.Id> cacheUserUidToUser = new HashMap<>();
-	private final HashMap<String, UserProfile.Id> cacheRoleUidToUser = new HashMap<>();
+	private final Object lock2 = new Object();
+	private final HashMap<UserProfile.Id, String> cacheGroupToGroupUid = new HashMap<>();
+	private final HashMap<String, UserProfile.Id> cacheGroupUidToGroup = new HashMap<>();
+	
 	private final HashMap<UserProfile.Id, UserPersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
 	private final HashMap<UserProfile.Id, UserProfile.Data> cacheUserToData = new HashMap<>();
 	
@@ -115,7 +128,8 @@ public final class UserManager {
 	 */
 	private UserManager(WebTopApp wta) {
 		this.wta = wta;
-		initUidCache();
+		initUserUidCache();
+		initGroupUidCache();
 	}
 	
 	/**
@@ -123,7 +137,8 @@ public final class UserManager {
 	 */
 	void cleanup() {
 		wta = null;
-		cleanupUidCache();
+		cleanupUserUidCache();
+		cleanupGroupUidCache();
 		cleanupUserCache();
 		logger.info("UserManager destroyed");
 	}
@@ -204,7 +219,29 @@ public final class UserManager {
 		} catch(DAOException ex) {
 			throw new WTException(ex, "DB error");
 		}
-	}	
+	}
+	
+	public DomainEntity getDomainEntity(String domainId) throws WTException {
+		try {
+			ODomain domain = getDomain(domainId);
+			return new DomainEntity(domain);
+			
+		} catch(URISyntaxException ex) {
+			throw new WTException(ex, "Invalid directory URI");
+		}
+	}
+	
+	public void addDomain(DomainEntity domain) throws WTException {
+		
+	}
+	
+	public void updateDomain(DomainEntity domain) throws WTException {
+		
+	}
+	
+	public void deleteDomain(String domainId) throws WTException {
+		
+	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
@@ -258,16 +295,21 @@ public final class UserManager {
 		AuthManager authm = wta.getAuthManager();
 		UserDAO dao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
 		
 		try {
 			OUser ouser = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
-			
 			OUserInfo ouseri = uidao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			if(ouseri == null) throw new WTException("User info not found [{0}]", pid.toString());
 			
-			AuthManager.EntityPermissions perms = authm.extractPermissions(con, ouser.getRoleUid());
+			List<AssignedGroup> assiGroups = uassdao.viewAssignedByUser(con, ouser.getUserUid());
+			List<AssignedRole> assiRoles = authm.listAssignedRoles(con, ouser.getUserUid());
+			AuthManager.EntityPermissions perms = authm.extractPermissions(con, ouser.getUserUid());
+			
 			UserEntity user = new UserEntity(ouser, ouseri);
+			user.setAssignedGroups(assiGroups);
+			user.setAssignedRoles(assiRoles);
 			user.setPermissions(perms.others);
 			user.setServicesPermissions(perms.services);
 			
@@ -334,7 +376,7 @@ public final class UserManager {
 			DbUtils.commitQuietly(con);
 			
 			// Update cache
-			addToUidCache(new UserUid(ouser.getDomainId(), user.getUserId(), ouser.getUserUid(), ouser.getRoleUid()));
+			addToUserUidCache(new UserUid(ouser.getDomainId(), user.getUserId(), ouser.getUserUid()));
 
 			// Explicitly sets some important (locale & timezone) user settings to their defaults
 			UserProfile.Id pid = new UserProfile.Id(ouser.getDomainId(), ouser.getUserId());
@@ -438,6 +480,7 @@ public final class UserManager {
 		AuthManager authm = wta.getAuthManager();
 		UserDAO udao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
 		Connection con = null;
 		
 		try {
@@ -446,14 +489,21 @@ public final class UserManager {
 			OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			if(user == null) throw new WTException("User not found [{0}]", pid.toString());
 			
-			authm.deletePermission(con, user.getRoleUid());
+			logger.debug("Deleting permissions");
+			authm.deletePermissionByRole(con, user.getUserUid());
+			logger.debug("Deleting groups associations");
+			uadao.deleteByUser(con, user.getUserUid());
+			logger.debug("Deleting roles associations");
+			authm.deleteRoleAssociationByUser(con, user.getUserUid());
+			logger.debug("Deleting userInfo");
 			uidao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			logger.debug("Deleting user");
 			udao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			
 			if(cleanupDirectory) {
 				ODomain domain = getDomain(pid.getDomainId());
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-
+				
 				AuthenticationDomain ad = new AuthenticationDomain(domain);
 				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
@@ -466,7 +516,7 @@ public final class UserManager {
 			DbUtils.commitQuietly(con);
 			
 			// Update cache
-			removeFromUidCache(pid);
+			removeFromUserUidCache(pid);
 			removeFromUserCache(pid);
 			
 			// Cleanup all user settings ?????????????????????????????????????????????????
@@ -562,6 +612,20 @@ public final class UserManager {
 		}
 	}
 	
+	public List<OGroup> listGroups(String domainId) throws WTException {
+		GroupDAO dao = GroupDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return dao.selectByDomain(con, domainId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
 	
 	
@@ -636,15 +700,8 @@ public final class UserManager {
 	
 	public String userToUid(UserProfile.Id pid) {
 		synchronized(lock1) {
-			if(!cacheUserToUidBag.containsKey(pid)) throw new WTRuntimeException("[userToSidCache] Cache miss on key {0}", pid.toString());
-			return cacheUserToUidBag.get(pid).userUid;
-		}
-	}
-	
-	public String userToRoleUid(UserProfile.Id pid) {
-		synchronized(lock1) {
-			if(!cacheUserToUidBag.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
-			return cacheUserToUidBag.get(pid).roleUid;
+			if(!cacheUserToUserUid.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
+			return cacheUserToUserUid.get(pid);
 		}
 	}
 	
@@ -655,10 +712,17 @@ public final class UserManager {
 		}
 	}
 	
-	public UserProfile.Id roleUidToUser(String uid) {
-		synchronized(lock1) {
-			if(!cacheRoleUidToUser.containsKey(uid)) throw new WTRuntimeException("[roleUidToUserCache] Cache miss on key {0}", uid);
-			return cacheRoleUidToUser.get(uid);
+	public String groupToUid(UserProfile.Id pid) {
+		synchronized(lock2) {
+			if(!cacheGroupToGroupUid.containsKey(pid)) throw new WTRuntimeException("[groupToUidCache] Cache miss on key {0}", pid.toString());
+			return cacheGroupToGroupUid.get(pid);
+		}
+	}
+	
+	public UserProfile.Id uidToGroup(String uid) {
+		synchronized(lock2) {
+			if(!cacheGroupUidToGroup.containsKey(uid)) throw new WTRuntimeException("[uidToGroupCache] Cache miss on key {0}", uid);
+			return cacheGroupUidToGroup.get(uid);
 		}
 	}
 	
@@ -677,76 +741,32 @@ public final class UserManager {
 	
 	
 	
-	
-	
 	private UserEntry createUserEntry(UserEntity user) {
 		return new UserEntry(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
-	}
-	
-	private void doUserUpdate(Connection con, UserEntity user) throws DAOException, WTException {
-		AuthManager authm = wta.getAuthManager();
-		UserDAO udao = UserDAO.getInstance();
-		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		
-		UserEntity oldUser = getUserEntity(con, user.getProfileId());
-		if(oldUser == null) throw new WTException("User not found [{0}]", user.getProfileId().toString());
-		
-		logger.debug("Updating User");
-		OUser ouser = new OUser();
-		ouser.setDomainId(user.getDomainId());
-		ouser.setUserId(user.getUserId());
-		ouser.setEnabled(user.getEnabled());
-		ouser.setDisplayName(user.getDisplayName());
-		udao.updateEnabledDisplayName(con, ouser);
-
-		logger.debug("Updating UserInfo");
-		OUserInfo ouseri = new OUserInfo();
-		ouseri.setDomainId(user.getDomainId());
-		ouseri.setUserId(user.getUserId());
-		ouseri.setFirstName(user.getFirstName());
-		ouseri.setLastName(user.getLastName());
-		uidao.updateFirstLastName(con, ouseri);
-
-		logger.debug("Updating permissions");
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet1 = LangUtils.getCollectionChanges(oldUser.getPermissions(), user.getPermissions());
-		for(ORolePermission perm : changeSet1.deleted) {
-			authm.deletePermission(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet1.inserted) {
-			authm.addPermission(con, oldUser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
-		}
-
-		LangUtils.CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
-		for(ORolePermission perm : changeSet2.deleted) {
-			authm.deletePermission(con, perm.getRolePermissionId());
-		}
-		for(ORolePermission perm : changeSet2.inserted) {
-			authm.addPermission(con, oldUser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
-		}
 	}
 	
 	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
 		AuthManager authm = wta.getAuthManager();
 		UserDAO udao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
 		
 		InternetAddress email = MailUtils.buildInternetAddress(user.getUserId(), domain.getDomainName(), null);
 		if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getDomainName());
 		
 		// Insert User record
-		logger.debug("Inserting User");
+		logger.debug("Inserting user");
 		OUser ouser = new OUser();
 		ouser.setDomainId(user.getDomainId());
 		ouser.setUserId(user.getUserId());
 		ouser.setEnabled(user.getEnabled());
 		ouser.setUserUid(IdentifierUtils.getUUID());
-		ouser.setRoleUid(IdentifierUtils.getUUID());
 		ouser.setDisplayName(user.getDisplayName());
 		ouser.setSecret(generateSecretKey());
 		udao.insert(con, ouser);
 		
 		// Insert UserInfo record
-		logger.debug("Inserting UserInfo");
+		logger.debug("Inserting userInfo");
 		OUserInfo oui = new OUserInfo();
 		oui.setDomainId(user.getDomainId());
 		oui.setUserId(user.getUserId());
@@ -755,16 +775,97 @@ public final class UserManager {
 		oui.setEmail(email.getAddress());
 		uidao.insert(con, oui);
 		
+		logger.debug("Inserting groups associations");
+		for(AssignedGroup assiGroup : user.getAssignedGroups()) {
+			final OUserAssociation oua = new OUserAssociation();
+			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			oua.setUserAssociationId(uadao.getSequence(con).intValue());
+			oua.setUserUid(ouser.getUserUid());
+			oua.setGroupUid(groupUid);
+			uadao.insert(con, oua);
+		}
+		
+		logger.debug("Inserting roles associations");
+		for(AssignedRole assiRole : user.getAssignedRoles()) {
+			authm.addRoleAssociation(con, ouser.getUserUid(), assiRole.getRoleUid());
+		}
+		
 		// Insert permissions
 		logger.debug("Inserting permissions");
 		for(ORolePermission perm : user.getPermissions()) {
-			authm.addPermission(con, ouser.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+			authm.addPermission(con, ouser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 		}
 		for(ORolePermission perm : user.getServicesPermissions()) {
-			authm.addPermission(con, ouser.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+			authm.addPermission(con, ouser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 		}
 		
 		return ouser;
+	}
+	
+	private void doUserUpdate(Connection con, UserEntity user) throws DAOException, WTException {
+		AuthManager authm = wta.getAuthManager();
+		UserDAO udao = UserDAO.getInstance();
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
+		
+		UserEntity oldUser = getUserEntity(con, user.getProfileId());
+		if(oldUser == null) throw new WTException("User not found [{0}]", user.getProfileId().toString());
+		
+		logger.debug("Updating user");
+		OUser ouser = new OUser();
+		ouser.setDomainId(user.getDomainId());
+		ouser.setUserId(user.getUserId());
+		ouser.setEnabled(user.getEnabled());
+		ouser.setDisplayName(user.getDisplayName());
+		udao.updateEnabledDisplayName(con, ouser);
+
+		logger.debug("Updating userInfo");
+		OUserInfo ouseri = new OUserInfo();
+		ouseri.setDomainId(user.getDomainId());
+		ouseri.setUserId(user.getUserId());
+		ouseri.setFirstName(user.getFirstName());
+		ouseri.setLastName(user.getLastName());
+		uidao.updateFirstLastName(con, ouseri);
+		
+		logger.debug("Updating groups associations");
+		LangUtils.CollectionChangeSet<AssignedGroup> changeSet1 = LangUtils.getCollectionChanges(oldUser.getAssignedGroups(), user.getAssignedGroups());
+		for(AssignedGroup assiGroup : changeSet1.deleted) {
+			uadao.deleteById(con, assiGroup.getUserAssociationId());
+		}
+		for(AssignedGroup assiGroup : changeSet1.inserted) {
+			final OUserAssociation oua = new OUserAssociation();
+			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			oua.setUserAssociationId(uadao.getSequence(con).intValue());
+			oua.setUserUid(oldUser.getUserUid());
+			oua.setGroupUid(groupUid);
+			uadao.insert(con, oua);
+		}
+		
+		logger.debug("Updating roles associations");
+		LangUtils.CollectionChangeSet<AssignedRole> changeSet2 = LangUtils.getCollectionChanges(oldUser.getAssignedRoles(), user.getAssignedRoles());
+		for(AssignedRole assiRole : changeSet2.deleted) {
+			authm.deleteRoleAssociation(con, assiRole.getRoleAssociationId());
+		}
+		for(AssignedRole assiRole : changeSet2.inserted) {
+			authm.addRoleAssociation(con, oldUser.getUserUid(), assiRole.getRoleUid());
+		}
+
+		logger.debug("Updating permissions");
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet3 = LangUtils.getCollectionChanges(oldUser.getPermissions(), user.getPermissions());
+		for(ORolePermission perm : changeSet3.deleted) {
+			authm.deletePermission(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet3.inserted) {
+			authm.addPermission(con, oldUser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+		}
+
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet4 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
+		for(ORolePermission perm : changeSet4.deleted) {
+			authm.deletePermission(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet4.inserted) {
+			authm.addPermission(con, oldUser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+		}
 	}
 	
 	private UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
@@ -832,7 +933,7 @@ public final class UserManager {
 		}
 	}
 	
-	private void initUidCache() {
+	private void initUserUidCache() {
 		Connection con = null;
 		
 		try {
@@ -840,42 +941,84 @@ public final class UserManager {
 				UserDAO dao = UserDAO.getInstance();
 				
 				con = wta.getConnectionManager().getConnection();
-				List<UserUid> uids = dao.selectAllUids(con);
-				cleanupUidCache();
+				List<UserUid> uids = dao.viewAllUids(con);
+				cleanupUserUidCache();
 				for(UserUid uid : uids) {
-					addToUidCache(uid);
+					addToUserUidCache(uid);
 				}
 			}
 		} catch(SQLException ex) {
-			throw new WTRuntimeException(ex, "Unable to init UID cache");
+			throw new WTRuntimeException(ex, "Unable to init user UID cache");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private void cleanupUidCache() {
+	private void cleanupUserUidCache() {
 		synchronized(lock1) {
-			cacheUserToUidBag.clear();
+			cacheUserToUserUid.clear();
 			cacheUserUidToUser.clear();
-			cacheRoleUidToUser.clear();
 		}
 	}
 	
-	private void addToUidCache(UserUid uid) {
+	private void addToUserUidCache(UserUid uid) {
 		synchronized(lock1) {
 			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
-			cacheUserToUidBag.put(pid, new UserUidBag(uid.getUserUid(), uid.getRoleUid()));
+			cacheUserToUserUid.put(pid, uid.getUserUid());
 			cacheUserUidToUser.put(uid.getUserUid(), pid);
-			cacheRoleUidToUser.put(uid.getRoleUid(), pid);
 		}
 	}
 	
-	private void removeFromUidCache(UserProfile.Id pid) {
+	private void removeFromUserUidCache(UserProfile.Id pid) {
 		synchronized(lock1) {
-			if(cacheUserToUidBag.containsKey(pid)) {
-				UserUidBag bag = cacheUserToUidBag.remove(pid);
-				cacheUserUidToUser.remove(bag.userUid);
-				cacheRoleUidToUser.remove(bag.roleUid);
+			if(cacheUserToUserUid.containsKey(pid)) {
+				String uid = cacheUserToUserUid.remove(pid);
+				cacheUserUidToUser.remove(uid);
+			}
+		}
+	}
+	
+	private void initGroupUidCache() {
+		Connection con = null;
+		
+		try {
+			synchronized(lock2) {
+				GroupDAO dao = GroupDAO.getInstance();
+				
+				con = wta.getConnectionManager().getConnection();
+				List<GroupUid> uids = dao.viewAllUids(con);
+				cleanupGroupUidCache();
+				for(GroupUid uid : uids) {
+					addToGroupUidCache(uid);
+				}
+			}
+		} catch(SQLException ex) {
+			throw new WTRuntimeException(ex, "Unable to init group UID cache");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private void cleanupGroupUidCache() {
+		synchronized(lock2) {
+			cacheGroupToGroupUid.clear();
+			cacheGroupUidToGroup.clear();
+		}
+	}
+	
+	private void addToGroupUidCache(GroupUid uid) {
+		synchronized(lock2) {
+			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
+			cacheGroupToGroupUid.put(pid, uid.getUserUid());
+			cacheGroupUidToGroup.put(uid.getUserUid(), pid);
+		}
+	}
+	
+	private void removeFromGroupUidCache(UserProfile.Id pid) {
+		synchronized(lock2) {
+			if(cacheGroupToGroupUid.containsKey(pid)) {
+				String uid = cacheGroupToGroupUid.remove(pid);
+				cacheGroupUidToGroup.remove(uid);
 			}
 		}
 	}

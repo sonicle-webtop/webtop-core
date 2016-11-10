@@ -41,23 +41,28 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
-import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
+import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsRole;
+import com.sonicle.webtop.core.bol.js.JsRoleLkp;
+import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
+import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
+import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -102,6 +107,55 @@ public class Service extends BaseService {
 		node.setIconClass(iconClass);
 		return node;
 	}
+	
+	public void processLookupDomainGroups(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsSimple> items = new ArrayList<>();
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean uid = ServletUtils.getBooleanParameter(request, "uid", false);
+			
+			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for(OGroup group : coreadm.listGroups(domainId)) {
+				items.add(new JsSimple(uid ? group.getUserUid() : group.getGroupId(), group.getDisplayName()));
+			}
+			
+			new JsonResult("groups", items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupDomainGroups", ex);
+			new JsonResult(false, "Unable to lookup groups").printTo(out);
+		}
+	}
+	
+	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsRoleLkp> items = new ArrayList<>();
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			for(Role role : coreadm.listRoles(domainId)) {
+				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
+			}
+			
+			new JsonResult("roles", items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupDomainRoles", ex);
+			new JsonResult(false, "Unable to lookup roles").printTo(out);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	private static final String NTYPE_SETTINGS = "settings";
 	private static final String NTYPE_DOMAINS = "domains";
@@ -161,9 +215,9 @@ public class Service extends BaseService {
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wta-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-domainGroups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-domainUsers-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-domainRoles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 						
 						} else { // Availbale webtop domains
 							for(ODomain domain : core.listDomains(false)) {
@@ -237,7 +291,33 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageSettings", ex);
-			new JsonResult(false, "Error").printTo(out);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomains(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				DomainEntity domain = coreadm.getDomain(id);
+				new JsonResult(domain).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, DomainEntity> pl = ServletUtils.getPayload(request, DomainEntity.class);
+				coreadm.addDomain(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, DomainEntity> pl = ServletUtils.getPayload(request, DomainEntity.class);
+				coreadm.updateDomain(pl.data);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomains", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -294,8 +374,7 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageSettings", ex);
-			new JsonResult(false, "Error").printTo(out);
-			
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -332,7 +411,7 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageDomainUsers", ex);
-			new JsonResult(false, "Error").printTo(out);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -360,7 +439,7 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageUsers", ex);
-			new JsonResult(false, "Error").printTo(out);	
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -376,14 +455,9 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ChangeUserPassword", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out);
+			new JsonResult(ex).printTo(out);
 		}
 	}
-	
-	
-	
-	
-	
 	
 	public void processManageDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
@@ -391,7 +465,7 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-
+				
 				List<JsGridDomainRole> items = new ArrayList<>();
 				for(Role role : coreadm.listRoles(domainId)) {
 					items.add(new JsGridDomainRole(role));
@@ -408,7 +482,7 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageDomainRoles", ex);
-			new JsonResult(false, "Error").printTo(out);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -434,8 +508,7 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageRoles", ex);
-			new JsonResult(false, "Error").printTo(out);
-			
+			new JsonResult(ex).printTo(out);
 		}
 	}
 }

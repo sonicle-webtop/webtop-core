@@ -34,8 +34,8 @@
 Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	extend: 'WT.sdk.ModelView',
 	requires: [
-		'Sonicle.webtop.core.ux.grid.RolePermissions',
-		'Sonicle.webtop.core.ux.grid.RoleSvcPermissions'
+		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
+		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
 	],
 	
 	dockableConfig: {
@@ -81,35 +81,32 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				flex: 1,
 				activeTab: 0,
 				items: [{
-					xtype: 'wtrolesvcpermissionsgrid',
-					title: me.mys.res('role.servicesPerms.tit'),
-					iconCls: 'wt-icon-service-module-xs',
+					xtype: 'wtaroleservicegrid',
+					title: me.mys.res('role.assignedServices.tit'),
+					iconCls: 'wta-icon-service-module-xs',
 					bind: {
-						store: '{record.servicesPerms}'
+						store: '{record.assignedServices}'
 					},
 					listeners: {
 						pick: function(s, val) {
 							var mo = me.getModel();
-							mo.servicesPerms().add({
+							mo.assignedServices().add({
 								_fk: mo.getId(),
-								serviceId: '',
-								groupName: '',
-								action: '',
-								instance: val
+								serviceId: val
 							});
 						}
 					}
 				}, {
-					xtype: 'wtrolepermissionsgrid',
-					title: me.mys.res('role.othersPerms.tit'),
-					iconCls: 'wt-icon-permission-xs',
+					xtype: 'wtarolepermissiongrid',
+					title: me.mys.res('role.permissions.tit'),
+					iconCls: 'wta-icon-permission-xs',
 					bind: {
-						store: '{record.othersPerms}'
+						store: '{record.permissions}'
 					},
 					listeners: {
 						pick: function(s, serviceId, groupName, action) {
 							var mo = me.getModel();
-							mo.othersPerms().add({
+							mo.permissions().add({
 								_fk: mo.getId(),
 								serviceId: serviceId,
 								groupName: groupName,

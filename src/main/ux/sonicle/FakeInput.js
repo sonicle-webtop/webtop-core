@@ -27,7 +27,7 @@ Ext.define('Sonicle.FakeInput', {
 		me.on('afterrender', function(s) {
 			Ext.defer(function() {
 				s.getEl().setStyle('display', 'none');
-			}, 100);
+			}, 10);
 		}, me, {single: true});
 	}
 });

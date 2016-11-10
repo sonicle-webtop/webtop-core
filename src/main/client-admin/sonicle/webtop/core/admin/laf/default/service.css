@@ -3,14 +3,20 @@
 .wta-icon-service-m { background-image: url('service_32.png') !important; }
 .wta-icon-service-l { background-image: url('service_48.png') !important; }
 
+.wta-icon-addDomain-xs { background-image: url('domain-add_16.png') !important; }
+.wta-icon-editDomain-xs { background-image: url('domain-edit_16.png') !important; }
+.wta-icon-deleteDomain-xs { background-image: url('domain-delete_16.png') !important; }
+
 .wta-icon-settings-xs { background-image: url('settings_16.png') !important; }
 .wta-icon-dbUpgrader-xs { background-image: url('dbUpgrader_16.png') !important; }
 .wta-icon-domains-xs { background-image: url('domains_16.png') !important; }
 .wta-icon-domain-xs { background-image: url('domain_16.png') !important; }
-.wta-icon-domainGroups-xs { background-image: url('domainGroups_16.png') !important; }
-.wta-icon-domainUsers-xs { background-image: url('domainUsers_16.png') !important; }
-.wta-icon-domainRoles-xs { background-image: url('domainRoles_16.png') !important; }
+.wta-icon-groups-xs { background-image: url('group_16.png') !important; }
+.wta-icon-users-xs { background-image: url('user_16.png') !important; }
+.wta-icon-roles-xs { background-image: url('role_16.png') !important; }
 .wta-icon-user-xs { background-image: url('user_16.png') !important; }
 .wta-icon-role-xs { background-image: url('role_16.png') !important; }
+.wta-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
+.wta-icon-permission-xs { background-image: url('permission_16.png') !important; }
 
 .wta-gpusers-row-disabled { color: #E60D35; }

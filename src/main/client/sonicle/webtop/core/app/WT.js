@@ -40,11 +40,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * Core service ID.
 	 */
 	ID: 'com.sonicle.webtop.core',
+	
 	/**
 	 * @property
 	 * Core service short ID.
 	 */
 	XID: 'wt',
+	
 	/**
 	 * @property
 	 * Core service namespace.
@@ -167,6 +169,18 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	findXid: function(id) {
 		var desc = this.getApp().getDescriptor(id);
 		return (desc) ? desc.getXid() : null;
+	},
+	
+	toPid: function(domainId, userId) {
+		return userId + '@' + domainId;
+	},
+	
+	fromPid: function(pid) {
+		var tks = pid.split('@');
+		return {
+			domainId: tks[1],
+			userId: tks[0]
+		};
 	},
 	
 	/**
@@ -576,6 +590,19 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		Ext.apply(obj, {headers: hdrs});
 		//headers: {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
 		Ext.Ajax.request(obj);
+	},
+	
+	handleRequestError: function(sid, act, req, op) {
+		if(!req.aborted) {
+			if(req.status === 200) {
+				var msg = op.getError();
+				if(!Ext.isEmpty(msg)) {
+					WT.error(msg);
+				} else {
+					WT.error(WT.res(WT.ID, 'error.request.action', act, sid));
+				}
+			}
+		}
 	},
 	
 	reload: function() {

@@ -31,30 +31,34 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.Role', {
+Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 	extend: 'WT.ux.data.BaseModel',
 	requires: [
 		'Sonicle.data.writer.Json',
-		'Sonicle.webtop.core.admin.model.AssignedService',
-		'Sonicle.webtop.core.admin.model.RolePermission'
+		'Sonicle.data.validator.Username'
 	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageRoles', 'data', {
+	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomains', 'data', {
 		writer: {
 			type: 'sojson',
 			writeAssociations: true
 		}
 	}),
 	
-	identifier: 'negativestring',
-	idProperty: 'roleUid',
 	fields: [
-		WTF.field('roleUid', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('name', 'string', false),
-		WTF.field('description', 'string', true)
-	],
-	hasMany: [
-		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
-		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
+		WTF.field('domainId', 'string', false, {
+			validators: ['sousername']
+		}),
+		WTF.field('internetName', 'string', false),
+		WTF.field('displayName', 'string', false),
+		WTF.field('enabled', 'boolean', false),
+		WTF.field('dirScheme', 'string', false),
+		WTF.field('dirHost', 'string', true),
+		WTF.field('dirPort', 'int', true),
+		WTF.field('dirPath', 'string', true),
+		WTF.field('dirUsername', 'string', false),
+		WTF.field('dirPassword', 'string', false),
+		WTF.field('dirCaseSensitive', 'boolean', false),
+		WTF.field('dirPasswordPolicy', 'boolean', false),
+		WTF.field('userAutoCreation', 'boolean', false)
 	]
 });

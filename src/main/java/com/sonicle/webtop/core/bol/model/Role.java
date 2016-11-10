@@ -66,14 +66,14 @@ public class Role {
 	}
 	
 	public Role(OGroup o) {
-		this.roleUid = o.getRoleUid();
+		this.roleUid = o.getUserUid();
 		this.domainId = o.getDomainId();
 		this.name = o.getUserId();
 		this.description = o.getDisplayName();
 	}
 	
 	public Role(OUser o) {
-		this.roleUid = o.getRoleUid();
+		this.roleUid = o.getUserUid();
 		this.domainId = o.getDomainId();
 		this.name = o.getUserId();
 		this.description = o.getDisplayName();

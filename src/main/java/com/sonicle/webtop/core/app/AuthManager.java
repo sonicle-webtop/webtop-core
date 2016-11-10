@@ -38,8 +38,10 @@ import com.sonicle.commons.LangUtils.CollectionChangeSet;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORole;
+import com.sonicle.webtop.core.bol.ORoleAssociation;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
@@ -124,6 +126,12 @@ public class AuthManager {
 		return directory;
 	}
 	
+	/**
+	 * Lists domain real roles (those defined as indipendent role).
+	 * @param domainId The domain ID.
+	 * @return
+	 * @throws WTException 
+	 */
 	public List<Role> listRoles(String domainId) throws WTException {
 		RoleDAO dao = RoleDAO.getInstance();
 		ArrayList<Role> items = new ArrayList<>();
@@ -143,6 +151,12 @@ public class AuthManager {
 		return items;
 	}
 	
+	/**
+	 * Lists domain users roles (those coming from a user).
+	 * @param domainId The domain ID.
+	 * @return
+	 * @throws WTException 
+	 */
 	public List<Role> listUsersRoles(String domainId) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		ArrayList<Role> items = new ArrayList<>();
@@ -162,6 +176,12 @@ public class AuthManager {
 		return items;
 	}
 	
+	/**
+	 * Lists domain groups roles (those coming from a group).
+	 * @param domainId The domain ID.
+	 * @return
+	 * @throws WTException 
+	 */
 	public List<Role> listGroupsRoles(String domainId) throws WTException {
 		GroupDAO dao = GroupDAO.getInstance();
 		ArrayList<Role> items = new ArrayList<>();
@@ -181,37 +201,57 @@ public class AuthManager {
 		return items;
 	}
 	
-	/*
-	public List<Role2> listRoles(String domainId, boolean fromUsers, boolean fromGroups) throws WTException {
+	public List<AssignedRole> listAssignedRoles(String userUid) throws WTException {
 		Connection con = null;
-		ArrayList<Role2> roles = new ArrayList<>();
 		
 		try {
 			con = WT.getConnection(CoreManifest.ID);
-			if(fromUsers) {
-				UserDAO usedao = UserDAO.getInstance();
-				List<OUser> users = usedao.selectActiveByDomain(con, domainId);
-				for(OUser user: users) roles.add(new Role2(user));
-			}
-			if(fromUsers) {
-				GroupDAO grpdao = GroupDAO.getInstance();
-				List<OGroup> groups = grpdao.selectByDomain(con, domainId);
-				for(OGroup group: groups) roles.add(new Role2(group));
-			}
-			
-			RoleDAO roldao = RoleDAO.getInstance();
-			List<ORole> eroles = roldao.selectByDomain(con, domainId);
-			for(ORole erole : eroles) roles.add(new Role2(erole));
+			return listAssignedRoles(con, userUid);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-		return roles;
 	}
-	*/
 	
+	List<AssignedRole> listAssignedRoles(Connection con, String userUid) throws WTException {
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		
+		try {
+			return rolassdao.viewAssignedByUser(con, userUid);
+			
+		} catch(DAOException ex) {
+			throw new WTException(ex, "DB error");
+		}
+	}
+	
+	void deleteRoleAssociation(Connection con, int roleAssociationId) throws WTException {
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		rolassdao.deleteById(con, roleAssociationId);
+	}
+	
+	void deleteRoleAssociationByUser(Connection con, String userUid) throws WTException {
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		rolassdao.deleteByUser(con, userUid);
+	}
+	
+	void addRoleAssociation(Connection con, String userUid, String roleUid) throws WTException {
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		
+		ORoleAssociation ora = new ORoleAssociation();
+		ora.setRoleAssociationId(rolassdao.getSequence(con).intValue());
+		ora.setUserUid(userUid);
+		ora.setRoleUid(roleUid);
+		rolassdao.insert(con, ora);
+	}
+	
+	/**
+	 * Retrieves the domain ID for the specified role.
+	 * @param uid
+	 * @return
+	 * @throws WTException 
+	 */
 	public String getRoleDomain(String uid) throws WTException {
 		Connection con = null;
 		
@@ -358,16 +398,16 @@ public class AuthManager {
 		}
 	}
 	
-	public List<String> getRolesAsStringByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+	public List<String> getComputedRolesAsStringByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
 		ArrayList<String> uids = new ArrayList<>();
-		Set<RoleWithSource> roles = getRolesByUser(pid, self, transitive);
+		Set<RoleWithSource> roles = getComputedRolesByUser(pid, self, transitive);
 		for(RoleWithSource role : roles) {
 			uids.add(role.getRoleUid());
 		}
 		return uids;
 	}
 	
-	public Set<RoleWithSource> getRolesByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+	public Set<RoleWithSource> getComputedRolesByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
 		UserManager usrm = wta.getUserManager();
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
@@ -376,12 +416,11 @@ public class AuthManager {
 		try {
 			con = WT.getConnection(CoreManifest.ID);
 			String userUid = usrm.userToUid(pid);
-			String userRoleUid = usrm.userToRoleUid(pid);
 			
 			if(self) {
 				UserDAO usedao = UserDAO.getInstance();
 				OUser user = usedao.selectByUid(con, userUid);
-				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userRoleUid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
+				roles.add(new RoleWithSource(RoleWithSource.SOURCE_USER, userUid, user.getDomainId(), pid.getUserId(), user.getDisplayName()));
 			}
 			
 			RoleDAO roldao = RoleDAO.getInstance();
@@ -420,10 +459,9 @@ public class AuthManager {
 	}
 	
 	
-	
 	public ORolePermission addPermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws WTException {
 		UserManager usrm = wta.getUserManager();
-		return addPermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
+		return addPermission(con, usrm.userToUid(pid), serviceId, key, action, instance);
 	}
 	
 	public ORolePermission addPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
@@ -446,17 +484,17 @@ public class AuthManager {
 		return rpdao.deleteById(con, permissionId);
 	}
 	
-	public int deletePermission(Connection con, String roleUid) throws DAOException {
+	public int deletePermissionByRole(Connection con, String roleUid) throws DAOException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
 		return rpdao.deleteByRole(con, roleUid);
 	}
 	
-	public int deletePermission(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws DAOException {
+	public int deletePermissionBy(Connection con, UserProfile.Id pid, String serviceId, String key, String action, String instance) throws DAOException {
 		UserManager usrm = wta.getUserManager();
-		return deletePermission(con, usrm.userToRoleUid(pid), serviceId, key, action, instance);
+		return deletePermissionBy(con, usrm.userToUid(pid), serviceId, key, action, instance);
 	}
 	
-	public int deletePermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws DAOException {
+	public int deletePermissionBy(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws DAOException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
 		return rpdao.deleteByRoleServiceKeyActionInstance(con, roleUid, serviceId, key, action, instance);
 	}

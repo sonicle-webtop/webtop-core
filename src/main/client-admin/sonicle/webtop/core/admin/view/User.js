@@ -38,8 +38,10 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		'Sonicle.form.Spacer',
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
-		'Sonicle.webtop.core.ux.grid.RolePermissions',
-		'Sonicle.webtop.core.ux.grid.RoleSvcPermissions'
+		'Sonicle.webtop.core.admin.ux.GroupGrid',
+		'Sonicle.webtop.core.admin.ux.RoleGrid',
+		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
+		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
 	],
 	
 	dockableConfig: {
@@ -51,6 +53,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	fieldTitle: 'userId',
 	modelName: 'Sonicle.webtop.core.admin.model.User',
 	
+	domainId: null,
 	passwordPolicy: false,
 	
 	constructor: function(cfg) {
@@ -134,35 +137,66 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				flex: 1,
 				activeTab: 0,
 				items: [{
-					xtype: 'wtrolesvcpermissionsgrid',
-					title: me.mys.res('user.servicesPerms.tit'),
-					iconCls: 'wt-icon-service-module-xs',
+					xtype: 'wtagroupgrid',
+					title: me.mys.res('user.assignedGroups.tit'),
+					iconCls: 'wta-icon-groups-xs',
 					bind: {
-						store: '{record.servicesPerms}'
+						store: '{record.assignedGroups}'
 					},
+					domainId: me.domainId,
 					listeners: {
 						pick: function(s, val) {
 							var mo = me.getModel();
-							mo.servicesPerms().add({
+							mo.assignedGroups().add({
 								_fk: mo.getId(),
-								serviceId: '',
-								groupName: '',
-								action: '',
-								instance: val
+								groupId: val
 							});
 						}
 					}
 				}, {
-					xtype: 'wtrolepermissionsgrid',
-					title: me.mys.res('user.othersPerms.tit'),
-					iconCls: 'wt-icon-permission-xs',
+					xtype: 'wtarolegrid',
+					title: me.mys.res('user.assignedRoles.tit'),
+					iconCls: 'wta-icon-roles-xs',
 					bind: {
-						store: '{record.othersPerms}'
+						store: '{record.assignedRoles}'
+					},
+					domainId: me.domainId,
+					listeners: {
+						pick: function(s, val) {
+							var mo = me.getModel();
+							mo.assignedRoles().add({
+								_fk: mo.getId(),
+								roleUid: val
+							});
+						}
+					}
+				}, {
+					xtype: 'wtaroleservicegrid',
+					title: me.mys.res('user.assignedServices.tit'),
+					iconCls: 'wta-icon-service-module-xs',
+					bind: {
+						store: '{record.assignedServices}'
+					},
+					listeners: {
+						pick: function(s, val) {
+							var mo = me.getModel();
+							mo.assignedServices().add({
+								_fk: mo.getId(),
+								serviceId: val
+							});
+						}
+					}
+				}, {
+					xtype: 'wtarolepermissiongrid',
+					title: me.mys.res('user.permissions.tit'),
+					iconCls: 'wta-icon-permission-xs',
+					bind: {
+						store: '{record.permissions}'
 					},
 					listeners: {
 						pick: function(s, serviceId, groupName, action) {
 							var mo = me.getModel();
-							mo.othersPerms().add({
+							mo.permissions().add({
 								_fk: mo.getId(),
 								serviceId: serviceId,
 								groupName: groupName,

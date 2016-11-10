@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.model.RoleLkp', {
 		WTF.field('id', 'string', false),
 		WTF.roField('desc', 'string'),
 		WTF.roField('source', 'string'),
-		WTF.calcField('sourcedesc', 'string', 'source', function(v,rec) {
+		WTF.calcField('sourcelabel', 'string', 'source', function(v,rec) {
 			return '['+WT.res('role.source.'+rec.get('source'))+']';
 		})
 	]

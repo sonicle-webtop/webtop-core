@@ -31,10 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.PermissionPicker', {
-	alternateClassName: 'WT.ux.PermissionPicker',
+Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 	extend: 'Ext.panel.Panel',
-	alias: ['widget.wtpermissionpicker'],
+	alias: ['widget.wtapermissionpicker'],
 	requires: [
 		'Sonicle.webtop.core.model.ServiceLkp',
 		'Sonicle.webtop.core.model.ServicePermissionLkp'
@@ -116,7 +115,7 @@ Ext.define('Sonicle.webtop.core.ux.PermissionPicker', {
 					model: 'Sonicle.webtop.core.model.ServiceLkp',
 					proxy: WTF.proxy(WT.ID, 'LookupServices')
 				},
-				fieldLabel: WT.res('wtrolepermissionsgrid.serviceId.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.serviceId.lbl')
 			}),
 			WTF.localCombo('groupName', 'groupName', {
 				reference: 'fldgroupname',
@@ -136,7 +135,7 @@ Ext.define('Sonicle.webtop.core.ux.PermissionPicker', {
 					}]
 				},
 				disabled: true,
-				fieldLabel: WT.res('wtrolepermissionsgrid.groupName.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.groupName.lbl')
 			}),
 			WTF.localCombo('action', 'action', {
 				reference: 'fldaction',
@@ -158,7 +157,7 @@ Ext.define('Sonicle.webtop.core.ux.PermissionPicker', {
 					}]
 				},
 				disabled: true,
-				fieldLabel: WT.res('wtrolepermissionsgrid.action.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.action.lbl')
 			})
 		]);
 	},

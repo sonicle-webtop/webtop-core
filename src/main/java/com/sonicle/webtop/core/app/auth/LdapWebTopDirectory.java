@@ -36,6 +36,9 @@ package com.sonicle.webtop.core.app.auth;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.security.auth.directory.LdapDirectory;
+import static com.sonicle.webtop.core.app.auth.WebTopDirectory.SCHEME;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.ldaptive.LdapAttribute;
@@ -44,16 +47,22 @@ import org.ldaptive.LdapAttribute;
  *
  * @author malbinola
  */
-public class WebTopLdapDirectory extends LdapDirectory {
+public class LdapWebTopDirectory extends LdapDirectory {
+	public static final String SCHEME = "ldapwebtop";
 	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
 	public static final Pattern PATTERN_PASSWORD_ULETTERS = Pattern.compile(".*[A-Z].*");
 	public static final Pattern PATTERN_PASSWORD_LLETTERS = Pattern.compile(".*[a-z].*");
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
+	public URI buildUri(String host, Integer port) throws URISyntaxException {
+		int iport = (port == null) ? LdapWebTopConfigBuilder.DEFAULT_PORT : port;
+		return new URI(SCHEME, null, null, iport, LdapWebTopConfigBuilder.DEFAULT_USERS_DN, null, null);
+	}
+	
 	@Override
-	public WebTopLdapConfigBuilder getConfigBuilder() {
-		return WebTopLdapConfigBuilder.getInstance();
+	public LdapWebTopConfigBuilder getConfigBuilder() {
+		return LdapWebTopConfigBuilder.getInstance();
 	}
 	
 	@Override

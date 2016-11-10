@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	requires: [
 		'Sonicle.webtop.core.admin.model.AdminNode',
 		'Sonicle.webtop.core.admin.view.Settings',
+		'Sonicle.webtop.core.admin.view.Domain',
 		'Sonicle.webtop.core.admin.view.DomainSettings',
 		'Sonicle.webtop.core.admin.view.DomainUsers',
 		'Sonicle.webtop.core.admin.view.DomainRoles'
@@ -44,6 +45,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	init: function() {
 		var me = this;
 		
+		me.initActions();
+		me.initCxm();
 		
 		me.setToolComponent(Ext.create({
 			xtype: 'panel',
@@ -87,40 +90,28 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						*/
 					},
 					itemclick: function(s, rec, itm, i, e) {
-						console.log('itemclick');
-						
 						var type = rec.get('_type'), domainId;
 						if(type === 'settings') {
 							domainId = rec.get('_domainId');
 							if(domainId) {
-								me.showDomainSettings(rec);
+								me.showDomainSettingsUI(rec);
 							} else {
-								me.showSettings(rec);
+								me.showSettingsUI(rec);
 							}
 						} else if(type === 'users') {
-							me.showDomainUsers(rec);
+							me.showDomainUsersUI(rec);
 						} else if(type === 'roles') {
-							me.showDomainRoles(rec);
+							me.showDomainRolesUI(rec);
 						}
 						
 					},
 					itemcontextmenu: function(s, rec, itm, i, e) {
-						console.log('itemcontextmenu');
-						/*
 						var type = rec.get('_type');
-						if(type === 'root') {
-							me.setCurNode(rec.get('id'));
-							WT.showContextMenu(e, me.getRef('cxmRootStore'), {node: rec});
-						} else if(type === 'folder') {
-							me.setCurNode(rec.get('id'));
-							WT.showContextMenu(e, me.getRef('cxmStore'), {node: rec});
-						} else if(type === 'file') {
-							me.setCurNode(rec.get('id'));
-							WT.showContextMenu(e, me.getRef('cxmFile'), {node: rec});
-						} else {
-							me.setCurNode(null);
+						if(type === 'domains') {
+							WT.showContextMenu(e, me.getRef('cxmDomains'), {node: rec});
+						} else if(type === 'domain') {
+							WT.showContextMenu(e, me.getRef('cxmDomain'), {node: rec});
 						}
-						*/
 					}
 				}
 			}]
@@ -131,7 +122,67 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		}));
 	},
 	
-	showSettings: function(node) {
+	trAdmin: function() {
+		return this.getToolComponent().lookupReference('tradmin');
+	},
+	
+	initActions: function() {
+		var me = this;
+		me.addAction('addDomain', {
+			handler: function() {
+				me.addDomainUI();
+			}
+		});
+		me.addAction('editDomain', {
+			handler: function() {
+				var node = me.getCurrentDomainNode();
+				if(node) me.editDomainUI(node);
+			}
+		});
+		me.addAction('deleteDomain', {
+			handler: function() {
+				var node = me.getCurrentDomainNode();
+				if(node) me.deleteDomainUI(node);
+			}
+		});
+	},
+	
+	initCxm: function() {
+		var me = this;
+		me.addRef('cxmDomains', Ext.create({
+			xtype: 'menu',
+			items: [
+				me.getAction('addDomain')
+			],
+			listeners: {
+				beforeshow: function(s) {
+					me.updateDisabled('addDomain');
+				}
+			}
+		}));
+		me.addRef('cxmDomain', Ext.create({
+			xtype: 'menu',
+			items: [
+				me.getAction('editDomain'),
+				me.getAction('deleteDomain'),
+				me.getAction('addDomain')
+			],
+			listeners: {
+				beforeshow: function(s) {
+					me.updateDisabled('editDomain');
+					me.updateDisabled('deleteDomain');
+					me.updateDisabled('addDomain');
+				}
+			}
+		}));
+	},
+	
+	getCurrentDomainNode: function() {
+		var sel = this.trAdmin().getSelection();
+		return sel.length > 0 ? sel[0] : null;
+	},
+	
+	showSettingsUI: function(node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -144,7 +195,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainSettings: function(node) {
+	showDomainSettingsUI: function(node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -158,7 +209,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainUsers: function(node) {
+	showDomainUsersUI: function(node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -175,7 +226,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainRoles: function(node) {
+	showDomainRolesUI: function(node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -186,6 +237,85 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				domainId: node.get('_domainId'),
 				closable: true
 			});
+		});
+	},
+	
+	addDomainUI: function() {
+		this.addDomain({
+			callback: function(success) {
+				if(success) this.loadTreeNode('domains');
+			}
+		});
+	},
+	
+	editDomainUI: function(node) {
+		var me = this;
+		me.editDomain(node.get('_domainId'), {
+			callback: function(success) {
+				if(success) this.loadTreeNode('domains');
+			}
+		});
+	},
+	
+	deleteDomainUI: function(node) {
+		var me = this,
+				sto = me.trStores().getStore();
+		WT.confirm(me.res('store.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
+			if(bid === 'yes') {
+				me.deleteDomain(node.get('_domainId'), {
+					callback: function(success) {
+						if(success) sto.remove(node);
+					}
+				});
+			}
+		});
+	},
+	
+	addDomain: function(opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Domain');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					dirScheme: 'ldapwebtop'
+				}
+			});
+		});
+	},
+	
+	editDomain: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Domain');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					id: domainId
+				}
+			});
+		});
+	},
+	
+	deleteDomain: function(domainId, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomains', {
+			params: {
+				crud: 'delete',
+				domainId: domainId
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
 		});
 	},
 	
@@ -228,6 +358,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		var me = this,
 				vct = WT.createView(me.ID, 'view.User', {
 					viewCfg: {
+						domainId: domainId,
 						passwordPolicy: passwordPolicy
 					}
 				});
@@ -252,7 +383,11 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	editUser: function(profileId, opts) {
 		opts = opts || {};
 		var me = this,
-				vct = WT.createView(me.ID, 'view.User');
+				vct = WT.createView(me.ID, 'view.User', {
+					viewCfg: {
+						domainId: WT.fromPid(profileId).domainId
+					}
+				});
 		
 		vct.getView().on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -318,5 +453,44 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		tab = pnl.getComponent(itemId);
 		if(!tab) tab = pnl.add(createFn());
 		pnl.setActiveTab(tab);
+	},
+	
+	loadTreeNode: function(node) {
+		var me = this,
+				sto = me.trAdmin().getStore(),
+				no;
+		if(node && node.isNode) {
+			no = node;
+		} else {
+			no = sto.getNodeById(node);
+		}
+		if(no) sto.load({node: no});
+	},
+	
+	/**
+	 * @private
+	 */
+	updateDisabled: function(action) {
+		var me = this,
+				dis = me.isDisabled(action);
+		me.setActionDisabled(action, dis);
+	},
+	
+	/**
+	 * @private
+	 */
+	isDisabled: function(action) {
+		var me = this, sel;
+		switch(action) {
+			case 'editDomain':
+				sel = me.getCurrentDomainNode();
+				return sel ? false : true;
+			case 'deleteDomain':
+				sel = me.getCurrentDomainNode();
+				return sel ? false : true;
+			case 'addDomain':
+				return false;
+				//if(!me.isPermitted('STORE_OTHER', 'CREATE')) return true;
+		}
 	}
 });

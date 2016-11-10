@@ -31,14 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.grid.RoleSvcPermissions', {
-	alternateClassName: 'WT.ux.grid.RoleSvcPermissions',
+Ext.define('Sonicle.webtop.core.admin.ux.RolePermissionGrid', {
 	extend: 'Ext.grid.Panel',
-	alias: 'widget.wtrolesvcpermissionsgrid',
+	alias: 'widget.wtarolepermissiongrid',
 	requires: [
-		'Sonicle.picker.List',
-		'WT.ux.PickerWindow',
-		'Sonicle.webtop.core.model.ServiceLkp'
+		'Sonicle.webtop.core.admin.ux.PermissionPicker'
 	],
 	
 	initComponent: function() {
@@ -51,14 +48,23 @@ Ext.define('Sonicle.webtop.core.ux.grid.RoleSvcPermissions', {
 		if(!me.viewConfig) {
 			me.viewConfig = {
 				deferEmptyText: false,
-				emptyText: WT.res('grid.emptyText')
+				emptyText: WT.res(WT.ID + '.admin', 'wtarolepermissiongrid.emp')
 			};
 		}
 		
 		if(!me.columns) {
-			me.hideHeaders = true;
+			//me.hideHeaders = false;
 			me.columns = [{
-				dataIndex: 'instance',
+				dataIndex: 'serviceId',
+				header: WT.res(WT.ID + '.admin', 'wtapermissionpicker.serviceId.lbl'),
+				flex: 1
+			}, {
+				dataIndex: 'groupName',
+				header: WT.res(WT.ID + '.admin', 'wtapermissionpicker.groupName.lbl'),
+				flex: 1
+			}, {
+				dataIndex: 'action',
+				header: WT.res(WT.ID + '.admin', 'wtapermissionpicker.action.lbl'),
 				flex: 1
 			}];
 		}
@@ -95,24 +101,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.RoleSvcPermissions', {
 		var me = this;
 		return Ext.create({
 			xtype: 'wtpickerwindow',
-			title: WT.res('wtrolesvcpermissionsgrid.picker.tit'),
-			height: 350,
+			title: WT.res(WT.ID + '.admin', 'wtarolepermissiongrid.picker.tit'),
+			width: 500,
 			items: [{
-				xtype: 'solistpicker',
-				store: {
-					autoLoad: true,
-					model: 'Sonicle.webtop.core.model.ServiceLkp',
-					proxy: WTF.proxy(WT.ID, 'LookupServices', null, {
-						extraParams: {assignableOnly: true}
-					})
-				},
-				valueField: 'id',
-				displayField: 'label',
-				searchField: 'label',
-				emptyText: WT.res('grid.emptyText'),
-				searchText: 'Search...',
-				okText: WT.res('act-ok.lbl'),
-				cancelText: WT.res('act-cancel.lbl'),
+				xtype: 'wtapermissionpicker',
 				listeners: {
 					cancelclick: function() {
 						if(me.picker) me.picker.close();
@@ -160,10 +152,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.RoleSvcPermissions', {
 					rec = me.getSelection()[0];
 			if(rec) me.getStore().remove(rec);
 		},
-
-		onPickerPick: function(s, val, rec) {
+		
+		onPickerPick: function(s, serviceId, groupName, action) {
 			var me = this;
-			me.fireEvent('pick', me, val, rec);
+			me.fireEvent('pick', me, serviceId, groupName, action);
 			me.picker.close();
 			me.picker = null;
 		}

@@ -56,6 +56,7 @@ import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
@@ -298,7 +299,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	
+	public List<OGroup> listGroups() throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		UserManager usem = wta.getUserManager();
+		
+		try {
+			return usem.listGroups(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
+		}
+	}
 	
 	
 	
@@ -803,7 +813,7 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			String profileUid = usrm.userToUid(targetPid);
-			List<String> roleUids = authm.getRolesAsStringByUser(targetPid, true, true);
+			List<String> roleUids = authm.getComputedRolesAsStringByUser(targetPid, true, true);
 			
 			String rootKey = OShare.buildRootKey(groupName);
 			String folderKey = OShare.buildFolderKey(groupName);

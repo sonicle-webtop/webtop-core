@@ -44,6 +44,7 @@ import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
@@ -58,6 +59,7 @@ import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsActivity;
 import com.sonicle.webtop.core.bol.js.JsCausal;
@@ -130,7 +132,7 @@ public class Service extends BaseService {
 	}
 	
 	private CoreAdminManager getCoreAdminManager() {
-		return (CoreAdminManager)WT.getServiceManager(SERVICE_ID);
+		return (CoreAdminManager)WT.getServiceManager(CoreAdminManifest.ID);
 	}
 
 	@Override

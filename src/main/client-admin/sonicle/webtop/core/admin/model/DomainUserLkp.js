@@ -31,17 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.RoleSvcPermission', {
-	extend: 'WT.ux.data.BaseModel',
+Ext.define('Sonicle.webtop.core.admin.model.DomainUserLkp', {
+	extend: 'WT.ux.data.SimpleModel',
 	
-	identifier: 'negative',
-	idProperty: 'rolePermissionId',
 	fields: [
-		WTF.fkField('string'),
-		WTF.field('rolePermissionId', 'int', false),
-		WTF.field('serviceId', 'string', true),
-		WTF.field('groupName', 'string', true),
-		WTF.field('action', 'string', true),
-		WTF.field('instance', 'string', false)
+		WTF.calcField('label', 'string', ['id', 'desc'], function(v, rec) {
+			return WT.ux.data.SimpleModel.buildLabel(rec.get('id'), rec.get('desc'));
+		})
 	]
 });

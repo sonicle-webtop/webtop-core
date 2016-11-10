@@ -41,11 +41,14 @@ import com.sonicle.webtop.core.app.WebTopApp;
  *
  * @author malbinola
  */
-public class WebTopLdapConfigBuilder extends LdapConfigBuilder {
-	private static final WebTopLdapConfigBuilder BUILDER = new WebTopLdapConfigBuilder();
+public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
+	private static final LdapWebTopConfigBuilder BUILDER = new LdapWebTopConfigBuilder();
 	private static final String WTA = "wta";
+	public static final String DEFAULT_HOST = "localhost";
+	public static final Integer DEFAULT_PORT = 389;
+	public static final String DEFAULT_USERS_DN = "ou=people";
 	
-	public static WebTopLdapConfigBuilder getInstance() {
+	public static LdapWebTopConfigBuilder getInstance() {
 		return BUILDER;
 	}
 	
@@ -55,5 +58,20 @@ public class WebTopLdapConfigBuilder extends LdapConfigBuilder {
 	
 	public void setWebTopApp(DirectoryOptions opts, WebTopApp wta) {
 		setParam(opts, WTA, wta);
+	}
+	
+	@Override
+	public String getHost(DirectoryOptions opts) {
+		return getString(opts, HOST, DEFAULT_HOST);
+	}
+	
+	@Override
+	public int getPort(DirectoryOptions opts) {
+		return getInteger(opts, PORT, DEFAULT_PORT);
+	}
+	
+	@Override
+	public String getUsersDn(DirectoryOptions opts) {
+		return getString(opts, USERS_DN, DEFAULT_USERS_DN);
 	}
 }

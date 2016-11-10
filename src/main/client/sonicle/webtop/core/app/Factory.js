@@ -254,11 +254,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				type: 'json'
 			}, opts.writer || {}),
 			listeners: Ext.merge({
-				exception: function(s,req,op,eop) {
-					//TODO: localizzare il messaggio di errore
-					if(!req.aborted) {
-						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
-					}
+				exception: function(s, req, op, eop) {
+					WT.handleRequestError(sid, act, req, op);
 				}
 			}, opts.listeners || {})
 		}, obj);
@@ -282,11 +279,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				messageProperty: 'message'
 			}, opts.reader || {}),
 			listeners: Ext.merge({
-				exception: function(s,req,op,eop) {
-					//TODO: localizzare il messaggio di errore
-					if(!req.aborted) {
-						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
-					}
+				exception: function(s, req, op, eop) {
+					WT.handleRequestError(sid, act, req, op);
 				}
 			}, opts.listeners || {})
 		}, obj);
@@ -330,11 +324,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				writeAllFields: true
 			}, opts.writer || {}),
 			listeners: {
-				exception: function(s,req,op,eop) {
-					//TODO: localizzare il messaggio di errore
-					if(!req.aborted) {
-						WT.error('Error during action "'+act+'" on service "'+sid+'"',"Ajax Error");
-					}
+				exception: function(s, req, op, eop) {
+					WT.handleRequestError(sid, act, req, op);
 				}
 			}
 		}, obj);

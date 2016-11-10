@@ -93,7 +93,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 						model: 'WT.model.RoleLkp',
 						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
 					},
-					sourceField: 'sourcedesc',
+					sourceField: 'sourcelabel',
 					anchor: '100%',
 					emptyText: WT.res('sharing.fld-role.lbl'),
 					listeners: {

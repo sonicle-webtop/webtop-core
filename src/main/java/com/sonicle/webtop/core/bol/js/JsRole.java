@@ -46,8 +46,8 @@ public class JsRole {
 	public String domainId;
 	public String name;
 	public String description;
-	public ArrayList<Permission> othersPerms = new ArrayList<>();
-	public ArrayList<Permission> servicesPerms = new ArrayList<>();
+	public ArrayList<Service> assignedServices = new ArrayList<>();
+	public ArrayList<Permission> permissions = new ArrayList<>();
 	
 	public JsRole() {}
 	
@@ -56,11 +56,25 @@ public class JsRole {
 		domainId = o.getDomainId();
 		name = o.getName();
 		description = o.getDescription();
-		for(ORolePermission perm : o.getPermissions()) {
-			othersPerms.add(new Permission(roleUid, perm));
-		}
+		
 		for(ORolePermission perm : o.getServicesPermissions()) {
-			servicesPerms.add(new Permission(roleUid, perm));
+			assignedServices.add(new Service(roleUid, perm));
+		}
+		for(ORolePermission perm : o.getPermissions()) {
+			permissions.add(new Permission(roleUid, perm));
+		}
+	}
+	
+	public static class Service extends JsFkModel {
+		public Integer permissionId;
+		public String serviceId;
+		
+		public Service() {}
+		
+		public Service(String fk, ORolePermission o) {
+			super(fk);
+			permissionId = o.getRolePermissionId();
+			serviceId = o.getInstance();
 		}
 	}
 	
@@ -90,25 +104,22 @@ public class JsRole {
 		re.setName(js.name);
 		re.setDescription(js.description);
 		
-		for(Permission jsPerm : js.othersPerms) {
-			final ORolePermission perm = new ORolePermission();
-			perm.setRolePermissionId(jsPerm.rolePermissionId);
-			perm.setServiceId(jsPerm.serviceId);
-			perm.setKey(jsPerm.groupName);
-			perm.setAction(jsPerm.action);
-			perm.setInstance(jsPerm.instance);
+		for(Service js1 : js.assignedServices) {
+			final ORolePermission rp = new ORolePermission();
+			rp.setRolePermissionId(js1.permissionId);
+			rp.setInstance(js1.serviceId);
 			
-			re.getPermissions().add(perm);
+			re.getServicesPermissions().add(rp);
 		}
-		for(Permission jsPerm : js.servicesPerms) {
-			final ORolePermission perm = new ORolePermission();
-			perm.setRolePermissionId(jsPerm.rolePermissionId);
-			perm.setServiceId(jsPerm.serviceId);
-			perm.setKey(jsPerm.groupName);
-			perm.setAction(jsPerm.action);
-			perm.setInstance(jsPerm.instance);
+		for(Permission js1 : js.permissions) {
+			final ORolePermission rp = new ORolePermission();
+			rp.setRolePermissionId(js1.rolePermissionId);
+			rp.setServiceId(js1.serviceId);
+			rp.setKey(js1.groupName);
+			rp.setAction(js1.action);
+			rp.setInstance(js1.instance);
 			
-			re.getServicesPermissions().add(perm);
+			re.getPermissions().add(rp);
 		}
 		
 		return re;

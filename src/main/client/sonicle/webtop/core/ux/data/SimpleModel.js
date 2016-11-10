@@ -35,5 +35,16 @@ Ext.define('Sonicle.webtop.core.ux.data.SimpleModel', {
 	alternateClassName: 'WT.ux.data.SimpleModel',
 	extend: 'WT.ux.data.BaseModel',
 	
-	fields: ['id', 'desc']
+	fields: ['id', 'desc'],
+	
+	statics: {
+		buildLabel: function(id, desc, seps) {
+			if(!Ext.isArray(seps)) seps = ['(', ')'];
+			if(id === '*') {
+				return desc;
+			} else {
+				return id + ' ' + seps[0] + desc + seps[1];
+			}
+		}
+	}
 });

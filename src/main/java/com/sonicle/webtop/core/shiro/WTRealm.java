@@ -42,13 +42,13 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.security.auth.directory.LdapConfigBuilder;
-import com.sonicle.security.auth.directory.NethLdapConfigBuilder;
+import com.sonicle.security.auth.directory.LdapNethConfigBuilder;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
-import com.sonicle.webtop.core.app.auth.WebTopLdapConfigBuilder;
+import com.sonicle.webtop.core.app.auth.LdapWebTopConfigBuilder;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
@@ -252,7 +252,7 @@ public class WTRealm extends AuthorizingRealm {
 		String authRes = ServicePermission.namespacedName(CoreManifest.ID, "SERVICE");
 		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
-		Set<RoleWithSource> userRoles = autm.getRolesByUser(pid, true, true);
+		Set<RoleWithSource> userRoles = autm.getComputedRolesByUser(pid, true, true);
 		for(RoleWithSource role : userRoles) {
 			roles.add(role.getRoleUid());
 
@@ -285,17 +285,16 @@ public class WTRealm extends AuthorizingRealm {
 				lbui.setPort(opts, authUri.getPort());
 				lbui.setUsersDn(opts, authUri.getPath());
 				break;
-			case "ldapWebTop": //TODO: url legacy! Rimuovere se possibile!
-			case "webtopldap":
-				WebTopLdapConfigBuilder wtlbui = new WebTopLdapConfigBuilder();
+			case "ldapwebtop":
+				LdapWebTopConfigBuilder wtlbui = new LdapWebTopConfigBuilder();
 				wtlbui.setHost(opts, authUri.getHost());
 				wtlbui.setPort(opts, authUri.getPort());
 				wtlbui.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
 				wtlbui.setAdminUsername(opts, ad.getAuthUsername());
 				wtlbui.setAdminPassword(opts, PasswordUtils.decryptDES(new String(ad.getAuthPassword()), "password").toCharArray());
 				break;
-			case "nethldap":
-				NethLdapConfigBuilder ntlbui = new NethLdapConfigBuilder();
+			case "ldapneth":
+				LdapNethConfigBuilder ntlbui = new LdapNethConfigBuilder();
 				ntlbui.setHost(opts, authUri.getHost());
 				ntlbui.setPort(opts, authUri.getPort());
 				ntlbui.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));

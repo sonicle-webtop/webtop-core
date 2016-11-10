@@ -31,30 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.Role', {
-	extend: 'WT.ux.data.BaseModel',
-	requires: [
-		'Sonicle.data.writer.Json',
-		'Sonicle.webtop.core.admin.model.AssignedService',
-		'Sonicle.webtop.core.admin.model.RolePermission'
-	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageRoles', 'data', {
-		writer: {
-			type: 'sojson',
-			writeAssociations: true
-		}
-	}),
+Ext.define('Sonicle.webtop.core.admin.model.DomainRoleLkp', {
+	extend: 'WT.ux.data.SimpleModel',
 	
-	identifier: 'negativestring',
-	idProperty: 'roleUid',
 	fields: [
-		WTF.field('roleUid', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('name', 'string', false),
-		WTF.field('description', 'string', true)
-	],
-	hasMany: [
-		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
-		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
+		WTF.calcField('label', 'string', ['id', 'desc'], function(v, rec) {
+			return WT.ux.data.SimpleModel.buildLabel(rec.get('id'), rec.get('desc'));
+		})
 	]
 });

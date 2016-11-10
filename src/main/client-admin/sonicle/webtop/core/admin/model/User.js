@@ -38,8 +38,10 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		'Sonicle.data.validator.Equality',
 		'Sonicle.data.validator.Username',
 		'Sonicle.data.validator.Password',
-		'Sonicle.webtop.core.admin.model.RolePermission',
-		'Sonicle.webtop.core.admin.model.RoleSvcPermission'
+		'Sonicle.webtop.core.admin.model.AssignedGroup',
+		'Sonicle.webtop.core.admin.model.AssignedRole',
+		'Sonicle.webtop.core.admin.model.AssignedService',
+		'Sonicle.webtop.core.admin.model.RolePermission'
 	],
 	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageUsers', 'data', {
 		writer: {
@@ -64,7 +66,9 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		WTF.field('displayName', 'string', false)
 	],
 	hasMany: [
-		WTF.hasMany('othersPerms', 'Sonicle.webtop.core.admin.model.RolePermission'),
-		WTF.hasMany('servicesPerms', 'Sonicle.webtop.core.admin.model.RoleSvcPermission')
+		WTF.hasMany('assignedGroups', 'Sonicle.webtop.core.admin.model.AssignedGroup'),
+		WTF.hasMany('assignedRoles', 'Sonicle.webtop.core.admin.model.AssignedRole'),
+		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
+		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
 	]
 });

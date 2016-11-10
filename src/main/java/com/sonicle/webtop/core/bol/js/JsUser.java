@@ -33,9 +33,12 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.webtop.core.bol.AssignedGroup;
+import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -51,8 +54,10 @@ public class JsUser {
 	public String firstName;
 	public String lastName;
 	public String displayName;
-	public ArrayList<Permission> othersPerms = new ArrayList<>();
-	public ArrayList<Permission> servicesPerms = new ArrayList<>();
+	public List<Group> assignedGroups = new ArrayList<>();
+	public List<Role> assignedRoles = new ArrayList<>();
+	public ArrayList<Service> assignedServices = new ArrayList<>();
+	public ArrayList<Permission> permissions = new ArrayList<>();
 	
 	public JsUser() {}
 	
@@ -66,11 +71,57 @@ public class JsUser {
 		firstName = o.getFirstName();
 		lastName = o.getLastName();
 		displayName = o.getDisplayName();
-		for(ORolePermission perm : o.getPermissions()) {
-			othersPerms.add(new Permission(profileId, perm));
+		
+		for(AssignedGroup assiGroup : o.getAssignedGroups()) {
+			assignedGroups.add(new Group(profileId, assiGroup));
+		}
+		for(AssignedRole assiRole : o.getAssignedRoles()) {
+			assignedRoles.add(new Role(profileId, assiRole));
 		}
 		for(ORolePermission perm : o.getServicesPermissions()) {
-			servicesPerms.add(new Permission(profileId, perm));
+			assignedServices.add(new Service(profileId, perm));
+		}
+		for(ORolePermission perm : o.getPermissions()) {
+			permissions.add(new Permission(profileId, perm));
+		}
+	}
+	
+	public static class Group extends JsFkModel {
+		public Integer associationId;
+		public String groupId;
+		
+		public Group() {}
+		
+		public Group(String fk, AssignedGroup o) {
+			super(fk);
+			associationId = o.getUserAssociationId();
+			groupId = o.getGroupId();
+		}
+	}
+	
+	public static class Role extends JsFkModel {
+		public Integer associationId;
+		public String roleUid;
+		
+		public Role() {}
+		
+		public Role(String fk, AssignedRole o) {
+			super(fk);
+			associationId = o.getRoleAssociationId();
+			roleUid = o.getRoleUid();
+		}
+	}
+	
+	public static class Service extends JsFkModel {
+		public Integer permissionId;
+		public String serviceId;
+		
+		public Service() {}
+		
+		public Service(String fk, ORolePermission o) {
+			super(fk);
+			permissionId = o.getRolePermissionId();
+			serviceId = o.getInstance();
 		}
 	}
 	
@@ -102,25 +153,36 @@ public class JsUser {
 		ue.setLastName(js.lastName);
 		ue.setDisplayName(js.displayName);
 		
-		for(Permission jsPerm : js.othersPerms) {
-			final ORolePermission perm = new ORolePermission();
-			perm.setRolePermissionId(jsPerm.rolePermissionId);
-			perm.setServiceId(jsPerm.serviceId);
-			perm.setKey(jsPerm.groupName);
-			perm.setAction(jsPerm.action);
-			perm.setInstance(jsPerm.instance);
+		for(Group js1 : js.assignedGroups) {
+			final AssignedGroup o1 = new AssignedGroup();
+			o1.setUserAssociationId(js1.associationId);
+			o1.setGroupId(js1.groupId);
 			
-			ue.getPermissions().add(perm);
+			ue.getAssignedGroups().add(o1);
 		}
-		for(Permission jsPerm : js.servicesPerms) {
-			final ORolePermission perm = new ORolePermission();
-			perm.setRolePermissionId(jsPerm.rolePermissionId);
-			perm.setServiceId(jsPerm.serviceId);
-			perm.setKey(jsPerm.groupName);
-			perm.setAction(jsPerm.action);
-			perm.setInstance(jsPerm.instance);
+		for(Role js1 : js.assignedRoles) {
+			final AssignedRole ar = new AssignedRole();
+			ar.setRoleAssociationId(js1.associationId);
+			ar.setRoleUid(js1.roleUid);
 			
-			ue.getServicesPermissions().add(perm);
+			ue.getAssignedRoles().add(ar);
+		}
+		for(Service js1 : js.assignedServices) {
+			final ORolePermission rp = new ORolePermission();
+			rp.setRolePermissionId(js1.permissionId);
+			rp.setInstance(js1.serviceId);
+			
+			ue.getServicesPermissions().add(rp);
+		}
+		for(Permission js1 : js.permissions) {
+			final ORolePermission rp = new ORolePermission();
+			rp.setRolePermissionId(js1.rolePermissionId);
+			rp.setServiceId(js1.serviceId);
+			rp.setKey(js1.groupName);
+			rp.setAction(js1.action);
+			rp.setInstance(js1.instance);
+			
+			ue.getPermissions().add(rp);
 		}
 		
 		return ue;
