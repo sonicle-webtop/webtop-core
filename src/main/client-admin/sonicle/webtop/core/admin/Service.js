@@ -76,19 +76,6 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				},
 				hideHeaders: true,
 				listeners: {
-					selectionchange: function(s, rec) {
-						console.log('selectionchange');
-						/*
-						var type = (rec.length === 1) ? rec[0].get('_type') : null;
-						if(type === 'folder') {
-							me.setCurNode(rec[0].getId());
-						} else if(type === 'file') {
-							me.setCurNode(rec[0].getId());
-						} else {
-							me.setCurNode(null);
-						}
-						*/
-					},
 					itemclick: function(s, rec, itm, i, e) {
 						var type = rec.get('_type'), domainId;
 						if(type === 'settings') {
@@ -259,7 +246,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	
 	deleteDomainUI: function(node) {
 		var me = this,
-				sto = me.trStores().getStore();
+				sto = me.trAdmin().getStore();
 		WT.confirm(me.res('store.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
 			if(bid === 'yes') {
 				me.deleteDomain(node.get('_domainId'), {
@@ -282,7 +269,11 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		vct.show(false, function() {
 			vct.getView().begin('new', {
 				data: {
-					dirScheme: 'ldapwebtop'
+					enabled: true,
+					dirScheme: 'ldapwebtop',
+					dirCaseSensitive: false,
+					dirPasswordPolicy: true,
+					userAutoCreation: false
 				}
 			});
 		});

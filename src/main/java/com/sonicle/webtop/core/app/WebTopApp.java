@@ -33,15 +33,36 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.manager.TomcatManager;
+import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
+import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.auth.directory.ADConfigBuilder;
+import com.sonicle.security.auth.directory.ADDirectory;
+import com.sonicle.security.auth.directory.DirectoryOptions;
+import com.sonicle.security.auth.directory.ImapConfigBuilder;
+import com.sonicle.security.auth.directory.ImapDirectory;
+import com.sonicle.security.auth.directory.LdapConfigBuilder;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.LdapNethConfigBuilder;
+import com.sonicle.security.auth.directory.LdapNethDirectory;
+import com.sonicle.security.auth.directory.SftpConfigBuilder;
+import com.sonicle.security.auth.directory.SftpDirectory;
+import com.sonicle.security.auth.directory.SmbConfigBuilder;
+import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.app.auth.LdapWebTopConfigBuilder;
+import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
+import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
+import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
@@ -62,6 +83,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -1034,6 +1056,85 @@ public final class WebTopApp {
 		String prop = System.getProperties().getProperty("com.sonicle.webtop.extdebug");
 		return LangUtils.value(prop, false);
 		//return System.getProperties().containsKey("com.sonicle.webtop.extdebug");
+	}
+	
+	private char[] getDirPassword(AuthenticationDomain ad) {
+		if(ad.getAuthPassword() == null) return null;
+		String s = PasswordUtils.decryptDES(new String(ad.getAuthPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
+		return (s != null) ? s.toCharArray() : null;
+	}
+	
+	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
+		return new AuthenticationDomain(domain.getDomainId(), 
+				domain.getDomainName(), 
+				domain.getAuthUri(), 
+				domain.getAuthUsername(), 
+				(domain.getAuthPassword() != null) ? domain.getAuthPassword().toCharArray() : null, 
+				EnumUtils.getEnum(ConnectionSecurity.class, domain.getAuthConnectionSecurity())
+		);
+	}
+	
+	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
+		DirectoryOptions opts = new DirectoryOptions();
+		URI authUri = ad.getAuthUri();
+		switch(authUri.getScheme()) {
+			case WebTopDirectory.SCHEME:
+				WebTopConfigBuilder wt = new WebTopConfigBuilder();
+				wt.setWebTopApp(opts, this);
+				break;
+			case LdapWebTopDirectory.SCHEME:
+				LdapWebTopConfigBuilder ldapwt = new LdapWebTopConfigBuilder();
+				ldapwt.setHost(opts, authUri.getHost());
+				ldapwt.setPort(opts, authUri.getPort());
+				ldapwt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
+				ldapwt.setAdminUsername(opts, ad.getAuthUsername());
+				ldapwt.setAdminPassword(opts, getDirPassword(ad));
+				ldapwt.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				break;	
+			case LdapDirectory.SCHEME:
+				LdapConfigBuilder ldap = new LdapConfigBuilder();
+				ldap.setHost(opts, authUri.getHost());
+				ldap.setPort(opts, authUri.getPort());
+				ldap.setUsersDn(opts, authUri.getPath());
+				ldap.setAdminUsername(opts, ad.getAuthUsername());
+				ldap.setAdminPassword(opts, getDirPassword(ad));
+				ldap.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				break;
+			case ImapDirectory.SCHEME:
+				ImapConfigBuilder imap = new ImapConfigBuilder();
+				imap.setHost(opts, authUri.getHost());
+				imap.setPort(opts, authUri.getPort());
+				imap.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				break;
+			case SmbDirectory.SCHEME:
+				SmbConfigBuilder smb = new SmbConfigBuilder();
+				smb.setHost(opts, authUri.getHost());
+				smb.setPort(opts, authUri.getPort());
+				break;
+			case SftpDirectory.SCHEME:
+				SftpConfigBuilder sftp = new SftpConfigBuilder();
+				sftp.setHost(opts, authUri.getHost());
+				sftp.setPort(opts, authUri.getPort());
+				break;
+			case ADDirectory.SCHEME:
+				ADConfigBuilder actdir = new ADConfigBuilder();
+				actdir.setHost(opts, authUri.getHost());
+				actdir.setPort(opts, authUri.getPort());
+				//TODO: completare implementazione ActiveDirectory
+				//actdir.setAdminUsername(opts, ad.getAuthUsername());
+				//actdir.setAdminPassword(opts, getDirPassword(ad));
+				break;
+			case LdapNethDirectory.SCHEME:
+				LdapNethConfigBuilder ldapnt = new LdapNethConfigBuilder();
+				ldapnt.setHost(opts, authUri.getHost());
+				ldapnt.setPort(opts, authUri.getPort());
+				ldapnt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
+				ldapnt.setAdminUsername(opts, ad.getAuthUsername());
+				ldapnt.setAdminPassword(opts, getDirPassword(ad));
+				ldapnt.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				break;
+		}
+		return opts;
 	}
 	
 	/**

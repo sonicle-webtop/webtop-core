@@ -33,10 +33,10 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.webtop.core.bol.ODomain;
-import java.net.URI;
 import java.net.URISyntaxException;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -47,10 +47,10 @@ public class DomainEntity {
 	private String internetName;
 	private Boolean enabled;
 	private String displayName;
-	private String dirScheme;
 	private String dirUri;
 	private String dirUsername;
 	private String dirPassword;
+	private ConnectionSecurity dirConSecurity;
 	private Boolean dirCaseSensitive;
 	private Boolean dirPasswordPolicy;
 	private Boolean userAutoCreation;
@@ -62,16 +62,10 @@ public class DomainEntity {
 		internetName = o.getDomainName();
 		enabled = o.getEnabled();
 		displayName = o.getDescription();
-		
-		URI uri = new URI(o.getAuthUri());
-		if(StringUtils.startsWith(uri.getScheme(), "vfs")) {
-			dirScheme = "vfs";
-		} else {
-			dirScheme = uri.getScheme();
-		}
 		dirUri = o.getAuthUri();
 		dirUsername = o.getAuthUsername();
 		dirPassword = o.getAuthPassword();
+		dirConSecurity = EnumUtils.getEnum(ConnectionSecurity.class, o.getAuthConnectionSecurity());
 		dirCaseSensitive = o.getCaseSensitiveAuth();
 		dirPasswordPolicy = o.getWebtopAdvSecurity();
 		userAutoCreation = o.getUserAutoCreation();
@@ -109,14 +103,6 @@ public class DomainEntity {
 		this.displayName = displayName;
 	}
 
-	public String getDirScheme() {
-		return dirScheme;
-	}
-
-	public void setDirScheme(String dirScheme) {
-		this.dirScheme = dirScheme;
-	}
-
 	public String getDirUri() {
 		return dirUri;
 	}
@@ -139,6 +125,14 @@ public class DomainEntity {
 
 	public void setDirPassword(String dirPassword) {
 		this.dirPassword = dirPassword;
+	}
+	
+	public ConnectionSecurity getDirConnectionSecurity() {
+		return dirConSecurity;
+	}
+
+	public void setDirConnectionSecurity(ConnectionSecurity dirConSecurity) {
+		this.dirConSecurity = dirConSecurity;
 	}
 
 	public Boolean getDirCaseSensitive() {

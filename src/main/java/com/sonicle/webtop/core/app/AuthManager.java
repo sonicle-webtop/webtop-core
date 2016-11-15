@@ -113,16 +113,20 @@ public class AuthManager {
 	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
 		try {
-			return getAuthDirectory(new URI(authUri));
+			return getAuthDirectoryByScheme(new URI(authUri).getScheme());
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid authentication URI [{0}]", authUri);
 		}
 	}
 	
 	public AbstractDirectory getAuthDirectory(URI authUri) throws WTException {
+		return getAuthDirectoryByScheme(authUri.getScheme());
+	}
+	
+	public AbstractDirectory getAuthDirectoryByScheme(String scheme) throws WTException {
 		DirectoryManager dirManager = DirectoryManager.getManager();
-		AbstractDirectory directory = dirManager.getDirectory(authUri.getScheme());
-		if(directory == null) throw new WTException("Directory not supported [{0}]", authUri.getScheme());
+		AbstractDirectory directory = dirManager.getDirectory(scheme);
+		if(directory == null) throw new WTException("Directory not supported [{0}]", scheme);
 		return directory;
 	}
 	

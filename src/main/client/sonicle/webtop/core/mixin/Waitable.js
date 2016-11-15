@@ -38,29 +38,33 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 		id: 'waitable'
 	},
 	
-	waitCount_: 0,
+	_waitCount: 0,
 	
 	/**
 	 * Signals to apply the loading mask.
 	 * Every time this method will be called, a counter will be incremented.
-	 * Mask will be effectively added only on the first call (counter=1).
-	 * @param {String} msg The title to show for the waiting message box.
+	 * Mask will be effectively added only on the first call (when counter=1).
+	 * @param {String} [msg] The message to show within the indicator.
 	 */
 	wait: function(msg) {
 		var me = this;
-		me.waitCount_++;		
-		if(me.waitCount_ === 1) {
+		me._waitCount++;		
+		if(me._waitCount === 1) {
 			var cmp = me.ownerCt || me;
 			cmp.setLoading(msg || WT.res('waiting'));
 			//cmp.mask(msg || WT.res('waiting'));
 		}
 	},
 	
+	/**
+	 * Updates (if displayed) the message of the loading indicator.
+	 * @param {String} [msg] The message to show within the indicator.
+	 */
 	waitUpdate: function(msg) {
 		var me = this;
-		if(me.waitCount_ >= 1) {
+		if(me._waitCount >= 1) {
 			var cmp = me.ownerCt || me;
-			cmp.setLoading(msg || WT.res('waiting'));
+			cmp.setLoading(msg || WT.res('waiting'));s
 		}
 	},
 	
@@ -71,8 +75,8 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	 */
 	unwait: function() {
 		var me = this;
-		me.waitCount_--;
-		if(me.waitCount_ === 0) {
+		me._waitCount--;
+		if(me._waitCount === 0) {
 			var cmp = me.ownerCt || me;
 			cmp.setLoading(false);
 			//cmp.unmask();

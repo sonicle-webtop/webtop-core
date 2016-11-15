@@ -33,18 +33,30 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.CredentialAlgorithm;
+import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.EntryException;
+import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
+import com.sonicle.security.auth.directory.ImapDirectory;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.LdapNethDirectory;
+import com.sonicle.security.auth.directory.SftpDirectory;
+import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
+import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.AssignedGroup;
 import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.GroupUid;
@@ -59,17 +71,30 @@ import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.UserEntity;
+import com.sonicle.webtop.core.dal.ActivityDAO;
+import com.sonicle.webtop.core.dal.AutosaveDAO;
+import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainDAO;
+import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.GroupDAO;
+import com.sonicle.webtop.core.dal.MessageQueueDAO;
+import com.sonicle.webtop.core.dal.RoleAssociationDAO;
+import com.sonicle.webtop.core.dal.RoleDAO;
+import com.sonicle.webtop.core.dal.RolePermissionDAO;
+import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
+import com.sonicle.webtop.core.dal.ShareDAO;
+import com.sonicle.webtop.core.dal.ShareDataDAO;
+import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
+import com.sonicle.webtop.core.dal.SysLogDAO;
 import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
+import com.sonicle.webtop.core.dal.UserSettingDAO;
 import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.shiro.WTRealm;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import com.sonicle.webtop.core.userinfo.UserInfoProviderFactory;
 import com.sonicle.webtop.core.util.IdentifierUtils;
@@ -167,7 +192,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection();
+			con = wta.getConnectionManager().getConnection();
 			if(enabledOnly) {
 				return dao.selectEnabled(con);
 			} else {
@@ -186,7 +211,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection();
+			con = wta.getConnectionManager().getConnection();
 			return dao.selectEnabledByInternetDomain(con, internetDomain);
 			
 		} catch(SQLException | DAOException ex) {
@@ -200,7 +225,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection();
+			con = wta.getConnectionManager().getConnection();
 			return getDomain(con, domainId);
 			
 		} catch(SQLException ex) {
@@ -224,23 +249,169 @@ public final class UserManager {
 	public DomainEntity getDomainEntity(String domainId) throws WTException {
 		try {
 			ODomain domain = getDomain(domainId);
-			return new DomainEntity(domain);
+			DomainEntity de = new DomainEntity(domain);
+			de.setDirPassword(getDirPassword(domain));
+			return de;
 			
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid directory URI");
 		}
 	}
 	
-	public void addDomain(DomainEntity domain) throws WTException {
+	private void fillDomain(ODomain o, DomainEntity domain) throws WTException {
+		String scheme = null;
 		
+		o.setDomainId(domain.getDomainId());
+		o.setDomainName(domain.getInternetName());
+		o.setDescription(domain.getDisplayName());
+		o.setEnabled(domain.getEnabled());
+		o.setAuthUri(domain.getDirUri());
+		
+		try {
+			scheme = URIUtils.getScheme(domain.getDirUri());
+		} catch(URISyntaxException ex) {
+			throw new WTException("Invalid directory URI [{0}]", domain.getDirUri());
+		}
+		
+		if (scheme.equals(WebTopDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(null);
+			o.setAuthUsername(null);
+			o.setAuthPassword(null);
+			o.setWebtopAdvSecurity(domain.getDirPasswordPolicy());
+		} else if (scheme.equals(LdapWebTopDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(EnumUtils.getName(domain.getDirConnectionSecurity()));
+			o.setAuthUsername(domain.getDirUsername());
+			setDirPassword(o, domain.getDirPassword());
+			o.setWebtopAdvSecurity(domain.getDirPasswordPolicy());
+		} else if (scheme.equals(LdapDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(EnumUtils.getName(domain.getDirConnectionSecurity()));
+			o.setAuthUsername(domain.getDirUsername());
+			setDirPassword(o, domain.getDirPassword());
+			o.setWebtopAdvSecurity(false);
+		} else if (scheme.equals(ImapDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(EnumUtils.getName(domain.getDirConnectionSecurity()));
+			o.setAuthUsername(null);
+			o.setAuthPassword(null);
+			o.setWebtopAdvSecurity(false);
+		} else if (scheme.equals(SmbDirectory.SCHEME) || scheme.equals(SftpDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(null);
+			o.setAuthUsername(null);
+			o.setAuthPassword(null);
+			o.setWebtopAdvSecurity(false);
+		} else if (scheme.equals(ADDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(EnumUtils.getName(domain.getDirConnectionSecurity()));
+			o.setAuthUsername(domain.getDirUsername());
+			setDirPassword(o, domain.getDirPassword());
+			o.setWebtopAdvSecurity(domain.getDirPasswordPolicy());
+		} else if (scheme.equals(LdapNethDirectory.SCHEME)) {
+			o.setAuthConnectionSecurity(EnumUtils.getName(domain.getDirConnectionSecurity()));
+			o.setAuthUsername(domain.getDirUsername());
+			setDirPassword(o, domain.getDirPassword());
+			o.setWebtopAdvSecurity(false);
+		}
+		o.setCaseSensitiveAuth(domain.getDirCaseSensitive());
+		o.setUserAutoCreation(domain.getUserAutoCreation());
+	}
+	
+	public void addDomain(DomainEntity domain) throws WTException {
+		DomainDAO dodao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			logger.debug("Inserting domain");
+			ODomain odomain = new ODomain();
+			fillDomain(odomain, domain);
+			dodao.insert(con, odomain);
+			
+			OGroup ogroup1 = doGroupInsert(con, odomain.getDomainId(), USERID_ADMINISTRATORS, "Utenti");
+			OGroup ogroup2 = doGroupInsert(con, odomain.getDomainId(), USERID_USERS, "Utenti");
+			
+			DbUtils.commitQuietly(con);
+			
+			// Update cache
+			addToUserUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
+			addToUserUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public void updateDomain(DomainEntity domain) throws WTException {
+		DomainDAO dodao = DomainDAO.getInstance();
+		Connection con = null;
 		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			logger.debug("Updating domain");
+			ODomain odomain = new ODomain();
+			fillDomain(odomain, domain);
+			dodao.update(con, odomain);
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public void deleteDomain(String domainId) throws WTException {
+		DomainDAO domdao = DomainDAO.getInstance();
 		
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			logger.debug("Deleting domain");
+			
+			ActivityDAO.getInstance().deleteByDomain(con, domainId);
+			CausalDAO.getInstance().deleteByDomain(con, domainId);
+			
+			AutosaveDAO.getInstance().deleteByDomain(con, domainId);
+			ServiceStoreEntryDAO.getInstance().deleteByDomain(con, domainId);
+			SnoozedReminderDAO.getInstance().deleteByDomain(con, domainId);
+			MessageQueueDAO.getInstance().deleteByDomain(con, domainId);
+			SysLogDAO.getInstance().deleteByDomain(con, domainId);
+			
+			DomainSettingDAO.getInstance().deleteByDomain(con, domainId);
+			UserSettingDAO.getInstance().deleteByDomain(con, domainId);
+			
+			RoleAssociationDAO.getInstance().deleteByDomain(con, domainId);
+			RolePermissionDAO.getInstance().deleteByDomain(con, domainId);
+			RoleDAO.getInstance().deleteByDomain(con, domainId);
+			ShareDAO.getInstance().deleteByDomain(con, domainId);
+			ShareDataDAO.getInstance().deleteByDomain(con, domainId);
+			
+			UserAssociationDAO.getInstance().deleteByDomain(con, domainId);
+			UserInfoDAO.getInstance().deleteByDomain(con, domainId);
+			UserDAO.getInstance().deleteByDomain(con, domainId);
+			GroupDAO.getInstance().deleteByDomain(con, domainId);
+			domdao.deleteById(con, domainId);
+			
+			DbUtils.commitQuietly(con);
+			
+			initUserUidCache();
+			initGroupUidCache();
+			cleanupUserCache();
+			
+			//TODO: chiamare controller per eliminare dominio per i servizi
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
@@ -248,7 +419,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection();
+			con = wta.getConnectionManager().getConnection();
 			if(enabledOnly) {
 				return dao.selectEnabledByDomain(con, domainId);
 			} else {
@@ -338,9 +509,9 @@ public final class UserManager {
 			
 			OUser ouser = null;
 			if(updateDirectory) {
-				AuthenticationDomain ad = new AuthenticationDomain(domain);
+				AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
-				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
 				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if(!directory.validateUsername(opts, user.getUserId())) {
@@ -457,9 +628,9 @@ public final class UserManager {
 			ODomain domain = getDomain(pid.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 			
-			AuthenticationDomain ad = new AuthenticationDomain(domain);
+			AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 			AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
-			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
 			if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 				if(oldPassword != null) {
@@ -504,9 +675,9 @@ public final class UserManager {
 				ODomain domain = getDomain(pid.getDomainId());
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 				
-				AuthenticationDomain ad = new AuthenticationDomain(domain);
+				AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 				AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
-				DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
 				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
@@ -544,9 +715,9 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			AuthenticationDomain ad = new AuthenticationDomain(domain);
+			AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 			AbstractDirectory directory = authm.getAuthDirectory(ad.getAuthUri());
-			DirectoryOptions opts = WTRealm.createDirectoryOptions(wta, ad);
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
 			con = wta.getConnectionManager().getConnection();
 			Map<String, OUser> wtUsers = dao.selectByDomain2(con, domain.getDomainId());
@@ -617,7 +788,7 @@ public final class UserManager {
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection();
+			con = wta.getConnectionManager().getConnection();
 			return dao.selectByDomain(con, domainId);
 			
 		} catch(SQLException | DAOException ex) {
@@ -738,7 +909,23 @@ public final class UserManager {
 	
 	
 	
-	
+	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
+		GroupDAO gdao = GroupDAO.getInstance();
+		
+		logger.debug("Inserting group");
+		OGroup ogroup = new OGroup();
+		ogroup.setDomainId(domainId);
+		ogroup.setUserId(groupId);
+		ogroup.setEnabled(true);
+		ogroup.setUserUid(IdentifierUtils.getUUID());
+		ogroup.setDisplayName(displayName);
+		ogroup.setSecret(null);
+		ogroup.setPasswordType(null);
+		ogroup.setPassword(null);
+		gdao.insert(con, ogroup);
+		
+		return ogroup;
+	}
 	
 	
 	private UserEntry createUserEntry(UserEntity user) {
@@ -901,6 +1088,14 @@ public final class UserManager {
 		oui.setCustom2(upi.getCustom02());
 		oui.setCustom3(upi.getCustom03());
 		return oui;
+	}
+	
+	private String getDirPassword(ODomain o) {
+		return PasswordUtils.decryptDES(o.getAuthPassword(), new String(new char[]{'p','a','s','s','w','o','r','d'}));
+	}
+	
+	private void setDirPassword(ODomain o, String password) {
+		o.setAuthPassword(PasswordUtils.encryptDES(password, new String(new char[]{'p','a','s','s','w','o','r','d'})));
 	}
 	
 	private void cleanupUserCache() {

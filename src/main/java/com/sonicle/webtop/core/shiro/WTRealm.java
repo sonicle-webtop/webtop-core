@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
@@ -41,14 +40,11 @@ import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.security.auth.directory.LdapConfigBuilder;
-import com.sonicle.security.auth.directory.LdapNethConfigBuilder;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.UserManager;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
-import com.sonicle.webtop.core.app.auth.LdapWebTopConfigBuilder;
+import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
@@ -56,7 +52,6 @@ import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
@@ -93,14 +88,27 @@ public class WTRealm extends AuthorizingRealm {
 			logger.debug("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
 			
 			Principal principal = authenticateUser(domainId, internetDomain, username, upt.getPassword());
+			// Update token with new values resulting from authentication
+			upt.setDomain(principal.getDomainId());
+			upt.setUsername(principal.getUserId());
 			return new WebTopAuthenticationInfo(principal, upt.getPassword(), this.getName());
 		} else {
 			return null;
 		}
 	}
 	
-	private boolean isSysAdmin(String internetDomain, String username) {
-		return StringUtils.equals(StringUtils.lowerCase(username), "admin") && StringUtils.isBlank(internetDomain);
+	@Override
+	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+		if(principals == null) throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
+		
+		try {
+			Principal principal = (Principal)principals.getPrimaryPrincipal();
+			WebTopApp.logger.debug("doGetAuthorizationInfo - {}", principal);
+			return loadAuthorizationInfo(principal);
+			
+		} catch(Exception ex) {
+			throw new AuthorizationException(ex);
+		}
 	}
 	
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
@@ -114,7 +122,8 @@ public class WTRealm extends AuthorizingRealm {
 			
 			logger.debug("Building the authentication domain");
 			if(isSysAdmin(internetDomain, username)) {
-				ad = new AuthenticationDomain("*", null, "webtop://localhost", null, null);
+				String authUri = dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
+				ad = new AuthenticationDomain("*", null, authUri, null, null, null);
 				
 			} else {
 				ODomain domain = null;
@@ -127,11 +136,11 @@ public class WTRealm extends AuthorizingRealm {
 					domain = usem.getDomain(domainId);
 					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
-				ad = new AuthenticationDomain(domain);
+				ad = wta.createAuthenticationDomain(domain);
 				autoCreate = domain.getUserAutoCreation();
 			}
 			
-			DirectoryOptions opts = createDirectoryOptions(wta, ad);
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			AbstractDirectory directory = dirManager.getDirectory(ad.getAuthUri().getScheme());
 			if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getAuthUri().getScheme());
 			
@@ -161,81 +170,7 @@ public class WTRealm extends AuthorizingRealm {
 		}	
 	}
 	
-	private UserEntity createUserEntity(String domainId, UserEntry userEntry) {
-		UserEntity ue = new UserEntity();
-		ue.setDomainId(domainId);
-		ue.setUserId(userEntry.userId);
-		ue.setEnabled(true);
-		ue.setFirstName(userEntry.firstName);
-		ue.setLastName(userEntry.lastName);
-		ue.setDisplayName(userEntry.displayName);
-		return ue;
-	}
-	
-	@Override
-	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		if(principals == null) throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
-		
-		try {
-			Principal principal = (Principal)principals.getPrimaryPrincipal();
-			WebTopApp.logger.debug("doGetAuthorizationInfo - {}", principal);
-			return loadAuthorizationInfo(principal);
-			
-		} catch(Exception ex) {
-			throw new AuthorizationException(ex);
-		}
-	}
-	
-	
-	/*
-	@Override
-	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-		try {
-			WebTopApp.logger.debug("doGetAuthenticationInfo - {}", token.getPrincipal());
-			return loadAuthenticationInfo(token);
-			
-		} catch(Exception ex) {
-			throw new AuthorizationException(ex);
-		}
-	}
-	*/
-	
-//	 
-//	
-//	
-//	
-//	
-//	
-//	protected AuthenticationInfo loadAuthenticationInfo(AuthenticationToken token) throws LoginException, SQLException {
-//		WebTopApp wta = WebTopApp.getInstance();
-//		SonicleLogin login = new SonicleLogin(wta.getConnectionManager().getDataSource());
-//		
-//		if(token instanceof UsernamePasswordDomainToken) {
-//			UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
-//			//logger.debug("isRememberMe={}",upt.isRememberMe());
-//			char[] password = (char[])token.getCredentials();
-//			WebTopApp.logger.debug("validating user {}", (String)token.getPrincipal());
-//			Principal p = login.validateUser((String)token.getPrincipal() + "@" + upt.getDomain(), password);
-//			/*
-//			ArrayList<GroupPrincipal> groups = p.getGroups();
-//			for(GroupPrincipal group: groups) {
-//				WebTopApp.logger.debug("user {} is in group {}",p.getSubjectId(),group.getSubjectId());
-//			}
-//			*/
-//			return new WebTopAuthenticationInfo(p, password, this.getName());
-//			
-//		} else {
-//			String username = (String)token.getPrincipal();
-//			char[] password = (char[])token.getCredentials();
-//			boolean canBeToken = (password.length == 36);
-//			//TODO: completare l'implementazione aggiungendo la login tramite token
-//			WebTopApp.logger.debug("validating user {}", username);
-//			Principal principal = login.validateUser(username, password);
-//			return new WebTopAuthenticationInfo(principal, password, getName());
-//		}
-//	}
-	
-	protected WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
+	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
 		AuthManager autm = wta.getAuthManager();
 		UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
@@ -271,37 +206,18 @@ public class WTRealm extends AuthorizingRealm {
 		return new WTAuthorizationInfo(roles, perms);
 	}
 	
-	public static DirectoryOptions createDirectoryOptions(WebTopApp wta, AuthenticationDomain ad) {
-		DirectoryOptions opts = new DirectoryOptions();
-		URI authUri = ad.getAuthUri();
-		switch(authUri.getScheme()) {
-			case "webtop":
-				WebTopConfigBuilder wtbui = new WebTopConfigBuilder();
-				wtbui.setWebTopApp(opts, wta);
-				break;
-			case "ldap":
-				LdapConfigBuilder lbui = new LdapConfigBuilder();
-				lbui.setHost(opts, authUri.getHost());
-				lbui.setPort(opts, authUri.getPort());
-				lbui.setUsersDn(opts, authUri.getPath());
-				break;
-			case "ldapwebtop":
-				LdapWebTopConfigBuilder wtlbui = new LdapWebTopConfigBuilder();
-				wtlbui.setHost(opts, authUri.getHost());
-				wtlbui.setPort(opts, authUri.getPort());
-				wtlbui.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
-				wtlbui.setAdminUsername(opts, ad.getAuthUsername());
-				wtlbui.setAdminPassword(opts, PasswordUtils.decryptDES(new String(ad.getAuthPassword()), "password").toCharArray());
-				break;
-			case "ldapneth":
-				LdapNethConfigBuilder ntlbui = new LdapNethConfigBuilder();
-				ntlbui.setHost(opts, authUri.getHost());
-				ntlbui.setPort(opts, authUri.getPort());
-				ntlbui.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
-				ntlbui.setAdminUsername(opts, ad.getAuthUsername());
-				ntlbui.setAdminPassword(opts, PasswordUtils.decryptDES(new String(ad.getAuthPassword()), "password").toCharArray());
-				break;
-		}
-		return opts;
+	private boolean isSysAdmin(String internetDomain, String username) {
+		return StringUtils.equals(StringUtils.lowerCase(username), "admin") && StringUtils.isBlank(internetDomain);
+	}
+	
+	private UserEntity createUserEntity(String domainId, UserEntry userEntry) {
+		UserEntity ue = new UserEntity();
+		ue.setDomainId(domainId);
+		ue.setUserId(userEntry.userId);
+		ue.setEnabled(true);
+		ue.setFirstName(userEntry.firstName);
+		ue.setLastName(userEntry.lastName);
+		ue.setDisplayName(userEntry.displayName);
+		return ue;
 	}
 }

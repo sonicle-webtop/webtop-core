@@ -38,13 +38,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
 		'Sonicle.webtop.core.admin.model.Domain',
+		'Sonicle.webtop.core.admin.store.DirConSecurity',
 		'Sonicle.webtop.core.admin.store.DirScheme'
 	],
 	
 	dockableConfig: {
 		title: '{domain.tit}',
 		iconCls: 'wta-icon-domain-xs',
-		width: 650,
+		width: 500,
 		height: 500
 	},
 	fieldTitle: 'domainId',
@@ -80,7 +81,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 				xtype: 'wtform',
 				modelValidation: true,
 				defaults: {
-					labelWidth: 100
+					labelWidth: 120
 				},
 				items: [{
 					xtype: 'textfield',
@@ -118,7 +119,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						autoLoad: true
 					}),
 					fieldLabel: me.mys.res('domain.fld-dirScheme.lbl'),
-					width: 350
+					width: 400
 				})]
 			}, {
 				xtype: 'container',
@@ -131,6 +132,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'webtop',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 						xtype: 'checkbox',
 						bind: '{foDirCaseSensitive}',
@@ -146,12 +150,15 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'ldapwebtop',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 						xtype: 'fieldcontainer',
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirUri}',
+							bind: '{record.dirHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
@@ -163,10 +170,20 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('ftpWiz.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
 						}],
 						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
-					}, {
+					},
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.dirConSecurity}',
+						allowBlank: false,
+						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+							autoLoad: true
+						}),
+						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						width: 230
+					}),
+					{
 						xtype: 'textfield',
 						bind: '{record.dirUsername}',
 						plugins: 'sonoautocomplete',
@@ -174,7 +191,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						reference: 'fldpassword',
 						bind: '{record.dirPassword}',
 						plugins: 'sonoautocomplete',
 						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
@@ -194,12 +210,15 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'ldap',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 						xtype: 'fieldcontainer',
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirUri}',
+							bind: '{record.dirHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
@@ -211,12 +230,22 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('ftpWiz.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
 						}],
 						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
-					}, {
+					},
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.dirConSecurity}',
+						allowBlank: false,
+						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+							autoLoad: true
+						}),
+						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						width: 230
+					}),
+					{
 						xtype: 'textfield',
-						bind: '{record.dirPath',
+						bind: '{record.dirPath}',
 						fieldLabel: me.mys.res('domain.fld-dirPath.lbl'),
 						anchor: '100%'
 					}, {
@@ -227,7 +256,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						reference: 'fldpassword',
 						bind: '{record.dirPassword}',
 						plugins: 'sonoautocomplete',
 						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
@@ -247,12 +275,15 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'imap',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 						xtype: 'fieldcontainer',
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirUri}',
+							bind: '{record.dirHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
@@ -264,7 +295,83 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('ftpWiz.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
+						}],
+						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+					},
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.dirConSecurity}',
+						allowBlank: false,
+						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+							autoLoad: true
+						}),
+						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						width: 200
+					}),
+					{
+						xtype: 'checkbox',
+						bind: '{foDirCaseSensitive}',
+						hideEmptyLabel: false,
+						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+					}]
+				}, {
+					xtype: 'wtform',
+					itemId: 'smb',
+					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
+					items: [{
+						xtype: 'fieldcontainer',
+						layout: 'hbox',
+						items: [{
+							xtype: 'textfield',
+							bind: '{record.dirHost}',
+							width: 160
+						}, {
+							xtype: 'displayfield',
+							value: '&nbsp;:&nbsp;'
+						}, {
+							xtype: 'numberfield',
+							bind: '{record.dirPort}',
+							hideTrigger: true,
+							minValue: 1,
+							maxValue: 65000,
+							width: 60,
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
+						}],
+						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+					}, {
+						xtype: 'checkbox',
+						bind: '{foDirCaseSensitive}',
+						hideEmptyLabel: false,
+						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+					}]
+				}, {
+					xtype: 'wtform',
+					itemId: 'sftp',
+					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
+					items: [{
+						xtype: 'fieldcontainer',
+						layout: 'hbox',
+						items: [{
+							xtype: 'textfield',
+							bind: '{record.dirHost}',
+							width: 160
+						}, {
+							xtype: 'displayfield',
+							value: '&nbsp;:&nbsp;'
+						}, {
+							xtype: 'numberfield',
+							bind: '{record.dirPort}',
+							hideTrigger: true,
+							minValue: 1,
+							maxValue: 65000,
+							width: 60,
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
 						}],
 						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
 					}, {
@@ -277,6 +384,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'ad',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 							
 					}]
@@ -284,12 +394,15 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'wtform',
 					itemId: 'ldapneth',
 					modelValidation: true,
+					defaults: {
+						labelWidth: 120
+					},
 					items: [{
 						xtype: 'fieldcontainer',
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirUri}',
+							bind: '{record.dirHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
@@ -301,10 +414,20 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('ftpWiz.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-dirPort.emp')
 						}],
 						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
-					}, {
+					},
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.dirConSecurity}',
+						allowBlank: false,
+						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+							autoLoad: true
+						}),
+						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						width: 230
+					}),
+					{
 						xtype: 'textfield',
 						bind: '{record.dirUsername}',
 						plugins: 'sonoautocomplete',
@@ -312,7 +435,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						reference: 'fldpassword',
 						bind: '{record.dirPassword}',
 						plugins: 'sonoautocomplete',
 						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
@@ -326,90 +448,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 				}]
 			}]
 		});
-		/*
-		me.add({
-			region: 'center',
-			xtype: 'wtform',
-			modelValidation: true,
-			defaults: {
-				labelWidth: 100
-			},
-			items: [, {
-				xtype: 'textfield',
-				reference: 'flddomainid',
-				bind: '{record.domainId}',
-				disabled: true,
-				fieldLabel: me.mys.res('domain.fld-domainId.lbl'),
-				width: 300
-			}, {
-				xtype: 'textfield',
-				bind: '{record.internetName}',
-				fieldLabel: me.mys.res('domain.fld-internetName.lbl'),
-				emptyText: 'example.com',
-				width: 400
-			}, {
-				xtype: 'textfield',
-				bind: '{record.displayName}',
-				fieldLabel: me.mys.res('domain.fld-displayName.lbl'),
-				width: 400
-			}, {
-				xtype: 'checkbox',
-				bind: '{foEnabled}',
-				hideEmptyLabel: false,
-				boxLabel: me.mys.res('domain.fld-enabled.lbl')
-			}, {
-				xtype: 'checkbox',
-				bind: '{foUserAutoCreation}',
-				hideEmptyLabel: false,
-				boxLabel: me.mys.res('domain.fld-userAutoCreation.lbl')
-			}, 
-			WTF.lookupCombo('id', 'desc', {
-				bind: '{record.dirScheme}',
-				allowBlank: false,
-				store: Ext.create('Sonicle.webtop.core.admin.store.DirScheme', {
-					autoLoad: true
-				}),
-				fieldLabel: me.mys.res('domain.fld-dirScheme.lbl'),
-				width: 350
-			}), {
-				xtype: 'fieldset',
-				title: me.mys.res('domain.directory.tit'),
-				items: [
-					
-					{
-						xtype: 'textfield',
-						bind: '{record.dirUri}',
-						fieldLabel: me.mys.res('domain.fld-dirUri.lbl'),
-						anchor: '100%'
-					}, {
-						xtype: 'textfield',
-						bind: '{record.dirUsername}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirUsername.lbl'),
-						width: 300
-					}, {
-						xtype: 'sopasswordfield',
-						reference: 'fldpassword',
-						bind: '{record.dirPassword}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
-						width: 300
-					}, {
-						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
-						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
-					}, {
-						xtype: 'checkbox',
-						bind: '{foDirPasswordPolicy}',
-						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
-				}],
-				anchor: '-5'
-			}]
-		});
-		*/
 		me.on('viewload', me.onViewLoad);
+		me.getVM().bind('{record.dirScheme}', me.onSchemeChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -420,6 +460,63 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 			me.lref('flddomainid').focus(true);
 		} else {
 			me.lref('flddomainid').setDisabled(true);
+		}
+	},
+	
+	onSchemeChanged: function(v) {
+		this.updateValidators(this.getModel());
+	},
+	
+	updateValidators: function(mo) {
+		switch(mo.get('dirScheme')) {
+			case 'webtop':
+				mo.getField('dirHost').constructValidators([]);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators([]);
+				mo.getField('dirPassword').constructValidators([]);
+				break;
+			case 'ldapwebtop':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators(['presence']);
+				mo.getField('dirPassword').constructValidators(['presence']);
+				break;
+			case 'ldap':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators(['presence']);
+				mo.getField('dirUsername').constructValidators(['presence']);
+				mo.getField('dirPassword').constructValidators(['presence']);
+				break;
+			case 'imap':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators([]);
+				mo.getField('dirPassword').constructValidators([]);
+				break;
+			case 'smb':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators([]);
+				mo.getField('dirPassword').constructValidators([]);
+				break;
+			case 'sftp':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators([]);
+				mo.getField('dirPassword').constructValidators([]);
+				break;
+			case 'ad':
+				mo.getField('dirHost').constructValidators([]);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators([]);
+				mo.getField('dirPassword').constructValidators([]);
+				break;
+			case 'ldapneth':
+				mo.getField('dirHost').constructValidators(['presence']);
+				mo.getField('dirPath').constructValidators([]);
+				mo.getField('dirUsername').constructValidators(['presence']);
+				mo.getField('dirPassword').constructValidators(['presence']);
+				break;
 		}
 	}
 });

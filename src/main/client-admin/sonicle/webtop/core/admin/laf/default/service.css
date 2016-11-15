@@ -11,6 +11,7 @@
 .wta-icon-dbUpgrader-xs { background-image: url('dbUpgrader_16.png') !important; }
 .wta-icon-domains-xs { background-image: url('domains_16.png') !important; }
 .wta-icon-domain-xs { background-image: url('domain_16.png') !important; }
+.wta-icon-domain-disabled-xs { background-image: url('domain-disabled_16.png') !important; }
 .wta-icon-groups-xs { background-image: url('group_16.png') !important; }
 .wta-icon-users-xs { background-image: url('user_16.png') !important; }
 .wta-icon-roles-xs { background-image: url('role_16.png') !important; }

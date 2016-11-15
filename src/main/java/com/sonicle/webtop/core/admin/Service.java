@@ -41,6 +41,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
+import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -51,6 +52,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OSettingDb;
+import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsRole;
@@ -168,7 +170,7 @@ public class Service extends BaseService {
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
-		node.setIconClass("wta-icon-domain-xs");
+		node.setIconClass(domain.getEnabled() ? "wta-icon-domain-xs" : "wta-icon-domain-disabled-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		node.put("_internetDomain", domain.getDomainName());
@@ -302,16 +304,23 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				DomainEntity domain = coreadm.getDomain(id);
-				new JsonResult(domain).printTo(out);
+				new JsonResult(new JsDomain(domain)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, DomainEntity> pl = ServletUtils.getPayload(request, DomainEntity.class);
-				coreadm.addDomain(pl.data);
+				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
+				coreadm.addDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, DomainEntity> pl = ServletUtils.getPayload(request, DomainEntity.class);
-				coreadm.updateDomain(pl.data);
+				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
+				coreadm.updateDomain(JsDomain.buildDomainEntity(pl.data, dir));
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				coreadm.deleteDomain(domainId);
 				new JsonResult().printTo(out);
 			}
 			

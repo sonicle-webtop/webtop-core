@@ -49,9 +49,10 @@ import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -67,6 +68,7 @@ import org.slf4j.LoggerFactory;
  */
 public class WebTopDirectory extends AbstractDirectory {
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(WebTopDirectory.class);
+	public static final String SCHEME = "webtop";
 	public static final Pattern PATTERN_USERNAME = Pattern.compile("^" + RegexUtils.MATCH_USERNAME + "$");
 	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
 	public static final Pattern PATTERN_PASSWORD_ULETTERS = Pattern.compile(".*[A-Z].*");
@@ -88,6 +90,12 @@ public class WebTopDirectory extends AbstractDirectory {
 	@Override
 	public Collection<DirectoryCapability> getCapabilities() {
 		return CAPABILITIES;
+	}
+	
+	@Override
+	public URI buildUri(String host, Integer port, String path) throws URISyntaxException {
+		// host, port and path can be ignored!
+		return new URI(SCHEME, null, "localhost", -1, null, null, null);
 	}
 	
 	@Override

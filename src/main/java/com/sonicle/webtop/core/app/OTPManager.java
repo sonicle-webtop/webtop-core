@@ -35,10 +35,10 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.URLUtils;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.security.otp.OTPKey;
@@ -191,7 +191,7 @@ public class OTPManager {
 		ODomain domain = wta.getUserManager().getDomain(pid.getDomainId());
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
-		String issuer = URLUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
+		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
 		InternetAddress ia = MailUtils.buildInternetAddress(pid.getUserId(), domain.getDomainName(), null);
 		if(ia == null) throw new WTException("Unable to build account address");
 		

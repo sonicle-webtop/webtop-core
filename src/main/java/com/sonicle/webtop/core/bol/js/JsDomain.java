@@ -33,10 +33,14 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.URIUtils;
+import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
 import java.net.URI;
 import java.net.URISyntaxException;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -53,6 +57,7 @@ public class JsDomain {
 	public String dirPath;
 	public String dirUsername;
 	public String dirPassword;
+	public String dirConSecurity;
 	public Boolean dirCaseSensitive;
 	public Boolean dirPasswordPolicy;
 	public Boolean userAutoCreation;
@@ -71,34 +76,25 @@ public class JsDomain {
 		dirPath = uri.getPath();
 		dirUsername = o.getDirUsername();
 		dirPassword = o.getDirPassword();
+		dirConSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getDirConnectionSecurity()), "null");
 		dirCaseSensitive = o.getDirCaseSensitive();
 		dirPasswordPolicy = o.getDirPasswordPolicy();
 		userAutoCreation = o.getUserAutoCreation();
 	}
 	
-	public static DomainEntity buildUserEntity(JsDomain js) throws URISyntaxException {
+	public static DomainEntity buildDomainEntity(JsDomain js, AbstractDirectory dir) throws URISyntaxException {
 		DomainEntity de = new DomainEntity();
 		de.setDomainId(js.domainId);
 		de.setInternetName(js.internetName);
 		de.setEnabled(js.enabled);
 		de.setDisplayName(js.displayName);
-		//URI uri = new URI(js);
-		//TODO: completare costruzione URI
+		de.setDirUri(dir.buildUri(js.dirHost, js.dirPort, js.dirPath).toString());
+		de.setDirUsername(js.dirUsername);
+		de.setDirPassword(js.dirPassword);
+		de.setDirConnectionSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.dirConSecurity));
 		de.setDirCaseSensitive(js.dirCaseSensitive);
 		de.setDirPasswordPolicy(js.dirPasswordPolicy);
 		de.setUserAutoCreation(js.userAutoCreation);
 		return de;
 	}
-	
-	/*
-	public static URI buildUri(JsDomain js) {
-		if(js.dirScheme.equals("webtop")) {
-			new URI(js);
-			
-		} else if(js.dirScheme.equals("ldapwebtop")) {
-			
-			
-		}
-	}
-	*/
 }

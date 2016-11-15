@@ -31,37 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.Domain', {
-	extend: 'WT.ux.data.BaseModel',
-	requires: [
-		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.Username'
-	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageDomains', 'data', {
-		writer: {
-			type: 'sojson',
-			writeAssociations: true
-		}
-	}),
+Ext.define('Sonicle.webtop.core.admin.store.DirConSecurity', {
+	extend: 'Ext.data.ArrayStore',
 	
-	fields: [
-		WTF.field('domainId', 'string', false, {
-			validators: ['sousername']
-		}),
-		WTF.field('internetName', 'string', false),
-		WTF.field('displayName', 'string', false),
-		WTF.field('enabled', 'boolean', false),
-		WTF.field('dirScheme', 'string', false),
-		WTF.field('dirHost', 'string', true),
-		WTF.field('dirPort', 'int', true),
-		WTF.field('dirPath', 'string', true),
-		WTF.field('dirUsername', 'string', false),
-		WTF.field('dirPassword', 'string', false),
-		WTF.field('dirConSecurity', 'string', true, {
-			defaultValue: 'null'
-		}),
-		WTF.field('dirCaseSensitive', 'boolean', false),
-		WTF.field('dirPasswordPolicy', 'boolean', false),
-		WTF.field('userAutoCreation', 'boolean', false)
-	]
+	model: 'WT.model.Simple',
+	data: [
+		['null', ''],
+		['SSL','SSL/TLS'],
+		['STARTTLS','STARTTLS']
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.config.data[0][1] = WT.res('word.no');
+		me.callParent([cfg]);
+	}
 });

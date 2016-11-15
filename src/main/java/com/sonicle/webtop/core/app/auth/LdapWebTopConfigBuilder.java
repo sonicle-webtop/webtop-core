@@ -62,16 +62,16 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 	
 	@Override
 	public String getHost(DirectoryOptions opts) {
-		return getString(opts, HOST, DEFAULT_HOST);
+		return getString(opts, PARAM_HOST, DEFAULT_HOST);
 	}
 	
 	@Override
 	public int getPort(DirectoryOptions opts) {
-		return getInteger(opts, PORT, DEFAULT_PORT);
+		return getInteger(opts, PARAM_PORT, DEFAULT_PORT);
 	}
 	
 	@Override
 	public String getUsersDn(DirectoryOptions opts) {
-		return getString(opts, USERS_DN, DEFAULT_USERS_DN);
+		return getString(opts, PARAM_USERS_DN, DEFAULT_USERS_DN);
 	}
 }

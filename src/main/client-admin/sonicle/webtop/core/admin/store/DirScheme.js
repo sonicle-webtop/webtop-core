@@ -40,7 +40,8 @@ Ext.define('Sonicle.webtop.core.admin.store.DirScheme', {
 		['ldapwebtop',''],
 		['ldap',''],
 		['imap',''],
-		['vfs',''],
+		['smb',''],
+		['sftp',''],
 		['ad',''],
 		['ldapneth','']
 	],

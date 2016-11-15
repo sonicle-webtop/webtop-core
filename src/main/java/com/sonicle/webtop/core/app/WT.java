@@ -248,6 +248,11 @@ public class WT {
 		return conm.getConnection();
 	}
 	
+	public static Connection getCoreConnection(boolean autoCommit) throws SQLException {
+		ConnectionManager conm = getWTA().getConnectionManager();
+		return conm.getConnection(autoCommit);
+	}
+	
 	public static Connection getConnection(String serviceId) throws SQLException {
 		ConnectionManager conm = getWTA().getConnectionManager();
 		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {

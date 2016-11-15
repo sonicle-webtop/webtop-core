@@ -146,7 +146,9 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	private void writeAuthLog(UsernamePasswordDomainToken token, HttpServletRequest request, String action) {
 		WebTopApp wta = WebTopApp.getInstance();
 		if(wta != null) {
-			UserProfile.Id pid = new UserProfile.Id(token.getDomain(), token.getUsername());
+			String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
+			String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
+			UserProfile.Id pid = new UserProfile.Id(domainId, userId);
 			wta.getLogManager().write(pid, CoreManifest.ID, action, null, request, request.getRequestedSessionId(), null);
 		}
 	}
