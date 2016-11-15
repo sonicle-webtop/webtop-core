@@ -36,16 +36,14 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
-import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
-import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
@@ -60,13 +58,10 @@ import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
-import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsSimple;
-import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
 import com.sonicle.webtop.core.bol.model.SharePermsElements;
@@ -74,9 +69,6 @@ import com.sonicle.webtop.core.bol.model.SharePermsFolder;
 import com.sonicle.webtop.core.bol.model.IncomingShareRoot;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
-import com.sonicle.webtop.core.bol.model.RoleEntity;
-import com.sonicle.webtop.core.bol.model.SessionInfo;
-import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.bol.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
@@ -191,28 +183,28 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
-		return wta.getAuthManager().getAuthDirectory(domain.getAuthUri());
+		return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
-			return usem.listDomains(enabledOnly);
+			return wtmgr.listDomains(enabledOnly);
 		} else {
-			ODomain domain = usem.getDomain(RunContext.getRunProfileId().getDomain());
+			ODomain domain = wtmgr.getDomain(RunContext.getRunProfileId().getDomain());
 			return domain.getEnabled() ? Arrays.asList(domain) : new ArrayList<ODomain>();
 		}
 	}
 	
 	public ODomain getDomain(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
-			return usem.getDomain(domainId);
+			return wtmgr.getDomain(domainId);
 		} else {
 			ensureUserDomain();
-			return usem.getDomain(domainId);
+			return wtmgr.getDomain(domainId);
 		}
 	}
 	
@@ -228,9 +220,9 @@ public class CoreManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listRoles(domainId);
+			return wtmgr.listRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
 		}
@@ -248,9 +240,9 @@ public class CoreManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listUsersRoles(domainId);
+			return wtmgr.listUsersRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
 		}
@@ -268,9 +260,9 @@ public class CoreManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listGroupsRoles(domainId);
+			return wtmgr.listGroupsRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
 		}
@@ -278,33 +270,33 @@ public class CoreManager extends BaseManager {
 	
 	public List<OUser> listUsers(boolean enabledOnly) throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		try {
-			return usem.listUsers(domainId, enabledOnly);
+			return wtmgr.listUsers(domainId, enabledOnly);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list users [{0}]", domainId);
 		}
 	}
 	
 	public OUser getUser(UserProfile.Id pid) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
-			return usem.getUser(pid);
+			return wtmgr.getUser(pid);
 		} else {
 			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 			ensureUserDomain(pid.getDomainId());
-			return usem.getUser(pid);
+			return wtmgr.getUser(pid);
 		}
 	}
 	
 	public List<OGroup> listGroups() throws WTException {
 		String domainId = getTargetProfileId().getDomainId();
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		try {
-			return usem.listGroups(domainId);
+			return wtmgr.listGroups(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
 		}
@@ -465,11 +457,11 @@ public class CoreManager extends BaseManager {
 	*/
 	
 	public UserInfoProviderBase getUserInfoProvider() throws WTException {
-		return wta.getUserManager().getUserInfoProvider();
+		return wta.getWebTopManager().getUserInfoProvider();
 	}
 	
 	public boolean isUserInfoProviderWritable() {
-		return wta.getUserManager().isUserInfoProviderWritable();
+		return wta.getWebTopManager().isUserInfoProviderWritable();
 	}
 	
 	
@@ -479,11 +471,11 @@ public class CoreManager extends BaseManager {
 	
 	
 	public UserProfile.Id userUidToProfileId(String userUid) {
-		return wta.getUserManager().uidToUser(userUid);
+		return wta.getWebTopManager().uidToUser(userUid);
 	}
 	
 	public UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
-		return wta.getUserManager().userData(pid);
+		return wta.getWebTopManager().userData(pid);
 	}
 	
 	
@@ -491,11 +483,11 @@ public class CoreManager extends BaseManager {
 	
 	
 	public String getInternetUserId(UserProfile.Id pid) throws WTException {
-		return wta.getUserManager().getInternetUserId(pid);
+		return wta.getWebTopManager().getInternetUserId(pid);
 	}
 	
 	public UserPersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
-		return wta.getUserManager().userPersonalInfo(pid);
+		return wta.getWebTopManager().userPersonalInfo(pid);
 	}
 	
 	public String getUserDisplayName(UserProfile.Id pid) throws Exception {
@@ -517,7 +509,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public OUser addUser(OUser item) throws Exception {
-		UserInfoProviderBase uip = wta.getUserManager().getUserInfoProvider();
+		UserInfoProviderBase uip = wta.getWebTopManager().getUserInfoProvider();
 		Connection con = null;
 		int ret;
 		
@@ -804,16 +796,15 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<IncomingShareRoot> listIncomingShareRoots(String serviceId, String groupName) throws WTException {
-		UserManager usrm = wta.getUserManager();
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		UserDAO usedao = UserDAO.getInstance();
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
-			String profileUid = usrm.userToUid(targetPid);
-			List<String> roleUids = authm.getComputedRolesAsStringByUser(targetPid, true, true);
+			String profileUid = wtmgr.userToUid(targetPid);
+			List<String> roleUids = wtmgr.getComputedRolesAsStringByUser(targetPid, true, true);
 			
 			String rootKey = OShare.buildRootKey(groupName);
 			String folderKey = OShare.buildFolderKey(groupName);
@@ -842,7 +833,7 @@ public class CoreManager extends BaseManager {
 				OUser user = usedao.selectByUid(con, uid);
 				if(user == null) continue;
 				
-				roots.add(new IncomingShareRoot(root.getShareId().toString(), usrm.uidToUser(root.getUserUid()), user.getDisplayName()));
+				roots.add(new IncomingShareRoot(root.getShareId().toString(), wtmgr.uidToUser(root.getUserUid()), user.getDisplayName()));
 			}
 			return roots;
 			
@@ -891,7 +882,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public <T>T getIncomingShareFolderData(String shareId, Class<T> type) throws WTException {
-		UserManager usrm = wta.getUserManager();
+		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		ShareDataDAO shddao = ShareDataDAO.getInstance();
 		Connection con = null;
@@ -978,7 +969,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Sharing getSharing(String serviceId, String groupName, String shareId) throws WTException {
-		UserManager usrm = wta.getUserManager();
+		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		RolePermissionDAO rpedao = RolePermissionDAO.getInstance();
 		Connection con = null;
@@ -1075,7 +1066,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void updateSharing(String serviceId, String groupName, Sharing sharing) throws WTException {
-		UserManager usrm = wta.getUserManager();
+		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		Connection con = null;
 		
@@ -1234,7 +1225,7 @@ public class CoreManager extends BaseManager {
 	}
 			
 	public List<OShare> listShareByOwner(UserProfile.Id pid, String serviceId, String shareKey) throws WTException {
-		UserManager usrm = wta.getUserManager();
+		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO dao = ShareDAO.getInstance();
 		Connection con = null;
 		

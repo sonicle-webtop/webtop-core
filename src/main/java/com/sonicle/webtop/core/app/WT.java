@@ -364,7 +364,7 @@ public class WT {
 	
 	public static String getDomainInternetName(String domainId) {
 		try {
-			return getWTA().getUserManager().getDomainInternetName(domainId);
+			return getWTA().getWebTopManager().getDomainInternetName(domainId);
 		} catch(WTException ex) {
 			//TODO: logging
 			return null;
@@ -373,7 +373,7 @@ public class WT {
 	
 	public static UserProfile.Data getUserData(UserProfile.Id profileId) {
 		try {
-			return getWTA().getUserManager().userData(profileId);
+			return getWTA().getWebTopManager().userData(profileId);
 		} catch(WTException ex) {
 			//TODO: logging
 			return null;
@@ -382,7 +382,7 @@ public class WT {
 	
 	public static UserPersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
 		try {
-			return getWTA().getUserManager().userPersonalInfo(profileId);
+			return getWTA().getWebTopManager().userPersonalInfo(profileId);
 		} catch(WTException ex) {
 			//TODO: logging
 			return null;

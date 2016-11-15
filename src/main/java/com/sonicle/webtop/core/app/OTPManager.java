@@ -140,7 +140,7 @@ public class OTPManager {
 	
 	public EmailConfig configureEmail(UserProfile.Id pid, String emailAddress) throws WTException {
 		SonicleAuth sa = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-		UserProfile.Data ud = wta.getUserManager().userData(pid);
+		UserProfile.Data ud = wta.getWebTopManager().userData(pid);
 		if(ud.getEmail() == null) throw new WTException("Valid email address is required");
 		OTPKey otp = sa.generateCredentials(ud.getEmail().getAddress());
 		
@@ -188,7 +188,7 @@ public class OTPManager {
 	}
 	
 	private byte[] generateGoogleAuthQRCode(UserProfile.Id pid, OTPKey otp, int size) throws WTException {
-		ODomain domain = wta.getUserManager().getDomain(pid.getDomainId());
+		ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
 		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
@@ -204,7 +204,7 @@ public class OTPManager {
 		String deliveryMode = getDeliveryMode(pid);
 		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-			UserProfile.Data ud = wta.getUserManager().userData(pid);
+			UserProfile.Data ud = wta.getWebTopManager().userData(pid);
 			if(ud.getEmail() == null) throw new WTException("Valid email address is required");
 			
 			OTPKey otp = te.generateCredentials(ud.getEmail().getAddress());

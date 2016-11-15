@@ -217,16 +217,15 @@ public final class WebTopApp {
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
-	private I18nManager i18nm = null;
-	private ConnectionManager conm = null;
-	private LogManager logm = null;
-	private UserManager usrm = null;
-	private AuthManager autm = null;
-	private SettingsManager setm = null;
+	private I18nManager i18nmgr = null;
+	private ConnectionManager conmgr = null;
+	private LogManager logmgr = null;
+	private WebTopManager wtmgr = null;
+	private SettingsManager setmgr = null;
 	private ServiceManager svcm = null;
-	private SessionManager sesm = null;
-	private OTPManager otpm = null;
-	private ReportManager rptm = null;
+	private SessionManager sesmgr = null;
+	private OTPManager optmgr = null;
+	private ReportManager rptmgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, String> cacheDomainByFQDN = new HashMap<>();
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
@@ -253,17 +252,17 @@ public final class WebTopApp {
 		
 		logger.info("WTA initialization started [{}]", webappName);
 		
-		this.conm = ConnectionManager.initialize(this); // Connection Manager
-		this.sesm = SessionManager.initialize(this); // Session Manager
-		this.autm = AuthManager.initialize(this); // Auth Manager
+		this.conmgr = ConnectionManager.initialize(this); // Connection Manager
+		this.sesmgr = SessionManager.initialize(this); // Session Manager
+		//this.autm = AuthManager.initialize(this); // Auth Manager
 		
-		this.mediaTypes = MediaTypes.init(conm);
-		this.fileTypes = FileTypes.init(conm);
+		this.mediaTypes = MediaTypes.init(conmgr);
+		this.fileTypes = FileTypes.init(conmgr);
 		
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
 		String[] tags = new String[]{"it_IT", "en_EN"};
-		this.i18nm = I18nManager.initialize(this, tags);
+		this.i18nmgr = I18nManager.initialize(this, tags);
 		
 		// Template Engine
 		logger.info("Initializing template engine");
@@ -273,13 +272,13 @@ public final class WebTopApp {
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.logm = LogManager.initialize(this); // Log Manager
-		this.usrm = UserManager.initialize(this); // User Manager
+		this.logmgr = LogManager.initialize(this); // Log Manager
+		this.wtmgr = WebTopManager.initialize(this); // User Manager
 		
-		this.setm = SettingsManager.initialize(this); // Settings Manager
-		this.systemLocale = CoreServiceSettings.getSystemLocale(setm); // System locale
-		this.otpm = OTPManager.initialize(this); // OTP Manager
-		this.rptm = ReportManager.initialize(this); // Report Manager
+		this.setmgr = SettingsManager.initialize(this); // Settings Manager
+		this.systemLocale = CoreServiceSettings.getSystemLocale(setmgr); // System locale
+		this.optmgr = OTPManager.initialize(this); // OTP Manager
+		this.rptmgr = ReportManager.initialize(this); // Report Manager
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
@@ -315,7 +314,7 @@ public final class WebTopApp {
 			// Check webapp version
 			logger.info("Checking webapp version...");
 			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
-			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setm);
+			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setmgr);
 			if(StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
 				this.webappIsLatest = true;
@@ -370,8 +369,8 @@ public final class WebTopApp {
 		svcm.cleanup();
 		svcm = null;
 		// Session Manager
-		sesm.cleanup();
-		sesm = null;
+		sesmgr.cleanup();
+		sesmgr = null;
 		// Scheduler
 		try {
 			scheduler.shutdown(true);
@@ -380,26 +379,26 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
 		}
 		// Report Manager
-		rptm.cleanup();
-		rptm = null;
+		rptmgr.cleanup();
+		rptmgr = null;
 		// OTP Manager
-		otpm.cleanup();
-		otpm = null;
+		optmgr.cleanup();
+		optmgr = null;
 		// Settings Manager
-		setm.cleanup();
-		setm = null;
+		setmgr.cleanup();
+		setmgr = null;
 		// Auth Manager
-		autm.cleanup();
-		autm = null;
+		//autm.cleanup();
+		//autm = null;
 		// User Manager
-		usrm.cleanup();
-		usrm = null;
+		wtmgr.cleanup();
+		wtmgr = null;
 		// Connection Manager
-		conm.cleanup();
-		conm = null;
+		conmgr.cleanup();
+		conmgr = null;
 		// I18nManager Manager
 		//I18nManager.cleanup();
-		i18nm = null;
+		i18nmgr = null;
 		
 		// Destroy admin session
 		synchronized(lockAdminSubject) {
@@ -573,7 +572,7 @@ public final class WebTopApp {
 	 * @return I18nManager instance.
 	 */
 	public I18nManager getI18nManager() {
-		return i18nm;
+		return i18nmgr;
 	}
 	
 	/**
@@ -581,7 +580,7 @@ public final class WebTopApp {
 	 * @return ConnectionManager instance.
 	 */
 	public ConnectionManager getConnectionManager() {
-		return conm;
+		return conmgr;
 	}
 	
 	/**
@@ -589,7 +588,7 @@ public final class WebTopApp {
 	 * @return SettingsManager instance.
 	 */
 	public SettingsManager getSettingsManager() {
-		return setm;
+		return setmgr;
 	}
 	
 	/**
@@ -597,23 +596,15 @@ public final class WebTopApp {
 	 * @return UserManager instance.
 	 */
 	public LogManager getLogManager() {
-		return logm;
+		return logmgr;
 	}
 	
 	/**
-	 * Returns the UserManager.
-	 * @return UserManager instance.
+	 * Returns the WebTopManager.
+	 * @return WebTopManager instance.
 	 */
-	public UserManager getUserManager() {
-		return usrm;
-	}
-	
-	/**
-	 * Returns the AuthManager.
-	 * @return AuthManager instance.
-	 */
-	public AuthManager getAuthManager() {
-		return autm;
+	public WebTopManager getWebTopManager() {
+		return wtmgr;
 	}
 	
 	/**
@@ -629,7 +620,7 @@ public final class WebTopApp {
 	 * @return OTPManager instance.
 	 */
 	public OTPManager getOTPManager() {
-		return otpm;
+		return optmgr;
 	}
 	
 	/**
@@ -637,7 +628,7 @@ public final class WebTopApp {
 	 * @return ReportManager instance.
 	 */
 	public ReportManager getReportManager() {
-		return rptm;
+		return rptmgr;
 	}
 	
 	/**
@@ -645,7 +636,7 @@ public final class WebTopApp {
 	 * @return SessionManager instance.
 	 */
 	public SessionManager getSessionManager() {
-		return sesm;
+		return sesmgr;
 	}
 	
 	/**
@@ -996,7 +987,7 @@ public final class WebTopApp {
 	}
 	
 	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
-		List<WebTopSession> sessions = sesm.getWebTopSessions(profileId);
+		List<WebTopSession> sessions = sesmgr.getWebTopSessions(profileId);
 		if(!sessions.isEmpty()) {
 			for(WebTopSession session : sessions) {
 				session.nofity(messages);
@@ -1007,7 +998,7 @@ public final class WebTopApp {
 				
 				try {
 					MessageQueueDAO mqdao = MessageQueueDAO.getInstance();
-					con = conm.getConnection();
+					con = conmgr.getConnection();
 					OMessageQueue queued = null;
 					for(ServiceMessage message : messages) {
 						queued = new OMessageQueue();

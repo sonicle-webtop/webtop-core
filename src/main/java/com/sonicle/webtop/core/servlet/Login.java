@@ -40,7 +40,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import freemarker.template.Template;
@@ -70,7 +70,7 @@ public class Login extends AbstractServlet {
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = getWebTopApp(request);
-		UserManager usem = wta.getUserManager();
+		WebTopManager usem = wta.getWebTopManager();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		
 		try {

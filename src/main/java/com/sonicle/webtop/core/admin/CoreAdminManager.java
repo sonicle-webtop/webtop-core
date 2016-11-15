@@ -33,10 +33,9 @@
  */
 package com.sonicle.webtop.core.admin;
 
-import com.sonicle.webtop.core.app.AuthManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SettingsManager;
-import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -129,52 +128,52 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public DomainEntity getDomain(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.getDomainEntity(domainId);
+			return wtmgr.getDomainEntity(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot get domain [{0}]", domainId);
 		}
 	}
 	
 	public void addDomain(DomainEntity domain) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.addDomain(domain);
+			wtmgr.addDomain(domain);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot add domain");
 		}
 	}
 	
 	public void updateDomain(DomainEntity domain) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.updateDomain(domain);
+			wtmgr.updateDomain(domain);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot update domain [{0}]", domain.getDomainId());
 		}
 	}
 	
 	public void deleteDomain(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.deleteDomain(domainId);
+			wtmgr.deleteDomain(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot delete domain [{0}]", domainId);
 		}
@@ -235,9 +234,9 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listRoles(domainId);
+			return wtmgr.listRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
 		}
@@ -253,9 +252,9 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listUsersRoles(domainId);
+			return wtmgr.listUsersRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
 		}
@@ -271,81 +270,81 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		try {
-			return authm.listGroupsRoles(domainId);
+			return wtmgr.listGroupsRoles(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
 		}
 	}
 	
 	public RoleEntity getRole(String uid) throws WTException {
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		String domainId = authm.getRoleDomain(uid);
+		String domainId = wtmgr.getRoleDomain(uid);
 		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return authm.getRole(uid);
+			return wtmgr.getRole(uid);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot get role [{0}]", uid);
 		}
 	}
 	
 	public void addRole(RoleEntity role) throws WTException {
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			authm.addRole(role);
+			wtmgr.addRole(role);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot add role");
 		}
 	}
 	
 	public void updateRole(RoleEntity role) throws WTException {
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			authm.updateRole(role);
+			wtmgr.updateRole(role);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
 		}
 	}
 	
 	public void deleteRole(String uid) throws WTException {
-		AuthManager authm = wta.getAuthManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		String domainId = authm.getRoleDomain(uid);
+		String domainId = wtmgr.getRoleDomain(uid);
 		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			authm.deleteRole(uid);
+			wtmgr.deleteRole(uid);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot delete role [{0}]", uid);
 		}
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			ODomain domain = usem.getDomain(domainId);
-			return usem.listDirectoryUsers(domain);
+			ODomain domain = wtmgr.getDomain(domainId);
+			return wtmgr.listDirectoryUsers(domain);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list directory users [{0}]", domainId);
@@ -353,26 +352,26 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.listUsers(domainId, enabledOnly);
+			return wtmgr.listUsers(domainId, enabledOnly);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list users [{0}]", domainId);
 		}
 	}
 	
 	public UserEntity getUser(UserProfile.Id pid) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.getUserEntity(pid);
+			return wtmgr.getUserEntity(pid);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to get user [{0}]", pid.toString());
 		}
@@ -380,13 +379,13 @@ public class CoreAdminManager extends BaseManager {
 	
 	/*
 	public OUser getUser(UserProfile.Id pid) throws WTException {
-		UserManager usem = wta.getUserManager();
+		UserManager wtmgr = wta.getUserManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.getUser(pid);
+			return wtmgr.getUser(pid);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to get user [{0}]", pid.toString());
 		}
@@ -394,39 +393,39 @@ public class CoreAdminManager extends BaseManager {
 	*/
 	
 	public void addUser(UserEntity user, char[] password) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.addUser(true, user, password);
+			wtmgr.addUser(true, user, password);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
 		}
 	}
 	
 	public void updateUser(UserEntity user) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.updateUser(user);
+			wtmgr.updateUser(user);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to update user [{0}]", user.getProfileId().toString());
 		}
 	}
 	
 	public boolean updateUser(UserProfile.Id pid, boolean enabled) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.updateUser(pid, enabled);
+			return wtmgr.updateUser(pid, enabled);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to update user [{0}]", pid.toString());
@@ -434,26 +433,26 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public void updateUserPassword(UserProfile.Id pid, char[] newPassword) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.updateUserPassword(pid, null, newPassword);
+			wtmgr.updateUserPassword(pid, null, newPassword);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to change user password [{0}]", pid.toString());
 		}
 	}
 	
 	public void deleteUser(boolean deep, UserProfile.Id pid) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			usem.deleteUser(pid, deep);
+			wtmgr.deleteUser(pid, deep);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to delete user [{0}]", pid.toString());
@@ -461,13 +460,13 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	public List<OGroup> listGroups(String domainId) throws WTException {
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return usem.listGroups(domainId);
+			return wtmgr.listGroups(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
 		}

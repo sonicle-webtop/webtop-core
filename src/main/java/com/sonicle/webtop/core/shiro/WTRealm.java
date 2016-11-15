@@ -41,8 +41,7 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.AuthManager;
-import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -113,7 +112,7 @@ public class WTRealm extends AuthorizingRealm {
 	
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
-		UserManager usem = wta.getUserManager();
+		WebTopManager wtmgr = wta.getWebTopManager();
 		AuthenticationDomain ad = null;
 		boolean autoCreate = false;
 		
@@ -128,12 +127,12 @@ public class WTRealm extends AuthorizingRealm {
 			} else {
 				ODomain domain = null;
 				if(!StringUtils.isBlank(internetDomain)) {
-					List<ODomain> domains = usem.listByInternetDomain(internetDomain);
+					List<ODomain> domains = wtmgr.listByInternetDomain(internetDomain);
 					if(domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{0}]", internetDomain);
 					if(domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{0}]", internetDomain);
 					domain = domains.get(0);
 				} else {
-					domain = usem.getDomain(domainId);
+					domain = wtmgr.getDomain(domainId);
 					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
 				ad = wta.createAuthenticationDomain(domain);
@@ -150,11 +149,11 @@ public class WTRealm extends AuthorizingRealm {
 			UserEntry userEntry = directory.authenticate(opts, principal);
 			principal.setDisplayName(userEntry.displayName);
 			
-			UserManager.CheckUserResult chk = usem.checkUser(principal.getDomainId(), principal.getUserId());
+			WebTopManager.CheckUserResult chk = wtmgr.checkUser(principal.getDomainId(), principal.getUserId());
 			if(autoCreate && !chk.exist) {
 				logger.debug("Creating user [{}]", principal.getSubjectId());
 				synchronized(lock1) {
-					usem.addUser(createUserEntity(principal.getDomainId(), userEntry));
+					wtmgr.addUser(createUserEntity(principal.getDomainId(), userEntry));
 				}
 			} else if(!chk.exist) {
 				throw new WTException("User does not exist [{0}]", principal.getSubjectId());
@@ -172,7 +171,7 @@ public class WTRealm extends AuthorizingRealm {
 	
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
-		AuthManager autm = wta.getAuthManager();
+		WebTopManager wtm = wta.getWebTopManager();
 		UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
 		
 		HashSet<String> roles = new HashSet<>();
@@ -187,11 +186,11 @@ public class WTRealm extends AuthorizingRealm {
 		String authRes = ServicePermission.namespacedName(CoreManifest.ID, "SERVICE");
 		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
-		Set<RoleWithSource> userRoles = autm.getComputedRolesByUser(pid, true, true);
+		Set<RoleWithSource> userRoles = wtm.getComputedRolesByUser(pid, true, true);
 		for(RoleWithSource role : userRoles) {
 			roles.add(role.getRoleUid());
 
-			List<ORolePermission> rolePerms = autm.listRolePermissions(role.getRoleUid());
+			List<ORolePermission> rolePerms = wtm.listRolePermissions(role.getRoleUid());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 

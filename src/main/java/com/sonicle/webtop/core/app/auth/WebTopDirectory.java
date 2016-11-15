@@ -42,7 +42,7 @@ import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.webtop.core.app.UserManager;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -128,9 +128,9 @@ public class WebTopDirectory extends AbstractDirectory {
 		WebTopApp wta = builder.getWebTopApp(opts);
 		
 		try {
-			UserManager usem = wta.getUserManager();
+			WebTopManager wtmgr = wta.getWebTopManager();
 			UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
-			OUser ouser = usem.getUser(pid);
+			OUser ouser = wtmgr.getUser(pid);
 			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
 			
 			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());
@@ -161,9 +161,9 @@ public class WebTopDirectory extends AbstractDirectory {
 		WebTopApp wta = builder.getWebTopApp(opts);
 		
 		try {
-			UserManager usem = wta.getUserManager();
+			WebTopManager wtmgr = wta.getWebTopManager();
 			UserProfile.Id pid = new UserProfile.Id(domainId, userId);
-			OUser ouser = usem.getUser(pid);
+			OUser ouser = wtmgr.getUser(pid);
 			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
 			
 			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());

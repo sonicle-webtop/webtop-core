@@ -235,18 +235,18 @@ public class RunContext {
 	
 	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) {
 		SecurityManager manager = SecurityUtils.getSecurityManager();
-		if(manager.isPermitted(principals, AuthManager.WTADMIN_PSTRING)) return true;
+		if(manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING)) return true;
 		return manager.isPermitted(principals, ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, key), action, instance));
 	}
 	
 	private static boolean isSysAdmin(PrincipalCollection principals) {
 		SecurityManager manager = SecurityUtils.getSecurityManager();
-		return manager.isPermitted(principals, AuthManager.SYSADMIN_PSTRING);
+		return manager.isPermitted(principals, WebTopManager.SYSADMIN_PSTRING);
 	}
 	
 	private static boolean isWebTopAdmin(PrincipalCollection principals) {
 		SecurityManager manager = SecurityUtils.getSecurityManager();
-		return manager.isPermitted(principals, AuthManager.WTADMIN_PSTRING);
+		return manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING);
 	}
 	
 	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key) throws AuthException {
