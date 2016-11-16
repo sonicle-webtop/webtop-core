@@ -46,29 +46,29 @@ public class DomainEntity {
 	private String domainId;
 	private String internetName;
 	private Boolean enabled;
-	private String displayName;
-	private String dirUri;
-	private String dirUsername;
-	private String dirPassword;
-	private ConnectionSecurity dirConSecurity;
-	private Boolean dirCaseSensitive;
-	private Boolean dirPasswordPolicy;
+	private String description;
 	private Boolean userAutoCreation;
+	private String authUri;
+	private String authUsername;
+	private String authPassword;
+	private ConnectionSecurity authConnSecurity;
+	private Boolean authCaseSensitive;
+	private Boolean authPasswordPolicy;
 	
 	public DomainEntity() {}
 	
 	public DomainEntity(ODomain o) throws URISyntaxException {
 		domainId = o.getDomainId();
-		internetName = o.getDomainName();
+		internetName = o.getInternetName();
 		enabled = o.getEnabled();
-		displayName = o.getDescription();
-		dirUri = o.getAuthUri();
-		dirUsername = o.getAuthUsername();
-		dirPassword = o.getAuthPassword();
-		dirConSecurity = EnumUtils.getEnum(ConnectionSecurity.class, o.getAuthConnectionSecurity());
-		dirCaseSensitive = o.getCaseSensitiveAuth();
-		dirPasswordPolicy = o.getWebtopAdvSecurity();
+		description = o.getDescription();
 		userAutoCreation = o.getUserAutoCreation();
+		authUri = o.getAuthUri();
+		authUsername = o.getAuthUsername();
+		authPassword = o.getAuthPassword();
+		authConnSecurity = EnumUtils.getEnum(ConnectionSecurity.class, o.getAuthConnectionSecurity());
+		authCaseSensitive = o.getAuthCaseSensitive();
+		authPasswordPolicy = o.getAuthPasswordPolicy();
 	}
 
 	public String getDomainId() {
@@ -95,67 +95,67 @@ public class DomainEntity {
 		this.enabled = enabled;
 	}
 
-	public String getDisplayName() {
-		return displayName;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
-
-	public String getDirUri() {
-		return dirUri;
-	}
-
-	public void setDirUri(String dirUri) {
-		this.dirUri = dirUri;
-	}
-
-	public String getDirUsername() {
-		return dirUsername;
-	}
-
-	public void setDirUsername(String dirUsername) {
-		this.dirUsername = dirUsername;
-	}
-
-	public String getDirPassword() {
-		return dirPassword;
-	}
-
-	public void setDirPassword(String dirPassword) {
-		this.dirPassword = dirPassword;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	
-	public ConnectionSecurity getDirConnectionSecurity() {
-		return dirConSecurity;
-	}
-
-	public void setDirConnectionSecurity(ConnectionSecurity dirConSecurity) {
-		this.dirConSecurity = dirConSecurity;
-	}
-
-	public Boolean getDirCaseSensitive() {
-		return dirCaseSensitive;
-	}
-
-	public void setDirCaseSensitive(Boolean dirCaseSensitive) {
-		this.dirCaseSensitive = dirCaseSensitive;
-	}
-
-	public Boolean getDirPasswordPolicy() {
-		return dirPasswordPolicy;
-	}
-
-	public void setDirPasswordPolicy(Boolean dirPasswordPolicy) {
-		this.dirPasswordPolicy = dirPasswordPolicy;
-	}
-
 	public Boolean getUserAutoCreation() {
 		return userAutoCreation;
 	}
 
 	public void setUserAutoCreation(Boolean userAutoCreation) {
 		this.userAutoCreation = userAutoCreation;
+	}
+
+	public String getAuthUri() {
+		return authUri;
+	}
+
+	public void setAuthUri(String authUri) {
+		this.authUri = authUri;
+	}
+
+	public String getAuthUsername() {
+		return authUsername;
+	}
+
+	public void setAuthUsername(String authUsername) {
+		this.authUsername = authUsername;
+	}
+
+	public String getAuthPassword() {
+		return authPassword;
+	}
+
+	public void setAuthPassword(String authPassword) {
+		this.authPassword = authPassword;
+	}
+	
+	public ConnectionSecurity getAuthConnSecurity() {
+		return authConnSecurity;
+	}
+
+	public void setAuthConnSecurity(ConnectionSecurity authConnSecurity) {
+		this.authConnSecurity = authConnSecurity;
+	}
+
+	public Boolean getAuthCaseSensitive() {
+		return authCaseSensitive;
+	}
+
+	public void setAuthCaseSensitive(Boolean authCaseSensitive) {
+		this.authCaseSensitive = authCaseSensitive;
+	}
+
+	public Boolean getAuthPasswordPolicy() {
+		return authPasswordPolicy;
+	}
+
+	public void setAuthPasswordPolicy(Boolean authPasswordPolicy) {
+		this.authPasswordPolicy = authPasswordPolicy;
 	}
 }

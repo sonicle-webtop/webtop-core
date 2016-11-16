@@ -270,10 +270,9 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			vct.getView().begin('new', {
 				data: {
 					enabled: true,
-					dirScheme: 'ldapwebtop',
-					dirCaseSensitive: false,
-					dirPasswordPolicy: true,
-					userAutoCreation: false
+					userAutoCreation: false,
+					authCaseSensitive: false,
+					authPasswordPolicy: true
 				}
 			});
 		});

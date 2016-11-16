@@ -31,19 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.store.DirConSecurity', {
+Ext.define('Sonicle.webtop.core.admin.store.AuthScheme', {
 	extend: 'Ext.data.ArrayStore',
 	
 	model: 'WT.model.Simple',
 	data: [
-		['null', ''],
-		['SSL','SSL/TLS'],
-		['STARTTLS','STARTTLS']
+		['webtop',''],
+		['ldapwebtop',''],
+		['ldap',''],
+		['imap',''],
+		['smb',''],
+		['sftp',''],
+		['ad',''],
+		['ldapneth','']
 	],
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.config.data[0][1] = WT.res('word.no');
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('com.sonicle.webtop.core.admin', 'store.authScheme.'+row[0]);
+		});
 		me.callParent([cfg]);
 	}
 });

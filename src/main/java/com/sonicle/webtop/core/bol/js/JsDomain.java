@@ -50,17 +50,17 @@ public class JsDomain {
 	public String domainId;
 	public String internetName;
 	public Boolean enabled;
-	public String displayName;
-	public String dirScheme;
-	public String dirHost;
-	public Integer dirPort;
-	public String dirPath;
-	public String dirUsername;
-	public String dirPassword;
-	public String dirConSecurity;
-	public Boolean dirCaseSensitive;
-	public Boolean dirPasswordPolicy;
+	public String description;
 	public Boolean userAutoCreation;
+	public String authScheme;
+	public String authHost;
+	public Integer authPort;
+	public String authPath;
+	public String authUsername;
+	public String authPassword;
+	public String authConnSecurity;
+	public Boolean authCaseSensitive;
+	public Boolean authPasswordPolicy;
 	
 	public JsDomain() {}
 	
@@ -68,18 +68,18 @@ public class JsDomain {
 		domainId = o.getDomainId();
 		internetName = o.getInternetName();
 		enabled = o.getEnabled();
-		displayName = o.getDisplayName();
-		URI uri = new URI(o.getDirUri());
-		dirScheme = uri.getScheme();
-		dirHost = uri.getHost();
-		dirPort = URIUtils.getPort(uri);
-		dirPath = uri.getPath();
-		dirUsername = o.getDirUsername();
-		dirPassword = o.getDirPassword();
-		dirConSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getDirConnectionSecurity()), "null");
-		dirCaseSensitive = o.getDirCaseSensitive();
-		dirPasswordPolicy = o.getDirPasswordPolicy();
+		description = o.getDescription();
 		userAutoCreation = o.getUserAutoCreation();
+		URI uri = new URI(o.getAuthUri());
+		authScheme = uri.getScheme();
+		authHost = uri.getHost();
+		authPort = URIUtils.getPort(uri);
+		authPath = uri.getPath();
+		authUsername = o.getAuthUsername();
+		authPassword = o.getAuthPassword();
+		authConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getAuthConnSecurity()), "null");
+		authCaseSensitive = o.getAuthCaseSensitive();
+		authPasswordPolicy = o.getAuthPasswordPolicy();
 	}
 	
 	public static DomainEntity buildDomainEntity(JsDomain js, AbstractDirectory dir) throws URISyntaxException {
@@ -87,14 +87,14 @@ public class JsDomain {
 		de.setDomainId(js.domainId);
 		de.setInternetName(js.internetName);
 		de.setEnabled(js.enabled);
-		de.setDisplayName(js.displayName);
-		de.setDirUri(dir.buildUri(js.dirHost, js.dirPort, js.dirPath).toString());
-		de.setDirUsername(js.dirUsername);
-		de.setDirPassword(js.dirPassword);
-		de.setDirConnectionSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.dirConSecurity));
-		de.setDirCaseSensitive(js.dirCaseSensitive);
-		de.setDirPasswordPolicy(js.dirPasswordPolicy);
+		de.setDescription(js.description);
 		de.setUserAutoCreation(js.userAutoCreation);
+		de.setAuthUri(dir.buildUri(js.authHost, js.authPort, js.authPath).toString());
+		de.setAuthUsername(js.authUsername);
+		de.setAuthPassword(js.authPassword);
+		de.setAuthConnSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.authConnSecurity));
+		de.setAuthCaseSensitive(js.authCaseSensitive);
+		de.setAuthPasswordPolicy(js.authPasswordPolicy);
 		return de;
 	}
 }

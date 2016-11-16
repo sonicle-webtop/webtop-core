@@ -49,19 +49,17 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 			validators: ['sousername']
 		}),
 		WTF.field('internetName', 'string', false),
-		WTF.field('displayName', 'string', false),
-		WTF.field('enabled', 'boolean', false),
-		WTF.field('dirScheme', 'string', false),
-		WTF.field('dirHost', 'string', true),
-		WTF.field('dirPort', 'int', true),
-		WTF.field('dirPath', 'string', true),
-		WTF.field('dirUsername', 'string', false),
-		WTF.field('dirPassword', 'string', false),
-		WTF.field('dirConSecurity', 'string', true, {
-			defaultValue: 'null'
-		}),
-		WTF.field('dirCaseSensitive', 'boolean', false),
-		WTF.field('dirPasswordPolicy', 'boolean', false),
-		WTF.field('userAutoCreation', 'boolean', false)
+		WTF.field('enabled', 'boolean', false, {defaultValue: true}),
+		WTF.field('description', 'string', false),
+		WTF.field('userAutoCreation', 'boolean', false, {defaultValue: false}),
+		WTF.field('authScheme', 'string', false),
+		WTF.field('authHost', 'string', true),
+		WTF.field('authPort', 'int', true),
+		WTF.field('authPath', 'string', true),
+		WTF.field('authUsername', 'string', false),
+		WTF.field('authPassword', 'string', false),
+		WTF.field('authConnSecurity', 'string', true, {defaultValue: 'null'}),
+		WTF.field('authCaseSensitive', 'boolean', false, {defaultValue: false}),
+		WTF.field('authPasswordPolicy', 'boolean', false, {defaultValue: false})
 	]
 });

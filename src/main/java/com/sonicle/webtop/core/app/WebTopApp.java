@@ -495,7 +495,7 @@ public final class WebTopApp {
 			CoreManager core = WT.getCoreManager();
 			cacheDomainByFQDN.clear();
 			for(ODomain domain : core.listDomains(true)) {
-				cacheDomainByFQDN.put(domain.getDomainName(), domain.getDomainId());
+				cacheDomainByFQDN.put(domain.getInternetName(), domain.getDomainId());
 			}
 		}
 	}
@@ -1057,7 +1057,7 @@ public final class WebTopApp {
 	
 	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
 		return new AuthenticationDomain(domain.getDomainId(), 
-				domain.getDomainName(), 
+				domain.getInternetName(), 
 				domain.getAuthUri(), 
 				domain.getAuthUsername(), 
 				(domain.getAuthPassword() != null) ? domain.getAuthPassword().toCharArray() : null, 

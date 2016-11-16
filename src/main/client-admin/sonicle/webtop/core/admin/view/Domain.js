@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete',
 		'Sonicle.webtop.core.admin.model.Domain',
-		'Sonicle.webtop.core.admin.store.DirConSecurity',
-		'Sonicle.webtop.core.admin.store.DirScheme'
+		'Sonicle.webtop.core.admin.store.AuthConnSecurity',
+		'Sonicle.webtop.core.admin.store.AuthScheme'
 	],
 	
 	dockableConfig: {
@@ -60,9 +60,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		
 		WTU.applyFormulas(me.getVM(), {
 			foEnabled: WTF.checkboxBind('record', 'enabled'),
-			foDirCaseSensitive: WTF.checkboxBind('record', 'dirCaseSensitive'),
-			foDirPasswordPolicy: WTF.checkboxBind('record', 'dirPasswordPolicy'),
-			foUserAutoCreation: WTF.checkboxBind('record', 'userAutoCreation')
+			foUserAutoCreation: WTF.checkboxBind('record', 'userAutoCreation'),
+			foAuthCaseSensitive: WTF.checkboxBind('record', 'authCaseSensitive'),
+			foAuthPasswordPolicy: WTF.checkboxBind('record', 'authPasswordPolicy')
 		});
 	},
 	
@@ -98,8 +98,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					width: 400
 				}, {
 					xtype: 'textfield',
-					bind: '{record.displayName}',
-					fieldLabel: me.mys.res('domain.fld-displayName.lbl'),
+					bind: '{record.description}',
+					fieldLabel: me.mys.res('domain.fld-description.lbl'),
 					width: 400
 				}, {
 					xtype: 'checkbox',
@@ -113,22 +113,24 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					boxLabel: me.mys.res('domain.fld-userAutoCreation.lbl')
 				}, 
 				WTF.lookupCombo('id', 'desc', {
-					bind: '{record.dirScheme}',
+					bind: '{record.authScheme}',
 					allowBlank: false,
-					store: Ext.create('Sonicle.webtop.core.admin.store.DirScheme', {
+					store: Ext.create('Sonicle.webtop.core.admin.store.AuthScheme', {
 						autoLoad: true
 					}),
-					fieldLabel: me.mys.res('domain.fld-dirScheme.lbl'),
+					fieldLabel: me.mys.res('domain.fld-authScheme.lbl'),
 					width: 400
 				})]
 			}, {
 				xtype: 'container',
 				layout: 'card',
-				bind: {
-					activeItem: '{record.dirScheme}'
-				},
+				reference: 'pnlauth',
+				activeItem: 'empty',
 				flex: 1,
 				items: [{
+					xtype: 'panel',
+					itemId: 'empty'
+				}, {
 					xtype: 'wtform',
 					itemId: 'webtop',
 					modelValidation: true,
@@ -137,14 +139,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					},
 					items: [{
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirPasswordPolicy}',
+						bind: '{foAuthPasswordPolicy}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
+						boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -158,53 +160,53 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					},
 					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.dirConSecurity}',
+						bind: '{record.authConnSecurity}',
 						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
 						width: 230
 					}),
 					{
 						xtype: 'textfield',
-						bind: '{record.dirUsername}',
+						bind: '{record.authUsername}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirUsername.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						bind: '{record.dirPassword}',
+						bind: '{record.authPassword}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
 						width: 300
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirPasswordPolicy}',
+						bind: '{foAuthPasswordPolicy}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
+						boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -218,58 +220,58 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					},
 					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.dirConSecurity}',
+						bind: '{record.authConnSecurity}',
 						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
 						width: 230
 					}),
 					{
 						xtype: 'textfield',
-						bind: '{record.dirPath}',
-						fieldLabel: me.mys.res('domain.fld-dirPath.lbl'),
+						bind: '{record.authPath}',
+						fieldLabel: me.mys.res('domain.fld-authPath.lbl'),
 						anchor: '100%'
 					}, {
 						xtype: 'textfield',
-						bind: '{record.dirUsername}',
+						bind: '{record.authUsername}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirUsername.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						bind: '{record.dirPassword}',
+						bind: '{record.authPassword}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
 						width: 300
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirPasswordPolicy}',
+						bind: '{foAuthPasswordPolicy}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
+						boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -283,36 +285,36 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					},
 					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.dirConSecurity}',
+						bind: '{record.authConnSecurity}',
 						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
 						width: 200
 					}),
 					{
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -326,26 +328,26 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -359,26 +361,26 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}]
 				}, {
 					xtype: 'wtform',
@@ -402,54 +404,54 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						layout: 'hbox',
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.dirHost}',
+							bind: '{record.authHost}',
 							width: 160
 						}, {
 							xtype: 'displayfield',
 							value: '&nbsp;:&nbsp;'
 						}, {
 							xtype: 'numberfield',
-							bind: '{record.dirPort}',
+							bind: '{record.authPort}',
 							hideTrigger: true,
 							minValue: 1,
 							maxValue: 65000,
 							width: 60,
-							emptyText: me.mys.res('domain.fld-dirPort.emp')
+							emptyText: me.mys.res('domain.fld-authPort.emp')
 						}],
-						fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
 					},
 					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.dirConSecurity}',
+						bind: '{record.authConnSecurity}',
 						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.DirConSecurity', {
+						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
 							autoLoad: true
 						}),
-						fieldLabel: me.mys.res('domain.fld-dirConSecurity.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
 						width: 230
 					}),
 					{
 						xtype: 'textfield',
-						bind: '{record.dirUsername}',
+						bind: '{record.authUsername}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirUsername.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
-						bind: '{record.dirPassword}',
+						bind: '{record.authPassword}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
 						width: 300
 					}, {
 						xtype: 'checkbox',
-						bind: '{foDirCaseSensitive}',
+						bind: '{foAuthCaseSensitive}',
 						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
 					}]
 				}]
 			}]
 		});
 		me.on('viewload', me.onViewLoad);
-		me.getVM().bind('{record.dirScheme}', me.onSchemeChanged, me);
+		me.getVM().bind('{record.authScheme}', me.onSchemeChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -464,58 +466,60 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 	},
 	
 	onSchemeChanged: function(v) {
-		this.updateValidators(this.getModel());
+		var mo = this.getModel(), scheme = mo.get('authScheme');
+		this.lref('pnlauth').setActiveItem(Ext.isEmpty(scheme) ? 'empty' : scheme);
+		this.updateValidators(mo);
 	},
 	
 	updateValidators: function(mo) {
-		switch(mo.get('dirScheme')) {
+		switch(mo.get('authScheme')) {
 			case 'webtop':
-				mo.getField('dirHost').constructValidators([]);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
+				mo.getField('authHost').constructValidators([]);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ldapwebtop':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authPassword').constructValidators(['presence']);
 				break;
 			case 'ldap':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators(['presence']);
-				mo.getField('dirUsername').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators(['presence']);
+				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authPassword').constructValidators(['presence']);
 				break;
 			case 'imap':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'smb':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'sftp':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ad':
-				mo.getField('dirHost').constructValidators([]);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
+				mo.getField('authHost').constructValidators([]);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ldapneth':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirPath').constructValidators([]);
-				mo.getField('dirUsername').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
+				mo.getField('authHost').constructValidators(['presence']);
+				mo.getField('authPath').constructValidators([]);
+				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authPassword').constructValidators(['presence']);
 				break;
 		}
 	}

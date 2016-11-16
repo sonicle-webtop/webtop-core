@@ -173,7 +173,7 @@ public class Service extends BaseService {
 		node.setIconClass(domain.getEnabled() ? "wta-icon-domain-xs" : "wta-icon-domain-disabled-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
-		node.put("_internetDomain", domain.getDomainName());
+		//node.put("_internetDomain", domain.getInternetName());
 		//node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
 		//node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
@@ -212,7 +212,7 @@ public class Service extends BaseService {
 							String domainId = cid.getToken(1);
 							ODomain domain = core.getDomain(domainId);
 							AbstractDirectory dir = core.getAuthDirectory(domain);
-							boolean passwordPolicy = domain.getWebtopAdvSecurity();
+							boolean passwordPolicy = domain.getAuthPasswordPolicy();
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
@@ -308,13 +308,13 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.authScheme);
 				coreadm.addDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.authScheme);
 				coreadm.updateDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				

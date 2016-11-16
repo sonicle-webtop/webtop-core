@@ -191,8 +191,8 @@ public class OTPManager {
 		ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
-		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getDomainName()));
-		InternetAddress ia = MailUtils.buildInternetAddress(pid.getUserId(), domain.getDomainName(), null);
+		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getInternetName()));
+		InternetAddress ia = MailUtils.buildInternetAddress(pid.getUserId(), domain.getInternetName(), null);
 		if(ia == null) throw new WTException("Unable to build account address");
 		
 		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getKey(), ia.getAddress());
