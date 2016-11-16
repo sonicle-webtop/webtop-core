@@ -1080,7 +1080,7 @@ public final class WebTopApp {
 				ldapwt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
 				ldapwt.setAdminUsername(opts, ad.getAuthUsername());
 				ldapwt.setAdminPassword(opts, getDirPassword(ad));
-				ldapwt.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				ldapwt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
 				break;	
 			case LdapDirectory.SCHEME:
 				LdapConfigBuilder ldap = new LdapConfigBuilder();
@@ -1089,13 +1089,13 @@ public final class WebTopApp {
 				ldap.setUsersDn(opts, authUri.getPath());
 				ldap.setAdminUsername(opts, ad.getAuthUsername());
 				ldap.setAdminPassword(opts, getDirPassword(ad));
-				ldap.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				ldap.setConnectionSecurity(opts, ad.getAuthConnSecurity());
 				break;
 			case ImapDirectory.SCHEME:
 				ImapConfigBuilder imap = new ImapConfigBuilder();
 				imap.setHost(opts, authUri.getHost());
 				imap.setPort(opts, authUri.getPort());
-				imap.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				imap.setConnectionSecurity(opts, ad.getAuthConnSecurity());
 				break;
 			case SmbDirectory.SCHEME:
 				SmbConfigBuilder smb = new SmbConfigBuilder();
@@ -1122,7 +1122,7 @@ public final class WebTopApp {
 				ldapnt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
 				ldapnt.setAdminUsername(opts, ad.getAuthUsername());
 				ldapnt.setAdminPassword(opts, getDirPassword(ad));
-				ldapnt.setConnectionSecurity(opts, ad.getAuthConnectionSecurity());
+				ldapnt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
 				break;
 		}
 		return opts;
