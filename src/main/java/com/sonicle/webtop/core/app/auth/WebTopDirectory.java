@@ -42,13 +42,11 @@ import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.OLocalVaultEntry;
 import com.sonicle.webtop.core.dal.DAOException;
-import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.dal.LocalVaultDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
-import com.sonicle.webtop.core.sdk.WTException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -71,14 +69,15 @@ public class WebTopDirectory extends AbstractDirectory {
 	public static final String SCHEME = "webtop";
 	public static final Pattern PATTERN_USERNAME = Pattern.compile("^" + RegexUtils.MATCH_USERNAME + "$");
 	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
-	public static final Pattern PATTERN_PASSWORD_ULETTERS = Pattern.compile(".*[A-Z].*");
-	public static final Pattern PATTERN_PASSWORD_LLETTERS = Pattern.compile(".*[a-z].*");
+	public static final Pattern PATTERN_PASSWORD_UALPHA = Pattern.compile(".*[A-Z].*");
+	public static final Pattern PATTERN_PASSWORD_LALPHA = Pattern.compile(".*[a-z].*");
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
 	static final Collection<DirectoryCapability> CAPABILITIES = Collections.unmodifiableCollection(
 		EnumSet.of(
-			DirectoryCapability.PASSWORD_WRITE
+			DirectoryCapability.PASSWORD_WRITE,
+			DirectoryCapability.USERS_WRITE
 		)
 	);
 	
@@ -114,40 +113,82 @@ public class WebTopDirectory extends AbstractDirectory {
 		int count = 0;
 		final String cs = new String(password);
 		if(PATTERN_PASSWORD_LENGTH.matcher(cs).matches()) {
-			if(PATTERN_PASSWORD_ULETTERS.matcher(cs).matches()) count++;
-			if(PATTERN_PASSWORD_LLETTERS.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_UALPHA.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_LALPHA.matcher(cs).matches()) count++;
 			if(PATTERN_PASSWORD_NUMBERS.matcher(cs).matches()) count++;
 			if(PATTERN_PASSWORD_SPECIAL.matcher(cs).matches()) count++;
 		}
 		return count >= 3;
 	}
-
+	
 	@Override
-	public UserEntry authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
+	public AuthUser authenticate(DirectoryOptions opts, Principal principal) throws DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
 		WebTopApp wta = builder.getWebTopApp(opts);
+		Connection con = null;
 		
 		try {
-			WebTopManager wtmgr = wta.getWebTopManager();
-			UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
-			OUser ouser = wtmgr.getUser(pid);
-			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
+			con = wta.getConnectionManager().getConnection();
 			
-			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());
-			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), ouser.getPassword());
-			if(!result) throw new DirectoryException("Provided password is not valid");
+			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
+			if (entry == null) throw new DirectoryException("User not found [{0}]", new UserProfile.Id(principal.getDomainId(), principal.getUserId()).toString());
 			
-			if(algo.equals(CredentialAlgorithm.PLAIN)) {
+			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
+			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), entry.getPassword());
+			if (!result) throw new DirectoryException("Provided password is not valid");
+			if (StringUtils.isBlank(new String(principal.getPassword()))) throw new DirectoryException("Cannot authenticate using blank password");
+			
+			if (algo.equals(CredentialAlgorithm.PLAIN)) {
 				logger.debug("Encrypting PLAIN password");
 				CredentialAlgorithm newAlgo = CredentialAlgorithm.SHA;
-				updatePassword(wta, pid, newAlgo.name(), CredentialAlgorithm.encrypt(newAlgo, ouser.getPassword()));
+				doUpdatePassword(con, principal.getDomainId(), principal.getUserId(), newAlgo, entry.getPassword());
 			}
 			
-			return createUserEntry(ouser);
+			return createUserEntry(principal);
 			
-		} catch(WTException ex) {
-			throw new DirectoryException(ex);
+		} catch(SQLException | DAOException ex) {
+			throw new DirectoryException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	@Override
+	public List<AuthUser> listUsers(DirectoryOptions opts, String domainId) throws DirectoryException {
+		throw new DirectoryException("Capability not supported");
+	}
+	
+	@Override
+	public void addUser(DirectoryOptions opts, String domainId, AuthUser entry) throws EntryException, DirectoryException {
+		WebTopConfigBuilder builder = getConfigBuilder();
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
+		WebTopApp wta = builder.getWebTopApp(opts);
+		Connection con = null;
+		
+		try {
+			ensureCapability(DirectoryCapability.USERS_WRITE);
+			if(StringUtils.isBlank(entry.userId)) throw new DirectoryException("Missing value for 'userId'");
+			
+			String uid = sanitizeUsername(opts, entry.userId);
+			
+			con = wta.getConnectionManager().getConnection();
+			OLocalVaultEntry olve = new OLocalVaultEntry();
+			olve.setDomainId(domainId);
+			olve.setUserId(uid);
+			olve.setPasswordType(CredentialAlgorithm.PLAIN.name());
+			lvdao.insert(con, olve);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new DirectoryException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	@Override
+	public void updateUser(DirectoryOptions opts, String domainId, AuthUser entry) throws DirectoryException {
+		// Nothing to update...
 	}
 	
 	@Override
@@ -158,46 +199,50 @@ public class WebTopDirectory extends AbstractDirectory {
 	@Override
 	public void updateUserPassword(DirectoryOptions opts, String domainId, String userId, char[] oldPassword, char[] newPassword) throws EntryException, DirectoryException {
 		WebTopConfigBuilder builder = getConfigBuilder();
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
 		WebTopApp wta = builder.getWebTopApp(opts);
+		Connection con = null;
 		
 		try {
-			WebTopManager wtmgr = wta.getWebTopManager();
-			UserProfile.Id pid = new UserProfile.Id(domainId, userId);
-			OUser ouser = wtmgr.getUser(pid);
-			if(ouser == null) throw new DirectoryException("User not found [{0}]", pid.toString());
+			con = wta.getConnectionManager().getConnection();
 			
-			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(ouser.getPasswordType());
+			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
+			if(entry == null) throw new DirectoryException("User not found [{0}]", new UserProfile.Id(domainId, userId).toString());
 			
+			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
 			if(oldPassword != null) {
-				boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), ouser.getPassword());
+				boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), entry.getPassword());
 				if(!result) throw new EntryException("Old password does not match the current one");
 			}
 			
-			updatePassword(wta, pid, algo.name(), CredentialAlgorithm.encrypt(algo, ouser.getPassword()));
+			doUpdatePassword(con, domainId, userId, algo, new String(newPassword));
 			
-		} catch(WTException ex) {
-			throw new DirectoryException(ex);
+		} catch(SQLException | DAOException ex) {
+			throw new DirectoryException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
 	@Override
-	public List<UserEntry> listUsers(DirectoryOptions opts, String domainId) throws DirectoryException {
-		throw new DirectoryException("Capability not supported");
-	}
-	
-	@Override
-	public void addUser(DirectoryOptions opts, String domainId, UserEntry entry) throws DirectoryException {
-		throw new DirectoryException("Capability not supported");
-	}
-
-	@Override
-	public void updateUser(DirectoryOptions opts, String domainId, UserEntry entry) throws DirectoryException {
-		throw new DirectoryException("Capability not supported");
-	}
-
-	@Override
 	public void deleteUser(DirectoryOptions opts, String domainId, String userId) throws DirectoryException {
-		throw new DirectoryException("Capability not supported");
+		WebTopConfigBuilder builder = getConfigBuilder();
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
+		WebTopApp wta = builder.getWebTopApp(opts);
+		Connection con = null;
+		
+		try {
+			ensureCapability(DirectoryCapability.USERS_WRITE);
+			String uid = sanitizeUsername(opts, userId);
+			
+			con = wta.getConnectionManager().getConnection();
+			lvdao.deleteByDomainUser(con, domainId, uid);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new DirectoryException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 
 	@Override
@@ -205,27 +250,21 @@ public class WebTopDirectory extends AbstractDirectory {
 		throw new DirectoryException("Capability not supported");
 	}
 	
-	private void updatePassword(WebTopApp wta, UserProfile.Id pid, String passwordType, String password) {
-		UserDAO dao = UserDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection();
-			dao.updatePasswordByDomainUser(con, pid.getDomainId(), pid.getUserId(), passwordType, password);
-			
-		} catch(SQLException | DAOException ex) {
-			logger.warn("Unable to encrypt password");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+	private int doUpdatePassword(Connection con, String domainId, String userId, CredentialAlgorithm algo, String password) throws DAOException {
+		return doUpdatePassword(con, domainId, userId, algo.name(), CredentialAlgorithm.encrypt(algo, password));
 	}
 	
-	protected UserEntry createUserEntry(OUser ouser) {
-		UserEntry userEntry = new UserEntry();
-		userEntry.userId = ouser.getUserId();
+	private int doUpdatePassword(Connection con, String domainId, String userId, String passwordType, String password) throws DAOException {
+		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
+		return lvdao.updatePasswordByDomainUser(con, domainId, userId, passwordType, password);
+	}
+	
+	protected AuthUser createUserEntry(Principal principal) {
+		AuthUser userEntry = new AuthUser();
+		userEntry.userId = principal.getUserId();
 		userEntry.firstName = null;
 		userEntry.lastName = null;
-		userEntry.displayName = ouser.getDisplayName();
+		userEntry.displayName = principal.getDisplayName();
 		return userEntry;
 	}
 }

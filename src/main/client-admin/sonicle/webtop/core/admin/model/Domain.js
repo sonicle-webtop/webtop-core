@@ -56,8 +56,8 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('authHost', 'string', true),
 		WTF.field('authPort', 'int', true),
 		WTF.field('authPath', 'string', true),
-		WTF.field('authUsername', 'string', false),
-		WTF.field('authPassword', 'string', false),
+		WTF.field('authUsername', 'string', true),
+		WTF.field('authPassword', 'string', true),
 		WTF.field('authConnSecurity', 'string', true, {defaultValue: 'null'}),
 		WTF.field('authCaseSensitive', 'boolean', false, {defaultValue: false}),
 		WTF.field('authPasswordPolicy', 'boolean', false, {defaultValue: false})

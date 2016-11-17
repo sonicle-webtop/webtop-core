@@ -206,8 +206,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				itemId: itemId,
 				domainId: node.get('_domainId'),
 				passwordPolicy: node.get('_passwordPolicy'),
-				dirCapPasswordWrite: node.get('_dirCapPasswordWrite'),
-				dirCapUsersWrite: node.get('_dirCapUsersWrite'),
+				authCapPasswordWrite: node.get('_authCapPasswordWrite'),
+				authCapUsersWrite: node.get('_authCapUsersWrite'),
 				closable: true
 			});
 		});
@@ -228,16 +228,23 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	},
 	
 	addDomainUI: function() {
-		this.addDomain({
-			callback: function(success) {
-				if(success) this.loadTreeNode('domains');
+		var me = this;
+		me.addDomain({
+			callback: function(success, mo) {
+				if(success) {
+					me.loadTreeNode('domains');
+					me.initDomain(mo.get('domainId'), {
+						callback: function(success) {
+							if(success) WT.info(me.res('domain.info.init'));
+						}
+					});
+				}
 			}
 		});
 	},
 	
 	editDomainUI: function(node) {
-		var me = this;
-		me.editDomain(node.get('_domainId'), {
+		this.editDomain(node.get('_domainId'), {
 			callback: function(success) {
 				if(success) this.loadTreeNode('domains');
 			}
@@ -245,13 +252,12 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	},
 	
 	deleteDomainUI: function(node) {
-		var me = this,
-				sto = me.trAdmin().getStore();
-		WT.confirm(me.res('store.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
+		var me = this;
+		WT.confirm(me.res('domain.confirm.delete', Ext.String.ellipsis(node.get('text'), 40)), function(bid) {
 			if(bid === 'yes') {
 				me.deleteDomain(node.get('_domainId'), {
 					callback: function(success) {
-						if(success) sto.remove(node);
+						if(success) node.remove();
 					}
 				});
 			}
@@ -301,6 +307,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		WT.ajaxReq(me.ID, 'ManageDomains', {
 			params: {
 				crud: 'delete',
+				domainId: domainId
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	initDomain: function(domainId, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomains', {
+			params: {
+				crud: 'init',
 				domainId: domainId
 			},
 			callback: function(success, json) {

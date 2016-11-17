@@ -179,15 +179,15 @@ public class Service extends BaseService {
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean passwordPolicy, boolean authCapPasswordWrite, boolean authCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, type);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), text, true);
 		node.setIconClass(iconClass);
 		node.put("_type", type);
 		node.put("_domainId", domainId);
 		node.put("_passwordPolicy", passwordPolicy);
-		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
-		node.put("_dirCapUsersWrite", dirCapUsersWrite);
+		node.put("_authCapPasswordWrite", authCapPasswordWrite);
+		node.put("_authCapUsersWrite", authCapUsersWrite);
 		return node;
 	}
 	
@@ -321,6 +321,11 @@ public class Service extends BaseService {
 			} else if(crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				coreadm.deleteDomain(domainId);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("init")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				coreadm.initDomainWithDefaults(domainId);
 				new JsonResult().printTo(out);
 			}
 			

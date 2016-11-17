@@ -49,8 +49,8 @@ import org.ldaptive.LdapAttribute;
 public class LdapWebTopDirectory extends LdapDirectory {
 	public static final String SCHEME = "ldapwebtop";
 	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
-	public static final Pattern PATTERN_PASSWORD_ULETTERS = Pattern.compile(".*[A-Z].*");
-	public static final Pattern PATTERN_PASSWORD_LLETTERS = Pattern.compile(".*[a-z].*");
+	public static final Pattern PATTERN_PASSWORD_UALPHA = Pattern.compile(".*[A-Z].*");
+	public static final Pattern PATTERN_PASSWORD_LALPHA = Pattern.compile(".*[a-z].*");
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
@@ -71,8 +71,8 @@ public class LdapWebTopDirectory extends LdapDirectory {
 		int count = 0;
 		final String cs = new String(password);
 		if(PATTERN_PASSWORD_LENGTH.matcher(cs).matches()) {
-			if(PATTERN_PASSWORD_ULETTERS.matcher(cs).matches()) count++;
-			if(PATTERN_PASSWORD_LLETTERS.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_UALPHA.matcher(cs).matches()) count++;
+			if(PATTERN_PASSWORD_LALPHA.matcher(cs).matches()) count++;
 			if(PATTERN_PASSWORD_NUMBERS.matcher(cs).matches()) count++;
 			if(PATTERN_PASSWORD_SPECIAL.matcher(cs).matches()) count++;
 		}
@@ -80,7 +80,7 @@ public class LdapWebTopDirectory extends LdapDirectory {
 	}
 	
 	@Override
-	protected List<LdapAttribute> createLdapAddAttrs(UserEntry userEntry) throws DirectoryException {
+	protected List<LdapAttribute> createLdapAddAttrs(AuthUser userEntry) throws DirectoryException {
 		List<LdapAttribute> attrs = super.createLdapAddAttrs(userEntry);
 		LdapAttribute objectClass = new LdapAttribute("objectClass");
 		objectClass.addStringValue("inetOrgPerson", "top");

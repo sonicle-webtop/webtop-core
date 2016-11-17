@@ -42,12 +42,12 @@ import com.sonicle.webtop.core.bol.OUser;
  */
 public class DirectoryUser {
 	private String domainId;
-	private AbstractDirectory.UserEntry dirUser;
+	private AbstractDirectory.AuthUser dirUser;
 	private OUser wtUser;
 	
 	public DirectoryUser() {}
 	
-	public DirectoryUser(String domainId, AbstractDirectory.UserEntry dirUser, OUser wtUser) {
+	public DirectoryUser(String domainId, AbstractDirectory.AuthUser dirUser, OUser wtUser) {
 		this.domainId = domainId;
 		this.dirUser = dirUser;
 		this.wtUser = wtUser;
@@ -57,7 +57,7 @@ public class DirectoryUser {
 		return domainId;
 	}
 
-	public AbstractDirectory.UserEntry getDirUser() {
+	public AbstractDirectory.AuthUser getDirUser() {
 		return dirUser;
 	}
 

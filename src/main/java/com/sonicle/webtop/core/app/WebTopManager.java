@@ -45,7 +45,7 @@ import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
+import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.security.auth.directory.ImapDirectory;
@@ -143,8 +143,9 @@ public final class WebTopManager {
 	private WebTopApp wta = null;
 	public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
 	public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
+	public static final String USERID_ADMIN = "admin";
+	public static final String USERID_ADMINS = "admins";
 	public static final String USERID_USERS = "users";
-	public static final String USERID_ADMINISTRATORS = "administrators";
 	
 	private final Object lock1 = new Object();
 	private final HashMap<UserProfile.Id, String> cacheUserToUserUid = new HashMap<>();
@@ -278,8 +279,9 @@ public final class WebTopManager {
 	}
 	
 	public DomainEntity getDomainEntity(String domainId) throws WTException {
+		
+		ODomain domain = getDomain(domainId);
 		try {
-			ODomain domain = getDomain(domainId);
 			DomainEntity de = new DomainEntity(domain);
 			de.setAuthPassword(getDirPassword(domain));
 			return de;
@@ -289,7 +291,46 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void addDomain(DomainEntity domain) throws WTException {
+	public void initDomainWithDefaults(String domainId) throws WTException {
+		ODomain odomain = getDomain(domainId);
+		if(odomain == null) throw new WTException("Domain not found [{0}]", domainId);
+		
+		initDomainWithDefaults(odomain);
+	}
+	
+	private void initDomainWithDefaults(ODomain domain) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			logger.debug("Inserting default groups");
+			OGroup ogroup1 = doGroupInsert(con, domain.getDomainId(), USERID_ADMINS, "Admins");
+			OGroup ogroup2 = doGroupInsert(con, domain.getDomainId(), USERID_USERS, "Users");
+			
+			// Update cache
+			addToGroupUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
+			addToGroupUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
+			
+			logger.debug("Inserting domain admin");
+			UserEntity ue = new UserEntity();
+			ue.setDomainId(domain.getDomainId());
+			ue.setUserId(USERID_ADMIN);
+			ue.setEnabled(true);
+			ue.setFirstName("DomainAdmin");
+			ue.setLastName(domain.getDescription());
+			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
+			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_ADMINS));
+			addUser(true, ue);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ODomain addDomain(DomainEntity domain) throws WTException {
 		DomainDAO dodao = DomainDAO.getInstance();
 		Connection con = null;
 		
@@ -301,14 +342,8 @@ public final class WebTopManager {
 			fillDomain(odomain, domain);
 			dodao.insert(con, odomain);
 			
-			OGroup ogroup1 = doGroupInsert(con, odomain.getDomainId(), USERID_ADMINISTRATORS, "Utenti");
-			OGroup ogroup2 = doGroupInsert(con, odomain.getDomainId(), USERID_USERS, "Utenti");
-			
 			DbUtils.commitQuietly(con);
-			
-			// Update cache
-			addToUserUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
-			addToUserUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
+			return odomain;
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
@@ -342,14 +377,18 @@ public final class WebTopManager {
 	
 	public void deleteDomain(String domainId) throws WTException {
 		DomainDAO domdao = DomainDAO.getInstance();
-		
 		Connection con = null;
+		ODomain odomain = null;
+		List<OUser> ousers = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(false);
 			
-			logger.debug("Deleting domain");
+			odomain = domdao.selectById(con, domainId);
+			if(odomain == null) throw new WTException("Domain not found [{0}]", odomain);
+			ousers = listUsers(domainId, false);
 			
+			logger.debug("Deleting domain");
 			ActivityDAO.getInstance().deleteByDomain(con, domainId);
 			CausalDAO.getInstance().deleteByDomain(con, domainId);
 			
@@ -376,18 +415,36 @@ public final class WebTopManager {
 			
 			DbUtils.commitQuietly(con);
 			
-			initUserUidCache();
-			initGroupUidCache();
-			cleanupUserCache();
-			
-			//TODO: chiamare controller per eliminare dominio per i servizi
-			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		initUserUidCache();
+		initGroupUidCache();
+		cleanupUserCache();
+		
+		try {
+			AuthenticationDomain ad = wta.createAuthenticationDomain(odomain);
+			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			
+			if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+				for(OUser ouser : ousers) {
+					final UserProfile.Id pid = new UserProfile.Id(ouser.getDomainId(), ouser.getUserId());
+					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
+				}
+			}
+			
+		} catch(URISyntaxException ex) {
+			throw new WTException(ex, "Invalid domain auth URI");
+		} catch(DirectoryException ex) {
+			throw new WTException(ex, "DirectoryException error");
+		}
+
+		//TODO: chiamare controller per eliminare dominio per i servizi
 	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
@@ -467,15 +524,15 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void addUser(UserEntity user) throws WTException {
-		addUser(false, user, null);
+	public void addUser(boolean updateDirectory, UserEntity user) throws WTException {
+		addUser(updateDirectory, user, null);
 	}
 	
 	public void addUser(boolean updateDirectory, UserEntity user, char[] password) throws WTException {
 		Connection con = null;
 		
 		try {
-			con = WT.getConnection(CoreManifest.ID, false);
+			con = wta.getConnectionManager().getConnection(false);
 			
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
@@ -492,8 +549,12 @@ public final class WebTopManager {
 					}
 				}
 				if(authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					if(domain.getAuthPasswordPolicy()&& !authDir.validatePasswordPolicy(opts, password)) {
-						throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+					if(password == null) {
+						password = authDir.generatePassword(opts, domain.getAuthPasswordPolicy());
+					} else {
+						if(domain.getAuthPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
+							throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+						}
 					}
 				}
 				
@@ -503,7 +564,7 @@ public final class WebTopManager {
 				if(authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					logger.debug("Adding user into directory");
 					try {
-						authDir.addUser(opts, domain.getDomainId(), createUserEntry(user));
+						authDir.addUser(opts, domain.getDomainId(), createAuthUser(user));
 					} catch(EntryException ex1) {
 						logger.debug("Skipped: already exists!");
 					}
@@ -697,13 +758,13 @@ public final class WebTopManager {
 			ArrayList<DirectoryUser> items = new ArrayList<>();
 			
 			if(directory.hasCapability(DirectoryCapability.USERS_READ)) {
-				for(UserEntry userEntry : directory.listUsers(opts, domain.getDomainId())) {
+				for(AuthUser userEntry : directory.listUsers(opts, domain.getDomainId())) {
 					items.add(new DirectoryUser(domain.getDomainId(), userEntry, wtUsers.get(userEntry.userId)));
 				}
 				
 			} else {
 				for(OUser ouser : wtUsers.values()) {
-					final AbstractDirectory.UserEntry userEntry = new AbstractDirectory.UserEntry(ouser.getUserId(), null, null, ouser.getDisplayName(), null);
+					final AbstractDirectory.AuthUser userEntry = new AbstractDirectory.AuthUser(ouser.getUserId(), null, null, ouser.getDisplayName(), null);
 					items.add(new DirectoryUser(domain.getDomainId(), userEntry, ouser));
 				}
 			}
@@ -931,10 +992,10 @@ public final class WebTopManager {
 			roldao.insert(con, orole);
 			
 			for(ORolePermission perm : role.getPermissions()) {
-				doAddPermission(con, orole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+				doInsertPermission(con, orole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 			}
 			for(ORolePermission perm : role.getServicesPermissions()) {
-				doAddPermission(con, orole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+				doInsertPermission(con, orole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 			}
 			
 			DbUtils.commitQuietly(con);
@@ -969,7 +1030,7 @@ public final class WebTopManager {
 				rolperdao.deleteById(con, perm.getRolePermissionId());
 			}
 			for(ORolePermission perm : changeSet1.inserted) {
-				doAddPermission(con, oldRole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+				doInsertPermission(con, oldRole.getRoleUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 			}
 			
 			LangUtils.CollectionChangeSet<ORolePermission> changeSet2 = LangUtils.getCollectionChanges(oldRole.getServicesPermissions(), role.getServicesPermissions());
@@ -977,7 +1038,7 @@ public final class WebTopManager {
 				rolperdao.deleteById(con, perm.getRolePermissionId());
 			}
 			for(ORolePermission perm : changeSet2.inserted) {
-				doAddPermission(con, oldRole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+				doInsertPermission(con, oldRole.getRoleUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 			}
 			
 			DbUtils.commitQuietly(con);
@@ -1172,7 +1233,7 @@ public final class WebTopManager {
 	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
 		GroupDAO gdao = GroupDAO.getInstance();
 		
-		logger.debug("Inserting group");
+		logger.debug("Inserting group [{}]", groupId);
 		OGroup ogroup = new OGroup();
 		ogroup.setDomainId(domainId);
 		ogroup.setUserId(groupId);
@@ -1180,16 +1241,14 @@ public final class WebTopManager {
 		ogroup.setUserUid(IdentifierUtils.getUUID());
 		ogroup.setDisplayName(displayName);
 		ogroup.setSecret(null);
-		ogroup.setPasswordType(null);
-		ogroup.setPassword(null);
 		gdao.insert(con, ogroup);
 		
 		return ogroup;
 	}
 	
 	
-	private UserEntry createUserEntry(UserEntity user) {
-		return new UserEntry(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
+	private AuthUser createAuthUser(UserEntity user) {
+		return new AuthUser(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
 	}
 	
 	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
@@ -1203,7 +1262,7 @@ public final class WebTopManager {
 		// Insert User record
 		logger.debug("Inserting user");
 		OUser ouser = new OUser();
-		ouser.setDomainId(user.getDomainId());
+		ouser.setDomainId(domain.getDomainId());
 		ouser.setUserId(user.getUserId());
 		ouser.setEnabled(user.getEnabled());
 		ouser.setUserUid(IdentifierUtils.getUUID());
@@ -1214,7 +1273,7 @@ public final class WebTopManager {
 		// Insert UserInfo record
 		logger.debug("Inserting userInfo");
 		OUserInfo oui = new OUserInfo();
-		oui.setDomainId(user.getDomainId());
+		oui.setDomainId(domain.getDomainId());
 		oui.setUserId(user.getUserId());
 		oui.setFirstName(user.getFirstName());
 		oui.setLastName(user.getLastName());
@@ -1223,26 +1282,31 @@ public final class WebTopManager {
 		
 		logger.debug("Inserting groups associations");
 		for(AssignedGroup assiGroup : user.getAssignedGroups()) {
+			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			doInsertUserAssociation(con, ouser.getUserUid(), groupUid);
+			
+			/*
 			final OUserAssociation oua = new OUserAssociation();
 			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
 			oua.setUserAssociationId(uadao.getSequence(con).intValue());
 			oua.setUserUid(ouser.getUserUid());
 			oua.setGroupUid(groupUid);
 			uadao.insert(con, oua);
+			*/
 		}
 		
 		logger.debug("Inserting roles associations");
 		for(AssignedRole assiRole : user.getAssignedRoles()) {
-			doAddRoleAssociation(con, ouser.getUserUid(), assiRole.getRoleUid());
+			doInsertRoleAssociation(con, ouser.getUserUid(), assiRole.getRoleUid());
 		}
 		
 		// Insert permissions
 		logger.debug("Inserting permissions");
 		for(ORolePermission perm : user.getPermissions()) {
-			doAddPermission(con, ouser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+			doInsertPermission(con, ouser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 		}
 		for(ORolePermission perm : user.getServicesPermissions()) {
-			doAddPermission(con, ouser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+			doInsertPermission(con, ouser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 		}
 		
 		return ouser;
@@ -1280,12 +1344,16 @@ public final class WebTopManager {
 			uadao.deleteById(con, assiGroup.getUserAssociationId());
 		}
 		for(AssignedGroup assiGroup : changeSet1.inserted) {
+			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			doInsertUserAssociation(con, oldUser.getUserUid(), groupUid);
+			/*
 			final OUserAssociation oua = new OUserAssociation();
 			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
 			oua.setUserAssociationId(uadao.getSequence(con).intValue());
 			oua.setUserUid(oldUser.getUserUid());
 			oua.setGroupUid(groupUid);
 			uadao.insert(con, oua);
+			*/
 		}
 		
 		logger.debug("Updating roles associations");
@@ -1294,7 +1362,7 @@ public final class WebTopManager {
 			rolassdao.deleteById(con, assiRole.getRoleAssociationId());
 		}
 		for(AssignedRole assiRole : changeSet2.inserted) {
-			doAddRoleAssociation(con, oldUser.getUserUid(), assiRole.getRoleUid());
+			doInsertRoleAssociation(con, oldUser.getUserUid(), assiRole.getRoleUid());
 		}
 
 		logger.debug("Updating permissions");
@@ -1303,7 +1371,7 @@ public final class WebTopManager {
 			rpdao.deleteById(con, perm.getRolePermissionId());
 		}
 		for(ORolePermission perm : changeSet3.inserted) {
-			doAddPermission(con, oldUser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+			doInsertPermission(con, oldUser.getUserUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
 		}
 
 		LangUtils.CollectionChangeSet<ORolePermission> changeSet4 = LangUtils.getCollectionChanges(oldUser.getServicesPermissions(), user.getServicesPermissions());
@@ -1311,7 +1379,7 @@ public final class WebTopManager {
 			rpdao.deleteById(con, perm.getRolePermissionId());
 		}
 		for(ORolePermission perm : changeSet4.inserted) {
-			doAddPermission(con, oldUser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+			doInsertPermission(con, oldUser.getUserUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
 		}
 	}
 	
@@ -1370,7 +1438,18 @@ public final class WebTopManager {
 		o.setAuthCaseSensitive(domain.getAuthCaseSensitive());
 	}
 	
-	private void doAddRoleAssociation(Connection con, String userUid, String roleUid) throws WTException {
+	private OUserAssociation doInsertUserAssociation(Connection con, String userUid, String groupUid) throws WTException {
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
+		
+		OUserAssociation oua = new OUserAssociation();
+		oua.setUserAssociationId(uadao.getSequence(con).intValue());
+		oua.setUserUid(userUid);
+		oua.setGroupUid(groupUid);
+		uadao.insert(con, oua);
+		return oua;
+	}
+	
+	private ORoleAssociation doInsertRoleAssociation(Connection con, String userUid, String roleUid) throws WTException {
 		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
 		
 		ORoleAssociation ora = new ORoleAssociation();
@@ -1378,9 +1457,10 @@ public final class WebTopManager {
 		ora.setUserUid(userUid);
 		ora.setRoleUid(roleUid);
 		rolassdao.insert(con, ora);
+		return ora;
 	}
 	
-	private ORolePermission doAddPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
+	private ORolePermission doInsertPermission(Connection con, String roleUid, String serviceId, String key, String action, String instance) throws WTException {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
 		
 		ORolePermission perm = new ORolePermission();

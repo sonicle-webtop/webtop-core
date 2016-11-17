@@ -39,8 +39,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	
 	domainId: null,
 	passwordPolicy: false,
-	dirCapPasswordWrite: false,
-	dirCapUsersWrite: false,
+	authCapPasswordWrite: false,
+	authCapUsersWrite: false,
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
@@ -124,7 +124,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					menu: [
 						me.addAction('addEmpty', {
 							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
-							disabled: !me.dirCapUsersWrite,
+							disabled: !me.authCapUsersWrite,
 							handler: function() {
 								me.addUserUI(null);
 							}
@@ -337,7 +337,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					return true;
 				}
 			case 'changePassword':
-				if(!me.dirCapPasswordWrite) return true;
+				if(!me.authCapPasswordWrite) return true;
 				sel = me.getSelectedUser();
 				if(sel) {
 					return !sel.get('exist');

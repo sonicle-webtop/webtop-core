@@ -38,7 +38,7 @@ import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.security.auth.directory.AbstractDirectory.UserEntry;
+import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
@@ -146,14 +146,14 @@ public class WTRealm extends AuthorizingRealm {
 			String sntzUsername = directory.sanitizeUsername(opts, username);
 			logger.debug("Authenticating principal [{}, {}]", ad.getDomainId(), sntzUsername);
 			Principal principal = new Principal(ad, ad.getDomainId(), sntzUsername, password);
-			UserEntry userEntry = directory.authenticate(opts, principal);
+			AuthUser userEntry = directory.authenticate(opts, principal);
 			principal.setDisplayName(userEntry.displayName);
 			
 			WebTopManager.CheckUserResult chk = wtmgr.checkUser(principal.getDomainId(), principal.getUserId());
 			if(autoCreate && !chk.exist) {
 				logger.debug("Creating user [{}]", principal.getSubjectId());
 				synchronized(lock1) {
-					wtmgr.addUser(createUserEntity(principal.getDomainId(), userEntry));
+					wtmgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry));
 				}
 			} else if(!chk.exist) {
 				throw new WTException("User does not exist [{0}]", principal.getSubjectId());
@@ -209,7 +209,7 @@ public class WTRealm extends AuthorizingRealm {
 		return StringUtils.equals(StringUtils.lowerCase(username), "admin") && StringUtils.isBlank(internetDomain);
 	}
 	
-	private UserEntity createUserEntity(String domainId, UserEntry userEntry) {
+	private UserEntity createUserEntity(String domainId, AuthUser userEntry) {
 		UserEntity ue = new UserEntity();
 		ue.setDomainId(domainId);
 		ue.setUserId(userEntry.userId);

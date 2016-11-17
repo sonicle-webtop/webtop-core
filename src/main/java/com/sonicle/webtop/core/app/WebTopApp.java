@@ -305,11 +305,13 @@ public final class WebTopApp {
 	private void onAppReady() {
 		logger.trace("onAppReady...");
 		try {
+			/*
 			try {
 				initCacheDomainByFQDN();
 			} catch(WTException ex) {
 				logger.warn("Unable to create domains FQDN cache", ex);
 			}
+			*/
 			
 			// Check webapp version
 			logger.info("Checking webapp version...");
@@ -494,6 +496,7 @@ public final class WebTopApp {
 		synchronized(cacheDomainByFQDN) {
 			CoreManager core = WT.getCoreManager();
 			cacheDomainByFQDN.clear();
+			//getWebTopManager().listDomains(webappIsLatest)
 			for(ODomain domain : core.listDomains(true)) {
 				cacheDomainByFQDN.put(domain.getInternetName(), domain.getDomainId());
 			}

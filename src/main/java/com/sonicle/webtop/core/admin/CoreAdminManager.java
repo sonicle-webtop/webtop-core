@@ -143,13 +143,25 @@ public class CoreAdminManager extends BaseManager {
 	public void addDomain(DomainEntity domain) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
 			wtmgr.addDomain(domain);
+			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot add domain");
+		}
+	}
+	
+	public void initDomainWithDefaults(String domainId) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			wtmgr.initDomainWithDefaults(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot init domain");
 		}
 	}
 	
