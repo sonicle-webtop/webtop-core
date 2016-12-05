@@ -533,7 +533,7 @@
 									<executable>${sencha.cmd.executable}</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<argument>--sdk-path=${sencha.extjs.sdk}</argument>
+										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>compile</argument>
 										<argument>--classpath=client-core,client-core-private,D:\Sonicle\Workspaces\wt5\common\sonicle-extjs-extensions\src\sencha\sonicle-extensions\src</argument>
 										<argument>exclude</argument>
