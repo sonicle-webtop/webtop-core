@@ -1,102 +1,100 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<title>${title}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/wt.ico" />
-		
-		<!-- Bootstrap -->
-		<link href="resources/com.sonicle.webtop.core/css/bootstrap.min.css" rel="stylesheet">
-		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-		<!--[if lt IE 9]>
-			<script src="resources/com.sonicle.webtop.core/js/html5shiv-3.7.2.min.js"></script>
-			<script src="resources/com.sonicle.webtop.core/js/respond-1.4.2.min.js"></script>
-		<![endif]-->
-		
-		<link href="resources/com.sonicle.webtop.core/css/login.css" rel="stylesheet">
-        <script type="text/javascript" src="resources/com.sonicle.webtop.core/js/jquery-3.0.0.min.js"></script>
-		<script type="text/javascript">
-            $(function() {
-                setTimeout(function() {
+        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/0.0.0/resources/images/wt.ico" />
+        <!-- Bootstrap -->
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/bootstrap.min.css" />
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/libs/html5shiv-3.7.2.min.js"></script>
+            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/libs/respond-1.4.2.min.js"></script>
+        <![endif]-->
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/login.css" />
+        <script type="text/javascript" src="resources/com.sonicle.webtop.core/0.0.0/resources/libs/jquery-3.0.0.min.js"></script>
+        <script type="text/javascript">
+            $(function () {
+                setTimeout(function () {
                     $('#wtusername').focus();
                 }, 100);
-                $('#wtsubmit').bind('click tap', function() {
+                $('#wtsubmit').bind('click tap', function () {
                     $('#location').val(window.location);
                     $('form[name="login"]').submit();
                     $(this).prop("disabled", true);
                 });
             });
-		</script>
-	</head>
-	<body>
-		<div class="jumbotron vertical-center">
-			<div id="login" class="container">
-				<div class="row">
-					<div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-						<img class="logo img-responsive" src="resources/com.sonicle.webtop.core/images/login.png">
-						<#if showMaintenance>
-						<div class="alert alert-warning text-center" role="alert">
-							<span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-							${maintenanceMessage}
-						</div>
-						</#if>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
-						<form name="login" method="post" action="login">
+        </script>
+    </head>
+    <body>
+        <div class="jumbotron vertical-center">
+            <div id="login" class="container">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
+                        <img class="logo img-responsive" src="resources/com.sonicle.webtop.core/0.0.0/resources/images/login.png">
+                        <#if showMaintenance>
+                        <div class="alert alert-warning text-center" role="alert">
+                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+                            ${maintenanceMessage}
+                        </div>
+                        </#if>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+                        <form name="login" method="post" action="login">
                             <input id="location" name="location" type="hidden">
-							<div class="box">
-								<#if showFailure>
-								<p class="text-center text-danger">
-									<span class="glyphicon glyphicon-exclamation-sign"></span>
-									${failureMessage}
-								</p>
-								</#if>
-								<div class="form-group">
-									<div class="input-group">
-										<input class="form-control" id="wtusername" name="wtusername" type="username" placeholder="${usernamePlaceholder}">
-										<div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
-									</div>
-								</div>
-								<div class="form-group">
-									<div class="input-group">
-										<input class="form-control" id="wtpassword" name="wtpassword" type="password" placeholder="${passwordPlaceholder}">
-										<div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
-									</div>
-								</div>
-								<div class="form-group" <#if !showDomain>style="display: none;"</#if>>
-									<div class="input-group">
-										<div class="input-group-addon">${domainLabel}</div>
-										<select class="form-control" id="wtdomain" name="wtdomain">
-											<#list domains as domain>
-											<option value="${domain.getValue()}" >${domain.getDescription()}</option>
-											</#list>
-										</select>
-									</div>
-								</div>
-								<br>
-								<!--<button class="btn btn-default full-width" type="sumbit"><span class="glyphicon glyphicon-ok"></span></button>-->
-								<button class="btn btn-primary" id="wtsubmit" type="sumbit">${submitLabel}</button>
-							</div>
-						</form>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-						<img class="powered img-responsive" src="resources/com.sonicle.webtop.core/images/poweredby.png">
-						<h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
-						<#if showFootprint>
-						<h6 class="footprint text-center"><small>Hosted on ${systemInfo} - ${serverInfo} - Java ${jdk} - ${appName}</small></h6>
-						</#if>
-					</div>
-				</div>
-			</div>
-		</div>
-	</body>
+                            <div class="box">
+                                <#if showFailure>
+                                <p class="text-center text-danger">
+                                    <span class="glyphicon glyphicon-exclamation-sign"></span>
+                                    ${failureMessage}
+                                </p>
+                                </#if>
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input class="form-control" id="wtusername" name="wtusername" type="username" placeholder="${usernamePlaceholder}">
+                                        <div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input class="form-control" id="wtpassword" name="wtpassword" type="password" placeholder="${passwordPlaceholder}">
+                                        <div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
+                                    </div>
+                                </div>
+                                <div class="form-group" <#if !showDomain>style="display: none;"</#if>>
+                                     <div class="input-group">
+                                        <div class="input-group-addon">${domainLabel}</div>
+                                        <select class="form-control" id="wtdomain" name="wtdomain">
+                                            <#list domains as domain>
+                                            <option value="${domain.getValue()}" >${domain.getDescription()}</option>
+                                            </#list>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br>
+                                <!--<button class="btn btn-default full-width" type="sumbit"><span class="glyphicon glyphicon-ok"></span></button>-->
+                                <button class="btn btn-primary" id="wtsubmit" type="sumbit">${submitLabel}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
+                        <img class="powered img-responsive" src="resources/com.sonicle.webtop.core/0.0.0/resources/images/poweredby.png">
+                        <h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
+                        <#if showFootprint>
+                        <h6 class="footprint text-center"><small>Hosted on ${systemInfo} - ${serverInfo} - Java ${jdk} - ${appName}</small></h6>
+                        </#if>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

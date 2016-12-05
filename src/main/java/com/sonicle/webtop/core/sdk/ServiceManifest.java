@@ -232,22 +232,43 @@ public class ServiceManifest {
 		return StringUtils.lowerCase(StringUtils.replace(getJsPackageName(), ".", "/"));
 	}
 	
+	/**
+	 * Returns current service version.
+	 * @return The service version.
+	 */
 	public ServiceVersion getVersion() {
 		return version;
 	}
 	
+	/**
+	 * Returns service previous version (before the current one).
+	 * @return The service version.
+	 */
 	public ServiceVersion getOldVersion() {
 		return oldVersion;
 	}
 	
+	/**
+	 * Sets service previous version.
+	 * @param value 
+	 */
 	public void setOldVersion(ServiceVersion value) {
 		oldVersion = value;
 	}
 	
+	/**
+	 * Gets the specified build date.
+	 * @return The build date (as declared in manifest)
+	 */
 	public String getBuildDate() {
 		return buildDate;
 	}
 	
+	/**
+	 * Gets the class name of server-side Controller implementation.
+	 * (eg. com.sonicle.webtop.core.CoreController)
+	 * @return The class name.
+	 */
 	public String getControllerClassName() {
 		return controllerClassName;
 	}
@@ -255,7 +276,7 @@ public class ServiceManifest {
 	/**
 	 * Gets the class name of server-side Manager implementation.
 	 * (eg. com.sonicle.webtop.core.CoreManager)
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getManagerClassName() {
 		return managerClassName;
@@ -264,7 +285,7 @@ public class ServiceManifest {
 	/**
 	 * Gets the class name of server-side REST Api implementation.
 	 * (eg. com.sonicle.webtop.core.CoreRestApi)
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getRestApiClassName() {
 		return restApiClassName;
@@ -273,7 +294,7 @@ public class ServiceManifest {
 	/**
 	 * Gets the class name of server-side private (authenticated) service implementation.
 	 * (eg. com.sonicle.webtop.core.CoreService)
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getPrivateServiceClassName() {
 		return privateServiceClassName;
@@ -284,9 +305,9 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of server-side public service implementation.
+	 * Gets the class name of server-side public (not authenticated) service implementation.
 	 * (eg. com.sonicle.webtop.core.CorePublicService)
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getPublicServiceClassName() {
 		return publicServiceClassName;
@@ -295,17 +316,17 @@ public class ServiceManifest {
 	/**
 	 * Gets the class name of server-side job service implementation.
 	 * (eg. com.sonicle.webtop.core.CoreJobService)
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getJobServiceClassName() {
 		return jobServiceClassName;
 	}
 	
 	/**
-	 * Gets the class name of client-side service implementation.
+	 * Gets the class name of client-side private service implementation.
 	 * (eg. Sonicle.webtop.mail.MailService)
 	 * @param full True to include js package.
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getPrivateServiceJsClassName(boolean full) {
 		return (full) ? LangUtils.buildClassName(jsPackage, privateServiceJsClassName) : privateServiceJsClassName;
@@ -316,10 +337,10 @@ public class ServiceManifest {
 	}
 	
 	/**
-	 * Gets the class name of client-side service implementation.
+	 * Gets the class name of client-side public service implementation.
 	 * (eg. Sonicle.webtop.mail.MailService)
 	 * @param full True to include js package.
-	 * @return The value.
+	 * @return The class name.
 	 */
 	public String getPublicServiceJsClassName(boolean full) {
 		return (full) ? LangUtils.buildClassName(jsPackage, publicServiceJsClassName) : publicServiceJsClassName;
@@ -337,21 +358,65 @@ public class ServiceManifest {
 		return (full) ? LangUtils.buildClassName(jsPackage, userOptionsModelJsClassName) : userOptionsModelJsClassName;
 	}
 	
+	/**
+	 * Gets the class name of client-side locale object that applies localized strings.
+	 * @param locale The required locale.
+	 * @param full True to include js package.
+	 * @return The class name.
+	 */
 	public String getLocaleJsClassName(Locale locale, boolean full) {
-		String cn = MessageFormat.format("Locale_{0}", locale.toString());
+		String cn = "Locale_" + locale.toString();
 		return (full) ? LangUtils.buildClassName(jsPackage, cn) : cn;
 	}
 	
-	public String getJsLocaleClassName(Locale locale) {
-		return MessageFormat.format("{0}.Locale_{1}", getJsPackageName(), locale.toString());
+	/**
+	 * Returns the client-side URL path to reach service package base folder.
+	 * Eg. "resources/com.sonicle.webtop.mail/1.0.0"
+	 * @return 
+	 */
+	public String getPackageBaseUrl() {
+		return "resources/" + getId() + "/" + getVersion().toString();
 	}
 	
 	/**
-	 * 
+	 * Returns the client-side URL path to reach service package sources folder.
+	 * Eg. "resources/com.sonicle.webtop.mail/1.0.0/src"
 	 * @return 
 	 */
-	public String getJsBaseUrl() {
-		return MessageFormat.format("resources/{0}/{1}", getId(), getVersion().toString());
+	public String getPackageSrcUrl() {
+		return getPackageBaseUrl() + "/src";
+	}
+	
+	/**
+	 * Returns the client-side URL path to reach service package LAF folder.
+	 * Eg. "resources/com.sonicle.webtop.mail/1.0.0/laf"
+	 * @param lookAndFeel The look&feel name.
+	 * @return 
+	 */
+	public String getPackageLookAndFeelUrl(String lookAndFeel) {
+		return getPackageBaseUrl() + "/laf/" + lookAndFeel;
+	}
+	
+	public String getBundleJsFileName() {
+		return getId() + ".js";
+	}
+	
+	public String getPrivateServiceJsFileName() {
+		return getPrivateServiceJsClassName(false) + ".js";
+	}
+	
+	public String getPublicServiceJsFileName() {
+		return getPublicServiceJsClassName(false) + ".js";
+	}
+	
+	public String getLocaleJsFileName(Locale locale) {
+		return getLocaleJsClassName(locale, false) + ".js";
+	}
+	
+	public String getJsBaseUrl(boolean devMode) {
+		String base = getPackageBaseUrl();
+		if (devMode) base += "/src";
+		return base;
 	}
 	
 	public String getCompany() {

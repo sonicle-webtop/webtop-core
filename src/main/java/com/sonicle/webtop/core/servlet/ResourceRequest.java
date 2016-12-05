@@ -139,9 +139,9 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	protected LookupResult lookupNoCache(HttpServletRequest req, String reqPath) {
-		String subject = null, subjectPath = null, jsPath = null, path = null, translPath = null;
+		String subject = null, subjectPath = null, jsPath = null, path = null, targetPath = null;
 		boolean isVirtualUrl = false, jsPathFound = false;
-		URL translUrl = null;
+		URL targetUrl = null;
 		
 		// Builds a convenient URL for the servlet relative URL
 		try {
@@ -156,12 +156,24 @@ public class ResourceRequest extends HttpServlet {
 				//	{service.version} -> 5.1.1
 				//	{remaining.url.part} -> laf/default/service.css
 				
+				/*
 				isVirtualUrl = true;
 				subject = matcher.group(1);
 				jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
 				jsPathFound = (jsPath != null);
 				subjectPath = (jsPathFound) ? jsPath : subject;
 				path = matcher.group(3);
+				*/
+				
+				isVirtualUrl = true;
+				subject = matcher.group(1);
+				path = matcher.group(3);
+				
+				if (!WebTopApp.get(req).getServiceManager().isValidService(subject)) {
+					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+				}
+				targetUrl = new URL("http://fake/client/"+subject+"/"+path);
+				
 			} else {
 				isVirtualUrl = false;
 				String[] urlParts = splitPath(reqPath);
@@ -170,6 +182,8 @@ public class ResourceRequest extends HttpServlet {
 				jsPathFound = (jsPath != null);
 				subjectPath = (jsPathFound) ? jsPath : urlParts[0];
 				path = urlParts[1];
+				
+				targetUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			}
 			
 			//String[] urlParts = splitPath(reqPath);
@@ -184,41 +198,46 @@ public class ResourceRequest extends HttpServlet {
 			//path = urlParts[1];
 			//System.out.println("path: "+path);
 			////logger.trace("{}, {}", subject, path);
-			translUrl = new URL("http://fake/"+subjectPath+"/"+path);
-			translPath = translUrl.getPath();
+			//translUrl = new URL("http://fake/"+subjectPath+"/"+path);
+			targetPath = targetUrl.getPath();
 			//System.out.println("translPath: "+translPath);
 			
 			//logger.trace("Translated path [{}]", translPath);
-			if (isForbidden(translPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+			if (isForbidden(targetPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			
 		} catch(MalformedURLException ex) {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
 		if(subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
-			return lookupLoginImage(req, isVirtualUrl, translUrl);
+			return lookupLoginImage(req, isVirtualUrl, targetUrl);
 			
 		} else if(subject.equals(CoreManifest.ID) && path.equals("license.html")) {
-			return lookupLicense(req, isVirtualUrl, translUrl);
+			return lookupLicense(req, isVirtualUrl, targetUrl);
 			
 		} else {
-			if(StringUtils.endsWith(translPath, ".js")) {
-				String baseName = FilenameUtils.getBaseName(translPath);
-				if(StringUtils.startsWith(baseName, "Locale")) {
-					if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-					return lookupLocaleJs(req, isVirtualUrl, subject, subjectPath, path, translUrl);
-				
+			if (StringUtils.endsWith(targetPath, ".js")) {
+				WebTopApp wta = WebTopApp.get(req);
+				String sessionId = ServletHelper.getSessionID(req);
+				if (StringUtils.startsWith(path, "resources/libs")) {
+					// If targets lib folder, simply return requested file without handling debug versions
+					return lookupJs(req, true, targetUrl, false);
+					
+				} else if (StringUtils.startsWith(path, "boot/")) {
+					return lookupJs(req, true, targetUrl, isDebug(wta, sessionId));
+					
+				} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
+					return lookupLocaleJs(req, true, targetUrl, subject);
+					
 				} else {
-					WebTopApp wta = WebTopApp.get(req);
-					String sessionId = ServletHelper.getSessionID(req);
-					return lookupJs(req, isVirtualUrl, translUrl, isDebug(wta, sessionId));
+					return lookupJs(req, true, targetUrl, isDebug(wta, sessionId));
 				}
-			} else if(StringUtils.startsWith(path, "laf")) {
-				if(!jsPathFound) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-				return lookupLAF(req, isVirtualUrl, subject, subjectPath, path, translUrl);
-			
+				
+			} else if (StringUtils.startsWith(path, "laf")) {
+				return lookupLAF(req, true, targetUrl, path, subject, subjectPath);
+				
 			} else {
-				return lookupDefault(req, isVirtualUrl, translUrl);
+				return lookupDefault(req, isVirtualUrl, targetUrl);
 			}
 		}
 	}
@@ -226,9 +245,11 @@ public class ResourceRequest extends HttpServlet {
 	private boolean isDebug(WebTopApp wta, String sessionId) {
 		if(StringUtils.isBlank(sessionId)) return false;
 		WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
-		if(wts == null) return false;
-		CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId());
-		return cus.getSystemDebug();
+		if(wts == null) {
+			return WebTopApp.getPropDebugMode();
+		} else {
+			return wts.getDebugMode();
+		}
 	}
 	
 	private URL getResURL(String name) {
@@ -304,58 +325,59 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLAF(HttpServletRequest request, boolean forceCaching, String serviceId, String subjectPath, String path, URL url) {
-		final String LOOKUP_URL = "/{0}/laf/{1}/{2}";
+	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL targetUrl, boolean debugVersion) {
+		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
 		try {
-			Matcher lafm = PATTERN_LAF_PATH.matcher(path);
-			if(!lafm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-			String laf = lafm.group(1);
-			String lastPath = lafm.group(2);
-			
-			// First, try to get the resource in folder related to the specified
-			// look&feel, then if not found looks into the default laf.
-			fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, laf, lastPath));
-			if(fileUrl == null) {
-				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "default", lastPath));
+			String targetPath = targetUrl.getPath();
+			if(debugVersion) {
+				String dpath = targetPath.substring(0, targetPath.length() - 3) + "-debug.js";
+				fileUrl = getResURL(dpath);
+				if (fileUrl != null) targetPath = dpath;
+			}
+			if (fileUrl == null) {
+				fileUrl = getResURL(targetPath);
 			}
 			
-			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(lastPath), forceCaching, resFile);
-			
+			Resource resFile = getFile(wta, fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
+		
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
-			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
 	}
 	
-	private LookupResult lookupLocaleJs(HttpServletRequest request, boolean forceCaching, String serviceId, String subjectPath, String path, URL url) {
-		final String LOOKUP_URL = "/{0}/locale_{1}.properties";
+	private LookupResult lookupLocaleJs(HttpServletRequest request, boolean forceCaching, URL targetUrl, String serviceId) {
 		WebTopApp wta = WebTopApp.get(request);
-		//String path = url.getPath();
+		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			Matcher locm = PATTERN_LOCALE_FILE.matcher(path);
-			if(!locm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-			String baseName = locm.group(1);
-			String locale = locm.group(2);
+			String fileName = FilenameUtils.getName(targetPath);
+			String baseTargetPath = StringUtils.substringBefore(targetPath, fileName);
+			Matcher matcher = PATTERN_LOCALE_FILE.matcher(fileName);
+			if (!matcher.matches()) throw new InternalServerException();
+			String nameBase = matcher.group(1);
+			String nameLoc = matcher.group(2);
 			
-			// First try to get the properties file that match the requested
-			// locale, if not found it searches for the en locale
-			fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, locale));
-			if(fileUrl == null) {
-				fileUrl = getResURL(MessageFormat.format(LOOKUP_URL, subjectPath, "en_EN"));
+			// Try to get the properties file that match the requested locale...
+			// If not found, look for the basic english locale (en_EN)
+			String[] locales = new String[]{nameLoc, "en_EN"};
+			for (String locale : locales) {
+				fileUrl = getResURL(baseTargetPath + "locale_" + locale + ".properties");
+				if(fileUrl != null) break;
 			}
+			if (fileUrl == null) throw new NotFoundException();
 			
 			// Defines specific params
 			ServiceManager svcm = wta.getServiceManager();
 			ServiceManifest manifest = svcm.getManifest(serviceId);
-			String clazz = manifest.getJsPackageName() + "." + baseName;
+			String clazz = manifest.getJsPackageName() + "." + nameBase;
 			String override = manifest.getPrivateServiceJsClassName(true);
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
@@ -371,31 +393,33 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL url, boolean debug) {
-		//logger.trace("Looking-up js file");
-		WebTopApp wta = WebTopApp.get(request);
-		String path = url.getPath();
+	private LookupResult lookupLAF(HttpServletRequest request, boolean forceCaching, URL targetUrl, String path, String serviceId, String subjectPath) {
+		final String LOOKUP_URL = "/{0}/laf/{1}/{2}";
 		URL fileUrl = null;
 		
 		try {
-			String dpath = null;
-			if(debug) {
-				dpath = path.substring(0, path.length() - 3) + ".debug.js";
-				fileUrl = this.getClass().getResource(dpath);
-			}
-			if (fileUrl != null) {
-				path = dpath;
-			} else {
-				fileUrl = this.getClass().getResource(path);
-			}
+			String baseTargetPath = StringUtils.substringBefore(targetUrl.getPath(), path);
+			Matcher lafm = PATTERN_LAF_PATH.matcher(path);
+			if(!lafm.matches()) return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+			String pathLaf = lafm.group(1);
+			String remainingPath = lafm.group(2);
 			
-			Resource resFile = getFile(wta, fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
-		
+			// Try to get resource in folder related to the requested look&feel...
+			// If not found, look for the default one (default)
+			String[] lafs = new String[]{pathLaf, "default"};
+			for (String laf : lafs) {
+				fileUrl = getResURL(baseTargetPath + "laf/" + laf + "/" + remainingPath);
+				if(fileUrl != null) break;
+			}
+			if (fileUrl == null) throw new NotFoundException();
+			
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(remainingPath), forceCaching, resFile);
+			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 		} catch(NotFoundException ex) {
-			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
 		}
@@ -525,7 +549,7 @@ public class ResourceRequest extends HttpServlet {
 				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
 				ServletUtils.setContentTypeHeader(response, mimeType);
 				if(forceCaching) {
-					ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24*365); // infinite
+					ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24*365); // long (365 days)
 				} else {
 					if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
 						ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24); // 1 day

@@ -1,32 +1,28 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<meta charset="UTF-8">
+        <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/wt.ico" />
-		<link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/font-awesome.min.css">
-        <link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/loading.css">
+        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/0.0.0/resources/images/wt.ico" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/font-awesome.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/loading.css" />
     </head>
     <body>
         <div id="wt-loading-mask"></div>
         <div id="wt-loading">
             <span id="wt-loading-message">${loadingMessage}</span>
         </div>
-        <!--
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/moxie.js"></script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.dev.js"></script>
-		-->
-        <script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.full.min.js"></script>
-		<script type="text/javascript" src="resources/tinymce/tinymce.min.js"></script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/include-ext.js?language=${language}&theme=${theme}&laf=${laf}&rtl=${rtl}&debug=${debug}"></script>
-		<script type="text/javascript">
-			Ext.ns('WTS');
-			WTS = ${WTS};
-		</script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/app-private.js"></script>
-    </body>
+        <script type="text/javascript">
+            var WTS = {}, Ext = Ext || {};
+            WTS = ${WTS};
+            Ext.beforeLoad = function() {
+                Ext.manifest = WTS.appManifest;
+            };
+        </script>
+        <script type="text/javascript" src="resources/com.sonicle.webtop.core/0.0.0/boot/bootstrap.js"></script>
+   </body>
 </html>

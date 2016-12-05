@@ -243,9 +243,11 @@ public final class WebTopApp {
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
-		logger.info("wtdebug = {}", getPropWTDebug());
-		logger.info("extdebug = {}", getPropExtDebug());
-		logger.info("scheduler.disabled = {}", getPropSchedulerDisabled());
+		logger.info("webtop.extjsdebug = {}", getPropExtJsDebug());
+		logger.info("webtop.soextdevmode = {}", getPropSonicleExtJsExtensionsDevMode());
+		logger.info("webtop.devmode = {}", getPropDevMode());
+		logger.info("webtop.debugmode = {}", getPropDebugMode());
+		logger.info("webtop.scheduler.disabled = {}", getPropSchedulerDisabled());
 		
 		this.webappName = ServletHelper.getWebAppName(context);
 		this.webappIsLatest = false;
@@ -1035,21 +1037,29 @@ public final class WebTopApp {
 	}
 	
 	public static boolean getPropSchedulerDisabled() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
+		String prop = System.getProperties().getProperty("webtop.scheduler.disabled");
 		return LangUtils.value(prop, false);
 		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 	}
 	
-	public static boolean getPropWTDebug() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.wtdebug");
+	public static boolean getPropExtJsDebug() {
+		String prop = System.getProperties().getProperty("webtop.extjsdebug");
 		return LangUtils.value(prop, false);
-		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 	}
 	
-	public static boolean getPropExtDebug() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.extdebug");
+	public static boolean getPropSonicleExtJsExtensionsDevMode() {
+		String prop = System.getProperties().getProperty("webtop.soextdevmode");
 		return LangUtils.value(prop, false);
-		//return System.getProperties().containsKey("com.sonicle.webtop.extdebug");
+	}
+	
+	public static boolean getPropDevMode() {
+		String prop = System.getProperties().getProperty("webtop.devmode");
+		return LangUtils.value(prop, false);
+	}
+	
+	public static boolean getPropDebugMode() {
+		String prop = System.getProperties().getProperty("webtop.debugmode");
+		return LangUtils.value(prop, false);
 	}
 	
 	private char[] getDirPassword(AuthenticationDomain ad) {

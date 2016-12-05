@@ -1,0 +1,30 @@
+{
+    "js": [{
+        "path": "resources/client/extjs/ext-all-debug.js"
+	}, {
+		"path": "resources/client/extjs/packages/ext-locale/build/ext-locale-it.js"
+	}, {
+		"path": "resources/client/extjs/packages/sonicle-extensions/sonicle-extensions-debug.js"
+	}, {
+		"path": "resources/com.sonicle.webtop.core/0.0.0/src/app-private.js"
+	}],
+    "css": [{
+        "path": "resources/client/extjs/packages/ext-theme-crisp/build/resources/ext-theme-crisp-all.css"
+    }, {
+        "path": "resources/client/extjs/packages/sencha-charts/build/crisp/resources/sencha-charts-all.css"
+    }, {
+        "path": "resources/client/extjs/packages/sonicle-extensions/crisp/resources/sonicle-extensions-all.css"
+    }],
+    "cache": {
+        "deltas": "deltas"
+    },
+    "name": "WebTop",
+    "framework": "ext",
+    "theme": "ext-theme-crisp",
+    "id": "5ae25afe-182c-466c-a6ad-0a3af0ee74b5",
+    "profile": "",
+    "hash": "971687edb68b0e372d1868dd86ff0e52c8d68928",
+    "resources": {
+        "path": "resources/com.sonicle.webtop.core/0.0.0/resources"
+    }
+}

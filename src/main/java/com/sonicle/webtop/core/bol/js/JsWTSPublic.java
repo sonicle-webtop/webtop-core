@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.JsonResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -41,16 +40,12 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class JsWTSPublic {
-	public String platformName;
-	public String fileTypes;
-	public HashMap<String, String> appPaths = new HashMap<>();
-	public ArrayList<String> appRequires = new ArrayList<>();
+public class JsWTSPublic extends JsWTS {
 	public ArrayList<JsWTSPublic.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	
-	public String toJson() {
-		return JsonResult.GSON.toJson(this);
+	public JsWTSPublic() {
+		this.appType = "public";
 	}
 	
 	public static class ServiceUserOptions {

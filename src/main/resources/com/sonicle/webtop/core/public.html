@@ -7,21 +7,17 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/wt.ico">
-		<link rel="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/css/font-awesome.min.css">
+		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/0.0.0/resources/images/wt.ico" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/font-awesome.min.css" />
     </head>
     <body>
-        <!--
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/moxie.js"></script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.dev.js"></script>
-		-->
-        <script type="text/javascript" src="resources/com.sonicle.webtop.core/js/plupload.full.min.js"></script>
-		<script type="text/javascript" src="resources/tinymce/tinymce.min.js"></script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/include-ext.js?language=${language}&theme=${theme}&laf=${laf}&rtl=${rtl}&debug=${debug}"></script>
-		<script type="text/javascript">
-			Ext.ns('WTS');
-			WTS = ${WTS};
-		</script>
-		<script type="text/javascript" src="resources/com.sonicle.webtop.core/app-public.js"></script>
+        <script type="text/javascript">
+            var WTS = {}, Ext = Ext || {};
+            WTS = ${WTS};
+            Ext.beforeLoad = function() {
+                Ext.manifest = WTS.appManifest;
+            };
+        </script>
+        <script type="text/javascript" src="resources/com.sonicle.webtop.core/0.0.0/boot/bootstrap.js"></script>
     </body>
 </html>

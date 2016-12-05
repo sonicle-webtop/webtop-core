@@ -1,0 +1,38 @@
+
+.wt-header {
+	background-color: #dce7f4;
+}
+.wt-launcher {
+	background-color: #dce7f4;
+}
+
+/* -----------------------------------------
+ * Convenience classes for addressing theme base colors
+ */
+/*
+ * Background: generally light to not provide excessive contrast
+ * 1:light, 2:base, 3:dark/alternative
+ */
+.wt-theme-bg-1 {
+	background-color: #dfe9f6;
+}
+.wt-theme-bg-2 {
+	background-color: #dfe9f6;
+}
+.wt-theme-bg-3 {
+	background-color: #dfe9f6;
+}
+/*
+ * Header/
+ * 1:light, 2:darker, 3:dark
+ */
+.wt-theme-hd-1 {
+	background-color: #dfe9f6;
+}
+.wt-theme-hd-2 {
+	background-color: #ced9e7;
+}
+.wt-theme-hd-3 {
+	background-color: #cecece;
+}
+

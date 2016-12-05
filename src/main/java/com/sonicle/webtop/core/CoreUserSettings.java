@@ -180,10 +180,6 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setInteger(VIEWPORT_TOOL_WIDTH, value);
 	}
 	
-	public boolean getSystemDebug() {
-		return getBoolean(SYSTEM_DEBUG, false);
-	}
-	
 	public boolean getWhatsnewNeeded() {
 		return getBoolean(WHATSNEW_NEEDED, true);
 	}

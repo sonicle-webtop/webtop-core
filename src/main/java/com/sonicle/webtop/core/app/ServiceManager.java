@@ -106,6 +106,7 @@ public class ServiceManager {
 	private WebTopApp wta = null;
 	private Scheduler scheduler = null;
 	private final Object lock = new Object();
+	
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
 	private final HashMap<String, String> xidToServiceId = new HashMap<>();
 	private final HashMap<String, String> serviceIdToJsPath = new HashMap<>();
@@ -209,6 +210,10 @@ public class ServiceManager {
 		}
 	}
 	
+	public boolean isValidService(String serviceId) {
+		return descriptors.containsKey(serviceId);
+	}
+	
 	public String getServiceJsPath(String serviceId) {
 		return serviceIdToJsPath.get(serviceId);
 	}
@@ -238,8 +243,12 @@ public class ServiceManager {
 	}
 	
 	public boolean hasFullRights(String serviceId) {
-		if(serviceId.equals(CoreManifest.ID)) return true;
-		return false;
+		return isCoreService(serviceId);
+	}
+	
+	public boolean isInDevMode(String serviceId) {
+		Boolean bool = LangUtils.value(wta.getSettingsManager().getServiceSetting(serviceId, CoreSettings.DEV_MODE), (Boolean)null);
+		return (bool == null) ? WebTopApp.getPropDevMode() : bool;
 	}
 	
 	public boolean isInMaintenance(String serviceId) {

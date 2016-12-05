@@ -84,6 +84,7 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("baseUrl", baseUrl);
 	}
 	
+	/*
 	public static void fillIncludeVars(Map vars, Locale locale, String theme, String lookAndFeel, boolean rightToLeft, boolean extJsDebug) {
 		vars.put("language", locale.getLanguage());
 		vars.put("theme", theme);
@@ -91,4 +92,5 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("rtl", String.valueOf(rightToLeft));
 		vars.put("debug", String.valueOf(extJsDebug));
 	}
+	*/
 }

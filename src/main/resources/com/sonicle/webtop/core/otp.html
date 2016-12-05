@@ -1,98 +1,96 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<title>${title}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-		<link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/images/wt.ico" />
-		
-		<!-- Bootstrap -->
-		<link href="resources/com.sonicle.webtop.core/css/bootstrap.min.css" rel="stylesheet">
-		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-		<!--[if lt IE 9]>
-			<script src="resources/com.sonicle.webtop.core/js/html5shiv-3.7.2.min.js"></script>
-			<script src="resources/com.sonicle.webtop.core/js/respond-1.4.2.min.js"></script>
-		<![endif]-->
-		
-		<link href="resources/com.sonicle.webtop.core/css/login.css" rel="stylesheet">
-		<script type="text/javascript">
-			function onBodyLoad() {
-				setTimeout(function() {
-					document.getElementById("wtfakecode").focus();
-				}, 100);
-			}
-			function onFakecodeKeyPress(evt) {
-				var e = evt || window.event,
-						charCode = (e.which) ? e.which : e.keyCode;
-				if(charCode === 13) {
-					e.stopPropagation();
-					e.preventDefault();
-					submit();
-				}
-			}
-			function onSubmitClick() {
-				submit();
-			}
-			function submit() {
-				// We need to implement this value swap in order to circumvent a 
-				// partucular behaviour in FF: autocomplete='off' attribute is
-				// ignored by default (see https://bugzilla.mozilla.org/show_bug.cgi?id=956906)
-				var form = document.forms['login'],
-						code = form['wtfakecode'].value,
-						trust = form['wttrust'].checked;
-				form.reset();
-				form['wtcode'].value = code;
-				form['wttrust'].checked = trust;
-				form.submit();
-			}
-		</script>
-	</head>
-	<body onload="onBodyLoad()">
-		<div class="jumbotron vertical-center">
-			<div id="login" class="container">
-				<div class="row">
-					<div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
-						<h3 class="text-center">${helpTitle}</h3>
-						<form name="login" method="post">
-							<div class="box">
-								<img class="delivery img-responsive" src="resources/com.sonicle.webtop.core/images/otp-${deliveryMode}.png">
-								<h4>${deliveryTitle}</h4>
-								<h5>${deliveryInfo}</h5>
-								<#if showFailure>
-								<p class="text-center text-danger">
-									<span class="glyphicon glyphicon-exclamation-sign"></span>
-									${failureMessage}
-								</p>
-								</#if>
-								<div class="form-group">
-									<div class="input-group">
-										<input type="hidden" id="wtcode" name="wtcode">
-										<input class="form-control" id="wtfakecode" name="wtfakecode" type="password" placeholder="${codePlaceholder}" autocomplete="off" maxlength="6" onkeypress="onFakecodeKeyPress(event)">
-										<div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
-									</div>
-								</div>
-								<br>
-								<button class="btn btn-primary full-width" type="sumbit" onclick="onSubmitClick()">${submitLabel}</button>
-								<#if showTrustCheckbox>
-								<div class="checkbox">
-									<label><input type="checkbox" id="wttrust" name="wttrust" value="true"> ${trustLabel}</label>
-								</div>
-								</#if>
-							</div>
-						</form>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-						<img class="powered img-responsive" src="resources/com.sonicle.webtop.core/images/poweredby.png">
-						<h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
-					</div>
-				</div>
-			</div>
-		</div>
-	</body>
+        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/0.0.0/resources/images/wt.ico" />
+        <!-- Bootstrap -->
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/bootstrap.min.css" />
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/libs/html5shiv-3.7.2.min.js"></script>
+            <script src="resources/com.sonicle.webtop.core/0.0.0/resources/libs/respond-1.4.2.min.js"></script>
+        <![endif]-->
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/login.css" />
+        <script type="text/javascript">
+            function onBodyLoad() {
+                setTimeout(function () {
+                    document.getElementById("wtfakecode").focus();
+                }, 100);
+            }
+            function onFakecodeKeyPress(evt) {
+                var e = evt || window.event,
+                        charCode = (e.which) ? e.which : e.keyCode;
+                if (charCode === 13) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    submit();
+                }
+            }
+            function onSubmitClick() {
+                submit();
+            }
+            function submit() {
+                // We need to implement this value swap in order to circumvent a 
+                // partucular behaviour in FF: autocomplete='off' attribute is
+                // ignored by default (see https://bugzilla.mozilla.org/show_bug.cgi?id=956906)
+                var form = document.forms['login'],
+                        code = form['wtfakecode'].value,
+                        trust = form['wttrust'].checked;
+                form.reset();
+                form['wtcode'].value = code;
+                form['wttrust'].checked = trust;
+                form.submit();
+            }
+        </script>
+    </head>
+    <body onload="onBodyLoad()">
+        <div class="jumbotron vertical-center">
+            <div id="login" class="container">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+                        <h3 class="text-center">${helpTitle}</h3>
+                        <form name="login" method="post">
+                            <div class="box">
+                                <img class="delivery img-responsive" src="resources/com.sonicle.webtop.core/images/otp-${deliveryMode}.png">
+                                <h4>${deliveryTitle}</h4>
+                                <h5>${deliveryInfo}</h5>
+                                <#if showFailure>
+                                <p class="text-center text-danger">
+                                    <span class="glyphicon glyphicon-exclamation-sign"></span>
+                                    ${failureMessage}
+                                </p>
+                                </#if>
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input type="hidden" id="wtcode" name="wtcode">
+                                        <input class="form-control" id="wtfakecode" name="wtfakecode" type="password" placeholder="${codePlaceholder}" autocomplete="off" maxlength="6" onkeypress="onFakecodeKeyPress(event)">
+                                        <div class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></div>
+                                    </div>
+                                </div>
+                                <br>
+                                <button class="btn btn-primary full-width" type="sumbit" onclick="onSubmitClick()">${submitLabel}</button>
+                                <#if showTrustCheckbox>
+                                <div class="checkbox">
+                                    <label><input type="checkbox" id="wttrust" name="wttrust" value="true"> ${trustLabel}</label>
+                                </div>
+                                </#if>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
+                        <img class="powered img-responsive" src="resources/com.sonicle.webtop.core/images/poweredby.png">
+                        <h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

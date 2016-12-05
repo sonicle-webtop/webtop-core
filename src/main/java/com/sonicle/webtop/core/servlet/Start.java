@@ -68,10 +68,6 @@ public class Start extends AbstractServlet {
 		SettingsManager setm = wta.getSettingsManager();
 		WebTopSession wts = RunContext.getWebTopSession();
 		
-		//String sextdebug=System.getProperty("com.sonicle.webtop.extdebug");
-		//boolean extdebug=sextdebug!=null && sextdebug.equals("true");
-		boolean extdebug = WebTopApp.getPropExtDebug();
-		
 		try {
 			WebTopApp.logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
 			
@@ -86,22 +82,16 @@ public class Start extends AbstractServlet {
 			if(!isOtpVerified) throw new OtpException();
 			
 			wts.initPrivateEnvironment(request);
-			CoreUserSettings cus = new CoreUserSettings(wts.getUserProfile().getId()); // Keep at this line!
-			
 			Locale locale = wts.getLocale();
-			String layout = cus.getLayout();
-			
 			Map vars = new HashMap();
 			
 			// Page + loader variables
 			AbstractServlet.fillPageVars(vars, locale, wta, null);
-			AbstractServlet.fillIncludeVars(vars, locale, cus.getTheme(), cus.getLookAndFeel(), cus.getRightToLeft(), extdebug);
-			vars.put("layout", cus.getLayout());
 			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));
 			
 			// Startup variables
 			JsWTSPrivate jswts = new JsWTSPrivate();
-			wts.fillStartup(jswts, layout);
+			wts.fillStartup(jswts);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			
 			// Load and build template

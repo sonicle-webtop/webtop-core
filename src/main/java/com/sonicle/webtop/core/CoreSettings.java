@@ -205,6 +205,16 @@ public class CoreSettings {
 	
 	
 	
+	
+	
+	
+	/**
+	 * [system][*]
+	 * [boolean]
+	 * Indicates whether DevMode is active for a service
+	 */
+	public static final String DEV_MODE = "devmode";
+	
 	/**
 	 * [system][*]
 	 * [boolean]
@@ -344,14 +354,6 @@ public class CoreSettings {
 	 * Long time format pattern
 	 */
 	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
-	
-	/**
-	 * [user]
-	 * [boolean]
-	 * Activates debug mode. If activated, client js files will be passed in  
-	 * plain text, so they are readable.
-	 */
-	public static final String SYSTEM_DEBUG = "system.debug";
 	
 	/**
 	 * [user]

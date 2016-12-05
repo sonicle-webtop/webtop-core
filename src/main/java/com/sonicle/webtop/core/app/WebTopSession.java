@@ -34,12 +34,14 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.web.json.extjs.ExtManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
@@ -81,6 +83,7 @@ public class WebTopSession {
 	
 	private final Object lock = new Object();
 	private Session session;
+	private Boolean debugMode;
 	private final WebTopApp wta;
 	private final PropertyBag props = new PropertyBag();
 	private int initLevel = 0;
@@ -133,6 +136,14 @@ public class WebTopSession {
 	 */
 	public String getId() {
 		return session.getId().toString();
+	}
+	
+	/**
+	 * Returns the configuration for debug mode.
+	 * @return 
+	 */
+	public boolean getDebugMode() {
+		return debugMode == null ? WebTopApp.getPropDebugMode() : debugMode;
 	}
 	
 	/**
@@ -585,21 +596,30 @@ public class WebTopSession {
 		}
 	}
 	
-	public void fillStartup(JsWTSPrivate js, String layout) {
+	public void fillStartup(JsWTSPrivate js) {
 		if(!isReady()) return;
 		
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
+		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
+		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
 		Locale locale = getLocale();
-		js.platformName = wta.getPlatformName();
+		
+		fillAppReferences(js, locale, theme, false);
 		js.securityToken = RunContext.getCSRFToken();
 		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);
-		js.fileTypes = wta.getFileTypes().toString();
+		
+		// Include Core references
+		js.appManifest.name = coreManifest.getJsPackageName();
+		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-private");
+		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
 		// Evaluate services
 		JsWTSPrivate.Service last = null;
 		String deflt = null;
 		for(String serviceId : getPrivateServices()) {
-			fillStartupForService(js, serviceId, locale);
+			fillStartupForService(js, serviceId, locale, theme, lookAndFeel);
 			last = js.services.get(js.services.size()-1);
 			//TODO: gestire la manutenzione
 			if((deflt == null) && !last.id.equals(CoreManifest.ID) && !last.maintenance) {
@@ -611,7 +631,7 @@ public class WebTopSession {
 		js.defaultService = deflt;
 	}
 	
-	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale) {
+	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale, String theme, String lookAndFeel) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
@@ -632,15 +652,13 @@ public class WebTopSession {
 			if(!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
 		}
 		
-		if(svcm.isCoreService(serviceId)) {
-			// Defines paths and requires
-			js.appRequires.add(manifest.getPrivateServiceJsClassName(true));
-			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
-		} else {
-			// Defines paths and requires
-			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-			js.appRequires.add(manifest.getPrivateServiceJsClassName(true));
-			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
+		// Fill application manifest with service references (NOTE: core service is skipped here!)
+		if (!serviceId.equals(CoreManifest.ID)) {
+			// Includes service references
+			fillServiceJsReferences(svcm.isInDevMode(serviceId), js, manifest, locale);
+
+			// Includes service stylesheet references
+			fillServiceCssReferences(js, manifest, theme, lookAndFeel);
 		}
 		
 		// Completes service info
@@ -649,7 +667,7 @@ public class WebTopSession {
 		jssvc.id = manifest.getId();
 		jssvc.xid = manifest.getXId();
 		jssvc.ns = manifest.getJsPackageName();
-		jssvc.path = manifest.getJsBaseUrl();
+		jssvc.path = manifest.getJsBaseUrl(false);
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
 		jssvc.serviceClassName = manifest.getPrivateServiceJsClassName(true);
 		jssvc.serviceVarsClassName = manifest.getPrivateServiceVarsModelJsClassName(true);
@@ -703,8 +721,15 @@ public class WebTopSession {
 	
 	public void fillStartup(JsWTSPublic js, String publicServiceId) {
 		Locale locale = getLocale();
-		js.platformName = wta.getPlatformName();
-		js.fileTypes = wta.getFileTypes().toString();
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
+		fillAppReferences(js, locale, "crisp", false);
+		
+		// Include Core references
+		js.appManifest.name = coreManifest.getJsPackageName();
+		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-public");
+		fillServiceCssReferences(js, coreManifest, "crisp", "default");
+		
 		fillStartupForPublicService(js, CoreManifest.ID, locale);
 		fillStartupForPublicService(js, publicServiceId, locale);
 	}
@@ -714,15 +739,13 @@ public class WebTopSession {
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		
-		if(svcm.isCoreService(serviceId)) {
-			// Defines paths and requires
-			js.appRequires.add(manifest.getPublicServiceJsClassName(true));
-			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
-		} else {
-			// Defines paths and requires
-			js.appPaths.put(manifest.getJsPackageName(), manifest.getJsBaseUrl());
-			js.appRequires.add(manifest.getPublicServiceJsClassName(true));
-			js.appRequires.add(manifest.getLocaleJsClassName(locale, true));
+		// Fill application manifest with service references (NOTE: core service is skipped here!)
+		if (!serviceId.equals(CoreManifest.ID)) {
+			// Includes service references
+			fillServiceJsReferences(svcm.isInDevMode(serviceId), js, manifest, locale);
+			
+			// Includes service stylesheet references
+			fillServiceCssReferences(js, manifest, "crisp", "default");
 		}
 		
 		// Completes service info
@@ -731,7 +754,7 @@ public class WebTopSession {
 		jssvc.id = manifest.getId();
 		jssvc.xid = manifest.getXId();
 		jssvc.ns = manifest.getJsPackageName();
-		jssvc.path = manifest.getJsBaseUrl();
+		jssvc.path = manifest.getJsBaseUrl(false);
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
 		jssvc.serviceClassName = manifest.getPublicServiceJsClassName(true);
 		jssvc.serviceVarsClassName = manifest.getPublicServiceVarsModelJsClassName(true);
@@ -765,6 +788,87 @@ public class WebTopSession {
 		JsWTSPublic.Vars is = new JsWTSPublic.Vars();
 		if(vars != null) is.putAll(vars);
 		return is;
+	}
+	
+	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+		js.platformName = wta.getPlatformName();
+		js.fileTypes = wta.getFileTypes().toString();
+		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
+		fillExtJsReferences(js, locale, theme, rtl);
+	}
+	
+	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+		js.appManifest.framework = "ext";
+		
+		// Include external libraries references
+		// Please do not replace 0.0.0 with the real version, it limits server traffic.
+		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
+		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
+		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
+		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
+		// Uncomment these lines to load debug versions of the libraries ----->
+		//js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.js");
+		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "moxie.js");
+		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");
+		// <-------------------------------------------------------------------
+		
+		// Include ExtJs references
+		final String EXTJS_PATH = "resources/client/extjs/";
+		String extRtl = rtl ? "-rtl" : "";
+		String extDebug = WebTopApp.getPropExtJsDebug() ? "-debug" : "";
+		String extTheme = theme;
+		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
+		String extLang = "-" + locale.getLanguage();
+		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js"); // ExtJs library
+		js.appManifest.addJs(EXTJS_PATH + "packages/ext-locale/build/" + "ext-locale" + extLang + extDebug + ".js"); // ExtJs library localization
+		js.appManifest.addJs(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/" + "ext-theme-" + extTheme + extDebug + ".js"); // ExtJs theme overrides
+		js.appManifest.addCss(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/resources/" + "ext-theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
+		
+		// Include Sonicle ExtJs Extensions references
+		if (WebTopApp.getPropSonicleExtJsExtensionsDevMode()) {
+			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
+		} else {
+			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
+		}
+		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extDebug + ".css");
+	}
+	
+	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {
+		
+		if (devMode) {
+			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
+			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Factory.js");
+			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Util.js");
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/src/app" + suffix+ ".js"); // App file (private or public)
+			
+			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
+			js.appManifest.paths.put("WTA", manifest.getPackageSrcUrl()); // Short namespace (WTA) -> url path mapping
+			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/" + jsFileName); // Service js class
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
+		} else {
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getId() + suffix + ".js"); // Service concatenated js
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
+		}
+	}
+	
+	private void fillServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale) {
+		if (devMode) {
+			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
+			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
+			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/" + jsFileName); // Service js class
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
+		} else {
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getBundleJsFileName()); // Service concatenated js
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
+		}
+	}
+	
+	private void fillServiceCssReferences(JsWTS js, ServiceManifest manifest, String theme, String lookAndFeel) {
+		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service.css");
+		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override.css");
+		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-" + theme + ".css");
+		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override-" + theme + ".css");
 	}
 	
 	private boolean isWhatsnewNeeded() {
