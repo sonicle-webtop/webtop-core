@@ -263,7 +263,7 @@
 						</goals>
 						<configuration>
 							<target>
-								<copy todir="${project.build.outputDirectory}/client/com.sonicle.webtop.core/boot">
+								<copy todir="${project.build.outputDirectory}/client/${webtop.service.package}/boot">
 									<fileset dir="src/main/client-boot">
 										<include name="**/*.js"/>
 									</fileset>
@@ -289,10 +289,142 @@
 							<nosuffix>true</nosuffix>
 							<skipMerge>true</skipMerge>
 							<jsSourceDir>client-boot</jsSourceDir>
-							<jsTargetDir>client/com.sonicle.webtop.core/boot</jsTargetDir>
+							<jsTargetDir>client/${webtop.service.package}/boot</jsTargetDir>
 							<jsSourceIncludes>
 								<jsSourceInclude>**/*.js</jsSourceInclude>
 							</jsSourceIncludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>${maven-resources-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>client-copy-core-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}/src</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-core</directory>
+									<excludes>
+										<exclude>**/laf/**</exclude>
+										<exclude>*.properties</exclude>
+									</excludes>
+								</resource>
+								<resource>
+									<directory>src/main/client-core-private</directory>
+								</resource>
+								<resource>
+									<directory>src/main/client-core-public</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-core-laf</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}/laf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-core/laf</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-core-locale</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-core</directory>
+									<includes>
+										<include>*.properties</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-admin-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}.admin/src</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-admin</directory>
+									<excludes>
+										<exclude>**/laf/**</exclude>
+										<exclude>*.properties</exclude>
+									</excludes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-admin-laf</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}.admin/laf</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-admin/laf</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-admin-locale</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}.admin</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-admin</directory>
+									<includes>
+										<include>*.properties</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-resources</id>
+						<phase>none</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/client/${webtop.service.package}/resources</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/client-resources</directory>
+								</resource>
+							</resources>
 						</configuration>
 					</execution>
 				</executions>
@@ -342,132 +474,37 @@
 						</executions>
 					</plugin>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-resources-plugin</artifactId>
+						<version>${maven-resources-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>client-copy-core-src</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core/src</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-core</directory>
-											<excludes>
-												<exclude>**/laf/**</exclude>
-												<exclude>*.properties</exclude>
-											</excludes>
-										</resource>
-										<resource>
-											<directory>src/main/client-core-private</directory>
-										</resource>
-										<resource>
-											<directory>src/main/client-core-public</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-core-laf</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core/laf</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-core/laf</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-core-locale</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-core</directory>
-											<includes>
-												<include>*.properties</include>
-											</includes>
-										</resource>
-									</resources>
-								</configuration>
-							</execution>
-							<execution>
-								<id>client-copy-resources</id>
-								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core/resources</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-resources</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-admin-src</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin/src</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-admin</directory>
-											<excludes>
-												<exclude>**/laf/**</exclude>
-												<exclude>*.properties</exclude>
-											</excludes>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-admin-laf</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin/laf</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-admin/laf</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-admin-locale</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-admin</directory>
-											<includes>
-												<include>*.properties</include>
-											</includes>
-										</resource>
-									</resources>
-								</configuration>
+							</execution>
+							<execution>
+								<id>client-copy-resources</id>
+								<phase>process-resources</phase>
 							</execution>
 						</executions>
 					</plugin>
@@ -546,7 +583,7 @@
 										<argument>--remove-text-references</argument>
 										<argument>--optimize-string-references</argument>
 										<argument>--remove-requirement-nodes</argument>
-										<argument>--output-file=${project.build.outputDirectory}/client/com.sonicle.webtop.core/com.sonicle.webtop.core-private.js</argument>
+										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}/${webtop.service.package}-private.js</argument>
 									</arguments>
 								</configuration>
 							</execution>
@@ -573,7 +610,7 @@
 										<argument>--remove-text-references</argument>
 										<argument>--optimize-string-references</argument>
 										<argument>--remove-requirement-nodes</argument>
-										<argument>--output-file=${project.build.outputDirectory}/client/com.sonicle.webtop.core/com.sonicle.webtop.core-public.js</argument>
+										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}/${webtop.service.package}-public.js</argument>
 									</arguments>
 								</configuration>
 							</execution>
@@ -600,95 +637,44 @@
 										<argument>--remove-text-references</argument>
 										<argument>--optimize-string-references</argument>
 										<argument>--remove-requirement-nodes</argument>
-										<argument>--output-file=${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin/com.sonicle.webtop.core.admin.js</argument>
+										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}.admin/${webtop.service.package}.admin.js</argument>
 									</arguments>
 								</configuration>
 							</execution>
 						</executions>
 					</plugin>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-resources-plugin</artifactId>
+						<version>${maven-resources-plugin.version}</version>
 						<executions>
+							<execution>
+								<id>client-copy-core-src</id>
+								<phase>process-resources</phase>
+							</execution>
 							<execution>
 								<id>client-copy-core-laf</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core/laf</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-core/laf</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-core-locale</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-core</directory>
-											<includes>
-												<include>*.properties</include>
-											</includes>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
-								<id>client-copy-resources</id>
+								<id>client-copy-admin-src</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core/resources</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-resources</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-admin-laf</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin/laf</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-admin/laf</directory>
-										</resource>
-									</resources>
-								</configuration>
 							</execution>
 							<execution>
 								<id>client-copy-admin-locale</id>
 								<phase>process-resources</phase>
-								<goals>
-									<goal>copy-resources</goal>
-								</goals>
-								<configuration>
-									<outputDirectory>${project.build.outputDirectory}/client/com.sonicle.webtop.core.admin</outputDirectory>
-									<resources>
-										<resource>
-											<directory>src/main/client-admin</directory>
-											<includes>
-												<include>*.properties</include>
-											</includes>
-										</resource>
-									</resources>
-								</configuration>
+							</execution>
+							<execution>
+								<id>client-copy-resources</id>
+								<phase>process-resources</phase>
 							</execution>
 						</executions>
 					</plugin>
