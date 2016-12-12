@@ -1037,28 +1037,28 @@ public final class WebTopApp {
 	}
 	
 	public static boolean getPropSchedulerDisabled() {
-		String prop = System.getProperties().getProperty("webtop.scheduler.disabled");
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
 		return LangUtils.value(prop, false);
 		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
 	}
 	
 	public static boolean getPropExtJsDebug() {
-		String prop = System.getProperties().getProperty("webtop.extjsdebug");
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.extjsdebug");
 		return LangUtils.value(prop, false);
 	}
 	
 	public static boolean getPropSonicleExtJsExtensionsDevMode() {
-		String prop = System.getProperties().getProperty("webtop.soextdevmode");
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.soextdevmode");
 		return LangUtils.value(prop, false);
 	}
 	
 	public static boolean getPropDevMode() {
-		String prop = System.getProperties().getProperty("webtop.devmode");
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.devmode");
 		return LangUtils.value(prop, false);
 	}
 	
 	public static boolean getPropDebugMode() {
-		String prop = System.getProperties().getProperty("webtop.debugmode");
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.debugmode");
 		return LangUtils.value(prop, false);
 	}
 	
