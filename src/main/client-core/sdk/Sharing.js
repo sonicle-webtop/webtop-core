@@ -117,28 +117,17 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				},
 				border: true,
 				columns: [{
+					xtype: 'solookupcolumn',
 					dataIndex: 'roleUid',
-					editor: {
-						xtype: 'textfield'
+					store: {
+						autoLoad: true,
+						model: 'WTA.ux.data.SimpleModel',
+						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
 					},
+					displayField: 'desc',
 					header: WT.res('sharing.gp-rights.role.lbl'),
 					flex: 1
-				}
-				//TODO: aggiungere eventuali preset
-				/*, {
-					dataIndex: 'recipientType',
-					renderer: WTF.resColRenderer({
-						id: me.mys.ID,
-						key: 'store.attendeeRcptType'
-					}),
-					editor: Ext.create(WTF.localCombo('id', 'desc', {
-						store: Ext.create('Sonicle.webtop.calendar.store.AttendeeRcptType', {
-							autoLoad: true
-						})
-					})),
-					header: me.mys.res('event.gp-attendees.recipientType.lbl'),
-					width: 180
-				}*/],
+				}],
 				tbar: [
 					me.addAction('deleteRights', {
 						text: WT.res('act-delete.lbl'),
