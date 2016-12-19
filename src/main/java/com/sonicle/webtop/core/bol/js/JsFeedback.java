@@ -39,6 +39,7 @@ package com.sonicle.webtop.core.bol.js;
  */
 public class JsFeedback {
 	public String serviceId;
+	public String subject;
 	public String message;
 	public String anonymous;
 	public String timestamp;

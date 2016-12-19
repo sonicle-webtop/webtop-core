@@ -666,7 +666,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						items: [{
 							xtype: 'displayfield',
 							bind: '{record.otpEmailAddress}',
-							fieldLabel: WT.res('otp.setup.email.fld-emailaddress.lbl')
+							fieldLabel: WT.res('opts.otp.email.fld-emailaddress.lbl')
 						}]
 					}]
 				}]

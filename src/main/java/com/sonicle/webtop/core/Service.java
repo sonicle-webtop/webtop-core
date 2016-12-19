@@ -687,7 +687,7 @@ public class Service extends BaseService {
 			//new JsonResult(false, "Erroreeeeeeeeeeeeeeeeeeeeeee").printTo(out);
 			
 		} catch(Exception ex) {
-			logger.error("Error executing action Feedback", ex);
+			logger.error("Error in action Feedback", ex);
 			new JsonResult(false, "Unable to send feedback report.").printTo(out);
 		}
 	}

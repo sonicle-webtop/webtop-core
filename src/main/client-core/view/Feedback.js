@@ -93,6 +93,11 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 					width: 400,
 					fieldLabel: WT.res('feedback.fld-service.lbl')
 				}, {
+					xtype: 'textfield',
+					name: 'subject',
+					width: 400,
+					fieldLabel: WT.res('feedback.fld-subject.lbl')
+				}, {
 					xtype: 'textareafield',
 					name: 'message',
 					allowBlank: false,
@@ -145,6 +150,8 @@ Ext.define('Sonicle.webtop.core.view.Feedback', {
 		
 		form.setFieldValue('timestamp', new Date().toString());
 		form.setFieldValue('image', h2c);
+		//TODO: implementare invio feedback lato server
+		WT.warn(WT.res('warn.todo'));
 		me.doSave(false);
 	},
 	
