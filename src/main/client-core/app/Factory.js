@@ -120,7 +120,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @return {String} The URL
 	 */
 	resourceUrl: function(sid, relPath) {
-		return 'resources/'+sid+'/laf/'+WT.getVar('laf')+'/'+relPath;
+		return 'resources/'+sid+'/'+WT.getApp().getServiceVersion(sid)+'/laf/'+WT.getVar('laf')+'/'+relPath;
 		//return Ext.String.format('resources/{0}/laf/{1}/{2}', sid, WT.getVar('laf'), relPath);
 	},
 	
@@ -130,7 +130,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @return {String} The URL
 	 */
 	globalImageUrl: function(relPath) {
-		return 'resources/'+WT.ID+'/images/'+relPath;
+		return 'resources/'+WT.ID+'/'+WT.getApp().getServiceVersion(WT.ID)+'/resources/images/'+relPath;
 		//return Ext.String.format('resources/{0}/images/{1}', WT.ID, relPath);
 	},
 	

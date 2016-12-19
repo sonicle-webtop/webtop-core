@@ -102,9 +102,8 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	onBlur: function(e) {
 		var me = this;
 		me.callParent(arguments);
-		// This avoids binding notify firing problems when typing into field
-		// and bluring out rapidly; checkChange method forces internal updates!
-		if(me.store && !me.store.isLoaded()) me.checkChange();
+		// force binding update on field blur
+		me.checkChange();
 	},
 	
 	/*
