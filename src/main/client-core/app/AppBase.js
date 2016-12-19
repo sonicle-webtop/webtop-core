@@ -105,5 +105,15 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	getService: function(id) {
 		var desc = this.getDescriptor(id);
 		return (desc) ? desc.getInstance() : null;
+	},
+	
+	/**
+	 * Returns a service version.
+	 * @param {String} id The service ID.
+	 * @returns {String} The version string. 
+	 */
+	getServiceVersion: function(id) {
+		var desc = this.getDescriptor(id);
+		return (desc) ? desc.getVersion() : "0.0.0";
 	}
 });
