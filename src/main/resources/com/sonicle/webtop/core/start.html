@@ -7,9 +7,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/0.0.0/resources/images/wt.ico" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/font-awesome.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/css/loading.css" />
+        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/${version.toString()}/resources/images/wt.ico" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/${version.toString()}/resources/css/font-awesome.min.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/${version.toString()}/resources/css/loading.css" />
     </head>
     <body>
         <div id="wt-loading-mask"></div>
@@ -23,6 +23,6 @@
                 Ext.manifest = WTS.appManifest;
             };
         </script>
-        <script type="text/javascript" src="resources/com.sonicle.webtop.core/0.0.0/boot/bootstrap.js"></script>
+        <script type="text/javascript" src="resources/com.sonicle.webtop.core/${version.toString()}/boot/bootstrap.js"></script>
    </body>
 </html>
