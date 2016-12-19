@@ -164,11 +164,11 @@ public final class UserProfile {
 	}
 	
 	public String getEmailAddress() {
-		return WT.getUserData(getId()).getEmail().getAddress();
+		return WT.getUserData(getId()).getEmailAddress();
 	}
 	
-	public String getCompleteEmailAddress() {
-		return WT.getUserData(getId()).getEmail().toString();
+	public String getFullEmailAddress() {
+		return WT.getUserData(getId()).getFullEmailAddress();
 	}
 	
 	public static class Data {
@@ -212,6 +212,14 @@ public final class UserProfile {
 		
 		public InternetAddress getEmail() {
 			return email;
+		}
+		
+		public String getEmailAddress() {
+			return email.getAddress();
+		}
+		
+		public String getFullEmailAddress() {
+			return email.toString();
 		}
 	}
 	

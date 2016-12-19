@@ -305,8 +305,8 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
-		return wta.getWebTopManager().userData(pid);
+	public UserProfile.Data getUserData() throws WTException {
+		return wta.getWebTopManager().userData(getTargetProfileId());
 	}
 	
 	public UserProfile.PersonalInfo getUserPersonalInfo() throws WTException {
@@ -490,7 +490,7 @@ public class CoreManager extends BaseManager {
 	@Override
 	protected Locale findLocale() {
 		try {
-			return getUserData(getTargetProfileId()).getLocale();
+			return getUserData().getLocale();
 		} catch(Exception ex) {
 			return Locale.ENGLISH;
 		}
