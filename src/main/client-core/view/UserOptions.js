@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	viewModel: {
 		formulas: {
 			upiFieldEditable: function(get) {
-				return WT.getVar('wtUpiProviderWritable') && get('record.canManageUpi');
+				return get('record.canManageUpi');
 			},
 			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
 			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled')

@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.app.DescriptorPublic', {
 		xid: null,
 		ns: null,
 		path: null,
+		version: null,
 		serviceClassName: null,
 		serviceVarsClassName: null,
 		name: null,

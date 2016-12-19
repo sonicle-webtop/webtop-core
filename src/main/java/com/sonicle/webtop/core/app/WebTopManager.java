@@ -96,12 +96,9 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
-import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
-import com.sonicle.webtop.core.userinfo.UserInfoProviderFactory;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -154,7 +151,7 @@ public final class WebTopManager {
 	private final HashMap<UserProfile.Id, String> cacheGroupToGroupUid = new HashMap<>();
 	private final HashMap<String, UserProfile.Id> cacheGroupUidToGroup = new HashMap<>();
 	
-	private final HashMap<UserProfile.Id, UserPersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
+	private final HashMap<UserProfile.Id, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
 	private final HashMap<UserProfile.Id, UserProfile.Data> cacheUserToData = new HashMap<>();
 	
 	/**
@@ -179,26 +176,13 @@ public final class WebTopManager {
 		logger.info("UserManager destroyed");
 	}
 	
+	public void cleanUserProfileCache(UserProfile.Id pid) {
+		removeFromUserCache(pid);
+	}
+	
 	public static String generateSecretKey() {
 		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
-	
-	///////////////////////////////////////////////
-	public UserInfoProviderBase getUserInfoProvider() throws WTException {
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
-		String providerName = css.getUserInfoProvider();
-		return UserInfoProviderFactory.getProvider(providerName, wta.getConnectionManager(), wta.getSettingsManager());
-	}
-	
-	public boolean isUserInfoProviderWritable() {
-		try {
-			return getUserInfoProvider().canWrite();
-		} catch(WTException ex) {
-			//TODO: logging?
-			return false;
-		}
-	}
-	////////////////////////////////////////////7
 	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
 		try {
@@ -782,14 +766,13 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserPersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
-		UserInfoDAO dao = UserInfoDAO.getInstance();
+	public boolean updateUserDisplayName(UserProfile.Id pid, String displayName) throws WTException {
+		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			OUserInfo oui = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			return (oui == null) ? null : new UserPersonalInfo(oui);
+			return dao.updateDisplayNameByDomainUser(con, pid.getDomainId(), pid.getUserId(), displayName) == 1;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -798,7 +781,23 @@ public final class WebTopManager {
 		}
 	}
 	
-	public boolean updateUserPersonalInfo(UserProfile.Id pid, UserPersonalInfo userPersonalInfo) throws WTException {
+	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
+		UserInfoDAO dao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			OUserInfo oui = dao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			return (oui == null) ? null : new UserProfile.PersonalInfo(oui);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean updateUserPersonalInfo(UserProfile.Id pid, UserProfile.PersonalInfo userPersonalInfo) throws WTException {
 		UserInfoDAO dao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
@@ -1165,10 +1164,10 @@ public final class WebTopManager {
 		return new EntityPermissions(othersPerms, servicesPerms);
 	}
 	
-	public UserPersonalInfo userPersonalInfo(UserProfile.Id pid) throws WTException {
+	public UserProfile.PersonalInfo userPersonalInfo(UserProfile.Id pid) throws WTException {
 		synchronized(cacheUserToPersonalInfo) {
 			if(!cacheUserToPersonalInfo.containsKey(pid)) {
-				UserPersonalInfo upi = getUserPersonalInfo(pid);
+				UserProfile.PersonalInfo upi = getUserPersonalInfo(pid);
 				if(upi == null) throw new WTException("UserPersonalInfo not found [{0}]", pid.toString());
 				cacheUserToPersonalInfo.put(pid, upi);
 				return upi;
@@ -1477,7 +1476,7 @@ public final class WebTopManager {
 	
 	private UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
 		CoreUserSettings cus = new CoreUserSettings(pid);
-		UserPersonalInfo upi = userPersonalInfo(pid);
+		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		OUser ouser = getUser(pid);
 		if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
 
@@ -1485,7 +1484,7 @@ public final class WebTopManager {
 		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), ia);
 	}
 	
-	private OUserInfo createUserInfo(UserPersonalInfo upi) {
+	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {
 		OUserInfo oui = new OUserInfo();
 		oui.setTitle(upi.getTitle());
 		oui.setFirstName(upi.getFirstName());
@@ -1533,7 +1532,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	private void addToUserCache(UserProfile.Id pid, UserPersonalInfo userPersonalInfo) {
+	private void addToUserCache(UserProfile.Id pid, UserProfile.PersonalInfo userPersonalInfo) {
 		synchronized(cacheUserToPersonalInfo) {
 			cacheUserToPersonalInfo.put(pid, userPersonalInfo);
 		}

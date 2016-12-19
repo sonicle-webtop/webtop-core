@@ -145,7 +145,6 @@ public class Service extends BaseService {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars co = new ServiceVars();
 		
-		co.put("wtUpiProviderWritable", coreMgr.isUserInfoProviderWritable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());

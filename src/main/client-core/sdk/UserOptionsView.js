@@ -110,6 +110,7 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	 * Extract the field name from a binding string ('{record.id}' -> 'id')
 	 */
 	_extrField: function(bind) {
-		return bind.substring(1, bind.length-1).replace(this.getModelProperty()+'.', '');
+		var valBind = Ext.isString(bind) ? bind : bind.value;
+		return valBind.substring(1, valBind.length-1).replace(this.getModelProperty()+'.', '');
 	}
 });
