@@ -45,7 +45,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
  * @author malbinola
  */
 public class CoreUserSettings extends BaseUserSettings {
-	private CoreServiceSettings ss;
+	private final CoreServiceSettings ss;
 	
 	public CoreUserSettings(UserProfile.Id profileId) {
 		super(CoreManifest.ID, profileId);
@@ -54,6 +54,7 @@ public class CoreUserSettings extends BaseUserSettings {
 
 	public CoreUserSettings(String serviceId, UserProfile.Id profileId) {
 		super(serviceId, profileId);
+		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}
 	
 	public String getTheme() {
