@@ -324,6 +324,14 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	},
 	
 	/**
+	 * Hides this view. no 'prompt' will be shown
+	 */
+	hideView: function() {
+		var me = this;
+		if(me.ctInited) me.ownerCt.hide();
+	},
+	
+	/**
 	 * Shows the confirm message.
 	 */
 	showConfirm: function() {
