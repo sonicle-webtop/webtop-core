@@ -82,10 +82,10 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		if(params) url = Ext.String.urlAppend(url, Ext.Object.toQueryString(params));
 		return url;
 		*/
-		var pars = Ext.apply(params || {}, {
+		var pars = Ext.apply({
 			service: sid,
 			action: action
-		});
+		}, params);
 		return WTF.requestBaseUrl(pars);
 	},
 	

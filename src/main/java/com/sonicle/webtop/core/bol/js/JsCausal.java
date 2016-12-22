@@ -40,15 +40,14 @@ import com.sonicle.webtop.core.bol.OCausal;
  * @author malbinola
  */
 public class JsCausal extends JsSimple {
-	public String status;
+	public String revisionStatus;
 	public Boolean readOnly;
 	
 	public JsCausal() {}
 	
 	public JsCausal(OCausal causal) {
 		super(causal.getCausalId(), causal.getDescription());
-		status = causal.getStatus();
+		revisionStatus = causal.getRevisionStatus();
 		readOnly = causal.getReadOnly();
 	}
-	
 }
