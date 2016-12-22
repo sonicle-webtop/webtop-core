@@ -40,14 +40,14 @@ import com.sonicle.webtop.core.bol.OActivity;
  * @author malbinola
  */
 public class JsActivity extends JsSimple {
-	public String status;
+	public String revisionStatus;
 	public Boolean readOnly;
 	
 	public JsActivity() {}
 	
 	public JsActivity(OActivity activity) {
 		super(activity.getActivityId(), activity.getDescription());
-		status = activity.getStatus();
+		revisionStatus = activity.getRevisionStatus();
 		readOnly = activity.getReadOnly();
 	}
 }

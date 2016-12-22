@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.model.CausalLkp', {
 	fields: [
 		WTF.field('id', 'int', false),
 		WTF.field('desc', 'string', true),
-		WTF.field('status', 'string', false),
+		WTF.field('revisionStatus', 'string', false),
 		WTF.field('readOnly', 'boolean', false)
 	]
 });
