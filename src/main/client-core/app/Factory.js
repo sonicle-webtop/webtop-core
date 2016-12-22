@@ -98,9 +98,12 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @return {String} The encoded URL
 	 */
 	processBinUrl: function(sid, action, params) {
-		return WTF.processUrl(sid, action, Ext.apply(params || {}, {
+		var pars = Ext.apply({
+			service: sid,
+			action: action,
 			nowriter: true
-		}));
+		}, params);
+		return WTF.requestBaseUrl(pars);
 	},
 	
 	/*
