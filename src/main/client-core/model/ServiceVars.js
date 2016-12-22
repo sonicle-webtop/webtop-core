@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
-		WTF.field('wtUpiProviderWritable', 'boolean'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
 		WTF.field('wtOtpEnabled', 'boolean'),
 		WTF.field('wtUploadMaxFileSize', 'int'),

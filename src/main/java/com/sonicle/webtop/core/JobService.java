@@ -187,7 +187,7 @@ public class JobService extends BaseJobService {
 		
 		private void sendEmail(ReminderEmail reminder) {
 			try {
-				UserProfile.Data ud = jobService.core.getUserData(reminder.getProfileId());
+				UserProfile.Data ud = WT.getUserData(reminder.getProfileId());
 				InternetAddress from = WT.buildDomainInternetAddress(reminder.getProfileId().getDomainId(), "webtop-notification", null);
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = ud.getEmail();
@@ -223,7 +223,7 @@ public class JobService extends BaseJobService {
 					// Skip profiles that don't have permission for syncing devices
 					if(!RunContext.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
 					
-					UserProfile.Data ud = jobService.core.getUserData(pid);
+					UserProfile.Data ud = WT.getUserData(pid);
 					// Skip profiles that cannot receive email alerts
 					if(ud.getEmail() == null) continue;
 					

@@ -61,8 +61,8 @@ public abstract class BaseManager {
 	
 	protected Locale findLocale() {
 		try {
-			CoreManager core = WT.getCoreManager();
-			return core.getUserData(getTargetProfileId()).getLocale();
+			CoreManager core = WT.getCoreManager(getTargetProfileId());
+			return core.getUserData().getLocale();
 		} catch(Exception ex) {
 			return Locale.ENGLISH;
 		}

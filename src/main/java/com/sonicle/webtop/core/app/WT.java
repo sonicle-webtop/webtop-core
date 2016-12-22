@@ -44,7 +44,6 @@ import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
@@ -380,7 +379,7 @@ public class WT {
 		}
 	}
 	
-	public static UserPersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
+	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
 		try {
 			return getWTA().getWebTopManager().userPersonalInfo(profileId);
 		} catch(WTException ex) {

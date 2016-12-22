@@ -221,7 +221,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 						
-						} else { // Availbale webtop domains
+						} else { // Available webtop domains
 							for(ODomain domain : core.listDomains(false)) {
 								children.add(createDomainNode(nodeId, domain));
 							}

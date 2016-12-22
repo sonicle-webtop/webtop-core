@@ -87,11 +87,9 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import com.sonicle.webtop.core.sdk.UserPersonalInfo;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IRecipientsProvidersSource;
-import com.sonicle.webtop.core.userinfo.UserInfoProviderBase;
 import com.sonicle.webtop.core.util.ZPushManager;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -145,7 +143,15 @@ public class CoreManager extends BaseManager {
 	
 	
 	
+	public ServiceManager getServiceManager() {
+		ensureCallerService(SERVICE_ID, "getServiceManager");
+		return wta.getServiceManager();
+	}
 	
+	public OTPManager getOTPManager() {
+		ensureCallerService(SERVICE_ID, "getOTPManager");
+		return wta.getOTPManager();
+	}
 	
 	public List<JsSimple> listThemes() throws WTException {
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -197,13 +203,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public ODomain getDomain() throws WTException {
+		return getDomain(getTargetProfileId().getDomainId());
+	}
+	
 	public ODomain getDomain(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
 			return wtmgr.getDomain(domainId);
 		} else {
-			ensureUserDomain();
+			ensureUserDomain(domainId);
 			return wtmgr.getDomain(domainId);
 		}
 	}
@@ -279,6 +289,10 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public OUser getUser() throws WTException {
+		return getUser(getTargetProfileId());
+	}
+	
 	public OUser getUser(UserProfile.Id pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
@@ -289,6 +303,54 @@ public class CoreManager extends BaseManager {
 			ensureUserDomain(pid.getDomainId());
 			return wtmgr.getUser(pid);
 		}
+	}
+	
+	public UserProfile.Data getUserData() throws WTException {
+		return wta.getWebTopManager().userData(getTargetProfileId());
+	}
+	
+	public UserProfile.PersonalInfo getUserPersonalInfo() throws WTException {
+		return getUserPersonalInfo(getTargetProfileId());
+	}
+	
+	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		if(RunContext.isSysAdmin()) {
+			return wtmgr.getUserPersonalInfo(pid);
+		} else {
+			ensureUserDomain(pid.getDomainId());
+			return wtmgr.getUserPersonalInfo(pid);
+		}
+	}
+	
+	public boolean updateUserDisplayName(String displayName) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		if(RunContext.isSysAdmin()) {
+			return wtmgr.updateUserDisplayName(getTargetProfileId(), displayName);
+		} else {
+			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+			ensureUser();
+			return wtmgr.updateUserDisplayName(getTargetProfileId(), displayName);
+		}
+	}
+	
+	public boolean updateUserPersonalInfo(UserProfile.PersonalInfo userPersonalInfo) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		if(RunContext.isSysAdmin()) {
+			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
+		} else {
+			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+			ensureUser();
+			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
+		}
+	}
+	
+	public void cleanUserProfileCache() {
+		ensureCallerService(SERVICE_ID, "cleanupUserProfileCache");
+		wta.getWebTopManager().cleanUserProfileCache(getTargetProfileId());
 	}
 	
 	public List<OGroup> listGroups() throws WTException {
@@ -428,21 +490,13 @@ public class CoreManager extends BaseManager {
 	@Override
 	protected Locale findLocale() {
 		try {
-			return getUserData(getTargetProfileId()).getLocale();
+			return getUserData().getLocale();
 		} catch(Exception ex) {
 			return Locale.ENGLISH;
 		}
 	}
 	
-	public ServiceManager getServiceManager() {
-		ensureCallerService(SERVICE_ID, "getServiceManager");
-		return wta.getServiceManager();
-	}
 	
-	public OTPManager getOTPManager() {
-		ensureCallerService(SERVICE_ID, "getOTPManager");
-		return wta.getOTPManager();
-	}
 	
 	/*
 	public boolean writeLog(String action, String remoteIp, String userAgent, String sessionId, String data) {
@@ -456,15 +510,6 @@ public class CoreManager extends BaseManager {
 	}
 	*/
 	
-	public UserInfoProviderBase getUserInfoProvider() throws WTException {
-		return wta.getWebTopManager().getUserInfoProvider();
-	}
-	
-	public boolean isUserInfoProviderWritable() {
-		return wta.getWebTopManager().isUserInfoProviderWritable();
-	}
-	
-	
 	
 	
 	
@@ -472,10 +517,6 @@ public class CoreManager extends BaseManager {
 	
 	public UserProfile.Id userUidToProfileId(String userUid) {
 		return wta.getWebTopManager().uidToUser(userUid);
-	}
-	
-	public UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
-		return wta.getWebTopManager().userData(pid);
 	}
 	
 	
@@ -486,62 +527,14 @@ public class CoreManager extends BaseManager {
 		return wta.getWebTopManager().getInternetUserId(pid);
 	}
 	
-	public UserPersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
-		return wta.getWebTopManager().userPersonalInfo(pid);
-	}
 	
-	public String getUserDisplayName(UserProfile.Id pid) throws Exception {
-		OUser user = getUser(pid);
-		if(user == null) throw new WTException("Unable to get user [{0}, {1}]", pid.getDomainId(), pid.getUserId());
-		return user.getDisplayName();
-	}
-	
-	public String getUserEmailAddress(UserProfile.Id pid) throws Exception {
-		UserPersonalInfo info = getUserPersonalInfo(pid);
-		if(info == null) throw new WTException("Unable to get personal info for user [{0}, {1}]", pid.getDomainId(), pid.getUserId());
-		return info.getEmail();
-	}
-	
+	/*
 	public String getUserCompleteEmailAddress(UserProfile.Id pid) throws Exception {
 		String address = getUserEmailAddress(pid);
 		String displayName = getUserDisplayName(pid);
 		return new InternetAddress(address, displayName).toString();
 	}
-	
-	public OUser addUser(OUser item) throws Exception {
-		UserInfoProviderBase uip = wta.getWebTopManager().getUserInfoProvider();
-		Connection con = null;
-		int ret;
-		
-		try {
-			con = WT.getCoreConnection();
-			UserDAO useDao = UserDAO.getInstance();
-			
-			ret = useDao.insert(con, item);
-			if(ret != 1) throw new WTException("Unable to insert user");
-			// Performs user info insertion
-			if(uip.canWrite()) {
-				if(!uip.addUser(item.getDomainId(), item.getUserId())) {
-					throw new WTException("Unable to insert user info");
-				}
-			}
-			
-			return item;
-			
-		} catch(Exception ex) {
-			// Rollsback user info insertion
-			if(uip.canWrite()) {
-				uip.deleteUser(item.getDomainId(), item.getUserId());
-			}
-			
-			throw ex;
-			
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	//TODO: remove user
+	*/
 	
 	public List<UserProfile.Id> listProfilesWithSetting(String serviceId, String key, Object value) throws WTException {
 		SettingsManager setm = wta.getSettingsManager();

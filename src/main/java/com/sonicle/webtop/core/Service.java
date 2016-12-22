@@ -145,7 +145,6 @@ public class Service extends BaseService {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars co = new ServiceVars();
 		
-		co.put("wtUpiProviderWritable", coreMgr.isUserInfoProviderWritable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
@@ -688,7 +687,7 @@ public class Service extends BaseService {
 			//new JsonResult(false, "Erroreeeeeeeeeeeeeeeeeeeeeee").printTo(out);
 			
 		} catch(Exception ex) {
-			logger.error("Error executing action Feedback", ex);
+			logger.error("Error in action Feedback", ex);
 			new JsonResult(false, "Unable to send feedback report.").printTo(out);
 		}
 	}
@@ -860,12 +859,12 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		CoreManager pidCoreMgr = WT.getCoreManager(getWts().getProfileId());
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				UserProfile.Data ud = coreMgr.getUserData(getWts().getProfileId());
-				DateTimeFormatter fmt = JsGridSync.createFormatter(ud.getTimeZone());
+				DateTimeFormatter fmt = JsGridSync.createFormatter(pidCoreMgr.getUserData().getTimeZone());
 				List<SyncDevice> devices = coreMgr.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
 				for(SyncDevice device : devices) {
@@ -878,14 +877,14 @@ public class Service extends BaseService {
 				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
 				CompositeId cid = new CompositeId().parse(pl.data.id);
 				
-				coreMgr.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
+				pidCoreMgr.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals("info")) {
 				String id = ServletUtils.getStringParameter(request, "id", true);
 				CompositeId cid = new CompositeId().parse(id);
 				
-				String info = coreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
+				String info = pidCoreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
 				new JsonResult(info).printTo(out);
 			}
 			

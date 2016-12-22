@@ -52,7 +52,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	viewModel: {
 		formulas: {
 			upiFieldEditable: function(get) {
-				return WT.getVar('wtUpiProviderWritable') && get('record.canManageUpi');
+				return get('record.canManageUpi');
 			},
 			isOTPActive: WTF.isEmptyFormula('record', 'otpDelivery', true),
 			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled')
@@ -666,7 +666,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						items: [{
 							xtype: 'displayfield',
 							bind: '{record.otpEmailAddress}',
-							fieldLabel: WT.res('otp.setup.email.fld-emailaddress.lbl')
+							fieldLabel: WT.res('opts.otp.email.fld-emailaddress.lbl')
 						}]
 					}]
 				}]

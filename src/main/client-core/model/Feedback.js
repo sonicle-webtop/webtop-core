@@ -36,9 +36,11 @@ Ext.define('Sonicle.webtop.core.model.Feedback', {
 	extend: 'WTA.model.Base',
 	
 	fields: [
-		'serviceId',
-		'message',
-		'anonymous',
+		WTF.field('serviceId', 'string', false),
+		WTF.field('subject', 'string', false),
+		WTF.field('message', 'string', false),
+		WTF.field('anonymous', 'boolean', false),
+		WTF.field('serviceId', 'string', false),
 		'timestamp',
 		'image'
 	]
