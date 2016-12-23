@@ -376,6 +376,9 @@ public class WebTopSession {
 					}
 				}
 			}
+			// Service initialization
+			svcm.initializeProfile(serviceId, profile.getId());
+			
 			// PrivateService
 			if(descriptor.hasPrivateService()) {
 				// Creates new instance

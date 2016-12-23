@@ -356,6 +356,13 @@ public class CoreSettings {
 	public static final String LONG_TIME_FORMAT = "i18n.format.time.long";
 	
 	/**
+	 * [user][*]
+	 * [boolean]
+	 * Stores if profile has been initialized for a service
+	 */
+	public static final String INITIALIZED = "initialized";
+	
+	/**
 	 * [user]
 	 * [boolean]
 	 * Specifies if whatsnew window must be shown after a service upgrade

@@ -132,7 +132,6 @@ public class JobService extends BaseJobService {
 				// Creates a controller instance for each service and calls it for reminders...
 				ServiceManager svcm = jobService.core.getServiceManager();
 				for(String sid : jobService.sidHandlingReminders) {
-					//BaseController instance = svcm.instantiateController(sid, jobService.getRunContext());
 					BaseController instance = svcm.getController(sid);
 					IControllerHandlesReminders controller = (IControllerHandlesReminders)instance;
 					alerts.addAll(controller.returnReminders(now));
