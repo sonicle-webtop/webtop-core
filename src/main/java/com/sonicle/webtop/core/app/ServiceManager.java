@@ -437,9 +437,9 @@ public class ServiceManager {
 	private boolean profileInitializedCheck(String serviceId, UserProfile.Id profileId) {
 		synchronized(lock2) {
 			SettingsManager setMgr = wta.getSettingsManager();
-			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.PROFILE_INITIALIZED), false);
+			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED), false);
 			if(!value) {
-				setMgr.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.PROFILE_INITIALIZED, true);
+				setMgr.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED, true);
 			}
 			return value;
 		}

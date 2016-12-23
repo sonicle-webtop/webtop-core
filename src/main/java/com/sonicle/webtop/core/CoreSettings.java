@@ -360,7 +360,7 @@ public class CoreSettings {
 	 * [boolean]
 	 * Stores if profile has been initialized for a service
 	 */
-	public static final String PROFILE_INITIALIZED = "profile.initialized";
+	public static final String INITIALIZED = "initialized";
 	
 	/**
 	 * [user]
