@@ -137,7 +137,7 @@ public class CoreManager extends BaseManager {
 			cacheReady.add("cacheAllowedServices");
 		}
 	}
-	
+
 	
 	
 	

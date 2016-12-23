@@ -50,6 +50,7 @@ import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesProfiles;
 import com.zaxxer.hikari.HikariConfig;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -106,6 +107,7 @@ public class ServiceManager {
 	private WebTopApp wta = null;
 	private Scheduler scheduler = null;
 	private final Object lock = new Object();
+	private final Object lock2 = new Object();
 	
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
 	private final HashMap<String, String> xidToServiceId = new HashMap<>();
@@ -372,6 +374,75 @@ public class ServiceManager {
 			}
 		}
 		return list;
+	}
+	
+	/**
+	 * Checks if a specific user need initialization for specified service.
+	 * If so, it initializes the user calling the controller implementation 
+	 * (if present) related to IControllerHandlesProfiles interface.
+	 * In any case this method ends applying a specific user-setting marking 
+	 * initialization as done.
+	 * @param serviceId The service ID.
+	 * @param profileId The user profile ID.
+	 */
+	public void initializeProfile(String serviceId, UserProfile.Id profileId) {
+		if(!profileInitializedCheck(serviceId, profileId)) {
+			ServiceDescriptor descr = getDescriptor(serviceId);
+			if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
+				BaseController instance = getController(serviceId);
+				IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
+				
+				try {
+					WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+					controller.addProfile(profileId);
+				} catch(Throwable t) {
+					logger.error("Controller: addProfile() throws errors [{}]", t);
+				} finally {
+					WebTopApp.unsetServiceLoggerDC();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Cleanup the specified user calling the controller implementation 
+	 * (if present) related to IControllerHandlesProfiles interface.
+	 * @param serviceId The service ID.
+	 * @param profileId The user profile ID.
+	 */
+	public void cleanupProfile(String serviceId, UserProfile.Id profileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
+			BaseController instance = getController(serviceId);
+			IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
+
+			try {
+				WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+				controller.removeProfile(profileId, false);
+			} catch(Throwable t) {
+				logger.error("Controller: removeProfile() throws errors [{}]", t);
+			} finally {
+				WebTopApp.unsetServiceLoggerDC();
+			}
+		}
+	}
+	
+	/**
+	 * Returns current initialization user-setting for a specific user.
+	 * If false, this method immediately set it to true value.
+	 * @param serviceId The service ID.
+	 * @param profileId The user profile ID.
+	 * @return The original value read before any update.
+	 */
+	private boolean profileInitializedCheck(String serviceId, UserProfile.Id profileId) {
+		synchronized(lock2) {
+			SettingsManager setMgr = wta.getSettingsManager();
+			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.PROFILE_INITIALIZED), false);
+			if(!value) {
+				setMgr.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.PROFILE_INITIALIZED, true);
+			}
+			return value;
+		}
 	}
 	
 	/**
