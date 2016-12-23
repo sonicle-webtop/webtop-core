@@ -255,17 +255,7 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 * @private
 	 */
 	onCtBeforeClose: function() {
-		var me = this;
-		// TODO: gestire i window group
-		/*
-		if(me.useWG && me.hasWindows()) return false;
-		*/
-		if(me.getPromptConfirm() === false) return true;
-		if(me.canCloseView() === false) {
-			me.showConfirm();
-			return false;
-		}
-		return true;
+		return this.onBeforeClose();
 	},
 	
 	/*
@@ -372,6 +362,24 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		var me = this;
 		me.fireEvent('viewdiscard', me);
 		me.closeView(false);
+	},
+	
+	/**
+	 * Handler method executed on container before close.
+	 * Child classes can override this method to implement their own custom logic.
+	 */
+	onBeforeClose: function() {
+		var me = this;
+		// TODO: gestire i window group
+		/*
+		if(me.useWG && me.hasWindows()) return false;
+		*/
+		if(me.getPromptConfirm() === false) return true;
+		if(me.canCloseView() === false) {
+			me.showConfirm();
+			return false;
+		}
+		return true;
 	},
 	
 	/**
