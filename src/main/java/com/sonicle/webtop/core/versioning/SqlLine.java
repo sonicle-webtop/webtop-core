@@ -37,7 +37,7 @@ package com.sonicle.webtop.core.versioning;
  *
  * @author matteo
  */
-public class SqlLine extends UpgradeLine {
+public class SqlLine extends BaseScriptLine {
 	
 	public SqlLine(String statement) {
 		super(statement);

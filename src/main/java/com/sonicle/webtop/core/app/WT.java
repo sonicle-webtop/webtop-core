@@ -238,36 +238,39 @@ public class WT {
 	}
 	
 	public static DataSource getDataSource(String serviceId, String dataSourceName) throws SQLException {
-		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getDataSource(serviceId, dataSourceName);
+		return getWTA().getConnectionManager().getDataSource(serviceId, dataSourceName);
 	}
 	
 	public static Connection getCoreConnection() throws SQLException {
-		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection();
+		return getWTA().getConnectionManager().getConnection();
 	}
 	
 	public static Connection getCoreConnection(boolean autoCommit) throws SQLException {
-		ConnectionManager conm = getWTA().getConnectionManager();
-		return conm.getConnection(autoCommit);
+		return getWTA().getConnectionManager().getConnection(autoCommit);
 	}
 	
 	public static Connection getConnection(String serviceId) throws SQLException {
+		return getWTA().getConnectionManager().getFallbackConnection(serviceId);
+		/*
 		ConnectionManager conm = getWTA().getConnectionManager();
 		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
 			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE);
 		} else {
 			return conm.getConnection();
 		}
+		*/
 	}
 	
 	public static Connection getConnection(String serviceId, boolean autoCommit) throws SQLException {
+		return getWTA().getConnectionManager().getFallbackConnection(serviceId, autoCommit);
+		/*
 		ConnectionManager conm = getWTA().getConnectionManager();
 		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
 			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE, autoCommit);
 		} else {
 			return conm.getConnection(autoCommit);
 		}
+		*/
 	}
 	
 	public static Connection getConnection(String serviceId, String dataSourceName) throws SQLException {
@@ -278,19 +281,14 @@ public class WT {
 		return getWTA().getConnectionManager().getConnection(serviceId, dataSourceName, autoCommit);
 	}
 	
-	public static String getHomePath() {
+	public static String getServiceHomePath(String serviceId) {
 		UserProfile.Id runPid = RunContext.getRunProfileId();
-		return getWTA().getHomePath(runPid.getDomain());
+		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
 	}
 	
 	public static String getTempPath() {
 		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getTempPath(runPid.getDomain());
-	}
-	
-	public static String getServiceHomePath(String serviceId) {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
-		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
 	}
 	
 	public static File getTempFolder() throws WTException {

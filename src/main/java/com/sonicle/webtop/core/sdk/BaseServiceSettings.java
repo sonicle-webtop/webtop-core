@@ -43,65 +43,69 @@ import com.sonicle.webtop.core.app.WebTopApp;
  */
 public abstract class BaseServiceSettings extends BaseSettings {
 	public static final String DEFAULT_PREFIX = "default.";
-	private SettingsManager setm;
+	private SettingsManager setMgr;
 	protected String serviceId;
 	protected String domainId;
 
-	//private BaseServiceSettings() {}
+	public BaseServiceSettings(SettingsManager setMgr, String serviceId, String domainId) {
+		this.setMgr = setMgr;
+		this.serviceId = serviceId;
+		this.domainId = domainId;
+	}
 
 	public BaseServiceSettings(String serviceId, String domainId) {
-		setm = WebTopApp.getInstance().getSettingsManager();
+		setMgr = WebTopApp.getInstance().getSettingsManager();
 		this.serviceId = serviceId;
 		this.domainId = domainId;
 	}
 	
 	@Override
 	public String getSetting(String key) {
-		return setm.getServiceSetting(domainId, serviceId, key);
+		return setMgr.getServiceSetting(domainId, serviceId, key);
 	}
 	
 	@Override
 	public boolean setSetting(String key, Object value) {
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
 	
 	@Override
 	public String getString(String key, String defaultValue) {
-		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+		return LangUtils.value(setMgr.getServiceSetting(domainId, serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setString(String key, String value) {
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
 	
 	@Override
 	public Boolean getBoolean(String key, Boolean defaultValue) {
-		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+		return LangUtils.value(setMgr.getServiceSetting(domainId, serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setBoolean(String key, Boolean value) {
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
 	
 	@Override
 	public Integer getInteger(String key, Integer defaultValue) {
-		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+		return LangUtils.value(setMgr.getServiceSetting(domainId, serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setInteger(String key, Integer value) {
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
 	
 	@Override
 	public Long getLong(String key, Long defaultValue) {
-		return LangUtils.value(setm.getServiceSetting(domainId, serviceId, key), defaultValue);
+		return LangUtils.value(setMgr.getServiceSetting(domainId, serviceId, key), defaultValue);
 	}
 	
 	@Override
 	public boolean setLong(String key, Long value) {
-		return setm.setServiceSetting(domainId, serviceId, key, value);
+		return setMgr.setServiceSetting(domainId, serviceId, key, value);
 	}
 }

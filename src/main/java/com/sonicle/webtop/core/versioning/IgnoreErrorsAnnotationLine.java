@@ -34,19 +34,20 @@
 package com.sonicle.webtop.core.versioning;
 
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author matteo
+ * @author malbinola
  */
-public class CommentLine extends BaseScriptLine {
-	private static final Pattern PATTERN = Pattern.compile("^--.+");
-	
-	public CommentLine(String text) {
+public class IgnoreErrorsAnnotationLine extends AnnotationLine {
+	private static final Pattern PATTERN = Pattern.compile("^@IgnoreErrors$");
+
+	public IgnoreErrorsAnnotationLine(String text) {
 		super(text);
 	}
 	
 	public static boolean matches(String text) {
-		return PATTERN.matcher(text).matches();
+		return PATTERN.matcher(StringUtils.trim(text)).matches();
 	}
 }

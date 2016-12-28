@@ -33,8 +33,11 @@
  */
 package com.sonicle.webtop.core.versioning;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,44 +51,60 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author matteo
+ * @author malbinola
  */
 public class SqlUpgradeScript {
-	
-	private static final Pattern PATTERN_FILENAME = Pattern.compile("^(([0-9]+(?:\\.[0-9]+){1,2})_([0-9]+))@(.+)\\.sql$");
-	private static final Pattern PATTERN_LINE_COMMENT = Pattern.compile("^--(.)+$");
-	
+	private static final Pattern PATTERN_JAR_FILENAME = Pattern.compile("^(([0-9]+(?:\\.[0-9]+){1,2})_([0-9]+))\\.sql$");
+	private static final Pattern PATTERN_FILE_FILENAME = Pattern.compile("^(.+)\\.sql$");
 	private String resourceName = null;
-	private String name = null;
-	private ServiceVersion version = null;
-	private String id = null;
-	private String dataSource = null;
-	private ArrayList<UpgradeLine> statements = null;
-	private String sql = null;
+	private String fileName = null;
+	private ServiceVersion fileVersion = null;
+	private String fileSequence = null;
+	private ArrayList<BaseScriptLine> statements = null;
 	
 	public static ServiceVersion extractVersion(String resourceName) {
-		//String filename = StringUtils.substring(resourceName, StringUtils.lastIndexOf(resourceName, "/")+1);
-		Matcher matcher = PATTERN_FILENAME.matcher(resourceName);
+		Matcher matcher = PATTERN_JAR_FILENAME.matcher(resourceName);
 		if(!matcher.matches()) throw new UnsupportedOperationException(MessageFormat.format("Bad resource name [{0}]", resourceName));
 		return new ServiceVersion(matcher.group(2));
 	}
 	
-	public SqlUpgradeScript(Class clazz, String resourceName) throws IOException, UnsupportedOperationException {
+	public SqlUpgradeScript(File file) throws IOException, UnsupportedOperationException {
+		InputStream is = null;
+		FileReader fr = null;
+		
+		try {
+			Matcher matcher = PATTERN_FILE_FILENAME.matcher(file.getName());
+			if(!matcher.matches()) throw new UnsupportedOperationException(MessageFormat.format("Bad resource name [{0}]", file.getName()));
+			
+			this.resourceName = file.getCanonicalPath();
+			this.fileName = matcher.group(1);
+			this.fileVersion = new ServiceVersion();
+			this.fileSequence = "";
+			
+			fr = new FileReader(file);
+			readFile(fr, true);
+			
+		} finally {
+			IOUtils.closeQuietly(fr);
+			IOUtils.closeQuietly(is);
+		}
+	}
+	
+	public SqlUpgradeScript(String jarResourceName) throws IOException, UnsupportedOperationException {
 		InputStream is = null;
 		BufferedReader br = null;
 		
 		try {
-			String filename = StringUtils.substring(resourceName, StringUtils.lastIndexOf(resourceName, "/")+1);
-			Matcher matcher = PATTERN_FILENAME.matcher(filename);
+			String filename = StringUtils.substring(jarResourceName, StringUtils.lastIndexOf(jarResourceName, "/")+1);
+			Matcher matcher = PATTERN_JAR_FILENAME.matcher(filename);
 			if(!matcher.matches()) throw new UnsupportedOperationException(MessageFormat.format("Bad resource name [{0}]", filename));
 			
-			this.resourceName = resourceName;
-			this.name = matcher.group(1);
-			this.version = new ServiceVersion(matcher.group(2));
-			this.id = matcher.group(3);
-			this.dataSource = matcher.group(4);
+			this.resourceName = jarResourceName;
+			this.fileName = matcher.group(1);
+			this.fileVersion = new ServiceVersion(matcher.group(2));
+			this.fileSequence = matcher.group(3);
 			
-			is = clazz.getResourceAsStream(resourceName);
+			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(jarResourceName);
 			if(is == null) throw new ResourceNotFoundException("Null InputStream!");
 			readFile(new InputStreamReader(is, "ISO-8859-15"), true);
 			//br = new BufferedReader(new InputStreamReader(is, "ISO-8859-15"));
@@ -100,60 +119,26 @@ public class SqlUpgradeScript {
 		return resourceName;
 	}
 	
-	public String getName() {
-		return name;
+	public String getFileName() {
+		return fileName;
 	}
 	
-	public ServiceVersion getVersion() {
-		return version;
+	public ServiceVersion getFileVersion() {
+		return fileVersion;
 	}
 	
-	public String getId() {
-		return id;
+	public String getFileSequence() {
+		return fileSequence;
 	}
 	
-	public String getDataSource() {
-		return dataSource;
-	}
-	
-	public ArrayList<UpgradeLine> getStatements() {
+	public ArrayList<BaseScriptLine> getStatements() {
 		return statements;
-	}
-	
-	/*
-	public ArrayList<String> getStatements() {
-		String[] semitokens = StringUtils.splitByWholeSeparator(this.sql, "; ");
-		ArrayList<String> statements = new ArrayList<String>();
-		String[] comtokens = null;
-		for(String semitoken: semitokens) {
-			if(!StringUtils.isEmpty(semitoken)) {
-				comtokens = StringUtils.splitByWholeSeparator(semitoken, "/ ");
-				statements.add((comtokens.length == 1) ? comtokens[0] : comtokens[1]);
-				//statements.add(semitoken);
-			}
-		}
-		return statements;
-		//return StringUtils.splitByWholeSeparator(this.sql, "; ");
-	}
-	*/
-	
-	private void readFile(BufferedReader reader) throws IOException {
-		String line = null;
-		StringBuilder sb = new StringBuilder();
-		while((line = reader.readLine()) != null) {
-			line = StringUtils.trim(line);
-			if(!StringUtils.isEmpty(line)) {
-				sb.append(line);
-				sb.append(" ");
-			}
-		}
-		this.sql = sb.toString();
 	}
 	
 	private void readFile(InputStreamReader readable, boolean flatNewLines) throws IOException {
-		this.statements = new ArrayList<UpgradeLine>();
-		String lines[] = null;
+		this.statements = new ArrayList<>();
 		StringBuilder sb = null, sbsql = null;
+		String lines[] = null;
 		
 		Scanner s = new Scanner(readable);
 		s.useDelimiter("(;( )?(\r)?\n)");
@@ -169,8 +154,16 @@ public class SqlUpgradeScript {
 				sbsql = new StringBuilder();
 				lines = StringUtils.split(block, "\n");
 				for(String line: lines) {
-					if(AnnotationLine.matches(line)) {
-						statements.add(new AnnotationLine(line));
+					if (AnnotationLine.matches(line)) {
+						if (DataSourceAnnotationLine.matches(line)) {
+							statements.add(new DataSourceAnnotationLine(line));
+						} else if (IgnoreErrorsAnnotationLine.matches(line)) {
+							statements.add(new IgnoreErrorsAnnotationLine(line));
+						} else if (RequireAdminAnnotationLine.matches(line)) {
+							statements.add(new RequireAdminAnnotationLine(line));
+						} else {
+							throw new IOException("Bad line: " + line);
+						}
 					} else if(CommentLine.matches(line)) {
 						sb.append(line);
 						sb.append("\n");
@@ -182,33 +175,6 @@ public class SqlUpgradeScript {
 				}
 				if(sb.length() > 0) statements.add(new CommentLine(StringUtils.removeEnd(sb.toString(), "\n")));
 				if(sbsql.length() > 0) statements.add(new SqlLine(StringUtils.removeEnd(sbsql.toString(), "\n")));
-				
-				
-				//if(AnnotationLine.matchesRequireAdmin(block)) {
-				//	statements.add(new AnnotationLine(block));
-				//} else {
-				//	if(block.startsWith("/*!") && block.endsWith("*/")) {
-				//		int i = block.indexOf(' ');
-				//		block = block.substring(i + 1, block.length() - " */".length());
-				//	}
-				/*	
-					lines = StringUtils.split(block, "\n");
-					sb = new StringBuilder();
-					sbsql = new StringBuilder();
-					for(String line: lines) {
-						if(CommentLine.matches(line)) {
-							sb.append(line);
-							sb.append("\n");
-						} else {
-							sbsql.append(StringUtils.trim(line));
-							sbsql.append(" ");
-							if(!flatNewLines) sbsql.append("\n");
-						}
-					}
-					if(sb.length() > 0) statements.add(new CommentLine(StringUtils.removeEnd(sb.toString(), "\n")));
-					if(sbsql.length() > 0) statements.add(new SqlLine(StringUtils.removeEnd(sbsql.toString(), "\n")));
-				}
-				*/
 			}
 		}
 	}

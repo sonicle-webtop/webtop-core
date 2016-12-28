@@ -44,12 +44,14 @@ import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.versioning.ResourceNotFoundException;
+import com.sonicle.webtop.core.versioning.SqlUpgradeScript;
 import com.sonicle.webtop.core.versioning.Whatsnew;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -209,31 +211,64 @@ class ServiceDescriptor {
 	 * @param fromVersion Starting version
 	 * @return HTML translated representation of loaded file.
 	 */
-	public synchronized String getWhatsnew(Locale locale, ServiceVersion fromVersion) {
+	public String getWhatsnew(Locale locale, ServiceVersion fromVersion) {
 		String resName = null;
 		Whatsnew wn = null;
 		
-		try {
-			String slocale = locale.toString();
-			if(whatsnewCache.containsKey(slocale)) {
-				logger.trace("Getting whatsnew from cache [{}, {}]", manifest.getId(), slocale);
-				wn = whatsnewCache.get(slocale);
-			} else {
-				resName = MessageFormat.format("/{0}/whatsnew/{1}.txt", LangUtils.packageToPath(manifest.getId()), slocale);
-				logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", manifest.getId(), resName, fromVersion);
-				wn = new Whatsnew(resName, defineWhatsnewVariables());
-				whatsnewCache.put(slocale, wn);
+		synchronized(whatsnewCache) {
+			try {
+				String slocale = locale.toString();
+				if(whatsnewCache.containsKey(slocale)) {
+					logger.trace("Getting whatsnew from cache [{}, {}]", manifest.getId(), slocale);
+					wn = whatsnewCache.get(slocale);
+				} else {
+					resName = MessageFormat.format("/{0}/meta/whatsnew/{1}.txt", LangUtils.packageToPath(manifest.getId()), slocale);
+					logger.debug("Loading whatsnew [{}, {}, ver. >= {}]", manifest.getId(), resName, fromVersion);
+					wn = new Whatsnew(resName, defineWhatsnewVariables());
+					whatsnewCache.put(slocale, wn);
+				}
+				return wn.toHtml(fromVersion, manifest.getVersion());
+
+			} catch(ResourceNotFoundException ex) {
+				logger.trace("Whatsnew file not available for service [{}]", manifest.getId());
+			} catch(IOException ex) {
+				logger.trace(ex.getMessage());
+			} catch(Exception ex) {
+				logger.error("Error getting whatsnew for service {}", manifest.getId(), ex);
 			}
-			return wn.toHtml(fromVersion, manifest.getVersion());
-			
-		} catch(ResourceNotFoundException ex) {
-			logger.trace("Whatsnew file not available for service [{}]", manifest.getId());
-		} catch(IOException ex) {
-			logger.trace(ex.getMessage());
-		} catch(Exception ex) {
-			logger.error("Error getting whatsnew for service {}", manifest.getId(), ex);
+			return StringUtils.EMPTY;
 		}
-		return StringUtils.EMPTY;
+	}
+	
+	public ArrayList<SqlUpgradeScript> getUpgradeScripts() {
+		ArrayList<SqlUpgradeScript> scripts = new ArrayList<>();
+		String resName = null;
+		
+		try {
+			String pkgPath = MessageFormat.format("{0}/meta/db/", LangUtils.packageToPath(manifest.getId()));
+			ServiceVersion fileVersion = null;
+			for(String file: LangUtils.listPackageFiles(getClass(), pkgPath)) {
+				try {
+					if(file.equals("init.sql")) continue;
+					fileVersion = SqlUpgradeScript.extractVersion(file);
+					if(fileVersion.compareTo(manifest.getOldVersion()) <= 0) continue; // Skip all version sections below oldVersion (included)
+					if(fileVersion.compareTo(manifest.getVersion()) > 0) continue; // Skip all version sections after manifestVersion
+					
+					resName = "/" + pkgPath + file;
+					logger.debug("Reading upgrade script [{}]", resName);
+					scripts.add(new SqlUpgradeScript(resName));
+					
+				} catch(IOException | UnsupportedOperationException ex1) {
+					logger.warn(ex1.getMessage());
+					//TODO: increment error counter...
+				}
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error loading upgrade scripts", ex);
+		}
+		//TODO: return also error counter...
+		return scripts;
 	}
 	
 	private HashMap<String, String> defineWhatsnewVariables() {

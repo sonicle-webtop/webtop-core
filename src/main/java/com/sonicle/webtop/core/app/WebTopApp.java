@@ -255,6 +255,7 @@ public final class WebTopApp {
 		logger.info("WTA initialization started [{}]", webappName);
 		
 		this.conmgr = ConnectionManager.initialize(this); // Connection Manager
+		this.setmgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesmgr = SessionManager.initialize(this); // Session Manager
 		//this.autm = AuthManager.initialize(this); // Auth Manager
 		
@@ -277,7 +278,6 @@ public final class WebTopApp {
 		this.logmgr = LogManager.initialize(this); // Log Manager
 		this.wtmgr = WebTopManager.initialize(this); // User Manager
 		
-		this.setmgr = SettingsManager.initialize(this); // Settings Manager
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setmgr); // System locale
 		this.optmgr = OTPManager.initialize(this); // OTP Manager
 		this.rptmgr = ReportManager.initialize(this); // Report Manager
@@ -493,18 +493,6 @@ public final class WebTopApp {
 		}
 	}
 	
-	private void initCacheDomainByFQDN() throws WTException {
-		//TODO: ricreare cache dopo aggiornamento tabella domini
-		synchronized(cacheDomainByFQDN) {
-			CoreManager core = WT.getCoreManager();
-			cacheDomainByFQDN.clear();
-			//getWebTopManager().listDomains(webappIsLatest)
-			for(ODomain domain : core.listDomains(true)) {
-				cacheDomainByFQDN.put(domain.getInternetName(), domain.getDomainId());
-			}
-		}
-	}
-	
 	
 	
 	
@@ -513,6 +501,9 @@ public final class WebTopApp {
 		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
 	}
 	
+	private CoreServiceSettings getCoreServiceSettings() {
+		return new CoreServiceSettings(setmgr, CoreManifest.ID, "*");
+	}
 	
 	
 	
@@ -520,8 +511,31 @@ public final class WebTopApp {
 	
 	
 	
+	public static boolean getPropExtJsDebug() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.extjsdebug");
+		return LangUtils.value(prop, false);
+	}
 	
+	public static boolean getPropSonicleExtJsExtensionsDevMode() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.soextdevmode");
+		return LangUtils.value(prop, false);
+	}
 	
+	public static boolean getPropDevMode() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.devmode");
+		return LangUtils.value(prop, false);
+	}
+	
+	public static boolean getPropDebugMode() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.debugmode");
+		return LangUtils.value(prop, false);
+	}
+	
+	public static boolean getPropSchedulerDisabled() {
+		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
+		return LangUtils.value(prop, false);
+		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
+	}
 	
 	/**
 	 * Returns webapp's name as configured in the application server.
@@ -663,7 +677,7 @@ public final class WebTopApp {
 		}
 	}
 	
-	public URL getResource(String resource) throws MalformedURLException {
+	public URL getContextResource(String resource) throws MalformedURLException {
 		return servletContext.getResource(resource);
 	}
 	
@@ -673,6 +687,134 @@ public final class WebTopApp {
 	
 	public Template loadTemplate(String path, String encoding) throws IOException {
 		return freemarkerCfg.getTemplate(path, encoding);
+	}
+	
+	/**
+	 * Return the configured HOME path for the platform.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @return The HOME path
+	 */
+	public String getHomePath() {
+		CoreServiceSettings css = getCoreServiceSettings();
+		return css.getHomePath();
+	}
+	
+	/**
+	 * Return the db-scripts HOME path for the passed Service.
+	 * @param serviceId The service ID.
+	 * @return The path
+	 */
+	public String getDbScriptsHomePath(String serviceId) {
+		CoreServiceSettings css = getCoreServiceSettings();
+		return css.getHomePath() + "dbscripts/" + serviceId + "/";
+	}
+	
+	/**
+	 * Returns the POST db-scripts path for the passed Service.
+	 * @param serviceId The service ID.
+	 * @return The path
+	 */
+	public String getDbScriptsPostPath(String serviceId) {
+		return getDbScriptsHomePath(serviceId) + "post/";
+	}
+	
+	/**
+	 * Return the HOME path for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @return The path
+	 */
+	public String getHomePath(String domainId) {
+		CoreServiceSettings css = getCoreServiceSettings();
+		return css.getHomePath() + "domains/" + domainId + "/";
+	}
+	
+	/**
+	 * Return the TEMP path (relative to the HOME) for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @return The path
+	 */
+	public String getTempPath(String domainId) {
+		return getHomePath(domainId) + "temp/";
+	}
+	
+	/**
+	 * Return service's HOME path for the passed Domain.
+	 * Path will be followed by the Unix style trailing separator.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @return The path
+	 */
+	public String getServiceHomePath(String domainId, String serviceId) {
+		return getHomePath(domainId) + serviceId + "/";
+	}
+	
+	public String getPublicPath(String domainId) {
+		return getHomePath(domainId) + "public/";
+	}
+	
+	public File getTempFolder(String domainId) throws WTException {
+		File tempDir = new File(getTempPath(domainId));
+		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
+			throw new WTException("Temp folder is not a directory or is write protected");
+		}
+		return tempDir;
+	}
+	
+	public File createTempFile(String domainId) throws WTException {
+		return createTempFile(domainId, null, null);
+	}
+	
+	public File createTempFile(String domainId, String prefix, String suffix) throws WTException {
+		return new File(getTempFolder(domainId), buildTempFilename(prefix, suffix));
+	}
+	
+	public boolean deleteTempFile(String domainId, String filename) throws WTException {
+		File tempFile = new File(getTempFolder(domainId), filename);
+		return tempFile.delete();
+	}
+	
+	public String buildTempFilename() {
+		return buildTempFilename(null, null);
+	}
+	
+	public String buildTempFilename(String prefix, String suffix) {
+		String uuid = IdentifierUtils.getUUID();
+		if(StringUtils.isBlank(suffix)) {
+			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
+		} else {
+			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
+		}
+	}
+	
+	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
+		if(!url.getProtocol().equals("file")) throw new MalformedURLException("Protocol must be 'file'");
+		File file = new File(url.toURI());
+		if(file.exists() && file.isFile()) {
+			return new FileResource(file);
+		} else {
+			return null;
+		}
+	}
+	
+	public JarFileResource getJarResource(URL url) throws URISyntaxException, MalformedURLException, IOException {
+		if(!url.getProtocol().equals("jar")) throw new MalformedURLException("Protocol must be 'jar'");
+		
+		String surl = url.toString();
+		int ix = surl.lastIndexOf("!/");
+		if (ix < 0) throw new MalformedURLException("URL must contains '!/'");
+		
+		String jarFileName, jarEntryName;
+		try {
+			jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), getSystemCharset().name());
+			jarEntryName = surl.substring(ix + 2);
+		} catch(UnsupportedEncodingException ex) {
+			throw new WTRuntimeException(ex, "{0} encoding not supported", getSystemCharset().name());
+		}
+		
+		File file = new File(jarFileName);
+		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
 	/**
@@ -756,113 +898,6 @@ public final class WebTopApp {
 	public String lookupAndFormatResource(String serviceId, Locale locale, String key, boolean escapeHtml, Object... arguments) {
 		String value = lookupResource(serviceId, locale, key, escapeHtml);
 		return MessageFormat.format(value, arguments);
-	}
-	
-	/**
-	 * Return the configured HOME path for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @return The HOME path
-	 */
-	public String getHomePath(String domainId) {
-		CoreServiceSettings css = getCoreServiceSettings("*");
-		CoreSettings.HomePathTemplateValues values = new CoreSettings.HomePathTemplateValues();
-		values.DOMAIN_ID = domainId;
-		return css.getHomePath(values);
-	}
-	
-	/**
-	 * Return the TEMP path (relative to the HOME) for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @return The TEMP path 
-	 */
-	public String getTempPath(String domainId) {
-		return getHomePath(domainId) + "temp/";
-	}
-	
-	/**
-	 * Return the configured service's HOME path for the passed Domain.
-	 * Path will be followed by the Unix style trailing separator.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @return The service's HOME path 
-	 */
-	public String getServiceHomePath(String domainId, String serviceId) {
-		return getHomePath(domainId) + serviceId + "/";
-	}
-	
-	public String getPublicPath(String domainId) {
-		return getHomePath(domainId) + "public/";
-	}
-	
-	public File getTempFolder(String domainId) throws WTException {
-		File tempDir = new File(getTempPath(domainId));
-		if(!tempDir.isDirectory() || !tempDir.canWrite()) {
-			throw new WTException("Temp folder is not a directory or is write protected");
-		}
-		return tempDir;
-	}
-	
-	public File createTempFile(String domainId) throws WTException {
-		return createTempFile(domainId, null, null);
-	}
-	
-	public File createTempFile(String domainId, String prefix, String suffix) throws WTException {
-		return new File(getTempFolder(domainId), buildTempFilename(prefix, suffix));
-	}
-	
-	public boolean deleteTempFile(String domainId, String filename) throws WTException {
-		File tempFile = new File(getTempFolder(domainId), filename);
-		return tempFile.delete();
-	}
-	
-	public String buildTempFilename() {
-		return buildTempFilename(null, null);
-	}
-	
-	public String buildTempFilename(String prefix, String suffix) {
-		String uuid = IdentifierUtils.getUUID();
-		if(StringUtils.isBlank(suffix)) {
-			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
-		} else {
-			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
-		}
-	}
-	
-	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
-		if(!url.getProtocol().equals("file")) throw new MalformedURLException("Protocol must be 'file'");
-		File file = new File(url.toURI());
-		if(file.exists() && file.isFile()) {
-			return new FileResource(file);
-		} else {
-			return null;
-		}
-	}
-	
-	public JarFileResource getJarResource(URL url) throws URISyntaxException, MalformedURLException, IOException {
-		if(!url.getProtocol().equals("jar")) throw new MalformedURLException("Protocol must be 'jar'");
-		
-		String surl = url.toString();
-		int ix = surl.lastIndexOf("!/");
-		if (ix < 0) throw new MalformedURLException("URL must contains '!/'");
-		
-		String jarFileName, jarEntryName;
-		try {
-			jarFileName = URLDecoder.decode(surl.substring(4 + 5, ix), getSystemCharset().name());
-			jarEntryName = surl.substring(ix + 2);
-		} catch(UnsupportedEncodingException ex) {
-			throw new WTRuntimeException(ex, "{0} encoding not supported", getSystemCharset().name());
-		}
-		
-		File file = new File(jarFileName);
-		return new JarFileResource(new JarFile(file), jarEntryName);
-	}
-	
-	public String getDomainIdByFQDN(String domainId) {
-		synchronized(cacheDomainByFQDN) {
-			return cacheDomainByFQDN.get(domainId);
-		}
 	}
 	
 	public Session getMailSession(String domainId) {
@@ -1036,38 +1071,6 @@ public final class WebTopApp {
 		return css;
 	}
 	
-	public static boolean getPropSchedulerDisabled() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
-		return LangUtils.value(prop, false);
-		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
-	}
-	
-	public static boolean getPropExtJsDebug() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.extjsdebug");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropSonicleExtJsExtensionsDevMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.soextdevmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropDevMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.devmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropDebugMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.debugmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	private char[] getDirPassword(AuthenticationDomain ad) {
-		if(ad.getAuthPassword() == null) return null;
-		String s = PasswordUtils.decryptDES(new String(ad.getAuthPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
-		return (s != null) ? s.toCharArray() : null;
-	}
-	
 	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
 		return new AuthenticationDomain(domain.getDomainId(), 
 				domain.getInternetName(), 
@@ -1139,6 +1142,12 @@ public final class WebTopApp {
 				break;
 		}
 		return opts;
+	}
+	
+	private char[] getDirPassword(AuthenticationDomain ad) {
+		if(ad.getAuthPassword() == null) return null;
+		String s = PasswordUtils.decryptDES(new String(ad.getAuthPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
+		return (s != null) ? s.toCharArray() : null;
 	}
 	
 	/**

@@ -40,11 +40,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author matteo
  */
-public class AnnotationLine extends UpgradeLine {
-	
+public class AnnotationLine extends BaseScriptLine {
 	private static final Pattern PATTERN = Pattern.compile("^@.+");
-	private static final Pattern PATTERN_REQUIRE_ADMIN = Pattern.compile("^@RequireAdmin$");
-	private static final Pattern PATTERN_IGNORE_ERRORS = Pattern.compile("^@IgnoreErrors$");
 	
 	public AnnotationLine(String text) {
 		super(text);
@@ -54,6 +51,7 @@ public class AnnotationLine extends UpgradeLine {
 		return PATTERN.matcher(StringUtils.trim(text)).matches();
 	}
 	
+	/*
 	public boolean matchesRequireAdmin() {
 		return PATTERN_REQUIRE_ADMIN.matcher(this.getText()).matches();
 	}
@@ -69,4 +67,5 @@ public class AnnotationLine extends UpgradeLine {
 	public static boolean matchesIgnoreErrors(String text) {
 		return PATTERN_IGNORE_ERRORS.matcher(text).matches();
 	}
+	*/
 }

@@ -34,10 +34,16 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.db.StatementUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.bol.OUpgradeStatement;
+import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseRestApi;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
@@ -49,12 +55,26 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesProfiles;
+import com.sonicle.webtop.core.versioning.AnnotationLine;
+import com.sonicle.webtop.core.versioning.BaseScriptLine;
+import com.sonicle.webtop.core.versioning.DataSourceAnnotationLine;
+import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
+import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
+import com.sonicle.webtop.core.versioning.SqlLine;
+import com.sonicle.webtop.core.versioning.SqlUpgradeScript;
 import com.zaxxer.hikari.HikariConfig;
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,7 +126,7 @@ public class ServiceManager {
 	public static final String SERVICES_DESCRIPTOR_RESOURCE = "META-INF/webtop-services.xml";
 	private WebTopApp wta = null;
 	private Scheduler scheduler = null;
-	private final Object lock = new Object();
+	private final Object lock1 = new Object();
 	private final Object lock2 = new Object();
 	
 	private final LinkedHashMap<String, ServiceDescriptor> descriptors = new LinkedHashMap<>();
@@ -154,11 +174,53 @@ public class ServiceManager {
 		logger.info("ServiceManager destroyed");
 	}
 	
+	private String getUpgradeTag() {
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			String lastTag = upgdao.selectLastTag(con);
+			int pendingUpgrades = upgdao.countPendingByTagType(con, lastTag, OUpgradeStatement.STATEMENT_TYPE_SQL);
+			if (pendingUpgrades == 0) {
+				return String.valueOf(DateTimeUtils.now(true).getMillis());
+			} else {
+				return lastTag;
+			}
+		} catch(SQLException | DAOException ex) {
+			logger.error("Unable to determine upgrade-tag", ex);
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	private void init() {
 		
 		// Progamatically register the core's manifest
-		registerService(new CoreManifest());
+		ServiceDescriptor coreDesc = registerService(new CoreManifest());
 		registerService(new CoreAdminManifest());
+		
+		boolean dbInitEnabled = isDbInitEnabled();
+		boolean dbAutoUpgrade = isDbAutoUpgrade();
+		boolean maintenanceDisabled = isMaintenanceDisabled();
+		boolean requireAdmin = false;
+		
+		// Always insert the maintenance flag. If useless 
+		// (requireAdmin=false) it will be removed at the end of the
+		// initialization process. In case of unexpected errors, we are
+		// sure that clients cannot connect before admin intervention.
+		boolean oldMaintenance = isInMaintenance(CoreManifest.ID);
+		if (!oldMaintenance) setMaintenance(CoreManifest.ID, true);
+
+		// Defines a proper upgrade-tag
+		String upgradeTag = getUpgradeTag();
+		logger.info("Database upgrades will be appended to {}", upgradeTag);
+		
+		// Upgrade database (core)
+		if (coreDesc.isUpgraded()) {
+			requireAdmin = requireAdmin | upgradeServiceDb(coreDesc, upgradeTag, dbAutoUpgrade);
+		}
 		
 		// Loads services' manifest files from classpath
 		logger.debug("Starting services discovery...");
@@ -175,11 +237,50 @@ public class ServiceManager {
 		} catch (IOException ex) {
 			throw new RuntimeException("Error during services discovery", ex);
 		}
-		
+
 		// Register discovered services
 		for(ServiceManifest manifest : manifests) {
-			registerService(manifest);
-			createController(manifest.getId());
+			String sid = manifest.getId();
+			ServiceDescriptor desc = registerService(manifest);
+			
+			// Init database
+			if (dbInitEnabled) {
+				//TODO: implementare inizializzazione database
+			}
+
+			// Upgrade database
+			if (desc.isUpgraded()) {
+				requireAdmin = requireAdmin | upgradeServiceDb(desc, upgradeTag, dbAutoUpgrade);
+			}
+			
+			// Inits classes
+			createController(sid);
+		}
+		
+		// Handle post db-scripts
+		for (String serviceId : listRegisteredServices()) {
+			ServiceDescriptor desc = getDescriptor(serviceId);
+			requireAdmin = requireAdmin | postUpgradeServiceDb(desc, upgradeTag, dbAutoUpgrade);
+		}
+		
+		if (requireAdmin) {
+			logger.warn("SysAdmin intervention is needed!");
+		} else {
+			// Admin support is not needed. Restore the maintenance value 
+			// read before startup. This prevents from overriding changes made 
+			// by a previous application startup
+			if (!oldMaintenance) {
+				logger.debug("Maintenance mode disabled");
+				setMaintenance(CoreManifest.ID, false);
+			} else {
+				logger.debug("Maintenance mode keep enabled");
+			}
+		}
+		
+		// Forcedly turn-off maintenance
+		if (maintenanceDisabled) {
+			logger.debug("Maintenance forcedly disabled (independently from startup state)");
+			wta.getSettingsManager().setServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE, false);
 		}
 		
 		// Instantiate job services
@@ -212,7 +313,12 @@ public class ServiceManager {
 		}
 	}
 	
-	public boolean isValidService(String serviceId) {
+	/**
+	 * Returns if this manager contains a descriptor for the specified service.
+	 * @param serviceId The service ID.
+	 * @return True, if service is valid, false otherwise.
+	 */
+	public boolean hasService(String serviceId) {
 		return descriptors.containsKey(serviceId);
 	}
 	
@@ -224,6 +330,11 @@ public class ServiceManager {
 		return serviceIdToPublicName.get(serviceId);
 	}
 	
+	/**
+	 * Returns the service ID by its public-name (if available).
+	 * @param publicName The service's public-name.
+	 * @return The service ID if found, null otherwise.
+	 */
 	public String getServiceIdByPublicName(String publicName) {
 		return publicNameToServiceId.get(publicName);
 	}
@@ -234,7 +345,7 @@ public class ServiceManager {
 	 * @return Service descriptor object.
 	 */
 	ServiceDescriptor getDescriptor(String serviceId) {
-		synchronized(lock) {
+		synchronized(lock1) {
 			if(!descriptors.containsKey(serviceId)) return null;
 			return descriptors.get(serviceId);
 		}
@@ -248,19 +359,34 @@ public class ServiceManager {
 		return isCoreService(serviceId);
 	}
 	
+	private boolean isDbInitEnabled() {
+		SettingsManager setMgr = wta.getSettingsManager();
+		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.DB_INIT_ENABLED), true);
+	}
+	
+	private boolean isDbAutoUpgrade() {
+		SettingsManager setMgr = wta.getSettingsManager();
+		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.DB_UPGRADE_AUTO), true);
+	}
+	
+	private boolean isMaintenanceDisabled() {
+		SettingsManager setMgr = wta.getSettingsManager();
+		return LangUtils.value(setMgr.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE_ENABLED), false);
+	}
+	
+	public boolean isInMaintenance(String serviceId) {
+		SettingsManager setMgr = wta.getSettingsManager();
+		return LangUtils.value(setMgr.getServiceSetting(serviceId, CoreSettings.MAINTENANCE), false);
+	}
+	
 	public boolean isInDevMode(String serviceId) {
 		Boolean bool = LangUtils.value(wta.getSettingsManager().getServiceSetting(serviceId, CoreSettings.DEV_MODE), (Boolean)null);
 		return (bool == null) ? WebTopApp.getPropDevMode() : bool;
 	}
 	
-	public boolean isInMaintenance(String serviceId) {
-		SettingsManager setm = wta.getSettingsManager();
-		return LangUtils.value(setm.getServiceSetting(serviceId, CoreSettings.MAINTENANCE), false);
-	}
-	
 	public void setMaintenance(String serviceId, boolean maintenance) {
-		SettingsManager setm = wta.getSettingsManager();
-		setm.setServiceSetting(serviceId, CoreSettings.MAINTENANCE, maintenance);
+		SettingsManager setMgr = wta.getSettingsManager();
+		setMgr.setServiceSetting(serviceId, CoreSettings.MAINTENANCE, maintenance);
 	}
 	
 	/**
@@ -279,7 +405,7 @@ public class ServiceManager {
 	 * @return List of services' IDs.
 	 */
 	public List<String> listRegisteredServices() {
-		synchronized(lock) {
+		synchronized(lock1) {
 			return Arrays.asList(descriptors.keySet().toArray(new String[descriptors.size()]));
 		}
 	}
@@ -298,7 +424,7 @@ public class ServiceManager {
 	 */
 	public List<String> listServicesWhichControllerImplements(Class clazz) {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.doesControllerImplements(clazz)) list.add(descr.getManifest().getId());
 			}
@@ -312,7 +438,7 @@ public class ServiceManager {
 	 */
 	public List<String> listServicesWithRestApi() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasRestApi()) list.add(descr.getManifest().getId());
 			}
@@ -326,7 +452,7 @@ public class ServiceManager {
 	 */
 	public List<String> listPrivateServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasPrivateService()) list.add(descr.getManifest().getId());
 			}
@@ -340,7 +466,7 @@ public class ServiceManager {
 	 */
 	public List<String> listPublicServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasPublicService()) list.add(descr.getManifest().getId());
 			}
@@ -354,7 +480,7 @@ public class ServiceManager {
 	 */
 	public List<String> listJobServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasJobService()) list.add(descr.getManifest().getId());
 			}
@@ -368,7 +494,7 @@ public class ServiceManager {
 	 */
 	public List<String> listUserOptionServices() {
 		ArrayList<String> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(lock1) {
 			for(ServiceDescriptor descr : descriptors.values()) {
 				if(descr.hasUserOptionsService()) list.add(descr.getManifest().getId());
 			}
@@ -771,7 +897,17 @@ public class ServiceManager {
 	
 	
 	
-	
+	private String generatePublicName(String serviceId) {
+		SettingsManager setm = wta.getSettingsManager();
+		String overriddenPublicName = setm.getServiceSetting(serviceId, CoreSettings.PUBLIC_NAME);
+		
+		if(!StringUtils.isEmpty(overriddenPublicName)) {
+			return overriddenPublicName;
+		} else {
+			String[] tokens = StringUtils.split(serviceId, ".");
+			return (tokens.length > 0) ? tokens[tokens.length-1] : serviceId;
+		}
+	}
 	
 	private ArrayList<ServiceManifest> discoverServices() throws IOException {
 		ClassLoader cl = LangUtils.findClassLoader(getClass());
@@ -816,15 +952,14 @@ public class ServiceManager {
 		return manifests;
 	}
 	
-	private void registerService(ServiceManifest manifest) {
-		ConnectionManager conm = wta.getConnectionManager();
+	private ServiceDescriptor registerService(ServiceManifest manifest) {
+		ConnectionManager conMgr = wta.getConnectionManager();
 		ServiceDescriptor desc = null;
 		String serviceId = manifest.getId();
 		String xid = manifest.getXId();
-		boolean maintenance = false;
 		
 		logger.info("Registering service [{}]", serviceId);
-		synchronized(lock) {
+		synchronized(lock1) {
 			if(descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
 			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
@@ -833,14 +968,14 @@ public class ServiceManager {
 			
 			// Register service's dataSources
 			try {
-				DataSourcesConfig config = conm.getConfiguration();
+				DataSourcesConfig config = conMgr.getConfiguration();
 				DataSourcesConfig.HikariConfigMap sources = config.getSources(serviceId);
 				if(sources != null) {
 					logger.debug("Registering {} dataSources", sources.size());
 					// If service provides its own sources, register them...
 					for(Entry<String, HikariConfig> entry : sources.entrySet()) {
-						if(!conm.isRegistered(serviceId, entry.getKey())) {
-							conm.registerDataSource(serviceId, entry.getKey(), entry.getValue());
+						if(!conMgr.isRegistered(serviceId, entry.getKey())) {
+							conMgr.registerDataSource(serviceId, entry.getKey(), entry.getValue());
 						}
 					}
 				} else {
@@ -851,19 +986,14 @@ public class ServiceManager {
 				throw new WTRuntimeException(ex, "Error registering service dataSources");
 			}
 			
+			// Upgrade check
 			boolean upgraded = upgradeCheck(manifest);
 			desc.setUpgraded(upgraded);
 			if(upgraded) {
-				// Force whatsnew pre-cache
+				// Force whatsnew pre-caching
 				desc.getWhatsnew(wta.getSystemLocale(), manifest.getOldVersion());
 			}
 
-			// If already in maintenance, keeps it active
-			if(!isInMaintenance(serviceId)) {
-				// ...otherwise sets it!
-				setMaintenance(serviceId, maintenance);
-			}
-			
 			descriptors.put(serviceId, desc);
 			xidToServiceId.put(xid, serviceId);
 			serviceIdToJsPath.put(serviceId, manifest.getJsPath());
@@ -878,18 +1008,165 @@ public class ServiceManager {
 			
 			// Adds service references into static map in order to facilitate ID lookup
 			WT.manifestCache.put(serviceId, manifest);
+			
+			return desc;
 		}
 	}
 	
-	private String generatePublicName(String serviceId) {
-		SettingsManager setm = wta.getSettingsManager();
-		String overriddenPublicName = setm.getServiceSetting(serviceId, CoreSettings.PUBLIC_NAME);
+	private boolean upgradeServiceDb(ServiceDescriptor desc, String upgradeTag, boolean autoUpdate) {
+		ArrayList<SqlUpgradeScript> scripts = desc.getUpgradeScripts();
+		return upgradeServiceDb(desc, scripts, upgradeTag, autoUpdate);
+	}
+	
+	private boolean upgradeServiceDb(ServiceDescriptor desc, ArrayList<SqlUpgradeScript> scripts, String upgradeTag, boolean autoUpdate) {
+		ConnectionManager conMgr = wta.getConnectionManager();
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		boolean requireAdmin = false;
+		Connection con = null;
 		
-		if(!StringUtils.isEmpty(overriddenPublicName)) {
-			return overriddenPublicName;
+		try {
+			if (!scripts.isEmpty()) {
+				String serviceId = desc.getManifest().getId();
+				
+				// Transforms each statement into a specific object
+				List<OUpgradeStatement> stmts = new ArrayList<>();
+				short sequence = 0;
+				for(SqlUpgradeScript script: scripts) {
+					// Extracts and inserts statements
+					ArrayList<BaseScriptLine> scriptStatements = script.getStatements();
+					String targetDataSource = null;
+					logger.trace("Script {}: found {} statement/s", script.getFileName(), scriptStatements.size());
+					for(BaseScriptLine statement: scriptStatements) {
+						sequence++;
+						String stmtType, stmtDs;
+						if (statement instanceof AnnotationLine) {
+							stmtDs = null;
+							stmtType = OUpgradeStatement.STATEMENT_TYPE_ANNOTATION;
+							if (statement instanceof DataSourceAnnotationLine) {
+								targetDataSource = ((DataSourceAnnotationLine) statement).getTargetDataSource();
+							}
+						} else if (statement instanceof SqlLine) {
+							stmtDs = targetDataSource;
+							stmtType = OUpgradeStatement.STATEMENT_TYPE_SQL;
+						} else {
+							stmtDs = null;
+							stmtType = OUpgradeStatement.STATEMENT_TYPE_COMMENT;
+						}
+						stmts.add(new OUpgradeStatement(upgradeTag, serviceId, sequence, script.getFileName(), stmtDs, stmtType, statement.getText()));
+					}
+				}
+				
+				// Inserts extracted statements into a dedicated table
+				con = conMgr.getConnection();
+				Integer maxId = upgdao.maxId(con);
+				int count = upgdao.batchInsert(con, stmts);
+				if(count != sequence) throw new WTException("Statements insertion not fully completed [total: {0}, inserted: {1}]", sequence, count);
+				
+				// Reads all inserted statements (NB: id needs to be refreshed because it comes from a db sequence)
+				stmts = upgdao.selectFromIdByTagService(con, maxId == null ? -1 : maxId, upgradeTag, serviceId);
+				if(stmts.isEmpty()) {
+					logger.debug("DB upgrade is not necessary [{}]", serviceId);
+				} else {
+					if(!autoUpdate) { // Manual
+						requireAdmin = true;
+
+					} else { // Auto: Runs statements...
+						HashMap<String, Connection> conCache = new HashMap<>();
+						try {
+							logger.debug("Executing upgrade statements [{}, {}]", serviceId, stmts.size());
+							boolean ignoreErrors = false;
+							for(OUpgradeStatement stmt: stmts) {
+								
+								if (stmt.getStatementType().equals(OUpgradeStatement.STATEMENT_TYPE_ANNOTATION)) {
+									if (RequireAdminAnnotationLine.matches(stmt.getStatementBody())) {
+										logger.trace("[{}, {}]: {}", stmt.getServiceId(), stmt.getSequenceNo(), stmt.getStatementBody());
+										requireAdmin = true;
+										break; // Stops iteration!
+									} else if (IgnoreErrorsAnnotationLine.matches(stmt.getStatementBody())) {
+										ignoreErrors = true; // Sets value! (for next sql statement)
+									}
+									
+								} else if (stmt.getStatementType().equals(OUpgradeStatement.STATEMENT_TYPE_SQL)) {
+									if (!conCache.containsKey(stmt.getStatementDataSource())) {
+										conCache.put(stmt.getStatementDataSource(), getUpgradeStatementConnection(conMgr, stmt));
+									}
+									boolean ret = executeUpgradeStatement(con, conCache.get(stmt.getStatementDataSource()), stmt, ignoreErrors);
+									if(!ret) { // In case of errors...
+										requireAdmin = true;
+										break; // Stops iteration!
+									}
+									ignoreErrors = false; // Resets value!
+									
+								} else {
+									logger.trace("[{}, {}]: !!! {}", stmt.getServiceId(), stmt.getSequenceNo(), StringUtils.replace(stmt.getStatementBody(), "\n", " "));
+								}
+							}
+						} finally {
+							if (!conCache.isEmpty()) {
+								logger.trace("Closing connections [{}]", conCache.size());
+								for(String key: conCache.keySet()) {
+									DbUtils.closeQuietly(conCache.remove(key));
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch(Throwable t) {
+			requireAdmin = true;
+			logger.error("Error handling upgrade script", t);
+		} finally {
+			return requireAdmin;
+		}
+	}
+	
+	private boolean postUpgradeServiceDb(ServiceDescriptor desc, String upgradeTag, boolean autoUpdate) {
+		ArrayList<SqlUpgradeScript> scripts = getPostDbScripts(desc.getManifest().getId());
+		return upgradeServiceDb(desc, scripts, upgradeTag, autoUpdate);
+	}
+	
+	private Connection getUpgradeStatementConnection(ConnectionManager conMgr, OUpgradeStatement statement) throws SQLException {
+		if (StringUtils.isEmpty(statement.getStatementDataSource())) {
+			return null;
 		} else {
-			String[] tokens = StringUtils.split(serviceId, ".");
-			return (tokens.length > 0) ? tokens[tokens.length-1] : serviceId;
+			String[] tokens = StringUtils.split(statement.getStatementDataSource(), "@", 2);
+			String namespace = tokens[0];
+			String dataSourceName = tokens[1];
+			return conMgr.getFallbackConnection(namespace, dataSourceName);
+		}
+	}
+	
+	private boolean executeUpgradeStatement(Connection con, Connection statementCon, OUpgradeStatement statement, boolean ignoreErrors) throws Throwable {
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Statement stmt = null;
+		
+		try {
+			logger.trace("[{}]: {}", statement.getUpgradeStatementId(), statement.getStatementBody());
+			stmt = statementCon.createStatement();
+			statement.setRunTimestamp(DateTimeUtils.now(true));
+			int ret = stmt.executeUpdate(statement.getStatementBody());
+			statement.setRunStatus(OUpgradeStatement.RUN_STATUS_OK);
+			statement.setRunMessage(MessageFormat.format("Affected rows: {0}", ret));
+			return true;
+			
+		} catch(SQLException ex) {
+			if(!ignoreErrors) {
+				statement.setRunStatus(OUpgradeStatement.RUN_STATUS_ERROR);
+				statement.setRunMessage(ex.getMessage());
+				logger.trace("{}", statement.getRunMessage());
+				return false;
+			} else {
+				statement.setRunStatus(OUpgradeStatement.RUN_STATUS_WARNING);
+				statement.setRunMessage(ex.getMessage());
+				return true;
+			}
+		} finally {
+			StatementUtils.closeQuietly(stmt);
+			try {
+				upgdao.update(con, statement);
+			} catch(DAOException ex1) {
+				throw new Exception("Unable to update statement status!", ex1);
+			}
 		}
 	}
 	
@@ -912,6 +1189,48 @@ public class ServiceManager {
 			return false;
 		}
 	}
+	
+	private ArrayList<SqlUpgradeScript> getPostDbScripts(String serviceId) {
+		ArrayList<SqlUpgradeScript> scripts = new ArrayList<>();
+		FilenameFilter sqlFilter = new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.toLowerCase().endsWith("sql");
+			}
+		};
+		
+		try {
+			String postPath = wta.getDbScriptsPostPath(serviceId);
+			logger.debug("Looking for post db-scripts in [{}]", postPath);
+			File postDir = new File(postPath);
+			if (postDir.exists()) {
+				File[] files = postDir.listFiles(sqlFilter);
+				if(files != null) {
+					for (File file: files) {
+						try {
+							logger.debug("Reading post db-scripts [{}]", file.getName());
+							SqlUpgradeScript script = new SqlUpgradeScript(file);
+							scripts.add(script);
+
+						} catch(Exception ex1) {
+							logger.warn(ex1.getMessage());
+							// increment error counter...
+						}
+					}
+				}
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error loading post db-scripts", ex);
+		}
+		return scripts;
+	}
+	
+	
+	
+	
+	
+	
 	
 	
 	

@@ -52,7 +52,6 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class Whatsnew {
-	
 	private final Pattern PATTER_LINE = Pattern.compile("^(\\$|%|@|\\*|!)(.*)");
 	private String resourceName = null;
 	private ServiceVersion version = null;

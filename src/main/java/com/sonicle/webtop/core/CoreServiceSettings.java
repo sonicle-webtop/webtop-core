@@ -15,7 +15,6 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.Locale;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 
 /**
@@ -25,6 +24,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	// NB: please do not provide a constructor that defaults serviceId 
 	// because there are some keys that can be applied widely across services
+	
+	public CoreServiceSettings(SettingsManager setMgr, String serviceId, String domainId) {
+		super(setMgr, serviceId, domainId);
+	}
 	
 	public CoreServiceSettings(String serviceId, String domainId) {
 		super(serviceId, domainId);
@@ -38,10 +41,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return PathUtils.ensureTrailingSeparator(getString(ZPUSH_PATH, null));
 	}
 	
-	public String getHomePath(HomePathTemplateValues tpl) {
-		String value = getString(HOME_PATH, null);
-		value = StringUtils.replace(value, "{DOMAIN_ID}", tpl.DOMAIN_ID);
-		return PathUtils.ensureTrailingSeparator(value);
+	public String getHomePath() {
+		return PathUtils.ensureTrailingSeparator(getString(HOME_PATH, null));
 	}
 	
 	public String getPublicBaseUrl() {
@@ -90,12 +91,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_FOOTPRINT, false);
 	}
 	
-	public String getUserInfoProvider() {
-		return getString(USERINFO_PROVIDER, "WebTop");
-	}
-	
 	public boolean getSysLogEnabled() {
 		return getBoolean(SYSLOG_ENABLED, false);
+	}
+	
+	public Boolean getWhatsnewEnabled() {
+		return getBoolean(WHATSNEW_ENABLED, true);
 	}
 	
 	public long getOTPProviderSonicleAuthKVI() {
@@ -122,9 +123,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
-	public Boolean getWhatsnewEnabled() {
-		return getBoolean(WHATSNEW_ENABLED, true);
-	}
+	
 	
 	
 	

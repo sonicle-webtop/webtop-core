@@ -56,12 +56,9 @@ public class CoreSettings {
 	/**
 	 * [system]
 	 * [string][templatable]
-	 * Defines webtop home path
+	 * Defines platform home path
 	 */
 	public static final String HOME_PATH = "home.path";
-	public static class HomePathTemplateValues {
-		public String DOMAIN_ID;
-	}
 	
 	/**
 	 * [domain+system]
@@ -195,30 +192,47 @@ public class CoreSettings {
 	public static final String DEVICES_SYNC_CHECK_TIME = "devices.sync.check.time";
 	
 	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates if maintenance management is active or not.
+	 * This should be used only to disable this feature, active by default.
+	 */
+	public static final String MAINTENANCE_ENABLED = "maintenance.enabled";
+	
+	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates if database initialization is active or not.
+	 * This should be used only to disable this feature, active by default.
+	 */
+	public static final String DB_INIT_ENABLED = "db.init.enabled";
+	
+	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates if database automatic upgrade is active or not.
+	 * This should be used only to disable this feature, active by default.
+	 */
+	public static final String DB_UPGRADE_AUTO = "db.upgrade.auto";
+	
+	/**
 	 * [domain+system]
 	 * [string]
-	 * Specifies if what's new visualization to users is active
+	 * Specifies if what's new visualization to users is enabled.
 	 */
 	public static final String WHATSNEW_ENABLED = "whatsnew.enabled";
-	
-	
-	
-	
-	
-	
-	
 	
 	/**
 	 * [system][*]
 	 * [boolean]
-	 * Indicates whether DevMode is active for a service
+	 * Indicates whether DevMode is active for a service.
 	 */
 	public static final String DEV_MODE = "devmode";
 	
 	/**
 	 * [system][*]
 	 * [boolean]
-	 * Indicates if system is under maintenance
+	 * Indicates whether a service is in maintenance or not.
 	 */
 	public static final String MAINTENANCE = "maintenance";
 	
@@ -242,20 +256,6 @@ public class CoreSettings {
 	 * Overrides support email address
 	 */
 	//public static final String MANIFEST_SUPPORT_EMAIL = "manifest.support.email";
-	/**
-	 * [boolean][system]
-	 */
-	//public static final String DB_INIT_ENABLED = "db.init.enabled";
-	/**
-	 * [boolean][system]
-	 */
-	//public static final String DB_UPGRADE_ENABLED = "db.upgrade.enabled";
-	
-	/**
-	 * [system]
-	 * [string]
-	 */
-	public static final String USERINFO_PROVIDER = "userinfo.provider";
 	
 	//public static final String DEFAULT_LANGUAGE = "default.language";
 	//public static final String DEFAULT_COUNTRY = "default.country";

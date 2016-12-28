@@ -33,20 +33,18 @@
  */
 package com.sonicle.webtop.core.versioning;
 
-import java.util.regex.Pattern;
-
 /**
  *
- * @author matteo
+ * @author malbinola
  */
-public class CommentLine extends BaseScriptLine {
-	private static final Pattern PATTERN = Pattern.compile("^--.+");
+public class BaseScriptLine {
+	private final String text;
 	
-	public CommentLine(String text) {
-		super(text);
+	public BaseScriptLine(String text) {
+		this.text = text;
 	}
 	
-	public static boolean matches(String text) {
-		return PATTERN.matcher(text).matches();
+	public String getText() {
+		return this.text;
 	}
 }

@@ -48,6 +48,12 @@ DROP SEQUENCE IF EXISTS "core"."seq_syslog";
 CREATE SEQUENCE "core"."seq_syslog";
 
 -- ----------------------------
+-- Sequence structure for seq_upgrade_statements
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "core"."seq_upgrade_statements";
+CREATE SEQUENCE "core"."seq_upgrade_statements";
+
+-- ----------------------------
 -- Sequence structure for seq_users_associations
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "core"."seq_users_associations";
@@ -357,6 +363,27 @@ WITH (OIDS=FALSE)
 ;
 
 -- ----------------------------
+-- Table structure for upgrade_statements
+-- ----------------------------
+DROP TABLE IF EXISTS "core"."upgrade_statements";
+CREATE TABLE "core"."upgrade_statements" (
+"upgrade_statement_id" int4 DEFAULT nextval('"core".seq_upgrade_statements'::regclass) NOT NULL,
+"tag" varchar(20) NOT NULL,
+"service_id" varchar(255) NOT NULL,
+"sequence_no" int2 NOT NULL,
+"script_name" varchar(255) NOT NULL,
+"statement_type" varchar(10) NOT NULL,
+"statement_data_source" varchar(255),
+"statement_body" text,
+"run_status" varchar(255),
+"run_timestamp" timestamp(6),
+"run_message" text
+)
+WITH (OIDS=FALSE)
+
+;
+
+-- ----------------------------
 -- Table structure for user_settings
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."user_settings";
@@ -609,6 +636,17 @@ ALTER TABLE "core"."shares_data" ADD PRIMARY KEY ("share_id", "user_uid");
 -- Primary Key structure for table syslog
 -- ----------------------------
 ALTER TABLE "core"."syslog" ADD PRIMARY KEY ("syslog_id");
+
+-- ----------------------------
+-- Indexes structure for table upgrade_statements
+-- ----------------------------
+CREATE INDEX "upgrade_statements_ak1" ON "core"."upgrade_statements" USING btree ("tag", "service_id", "sequence_no");
+CREATE INDEX "upgrade_statements_ak2" ON "core"."upgrade_statements" USING btree ("tag", "statement_type", "run_status");
+
+-- ----------------------------
+-- Primary Key structure for table upgrade_statements
+-- ----------------------------
+ALTER TABLE "core"."upgrade_statements" ADD PRIMARY KEY ("upgrade_statement_id");
 
 -- ----------------------------
 -- Primary Key structure for table user_settings

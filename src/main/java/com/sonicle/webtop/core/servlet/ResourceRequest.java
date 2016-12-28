@@ -169,7 +169,7 @@ public class ResourceRequest extends HttpServlet {
 				subject = matcher.group(1);
 				path = matcher.group(3);
 				
-				if (!WebTopApp.get(req).getServiceManager().isValidService(subject)) {
+				if (!WebTopApp.get(req).getServiceManager().hasService(subject)) {
 					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 				}
 				targetUrl = new URL("http://fake/client/"+subject+"/"+path);

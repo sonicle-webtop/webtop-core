@@ -43,6 +43,7 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import javax.sql.DataSource;
+import net.sf.qualitycheck.Check;
 import org.slf4j.Logger;
 
 /**
@@ -104,7 +105,7 @@ public class ConnectionManager implements IConnectionProvider {
 		config = new DataSourcesConfig();
 		try {
 			logger.debug("Loading dataSources configuration at [{}]", configResource);
-			URL url = wta.getResource(configResource);
+			URL url = wta.getContextResource(configResource);
 			config.parseConfiguration(url);
 		} catch(Exception ex) {
 			throw new RuntimeException("Unable to load dataSources configuration file", ex);
@@ -165,7 +166,7 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return Concatenated name
 	 */
 	public String poolName(String namespace, String dataSourceName) {
-		return MessageFormat.format("{0}.{1}", namespace, dataSourceName);
+		return namespace + "." + dataSourceName;
 	}
 	
 	/**
@@ -261,9 +262,63 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @throws SQLException 
 	 */
 	public Connection getConnection(String namespace, String dataSourceName, boolean autoCommit) throws SQLException {
-		Connection con = getPool(poolName(namespace, dataSourceName)).getConnection();
+		Check.notNull(namespace);
+		Check.notNull(dataSourceName);
+		String poolName = poolName(namespace, dataSourceName);
+		Connection con = getPool(poolName).getConnection();
 		con.setAutoCommit(autoCommit);
 		return con;
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(String namespace) throws SQLException {
+		return getFallbackConnection(namespace, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(String namespace, boolean autoCommit) throws SQLException {
+		return getFallbackConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(String namespace, String dataSourceName) throws SQLException {
+		return getFallbackConnection(namespace, dataSourceName, true);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(String namespace, String dataSourceName, boolean autoCommit) throws SQLException {
+		Check.notNull(namespace);
+		Check.notNull(dataSourceName);
+		String poolName = poolName(namespace, dataSourceName);
+		if (isRegistered(namespace, dataSourceName)) {
+			return getConnection(namespace, dataSourceName, autoCommit);
+		} else {
+			return getConnection(autoCommit);
+		}
 	}
 	
 	private void addPool(String poolName, HikariConfig config) {
@@ -284,9 +339,13 @@ public class ConnectionManager implements IConnectionProvider {
 	}
 	
 	public boolean isRegistered(String namespace, String dataSourceName) {
+		return isRegistered(poolName(namespace, dataSourceName));
+	}
+	
+	private boolean isRegistered(String poolName) {
 		synchronized(pools) {
 			if(shutdown) throw new RuntimeException("Manager is shutting down");
-			return pools.containsKey(poolName(namespace, dataSourceName));
+			return pools.containsKey(poolName);
 		}
 	}
 	

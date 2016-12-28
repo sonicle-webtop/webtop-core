@@ -33,20 +33,31 @@
  */
 package com.sonicle.webtop.core.versioning;
 
+import java.text.MessageFormat;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
- * @author matteo
+ * @author malbinola
  */
-public class CommentLine extends BaseScriptLine {
-	private static final Pattern PATTERN = Pattern.compile("^--.+");
+public class DataSourceAnnotationLine extends AnnotationLine {
+	private static final Pattern PATTERN = Pattern.compile("^@DataSource\\[(.+)\\]$");
+	private final String targetDataSource;
 	
-	public CommentLine(String text) {
+	public DataSourceAnnotationLine(String text) {
 		super(text);
+		Matcher matcher = PATTERN.matcher(text);
+		if (!matcher.matches()) throw new UnsupportedOperationException(MessageFormat.format("Bad line [{0}]", text));
+		targetDataSource = matcher.group(1);
 	}
 	
 	public static boolean matches(String text) {
-		return PATTERN.matcher(text).matches();
+		return PATTERN.matcher(StringUtils.trim(text)).matches();
+	}
+	
+	public String getTargetDataSource() {
+		return this.targetDataSource;
 	}
 }
