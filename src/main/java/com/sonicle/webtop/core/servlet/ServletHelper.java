@@ -85,6 +85,11 @@ public class ServletHelper {
 	}
 	
 	public static String guessMediaType(String filename, boolean fallback) {
+		String defaultMediaType=fallback?"application/octet-stream":null;
+		return guessMediaType(filename,defaultMediaType);
+	}
+	
+	public static String guessMediaType(String filename, String defaultMediaType) {
 		String ext = FilenameUtils.getExtension(filename);
 		if(!StringUtils.isBlank(ext)) {
 			String mtype = WT.getOverriddenMediaType(ext);
@@ -92,7 +97,7 @@ public class ServletHelper {
 			mtype = ServletUtils.guessMediaType(filename);
 			if(mtype != null) return mtype;
 		}
-		return fallback ? "application/octet-stream" : null;
+		return defaultMediaType;
 	}
 	
 	/*
