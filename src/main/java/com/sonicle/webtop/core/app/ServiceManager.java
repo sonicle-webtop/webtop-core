@@ -1090,7 +1090,12 @@ public class ServiceManager {
 									if (!conCache.containsKey(stmt.getStatementDataSource())) {
 										conCache.put(stmt.getStatementDataSource(), getUpgradeStatementConnection(conMgr, stmt));
 									}
-									boolean ret = executeUpgradeStatement(con, conCache.get(stmt.getStatementDataSource()), stmt, ignoreErrors);
+									boolean ret = executeUpgradeStatement(conCache.get(stmt.getStatementDataSource()), stmt, ignoreErrors);
+									try {
+										upgdao.update(con, stmt);
+									} catch(DAOException ex) {
+										throw new WTException("Unable to update statement status!", ex);
+									}
 									if(!ret) { // In case of errors...
 										requireAdmin = true;
 										break; // Stops iteration!
@@ -1116,6 +1121,7 @@ public class ServiceManager {
 			requireAdmin = true;
 			logger.error("Error handling upgrade script", t);
 		} finally {
+			DbUtils.closeQuietly(con);
 			return requireAdmin;
 		}
 	}
@@ -1136,8 +1142,49 @@ public class ServiceManager {
 		}
 	}
 	
-	private boolean executeUpgradeStatement(Connection con, Connection statementCon, OUpgradeStatement statement, boolean ignoreErrors) throws Throwable {
+	public boolean executeUpgradeStatement(OUpgradeStatement statement, boolean ignoreErrors) throws WTException {
+		ConnectionManager conMgr = wta.getConnectionManager();
 		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Connection con = null, targetCon = null;
+		
+		try {
+			targetCon = getUpgradeStatementConnection(conMgr, statement);
+			boolean ret = executeUpgradeStatement(targetCon, statement, ignoreErrors);
+			try {
+				con = conMgr.getConnection();
+				upgdao.update(con, statement);
+			} catch(DAOException ex) {
+				throw new Exception("Unable to update statement status!", ex);
+			}
+			return ret;
+			
+		} catch(Throwable t) {
+			throw new WTException(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+			DbUtils.closeQuietly(targetCon);
+		}
+	}
+	
+	public void skipUpgradeStatement(OUpgradeStatement statement) throws WTException {
+		ConnectionManager conMgr = wta.getConnectionManager();
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = conMgr.getConnection();
+			statement.setRunStatus(OUpgradeStatement.RUN_STATUS_SKIPPED);
+			logger.trace("[{}, {}]: {}", statement.getServiceId(), statement.getSequenceNo(), statement.getStatementBody());
+			upgdao.update(con, statement);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException("Unable to update statement status!", ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean executeUpgradeStatement(Connection statementCon, OUpgradeStatement statement, boolean ignoreErrors) throws Throwable {
 		Statement stmt = null;
 		
 		try {
@@ -1162,11 +1209,6 @@ public class ServiceManager {
 			}
 		} finally {
 			StatementUtils.closeQuietly(stmt);
-			try {
-				upgdao.update(con, statement);
-			} catch(DAOException ex1) {
-				throw new Exception("Unable to update statement status!", ex1);
-			}
 		}
 	}
 	

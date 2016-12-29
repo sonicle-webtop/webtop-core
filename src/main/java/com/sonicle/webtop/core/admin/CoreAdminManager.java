@@ -33,14 +33,18 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
+import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
@@ -50,10 +54,19 @@ import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
+import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
+import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -482,5 +495,37 @@ public class CoreAdminManager extends BaseManager {
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
 		}
+	}
+	
+	public List<OUpgradeStatement> listLastUpgradeStatements() throws WTException {
+		UpgradeStatementDAO upgdao = UpgradeStatementDAO.getInstance();
+		Connection con = null;
+		
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			con = WT.getConnection(SERVICE_ID);
+			String upgradeTag = upgdao.selectLastTag(con);
+			return upgdao.selectByTag(con, upgradeTag);
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean executeUpgradeStatement(OUpgradeStatement statement, boolean ignoreErrors) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		
+		ServiceManager srvMgr = wta.getServiceManager();
+		return srvMgr.executeUpgradeStatement(statement, ignoreErrors);
+	}
+	
+	public void skipUpgradeStatement(OUpgradeStatement statement) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		
+		ServiceManager srvMgr = wta.getServiceManager();
+		srvMgr.skipUpgradeStatement(statement);
 	}
 }

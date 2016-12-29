@@ -39,7 +39,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.Domain',
 		'Sonicle.webtop.core.admin.view.DomainSettings',
 		'Sonicle.webtop.core.admin.view.DomainUsers',
-		'Sonicle.webtop.core.admin.view.DomainRoles'
+		'Sonicle.webtop.core.admin.view.DomainRoles',
+		'Sonicle.webtop.core.admin.view.DbUpgrader'
 	],
 	
 	init: function() {
@@ -89,6 +90,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainUsersUI(rec);
 						} else if(type === 'roles') {
 							me.showDomainRolesUI(rec);
+						} else if(type === 'dbupgrader') {
+							me.showDbUpgraderUI(rec);
 						}
 						
 					},
@@ -175,6 +178,19 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.Settings', {
+				mys: me,
+				itemId: itemId,
+				closable: true
+			});
+		});
+	},
+	
+	showDbUpgraderUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				mys: me,
 				itemId: itemId,
 				closable: true

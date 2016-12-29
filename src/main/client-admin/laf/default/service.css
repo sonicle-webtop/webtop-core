@@ -19,5 +19,12 @@
 .wta-icon-role-xs { background-image: url('role_16.png') !important; }
 .wta-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
 .wta-icon-permission-xs { background-image: url('permission_16.png') !important; }
-
+.wta-icon-selectStmt-xs { background-image: url('selectStmt_16.png') !important; }
+.wta-icon-play1Stmt-xs { background-image: url('play1Stmt_16.png') !important; }
+.wta-icon-playStmt-xs { background-image: url('playStmt_16.png') !important; }
+.wta-icon-skipStmt-xs { background-image: url('skipStmt_16.png') !important; }
+.wta-icon-stmtStatus-ok-xs{ background-image: url('stmtStatus-ok_16.png') !important; }
+.wta-icon-stmtStatus-error-xs{ background-image: url('stmtStatus-error_16.png') !important; }
+.wta-icon-stmtStatus-warning-xs{ background-image: url('stmtStatus-warning_16.png') !important; }
+.wta-icon-stmtStatus-skipped-xs{ background-image: url('stmtStatus-skipped_16.png') !important; }
 .wta-gpusers-row-disabled { color: #E60D35; }
