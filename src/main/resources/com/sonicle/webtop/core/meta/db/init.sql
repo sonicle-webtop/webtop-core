@@ -1,4 +1,6 @@
 
+CREATE SCHEMA "core";
+
 -- ----------------------------
 -- Sequence structure for seq_activities
 -- ----------------------------

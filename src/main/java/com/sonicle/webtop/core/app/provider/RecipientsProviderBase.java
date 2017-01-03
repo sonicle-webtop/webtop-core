@@ -58,4 +58,5 @@ public abstract class RecipientsProviderBase {
 	}
 	
 	public abstract List<InternetRecipient> getRecipients(String queryText, int max);
+	public abstract List<InternetRecipient> expandToRecipients(String key);
 }
