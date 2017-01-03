@@ -418,6 +418,9 @@ public class WebTopSession {
 		logger.debug("Instantiated {} services", count);
 		*/
 		
+		//TODO: check autosave and notify
+		//this.nofity(message);
+		
 		initLevel = 2;
 	}
 	
