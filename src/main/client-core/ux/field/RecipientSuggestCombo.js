@@ -58,6 +58,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		limit: 100
 	},
 	
+	escapeDisplayed: true,
 	typeAhead: false,
 	minChars: 2,
 	autoSelect: false,
