@@ -164,6 +164,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	*/
 	
+	//TODO: verificare se servono (getSystemLanguage, getSystemCountry)
 	public static String getSystemLanguage(SettingsManager setm) {
 		return LangUtils.value(setm.getServiceSetting(CoreManifest.ID, SYSTEM_LANGUAGE), "it");
 	}
@@ -173,7 +174,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public static Locale getSystemLocale(SettingsManager setm) {
-		return new Locale(getSystemLanguage(setm), getSystemCountry(setm));
+		return new Locale("it", "IT");
 	}
 	
 	public static String getTomcatManagerUri(SettingsManager setm) {
@@ -205,7 +206,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public String getDefaultLanguageTag() {
-		return getString(DEFAULT_PREFIX + LANGUAGE_TAG, "it_IT");
+		return getString(DEFAULT_PREFIX + LANGUAGE_TAG, "en_EN");
 	}
 	
 	public String getDefaultTimezone() {

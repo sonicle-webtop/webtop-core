@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -1483,25 +1484,25 @@ public class CoreManager extends BaseManager {
 	
 	public List<InternetRecipient> listInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
-		List<InternetRecipient> recipients = null;
 		
 		int remaining = max;
 		for(String soid : sourceIds) {
+			final List<InternetRecipient> recipients;
 			//zero length source id means auto learnt
-			if (soid.length()==0) {
-				List<OServiceStoreEntry> entries=listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
-				recipients=new ArrayList<InternetRecipient>();
+			if (soid.length() == 0) {
+				List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+				recipients = new ArrayList<>();
 				for(OServiceStoreEntry entry: entries) {
-					try {
-						InternetAddress ia=new InternetAddress(entry.getValue());
-						recipients.add(new InternetRecipient("","["+lookupResource(locale, "word.automatic")+"]","",ia.getPersonal(),ia.getAddress()));
-					} catch(AddressException exc) {
-						
+					InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
+					if (ia != null) {
+						recipients.add(new InternetRecipient("", lookupResource(locale, "word.automatic"), "", ia.getPersonal(), ia.getAddress()));
 					}
 				}
+				
 			} else {
 				RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
 				if(provider == null) continue;
+				
 				recipients = provider.getRecipients(queryText, remaining);
 				if(recipients == null) continue;
 			}
@@ -1524,6 +1525,23 @@ public class CoreManager extends BaseManager {
 				}
 			}
 			*/
+		}
+		return items;
+	}
+	
+	public List<InternetRecipient> expandToInternetRecipients(String key) throws WTException {
+		ArrayList<InternetRecipient> items = new ArrayList<>();
+		
+		for(String srcId : listInternetRecipientsSources()) {
+			RecipientsProviderBase provider = getProfileRecipientsProviders().get(srcId);
+			if(provider == null) continue;
+			
+			final List<InternetRecipient> recipients = provider.expandToRecipients(key);
+			if(recipients == null) continue;
+			for (InternetRecipient recipient : recipients) {
+				recipient.setSource(srcId);
+				items.add(recipient);
+			}
 		}
 		return items;
 	}

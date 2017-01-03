@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	alias: ['widget.wtrcptsuggestcombo', 'widget.wtrcptsuggestcombobox'],
 	
 	requires: [
-		'WTA.ux.data.InternetRecipientModel'
+		'WTA.model.InternetRecipient'
 	],
 	plugins: [
 		'soenterkeyplugin',
@@ -70,7 +70,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	hideTrigger: true,
 	valueField: 'description',
 	displayField: 'description',
-	sourceField: 'sourceName',
+	sourceField: 'sourceLabel',
 	
 	initComponent: function() {
 		var me = this;
@@ -83,7 +83,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		var me = this;
 		Ext.apply(me, {
 			store: {
-				model: 'WTA.ux.data.InternetRecipientModel',
+				model: 'WTA.model.InternetRecipient',
 				proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients', {
 					extraParams: {
 						sources: me.getSources(),
