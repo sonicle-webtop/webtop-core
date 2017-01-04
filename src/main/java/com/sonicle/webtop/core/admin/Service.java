@@ -46,7 +46,10 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
+import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -77,12 +80,14 @@ import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -93,6 +98,8 @@ public class Service extends BaseService {
 	private static final Logger logger = WT.getLogger(Service.class);
 	private CoreManager core;
 	private CoreAdminManager coreadm;
+	private final Object lock1 = new Object();
+	private DbUpgraderEnvironment upgradeEnvironment = null;
 	
 	@Override
 	public void initialize() throws Exception {
@@ -107,6 +114,15 @@ public class Service extends BaseService {
 	
 	private WebTopApp getWta() {
 		return ((CorePrivateEnvironment)getEnv()).getApp();
+	}
+	
+	private DbUpgraderEnvironment getDbUpgraderEnvironment() throws WTException {
+		synchronized (lock1) {
+			if (this.upgradeEnvironment == null) {
+				this.upgradeEnvironment = new DbUpgraderEnvironment(coreadm.listLastUpgradeStatements());
+			}
+			return this.upgradeEnvironment;
+		}	
 	}
 	
 	private ExtTreeNode createTreeNode(String id, String type, String text, boolean leaf, String iconClass) {
@@ -546,69 +562,39 @@ public class Service extends BaseService {
 					for(ORunnableUpgradeStatement stmt : upEnv.runnableStmts) {
 						items.add(new JsGridUpgradeRow(stmt));
 					}
-					Integer nextStmtId = upEnv.getStatementId(false);
+					ORunnableUpgradeStatement next = upEnv.nextStatement();
+					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
 					new JsonResult("stmts", items, items.size())
+							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
 							.set("nextStmtId", nextStmtId)
-							.setSelected(nextStmtId)
-							.printTo(out);
-					
-				} else if (crud.equals("play1")) {
-					String stmtBody = ServletUtils.getStringParameter(request, "stmtBody", true);
-					Integer stmtId = ServletUtils.getIntParameter(request, "stmtId", null);
-					
-					// Determine which index to use... that belonging to the passed
-					// id or the current (in sequence) one
-					int index = upEnv.currentIndex;
-					if (stmtId != null) {
-						int indexOfId = upEnv.getIndexById(stmtId);
-						if(index == -1) throw new WTException("Index of statement ID not found [{0}]", stmtId);
-						index = indexOfId;
-					}
-					
-					ORunnableUpgradeStatement stmt = upEnv.runnableStmts.get(index);
-					stmt.setStatementBody(stmtBody);
-					coreadm.executeUpgradeStatement(stmt, false);
-					upEnv.updateExecuted(index, stmt);
-					
-					// Prepare output
-					List<JsGridUpgradeRow> items = new ArrayList<>();
-					items.add(new JsGridUpgradeRow(stmt));
-					Integer nextStmtId = upEnv.getStatementId(true);
-					Integer selectedId = (stmtId != null) ? stmtId : nextStmtId;
-					
-					new JsonResult(items, items.size())
-							.set("pendingCount", upEnv.pendingCount)
-							.set("okCount", upEnv.okCount)
-							.set("errorCount", upEnv.errorCount)
-							.set("warningCount", upEnv.warningCount)
-							.set("skippedCount", upEnv.skippedCount)
-							.set("nextStmtId", nextStmtId)
-							.setSelected(selectedId)
 							.printTo(out);
 					
 				} else if (crud.equals("play")) {
 					String stmtBody = ServletUtils.getStringParameter(request, "stmtBody", true);
+					boolean once = ServletUtils.getBooleanParameter(request, "once", false);
 					ArrayList<ORunnableUpgradeStatement> executed = new ArrayList<>();
 					
-					while (upEnv.currentIndex != Integer.MAX_VALUE) {
-						final ORunnableUpgradeStatement item = upEnv.runnableStmts.get(upEnv.currentIndex);
-						if (executed.isEmpty()) { // Use passed statement body only for the first statement
-							item.setStatementBody(stmtBody);
-						}
+					boolean ret = false;
+					while (true) {
+						ORunnableUpgradeStatement item = upEnv.nextStatement();
+						if (item == null) break;
+						
+						// Use passed statement body only for the first statement
+						if (executed.isEmpty()) item.setStatementBody(stmtBody);
 						if (!executed.isEmpty() && item.getRequireAdmin()) break;
 						
-						boolean ret = coreadm.executeUpgradeStatement(item, item.getIgnoreErrors());
-						upEnv.updateExecuted(upEnv.currentIndex, item);
+						ret = coreadm.executeUpgradeStatement(item, item.getIgnoreErrors());
+						upEnv.updateExecuted(ret, item);
 						
 						executed.add(item);
-						if(!ret) break; // Exits, admin must review execution...
-						upEnv.currentIndex = upEnv.nextIndex();
+						if (!ret) break; // Exits, admin must review execution...
+						if (once) break;
 					}
 					
 					// Prepare output
@@ -616,48 +602,38 @@ public class Service extends BaseService {
 					for(ORunnableUpgradeStatement stmt : executed) {
 						items.add(new JsGridUpgradeRow(stmt));
 					}
-					Integer nextStmtId = upEnv.getStatementId(true);
+					ORunnableUpgradeStatement next = upEnv.nextStatement();
+					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
 					new JsonResult(items, items.size())
+							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
 							.set("nextStmtId", nextStmtId)
-							.setSelected(nextStmtId)
 							.printTo(out);
 					
 				} else if (crud.equals("skip")) {
-					Integer stmtId = ServletUtils.getIntParameter(request, "stmtId", null);
-					
-					// Determine which index to use... that belonging to the passed
-					// id or the current (in sequence) one
-					int index = upEnv.currentIndex;
-					if (stmtId != null) {
-						int indexOfId = upEnv.getIndexById(stmtId);
-						if(index == -1) throw new WTException("Index of statement ID not found [{0}]", stmtId);
-						index = indexOfId;
-					}
-					
-					ORunnableUpgradeStatement stmt = upEnv.runnableStmts.get(index);
+					ORunnableUpgradeStatement stmt = upEnv.nextStatement();
 					coreadm.skipUpgradeStatement(stmt);
-					upEnv.updateExecuted(index, stmt);
+					upEnv.updateExecuted(true, stmt);
 					
 					// Prepare output
 					List<JsGridUpgradeRow> items = new ArrayList<>();
 					items.add(new JsGridUpgradeRow(stmt));
-					Integer nextStmtId = upEnv.getStatementId(true);
-					Integer selectedId = (stmtId != null) ? stmtId : nextStmtId;
+					ORunnableUpgradeStatement next = upEnv.nextStatement();
+					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
 					new JsonResult(items, items.size())
+							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
 							.set("nextStmtId", nextStmtId)
-							.setSelected(selectedId)
 							.printTo(out);
 				}
 			}
@@ -667,138 +643,40 @@ public class Service extends BaseService {
 		}
 	}
 	
-	/*
-	public void processManageDbUpgrades(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Connection con = null;
-		OUpgradeStmt item = null;
-		ServicesManager svcm = null;
-		UpgradeInfo info = null;
-		Integer nextId = null, selectedId = null;
-		
+	public void processSetMaintenanceFlag(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			Boolean value = ServletUtils.getBooleanParameter(request, "value", null);
+			if (value == null) throw new WTException("Invalid value");
 			
-			if (crud.equals(Crud.LIST)) {
-				nextId = getStatementId(false);
-				info = getUpgradeInfo(con);
-				new JsonResult(this.upgradeStatements, this.upgradeStatements.size())
-					.set("info", info).set("next", nextId).setSelected(nextId)
-					.printTo(out);
-				
-			} else if(crud.equals("exec")) {
-				svcm = wta.getServicesManager();
-				String statement = ServletUtils.getStringParameter(request, "statement", true);
-				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				
-				// Determine which index to use... that belonging to the passed
-				// id or the current (in sequence) one
-				int index = this.currentStatementIndex;
-				if(id != null) {
-					int indexOfId = getIndexById(id);
-					if(index == -1) throw new Exception("Merdaaaaaaaaaaa");
-					index = indexOfId;
-				}
-				
-				item = this.upgradeStatements.get(index);
-				item.statement = statement;
-				svcm.executeUpgradeStatement(item, false);
-				this.upgradeStatements.set(index, (ORunnableUpgradeStmt)item);
-				
-				nextId = getStatementId(true);
-				selectedId = (id != null) ? id : nextId;
-				info = getUpgradeInfo(con);
-				new JsonResult(item)
-					.set("info", info).set("next", nextId).setSelected(selectedId)
-					.printTo(out);
-				
-			}  else if(crud.equals("play")) {
-				svcm = wta.getServicesManager();
-				String statement = ServletUtils.getStringParameter(request, "statement", true);
-				
-				ArrayList<ORunnableUpgradeStmt> executed = new ArrayList<ORunnableUpgradeStmt>();
-				boolean ret = false;
-				while(this.currentStatementIndex != Integer.MAX_VALUE) {
-					item = this.upgradeStatements.get(this.currentStatementIndex);
-					if(executed.isEmpty()) item.statement = statement; // Use passed statement only for the first
-					if(!executed.isEmpty() && ((ORunnableUpgradeStmt)item).requireAdmin) break;
-					
-					ret = svcm.executeUpgradeStatement(item, ((ORunnableUpgradeStmt)item).ignoreErrors);
-					this.upgradeStatements.set(this.currentStatementIndex, (ORunnableUpgradeStmt)item);
-					executed.add((ORunnableUpgradeStmt)item);
-					if(!ret) break; // Exits, admin must review execution...
-					this.currentStatementIndex = nextUpgradeStatement();
-				}
-				
-				nextId = getStatementId(true);
-				info = getUpgradeInfo(con);
-				new JsonResult(executed)
-					.set("info", info).set("next", nextId).setSelected(nextId)
-					.printTo(out);
-				
-			} else if(crud.equals("skip")) {
-				svcm = wta.getServicesManager();
-				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				
-				// Determine which index to use... that belonging to the passed
-				// id or the current (in sequence) one
-				int index = this.currentStatementIndex;
-				if(id != null) {
-					int indexOfId = getIndexById(id);
-					if(index == -1) throw new Exception("Ooooooops");
-					index = indexOfId;
-				}
-				
-				item = this.upgradeStatements.get(index);
-				svcm.skipUpgradeStatement(item);
-				this.upgradeStatements.set(index, (ORunnableUpgradeStmt)item);
-				
-				nextId = getStatementId(true);
-				selectedId = (id != null) ? id : nextId;
-				info = getUpgradeInfo(con);
-				new JsonResult(item)
-					.set("info", info).set("next", nextId).setSelected(selectedId)
-					.printTo(out);
-			}
+			coreadm.setMaintenanceMode(value);
 			
-		} catch (Exception ex) {
-			logger.error("Error managing upgrade statements!", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out);
+			new JsonResult().printTo(out);
 			
-		} finally {
-			DbUtils.closeQuietly(con);
+		} catch(Exception ex) {
+			logger.error("Error in SetMaintenanceFlag", ex);
+			new JsonResult(ex).printTo(out);
 		}
-	}
-	*/
-	
-	private final Object lock1 = new Object();
-	private DbUpgraderEnvironment upgradeEnvironment = null;
-	
-	private DbUpgraderEnvironment getDbUpgraderEnvironment() throws WTException {
-		synchronized (lock1) {
-			if (this.upgradeEnvironment == null) {
-				this.upgradeEnvironment = new DbUpgraderEnvironment(coreadm.listLastUpgradeStatements());
-			}
-			return this.upgradeEnvironment;
-		}	
 	}
 	
 	private static class DbUpgraderEnvironment {
-		public int pendingCount = 0;
-		public int okCount = 0;
-		public int errorCount = 0;
-		public int warningCount = 0;
-		public int skippedCount = 0;
-		public int currentIndex = -1;
-		public final ArrayList<ORunnableUpgradeStatement> runnableStmts;
+		public String upgradeTag;
+		public int pendingCount;
+		public int okCount;
+		public int errorCount;
+		public int warningCount;
+		public int skippedCount;
+		public final LinkedList<ORunnableUpgradeStatement> runnableStmts;
+		public Integer index;
 		
 		public DbUpgraderEnvironment(List<OUpgradeStatement> stmts) {
-			this.pendingCount = 0;
-			this.okCount = 0;
-			this.errorCount = 0;
-			this.warningCount = 0;
-			this.skippedCount = 0;
-			this.currentIndex = -1;
-			this.runnableStmts = new ArrayList<>();
+			upgradeTag = null;
+			pendingCount = 0;
+			okCount = 0;
+			errorCount = 0;
+			warningCount = 0;
+			skippedCount = 0;
+			runnableStmts = new LinkedList<>();
+			index = -1;
 			
 			boolean ignoreErrors = false, requireAdmin = false;
 			String sqlComments = "", annComments = "";
@@ -822,7 +700,7 @@ public class Service extends BaseService {
 						if (!org.apache.commons.lang3.StringUtils.isEmpty(comments)) comments += "\n";
 						comments += sqlComments;
 					}
-					runnableStmts.add(new ORunnableUpgradeStatement(stmt, requireAdmin, ignoreErrors, org.apache.commons.lang3.StringUtils.trim(comments)));
+					runnableStmts.add(new ORunnableUpgradeStatement(stmt, requireAdmin, ignoreErrors, StringUtils.trim(comments)));
 					requireAdmin = ignoreErrors = false;
 					sqlComments = annComments = "";
 					
@@ -839,45 +717,46 @@ public class Service extends BaseService {
 					}
 				}
 			}
-			this.currentIndex = nextIndex();
+			if (!runnableStmts.isEmpty()) upgradeTag = runnableStmts.get(0).getTag();
+			index = nextIndex();
 		}
 		
-		public final Integer nextIndex() {
-			int index = Integer.MAX_VALUE;
-			if(this.currentIndex != Integer.MAX_VALUE) {
-				int start = (this.currentIndex < 0) ? 0 : this.currentIndex;
-				ListIterator<ORunnableUpgradeStatement> liter = this.runnableStmts.listIterator(start);
+		public ORunnableUpgradeStatement nextStatement() {
+			return index != null ? runnableStmts.get(index) : null;
+		}
+		
+		private Integer nextIndex() {
+			Integer next = null;
+			if (index != null) {
+				int start = (index < 0) ? 0 : index;
+				ListIterator<ORunnableUpgradeStatement> liter = runnableStmts.listIterator(start);
 				while (liter.hasNext()) {
 					final int ni = liter.nextIndex();
 					final ORunnableUpgradeStatement item = liter.next();
-					if(org.apache.commons.lang3.StringUtils.isEmpty(item.getRunStatus()) || item.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
-						index = ni;
+					if(StringUtils.isEmpty(item.getRunStatus()) || item.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
+						next = ni;
 						break;
 					}
 				}
 			}
-			return index;
+			return next;
 		}
 		
-		public final Integer getStatementId(boolean next) {
-			if (next) this.currentIndex = nextIndex();
-			if ((this.currentIndex == -1) || (this.currentIndex == Integer.MAX_VALUE)) return null;
-			return this.runnableStmts.get(this.currentIndex).getUpgradeStatementId();
-		}
-
-		public final int getIndexById(Integer id) {
-			if (id != null) {
-				for (int i=0; i<this.runnableStmts.size(); i++) {
-					if (this.runnableStmts.get(i).getUpgradeStatementId().equals(id)) return i;
-				}
-			}
-			return -1;
-		}
-		
-		public void updateExecuted(int index, ORunnableUpgradeStatement stmt) {
+		public void updateExecuted(boolean success, ORunnableUpgradeStatement stmt) {
 			runnableStmts.set(index, stmt);
-			
-			//TODO: aggiornare conteggi
+			if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
+				okCount++;
+			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
+				errorCount++;
+			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
+				warningCount++;
+			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
+				skippedCount++;
+			}
+			if (success) {
+				pendingCount--;
+				index = nextIndex();
+			}
 		}
 	}
 }

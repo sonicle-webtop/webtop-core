@@ -1495,7 +1495,7 @@ public class CoreManager extends BaseManager {
 				for(OServiceStoreEntry entry: entries) {
 					InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
 					if (ia != null) {
-						recipients.add(new InternetRecipient("", lookupResource(locale, "word.automatic"), "", ia.getPersonal(), ia.getAddress()));
+						recipients.add(new InternetRecipient("auto", lookupResource(locale, "word.automatic"), "auto", ia.getPersonal(), ia.getAddress()));
 					}
 				}
 				

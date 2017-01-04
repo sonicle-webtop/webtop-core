@@ -154,7 +154,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 							var o = s.getProxy().getReader().rawData;
 							me.nextStmtId = o.nextStmtId;
 							me.updateInfo(o);
-							me.selectStmt(o.selected);
+							me.selectStmt(o.nextStmtId);
 						}
 					}
 				},
@@ -235,18 +235,20 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				pars = {crud: mode};
 		
 		if (mode === 'play1') {
-			Ext.apply(pars, {
-				stmtId: (sel && sel.getId() === me.nextStmtId) ? sel.getId() : null,
+			pars = {
+				crud: 'play',
+				once: true,
 				stmtBody: me.lref('fldstmtbody').getValue()
-			});
+			};
 		} else if (mode === 'play') {
-			Ext.apply(pars, {
+			pars = {
+				crud: 'play',
 				stmtBody: me.lref('fldstmtbody').getValue()
-			});
+			};
 		} else if (mode === 'skip') {
-			Ext.apply(pars, {
-				stmtId: (sel && sel.getId() === me.nextStmtId) ? sel.getId() : null
-			});
+			pars = {
+				crud: 'skip'
+			};
 		} else {
 			Ext.raise('Mode "' + mode + '" not supported');
 		}
@@ -260,32 +262,18 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					me.nextStmtId = o.nextStmtId;
 					me.updateInfo(o);
 					me.updateStmts(o);
-					me.selectStmt(o.selected);
+					me.selectStmt(o.nextStmtId);
+					if ((o.pendingCount === 0) && me.mys.btnMaintenance().pressed) {
+						WT.confirm(me.mys.res('dbUpgrader.confirm.maintenance.disable'), function(bid) {
+							if(bid === 'yes') {
+								me.mys.setMaintenanceFlag(false);
+							}
+						}, me);
+					}	
 				}
 			}
 		});
 	},
-	
-	/*
-	_selectStatement: function(id) {
-		var gp = this.gpStatements;
-		var sm = gp.getSelectionModel();
-		if(id) {
-			var i = gp.getStore().indexOfId(id);
-			sm.selectRow(i, false);
-			gp.getView().focusRow(i);
-		} else {
-			sm.clearSelections();
-			this._h_selectionChange(sm);
-		}
-	},
-	*/
-	
-	
-	
-	
-	
-	
 	
 	getSelectedStmt: function() {
 		var sel = this.lref('gp').getSelection();
@@ -339,6 +327,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					return true;
 				}
 			case 'skip':
+				sel = me.getSelectedStmt();
 				if(sel && (me.isNextStmt(sel) || (me.isBeforeNextStmt(sel) && sel.isStatusError()))) {
 					return false;
 				} else {

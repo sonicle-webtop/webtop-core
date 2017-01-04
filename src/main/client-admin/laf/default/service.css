@@ -3,6 +3,8 @@
 .wta-icon-service-m { background-image: url('service_32.png') !important; }
 .wta-icon-service-l { background-image: url('service_48.png') !important; }
 
+.wta-icon-maintenance-on-xs { background-image: url('maintenance-on_16.png') !important; }
+.wta-icon-maintenance-off-xs { background-image: url('maintenance-off_16.png') !important; }
 .wta-icon-addDomain-xs { background-image: url('domain-add_16.png') !important; }
 .wta-icon-editDomain-xs { background-image: url('domain-edit_16.png') !important; }
 .wta-icon-deleteDomain-xs { background-image: url('domain-delete_16.png') !important; }

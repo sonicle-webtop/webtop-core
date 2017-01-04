@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.admin;
 
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -527,5 +528,12 @@ public class CoreAdminManager extends BaseManager {
 		
 		ServiceManager srvMgr = wta.getServiceManager();
 		srvMgr.skipUpgradeStatement(statement);
+	}
+	
+	public void setMaintenanceMode(boolean active) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		
+		ServiceManager srvMgr = wta.getServiceManager();
+		srvMgr.setMaintenance(CoreManifest.ID, active);
 	}
 }
