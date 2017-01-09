@@ -1091,7 +1091,7 @@ public final class WebTopApp {
 				LdapWebTopConfigBuilder ldapwt = new LdapWebTopConfigBuilder();
 				ldapwt.setHost(opts, authUri.getHost());
 				ldapwt.setPort(opts, authUri.getPort());
-				ldapwt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
+				ldapwt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetName()));
 				ldapwt.setAdminUsername(opts, ad.getAuthUsername());
 				ldapwt.setAdminPassword(opts, getDirPassword(ad));
 				ldapwt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
@@ -1133,7 +1133,7 @@ public final class WebTopApp {
 				LdapNethConfigBuilder ldapnt = new LdapNethConfigBuilder();
 				ldapnt.setHost(opts, authUri.getHost());
 				ldapnt.setPort(opts, authUri.getPort());
-				ldapnt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetDomain()));
+				ldapnt.setBaseDn(opts, LdapConfigBuilder.toDn(ad.getInternetName()));
 				ldapnt.setAdminUsername(opts, ad.getAuthUsername());
 				ldapnt.setAdminPassword(opts, getDirPassword(ad));
 				ldapnt.setConnectionSecurity(opts, ad.getAuthConnSecurity());

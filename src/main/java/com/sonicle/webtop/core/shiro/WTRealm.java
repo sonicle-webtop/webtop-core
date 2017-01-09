@@ -150,16 +150,16 @@ public class WTRealm extends AuthorizingRealm {
 			AuthUser userEntry = directory.authenticate(opts, principal);
 			principal.setDisplayName(userEntry.displayName);
 			
-			WebTopManager.CheckUserResult chk = wtmgr.checkUser(principal.getDomainId(), principal.getUserId());
-			if(autoCreate && !chk.exist) {
-				logger.debug("Creating user [{}]", principal.getSubjectId());
-				synchronized(lock1) {
-					wtmgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry));
+			synchronized (lock1) {
+				WebTopManager.CheckUserResult chk = wtmgr.checkUser(principal.getDomainId(), principal.getUserId());
+				if(autoCreate && !chk.exist) {
+					logger.debug("Creating user [{}]", principal.getSubjectId());
+					wtmgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
+				} else if(!chk.exist) {
+					throw new WTException("User does not exist [{0}]", principal.getSubjectId());
+				} else if(chk.exist && !chk.enabled) {
+					throw new WTException("User is disabled [{0}]", principal.getSubjectId());
 				}
-			} else if(!chk.exist) {
-				throw new WTException("User does not exist [{0}]", principal.getSubjectId());
-			} else if(chk.exist && !chk.enabled) {
-				throw new WTException("User is disabled [{0}]", principal.getSubjectId());
 			}
 			
 			return principal;

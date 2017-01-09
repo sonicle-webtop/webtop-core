@@ -305,7 +305,7 @@ public final class WebTopManager {
 			ue.setLastName(domain.getDescription());
 			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
 			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_ADMINS));
-			addUser(true, ue);
+			addUser(true, ue, null);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -508,11 +508,11 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void addUser(boolean updateDirectory, UserEntity user) throws WTException {
-		addUser(updateDirectory, user, null);
+	public void addUser(boolean updateDirectory, UserEntity user, char[] password) throws WTException {
+		addUser(updateDirectory, user, true, password);
 	}
 	
-	public void addUser(boolean updateDirectory, UserEntity user, char[] password) throws WTException {
+	public void addUser(boolean updateDirectory, UserEntity user, boolean updatePassword, char[] password) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -521,22 +521,24 @@ public final class WebTopManager {
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
 			
+			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_USERS));
+			
 			OUser ouser = null;
 			if(updateDirectory) {
 				AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 				AbstractDirectory authDir = getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
-				if(authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
-					if(!authDir.validateUsername(opts, user.getUserId())) {
+				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
+					if (!authDir.validateUsername(opts, user.getUserId())) {
 						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
 					}
 				}
-				if(authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-					if(password == null) {
+				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+					if (password == null) {
 						password = authDir.generatePassword(opts, domain.getAuthPasswordPolicy());
 					} else {
-						if(domain.getAuthPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
+						if (domain.getAuthPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
 							throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
 						}
 					}
@@ -553,7 +555,7 @@ public final class WebTopManager {
 						logger.debug("Skipped: already exists!");
 					}
 				}
-				if(authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				if(updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					logger.debug("Updating its password");
 					authDir.updateUserPassword(opts, domain.getDomainId(), user.getUserId(), password);
 				}
@@ -1280,23 +1282,27 @@ public final class WebTopManager {
 		uidao.insert(con, oui);
 		
 		logger.debug("Inserting groups associations");
+		HashSet<String> usedGroupUids = new HashSet<>();
 		for(AssignedGroup assiGroup : user.getAssignedGroups()) {
 			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
-			doInsertUserAssociation(con, ouser.getUserUid(), groupUid);
-			
-			/*
-			final OUserAssociation oua = new OUserAssociation();
-			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
-			oua.setUserAssociationId(uadao.getSequence(con).intValue());
-			oua.setUserUid(ouser.getUserUid());
-			oua.setGroupUid(groupUid);
-			uadao.insert(con, oua);
-			*/
+			if (!usedGroupUids.contains(groupUid)) {
+				// Due to built-in assigned groups, collection of assigned
+				// groups can contain duplicates; so skip them.
+				doInsertUserAssociation(con, ouser.getUserUid(), groupUid);
+				usedGroupUids.add(groupUid);
+			}
 		}
 		
 		logger.debug("Inserting roles associations");
+		HashSet<String> usedRoleUids = new HashSet<>();
 		for(AssignedRole assiRole : user.getAssignedRoles()) {
-			doInsertRoleAssociation(con, ouser.getUserUid(), assiRole.getRoleUid());
+			final String roleUid = assiRole.getRoleUid();
+			if (!usedRoleUids.contains(roleUid)) {
+				// Due to built-in assigned roles, collection of assigned
+				// roles can contain duplicates; so skip them.
+				doInsertRoleAssociation(con, ouser.getUserUid(), roleUid);
+				usedRoleUids.add(roleUid);
+			}
 		}
 		
 		// Insert permissions

@@ -54,12 +54,16 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OPecBridgeFetcher;
+import com.sonicle.webtop.core.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
+import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
+import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
@@ -156,7 +160,6 @@ public class Service extends BaseService {
 	
 	public void processLookupDomainRoles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsRoleLkp> items = new ArrayList<>();
-		UserProfile up = getEnv().getProfile();
 		
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
@@ -464,7 +467,11 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
-				coreadm.addUser(JsUser.buildUserEntity(pl.data), pl.data.password.toCharArray());
+				if (!StringUtils.isBlank(pl.data.password)) {
+					coreadm.addUser(JsUser.buildUserEntity(pl.data), true, pl.data.password.toCharArray());
+				} else {
+					coreadm.addUser(JsUser.buildUserEntity(pl.data), false, null);
+				}
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
@@ -549,6 +556,328 @@ public class Service extends BaseService {
 	}
 	
 	
+	
+	
+	public void processManagePecBridgeFetchers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				
+				List<JsGridPecBridgeFetcher> items = new ArrayList<>();
+				for(OPecBridgeFetcher fetcher : coreadm.listPecBridgeFetchers(domainId)) {
+					items.add(new JsGridPecBridgeFetcher(fetcher));
+				}
+				new JsonResult("roles", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				PayloadAsList<JsGridPecBridgeFetcher.List> pl = ServletUtils.getPayloadAsList(request, JsGridPecBridgeFetcher.List.class);
+				JsGridPecBridgeFetcher fetcher = pl.data.get(0);
+				
+				coreadm.deletePecBridgeFetcher(domainId, fetcher.fetcherId);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManagePecBridgeFetchers", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManagePecBridgeRelays(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				
+				List<JsGridPecBridgeRelay> items = new ArrayList<>();
+				for(OPecBridgeRelay relay : coreadm.listPecBridgeRelays(domainId)) {
+					items.add(new JsGridPecBridgeRelay(relay));
+				}
+				new JsonResult("roles", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				PayloadAsList<JsGridPecBridgeRelay.List> pl = ServletUtils.getPayloadAsList(request, JsGridPecBridgeRelay.List.class);
+				JsGridPecBridgeRelay relay = pl.data.get(0);
+				
+				coreadm.deletePecBridgeRelay(domainId, relay.relayId);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManagePecBridgeRelays", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/*
+	public void processManagePecBridgeRelays(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		Connection ccon = null;
+		OPecBridgeRelay item = null;
+		
+		try {
+			ccon = getConfigConnection();
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals("list")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				
+				ArrayList<OPecBridgeRelay> items = PecBridgeRelaysDb.selectByContext(ccon, domain.internetDomain);
+				ArrayList<JsonHashMap> jsm = new ArrayList<JsonHashMap>();
+				for(OPecBridgeRelay obj : items) {
+					jsm.add(createJsRelay(obj));
+				}
+				new JsonResult(jsm, jsm.size()).printTo(out);
+				
+			} else if(crud.equals("read")) {
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				item = PecBridgeRelaysDb.select(ccon, id);
+				new JsonResult(createJsRelay(item)).printTo(out);
+				
+			} else if(crud.equals("create")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String matcher = ServletUtils.getStringParameter(request, "matcher", true);
+				String host = ServletUtils.getStringParameter(request, "host", true);
+				Integer port = ServletUtils.getIntParameter(request, "port", true);
+				String protocol = ServletUtils.getStringParameter(request, "protocol", true);
+				String username = ServletUtils.getStringParameter(request, "username", null);
+				String password = ServletUtils.getStringParameter(request, "password", null);
+				String webtopProfileId = ServletUtils.getStringParameter(request, "webtopProfileId", true);
+				String tokens[] = StringUtils.split(webtopProfileId, "@", 2);
+				
+				if(!validateEmailAddress(matcher)) throw new Exception(lookupResource(env.getUserProfile(), "pecbridge.relay.error.matcher.invalid"));
+				
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				
+				try {
+					con.setAutoCommit(false);
+					int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);
+					if(ret != 1) throw new Exception("User's email not updated");
+					
+					item = new OPecBridgeRelay();
+					item.relayId = PecBridgeRelaysDb.generateId(ccon);
+					item.context = domain.internetDomain;
+					item.matcher = matcher;
+					item.host = host;
+					item.port = port;
+					item.protocol = protocol;
+					item.username = username;
+					item.password = password;
+					item.debug = false;
+					item.webtopProfileId = webtopProfileId;
+					PecBridgeRelaysDb.insert(ccon, item);
+					
+					DbUtils.commitQuietly(con);
+					new JsonResult().printTo(out);
+				
+				} catch(Exception ex1) {
+					DbUtils.rollbackQuietly(con);
+					throw ex1;
+				}
+				
+			} else if(crud.equals("update")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				String matcher = ServletUtils.getStringParameter(request, "matcher", true);
+				String host = ServletUtils.getStringParameter(request, "host", true);
+				Integer port = ServletUtils.getIntParameter(request, "port", true);
+				String protocol = ServletUtils.getStringParameter(request, "protocol", true);
+				String username = ServletUtils.getStringParameter(request, "username", null);
+				String password = ServletUtils.getStringParameter(request, "password", null);
+				String webtopProfileId = ServletUtils.getStringParameter(request, "webtopProfileId", true);
+				String tokens[] = StringUtils.split(webtopProfileId, "@", 2);
+				
+				if(!validateEmailAddress(matcher)) throw new Exception(lookupResource(env.getUserProfile(), "pecbridge.relay.error.matcher.invalid"));
+				
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				
+				try {
+					con.setAutoCommit(false);
+					int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);
+					if(ret != 1) throw new Exception("User's email not updated");
+					
+					item = new OPecBridgeRelay(id);
+					item.matcher = matcher;
+					item.host = host;
+					item.port = port;
+					item.protocol = protocol;
+					item.username = username;
+					item.password = password;
+					item.webtopProfileId = webtopProfileId;
+					PecBridgeRelaysDb.update(ccon, item);
+					
+					DbUtils.commitQuietly(con);
+					new JsonResult().printTo(out);
+				
+				} catch(Exception ex1) {
+					DbUtils.rollbackQuietly(con);
+					throw ex1;
+				}
+				
+			} else if(crud.equals("delete")) {
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				PecBridgeRelaysDb.delete(ccon, id);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(IntegrityConstraintViolationException ex) {
+			new JsonResult(false, lookupResource(env.getUserProfile(), "pecbridge.relay.error.matcher.dup")).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManagePecBridgeRelays!", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		} finally {
+			DbUtils.closeQuietly(ccon);
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processManagePecBridgeFetchers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con = null;
+		Connection ccon = null;
+		OPecBridgeFetcher item = null;
+		
+		try {
+			ccon = getConfigConnection();
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals("list")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				
+				ArrayList<OPecBridgeFetcher> items = PecBridgeFetchersDb.selectByContext(ccon, domain.internetDomain);
+				ArrayList<JsonHashMap> jsm = new ArrayList<JsonHashMap>();
+				for(OPecBridgeFetcher obj : items) {
+					jsm.add(createJsFetcher(obj));
+				}
+				new JsonResult(jsm, jsm.size()).printTo(out);
+				
+			} else if(crud.equals("read")) {
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				item = PecBridgeFetchersDb.select(ccon, id);
+				new JsonResult(createJsFetcher(item)).printTo(out);
+				
+			} else if(crud.equals("create")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				//String forwardAddress = ServletUtils.getStringParameter(request, "forwardAddress", true);
+				Boolean deleteOnForward = ServletUtils.getBooleanParameter(request, "deleteOnForward", false);
+				String host = ServletUtils.getStringParameter(request, "host", true);
+				Integer port = ServletUtils.getIntParameter(request, "port", true);
+				String protocol = ServletUtils.getStringParameter(request, "protocol", true);
+				String username = ServletUtils.getStringParameter(request, "username", null);
+				String password = ServletUtils.getStringParameter(request, "password", null);
+				String webtopProfileId = ServletUtils.getStringParameter(request, "webtopProfileId", true);
+				String tokens[] = StringUtils.split(webtopProfileId, "@", 2);
+				
+				//if(!validateEmailAddress(forwardAddress)) throw new Exception(lookupResource(env.getUserProfile(), "pecbridge.fetcher.error.forward.invalid"));
+				
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				//checkAddressDomain(ccon, domain, forwardAddress);
+				String forwardAddress = tokens[0] + "@" + domain.internetDomain;
+				
+				item = new OPecBridgeFetcher();
+				item.fetcherId = PecBridgeFetchersDb.generateId(ccon);
+				item.context = domain.internetDomain;
+				item.forwardAddress = forwardAddress;
+				item.deleteOnForward = deleteOnForward;
+				item.host = host;
+				item.port = port;
+				item.protocol = protocol;
+				item.username = username;
+				item.password = password;
+				item.webtopProfileId = webtopProfileId;
+				PecBridgeFetchersDb.insert(ccon, item);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("update")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				//String forwardAddress = ServletUtils.getStringParameter(request, "forwardAddress", true);
+				Boolean deleteOnForward = ServletUtils.getBooleanParameter(request, "deleteOnForward", false);
+				String host = ServletUtils.getStringParameter(request, "host", true);
+				Integer port = ServletUtils.getIntParameter(request, "port", true);
+				String protocol = ServletUtils.getStringParameter(request, "protocol", true);
+				String username = ServletUtils.getStringParameter(request, "username", null);
+				String password = ServletUtils.getStringParameter(request, "password", null);
+				String webtopProfileId = ServletUtils.getStringParameter(request, "webtopProfileId", true);
+				String tokens[] = StringUtils.split(webtopProfileId, "@", 2);
+				
+				//if(!validateEmailAddress(forwardAddress)) throw new Exception(lookupResource(env.getUserProfile(), "pecbridge.fetcher.error.forward.invalid"));
+				
+				con = wta.getMainConnection();
+				ODomain domain = DomainsDb.select(con, domainId);
+				if(domain == null) throw new Exception("Domain not found");
+				//checkAddressDomain(ccon, domain, forwardAddress);
+				String forwardAddress = tokens[0] + "@" + domain.internetDomain;
+				
+				item = new OPecBridgeFetcher(id);
+				item.forwardAddress = forwardAddress;
+				item.deleteOnForward = deleteOnForward;
+				item.host = host;
+				item.port = port;
+				item.protocol = protocol;
+				item.username = username;
+				item.password = password;
+				item.webtopProfileId = webtopProfileId;
+				PecBridgeFetchersDb.update(ccon, item);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("delete")) {
+				Integer id = ServletUtils.getIntParameter(request, "id", true);
+				PecBridgeFetchersDb.delete(ccon, id);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(IntegrityConstraintViolationException ex) {
+			new JsonResult(false, lookupResource(env.getUserProfile(), "pecbridge.fetcher.error.forward.dup")).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ManagePecBridgeFetchers!", ex);
+			new JsonResult(false, ex.getMessage()).printTo(out);
+		} finally {
+			DbUtils.closeQuietly(ccon);
+		}
+	}
+	*/
 	
 	
 	public void processManageDbUpgrades(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

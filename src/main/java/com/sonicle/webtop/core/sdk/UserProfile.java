@@ -136,7 +136,7 @@ public final class UserProfile {
 	
 	public String getMailcardId() {
 		AuthenticationDomain ad = principal.getAuthenticationDomain();
-		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getInternetDomain());
+		return MessageFormat.format("{0}@{1}", principal.getUserId(), ad.getInternetName());
 	}
 	
 	public String getSecret() {

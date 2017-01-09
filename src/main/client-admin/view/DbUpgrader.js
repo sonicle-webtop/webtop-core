@@ -116,14 +116,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					disabled: '{!gp.selection}'
 				},
 				grow: true,
-				fieldLabel: me.mys.res('dbUpdater.stmtBody.lbl')
+				fieldLabel: me.mys.res('dbUpgrader.stmtBody.lbl')
 			}, {
 				xtype: 'displayfield',
 				bind: {
 					value: '{gp.selection.runStatus}',
 					disabled: '{!gp.selection}'
 				},
-				fieldLabel: me.mys.res('dbUpdater.runStatus.lbl')
+				fieldLabel: me.mys.res('dbUpgrader.runStatus.lbl')
 			}, {
 				xtype: 'textareafield',
 				bind: {
@@ -132,7 +132,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				},
 				editable: false,
 				grow: true,
-				fieldLabel: me.mys.res('dbUpdater.runMessage.lbl')
+				fieldLabel: me.mys.res('dbUpgrader.runMessage.lbl')
 			}, {
 				xtype: 'textareafield',
 				bind: {
@@ -141,7 +141,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				},
 				editable: false,
 				grow: true,
-				fieldLabel: me.mys.res('dbUpdater.comments.lbl')
+				fieldLabel: me.mys.res('dbUpgrader.comments.lbl')
 			}, {
 				xtype: 'grid',
 				reference: 'gp',
@@ -162,15 +162,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					xtype: 'rownumberer'
 				}, {
 					dataIndex: 'serviceId',
-					header: me.mys.res('dbUpdater.gp.serviceId.lbl'),
+					header: me.mys.res('dbUpgrader.gp.serviceId.lbl'),
 					flex: 2
 				}, {
 					dataIndex: 'sequenceNo',
-					header: me.mys.res('dbUpdater.gp.sequenceNo.lbl'),
+					header: me.mys.res('dbUpgrader.gp.sequenceNo.lbl'),
 					width: 40
 				}, {
 					dataIndex: 'stmtDataSource',
-					header: me.mys.res('dbUpdater.gp.stmtDataSource.lbl'),
+					header: me.mys.res('dbUpgrader.gp.stmtDataSource.lbl'),
 					flex: 2
 				}, {
 					xtype: 'soiconcolumn',
@@ -180,12 +180,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 						return Ext.isEmpty(v) ? '' : ('wta-icon-stmtStatus-' + v.toLowerCase() + '-xs');
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
-					header: me.mys.res('dbUpdater.gp.runStatus.lbl'),
+					header: me.mys.res('dbUpgrader.gp.runStatus.lbl'),
 					minWidth: 120,
 					flex: 1
 				}, {
 					dataIndex: 'stmtBody',
-					header: me.mys.res('dbUpdater.gp.stmtBody.lbl'),
+					header: me.mys.res('dbUpgrader.gp.stmtBody.lbl'),
 					flex: 3
 				}],
 				flex: 1
@@ -215,10 +215,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 	
 	updateInfo: function(o) {
 		var me = this;
-		me.lref('tbipending').setText(me.mys.res('dbUpdater.tbi-pending.lbl') + ': ' + o.pendingCount);
-		me.lref('tbiok').setText(me.mys.res('dbUpdater.tbi-ok.lbl') + ': ' + o.okCount);
-		me.lref('tbiskipped').setText(me.mys.res('dbUpdater.tbi-skipped.lbl') + ': ' + o.skippedCount);
-		me.lref('tbitag').setText(me.mys.res('dbUpdater.tbi-tag.lbl') + ': ' + o.upgradeTag);
+		me.lref('tbipending').setText(me.mys.res('dbUpgrader.tbi-pending.lbl') + ': ' + o.pendingCount);
+		me.lref('tbiok').setText(me.mys.res('dbUpgrader.tbi-ok.lbl') + ': ' + o.okCount);
+		me.lref('tbiskipped').setText(me.mys.res('dbUpgrader.tbi-skipped.lbl') + ': ' + o.skippedCount);
+		me.lref('tbitag').setText(me.mys.res('dbUpgrader.tbi-tag.lbl') + ': ' + o.upgradeTag);
 	},
 	
 	updateStmts: function(o) {

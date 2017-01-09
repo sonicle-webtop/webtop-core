@@ -425,12 +425,13 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addUser: function(passwordPolicy, domainId, userId, firstName, lastName, displayName, opts) {
+	addUser: function(askForPassword, passwordPolicy, domainId, userId, firstName, lastName, displayName, opts) {
 		opts = opts || {};
 		var me = this,
 				vct = WT.createView(me.ID, 'view.User', {
 					viewCfg: {
 						domainId: domainId,
+						askForPassword: askForPassword,
 						passwordPolicy: passwordPolicy
 					}
 				});

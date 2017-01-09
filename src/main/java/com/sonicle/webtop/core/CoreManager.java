@@ -390,6 +390,7 @@ public class CoreManager extends BaseManager {
 		if(RunContext.isSysAdmin()) {
 			ids.add(CoreManifest.ID);
 			ids.add(CoreAdminManifest.ID);
+			ids.add("com.sonicle.webtop.vfs");
 		} else {
 			ServiceManager svcm = wta.getServiceManager();
 			for(String id : svcm.listRegisteredServices()) {

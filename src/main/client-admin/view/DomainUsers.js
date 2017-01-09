@@ -227,7 +227,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				fn = copy ? rec.get('dirFirstName') : null,
 				ln = copy ? rec.get('dirLastName') : null,
 				dn = copy ? rec.get('dirDisplayName') : null;
-		me.mys.addUser(me.passwordPolicy, me.domainId, usi, fn, ln, dn, {
+		me.mys.addUser(!copy, me.passwordPolicy, me.domainId, usi, fn, ln, dn, {
 			callback: function(success) {
 				if(success) {
 					me.lref('gp').getStore().load();

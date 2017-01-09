@@ -521,11 +521,13 @@ public class ServiceManager {
 				BaseController instance = getController(serviceId);
 				IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
 				
+				logger.debug("Initializing profile for service [{}]", serviceId);
 				try {
 					WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 					controller.addProfile(profileId);
 				} catch(Throwable t) {
-					logger.error("Controller: addProfile() throws errors [{}]", t);
+					//TODO: valutare se ritornare un booleano per verifica
+					logger.error("Controller: addProfile() throws errors", t);
 				} finally {
 					WebTopApp.unsetServiceLoggerDC();
 				}
@@ -544,12 +546,13 @@ public class ServiceManager {
 		if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
 			BaseController instance = getController(serviceId);
 			IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
-
+			
+			logger.debug("Cleaning-up profile for service [{}]", serviceId);
 			try {
 				WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
 				controller.removeProfile(profileId, false);
 			} catch(Throwable t) {
-				logger.error("Controller: removeProfile() throws errors [{}]", t);
+				logger.error("Controller: removeProfile() throws errors", t);
 			} finally {
 				WebTopApp.unsetServiceLoggerDC();
 			}

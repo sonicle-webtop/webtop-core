@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	modelName: 'Sonicle.webtop.core.admin.model.User',
 	
 	domainId: null,
+	askForPassword: true,
 	passwordPolicy: false,
 	
 	constructor: function(cfg) {
@@ -213,27 +214,37 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	},
 	
 	onViewLoad: function(s, success) {
-		if(!success) return;
-		var me = this, mo;
-		if(me.isMode(me.MODE_NEW)) {
+		if (!success) return;
+		var me = this,
+				flduserid = me.lref('flduserid'),
+				fldpassword = me.lref('fldpassword'),
+				fldpassword2 = me.lref('fldpassword2'),
+				mo;
+		if (me.isMode(me.MODE_NEW)) {
 			mo = me.getModel();
-			mo.getField('password').constructValidators([{
-				type: 'sopassword',
-				complex: me.passwordPolicy
-			}]);
-			mo.getField('password2').constructValidators([{
-				type: 'soequality',
-				equalField: 'password',
-				fieldLabel: me.mys.res('user.fld-password.lbl')
-			}]);
-			me.lref('flduserid').setDisabled(false);
-			me.lref('fldpassword').setHidden(false);
-			me.lref('fldpassword2').setHidden(false);
-			me.lref('flduserid').focus(true);
+			flduserid.setDisabled(false);
+			if (me.askForPassword) {
+				mo.getField('password').constructValidators([{
+					type: 'sopassword',
+					complex: me.passwordPolicy
+				}]);
+				mo.getField('password2').constructValidators([{
+					type: 'soequality',
+					equalField: 'password',
+					fieldLabel: me.mys.res('user.fld-password.lbl')
+				}]);
+				fldpassword.setHidden(false);
+				fldpassword2.setHidden(false);
+			} else {
+				fldpassword.setHidden(true);
+				fldpassword2.setHidden(true);
+			}	
+			flduserid.focus(true);
+			
 		} else {
-			me.lref('flduserid').setDisabled(true);
-			me.lref('fldpassword').setHidden(true);
-			me.lref('fldpassword2').setHidden(true);
+			flduserid.setDisabled(true);
+			fldpassword.setHidden(true);
+			fldpassword2.setHidden(true);
 		}
 	}
 });

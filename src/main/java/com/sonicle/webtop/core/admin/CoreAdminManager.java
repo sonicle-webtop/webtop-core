@@ -43,6 +43,8 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OPecBridgeFetcher;
+import com.sonicle.webtop.core.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
@@ -56,6 +58,8 @@ import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.PecBridgeFetcherDAO;
+import com.sonicle.webtop.core.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -254,7 +258,7 @@ public class CoreAdminManager extends BaseManager {
 	 * Lists domain real roles (those defined as indipendent role).
 	 * @param domainId The domain ID.
 	 * @return The role list.
-	 * @throws WTException If something go wrong.
+	 * @throws WTException If something goes wrong.
 	 */
 	public List<Role> listRoles(String domainId) throws WTException {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -272,7 +276,7 @@ public class CoreAdminManager extends BaseManager {
 	 * Lists domain users roles (those coming from a user).
 	 * @param domainId The domain ID.
 	 * @return The role list.
-	 * @throws WTException If something go wrong.
+	 * @throws WTException If something goes wrong.
 	 */
 	public List<Role> listUsersRoles(String domainId) throws WTException {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -290,7 +294,7 @@ public class CoreAdminManager extends BaseManager {
 	 * Lists domain groups roles (those coming from a group).
 	 * @param domainId The domain ID.
 	 * @return The role list.
-	 * @throws WTException If something go wrong.
+	 * @throws WTException If something goes wrong.
 	 */
 	public List<Role> listGroupsRoles(String domainId) throws WTException {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -418,14 +422,14 @@ public class CoreAdminManager extends BaseManager {
 	}
 	*/
 	
-	public void addUser(UserEntity user, char[] password) throws WTException {
+	public void addUser(UserEntity user, boolean updatePassord, char[] password) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			wtmgr.addUser(true, user, password);
+			wtmgr.addUser(true, user, updatePassord, password);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
 		}
@@ -495,6 +499,104 @@ public class CoreAdminManager extends BaseManager {
 			return wtmgr.listGroups(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
+		}
+	}
+	
+	
+	
+	/**
+	 * Lists configured PecBridge fetchers for the specified domain.
+	 * @param domainId The domain ID.
+	 * @return The fetcher list.
+	 * @throws WTException If something goes wrong.
+	 */
+	public List<OPecBridgeFetcher> listPecBridgeFetchers(String domainId) throws WTException {
+		PecBridgeFetcherDAO fetdao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			String internetName = WT.getDomainInternetName(domainId);
+			if (internetName == null) throw new WTException();
+			
+			con = WT.getConnection(SERVICE_ID);
+			return fetdao.selectByContext(con, internetName);
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int deletePecBridgeFetcher(String domainId, int fetcherId) throws WTException {
+		PecBridgeFetcherDAO fetdao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			String internetName = WT.getDomainInternetName(domainId);
+			if (internetName == null) throw new WTException();
+			
+			con = WT.getConnection(SERVICE_ID);
+			return fetdao.deleteByIdContext(con, fetcherId, internetName);
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	/**
+	 * Lists configured PecBridge relays for the specified domain.
+	 * @param domainId The domain ID.
+	 * @return The relay list.
+	 * @throws WTException If something goes wrong.
+	 */
+	public List<OPecBridgeRelay> listPecBridgeRelays(String domainId) throws WTException {
+		PecBridgeRelayDAO reldao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			String internetName = WT.getDomainInternetName(domainId);
+			if (internetName == null) throw new WTException();
+			
+			con = WT.getConnection(SERVICE_ID);
+			return reldao.selectByContext(con, internetName);
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int deletePecBridgeRelay(String domainId, int relayId) throws WTException {
+		PecBridgeRelayDAO reldao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		try {
+			String internetName = WT.getDomainInternetName(domainId);
+			if (internetName == null) throw new WTException();
+			
+			con = WT.getConnection(SERVICE_ID);
+			return reldao.deleteByIdContext(con, relayId, internetName);
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
