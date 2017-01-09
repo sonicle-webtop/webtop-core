@@ -70,9 +70,13 @@
 .wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
 .wt-icon-item-enable-xs { background-image: url('item-enable_16.png') !important; }
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
+.wt-icon-item-disabled-xs { background-image: url('item-disabled_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
 .wt-icon-permission-allowed-xs { background-image: url('permission-allowed_16.png') !important; }
 .wt-icon-permission-denied-xs { background-image: url('permission-denied_16.png') !important; }
+.wt-icon-traffic-light-green-xs { background-image: url('traffic-light-green_16.png') !important; }
+.wt-icon-traffic-light-orange-xs { background-image: url('traffic-light-orange_16.png') !important; }
+.wt-icon-traffic-light-red-xs { background-image: url('traffic-light-red_16.png') !important; }
 
 /* Formatting buttons */
 .wt-icon-format-bold-xs { background-image: url('format-bold_16.png') !important; }
