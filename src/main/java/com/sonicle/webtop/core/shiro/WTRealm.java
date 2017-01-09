@@ -125,6 +125,7 @@ public class WTRealm extends AuthorizingRealm {
 				ad = new AuthenticationDomain("*", null, authUri, null, null, null);
 				
 			} else {
+				if (wta.getServiceManager().isInMaintenance(CoreManifest.ID)) throw new WTException("Maintenance is active. Only sys-admin can login.");
 				ODomain domain = null;
 				if(!StringUtils.isBlank(internetDomain)) {
 					List<ODomain> domains = wtmgr.listByInternetDomain(internetDomain);

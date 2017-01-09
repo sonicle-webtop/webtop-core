@@ -249,7 +249,7 @@ class ServiceDescriptor {
 			ServiceVersion fileVersion = null;
 			for(String file: LangUtils.listPackageFiles(getClass(), pkgPath)) {
 				try {
-					if(file.equals("init.sql")) continue;
+					if (StringUtils.startsWithIgnoreCase(file, "init")) continue;
 					fileVersion = SqlUpgradeScript.extractVersion(file);
 					if(fileVersion.compareTo(manifest.getOldVersion()) <= 0) continue; // Skip all version sections below oldVersion (included)
 					if(fileVersion.compareTo(manifest.getVersion()) > 0) continue; // Skip all version sections after manifestVersion

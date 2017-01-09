@@ -44,10 +44,34 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	],
 	
 	init: function() {
-		var me = this;
+		var me = this,
+				maint = WT.getApp().getDescriptor(WT.ID).getMaintenance();
 		
 		me.initActions();
 		me.initCxm();
+		
+		me.setToolbar(Ext.create({
+			xtype: 'toolbar',
+			referenceHolder: true,
+			iconCls: '',
+			items: [{
+				xtype: 'button',
+				reference: 'btnmaintenance',
+				text: me.res(maint ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'),
+				enableToggle: true,
+				pressed: maint,
+				iconCls: maint ? 'wta-icon-maintenance-on-xs' : 'wta-icon-maintenance-off-xs',
+				toggleHandler: function(s,state) {
+					me.setMaintenanceFlag(state);
+				},
+				listeners: {
+					toggle: function(s, pressed) {
+						s.setText(me.res(pressed ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'));
+						s.setIconCls(pressed ? 'wta-icon-maintenance-on-xs' : 'wta-icon-maintenance-off-xs');
+					}
+				}
+			}]
+		}));
 		
 		me.setToolComponent(Ext.create({
 			xtype: 'panel',
@@ -112,6 +136,10 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		}));
 	},
 	
+	btnMaintenance: function() {
+		return this.getToolbar().lookupReference('btnmaintenance');
+	},
+	
 	trAdmin: function() {
 		return this.getToolComponent().lookupReference('tradmin');
 	},
@@ -170,6 +198,24 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	getCurrentDomainNode: function() {
 		var sel = this.trAdmin().getSelection();
 		return sel.length > 0 ? sel[0] : null;
+	},
+	
+	setMaintenanceFlag: function(active) {
+		var me = this;
+		//me.wait();
+		WT.ajaxReq(me.ID, 'SetMaintenanceFlag', {
+			params: {value: active},
+			callback: function(success, o) {
+				//me.unwait();
+				if(success) {
+					me.btnMaintenance().toggle(active);
+					WT.info(me.res(active ? 'btn-maintenance.info.on' : 'btn-maintenance.info.off'));
+				} else {
+					me.btnMaintenance().toggle(!active, true);
+					WT.error(o.message);
+				}
+			}
+		});
 	},
 	
 	showSettingsUI: function(node) {

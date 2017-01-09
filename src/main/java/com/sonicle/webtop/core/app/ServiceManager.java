@@ -197,9 +197,9 @@ public class ServiceManager {
 	
 	private void init() {
 		
-		// Progamatically register the core's manifest
+		// Programmatically register Core's manifest
+		// This call must be the first because it performs main dataSource registration
 		ServiceDescriptor coreDesc = registerService(new CoreManifest());
-		registerService(new CoreAdminManifest());
 		
 		boolean dbInitEnabled = isDbInitEnabled();
 		boolean dbAutoUpgrade = isDbAutoUpgrade();
@@ -221,6 +221,9 @@ public class ServiceManager {
 		if (coreDesc.isUpgraded()) {
 			requireAdmin = requireAdmin | upgradeServiceDb(coreDesc, upgradeTag, dbAutoUpgrade);
 		}
+		
+		// Programmatically register the core admin's manifest
+		registerService(new CoreAdminManifest());
 		
 		// Loads services' manifest files from classpath
 		logger.debug("Starting services discovery...");
