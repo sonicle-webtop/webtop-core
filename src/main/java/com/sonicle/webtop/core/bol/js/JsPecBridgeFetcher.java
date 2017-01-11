@@ -33,31 +33,53 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
-import java.util.ArrayList;
+import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class JsGridPecBridgeRelay {
-	public Integer relayId;
-	public String pecProfile;
-	public String pecAddress;
+public class JsPecBridgeFetcher {
+	public Integer fetcherId;
+	public String domainId;
+	public String userId;
 	public String host;
+	public Short port;
+	public String username;
+	public String password;
+	public String connSecurity;
+	public Boolean keepCopy;
 	
-	public JsGridPecBridgeRelay() {}
+	public JsPecBridgeFetcher() {}
 	
-	public JsGridPecBridgeRelay(OPecBridgeRelay o) {
-		relayId = o.getRelayId();
-		pecProfile = o.getWebtopProfileId();
-		pecAddress = o.getMatcher();
+	public JsPecBridgeFetcher(OPecBridgeFetcher o) {
+		UserProfile.Id pid = new UserProfile.Id(o.getWebtopProfileId());
+		fetcherId = o.getFetcherId();
+		domainId = pid.getDomainId();
+		userId = pid.getUserId();
 		host = o.getHost();
+		port = o.getPort();
+		username = o.getUsername();
+		password = o.getPassword();
+		if (o.getProtocol().equals("IMAPS")) {
+			connSecurity = "SSL";
+		}
+		keepCopy = !o.getDeleteOnForward();
 	}
 	
-	public static class List extends ArrayList<JsGridPecBridgeRelay> {
-		public List() {
-			super();
+	public static OPecBridgeFetcher buildFetcher(JsPecBridgeFetcher js) {
+		OPecBridgeFetcher o = new OPecBridgeFetcher();
+		o.setFetcherId(js.fetcherId);
+		o.setWebtopProfileId(new UserProfile.Id(js.domainId, js.userId).toString());
+		o.setHost(js.host);
+		o.setPort(js.port);
+		o.setUsername(js.username);
+		o.setPassword(js.password);
+		if (js.connSecurity.equals("SSL")) {
+			o.setProtocol("IMAPS");
 		}
+		o.setDeleteOnForward(!js.keepCopy);
+		return o;
 	}
 }

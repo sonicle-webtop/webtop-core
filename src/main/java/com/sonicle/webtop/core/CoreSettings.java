@@ -69,6 +69,20 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [boolean]
+	 * Defines if PECBridge management is enabled
+	 */
+	public static final String CONFIG_PECBRIDGE_MANAGEMENT = "config.pecbridge.management";
+	
+	/**
+	 * [domain+system]
+	 * [boolean]
+	 * Defines if Fetchmail management is enabled
+	 */
+	public static final String CONFIG_FETCHMAIL_MANAGEMENT = "config.fetchmail.management";
+	
+	/**
+	 * [domain+system]
 	 * [string]
 	 * Defines Dropbox API credentials
 	 */

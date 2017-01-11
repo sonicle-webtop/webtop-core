@@ -45,4 +45,5 @@ public class CoreAdminLocale {
 	public static final String TREE_ADMIN_DOMAIN_GROUPS = "tree.admin.domain.groups";
 	public static final String TREE_ADMIN_DOMAIN_USERS = "tree.admin.domain.users";
 	public static final String TREE_ADMIN_DOMAIN_ROLES = "tree.admin.domain.roles";
+	public static final String TREE_ADMIN_DOMAIN_PECBRIDGE = "tree.admin.domain.pecbridge";
 }

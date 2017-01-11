@@ -51,7 +51,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 	fieldTitle: 'domainId',
 	modelName: 'Sonicle.webtop.core.admin.model.Domain',
 	
-	domainId: null,
 	passwordPolicy: false,
 	
 	constructor: function(cfg) {

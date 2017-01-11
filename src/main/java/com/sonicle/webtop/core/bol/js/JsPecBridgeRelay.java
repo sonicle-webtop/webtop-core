@@ -34,30 +34,52 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
-import java.util.ArrayList;
+import com.sonicle.webtop.core.sdk.UserProfile;
 
 /**
  *
  * @author malbinola
  */
-public class JsGridPecBridgeRelay {
+public class JsPecBridgeRelay {
 	public Integer relayId;
-	public String pecProfile;
+	public String domainId;
+	public String userId;
 	public String pecAddress;
 	public String host;
+	public Short port;
+	public String username;
+	public String password;
+	public String connSecurity;
 	
-	public JsGridPecBridgeRelay() {}
+	public JsPecBridgeRelay() {}
 	
-	public JsGridPecBridgeRelay(OPecBridgeRelay o) {
+	public JsPecBridgeRelay(OPecBridgeRelay o) {
+		UserProfile.Id pid = new UserProfile.Id(o.getWebtopProfileId());
 		relayId = o.getRelayId();
-		pecProfile = o.getWebtopProfileId();
+		domainId = pid.getDomainId();
+		userId = pid.getUserId();
 		pecAddress = o.getMatcher();
 		host = o.getHost();
+		port = o.getPort();
+		username = o.getUsername();
+		password = o.getPassword();
+		if (o.getProtocol().equals("IMAPS")) {
+			connSecurity = "SSL";
+		}
 	}
 	
-	public static class List extends ArrayList<JsGridPecBridgeRelay> {
-		public List() {
-			super();
+	public static OPecBridgeRelay buildRelay(JsPecBridgeRelay js) {
+		OPecBridgeRelay o = new OPecBridgeRelay();
+		o.setRelayId(js.relayId);
+		o.setWebtopProfileId(new UserProfile.Id(js.domainId, js.userId).toString());
+		o.setMatcher(js.pecAddress);
+		o.setHost(js.host);
+		o.setPort(js.port);
+		o.setUsername(js.username);
+		o.setPassword(js.password);
+		if (js.connSecurity.equals("SSL")) {
+			o.setProtocol("IMAPS");
 		}
+		return o;
 	}
 }

@@ -389,6 +389,7 @@ public class Service extends BaseService {
 		
 		try {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean fullId = ServletUtils.getBooleanParameter(request, "fullId", false);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
 			
 			List<OUser> users;
@@ -405,7 +406,8 @@ public class Service extends BaseService {
 			
 			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			for(OUser user : users) {
-				items.add(new JsSimple(user.getUserId(), JsSimple.description(user.getDisplayName(), user.getUserId())));
+				final String id = fullId ? new UserProfile.Id(user.getDomainId(), user.getUserId()).toString() : user.getUserId();
+				items.add(new JsSimple(id, JsSimple.description(user.getDisplayName(), user.getUserId())));
 			}
 			
 			new JsonResult("users", items, items.size()).printTo(out);
