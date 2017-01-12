@@ -40,6 +40,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainSettings',
 		'Sonicle.webtop.core.admin.view.DomainUsers',
 		'Sonicle.webtop.core.admin.view.DomainRoles',
+		'Sonicle.webtop.core.admin.view.PecBridge',
+		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
 		'Sonicle.webtop.core.admin.view.DbUpgrader'
 	],
 	
@@ -103,21 +105,22 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				listeners: {
 					itemclick: function(s, rec, itm, i, e) {
 						var type = rec.get('_type'), domainId;
-						if(type === 'settings') {
+						if (type === 'settings') {
 							domainId = rec.get('_domainId');
-							if(domainId) {
+							if (domainId) {
 								me.showDomainSettingsUI(rec);
 							} else {
 								me.showSettingsUI(rec);
 							}
-						} else if(type === 'users') {
+						} else if (type === 'users') {
 							me.showDomainUsersUI(rec);
-						} else if(type === 'roles') {
+						} else if (type === 'roles') {
 							me.showDomainRolesUI(rec);
-						} else if(type === 'dbupgrader') {
+						} else if (type === 'pecbridge') {
+							me.showPecBridgeUI(rec);
+						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
 						}
-						
 					},
 					itemcontextmenu: function(s, rec, itm, i, e) {
 						var type = rec.get('_type');
@@ -281,6 +284,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainRoles', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showPecBridgeUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.PecBridge', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
@@ -515,6 +532,75 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
+		});
+	},
+	
+	addPecBridgeFetcher: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.PecBridgeFetcher');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId,
+					keepCopy: false
+				}
+			});
+		});
+	},
+	
+	editPecBridgeFetcher: function(fetcherId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.PecBridgeFetcher');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					fetcherId: fetcherId
+				}
+			});
+		});
+	},
+	
+	addPecBridgeRelay: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.PecBridgeRelay');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId
+				}
+			});
+		});
+	},
+	
+	editPecBridgeRelay: function(relayId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.PecBridgeRelay');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					relayId: relayId
+				}
+			});
 		});
 	},
 	

@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.bol.OPecBridgeFetcher;
+import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import java.util.ArrayList;
 
 /**
@@ -42,21 +42,17 @@ import java.util.ArrayList;
  */
 public class JsGridPecBridgeFetcher {
 	public Integer fetcherId;
-	public String context;
+	public String forwardProfile;
 	public String forwardAddress;
 	public String host;
-	public Short port;
-	public String protocol;
 	
 	public JsGridPecBridgeFetcher() {}
 	
 	public JsGridPecBridgeFetcher(OPecBridgeFetcher o) {
 		fetcherId = o.getFetcherId();
-		context = o.getContext();
+		forwardProfile = o.getWebtopProfileId();
 		forwardAddress = o.getForwardAddress();
 		host = o.getHost();
-		port = o.getPort();
-		protocol = o.getProtocol();
 	}
 	
 	public static class List extends ArrayList<JsGridPecBridgeFetcher> {

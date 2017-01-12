@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -471,7 +472,7 @@ public class CoreManager extends BaseManager {
 				if(providers == null) continue;
 				
 				for(RecipientsProviderBase provider : providers) {
-					CompositeId cid = new CompositeId().setTokens(serviceId, provider.getId());
+					final CompositeId cid = new CompositeId().setTokens(serviceId, provider.getId());
 					cacheProfileRecipientsProvider.put(cid.toString(), provider);
 				}
 			}
@@ -1526,18 +1527,23 @@ public class CoreManager extends BaseManager {
 			}
 			*/
 		}
+		
 		return items;
 	}
 	
-	public List<InternetRecipient> expandToInternetRecipients(String key) throws WTException {
+	public List<InternetRecipient> expandToInternetRecipients(String virtualRecipient) throws WTException {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
+		VirtualAddress virtAdd = new VirtualAddress(virtualRecipient);
 		
-		for(String srcId : listInternetRecipientsSources()) {
+		for (String srcId : listInternetRecipientsSources()) {
 			RecipientsProviderBase provider = getProfileRecipientsProviders().get(srcId);
-			if(provider == null) continue;
+			if (provider == null) continue;
 			
-			final List<InternetRecipient> recipients = provider.expandToRecipients(key);
-			if(recipients == null) continue;
+			if (!StringUtils.isBlank(virtAdd.getDomain()) && !StringUtils.startsWith(srcId, virtAdd.getDomain())) {
+				continue;
+			}
+			final List<InternetRecipient> recipients = provider.expandToRecipients(virtAdd.getLocal());
+			if (recipients == null) continue;
 			for (InternetRecipient recipient : recipients) {
 				recipient.setSource(srcId);
 				items.add(recipient);
@@ -1547,7 +1553,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void learnInternetRecipient(String email) {
-		addServiceStoreEntry(SERVICE_ID, "recipients", email.toUpperCase(),email);
+		addServiceStoreEntry(SERVICE_ID, "recipients", email, email);
 	}
 	
 	/*

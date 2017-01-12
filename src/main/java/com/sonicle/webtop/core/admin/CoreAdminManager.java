@@ -43,8 +43,8 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.bol.OPecBridgeFetcher;
-import com.sonicle.webtop.core.bol.OPecBridgeRelay;
+import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
+import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
@@ -58,8 +58,8 @@ import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
-import com.sonicle.webtop.core.dal.PecBridgeFetcherDAO;
-import com.sonicle.webtop.core.dal.PecBridgeRelayDAO;
+import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
+import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -511,7 +511,7 @@ public class CoreAdminManager extends BaseManager {
 	 * @throws WTException If something goes wrong.
 	 */
 	public List<OPecBridgeFetcher> listPecBridgeFetchers(String domainId) throws WTException {
-		PecBridgeFetcherDAO fetdao = PecBridgeFetcherDAO.getInstance();
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -522,7 +522,7 @@ public class CoreAdminManager extends BaseManager {
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
-			return fetdao.selectByContext(con, internetName);
+			return dao.selectByContext(con, internetName);
 		
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -531,8 +531,93 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public OPecBridgeFetcher getPecBridgeFetcher(int fetcherId) throws WTException {
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(SERVICE_ID);
+			OPecBridgeFetcher fetcher = dao.select(con, fetcherId);
+			if (fetcher != null) {
+				UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+				//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+				ensureUserDomain(pid.getDomainId());
+			}
+			return fetcher;
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addPecBridgeFetcher(OPecBridgeFetcher fetcher) throws WTException {
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(pid.getDomainId());
+		
+		try {
+			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+			UserProfile.Data ud = WT.getUserData(pid);
+			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			
+			con = WT.getConnection(SERVICE_ID, false);
+			fetcher.setContext(internetName);
+			fetcher.setForwardAddress(ud.getEmailAddress());
+			fetcher.setFetcherId(dao.getSequence(con).intValue());
+			dao.insert(con, fetcher);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updatePecBridgeFetcher(OPecBridgeFetcher fetcher) throws WTException {
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
+		Connection con = null;
+		
+		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(pid.getDomainId());
+		
+		try {
+			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+			UserProfile.Data ud = WT.getUserData(pid);
+			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			
+			con = WT.getConnection(SERVICE_ID, false);
+			fetcher.setForwardAddress(ud.getEmailAddress());
+			dao.update(con, fetcher);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public int deletePecBridgeFetcher(String domainId, int fetcherId) throws WTException {
-		PecBridgeFetcherDAO fetdao = PecBridgeFetcherDAO.getInstance();
+		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -543,7 +628,7 @@ public class CoreAdminManager extends BaseManager {
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
-			return fetdao.deleteByIdContext(con, fetcherId, internetName);
+			return dao.deleteByIdContext(con, fetcherId, internetName);
 		
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -559,7 +644,7 @@ public class CoreAdminManager extends BaseManager {
 	 * @throws WTException If something goes wrong.
 	 */
 	public List<OPecBridgeRelay> listPecBridgeRelays(String domainId) throws WTException {
-		PecBridgeRelayDAO reldao = PecBridgeRelayDAO.getInstance();
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -570,7 +655,7 @@ public class CoreAdminManager extends BaseManager {
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
-			return reldao.selectByContext(con, internetName);
+			return dao.selectByContext(con, internetName);
 		
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -579,8 +664,99 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public OPecBridgeRelay getPecBridgeRelay(int relayId) throws WTException {
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(SERVICE_ID);
+			OPecBridgeRelay relay = dao.select(con, relayId);
+			if (relay != null) {
+				UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+				//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+				ensureUserDomain(pid.getDomainId());
+			}
+			return relay;
+		
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addPecBridgeRelay(OPecBridgeRelay relay) throws WTException {
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(pid.getDomainId());
+		
+		try {
+			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+			UserProfile.Data ud = WT.getUserData(pid);
+			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			
+			//TODO: aggiornare email del profilo?
+			//int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);
+			//if(ret != 1) throw new Exception("User's email not updated");
+			
+			con = WT.getConnection(SERVICE_ID, false);
+			relay.setContext(internetName);
+			relay.setRelayId(dao.getSequence(con).intValue());
+			dao.insert(con, relay);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updatePecBridgeRelay(OPecBridgeRelay relay) throws WTException {
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
+		Connection con = null;
+		
+		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(pid.getDomainId());
+		
+		try {
+			String internetName = WT.getDomainInternetName(pid.getDomainId());
+			if (internetName == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+			UserProfile.Data ud = WT.getUserData(pid);
+			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
+			
+			//TODO: aggiornare email del profilo?
+			//int ret = WebTopDb.updateUserEmail(con, domainId, tokens[0], matcher);
+			//if(ret != 1) throw new Exception("User's email not updated");
+			
+			con = WT.getConnection(SERVICE_ID, false);
+			dao.update(con, relay);
+			
+			DbUtils.commitQuietly(con);
+		
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} catch(Exception ex) {
+			DbUtils.rollbackQuietly(con);
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public int deletePecBridgeRelay(String domainId, int relayId) throws WTException {
-		PecBridgeRelayDAO reldao = PecBridgeRelayDAO.getInstance();
+		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -591,7 +767,7 @@ public class CoreAdminManager extends BaseManager {
 			if (internetName == null) throw new WTException();
 			
 			con = WT.getConnection(SERVICE_ID);
-			return reldao.deleteByIdContext(con, relayId, internetName);
+			return dao.deleteByIdContext(con, relayId, internetName);
 		
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");

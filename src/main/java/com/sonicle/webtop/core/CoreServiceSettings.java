@@ -49,6 +49,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(PUBLIC_BASE_URL, null);
 	}
 	
+	public Boolean getHasPecBridgeManagement() {
+		return getBoolean(CONFIG_PECBRIDGE_MANAGEMENT, false);
+	}
+	
+	public Boolean getHasFetchmailManagement() {
+		return getBoolean(CONFIG_FETCHMAIL_MANAGEMENT, false);
+	}
+	
 	public String getDropboxAppKey() {
 		return getString(DROPBOX_APP_KEY, null);
 	}
