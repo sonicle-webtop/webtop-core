@@ -1529,8 +1529,6 @@ public class CoreManager extends BaseManager {
 			*/
 		}
 		
-		expandToInternetRecipients("list-84366@com.sonicle.webtop.contacts");
-		
 		return items;
 	}
 	
