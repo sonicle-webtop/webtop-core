@@ -140,10 +140,6 @@ public class CoreManager extends BaseManager {
 		}
 	}
 
-	public boolean hasService(String serviceId) {
-		return wta.getServiceManager().hasService(serviceId);
-	}
-	
 	public ServiceManager getServiceManager() {
 		ensureCallerService(SERVICE_ID, "getServiceManager");
 		return wta.getServiceManager();

@@ -38,11 +38,33 @@ package com.sonicle.webtop.core.bol.model;
  * @author malbinola
  */
 public class InternetRecipient {
+	
+	public static class RecipientType {
+		String type;
+		
+		RecipientType(String t) {
+			this.type=t;
+		}
+		
+		public String getType() {
+			return type;
+		}
+		
+		public String toString() {
+			return type;
+		}
+	};
+	
+	public static final RecipientType TO=new RecipientType("to");
+	public static final RecipientType CC=new RecipientType("cc");
+	public static final RecipientType BCC=new RecipientType("bcc");
+	
 	private String source;
 	private String sourceName;
 	private String type;
 	private String personal;
 	private String address;
+	private RecipientType recipientType=TO;
 	
 	public InternetRecipient() {}
 	
@@ -54,6 +76,15 @@ public class InternetRecipient {
 		this.address = address;
 	}
 
+	public InternetRecipient(String source, String sourceName, String type, String personal, String address, RecipientType rt) {
+		this.source = source;
+		this.sourceName = sourceName;
+		this.type = type;
+		this.personal = personal;
+		this.address = address;
+		this.recipientType = rt;
+	}
+	
 	public String getSource() {
 		return source;
 	}
@@ -76,6 +107,14 @@ public class InternetRecipient {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	public RecipientType getRecipientType() {
+		return recipientType;
+	}
+	
+	public void setRecipientType(RecipientType rt) {
+		this.recipientType=rt;
 	}
 
 	public String getPersonal() {

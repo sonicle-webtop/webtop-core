@@ -476,6 +476,9 @@ public class WebTopSession {
 		logger.debug("Instantiated {} public services", publicCount);
 	}
 	
+	public boolean isServiceAllowed(String serviceId) {
+		return allowedServices.contains(serviceId);
+	}
 	
 	private void cacheServiceManager(String serviceId, BaseManager manager) {
 		synchronized(managers) {
