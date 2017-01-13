@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -896,6 +897,21 @@ public class Service extends BaseService {
 		}
 	}
 		
+	public void processListInternetRecipientsSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			List<String> srcids=coreMgr.listInternetRecipientsSources();
+			ArrayList<JsSimple> srcs=new ArrayList<>();
+			for(String srcid: srcids) {
+				RecipientsProviderBase provider = coreMgr.getProfileRecipientsProvider(srcid);
+				srcs.add(new JsSimple(srcid,provider.getDescription()));
+			}
+			new JsonResult("sources", srcs, srcs.size()).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ListInternetRecipientsSource", ex);
+			new JsonResult(false, "Error in ListInternetRecipientsSources").printTo(out);
+		}
+	}
+	
 	public void processLookupInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<InternetRecipient> items = null;
 		
@@ -903,6 +919,7 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			int limit = ServletUtils.getIntParameter(request, "limit", 100);
+			if (limit==0) limit=Integer.MAX_VALUE;
 			
 			if(sources.isEmpty()) {
 				items = coreMgr.listInternetRecipients(query, limit);

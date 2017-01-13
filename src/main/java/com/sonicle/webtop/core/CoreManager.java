@@ -1469,6 +1469,10 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public RecipientsProviderBase getProfileRecipientsProvider(String srouceId) {
+		return getProfileRecipientsProviders().get(srouceId);
+	}
+	
 	public List<String> listInternetRecipientsSources() throws WTException {
 		return new ArrayList<>(getProfileRecipientsProviders().keySet());
 	}
