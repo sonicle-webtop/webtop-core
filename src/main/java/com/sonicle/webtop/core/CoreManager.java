@@ -140,11 +140,6 @@ public class CoreManager extends BaseManager {
 		}
 	}
 
-	
-	
-	
-	
-	
 	public ServiceManager getServiceManager() {
 		ensureCallerService(SERVICE_ID, "getServiceManager");
 		return wta.getServiceManager();
@@ -1472,6 +1467,10 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public RecipientsProviderBase getProfileRecipientsProvider(String srouceId) {
+		return getProfileRecipientsProviders().get(srouceId);
 	}
 	
 	public List<String> listInternetRecipientsSources() throws WTException {

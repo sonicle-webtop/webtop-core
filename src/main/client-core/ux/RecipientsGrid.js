@@ -301,9 +301,11 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
     
     clearAutosaveDirty: function() {
         this.autosaveRcbValue=this.rcb.getValue();
-    } 
+    },
 
-	
+	clear: function() {
+		this.getStore().removeAll();
+	}
 	
 /*	setValue: function(v) {
 		console.log("RecipientsGrid: setValue v="+v);

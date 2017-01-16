@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -359,6 +360,7 @@ public class Service extends BaseService {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			boolean users = ServletUtils.getBooleanParameter(request, "users", true);
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", true);
 			
 			if(wildcard) items.add(JsRoleLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			if(users) {
@@ -371,8 +373,10 @@ public class Service extends BaseService {
 					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_GROUP));
 				}
 			}
-			for(Role role : coreMgr.listRoles()) {
-				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
+			if (roles) {
+				for(Role role : coreMgr.listRoles()) {
+					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
+				}
 			}
 			
 			new JsonResult("roles", items, items.size()).printTo(out);
@@ -896,6 +900,21 @@ public class Service extends BaseService {
 		}
 	}
 		
+	public void processListInternetRecipientsSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			List<String> srcids=coreMgr.listInternetRecipientsSources();
+			ArrayList<JsSimple> srcs=new ArrayList<>();
+			for(String srcid: srcids) {
+				RecipientsProviderBase provider = coreMgr.getProfileRecipientsProvider(srcid);
+				srcs.add(new JsSimple(srcid,provider.getDescription()));
+			}
+			new JsonResult("sources", srcs, srcs.size()).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in ListInternetRecipientsSource", ex);
+			new JsonResult(false, "Error in ListInternetRecipientsSources").printTo(out);
+		}
+	}
+	
 	public void processLookupInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<InternetRecipient> items = null;
 		
@@ -903,6 +922,7 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			int limit = ServletUtils.getIntParameter(request, "limit", 100);
+			if (limit==0) limit=Integer.MAX_VALUE;
 			
 			if(sources.isEmpty()) {
 				items = coreMgr.listInternetRecipients(query, limit);
