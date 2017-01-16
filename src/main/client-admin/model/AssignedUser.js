@@ -31,44 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.User', {
+Ext.define('Sonicle.webtop.core.admin.model.AssignedUser', {
 	extend: 'WTA.ux.data.BaseModel',
-	requires: [
-		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.Equality',
-		'Sonicle.data.validator.Username',
-		'Sonicle.data.validator.Password',
-		'Sonicle.webtop.core.admin.model.AssignedGroup',
-		'Sonicle.webtop.core.admin.model.AssignedRole',
-		'Sonicle.webtop.core.admin.model.AssignedService',
-		'Sonicle.webtop.core.admin.model.RolePermission'
-	],
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageUser', 'data', {
-		writer: {
-			type: 'sojson',
-			writeAssociations: true
-		}
-	}),
 	
-	identifier: 'negativestring',
-	idProperty: 'profileId',
+	identifier: 'negative',
+	idProperty: 'associationId',
 	fields: [
-		WTF.field('profileId', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('userId', 'string', false, {
-			validators: ['sousername']
-		}),
-		WTF.field('enabled', 'boolean', true),
-		WTF.field('password', 'string', true),
-		WTF.field('password2', 'string', true),
-		WTF.field('firstName', 'string', false),
-		WTF.field('lastName', 'string', false),
-		WTF.field('displayName', 'string', false)
-	],
-	hasMany: [
-		WTF.hasMany('assignedGroups', 'Sonicle.webtop.core.admin.model.AssignedGroup'),
-		WTF.hasMany('assignedRoles', 'Sonicle.webtop.core.admin.model.AssignedRole'),
-		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
-		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
+		WTF.fkField('string'),
+		WTF.field('associationId', 'int', false),
+		WTF.field('userId', 'string', false)
 	]
 });

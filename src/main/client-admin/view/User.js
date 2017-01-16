@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	
 	dockableConfig: {
 		title: '{user.tit}',
-		iconCls: 'wta-icon-user-xs',
+		iconCls: 'wtadm-icon-user-xs',
 		width: 650,
 		height: 500
 	},
@@ -138,9 +138,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				flex: 1,
 				activeTab: 0,
 				items: [{
-					xtype: 'wtagroupgrid',
+					xtype: 'wtadmgroupgrid',
 					title: me.mys.res('user.assignedGroups.tit'),
-					iconCls: 'wta-icon-groups-xs',
+					iconCls: 'wtadm-icon-groups-xs',
 					bind: {
 						store: '{record.assignedGroups}'
 					},
@@ -155,9 +155,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 						}
 					}
 				}, {
-					xtype: 'wtarolegrid',
+					xtype: 'wtadmrolegrid',
 					title: me.mys.res('user.assignedRoles.tit'),
-					iconCls: 'wta-icon-roles-xs',
+					iconCls: 'wtadm-icon-roles-xs',
 					bind: {
 						store: '{record.assignedRoles}'
 					},
@@ -172,9 +172,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 						}
 					}
 				}, {
-					xtype: 'wtaroleservicegrid',
+					xtype: 'wtadmroleservicegrid',
 					title: me.mys.res('user.assignedServices.tit'),
-					iconCls: 'wta-icon-service-module-xs',
+					iconCls: 'wtadm-icon-service-module-xs',
 					bind: {
 						store: '{record.assignedServices}'
 					},
@@ -188,9 +188,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 						}
 					}
 				}, {
-					xtype: 'wtarolepermissiongrid',
+					xtype: 'wtadmrolepermissiongrid',
 					title: me.mys.res('user.permissions.tit'),
-					iconCls: 'wta-icon-permission-xs',
+					iconCls: 'wtadm-icon-permission-xs',
 					bind: {
 						store: '{record.permissions}'
 					},

@@ -60,12 +60,15 @@ import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
+import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
+import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
+import com.sonicle.webtop.core.bol.js.JsGroup;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsRole;
@@ -75,6 +78,7 @@ import com.sonicle.webtop.core.bol.js.JsUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
+import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
@@ -146,11 +150,11 @@ public class Service extends BaseService {
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
-			boolean uid = ServletUtils.getBooleanParameter(request, "uid", false);
+			boolean uidAsId = ServletUtils.getBooleanParameter(request, "uidAsId", false);
 			
 			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			for(OGroup group : coreadm.listGroups(domainId)) {
-				items.add(new JsSimple(uid ? group.getUserUid() : group.getGroupId(), group.getDisplayName()));
+				items.add(new JsSimple(uidAsId ? group.getUserUid() : group.getGroupId(), group.getDisplayName()));
 			}
 			
 			new JsonResult("groups", items, items.size()).printTo(out);
@@ -158,6 +162,28 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error in LookupDomainGroups", ex);
 			new JsonResult(false, "Unable to lookup groups").printTo(out);
+		}
+	}
+	
+	public void processLookupDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsSimple> items = new ArrayList<>();
+		UserProfile up = getEnv().getProfile();
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
+			boolean uidAsId = ServletUtils.getBooleanParameter(request, "uidAsId", false);
+			
+			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
+			for(OUser user : coreadm.listUsers(domainId, false)) {
+				items.add(new JsSimple(uidAsId ? user.getUserUid() : user.getUserId(), user.getDisplayName()));
+			}
+			
+			new JsonResult("users", items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupDomainUsers", ex);
+			new JsonResult(false, "Unable to lookup users").printTo(out);
 		}
 	}
 	
@@ -199,7 +225,7 @@ public class Service extends BaseService {
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
-		node.setIconClass(domain.getEnabled() ? "wta-icon-domain-xs" : "wta-icon-domain-disabled-xs");
+		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain-xs" : "wtadm-icon-domain-disabled-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		//node.put("_internetDomain", domain.getInternetName());
@@ -229,9 +255,9 @@ public class Service extends BaseService {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
 				if(nodeId.equals("root")) { // Admin roots...
-					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, lookupResource(CoreAdminLocale.TREE_ADMIN_SETTINGS), true, "wta-icon-settings-xs"));
-					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAINS), false, "wta-icon-domains-xs"));
-					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, lookupResource(CoreAdminLocale.TREE_ADMIN_DBUPGRADER), true, "wta-icon-dbUpgrader-xs"));
+					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, lookupResource(CoreAdminLocale.TREE_ADMIN_SETTINGS), true, "wtadm-icon-settings-xs"));
+					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAINS), false, "wtadm-icon-domains-xs"));
+					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, lookupResource(CoreAdminLocale.TREE_ADMIN_DBUPGRADER), true, "wtadm-icon-dbUpgrader-xs"));
 				} else {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
 					if(cid.getToken(0).equals("domains")) {
@@ -243,14 +269,14 @@ public class Service extends BaseService {
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wta-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wta-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wta-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wta-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wtadm-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wtadm-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wtadm-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wtadm-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
 							CoreServiceSettings css = WT.getCoreServiceSettings(domainId);
 							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_PECBRIDGE), "wta-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_PECBRIDGE), "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 							
 						} else { // Available webtop domains
@@ -424,6 +450,62 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processManageDomainGroups(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				
+				List<JsGridDomainGroup> items = new ArrayList<>();
+				for(OGroup group : coreadm.listGroups(domainId)) {
+					items.add(new JsGridDomainGroup(group));
+				}
+				new JsonResult("groups", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
+				
+				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
+				coreadm.deleteGroup(pid);
+				
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomainGroups", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageGroup(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				
+				UserProfile.Id pid = new UserProfile.Id(id);
+				GroupEntity group = coreadm.getGroup(pid);
+				new JsonResult(new JsGroup(group)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsGroup> pl = ServletUtils.getPayload(request, JsGroup.class);
+				coreadm.addGroup(JsGroup.buildGroupEntity(pl.data));
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsGroup> pl = ServletUtils.getPayload(request, JsGroup.class);
+				coreadm.updateGroup(JsGroup.buildGroupEntity(pl.data));
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageGroup", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
@@ -461,7 +543,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processManageUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processManageUser(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);

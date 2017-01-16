@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.admin.ux.GroupGrid', {
 	extend: 'Ext.grid.Panel',
-	alias: 'widget.wtagroupgrid',
+	alias: 'widget.wtadmgroupgrid',
 	requires: [
 		'Sonicle.picker.List',
 		'WTA.ux.PickerWindow',
@@ -64,7 +64,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.GroupGrid', {
 		if(!me.viewConfig) {
 			me.viewConfig = {
 				deferEmptyText: false,
-				emptyText: WT.res(WT.ID + '.admin', 'wtagroupgrid.emp')
+				emptyText: WT.res(WT.ID + '.admin', 'wtadmgroupgrid.emp')
 			};
 		}
 		
@@ -111,7 +111,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.GroupGrid', {
 		var me = this;
 		return Ext.create({
 			xtype: 'wtpickerwindow',
-			title: WT.res(WT.ID + '.admin', 'wtagroupgrid.picker.tit'),
+			title: WT.res(WT.ID + '.admin', 'wtadmgroupgrid.picker.tit'),
 			height: 350,
 			items: [{
 				xtype: 'solistpicker',
@@ -120,7 +120,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.GroupGrid', {
 				displayField: 'label',
 				searchField: 'label',
 				emptyText: WT.res('grid.emptyText'),
-				searchText: WT.res(WT.ID + '.admin', 'wtagroupgrid.picker.search'),
+				searchText: WT.res(WT.ID + '.admin', 'wtadmgroupgrid.picker.search'),
 				okText: WT.res('act-ok.lbl'),
 				cancelText: WT.res('act-cancel.lbl'),
 				listeners: {

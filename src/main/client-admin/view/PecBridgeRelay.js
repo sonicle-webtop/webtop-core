@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 	
 	dockableConfig: {
 		title: '{pecBridgeRelay.tit}',
-		iconCls: 'wta-icon-pecBridge-xs',
+		iconCls: 'wtadm-icon-pecBridge-xs',
 		width: 400,
 		height: 300
 	},

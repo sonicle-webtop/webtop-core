@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.admin.ux.RoleGrid', {
 	extend: 'Ext.grid.Panel',
-	alias: 'widget.wtarolegrid',
+	alias: 'widget.wtadmrolegrid',
 	requires: [
 		'Sonicle.picker.List',
 		'WTA.ux.PickerWindow',
@@ -63,7 +63,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleGrid', {
 		if(!me.viewConfig) {
 			me.viewConfig = {
 				deferEmptyText: false,
-				emptyText: WT.res(WT.ID + '.admin', 'wtarolegrid.emp')
+				emptyText: WT.res(WT.ID + '.admin', 'wtadmrolegrid.emp')
 			};
 		}
 		
@@ -110,7 +110,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleGrid', {
 		var me = this;
 		return Ext.create({
 			xtype: 'wtpickerwindow',
-			title: WT.res(WT.ID + '.admin', 'wtarolegrid.picker.tit'),
+			title: WT.res(WT.ID + '.admin', 'wtadmrolegrid.picker.tit'),
 			height: 350,
 			items: [{
 				xtype: 'solistpicker',
@@ -119,7 +119,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleGrid', {
 				displayField: 'desc',
 				searchField: 'desc',
 				emptyText: WT.res('grid.emptyText'),
-				searchText: WT.res(WT.ID + '.admin', 'wtarolegrid.picker.search'),
+				searchText: WT.res(WT.ID + '.admin', 'wtadmrolegrid.picker.search'),
 				okText: WT.res('act-ok.lbl'),
 				cancelText: WT.res('act-cancel.lbl'),
 				listeners: {

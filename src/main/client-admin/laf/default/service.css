@@ -1,36 +1,37 @@
-.wta-icon-service-xs { background-image: url('service_16.png') !important; }
-.wta-icon-service-s { background-image: url('service_24.png') !important; }
-.wta-icon-service-m { background-image: url('service_32.png') !important; }
-.wta-icon-service-l { background-image: url('service_48.png') !important; }
+.wtadm-icon-service-xs { background-image: url('service_16.png') !important; }
+.wtadm-icon-service-s { background-image: url('service_24.png') !important; }
+.wtadm-icon-service-m { background-image: url('service_32.png') !important; }
+.wtadm-icon-service-l { background-image: url('service_48.png') !important; }
 
-.wta-icon-maintenance-on-xs { background-image: url('maintenance-on_16.png') !important; }
-.wta-icon-maintenance-off-xs { background-image: url('maintenance-off_16.png') !important; }
-.wta-icon-addDomain-xs { background-image: url('domain-add_16.png') !important; }
-.wta-icon-editDomain-xs { background-image: url('domain-edit_16.png') !important; }
-.wta-icon-deleteDomain-xs { background-image: url('domain-delete_16.png') !important; }
+.wtadm-icon-maintenance-on-xs { background-image: url('maintenance-on_16.png') !important; }
+.wtadm-icon-maintenance-off-xs { background-image: url('maintenance-off_16.png') !important; }
+.wtadm-icon-addDomain-xs { background-image: url('domain-add_16.png') !important; }
+.wtadm-icon-editDomain-xs { background-image: url('domain-edit_16.png') !important; }
+.wtadm-icon-deleteDomain-xs { background-image: url('domain-delete_16.png') !important; }
 
-.wta-icon-settings-xs { background-image: url('settings_16.png') !important; }
-.wta-icon-dbUpgrader-xs { background-image: url('dbUpgrader_16.png') !important; }
-.wta-icon-domains-xs { background-image: url('domains_16.png') !important; }
-.wta-icon-domain-xs { background-image: url('domain_16.png') !important; }
-.wta-icon-domain-disabled-xs { background-image: url('domain-disabled_16.png') !important; }
-.wta-icon-groups-xs { background-image: url('group_16.png') !important; }
-.wta-icon-users-xs { background-image: url('user_16.png') !important; }
-.wta-icon-roles-xs { background-image: url('role_16.png') !important; }
-.wta-icon-user-xs { background-image: url('user_16.png') !important; }
-.wta-icon-role-xs { background-image: url('role_16.png') !important; }
-.wta-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
-.wta-icon-permission-xs { background-image: url('permission_16.png') !important; }
-.wta-icon-virtualDomain-xs { background-image: url('virtualDomain_16.png') !important; }
-.wta-icon-virtualEmail-xs { background-image: url('virtualEmail_16.png') !important; }
-.wta-icon-pecBridge-xs { background-image: url('pecBridge_16.png') !important; }
-.wta-icon-fetchmail-xs { background-image: url('pecBridge_16.png') !important; }
-.wta-icon-selectStmt-xs { background-image: url('fetchmail_16.png') !important; }
-.wta-icon-play1Stmt-xs { background-image: url('play1Stmt_16.png') !important; }
-.wta-icon-playStmt-xs { background-image: url('playStmt_16.png') !important; }
-.wta-icon-skipStmt-xs { background-image: url('skipStmt_16.png') !important; }
-.wta-icon-stmtStatus-ok-xs{ background-image: url('stmtStatus-ok_16.png') !important; }
-.wta-icon-stmtStatus-error-xs{ background-image: url('stmtStatus-error_16.png') !important; }
-.wta-icon-stmtStatus-warning-xs{ background-image: url('stmtStatus-warning_16.png') !important; }
-.wta-icon-stmtStatus-skipped-xs{ background-image: url('stmtStatus-skipped_16.png') !important; }
-.wta-gpusers-row-disabled { color: #E60D35; }
+.wtadm-icon-settings-xs { background-image: url('settings_16.png') !important; }
+.wtadm-icon-dbUpgrader-xs { background-image: url('dbUpgrader_16.png') !important; }
+.wtadm-icon-domains-xs { background-image: url('domains_16.png') !important; }
+.wtadm-icon-domain-xs { background-image: url('domain_16.png') !important; }
+.wtadm-icon-domain-disabled-xs { background-image: url('domain-disabled_16.png') !important; }
+.wtadm-icon-groups-xs { background-image: url('group_16.png') !important; }
+.wtadm-icon-group-xs { background-image: url('group_16.png') !important; }
+.wtadm-icon-users-xs { background-image: url('user_16.png') !important; }
+.wtadm-icon-user-xs { background-image: url('user_16.png') !important; }
+.wtadm-icon-roles-xs { background-image: url('role_16.png') !important; }
+.wtadm-icon-role-xs { background-image: url('role_16.png') !important; }
+.wtadm-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
+.wtadm-icon-permission-xs { background-image: url('permission_16.png') !important; }
+.wtadm-icon-virtualDomain-xs { background-image: url('virtualDomain_16.png') !important; }
+.wtadm-icon-virtualEmail-xs { background-image: url('virtualEmail_16.png') !important; }
+.wtadm-icon-pecBridge-xs { background-image: url('pecBridge_16.png') !important; }
+.wtadm-icon-fetchmail-xs { background-image: url('pecBridge_16.png') !important; }
+.wtadm-icon-selectStmt-xs { background-image: url('fetchmail_16.png') !important; }
+.wtadm-icon-play1Stmt-xs { background-image: url('play1Stmt_16.png') !important; }
+.wtadm-icon-playStmt-xs { background-image: url('playStmt_16.png') !important; }
+.wtadm-icon-skipStmt-xs { background-image: url('skipStmt_16.png') !important; }
+.wtadm-icon-stmtStatus-ok-xs{ background-image: url('stmtStatus-ok_16.png') !important; }
+.wtadm-icon-stmtStatus-error-xs{ background-image: url('stmtStatus-error_16.png') !important; }
+.wtadm-icon-stmtStatus-warning-xs{ background-image: url('stmtStatus-warning_16.png') !important; }
+.wtadm-icon-stmtStatus-skipped-xs{ background-image: url('stmtStatus-skipped_16.png') !important; }
+.wtadm-gpusers-row-disabled { color: #E60D35; }

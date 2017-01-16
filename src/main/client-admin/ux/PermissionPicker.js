@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 	extend: 'Ext.panel.Panel',
-	alias: ['widget.wtapermissionpicker'],
+	alias: ['widget.wtadmpermissionpicker'],
 	requires: [
 		'Sonicle.webtop.core.model.ServiceLkp',
 		'Sonicle.webtop.core.model.ServicePermissionLkp'
@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 					model: 'Sonicle.webtop.core.model.ServiceLkp',
 					proxy: WTF.proxy(WT.ID, 'LookupServices')
 				},
-				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.serviceId.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.serviceId.lbl')
 			}),
 			WTF.localCombo('groupName', 'groupName', {
 				reference: 'fldgroupname',
@@ -135,7 +135,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 					}]
 				},
 				disabled: true,
-				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.groupName.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.groupName.lbl')
 			}),
 			WTF.localCombo('action', 'action', {
 				reference: 'fldaction',
@@ -157,7 +157,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.PermissionPicker', {
 					}]
 				},
 				disabled: true,
-				fieldLabel: WT.res(WT.ID + '.admin', 'wtapermissionpicker.action.lbl')
+				fieldLabel: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.action.lbl')
 			})
 		]);
 	},

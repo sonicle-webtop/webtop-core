@@ -31,15 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.ux.RolePermissionGrid', {
+Ext.define('Sonicle.webtop.core.admin.ux.UserGrid', {
 	extend: 'Ext.grid.Panel',
-	alias: 'widget.wtadmrolepermissiongrid',
+	alias: 'widget.wtadmusergrid',
 	requires: [
-		'Sonicle.webtop.core.admin.ux.PermissionPicker'
+		'Sonicle.picker.List',
+		'WTA.ux.PickerWindow',
+		'Sonicle.grid.column.Lookup',
+		'Sonicle.webtop.core.admin.model.DomainUserLkp'
 	],
+	
+	/**
+	 * @cfg {String} domainId
+	 * The domain ID.
+	 */
 	
 	initComponent: function() {
 		var me = this;
+		
+		me.lookupStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'Sonicle.webtop.core.admin.model.DomainUserLkp',
+			proxy: WTF.proxy(WT.ID + '.admin', 'LookupDomainUsers', 'users', {
+				extraParams: {domainId: me.domainId}
+			})
+		});
 		
 		me.selModel = {
 			type: 'rowmodel'
@@ -48,23 +64,17 @@ Ext.define('Sonicle.webtop.core.admin.ux.RolePermissionGrid', {
 		if(!me.viewConfig) {
 			me.viewConfig = {
 				deferEmptyText: false,
-				emptyText: WT.res(WT.ID + '.admin', 'wtadmrolepermissiongrid.emp')
+				emptyText: WT.res(WT.ID + '.admin', 'wtadmusergrid.emp')
 			};
 		}
 		
 		if(!me.columns) {
-			//me.hideHeaders = false;
+			me.hideHeaders = true;
 			me.columns = [{
-				dataIndex: 'serviceId',
-				header: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.serviceId.lbl'),
-				flex: 1
-			}, {
-				dataIndex: 'groupName',
-				header: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.groupName.lbl'),
-				flex: 1
-			}, {
-				dataIndex: 'action',
-				header: WT.res(WT.ID + '.admin', 'wtadmpermissionpicker.action.lbl'),
+				xtype: 'solookupcolumn',
+				dataIndex: 'userId',
+				displayField: 'label',
+				store: me.lookupStore,
 				flex: 1
 			}];
 		}
@@ -101,10 +111,18 @@ Ext.define('Sonicle.webtop.core.admin.ux.RolePermissionGrid', {
 		var me = this;
 		return Ext.create({
 			xtype: 'wtpickerwindow',
-			title: WT.res(WT.ID + '.admin', 'wtadmrolepermissiongrid.picker.tit'),
-			width: 500,
+			title: WT.res(WT.ID + '.admin', 'wtadmusergrid.picker.tit'),
+			height: 350,
 			items: [{
-				xtype: 'wtadmpermissionpicker',
+				xtype: 'solistpicker',
+				store: me.lookupStore,
+				valueField: 'id',
+				displayField: 'label',
+				searchField: 'label',
+				emptyText: WT.res('grid.emptyText'),
+				searchText: WT.res(WT.ID + '.admin', 'wtadmusergrid.picker.search'),
+				okText: WT.res('act-ok.lbl'),
+				cancelText: WT.res('act-cancel.lbl'),
 				listeners: {
 					cancelclick: function() {
 						if(me.picker) me.picker.close();
@@ -152,10 +170,10 @@ Ext.define('Sonicle.webtop.core.admin.ux.RolePermissionGrid', {
 					rec = me.getSelection()[0];
 			if(rec) me.getStore().remove(rec);
 		},
-		
-		onPickerPick: function(s, serviceId, groupName, action) {
+
+		onPickerPick: function(s, val, rec) {
 			var me = this;
-			me.fireEvent('pick', me, serviceId, groupName, action);
+			me.fireEvent('pick', me, val, rec);
 			me.picker.close();
 			me.picker = null;
 		}

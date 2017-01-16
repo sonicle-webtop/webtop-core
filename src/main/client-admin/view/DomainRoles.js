@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 	
 	dockableConfig: {
 		title: '{domainRoles.tit}',
-		iconCls: 'wta-icon-roles-xs'
+		iconCls: 'wtadm-icon-roles-xs'
 	},
 	
 	constructor: function(cfg) {

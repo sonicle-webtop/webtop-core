@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.Settings',
 		'Sonicle.webtop.core.admin.view.Domain',
 		'Sonicle.webtop.core.admin.view.DomainSettings',
+		'Sonicle.webtop.core.admin.view.DomainGroups',
 		'Sonicle.webtop.core.admin.view.DomainUsers',
 		'Sonicle.webtop.core.admin.view.DomainRoles',
 		'Sonicle.webtop.core.admin.view.PecBridge',
@@ -62,14 +63,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				text: me.res(maint ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'),
 				enableToggle: true,
 				pressed: maint,
-				iconCls: maint ? 'wta-icon-maintenance-on-xs' : 'wta-icon-maintenance-off-xs',
+				iconCls: maint ? 'wtadm-icon-maintenance-on-xs' : 'wtadm-icon-maintenance-off-xs',
 				toggleHandler: function(s,state) {
 					me.setMaintenanceFlag(state);
 				},
 				listeners: {
 					toggle: function(s, pressed) {
 						s.setText(me.res(pressed ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'));
-						s.setIconCls(pressed ? 'wta-icon-maintenance-on-xs' : 'wta-icon-maintenance-off-xs');
+						s.setIconCls(pressed ? 'wtadm-icon-maintenance-on-xs' : 'wtadm-icon-maintenance-off-xs');
 					}
 				}
 			}]
@@ -112,6 +113,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							} else {
 								me.showSettingsUI(rec);
 							}
+						} else if (type === 'groups') {
+							me.showDomainGroupsUI(rec);
 						} else if (type === 'users') {
 							me.showDomainUsersUI(rec);
 						} else if (type === 'roles') {
@@ -253,6 +256,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainSettings', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showDomainGroupsUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainGroups', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
@@ -408,10 +425,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addRole: function(domainId, opts) {
+	addGroup: function(domainId, opts) {
 		opts = opts || {};
 		var me = this,
-				vct = WT.createView(me.ID, 'view.Role');
+				vct = WT.createView(me.ID, 'view.Group', {
+					viewCfg: {
+						domainId: domainId
+					}
+				});
 		
 		vct.getView().on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -425,10 +446,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	editRole: function(roleUid, opts) {
+	editGroup: function(profileId, opts) {
 		opts = opts || {};
 		var me = this,
-				vct = WT.createView(me.ID, 'view.Role');
+				vct = WT.createView(me.ID, 'view.Group', {
+					viewCfg: {
+						domainId: WT.fromPid(profileId).domainId
+					}
+				});
 		
 		vct.getView().on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -436,9 +461,23 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		vct.show(false, function() {
 			vct.getView().begin('edit', {
 				data: {
-					roleUid: roleUid
+					profileId: profileId
 				}
 			});
+		});
+	},
+	
+	deleteGroups: function(profileIds, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomainGroups', {
+			params: {
+				crud: 'delete',
+				profileIds: WTU.arrayAsParam(profileIds)
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
 		});
 	},
 	
@@ -532,6 +571,40 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
+		});
+	},
+	
+	addRole: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Role');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId
+				}
+			});
+		});
+	},
+	
+	editRole: function(roleUid, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.Role');
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('edit', {
+				data: {
+					roleUid: roleUid
+				}
+			});
 		});
 	},
 	

@@ -31,18 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.Settings', {
+Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'Sonicle.menu.StoreMenu',
-		'WTA.ux.grid.Setting',
-		'Sonicle.webtop.core.model.ServiceLkp',
-		'Sonicle.webtop.core.admin.model.SystemSetting'
+		'Sonicle.webtop.core.admin.model.GridDomainGroup'
 	],
 	
+	domainId: null,
+	passwordPolicy: false,
+	authCapPasswordWrite: false,
+	authCapUsersWrite: false,
+	
 	dockableConfig: {
-		title: '{settings.tit}',
-		iconCls: 'wtadm-icon-settings-xs'
+		title: '{domainGroups.tit}',
+		iconCls: 'wtadm-icon-groups-xs'
+	},
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+		
+		if(!cfg.title) {
+			me.setBind({
+				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
+			});
+		}
 	},
 	
 	initComponent: function() {
@@ -51,18 +64,19 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtsettinggrid',
+			xtype: 'grid',
 			reference: 'gp',
 			store: {
 				autoLoad: true,
-				autoSync: true,
-				model: 'Sonicle.webtop.core.admin.model.SystemSetting',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageSystemSettings', null, {
+				model: 'Sonicle.webtop.core.admin.model.GridDomainGroup',
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainGroups', 'groups', {
+					extraParams: {
+						domainId: me.domainId
+					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
 					}
 				}),
-				groupField: 'serviceId',
 				listeners: {
 					remove: function(s, recs) {
 						// Fix for updating selection
@@ -70,35 +84,32 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 					}
 				}
 			},
-			tbar: [{
-					xtype: 'splitbutton',
-					text: me.mys.res('settings.act-add.lbl'),
+			columns: [{
+				xtype: 'rownumberer'	
+			}, {
+				dataIndex: 'groupId',
+				header: me.mys.res('domainGroups.gp.groupId.lbl'),
+				flex: 1
+			}, {
+				dataIndex: 'displayName',
+				header: me.mys.res('domainGroups.gp.displayName.lbl'),
+				flex: 2
+			}],
+			tbar: [
+				me.addAction('add', {
+					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
-					handler: function(s) {
-						s.maybeShowMenu();
-					},
-					menu: {
-						xtype: 'sostoremenu',
-						store: {
-							autoLoad: true,
-							model: 'Sonicle.webtop.core.model.ServiceLkp',
-							proxy: WTF.proxy(WT.ID, 'LookupServices')
-						},
-						textField: 'label',
-						listeners: {
-							click: function(s,itm) {
-								me.addSettingUI(itm.getItemId());
-							}
-						}
+					handler: function() {
+						me.addGroupUI(null);
 					}
-				},
+				}),
 				me.addAction('remove', {
 					text: WT.res('act-remove.lbl'),
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
 					handler: function() {
-						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteSettingUI(rec);
+						var rec = me.getSelectedGroup();
+						if(rec) me.deleteGroupUI(rec);
 					}
 				}),
 				'->',
@@ -110,41 +121,84 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 						me.lref('gp').getStore().load();
 					}
 				})
-			]
+			],
+			listeners: {
+				rowdblclick: function(s, rec) {
+					me.editGroupUI(rec);
+				}
+			}
 		});
 		
 		me.getViewModel().bind({
 			bindTo: '{gp.selection}'
-		}, function(sel) {
-			me.getAction('remove').setDisabled((sel) ? false : true);
+		}, function() {
+			me.updateDisabled('remove');
 		});
 	},
 	
-	addSettingUI: function(serviceId) {
-		var gp = this.lref('gp'),
-				ce = gp.findPlugin('cellediting'),
-				sto = gp.getStore(),
-				indx, rec;
-		
-		indx = sto.findExact('serviceId', serviceId);
-		ce.cancelEdit();
-		rec = sto.createModel({
-			serviceId: serviceId,
-			key: null,
-			value: null
-		});
-		sto.insert(indx, rec);
-		ce.startEdit(rec, gp.keyColumn);
-	},
-	
-	deleteSettingUI: function(rec) {
-		var me = this,
-				sto = me.lref('gp').getStore();
-		
-		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
-				sto.remove(rec);
+	addGroupUI: function(rec) {
+		var me = this;
+		me.mys.addGroup(me.domainId, {
+			callback: function(success) {
+				if(success) {
+					me.lref('gp').getStore().load();
+				}
 			}
-		}, me);
+		});
+	},
+	
+	editGroupUI: function(rec) {
+		var me = this,
+				pid = rec.get('profileId');
+		me.mys.editGroup(pid, {
+			callback: function(success) {
+				if(success) {
+					me.lref('gp').getStore().load();
+				}
+			}
+		});
+	},
+	
+	deleteGroupUI: function(rec) {
+		var me = this;
+		
+		WT.confirm(me.mys.res('domainGroups.confirm.delete'), function(bid) {
+			if(bid === 'yes') {
+				me.mys.deleteGroups([rec.get('profileId')], {
+					callback: function(success) {
+						if(success) {
+							me.lref('gp').getStore().remove(rec);
+						}
+					}
+				});
+			}
+		}, me);	
+	},
+	
+	getSelectedGroup: function() {
+		var sel = this.lref('gp').getSelection();
+		return sel.length === 1 ? sel[0] : null;
+	},
+	
+	updateDisabled: function(action) {
+		var me = this,
+				dis = me.isDisabled(action);
+		me.setActionDisabled(action, dis);
+	},
+	
+	/**
+	 * @private
+	 */
+	isDisabled: function(action) {
+		var me = this, sel;
+		switch(action) {
+			case 'remove':
+				sel = me.getSelectedGroup();
+				if(sel) {
+					return false;
+				} else {
+					return true;
+				}
+		}
 	}
 });

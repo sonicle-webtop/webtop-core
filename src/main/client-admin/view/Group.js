@@ -31,21 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.Role', {
+Ext.define('Sonicle.webtop.core.admin.view.Group', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.form.Spacer',
+		'Sonicle.webtop.core.admin.ux.UserGrid',
+		'Sonicle.webtop.core.admin.ux.RoleGrid',
 		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
 		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
 	],
 	
 	dockableConfig: {
-		title: '{role.tit}',
-		iconCls: 'wtadm-icon-role-xs',
+		title: '{group.tit}',
+		iconCls: 'wtadm-icon-group-xs',
 		width: 650,
-		height: 500
+		height: 400
 	},
-	fieldTitle: 'name',
-	modelName: 'Sonicle.webtop.core.admin.model.Role',
+	fieldTitle: 'groupId',
+	modelName: 'Sonicle.webtop.core.admin.model.Group',
+	
+	domainId: null,
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.callParent([cfg]);
+	},
 	
 	initComponent: function() {
 		var me = this;
@@ -66,23 +76,58 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				},
 				items: [{
 					xtype: 'textfield',
-					reference: 'fldname',
-					bind: '{record.name}',
-					fieldLabel: me.mys.res('role.fld-name.lbl'),
+					reference: 'fldgroupid',
+					bind: '{record.groupId}',
+					disabled: true,
+					fieldLabel: me.mys.res('group.fld-groupId.lbl'),
 					width: 300
 				}, {
-					xtype: 'textareafield',
-					bind: '{record.description}',
-					fieldLabel: me.mys.res('role.fld-description.lbl'),
-					anchor: '100%'
+					xtype: 'textfield',
+					bind: '{record.displayName}',
+					fieldLabel: me.mys.res('group.fld-displayName.lbl'),
+					width: 400
 				}]
 			}, {
 				xtype: 'tabpanel',
 				flex: 1,
 				activeTab: 0,
 				items: [{
+					xtype: 'wtadmusergrid',
+					title: me.mys.res('group.assignedUsers.tit'),
+					iconCls: 'wtadm-icon-users-xs',
+					bind: {
+						store: '{record.assignedUsers}'
+					},
+					domainId: me.domainId,
+					listeners: {
+						pick: function(s, val) {
+							var mo = me.getModel();
+							mo.assignedUsers().add({
+								_fk: mo.getId(),
+								userId: val
+							});
+						}
+					}
+				}, {
+					xtype: 'wtadmrolegrid',
+					title: me.mys.res('group.assignedRoles.tit'),
+					iconCls: 'wtadm-icon-roles-xs',
+					bind: {
+						store: '{record.assignedRoles}'
+					},
+					domainId: me.domainId,
+					listeners: {
+						pick: function(s, val) {
+							var mo = me.getModel();
+							mo.assignedRoles().add({
+								_fk: mo.getId(),
+								roleUid: val
+							});
+						}
+					}
+				}, {
 					xtype: 'wtadmroleservicegrid',
-					title: me.mys.res('role.assignedServices.tit'),
+					title: me.mys.res('group.assignedServices.tit'),
 					iconCls: 'wtadm-icon-service-module-xs',
 					bind: {
 						store: '{record.assignedServices}'
@@ -98,7 +143,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 					}
 				}, {
 					xtype: 'wtadmrolepermissiongrid',
-					title: me.mys.res('role.permissions.tit'),
+					title: me.mys.res('group.permissions.tit'),
 					iconCls: 'wtadm-icon-permission-xs',
 					bind: {
 						store: '{record.permissions}'
@@ -123,8 +168,14 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	},
 	
 	onViewLoad: function(s, success) {
-		if(!success) return;
-		var me = this;
-		me.lref('fldname').focus(true);
+		if (!success) return;
+		var me = this,
+				fldgroupid = me.lref('fldgroupid');
+		if (me.isMode(me.MODE_NEW)) {
+			fldgroupid.setDisabled(false);
+			fldgroupid.focus(true);
+		} else {
+			fldgroupid.setDisabled(true);
+		}
 	}
 });

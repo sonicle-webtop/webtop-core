@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import java.util.ArrayList;
 public class CoreAdminManifest extends ServiceManifest {
 	
 	public static final String ID = "com.sonicle.webtop.core.admin";
-	public static final String XID = "wta";
+	public static final String XID = "wtadm";
 	public static final String JAVA_PACKAGE = "com.sonicle.webtop.core.admin";
 	public static final String JS_PACKAGE = "Sonicle.webtop.core.admin";
 	public static final String VERSION = "5.0.0";

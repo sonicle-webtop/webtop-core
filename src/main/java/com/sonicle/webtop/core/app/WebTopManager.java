@@ -59,6 +59,7 @@ import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.AssignedGroup;
 import com.sonicle.webtop.core.bol.AssignedRole;
+import com.sonicle.webtop.core.bol.AssignedUser;
 import com.sonicle.webtop.core.bol.GroupUid;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
@@ -71,6 +72,7 @@ import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
+import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
@@ -832,6 +834,123 @@ public final class WebTopManager {
 		}
 	}
 	
+	public GroupEntity getGroupEntity(UserProfile.Id pid) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return getGroupEntity(con, pid);
+			
+		} catch(SQLException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private GroupEntity getGroupEntity(Connection con, UserProfile.Id pid) throws WTException {
+		GroupDAO dao = GroupDAO.getInstance();
+		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		
+		try {
+			OGroup ogroup = dao.selectByDomainGroup(con, pid.getDomainId(), pid.getUserId());
+			if(ogroup == null) throw new WTException("Group not found [{0}]", pid.toString());
+			
+			List<AssignedUser> assiUsers = uassdao.viewAssignedByGroup(con, ogroup.getGroupUid());
+			List<AssignedRole> assiRoles = rolassdao.viewAssignedByGroup(con, ogroup.getGroupUid());
+			EntityPermissions perms = extractPermissions(con, ogroup.getGroupUid());
+			
+			GroupEntity group = new GroupEntity(ogroup);
+			group.setAssignedUsers(assiUsers);
+			group.setAssignedRoles(assiRoles);
+			group.setPermissions(perms.others);
+			group.setServicesPermissions(perms.services);
+			
+			return group;
+			
+		} catch(DAOException ex) {
+			throw new WTException(ex, "DB error");
+		}
+	}
+	
+	public void addGroup(GroupEntity group) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(false);
+			
+			ODomain domain = getDomain(group.getDomainId());
+			if(domain == null) throw new WTException("Domain not found [{0}]", group.getDomainId());
+			
+			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), group);
+			
+			DbUtils.commitQuietly(con);
+			
+			// Update cache
+			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), group.getGroupId(), ogroup.getGroupUid()));
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void updateGroup(GroupEntity group) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID, false);
+			
+			doGroupUpdate(con, group);
+			
+			DbUtils.commitQuietly(con);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteGroup(UserProfile.Id pid) throws WTException {
+		GroupDAO udao = GroupDAO.getInstance();
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getConnection(CoreManifest.ID, false);
+			
+			OGroup group = udao.selectByDomainGroup(con, pid.getDomainId(), pid.getUserId());
+			if(group == null) throw new WTException("Group not found [{0}]", pid.toString());
+			
+			logger.debug("Deleting permissions");
+			rpdao.deleteByRole(con, group.getGroupUid());
+			logger.debug("Deleting groups associations");
+			uadao.deleteByGroup(con, group.getGroupUid());
+			logger.debug("Deleting roles associations");
+			rolassdao.deleteByUser(con, group.getGroupUid());
+			logger.debug("Deleting group");
+			udao.deleteByDomainGroup(con, pid.getDomainId(), pid.getUserId());
+			
+			DbUtils.commitQuietly(con);
+			
+			// Update cache
+			removeFromGroupUidCache(pid);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	/**
 	 * Lists domain real roles (those defined as indipendent role).
 	 * @param domainId The domain ID.
@@ -1229,24 +1348,111 @@ public final class WebTopManager {
 		return domain.getInternetName();
 	}
 	
-	
-	
 	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
-		GroupDAO gdao = GroupDAO.getInstance();
+		GroupEntity ge = new GroupEntity();
+		ge.setGroupId(groupId);
+		ge.setDisplayName(displayName);
+		return doGroupInsert(con, domainId, ge);
+	}
+	
+	private OGroup doGroupInsert(Connection con, String domainId, GroupEntity group) throws DAOException, WTException {
+		GroupDAO dao = GroupDAO.getInstance();
 		
-		logger.debug("Inserting group [{}]", groupId);
+		// Insert Group record
+		logger.debug("Inserting group [{}]", group.getGroupId());
 		OGroup ogroup = new OGroup();
 		ogroup.setDomainId(domainId);
-		ogroup.setUserId(groupId);
+		ogroup.setGroupId(group.getGroupId());
 		ogroup.setEnabled(true);
-		ogroup.setUserUid(IdentifierUtils.getUUID());
-		ogroup.setDisplayName(displayName);
+		ogroup.setGroupUid(IdentifierUtils.getUUID());
+		ogroup.setDisplayName(group.getDisplayName());
 		ogroup.setSecret(null);
-		gdao.insert(con, ogroup);
+		dao.insert(con, ogroup);
+		
+		logger.debug("Inserting users associations");
+		HashSet<String> usedUserUids = new HashSet<>();
+		for(AssignedUser assiUser : group.getAssignedUsers()) {
+			final String userUid = userToUid(new UserProfile.Id(group.getDomainId(), assiUser.getUserId()));
+			if (!usedUserUids.contains(userUid)) { // Avoid userUid duplicates
+				doInsertUserAssociation(con, userUid, ogroup.getGroupUid());
+				usedUserUids.add(userUid);
+			}
+		}
+		
+		logger.debug("Inserting roles associations");
+		HashSet<String> usedRoleUids = new HashSet<>();
+		for(AssignedRole assiRole : group.getAssignedRoles()) {
+			final String roleUid = assiRole.getRoleUid();
+			if (!usedRoleUids.contains(roleUid)) { // Avoid roles duplicates
+				doInsertRoleAssociation(con, ogroup.getGroupUid(), roleUid);
+				usedRoleUids.add(roleUid);
+			}
+		}
+		
+		// Insert permissions
+		logger.debug("Inserting permissions");
+		for(ORolePermission perm : group.getPermissions()) {
+			doInsertPermission(con, ogroup.getGroupUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+		}
+		for(ORolePermission perm : group.getServicesPermissions()) {
+			doInsertPermission(con, ogroup.getGroupUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+		}
 		
 		return ogroup;
 	}
 	
+	private void doGroupUpdate(Connection con, GroupEntity group) throws DAOException, WTException {
+		GroupDAO dao = GroupDAO.getInstance();
+		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
+		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
+		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
+		
+		GroupEntity oldGroup = getGroupEntity(con, group.getProfileId());
+		if(oldGroup == null) throw new WTException("Group not found [{0}]", group.getProfileId().toString());
+		
+		logger.debug("Updating group");
+		OGroup ogroup = new OGroup();
+		ogroup.setDomainId(group.getDomainId());
+		ogroup.setGroupId(group.getGroupId());
+		ogroup.setDisplayName(group.getDisplayName());
+		dao.update(con, ogroup);
+		
+		logger.debug("Updating users associations");
+		LangUtils.CollectionChangeSet<AssignedUser> changeSet1 = LangUtils.getCollectionChanges(oldGroup.getAssignedUsers(), group.getAssignedUsers());
+		for(AssignedUser assiUser : changeSet1.deleted) {
+			uadao.deleteById(con, assiUser.getUserAssociationId());
+		}
+		for(AssignedUser assiUser : changeSet1.inserted) {
+			final String userUid = userToUid(new UserProfile.Id(group.getDomainId(), assiUser.getUserId()));
+			doInsertUserAssociation(con, userUid, oldGroup.getGroupUid());
+		}
+		
+		logger.debug("Updating roles associations");
+		LangUtils.CollectionChangeSet<AssignedRole> changeSet2 = LangUtils.getCollectionChanges(oldGroup.getAssignedRoles(), group.getAssignedRoles());
+		for(AssignedRole assiRole : changeSet2.deleted) {
+			rolassdao.deleteById(con, assiRole.getRoleAssociationId());
+		}
+		for(AssignedRole assiRole : changeSet2.inserted) {
+			doInsertRoleAssociation(con, oldGroup.getGroupUid(), assiRole.getRoleUid());
+		}
+
+		logger.debug("Updating permissions");
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet3 = LangUtils.getCollectionChanges(oldGroup.getPermissions(), group.getPermissions());
+		for(ORolePermission perm : changeSet3.deleted) {
+			rpdao.deleteById(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet3.inserted) {
+			doInsertPermission(con, oldGroup.getGroupUid(), perm.getServiceId(), perm.getKey(), perm.getAction(), "*");
+		}
+
+		LangUtils.CollectionChangeSet<ORolePermission> changeSet4 = LangUtils.getCollectionChanges(oldGroup.getServicesPermissions(), group.getServicesPermissions());
+		for(ORolePermission perm : changeSet4.deleted) {
+			rpdao.deleteById(con, perm.getRolePermissionId());
+		}
+		for(ORolePermission perm : changeSet4.inserted) {
+			doInsertPermission(con, oldGroup.getGroupUid(), CoreManifest.ID, "SERVICE", ServicePermission.ACTION_ACCESS, perm.getInstance());
+		}
+	}
 	
 	private AuthUser createAuthUser(UserEntity user) {
 		return new AuthUser(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
@@ -1255,7 +1461,6 @@ public final class WebTopManager {
 	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
 		UserDAO udao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
-		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
 		
 		InternetAddress email = MailUtils.buildInternetAddress(user.getUserId(), domain.getInternetName(), null);
 		if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getInternetName());
@@ -1351,14 +1556,6 @@ public final class WebTopManager {
 		for(AssignedGroup assiGroup : changeSet1.inserted) {
 			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
 			doInsertUserAssociation(con, oldUser.getUserUid(), groupUid);
-			/*
-			final OUserAssociation oua = new OUserAssociation();
-			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
-			oua.setUserAssociationId(uadao.getSequence(con).intValue());
-			oua.setUserUid(oldUser.getUserUid());
-			oua.setGroupUid(groupUid);
-			uadao.insert(con, oua);
-			*/
 		}
 		
 		logger.debug("Updating roles associations");

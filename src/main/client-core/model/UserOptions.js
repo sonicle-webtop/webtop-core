@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.roField('otpDeviceIsTrusted', 'boolean'),
 		WTF.roField('otpDeviceTrustedOn', 'string'),
 		
-		WTF.roField('canManageUpi', 'boolean', true),
-		WTF.roField('canSyncDevices', 'boolean', true)
+		WTF.roField('canManageUpi', 'boolean'),
+		WTF.roField('canSyncDevices', 'boolean')
 	]
 });

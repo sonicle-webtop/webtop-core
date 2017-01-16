@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
-		iconCls: 'wta-icon-users-xs'
+		iconCls: 'wtadm-icon-users-xs'
 	},
 	
 	constructor: function(cfg) {
@@ -68,7 +68,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			reference: 'gp',
 			store: {
 				autoLoad: true,
-				autoSync: true,
 				model: 'Sonicle.webtop.core.admin.model.GridDomainUser',
 				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainUsers', 'users', {
 					extraParams: {
@@ -87,7 +86,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			},
 			viewConfig: {
 				getRowClass: function(rec) {
-					return rec.get('enabled') === false ? 'wta-gpusers-row-disabled' : '';
+					return rec.get('enabled') === false ? 'wtadm-gpusers-row-disabled' : '';
 				}
 			},
 			columns: [{

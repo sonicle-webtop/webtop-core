@@ -45,13 +45,13 @@ import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
-import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
 import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
+import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
@@ -64,14 +64,9 @@ import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
-import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -254,115 +249,69 @@ public class CoreAdminManager extends BaseManager {
 		return setm.deleteServiceSetting(domainId, serviceId, key);
 	}
 	
-	/**
-	 * Lists domain real roles (those defined as indipendent role).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
-		}
-	}
-	
-	/**
-	 * Lists domain users roles (those coming from a user).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listUsersRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listUsersRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
-		}
-	}
-	
-	/**
-	 * Lists domain groups roles (those coming from a group).
-	 * @param domainId The domain ID.
-	 * @return The role list.
-	 * @throws WTException If something goes wrong.
-	 */
-	public List<Role> listGroupsRoles(String domainId) throws WTException {
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		ensureUserDomain(domainId);
-		
-		WebTopManager wtmgr = wta.getWebTopManager();
-		try {
-			return wtmgr.listGroupsRoles(domainId);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
-		}
-	}
-	
-	public RoleEntity getRole(String uid) throws WTException {
-		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		String domainId = wtmgr.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
-		
-		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
-		
-		try {
-			return wtmgr.getRole(uid);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot get role [{0}]", uid);
-		}
-	}
-	
-	public void addRole(RoleEntity role) throws WTException {
+	public List<OGroup> listGroups(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			wtmgr.addRole(role);
+			return wtmgr.listGroups(domainId);
 		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot add role");
+			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
 		}
 	}
 	
-	public void updateRole(RoleEntity role) throws WTException {
+	public GroupEntity getGroup(UserProfile.Id pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			wtmgr.updateRole(role);
+			return wtmgr.getGroupEntity(pid);
 		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
+			throw new WTException(ex, "Unable to get group [{0}]", pid.toString());
 		}
 	}
 	
-	public void deleteRole(String uid) throws WTException {
+	public void addGroup(GroupEntity group) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
-		
-		String domainId = wtmgr.getRoleDomain(uid);
-		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			wtmgr.deleteRole(uid);
+			wtmgr.addGroup(group);
 		} catch(Exception ex) {
-			throw new WTException(ex, "Cannot delete role [{0}]", uid);
+			throw new WTException(ex, "Unable to add group [{0}]", group.getProfileId().toString());
+		}
+	}
+	
+	public void updateGroup(GroupEntity group) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			wtmgr.updateGroup(group);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to update group [{0}]", group.getProfileId().toString());
+		}
+	}
+	
+	public void deleteGroup(UserProfile.Id pid) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			wtmgr.deleteGroup(pid);
+			
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to delete group [{0}]", pid.toString());
 		}
 	}
 	
@@ -489,20 +438,117 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public List<OGroup> listGroups(String domainId) throws WTException {
+	/**
+	 * Lists domain real roles (those defined as indipendent role).
+	 * @param domainId The domain ID.
+	 * @return The role list.
+	 * @throws WTException If something goes wrong.
+	 */
+	public List<Role> listRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		WebTopManager wtmgr = wta.getWebTopManager();
+		try {
+			return wtmgr.listRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list roles [{0}]", domainId);
+		}
+	}
+	
+	/**
+	 * Lists domain users roles (those coming from a user).
+	 * @param domainId The domain ID.
+	 * @return The role list.
+	 * @throws WTException If something goes wrong.
+	 */
+	public List<Role> listUsersRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		WebTopManager wtmgr = wta.getWebTopManager();
+		try {
+			return wtmgr.listUsersRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list users roles [{0}]", domainId);
+		}
+	}
+	
+	/**
+	 * Lists domain groups roles (those coming from a group).
+	 * @param domainId The domain ID.
+	 * @return The role list.
+	 * @throws WTException If something goes wrong.
+	 */
+	public List<Role> listGroupsRoles(String domainId) throws WTException {
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		ensureUserDomain(domainId);
+		
+		WebTopManager wtmgr = wta.getWebTopManager();
+		try {
+			return wtmgr.listGroupsRoles(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list groups roles [{0}]", domainId);
+		}
+	}
+	
+	public RoleEntity getRole(String uid) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		String domainId = wtmgr.getRoleDomain(uid);
+		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			return wtmgr.getRole(uid);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot get role [{0}]", uid);
+		}
+	}
+	
+	public void addRole(RoleEntity role) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsSysAdmin();
 		
 		try {
-			return wtmgr.listGroups(domainId);
+			wtmgr.addRole(role);
 		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to list groups [{0}]", domainId);
+			throw new WTException(ex, "Cannot add role");
 		}
 	}
 	
+	public void updateRole(RoleEntity role) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			wtmgr.updateRole(role);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot update role [{0}]", role.getRoleUid());
+		}
+	}
 	
+	public void deleteRole(String uid) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		String domainId = wtmgr.getRoleDomain(uid);
+		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			wtmgr.deleteRole(uid);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Cannot delete role [{0}]", uid);
+		}
+	}
 	
 	/**
 	 * Lists configured PecBridge fetchers for the specified domain.
