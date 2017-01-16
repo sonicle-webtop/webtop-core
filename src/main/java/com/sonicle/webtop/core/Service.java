@@ -360,6 +360,7 @@ public class Service extends BaseService {
 			boolean wildcard = ServletUtils.getBooleanParameter(request, "wildcard", false);
 			boolean users = ServletUtils.getBooleanParameter(request, "users", true);
 			boolean groups = ServletUtils.getBooleanParameter(request, "groups", true);
+			boolean roles = ServletUtils.getBooleanParameter(request, "roles", true);
 			
 			if(wildcard) items.add(JsRoleLkp.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			if(users) {
@@ -372,8 +373,10 @@ public class Service extends BaseService {
 					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_GROUP));
 				}
 			}
-			for(Role role : coreMgr.listRoles()) {
-				items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
+			if (roles) {
+				for(Role role : coreMgr.listRoles()) {
+					items.add(new JsRoleLkp(role, RoleWithSource.SOURCE_ROLE));
+				}
 			}
 			
 			new JsonResult("roles", items, items.size()).printTo(out);
