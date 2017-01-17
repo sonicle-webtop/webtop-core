@@ -158,7 +158,7 @@ public class WTRealm extends AuthorizingRealm {
 			
 			String sntzUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
 			logger.debug("Authenticating principal [{}, {}]", ad.getDomainId(), sntzUsername);
-			Principal principal = new Principal(ad, ad.getDomainId(), sntzUsername, password);
+			Principal principal = new Principal(ad, impersonate, ad.getDomainId(), sntzUsername, password);
 			AuthUser userEntry = directory.authenticate(opts, principal);
 			principal.setDisplayName(userEntry.displayName);
 			
@@ -166,9 +166,9 @@ public class WTRealm extends AuthorizingRealm {
 				String priUsername = sanitizeImpersonateUsername(username);
 				if (isSysAdminImpersonate(username)) {
 					if (ad2 == null) throw new WTException("ad2 is null");
-					principal = new Principal(ad2, true, ad2.getDomainId(), priUsername, password);
+					principal = new Principal(ad2, impersonate, ad2.getDomainId(), priUsername, password);
 				} else {
-					principal = new Principal(ad, true, ad.getDomainId(), priUsername, password);
+					principal = new Principal(ad, impersonate, ad.getDomainId(), priUsername, password);
 				}
 				
 				UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
