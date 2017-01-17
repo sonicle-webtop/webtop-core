@@ -1095,7 +1095,7 @@ public final class WebTopApp {
 				ldapwt.setAdminUsername(opts, ad.getAuthUsername());
 				ldapwt.setAdminPassword(opts, getDirPassword(ad));
 				ldapwt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
-				break;	
+				break;
 			case LdapDirectory.SCHEME:
 				LdapConfigBuilder ldap = new LdapConfigBuilder();
 				ldap.setHost(opts, authUri.getHost());
