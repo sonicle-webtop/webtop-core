@@ -1311,8 +1311,16 @@ public final class WebTopManager {
 	}
 	
 	public String userToUid(UserProfile.Id pid) {
+		return userToUid(pid,true);
+	}
+	
+	public String userToUid(UserProfile.Id pid, boolean mandatory) {
 		synchronized(lock1) {
-			if(!cacheUserToUserUid.containsKey(pid)) throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
+			if(!cacheUserToUserUid.containsKey(pid)) {
+				if (mandatory)
+					throw new WTRuntimeException("[userToUidCache] Cache miss on key {0}", pid.toString());
+				return null;
+			}
 			return cacheUserToUserUid.get(pid);
 		}
 	}
