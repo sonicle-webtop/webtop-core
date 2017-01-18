@@ -153,6 +153,7 @@ public class Service extends BaseService {
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
+		co.put("userDisplayName", profile.getDisplayName());
 		
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());

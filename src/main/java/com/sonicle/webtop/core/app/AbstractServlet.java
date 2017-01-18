@@ -41,6 +41,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.jooq.tools.StringUtils;
 
 /**
  *
@@ -64,16 +65,21 @@ public abstract class AbstractServlet extends HttpServlet {
 		processRequest(request, response);
 	}
 	
-	public static void fillSystemVars(Map vars, Locale locale, WebTopApp wta) {
+	public static void fillSystemVars(Map vars, WebTopApp wta, Locale locale) {
 		vars.put("systemInfo", wta.getSystemInfo());
 		vars.put("serverInfo", wta.getServerInfo());
 		vars.put("jdk", System.getProperty("java.version"));
 		vars.put("appName", wta.getWebAppName());
 	}
 	
-	public static void fillPageVars(Map vars, Locale locale, WebTopApp wta, String baseUrl) {
+	public static void fillPageVars(Map vars, WebTopApp wta, Locale locale, String baseUrl) {
+		fillPageVars(vars, wta, locale, null, baseUrl);
+	}
+	
+	public static void fillPageVars(Map vars, WebTopApp wta, Locale locale, String userTitle, String baseUrl) {
 		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
 		String title = wta.getPlatformName() + " " + manifest.getVersion().getMajor();
+		if (!StringUtils.isBlank(userTitle)) title += " [" + userTitle + "]";
 		vars.put("title", title);
 		vars.put("version", manifest.getVersion());
 		vars.put("baseUrl", baseUrl);

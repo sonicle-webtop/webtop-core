@@ -39,20 +39,22 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.field('wtOtpEnabled', 'boolean'),
 		WTF.field('wtUploadMaxFileSize', 'int'),
 		
-		WTF.field('profileId', 'string'), // Not a real option
-		WTF.field('domainId', 'string'), // Not a real option
-		WTF.field('userId', 'string'), // Not a real option
-		WTF.field('theme', 'string'),
-		WTF.field('layout', 'string'),
-		WTF.field('laf', 'string'),
-		WTF.field('desktopNotification', 'string'),
-		WTF.field('language', 'string'),
-		WTF.field('timezone', 'string'),
-		WTF.field('startDay', 'int'),
-		WTF.field('shortDateFormat', 'string'),
-		WTF.field('longDateFormat', 'string'),
-		WTF.field('shortTimeFormat', 'string'),
-		WTF.field('longTimeFormat', 'string'),
+		WTF.roField('profileId', 'string'),
+		WTF.roField('domainId', 'string'),
+		WTF.roField('userId', 'string'),
+		WTF.field('userDisplayName', 'string'),
+		
+		WTF.field('theme', 'string'), // Also a user-option
+		WTF.field('layout', 'string'), // Also a user-option
+		WTF.field('laf', 'string'), // Also a user-option
+		WTF.field('desktopNotification', 'string'), // Also a user-option
+		WTF.field('language', 'string'), // Also a user-option
+		WTF.field('timezone', 'string'), // Also a user-option
+		WTF.field('startDay', 'int'), // Also a user-option
+		WTF.field('shortDateFormat', 'string'), // Also a user-option
+		WTF.field('longDateFormat', 'string'), // Also a user-option
+		WTF.field('shortTimeFormat', 'string'), // Also a user-option
+		WTF.field('longTimeFormat', 'string'), // Also a user-option
 		WTF.calcField('use24HourTime', 'boolean', 'shortTimeFormat', function(v, rec) {
 			var tf = rec.get('shortTimeFormat');
 			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;

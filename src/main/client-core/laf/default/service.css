@@ -31,6 +31,14 @@
 .wt-icon-causal-ro-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-sharing-xs { background-image: url('sharing_16.png') !important; }
 
+.wt-menu-userdetails-main {
+	padding-top: 5px;
+	font-weight: bold;
+}
+.wt-menu-userdetails-sub {
+	color: #bdbdbd;
+	font-size: 90%;
+}
 .wt-menu-feedback { background-image: url('feedback_32.png') !important; width: 32px; }
 .wt-menu-whatsnew { background-image: url('whatsnew_32.png') !important; width: 32px; }
 .wt-menu-options { background-image: url('options_32.png') !important; width: 32px; }

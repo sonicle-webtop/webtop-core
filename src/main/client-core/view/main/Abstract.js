@@ -198,6 +198,14 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						plain: true,
 						width: 150,
 						items: [{
+							xtype: 'label',
+							text: WT.getVar('userDisplayName'),
+							cls: 'wt-menu-userdetails-main'
+						}, {
+							xtype: 'label',
+							text: WT.getVar('userId'),
+							cls: 'wt-menu-userdetails-sub'
+						}, '-', {
 							xtype: 'buttongroup',
 							columns: 2,
 							defaults: {
@@ -233,6 +241,82 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								iconCls: 'wt-menu-logout'
 							}]
 						}]
+					
+					
+					/*
+					items: [{
+							xtype: 'buttongroup',
+							columns: 2,
+							/*
+							defaults: {
+								xtype: 'button',
+								scale: 'large',
+								iconAlign: 'center',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							},
+							
+							items: [{
+								xtype: 'label',
+								text: 'Matteo Albinola',
+								cls: 'wt-menu-user',
+								colspan: 2
+							}, {
+								xtype: 'label',
+								text: 'matteo.albinola@sonicle.com',
+								cls: 'wt-menu-useremail',
+								colspan: 2
+							}, {
+								xtype: 'button',
+								itemId: 'feedback',
+								scale: 'large',
+								iconAlign: 'center',
+								tooltip: WT.res('menu.feedback.tip'),
+								disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
+								iconCls: 'wt-menu-feedback',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							}, {
+								xtype: 'button',
+								itemId: 'whatsnew',
+								scale: 'large',
+								iconAlign: 'center',
+								tooltip: WT.res('menu.whatsnew.tip'),
+								disabled: !WT.getVar('wtWhatsnewEnabled'),
+								iconCls: 'wt-menu-whatsnew',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							}, {
+								xtype: 'button',
+								itemId: 'options',
+								scale: 'large',
+								iconAlign: 'center',
+								tooltip: WT.res('menu.options.tip'),
+								iconCls: 'wt-menu-options',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							}, {
+								xtype: 'button',
+								itemId: 'help',
+								scale: 'large',
+								iconAlign: 'center',
+								tooltip: WT.res('menu.help.tip'),
+								iconCls: 'wt-menu-help',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							}, {
+								xtype: 'button',
+								itemId: 'logout',
+								colspan: 2,
+								scale: 'small',
+								tooltip: WT.res('menu.logout.tip'),
+								iconCls: 'wt-menu-logout',
+								width: '100%',
+								handler: 'onMenuButtonClick'
+							}]
+						}]
+					
+					*/
 					}
 				}]
 			}]
