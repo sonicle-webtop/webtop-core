@@ -39,6 +39,7 @@ import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
@@ -186,6 +187,11 @@ public final class WebTopManager {
 		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
 	
+	public String createSysAdminAuthDirectoryUri() throws URISyntaxException {
+		DirectoryManager dirManager = DirectoryManager.getManager();
+		return dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
+	}
+	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
 		try {
 			return getAuthDirectoryByScheme(new URI(authUri).getScheme());
@@ -203,6 +209,20 @@ public final class WebTopManager {
 		AbstractDirectory directory = dirManager.getDirectory(scheme);
 		if(directory == null) throw new WTException("Directory not supported [{0}]", scheme);
 		return directory;
+	}
+	
+	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
+		return new AuthenticationDomain(domain.getDomainId(), 
+				domain.getInternetName(), 
+				domain.getAuthUri(), 
+				domain.getAuthUsername(), 
+				(domain.getAuthPassword() != null) ? domain.getAuthPassword().toCharArray() : null, 
+				EnumUtils.getEnum(ConnectionSecurity.class, domain.getAuthConnectionSecurity())
+		);
+	}
+	
+	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
+		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), null, null, null);
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
@@ -413,7 +433,7 @@ public final class WebTopManager {
 		cleanupUserCache();
 		
 		try {
-			AuthenticationDomain ad = wta.createAuthenticationDomain(odomain);
+			AuthenticationDomain ad = createAuthenticationDomain(odomain);
 			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
@@ -527,7 +547,7 @@ public final class WebTopManager {
 			
 			OUser ouser = null;
 			if(updateDirectory) {
-				AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
+				AuthenticationDomain ad = createAuthenticationDomain(domain);
 				AbstractDirectory authDir = getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
@@ -643,13 +663,19 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void updateUserPassword(UserProfile.Id pid, char[] oldPassword, char[] newPassword) throws WTException {
+	public void updateUserPassword(UserProfile.Id pid, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
 				
 		try {
-			ODomain domain = getDomain(pid.getDomainId());
-			if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+			AuthenticationDomain ad = null;
+			if (pid.getDomainId().equals("*")) {
+				ad = createSysAdminAuthenticationDomain();
+			} else {
+				ODomain domain = getDomain(pid.getDomainId());
+				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+				
+				ad = createAuthenticationDomain(domain);
+			}
 			
-			AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
@@ -697,7 +723,7 @@ public final class WebTopManager {
 				ODomain domain = getDomain(pid.getDomainId());
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 				
-				AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
+				AuthenticationDomain ad = createAuthenticationDomain(domain);
 				AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
@@ -736,7 +762,7 @@ public final class WebTopManager {
 		Connection con = null;
 		
 		try {
-			AuthenticationDomain ad = wta.createAuthenticationDomain(domain);
+			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			

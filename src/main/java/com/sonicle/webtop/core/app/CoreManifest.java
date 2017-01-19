@@ -97,52 +97,60 @@ public class CoreManifest extends ServiceManifest {
 		permissions = new ArrayList<>();
 		
 		/*
-			SYSADMIN
+			SYSADMIN (internal)
 			Marks sysadmin
 			- ACCESS: can manage system
 		*/
 		
 		/*
-			WTADMIN
+			WTADMIN (internal)
 			Mark WebTop admins (users that can act as admins)
 			- ACCESS: can manage webtop palform
 		*/
 		permissions.add(new ServicePermission("WTADMIN", new String[]{ServicePermission.ACTION_ACCESS}));
 		
 		/*
-			SERVICE
+			SERVICE (internal)
 			- ACCESS
 			- CONFIGURE
 		*/
 		
 		/*
+			PASSWORD
+			- MANAGE: allow the user to change its password (auth-directory must support it)
+		*/
+		permissions.add(new ServicePermission("PASSWORD", new String[]{ServicePermission.ACTION_MANAGE}));
+		
+		/*
 			FEEDBACK
-			Resource that tracks feedback insertion form
+			Feedback insertion
 			- MANAGE: allow access to the form
 		*/
 		permissions.add(new ServicePermission("FEEDBACK", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
 			ACTIVITIES
-			Resource that tracks activities management form
+			Activities management
 			- MANAGE: allow access to the form
 		*/
 		permissions.add(new ServicePermission("ACTIVITIES", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
-			Causals
-			Resource that tracks causals management form
+			CAUSALS
+			Causals management
 			- MANAGE: allow access to the form
 		*/
 		permissions.add(new ServicePermission("CAUSALS", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
-			User personal info (via Options)
-			- WRITE: user can update/change its data (if provider supports it)
+			USER_PROFILE_INFO
+			User profile tab in user options
+			- WRITE: allow user to update/change its data
 		*/
 		permissions.add(new ServicePermission("USER_PROFILE_INFO", new String[]{ServicePermission.ACTION_MANAGE}));
 		
 		/*
+			DEVICES_SYNC
 			Device synchroniztion
 			- ACCESS: ability to sync data with devices
 		*/

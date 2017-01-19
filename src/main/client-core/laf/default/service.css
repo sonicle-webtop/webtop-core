@@ -32,13 +32,14 @@
 .wt-icon-sharing-xs { background-image: url('sharing_16.png') !important; }
 
 .wt-menu-userdetails-main {
-	padding-top: 5px;
+	padding: 5px 0 0 5px;
 	font-weight: bold;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 .wt-menu-userdetails-sub {
+	padding: 0 0 0 10px;
 	color: #bdbdbd;
 	font-size: 90%;
 	white-space: nowrap;

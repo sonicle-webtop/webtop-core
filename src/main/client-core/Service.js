@@ -56,11 +56,11 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 	
 	showActivities: function() {
-		WT.createView(WT.ID, 'view.Activities').show();
+		WT.createView(this.ID, 'view.Activities').show();
 	},
 	
 	showCausals: function() {
-		WT.createView(WT.ID, 'view.Causals').show();
+		WT.createView(this.ID, 'view.Causals').show();
 	},
 	
 	showReminder: function(data) {
@@ -69,7 +69,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		if(me.vwrem) {
 			me.vwrem.getView().addReminder(data);
 		} else {
-			me.vwrem = WT.createView(WT.ID, 'view.Reminder');
+			me.vwrem = WT.createView(me.ID, 'view.Reminder');
 			me.vwrem.on('close', function() {
 				me.vwrem = null;
 			}, {single: true});
@@ -79,5 +79,19 @@ Ext.define('Sonicle.webtop.core.Service', {
 				}, 200);
 			});
 		}
+	},
+	
+	changeUserPassword: function(oldPassword, newPassword, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ChangeUserPassword', {
+			params: {
+				oldPassword: oldPassword,
+				newPassword: newPassword
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
 	}
 });

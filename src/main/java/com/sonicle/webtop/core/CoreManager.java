@@ -185,7 +185,12 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
-		return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
+		if (RunContext.isSysAdmin()) {
+			return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
+		} else {
+			ensureUserDomain(domain.getDomainId());
+			return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
+		}
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
@@ -344,6 +349,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public void updateUserPassword(char[] oldPassword, char[] newPassword) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		try {
+			ensureUser();
+			if (oldPassword == null) throw new WTException("Old password must be provided");
+			wtmgr.updateUserPassword(getTargetProfileId(), oldPassword, newPassword);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to change user password [{0}]", getTargetProfileId().toString());
+		}
+	}
+	
 	public void cleanUserProfileCache() {
 		ensureCallerService(SERVICE_ID, "cleanupUserProfileCache");
 		wta.getWebTopManager().cleanUserProfileCache(getTargetProfileId());
@@ -389,6 +406,9 @@ public class CoreManager extends BaseManager {
 		} else {
 			ServiceManager svcm = wta.getServiceManager();
 			for(String id : svcm.listRegisteredServices()) {
+				// We don't want to add admin service during impersonation
+				if (id.equals(CoreAdminManifest.ID) && RunContext.isImpersonated()) continue;
+				
 				if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
 			}
 		}
@@ -807,7 +827,7 @@ public class CoreManager extends BaseManager {
 			// In order to find incoming root, we need to pass through folders
 			// that have at least a permission, getting incoming uids.
 			// We look into permission returning each share instance that have 
-			// "*@FOLDER" as key and satisfies a set of roles. Then we can
+			// "*@SHARE_FOLDER" as key and satisfies a set of roles. Then we can
 			// get a list of unique uids (from shares table) that owns the share.
 			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
 			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
@@ -1060,8 +1080,23 @@ public class CoreManager extends BaseManager {
 		ShareDAO shadao = ShareDAO.getInstance();
 		Connection con = null;
 		
+		// Sharing is handled at two levels: root(0) and folder(1).
+		// The first level tracks permissions associated to any instances 
+		// of items in the groupName; the second tracks permissions related to
+		// a specific item instance instead.
+		// If for example we are talking about addressbook contacts we can 
+		// define the contact category as a groupName.
+		// Of course we can have many categories: Work, Home, Prospect, etc.
+		// So, looking at sharing, the root level register permissions valid 
+		// for any items of the groupName (Work, Home, ...).
+		// At next level, we have permissions for only the Work category.
+		
 		try {
 			String puid = usrm.userToUid(getTargetProfileId());
+			
+			// Parses the sharing ID as a composite key:
+			// - "0"		for root share
+			// - "0|{id}"	for folder share
 			CompositeId cid = new CompositeId().parse(sharing.getId());
 			int level = cid.getSize()-1;
 			String rootId = cid.getToken(0);

@@ -53,6 +53,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String shortTimeFormat;
 	public String longTimeFormat;
 	
+	public Boolean canManageUpi; // Read-only
 	public String upiTitle;
 	public String upiFirstName;
 	public String upiLastName;
@@ -74,6 +75,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String upiCustom2;
 	public String upiCustom3;
 	
+	public Boolean canSyncDevices; // Read-only
 	public Boolean syncAlertEnabled;
 	public Integer syncAlertTolerance;
 	
@@ -82,9 +84,6 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String otpEmailAddress;
 	public Boolean otpDeviceIsTrusted;
 	public String otpDeviceTrustedOn;
-	
-	public Boolean canManageUpi; // Read-only
-	public Boolean canSyncDevices; // Read-only
 	
 	public JsUserOptions() {
 		super();

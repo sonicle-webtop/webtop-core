@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.field('wtOtpEnabled', 'boolean'),
 		WTF.field('wtUploadMaxFileSize', 'int'),
 		
+		WTF.roField('domainPasswordPolicy', 'boolean'),
 		WTF.roField('profileId', 'string'),
 		WTF.roField('domainId', 'string'),
 		WTF.roField('userId', 'string'),

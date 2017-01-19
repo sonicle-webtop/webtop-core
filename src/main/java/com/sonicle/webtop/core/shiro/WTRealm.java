@@ -113,7 +113,7 @@ public class WTRealm extends AuthorizingRealm {
 	
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
-		WebTopManager wtmgr = wta.getWebTopManager();
+		WebTopManager wtMgr = wta.getWebTopManager();
 		AuthenticationDomain ad = null, ad2 = null;
 		boolean autoCreate = false, impersonate = false;
 		
@@ -123,31 +123,31 @@ public class WTRealm extends AuthorizingRealm {
 			logger.debug("Building the authentication domain");
 			if (isSysAdmin(internetDomain, username)) {
 				impersonate = false;
-				ad = createSysAdminAuthenticationDomain();
+				ad = wtMgr.createSysAdminAuthenticationDomain();
 				
 			} else {
 				if (wta.getServiceManager().isInMaintenance(CoreManifest.ID)) throw new WTException("Maintenance is active. Only sys-admin can login.");
 				ODomain domain = null;
 				if(!StringUtils.isBlank(internetDomain)) {
-					List<ODomain> domains = wtmgr.listByInternetDomain(internetDomain);
+					List<ODomain> domains = wtMgr.listByInternetDomain(internetDomain);
 					if(domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{0}]", internetDomain);
 					if(domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{0}]", internetDomain);
 					domain = domains.get(0);
 				} else {
-					domain = wtmgr.getDomain(domainId);
+					domain = wtMgr.getDomain(domainId);
 					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
 				
 				if (isSysAdminImpersonate(username)) {
 					impersonate = true;
-					ad = createSysAdminAuthenticationDomain();
-					ad2 = wta.createAuthenticationDomain(domain);
+					ad = wtMgr.createSysAdminAuthenticationDomain();
+					ad2 = wtMgr.createAuthenticationDomain(domain);
 				} else if (isDomainAdminImpersonate(username)) {
 					impersonate = true;
-					ad = wta.createAuthenticationDomain(domain);
+					ad = wtMgr.createAuthenticationDomain(domain);
 				} else {
 					impersonate = false;
-					ad = wta.createAuthenticationDomain(domain);
+					ad = wtMgr.createAuthenticationDomain(domain);
 				}
 				autoCreate = domain.getUserAutoCreation();
 			}
@@ -179,10 +179,10 @@ public class WTRealm extends AuthorizingRealm {
 			}
 
 			synchronized (lock1) {
-				WebTopManager.CheckUserResult chk = wtmgr.checkUser(principal.getDomainId(), principal.getUserId());
+				WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
 				if(autoCreate && !chk.exist) {
 					logger.debug("Creating user [{}]", principal.getSubjectId());
-					wtmgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
+					wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
 				} else if(!chk.exist) {
 					throw new WTException("User does not exist [{0}]", principal.getSubjectId());
 				} else if(chk.exist && !chk.enabled) {
@@ -200,7 +200,7 @@ public class WTRealm extends AuthorizingRealm {
 	
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
-		WebTopManager wtm = wta.getWebTopManager();
+		WebTopManager wtMgr = wta.getWebTopManager();
 		UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
 		
 		HashSet<String> roles = new HashSet<>();
@@ -218,11 +218,11 @@ public class WTRealm extends AuthorizingRealm {
 		String authRes = ServicePermission.namespacedName(CoreManifest.ID, "SERVICE");
 		perms.add(ServicePermission.permissionString(authRes, ServicePermission.ACTION_ACCESS, CoreManifest.ID));
 		
-		Set<RoleWithSource> userRoles = wtm.getComputedRolesByUser(pid, true, true);
+		Set<RoleWithSource> userRoles = wtMgr.getComputedRolesByUser(pid, true, true);
 		for(RoleWithSource role : userRoles) {
 			roles.add(role.getRoleUid());
 
-			List<ORolePermission> rolePerms = wtm.listRolePermissions(role.getRoleUid());
+			List<ORolePermission> rolePerms = wtMgr.listRolePermissions(role.getRoleUid());
 			for(ORolePermission perm : rolePerms) {
 				// Generate resource namespaced name:
 				// resource "TEST" for service "com.sonicle.webtop.core" 
@@ -235,12 +235,6 @@ public class WTRealm extends AuthorizingRealm {
 		}
 		
 		return new WTAuthorizationInfo(roles, perms);
-	}
-	
-	private AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
-		DirectoryManager dirManager = DirectoryManager.getManager();
-		String authUri = dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
-		return new AuthenticationDomain("*", null, authUri, null, null, null);
 	}
 	
 	private boolean isSysAdmin(String internetDomain, String username) {

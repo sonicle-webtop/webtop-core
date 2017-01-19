@@ -32,5 +32,18 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.admin.view.ChangePassword', {
-	extend: 'Sonicle.webtop.core.view.ChangePassword'
+	extend: 'Sonicle.webtop.core.view.ChangePassword',
+	
+	doPasswordChange: function(op, np) {
+		var me = this;
+		me.mys.changeUserPassword(me.profileId, op, np, {
+			callback: function(success) {
+				if(success) {
+					me.closeView(false);
+				} else {
+					WT.error(WT.res('changePassword.error'));
+				}
+			}
+		});
+	}
 });

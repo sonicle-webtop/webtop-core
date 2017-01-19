@@ -43,6 +43,8 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -146,10 +148,26 @@ public class Service extends BaseService {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars co = new ServiceVars();
 		
+		boolean domainPasswordPolicy = false;
+		boolean dirCapPasswordWrite = false;
+		try {
+			if (profile.getDomainId().equals("*")) {
+				dirCapPasswordWrite = true;
+			} else {
+				ODomain domain = coreMgr.getDomain();
+				if (domain != null) {
+					domainPasswordPolicy = domain.getAuthPasswordPolicy();
+					AbstractDirectory dir = coreMgr.getAuthDirectory(domain);
+					dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
+				}
+			}
+		} catch(WTException ex) {}
+		
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
-		
+		co.put("domainPasswordPolicy", domainPasswordPolicy);
+		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
@@ -173,6 +191,21 @@ public class Service extends BaseService {
 	
 	private WebTopSession getWts() {
 		return getEnv().getWebTopSession();
+	}
+	
+	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			char[] oldPassword = ServletUtils.getStringParameter(request, "oldPassword", true).toCharArray();
+			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
+			
+			coreMgr.updateUserPassword(oldPassword, newPassword);
+			
+			new JsonResult().printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in ChangeUserPassword", ex);
+			new JsonResult(ex).printTo(out);
+		}
 	}
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

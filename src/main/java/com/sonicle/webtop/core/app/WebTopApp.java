@@ -1069,16 +1069,6 @@ public final class WebTopApp {
 		return css;
 	}
 	
-	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
-		return new AuthenticationDomain(domain.getDomainId(), 
-				domain.getInternetName(), 
-				domain.getAuthUri(), 
-				domain.getAuthUsername(), 
-				(domain.getAuthPassword() != null) ? domain.getAuthPassword().toCharArray() : null, 
-				EnumUtils.getEnum(ConnectionSecurity.class, domain.getAuthConnectionSecurity())
-		);
-	}
-	
 	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
 		DirectoryOptions opts = new DirectoryOptions();
 		URI authUri = ad.getAuthUri();

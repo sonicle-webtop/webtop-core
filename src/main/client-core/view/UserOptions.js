@@ -51,6 +51,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	viewModel: {
 		formulas: {
+			foPasswordDisabled: function(get) {
+				return get('record.canManagePassword');
+			},
 			upiFieldEditable: function(get) {
 				return get('record.canManageUpi');
 			},
@@ -171,7 +174,27 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						scope: me
 					}
 				}
-			})]
+			}), {
+				xtype: 'sospacer'
+			}, {
+				xtype: 'sospacer'
+			}, {
+				xtype: 'container',
+				layout: {
+					type: 'hbox',
+					pack: 'center',
+					align: 'middle'
+				},
+				items: [{
+					xtype: 'button',
+					disabled: !(WT.getVar('domainDirCapPasswordWrite') && WT.isPermitted('PASSWORD', 'MANAGE')),
+					text: WT.res('opts.main.btn-changePassword.lbl'),
+					width: 250,
+					handler: function() {
+						me.changePasswordUI();
+					}
+				}]
+			}]
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.i18n.tit'),
@@ -877,6 +900,21 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);
+	},
+	
+	changePasswordUI: function() {
+		// Password change from this panel can only be performed by the user 
+		// itself. Parameters are so taken from the environment because they
+		// refers to the same user.
+		var me = this,
+				vct = WT.createView(me.ID, 'view.ChangePassword', {
+					viewCfg: {
+						showOldPassword: true,
+						passwordPolicy: WT.getVar('domainPasswordPolicy'),
+						profileId: me.profileId
+					}
+				});
+		vct.show();
 	},
 	
 	onOTPDeliveryChanged: function(val) {

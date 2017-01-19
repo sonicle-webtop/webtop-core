@@ -48,6 +48,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('longDateFormat', 'string', false),
 		WTF.field('shortTimeFormat', 'string', false),
 		WTF.field('longTimeFormat', 'string', false),
+		WTF.roField('canManageUpi', 'boolean'),
 		WTF.field('upiTitle', 'string', true),
 		WTF.field('upiFirstName', 'string', true),
 		WTF.field('upiLastName', 'string', true),
@@ -68,16 +69,12 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('upiCustom1', 'string', true),
 		WTF.field('upiCustom2', 'string', true),
 		WTF.field('upiCustom3', 'string', true),
-		
+		WTF.roField('canSyncDevices', 'boolean'),
 		WTF.field('syncAlertEnabled', 'boolean', false),
 		WTF.field('syncAlertTolerance', 'int', false),
-		
 		WTF.roField('otpDelivery', 'string'),
 		WTF.roField('otpEmailAddress', 'string'),
 		WTF.roField('otpDeviceIsTrusted', 'boolean'),
-		WTF.roField('otpDeviceTrustedOn', 'string'),
-		
-		WTF.roField('canManageUpi', 'boolean'),
-		WTF.roField('canSyncDevices', 'boolean')
+		WTF.roField('otpDeviceTrustedOn', 'string')
 	]
 });

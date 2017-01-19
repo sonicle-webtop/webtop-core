@@ -54,6 +54,14 @@ public class RunContext {
 		return SecurityUtils.getSubject();
 	}
 	
+	public static boolean isImpersonated() {
+		Subject subject = getSubject();
+		if (subject == null) return false;
+		Principal principal = (Principal)subject.getPrincipal();
+		if (principal == null) return false;
+		return principal.isImpersonated();
+	}
+	
 	public static Session getSession() {
 		return getSession(getSubject());
 	}

@@ -144,7 +144,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.getDomainEntity(domainId);
@@ -156,7 +156,7 @@ public class CoreAdminManager extends BaseManager {
 	public void addDomain(DomainEntity domain) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.addDomain(domain);
@@ -169,7 +169,7 @@ public class CoreAdminManager extends BaseManager {
 	public void initDomainWithDefaults(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.initDomainWithDefaults(domainId);
@@ -182,7 +182,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.updateDomain(domain);
@@ -195,7 +195,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.deleteDomain(domainId);
@@ -212,7 +212,7 @@ public class CoreAdminManager extends BaseManager {
 	 */
 	public List<DomainSetting> listDomainSettings(String domainId, boolean includeHidden) {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.listSettings(domainId, includeHidden);
@@ -228,7 +228,7 @@ public class CoreAdminManager extends BaseManager {
 	 */
 	public boolean updateDomainSetting(String domainId, String serviceId, String key, Object value) {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.setServiceSetting(domainId, serviceId, key, value);
@@ -243,7 +243,7 @@ public class CoreAdminManager extends BaseManager {
 	 */
 	public boolean deleteDomainSetting(String domainId, String serviceId, String key) {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.deleteServiceSetting(domainId, serviceId, key);
@@ -253,7 +253,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.listGroups(domainId);
@@ -266,7 +266,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.getGroupEntity(pid);
@@ -279,7 +279,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.addGroup(group);
@@ -292,7 +292,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.updateGroup(group);
@@ -305,7 +305,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.deleteGroup(pid);
@@ -319,7 +319,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			ODomain domain = wtmgr.getDomain(domainId);
@@ -334,7 +334,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.listUsers(domainId, enabledOnly);
@@ -347,7 +347,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.getUserEntity(pid);
@@ -361,7 +361,7 @@ public class CoreAdminManager extends BaseManager {
 		UserManager wtmgr = wta.getUserManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.getUser(pid);
@@ -375,7 +375,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.addUser(true, user, updatePassord, password);
@@ -388,7 +388,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.updateUser(user);
@@ -401,7 +401,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.updateUser(pid, enabled);
@@ -415,7 +415,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.updateUserPassword(pid, null, newPassword);
@@ -428,7 +428,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.deleteUser(pid, deep);
@@ -499,7 +499,7 @@ public class CoreAdminManager extends BaseManager {
 		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			return wtmgr.getRole(uid);
@@ -512,7 +512,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.addRole(role);
@@ -525,7 +525,7 @@ public class CoreAdminManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.updateRole(role);
@@ -541,7 +541,7 @@ public class CoreAdminManager extends BaseManager {
 		if(domainId == null) throw new WTException("Role not found [{0}]", uid);
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-		RunContext.ensureIsSysAdmin();
+		RunContext.ensureIsWebTopAdmin();
 		
 		try {
 			wtmgr.deleteRole(uid);
@@ -559,6 +559,8 @@ public class CoreAdminManager extends BaseManager {
 	public List<OPecBridgeFetcher> listPecBridgeFetchers(String domainId) throws WTException {
 		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
@@ -581,6 +583,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		try {
 			con = WT.getConnection(SERVICE_ID);
 			OPecBridgeFetcher fetcher = dao.select(con, fetcherId);
@@ -601,6 +605,8 @@ public class CoreAdminManager extends BaseManager {
 	public void addPecBridgeFetcher(OPecBridgeFetcher fetcher) throws WTException {
 		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
 		
 		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -635,6 +641,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
@@ -666,6 +674,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeFetcherDAO dao = PecBridgeFetcherDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
@@ -693,6 +703,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);
 		
@@ -714,6 +726,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		try {
 			con = WT.getConnection(SERVICE_ID);
 			OPecBridgeRelay relay = dao.select(con, relayId);
@@ -734,6 +748,8 @@ public class CoreAdminManager extends BaseManager {
 	public void addPecBridgeRelay(OPecBridgeRelay relay) throws WTException {
 		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
 		
 		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -771,6 +787,8 @@ public class CoreAdminManager extends BaseManager {
 		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
 		
+		RunContext.ensureIsWebTopAdmin();
+		
 		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
@@ -804,6 +822,8 @@ public class CoreAdminManager extends BaseManager {
 	public int deletePecBridgeRelay(String domainId, int relayId) throws WTException {
 		PecBridgeRelayDAO dao = PecBridgeRelayDAO.getInstance();
 		Connection con = null;
+		
+		RunContext.ensureIsWebTopAdmin();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(domainId);

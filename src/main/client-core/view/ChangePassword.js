@@ -124,15 +124,23 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 				np = me.lref('fldnewpassword');
 		if(me.showOldPassword && !op.isValid()) return;
 		if(!np.isValid() || !me.lref('fldnewpassword2').isValid()) return;
-		
-		me.mys.changeUserPassword(me.profileId, me.showOldPassword ? op.getValue() : null, np.getValue(), {
-			callback: function(success) {
-				if(success) me.closeView(false);
-			}
-		});
+		me.doPasswordChange(me.showOldPassword ? op.getValue() : null, np.getValue());
 	},
 	
 	onCancelClick: function() {
 		this.closeView(false);
+	},
+	
+	doPasswordChange: function(op, np) {
+		var me = this;
+		me.mys.changeUserPassword(op, np, {
+			callback: function(success) {
+				if(success) {
+					me.closeView(false);
+				} else {
+					WT.error(WT.res('changePassword.error'));
+				}
+			}
+		});
 	}
 });
