@@ -45,6 +45,8 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -85,8 +87,16 @@ public class Start extends AbstractServlet {
 			Locale locale = wts.getLocale();
 			Map vars = new HashMap();
 			
+			String userTitle = null;
+			if (wts.getProfileId() != null) {
+				UserProfile.Data ud = WT.getUserData(wts.getProfileId());
+				if (ud != null) {
+					userTitle = ud.getDisplayName();
+				}
+			}
+			
 			// Page + loader variables
-			AbstractServlet.fillPageVars(vars, locale, wta, null);
+			AbstractServlet.fillPageVars(vars, wta, locale, userTitle, null);
 			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));
 			
 			// Startup variables
