@@ -310,6 +310,10 @@ public class CoreManager extends BaseManager {
 		return wta.getWebTopManager().userData(getTargetProfileId());
 	}
 	
+	public String getUserUid(UserProfile.Id pid) throws WTException {
+		return wta.getWebTopManager().userToUid(pid,false);
+	}
+	
 	public UserProfile.PersonalInfo getUserPersonalInfo() throws WTException {
 		return getUserPersonalInfo(getTargetProfileId());
 	}

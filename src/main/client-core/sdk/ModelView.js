@@ -38,7 +38,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		'WTA.mixin.HasModel'
 	],
 	
-	session: true,
+	session: false,
 	
 	config: {
 		/**

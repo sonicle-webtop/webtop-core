@@ -72,21 +72,43 @@ public class Sharing {
 		this.rights = rights;
 	}
 	
+	public boolean hasRoleUid(String roleUid) {
+		boolean found=false;
+		for(RoleRights rr: rights) {
+			if (rr.roleUid.equals(roleUid)) {
+				found=true;
+				break;
+			}
+		}
+		return found;
+	}	
+
+	public RoleRights getRoleRights(String roleUid) {
+		RoleRights retrr=null;
+		for(RoleRights rr: rights) {
+			if (rr.roleUid.equals(roleUid)) {
+				retrr=rr;
+				break;
+			}
+		}
+		return retrr;
+	}	
+	
 	public static class RoleRights {
 		public String roleUid;
-		public Boolean rootManage;
-		public Boolean folderRead;
-		public Boolean folderUpdate;
-		public Boolean folderDelete;
-		public Boolean elementsCreate;
-		public Boolean elementsUpdate;
-		public Boolean elementsDelete;
+		public boolean rootManage;
+		public boolean folderRead;
+		public boolean folderUpdate;
+		public boolean folderDelete;
+		public boolean elementsCreate;
+		public boolean elementsUpdate;
+		public boolean elementsDelete;
 		
 		public RoleRights() {}
 		
 		public RoleRights(String roleUid, SharePermsRoot rperms, SharePermsFolder fperms, SharePermsElements eperms) {
 			this.roleUid = roleUid;
-			rootManage = (rperms != null) ? rperms.implies("MANAGE") : null;
+			rootManage = (rperms != null) ? rperms.implies("MANAGE") : false;
 			folderRead = fperms.implies("READ");
 			folderUpdate = fperms.implies("UPDATE");
 			folderDelete = fperms.implies("DELETE");

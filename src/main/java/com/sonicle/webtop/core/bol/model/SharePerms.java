@@ -56,6 +56,10 @@ public abstract class SharePerms {
 	abstract protected void parse(String... actions);
 	abstract protected void parse(String[] actions, boolean[] bools);
 	
+	public void add(int action) {
+		mask |= action;
+	}
+	
 	public void merge(SharePerms permission) {
 		mask |= permission.mask;
 	}
