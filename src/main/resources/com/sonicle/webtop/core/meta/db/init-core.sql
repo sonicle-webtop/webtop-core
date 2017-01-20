@@ -222,7 +222,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."roles_associations";
 CREATE TABLE "core"."roles_associations" (
-"role_association_id" int4 DEFAULT nextval('seq_roles_associations'::regclass) NOT NULL,
+"role_association_id" int4 DEFAULT nextval('"core".seq_roles_associations'::regclass) NOT NULL,
 "user_uid" varchar(36) NOT NULL,
 "role_uid" varchar(36) NOT NULL
 )
@@ -235,7 +235,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."roles_permissions";
 CREATE TABLE "core"."roles_permissions" (
-"role_permission_id" int4 DEFAULT nextval('seq_roles_permissions'::regclass) NOT NULL,
+"role_permission_id" int4 DEFAULT nextval('"core".seq_roles_permissions'::regclass) NOT NULL,
 "role_uid" varchar(36) NOT NULL,
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
@@ -300,7 +300,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."shares";
 CREATE TABLE "core"."shares" (
-"share_id" int4 DEFAULT nextval('seq_shares'::regclass) NOT NULL,
+"share_id" int4 DEFAULT nextval('"core".seq_shares'::regclass) NOT NULL,
 "user_uid" varchar(36),
 "service_id" varchar(255),
 "key" varchar(255),
@@ -422,7 +422,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."users_associations";
 CREATE TABLE "core"."users_associations" (
-"user_association_id" int4 DEFAULT nextval('seq_users_associations'::regclass) NOT NULL,
+"user_association_id" int4 DEFAULT nextval('"core".seq_users_associations'::regclass) NOT NULL,
 "user_uid" varchar(36) NOT NULL,
 "group_uid" varchar(36) NOT NULL
 )
