@@ -403,17 +403,18 @@ public class CoreManager extends BaseManager {
 		ArrayList<String> ids = new ArrayList<>();
 		
 		ensureUserDomain();
-		if(RunContext.isSysAdmin()) {
+		if (RunContext.isSysAdmin()) {
 			ids.add(CoreManifest.ID);
 			ids.add(CoreAdminManifest.ID);
 			ids.add("com.sonicle.webtop.vfs");
+			
 		} else {
 			ServiceManager svcm = wta.getServiceManager();
-			for(String id : svcm.listRegisteredServices()) {
+			for (String id : svcm.listRegisteredServices()) {
 				// We don't want to add admin service during impersonation
 				if (id.equals(CoreAdminManifest.ID) && RunContext.isImpersonated()) continue;
 				
-				if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+				if (RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
 			}
 		}
 		return ids;

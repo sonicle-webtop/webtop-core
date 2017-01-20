@@ -118,7 +118,6 @@ public class ResourceRequest extends HttpServlet {
 		} else {
 			return lookup(request).getLastModified();
 		}
-		//return lookup(req).getLastModified();
 	}
 	
 	protected LookupResult lookup(HttpServletRequest req) {
@@ -209,10 +208,10 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
-		if(subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
+		if (subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
 			return lookupLoginImage(req, isVirtualUrl, targetUrl);
 			
-		} else if(subject.equals(CoreManifest.ID) && path.equals("license.html")) {
+		} else if (subject.equals(CoreManifest.ID) && path.equals("license.html")) {
 			return lookupLicense(req, isVirtualUrl, targetUrl);
 			
 		} else {
