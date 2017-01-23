@@ -125,6 +125,12 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDbUpgraderUI(rec);
 						}
 					},
+					itemdblclick: function(s, rec, itm, i, e) {
+						var type = rec.get('_type');
+						if (type === 'domain') {
+							me.editDomainUI(rec);
+						}
+					},
 					itemcontextmenu: function(s, rec, itm, i, e) {
 						var type = rec.get('_type');
 						if(type === 'domains') {
