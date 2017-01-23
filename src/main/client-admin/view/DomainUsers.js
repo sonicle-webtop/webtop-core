@@ -152,6 +152,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						}),
 						me.addAction('removeDeep', {
 							text: me.mys.res('domainUsers.act-removeDeep.lbl'),
+							disabled: !me.authCapUsersWrite,
 							handler: function() {
 								var rec = me.getSelectedUser();
 								if(rec) me.deleteUserUI(true, rec);
