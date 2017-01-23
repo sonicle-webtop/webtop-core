@@ -225,7 +225,6 @@ public final class WebTopApp {
 	private OTPManager optmgr = null;
 	private ReportManager rptmgr = null;
 	private Scheduler scheduler = null;
-	private final HashMap<String, String> cacheDomainByFQDN = new HashMap<>();
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazione
 	private final HashMap<String, CoreServiceSettings> cacheCss = new HashMap();
@@ -255,7 +254,6 @@ public final class WebTopApp {
 		this.conmgr = ConnectionManager.initialize(this); // Connection Manager
 		this.setmgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesmgr = SessionManager.initialize(this); // Session Manager
-		//this.autm = AuthManager.initialize(this); // Auth Manager
 		
 		this.mediaTypes = MediaTypes.init(conmgr);
 		this.fileTypes = FileTypes.init(conmgr);
@@ -735,6 +733,10 @@ public final class WebTopApp {
 	 */
 	public String getTempPath(String domainId) {
 		return getHomePath(domainId) + "temp/";
+	}
+	
+	public String getImagesPath(String domainId) {
+		return getHomePath(domainId) + "images/";
 	}
 	
 	/**

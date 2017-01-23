@@ -147,6 +147,8 @@ public final class WebTopManager {
 	public static final String USERID_ADMINS = "admins";
 	public static final String USERID_USERS = "users";
 	
+	private final HashMap<String, String> cacheInternetNameToDomain = new HashMap<>();
+	
 	private final Object lock1 = new Object();
 	private final HashMap<UserProfile.Id, String> cacheUserToUserUid = new HashMap<>();
 	private final HashMap<String, UserProfile.Id> cacheUserUidToUser = new HashMap<>();
@@ -164,6 +166,7 @@ public final class WebTopManager {
 	 */
 	private WebTopManager(WebTopApp wta) {
 		this.wta = wta;
+		initInternetNameToDomainCache();
 		initUserUidCache();
 		initGroupUidCache();
 	}
@@ -176,6 +179,7 @@ public final class WebTopManager {
 		cleanupUserUidCache();
 		cleanupGroupUidCache();
 		cleanupUserCache();
+		cleanupInternetNameToDomainCache();
 		logger.info("UserManager destroyed");
 	}
 	
@@ -223,6 +227,12 @@ public final class WebTopManager {
 	
 	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
 		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), null, null, null);
+	}
+	
+	public String internetNameToDomain(String internetName) {
+		synchronized (cacheInternetNameToDomain) {
+			return cacheInternetNameToDomain.get(internetName);
+		}
 	}
 	
 	public List<ODomain> listDomains(boolean enabledOnly) throws WTException {
@@ -339,17 +349,17 @@ public final class WebTopManager {
 	public ODomain addDomain(DomainEntity domain) throws WTException {
 		DomainDAO dodao = DomainDAO.getInstance();
 		Connection con = null;
+		ODomain odomain = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(false);
 			
 			logger.debug("Inserting domain");
-			ODomain odomain = new ODomain();
+			odomain = new ODomain();
 			fillDomain(odomain, domain);
 			dodao.insert(con, odomain);
 			
 			DbUtils.commitQuietly(con);
-			return odomain;
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
@@ -357,6 +367,11 @@ public final class WebTopManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		// Update cache
+		initInternetNameToDomainCache();
+		
+		return odomain;
 	}
 	
 	public void updateDomain(DomainEntity domain) throws WTException {
@@ -379,6 +394,9 @@ public final class WebTopManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		// Update cache
+		initInternetNameToDomainCache();
 	}
 	
 	public void deleteDomain(String domainId) throws WTException {
@@ -428,6 +446,8 @@ public final class WebTopManager {
 			DbUtils.closeQuietly(con);
 		}
 		
+		// Update cache
+		initInternetNameToDomainCache();
 		initUserUidCache();
 		initGroupUidCache();
 		cleanupUserCache();
@@ -1752,6 +1772,32 @@ public final class WebTopManager {
 	
 	private void setDirPassword(ODomain o, String password) {
 		o.setAuthPassword(PasswordUtils.encryptDES(password, new String(new char[]{'p','a','s','s','w','o','r','d'})));
+	}
+	
+	private void initInternetNameToDomainCache() {
+		Connection con = null;
+		
+		try {
+			synchronized(cacheInternetNameToDomain) {
+				DomainDAO dao = DomainDAO.getInstance();
+				
+				con = wta.getConnectionManager().getConnection();
+				cleanupInternetNameToDomainCache();
+				for(ODomain odomain : dao.selectEnabled(con)) {
+					cacheInternetNameToDomain.put(odomain.getInternetName(), odomain.getDomainId());
+				}
+			}
+		} catch(SQLException ex) {
+			throw new WTRuntimeException(ex, "Unable to init domain internetName cache");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private void cleanupInternetNameToDomainCache() {
+		synchronized(cacheInternetNameToDomain) {
+			cacheInternetNameToDomain.clear();
+		}
 	}
 	
 	private void cleanupUserCache() {

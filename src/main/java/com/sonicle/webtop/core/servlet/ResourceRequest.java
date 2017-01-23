@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.io.Resource;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -208,10 +209,10 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
-		if (subject.equals(CoreManifest.ID) && path.equals("images/login.png")) {
+		if (subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
 			return lookupLoginImage(req, isVirtualUrl, targetUrl);
 			
-		} else if (subject.equals(CoreManifest.ID) && path.equals("license.html")) {
+		} else if (subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
 			return lookupLicense(req, isVirtualUrl, targetUrl);
 			
 		} else {
@@ -256,39 +257,31 @@ public class ResourceRequest extends HttpServlet {
 		return this.getClass().getResource(name);
 	}
 	
-	private LookupResult lookupLoginImage(HttpServletRequest request, boolean forceCaching, URL url) {
-		//logger.trace("Looking-up login image");
-		String path = url.getPath();
+	private LookupResult lookupLoginImage(HttpServletRequest request, boolean forceCaching, URL targetUrl) {
+		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
-		try { // TODO: rewiew this!
-			String host = request.getRemoteHost();
-			URL requrl = new URL(request.getRequestURL().toString());
-			host = requrl.getHost();
-			int ix1 = host.indexOf('.');
-			int ix2 = host.lastIndexOf('.');
-			String hdomain = "";
-			if (ix1 == ix2) {
-				hdomain = host;
-			} else {
-				hdomain = host.substring(ix1 + 1);
+		try {
+			String targetPath = targetUrl.getPath();
+			WebTopManager wtMgr = wta.getWebTopManager();
+			if (wtMgr != null) {
+				String internetName = ServletUtils.getInternetName(request);
+				String domainId = wtMgr.internetNameToDomain(internetName);
+				if (!StringUtils.isBlank(domainId)) {
+					String pathname = wta.getImagesPath(domainId) + "login.png";
+					File file = new File(pathname);
+					if (file.exists()) {
+						fileUrl = file.toURI().toURL();
+					}
+				}
 			}
 			
-			File file = null;
-			File dfile = new File(getServletContext().getRealPath("/images/" + hdomain + ".png"));
-			if (dfile.exists()) {
-				file = dfile;
-			} else {
-				file = new File(getServletContext().getRealPath("/images/login.png"));
-			}
-			if (file.exists()) {
-				fileUrl = file.toURI().toURL();
-			} else {
-				fileUrl = this.getClass().getResource(path);
+			if (fileUrl == null) {
+				fileUrl = getResURL(targetPath);
 			}
 			
-			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
+			Resource resFile = getFile(wta, fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -299,21 +292,31 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLicense(HttpServletRequest request, boolean forceCaching, URL reqUrl) {
-		//logger.trace("Looking-up license");
-		String path = reqUrl.getPath();
+	private LookupResult lookupLicense(HttpServletRequest request, boolean forceCaching, URL targetUrl) {
+		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
 		try {
-			File file = new File(getServletContext().getRealPath("/images/license.html"));
-			if (file.exists()) {
-				fileUrl = file.toURI().toURL();
-			} else {
-				fileUrl = this.getClass().getResource(path);
+			String targetPath = targetUrl.getPath();
+			WebTopManager wtMgr = wta.getWebTopManager();
+			if (wtMgr != null) {
+				String internetName = ServletUtils.getInternetName(request);
+				String domainId = wtMgr.internetNameToDomain(internetName);
+				if (!StringUtils.isBlank(domainId)) {
+					String pathname = wta.getHomePath(domainId) + "license.html";
+					File file = new File(pathname);
+					if (file.exists()) {
+						fileUrl = file.toURI().toURL();
+					}
+				}
 			}
 			
-			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
+			if (fileUrl == null) {
+				fileUrl = getResURL(targetPath);
+			}
+			
+			Resource resFile = getFile(wta, fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
