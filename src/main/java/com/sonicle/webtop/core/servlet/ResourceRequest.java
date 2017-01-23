@@ -155,16 +155,6 @@ public class ResourceRequest extends HttpServlet {
 				//	{service.id} -> com.sonicle.webtop.core
 				//	{service.version} -> 5.1.1
 				//	{remaining.url.part} -> laf/default/service.css
-				
-				/*
-				isVirtualUrl = true;
-				subject = matcher.group(1);
-				jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
-				jsPathFound = (jsPath != null);
-				subjectPath = (jsPathFound) ? jsPath : subject;
-				path = matcher.group(3);
-				*/
-				
 				isVirtualUrl = true;
 				subject = matcher.group(1);
 				path = matcher.group(3);
@@ -185,22 +175,7 @@ public class ResourceRequest extends HttpServlet {
 				
 				targetUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			}
-			
-			//String[] urlParts = splitPath(reqPath);
-			//subject = urlParts[0];
-			//System.out.println("subject: "+subject);
-			//jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
-			//System.out.println("jsPath: "+jsPath);
-			//subjectPath = (jsPath == null) ? urlParts[0] : jsPath;
-			//System.out.println("subjectPath: "+subjectPath);
-			//isService = (jsPath != null);
-			////subjectPath = StringUtils.replace(paths[0], ".", "/");
-			//path = urlParts[1];
-			//System.out.println("path: "+path);
-			////logger.trace("{}, {}", subject, path);
-			//translUrl = new URL("http://fake/"+subjectPath+"/"+path);
 			targetPath = targetUrl.getPath();
-			//System.out.println("translPath: "+translPath);
 			
 			//logger.trace("Translated path [{}]", translPath);
 			if (isForbidden(targetPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -209,10 +184,28 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 		}
 		
-		if (subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
+		if (!isVirtualUrl && path.startsWith("images")) {
+			// Addresses domain public images
+			// URLs like "/{domainInternetName}/images/{relativePathToFile}"
+			// Eg.	"/sonicle.com/images/login.png"
+			//		"/sonicle.com/images/sub/login.png"
+			WebTopApp wta = WebTopApp.get(req);
+			WebTopManager wtMgr = wta.getWebTopManager();
+			String domainId = wtMgr.internetNameToDomain(subject);
+			if (StringUtils.isBlank(domainId)) {
+				return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+			}
+			return lookupDomainImage(req, targetUrl, domainId);
+			
+		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
+			// Addresses login image
+			// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
+			// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
 			return lookupLoginImage(req, isVirtualUrl, targetUrl);
 			
-		} else if (subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
+		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
+			// Addresses licence page
+			// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
 			return lookupLicense(req, isVirtualUrl, targetUrl);
 			
 		} else {
@@ -257,6 +250,31 @@ public class ResourceRequest extends HttpServlet {
 		return this.getClass().getResource(name);
 	}
 	
+	private LookupResult lookupDomainImage(HttpServletRequest request, URL targetUrl, String domainId) {
+		WebTopApp wta = WebTopApp.get(request);
+		URL fileUrl = null;
+		
+		try {
+			String targetPath = targetUrl.getPath();
+			String remainingPath = StringUtils.substringAfter(targetPath, "images/");
+			if (StringUtils.isBlank(remainingPath)) throw new NotFoundException();
+			String imagesPath = wta.getImagesPath(domainId);
+			File file = new File(imagesPath + remainingPath);
+			if (!file.exists()) throw new NotFoundException();
+			fileUrl = file.toURI().toURL();
+			
+			Resource resFile = getFile(wta, fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), false, resFile);
+			
+		} catch (ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(MalformedURLException | NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+		} catch(InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	
 	private LookupResult lookupLoginImage(HttpServletRequest request, boolean forceCaching, URL targetUrl) {
 		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
@@ -283,9 +301,9 @@ public class ResourceRequest extends HttpServlet {
 			Resource resFile = getFile(wta, fileUrl);
 			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
 			
-		} catch (MalformedURLException | ForbiddenException ex) {
+		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-		} catch(NotFoundException ex) {
+		} catch(MalformedURLException | NotFoundException ex) {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
