@@ -281,6 +281,10 @@ public class WT {
 		return getWTA().getConnectionManager().getConnection(serviceId, dataSourceName, autoCommit);
 	}
 	
+	public static String getDomainImagesPath(String domainId) {
+		return getWTA().getImagesPath(domainId);
+	}
+	
 	public static String getServiceHomePath(String serviceId) {
 		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);

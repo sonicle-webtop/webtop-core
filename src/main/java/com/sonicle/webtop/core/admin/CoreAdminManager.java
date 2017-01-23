@@ -64,6 +64,8 @@ import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.vfs.VfsManager;
+import com.sonicle.webtop.vfs.bol.model.Store;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -160,6 +162,10 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.addDomain(domain);
+			VfsManager vfs = (VfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
+			if (vfs != null) {
+				vfs.addBuiltInStoreDomainImages(domain.getDomainId());
+			}
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot add domain");
@@ -199,6 +205,11 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.deleteDomain(domainId);
+			VfsManager vfs = (VfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
+			if (vfs != null) {
+				vfs.deleteBuiltInStoreDomainImages(domainId);
+			}
+			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot delete domain [{0}]", domainId);
 		}

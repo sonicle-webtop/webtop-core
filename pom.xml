@@ -241,6 +241,12 @@
 			<artifactId>sonicle-extjs-extensions</artifactId>
 			<version>LATEST</version>
 		</dependency>
+		<dependency>
+            <groupId>com.sonicle.webtop</groupId>
+            <artifactId>webtop-vfs</artifactId>
+            <version>LATEST</version>
+			<scope>provided</scope>
+        </dependency>
 	</dependencies>
 	<build>
 		<resources>
