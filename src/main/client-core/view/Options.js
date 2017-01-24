@@ -148,10 +148,10 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 		});
 		
 		Ext.require(dep, function() {
-			var tabs = me.lref('svctabs');
+			var tabs = me.lref('svctabs'), tab;
 			tabs.removeAll(true);
 			Ext.each(data, function(itm) {
-				tabs.add(Ext.create(itm.viewClassName, {
+				tab = Ext.create(itm.viewClassName, {
 					itemId: itm.id,
 					title: itm.name,
 					iconCls: WTF.cssIconCls(itm.xid, 'service', 'xs'),
@@ -159,7 +159,9 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 					XID: itm.xid,
 					profileId: me.profileId,
 					modelName: itm.modelClassName
-				}));
+				});
+				if (tab.items.getCount() > 0) tab.setActiveTab(0);
+				tabs.add(tab);
 			});
 			tabs.setActiveTab(0);
 		});
