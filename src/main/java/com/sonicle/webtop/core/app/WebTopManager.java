@@ -37,6 +37,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.URIUtils;
+import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
@@ -70,6 +71,7 @@ import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserAssociation;
 import com.sonicle.webtop.core.bol.OUserInfo;
+import com.sonicle.webtop.core.bol.UserId;
 import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
@@ -1353,6 +1355,28 @@ public final class WebTopManager {
 			} else {
 				return cacheUserToData.get(pid);
 			}
+		}
+	}
+	
+	public UserProfile.Data userData(String emailAddress) throws WTException {
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			List<UserId> uids = uidao.viewByEmail(con, emailAddress);
+			if (uids.isEmpty()) return null;
+			
+			UserId uid = uids.get(0);
+			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
+			return userData(pid);
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	

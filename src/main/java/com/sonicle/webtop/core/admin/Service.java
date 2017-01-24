@@ -274,7 +274,7 @@ public class Service extends BaseService {
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wtadm-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wtadm-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
-							CoreServiceSettings css = WT.getCoreServiceSettings(domainId);
+							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 							if (css.getHasPecBridgeManagement()) {
 								children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_PECBRIDGE), "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}

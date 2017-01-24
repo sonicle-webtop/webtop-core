@@ -129,7 +129,7 @@ public class WT {
 	}
 	
 	public static String getPublicBaseUrl(String domainId) {
-		return getCoreServiceSettings(domainId).getPublicBaseUrl();
+		return getWTA().getPublicBaseUrl(domainId);
 	}
 	
 	public static String getServicePublicName(String serviceId) {
@@ -177,6 +177,10 @@ public class WT {
 				return matchingSid;
 			}
 		}
+	}
+	
+	public static String findDomainByInternetName(String internetName) {
+		return getWTA().getWebTopManager().internetNameToDomain(internetName);
 	}
 	
 	public static CoreManager getCoreManager() {
@@ -251,26 +255,10 @@ public class WT {
 	
 	public static Connection getConnection(String serviceId) throws SQLException {
 		return getWTA().getConnectionManager().getFallbackConnection(serviceId);
-		/*
-		ConnectionManager conm = getWTA().getConnectionManager();
-		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
-			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE);
-		} else {
-			return conm.getConnection();
-		}
-		*/
 	}
 	
 	public static Connection getConnection(String serviceId, boolean autoCommit) throws SQLException {
 		return getWTA().getConnectionManager().getFallbackConnection(serviceId, autoCommit);
-		/*
-		ConnectionManager conm = getWTA().getConnectionManager();
-		if (conm.isRegistered(serviceId, ConnectionManager.DEFAULT_DATASOURCE)) {
-			return conm.getConnection(serviceId, ConnectionManager.DEFAULT_DATASOURCE, autoCommit);
-		} else {
-			return conm.getConnection(autoCommit);
-		}
-		*/
 	}
 	
 	public static Connection getConnection(String serviceId, String dataSourceName) throws SQLException {
@@ -343,26 +331,6 @@ public class WT {
 		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
 	}
 	
-	public static String lookupCoreResource(Locale locale, String key) {
-		return getWTA().lookupResource(CoreManifest.ID, locale, key);
-	}
-	
-	public static String lookupResource(String serviceId, Locale locale, String key) {
-		return getWTA().lookupResource(serviceId, locale, key);
-	}
-	
-	public static String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
-		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
-	}
-	
-	public static CoreServiceSettings getCoreServiceSettings(String domainId)  {
-		return getWTA().getCoreServiceSettings(domainId);
-	}
-	
-	public static Session getMailSession(String domainId) {
-		return getWTA().getMailSession(domainId);
-	}
-	
 	public static String getDomainInternetName(String domainId) {
 		try {
 			return getWTA().getWebTopManager().getDomainInternetName(domainId);
@@ -381,6 +349,15 @@ public class WT {
 		}
 	}
 	
+	public static UserProfile.Data guessUserData(String emailAddress) {
+		try {
+			return getWTA().getWebTopManager().userData(emailAddress);
+		} catch(WTException ex) {
+			//TODO: logging
+			return null;
+		}
+	}
+	
 	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
 		try {
 			return getWTA().getWebTopManager().userPersonalInfo(profileId);
@@ -388,6 +365,22 @@ public class WT {
 			//TODO: logging
 			return null;
 		}
+	}
+	
+	public static String lookupCoreResource(Locale locale, String key) {
+		return getWTA().lookupResource(CoreManifest.ID, locale, key);
+	}
+	
+	public static String lookupResource(String serviceId, Locale locale, String key) {
+		return getWTA().lookupResource(serviceId, locale, key);
+	}
+	
+	public static String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
+		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
+	}
+	
+	public static Session getMailSession(String domainId) {
+		return getWTA().getMailSession(domainId);
 	}
 	
 	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {

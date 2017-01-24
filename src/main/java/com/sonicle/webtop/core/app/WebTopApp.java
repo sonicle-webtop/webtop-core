@@ -226,8 +226,7 @@ public final class WebTopApp {
 	private ReportManager rptmgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
-	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazione
-	private final HashMap<String, CoreServiceSettings> cacheCss = new HashMap();
+	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
 	/**
 	 * Private constructor.
@@ -817,6 +816,10 @@ public final class WebTopApp {
 		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
+	public String getPublicBaseUrl(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getPublicBaseUrl();
+	}
+	
 	/**
 	 * Returns the localized string for Core service bound to the specified key.
 	 * @param locale Desired locale.
@@ -903,7 +906,7 @@ public final class WebTopApp {
 	public Session getMailSession(String domainId) {
 		Session session;
 		synchronized(cacheMailSessionByDomain) {
-			CoreServiceSettings css=getCoreServiceSettings(domainId);
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 			String smtphost=css.getSMTPHost();
 			int smtpport=css.getSMTPPort();
 			String key=smtphost+":"+smtpport;
@@ -1057,18 +1060,6 @@ public final class WebTopApp {
 				}
 			}
 		}
-	}
-	
-	public CoreServiceSettings getCoreServiceSettings(String domainId) {
-		CoreServiceSettings css;
-		synchronized(cacheCss) {
-			css=cacheCss.get(domainId);
-			if (css==null) {
-				css=new CoreServiceSettings(CoreManifest.ID,domainId);
-				cacheCss.put(domainId, css);
-			}
-		}
-		return css;
 	}
 	
 	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {

@@ -281,16 +281,13 @@ public class ResourceRequest extends HttpServlet {
 		
 		try {
 			String targetPath = targetUrl.getPath();
-			WebTopManager wtMgr = wta.getWebTopManager();
-			if (wtMgr != null) {
-				String internetName = ServletUtils.getInternetName(request);
-				String domainId = wtMgr.internetNameToDomain(internetName);
-				if (!StringUtils.isBlank(domainId)) {
-					String pathname = wta.getImagesPath(domainId) + "login.png";
-					File file = new File(pathname);
-					if (file.exists()) {
-						fileUrl = file.toURI().toURL();
-					}
+			String internetName = ServletUtils.getInternetName(request);
+			String domainId = WT.findDomainByInternetName(internetName);
+			if (!StringUtils.isBlank(domainId)) {
+				String pathname = wta.getImagesPath(domainId) + "login.png";
+				File file = new File(pathname);
+				if (file.exists()) {
+					fileUrl = file.toURI().toURL();
 				}
 			}
 			
