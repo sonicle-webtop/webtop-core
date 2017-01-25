@@ -178,7 +178,7 @@ public class JobService extends BaseJobService {
 			
 			// Process messages...
 			for(UserProfile.Id pid : byProfile.keySet()) {
-				WT.nofity(pid, byProfile.get(pid), true);
+				WT.notify(pid, byProfile.get(pid), true);
 			}
 			
 			logger.trace("ReminderJob finished [{}]", now);

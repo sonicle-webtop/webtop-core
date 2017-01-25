@@ -1033,7 +1033,7 @@ public final class WebTopApp {
 		List<WebTopSession> sessions = sesmgr.getWebTopSessions(profileId);
 		if(!sessions.isEmpty()) {
 			for(WebTopSession session : sessions) {
-				session.nofity(messages);
+				session.notify(messages);
 			}
 		} else { // No user active sessions found!
 			if(enqueueIfOffline) {

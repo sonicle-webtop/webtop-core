@@ -78,11 +78,11 @@ public class PrivateEnvironment extends AbstractEnvironment {
 	}
 	
 	public void notify(ServiceMessage message) {
-		wts.nofity(message);
+		wts.notify(message);
 	}
 	
 	public void notify(List<ServiceMessage> messages) {
-		wts.nofity(messages);
+		wts.notify(messages);
 	}
 	
 	public String getSecurityToken() {

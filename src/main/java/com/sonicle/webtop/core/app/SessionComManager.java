@@ -101,11 +101,11 @@ public class SessionComManager {
 		}
 	}
 	
-	public void nofity(ServiceMessage message) {
-		nofity(Arrays.asList(new ServiceMessage[]{message}));
+	public void notify(ServiceMessage message) {
+		notify(Arrays.asList(new ServiceMessage[]{message}));
 	}
 	
-	public void nofity(List<ServiceMessage> messages) {
+	public void notify(List<ServiceMessage> messages) {
 		if(!sesm.pushData(sessionId, messages)) {
 			enqueueMessages(messages);
 		}

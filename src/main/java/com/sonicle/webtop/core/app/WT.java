@@ -393,19 +393,19 @@ public class WT {
 		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, null, null, null, data);
 	}
 	
-	public static void nofity(UserProfile.Id profileId, ServiceMessage message) {
-		nofity(profileId, message, false);
+	public static void notify(UserProfile.Id profileId, ServiceMessage message) {
+		WT.notify(profileId, message, false);
 	}
 	
-	public static void nofity(UserProfile.Id profileId, ServiceMessage message, boolean enqueueIfOffline) {
-		nofity(profileId, Arrays.asList(new ServiceMessage[]{message}), enqueueIfOffline);
+	public static void notify(UserProfile.Id profileId, ServiceMessage message, boolean enqueueIfOffline) {
+		notify(profileId, Arrays.asList(new ServiceMessage[]{message}), enqueueIfOffline);
 	}
 	
-	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages) {
-		nofity(profileId, messages, false);
+	public static void notify(UserProfile.Id profileId, List<ServiceMessage> messages) {
+		notify(profileId, messages, false);
 	}
 	
-	public static void nofity(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+	public static void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	

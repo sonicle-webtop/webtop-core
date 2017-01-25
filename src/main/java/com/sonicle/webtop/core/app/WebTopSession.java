@@ -419,7 +419,7 @@ public class WebTopSession {
 		*/
 		
 		//TODO: check autosave and notify
-		//this.nofity(message);
+		//this.notify(message);
 		
 		initLevel = 2;
 	}
@@ -907,14 +907,14 @@ public class WebTopSession {
 		svcm.resetWhatsnew(serviceId, profile);
 	}
 	
-	public void nofity(ServiceMessage message) {
+	public void notify(ServiceMessage message) {
 		if(!isReady()) return;
-		comm.nofity(message);
+		comm.notify(message);
 	}
 	
-	public void nofity(List<ServiceMessage> messages) {
+	public void notify(List<ServiceMessage> messages) {
 		if(!isReady()) return;
-		comm.nofity(messages);
+		comm.notify(messages);
 	}
 	
 	public List<ServiceMessage> getEnqueuedMessages() {
