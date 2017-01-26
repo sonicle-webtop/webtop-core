@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.auth.directory.AbstractDirectory;
@@ -42,7 +41,6 @@ import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
-import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.lang.StringUtils;
 

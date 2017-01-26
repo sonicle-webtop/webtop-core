@@ -455,7 +455,7 @@ public final class WebTopManager {
 		
 		try {
 			AuthenticationDomain ad = createAuthenticationDomain(odomain);
-			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
+			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
 			if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
@@ -569,12 +569,12 @@ public final class WebTopManager {
 			OUser ouser = null;
 			if(updateDirectory) {
 				AuthenticationDomain ad = createAuthenticationDomain(domain);
-				AbstractDirectory authDir = getAuthDirectory(ad.getAuthUri());
+				AbstractDirectory authDir = getAuthDirectory(ad.getDirUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
 				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if (!authDir.validateUsername(opts, user.getUserId())) {
-						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getDirUri().getScheme());
 					}
 				}
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
@@ -582,7 +582,7 @@ public final class WebTopManager {
 						password = authDir.generatePassword(opts, domain.getDirPasswordPolicy());
 					} else {
 						if (domain.getDirPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
-							throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getAuthUri().getScheme());
+							throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getDirUri().getScheme());
 						}
 					}
 				}
@@ -697,7 +697,7 @@ public final class WebTopManager {
 				ad = createAuthenticationDomain(domain);
 			}
 			
-			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
+			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
 			if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
@@ -745,7 +745,7 @@ public final class WebTopManager {
 				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 				
 				AuthenticationDomain ad = createAuthenticationDomain(domain);
-				AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
+				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
 				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
@@ -784,7 +784,7 @@ public final class WebTopManager {
 		
 		try {
 			AuthenticationDomain ad = createAuthenticationDomain(domain);
-			AbstractDirectory directory = getAuthDirectory(ad.getAuthUri());
+			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
 			con = wta.getConnectionManager().getConnection();

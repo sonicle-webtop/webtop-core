@@ -153,8 +153,8 @@ public class WTRealm extends AuthorizingRealm {
 			}
 			
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			AbstractDirectory directory = dirManager.getDirectory(ad.getAuthUri().getScheme());
-			if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getAuthUri().getScheme());
+			AbstractDirectory directory = dirManager.getDirectory(ad.getDirUri().getScheme());
+			if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getDirUri().getScheme());
 			
 			String sntzUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
 			logger.debug("Authenticating principal [{}, {}]", ad.getDomainId(), sntzUsername);

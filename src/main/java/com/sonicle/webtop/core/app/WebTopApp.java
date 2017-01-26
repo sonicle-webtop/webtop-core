@@ -1064,7 +1064,7 @@ public final class WebTopApp {
 	
 	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
 		DirectoryOptions opts = new DirectoryOptions();
-		URI authUri = ad.getAuthUri();
+		URI authUri = ad.getDirUri();
 		switch(authUri.getScheme()) {
 			case WebTopDirectory.SCHEME:
 				WebTopConfigBuilder wt = new WebTopConfigBuilder();
@@ -1074,8 +1074,8 @@ public final class WebTopApp {
 				LdapWebTopConfigBuilder ldapwt = new LdapWebTopConfigBuilder();
 				ldapwt.setHost(opts, authUri.getHost());
 				ldapwt.setPort(opts, authUri.getPort());
-				ldapwt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
-				ldapwt.setAdminDn(opts, ad.getAuthUsername(), ad.getInternetName());
+				ldapwt.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldapwt.setAdminDn(opts, ad.getDirAdmin(), ad.getInternetName());
 				ldapwt.setAdminPassword(opts, getDirPassword(ad));
 				ldapwt.setUsersDn(opts, ad.getInternetName());
 				break;
@@ -1083,8 +1083,8 @@ public final class WebTopApp {
 				LdapConfigBuilder ldap = new LdapConfigBuilder();
 				ldap.setHost(opts, authUri.getHost());
 				ldap.setPort(opts, authUri.getPort());
-				ldap.setConnectionSecurity(opts, ad.getAuthConnSecurity());
-				ldap.setAdminDn(opts, ad.getAuthUsername());
+				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldap.setAdminDn(opts, ad.getDirAdmin());
 				ldap.setAdminPassword(opts, getDirPassword(ad));
 				ldap.setUsersDn(opts, authUri.getPath());
 				break;
@@ -1092,7 +1092,7 @@ public final class WebTopApp {
 				ImapConfigBuilder imap = new ImapConfigBuilder();
 				imap.setHost(opts, authUri.getHost());
 				imap.setPort(opts, authUri.getPort());
-				imap.setConnectionSecurity(opts, ad.getAuthConnSecurity());
+				imap.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				break;
 			case SmbDirectory.SCHEME:
 				SmbConfigBuilder smb = new SmbConfigBuilder();
@@ -1116,8 +1116,8 @@ public final class WebTopApp {
 				LdapNethConfigBuilder ldapnt = new LdapNethConfigBuilder();
 				ldapnt.setHost(opts, authUri.getHost());
 				ldapnt.setPort(opts, authUri.getPort());
-				ldapnt.setConnectionSecurity(opts, ad.getAuthConnSecurity());
-				ldapnt.setAdminDn(opts, ad.getAuthUsername());
+				ldapnt.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldapnt.setAdminDn(opts, ad.getDirAdmin());
 				ldapnt.setAdminPassword(opts, getDirPassword(ad));
 				ldapnt.setUsersDn(opts, ad.getInternetName());
 				break;
@@ -1126,8 +1126,8 @@ public final class WebTopApp {
 	}
 	
 	private char[] getDirPassword(AuthenticationDomain ad) {
-		if(ad.getAuthPassword() == null) return null;
-		String s = PasswordUtils.decryptDES(new String(ad.getAuthPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
+		if(ad.getDirPassword() == null) return null;
+		String s = PasswordUtils.decryptDES(new String(ad.getDirPassword()), new String(new char[]{'p','a','s','s','w','o','r','d'}));
 		return (s != null) ? s.toCharArray() : null;
 	}
 	
