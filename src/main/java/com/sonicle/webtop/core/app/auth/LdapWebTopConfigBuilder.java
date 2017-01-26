@@ -46,7 +46,9 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 	private static final String WTA = "wta";
 	public static final String DEFAULT_HOST = "localhost";
 	public static final Integer DEFAULT_PORT = 389;
-	public static final String DEFAULT_USERS_DN = "ou=people";
+	public static final String DEFAULT_USER_FIRSTNAME_FIELD = "givenName";
+	public static final String DEFAULT_USER_LASTNAME_FIELD = "sn";
+	public static final String DEFAULT_USER_DISPLAY_NAME_FIELD = "cn";
 	
 	public static LdapWebTopConfigBuilder getInstance() {
 		return BUILDER;
@@ -70,8 +72,27 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 		return getInteger(opts, PARAM_PORT, DEFAULT_PORT);
 	}
 	
+	public void setAdminDn(DirectoryOptions opts, String adminUsername, String internetName) {
+		setParam(opts, PARAM_ADMIN_DN, "cn=" + adminUsername + "," + toDn(internetName));
+	}
+	
 	@Override
-	public String getUsersDn(DirectoryOptions opts) {
-		return getString(opts, PARAM_USERS_DN, DEFAULT_USERS_DN);
+	public void setUsersDn(DirectoryOptions opts, String internetName) {
+		setParam(opts, PARAM_USERS_DN, "ou=people," + toDn(internetName));
+	}
+	
+	@Override
+	public String getUserFirstnameField(DirectoryOptions opts) {
+		return getString(opts, PARAM_USER_FIRSTNAME_FIELD, DEFAULT_USER_FIRSTNAME_FIELD);
+	}
+	
+	@Override
+	public String getUserLastnameField(DirectoryOptions opts) {
+		return getString(opts, PARAM_USER_LASTNAME_FIELD, DEFAULT_USER_LASTNAME_FIELD);
+	}
+	
+	@Override
+	public String getUserDisplayNameField(DirectoryOptions opts) {
+		return getString(opts, PARAM_USER_DISPLAY_NAME_FIELD, DEFAULT_USER_DISPLAY_NAME_FIELD);
 	}
 }

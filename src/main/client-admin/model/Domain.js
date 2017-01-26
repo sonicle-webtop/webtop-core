@@ -55,11 +55,14 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('authScheme', 'string', false),
 		WTF.field('authHost', 'string', true),
 		WTF.field('authPort', 'int', true),
-		WTF.field('authPath', 'string', true),
-		WTF.field('authUsername', 'string', true),
+		WTF.field('authAdmin', 'string', true),
 		WTF.field('authPassword', 'string', true),
 		WTF.field('authConnSecurity', 'string', true, {defaultValue: 'null'}),
 		WTF.field('authCaseSensitive', 'boolean', false, {defaultValue: false}),
-		WTF.field('authPasswordPolicy', 'boolean', false, {defaultValue: false})
+		WTF.field('authPasswordPolicy', 'boolean', false, {defaultValue: false}),
+		WTF.field('ldapUsersDn', 'string', true),
+		WTF.field('ldapUserFirstnameField', 'string', true),
+		WTF.field('ldapUserLastnameField', 'string', true),
+		WTF.field('ldapUserDisplayNameField', 'string', true)
 	]
 });

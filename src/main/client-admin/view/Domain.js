@@ -186,9 +186,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					}),
 					{
 						xtype: 'textfield',
-						bind: '{record.authUsername}',
+						bind: '{record.authAdmin}',
 						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
+						fieldLabel: me.mys.res('domain.fld-authAdmin.lbl'),
 						width: 300
 					}, {
 						xtype: 'sopasswordfield',
@@ -208,69 +208,96 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
 					}]
 				}, {
-					xtype: 'wtform',
+					xtype: 'tabpanel',
 					itemId: 'ldap',
 					modelValidation: true,
-					defaults: {
-						labelWidth: 120
-					},
 					items: [{
-						xtype: 'fieldcontainer',
-						layout: 'hbox',
+						title: me.mys.res('domain.ldap.server.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [{
+								xtype: 'fieldcontainer',
+								layout: 'hbox',
+								items: [{
+									xtype: 'textfield',
+									bind: '{record.authHost}',
+									width: 160
+								}, {
+									xtype: 'displayfield',
+									value: '&nbsp;:&nbsp;'
+								}, {
+									xtype: 'numberfield',
+									bind: '{record.authPort}',
+									hideTrigger: true,
+									minValue: 1,
+									maxValue: 65000,
+									width: 60,
+									emptyText: me.mys.res('domain.fld-authPort.emp')
+								}],
+								fieldLabel: me.mys.res('domain.fld-authHost.lbl')
+							},
+							WTF.lookupCombo('id', 'desc', {
+								bind: '{record.authConnSecurity}',
+								allowBlank: false,
+								store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
+									autoLoad: true
+								}),
+								fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
+								width: 230
+							}),
+							{
+								xtype: 'textfield',
+								bind: '{record.authAdmin}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.ldap.fld-authAdmin.lbl'),
+								width: 300
+							}, {
+								xtype: 'sopasswordfield',
+								bind: '{record.authPassword}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
+								width: 300
+							}, {
+								xtype: 'checkbox',
+								bind: '{foAuthCaseSensitive}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
+							}, {
+								xtype: 'checkbox',
+								bind: '{foAuthPasswordPolicy}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
+							}
+						]
+					}, {
+						title: me.mys.res('domain.ldap.user.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 160
+						},
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.authHost}',
-							width: 160
+							bind: '{record.ldapUsersDn}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUsersDn.lbl'),
+							width: 330
 						}, {
-							xtype: 'displayfield',
-							value: '&nbsp;:&nbsp;'
+							xtype: 'textfield',
+							bind: '{record.ldapUserFirstnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+							width: 330
 						}, {
-							xtype: 'numberfield',
-							bind: '{record.authPort}',
-							hideTrigger: true,
-							minValue: 1,
-							maxValue: 65000,
-							width: 60,
-							emptyText: me.mys.res('domain.fld-authPort.emp')
-						}],
-						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
-					},
-					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.authConnSecurity}',
-						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
-							autoLoad: true
-						}),
-						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
-						width: 230
-					}),
-					{
-						xtype: 'textfield',
-						bind: '{record.authPath}',
-						fieldLabel: me.mys.res('domain.fld-authPath.lbl'),
-						anchor: '100%'
-					}, {
-						xtype: 'textfield',
-						bind: '{record.authUsername}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
-						width: 300
-					}, {
-						xtype: 'sopasswordfield',
-						bind: '{record.authPassword}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
-						width: 300
-					}, {
-						xtype: 'checkbox',
-						bind: '{foAuthCaseSensitive}',
-						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
-					}, {
-						xtype: 'checkbox',
-						bind: '{foAuthPasswordPolicy}',
-						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
+							xtype: 'textfield',
+							bind: '{record.ldapUserLastnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+							width: 330
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserDisplayNameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+							width: 330
+						}]
 					}]
 				}, {
 					xtype: 'wtform',
@@ -392,59 +419,96 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							
 					}]
 				}, {
-					xtype: 'wtform',
+					xtype: 'tabpanel',
 					itemId: 'ldapneth',
 					modelValidation: true,
-					defaults: {
-						labelWidth: 120
-					},
 					items: [{
-						xtype: 'fieldcontainer',
-						layout: 'hbox',
+						title: me.mys.res('domain.ldap.server.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [{
+								xtype: 'fieldcontainer',
+								layout: 'hbox',
+								items: [{
+									xtype: 'textfield',
+									bind: '{record.authHost}',
+									width: 160
+								}, {
+									xtype: 'displayfield',
+									value: '&nbsp;:&nbsp;'
+								}, {
+									xtype: 'numberfield',
+									bind: '{record.authPort}',
+									hideTrigger: true,
+									minValue: 1,
+									maxValue: 65000,
+									width: 60,
+									emptyText: me.mys.res('domain.fld-authPort.emp')
+								}],
+								fieldLabel: me.mys.res('domain.fld-authHost.lbl')
+							},
+							WTF.lookupCombo('id', 'desc', {
+								bind: '{record.authConnSecurity}',
+								allowBlank: false,
+								store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
+									autoLoad: true
+								}),
+								fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
+								width: 230
+							}),
+							{
+								xtype: 'textfield',
+								bind: '{record.authAdmin}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.ldap.fld-authAdmin.lbl'),
+								width: 300
+							}, {
+								xtype: 'sopasswordfield',
+								bind: '{record.authPassword}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
+								width: 300
+							}, {
+								xtype: 'checkbox',
+								bind: '{foAuthCaseSensitive}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
+							}, {
+								xtype: 'checkbox',
+								bind: '{foAuthPasswordPolicy}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-authPasswordPolicy.lbl')
+							}
+						]
+					}, {
+						title: me.mys.res('domain.ldap.user.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 160
+						},
 						items: [{
 							xtype: 'textfield',
-							bind: '{record.authHost}',
-							width: 160
+							bind: '{record.ldapUsersDn}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUsersDn.lbl'),
+							width: 330
 						}, {
-							xtype: 'displayfield',
-							value: '&nbsp;:&nbsp;'
+							xtype: 'textfield',
+							bind: '{record.ldapUserFirstnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+							width: 330
 						}, {
-							xtype: 'numberfield',
-							bind: '{record.authPort}',
-							hideTrigger: true,
-							minValue: 1,
-							maxValue: 65000,
-							width: 60,
-							emptyText: me.mys.res('domain.fld-authPort.emp')
-						}],
-						fieldLabel: me.mys.res('domain.fld-authHost.lbl')
-					},
-					WTF.lookupCombo('id', 'desc', {
-						bind: '{record.authConnSecurity}',
-						allowBlank: false,
-						store: Ext.create('Sonicle.webtop.core.admin.store.AuthConnSecurity', {
-							autoLoad: true
-						}),
-						fieldLabel: me.mys.res('domain.fld-authConnSecurity.lbl'),
-						width: 230
-					}),
-					{
-						xtype: 'textfield',
-						bind: '{record.authUsername}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-authUsername.lbl'),
-						width: 300
-					}, {
-						xtype: 'sopasswordfield',
-						bind: '{record.authPassword}',
-						plugins: 'sonoautocomplete',
-						fieldLabel: me.mys.res('domain.fld-authPassword.lbl'),
-						width: 300
-					}, {
-						xtype: 'checkbox',
-						bind: '{foAuthCaseSensitive}',
-						hideEmptyLabel: false,
-						boxLabel: me.mys.res('domain.fld-authCaseSensitive.lbl')
+							xtype: 'textfield',
+							bind: '{record.ldapUserLastnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+							width: 330
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserDisplayNameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+							width: 330
+						}]
 					}]
 				}]
 			}]
@@ -474,51 +538,51 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		switch(mo.get('authScheme')) {
 			case 'webtop':
 				mo.getField('authHost').constructValidators([]);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authAdmin').constructValidators([]);
 				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ldapwebtop':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authAdmin').constructValidators(['presence']);
 				mo.getField('authPassword').constructValidators(['presence']);
 				break;
 			case 'ldap':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators(['presence']);
-				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authAdmin').constructValidators(['presence']);
 				mo.getField('authPassword').constructValidators(['presence']);
+				mo.getField('ldapUsersDn').constructValidators(['presence']);
+				mo.getField('ldapUserFirstnameField').constructValidators(['presence']);
+				mo.getField('ldapUserLastnameField').constructValidators(['presence']);
+				mo.getField('ldapUserDisplayNameField').constructValidators(['presence']);
 				break;
 			case 'imap':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authAdmin').constructValidators([]);
 				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'smb':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authAdmin').constructValidators([]);
 				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'sftp':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authAdmin').constructValidators([]);
 				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ad':
 				mo.getField('authHost').constructValidators([]);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators([]);
+				mo.getField('authAdmin').constructValidators([]);
 				mo.getField('authPassword').constructValidators([]);
 				break;
 			case 'ldapneth':
 				mo.getField('authHost').constructValidators(['presence']);
-				mo.getField('authPath').constructValidators([]);
-				mo.getField('authUsername').constructValidators(['presence']);
+				mo.getField('authAdmin').constructValidators(['presence']);
 				mo.getField('authPassword').constructValidators(['presence']);
+				mo.getField('ldapUsersDn').constructValidators(['presence']);
+				mo.getField('ldapUserFirstnameField').constructValidators(['presence']);
+				mo.getField('ldapUserLastnameField').constructValidators(['presence']);
+				mo.getField('ldapUserDisplayNameField').constructValidators(['presence']);
 				break;
 		}
 	}

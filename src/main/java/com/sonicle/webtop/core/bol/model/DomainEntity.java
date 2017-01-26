@@ -34,8 +34,12 @@
 package com.sonicle.webtop.core.bol.model;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
@@ -48,12 +52,13 @@ public class DomainEntity {
 	private Boolean enabled;
 	private String description;
 	private Boolean userAutoCreation;
-	private String authUri;
-	private String authUsername;
-	private String authPassword;
-	private ConnectionSecurity authConnSecurity;
-	private Boolean authCaseSensitive;
-	private Boolean authPasswordPolicy;
+	private URI dirUri;
+	private String dirAdmin;
+	private String dirPassword;
+	private ConnectionSecurity dirConnSecurity;
+	private Boolean dirCaseSensitive;
+	private Boolean dirPasswordPolicy;
+	private ParamsLdapDirectory dirParameters;
 	
 	public DomainEntity() {}
 	
@@ -63,12 +68,18 @@ public class DomainEntity {
 		enabled = o.getEnabled();
 		description = o.getDescription();
 		userAutoCreation = o.getUserAutoCreation();
-		authUri = o.getAuthUri();
-		authUsername = o.getAuthUsername();
-		authPassword = o.getAuthPassword();
-		authConnSecurity = EnumUtils.getEnum(ConnectionSecurity.class, o.getAuthConnectionSecurity());
-		authCaseSensitive = o.getAuthCaseSensitive();
-		authPasswordPolicy = o.getAuthPasswordPolicy();
+		dirUri = new URI(o.getDirUri());
+		dirAdmin = o.getDirAdmin();
+		dirPassword = o.getDirPassword();
+		dirConnSecurity = EnumUtils.getEnum(ConnectionSecurity.class, o.getDirConnectionSecurity());
+		dirCaseSensitive = o.getDirCaseSensitive();
+		dirPasswordPolicy = o.getDirPasswordPolicy();
+		String scheme = dirUri.getScheme();
+		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME)) {
+			dirParameters = LangUtils.deserialize(o.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
+		} else {
+			dirParameters = null;
+		}
 	}
 
 	public String getDomainId() {
@@ -111,51 +122,59 @@ public class DomainEntity {
 		this.userAutoCreation = userAutoCreation;
 	}
 
-	public String getAuthUri() {
-		return authUri;
+	public URI getDirUri() {
+		return dirUri;
 	}
 
-	public void setAuthUri(String authUri) {
-		this.authUri = authUri;
+	public void setDirUri(URI dirUri) {
+		this.dirUri = dirUri;
 	}
 
-	public String getAuthUsername() {
-		return authUsername;
+	public String getDirAdmin() {
+		return dirAdmin;
 	}
 
-	public void setAuthUsername(String authUsername) {
-		this.authUsername = authUsername;
+	public void setDirAdmin(String dirAdmin) {
+		this.dirAdmin = dirAdmin;
 	}
 
-	public String getAuthPassword() {
-		return authPassword;
+	public String getDirPassword() {
+		return dirPassword;
 	}
 
-	public void setAuthPassword(String authPassword) {
-		this.authPassword = authPassword;
+	public void setDirPassword(String dirPassword) {
+		this.dirPassword = dirPassword;
 	}
 	
-	public ConnectionSecurity getAuthConnSecurity() {
-		return authConnSecurity;
+	public ConnectionSecurity getDirConnSecurity() {
+		return dirConnSecurity;
 	}
 
-	public void setAuthConnSecurity(ConnectionSecurity authConnSecurity) {
-		this.authConnSecurity = authConnSecurity;
+	public void setDirConnSecurity(ConnectionSecurity dirConnSecurity) {
+		this.dirConnSecurity = dirConnSecurity;
 	}
 
-	public Boolean getAuthCaseSensitive() {
-		return authCaseSensitive;
+	public Boolean getDirCaseSensitive() {
+		return dirCaseSensitive;
 	}
 
-	public void setAuthCaseSensitive(Boolean authCaseSensitive) {
-		this.authCaseSensitive = authCaseSensitive;
+	public void setDirCaseSensitive(Boolean dirCaseSensitive) {
+		this.dirCaseSensitive = dirCaseSensitive;
 	}
 
-	public Boolean getAuthPasswordPolicy() {
-		return authPasswordPolicy;
+	public Boolean getDirPasswordPolicy() {
+		return dirPasswordPolicy;
 	}
 
-	public void setAuthPasswordPolicy(Boolean authPasswordPolicy) {
-		this.authPasswordPolicy = authPasswordPolicy;
+	public void setDirPasswordPolicy(Boolean dirPasswordPolicy) {
+		this.dirPasswordPolicy = dirPasswordPolicy;
+	}
+	
+	public ParamsLdapDirectory getDirParameters() {
+		return dirParameters;
+	}
+
+	public void setDirParameters(ParamsLdapDirectory dirParameters) {
+		this.dirParameters = dirParameters;
 	}
 }

@@ -265,7 +265,7 @@ public class Service extends BaseService {
 							String domainId = cid.getToken(1);
 							ODomain domain = core.getDomain(domainId);
 							AbstractDirectory dir = core.getAuthDirectory(domain);
-							boolean passwordPolicy = domain.getAuthPasswordPolicy();
+							boolean passwordPolicy = domain.getDirPasswordPolicy();
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							

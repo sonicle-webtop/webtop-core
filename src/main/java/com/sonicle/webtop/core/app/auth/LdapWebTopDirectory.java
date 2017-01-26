@@ -63,7 +63,7 @@ public class LdapWebTopDirectory extends LdapDirectory {
 	public URI buildUri(String host, Integer port, String path) throws URISyntaxException {
 		// path can be ignored!
 		int iport = (port == null) ? LdapWebTopConfigBuilder.DEFAULT_PORT : port;
-		return new URI(SCHEME, null, host, iport, "/" + LdapWebTopConfigBuilder.DEFAULT_USERS_DN, null, null);
+		return new URI(SCHEME, null, host, iport, null, null, null);
 	}
 	
 	@Override
@@ -80,8 +80,8 @@ public class LdapWebTopDirectory extends LdapDirectory {
 	}
 	
 	@Override
-	protected List<LdapAttribute> createLdapAddAttrs(AuthUser userEntry) throws DirectoryException {
-		List<LdapAttribute> attrs = super.createLdapAddAttrs(userEntry);
+	protected List<LdapAttribute> createLdapAddAttrs(DirectoryOptions opts, AuthUser userEntry) throws DirectoryException {
+		List<LdapAttribute> attrs = super.createLdapAddAttrs(opts, userEntry);
 		LdapAttribute objectClass = new LdapAttribute("objectClass");
 		objectClass.addStringValue("inetOrgPerson", "top");
 		attrs.add(objectClass);

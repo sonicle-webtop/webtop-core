@@ -156,7 +156,7 @@ public class Service extends BaseService {
 			} else {
 				ODomain domain = coreMgr.getDomain();
 				if (domain != null) {
-					domainPasswordPolicy = domain.getAuthPasswordPolicy();
+					domainPasswordPolicy = domain.getDirPasswordPolicy();
 					AbstractDirectory dir = coreMgr.getAuthDirectory(domain);
 					dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 				}

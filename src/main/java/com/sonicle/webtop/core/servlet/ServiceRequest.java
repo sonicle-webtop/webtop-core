@@ -84,12 +84,12 @@ public class ServiceRequest extends BaseServiceRequest {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				String payload = null;
 				
-				if(StringUtils.isEmpty(id)) {
+				if(StringUtils.isBlank(id)) {
 					payload = ServletUtils.getPayload(request);
 					Payload<MapItem, JsUserOptionsBase> pl = ServletUtils.getPayload(payload, JsUserOptionsBase.class);
 					if(pl.map.has("id")) id = pl.data.id;
 				}
-				if(StringUtils.isEmpty(id)) throw new Exception("No id specified");
+				if(StringUtils.isBlank(id)) throw new Exception("No id specified");
 				
 				// Retrieves instantiated userOptions service (session context away)
 				UserProfile.Id pid = new UserProfile.Id(id);

@@ -34,10 +34,14 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.bol.model.DomainEntity;
+import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.apache.commons.lang.StringUtils;
@@ -55,12 +59,15 @@ public class JsDomain {
 	public String authScheme;
 	public String authHost;
 	public Integer authPort;
-	public String authPath;
-	public String authUsername;
+	public String authAdmin;
 	public String authPassword;
 	public String authConnSecurity;
 	public Boolean authCaseSensitive;
 	public Boolean authPasswordPolicy;
+	public String ldapUsersDn;
+	public String ldapUserFirstnameField;
+	public String ldapUserLastnameField;
+	public String ldapUserDisplayNameField;
 	
 	public JsDomain() {}
 	
@@ -70,16 +77,26 @@ public class JsDomain {
 		enabled = o.getEnabled();
 		description = o.getDescription();
 		userAutoCreation = o.getUserAutoCreation();
-		URI uri = new URI(o.getAuthUri());
-		authScheme = uri.getScheme();
-		authHost = uri.getHost();
-		authPort = URIUtils.getPort(uri);
-		authPath = uri.getPath();
-		authUsername = o.getAuthUsername();
-		authPassword = o.getAuthPassword();
-		authConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getAuthConnSecurity()), "null");
-		authCaseSensitive = o.getAuthCaseSensitive();
-		authPasswordPolicy = o.getAuthPasswordPolicy();
+		authScheme = o.getDirUri().getScheme();
+		authHost = o.getDirUri().getHost();
+		authPort = URIUtils.getPort(o.getDirUri());
+		authAdmin = o.getDirAdmin();
+		authPassword = o.getDirPassword();
+		authConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getDirConnSecurity()), "null");
+		authCaseSensitive = o.getDirCaseSensitive();
+		authPasswordPolicy = o.getDirPasswordPolicy();
+		if (o.getDirParameters() instanceof ParamsLdapDirectory) {
+			ParamsLdapDirectory params = (ParamsLdapDirectory)o.getDirParameters();
+			ldapUsersDn = params.usersDn;
+			ldapUserFirstnameField = params.userFirstnameField;
+			ldapUserLastnameField = params.userLastnameField;
+			ldapUserDisplayNameField = params.userDisplayNameField;
+		} else {
+			ldapUsersDn = null;
+			ldapUserFirstnameField = null;
+			ldapUserLastnameField = null;
+			ldapUserDisplayNameField = null;
+		}
 	}
 	
 	public static DomainEntity buildDomainEntity(JsDomain js, AbstractDirectory dir) throws URISyntaxException {
@@ -89,12 +106,23 @@ public class JsDomain {
 		de.setEnabled(js.enabled);
 		de.setDescription(js.description);
 		de.setUserAutoCreation(js.userAutoCreation);
-		de.setAuthUri(dir.buildUri(js.authHost, js.authPort, js.authPath).toString());
-		de.setAuthUsername(js.authUsername);
-		de.setAuthPassword(js.authPassword);
-		de.setAuthConnSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.authConnSecurity));
-		de.setAuthCaseSensitive(js.authCaseSensitive);
-		de.setAuthPasswordPolicy(js.authPasswordPolicy);
+		de.setDirUri(dir.buildUri(js.authHost, js.authPort, null));
+		de.setDirAdmin(js.authAdmin);
+		de.setDirPassword(js.authPassword);
+		de.setDirConnSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.authConnSecurity));
+		de.setDirCaseSensitive(js.authCaseSensitive);
+		de.setDirPasswordPolicy(js.authPasswordPolicy);
+		String scheme = de.getDirUri().getScheme();
+		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME)) {
+			ParamsLdapDirectory params =  new ParamsLdapDirectory();
+			params.usersDn = js.ldapUsersDn;
+			params.userFirstnameField = js.ldapUserFirstnameField;
+			params.userLastnameField = js.ldapUserLastnameField;
+			params.userDisplayNameField = js.ldapUserDisplayNameField;
+			de.setDirParameters(params);
+		} else {
+			de.setDirParameters(null);
+		}
 		return de;
 	}
 }

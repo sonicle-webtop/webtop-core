@@ -186,10 +186,10 @@ public class CoreManager extends BaseManager {
 	
 	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
 		if (RunContext.isSysAdmin()) {
-			return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
+			return wta.getWebTopManager().getAuthDirectory(domain.getDirUri());
 		} else {
 			ensureUserDomain(domain.getDomainId());
-			return wta.getWebTopManager().getAuthDirectory(domain.getAuthUri());
+			return wta.getWebTopManager().getAuthDirectory(domain.getDirUri());
 		}
 	}
 	
