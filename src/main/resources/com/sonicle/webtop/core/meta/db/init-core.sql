@@ -136,12 +136,13 @@ CREATE TABLE "core"."domains" (
 "enabled" bool NOT NULL,
 "description" varchar(100) NOT NULL,
 "user_auto_creation" bool NOT NULL,
-"auth_uri" varchar(255) NOT NULL,
-"auth_username" varchar(255),
-"auth_password" varchar(255),
-"auth_connection_security" varchar(10),
-"auth_case_sensitive" bool NOT NULL,
-"auth_password_policy" bool NOT NULL
+"dir_uri" varchar(255) NOT NULL,
+"dir_admin" varchar(255),
+"dir_password" varchar(255),
+"dir_connection_security" varchar(10),
+"dir_case_sensitive" bool NOT NULL,
+"dir_password_policy" bool NOT NULL,
+"dir_parameters" text
 )
 WITH (OIDS=FALSE)
 
