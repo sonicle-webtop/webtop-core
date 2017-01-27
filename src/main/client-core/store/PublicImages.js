@@ -31,70 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.Service', {
-	extend: 'WTA.sdk.Service',
-	requires: [
-		'Sonicle.webtop.core.model.ServiceVars',
-		'Sonicle.webtop.core.view.Activities',
-		'Sonicle.webtop.core.view.Causals'
-	],
+Ext.define('Sonicle.webtop.core.store.PublicImages', {
+	alternateClassName: 'WTA.store.PublicImages',
+	extend: 'Ext.data.Store',
 	
-	vwrem: null,
-	
-	init: function() {
-		var me = this;
-		WT.checkDesktopNotificationAuth();
-		me.onMessage('reminderNotify', function(msg) {
-			var pl = msg.payload;
-			me.showReminder(pl);
-			WT.showDesktopNotification(pl.serviceId, {
-				title: pl.title
-			});
-		});
-		me.onMessage('autosaveNotify', function(msg) {
-			WT.info("You have new autosave data!");
-		});
-	},
-	
-	
-	
-	showActivities: function() {
-		WT.createView(this.ID, 'view.Activities').show();
-	},
-	
-	showCausals: function() {
-		WT.createView(this.ID, 'view.Causals').show();
-	},
-	
-	showReminder: function(data) {
-		var me = this;
-		
-		if(me.vwrem) {
-			me.vwrem.getView().addReminder(data);
-		} else {
-			me.vwrem = WT.createView(me.ID, 'view.Reminder');
-			me.vwrem.on('close', function() {
-				me.vwrem = null;
-			}, {single: true});
-			me.vwrem.show(false, function() {
-				Ext.defer(function() {
-					me.vwrem.getView().addReminder(data);
-				}, 200);
-			});
-		}
-	},
-	
-	changeUserPassword: function(oldPassword, newPassword, opts) {
-		opts = opts || {};
-		var me = this;
-		WT.ajaxReq(me.ID, 'ChangeUserPassword', {
-			params: {
-				oldPassword: oldPassword,
-				newPassword: newPassword
-			},
-			callback: function(success, json) {
-				Ext.callback(opts.callback, opts.scope || me, [success, json]);
-			}
-		});
-	}
+	model: 'WTA.model.Simple',
+	proxy: WTF.proxy(WT.ID, 'ListDomainPublicImages', 'images')
 });

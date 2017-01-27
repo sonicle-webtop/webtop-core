@@ -87,6 +87,7 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -104,6 +105,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 /**
  *
@@ -168,6 +170,7 @@ public class Service extends BaseService {
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
 		co.put("domainPasswordPolicy", domainPasswordPolicy);
 		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
+		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
@@ -971,6 +974,21 @@ public class Service extends BaseService {
 		}
 	}
 	
+	
+	public void processListDomainPublicImages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String path=WT.getDomainImagesPath(getWts().getProfileId().getDomainId());
+			ArrayList<JsSimple> items=new ArrayList<>();
+			File dir=new File(path);
+			for(File file: dir.listFiles()) {
+				items.add(new JsSimple(file.getName(),file.getName()));
+			}
+			new JsonResult("images", items, items.size()).printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in processListDomainPublicImages", ex);
+			new JsonResult(false, "Error in processListDomainPublicImages").printTo(out);
+		}
+	}
 	
 	
 	private List<String> queryDomains() {

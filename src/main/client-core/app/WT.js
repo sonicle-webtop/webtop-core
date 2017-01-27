@@ -91,6 +91,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Returns the base URL of the public images for the current domain.
+	 * @returns {String}
+	 */
+	getPublicImagesUrl: function() {
+		return WT.getAppBaseUrl()+"/resources/"+WT.getVar("domainInternetName")+"/images";
+		//return WTS.baseUrl;
+	},
+	
+	/**
 	 * Returns the Push URL for websocket.
 	 * @returns {String}
 	 */
