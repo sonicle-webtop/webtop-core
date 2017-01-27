@@ -64,6 +64,7 @@ import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
@@ -1064,6 +1065,8 @@ public final class WebTopApp {
 	
 	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
 		DirectoryOptions opts = new DirectoryOptions();
+		ParamsLdapDirectory params = null;
+		
 		URI authUri = ad.getDirUri();
 		switch(authUri.getScheme()) {
 			case WebTopDirectory.SCHEME:
@@ -1075,18 +1078,10 @@ public final class WebTopApp {
 				ldapwt.setHost(opts, authUri.getHost());
 				ldapwt.setPort(opts, authUri.getPort());
 				ldapwt.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldapwt.setAdminDn(opts, ad.getDirAdmin(), ad.getInternetName());
+				ldapwt.setSpecificAdminDn(opts, ad.getDirAdmin(), ad.getInternetName());
 				ldapwt.setAdminPassword(opts, getDirPassword(ad));
-				ldapwt.setUsersDn(opts, ad.getInternetName());
-				break;
-			case LdapDirectory.SCHEME:
-				LdapConfigBuilder ldap = new LdapConfigBuilder();
-				ldap.setHost(opts, authUri.getHost());
-				ldap.setPort(opts, authUri.getPort());
-				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldap.setAdminDn(opts, ad.getDirAdmin());
-				ldap.setAdminPassword(opts, getDirPassword(ad));
-				ldap.setUsersDn(opts, authUri.getPath());
+				ldapwt.setSpecificLoginDn(opts, ad.getInternetName());
+				ldapwt.setSpecificUserDn(opts, ad.getInternetName());
 				break;
 			case ImapDirectory.SCHEME:
 				ImapConfigBuilder imap = new ImapConfigBuilder();
@@ -1104,22 +1099,55 @@ public final class WebTopApp {
 				sftp.setHost(opts, authUri.getHost());
 				sftp.setPort(opts, authUri.getPort());
 				break;
+			case LdapDirectory.SCHEME:
+				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
+				LdapConfigBuilder ldap = new LdapConfigBuilder();
+				ldap.setHost(opts, authUri.getHost());
+				ldap.setPort(opts, authUri.getPort());
+				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldap.setAdminDn(opts, ad.getDirAdmin());
+				ldap.setAdminPassword(opts, getDirPassword(ad));
+				if (!StringUtils.isBlank(params.loginDn)) ldap.setLoginDn(opts, params.loginDn);
+				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
+				if (!StringUtils.isBlank(params.userDn)) ldap.setUserDn(opts, params.userDn);
+				if (!StringUtils.isBlank(params.userFilter)) ldap.setUserFilter(opts, params.userFilter);
+				if (!StringUtils.isBlank(params.userFirstnameField)) ldap.setUserFirstnameField(opts, params.userFirstnameField);
+				if (!StringUtils.isBlank(params.userLastnameField)) ldap.setUserLastnameField(opts, params.userLastnameField);
+				if (!StringUtils.isBlank(params.userDisplayNameField)) ldap.setUserDisplayNameField(opts, params.userDisplayNameField);
+				break;
 			case ADDirectory.SCHEME:
-				ADConfigBuilder actdir = new ADConfigBuilder();
-				actdir.setHost(opts, authUri.getHost());
-				actdir.setPort(opts, authUri.getPort());
-				//TODO: completare implementazione ActiveDirectory
-				//actdir.setAdminUsername(opts, ad.getAuthUsername());
-				//actdir.setAdminPassword(opts, getDirPassword(ad));
+				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
+				ADConfigBuilder adir = new ADConfigBuilder();
+				adir.setHost(opts, authUri.getHost());
+				adir.setPort(opts, authUri.getPort());
+				adir.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				adir.setAdminDn(opts, ad.getDirAdmin());
+				adir.setAdminPassword(opts, getDirPassword(ad));
+				if (!StringUtils.isBlank(params.loginDn)) adir.setLoginDn(opts, params.loginDn);
+				if (!StringUtils.isBlank(params.loginFilter)) adir.setLoginFilter(opts, params.loginFilter);
+				if (!StringUtils.isBlank(params.userDn)) adir.setUserDn(opts, params.userDn);
+				if (!StringUtils.isBlank(params.userFilter)) adir.setUserFilter(opts, params.userFilter);
+				if (!StringUtils.isBlank(params.userFirstnameField)) adir.setUserFirstnameField(opts, params.userFirstnameField);
+				if (!StringUtils.isBlank(params.userLastnameField)) adir.setUserLastnameField(opts, params.userLastnameField);
+				if (!StringUtils.isBlank(params.userDisplayNameField)) adir.setUserDisplayNameField(opts, params.userDisplayNameField);
 				break;
 			case LdapNethDirectory.SCHEME:
-				LdapNethConfigBuilder ldapnt = new LdapNethConfigBuilder();
-				ldapnt.setHost(opts, authUri.getHost());
-				ldapnt.setPort(opts, authUri.getPort());
-				ldapnt.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldapnt.setAdminDn(opts, ad.getDirAdmin());
-				ldapnt.setAdminPassword(opts, getDirPassword(ad));
-				ldapnt.setUsersDn(opts, ad.getInternetName());
+				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
+				LdapNethConfigBuilder ldapnts = new LdapNethConfigBuilder();
+				ldapnts.setHost(opts, authUri.getHost());
+				ldapnts.setPort(opts, authUri.getPort());
+				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldapnts.setAdminDn(opts, ad.getDirAdmin());
+				ldapnts.setAdminPassword(opts, getDirPassword(ad));
+				ldapnts.setSpecificLoginDn(opts, ad.getInternetName());
+				ldapnts.setSpecificUserDn(opts, ad.getInternetName());
+				if (!StringUtils.isBlank(params.loginDn)) ldapnts.setLoginDn(opts, params.loginDn);
+				if (!StringUtils.isBlank(params.loginFilter)) ldapnts.setLoginFilter(opts, params.loginFilter);
+				if (!StringUtils.isBlank(params.userDn)) ldapnts.setUserDn(opts, params.userDn);
+				if (!StringUtils.isBlank(params.userFilter)) ldapnts.setUserFilter(opts, params.userFilter);
+				if (!StringUtils.isBlank(params.userFirstnameField)) ldapnts.setUserFirstnameField(opts, params.userFirstnameField);
+				if (!StringUtils.isBlank(params.userLastnameField)) ldapnts.setUserLastnameField(opts, params.userLastnameField);
+				if (!StringUtils.isBlank(params.userDisplayNameField)) ldapnts.setUserDisplayNameField(opts, params.userDisplayNameField);
 				break;
 		}
 		return opts;

@@ -222,12 +222,13 @@ public final class WebTopManager {
 				domain.getDirUri(), 
 				domain.getDirAdmin(), 
 				(domain.getDirPassword() != null) ? domain.getDirPassword().toCharArray() : null, 
-				EnumUtils.getEnum(ConnectionSecurity.class, domain.getDirConnectionSecurity())
+				EnumUtils.getEnum(ConnectionSecurity.class, domain.getDirConnectionSecurity()),
+				domain.getDirParameters()
 		);
 	}
 	
 	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
-		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), null, null, null);
+		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), null, null, null, null);
 	}
 	
 	public String internetNameToDomain(String internetName) {

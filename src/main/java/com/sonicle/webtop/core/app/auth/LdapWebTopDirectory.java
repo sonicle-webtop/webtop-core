@@ -35,9 +35,13 @@ package com.sonicle.webtop.core.app.auth;
 
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.security.auth.directory.LdapDirectory;
+import com.sonicle.security.auth.directory.AbstractLdapDirectory;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.ldaptive.LdapAttribute;
@@ -46,7 +50,7 @@ import org.ldaptive.LdapAttribute;
  *
  * @author malbinola
  */
-public class LdapWebTopDirectory extends LdapDirectory {
+public final class LdapWebTopDirectory extends AbstractLdapDirectory {
 	public static final String SCHEME = "ldapwebtop";
 	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
 	public static final Pattern PATTERN_PASSWORD_UALPHA = Pattern.compile(".*[A-Z].*");
@@ -54,9 +58,22 @@ public class LdapWebTopDirectory extends LdapDirectory {
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
 	
+	static final Collection<DirectoryCapability> CAPABILITIES = Collections.unmodifiableCollection(
+		EnumSet.of(
+			DirectoryCapability.PASSWORD_WRITE,
+			DirectoryCapability.USERS_READ,
+			DirectoryCapability.USERS_WRITE
+		)
+	);
+	
 	@Override
 	public LdapWebTopConfigBuilder getConfigBuilder() {
 		return LdapWebTopConfigBuilder.getInstance();
+	}
+	
+	@Override
+	public Collection<DirectoryCapability> getCapabilities() {
+		return CAPABILITIES;
 	}
 	
 	@Override

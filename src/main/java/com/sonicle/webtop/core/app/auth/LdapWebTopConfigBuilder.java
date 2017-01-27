@@ -34,21 +34,21 @@
 package com.sonicle.webtop.core.app.auth;
 
 import com.sonicle.security.auth.directory.DirectoryOptions;
-import com.sonicle.security.auth.directory.LdapConfigBuilder;
+import com.sonicle.security.auth.directory.AbstractLdapConfigBuilder;
 import com.sonicle.webtop.core.app.WebTopApp;
 
 /**
  *
  * @author malbinola
  */
-public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
+public final class LdapWebTopConfigBuilder extends AbstractLdapConfigBuilder {
 	private static final LdapWebTopConfigBuilder BUILDER = new LdapWebTopConfigBuilder();
 	private static final String WTA = "wta";
 	public static final String DEFAULT_HOST = "localhost";
 	public static final Integer DEFAULT_PORT = 389;
 	public static final String DEFAULT_USER_FIRSTNAME_FIELD = "givenName";
 	public static final String DEFAULT_USER_LASTNAME_FIELD = "sn";
-	public static final String DEFAULT_USER_DISPLAY_NAME_FIELD = "cn";
+	public static final String DEFAULT_USER_DISPLAYNAME_FIELD = "cn";
 	
 	public static LdapWebTopConfigBuilder getInstance() {
 		return BUILDER;
@@ -62,6 +62,18 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 		setParam(opts, WTA, wta);
 	}
 	
+	public void setSpecificAdminDn(DirectoryOptions opts, String adminUsername, String internetName) {
+		setAdminDn(opts, "cn=" + adminUsername + "," + toDn(internetName));
+	}
+	
+	public void setSpecificLoginDn(DirectoryOptions opts, String internetName) {
+		setLoginDn(opts, "ou=people," + toDn(internetName));
+	}
+	
+	public void setSpecificUserDn(DirectoryOptions opts, String internetName) {
+		setUserDn(opts, "ou=people," + toDn(internetName));
+	}
+	
 	@Override
 	public String getHost(DirectoryOptions opts) {
 		return getString(opts, PARAM_HOST, DEFAULT_HOST);
@@ -70,15 +82,6 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 	@Override
 	public int getPort(DirectoryOptions opts) {
 		return getInteger(opts, PARAM_PORT, DEFAULT_PORT);
-	}
-	
-	public void setAdminDn(DirectoryOptions opts, String adminUsername, String internetName) {
-		setParam(opts, PARAM_ADMIN_DN, "cn=" + adminUsername + "," + toDn(internetName));
-	}
-	
-	@Override
-	public void setUsersDn(DirectoryOptions opts, String internetName) {
-		setParam(opts, PARAM_USERS_DN, "ou=people," + toDn(internetName));
 	}
 	
 	@Override
@@ -93,6 +96,6 @@ public class LdapWebTopConfigBuilder extends LdapConfigBuilder {
 	
 	@Override
 	public String getUserDisplayNameField(DirectoryOptions opts) {
-		return getString(opts, PARAM_USER_DISPLAY_NAME_FIELD, DEFAULT_USER_DISPLAY_NAME_FIELD);
+		return getString(opts, PARAM_USER_DISPLAYNAME_FIELD, DEFAULT_USER_DISPLAYNAME_FIELD);
 	}
 }

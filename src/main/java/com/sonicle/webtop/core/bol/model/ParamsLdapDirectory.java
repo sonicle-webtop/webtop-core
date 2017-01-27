@@ -40,7 +40,10 @@ import com.sonicle.commons.web.json.JsonResult;
  * @author malbinola
  */
 public class ParamsLdapDirectory {
-	public String usersDn;
+	public String loginDn;
+	public String loginFilter;
+	public String userDn;
+	public String userFilter;
 	public String userFirstnameField;
 	public String userLastnameField;
 	public String userDisplayNameField;
