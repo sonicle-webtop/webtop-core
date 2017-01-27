@@ -46,6 +46,7 @@ import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
+import com.sonicle.webtop.core.msg.InformationMessage;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -418,10 +419,14 @@ public class WebTopSession {
 		logger.debug("Instantiated {} services", count);
 		*/
 		
+		initLevel = 2;
+		
 		//TODO: check autosave and notify
 		//this.notify(message);
+		if (core.hasAutosaveData(allowedServices)) {
+			this.notify(new ServiceMessage("com.sonicle.webtop.core","autosaveNotify"));
+		}
 		
-		initLevel = 2;
 	}
 	
 	public synchronized void initPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
@@ -615,6 +620,7 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);
+		js.baseUrl=SessionManager.getClientUrl(session);
 		js.securityToken = RunContext.getCSRFToken();
 		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);
@@ -733,6 +739,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		fillAppReferences(js, locale, "crisp", false);
+		js.baseUrl=SessionManager.getClientUrl(session);
 		
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
