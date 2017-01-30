@@ -85,6 +85,7 @@ DROP TABLE IF EXISTS "core"."autosave";
 CREATE TABLE "core"."autosave" (
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
+"webtop_client_id" char(36) NOT NULL,
 "service_id" varchar(255) NOT NULL,
 "context" varchar(50) NOT NULL,
 "key" varchar(100) NOT NULL,
@@ -508,9 +509,14 @@ CREATE INDEX "activities_ak2" ON "core"."activities" USING btree ("external_id")
 ALTER TABLE "core"."activities" ADD PRIMARY KEY ("activity_id");
 
 -- ----------------------------
+-- Indexes structure for table autosave
+-- ----------------------------
+CREATE INDEX "autosave_ak1" ON "core"."autosave" ("domain_id", "user_id", "service_id", "context", "key");
+
+-- ----------------------------
 -- Primary Key structure for table autosave
 -- ----------------------------
-ALTER TABLE "core"."autosave" ADD PRIMARY KEY ("domain_id", "user_id", "service_id", "context", "key");
+ALTER TABLE "core"."autosave" ADD PRIMARY KEY ("domain_id", "user_id", "webtop_client_id", "service_id", "context", "key");
 
 -- ----------------------------
 -- Indexes structure for table causals
