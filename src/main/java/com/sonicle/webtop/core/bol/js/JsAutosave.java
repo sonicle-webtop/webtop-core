@@ -31,79 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
-	alternateClassName: 'WTA.ServiceDescriptor',
-	requires: [
-		'Sonicle.webtop.core.sdk.Service'
-	],
+package com.sonicle.webtop.core.bol.js;
+
+/**
+ *
+ * @author gabriele.bulfon
+ */
+public class JsAutosave {
+
+	public String domainId;
+	public String userId;
+	public String serviceId;
+	public String context;
+	public String key;
+	public String value;
 	
-	config: {
-		index: null,
-		maintenance: null,
-		id: null,
-		xid: null,
-		ns: null,
-		path: null,
-		version: null,
-		build: null,
-		serviceClassName: null,
-		serviceVarsClassName: null,
-		userOptions: null,
-		name: null,
-		desription: null,
-		company: null
-	},
-	
-	instance: null,
-	inited: false,
-	
-	constructor: function(cfg) {
-		var me = this;
-		me.initConfig(cfg);
-		me.callParent(arguments);
-	},
-	
-	getInstance: function() {
-		var me = this;
-		if(!me.instance) {
-			var cn = me.getServiceClassName();
-			if(!Ext.isString(cn)) return null;
-			try {
-				me.instance = Ext.create(cn, {
-					ID: me.getId(),
-					XID: me.getXid(),
-					serviceVarsClassName: me.getServiceVarsClassName(),
-					permsData: WTS.servicesPerms[me.getIndex()],
-					varsData: WTS.servicesVars[me.getIndex()]
-				});
-			} catch(e) {
-				WTA.Log.error('Unable to instantiate service class [{0}]', cn);
-				WTA.Log.exception(e);
-			}
-		}
-		return me.instance;
-	},
-	
-	initService: function() {
-		var me = this;
-		WTA.Log.debug('Initializing service [{0}]', me.getId());
-		var svc = me.getInstance();
-		if(svc === null) return false;
-		
-		// Calls initialization method
-		try {
-			svc.privateInit.call(svc);
-			svc.init.call(svc);
-			me.inited = true;
-			return true;
-		} catch(e) {
-			WTA.Log.error('Error while calling init() method');
-			WTA.Log.exception(e);
-			return false;
-		}
-	},
-	
-	isInited: function() {
-		return this.inited;
+	public JsAutosave(String domainId, String userId, String serviceId, String context, String key, String value) {
+		this.domainId=domainId;
+		this.userId=userId;
+		this.serviceId=serviceId;
+		this.context=context;
+		this.key=key;
+		this.value=value;
 	}
-});
+	
+}

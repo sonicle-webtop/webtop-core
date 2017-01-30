@@ -63,6 +63,12 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	 */
 	init: Ext.emptyFn,
 	
+	/**
+	 * @method
+	 * Called automatically when receiving autosave data.
+	 */
+	autosaveRestore: Ext.emptyFn,
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.ID = cfg.ID;
@@ -221,5 +227,35 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	 */
 	resourceUrl: function(relPath) {
 		return WTF.resourceUrl(this.ID, relPath);
+	},
+	
+	
+	//private
+	privateInit: function() {
+		var me=this;
+		me.onMessage('autosaveRestore',me.privateAutosaveRestore,me);
+	},
+	
+	privateAutosaveRestore: function(cfg) {
+		var me=this,
+			pl=cfg.payload,
+			ret=me.autosaveRestore(pl.value);
+	
+		if (ret===true) {
+			WT.ajaxReq(WT.ID, "RemoveAutosave", {
+				params: {
+					serviceId: pl.serviceId,
+					context: pl.context,
+					key: pl.key
+				},
+				callback: function(success,json) {
+					if (!success) {
+						WT.error(json.text);
+					}
+				}
+			});
+		}
+		
 	}
+	
 });

@@ -59,12 +59,14 @@ import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.CausalGrid;
 import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsActivity;
+import com.sonicle.webtop.core.bol.js.JsAutosave;
 import com.sonicle.webtop.core.bol.js.JsCausal;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
@@ -990,6 +992,56 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processRestoreAutosave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con=null;
+		try {
+			con=getConnection();
+			List<OAutosave> items=coreMgr.listAutosaveData();
+			for(OAutosave item: items) {
+				getWts().notify(new ServiceMessage(item.getServiceId(),"autosaveRestore",
+						new JsAutosave(
+								item.getDomainId(),
+								item.getUserId(),
+								item.getServiceId(),
+								item.getContext(),
+								item.getKey(),
+								item.getValue()
+						)
+				));
+			}
+			new JsonResult().printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in processRestoreAutosave", ex);
+			new JsonResult(false, "Error in processRestoreAutosave").printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processRemoveAutosave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		Connection con=null;
+		try {
+			con=getConnection();
+			String serviceId=ServletUtils.getStringParameter(request, "serviceId", false);
+			String context=ServletUtils.getStringParameter(request, "context", false);
+			String key=ServletUtils.getStringParameter(request, "key", false);
+			
+			if (serviceId==null) coreMgr.deleteAutosaveData();
+			else {
+				if (context==null) coreMgr.deleteAutosaveData(serviceId);
+				else {
+					if (key==null) coreMgr.deleteAutosaveData(serviceId,context);
+					else coreMgr.deleteAutosaveData(serviceId, context, key);
+				}
+			}
+			new JsonResult().printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in processRestoreAutosave", ex);
+			new JsonResult(false, "Error in processRestoreAutosave").printTo(out);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
 	
 	private List<String> queryDomains() {
 		List<String> domains = new ArrayList<>();
