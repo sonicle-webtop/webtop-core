@@ -1461,14 +1461,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void updateAutosaveData(String serviceId, String context, String key, String value) {
+	public void updateAutosaveData(String webtopClientId, String serviceId, String context, String key, String value) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			OAutosave data = asdao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			OAutosave data = asdao.select(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, serviceId, context, key);
 			
 			if(data != null) {
 				data.setValue(value);
@@ -1506,50 +1506,67 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+
 	}
 	
-	public void deleteAutosaveData(String serviceId) {
+	public void deleteAutosaveData(String webtopClientId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			asdao.deleteByService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
+			asdao.deleteByWebtopClientId(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId);
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting autosave entry [{}, {}]", targetPid, serviceId, ex);
+			logger.error("Error deleting autosave entry [{}, {}]", targetPid, webtopClientId, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteAutosaveData(String serviceId, String context) {
+	public void deleteAutosaveData(String webtopClientId, String serviceId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			asdao.deleteByContext(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context);
+			asdao.deleteByService(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, serviceId);
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting autosave entry [{}, {}, {}]", targetPid, serviceId, context, ex);
+			logger.error("Error deleting autosave entry [{}, {}, {}]", targetPid, webtopClientId, serviceId, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteAutosaveData(String serviceId, String context, String key) {
+	public void deleteAutosaveData(String webtopClientId, String serviceId, String context) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			asdao.deleteByKey(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			asdao.deleteByContext(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, serviceId, context);
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting autosave entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
+			logger.error("Error deleting autosave entry [{}, {}, {}, {}]", targetPid, webtopClientId, serviceId, context, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteAutosaveData(String webtopClientId, String serviceId, String context, String key) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			asdao.deleteByKey(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, serviceId, context, key);
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error deleting autosave entry [{}, {}, {}, {}, {}]", targetPid, webtopClientId, serviceId, context, key, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
