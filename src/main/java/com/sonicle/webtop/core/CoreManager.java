@@ -1492,6 +1492,54 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public void deleteAutosaveData() {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			asdao.deleteByUser(con, targetPid.getDomainId(), targetPid.getUserId());
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error deleting autosave entry [{}]", targetPid, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteAutosaveData(String serviceId) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			asdao.deleteByService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error deleting autosave entry [{}, {}]", targetPid, serviceId, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteAutosaveData(String serviceId, String context) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			asdao.deleteByContext(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context);
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error deleting autosave entry [{}, {}, {}]", targetPid, serviceId, context, ex);
+			
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public void deleteAutosaveData(String serviceId, String context, String key) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
@@ -1499,7 +1547,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			asdao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			asdao.deleteByKey(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting autosave entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
 			
@@ -1524,6 +1572,22 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public List<OAutosave> listAutosaveData() {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			return asdao.selectByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(),listAllowedServices());
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error selecting autosave entry [{}]", targetPid, ex);
+			return new ArrayList<>();
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public boolean hasAutosaveData(List<String> serviceIds) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
@@ -1533,7 +1597,7 @@ public class CoreManager extends BaseManager {
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
 			return asdao.countByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), serviceIds) > 0;
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error selecting autosave entry [{}, {}]", targetPid, ex);
+			logger.error("Error selecting autosave entry [{}]", targetPid, ex);
 			return false;
 		} finally {
 			DbUtils.closeQuietly(con);

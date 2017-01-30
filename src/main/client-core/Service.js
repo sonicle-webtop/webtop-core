@@ -52,7 +52,37 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 		});
 		me.onMessage('autosaveNotify', function(msg) {
-			WT.info("You have new autosave data!");
+			Ext.Msg.show({
+				title: WT.res('warning'),
+				msg: me.res('autosave.notification.msg'),
+				buttons: Ext.MessageBox.YESNOCANCEL,
+				buttonText: {
+					yes: WT.res('word.yes'),
+					no: WT.res('word.no'),
+					cancel: WT.res('act-remove-all.lbl')
+				},
+				icon: Ext.Msg.QUESTION,
+				fn: function(bid) {
+					if (bid === 'no') return;
+					if (bid === 'cancel' ) {
+						WT.ajaxReq(me.ID, "RemoveAutosave", {
+							callback: function(success,json) {
+								if (!success) {
+									WT.error(json.text);
+								}
+							}
+						});
+					} else {
+						WT.ajaxReq(me.ID, "RestoreAutosave", {
+							callback: function(success,json) {
+								if (!success) {
+									WT.error(json.text);
+								}
+							}
+						});
+					}
+				}
+			});
 		});
 	},
 	

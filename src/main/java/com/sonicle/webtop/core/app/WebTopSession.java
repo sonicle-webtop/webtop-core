@@ -420,8 +420,6 @@ public class WebTopSession {
 		
 		initLevel = 2;
 		
-		//TODO: check autosave and notify
-		//this.notify(message);
 		if (core.hasAutosaveData(allowedServices)) {
 			this.notify(new ServiceMessage("com.sonicle.webtop.core","autosaveNotify"));
 		}
