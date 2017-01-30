@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.bol.model;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -75,7 +76,7 @@ public class DomainEntity {
 		dirCaseSensitive = o.getDirCaseSensitive();
 		dirPasswordPolicy = o.getDirPasswordPolicy();
 		String scheme = dirUri.getScheme();
-		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME)) {
+		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(ADDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME)) {
 			dirParameters = LangUtils.deserialize(o.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
 		} else {
 			dirParameters = null;

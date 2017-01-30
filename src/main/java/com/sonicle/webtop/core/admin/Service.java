@@ -366,13 +366,13 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.authScheme);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
 				coreadm.addDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
-				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.authScheme);
+				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
 				coreadm.updateDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
