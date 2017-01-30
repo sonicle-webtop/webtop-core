@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
+import com.fasterxml.uuid.Generators;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -55,12 +56,30 @@ public class IdentifierUtils {
 	/**
 	 * Generates a characters UUID.
 	 * With noHiphens at False, resulting string will be 36 characters length; 32 otherwise.
-	 * @param noHiphens
+	 * @param noDashes
 	 * @return 
 	 */
-	public static synchronized String getUUID(boolean noHiphens) {
+	public static synchronized String getUUID(boolean noDashes) {
 		String uuid = UUID.randomUUID().toString();
-		return (noHiphens) ? StringUtils.replace(uuid, "-", "") : uuid;
+		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
+	}
+	
+	public static synchronized String getUUIDTimeBased() {
+		return getUUIDTimeBased(false);
+	}
+	
+	public static synchronized String getUUIDTimeBased(boolean noDashes) {
+		final String uuid = Generators.timeBasedGenerator().generate().toString();
+		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
+	}
+	
+	public static synchronized String getUUIDRandom() {
+		return getUUIDRandom(false);
+	}
+	
+	public static synchronized String getUUIDRandom(boolean noDashes) {
+		final String uuid = Generators.randomBasedGenerator().generate().toString();
+		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
 	public static synchronized String getCRSFToken() {

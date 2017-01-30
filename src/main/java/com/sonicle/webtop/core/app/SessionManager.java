@@ -44,11 +44,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import net.sf.uadetector.ReadableUserAgent;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.SessionException;
@@ -80,6 +83,7 @@ public class SessionManager {
 	}
 	
 	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
+	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "wtcid";
 	public static final String ATTRIBUTE_CSRF_TOKEN = "csrf";
 	public static final String ATTRIBUTE_CLIENT_IP = "clientIp";
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
@@ -87,9 +91,11 @@ public class SessionManager {
 	public static final String ATTRIBUTE_CLIENT_LOCALE = "clientLocale";
 	public static final String ATTRIBUTE_CLIENT_URL = "clientUrl";
 	public static final String ATTRIBUTE_REFERER_URI = "refererUri";
+	public static final String COOKIE_WEBTOP_CLIENTID = "wtClientId";
 	
 	private WebTopApp wta = null;
-	private final HashMap<String, WebTopSession> onlineSessions = new HashMap<>();
+	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
+	private final HashSet<String> onlineWebTopClientIds = new HashSet<>();
 	private final HashMap<String, Integer> wsPushSessions = new HashMap<>();
 	private final HashMap<UserProfile.Id, ProfileSids> profileSidsCache = new HashMap<>();
 	
@@ -116,8 +122,20 @@ public class SessionManager {
 		logger.info("SessionManager destroyed");
 	}
 	
+	private HttpServletRequest getServletRequest() {
+		return (HttpServletRequest)((WebDelegatingSubject)SecurityUtils.getSubject()).getServletRequest();
+	}
+	
+	private HttpServletResponse getServletResponse() {
+		return (HttpServletResponse)((WebDelegatingSubject)SecurityUtils.getSubject()).getServletResponse();
+	}
+	
 	public static WebTopSession getWebTopSession(Session session) {
 		return (WebTopSession)session.getAttribute(ATTRIBUTE_WEBTOP_SESSION);
+	}
+	
+	public static String getWebTopClientID(Session session) {
+		return (String)session.getAttribute(ATTRIBUTE_WEBTOP_CLIENTID);
 	}
 	
 	public static String getCSRFToken(Session session) {
@@ -195,12 +213,20 @@ public class SessionManager {
 	
 	private void startShiroSession(Session session) throws Exception {
 		WebTopSession wts = new WebTopSession(wta, session);
+		
+		HttpServletRequest request = getServletRequest();
+		String wtcid = ServletUtils.getCookie(request, COOKIE_WEBTOP_CLIENTID);
+		if (StringUtils.isBlank(wtcid)) {
+			wtcid = IdentifierUtils.getUUIDTimeBased();
+			HttpServletResponse response = getServletResponse();
+			ServletUtils.setCookie(response, COOKIE_WEBTOP_CLIENTID, wtcid, 60*60*24*365*10);
+		}
+		session.setAttribute(ATTRIBUTE_WEBTOP_CLIENTID, wtcid);
 		session.setAttribute(ATTRIBUTE_WEBTOP_SESSION, wts);
 		session.setAttribute(ATTRIBUTE_CSRF_TOKEN, IdentifierUtils.getCRSFToken());
 		
 		// Dump into session some client data
 		if(session.getAttribute("dump") == null) {
-			HttpServletRequest request = (HttpServletRequest)((WebDelegatingSubject)SecurityUtils.getSubject()).getServletRequest();
 			session.setAttribute("dump", true);
 			String ua = ServletUtils.getUserAgent(request);
 			session.setAttribute(ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
@@ -220,35 +246,42 @@ public class SessionManager {
 		UserProfile.Id pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
 		wts.cleanup();
 		if(pid != null) {
-			unregisterWebTopSession(sid, pid);
+			unregisterWebTopSession(session, pid);
 			wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, getClientIP(session), getClientUserAgent(session), sid, null);
 		}
 		logger.trace("WTS destroyed [{}]", sid);
 	}
 	
-	void registerWebTopSession(String sid, WebTopSession wts) throws WTException {
+	void registerWebTopSession(Session session, WebTopSession wts) throws WTException {
 		synchronized(onlineSessions) {
+			String sid = session.getId().toString();
 			if(onlineSessions.containsKey(sid)) throw new WTException("Session [{0}] is already registered", sid);
 			UserProfile.Id pid = wts.getUserProfile().getId();
 			if(pid == null) throw new WTException("Session [{0}] is not bound to a user", sid);
+			
 			onlineSessions.put(sid, wts);
+			String wtcid = getWebTopClientID(session);
+			onlineWebTopClientIds.add(pid.toString() + "|" + wtcid);
 			if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
 			profileSidsCache.get(pid).add(sid);
 			logger.trace("Session registered [{}, {}]", sid, pid);
 		}
 	}
 	
-	private void unregisterWebTopSession(String sessionId, UserProfile.Id profileId) throws WTException {
+	private void unregisterWebTopSession(Session session, UserProfile.Id profileId) throws WTException {
 		synchronized(onlineSessions) {
-			if(onlineSessions.containsKey(sessionId)) {
+			String sid = session.getId().toString();
+			if(onlineSessions.containsKey(sid)) {
 				if(profileId != null) {
 					if(profileSidsCache.get(profileId) != null) {
-						profileSidsCache.get(profileId).remove(sessionId);
+						profileSidsCache.get(profileId).remove(sid);
 						if(profileSidsCache.get(profileId).isEmpty()) profileSidsCache.remove(profileId);
 					}
-					onlineSessions.remove(sessionId);
+					String wtcid = getWebTopClientID(session);
+					onlineWebTopClientIds.remove(profileId.toString() + "|" + wtcid);
+					onlineSessions.remove(sid);
 				} else {
-					logger.warn("Session [{}] is not bound to a user", sessionId);
+					logger.warn("Session [{}] is not bound to a user", sid);
 				}
 			}
 		}
@@ -339,6 +372,10 @@ public class SessionManager {
 	
 	public boolean isOnline(String sessionId) {
 		return onlineSessions.containsKey(sessionId);
+	}
+	
+	public boolean isWebTopClientIdOnline(UserProfile.Id profileId, String webtopClientId) {
+		return onlineWebTopClientIds.contains(profileId.toString() + "|" + webtopClientId);
 	}
 	
 	public void invalidateSession(String sessionId) throws SessionException {

@@ -85,6 +85,14 @@ public class RunContext {
 		return new UserProfile.Id(((Principal)subject.getPrincipal()).getName());
 	}
 	
+	public static String getWebTopClientID() {
+		return getWebTopClientID(getSession());
+	}
+	
+	public static String getWebTopClientID(Session session) {
+		return (session == null) ? null : SessionManager.getWebTopClientID(session);
+	}
+	
 	public static String getCSRFToken() {
 		return getCSRFToken(getSession());
 	}

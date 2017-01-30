@@ -52,8 +52,8 @@ public class ContextListener implements ServletContextListener {
 		try {
 			WebTopApp.start(context);
 			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
-		} catch(Exception ex) {
-			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, ex);
+		} catch(Throwable t) {
+			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, t);
 		}
 	}
 

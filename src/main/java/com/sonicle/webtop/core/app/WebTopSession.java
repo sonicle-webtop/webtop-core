@@ -352,14 +352,13 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		SessionManager sesm = wta.getSessionManager();
 		CoreManager core = WT.getCoreManager(profile.getId());
-		String sessionId = getId();
 		
 		privateCoreEnv = new CorePrivateEnvironment(wta, this);
 		privateEnv = new PrivateEnvironment(this);
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
-		sesm.registerWebTopSession(sessionId, this);
-		comm = new SessionComManager(sesm, sessionId, profile.getId());
+		sesm.registerWebTopSession(getSession(), this);
+		comm = new SessionComManager(sesm, getId(), profile.getId());
 		
 		allowedServices = core.listAllowedServices();
 		
