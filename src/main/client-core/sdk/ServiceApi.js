@@ -31,7 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.BaseServiceApi', {
+Ext.define('Sonicle.webtop.core.sdk.ServiceApi', {
+	alternateClassName: 'WTA.sdk.ServiceApi',
 	
 	/**
 	 * @cfg {Sonicle.webtop.core.sdk.BaseService} service
@@ -40,6 +41,6 @@ Ext.define('Sonicle.webtop.core.sdk.BaseServiceApi', {
 	service: null,
 	
 	constructor: function(cfg) {
-		if(!cfg.mys) Ext.Error.raise('Specify a valid service insance');
+		if(!cfg.service) Ext.Error.raise('Specify a valid service insance');
 	}
 });
