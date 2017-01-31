@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	 * @private
 	 */
 	toRightsObj: function(rights) {
-		var iof = function(s,v) { return s.indexOf(v)!==-1; },
+		var iof = function(s,v) { return s ? s.indexOf(v) !== -1 : false; },
 				obj = {};
 		obj['CREATE'] = iof(rights, 'c');
 		obj['READ'] = iof(rights, 'r');
