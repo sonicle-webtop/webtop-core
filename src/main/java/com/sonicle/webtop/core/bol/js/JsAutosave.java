@@ -41,14 +41,16 @@ public class JsAutosave {
 
 	public String domainId;
 	public String userId;
+	public String webtopClientId;
 	public String serviceId;
 	public String context;
 	public String key;
 	public String value;
 	
-	public JsAutosave(String domainId, String userId, String serviceId, String context, String key, String value) {
+	public JsAutosave(String domainId, String userId, String webtopClientId, String serviceId, String context, String key, String value) {
 		this.domainId=domainId;
 		this.userId=userId;
+		this.webtopClientId=webtopClientId;
 		this.serviceId=serviceId;
 		this.context=context;
 		this.key=key;

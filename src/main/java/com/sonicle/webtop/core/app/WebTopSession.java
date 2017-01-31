@@ -41,6 +41,8 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.ws.AutosaveMessage;
+import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
@@ -419,9 +421,13 @@ public class WebTopSession {
 		*/
 		
 		initLevel = 2;
-		
-		if (core.hasAutosaveData(allowedServices)) {
-			this.notify(new ServiceMessage("com.sonicle.webtop.core","autosaveNotify"));
+
+		String webtopClientId=RunContext.getWebTopClientID();
+		boolean mine=core.hasMyAutosaveData(webtopClientId);
+		List<OAutosave> odata=core.listOfflineOthersAutosaveData(webtopClientId);
+		boolean others=(odata==null)?false:odata.size()>0;
+		if (mine || others) {
+			this.notify(new AutosaveMessage(core.SERVICE_ID,mine,others));
 		}
 		
 	}

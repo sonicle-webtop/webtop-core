@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	init: function() {
 		var me = this;
 		WT.checkDesktopNotificationAuth();
+		
 		me.onMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
 			me.showReminder(pl);
@@ -51,42 +52,108 @@ Ext.define('Sonicle.webtop.core.Service', {
 				title: pl.title
 			});
 		});
+		
 		me.onMessage('autosaveNotify', function(msg) {
-			Ext.Msg.show({
-				title: WT.res('warning'),
-				msg: me.res('autosave.notification.msg'),
-				buttons: Ext.MessageBox.YESNOCANCEL,
-				buttonText: {
-					yes: WT.res('word.yes'),
-					no: WT.res('word.no'),
-					cancel: WT.res('act-remove-all.lbl')
-				},
-				icon: Ext.Msg.QUESTION,
-				fn: function(bid) {
-					if (bid === 'no') return;
-					if (bid === 'cancel' ) {
-						WT.ajaxReq(me.ID, "RemoveAutosave", {
-							callback: function(success,json) {
-								if (!success) {
-									WT.error(json.text);
-								}
-							}
-						});
-					} else {
-						WT.ajaxReq(me.ID, "RestoreAutosave", {
-							callback: function(success,json) {
-								if (!success) {
-									WT.error(json.text);
-								}
-							}
-						});
-					}
-				}
-			});
+			var me=this, pl = msg.payload;
+			
+			if (pl.mine) {
+				me.notifyMyAutosave(pl);
+			}
+			else if (pl.others) {
+				me.notifyOthersAutosave(pl);
+			}
+			
 		});
 	},
 	
+	notifyMyAutosave: function(pl) {
+		var me=this;
+		Ext.Msg.show({
+			title: WT.res('warning'),
+			msg: WT.res('autosave.mine-notification.msg'),
+			buttons: Ext.MessageBox.YESNOCANCEL,
+			buttonText: {
+				yes: WT.res('word.yes'),
+				no: WT.res('word.no'),
+				cancel: WT.res('act-remove-all.lbl')
+			},
+			icon: Ext.Msg.QUESTION,
+			fn: function(bid) {
+				if (bid === 'no') {
+					if (pl.others) me.notifyOthersAutosave(pl);
+					return;
+				}
+				if (bid === 'cancel' ) {
+					WT.ajaxReq(me.ID, "RemoveAutosave", {
+						params: {
+							allMine: true
+						},
+						callback: function(success,json) {
+							if (success) {
+								if (pl.others) me.notifyOthersAutosave(pl);
+							} else {
+								WT.error(json.text);
+							}
+						}
+					});
+				} else {
+					WT.ajaxReq(me.ID, "RestoreAutosave", {
+						params: {
+							mine: true
+						},
+						callback: function(success,json) {
+							if (success) {
+								if (pl.others) me.notifyOthersAutosave(pl);
+							} else {
+								WT.error(json.text);
+							}
+						}
+					});
+				}
+			}
+		});
+	},
 	
+	notifyOthersAutosave: function() {
+		var me=this;
+		Ext.Msg.show({
+			title: WT.res('warning'),
+			msg: WT.res('autosave.others-notification.msg'),
+			buttons: Ext.MessageBox.YESNOCANCEL,
+			buttonText: {
+				yes: WT.res('word.yes'),
+				no: WT.res('word.no'),
+				cancel: WT.res('act-remove-all.lbl')
+			},
+			icon: Ext.Msg.QUESTION,
+			fn: function(bid) {
+				if (bid === 'no') return;
+				if (bid === 'cancel' ) {
+					WT.ajaxReq(me.ID, "RemoveAutosave", {
+						params: {
+							allOthers: true
+						},
+						callback: function(success,json) {
+							if (!success) {
+								WT.error(json.text);
+							}
+						}
+					});
+				} else {
+					WT.ajaxReq(me.ID, "RestoreAutosave", {
+						params: {
+							mine: false
+						},
+						callback: function(success,json) {
+							if (!success) {
+								WT.error(json.text);
+							}
+						}
+					});
+				}
+			}
+		});
+	},
 	
 	showActivities: function() {
 		WT.createView(this.ID, 'view.Activities').show();
