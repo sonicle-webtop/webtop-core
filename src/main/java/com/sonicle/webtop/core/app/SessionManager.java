@@ -374,7 +374,7 @@ public class SessionManager {
 		return onlineSessions.containsKey(sessionId);
 	}
 	
-	public boolean isWebTopClientIdOnline(UserProfile.Id profileId, String webtopClientId) {
+	public boolean isOnline(UserProfile.Id profileId, String webtopClientId) {
 		return onlineWebTopClientIds.contains(profileId.toString() + "|" + webtopClientId);
 	}
 	

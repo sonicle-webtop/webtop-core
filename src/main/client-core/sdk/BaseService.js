@@ -236,14 +236,15 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 		me.onMessage('autosaveRestore',me.privateAutosaveRestore,me);
 	},
 	
-	privateAutosaveRestore: function(cfg) {
+	privateAutosaveRestore: function(msg) {
 		var me=this,
-			pl=cfg.payload,
+			pl=msg.payload,
 			ret=me.autosaveRestore(pl.value);
 	
 		if (ret===true) {
 			WT.ajaxReq(WT.ID, "RemoveAutosave", {
 				params: {
+					webtopClientId: pl.webtopClientId,
 					serviceId: pl.serviceId,
 					context: pl.context,
 					key: pl.key

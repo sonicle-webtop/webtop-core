@@ -996,12 +996,18 @@ public class Service extends BaseService {
 		Connection con=null;
 		try {
 			con=getConnection();
-			List<OAutosave> items=coreMgr.listAutosaveData();
+			boolean mine=ServletUtils.getBooleanParameter(request, "mine", true);
+			String webtopClientId=RunContext.getWebTopClientID();
+			List<OAutosave> items;
+			if (mine) items=coreMgr.listMyAutosaveData(webtopClientId);
+			else items=coreMgr.listOfflineOthersAutosaveData(webtopClientId);
+			
 			for(OAutosave item: items) {
 				getWts().notify(new ServiceMessage(item.getServiceId(),"autosaveRestore",
 						new JsAutosave(
 								item.getDomainId(),
 								item.getUserId(),
+								item.getWebtopClientId(),
 								item.getServiceId(),
 								item.getContext(),
 								item.getKey(),
@@ -1022,16 +1028,19 @@ public class Service extends BaseService {
 		Connection con=null;
 		try {
 			con=getConnection();
-			String serviceId=ServletUtils.getStringParameter(request, "serviceId", false);
-			String context=ServletUtils.getStringParameter(request, "context", false);
-			String key=ServletUtils.getStringParameter(request, "key", false);
+			boolean allOthers=ServletUtils.getBooleanParameter(request, "allOthers", false);
 			
-			if (serviceId==null) coreMgr.deleteAutosaveData();
+			if (allOthers) coreMgr.deleteOfflineOthersAutosaveData(RunContext.getWebTopClientID());
 			else {
-				if (context==null) coreMgr.deleteAutosaveData(serviceId);
+				boolean allMine=ServletUtils.getBooleanParameter(request, "allMine", false);
+				if (allMine) coreMgr.deleteMyAutosaveData(RunContext.getWebTopClientID());
 				else {
-					if (key==null) coreMgr.deleteAutosaveData(serviceId,context);
-					else coreMgr.deleteAutosaveData(serviceId, context, key);
+					String serviceId=ServletUtils.getStringParameter(request, "serviceId", true);
+					String context=ServletUtils.getStringParameter(request, "context", true);
+					String key=ServletUtils.getStringParameter(request, "key", true);
+					String webtopClientId=ServletUtils.getStringParameter(request, "webtopClientId", true);
+					
+					coreMgr.deleteMyAutosaveData(webtopClientId, serviceId, context, key);
 				}
 			}
 			new JsonResult().printTo(out);

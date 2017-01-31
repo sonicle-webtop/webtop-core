@@ -42,6 +42,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.AbstractEnvironmentService;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
@@ -131,7 +132,7 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	public void processManageAutosave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		CoreManager core = WT.getCoreManager();
-		String webtopClientId=""; //RunContext.get
+		String webtopClientId=RunContext.getWebTopClientID();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
@@ -140,10 +141,10 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 			if (crud.equals(Crud.READ)) {
 			} else if (crud.equals(Crud.UPDATE)) {
 				String value = ServletUtils.getStringParameter(request, "value", true);
-				core.updateAutosaveData(webtopClientId, SERVICE_ID, cntx, key, value);
+				core.updateMyAutosaveData(webtopClientId, SERVICE_ID, cntx, key, value);
 				new JsonResult().printTo(out);
 			} else if (crud.equals(Crud.DELETE)) {
-				core.deleteAutosaveData(SERVICE_ID, cntx, key);
+				core.deleteMyAutosaveData(webtopClientId, SERVICE_ID, cntx, key);
 				new JsonResult().printTo(out);
 			}
 		} catch(Exception ex) {

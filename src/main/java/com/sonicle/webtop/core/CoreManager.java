@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.ServiceManager;
+import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
@@ -1461,7 +1462,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void updateAutosaveData(String webtopClientId, String serviceId, String context, String key, String value) {
+	public void updateMyAutosaveData(String webtopClientId, String serviceId, String context, String key, String value) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1477,6 +1478,7 @@ public class CoreManager extends BaseManager {
 				data = new OAutosave();
 				data.setDomainId(targetPid.getDomainId());
 				data.setUserId(targetPid.getUserId());
+				data.setWebtopClientId(webtopClientId);
 				data.setServiceId(serviceId);
 				data.setContext(context);
 				data.setKey(StringUtils.upperCase(key));
@@ -1492,16 +1494,19 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteAutosaveData() {
+	public void deleteOfflineOthersAutosaveData(String notWebtopClientId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			asdao.deleteByUser(con, targetPid.getDomainId(), targetPid.getUserId());
+			List<OAutosave> items=listOfflineOthersAutosaveData(notWebtopClientId);
+			for(OAutosave item: items) {
+				asdao.deleteByKey(con, targetPid.getDomainId(), targetPid.getUserId(),item.getWebtopClientId(),item.getServiceId(),item.getContext(),item.getKey());
+			}
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error deleting autosave entry [{}]", targetPid, ex);
+			logger.error("Error deleting autosave entry [{}, !{}]", targetPid, notWebtopClientId, ex);
 			
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -1509,7 +1514,7 @@ public class CoreManager extends BaseManager {
 
 	}
 	
-	public void deleteAutosaveData(String webtopClientId) {
+	public void deleteMyAutosaveData(String webtopClientId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1525,7 +1530,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteAutosaveData(String webtopClientId, String serviceId) {
+	public void deleteMyAutosaveData(String webtopClientId, String serviceId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1541,7 +1546,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteAutosaveData(String webtopClientId, String serviceId, String context) {
+	public void deleteMyAutosaveData(String webtopClientId, String serviceId, String context) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1557,7 +1562,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteAutosaveData(String webtopClientId, String serviceId, String context, String key) {
+	public void deleteMyAutosaveData(String webtopClientId, String serviceId, String context, String key) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
@@ -1573,30 +1578,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OAutosave> listAutosaveData(String serviceId, String context) {
+	public List<OAutosave> listMyAutosaveData(String webtopClientId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			return asdao.selectByContext(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context);
-		} catch(SQLException | DAOException ex) {
-			logger.error("Error selecting autosave entry [{}, {}, {}]", targetPid, serviceId, context, ex);
-			return new ArrayList<>();
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	public List<OAutosave> listAutosaveData() {
-		UserProfile.Id targetPid = getTargetProfileId();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			return asdao.selectByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(),listAllowedServices());
+			return asdao.selectMineByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, listAllowedServices());
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error selecting autosave entry [{}]", targetPid, ex);
 			return new ArrayList<>();
@@ -1605,17 +1594,41 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public boolean hasAutosaveData(List<String> serviceIds) {
+	public boolean hasMyAutosaveData(String webtopClientId) {
 		UserProfile.Id targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
-			return asdao.countByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), serviceIds) > 0;
+			return asdao.countMineByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), webtopClientId, listAllowedServices()) > 0;
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error selecting autosave entry [{}]", targetPid, ex);
 			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OAutosave> listOfflineOthersAutosaveData(String notWebtopClientId) {
+		UserProfile.Id targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			SessionManager sm=wta.getSessionManager();
+			//wta.getSessionManager().isOnline(targetPid, notWebtopClientId);
+			con = WT.getCoreConnection();
+			AutosaveDAO asdao = AutosaveDAO.getInstance();
+			List<OAutosave> data=asdao.selectOthersByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), notWebtopClientId, listAllowedServices());
+			List<OAutosave> rdata=new ArrayList<OAutosave>();
+			for(OAutosave as: data) {
+				if (!sm.isOnline(new UserProfile.Id(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
+					rdata.add(as);
+			}
+			return rdata;
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error selecting autosave entry [{}]", targetPid, ex);
+			return null;
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
