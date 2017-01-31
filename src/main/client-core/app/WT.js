@@ -649,7 +649,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} id The service ID.
 	 * @returns {Object} The service API object.
 	 */
-	getServiceAPI: function(id) {
-		return WT.getApp().getServiceAPI(id);
+	getServiceApi: function(id) {
+		return WT.getApp().getServiceApi(id);
 	}
 });

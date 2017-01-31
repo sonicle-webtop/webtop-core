@@ -64,6 +64,13 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	init: Ext.emptyFn,
 	
 	/**
+	 * Override to return the Service API instance.
+	 * @param {String} id The service ID.
+	 * @returns {Object} The service API object or null if service is not valid.
+	 */
+	getApiInstance: Ext.emptyFn,
+	
+	/**
 	 * @method
 	 * Called automatically when receiving autosave data.
 	 */
@@ -79,13 +86,6 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 		me.mixins.actionstorer.constructor.call(me, cfg);
 		me.callParent(arguments);
 	},
-	
-	/**
-	 * Override to return the Service API interface.
-	 * @param {String} id The service ID.
-	 * @returns {Object} The service API object or null if service is not valid.
-	 */
-	getAPI: Ext.emptyFn,
 	
 	/**
 	 * Returns service's name.

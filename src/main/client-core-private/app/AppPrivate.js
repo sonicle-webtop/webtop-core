@@ -280,12 +280,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	 * @param {String} id The service ID.
 	 * @returns {Object} The service API object or null if service is not valid.
 	 */
-	getServiceAPI: function(id) {
-		var svc=this.getService(id);
-		if (svc) return svc.getAPI();
-		return null;
+	getServiceApi: function(id) {
+		var svc = this.getService(id);
+		return svc ? svc.getApiInstance() : null;
 	}
-	
 });
 
 Ext.override(Ext.data.proxy.Server, {
