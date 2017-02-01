@@ -70,7 +70,7 @@ public class WsPushEndpoint {
 				sessions.put(sid, session);
 			}
 			wta.getSessionManager().wsSessionOpened(sid, session);
-			logger.trace("Connection opened");
+			logger.trace("Connection opened [{}]", sid);
 		} catch(Exception ex) {
 			throw new IOException(ex);
 		}
@@ -84,7 +84,7 @@ public class WsPushEndpoint {
 				sessions.remove(sid, session);
 			}
 			wta.getSessionManager().wsSessionClosed(sid);
-			logger.trace("Connection closed");
+			logger.trace("Connection closed [{}]", sid);
 		} catch(Exception ex) {
 			throw new IOException(ex);
 		}

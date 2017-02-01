@@ -184,6 +184,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		}
 		
 		// Inits messages (webSocket/ServerEvents)
+		WTA.ComManager.setConnectionWarnMsg(WT.res('warn.connectionlost'));
 		WTA.ComManager.on('receive', function(s,messages) {
 			Ext.each(messages, function(msg) {
 				if (msg && msg.service) {
@@ -192,13 +193,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				}
 			});
 		});
-		WTA.ComManager.on('connectionlost', function(s) {
-			WT.warn(WT.res('connectionlost'));
-		});
 		WTA.ComManager.connect();
 		
 		Sonicle.ActivityMonitor.on('change', function(s, idle) {
-			console.log('ActivityMonitor: ' + (idle ? 'idel' : 'work'));
+			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
 		});
 		Sonicle.ActivityMonitor.start();
 		
