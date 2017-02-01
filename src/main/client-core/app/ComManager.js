@@ -40,19 +40,65 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 	mixins: [
 		'Ext.mixin.Observable'
 	],
-	config: {
-		wsReconnectInterval: 10000,
-		wsKeepAliveInterval: 60000,
-		seInterval: 20000,
-		connectionLostTimeout: 60*1000*2
+	
+	statics: {
+		MODE_WS: 'ws',
+		MODE_FP: 'fp'
 	},
 	
-	lastseen: 0,
+	config: {
+		
+		/**
+		 * @cfg {Integer} wsReconnectInterval
+		 * Amount of time (in millis) between each websocket reconnect tries.
+		 */
+		wsReconnectInterval: 10*1000,
+		
+		/**
+		 * @cfg {Integer} wsKeepAliveInterval
+		 * Amount of time (in millis) between each keep-alive server calls.
+		 */
+		wsKeepAliveInterval: 60*1000,
+		
+		/**
+		 * @cfg {Integer} fpPollInterval
+		 * Amount of time (in millis) between each fast-poll server calls.
+		 */
+		fpPollInterval: 5*1000,
+		
+		/**
+		 * @cfg {Integer} connectionLostTimeout
+		 * Amount of time (in millis) after fire the connectionlost event.
+		 * Note that this event will fire only one time after the connection problem.
+		 */
+		connectionLostTimeout: 60*1000,
+		
+		/**
+		 * @cfg {Boolean} connectionWarn
+		 * True to display a connection warning alert after the {@link #connectionWarnTimeout}.
+		 * Note that the alert will be displayed many times to the user,
+		 * according to the value of the timeout.
+		 */
+		connectionWarn: true,
+		
+		/**
+		 * @cfg {Integer} connectionWarnTimeout
+		 * Amount of time (in millis) after display a connection warning alert.
+		 */
+		connectionWarnTimeout: 60*1000,
+		
+		/**
+		 * @cfg {String} connectionWarnMsg
+		 * Text to display in connection warning alert.
+		 */
+		connectionWarnMsg: 'Internet connection is unstable'
+	},
+	
 	mode: null,
-	MODE_UNKNOWN: 'unknown',
-	MODE_WS: 'ws',
-	MODE_SE: 'se',
-	ws: null,
+	firsterror: 0,
+	lasterror: 0,
+	lastwarn: 0,
+	lostfired: false,
 	
 	constructor: function(config) {
 		var me = this;
@@ -65,12 +111,11 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 		cfg = cfg || {};
 		me.initConfig(cfg);
 		
-		me.mode = me.MODE_UNKNOWN;
+		me.mode = undefined;
 		if(me.isWSSupported()) {
 			me.initWebSocket();
 		} else {
-			//console.log('WebSockets are not supported');
-			me.initServerEvents();
+			me.initFastPoll();
 		}
 	},
 	
@@ -88,15 +133,16 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 			listeners: {
 				open: function(ws) {
 					//console.log('ws.open');
-					if(me.mode === me.MODE_UNKNOWN) {
-						me.mode = me.MODE_WS;
-						me.shutdownServerEvents(); // Ensure SE are down
+					if (me.mode === undefined) {
+						me.mode = me.self.MODE_WS;
+						me.shutdownFastPoll(); // Ensure fast-poll is down
+						me.resetError();
 						me.runKeepAliveTask();
 					}
 				},
 				close: function(ws) {
 					//console.log('ws.close');
-					if(me.mode === me.MODE_UNKNOWN) {
+					if (me.mode === undefined) {
 						return; // Disabling event!
 					} else {
 						//console.log('ws status: '+ws.getStatus());
@@ -104,17 +150,18 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 				},
 				message: function(ws, msg) {
 					//console.log('ws.message');
-					me.updateLastSeen();
 					me.handleMessages(msg);
 				},
 				error: function(ws, err) {
 					//console.log('ws.error');
-					if(me.mode === me.MODE_UNKNOWN) {
-						// Websocket not available!
-						// Close it and do failover on server-events...
+					if (me.mode === undefined) {
+						// Websocket not available on server!
+						// Close it and do failover on fast-poll...
 						ws.close();
-						me.initServerEvents();
+						me.initFastPoll();
 					} else {
+						me.shutdownKeepAliveTask();
+						me.dumpError();
 						me.connectionLostCheck();
 						if(ws.getStatus() === ws.OPEN) {
 							//console.log('ws status: '+ws.getStatus());
@@ -133,13 +180,7 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 				run: function () {
 					Ext.Ajax.request({
 						url: 'keep-alive',
-						method: 'GET',
-						success: function() {
-							me.updateLastSeen();
-						},
-						failure: function() {
-							me.connectionLostCheck();
-						}
+						method: 'GET'
 					});
 				},
 				interval: me.getWsKeepAliveInterval()
@@ -155,20 +196,23 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 		}
 	},
 	
-	initServerEvents: function() {
+	initFastPoll: function() {
 		var me = this;
-		if(!Ext.isDefined(me.seTask)) {
-			me.mode = me.MODE_SE;
+		if(!Ext.isDefined(me.fpTask)) {
+			me.mode = me.self.MODE_FP;
 			me.shutdownKeepAliveTask();
-			me.seTask = Ext.TaskManager.start({
+			me.fpTask = Ext.TaskManager.start({
 				run: function () {
 					//console.log('calling ServerEvents');
 					WT.ajaxReq(WT.ID, 'ServerEvents', {
 						success: function() {
-							me.updateLastSeen();
+							me.resetError();
 						},
-						failure: function() {
-							me.connectionLostCheck();
+						failure: function(resp) {
+							if (resp.status === 0) {
+								me.dumpError();
+								me.connectionLostCheck();
+							}
 						},
 						callback: function(success, o) {
 							if(success) {
@@ -177,33 +221,58 @@ Ext.define('Sonicle.webtop.core.app.ComManager', {
 						}
 					});
 				},
-				interval: me.getSeInterval()
+				interval: me.getFpPollInterval()
 			});
 		}
 	},
 	
-	shutdownServerEvents: function() {
+	shutdownFastPoll: function() {
 		var me = this;
-		if(Ext.isDefined(me.seTask)) {
-			Ext.TaskManager.stop(me.seTask);
-			delete me.seTask;
+		if(Ext.isDefined(me.fpTask)) {
+			Ext.TaskManager.stop(me.fpTask);
+			delete me.fpTask;
 		}
 	},
 	
-	updateLastSeen: function() {
-		this.fire = true;
-		this.lastseen = Date.now();
-		//console.log('updateLastSeen '+this.lastseen);
+	resetError: function() {
+		var me = this;
+		me.firsterror = 0;
+		me.lasterror = 0;
+		me.lastwarn = 0;
+		me.lostfired = false;
+	},
+	
+	dumpError: function() {
+		//console.log('dumpError');
+		var me = this;
+		if (me.firsterror === 0) me.firsterror = Date.now();
+		if (me.lastwarn === 0) me.lastwarn = Date.now();
+		me.lasterror = Date.now();
 	},
 	
 	connectionLostCheck: function() {
 		//console.log('connectionLostCheck');
-		var me = this, now = Date.now();
-		if((now - me.lastseen) > me.getConnectionLostTimeout()) {
-			if(me.fire) {
-				me.fire = false;
-				me.fireEventArgs('connectionlost', [me, (now - me.lastseen)]);
-			}
+		var me = this,
+				gelapsed = me.lasterror - me.firsterror,
+				welapsed = me.lasterror - me.lastwarn;
+		
+		if (!me.lostfired && (gelapsed >= me.getConnectionLostTimeout())) {
+			me.lostfired = true;
+			//console.log('fire connectionlost');
+			me.fireEventArgs('connectionlost', [me, gelapsed, me.firsterror]);
+		}
+		if (me.getConnectionWarn() && !me.warning && (welapsed >= me.getConnectionWarnTimeout())) {
+			//console.log('warn connection lost');
+			me.warning = true;
+			me.fireEventArgs('connectionlostwarn', [me, gelapsed, me.firsterror]);
+			WT.warn(me.getConnectionWarnMsg(), {
+				config: {
+					fn: function() {
+						me.lastwarn = Date.now();
+						delete me.warning;
+					}
+				}
+			});
 		}
 	},
 	

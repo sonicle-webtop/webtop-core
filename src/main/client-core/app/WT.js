@@ -324,7 +324,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	msg: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show(Ext.apply({
+		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK
@@ -346,7 +346,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	prompt: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.prompt(
+		return Ext.Msg.prompt(
 			opts.title || WT.res('prompt'),
 			msg,
 			opts.fn,
@@ -365,11 +365,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show(Ext.apply({
+		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -386,11 +386,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show(Ext.apply({
+		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('warning'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -407,11 +407,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
-		Ext.Msg.show(Ext.apply({
+		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('error'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -425,11 +425,17 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Function} cb A callback function which is called after a choice.
 	 * @param {String} cb.buttonId The ID of the button pressed.
 	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
-	 * @param {Object} [opts] Config options.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
-		Ext.Msg.show({
+		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('confirm'),
 			message: msg,
 			buttons: opts.buttons || Ext.Msg.YESNO,
@@ -437,7 +443,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			fn: function(bid) {
 				Ext.callback(cb, scope, [bid]);
 			}
-		});
+		}, opts.config || {}));
 	},
 	
 	/**
@@ -449,7 +455,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts] Config options.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
-		this.confirm(msg, cb, scope, Ext.apply({
+		return this.confirm(msg, cb, scope, Ext.apply({
 			buttons: Ext.Msg.YESNOCANCEL
 		}, opts));
 	},
@@ -580,11 +586,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			}, opts.params || {}),
 			success: function(resp, opts) {
 				var obj = Ext.decode(resp.responseText);
-				if(sfn) Ext.callback(sfn, scope || me, [opts]);
+				if(sfn) Ext.callback(sfn, scope || me, [resp, opts]);
 				Ext.callback(fn, scope || me, [obj.success, obj, opts]);
 			},
 			failure: function(resp, opts) {
-				if(ffn) Ext.callback(ffn, scope || me, [opts]);
+				if(ffn) Ext.callback(ffn, scope || me, [resp, opts]);
 				Ext.callback(fn, scope || me, [false, null, opts]);
 			},
 			scope: me
