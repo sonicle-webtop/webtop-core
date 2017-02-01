@@ -185,6 +185,9 @@
 .wt-ftype-application-xs { background-image: url('ftypes/application_16.png') }
 .wt-ftype-application-s { background-image: url('ftypes/application_24.png') }
 .wt-ftype-application-m { background-image: url('ftypes/application_32.png') }
+.wt-ftype-calendar-xs { background-image: url('ftypes/calendar_16.png') }
+.wt-ftype-calendar-s { background-image: url('ftypes/calendar_24.png') }
+.wt-ftype-calendar-m { background-image: url('ftypes/calendar_32.png') }
 
 .wt-grid-header-icon {
 	background-repeat: no-repeat;
