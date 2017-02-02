@@ -118,6 +118,10 @@ public class ICalendarUtils {
 		return (ve == null) ? null : ve.getUid().getValue();
 	}
 	
+	public static String buildProdId(String product) {
+		return "-//Sonicle Srl//" + product + "//EN";
+	}
+	
 	public static String buildProdId(String company, String product) {
 		return "-//" + company + "//" + product + "//EN";
 	}
