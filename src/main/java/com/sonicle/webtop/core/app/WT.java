@@ -351,7 +351,7 @@ public class WT {
 	
 	public static UserProfile.Data guessUserData(String emailAddress) {
 		try {
-			return getWTA().getWebTopManager().userData(emailAddress);
+			return getWTA().getWebTopManager().userDataByEmail(emailAddress);
 		} catch(WTException ex) {
 			//TODO: logging
 			return null;

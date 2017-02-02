@@ -494,6 +494,28 @@ public final class WebTopManager {
 		}
 	}
 	
+	public List<UserProfile.Id> listUserProfileIdsByEmail(String emailAddress) throws WTException {
+		UserInfoDAO uidao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			List<UserId> uids = uidao.viewByEmail(con, emailAddress);
+			ArrayList<UserProfile.Id> items = new ArrayList<>();
+			for(UserId uid : uids) {
+				items.add(new UserProfile.Id(uid.getDomainId(), uid.getUserId()));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public OUser getUser(UserProfile.Id pid) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
@@ -1358,7 +1380,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserProfile.Data userData(String emailAddress) throws WTException {
+	public UserProfile.Data userDataByEmail(String emailAddress) throws WTException {
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		Connection con = null;
 		

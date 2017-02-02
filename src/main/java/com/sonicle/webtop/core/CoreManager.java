@@ -291,6 +291,11 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public List<UserProfile.Id> listUserIdsByEmail(String emailAddress) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		return wtmgr.listUserProfileIdsByEmail(emailAddress);
+	}
+	
 	public OUser getUser() throws WTException {
 		return getUser(getTargetProfileId());
 	}
