@@ -45,12 +45,15 @@ import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
+import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Method;
+import net.fortuna.ical4j.model.property.ProdId;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -126,29 +129,35 @@ public class ICalendarUtils {
 		Calendar nical = new Calendar(ical);
 		PropertyList plist = nical.getProperties();
 		plist.remove(plist.getProperty(Property.METHOD));
-		nical.getProperties().add(Method.REPLY);
+		plist.add(Method.REPLY);
+		plist.remove(plist.getProperty(Property.PRODID));
+		plist.add(new ProdId("-//Sonicle//Webtop5//EN"));
 		
 		VEvent ve = getVEvent(nical);
-		
+		PropertyList props=ve.getProperties();
+		props.remove(props.getProperty(Property.DESCRIPTION));
+		props.remove(props.getProperty(Property.LAST_MODIFIED));
+		props.remove(props.getProperty(Property.CREATED));
+		props.remove(props.getProperty(Property.LOCATION));
+		props.remove(props.getProperty(Property.STATUS));
+
 		// Iterates over attendees...
 		PropertyList atts = ve.getProperties(Property.ATTENDEE);
-		ArrayList<Attendee> toDelete = new ArrayList<>();
+		props.removeAll(atts);
+		Attendee matchingAtt=null;
 		for (Iterator attIt = atts.iterator(); attIt.hasNext();) {
-			Attendee att = (Attendee) attIt.next();
+			matchingAtt = (Attendee) attIt.next();
 
 			// Keep only right attendee element, we are looking for a specific attendee
-			URI uri = att.getCalAddress();
+			URI uri = matchingAtt.getCalAddress();
 			if(StringUtils.equals(uri.getSchemeSpecificPart(), forAddress)) {
-				att.getParameters().replace(response);
-			} else {
-				// Mark useless attendee
-				toDelete.add(att);
+				matchingAtt.getParameters().replace(response);
+				//matchingAtt.getParameters().replace(Rsvp.FALSE);
+				break;
 			}
 		}
-		if(atts.size() == toDelete.size()) return null; // Not found!
 		
-		// Removes unwanted attendees
-		for(Attendee att : toDelete) atts.remove(att);
+		props.add(matchingAtt);
 		
 		return nical;
 	}
