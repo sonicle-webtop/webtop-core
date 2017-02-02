@@ -118,6 +118,10 @@ public class ICalendarUtils {
 		return (ve == null) ? null : ve.getUid().getValue();
 	}
 	
+	public static String buildProdId(String company, String product) {
+		return "-//" + company + "//" + product + "//EN";
+	}
+	
 	public static String buildUid(String left, String host) {
 		return left + "@" + host;
 	}

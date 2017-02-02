@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.sdk.ServiceApi', {
 	service: null,
 	
 	constructor: function(cfg) {
-		if(!cfg.service) Ext.Error.raise('Specify a valid service instance');
-		this.service=cfg.service;
+		if (!cfg.service) Ext.Error.raise('Specify a valid service instance');
+		this.service = cfg.service;
 	}
 });
