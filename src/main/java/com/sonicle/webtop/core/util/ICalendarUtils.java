@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -41,16 +42,22 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Method;
+import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.Version;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -128,6 +135,27 @@ public class ICalendarUtils {
 	
 	public static String buildUid(String left, String host) {
 		return left + "@" + host;
+	}
+	
+	public static String calendarToString(Calendar ical) throws IOException, ValidationException {
+		ByteArrayOutputStream baos = null;
+		try {
+			baos = new ByteArrayOutputStream();
+			CalendarOutputter outputter = new CalendarOutputter();
+			outputter.output(ical, baos);
+			return baos.toString("UTF8");
+		} finally {
+			IOUtils.closeQuietly(baos);
+		}
+	}
+	
+	public static Calendar newCalendar(String prodId, Method method) {
+		Calendar ical = new Calendar();
+		ical.getProperties().add(new ProdId(prodId));
+		ical.getProperties().add(Version.VERSION_2_0);
+		ical.getProperties().add(CalScale.GREGORIAN);
+		if (method != null) ical.getProperties().add(method);
+		return ical;
 	}
 	
 	public static Calendar buildInvitationReply(Calendar ical, String forAddress, PartStat response) throws URISyntaxException, ParseException, IOException {
