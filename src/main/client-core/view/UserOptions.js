@@ -154,27 +154,42 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'formseparator'
-			}, 
-			WTF.lookupCombo('id', 'desc', {
-				bind: '{record.desktopNotification}',
-				store: Ext.create('WTA.store.DesktopNotification', {
-					autoLoad: true
-				}),
-				disabled: !NtfMgr.isSupported || (NtfMgr.permissionLevel() === NtfMgr.PERM_DENIED),
+			}, {
+				xtype: 'fieldcontainer',
 				fieldLabel: WT.res('opts.main.fld-desktopNotification.lbl'),
-				width: 340,
-				listeners: {
-					select: function(s,rec) {
-						if(rec.get('id') === 'always' || rec.get('id') === 'auto') {
-							NtfMgr.ensurePermission();
+				layout: 'hbox',
+				defaults: {
+					margin: '0 10 0 0'
+				},
+				items: [
+					WTF.lookupCombo('id', 'desc', {
+						bind: '{record.desktopNotification}',
+						store: Ext.create('WTA.store.DesktopNotification', {
+							autoLoad: true
+						}),
+						disabled: !NtfMgr.isSupported || (NtfMgr.permissionLevel() === NtfMgr.PERM_DENIED),
+						width: 195,
+						listeners: {
+							select: function(s,rec) {
+								if(rec.get('id') === 'always' || rec.get('id') === 'auto') {
+									NtfMgr.ensureAuthorization();
+								}
+							},
+							blur: {
+								fn: me.onBlurAutoSave,
+								scope: me
+							}
 						}
-					},
-					blur: {
-						fn: me.onBlurAutoSave,
-						scope: me
+					}), {
+						xtype: 'button',
+						tooltip: WT.res('opts.main.btn-notificationAuthorize.tip'),
+						iconCls: 'wt-icon-notification-authorize-xs',
+						handler: function() {
+							NtfMgr.ensureAuthorization();
+						}
 					}
-				}
-			}), {
+				]
+			}, {
 				xtype: 'sospacer'
 			}, {
 				xtype: 'sospacer'
