@@ -472,10 +472,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	showDesktopNotification: function(sid, opts) {
 		opts = opts || {};
 		var dn = WT.getVar('desktopNotification'),
+				PMgr = Sonicle.PageMgr,
 				NtfMgr = Sonicle.DesktopNotificationMgr,
 				desc, ico;
 		
-		if(dn === 'always' || (dn === 'auto' && !PageMgr.isHidden())) {
+		if(dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
 			desc = WT.getApp().getDescriptor(sid);
 			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
 			return NtfMgr.notify(opts.title, {
