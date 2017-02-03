@@ -41,6 +41,8 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.data.ParserException;
@@ -169,6 +171,22 @@ public class ICalendarUtils {
 		ical.getProperties().add(CalScale.GREGORIAN);
 		if (method != null) ical.getProperties().add(method);
 		return ical;
+	}
+	
+	public static MimeBodyPart createInvitationAttachmentPart(String icalText, String filename) throws MessagingException {
+		MimeBodyPart part = new MimeBodyPart();
+		part.setText(icalText, "UTF-8");
+		part.setHeader("Content-type", "application/ics");
+		part.setFileName(filename);
+		return part;
+	}
+	
+	public static MimeBodyPart createInvitationCalendarPart(boolean cancel, String icalText) throws MessagingException {
+		String method = cancel ? "CANCEL" : "REQUEST";
+		MimeBodyPart part = new MimeBodyPart();
+		part.setText(icalText, "UTF-8");
+		part.setHeader("Content-type", "text/calendar; charset=UTF-8; method=" + method);
+		return part;
 	}
 	
 	public static Calendar buildInvitationReply(Calendar ical, String prodId, String forAddress, PartStat response) throws URISyntaxException, ParseException, IOException {
