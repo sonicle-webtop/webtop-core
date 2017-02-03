@@ -120,13 +120,26 @@ public class ICalendarUtils {
 	 * @param ical The Calendar object
 	 * @return The VEvent's Uid or null if not found
 	 */
-	public static String getInvitationUid(Calendar ical) {
+	public static String getVEventUid(Calendar ical) {
 		VEvent ve = getVEvent(ical);
 		return (ve == null) ? null : ve.getUid().getValue();
 	}
 	
+	/**
+	 * Returns the first attendee in the VEvent object.
+	 * @param ve The VEvent object
+	 * @return The first attendee or null if not present
+	 */
+	public static Attendee getAttendee(VEvent ve) {
+		PropertyList atts = ve.getProperties(Property.ATTENDEE);
+		for (Iterator attIt = atts.iterator(); attIt.hasNext();) {
+			return (Attendee) attIt.next();
+		}
+		return null;
+	}
+	
 	public static String buildProdId(String product) {
-		return "-//Sonicle Srl//" + product + "//EN";
+		return "-//Sonicle//" + product + "//EN";
 	}
 	
 	public static String buildProdId(String company, String product) {

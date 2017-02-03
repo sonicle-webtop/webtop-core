@@ -78,5 +78,21 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 			//	nameProperty: 'mapping'
 			//}
 		}
+	},
+	
+	setDatePart: function(field, date) {
+		var me = this,
+				v = me.get(field) || new Date(), dt;
+		dt = !Ext.isDate(date) ? null : Sonicle.Date.copyDate(date, v);
+		me.set(field, dt);
+		return dt;
+	},
+	
+	setTimePart: function(field, date) {
+		var me = this,
+				v = me.get(field) || new Date(), dt;
+		dt = !Ext.isDate(date) ? null : Sonicle.Date.copyTime(date, v);
+		me.set(field, dt);
+		return dt;
 	}
 });

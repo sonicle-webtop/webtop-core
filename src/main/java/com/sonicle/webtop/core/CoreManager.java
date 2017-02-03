@@ -1388,6 +1388,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
+			if (StringUtils.isBlank(value)) return;
+			
 			con = WT.getCoreConnection();
 			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
 			OServiceStoreEntry entry = sedao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
