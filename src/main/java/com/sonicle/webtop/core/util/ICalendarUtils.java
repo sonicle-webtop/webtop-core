@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
@@ -51,7 +50,6 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
-//import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Attendee;
@@ -59,6 +57,8 @@ import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.util.SimpleHostInfo;
+import net.fortuna.ical4j.util.UidGenerator;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -140,16 +140,22 @@ public class ICalendarUtils {
 		return null;
 	}
 	
+	/*
+	public static String buildUid(String internetName, String id) {
+		return new UidGenerator(new SimpleHostInfo(internetName), id).toString();
+	}
+	*/
+	
+	public static String buildUid(String id, String internetName) {
+		return id + "@" + internetName;
+	}
+	
 	public static String buildProdId(String product) {
 		return "-//Sonicle//" + product + "//EN";
 	}
 	
 	public static String buildProdId(String company, String product) {
 		return "-//" + company + "//" + product + "//EN";
-	}
-	
-	public static String buildUid(String left, String host) {
-		return left + "@" + host;
 	}
 	
 	public static String calendarToString(Calendar ical) throws IOException {
