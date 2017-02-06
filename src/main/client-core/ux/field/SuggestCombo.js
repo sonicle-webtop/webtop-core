@@ -39,10 +39,6 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	requires: [
 		'WTA.ux.data.ValueModel'
 	],
-	plugins: [
-		'soenterkeyplugin',
-		'sofieldtooltip'
-	],
 	
 	/**
 	 * @cfg {String} sid
