@@ -109,7 +109,7 @@ Ext.define('Sonicle.webtop.core.ux.AddressBook', {
 					},
 					store: {
 						model: 'WTA.model.InternetRecipient',
-						proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients')
+						proxy: WTF.apiProxy(WT.ID, 'ManageInternetRecipients', 'recipients')
 					},
 					columns: [
 						{
@@ -164,7 +164,7 @@ Ext.define('Sonicle.webtop.core.ux.AddressBook', {
 		var me=this;
 		me.lookupReference('grdContacts').getStore().reload({
 			params: {
-				sources: [ me.source ],
+				sources: me.sourceId==="*"?[]:[ me.sourceId ],
 				query: me.lookupReference("query").getValue(),
 				limit: 0
 			}
