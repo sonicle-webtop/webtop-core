@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	extend: 'Ext.container.Viewport',
 	requires: [
 		'WTA.view.main.AbstractC',
+		'WTA.ux.NotificationButton',
 		'WTA.ux.TaskBar',
 		'WTA.ux.ServiceButton',
 		'WTA.ux.ViewWindow'
@@ -190,7 +191,32 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
 						handler: 'onToolsMenuClick'
 					}, '-']
-				}, {
+				}, /*{
+					xtype: 'button',
+					iconCls: 'wt-icon-notification-xs'
+					
+					
+				}, /*{
+					xtype: 'button',
+					glyph: 0xf0c9,
+					menu: {
+						items: [{
+							xtype: 'panel',
+							layout: 'anchor',
+							border: false,
+							items: [{
+								xtype: 'label',
+								text: WT.getVar('userDisplayName'),
+								cls: 'wt-menu-userdetails-main'
+							}, {
+								xtype: 'label',
+								text: WT.getVar('userId'),
+								cls: 'wt-menu-userdetails-sub'
+							}],
+							width: 150
+						}]
+					}
+				},*/ {
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {
