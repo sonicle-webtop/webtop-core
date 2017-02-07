@@ -224,15 +224,16 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 			mo = me.getModel();
 			flduserid.setDisabled(false);
 			if (me.askForPassword) {
-				mo.getField('password').constructValidators([{
+				mo.setFieldValidators('password', [{
 					type: 'sopassword',
 					complex: me.passwordPolicy
 				}]);
-				mo.getField('password2').constructValidators([{
+				mo.setFieldValidators('password2', [{
 					type: 'soequality',
 					equalField: 'password',
 					fieldLabel: me.mys.res('user.fld-password.lbl')
 				}]);
+				mo.getValidation(true);
 				fldpassword.setHidden(false);
 				fldpassword2.setHidden(false);
 			} else {

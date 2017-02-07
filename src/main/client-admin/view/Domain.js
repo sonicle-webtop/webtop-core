@@ -692,60 +692,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 	onSchemeChanged: function(v) {
 		var mo = this.getModel(), scheme = mo.get('dirScheme');
 		this.lref('pnldir').setActiveItem(Ext.isEmpty(scheme) ? 'empty' : scheme);
-		this.updateValidators(mo);
-	},
-	
-	updateValidators: function(mo) {
-		switch(mo.get('dirScheme')) {
-			case 'webtop':
-				mo.getField('dirHost').constructValidators([]);
-				mo.getField('dirAdmin').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
-				break;
-			case 'ldapwebtop':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
-				break;
-			case 'ldap':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
-				mo.getField('ldapLoginDn').constructValidators(['presence']);
-				mo.getField('ldapUserDn').constructValidators(['presence']);
-				mo.getField('ldapUserFirstnameField').constructValidators(['presence']);
-				mo.getField('ldapUserLastnameField').constructValidators(['presence']);
-				mo.getField('ldapUserDisplayNameField').constructValidators(['presence']);
-				break;
-			case 'ad':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
-				mo.getField('ldapLoginDn').constructValidators(['presence']);
-				mo.getField('ldapUserDn').constructValidators(['presence']);
-				break;
-			case 'ldapneth':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators(['presence']);
-				mo.getField('dirPassword').constructValidators(['presence']);
-				mo.getField('ldapLoginDn').constructValidators(['presence']);
-				mo.getField('ldapUserDn').constructValidators(['presence']);
-				break;
-			case 'imap':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
-				break;
-			case 'smb':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
-				break;
-			case 'sftp':
-				mo.getField('dirHost').constructValidators(['presence']);
-				mo.getField('dirAdmin').constructValidators([]);
-				mo.getField('dirPassword').constructValidators([]);
-				break;
-		}
+		mo.refreshValidatorsForDirScheme();
 	}
 });

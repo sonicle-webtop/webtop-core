@@ -67,5 +67,61 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('ldapUserFirstnameField', 'string', true),
 		WTF.field('ldapUserLastnameField', 'string', true),
 		WTF.field('ldapUserDisplayNameField', 'string', true)
-	]
+	],
+	
+	refreshValidatorsForDirScheme: function() {
+		var me = this;
+		switch(me.get('dirScheme')) {
+			case 'webtop':
+				me.setFieldValidators('dirHost');
+				me.setFieldValidators('dirAdmin');
+				me.setFieldValidators('dirPassword');
+				break;
+			case 'ldapwebtop':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin', ['presence']);
+				me.setFieldValidators('dirPassword', ['presence']);
+				break;
+			case 'ldap':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin', ['presence']);
+				me.setFieldValidators('dirPassword', ['presence']);
+				me.setFieldValidators('ldapLoginDn', ['presence']);
+				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserFirstnameField', ['presence']);
+				me.setFieldValidators('ldapUserLastnameField', ['presence']);
+				me.setFieldValidators('ldapUserDisplayNameField', ['presence']);
+				break;
+			case 'ad':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin', ['presence']);
+				me.setFieldValidators('dirPassword', ['presence']);
+				me.setFieldValidators('ldapLoginDn', ['presence']);
+				me.setFieldValidators('ldapUserDn', ['presence']);
+				break;
+			case 'ldapneth':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin', ['presence']);
+				me.setFieldValidators('dirPassword', ['presence']);
+				me.setFieldValidators('ldapLoginDn', ['presence']);
+				me.setFieldValidators('ldapUserDn', ['presence']);
+				break;
+			case 'imap':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin');
+				me.setFieldValidators('dirPassword');
+				break;
+			case 'smb':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin');
+				me.setFieldValidators('dirPassword');
+				break;
+			case 'sftp':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin');
+				me.setFieldValidators('dirPassword');
+				break;
+		}
+		me.getValidation(true);
+	}
 });
