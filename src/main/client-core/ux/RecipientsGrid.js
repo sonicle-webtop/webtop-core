@@ -97,6 +97,7 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
 			  return true;
 			}
 		} else {
+			me.completeEdit();
 			var email=ppos.record.get("email");
 			if (email==="") {
 				if (!stopExitFocus)

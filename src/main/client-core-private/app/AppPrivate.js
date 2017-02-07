@@ -299,3 +299,32 @@ Ext.override(Ext.menu.Item, {
 		return this.callParent([e]);
 	}
 });
+
+Ext.override(Ext.util.LruCache, {
+
+    // private. Only used by internal methods.
+    unlinkEntry: function (entry) {
+        // Stitch the list back up.
+        if (entry) {
+            if (this.last && this.last.key === entry.key)
+                this.last = entry.prev;
+            if (this.first && this.first.key === entry.key)
+                this.first = entry.next;
+
+
+            if (entry.next) {
+                entry.next.prev = entry.prev;
+            } else {
+                this.last = entry.prev;
+            }
+            if (entry.prev) {
+                entry.prev.next = entry.next;
+            } else {
+                this.first = entry.next;
+            }
+            entry.prev = entry.next = null;
+        }
+    }
+
+});
+

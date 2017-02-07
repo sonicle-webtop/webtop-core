@@ -84,7 +84,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		Ext.apply(me, {
 			store: {
 				model: 'WTA.model.InternetRecipient',
-				proxy: WTF.apiProxy(WT.ID, 'LookupInternetRecipients', 'recipients', {
+				proxy: WTF.apiProxy(WT.ID, 'ManageInternetRecipients', 'recipients', {
 					extraParams: {
 						sources: me.getSources(),
 						limit: me.getLimit()
@@ -125,7 +125,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 						nav = pick.getNavigationModel(),
 						rec = nav.getRecord();
 
-				if(rec) {
+				if(rec && rec.get("source")==="") {
 					rec.drop();
 					s.getStore().sync();
 				}

@@ -71,11 +71,13 @@ import com.sonicle.webtop.core.bol.js.JsCausal;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
+import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
+import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
@@ -954,25 +956,37 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processLookupInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processManageInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<InternetRecipient> items = null;
 		
 		try {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
+			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
-			int limit = ServletUtils.getIntParameter(request, "limit", 100);
-			if (limit==0) limit=Integer.MAX_VALUE;
-			
-			if(sources.isEmpty()) {
-				items = coreMgr.listInternetRecipients(query, limit);
-			} else {
-				items = coreMgr.listInternetRecipients(sources, query, limit);
+			if (crud.equals(Crud.READ)) {
+				int limit = ServletUtils.getIntParameter(request, "limit", 100);
+				if (limit==0) limit=Integer.MAX_VALUE;
+
+				if(sources.isEmpty()) {
+					items = coreMgr.listInternetRecipients(query, limit);
+				} else {
+					items = coreMgr.listInternetRecipients(sources, query, limit);
+				}
+				new JsonResult("recipients", items, items.size()).printTo(out);
 			}
-			new JsonResult("recipients", items, items.size()).printTo(out);
+			else if (crud.equals(Crud.DELETE)) {
+				Payload<MapItem, JsInternetAddress> pl = ServletUtils.getPayload(request, JsInternetAddress.class);
+				if (pl.data.source.isEmpty()) {
+					coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", pl.data.address.toUpperCase());
+					new JsonResult().printTo(out);
+				} else {
+					throw new Exception("Cannot delete from source "+pl.data.source+" ["+pl.data.sourceName+"]");
+				}
+			}
 
 		} catch (Exception ex) {
-			logger.error("Error in LookupInternetRecipients", ex);
-			new JsonResult(false, "Error in LookupInternetRecipients").printTo(out);
+			logger.error("Error in ManageInternetRecipients", ex);
+			new JsonResult(false, "Error in ManageInternetRecipients").printTo(out);
 		}
 	}
 	

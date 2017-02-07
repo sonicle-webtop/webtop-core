@@ -39,10 +39,6 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	requires: [
 		'WTA.ux.data.ValueModel'
 	],
-	plugins: [
-		'soenterkeyplugin',
-		'sofieldtooltip'
-	],
 	
 	/**
 	 * @cfg {String} sid
@@ -56,6 +52,8 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 		 */
 		suggestionContext: ''
 	},
+	
+	preventEnterFiringOnPickerExpanded: true,
 	
 	typeAhead: false,
 	minChars: 2,
@@ -71,6 +69,14 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	
 	initComponent: function() {
 		var me = this;
+		me.plugins=me.plugins||[];
+		me.plugins.push(
+			{
+				ptype: 'soenterkeyplugin',
+				preventEnterFiringOnPickerExpanded: me.preventEnterFiringOnPickerExpanded
+			},
+			'sofieldtooltip'
+		);
 		me.doApplyConfig();
 		me.callParent(arguments);
 		me.on('specialkey', me._onSpecialKey);
