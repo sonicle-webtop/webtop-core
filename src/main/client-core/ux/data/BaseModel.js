@@ -80,6 +80,25 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 		}
 	},
 	
+	/**
+	 * Sets the specified field only if its (current) value is null.
+	 * @param {String} field The name of the field to update
+	 * @param {Mixed} value The value to set
+	 */
+	setIfNull: function(field, value) {
+		if (this.get(field) === null) {
+			this.set(field, value);
+		}
+	},
+	
+	/**
+	 * Sets the date part only into the specified field.
+	 * If null, the field will be initialized using the current date value.
+	 * Passed field name must refer to a date field.
+	 * @param {String} field The name of the field to update
+	 * @param {Date} date The value from which copy the date part
+	 * @returns {Date} The value set
+	 */
 	setDatePart: function(field, date) {
 		var me = this,
 				v = me.get(field) || new Date(), dt;
@@ -88,11 +107,32 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 		return dt;
 	},
 	
+	/**
+	 * Sets the time part only into the specified field.
+	 * If null, the field will be initialized using the current date value.
+	 * Passed field name must refer to a date field.
+	 * @param {String} field The name of the field to update
+	 * @param {Date} date The value from which copy the time part
+	 * @returns {Date} The value set
+	 */
 	setTimePart: function(field, date) {
 		var me = this,
 				v = me.get(field) || new Date(), dt;
 		dt = !Ext.isDate(date) ? null : Sonicle.Date.copyTime(date, v);
 		me.set(field, dt);
 		return dt;
+	},
+	
+	/**
+	 * Sets validators to a field dinamically.
+	 * NB: after the update of validators a call to {@link Ext.data.Model#getValidation getValidation}
+	 * with the 'refresh' parameter to 'True' is necessary in order to refresh
+	 * the internal validation instance.
+	 * @param {String} field The name of the field
+	 * @param {Object[]} validators An array of {@link Ext.data.validator.Validator validators}
+	 */
+	setFieldValidators: function(field, validators) {
+		var fld = this.getField(field);
+		if (fld) fld.setModelValidators(validators || []);
 	}
 });
