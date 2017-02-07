@@ -114,6 +114,34 @@ WITH (OIDS=FALSE)
 ;
 
 -- ----------------------------
+-- Table structure for customers
+-- ----------------------------
+DROP TABLE IF EXISTS "core"."customers";
+CREATE TABLE "core"."customers" (
+"customer_id" varchar(15) NOT NULL,
+"description" varchar(50),
+"type" varchar(1),
+"address" varchar(100),
+"city" varchar(30),
+"state" varchar(30),
+"postalcode" varchar(20),
+"country" varchar(30),
+"telephone" varchar(50),
+"email" varchar(80),
+"from_drm" varchar(5),
+"parent_id" varchar(15),
+"external_id" varchar(100),
+"status" varchar(1),
+"domain_id" varchar(20),
+"km" varchar(15),
+"lock" varchar(20),
+"note" varchar(2000)
+)
+WITH (OIDS=FALSE)
+
+;
+
+-- ----------------------------
 -- Table structure for domain_settings
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."domain_settings";
@@ -466,34 +494,6 @@ WITH (OIDS=FALSE)
 ;
 
 -- ----------------------------
--- Table structure for xcustomers
--- ----------------------------
-DROP TABLE IF EXISTS "core"."customers";
-CREATE TABLE "core"."customers" (
-"customer_id" varchar(15),
-"description" varchar(50),
-"type" varchar(1),
-"address" varchar(100),
-"city" varchar(30),
-"state" varchar(30),
-"postalcode" varchar(20),
-"country" varchar(30),
-"telephone" varchar(50),
-"email" varchar(80),
-"from_drm" varchar(5),
-"parent_id" varchar(15),
-"external_id" varchar(100),
-"status" varchar(1),
-"domain_id" varchar(15),
-"km" varchar(15),
-"lock" varchar(20),
-"note" varchar(2000)
-)
-WITH (OIDS=FALSE)
-
-;
-
--- ----------------------------
 -- Alter Sequences Owned By 
 -- ----------------------------
 
@@ -528,6 +528,16 @@ CREATE INDEX "causals_ak2" ON "core"."causals" USING btree ("external_id");
 -- Primary Key structure for table causals
 -- ----------------------------
 ALTER TABLE "core"."causals" ADD PRIMARY KEY ("causal_id");
+
+-- ----------------------------
+-- Indexes structure for table customers
+-- ----------------------------
+CREATE INDEX "customers_ak1" ON "core"."customers" USING btree ("description", "status");
+
+-- ----------------------------
+-- Primary Key structure for table customers
+-- ----------------------------
+ALTER TABLE "core"."customers" ADD PRIMARY KEY ("customer_id");
 
 -- ----------------------------
 -- Primary Key structure for table domain_settings
