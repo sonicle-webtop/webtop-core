@@ -69,6 +69,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -103,6 +104,7 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
+	private javax.mail.Session mailSession = null;
 	
 	WebTopSession(WebTopApp wta, Session session) {
 		this.wta = wta;
@@ -515,6 +517,28 @@ public class WebTopSession {
 		synchronized(managers) {
 			managers.clear();
 		}
+	}
+	
+	public synchronized javax.mail.Session getMailSession() {
+		UserProfile.Id pid=getProfileId();
+		if (pid!=null && mailSession==null) {
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
+			String smtphost=css.getSMTPHost();
+			int smtpport=css.getSMTPPort();
+			Properties props = System.getProperties();
+			//props.setProperty("mail.imap.parse.debug", "true");
+			props.setProperty("mail.smtp.host", smtphost);
+			props.setProperty("mail.smtp.port", ""+smtpport);
+			//props.setProperty("mail.socket.debug", "true");
+			props.setProperty("mail.imaps.ssl.trust", "*");
+			props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
+			props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
+			//support idle events
+			props.setProperty("mail.imap.enableimapevents", "true");
+
+			mailSession=javax.mail.Session.getInstance(props, null);
+		}
+		return mailSession;
 	}
 	
 	/**

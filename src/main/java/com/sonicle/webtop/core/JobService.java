@@ -191,7 +191,7 @@ public class JobService extends BaseJobService {
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = ud.getEmail();
 				if(to == null) throw new WTException("Error building destination address");
-				WT.sendEmail(reminder.getProfileId(), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
+				WT.sendEmail(WT.getGlobalMailSession(reminder.getProfileId()), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
 				
 			} catch(Exception ex) {
 				logger.error("Unable to send email", ex);
@@ -247,7 +247,7 @@ public class JobService extends BaseJobService {
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = userData.getEmail();
 				if(to == null) throw new WTException("Error building destination address");
-				WT.sendEmail(pid, true, from, to, subject, html);
+				WT.sendEmail(WT.getGlobalMailSession(pid), true, from, to, subject, html);
 				
 			} catch(IOException | TemplateException ex) {
 				logger.error("Unable to build email template", ex);

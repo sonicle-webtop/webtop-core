@@ -904,7 +904,7 @@ public final class WebTopApp {
 		return MessageFormat.format(value, arguments);
 	}
 	
-	public Session getMailSession(String domainId) {
+	public Session getGlobalMailSession(String domainId) {
 		Session session;
 		synchronized(cacheMailSessionByDomain) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
@@ -933,7 +933,7 @@ public final class WebTopApp {
 		return session;
 	}
 	
-	public void sendEmail(UserProfile.Id pid, boolean rich, 
+	public void sendEmail(javax.mail.Session session, boolean rich, 
 			String from, String[] to, String[] cc, String[] bcc, 
 			String subject, String body) throws MessagingException {
 		
@@ -966,15 +966,15 @@ public final class WebTopApp {
             }
 		}
 		
-		sendEmail(pid,rich,iafrom,iato,iacc,iabcc,subject,body,null);
+		sendEmail(session,rich,iafrom,iato,iacc,iabcc,subject,body,null);
 		
 	}
 	
-	public void sendEmail(UserProfile.Id pid, boolean rich, 
+	public void sendEmail(javax.mail.Session session, boolean rich, 
 			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
 				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
 		
-		Session session=getMailSession(pid.getDomainId());
+		//Session session=getGlobalMailSession(pid.getDomainId());
         MimeMessage msg=new MimeMessage(session);
         try {
           subject=MimeUtility.encodeText(subject);

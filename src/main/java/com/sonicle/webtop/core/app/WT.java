@@ -379,8 +379,12 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
-	public static Session getMailSession(String domainId) {
-		return getWTA().getMailSession(domainId);
+	public static Session getGlobalMailSession(UserProfile.Id pid) {
+		return getGlobalMailSession(pid.getDomainId());
+	}
+	
+	public static Session getGlobalMailSession(String domainId) {
+		return getWTA().getGlobalMailSession(domainId);
 	}
 	
 	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
@@ -409,26 +413,26 @@ public class WT {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	
-	public static void sendEmail(UserProfile.Id pid, boolean rich, String from, String to, String subject, String body) throws MessagingException {
-		sendEmail(pid, rich, from, new String[]{to}, null, null, subject, body);
+	public static void sendEmail(Session session, boolean rich, String from, String to, String subject, String body) throws MessagingException {
+		sendEmail(session, rich, from, new String[]{to}, null, null, subject, body);
 	}
 	
-	public static void sendEmail(UserProfile.Id pid, boolean rich, InternetAddress from, InternetAddress to, String subject, String body) throws MessagingException {
-		sendEmail(pid, rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
+	public static void sendEmail(Session session, boolean rich, InternetAddress from, InternetAddress to, String subject, String body) throws MessagingException {
+		sendEmail(session, rich, from, new InternetAddress[]{to}, null, null, subject, body, null);
 	}
 	
-	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+	public static void sendEmail(Session session, boolean rich, 
 			String from, String[] to, String[] cc, String[] bcc, 
 				String subject, String body) throws MessagingException {
 		
-		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body);
+		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body);
 	}
 	
-	public static void sendEmail(UserProfile.Id pid, boolean rich, 
+	public static void sendEmail(Session session, boolean rich, 
 			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
 				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
 		
-		getWTA().sendEmail(pid, rich, from, to, cc, bcc, subject, body, parts);
+		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
 	/**

@@ -36,7 +36,9 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopSession;
 import java.util.Locale;
+import javax.mail.Session;
 import org.apache.commons.lang3.StringUtils;
 import sun.reflect.Reflection;
 
@@ -139,6 +141,12 @@ public abstract class BaseManager {
 	
 	public void setLocale(Locale locale) {
 		this.locale = locale;
+	}
+	
+	public Session getMailSession() {
+		WebTopSession wts=RunContext.getWebTopSession();
+		if (wts!=null) return wts.getMailSession();
+		return WT.getGlobalMailSession(getTargetProfileId());
 	}
 	
 	/**
