@@ -39,6 +39,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.ws.AutosaveMessage;
@@ -60,6 +61,8 @@ import com.sonicle.webtop.core.servlet.Otp;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -539,14 +542,24 @@ public class WebTopSession {
 		}
 	}
 	
+	public List<String> getPrivateServices() {
+		return getPrivateServices(false);
+	}
+	
 	/**
 	 * Gets instantiated services list.
+	 * @param sortByOrder True to sort the list using chosen order
 	 * @return A list of service ids.
 	 */
-	public List<String> getPrivateServices() {
+	public List<String> getPrivateServices(boolean sortByOrder) {
 		if(!isReady()) return null;
 		synchronized(privateServices) {
-			return Arrays.asList(privateServices.keySet().toArray(new String[privateServices.size()]));
+			List<String> ids = Arrays.asList(privateServices.keySet().toArray(new String[privateServices.size()]));
+			if (sortByOrder) {
+				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getUserProfile().getDomainId());
+				sortServiceIdsByOrder(css.getServicesOrder(), ids);
+			}
+			return ids;
 		}
 	}
 	
@@ -636,7 +649,7 @@ public class WebTopSession {
 		// Evaluate services
 		JsWTSPrivate.Service last = null;
 		String deflt = null;
-		for(String serviceId : getPrivateServices()) {
+		for(String serviceId : getPrivateServices(true)) {
 			fillStartupForService(js, serviceId, locale, theme, lookAndFeel);
 			last = js.services.get(js.services.size()-1);
 			//TODO: gestire la manutenzione
@@ -888,6 +901,35 @@ public class WebTopSession {
 		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override.css");
 		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-" + theme + ".css");
 		js.appManifest.addCss(manifest.getPackageLookAndFeelUrl(lookAndFeel) + "/" + "service-override-" + theme + ".css");
+	}
+	
+	private List<String> sortServiceIdsByOrder(final CoreServiceSettings.ServicesOrder so, List<String> ids) {
+		Collections.sort(ids, new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				int i1 = serviceIdToOrderIndex(so, o1);
+				int i2 = serviceIdToOrderIndex(so, o2);
+				if (i1 < i2) {
+					return -1;
+				} else if (i1 > i2) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+		});
+		return ids;
+	}
+	
+	private int serviceIdToOrderIndex(CoreServiceSettings.ServicesOrder so, String serviceId) {
+		if (StringUtils.equals(serviceId, CoreManifest.ID)) {
+			return -2;
+		} else if (StringUtils.equals(serviceId, CoreAdminManifest.ID)) {
+			return -1;
+		} else {
+			int i = so.indexOf(serviceId);
+			return (i != -1) ? i : 99;
+		}
 	}
 	
 	private boolean isWhatsnewNeeded() {

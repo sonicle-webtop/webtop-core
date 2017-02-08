@@ -278,7 +278,12 @@ public class CoreSettings {
 	
 	
 	
-	
+	/**
+	 * [domain+system+user][default]
+	 * [string]
+	 * 
+	 */
+	public static final String SERVICES_ORDER = "services.order";
 	
 	/**
 	 * [user][default]

@@ -9,11 +9,13 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
+import java.util.ArrayList;
 import java.util.Locale;
 import org.joda.time.LocalTime;
 
@@ -75,8 +77,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public Integer getUploadMaxFileSize() {
 		Integer value = getInteger(UPLOAD_MAXFILESIZE, null);
-		if(value != null) return value;
-		return getDefaultUploadMaxFileSize();
+		return (value != null) ? value : getDefaultUploadMaxFileSize();
 	}
 	
 	public String getSMTPHost() {
@@ -131,7 +132,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
+	public ServicesOrder getServicesOrder() {
+		ServicesOrder value = getObject(SERVICES_ORDER, null, ServicesOrder.class);
+		return (value != null) ? value : getDefaultServicesOrder();
+	}
 	
+	public boolean setServicesOrder(ServicesOrder value) {
+		return setObject(SERVICES_ORDER, value, ServicesOrder.class);
+	}
 	
 	
 	
@@ -189,6 +197,20 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return LangUtils.value(setm.getServiceSetting(CoreManifest.ID, TOMCAT_MANAGER_URI), (String)null);
 	}
 	
+	private ServicesOrder getDefaultServicesOrder() {
+		ServicesOrder value = getObject(SERVICES_ORDER, null, ServicesOrder.class);
+		if (value == null) {
+			value = new ServicesOrder();
+			value.add("com.sonicle.webtop.core.admin");
+			value.add("com.sonicle.webtop.mail");
+			value.add("com.sonicle.webtop.calendar");
+			value.add("com.sonicle.webtop.contacts");
+			value.add("com.sonicle.webtop.tasks");
+			value.add("com.sonicle.webtop.vfs");
+		}
+		return value;
+	}
+	
 	private Integer getDefaultUploadMaxFileSize() {
 		return getInteger(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, 20971520);
 	}
@@ -243,5 +265,19 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public boolean getDefaultDevicesSyncAlertEnabled() {
 		return getBoolean(DEFAULT_PREFIX + DEVICES_SYNC_ALERT_ENABLED, false);
+	}
+	
+	public static class ServicesOrder extends ArrayList<String> {
+		public ServicesOrder() {
+			super();
+		}
+		
+		public static ServicesOrder fromJson(String value) {
+			return JsonResult.gson.fromJson(value, ServicesOrder.class);
+		}
+		
+		public static String toJson(ServicesOrder value) {
+			return JsonResult.gson.toJson(value, ServicesOrder.class);
+		}
 	}
 }
