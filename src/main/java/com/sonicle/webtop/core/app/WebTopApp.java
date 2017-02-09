@@ -913,7 +913,7 @@ public final class WebTopApp {
 			String key=smtphost+":"+smtpport;
 			session=cacheMailSessionByDomain.get(key);
 			if (session==null) {
-				Properties props = System.getProperties();
+				Properties props = new Properties(System.getProperties());
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
 				props.setProperty("mail.smtp.port", ""+smtpport);
