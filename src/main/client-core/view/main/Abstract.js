@@ -195,7 +195,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					xtype: 'wtnotificationbutton'
 					
 					
-				}, /*{
+				}, ' ', '-', /*{
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {
