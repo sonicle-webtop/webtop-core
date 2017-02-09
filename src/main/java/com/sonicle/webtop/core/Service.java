@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
@@ -157,7 +158,7 @@ public class Service extends BaseService {
 		boolean domainPasswordPolicy = false;
 		boolean dirCapPasswordWrite = false;
 		try {
-			if (profile.getDomainId().equals("*")) {
+			if (profile.getDomainId().equals(WebTopManager.DOMAINID_SYSADMIN)) {
 				dirCapPasswordWrite = true;
 			} else {
 				ODomain domain = coreMgr.getDomain();
