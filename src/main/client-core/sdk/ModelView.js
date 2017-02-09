@@ -229,6 +229,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 * Loads defined model and sets NEW mode.
 	 * @param {Object} opts
 	 * @param {Object} opts.data
+	 * @param {Boolean} [opts.dirty=false]
 	 */
 	beginNew: function(opts) {
 		this.begin(this.MODE_NEW, opts);
@@ -281,7 +282,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this;
 		me.wait();
 		me.loadModel({
-			data: me.opts.data
+			data: me.opts.data,
+			dirty: me.opts.dirty
 		});
 	},
 	
