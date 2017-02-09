@@ -49,7 +49,7 @@ public class CoreManifest extends ServiceManifest {
 	public static final String JAVA_PACKAGE = "com.sonicle.webtop.core";
 	public static final String JS_PACKAGE = "Sonicle.webtop.core";
 	public static final String VERSION = "5.0.0";
-	public static final String BUILD_DATE = "07/10/2014";
+	public static final String BUILD_DATE = "2017-02-09";
 	public static final String CONTROLLER_CLASSNAME = "com.sonicle.webtop.core.CoreController";
 	public static final String MANAGER_CLASSNAME = "com.sonicle.webtop.core.CoreManager";
 	public static final String REST_API_CLASSNAME = "com.sonicle.webtop.core.CoreRestApi";
