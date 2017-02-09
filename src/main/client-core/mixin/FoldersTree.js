@@ -41,6 +41,125 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	/**
 	 * @private
 	 */
+	toF3RightsObj: function(rights) {
+		var iof = function(s,v) { return s ? s.indexOf(v) !== -1 : false; },
+				obj = {};
+		obj['CREATE'] = iof(rights, 'c');
+		obj['READ'] = iof(rights, 'r');
+		obj['UPDATE'] = iof(rights, 'u');
+		obj['DELETE'] = iof(rights, 'd');
+		obj['MANAGE'] = iof(rights, 'm');
+		return obj;
+	},
+	
+	/**
+	 * @private
+	 * Returns folder that matches my profileId.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getF3MyRoot: function(tree) {
+		return this.getF3RootByProfile(tree, WT.getVar('profileId'));
+	},
+	
+	/**
+	 * @private
+	 * Returns folder that matches passed profileId.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getF3RootByProfile: function(tree, profileId) {
+		return tree.getStore().findNode('_pid', profileId, false);
+	},
+	
+	getF3FolderById: function(tree, foldId, idField) {
+		return tree.getStore().findNode(idField, foldId, false);
+	},
+	
+	/*
+	 * @private
+	 */
+	getF3FolderByRoot: function(rootNode) {
+		if (!rootNode) return null;
+		var n = this.getF3DefaultFolderByRoot(rootNode);
+		return n ? n : this.getF3BuiltInFolderByRoot(rootNode);
+	},
+	
+	/*
+	 * @private
+	 */
+	getF3DefaultFolderByRoot: function(rootNode) {
+		if (!rootNode) return null;
+		return rootNode.findChildBy(function(n) {
+			return (n.get('_default') === true);
+		});
+	},
+	
+	/*
+	 * @private
+	 */
+	getF3BuiltInFolderByRoot: function(rootNode) {
+		if (!rootNode) return null;
+		return rootNode.findChildBy(function(n) {
+			return (n.get('_builtIn') === true);
+		});
+	},
+	
+	/**
+	 * @private
+	 * Returns the first tree node of the current selection.
+	 */
+	getF3SelectedNode: function(tree) {
+		var sel = tree.getSelection();
+		return (sel.length === 0) ? null : sel[0];
+	},
+	
+	
+	/*
+	 * @private
+	 */
+	showHideF3Folder: function(node, show) {
+		node.beginEdit();
+		node.set('_visible', show);
+		node.endEdit();
+	},
+	
+	/*
+	 * @private
+	 */
+	showHideAllF3Folders: function(parentNode, show) {
+		var me = this,
+				store = parentNode.getTreeStore();
+		
+		store.suspendAutoSync();
+		parentNode.cascadeBy(function(n) {
+			if(n !== parentNode) {
+				n.set('checked', show);
+				me.showHideFolder(n, show);
+			}
+		});
+		store.resumeAutoSync();
+		store.sync();
+	},
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	 * @private
+	 * F3
+	 */
 	toRightsObj: function(rights) {
 		var iof = function(s,v) { return s ? s.indexOf(v) !== -1 : false; },
 				obj = {};
@@ -54,6 +173,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/**
 	 * @private
+	 * F3
 	 * Returns folder that matches with my profileId.
 	 * @returns {Ext.data.NodeInterface}
 	 */
@@ -63,6 +183,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/**
 	 * @private
+	 * F3
 	 * Returns selected tree node.
 	 */
 	getSelectedNode: function(tree) {
@@ -114,6 +235,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/*
 	 * @private
+	 * F3
 	 */
 	getFolderByRoot: function(rootNode) {
 		var node = this.getDefaultFolder(rootNode);
@@ -122,6 +244,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/*
 	 * @private
+	 * F3
 	 */
 	getDefaultFolder: function(rootNode) {
 		return rootNode.findChildBy(function(n) {
@@ -131,6 +254,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/*
 	 * @private
+	 * F3
 	 */
 	getBuiltInFolder: function(rootNode) {
 		return rootNode.findChildBy(function(n) {
@@ -140,6 +264,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/*
 	 * @private
+	 * F3
 	 */
 	showHideFolder: function(node, show) {
 		node.beginEdit();
@@ -149,6 +274,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	
 	/*
 	 * @private
+	 * F3
 	 */
 	showHideAllFolders: function(parentNode, show) {
 		var me = this,
