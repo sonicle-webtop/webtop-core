@@ -224,7 +224,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	headerWithIcon: function(iconCls) {
 		return '<i class="wt-grid-header-icon '+iconCls+'">\u00a0\u00a0\u00a0\u00a0\u00a0</i>';
 	},
-	
+		
 	/**
 	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy}.
 	 * @param {String} sid The service ID
@@ -332,6 +332,25 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 					WT.handleRequestError(sid, act, req, op);
 				}
 			}
+		}, obj);
+	},
+	
+	/**
+	 * Helper method for building a config object for a {@link Ext.data.proxy.Memory proxy}.
+	 * @param {String} rootp The rootProperty
+	 * @param {Object} [opts]
+	 * @param {Object} [opts.reader]
+	 * @returns {Object} Object config
+	 */
+	memoryProxy: function(rootp, opts) {
+		opts = opts || {};
+		var obj = {};
+		return Ext.apply({
+			type: 'memory',
+			reader: Ext.apply({
+				type: 'json',
+				rootProperty: rootp || 'data'
+			}, opts.reader || {})
 		}, obj);
 	},
 	

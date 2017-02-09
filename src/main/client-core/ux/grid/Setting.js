@@ -64,7 +64,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 	
 	gridCls: 'wt-setting-grid',
 	
-	initComponent : function() {
+	initComponent: function() {
 		var me = this;
 		
 		me.groupText = me.groupText || WT.res('wtsettinggrid.group.lbl');

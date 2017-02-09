@@ -33,11 +33,128 @@
  */
 Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	alternateClassName: 'WTA.ux.NotificationButton',
-	extend: 'Ext.menu.Menu',
+	extend: 'Ext.button.Button',
 	alias: ['widget.wtnotificationbutton'],
+	/*
+	requires: [
+		'WTA.ux.grid.Notification'
+	],
+	*/
+	uses: [
+		'WTA.model.Notification'
+	],
 	
-	iconCls: 'wt-icon-notification-xs'
+	arrowVisible: false,
+	iconCls: 'wt-icon-notification-xs',
 	
-	
-	
+	initComponent: function() {
+		var me = this;
+		me.store = Ext.create('Ext.data.Store', {
+			model: 'WTA.model.Notification',
+			proxy: {
+				type: 'memory',
+				reader: 'json'
+			}
+		});
+		
+		me.store.add([
+			me.store.createModel({
+				serviceId: 'com.sonicle.webtop.core',
+				iconCls: 'wt-icon-service-m',
+				title: 'Notifica 1',
+				notifyService: true,
+				autoRemove: true
+			}),
+			me.store.createModel({
+				serviceId: 'com.sonicle.webtop.mail',
+				iconCls: 'wtmail-icon-service-m',
+				title: 'Notifica 2',
+				notifyService: true,
+				autoRemove: false
+			}),
+			me.store.createModel({
+				serviceId: 'com.sonicle.webtop.vfs',
+				iconCls: 'wtvfs-icon-service-m',
+				title: 'Notifica 3',
+				notifyService: false,
+				autoRemove: true
+			}),
+			me.store.createModel({
+				serviceId: 'com.sonicle.webtop.valendar',
+				iconCls: 'wtcal-icon-service-m',
+				title: 'Notifica 4',
+				notifyService: false,
+				autoRemove: false
+			})
+		]);
+			
+		
+		Ext.apply(me, {
+			menu: {
+				xtype: 'menu',
+				plain: true,
+				layout: 'fit',
+				forceLayout: true,
+				items: [{
+					xtype: 'grid',
+					title: 'Notifiche',
+					store: me.store,
+					selModel: {
+						type: 'rowmodel'
+					},
+					hideHeaders: true,
+					columns: [{
+						xtype: 'soiconcolumn',
+						dataIndex: 'iconCls',
+						iconSize: 32,
+						width: 40
+					}, {
+						dataIndex: 'title',
+						flex: 1
+					}, {
+						xtype:'actioncolumn',
+						items: [{
+							iconCls: 'wt-icon-notification-remove-xs',
+							tooltip: 'Rimuovi',
+							handler: function(s, rindx, cindx, itm, e) {
+								//s.getStore().removeAt(rindx);
+								e.stopPropagation();
+								Ext.defer(function() {
+									var sto = me.store;
+									sto.remove(sto.getAt(rindx));
+								}, 100);
+								//var sto = me.store;
+								//sto.remove(sto.getAt(rindx));
+								
+							}
+						}],
+						width: 30
+					}],
+					bbar: ['->', {
+						text: 'Rimuovi tutte',
+						handler: function() {
+							me.store.removeAll();
+						}
+					}],
+					listeners: {
+						rowdblclick: function(s, rec, el, rindx, e) {
+							e.stopEvent();
+							me.store.remove(rec);
+							/*
+							if (rec.get('autoRemove')) me.store.remove(rec);
+							if (rec.get('notifyService') === true) {
+								me.fireEvent('notifyService', me, rec);
+							} else {
+								e.stopPropagation();
+							}
+							*/
+						}
+					}
+				}],
+				height: 300,
+				width: 250
+			}
+		});
+		me.callParent(arguments);
+	}
 });

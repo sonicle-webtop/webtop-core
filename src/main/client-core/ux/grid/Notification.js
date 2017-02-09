@@ -31,19 +31,59 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.NotificationMenu', {
-	alternateClassName: 'WTA.ux.NotificationMenu',
-	extend: 'Ext.menu.Menu',
-	alias: ['widget.wtnotificationmenu'],
+Ext.define('Sonicle.webtop.core.ux.grid.Notification', {
+	alternateClassName: 'WTA.ux.grid.Notification',
+	extend: 'Ext.grid.Panel',
+	alias: 'widget.wtnotificationgrid',
 	
 	initComponent: function() {
 		var me = this;
-		me.menu = {
-			xtype: 'wtnotificationmenu'
-		};
+		
+		Ext.apply(me, {
+			selModel: {
+				type: 'rowmodel'
+			},
+			hideHeaders: true,
+			columns: [{
+				xtype: 'soiconcolumn',
+				dataIndex: 'iconCls',
+				iconSize: 32,
+				width: 40
+			}, {
+				dataIndex: 'title',
+				flex: 1
+			}, {
+				xtype:'actioncolumn',
+				items: [{
+					iconCls: 'wt-icon-notification-remove-xs',
+					tooltip: 'Rimuovi',
+					handler: function(s, rindx, cindx, itm, e) {
+						e.stopPropagation();
+						s.getStore().removeAt(rindx);
+						//var sto = s.getStore();
+						//sto.remove(sto.getAt(rindx));
+					}
+				}],
+				width: 30
+			}],
+			bbar: ['->', {
+				text: 'Rimuovi tutte',
+				handler: function() {
+					me.getStore().removeAll();
+				}
+			}],
+			listeners: {
+				rowclick: function(s, rec, el, rindx, e) {
+					if (rec.get('autoRemove')) me.getStore().remove(rec);
+					if (rec.get('notifyService') === true) {
+						me.fireEvent('notifyService', me, rec);
+					} else {
+						e.stopPropagation();
+					}
+				}
+			}
+		});
+		
 		me.callParent(arguments);
 	}
-	
-	
-	
 });

@@ -191,9 +191,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
 						handler: 'onToolsMenuClick'
 					}, '-']
-				}, /*{
-					xtype: 'button',
-					iconCls: 'wt-icon-notification-xs'
+				},{
+					xtype: 'wtnotificationbutton'
 					
 					
 				}, /*{
@@ -219,6 +218,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				},*/ {
 					xtype: 'button',
 					glyph: 0xf0c9,
+					arrowVisible: false,
 					menu: {
 						xtype: 'menu',
 						plain: true,
