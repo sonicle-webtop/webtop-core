@@ -519,14 +519,14 @@ public class WebTopSession {
 		}
 	}
 	
-	public synchronized javax.mail.Session getMailSession() {
+	public javax.mail.Session getMailSession() {
 		synchronized(lock1) {
 			UserProfile.Id pid = getProfileId();
 			if (pid != null && mailSession == null) {
 				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 				String smtphost=css.getSMTPHost();
 				int smtpport=css.getSMTPPort();
-				Properties props = System.getProperties();
+				Properties props = new Properties(System.getProperties());
 				//props.setProperty("mail.socket.debug", "true");
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
