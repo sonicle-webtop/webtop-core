@@ -96,7 +96,7 @@ public class Start extends AbstractServlet {
 			}
 			
 			// Page + loader variables
-			AbstractServlet.fillPageVars(vars, wta, locale, userTitle, null);
+			AbstractServlet.fillPageVars(vars, locale, userTitle, null);
 			vars.put("loadingMessage", wta.lookupResource(locale, "tpl.start.loading"));
 			
 			// Startup variables

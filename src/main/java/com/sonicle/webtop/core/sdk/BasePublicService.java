@@ -80,7 +80,7 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 	}
 	
 	public void writePage(HttpServletResponse response, String baseUrl, Map vars, Locale locale) throws IOException, TemplateException {
-		AbstractServlet.fillPageVars(vars, WT.getPlatformName(), PathUtils.ensureTrailingSeparator(baseUrl));
+		AbstractServlet.fillPageVars(vars, locale, PathUtils.ensureTrailingSeparator(baseUrl));
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "public.html");
 		tpl.process(vars, response.getWriter());
 	}

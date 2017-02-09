@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
@@ -72,21 +73,16 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("appName", wta.getWebAppName());
 	}
 	
-	public static void fillPageVars(Map vars, WebTopApp wta, Locale locale, String baseUrl) {
-		fillPageVars(vars, wta, locale, null, baseUrl);
+	public static void fillPageVars(Map vars, Locale locale, String baseUrl) {
+		fillPageVars(vars, locale, null, baseUrl);
 	}
 	
-	public static void fillPageVars(Map vars, WebTopApp wta, Locale locale, String userTitle, String baseUrl) {
-		ServiceManifest manifest = wta.getServiceManager().getManifest(CoreManifest.ID);
-		String title = wta.getPlatformName() + " " + manifest.getVersion().getMajor();
+	public static void fillPageVars(Map vars, Locale locale, String userTitle, String baseUrl) {
+		ServiceVersion version = WT.getManifest(CoreManifest.ID).getVersion();
+		String title = WT.getPlatformName() + " " + version.getMajor();
 		if (!StringUtils.isBlank(userTitle)) title += " [" + userTitle + "]";
 		vars.put("title", title);
-		vars.put("version", manifest.getVersion());
-		vars.put("baseUrl", baseUrl);
-	}
-	
-	public static void fillPageVars(Map vars, String title, String baseUrl) {
-		vars.put("title", title);
+		vars.put("version", version);
 		vars.put("baseUrl", baseUrl);
 	}
 	

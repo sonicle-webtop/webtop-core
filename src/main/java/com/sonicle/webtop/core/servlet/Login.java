@@ -122,7 +122,7 @@ public class Login extends AbstractServlet {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
 		Map tplMap = new HashMap();
-		AbstractServlet.fillPageVars(tplMap, wta, locale, null);
+		AbstractServlet.fillPageVars(tplMap, locale, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale);
 		tplMap.put("showFootprint", !css.getHideLoginFootprint());
 		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
