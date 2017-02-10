@@ -82,7 +82,5 @@ public class CoreLocaleKey {
 	public static final String WORD_NONE_FEMALE = "word.none.female";
 	public static final String WORD_YES = "word.yes";
 	public static final String WORD_NO = "word.no";
-	
-	
-
+	public static final String INTERNETRECIPIENT_AUTO = "internetRecipient.auto";
 }
