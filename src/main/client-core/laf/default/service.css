@@ -9,10 +9,10 @@
 */
 
 /* SERVICE ICONS */
-.wt-icon-service-xs { background-image: url('elica_16.png') !important; }
-.wt-icon-service-s { background-image: url('elica_24.png') !important; }
-.wt-icon-service-m { background-image: url('elica_32.png') !important; }
-.wt-icon-service-l { background-image: url('elica_48.png') !important; }
+.wt-icon-service-xs { background-image: url('service_16.png') !important; }
+.wt-icon-service-s { background-image: url('service_24.png') !important; }
+.wt-icon-service-m { background-image: url('service_32.png') !important; }
+.wt-icon-service-l { background-image: url('service_48.png') !important; }
 
 .wt-icon-empty { background-image: url('empty.png') !important;}
 .wt-icon-empty-xs { width: 16px; height: 16px; background-image: url('empty.png') !important;}
