@@ -156,9 +156,16 @@ public class CoreSettings {
 	/**
 	 * [system]
 	 * [boolean]
-	 * Indicates whether to forcedly hide footprint details from login page
+	 * Indicates whether to forcedly hide webapp name
 	 */
-	public static final String LOGIN_HIDE_FOOTPRINT = "login.footprint.hide";
+	public static final String LOGIN_HIDE_WEBAPPNAME = "login.webappname.hide";
+	
+	/**
+	 * [system]
+	 * [boolean]
+	 * Indicates whether to forcedly hide footer details from login page
+	 */
+	public static final String LOGIN_HIDE_SERVERINFO = "login.serverinfo.hide";
 	
 	/**
 	 * [user+domain+system]

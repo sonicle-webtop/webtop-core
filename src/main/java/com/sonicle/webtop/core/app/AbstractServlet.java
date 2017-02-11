@@ -70,7 +70,7 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("systemInfo", wta.getSystemInfo());
 		vars.put("serverInfo", wta.getServerInfo());
 		vars.put("jdk", System.getProperty("java.version"));
-		vars.put("appName", wta.getWebAppName());
+		vars.put("webappName", wta.getWebAppName());
 	}
 	
 	public static void fillPageVars(Map vars, Locale locale, String baseUrl) {

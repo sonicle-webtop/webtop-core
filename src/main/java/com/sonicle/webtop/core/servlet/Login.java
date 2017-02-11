@@ -124,7 +124,8 @@ public class Login extends AbstractServlet {
 		Map tplMap = new HashMap();
 		AbstractServlet.fillPageVars(tplMap, locale, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale);
-		tplMap.put("showFootprint", !css.getHideLoginFootprint());
+		tplMap.put("showWebappName", !css.getHideLoginWebappName());
+		tplMap.put("showServerInfo", !css.getHideLoginServerInfo());
 		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
 		tplMap.put("maintenanceMessage", maintenanceMessage);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
