@@ -77,8 +77,18 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this, stoRoles;
 		me.callParent(arguments);
+		
+		stoRoles = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'WTA.model.RoleLkp',
+			proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles', {
+				extraParams: {
+					roles: false
+				}
+			})
+		});
 		
 		me.add({
 			region: 'north',
@@ -88,11 +98,18 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				WTF.localCombo('id', 'desc', {
 					xtype: 'sosourcecombo',
 					reference: 'fldrole',
+					store: stoRoles,
+					/*
 					store: {
 						autoLoad: true,
 						model: 'WTA.model.RoleLkp',
-						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
+						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles', {
+							extraParams: {
+								roles: false
+							}
+						})
 					},
+					*/
 					sourceField: 'sourceLabel',
 					anchor: '100%',
 					emptyText: WT.res('sharing.fld-role.lbl'),
@@ -119,11 +136,14 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				columns: [{
 					xtype: 'solookupcolumn',
 					dataIndex: 'roleUid',
+					store: stoRoles,
+					/*
 					store: {
 						autoLoad: true,
 						model: 'WTA.ux.data.SimpleModel',
 						proxy: WTF.proxy(WT.ID, 'LookupDomainRoles', 'roles')
 					},
+					*/
 					displayField: 'desc',
 					header: WT.res('sharing.gp-rights.role.lbl'),
 					flex: 1
