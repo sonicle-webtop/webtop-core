@@ -212,6 +212,7 @@ public class SessionManager {
 	}
 	
 	private void startShiroSession(Session session) throws Exception {
+		logger.trace("Shiro session created [{}]", session.getId());
 		WebTopSession wts = new WebTopSession(wta, session);
 		
 		HttpServletRequest request = getServletRequest();
@@ -239,17 +240,18 @@ public class SessionManager {
 	}
 	
 	private void stopShiroSession(Session session) throws Exception {
+		logger.trace("Shiro session created [{}]", session.getId());
 		WebTopSession wts = SessionManager.getWebTopSession(session);
-		if(wts == null) throw new Exception("WTS is null");
-		
-		String sid = session.getId().toString();
-		UserProfile.Id pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
-		wts.cleanup();
-		if(pid != null) {
-			unregisterWebTopSession(session, pid);
-			wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, getClientIP(session), getClientUserAgent(session), sid, null);
+		if (wts != null) {
+			String sid = session.getId().toString();
+			UserProfile.Id pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
+			wts.cleanup();
+			if(pid != null) {
+				unregisterWebTopSession(session, pid);
+				wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, getClientIP(session), getClientUserAgent(session), sid, null);
+			}
+			logger.trace("WTS destroyed [{}]", sid);
 		}
-		logger.trace("WTS destroyed [{}]", sid);
 	}
 	
 	void registerWebTopSession(Session session, WebTopSession wts) throws WTException {
