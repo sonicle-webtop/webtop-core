@@ -824,7 +824,7 @@ public final class WebTopManager {
 				
 			} else {
 				for(OUser ouser : wtUsers.values()) {
-					final AbstractDirectory.AuthUser userEntry = new AbstractDirectory.AuthUser(ouser.getUserId(), null, null, ouser.getDisplayName(), null);
+					final AbstractDirectory.AuthUser userEntry = new AbstractDirectory.AuthUser(ouser.getUserId(), ouser.getDisplayName(), null, null, null);
 					items.add(new DirectoryUser(domain.getDomainId(), userEntry, ouser));
 				}
 			}
@@ -1562,7 +1562,7 @@ public final class WebTopManager {
 	}
 	
 	private AuthUser createAuthUser(UserEntity user) {
-		return new AuthUser(user.getUserId(), user.getFirstName(), user.getLastName(), user.getDisplayName(), null);
+		return new AuthUser(user.getUserId(), user.getDisplayName(), user.getFirstName(), user.getLastName(), null);
 	}
 	
 	private OUser doUserInsert(Connection con, ODomain domain, UserEntity user) throws DAOException, WTException {
