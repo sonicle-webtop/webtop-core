@@ -69,10 +69,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 				align: 'stretch'
 			},
 			items: [{
-				xtype: 'wtform',
+				xtype: 'wtfieldspanel',
+				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
-					labelWidth: 100
+					labelWidth: 120
 				},
 				items: [{
 					xtype: 'textfield',
@@ -165,6 +166,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 		});
 		
 		me.on('viewload', me.onViewLoad);
+		me.on('viewinvalid', me.onViewInvalid);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -177,5 +179,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Group', {
 		} else {
 			fldgroupid.setDisabled(true);
 		}
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
 	}
 });

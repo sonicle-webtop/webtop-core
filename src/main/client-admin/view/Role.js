@@ -59,10 +59,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				align: 'stretch'
 			},
 			items: [{
-				xtype: 'wtform',
+				xtype: 'wtfieldspanel',
+				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
-					labelWidth: 100
+					labelWidth: 120
 				},
 				items: [{
 					xtype: 'textfield',
@@ -120,11 +121,16 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 		});
 		
 		me.on('viewload', me.onViewLoad);
+		me.on('viewinvalid', me.onViewInvalid);
 	},
 	
 	onViewLoad: function(s, success) {
 		if(!success) return;
 		var me = this;
 		me.lref('fldname').focus(true);
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
 	}
 });

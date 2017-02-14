@@ -82,7 +82,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
-					labelWidth: 100
+					labelWidth: 120
 				},
 				items: [{
 					xtype: 'sofakeinput' // Disable Chrome autofill
