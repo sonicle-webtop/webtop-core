@@ -288,14 +288,18 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	saveView: function(closeAfter) {
-		var me = this, ok;
+		var me = this, ok, mo;
 		me.wait();
 		ok = me.saveModel({
 			pass: {
 				closeAfter: closeAfter
 			}
 		});
-		if(!ok) me.unwait();
+		if (!ok) {
+			me.unwait();
+			mo = me.getModel();
+			if (mo) me.fireEvent('viewinvalid', me, mo, mo.getValidation().getErrors());
+		}
 	},
 	
 	onModelLoad: function(s, success, model) {

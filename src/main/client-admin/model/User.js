@@ -61,9 +61,9 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		WTF.field('enabled', 'boolean', true),
 		WTF.field('password', 'string', true),
 		WTF.field('password2', 'string', true),
-		WTF.field('firstName', 'string', false),
-		WTF.field('lastName', 'string', false),
-		WTF.field('displayName', 'string', false)
+		WTF.field('displayName', 'string', false),
+		WTF.field('firstName', 'string', true),
+		WTF.field('lastName', 'string', true)
 	],
 	hasMany: [
 		WTF.hasMany('assignedGroups', 'Sonicle.webtop.core.admin.model.AssignedGroup'),

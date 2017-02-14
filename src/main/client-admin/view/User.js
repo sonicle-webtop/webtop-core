@@ -78,7 +78,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				align: 'stretch'
 			},
 			items: [{
-				xtype: 'wtform',
+				xtype: 'wtfieldspanel',
+				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
 					labelWidth: 100
@@ -119,6 +120,11 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					boxLabel: me.mys.res('user.fld-enabled.lbl')
 				}, {
 					xtype: 'textfield',
+					bind: '{record.displayName}',
+					fieldLabel: me.mys.res('user.fld-displayName.lbl'),
+					width: 400
+				}, {
+					xtype: 'textfield',
 					bind: '{record.firstName}',
 					fieldLabel: me.mys.res('user.fld-firstName.lbl'),
 					width: 400
@@ -126,11 +132,6 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					xtype: 'textfield',
 					bind: '{record.lastName}',
 					fieldLabel: me.mys.res('user.fld-lastName.lbl'),
-					width: 400
-				}, {
-					xtype: 'textfield',
-					bind: '{record.displayName}',
-					fieldLabel: me.mys.res('user.fld-displayName.lbl'),
 					width: 400
 				}]
 			}, {
@@ -211,6 +212,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		});
 		
 		me.on('viewload', me.onViewLoad);
+		me.on('viewinvalid', me.onViewInvalid);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -224,11 +226,13 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 			mo = me.getModel();
 			flduserid.setDisabled(false);
 			if (me.askForPassword) {
-				mo.setFieldValidators('password', [{
+				mo.setFieldValidators('password', [
+					'presence', {
 					type: 'sopassword',
 					complex: me.passwordPolicy
 				}]);
-				mo.setFieldValidators('password2', [{
+				mo.setFieldValidators('password2', [
+					'presence', {
 					type: 'soequality',
 					equalField: 'password',
 					fieldLabel: me.mys.res('user.fld-password.lbl')
@@ -247,5 +251,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 			fldpassword.setHidden(true);
 			fldpassword2.setHidden(true);
 		}
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
 	}
 });

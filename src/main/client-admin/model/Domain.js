@@ -76,11 +76,21 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirHost');
 				me.setFieldValidators('dirAdmin');
 				me.setFieldValidators('dirPassword');
+				me.setFieldValidators('ldapLoginDn');
+				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'ldapwebtop':
 				me.setFieldValidators('dirHost', ['presence']);
 				me.setFieldValidators('dirAdmin', ['presence']);
 				me.setFieldValidators('dirPassword', ['presence']);
+				me.setFieldValidators('ldapLoginDn');
+				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'ldap':
 				me.setFieldValidators('dirHost', ['presence']);
@@ -98,6 +108,9 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword', ['presence']);
 				me.setFieldValidators('ldapLoginDn', ['presence']);
 				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'ldapneth':
 				me.setFieldValidators('dirHost', ['presence']);
@@ -105,21 +118,39 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword', ['presence']);
 				me.setFieldValidators('ldapLoginDn', ['presence']);
 				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'imap':
 				me.setFieldValidators('dirHost', ['presence']);
 				me.setFieldValidators('dirAdmin');
 				me.setFieldValidators('dirPassword');
+				me.setFieldValidators('ldapLoginDn');
+				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'smb':
 				me.setFieldValidators('dirHost', ['presence']);
 				me.setFieldValidators('dirAdmin');
 				me.setFieldValidators('dirPassword');
+				me.setFieldValidators('ldapLoginDn');
+				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 			case 'sftp':
 				me.setFieldValidators('dirHost', ['presence']);
 				me.setFieldValidators('dirAdmin');
 				me.setFieldValidators('dirPassword');
+				me.setFieldValidators('ldapLoginDn');
+				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserFirstnameField');
+				me.setFieldValidators('ldapUserLastnameField');
+				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 		}
 		me.getValidation(true);

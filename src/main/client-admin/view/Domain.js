@@ -77,7 +77,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 				align: 'stretch'
 			},
 			items: [{
-				xtype: 'wtform',
+				xtype: 'wtfieldspanel',
+				reference: 'pnlmain',
 				modelValidation: true,
 				defaults: {
 					labelWidth: 120
@@ -130,7 +131,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'panel',
 					itemId: 'empty'
 				}, {
-					xtype: 'wtform',
+					xtype: 'wtfieldspanel',
 					itemId: 'webtop',
 					modelValidation: true,
 					defaults: {
@@ -148,7 +149,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 						boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
 					}]
 				}, {
-					xtype: 'wtform',
+					xtype: 'wtfieldspanel',
 					itemId: 'ldapwebtop',
 					modelValidation: true,
 					defaults: {
@@ -211,6 +212,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'tabpanel',
 					itemId: 'ldap',
 					modelValidation: true,
+					deferredRender: false,
 					items: [{
 						title: me.mys.res('domain.ldap.server.tit'),
 						xtype: 'wtfieldspanel',
@@ -325,6 +327,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'tabpanel',
 					itemId: 'ad',
 					modelValidation: true,
+					deferredRender: false,
 					defaults: {
 						labelWidth: 120
 					},
@@ -447,6 +450,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 					xtype: 'tabpanel',
 					itemId: 'ldapneth',
 					modelValidation: true,
+					deferredRender: false,
 					items: [{
 						title: me.mys.res('domain.ldap.server.tit'),
 						xtype: 'wtfieldspanel',
@@ -675,6 +679,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 			}]
 		});
 		me.on('viewload', me.onViewLoad);
+		me.on('viewinvalid', me.onViewInvalid);
 		me.getVM().bind('{record.dirScheme}', me.onSchemeChanged, me);
 	},
 	
@@ -687,6 +692,12 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		} else {
 			me.lref('flddomainid').setDisabled(true);
 		}
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		var me = this;
+		WTU.updateFieldsErrors(me.lref('pnlmain'), errs);
+		WTU.updateFieldsErrors(me.lref('pnldir').getLayout().getActiveItem(), errs);
 	},
 	
 	onSchemeChanged: function(v) {

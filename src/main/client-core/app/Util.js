@@ -306,6 +306,25 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
+	 * Checks for each descendant field in passed container if there is a
+	 * validation error that matches its {@link Ext.form.field.Field#getValidationField}.
+	 * If found, field's invalid status will be set.
+	 * @param {Ext.container.Container} container The container to look into.
+	 * @param {Object} errors Validation error object
+	 */
+	updateFieldsErrors: function(container, errors) {
+		if (container.isXType('container') && errors) {
+			var flds = container.query('field');
+			Ext.iterate(errors, function(err) {
+				Ext.iterate(flds, function(fld) {
+					var vf = fld.getValidationField();
+					if (vf && (vf.getName() === err.id)) fld.markInvalid(err.msg);
+				});
+			});
+		}
+	},
+	
+	/**
 	 * Find a specific {@link Ext.form.field.Field field} in passed {@link Ext.form.Panel form}.
 	 * @param {Ext.form.Panel} form The form panel.
 	 * @param {String} id The value to search for (specify either a id, dataIndex, name or hiddenName).
