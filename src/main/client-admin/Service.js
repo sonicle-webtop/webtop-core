@@ -80,7 +80,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			xtype: 'panel',
 			layout: 'border',
 			referenceHolder: true,
-			title: '',
+			title: me.getName(),
 			items: [{
 				region: 'center',
 				xtype: 'treepanel',

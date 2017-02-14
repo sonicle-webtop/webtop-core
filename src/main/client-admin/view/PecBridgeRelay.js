@@ -60,7 +60,8 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtform',
+			xtype: 'wtfieldspanel',
+			reference: 'pnlmain',
 			modelValidation: true,
 			defaults: {
 				labelWidth: 120
@@ -131,6 +132,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 			]
 		});
 		me.on('viewload', me.onViewLoad);
+		me.on('viewinvalid', me.onViewInvalid);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -140,5 +142,9 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeRelay', {
 		
 		flduser.getStore().load();
 		flduser.focus(true);
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
 	}
 });

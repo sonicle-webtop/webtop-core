@@ -104,6 +104,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -343,11 +344,25 @@ public final class WebTopManager {
 			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_ADMINS));
 			addUser(true, ue, null);
 			
+			// Checks directory structure
+			checkDomainHomeStructure(domain);
+			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public void checkDomainHomeStructure(ODomain domain) throws WTException {
+		File dirHome = new File(wta.getHomePath(domain.getDomainId()));
+		if (!dirHome.exists()) dirHome.mkdir();
+		
+		File dirTemp = new File(wta.getTempPath(domain.getDomainId()));
+		if (!dirTemp.exists()) dirTemp.mkdir();
+
+		File dirImages = new File(wta.getImagesPath(domain.getDomainId()));
+		if (!dirImages.exists()) dirImages.mkdir();
 	}
 	
 	public ODomain addDomain(DomainEntity domain) throws WTException {

@@ -273,6 +273,11 @@ public class WT {
 		return getWTA().getImagesPath(domainId);
 	}
 	
+	public static String getServiceHomePath(String domainId, String serviceId) {
+		//TODO: eliminare questo metodo dopo la modifica della lettura dei model nel servizio di posta
+		return getWTA().getServiceHomePath(domainId, serviceId);
+	}
+	
 	public static String getServiceHomePath(String serviceId) {
 		UserProfile.Id runPid = RunContext.getRunProfileId();
 		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
