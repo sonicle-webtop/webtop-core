@@ -179,6 +179,7 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.initDomainWithDefaults(domainId);
+			wtmgr.initDomainHomeFolder(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot init domain");
 		}

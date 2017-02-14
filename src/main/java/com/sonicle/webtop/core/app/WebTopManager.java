@@ -162,6 +162,7 @@ public final class WebTopManager {
 	
 	private final HashMap<UserProfile.Id, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
 	private final HashMap<UserProfile.Id, UserProfile.Data> cacheUserToData = new HashMap<>();
+	private final Object lock3 = new Object();
 	
 	/**
 	 * Private constructor.
@@ -344,9 +345,6 @@ public final class WebTopManager {
 			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_ADMINS));
 			addUser(true, ue, null);
 			
-			// Checks directory structure
-			checkDomainHomeStructure(domain);
-			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
@@ -354,15 +352,24 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void checkDomainHomeStructure(ODomain domain) throws WTException {
-		File dirHome = new File(wta.getHomePath(domain.getDomainId()));
-		if (!dirHome.exists()) dirHome.mkdir();
-		
-		File dirTemp = new File(wta.getTempPath(domain.getDomainId()));
-		if (!dirTemp.exists()) dirTemp.mkdir();
-
-		File dirImages = new File(wta.getImagesPath(domain.getDomainId()));
-		if (!dirImages.exists()) dirImages.mkdir();
+	public void initDomainHomeFolder(String domainId) throws SecurityException {
+		synchronized(lock3) {
+			// Main folder (/domains/{domainId})
+			File domainDir = new File(wta.getHomePath(domainId));
+			if (!domainDir.exists()) domainDir.mkdir();
+			
+			// Internal folders...
+			File tempDir = new File(wta.getTempPath(domainId));
+			if (!tempDir.exists()) tempDir.mkdir();
+			
+			File imagesDir = new File(wta.getImagesPath(domainId));
+			if (!imagesDir.exists()) imagesDir.mkdir();
+			
+			for (String sid : wta.getServiceManager().listRegisteredServices()) {
+				File svcDir = new File(wta.getServiceHomePath(domainId, sid));
+				if (!svcDir.exists()) svcDir.mkdir();
+			}
+		}	
 	}
 	
 	public ODomain addDomain(DomainEntity domain) throws WTException {

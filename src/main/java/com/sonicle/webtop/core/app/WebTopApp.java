@@ -198,6 +198,12 @@ public final class WebTopApp {
 		}
 	}
 	
+	public static final String DOMAINS_FOLDER = "domains";
+	public static final String DBSCRIPTS_FOLDER = "dbscripts";
+	public static final String DBSCRIPTS_POST_FOLDER = "post";
+	public static final String DOMAIN_TEMP_FOLDER = "temp";
+	public static final String DOMAIN_IMAGES_FOLDER = "images";
+	
 	private final ServletContext servletContext;
 	private final String systemInfo;
 	private final Charset systemCharset;
@@ -255,6 +261,12 @@ public final class WebTopApp {
 		this.setmgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesmgr = SessionManager.initialize(this); // Session Manager
 		
+		// Checks home directory
+		logger.info("Checking home structure...");
+		File homeDir = new File(getHomePath());
+		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{0}]", homeDir.toString());
+		checkHomeStructure();
+		
 		this.mediaTypes = MediaTypes.init(conmgr);
 		this.fileTypes = FileTypes.init(conmgr);
 		
@@ -293,6 +305,8 @@ public final class WebTopApp {
 		
 		this.svcm = ServiceManager.initialize(this, this.scheduler); // Service Manager
 		
+		
+		
 		org.apache.shiro.session.Session session = adminSubject.getSession(false);
 		logger.info("Admin session created [{}]", session.getId().toString());
 		scheduleAdminTouchTask(session.getTimeout());
@@ -300,9 +314,70 @@ public final class WebTopApp {
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
 	
+	public void destroy() {
+		logger.info("WTA shutdown started [{}]", webappName);
+		
+		// Destroy timers
+		if(webappVersionCheckTimer != null) webappVersionCheckTimer.cancel();
+		if(adminTouchTimer != null) adminTouchTimer.cancel();
+		
+		tomcat = null;
+		
+		// Service Manager
+		svcm.cleanup();
+		svcm = null;
+		// Session Manager
+		sesmgr.cleanup();
+		sesmgr = null;
+		// Scheduler
+		try {
+			scheduler.shutdown(true);
+			scheduler = null;
+		} catch(SchedulerException ex) {
+			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
+		}
+		// Report Manager
+		rptmgr.cleanup();
+		rptmgr = null;
+		// OTP Manager
+		optmgr.cleanup();
+		optmgr = null;
+		// Settings Manager
+		setmgr.cleanup();
+		setmgr = null;
+		// Auth Manager
+		//autm.cleanup();
+		//autm = null;
+		// User Manager
+		wtmgr.cleanup();
+		wtmgr = null;
+		// Connection Manager
+		conmgr.cleanup();
+		conmgr = null;
+		// I18nManager Manager
+		//I18nManager.cleanup();
+		i18nmgr = null;
+		
+		// Destroy admin session
+		synchronized(lockAdminSubject) {
+			adminSubject.logout();
+		}
+		
+		logger.info("WTA shutdown completed [{}]", webappName);
+	}
+	
 	private void onAppReady() {
 		logger.trace("onAppReady...");
 		try {
+
+			
+			logger.info("Checking domains homes structure...");
+			try {
+				checkDomainsHomesStructure();
+			} catch(WTException ex) {
+				logger.error("Error", ex);
+			}
+			
 			/*
 			try {
 				initCacheDomainByFQDN();
@@ -356,56 +431,34 @@ public final class WebTopApp {
 		}
 	}
 	
-	public void destroy() {
-		logger.info("WTA shutdown started [{}]", webappName);
-		
-		// Destroy timers
-		if(webappVersionCheckTimer != null) webappVersionCheckTimer.cancel();
-		if(adminTouchTimer != null) adminTouchTimer.cancel();
-		
-		tomcat = null;
-		
-		// Service Manager
-		svcm.cleanup();
-		svcm = null;
-		// Session Manager
-		sesmgr.cleanup();
-		sesmgr = null;
-		// Scheduler
+	private void checkHomeStructure() {
 		try {
-			scheduler.shutdown(true);
-			scheduler = null;
-		} catch(SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
+			File dbScriptsDir = new File(getDbScriptsPath());
+			if (!dbScriptsDir.exists()) {
+				dbScriptsDir.mkdir();
+				logger.trace("{} created", dbScriptsDir.toString());
+			}
+			
+			File domainsDir = new File(getDomainsPath());
+			if (!domainsDir.exists()) {
+				domainsDir.mkdir();
+				logger.trace("{} created", domainsDir.toString());
+			}
+			
+		} catch(SecurityException ex) {
+			throw new WTRuntimeException("Security error", ex);
+		}	
+	}
+	
+	private void checkDomainsHomesStructure() throws WTException {
+		List<ODomain> domains = wtmgr.listDomains(false);
+		for (ODomain domain : domains) {
+			try {
+				wtmgr.initDomainHomeFolder(domain.getDomainId());
+			} catch(SecurityException ex) {
+				logger.warn("Unable to check domain home [{}]", ex, domain.getDomainId());
+			}
 		}
-		// Report Manager
-		rptmgr.cleanup();
-		rptmgr = null;
-		// OTP Manager
-		optmgr.cleanup();
-		optmgr = null;
-		// Settings Manager
-		setmgr.cleanup();
-		setmgr = null;
-		// Auth Manager
-		//autm.cleanup();
-		//autm = null;
-		// User Manager
-		wtmgr.cleanup();
-		wtmgr = null;
-		// Connection Manager
-		conmgr.cleanup();
-		conmgr = null;
-		// I18nManager Manager
-		//I18nManager.cleanup();
-		i18nmgr = null;
-		
-		// Destroy admin session
-		synchronized(lockAdminSubject) {
-			adminSubject.logout();
-		}
-		
-		logger.info("WTA shutdown completed [{}]", webappName);
 	}
 	
 	private void scheduleAdminTouchTask(long sessionTimeout) {
@@ -695,6 +748,11 @@ public final class WebTopApp {
 		return css.getHomePath();
 	}
 	
+	private String getDbScriptsPath() {
+		CoreServiceSettings css = getCoreServiceSettings();
+		return css.getHomePath() + DBSCRIPTS_FOLDER + "/";
+	}
+	
 	/**
 	 * Return the db-scripts HOME path for the passed Service.
 	 * @param serviceId The service ID.
@@ -702,7 +760,7 @@ public final class WebTopApp {
 	 */
 	public String getDbScriptsHomePath(String serviceId) {
 		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath() + "dbscripts/" + serviceId + "/";
+		return css.getHomePath() + DBSCRIPTS_FOLDER + "/" + serviceId + "/";
 	}
 	
 	/**
@@ -711,7 +769,12 @@ public final class WebTopApp {
 	 * @return The path
 	 */
 	public String getDbScriptsPostPath(String serviceId) {
-		return getDbScriptsHomePath(serviceId) + "post/";
+		return getDbScriptsHomePath(serviceId) + DBSCRIPTS_POST_FOLDER + "/";
+	}
+	
+	private String getDomainsPath() {
+		CoreServiceSettings css = getCoreServiceSettings();
+		return css.getHomePath() + DOMAINS_FOLDER + "/";
 	}
 	
 	/**
@@ -722,7 +785,11 @@ public final class WebTopApp {
 	 */
 	public String getHomePath(String domainId) {
 		CoreServiceSettings css = getCoreServiceSettings();
-		return css.getHomePath() + "domains/" + domainId + "/";
+		if (StringUtils.equals(domainId, "*")) {
+			return css.getHomePath() + DOMAINS_FOLDER + "/_/";
+		} else {
+			return css.getHomePath() + DOMAINS_FOLDER + "/" + domainId + "/";
+		}
 	}
 	
 	/**
@@ -732,11 +799,11 @@ public final class WebTopApp {
 	 * @return The path
 	 */
 	public String getTempPath(String domainId) {
-		return getHomePath(domainId) + "temp/";
+		return getHomePath(domainId) + DOMAIN_TEMP_FOLDER + "/";
 	}
 	
 	public String getImagesPath(String domainId) {
-		return getHomePath(domainId) + "images/";
+		return getHomePath(domainId) + DOMAIN_IMAGES_FOLDER + "/";
 	}
 	
 	/**
