@@ -66,7 +66,7 @@ public class ZPushManager {
 			return parseListOutput(lines);
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -81,7 +81,7 @@ public class ZPushManager {
 			return parseLastsyncOutput(lines);
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -96,7 +96,7 @@ public class ZPushManager {
 			return parseListDevicesOfUserOutput(lines, lineSep);
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -111,7 +111,7 @@ public class ZPushManager {
 			return parseListUsersOfDeviceOutput(lines, lineSep);
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -125,7 +125,7 @@ public class ZPushManager {
 			lines = shell.execute(buildShellCommand(cmd));
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -139,7 +139,7 @@ public class ZPushManager {
 			lines = shell.execute(buildShellCommand(cmd));
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	
@@ -153,7 +153,7 @@ public class ZPushManager {
 			lines = shell.execute(buildShellCommand(cmd));
 			
 		} finally {
-			shell.close();
+			if (shell!=null) shell.close();
 		}
 	}
 	

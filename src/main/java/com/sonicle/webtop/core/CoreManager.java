@@ -1791,6 +1791,7 @@ public class CoreManager extends BaseManager {
 
 			return devices;
 		} catch(Exception ex) {
+			logger.error("Error listing zpush devices",ex);
 			throw new WTException(ex);
 		}
 	}
