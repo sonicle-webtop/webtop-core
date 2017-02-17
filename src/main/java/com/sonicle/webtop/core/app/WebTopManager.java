@@ -1395,7 +1395,8 @@ public final class WebTopManager {
 	public UserProfile.Data userData(UserProfile.Id pid) throws WTException {
 		synchronized(cacheUserToData) {
 			if(!cacheUserToData.containsKey(pid)) {
-				UserProfile.Data ud = getUserData(pid);
+				final UserProfile.Data ud = getUserData(pid);
+				if (ud == null) return null;
 				cacheUserToData.put(pid, ud);
 				return ud;
 			} else {
@@ -1814,8 +1815,8 @@ public final class WebTopManager {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		OUser ouser = getUser(pid);
-		if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
-
+		if (ouser == null) return null;
+		//if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
 		InternetAddress ia = MailUtils.buildInternetAddress(upi.getEmail(), ouser.getDisplayName());
 		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), ia);
 	}

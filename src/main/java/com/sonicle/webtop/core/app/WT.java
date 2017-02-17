@@ -82,6 +82,8 @@ public class WT {
 	static final HashMap<String, ServiceManifest> manifestCache = new HashMap<>();
 	private static final HashMap<String, String> cnameToServiceIdCache = new HashMap<>();
 	
+	public static final Locale LOCALE_ENGLISH = new Locale("en", "EN");
+	
 	private static WebTopApp getWTA() {
 		return WebTopApp.getInstance();
 	}

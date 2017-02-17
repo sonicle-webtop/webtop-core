@@ -518,15 +518,6 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	@Override
-	protected Locale findLocale() {
-		try {
-			return getUserData().getLocale();
-		} catch(Exception ex) {
-			return Locale.ENGLISH;
-		}
-	}
-	
 	
 	
 	/*
@@ -1306,7 +1297,7 @@ public class CoreManager extends BaseManager {
 			// Checks user rights on service...
 			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) {
 				uos = new UserOptionsServiceData(svcm.getManifest(id));
-				uos.name = wta.lookupResource(id, Locale.ITALIAN, CoreLocaleKey.SERVICE_NAME);
+				uos.name = wta.lookupResource(id, getLocale(), CoreLocaleKey.SERVICE_NAME);
 				items.add(uos);
 			}
 		}
@@ -1671,7 +1662,7 @@ public class CoreManager extends BaseManager {
 				for(OServiceStoreEntry entry: entries) {
 					InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
 					if (ia != null) {
-						recipients.add(new InternetRecipient("auto", lookupResource(locale, CoreLocaleKey.INTERNETRECIPIENT_AUTO), "auto", ia.getPersonal(), ia.getAddress()));
+						recipients.add(new InternetRecipient("auto", lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), "auto", ia.getPersonal(), ia.getAddress()));
 					}
 				}
 				

@@ -51,23 +51,23 @@ public abstract class BaseManager {
 	private final UserProfile.Id targetProfile;
 	protected final boolean fastInit;
 	private String softwareName;
-	protected Locale locale;
+	private Locale locale;
 	
 	public BaseManager(boolean fastInit, UserProfile.Id targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.fastInit = fastInit;
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
+		this.locale = null;
 		locale = findLocale();
 	}
 	
 	protected Locale findLocale() {
-		try {
-			CoreManager core = WT.getCoreManager(getTargetProfileId());
-			return core.getUserData().getLocale();
-		} catch(Exception ex) {
-			return Locale.ENGLISH;
-		}
+		WebTopSession wts = RunContext.getWebTopSession();
+		if (wts != null) return wts.getLocale();
+		UserProfile.Data ud = WT.getUserData(getTargetProfileId());
+		if (ud != null) return ud.getLocale();
+		return WT.LOCALE_ENGLISH;
 	}
 	
 	public UserProfile.Id getTargetProfileId() {
@@ -144,9 +144,8 @@ public abstract class BaseManager {
 	}
 	
 	public Session getMailSession() {
-		WebTopSession wts=RunContext.getWebTopSession();
-		if (wts!=null) return wts.getMailSession();
-		return WT.getGlobalMailSession(getTargetProfileId());
+		WebTopSession wts = RunContext.getWebTopSession();
+		return (wts != null) ? wts.getMailSession() : WT.getGlobalMailSession(getTargetProfileId());
 	}
 	
 	/**
