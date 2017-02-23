@@ -58,6 +58,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesProfiles;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.versioning.AnnotationLine;
 import com.sonicle.webtop.core.versioning.BaseScriptLine;
 import com.sonicle.webtop.core.versioning.DataSourceAnnotationLine;
@@ -523,13 +524,13 @@ public class ServiceManager {
 				
 				logger.debug("Initializing profile for service [{}]", serviceId);
 				try {
-					WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+					LoggerUtils.setContextDC(instance.SERVICE_ID);
 					controller.addProfile(profileId);
 				} catch(Throwable t) {
 					//TODO: valutare se ritornare un booleano per verifica
 					logger.error("Controller: addProfile() throws errors", t);
 				} finally {
-					WebTopApp.unsetServiceLoggerDC();
+					LoggerUtils.clearContextServiceDC();
 				}
 			}
 		}
@@ -549,12 +550,12 @@ public class ServiceManager {
 			
 			logger.debug("Cleaning-up profile for service [{}]", serviceId);
 			try {
-				WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+				LoggerUtils.setContextDC(instance.SERVICE_ID);
 				controller.removeProfile(profileId, false);
 			} catch(Throwable t) {
 				logger.error("Controller: removeProfile() throws errors", t);
 			} finally {
-				WebTopApp.unsetServiceLoggerDC();
+				LoggerUtils.clearContextServiceDC();
 			}
 		}
 	}
@@ -773,12 +774,12 @@ public class ServiceManager {
 		
 		// Calls initialization method
 		try {
-			WebTopApp.setServiceLoggerDC(serviceId);
+			LoggerUtils.setContextDC(serviceId);
 			instance.initialize();
 		} catch(Throwable t) {
 			logger.error("PrivateService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 		
 		return instance;
@@ -786,12 +787,12 @@ public class ServiceManager {
 	
 	public void cleanupPrivateService(BaseService instance) {
 		try {
-			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			LoggerUtils.setContextDC(instance.getManifest().getId());
 			instance.cleanup();
 		} catch(Throwable t) {
 			logger.error("PrivateService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 	}
 	
@@ -825,12 +826,12 @@ public class ServiceManager {
 		
 		// Calls initialization method
 		try {
-			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable t) {
 			logger.error("PublicService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 		
 		return instance;
@@ -838,12 +839,12 @@ public class ServiceManager {
 	
 	public void cleanupPublicService(BasePublicService instance) {
 		try {
-			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			LoggerUtils.setContextDC(instance.getManifest().getId());
 			instance.cleanup();
 		} catch(Throwable t) {
 			logger.error("PublicService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 	}
 	
@@ -877,23 +878,23 @@ public class ServiceManager {
 	
 	private void initializeJobService(BaseJobService instance) {
 		try {
-			WebTopApp.setServiceLoggerDC(instance.SERVICE_ID);
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable t) {
 			logger.error("JobService: initialize() throws errors [{}]", t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 	}
 	
 	private void cleanupJobService(BaseJobService instance) {
 		try {
-			WebTopApp.setServiceLoggerDC(instance.getManifest().getId());
+			LoggerUtils.setContextDC(instance.getManifest().getId());
 			instance.cleanup();
 		} catch(Throwable t) {
 			logger.error("JobService: cleanup() throws errors [{}]", t);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 	}
 	
@@ -1328,13 +1329,13 @@ public class ServiceManager {
 		try {
 			// Gets task definitions from base service definition
 			try {
-				WebTopApp.setServiceLoggerDC(serviceId);
+				LoggerUtils.setContextDC(serviceId);
 				taskDefs = service.returnTasks();
 			} catch(Exception ex) {
 				logger.error("JobService method returns errors [returnTask()]", ex);
 				throw ex;
 			} finally {
-				WebTopApp.unsetServiceLoggerDC();
+				LoggerUtils.clearContextServiceDC();
 			}
 			if(taskDefs != null) {
 				unscheduleJobServiceTasks(serviceId);

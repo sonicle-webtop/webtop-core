@@ -35,9 +35,8 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -52,19 +51,9 @@ public class Logout extends AbstractServlet {
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		WebTopApp wta = getWebTopApp(request);
 		ServletHelper.setPrivateCache(response);
-		
-		try {
-			WebTopApp.initLoggerDC(wta.getWebAppName()); // Init default diagnostic context
-			WebTopSession wts = RunContext.getWebTopSession();
-			if(wts == null) throw new ServletException("WTS is null!");
-			WebTopApp.setSessionLoggerDC(wts);
-			RunContext.getSubject().logout();
-			ServletUtils.redirectRequest(request, response);
-			
-		} finally {
-			WebTopApp.clearLoggerDC();
-		}
+		LoggerUtils.setContextDC(RunContext.getRunProfileId());
+		RunContext.getSubject().logout();
+		ServletUtils.redirectRequest(request, response);
 	}
 }

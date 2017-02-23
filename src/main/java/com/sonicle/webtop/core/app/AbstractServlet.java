@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.sdk.ServiceVersion;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
@@ -57,12 +58,26 @@ public abstract class AbstractServlet extends HttpServlet {
 	
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		processRequest(request, response);
+		try {
+			WebTopApp wta = getWebTopApp(request);
+			LoggerUtils.initDC(wta.getWebAppName());
+			processRequest(request, response);
+			
+		} finally {
+			LoggerUtils.clearDC();
+		}
 	}
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		processRequest(request, response);
+		try {
+			WebTopApp wta = getWebTopApp(request);
+			LoggerUtils.initDC(wta.getWebAppName());
+			processRequest(request, response);
+			
+		} finally {
+			LoggerUtils.clearDC();
+		}
 	}
 	
 	public static void fillSystemVars(Map vars, WebTopApp wta, Locale locale) {

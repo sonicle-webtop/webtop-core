@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.io.Resource;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,8 +163,6 @@ public class PublicServiceRequest extends BaseServiceRequest {
 		} catch(Exception ex) {
 			logger.warn("Error processing publicService request", ex);
 			throw new ServletException(ex.getMessage());
-		} finally {
-			WebTopApp.clearLoggerDC();
 		}
 	}
 	

@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.File;
@@ -462,19 +463,18 @@ public class WT {
 	}
 	
 	/**
-	 * (logger) Apply a custom diagnostic context (DC) to the default one.
+	 * Sets a value for custom diagnostic context variable.
 	 * Passed value is associated to the key 'custom' of current DC.
-	 * @param diagnosticContext Custom diagnostic context string value to append.
+	 * @param value Variable value to set.
 	 */
-	public static void applyLoggerDC(String diagnosticContext) {
-		WebTopApp.setServiceCustomLoggerDC(diagnosticContext);
+	public static void setLoggerDC(String value) {
+		LoggerUtils.setCustomDC(value);
 	}
 	
 	/**
-	 * (logger) Removes custom diagnostic context restoring the default one.
-	 * Same behaviour calling: applyLoggerDC(null)
+	 * Clears the custom diagnostic context variable.
 	 */
 	public static void clearLoggerDC() {
-		WebTopApp.unsetServiceCustomLoggerDC();
+		LoggerUtils.clearCustomDC();
 	}
 }

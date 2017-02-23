@@ -36,9 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
-import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -47,6 +45,7 @@ import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import java.io.IOException;
 import java.util.HashMap;
@@ -66,6 +65,7 @@ public class Start extends AbstractServlet {
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
 		SettingsManager setm = wta.getSettingsManager();
 		WebTopSession wts = RunContext.getWebTopSession();
@@ -122,7 +122,6 @@ public class Start extends AbstractServlet {
 		} finally {
 			response.setHeader("Cache-Control", "private, no-cache");
 			ServletHelper.setPageContentType(response);
-			WebTopApp.clearLoggerDC();
 		}
 	}
 	

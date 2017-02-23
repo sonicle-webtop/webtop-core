@@ -35,8 +35,8 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.util.Arrays;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
@@ -95,8 +95,6 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 		PrintWriter out = null;
 		try {
 			try {
-				WebTopApp.setServiceLoggerDC(service);
-				
 				ArrayList<Object> invokeArgs = new ArrayList<>();
 				invokeArgs.add(request);
 				invokeArgs.add(response);
@@ -107,11 +105,12 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 					invokeArgs.add(out);
 				}
 				if(args.length > 0) invokeArgs.addAll(Arrays.asList(args));
+				LoggerUtils.setContextDC(service);
 				methodInfo.method.invoke(instance, invokeArgs.toArray());
 				
 			} finally {
 				if(out != null) out.flush();
-				WebTopApp.unsetServiceLoggerDC();
+				LoggerUtils.clearContextServiceDC();
 			}
 		} catch(Exception ex) {
 			throw new Exception("Error during method invocation", ex);

@@ -59,6 +59,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -752,12 +753,12 @@ public class WebTopSession {
 		
 		// Retrieves initial vars from instantiated service
 		try {
-			WebTopApp.setServiceLoggerDC(serviceId);
+			LoggerUtils.setContextDC(serviceId);
 			vars = svc.returnServiceVars();
 		} catch(Exception ex) {
 			logger.error("returnServiceVars method returns errors", ex);
 		} finally {
-			WebTopApp.unsetServiceLoggerDC();
+			LoggerUtils.clearContextServiceDC();
 		}
 		
 		JsWTSPrivate.Vars is = new JsWTSPrivate.Vars();
@@ -832,12 +833,12 @@ public class WebTopSession {
 		// Retrieves initial vars from instantiated service
 		if(svc != null) {
 			try {
-				WebTopApp.setServiceLoggerDC(serviceId);
+				LoggerUtils.setContextDC(serviceId);
 				vars = svc.returnServiceVars();
 			} catch(Exception ex) {
 				logger.error("returnServiceVars method returns errors", ex);
 			} finally {
-				WebTopApp.unsetServiceLoggerDC();
+				LoggerUtils.clearContextServiceDC();
 			}
 		}
 		

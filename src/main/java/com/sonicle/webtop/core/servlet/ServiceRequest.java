@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -62,6 +63,7 @@ public class ServiceRequest extends BaseServiceRequest {
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
 		WebTopSession wts = RunContext.getWebTopSession();
 		
@@ -103,8 +105,6 @@ public class ServiceRequest extends BaseServiceRequest {
 		} catch(Exception ex) {
 			logger.warn("Error in serviceRequest servlet", ex);
 			throw new ServletException(ex.getMessage());
-		} finally {
-			WebTopApp.clearLoggerDC();
 		}
 	}
 
