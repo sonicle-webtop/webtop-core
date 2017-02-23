@@ -10,16 +10,10 @@
 	<parent>
 		<groupId>com.sonicle.webtop</groupId>
 		<artifactId>webtop-superpom-core</artifactId>
-		<version>1.0</version>
+		<version>1</version>
 	</parent>
 	
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		
-		<!-- WEBTOP SERVICE CONFIGURATION -->
-		<webtop.service.package>com.sonicle.webtop.core</webtop.service.package>
-		<webtop.service.jsPackage>Sonicle.webtop.core</webtop.service.jsPackage>
 	</properties>
 	
 	<repositories>
@@ -28,7 +22,24 @@
 			<url>http://jaspersoft.artifactoryonline.com/jaspersoft/jr-ce-releases</url>
 		</repository>
 	</repositories>
+	
 	<dependencies>
+		<dependency>
+			<groupId>com.sonicle.extjs</groupId>
+			<artifactId>sonicle-extjs</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sonicle.extjs</groupId>
+			<artifactId>sonicle-extjs-extensions</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		<dependency>
+            <groupId>com.sonicle.webtop</groupId>
+            <artifactId>webtop-vfs-api</artifactId>
+            <version>LATEST</version>
+			<scope>provided</scope>
+        </dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
@@ -81,9 +92,6 @@
 			<artifactId>jersey-common</artifactId>
 			<version>2.16</version>
 		</dependency>
-		
-		
-		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -236,23 +244,8 @@
 			<artifactId>jasperreports-functions</artifactId>
 			<version>6.3.0</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sonicle.extjs</groupId>
-			<artifactId>sonicle-extjs</artifactId>
-			<version>LATEST</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sonicle.extjs</groupId>
-			<artifactId>sonicle-extjs-extensions</artifactId>
-			<version>LATEST</version>
-		</dependency>
-		<dependency>
-            <groupId>com.sonicle.webtop</groupId>
-            <artifactId>webtop-vfs</artifactId>
-            <version>LATEST</version>
-			<scope>provided</scope>
-        </dependency>
 	</dependencies>
+	
 	<build>
 		<resources>
 			<resource>

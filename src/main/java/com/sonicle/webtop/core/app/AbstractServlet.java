@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.io.IOException;
 import java.util.Locale;
@@ -42,7 +41,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -85,14 +84,4 @@ public abstract class AbstractServlet extends HttpServlet {
 		vars.put("version", version);
 		vars.put("baseUrl", baseUrl);
 	}
-	
-	/*
-	public static void fillIncludeVars(Map vars, Locale locale, String theme, String lookAndFeel, boolean rightToLeft, boolean extJsDebug) {
-		vars.put("language", locale.getLanguage());
-		vars.put("theme", theme);
-		vars.put("laf", lookAndFeel);
-		vars.put("rtl", String.valueOf(rightToLeft));
-		vars.put("debug", String.valueOf(extJsDebug));
-	}
-	*/
 }

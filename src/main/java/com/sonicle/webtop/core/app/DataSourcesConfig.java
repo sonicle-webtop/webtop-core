@@ -43,7 +43,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.plist.ParseException;
-import org.jooq.tools.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
