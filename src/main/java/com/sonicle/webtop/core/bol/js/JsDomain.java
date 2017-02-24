@@ -67,6 +67,7 @@ public class JsDomain {
 	public String ldapLoginFilter;
 	public String ldapUserDn;
 	public String ldapUserFilter;
+	public String ldapUserIdField;
 	public String ldapUserFirstnameField;
 	public String ldapUserLastnameField;
 	public String ldapUserDisplayNameField;
@@ -93,6 +94,7 @@ public class JsDomain {
 			ldapLoginFilter = params.loginFilter;
 			ldapUserDn = params.userDn;
 			ldapUserFilter = params.userFilter;
+			ldapUserIdField = params.userIdField;
 			ldapUserFirstnameField = params.userFirstnameField;
 			ldapUserLastnameField = params.userLastnameField;
 			ldapUserDisplayNameField = params.userDisplayNameField;
@@ -101,6 +103,7 @@ public class JsDomain {
 			ldapLoginFilter = null;
 			ldapUserDn = null;
 			ldapUserFilter = null;
+			ldapUserIdField = null;
 			ldapUserFirstnameField = null;
 			ldapUserLastnameField = null;
 			ldapUserDisplayNameField = null;
@@ -121,12 +124,13 @@ public class JsDomain {
 		de.setDirCaseSensitive(js.dirCaseSensitive);
 		de.setDirPasswordPolicy(js.dirPasswordPolicy);
 		String scheme = de.getDirUri().getScheme();
-		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(ADDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME)) {
+		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME) || scheme.equals(ADDirectory.SCHEME)) {
 			ParamsLdapDirectory params =  new ParamsLdapDirectory();
 			params.loginDn = js.ldapLoginDn;
 			params.loginFilter = js.ldapLoginFilter;
 			params.userDn = js.ldapUserDn;
 			params.userFilter = js.ldapUserFilter;
+			params.userIdField = js.ldapUserIdField;
 			params.userFirstnameField = js.ldapUserFirstnameField;
 			params.userLastnameField = js.ldapUserLastnameField;
 			params.userDisplayNameField = js.ldapUserDisplayNameField;

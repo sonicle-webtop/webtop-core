@@ -64,6 +64,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('ldapLoginFilter', 'string', true),
 		WTF.field('ldapUserDn', 'string', true),
 		WTF.field('ldapUserFilter', 'string', true),
+		WTF.field('ldapUserIdField', 'string', true),
 		WTF.field('ldapUserFirstnameField', 'string', true),
 		WTF.field('ldapUserLastnameField', 'string', true),
 		WTF.field('ldapUserDisplayNameField', 'string', true)
@@ -78,6 +79,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword');
 				me.setFieldValidators('ldapLoginDn');
 				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');
@@ -88,6 +90,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword', ['presence']);
 				me.setFieldValidators('ldapLoginDn');
 				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');
@@ -98,6 +101,18 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword', ['presence']);
 				me.setFieldValidators('ldapLoginDn', ['presence']);
 				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserIdField', ['presence']);
+				me.setFieldValidators('ldapUserFirstnameField', ['presence']);
+				me.setFieldValidators('ldapUserLastnameField', ['presence']);
+				me.setFieldValidators('ldapUserDisplayNameField', ['presence']);
+				break;
+			case 'ldapneth':
+				me.setFieldValidators('dirHost', ['presence']);
+				me.setFieldValidators('dirAdmin', ['presence']);
+				me.setFieldValidators('dirPassword', ['presence']);
+				me.setFieldValidators('ldapLoginDn', ['presence']);
+				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserIdField', ['presence']);
 				me.setFieldValidators('ldapUserFirstnameField', ['presence']);
 				me.setFieldValidators('ldapUserLastnameField', ['presence']);
 				me.setFieldValidators('ldapUserDisplayNameField', ['presence']);
@@ -108,16 +123,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword', ['presence']);
 				me.setFieldValidators('ldapLoginDn', ['presence']);
 				me.setFieldValidators('ldapUserDn', ['presence']);
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'ldapneth':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin', ['presence']);
-				me.setFieldValidators('dirPassword', ['presence']);
-				me.setFieldValidators('ldapLoginDn', ['presence']);
-				me.setFieldValidators('ldapUserDn', ['presence']);
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');
@@ -128,6 +134,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword');
 				me.setFieldValidators('ldapLoginDn');
 				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');
@@ -138,6 +145,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword');
 				me.setFieldValidators('ldapLoginDn');
 				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');
@@ -148,6 +156,7 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('dirPassword');
 				me.setFieldValidators('ldapLoginDn');
 				me.setFieldValidators('ldapUserDn');
+				me.setFieldValidators('ldapUserIdField');
 				me.setFieldValidators('ldapUserFirstnameField');
 				me.setFieldValidators('ldapUserLastnameField');
 				me.setFieldValidators('ldapUserDisplayNameField');

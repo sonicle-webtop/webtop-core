@@ -44,6 +44,7 @@ public class ParamsLdapDirectory {
 	public String loginFilter;
 	public String userDn;
 	public String userFilter;
+	public String userIdField;
 	public String userFirstnameField;
 	public String userLastnameField;
 	public String userDisplayNameField;

@@ -39,11 +39,11 @@ Ext.define('Sonicle.webtop.core.admin.store.DirScheme', {
 		['webtop',''],
 		['ldapwebtop',''],
 		['ldap',''],
+		['ldapneth',''],
+		['ad',''],
 		['imap',''],
 		['smb',''],
-		['sftp',''],
-		['ad',''],
-		['ldapneth','']
+		['sftp','']
 	],
 	
 	constructor: function(cfg) {

@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
@@ -42,7 +41,6 @@ import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.Principal;
-import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
 import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.DirectoryOptions;
@@ -129,7 +127,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
-import org.slf4j.MDC;
 
 /**
  *
@@ -1150,22 +1147,6 @@ public final class WebTopApp {
 				ldapwt.setSpecificLoginDn(opts, ad.getInternetName());
 				ldapwt.setSpecificUserDn(opts, ad.getInternetName());
 				break;
-			case ImapDirectory.SCHEME:
-				ImapConfigBuilder imap = new ImapConfigBuilder();
-				imap.setHost(opts, authUri.getHost());
-				imap.setPort(opts, authUri.getPort());
-				imap.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				break;
-			case SmbDirectory.SCHEME:
-				SmbConfigBuilder smb = new SmbConfigBuilder();
-				smb.setHost(opts, authUri.getHost());
-				smb.setPort(opts, authUri.getPort());
-				break;
-			case SftpDirectory.SCHEME:
-				SftpConfigBuilder sftp = new SftpConfigBuilder();
-				sftp.setHost(opts, authUri.getHost());
-				sftp.setPort(opts, authUri.getPort());
-				break;
 			case LdapDirectory.SCHEME:
 				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
 				LdapConfigBuilder ldap = new LdapConfigBuilder();
@@ -1178,9 +1159,27 @@ public final class WebTopApp {
 				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
 				if (!StringUtils.isBlank(params.userDn)) ldap.setUserDn(opts, params.userDn);
 				if (!StringUtils.isBlank(params.userFilter)) ldap.setUserFilter(opts, params.userFilter);
+				if (!StringUtils.isBlank(params.userIdField)) ldap.setUserIdField(opts, params.userIdField);
 				if (!StringUtils.isBlank(params.userFirstnameField)) ldap.setUserFirstnameField(opts, params.userFirstnameField);
 				if (!StringUtils.isBlank(params.userLastnameField)) ldap.setUserLastnameField(opts, params.userLastnameField);
 				if (!StringUtils.isBlank(params.userDisplayNameField)) ldap.setUserDisplayNameField(opts, params.userDisplayNameField);
+				break;
+			case LdapNethDirectory.SCHEME:
+				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
+				LdapNethConfigBuilder ldapnts = new LdapNethConfigBuilder();
+				ldapnts.setHost(opts, authUri.getHost());
+				ldapnts.setPort(opts, authUri.getPort());
+				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				ldapnts.setAdminDn(opts, ad.getDirAdmin());
+				ldapnts.setAdminPassword(opts, getDirPassword(ad));
+				if (!StringUtils.isBlank(params.loginDn)) ldapnts.setLoginDn(opts, params.loginDn);
+				if (!StringUtils.isBlank(params.loginFilter)) ldapnts.setLoginFilter(opts, params.loginFilter);
+				if (!StringUtils.isBlank(params.userDn)) ldapnts.setUserDn(opts, params.userDn);
+				if (!StringUtils.isBlank(params.userFilter)) ldapnts.setUserFilter(opts, params.userFilter);
+				if (!StringUtils.isBlank(params.userIdField)) ldapnts.setUserIdField(opts, params.userIdField);
+				if (!StringUtils.isBlank(params.userFirstnameField)) ldapnts.setUserFirstnameField(opts, params.userFirstnameField);
+				if (!StringUtils.isBlank(params.userLastnameField)) ldapnts.setUserLastnameField(opts, params.userLastnameField);
+				if (!StringUtils.isBlank(params.userDisplayNameField)) ldapnts.setUserDisplayNameField(opts, params.userDisplayNameField);
 				break;
 			case ADDirectory.SCHEME:
 				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
@@ -1198,23 +1197,21 @@ public final class WebTopApp {
 				if (!StringUtils.isBlank(params.userLastnameField)) adir.setUserLastnameField(opts, params.userLastnameField);
 				if (!StringUtils.isBlank(params.userDisplayNameField)) adir.setUserDisplayNameField(opts, params.userDisplayNameField);
 				break;
-			case LdapNethDirectory.SCHEME:
-				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
-				LdapNethConfigBuilder ldapnts = new LdapNethConfigBuilder();
-				ldapnts.setHost(opts, authUri.getHost());
-				ldapnts.setPort(opts, authUri.getPort());
-				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
-				ldapnts.setAdminDn(opts, ad.getDirAdmin());
-				ldapnts.setAdminPassword(opts, getDirPassword(ad));
-				ldapnts.setSpecificLoginDn(opts, ad.getInternetName());
-				ldapnts.setSpecificUserDn(opts, ad.getInternetName());
-				if (!StringUtils.isBlank(params.loginDn)) ldapnts.setLoginDn(opts, params.loginDn);
-				if (!StringUtils.isBlank(params.loginFilter)) ldapnts.setLoginFilter(opts, params.loginFilter);
-				if (!StringUtils.isBlank(params.userDn)) ldapnts.setUserDn(opts, params.userDn);
-				if (!StringUtils.isBlank(params.userFilter)) ldapnts.setUserFilter(opts, params.userFilter);
-				if (!StringUtils.isBlank(params.userFirstnameField)) ldapnts.setUserFirstnameField(opts, params.userFirstnameField);
-				if (!StringUtils.isBlank(params.userLastnameField)) ldapnts.setUserLastnameField(opts, params.userLastnameField);
-				if (!StringUtils.isBlank(params.userDisplayNameField)) ldapnts.setUserDisplayNameField(opts, params.userDisplayNameField);
+			case ImapDirectory.SCHEME:
+				ImapConfigBuilder imap = new ImapConfigBuilder();
+				imap.setHost(opts, authUri.getHost());
+				imap.setPort(opts, authUri.getPort());
+				imap.setConnectionSecurity(opts, ad.getDirConnSecurity());
+				break;
+			case SmbDirectory.SCHEME:
+				SmbConfigBuilder smb = new SmbConfigBuilder();
+				smb.setHost(opts, authUri.getHost());
+				smb.setPort(opts, authUri.getPort());
+				break;
+			case SftpDirectory.SCHEME:
+				SftpConfigBuilder sftp = new SftpConfigBuilder();
+				sftp.setHost(opts, authUri.getHost());
+				sftp.setPort(opts, authUri.getPort());
 				break;
 		}
 		return opts;

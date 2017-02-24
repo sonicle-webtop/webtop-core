@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		title: '{domain.tit}',
 		iconCls: 'wtadm-icon-domain-xs',
 		width: 500,
-		height: 500
+		height: 550
 	},
 	fieldTitle: 'domainId',
 	modelName: 'Sonicle.webtop.core.admin.model.Domain',
@@ -308,6 +308,135 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
+							bind: '{record.ldapUserIdField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserIdField.lbl'),
+							emptyText: me.mys.res('domain.ldap.fld-ldapUserIdField.emp'),
+							width: 330
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserFirstnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
+							emptyText: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.emp'),
+							width: 330
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserLastnameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
+							emptyText: me.mys.res('domain.ldap.fld-ldapUserLastnameField.emp'),
+							width: 330
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserDisplayNameField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
+							emptyText: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.emp'),
+							width: 330
+						}]
+					}]
+				}, {
+					xtype: 'tabpanel',
+					itemId: 'ldapneth',
+					modelValidation: true,
+					deferredRender: false,
+					items: [{
+						title: me.mys.res('domain.ldap.server.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [{
+								xtype: 'fieldcontainer',
+								layout: 'hbox',
+								items: [{
+									xtype: 'textfield',
+									bind: '{record.dirHost}',
+									width: 160
+								}, {
+									xtype: 'displayfield',
+									value: '&nbsp;:&nbsp;'
+								}, {
+									xtype: 'numberfield',
+									bind: '{record.dirPort}',
+									hideTrigger: true,
+									minValue: 1,
+									maxValue: 65000,
+									width: 60,
+									emptyText: me.mys.res('domain.fld-dirPort.emp')
+								}],
+								fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
+							},
+							WTF.lookupCombo('id', 'desc', {
+								bind: '{record.dirConnSecurity}',
+								allowBlank: false,
+								store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
+									autoLoad: true
+								}),
+								fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
+								width: 230
+							}),
+							{
+								xtype: 'textfield',
+								bind: '{record.dirAdmin}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.ldap.fld-dirAdmin.lbl'),
+								anchor: '100%'
+							}, {
+								xtype: 'sopasswordfield',
+								bind: '{record.dirPassword}',
+								plugins: 'sonoautocomplete',
+								fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
+								width: 300
+							}, {
+								xtype: 'checkbox',
+								bind: '{foDirCaseSensitive}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
+							}, {
+								xtype: 'checkbox',
+								bind: '{foDirPasswordPolicy}',
+								hideEmptyLabel: false,
+								boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
+							}
+						]
+					}, {
+						title: me.mys.res('domain.ldap.login.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [{
+							xtype: 'textfield',
+							bind: '{record.ldapLoginDn}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginDn.lbl'),
+							anchor: '100%'
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapLoginFilter}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginFilter.lbl'),
+							anchor: '100%'
+						}]
+					}, {
+						title: me.mys.res('domain.ldap.user.tit'),
+						xtype: 'wtfieldspanel',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [{
+							xtype: 'textfield',
+							bind: '{record.ldapUserDn}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDn.lbl'),
+							anchor: '100%'
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserFilter}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
+							anchor: '100%'
+						}, {
+							xtype: 'textfield',
+							bind: '{record.ldapUserIdField}',
+							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserIdField.lbl'),
+							width: 330
+						}, {
+							xtype: 'textfield',
 							bind: '{record.ldapUserFirstnameField}',
 							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
 							width: 330
@@ -425,126 +554,6 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 							bind: '{record.ldapUserFilter}',
 							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
 							emptyText: '&(objectClass=person)(objectClass=user)',
-							anchor: '100%'
-						}, {
-							xtype: 'textfield',
-							bind: '{record.ldapUserFirstnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFirstnameField.lbl'),
-							emptyText: 'givenName',
-							width: 330
-						}, {
-							xtype: 'textfield',
-							bind: '{record.ldapUserLastnameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserLastnameField.lbl'),
-							emptyText: 'sn',
-							width: 330
-						}, {
-							xtype: 'textfield',
-							bind: '{record.ldapUserDisplayNameField}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDisplayNameField.lbl'),
-							emptyText: 'cn',
-							width: 330
-						}]
-					}]
-				}, {
-					xtype: 'tabpanel',
-					itemId: 'ldapneth',
-					modelValidation: true,
-					deferredRender: false,
-					items: [{
-						title: me.mys.res('domain.ldap.server.tit'),
-						xtype: 'wtfieldspanel',
-						defaults: {
-							labelWidth: 120
-						},
-						items: [{
-								xtype: 'fieldcontainer',
-								layout: 'hbox',
-								items: [{
-									xtype: 'textfield',
-									bind: '{record.dirHost}',
-									width: 160
-								}, {
-									xtype: 'displayfield',
-									value: '&nbsp;:&nbsp;'
-								}, {
-									xtype: 'numberfield',
-									bind: '{record.dirPort}',
-									hideTrigger: true,
-									minValue: 1,
-									maxValue: 65000,
-									width: 60,
-									emptyText: me.mys.res('domain.fld-dirPort.emp')
-								}],
-								fieldLabel: me.mys.res('domain.fld-dirHost.lbl')
-							},
-							WTF.lookupCombo('id', 'desc', {
-								bind: '{record.dirConnSecurity}',
-								allowBlank: false,
-								store: Ext.create('Sonicle.webtop.core.admin.store.DirConnSecurity', {
-									autoLoad: true
-								}),
-								fieldLabel: me.mys.res('domain.fld-dirConnSecurity.lbl'),
-								width: 230
-							}),
-							{
-								xtype: 'textfield',
-								bind: '{record.dirAdmin}',
-								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.ldap.fld-dirAdmin.lbl'),
-								anchor: '100%'
-							}, {
-								xtype: 'sopasswordfield',
-								bind: '{record.dirPassword}',
-								plugins: 'sonoautocomplete',
-								fieldLabel: me.mys.res('domain.fld-dirPassword.lbl'),
-								width: 300
-							}, {
-								xtype: 'checkbox',
-								bind: '{foDirCaseSensitive}',
-								hideEmptyLabel: false,
-								boxLabel: me.mys.res('domain.fld-dirCaseSensitive.lbl')
-							}, {
-								xtype: 'checkbox',
-								bind: '{foDirPasswordPolicy}',
-								hideEmptyLabel: false,
-								boxLabel: me.mys.res('domain.fld-dirPasswordPolicy.lbl')
-							}
-						]
-					}, {
-						title: me.mys.res('domain.ldap.login.tit'),
-						xtype: 'wtfieldspanel',
-						defaults: {
-							labelWidth: 120
-						},
-						items: [{
-							xtype: 'textfield',
-							bind: '{record.ldapLoginDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginDn.lbl'),
-							emptyText: 'ou=people,dc={sub1},dc={tld}',
-							anchor: '100%'
-						}, {
-							xtype: 'textfield',
-							bind: '{record.ldapLoginFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapLoginFilter.lbl'),
-							anchor: '100%'
-						}]
-					}, {
-						title: me.mys.res('domain.ldap.user.tit'),
-						xtype: 'wtfieldspanel',
-						defaults: {
-							labelWidth: 120
-						},
-						items: [{
-							xtype: 'textfield',
-							bind: '{record.ldapUserDn}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserDn.lbl'),
-							emptyText: 'ou=people,dc={sub1},dc={tld}',
-							anchor: '100%'
-						}, {
-							xtype: 'textfield',
-							bind: '{record.ldapUserFilter}',
-							fieldLabel: me.mys.res('domain.ldap.fld-ldapUserFilter.lbl'),
 							anchor: '100%'
 						}, {
 							xtype: 'textfield',
