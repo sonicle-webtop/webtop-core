@@ -273,15 +273,19 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			id = WT.ID;
 		}
 		var ExArr = Ext.Array,
-				loc = WT.getApp().getLocale(id);
+				loc = WT.getApp().getLocale(id),
+				str;
 		
-		if(!loc) return undefined;
-		if(arguments.length > 2) {
-			var str = loc.strings[key],
-					args = ExArr.merge([str], ExArr.slice(arguments, 2));
+		// Returns the key itself whether locale or string are not defined
+		if (!loc) return key;
+		str = loc.strings[key];
+		if (str === undefined) return key;
+		
+		if (arguments.length > 2) {
+			var args = ExArr.merge([str], ExArr.slice(arguments, 2));
 			return Ext.isDefined(str) ? Ext.String.format.apply(this, args) : loc.strings[key];
 		} else {
-			return loc.strings[key];
+			return str;
 		}
 	},
 	
@@ -294,20 +298,20 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * The first one points at the resource with key 'abc' in the service 
 	 * 'com.sonicle.webtop.core', while the second in service 'com.sonicle.webtop.myservice'.
 	 * @param {String} [id] The service ID.
-	 * @param {String} str The string.
+	 * @param {String} tpl The string.
 	 * @returns {String} The value.
 	 */
-	resTpl: function(id, str) {
+	resTpl: function(id, tpl) {
 		if(arguments.length === 1) {
-			str = id;
+			tpl = id;
 			id = WT.ID;
 		}
-		if(Ext.isString(str) && str.startsWith('{') && str.endsWith('}')) {
-			var s = str.substr(1, str.length-2),
+		if(Ext.isString(tpl) && tpl.startsWith('{') && tpl.endsWith('}')) {
+			var s = tpl.substr(1, tpl.length-2),
 					tokens = s.split('@');
 			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
 		} else {
-			return str; // No template defined...
+			return tpl; // No template defined...
 		}
 	},
 	

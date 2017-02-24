@@ -926,17 +926,15 @@ public final class WebTopApp {
 	 * @return Localized string
 	 */
 	public String lookupResource(String serviceId, Locale locale, String key, boolean escapeHtml) {
-		String value = "";
-		
 		try {
 			String baseName = StringUtils.replace(serviceId, ".", "/") + "/locale";
-			value = ResourceBundle.getBundle(baseName, locale).getString(key);
+			String value = ResourceBundle.getBundle(baseName, locale).getString(key);
 			if(escapeHtml) value = StringEscapeUtils.escapeHtml4(value);
-		} catch(MissingResourceException ex) {
-			//TODO: abilitare logging
-			//logger.trace("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
-		} finally {
 			return value;
+			
+		} catch(MissingResourceException ex) {
+			return key;
+			//logger.trace("Missing resource [{}, {}, {}]", baseName, locale.toString(), key, ex);
 		}
 	}
 	
