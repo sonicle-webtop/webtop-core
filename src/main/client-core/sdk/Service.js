@@ -64,6 +64,13 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	msgListeners: null,
 	
 	/**
+	 * @private
+	 * @property {Number} activationCount
+	 * Nuumber of activations of this service.
+	 */
+	activationCount: 0,
+	
+	/**
 	 * @event activate
 	 * Fires after the Service has been activated.
 	 */
@@ -92,6 +99,10 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	isActive: function() {
 		return WT.getActiveService() === this.ID;
+	},
+	
+	getActivationCount: function() {
+		return this.activationCount;
 	},
 	
 	/**

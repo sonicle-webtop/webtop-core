@@ -208,13 +208,17 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	 * @param {String} id The service ID.
 	 */
 	activateService: function(id) {
-		var me = this;
-		var svc = me.getService(id);
-		if(!svc) return;
-		var vpc = me.getViewport().getController();
-		vpc.addServiceCmps(svc);
+		var me = this,
+				vpc = me.getViewport().getController(),
+				inst = me.getService(id);
+				
+		if (!inst) return;
+		vpc.addServiceCmps(inst);
 		me.currentService = id;
-		if(vpc.activateService(svc)) svc.fireEvent('activate');
+		if (vpc.activateService(inst)) {
+			inst.activationCount++;
+			inst.fireEvent('activate');
+		}
 	},
 	
 	hideLoadingLayer: function() {
