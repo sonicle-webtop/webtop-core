@@ -156,16 +156,17 @@ public class CoreSettings {
 	/**
 	 * [system]
 	 * [boolean]
-	 * Indicates whether to forcedly hide webapp name
+	 * Indicates whether to forcedly hide footer system details (os, appserver, 
+	 * java) from login page.
 	 */
-	public static final String LOGIN_HIDE_WEBAPPNAME = "login.webappname.hide";
+	public static final String LOGIN_HIDE_SYSTEMINFO = "login.systeminfo.hide";
 	
 	/**
 	 * [system]
 	 * [boolean]
-	 * Indicates whether to forcedly hide footer details from login page
+	 * Indicates whether to forcedly hide deployed webapp name.
 	 */
-	public static final String LOGIN_HIDE_SERVERINFO = "login.serverinfo.hide";
+	public static final String LOGIN_HIDE_WEBAPPNAME = "login.webappname.hide";
 	
 	/**
 	 * [user+domain+system]

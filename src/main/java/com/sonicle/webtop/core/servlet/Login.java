@@ -43,7 +43,6 @@ import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -120,9 +119,7 @@ public class Login extends AbstractServlet {
 		
 		Map tplMap = new HashMap();
 		AbstractServlet.fillPageVars(tplMap, locale, null);
-		AbstractServlet.fillSystemVars(tplMap, wta, locale);
-		tplMap.put("showWebappName", !css.getHideLoginWebappName());
-		tplMap.put("showServerInfo", !css.getHideLoginServerInfo());
+		AbstractServlet.fillSystemVars(tplMap, wta, locale, !css.getHideLoginSystemInfo(), !css.getHideLoginWebappName());
 		tplMap.put("showMaintenance", !StringUtils.isBlank(maintenanceMessage));
 		tplMap.put("maintenanceMessage", maintenanceMessage);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));

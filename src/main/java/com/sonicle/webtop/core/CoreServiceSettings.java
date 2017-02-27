@@ -96,12 +96,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_DOMAINS, false);
 	}
 	
-	public Boolean getHideLoginWebappName() {
-		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
+	public Boolean getHideLoginSystemInfo() {
+		return getBoolean(LOGIN_HIDE_SYSTEMINFO, false);
 	}
 	
-	public Boolean getHideLoginServerInfo() {
-		return getBoolean(LOGIN_HIDE_SERVERINFO, false);
+	public Boolean getHideLoginWebappName() {
+		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
 	}
 	
 	public boolean getSysLogEnabled() {

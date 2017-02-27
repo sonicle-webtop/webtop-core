@@ -202,7 +202,7 @@ public final class WebTopApp {
 	public static final String DOMAIN_IMAGES_FOLDER = "images";
 	
 	private final ServletContext servletContext;
-	private final String systemInfo;
+	private final String osInfo;
 	private final Charset systemCharset;
 	private DateTimeZone systemTimeZone;
 	private Locale systemLocale;
@@ -239,7 +239,7 @@ public final class WebTopApp {
 	private WebTopApp(ServletContext context, Subject adminSubject) {
 		this.servletContext = context;
 		this.adminSubject = adminSubject;
-		this.systemInfo = SysInfo.build();
+		this.osInfo = OSInfo.build();
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
@@ -604,12 +604,12 @@ public final class WebTopApp {
 		return "WebTop";
 	}
 	
-	public String getServerInfo() {
+	public String getAppServerInfo() {
 		return servletContext.getServerInfo();
 	}
 	
-	public String getSystemInfo() {
-		return systemInfo;
+	public String getOSInfo() {
+		return osInfo;
 	}
 	
 	public Charset getSystemCharset() {

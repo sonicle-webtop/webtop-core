@@ -80,11 +80,22 @@ public abstract class AbstractServlet extends HttpServlet {
 		}
 	}
 	
-	public static void fillSystemVars(Map vars, WebTopApp wta, Locale locale) {
-		vars.put("systemInfo", wta.getSystemInfo());
-		vars.put("serverInfo", wta.getServerInfo());
-		vars.put("jdk", System.getProperty("java.version"));
-		vars.put("webappName", wta.getWebAppName());
+	public static void fillSystemVars(Map vars, WebTopApp wta, Locale locale, boolean showSystemInfo, boolean showWebappInfo) {
+		String osInfo = wta.getOSInfo();
+		String appServerInfo = wta.getAppServerInfo();
+		String jdk = System.getProperty("java.version");
+		String webappName = wta.getWebAppName();
+		vars.put("osInfo", osInfo);
+		vars.put("appServerInfo", appServerInfo);
+		vars.put("jdk", jdk);
+		vars.put("webappName", webappName);
+		String serverInfo = "";
+		if (showSystemInfo) serverInfo += "Hosted on " + osInfo + " - " + appServerInfo + " - Java " + jdk;
+		if (showWebappInfo) {
+			if (!StringUtils.isBlank(serverInfo)) serverInfo += " - ";
+			serverInfo += webappName;
+		}
+		vars.put("serverInfo", StringUtils.defaultIfBlank(serverInfo, null));
 	}
 	
 	public static void fillPageVars(Map vars, Locale locale, String baseUrl) {

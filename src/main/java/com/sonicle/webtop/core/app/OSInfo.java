@@ -42,7 +42,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public class SysInfo {
+public class OSInfo {
 	
 	public static String build() {
 		String host = getCmdOutput("uname -n");
