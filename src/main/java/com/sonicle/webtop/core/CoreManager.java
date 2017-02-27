@@ -159,10 +159,10 @@ public class CoreManager extends BaseManager {
 		//items.add(new JsSimple("aria", "Aria"));
 		items.add(new JsSimple("classic", "Classic"));
 		items.add(new JsSimple("crisp", "Crisp"));
-		items.add(new JsSimple("crisp-touch", "Crisp Touch"));
+		//items.add(new JsSimple("crisp-touch", "Crisp Touch"));
 		items.add(new JsSimple("gray", "Gray"));
 		items.add(new JsSimple("neptune", "Neptune"));
-		items.add(new JsSimple("neptune-touch", "Neptune Touch"));
+		//items.add(new JsSimple("neptune-touch", "Neptune Touch"));
 		return items;
 	}
 	
