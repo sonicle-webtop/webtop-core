@@ -22,6 +22,7 @@
 
 .wt-icon-feedback-xs { background-image: url('feedback_16.png') !important; }
 .wt-icon-whatsnew-xs { background-image: url('whatsnew_16.png') !important; }
+.wt-icon-addons-xs { background-image: url('addons_16.png') !important; }
 .wt-icon-changePassword-xs { background-image: url('password_16.png') !important; }
 .wt-icon-options-xs { background-image: url('options_16.png') !important; }
 .wt-icon-reminder-xs { background-image: url('reminder_16.png') !important; }
@@ -51,12 +52,14 @@
 .wt-menu-feedback { background-image: url('feedback_32.png') !important; width: 32px; }
 .wt-menu-whatsnew { background-image: url('whatsnew_32.png') !important; width: 32px; }
 .wt-menu-options { background-image: url('options_32.png') !important; width: 32px; }
+.wt-menu-addons { background-image: url('addons_32.png') !important; width: 32px; }
 .wt-menu-help { background-image: url('help_32.png') !important; width: 32px; }
 .wt-menu-logout { background-image: url('logout-disabled_16.png') !important; width: 16px; }
 .wt-menu-tools { background-image: url('toolbox_16.png') !important; }
 .x-btn-over .wt-menu-logout { background-image: url('logout_16.png') !important; width: 16px; }
 
 /* Platform ICONS */
+.wt-icon-platform-win-xs { background-image: url('platform-win_16.png') !important; }
 .wt-icon-ok-xs { background-image: url('ok_16.png') !important; }
 .wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
 .wt-icon-add-xs { background-image: url('add_16.png') !important; }

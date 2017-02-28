@@ -191,11 +191,11 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
 						handler: 'onToolsMenuClick'
 					}, '-']
-				},{
+				}, /*{
 					xtype: 'wtnotificationbutton'
 					
 					
-				}, ' ', '-', /*{
+				}*/, ' ', '-', /*{
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {
@@ -256,10 +256,14 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								tooltip: WT.res('menu.options.tip'),
 								iconCls: 'wt-menu-options'
 							}, {
+								itemId: 'addons',
+								tooltip: WT.res('menu.addons.tip'),
+								iconCls: 'wt-menu-addons'
+							}/*, {
 								itemId: 'help',
 								tooltip: WT.res('menu.help.tip'),
 								iconCls: 'wt-menu-help'
-							}, {
+							}*/, {
 								itemId: 'logout',
 								colspan: 2,
 								scale: 'small',

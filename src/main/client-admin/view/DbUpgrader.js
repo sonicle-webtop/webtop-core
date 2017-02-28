@@ -65,6 +65,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				'-',
 				me.addAction('play1', {
 					text: me.mys.res('dbUpgrader.act-play1.lbl'),
+					tooltip: null,
 					iconCls: 'wtadm-icon-play1Stmt-xs',
 					handler: function() {
 						me.executeStmt('play1');
@@ -72,6 +73,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				}),
 				me.addAction('play', {
 					text: me.mys.res('dbUpgrader.act-play.lbl'),
+					tooltip: null,
 					iconCls: 'wtadm-icon-playStmt-xs',
 					handler: function() {
 						me.executeStmt('play');
@@ -79,6 +81,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				}),
 				me.addAction('skip', {
 					text: me.mys.res('dbUpgrader.act-skip.lbl'),
+					tooltip: null,
 					iconCls: 'wtadm-icon-skipStmt-xs',
 					handler: function() {
 						me.executeStmt('skip');

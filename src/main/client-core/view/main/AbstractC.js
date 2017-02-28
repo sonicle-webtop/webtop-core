@@ -264,6 +264,9 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			case 'whatsnew':
 				me.showWhatsnew();
 				break;
+			case 'addons':
+				me.showAddons();
+				break;
 			case 'options':
 				me.showOptions();
 				break;
@@ -390,6 +393,13 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				profileId: WT.getVar('profileId')
 			}
 		}).show();
+	},
+	
+	showAddons: function() {
+		var me = this,
+				mys = WT.getApp().getService(WT.ID);
+		
+		me.createView(mys, 'view.Addons').show();
 	},
 	
 	showWhatsnew: function(full) {

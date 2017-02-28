@@ -102,6 +102,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 			tbar: [
 				me.addAction('add', {
 					text: WT.res('act-add.lbl'),
+					tooltip: null,
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
 						me.addRoleUI(me.domainId);
@@ -109,6 +110,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 				}),
 				me.addAction('remove', {
 					text: WT.res('act-remove.lbl'),
+					tooltip: null,
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
 					handler: function() {
@@ -118,7 +120,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 				}),
 				'->',
 				me.addAction('refresh', {
-					text: '',
+					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
 					iconCls: 'wt-icon-refresh-xs',
 					handler: function() {

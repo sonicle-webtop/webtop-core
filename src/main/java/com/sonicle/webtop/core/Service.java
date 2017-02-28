@@ -51,9 +51,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
-import com.sonicle.webtop.core.app.PrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
@@ -64,7 +62,6 @@ import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsActivity;
 import com.sonicle.webtop.core.bol.js.JsAutosave;
@@ -78,7 +75,6 @@ import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
-import com.sonicle.webtop.core.bol.js.JsValue;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
@@ -93,6 +89,7 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.File;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -106,11 +103,11 @@ import java.util.TimeZone;
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 /**
  *
@@ -170,6 +167,7 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
+		co.put("wtNotifierAvailable", isNotifierAvailable());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
@@ -799,6 +797,40 @@ public class Service extends BaseService {
 			logger.error("Error in TurnOffWhatsnew", ex);
 		} finally {
 			new JsonResult().printTo(out);
+		}
+	}
+	
+	public void processDownloadAddon(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String addonId = ServletUtils.getStringParameter(request, "addonId", true);
+			
+			if (addonId.equals("notifier")) {
+				InputStream is = null;
+				try {
+					if (!isNotifierAvailable()) throw new WTException("Notifier not available");
+					is = this.getClass().getResourceAsStream("/webtop/addons/webtop.exe");
+					IOUtils.copy(is, response.getOutputStream());
+					ServletUtils.setFileStreamHeadersForceDownload(response, "notifier.exe");
+				} finally {
+					IOUtils.closeQuietly(is);
+				}
+				
+			} else {
+				throw new WTException("Unknown addon [{0}]", addonId);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in action DownloadFiles", ex);
+			ServletUtils.writeError(response, HttpServletResponse.SC_NOT_FOUND);
+		}
+	}
+	
+	private boolean isNotifierAvailable() {
+		try {
+			Class.forName("com.sonicle.webtop.addons.AddOns");
+			return true;
+		} catch(ClassNotFoundException ex) {
+			return false;
 		}
 	}
 	

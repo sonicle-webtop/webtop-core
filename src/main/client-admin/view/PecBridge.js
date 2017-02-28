@@ -123,6 +123,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				tbar: [
 					me.addAction('addFetcher', {
 						text: WT.res('act-add.lbl'),
+						tooltip: null,
 						iconCls: 'wt-icon-add-xs',
 						handler: function() {
 							me.addFetcherUI();
@@ -130,6 +131,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					me.addAction('removeFetcher', {
 						text: WT.res('act-remove.lbl'),
+						tooltip: null,
 						iconCls: 'wt-icon-remove-xs',
 						disabled: true,
 						handler: function() {
@@ -139,7 +141,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					'->',
 					me.addAction('refreshFetchers', {
-						text: '',
+						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
 						iconCls: 'wt-icon-refresh-xs',
 						handler: function() {
@@ -197,6 +199,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 				tbar: [
 					me.addAction('addRelay', {
 						text: WT.res('act-add.lbl'),
+						tooltip: null,
 						iconCls: 'wt-icon-add-xs',
 						handler: function() {
 							me.addRelayUI();
@@ -204,6 +207,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					me.addAction('removeRelay', {
 						text: WT.res('act-remove.lbl'),
+						tooltip: null,
 						iconCls: 'wt-icon-remove-xs',
 						disabled: true,
 						handler: function() {
@@ -213,7 +217,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					}),
 					'->',
 					me.addAction('refreshRelays', {
-						text: '',
+						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
 						iconCls: 'wt-icon-refresh-xs',
 						handler: function() {

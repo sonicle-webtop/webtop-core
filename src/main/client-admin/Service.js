@@ -159,17 +159,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	initActions: function() {
 		var me = this;
 		me.addAction('addDomain', {
+			tooltip: null,
 			handler: function() {
 				me.addDomainUI();
 			}
 		});
 		me.addAction('editDomain', {
+			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();
 				if(node) me.editDomainUI(node);
 			}
 		});
 		me.addAction('deleteDomain', {
+			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();
 				if(node) me.deleteDomainUI(node);

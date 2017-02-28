@@ -94,6 +94,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 				},
 				me.addAction('remove', {
 					text: WT.res('act-remove.lbl'),
+					tooltip: null,
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
 					handler: function() {
@@ -103,7 +104,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 				}),
 				'->',
 				me.addAction('refresh', {
-					text: '',
+					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
 					iconCls: 'wt-icon-refresh-xs',
 					handler: function() {
