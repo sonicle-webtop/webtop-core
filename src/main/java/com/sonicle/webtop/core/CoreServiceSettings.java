@@ -75,6 +75,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(GOOGLE_DRIVE_CLIENT_SECRET, null);
 	}
 	
+	public String getAddonNotifierUrl() {
+		return getString(ADDON_NOTIFIER_URL, null);
+	}
+	
 	public Integer getUploadMaxFileSize() {
 		Integer value = getInteger(UPLOAD_MAXFILESIZE, null);
 		return (value != null) ? value : getDefaultUploadMaxFileSize();

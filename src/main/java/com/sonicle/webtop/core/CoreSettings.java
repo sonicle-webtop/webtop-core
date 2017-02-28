@@ -99,6 +99,13 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [string]
+	 * Defines the download URL for the Notifier addon
+	 */
+	public static final String ADDON_NOTIFIER_URL = "addon.notifier.url";
+	
+	/**
+	 * [domain+system]
 	 * [long]
 	 * Maximum file size for uploads
 	 */

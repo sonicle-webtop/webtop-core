@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -90,6 +91,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -167,7 +169,7 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
-		co.put("wtNotifierAvailable", isNotifierAvailable());
+		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
@@ -193,6 +195,12 @@ public class Service extends BaseService {
 		co.put("longTimeFormat", us.getLongTimeFormat());
 		
 		return co;
+	}
+	
+	private String addonNotifier() {
+		String url = ss.getAddonNotifierUrl();
+		if (!StringUtils.isBlank(url)) return url;
+		return LangUtils.classForNameQuietly("com.sonicle.webtop.addons.AddOns") ? "true" : "false";
 	}
 	
 	private WebTopSession getWts() {
@@ -807,10 +815,13 @@ public class Service extends BaseService {
 			if (addonId.equals("notifier")) {
 				InputStream is = null;
 				try {
-					if (!isNotifierAvailable()) throw new WTException("Notifier not available");
+					if (!LangUtils.classForNameQuietly("com.sonicle.webtop.addons.AddOns")) {
+						throw new WTException("Notifier not available");
+					}
 					is = this.getClass().getResourceAsStream("/webtop/addons/webtop.exe");
-					IOUtils.copy(is, response.getOutputStream());
+					OutputStream os = response.getOutputStream();
 					ServletUtils.setFileStreamHeadersForceDownload(response, "notifier.exe");
+					IOUtils.copy(is, os);
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
@@ -822,15 +833,6 @@ public class Service extends BaseService {
 		} catch(Exception ex) {
 			logger.error("Error in action DownloadFiles", ex);
 			ServletUtils.writeError(response, HttpServletResponse.SC_NOT_FOUND);
-		}
-	}
-	
-	private boolean isNotifierAvailable() {
-		try {
-			Class.forName("com.sonicle.webtop.addons.AddOns");
-			return true;
-		} catch(ClassNotFoundException ex) {
-			return false;
 		}
 	}
 	

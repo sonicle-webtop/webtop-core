@@ -71,17 +71,22 @@ Ext.define('Sonicle.webtop.core.view.Addons', {
 				ui: 'default-toolbar',
 				iconCls: 'wt-icon-platform-win-xs',
 				text: me.mys.res('addons.btn-download.lbl'),
-				disabled: !Ext.isWindows || !me.mys.getVar('wtNotifierAvailable', false),
+				disabled: !Ext.isWindows || (me.mys.getVar('wtAddonNotifier') === 'false'),
 				handler: function() {
-					me.downloadAddon('notifier');
+					var url = me.mys.getVar('wtAddonNotifier');
+					me.downloadAddon('notifier', (url === 'true') ? null : url);
 				}
 			}]
 		});
 	},
 	
-	downloadAddon: function(id) {
-		Sonicle.URLMgr.download(WTF.processBinUrl(this.mys.ID, 'DownloadAddon', {
-			addonId: id
-		}));
+	downloadAddon: function(id, url) {
+		if (url) {
+			Sonicle.URLMgr.download(url);
+		} else {
+			Sonicle.URLMgr.download(WTF.processBinUrl(this.mys.ID, 'DownloadAddon', {
+				addonId: id
+			}));
+		}
 	}
 });
