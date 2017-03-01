@@ -175,13 +175,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				var mdl = me.getModel(),
 						reader = mdl.getProxy().getReader(),
 						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
-				if (success) {
-					if (dirty) {
-						mdl.dirty = true;
-					} else {
-						mdl.commit(true);
-					}
-				}
+				
+				if (success && dirty) mdl.dirty = true;
 				me.fireEvent('modelload', me, success, mdl, opts.pass);
 				Ext.callback(opts.callback, opts.scope||me, [ success, mdl ]);
 			});
@@ -196,12 +191,9 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				});
 				// Apply initial data setting dirty flag
 				model = vm.get(linkName);
-				model.set(data);
-				/*
 				model.set(data, {
-					dirty: dirty
+					dirty: false
 				});
-				*/
 				model.setAssociated(data); // Using our custom Sonicle.data.Model!
 				
 			} else { // Load an instance (an id is required)
