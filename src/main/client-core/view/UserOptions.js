@@ -623,7 +623,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.otp.tit'),
-			disabled: WT.getVar('wtOtpEnabled'),
+			disabled: !WT.getVar('wtOtpEnabled'),
 			items: [{
 				xtype: 'container',
 				layout: 'form',
