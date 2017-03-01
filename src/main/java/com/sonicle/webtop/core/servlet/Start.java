@@ -55,6 +55,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -62,6 +63,7 @@ import org.apache.shiro.SecurityUtils;
  */
 public class Start extends AbstractServlet {
 	public static final String URL = "start"; // This must reflect web.xml!
+	private static final Logger logger = WT.getLogger(Start.class);
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -71,7 +73,7 @@ public class Start extends AbstractServlet {
 		WebTopSession wts = RunContext.getWebTopSession();
 		
 		try {
-			WebTopApp.logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
+			logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
 			
 			// Checks maintenance mode
 			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
@@ -105,7 +107,7 @@ public class Start extends AbstractServlet {
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			
 			// Load and build template
-			Template tpl = wta.loadTemplate("com/sonicle/webtop/core/start.html");
+			Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/private.html");
 			tpl.process(vars, response.getWriter());
 			
 		} catch(MaintenanceException ex) {
@@ -117,7 +119,7 @@ public class Start extends AbstractServlet {
 			ServletUtils.forwardRequest(request, response, "otp");
 			
 		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in start servlet!", ex);
+			logger.error("Error", ex);
 			
 		} finally {
 			response.setHeader("Cache-Control", "private, no-cache");

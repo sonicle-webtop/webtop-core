@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -58,6 +59,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.slf4j.Logger;
 
 /**
  *
@@ -65,6 +67,7 @@ import org.apache.shiro.SecurityUtils;
  */
 public class Otp extends AbstractServlet {
 	public static final String URL = "otp"; // This must reflect web.xml!
+	private static final Logger logger = WT.getLogger(Otp.class);
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
 	public static final String WTSPROP_OTP_VERIFIED = "OTPVERIFIED";
@@ -129,7 +132,7 @@ public class Otp extends AbstractServlet {
 			if(wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
 			ServletUtils.forwardRequest(request, response, "start");
 		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in otp servlet!", ex);
+			logger.error("Error", ex);
 			//TODO: pagina di errore
 		} finally {
 			ServletHelper.setPrivateCache(response);
@@ -144,16 +147,16 @@ public class Otp extends AbstractServlet {
 		// Tests enabling parameters
 		boolean sysEnabled = css.getOTPEnabled(), profileEnabled = otpm.isEnabled(pid);
 		if(!sysEnabled || !profileEnabled) { //TODO: valutare se escludere admin
-			WebTopApp.logger.debug("OTP check skipped [{}, {}]", sysEnabled, profileEnabled);
+			logger.debug("OTP check skipped [{}, {}]", sysEnabled, profileEnabled);
 			return true;
 		}
 		
 		String remoteIP = ServletUtils.getClientIP(request);
-		WebTopApp.logger.debug("Checking OTP from remote address {}", remoteIP);
+		logger.debug("Checking OTP from remote address {}", remoteIP);
 		
 		// Checks if request comes from a configured trusted network and skip check
 		if(otpm.isTrusted(pid, remoteIP)) {
-			WebTopApp.logger.debug("OTP check skipped: request comes from a trusted address.");
+			logger.debug("OTP check skipped: request comes from a trusted address.");
 			return true;
 		}
 		
@@ -165,7 +168,7 @@ public class Otp extends AbstractServlet {
 		}
 		
 		if(td != null) {
-			WebTopApp.logger.debug("OTP check skipped: request comes from a trusted device [{}]", td.deviceId);
+			logger.debug("OTP check skipped: request comes from a trusted device [{}]", td.deviceId);
 			return true;
 		}
 		
@@ -188,7 +191,7 @@ public class Otp extends AbstractServlet {
 		tplMap.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
 		
 		// Load and build template
-		Template tpl = wta.loadTemplate("com/sonicle/webtop/core/otp.html");
+		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/otp.html");
 		tpl.process(tplMap, response.getWriter());
 	}
 	

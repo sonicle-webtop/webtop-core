@@ -89,6 +89,7 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTLocalizedException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -873,9 +874,10 @@ public class Service extends BaseService {
 					if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
 						InternetAddress ia = MailUtils.buildInternetAddress(address, null);
-						if(!MailUtils.isAddressValid(ia)) throw new WTException("Indirizzo non valido"); //TODO: messaggio in lingua
+						if(!MailUtils.isAddressValid(ia)) throw new WTException("Email address not valid"); //TODO: messaggio in lingua
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
+						//TODO: email send
 						logger.debug("{}", config.otp.getVerificationCode());
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 
@@ -890,7 +892,12 @@ public class Service extends BaseService {
 
 					OTPManager.Config config = (OTPManager.Config)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					boolean enabled = corem.otpActivate(config, code);
-					if(!enabled) throw new WTException("Codice non valido"); //TODO: messaggio in lingua
+					/*
+					if (!enabled) {
+						throw new WTLocalizedException(lookupResource(CoreLocaleKey.OTP_SETUP_ERROR_CODE), "Invalid code");
+					}
+					*/
+					if(!enabled) throw new WTException("Invalid code"); //TODO: messaggio in lingua
 					wts.clearProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					
 					new JsonResult().printTo(out);

@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -56,6 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
 
 /**
  *
@@ -63,6 +65,7 @@ import org.apache.shiro.session.Session;
  */
 public class Login extends AbstractServlet {
 	public static final String URL = "login"; // This must reflect web.xml!
+	private static final Logger logger = WT.getLogger(Login.class);
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";
 	public static final String LOGINFAILURE_MAINTENANCE = "maintenance";
@@ -107,7 +110,7 @@ public class Login extends AbstractServlet {
 			buildPage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
 			
 		} catch(Exception ex) {
-			WebTopApp.logger.error("Error in login servlet!", ex);
+			logger.error("Error", ex);
 		} finally {
 			ServletHelper.setPrivateCache(response);
 			ServletHelper.setPageContentType(response);
@@ -132,7 +135,7 @@ public class Login extends AbstractServlet {
 		tplMap.put("domains", domains);
 		
 		// Load and build template
-		Template tpl = wta.loadTemplate("com/sonicle/webtop/core/login.html");
+		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/login.html");
 		tpl.process(tplMap, response.getWriter());
 	}
 	

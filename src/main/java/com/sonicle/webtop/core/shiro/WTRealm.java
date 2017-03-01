@@ -43,7 +43,6 @@ import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
@@ -103,7 +102,7 @@ public class WTRealm extends AuthorizingRealm {
 		
 		try {
 			Principal principal = (Principal)principals.getPrimaryPrincipal();
-			WebTopApp.logger.debug("doGetAuthorizationInfo - {}", principal);
+			logger.debug("doGetAuthorizationInfo - {}", principal);
 			return loadAuthorizationInfo(principal);
 			
 		} catch(Exception ex) {
