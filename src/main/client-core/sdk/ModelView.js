@@ -101,6 +101,13 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	validModeRe: /^new|edit|view$/i,
 	
 	/**
+	 * @readonly
+	 * @property {Boolean} modelLoading
+	 * True if the model is being loaded.
+	 */
+	modelLoading: false,
+	
+	/**
 	 * @private
 	 * @property {String} mode
 	 * Form operative mode.
@@ -282,6 +289,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	loadView: function() {
 		var me = this;
+		me.modelLoading = true;
 		me.wait();
 		me.loadModel({
 			data: me.opts.data,
@@ -306,6 +314,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	onModelLoad: function(s, success, model) {
 		var me = this;
+		me.modelLoading = false;
 		s.unwait();
 		if((me.getFieldTitle() === true) || Ext.isString(me.getFieldTitle())) {
 			me.getVM().set('_fieldTitle', me.formatFieldTitle(me.getModel()));
