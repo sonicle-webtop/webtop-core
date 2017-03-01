@@ -136,7 +136,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * Loads configured model.
 	 * @param {Object} opts 
 	 * @param {Object} opts.data Initial data
-	 * @param {Boolean} [opts.dirty=false] True to apply dirty flag on new instance.
+	 * @param {Boolean} [opts.dirty=false] The value of dirty flag to keep after loading.
 	 * @param {Object} [opts.pass] Custom parameters to pass to events callbacks
 	 * @param {Function} [opts.callback] The callback function to call
 	 * @param {Object} [opts.scope] The scope (this) for the supplied callback
@@ -145,6 +145,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		opts = opts || {};
 		var me = this,
 				model = me.getModel(),
+				dirty = Ext.isBoolean(opts.dirty) ? opts.dirty : false,
 				data, vm, linkName, idProp, id;
 		
 		if(model) { // Model already linked
@@ -174,6 +175,13 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				var mdl = me.getModel(),
 						reader = mdl.getProxy().getReader(),
 						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
+				if (success) {
+					if (dirty) {
+						mdl.dirty = true;
+					} else {
+						mdl.commit(true);
+					}
+				}
 				me.fireEvent('modelload', me, success, mdl, opts.pass);
 				Ext.callback(opts.callback, opts.scope||me, [ success, mdl ]);
 			});
@@ -188,9 +196,12 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				});
 				// Apply initial data setting dirty flag
 				model = vm.get(linkName);
+				model.set(data);
+				/*
 				model.set(data, {
-					dirty: Ext.isBoolean(opts.dirty) ? opts.dirty : false
+					dirty: dirty
 				});
+				*/
 				model.setAssociated(data); // Using our custom Sonicle.data.Model!
 				
 			} else { // Load an instance (an id is required)
