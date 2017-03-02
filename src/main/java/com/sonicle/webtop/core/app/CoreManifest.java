@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import java.util.ArrayList;

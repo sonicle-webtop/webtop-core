@@ -33,6 +33,9 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
+import com.sonicle.webtop.core.model.SharePermsFolder;
+import com.sonicle.webtop.core.model.SharePermsElements;
+import com.sonicle.webtop.core.model.SharePermsRoot;
 import java.util.ArrayList;
 
 /**

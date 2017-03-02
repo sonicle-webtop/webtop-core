@@ -47,7 +47,7 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;

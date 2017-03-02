@@ -78,7 +78,7 @@ import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;

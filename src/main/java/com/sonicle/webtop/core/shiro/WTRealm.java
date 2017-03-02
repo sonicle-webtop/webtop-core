@@ -46,7 +46,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.UserProfileId;

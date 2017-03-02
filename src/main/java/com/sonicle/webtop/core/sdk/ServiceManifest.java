@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
-import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServiceSharePermission;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;

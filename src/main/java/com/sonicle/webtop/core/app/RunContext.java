@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.security.Principal;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import org.apache.shiro.SecurityUtils;

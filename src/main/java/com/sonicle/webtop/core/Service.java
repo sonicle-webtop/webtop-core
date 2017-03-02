@@ -81,7 +81,7 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.bol.model.InternetRecipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
-import com.sonicle.webtop.core.bol.model.ServicePermission;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.util.AppLocale;
