@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.LoggerUtils;
@@ -79,7 +79,7 @@ public class Otp extends AbstractServlet {
 		WebTopSession wts = RunContext.getWebTopSession();
 		
 		try {
-			UserProfile.Id pid = wts.getUserProfile().getId();
+			UserProfileId pid = wts.getUserProfile().getId();
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			Locale locale = wts.getLocale();
 			
@@ -140,7 +140,7 @@ public class Otp extends AbstractServlet {
 		}
 	}
 	
-	private boolean skipOTP(WebTopApp wta, UserProfile.Id pid, HttpServletRequest request) {
+	private boolean skipOTP(WebTopApp wta, UserProfileId pid, HttpServletRequest request) {
 		OTPManager otpm = wta.getOTPManager();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		

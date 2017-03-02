@@ -39,11 +39,11 @@ package com.sonicle.webtop.core.sdk;
  */
 public abstract class BaseReminder {
 	protected String serviceId;
-	protected UserProfile.Id profileId;
+	protected UserProfileId profileId;
 	protected String type;
 	protected String instanceId;
 	
-	public BaseReminder(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+	public BaseReminder(String serviceId, UserProfileId profileId, String type, String instanceId) {
 		this.serviceId = serviceId;
 		this.profileId = profileId;
 		this.type = type;
@@ -54,7 +54,7 @@ public abstract class BaseReminder {
 		return serviceId;
 	}
 
-	public UserProfile.Id getProfileId() {
+	public UserProfileId getProfileId() {
 		return profileId;
 	}
 

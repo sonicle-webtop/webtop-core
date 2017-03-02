@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 
 /**
  *
@@ -54,7 +54,7 @@ public class JsPecBridgeRelay {
 	public JsPecBridgeRelay() {}
 	
 	public JsPecBridgeRelay(OPecBridgeRelay o) {
-		UserProfile.Id pid = new UserProfile.Id(o.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(o.getWebtopProfileId());
 		relayId = o.getRelayId();
 		domainId = pid.getDomainId();
 		userId = pid.getUserId();
@@ -71,7 +71,7 @@ public class JsPecBridgeRelay {
 	public static OPecBridgeRelay buildRelay(JsPecBridgeRelay js) {
 		OPecBridgeRelay o = new OPecBridgeRelay();
 		o.setRelayId(js.relayId);
-		o.setWebtopProfileId(new UserProfile.Id(js.domainId, js.userId).toString());
+		o.setWebtopProfileId(new UserProfileId(js.domainId, js.userId).toString());
 		o.setMatcher(js.pecAddress);
 		o.setHost(js.host);
 		o.setPort(js.port);

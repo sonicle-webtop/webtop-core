@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -110,27 +111,27 @@ public class OTPManager {
 		logger.info("OTPManager destroyed");
 	}
 	
-	public boolean isEnabled(UserProfile.Id pid) {
+	public boolean isEnabled(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		return StringUtils.isBlank(cus.getOTPDelivery()) ? false : cus.getOTPEnabled();
 	}
 	
-	public String getDeliveryMode(UserProfile.Id pid) {
+	public String getDeliveryMode(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		return cus.getOTPDelivery();
 	}
 	
-	public String getEmailAddress(UserProfile.Id pid) {
+	public String getEmailAddress(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		return cus.getOTPEmailAddress();
 	}
 	
-	private String getSecret(UserProfile.Id pid) {
+	private String getSecret(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		return cus.getOTPSecret();
 	}
 	
-	public void deactivate(UserProfile.Id pid) {
+	public void deactivate(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		cus.clear(CoreSettings.OTP_SECRET);
 		cus.clear(CoreSettings.OTP_EMAILADDRESS);
@@ -138,7 +139,7 @@ public class OTPManager {
 		cus.setOTPEnabled(false);
 	}
 	
-	public EmailConfig configureEmail(UserProfile.Id pid, String emailAddress) throws WTException {
+	public EmailConfig configureEmail(UserProfileId pid, String emailAddress) throws WTException {
 		SonicleAuth sa = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 		UserProfile.Data ud = wta.getWebTopManager().userData(pid);
 		if(ud.getEmail() == null) throw new WTException("Valid email address is required");
@@ -149,14 +150,14 @@ public class OTPManager {
 		return new EmailConfig(otp, emailAddress);
 	}
 	
-	public GoogleAuthConfig configureGoogleAuth(UserProfile.Id pid, int qrCodeSize) throws WTException {
+	public GoogleAuthConfig configureGoogleAuth(UserProfileId pid, int qrCodeSize) throws WTException {
 		GoogleAuth ga = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
 		OTPKey otp = ga.generateCredentials();
 		byte[] qrcode = generateGoogleAuthQRCode(pid, otp, qrCodeSize);
 		return new GoogleAuthConfig(otp, qrcode);
 	}
 	
-	public boolean activate(UserProfile.Id pid, Config config, int code) throws WTException {
+	public boolean activate(UserProfileId pid, Config config, int code) throws WTException {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		
 		if(config instanceof EmailConfig) {
@@ -187,7 +188,7 @@ public class OTPManager {
 		return false;
 	}
 	
-	private byte[] generateGoogleAuthQRCode(UserProfile.Id pid, OTPKey otp, int size) throws WTException {
+	private byte[] generateGoogleAuthQRCode(UserProfileId pid, OTPKey otp, int size) throws WTException {
 		ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
 		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
 		
@@ -200,7 +201,7 @@ public class OTPManager {
 		return QRCode.from(uri).withSize(size, size).stream().toByteArray();
 	}
 	
-	public Config prepareCheckCode(UserProfile.Id pid) throws WTException {
+	public Config prepareCheckCode(UserProfileId pid) throws WTException {
 		String deliveryMode = getDeliveryMode(pid);
 		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
@@ -217,7 +218,7 @@ public class OTPManager {
 		}
 	}
 	
-	public boolean checkCode(UserProfile.Id pid, Config data, int code) {
+	public boolean checkCode(UserProfileId pid, Config data, int code) {
 		String deliveryMode = getDeliveryMode(pid);
 		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
@@ -230,31 +231,31 @@ public class OTPManager {
 		}
 	}
 	
-	public void registerTrustedDevice(UserProfile.Id pid, JsTrustedDevice td) {
+	public void registerTrustedDevice(UserProfileId pid, JsTrustedDevice td) {
 		SettingsManager sm = wta.getSettingsManager();
 		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + td.deviceId;
 		sm.setUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key, JsonResult.gson.toJson(td));
 	}
 	
-	public boolean removeTrustedDevice(UserProfile.Id pid, String deviceId) {
+	public boolean removeTrustedDevice(UserProfileId pid, String deviceId) {
 		SettingsManager sm = wta.getSettingsManager();
 		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
 		return sm.deleteUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key);
 	}
 	
-	public JsTrustedDevice getTrustedDevice(UserProfile.Id pid, String deviceId) {
+	public JsTrustedDevice getTrustedDevice(UserProfileId pid, String deviceId) {
 		SettingsManager sm = wta.getSettingsManager();
 		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + deviceId;
 		return LangUtils.value(sm.getUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key), null, JsTrustedDevice.class);
 	}
 	
-	public ArrayList<JsTrustedDevice> listTrustedDevices(UserProfile.Id pid) {
+	public ArrayList<JsTrustedDevice> listTrustedDevices(UserProfileId pid) {
 		SettingsManager sm = wta.getSettingsManager();
 		List<OUserSetting> items = sm.getUserSettings(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, CoreSettings.OTP_TRUSTED_DEVICE+"%");
 		return JsTrustedDevice.asList(items);
 	}
 	
-	public JsTrustedDevice trustThisDevice(UserProfile.Id pid, String userAgentHeader) {
+	public JsTrustedDevice trustThisDevice(UserProfileId pid, String userAgentHeader) {
 		String deviceId = DigestUtils.shaHex(UUID.randomUUID().toString() + userAgentHeader);
 		long now = new Date().getTime();
 		JsTrustedDevice td = new JsTrustedDevice(deviceId, DomainAccount.buildName(pid.getDomainId(), pid.getUserId()), now, userAgentHeader);
@@ -262,7 +263,7 @@ public class OTPManager {
 		return td;
 	}
 	
-	public boolean isThisDeviceTrusted(UserProfile.Id pid, TrustedDeviceCookie tdc) {
+	public boolean isThisDeviceTrusted(UserProfileId pid, TrustedDeviceCookie tdc) {
 		if(tdc == null) return false;
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		
@@ -292,7 +293,7 @@ public class OTPManager {
 		return true;
 	}
 	
-	public boolean isTrusted(UserProfile.Id pid, String remoteIP) {
+	public boolean isTrusted(UserProfileId pid, String remoteIP) {
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		String addresses = css.getOTPTrustedAddresses();
 		if(addresses != null) {
@@ -307,18 +308,18 @@ public class OTPManager {
 		return false;
 	}
 	
-	public void clearTrustedDeviceCookie(UserProfile.Id pid, HttpServletResponse response) {
+	public void clearTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response) {
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		ServletUtils.eraseCookie(response, name);
 	}
 	
-	public TrustedDeviceCookie readTrustedDeviceCookie(UserProfile.Id pid, HttpServletRequest request) {
+	public TrustedDeviceCookie readTrustedDeviceCookie(UserProfileId pid, HttpServletRequest request) {
 		String secret = getSecret(pid);
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		return ServletUtils.getEncryptedCookie(secret, request, name, TrustedDeviceCookie.class);
 	}
 	
-	public void writeTrustedDeviceCookie(UserProfile.Id pid, HttpServletResponse response, TrustedDeviceCookie tdc) {
+	public void writeTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response, TrustedDeviceCookie tdc) {
 		String secret = getSecret(pid);
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		int duration = 60*60*24*365*2; // 2 years

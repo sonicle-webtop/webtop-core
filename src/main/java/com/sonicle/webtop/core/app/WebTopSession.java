@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.commons.web.json.extjs.ExtManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -49,12 +48,12 @@ import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.ServiceSharePermission;
-import com.sonicle.webtop.core.msg.InformationMessage;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
@@ -282,7 +281,7 @@ public class WebTopSession {
 	 * Note that this can be null if the user is not authenticated. (eg. public area)
 	 * @return The UserProfile's ID
 	 */
-	public UserProfile.Id getProfileId() {
+	public UserProfileId getProfileId() {
 		return (profile == null) ? null : profile.getId();
 	}
 	
@@ -326,7 +325,7 @@ public class WebTopSession {
 		Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();
 		
 		Subject subject = RunContext.getSubject();
-		UserProfile.Id profileId = RunContext.getRunProfileId(subject);
+		UserProfileId profileId = RunContext.getRunProfileId(subject);
 		
 		emptyServiceManagers();
 		
@@ -522,7 +521,7 @@ public class WebTopSession {
 	
 	public javax.mail.Session getMailSession() {
 		synchronized(lock1) {
-			UserProfile.Id pid = getProfileId();
+			UserProfileId pid = getProfileId();
 			if (pid != null && mailSession == null) {
 				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 				String smtphost=css.getSMTPHost();

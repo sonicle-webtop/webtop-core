@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.ibm.icu.text.MessageFormat;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.NotificationHelper;
@@ -46,10 +47,16 @@ import java.util.Locale;
  */
 public class TplHelper {
 	
+	public static String buildOtpCodeVerificationEmail(Locale locale, String verificationCode) throws IOException, TemplateException {
+		String source = NotificationHelper.buildSource(locale, CoreManifest.ID);
+		String bodyMessage = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_MESSAGE);
+		bodyMessage = MessageFormat.format(bodyMessage, verificationCode);
+		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
+	}
+	
 	public static String buildDeviceSyncCheckEmail(Locale locale) throws IOException, TemplateException {
 		String source = NotificationHelper.buildSource(locale, CoreManifest.ID);
 		String bodyMessage = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE);
-		
 		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
 	}
 }

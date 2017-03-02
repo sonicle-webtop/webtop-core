@@ -47,10 +47,8 @@ import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
-import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -86,16 +84,15 @@ import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -466,7 +463,7 @@ public class Service extends BaseService {
 			} else if(crud.equals(Crud.DELETE)) {
 				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
 				
-				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
+				UserProfileId pid = new UserProfileId(profileIds.get(0));
 				coreadm.deleteGroup(pid);
 				
 				new JsonResult().printTo(out);
@@ -485,7 +482,7 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				
-				UserProfile.Id pid = new UserProfile.Id(id);
+				UserProfileId pid = new UserProfileId(id);
 				GroupEntity group = coreadm.getGroup(pid);
 				new JsonResult(new JsGroup(group)).printTo(out);
 				
@@ -523,7 +520,7 @@ public class Service extends BaseService {
 				boolean deep = ServletUtils.getBooleanParameter(request, "deep", false);
 				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
 				
-				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
+				UserProfileId pid = new UserProfileId(profileIds.get(0));
 				coreadm.deleteUser(deep, pid);
 				
 				new JsonResult().printTo(out);
@@ -531,7 +528,7 @@ public class Service extends BaseService {
 			} else if(crud.equals("enable") || crud.equals("disable")) {
 				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
 				
-				UserProfile.Id pid = new UserProfile.Id(profileIds.get(0));
+				UserProfileId pid = new UserProfileId(profileIds.get(0));
 				coreadm.updateUser(pid, crud.equals("enable"));
 				
 				new JsonResult().printTo(out);
@@ -550,7 +547,7 @@ public class Service extends BaseService {
 			if(crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				
-				UserProfile.Id pid = new UserProfile.Id(id);
+				UserProfileId pid = new UserProfileId(id);
 				UserEntity user = coreadm.getUser(pid);
 				new JsonResult(new JsUser(user)).printTo(out);
 				
@@ -580,7 +577,7 @@ public class Service extends BaseService {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
 			
-			UserProfile.Id pid = new UserProfile.Id(profileId);
+			UserProfileId pid = new UserProfileId(profileId);
 			coreadm.updateUserPassword(pid, newPassword);
 			
 			new JsonResult().printTo(out);

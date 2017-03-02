@@ -38,8 +38,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import com.sonicle.webtop.core.sdk.UserProfile;
-import java.io.IOException;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.sql.Connection;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -56,10 +55,10 @@ public class SessionComManager {
 	private final static Logger logger = WT.getLogger(SessionComManager.class);
 	private SessionManager sesm = null;
 	private final String sessionId;
-	private final UserProfile.Id profileId;
+	private final UserProfileId profileId;
 	private final ArrayDeque<ServiceMessage> messageQueue = new ArrayDeque<>();
 	
-	public SessionComManager(SessionManager sesm, String sessionId, UserProfile.Id profileId) {
+	public SessionComManager(SessionManager sesm, String sessionId, UserProfileId profileId) {
 		this.sesm = sesm;
 		this.sessionId = sessionId;
 		this.profileId = profileId;

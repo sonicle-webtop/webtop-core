@@ -39,7 +39,7 @@ package com.sonicle.webtop.core.sdk;
  */
 public class AuthPermissionException extends AuthException {
 	
-	public AuthPermissionException(UserProfile.Id pid, String resource, String action) {
+	public AuthPermissionException(UserProfileId pid, String resource, String action) {
 		super("Profile [{0}] ha");
 	}
 }

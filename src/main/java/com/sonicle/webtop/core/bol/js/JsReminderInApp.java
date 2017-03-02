@@ -36,11 +36,9 @@ package com.sonicle.webtop.core.bol.js;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -78,7 +76,7 @@ public class JsReminderInApp {
 		timezone = rem.getTimezone();
 	}
 	
-	public static ReminderInApp createReminderInApp(UserProfile.Id profileId, JsReminderInApp js) {
+	public static ReminderInApp createReminderInApp(UserProfileId profileId, JsReminderInApp js) {
 		ReminderInApp rem = new ReminderInApp(js.serviceId, profileId, js.type, js.instanceId);
 		rem.setTitle(js.title);
 		rem.setDate(DateTimeUtils.parseYmdHmsWithZone(js.date, DateTimeZone.forID(js.timezone)));

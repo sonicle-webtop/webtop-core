@@ -45,13 +45,13 @@ import javax.servlet.http.HttpServletResponse;
 public abstract class BaseUserOptionsService extends AbstractService {	
 	private boolean configured = false;
 	private UserProfile sessionProfile;
-	private UserProfile.Id targetProfileId;
+	private UserProfileId targetProfileId;
 	
 	public BaseUserOptionsService() {
 		super();
 	}
 
-	public final void configure(UserProfile sessionProfile, UserProfile.Id targetProfileId) {
+	public final void configure(UserProfile sessionProfile, UserProfileId targetProfileId) {
 		if(configured) return;
 		configured = true;
 		this.sessionProfile = sessionProfile;
@@ -62,7 +62,7 @@ public abstract class BaseUserOptionsService extends AbstractService {
 		return sessionProfile;
 	}
 	
-	public UserProfile.Id getTargetProfileId() {
+	public UserProfileId getTargetProfileId() {
 		return targetProfileId;
 	}
 	

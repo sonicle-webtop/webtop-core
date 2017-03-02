@@ -44,7 +44,7 @@ public class ReminderInApp extends BaseReminder {
 	private DateTime date;
 	private String timezone;
 
-	public ReminderInApp(String serviceId, UserProfile.Id profileId, String type, String instanceId) {
+	public ReminderInApp(String serviceId, UserProfileId profileId, String type, String instanceId) {
 		super(serviceId, profileId, type, instanceId);
 	}
 

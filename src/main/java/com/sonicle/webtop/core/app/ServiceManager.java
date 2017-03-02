@@ -55,6 +55,7 @@ import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesProfiles;
@@ -515,7 +516,7 @@ public class ServiceManager {
 	 * @param serviceId The service ID.
 	 * @param profileId The user profile ID.
 	 */
-	public void initializeProfile(String serviceId, UserProfile.Id profileId) {
+	public void initializeProfile(String serviceId, UserProfileId profileId) {
 		if(!profileInitializedCheck(serviceId, profileId)) {
 			ServiceDescriptor descr = getDescriptor(serviceId);
 			if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
@@ -542,7 +543,7 @@ public class ServiceManager {
 	 * @param serviceId The service ID.
 	 * @param profileId The user profile ID.
 	 */
-	public void cleanupProfile(String serviceId, UserProfile.Id profileId) {
+	public void cleanupProfile(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
 			BaseController instance = getController(serviceId);
@@ -567,7 +568,7 @@ public class ServiceManager {
 	 * @param profileId The user profile ID.
 	 * @return The original value read before any update.
 	 */
-	private boolean profileInitializedCheck(String serviceId, UserProfile.Id profileId) {
+	private boolean profileInitializedCheck(String serviceId, UserProfileId profileId) {
 		synchronized(lock2) {
 			SettingsManager setMgr = wta.getSettingsManager();
 			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED), false);
@@ -723,21 +724,21 @@ public class ServiceManager {
 		}
 	}
 	
-	public CoreManager instantiateCoreManager(boolean fastInit, UserProfile.Id targetProfileId) {
+	public CoreManager instantiateCoreManager(boolean fastInit, UserProfileId targetProfileId) {
 		return new CoreManager(wta, fastInit, targetProfileId);
 	}
 	
-	public CoreAdminManager instantiateCoreAdminManager(boolean fastInit, UserProfile.Id targetProfileId) {
+	public CoreAdminManager instantiateCoreAdminManager(boolean fastInit, UserProfileId targetProfileId) {
 		return new CoreAdminManager(wta, fastInit, targetProfileId);
 	}
 	
-	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfile.Id targetProfileId) {
+	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasManager()) return null;
 		
 		try {
 			Class clazz = descr.getManagerClass();
-			Constructor<BaseManager> constructor = clazz.getConstructor(boolean.class, UserProfile.Id.class);
+			Constructor<BaseManager> constructor = clazz.getConstructor(boolean.class, UserProfileId.class);
 			return constructor.newInstance(fastInit, targetProfileId);
 		} catch(Throwable t) {
 			logger.error("Manager: instantiation failure [{}]", descr.getManifest().getManagerClassName(), t);
@@ -796,7 +797,7 @@ public class ServiceManager {
 		}
 	}
 	
-	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfile.Id targetProfileId) {
+	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfileId targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
 		

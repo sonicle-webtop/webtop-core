@@ -48,12 +48,12 @@ import sun.reflect.Reflection;
  */
 public abstract class BaseManager {
 	public final String SERVICE_ID;
-	private final UserProfile.Id targetProfile;
+	private final UserProfileId targetProfile;
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
 	
-	public BaseManager(boolean fastInit, UserProfile.Id targetProfileId) {
+	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
 		this.fastInit = fastInit;
 		this.targetProfile = targetProfileId;
@@ -70,7 +70,7 @@ public abstract class BaseManager {
 		return WT.LOCALE_ENGLISH;
 	}
 	
-	public UserProfile.Id getTargetProfileId() {
+	public UserProfileId getTargetProfileId() {
 		return targetProfile;
 	}
 	
@@ -92,7 +92,7 @@ public abstract class BaseManager {
 	 * @throws AuthException When profiles not match.
 	 */
 	public void ensureUser() throws AuthException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		if(RunContext.isWebTopAdmin(runPid)) return;
 		if(!runPid.equals(getTargetProfileId())) throw new AuthException("");
 	}
@@ -103,7 +103,7 @@ public abstract class BaseManager {
 	 * @throws AuthException When domain IDs do not match.
 	 */
 	public void ensureUserDomain() throws AuthException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		if(RunContext.isWebTopAdmin(runPid)) return;
 		if(!runPid.hasDomain(getTargetProfileId().getDomainId())) throw new AuthException("Domain ID for the running profile [{0}] does not match with the target [{1}]", runPid.getDomainId(), getTargetProfileId().getDomainId());
 	}
@@ -114,7 +114,7 @@ public abstract class BaseManager {
 	 * @throws AuthException When domain IDs do not match.
 	 */
 	public void ensureUserDomain(String domainId) throws AuthException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		if(RunContext.isWebTopAdmin(runPid)) return;
 		if(!runPid.hasDomain(domainId)) throw new AuthException("Domain ID for the running profile [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
 	}

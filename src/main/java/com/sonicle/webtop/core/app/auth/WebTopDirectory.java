@@ -46,7 +46,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OLocalVaultEntry;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.LocalVaultDAO;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -132,7 +132,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			con = wta.getConnectionManager().getConnection();
 			
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
-			if (entry == null) throw new DirectoryException("User not found [{0}]", new UserProfile.Id(principal.getDomainId(), principal.getUserId()).toString());
+			if (entry == null) throw new DirectoryException("User not found [{0}]", new UserProfileId(principal.getDomainId(), principal.getUserId()).toString());
 			
 			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
 			boolean result = CredentialAlgorithm.compare(algo, new String(principal.getPassword()), entry.getPassword());
@@ -207,7 +207,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			con = wta.getConnectionManager().getConnection();
 			
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
-			if(entry == null) throw new DirectoryException("User not found [{0}]", new UserProfile.Id(domainId, userId).toString());
+			if(entry == null) throw new DirectoryException("User not found [{0}]", new UserProfileId(domainId, userId).toString());
 			
 			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
 			if(oldPassword != null) {

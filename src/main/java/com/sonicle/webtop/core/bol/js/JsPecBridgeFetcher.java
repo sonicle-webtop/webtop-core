@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 
 /**
  *
@@ -54,7 +54,7 @@ public class JsPecBridgeFetcher {
 	public JsPecBridgeFetcher() {}
 	
 	public JsPecBridgeFetcher(OPecBridgeFetcher o) {
-		UserProfile.Id pid = new UserProfile.Id(o.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(o.getWebtopProfileId());
 		fetcherId = o.getFetcherId();
 		domainId = pid.getDomainId();
 		userId = pid.getUserId();
@@ -71,7 +71,7 @@ public class JsPecBridgeFetcher {
 	public static OPecBridgeFetcher buildFetcher(JsPecBridgeFetcher js) {
 		OPecBridgeFetcher o = new OPecBridgeFetcher();
 		o.setFetcherId(js.fetcherId);
-		o.setWebtopProfileId(new UserProfile.Id(js.domainId, js.userId).toString());
+		o.setWebtopProfileId(new UserProfileId(js.domainId, js.userId).toString());
 		o.setHost(js.host);
 		o.setPort(js.port);
 		o.setUsername(js.username);

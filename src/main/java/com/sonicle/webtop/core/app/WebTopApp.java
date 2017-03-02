@@ -67,7 +67,7 @@ import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
@@ -138,11 +138,11 @@ public final class WebTopApp {
 	private static WebTopApp instance = null;
 	private static final Object lockInstance = new Object();
 	
-	private static Subject buildSubject(UserProfile.Id pid) {
+	private static Subject buildSubject(UserProfileId pid) {
 		return buildSubject(pid, null);
 	}
 	
-	private static Subject buildSubject(UserProfile.Id pid, String sessionId) {
+	private static Subject buildSubject(UserProfileId pid, String sessionId) {
 		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
 		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
 		if(StringUtils.isBlank(sessionId)) {
@@ -164,7 +164,7 @@ public final class WebTopApp {
 		synchronized(lockInstance) {
 			if(instance != null) throw new RuntimeException("Application must be started once");
 			SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
-			Subject adminSubject = buildSubject(new UserProfile.Id("*", "admin"));
+			Subject adminSubject = buildSubject(new UserProfileId("*", "admin"));
 			
 			ThreadState threadState = new SubjectThreadState(adminSubject);
 			try {
@@ -544,7 +544,7 @@ public final class WebTopApp {
 	
 	
 	public Subject bindAdminSubjectToSession(String sessionId) {
-		return buildSubject(new UserProfile.Id("*", "admin"), sessionId);
+		return buildSubject(new UserProfileId("*", "admin"), sessionId);
 	}
 	
 	private CoreServiceSettings getCoreServiceSettings() {
@@ -1092,7 +1092,7 @@ public final class WebTopApp {
         Transport.send(msg);
 	}
 	
-	public void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+	public void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		List<WebTopSession> sessions = sesmgr.getWebTopSessions(profileId);
 		if(!sessions.isEmpty()) {
 			for(WebTopSession session : sessions) {

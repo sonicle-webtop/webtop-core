@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -75,14 +75,14 @@ public class RunContext {
 		return (session != null) ? session.getId().toString() : null;
 	}
 	
-	public static UserProfile.Id getRunProfileId() {
+	public static UserProfileId getRunProfileId() {
 		return getRunProfileId(getSubject());
 	}
 	
-	public static UserProfile.Id getRunProfileId(Subject subject) {
+	public static UserProfileId getRunProfileId(Subject subject) {
 		if(subject == null) return null;
 		if(subject.getPrincipal() == null) return null;
-		return new UserProfile.Id(((Principal)subject.getPrincipal()).getName());
+		return new UserProfileId(((Principal)subject.getPrincipal()).getName());
 	}
 	
 	public static String getWebTopClientID() {
@@ -133,15 +133,15 @@ public class RunContext {
 		return !principals.isEmpty() && isPermitted(principals, serviceId, key, action, instance);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key) {
+	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key) {
 		return isPermitted(buildPrincipalCollection(profileId), serviceId, key);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key, String action) {
+	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key, String action) {
 		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
 	}
 	
-	public static boolean isPermitted(UserProfile.Id profileId, String serviceId, String key, String action, String instance) {
+	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key, String action, String instance) {
 		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
 	}
 	
@@ -163,11 +163,11 @@ public class RunContext {
 		return !principals.isEmpty() && isWebTopAdmin(principals);
 	}
 	
-	public static boolean isSysAdmin(UserProfile.Id profileId) {
+	public static boolean isSysAdmin(UserProfileId profileId) {
 		return isSysAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	public static boolean isWebTopAdmin(UserProfile.Id profileId) {
+	public static boolean isWebTopAdmin(UserProfileId profileId) {
 		return isWebTopAdmin(buildPrincipalCollection(profileId));
 	}
 	
@@ -195,15 +195,15 @@ public class RunContext {
 		ensureIsPermitted(subject.getPrincipals(), serviceId, key, action, instance);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key) throws AuthException {
+	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key) throws AuthException {
 		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key, String action) throws AuthException {
+	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key, String action) throws AuthException {
 		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
 	}
 	
-	public static void ensureIsPermitted(UserProfile.Id profileId, String serviceId, String key, String action, String instance) throws AuthException {
+	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key, String action, String instance) throws AuthException {
 		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
 	}
 		
@@ -223,15 +223,15 @@ public class RunContext {
 		ensureIsWebTopAdmin(subject.getPrincipals());
 	}
 	
-	public static void ensureIsSysAdmin(UserProfile.Id profileId) throws AuthException {
+	public static void ensureIsSysAdmin(UserProfileId profileId) throws AuthException {
 		ensureIsSysAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	public static void ensureIsWebTopAdmin(UserProfile.Id profileId) throws AuthException {
+	public static void ensureIsWebTopAdmin(UserProfileId profileId) throws AuthException {
 		ensureIsWebTopAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	static PrincipalCollection buildPrincipalCollection(UserProfile.Id pid) {
+	static PrincipalCollection buildPrincipalCollection(UserProfileId pid) {
 		Subject subject = getSubject();
 		if((subject != null) && pid.equals(getRunProfileId(subject))) {
 			return subject.getPrincipals();

@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
@@ -97,7 +97,7 @@ public class SessionManager {
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
 	private final HashSet<String> onlineWebTopClientIds = new HashSet<>();
 	private final HashMap<String, Integer> wsPushSessions = new HashMap<>();
-	private final HashMap<UserProfile.Id, ProfileSids> profileSidsCache = new HashMap<>();
+	private final HashMap<UserProfileId, ProfileSids> profileSidsCache = new HashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -244,7 +244,7 @@ public class SessionManager {
 		WebTopSession wts = SessionManager.getWebTopSession(session);
 		if (wts != null) {
 			String sid = session.getId().toString();
-			UserProfile.Id pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
+			UserProfileId pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
 			wts.cleanup();
 			if(pid != null) {
 				unregisterWebTopSession(session, pid);
@@ -258,7 +258,7 @@ public class SessionManager {
 		synchronized(onlineSessions) {
 			String sid = session.getId().toString();
 			if(onlineSessions.containsKey(sid)) throw new WTException("Session [{0}] is already registered", sid);
-			UserProfile.Id pid = wts.getUserProfile().getId();
+			UserProfileId pid = wts.getUserProfile().getId();
 			if(pid == null) throw new WTException("Session [{0}] is not bound to a user", sid);
 			
 			onlineSessions.put(sid, wts);
@@ -270,7 +270,7 @@ public class SessionManager {
 		}
 	}
 	
-	private void unregisterWebTopSession(Session session, UserProfile.Id profileId) throws WTException {
+	private void unregisterWebTopSession(Session session, UserProfileId profileId) throws WTException {
 		synchronized(onlineSessions) {
 			String sid = session.getId().toString();
 			if(onlineSessions.containsKey(sid)) {
@@ -342,7 +342,7 @@ public class SessionManager {
 		}
 	}
 	
-	public List<WebTopSession> getWebTopSessions(UserProfile.Id profileId) {
+	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
 		List<WebTopSession> list = new ArrayList<>();
 		synchronized(onlineSessions) {
 			if(profileSidsCache.get(profileId) != null) {
@@ -376,7 +376,7 @@ public class SessionManager {
 		return onlineSessions.containsKey(sessionId);
 	}
 	
-	public boolean isOnline(UserProfile.Id profileId, String webtopClientId) {
+	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
 		return onlineWebTopClientIds.contains(profileId.toString() + "|" + webtopClientId);
 	}
 	

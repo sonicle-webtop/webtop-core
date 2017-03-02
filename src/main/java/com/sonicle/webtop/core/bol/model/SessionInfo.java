@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.model;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import org.apache.shiro.session.Session;
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
@@ -54,7 +54,7 @@ public class SessionInfo {
 	
 	public SessionInfo() {}
 	
-	public SessionInfo(DateTime now, Session session, UserProfile.Id profileId, int pushSessionsCount) {
+	public SessionInfo(DateTime now, Session session, UserProfileId profileId, int pushSessionsCount) {
 		this.sessionId = session.getId().toString();
 		this.timeout = (session.getTimeout() < 0) ? -1 : (int)session.getTimeout()/1000;
 		this.creationTime = new DateTime(session.getStartTimestamp());

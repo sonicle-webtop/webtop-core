@@ -88,9 +88,12 @@ import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.sdk.WTLocalizedException;
+import com.sonicle.webtop.core.util.NotificationHelper;
+import freemarker.template.TemplateException;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -459,7 +462,7 @@ public class Service extends BaseService {
 			
 			if(wildcard) items.add(JsSimple.wildcard(lookupResource(up.getLocale(), CoreLocaleKey.WORD_ALL_MALE)));
 			for(OUser user : users) {
-				final String id = fullId ? new UserProfile.Id(user.getDomainId(), user.getUserId()).toString() : user.getUserId();
+				final String id = fullId ? new UserProfileId(user.getDomainId(), user.getUserId()).toString() : user.getUserId();
 				items.add(new JsSimple(id, JsSimple.description(user.getDisplayName(), user.getUserId())));
 			}
 			
@@ -476,7 +479,7 @@ public class Service extends BaseService {
 		
 		try {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
-			UserProfile.Id pid = new UserProfile.Id(profileId);
+			UserProfileId pid = new UserProfileId(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
 			List<OActivity> activities = coreMgr.listLiveActivities(pid);
@@ -535,7 +538,7 @@ public class Service extends BaseService {
 		try {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			String customerId = ServletUtils.getStringParameter(request, "customerId", null);
-			UserProfile.Id pid = new UserProfile.Id(profileId);
+			UserProfileId pid = new UserProfileId(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
 			List<OCausal> causals = coreMgr.listLiveCausals( pid, customerId);
@@ -612,7 +615,7 @@ public class Service extends BaseService {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			String parentCustomerId = ServletUtils.getStringParameter(request, "parentCustomerId", null);
 			String query = ServletUtils.getStringParameter(request, "query", "");
-			UserProfile.Id pid = new UserProfile.Id(profileId);
+			UserProfileId pid = new UserProfileId(profileId);
 			CustomerDAO cdao = CustomerDAO.getInstance();
 			con = WT.getCoreConnection();
 			
@@ -697,7 +700,7 @@ public class Service extends BaseService {
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			
-			UserProfile.Id targetPid = new UserProfile.Id(id);
+			UserProfileId targetPid = new UserProfileId(id);
 			if(getWts().getProfileId().equals(targetPid)) {
 				data = coreMgr.listUserOptionServices();
 			} else {
@@ -857,7 +860,7 @@ public class Service extends BaseService {
 	
 	public void processManageOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
-		UserProfile.Id pid = getEnv().getProfile().getId();
+		UserProfileId pid = getEnv().getProfile().getId();
 		CoreManager corem = null;
 		
 		try {
@@ -866,7 +869,7 @@ public class Service extends BaseService {
 				// These work only on a target user!
 				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 				
-				UserProfile.Id targetPid = new UserProfile.Id(profileId);
+				UserProfileId targetPid = new UserProfileId(profileId);
 				corem = (targetPid.equals(coreMgr.getTargetProfileId())) ? coreMgr : WT.getCoreManager(targetPid);
 				
 				if(operation.equals("configure")) {
@@ -934,6 +937,52 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error in ManageOTP").printTo(out);
 		}
 	}
+	
+	private void sendOtpCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String verificationCode) {
+		try {
+			String bodyHeader = WT.lookupResource(SERVICE_ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER);
+			String subject = NotificationHelper.buildSubject(locale, SERVICE_ID, bodyHeader);
+			String html = TplHelper.buildOtpCodeVerificationEmail(locale, verificationCode);
+
+			InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
+			if(from == null) throw new WTException("Error building sender address");
+			WT.sendEmail(WT.getGlobalMailSession(pid), true, from, to, subject, html);
+
+		} catch(IOException | TemplateException ex) {
+			logger.error("Unable to build email template", ex);
+		} catch(Exception ex) {
+			logger.error("Unable to send email", ex);
+		}
+	}
+	
+	/*
+	private void sendOtpCodeEmail2(OSharingLink olink, String path, String ipAddress, String userAgent) throws WTException {
+		final String BHD_KEY = (olink.getLinkType().equals(SharingLink.TYPE_DOWNLOAD)) ? VfsLocale.TPL_EMAIL_SHARINGLINKUSAGE_BODY_HEADER_DL : VfsLocale.TPL_EMAIL_SHARINGLINKUSAGE_BODY_HEADER_UL;
+		UserProfileId pid = olink.getProfileId();
+		
+		//TODO: rendere relativa la path del file rispetto allo Store???
+		try {
+			UserProfile.Data ud = WT.getUserData(olink.getProfileId());
+			String bodyHeader = lookupResource(ud.getLocale(), BHD_KEY);
+			String source = NotificationHelper.buildSource(ud.getLocale(), SERVICE_ID);
+			String subject = TplHelper.buildLinkUsageEmailSubject(ud.getLocale(), bodyHeader);
+			String customBody = TplHelper.buildLinkUsageBodyTpl(ud.getLocale(), olink.getSharingLinkId(), PathUtils.getFileName(olink.getFilePath()), path, ipAddress, userAgent);
+			String html = NotificationHelper.buildCustomBodyTplForNoReplay(ud.getLocale(), source, bodyHeader, customBody);
+
+			//InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
+			//if(from == null) throw new WTException("Error building sender address");
+			InternetAddress from = WT.getNotificationAddress(pid.getDomainId());
+			InternetAddress to = ud.getEmail();
+			if(to == null) throw new WTException("Error building destination address");
+			WT.sendEmail(getMailSession(), true, from, to, subject, html);
+
+		} catch(IOException | TemplateException ex) {
+			logger.error("Unable to build email template", ex);
+		} catch(Exception ex) {
+			logger.error("Unable to send email", ex);
+		}
+	}
+	*/
 	
 	public void processGetOTPGoogleAuthQRCode(HttpServletRequest request, HttpServletResponse response) {
 		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();

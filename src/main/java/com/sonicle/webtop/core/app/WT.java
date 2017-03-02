@@ -37,7 +37,6 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.CoreManager;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.BaseManager;
@@ -45,6 +44,7 @@ import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
 import com.sonicle.webtop.core.util.LoggerUtils;
@@ -197,7 +197,7 @@ public class WT {
 		//return RunContext.getWebTopSession().getCoreManager();
 	}
 	
-	public static CoreManager getCoreManager(UserProfile.Id targetProfileId) {
+	public static CoreManager getCoreManager(UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getCoreManager();
 		} else {
@@ -205,7 +205,7 @@ public class WT {
 		}
 	}
 	
-	public static CoreAdminManager getCoreAdminManager(UserProfile.Id targetProfileId) {
+	public static CoreAdminManager getCoreAdminManager(UserProfileId targetProfileId) {
 		//TODO: verificare
 		return getWTA().getServiceManager().instantiateCoreAdminManager(false, targetProfileId);
 	}
@@ -222,7 +222,7 @@ public class WT {
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
 	}
 	
-	public static BaseManager getServiceManager(String serviceId, UserProfile.Id targetProfileId) {
+	public static BaseManager getServiceManager(String serviceId, UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
@@ -282,17 +282,17 @@ public class WT {
 	}
 	
 	public static String getServiceHomePath(String serviceId) {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
 	}
 	
 	public static String getTempPath() {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().getTempPath(runPid.getDomain());
 	}
 	
 	public static File getTempFolder() throws WTException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().getTempFolder(runPid.getDomain());
 	}
 	
@@ -301,12 +301,12 @@ public class WT {
 	}
 	
 	public static File createTempFile(String prefix, String suffix) throws WTException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
 	}
 	
 	public static boolean deleteTempFile(String filename) throws WTException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().deleteTempFile(runPid.getDomain(), filename);
 	}
 	
@@ -335,7 +335,7 @@ public class WT {
 	}
 	
 	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {
-		UserProfile.Id runPid = RunContext.getRunProfileId();
+		UserProfileId runPid = RunContext.getRunProfileId();
 		getWTA().getReportManager().generateToStream(runPid.getDomain(), report, outputType, outputStream);
 	}
 	
@@ -348,7 +348,7 @@ public class WT {
 		}
 	}
 	
-	public static UserProfile.Data getUserData(UserProfile.Id profileId) {
+	public static UserProfile.Data getUserData(UserProfileId profileId) {
 		try {
 			return getWTA().getWebTopManager().userData(profileId);
 		} catch(WTException ex) {
@@ -366,7 +366,7 @@ public class WT {
 		}
 	}
 	
-	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id profileId) {
+	public static UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId profileId) {
 		try {
 			return getWTA().getWebTopManager().userPersonalInfo(profileId);
 		} catch(WTException ex) {
@@ -387,7 +387,7 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
-	public static Session getGlobalMailSession(UserProfile.Id pid) {
+	public static Session getGlobalMailSession(UserProfileId pid) {
 		return getGlobalMailSession(pid.getDomainId());
 	}
 	
@@ -405,19 +405,19 @@ public class WT {
 		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, null, null, null, data);
 	}
 	
-	public static void notify(UserProfile.Id profileId, ServiceMessage message) {
+	public static void notify(UserProfileId profileId, ServiceMessage message) {
 		WT.notify(profileId, message, false);
 	}
 	
-	public static void notify(UserProfile.Id profileId, ServiceMessage message, boolean enqueueIfOffline) {
+	public static void notify(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
 		notify(profileId, Arrays.asList(new ServiceMessage[]{message}), enqueueIfOffline);
 	}
 	
-	public static void notify(UserProfile.Id profileId, List<ServiceMessage> messages) {
+	public static void notify(UserProfileId profileId, List<ServiceMessage> messages) {
 		notify(profileId, messages, false);
 	}
 	
-	public static void notify(UserProfile.Id profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
+	public static void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		getWTA().notify(profileId, messages, enqueueIfOffline);
 	}
 	

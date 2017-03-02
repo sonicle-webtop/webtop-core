@@ -101,6 +101,7 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
@@ -154,14 +155,14 @@ public final class WebTopManager {
 	private final HashMap<String, String> cacheInternetNameToDomain = new HashMap<>();
 	
 	private final Object lock1 = new Object();
-	private final HashMap<UserProfile.Id, String> cacheUserToUserUid = new HashMap<>();
-	private final HashMap<String, UserProfile.Id> cacheUserUidToUser = new HashMap<>();
+	private final HashMap<UserProfileId, String> cacheUserToUserUid = new HashMap<>();
+	private final HashMap<String, UserProfileId> cacheUserUidToUser = new HashMap<>();
 	private final Object lock2 = new Object();
-	private final HashMap<UserProfile.Id, String> cacheGroupToGroupUid = new HashMap<>();
-	private final HashMap<String, UserProfile.Id> cacheGroupUidToGroup = new HashMap<>();
+	private final HashMap<UserProfileId, String> cacheGroupToGroupUid = new HashMap<>();
+	private final HashMap<String, UserProfileId> cacheGroupUidToGroup = new HashMap<>();
 	
-	private final HashMap<UserProfile.Id, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
-	private final HashMap<UserProfile.Id, UserProfile.Data> cacheUserToData = new HashMap<>();
+	private final HashMap<UserProfileId, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
+	private final HashMap<UserProfileId, UserProfile.Data> cacheUserToData = new HashMap<>();
 	private final Object lock3 = new Object();
 	
 	/**
@@ -188,7 +189,7 @@ public final class WebTopManager {
 		logger.info("UserManager destroyed");
 	}
 	
-	public void cleanUserProfileCache(UserProfile.Id pid) {
+	public void cleanUserProfileCache(UserProfileId pid) {
 		removeFromUserCache(pid);
 	}
 	
@@ -485,7 +486,7 @@ public final class WebTopManager {
 			
 			if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 				for(OUser ouser : ousers) {
-					final UserProfile.Id pid = new UserProfile.Id(ouser.getDomainId(), ouser.getUserId());
+					final UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
 					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
 				}
 			}
@@ -518,7 +519,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public List<UserProfile.Id> listUserProfileIdsByEmail(String emailAddress) throws WTException {
+	public List<UserProfileId> listUserProfileIdsByEmail(String emailAddress) throws WTException {
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
@@ -526,9 +527,9 @@ public final class WebTopManager {
 			con = wta.getConnectionManager().getConnection();
 			
 			List<UserId> uids = uidao.viewByEmail(con, emailAddress);
-			ArrayList<UserProfile.Id> items = new ArrayList<>();
+			ArrayList<UserProfileId> items = new ArrayList<>();
 			for(UserId uid : uids) {
-				items.add(new UserProfile.Id(uid.getDomainId(), uid.getUserId()));
+				items.add(new UserProfileId(uid.getDomainId(), uid.getUserId()));
 			}
 			return items;
 			
@@ -540,7 +541,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public OUser getUser(UserProfile.Id pid) throws WTException {
+	public OUser getUser(UserProfileId pid) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
@@ -555,7 +556,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserEntity getUserEntity(UserProfile.Id pid) throws WTException {
+	public UserEntity getUserEntity(UserProfileId pid) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -569,7 +570,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	private UserEntity getUserEntity(Connection con, UserProfile.Id pid) throws WTException {
+	private UserEntity getUserEntity(Connection con, UserProfileId pid) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
@@ -660,7 +661,7 @@ public final class WebTopManager {
 			addToUserUidCache(new UserUid(ouser.getDomainId(), user.getUserId(), ouser.getUserUid()));
 
 			// Explicitly sets some important (locale & timezone) user settings to their defaults
-			UserProfile.Id pid = new UserProfile.Id(ouser.getDomainId(), ouser.getUserId());
+			UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, ouser.getDomainId());
 			CoreUserSettings cus = new CoreUserSettings(pid);
 			cus.setLanguageTag(css.getDefaultLanguageTag());
@@ -678,7 +679,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public CheckUserResult checkUser(UserProfile.Id pid) throws WTException {
+	public CheckUserResult checkUser(UserProfileId pid) throws WTException {
 		return checkUser(pid.getDomainId(), pid.getUserId());
 	}
 	
@@ -716,7 +717,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public boolean updateUser(UserProfile.Id pid, boolean enabled) throws WTException {
+	public boolean updateUser(UserProfileId pid, boolean enabled) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
@@ -731,7 +732,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void updateUserPassword(UserProfile.Id pid, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
+	public void updateUserPassword(UserProfileId pid, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
 				
 		try {
 			AuthenticationDomain ad = null;
@@ -762,7 +763,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void deleteUser(UserProfile.Id pid, boolean cleanupDirectory) throws WTException {
+	public void deleteUser(UserProfileId pid, boolean cleanupDirectory) throws WTException {
 		UserDAO udao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
@@ -864,7 +865,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public boolean updateUserDisplayName(UserProfile.Id pid, String displayName) throws WTException {
+	public boolean updateUserDisplayName(UserProfileId pid, String displayName) throws WTException {
 		UserDAO dao = UserDAO.getInstance();
 		Connection con = null;
 		
@@ -879,7 +880,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
+	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId pid) throws WTException {
 		UserInfoDAO dao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
@@ -895,7 +896,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public boolean updateUserPersonalInfo(UserProfile.Id pid, UserProfile.PersonalInfo userPersonalInfo) throws WTException {
+	public boolean updateUserPersonalInfo(UserProfileId pid, UserProfile.PersonalInfo userPersonalInfo) throws WTException {
 		UserInfoDAO dao = UserInfoDAO.getInstance();
 		Connection con = null;
 		
@@ -928,7 +929,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public GroupEntity getGroupEntity(UserProfile.Id pid) throws WTException {
+	public GroupEntity getGroupEntity(UserProfileId pid) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -942,7 +943,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	private GroupEntity getGroupEntity(Connection con, UserProfile.Id pid) throws WTException {
+	private GroupEntity getGroupEntity(Connection con, UserProfileId pid) throws WTException {
 		GroupDAO dao = GroupDAO.getInstance();
 		UserAssociationDAO uassdao = UserAssociationDAO.getInstance();
 		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
@@ -1010,7 +1011,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void deleteGroup(UserProfile.Id pid) throws WTException {
+	public void deleteGroup(UserProfileId pid) throws WTException {
 		GroupDAO udao = GroupDAO.getInstance();
 		UserAssociationDAO uadao = UserAssociationDAO.getInstance();
 		RoleAssociationDAO rolassdao = RoleAssociationDAO.getInstance();
@@ -1287,7 +1288,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public List<String> getComputedRolesAsStringByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+	public List<String> getComputedRolesAsStringByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
 		ArrayList<String> uids = new ArrayList<>();
 		Set<RoleWithSource> roles = getComputedRolesByUser(pid, self, transitive);
 		for(RoleWithSource role : roles) {
@@ -1296,7 +1297,7 @@ public final class WebTopManager {
 		return uids;
 	}
 	
-	public Set<RoleWithSource> getComputedRolesByUser(UserProfile.Id pid, boolean self, boolean transitive) throws WTException {
+	public Set<RoleWithSource> getComputedRolesByUser(UserProfileId pid, boolean self, boolean transitive) throws WTException {
 		WebTopManager usrm = wta.getWebTopManager();
 		Connection con = null;
 		HashSet<String> roleMap = new HashSet<>();
@@ -1379,7 +1380,7 @@ public final class WebTopManager {
 		return new EntityPermissions(othersPerms, servicesPerms);
 	}
 	
-	public UserProfile.PersonalInfo userPersonalInfo(UserProfile.Id pid) throws WTException {
+	public UserProfile.PersonalInfo userPersonalInfo(UserProfileId pid) throws WTException {
 		synchronized(cacheUserToPersonalInfo) {
 			if(!cacheUserToPersonalInfo.containsKey(pid)) {
 				UserProfile.PersonalInfo upi = getUserPersonalInfo(pid);
@@ -1392,7 +1393,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserProfile.Data userData(UserProfile.Id pid) throws WTException {
+	public UserProfile.Data userData(UserProfileId pid) throws WTException {
 		synchronized(cacheUserToData) {
 			if(!cacheUserToData.containsKey(pid)) {
 				final UserProfile.Data ud = getUserData(pid);
@@ -1416,7 +1417,7 @@ public final class WebTopManager {
 			if (uids.isEmpty()) return null;
 			
 			UserId uid = uids.get(0);
-			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
+			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
 			return userData(pid);
 			
 		} catch(SQLException | DAOException ex) {
@@ -1427,11 +1428,11 @@ public final class WebTopManager {
 		}
 	}
 	
-	public String userToUid(UserProfile.Id pid) {
+	public String userToUid(UserProfileId pid) {
 		return userToUid(pid,true);
 	}
 	
-	public String userToUid(UserProfile.Id pid, boolean mandatory) {
+	public String userToUid(UserProfileId pid, boolean mandatory) {
 		synchronized(lock1) {
 			if(!cacheUserToUserUid.containsKey(pid)) {
 				if (mandatory)
@@ -1442,30 +1443,30 @@ public final class WebTopManager {
 		}
 	}
 	
-	public UserProfile.Id uidToUser(String uid) {
+	public UserProfileId uidToUser(String uid) {
 		synchronized(lock1) {
 			if(!cacheUserUidToUser.containsKey(uid)) throw new WTRuntimeException("[uidToUserCache] Cache miss on key {0}", uid);
 			return cacheUserUidToUser.get(uid);
 		}
 	}
 	
-	public String groupToUid(UserProfile.Id pid) {
+	public String groupToUid(UserProfileId pid) {
 		synchronized(lock2) {
 			if(!cacheGroupToGroupUid.containsKey(pid)) throw new WTRuntimeException("[groupToUidCache] Cache miss on key {0}", pid.toString());
 			return cacheGroupToGroupUid.get(pid);
 		}
 	}
 	
-	public UserProfile.Id uidToGroup(String uid) {
+	public UserProfileId uidToGroup(String uid) {
 		synchronized(lock2) {
 			if(!cacheGroupUidToGroup.containsKey(uid)) throw new WTRuntimeException("[uidToGroupCache] Cache miss on key {0}", uid);
 			return cacheGroupUidToGroup.get(uid);
 		}
 	}
 	
-	public String getInternetUserId(UserProfile.Id pid) throws WTException {
+	public String getInternetUserId(UserProfileId pid) throws WTException {
 		ODomain domain = getDomain(pid.getDomainId());
-		return new UserProfile.Id(domain.getInternetName(), pid.getUserId()).toString();
+		return new UserProfileId(domain.getInternetName(), pid.getUserId()).toString();
 	}
 	
 	public String getDomainInternetName(String domainId) throws WTException {
@@ -1502,7 +1503,7 @@ public final class WebTopManager {
 		logger.debug("Inserting users associations");
 		HashSet<String> usedUserUids = new HashSet<>();
 		for(AssignedUser assiUser : group.getAssignedUsers()) {
-			final String userUid = userToUid(new UserProfile.Id(group.getDomainId(), assiUser.getUserId()));
+			final String userUid = userToUid(new UserProfileId(group.getDomainId(), assiUser.getUserId()));
 			if (!usedUserUids.contains(userUid)) { // Avoid userUid duplicates
 				doInsertUserAssociation(con, userUid, ogroup.getGroupUid());
 				usedUserUids.add(userUid);
@@ -1553,7 +1554,7 @@ public final class WebTopManager {
 			uadao.deleteById(con, assiUser.getUserAssociationId());
 		}
 		for(AssignedUser assiUser : changeSet1.inserted) {
-			final String userUid = userToUid(new UserProfile.Id(group.getDomainId(), assiUser.getUserId()));
+			final String userUid = userToUid(new UserProfileId(group.getDomainId(), assiUser.getUserId()));
 			doInsertUserAssociation(con, userUid, oldGroup.getGroupUid());
 		}
 		
@@ -1619,7 +1620,7 @@ public final class WebTopManager {
 		logger.debug("Inserting groups associations");
 		HashSet<String> usedGroupUids = new HashSet<>();
 		for(AssignedGroup assiGroup : user.getAssignedGroups()) {
-			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			final String groupUid = groupToUid(new UserProfileId(user.getDomainId(), assiGroup.getGroupId()));
 			if (!usedGroupUids.contains(groupUid)) {
 				// Due to built-in assigned groups, collection of assigned
 				// groups can contain duplicates; so skip them.
@@ -1684,7 +1685,7 @@ public final class WebTopManager {
 			uadao.deleteById(con, assiGroup.getUserAssociationId());
 		}
 		for(AssignedGroup assiGroup : changeSet1.inserted) {
-			final String groupUid = groupToUid(new UserProfile.Id(user.getDomainId(), assiGroup.getGroupId()));
+			final String groupUid = groupToUid(new UserProfileId(user.getDomainId(), assiGroup.getGroupId()));
 			doInsertUserAssociation(con, oldUser.getUserUid(), groupUid);
 		}
 		
@@ -1811,7 +1812,7 @@ public final class WebTopManager {
 		return perm;
 	}
 	
-	private UserProfile.Data getUserData(UserProfile.Id pid) throws WTException {
+	private UserProfile.Data getUserData(UserProfileId pid) throws WTException {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		OUser ouser = getUser(pid);
@@ -1889,19 +1890,19 @@ public final class WebTopManager {
 		}
 	}
 	
-	private void addToUserCache(UserProfile.Id pid, UserProfile.Data userData) {
+	private void addToUserCache(UserProfileId pid, UserProfile.Data userData) {
 		synchronized(cacheUserToData) {
 			cacheUserToData.put(pid, userData);
 		}
 	}
 	
-	private void addToUserCache(UserProfile.Id pid, UserProfile.PersonalInfo userPersonalInfo) {
+	private void addToUserCache(UserProfileId pid, UserProfile.PersonalInfo userPersonalInfo) {
 		synchronized(cacheUserToPersonalInfo) {
 			cacheUserToPersonalInfo.put(pid, userPersonalInfo);
 		}
 	}
 	
-	private void removeFromUserCache(UserProfile.Id pid) {
+	private void removeFromUserCache(UserProfileId pid) {
 		synchronized(cacheUserToData) {
 			cacheUserToData.remove(pid);
 		}
@@ -1940,13 +1941,13 @@ public final class WebTopManager {
 	
 	private void addToUserUidCache(UserUid uid) {
 		synchronized(lock1) {
-			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
+			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
 			cacheUserToUserUid.put(pid, uid.getUserUid());
 			cacheUserUidToUser.put(uid.getUserUid(), pid);
 		}
 	}
 	
-	private void removeFromUserUidCache(UserProfile.Id pid) {
+	private void removeFromUserUidCache(UserProfileId pid) {
 		synchronized(lock1) {
 			if(cacheUserToUserUid.containsKey(pid)) {
 				String uid = cacheUserToUserUid.remove(pid);
@@ -1985,13 +1986,13 @@ public final class WebTopManager {
 	
 	private void addToGroupUidCache(GroupUid uid) {
 		synchronized(lock2) {
-			UserProfile.Id pid = new UserProfile.Id(uid.getDomainId(), uid.getUserId());
+			UserProfileId pid = new UserProfileId(uid.getDomainId(), uid.getUserId());
 			cacheGroupToGroupUid.put(pid, uid.getUserUid());
 			cacheGroupUidToGroup.put(uid.getUserUid(), pid);
 		}
 	}
 	
-	private void removeFromGroupUidCache(UserProfile.Id pid) {
+	private void removeFromGroupUidCache(UserProfileId pid) {
 		synchronized(lock2) {
 			if(cacheGroupToGroupUid.containsKey(pid)) {
 				String uid = cacheGroupToGroupUid.remove(pid);

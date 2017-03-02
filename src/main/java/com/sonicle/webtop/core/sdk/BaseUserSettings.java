@@ -48,20 +48,20 @@ import java.util.List;
 public abstract class BaseUserSettings extends BaseSettings {
 	private SettingsManager setm;
 	protected String serviceId;
-	protected UserProfile.Id profileId;
+	protected UserProfileId profileId;
 
 	//private BaseUserSettings() {}
 	
-	public BaseUserSettings(String serviceId, UserProfile.Id profileId) {
+	public BaseUserSettings(String serviceId, UserProfileId profileId) {
 		this.setm = WebTopApp.getInstance().getSettingsManager();
 		this.serviceId = serviceId;
 		this.profileId = profileId;
 	}
 	
-	public List<UserProfile.Id> getProfilesThatHave(String key, Object value) {
-		ArrayList<UserProfile.Id> profiles = new ArrayList<>();
+	public List<UserProfileId> getProfilesThatHave(String key, Object value) {
+		ArrayList<UserProfileId> profiles = new ArrayList<>();
 		for(OUserSetting setting : setm.getUserSettings(serviceId, key, value)) {
-			profiles.add(new UserProfile.Id(setting.getDomainId(), setting.getUserId()));
+			profiles.add(new UserProfileId(setting.getDomainId(), setting.getUserId()));
 		}
 		return profiles;
 	}

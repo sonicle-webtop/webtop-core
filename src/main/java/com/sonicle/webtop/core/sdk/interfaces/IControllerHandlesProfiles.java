@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk.interfaces;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 
 /**
@@ -42,6 +42,6 @@ import com.sonicle.webtop.core.sdk.WTException;
  */
 public interface IControllerHandlesProfiles {
 	
-	public void addProfile(UserProfile.Id profileId) throws WTException;
-	public void removeProfile(UserProfile.Id profileId, boolean deep) throws WTException;
+	public void addProfile(UserProfileId profileId) throws WTException;
+	public void removeProfile(UserProfileId profileId, boolean deep) throws WTException;
 }

@@ -63,9 +63,9 @@ import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
-import com.sonicle.webtop.vfs.model.Store;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -79,7 +79,7 @@ public class CoreAdminManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreAdminManager.class);
 	private WebTopApp wta = null;
 	
-	public CoreAdminManager(WebTopApp wta, boolean fastInit, UserProfile.Id targetProfileId) {
+	public CoreAdminManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
 	}
@@ -274,7 +274,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public GroupEntity getGroup(UserProfile.Id pid) throws WTException {
+	public GroupEntity getGroup(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -313,7 +313,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public void deleteGroup(UserProfile.Id pid) throws WTException {
+	public void deleteGroup(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -355,7 +355,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public UserEntity getUser(UserProfile.Id pid) throws WTException {
+	public UserEntity getUser(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -369,7 +369,7 @@ public class CoreAdminManager extends BaseManager {
 	}
 	
 	/*
-	public OUser getUser(UserProfile.Id pid) throws WTException {
+	public OUser getUser(UserProfileId pid) throws WTException {
 		UserManager wtmgr = wta.getUserManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -409,7 +409,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public boolean updateUser(UserProfile.Id pid, boolean enabled) throws WTException {
+	public boolean updateUser(UserProfileId pid, boolean enabled) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -423,7 +423,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public void updateUserPassword(UserProfile.Id pid, char[] newPassword) throws WTException {
+	public void updateUserPassword(UserProfileId pid, char[] newPassword) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -436,7 +436,7 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public void deleteUser(boolean deep, UserProfile.Id pid) throws WTException {
+	public void deleteUser(boolean deep, UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
@@ -601,7 +601,7 @@ public class CoreAdminManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			OPecBridgeFetcher fetcher = dao.select(con, fetcherId);
 			if (fetcher != null) {
-				UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+				UserProfileId pid = new UserProfileId(fetcher.getWebtopProfileId());
 				//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 				ensureUserDomain(pid.getDomainId());
 			}
@@ -620,7 +620,7 @@ public class CoreAdminManager extends BaseManager {
 		
 		RunContext.ensureIsWebTopAdmin();
 		
-		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(fetcher.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
 		
@@ -655,7 +655,7 @@ public class CoreAdminManager extends BaseManager {
 		
 		RunContext.ensureIsWebTopAdmin();
 		
-		UserProfile.Id pid = new UserProfile.Id(fetcher.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(fetcher.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
 		
@@ -744,7 +744,7 @@ public class CoreAdminManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			OPecBridgeRelay relay = dao.select(con, relayId);
 			if (relay != null) {
-				UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+				UserProfileId pid = new UserProfileId(relay.getWebtopProfileId());
 				//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 				ensureUserDomain(pid.getDomainId());
 			}
@@ -763,7 +763,7 @@ public class CoreAdminManager extends BaseManager {
 		
 		RunContext.ensureIsWebTopAdmin();
 		
-		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(relay.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
 		
@@ -801,7 +801,7 @@ public class CoreAdminManager extends BaseManager {
 		
 		RunContext.ensureIsWebTopAdmin();
 		
-		UserProfile.Id pid = new UserProfile.Id(relay.getWebtopProfileId());
+		UserProfileId pid = new UserProfileId(relay.getWebtopProfileId());
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		ensureUserDomain(pid.getDomainId());
 		

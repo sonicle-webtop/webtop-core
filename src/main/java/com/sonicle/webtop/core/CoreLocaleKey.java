@@ -58,8 +58,12 @@ public class CoreLocaleKey {
 	public static final String TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE = "tpl.notification.noreply.footer.message";
 	public static final String TPL_NOTIFICATION_FOOTER_HEADER = "tpl.notification.footer.header";
 	public static final String TPL_NOTIFICATION_FOOTER_MESSAGE = "tpl.notification.footer.message";
+	public static final String TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER = "tpl.email.otpCodeVerification.body.header";
+	public static final String TPL_EMAIL_OTPCODEVERIFICATION_BODY_MESSAGE = "tpl.email.otpCodeVerification.body.message";
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER = "tpl.email.devicesSyncCheck.body.header";
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE = "tpl.email.devicesSyncCheck.body.message";
+	
+	//public static final String OTP_SETUP_ERROR_CODE = "otp.setup.error.code";
 	
 	public static final String SERVICE_NAME = "service.name";
 	public static final String SERVICE_DESCRIPTION = "service.description";

@@ -38,7 +38,7 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.bol.OSysLog;
 import com.sonicle.webtop.core.dal.SysLogDAO;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.servlet.http.HttpServletRequest;
@@ -93,13 +93,13 @@ public class LogManager {
 		return css.getSysLogEnabled();
 	}
 	
-	public boolean write(UserProfile.Id profileId, String serviceId, String action, String softwareName, HttpServletRequest request, String sessionId, String data) {
+	public boolean write(UserProfileId profileId, String serviceId, String action, String softwareName, HttpServletRequest request, String sessionId, String data) {
 		String remoteIp = ServletUtils.getClientIP(request);
 		String userAgent = ServletUtils.getUserAgent(request);
 		return write(profileId, serviceId, action, softwareName, remoteIp, userAgent, sessionId, data);
 	}
 	
-	public boolean write(UserProfile.Id profileId, String serviceId, String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
+	public boolean write(UserProfileId profileId, String serviceId, String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
 		Connection con = null;
 		if(!initialized) return false;
 		if(!isEnabled(profileId.getDomain(), serviceId)) return false;

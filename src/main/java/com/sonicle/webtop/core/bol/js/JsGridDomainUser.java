@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 
 /**
@@ -56,7 +56,7 @@ public class JsGridDomainUser {
 	}
 	
 	public JsGridDomainUser(DirectoryUser du, boolean exist) {
-		profileId = new UserProfile.Id(du.getDomainId(), du.getDirUser().userId).toString();
+		profileId = new UserProfileId(du.getDomainId(), du.getDirUser().userId).toString();
 		userId = du.getDirUser().userId;
 		this.exist = exist;
 		if(du.getWtUser() != null) {

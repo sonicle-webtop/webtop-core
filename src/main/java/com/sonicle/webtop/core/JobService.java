@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ReminderEmail;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesReminders;
 import com.sonicle.webtop.core.util.NotificationHelper;
@@ -121,7 +122,7 @@ public class JobService extends BaseJobService {
 		
 		@Override
 		public void executeWork() {
-			HashMap<UserProfile.Id, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
+			HashMap<UserProfileId, ArrayList<ServiceMessage>> byProfile = new HashMap<>();
 			DateTime now = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
 			
 			logger.trace("ReminderJob started [{}]", now);
@@ -164,7 +165,7 @@ public class JobService extends BaseJobService {
 				logger.trace("Processing snoozed reminders");
 				List<OSnoozedReminder> prems = jobService.core.listExpiredSnoozedReminders(now);
 				for(OSnoozedReminder prem : prems) {
-					UserProfile.Id pid = new UserProfile.Id(prem.getDomainId(), prem.getUserId());
+					UserProfileId pid = new UserProfileId(prem.getDomainId(), prem.getUserId());
 					ReminderMessage msg = new ReminderMessage(new JsReminderInApp(prem));
 					if(!byProfile.containsKey(pid)) {
 						byProfile.put(pid, new ArrayList<ServiceMessage>());
@@ -177,7 +178,7 @@ public class JobService extends BaseJobService {
 			}
 			
 			// Process messages...
-			for(UserProfile.Id pid : byProfile.keySet()) {
+			for(UserProfileId pid : byProfile.keySet()) {
 				WT.notify(pid, byProfile.get(pid), true);
 			}
 			
@@ -216,9 +217,9 @@ public class JobService extends BaseJobService {
 			
 			logger.trace("DevicesSyncCheckJob started [{}]", now);
 			try {
-				List<UserProfile.Id> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreSettings.DEVICES_SYNC_ALERT_ENABLED, true);
+				List<UserProfileId> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreSettings.DEVICES_SYNC_ALERT_ENABLED, true);
 				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
-				for(UserProfile.Id pid : pids) {
+				for(UserProfileId pid : pids) {
 					// Skip profiles that don't have permission for syncing devices
 					if(!RunContext.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
 					
@@ -237,7 +238,7 @@ public class JobService extends BaseJobService {
 			logger.trace("DevicesSyncCheckJob finished [{}]", now);
 		}
 		
-		private void sendEmail(UserProfile.Id pid, UserProfile.Data userData) {
+		private void sendEmail(UserProfileId pid, UserProfile.Data userData) {
 			try {
 				String bodyHeader = jobService.lookupResource(userData.getLocale(), CoreLocaleKey.TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER);
 				String subject = NotificationHelper.buildSubject(userData.getLocale(), jobService.SERVICE_ID, bodyHeader);

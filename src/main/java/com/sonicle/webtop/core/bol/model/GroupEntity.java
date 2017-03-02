@@ -37,7 +37,7 @@ import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.AssignedUser;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.ORolePermission;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,8 +80,8 @@ public class GroupEntity {
 		this.groupId = groupId;
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return new UserProfile.Id(getDomainId(), getGroupId());
+	public UserProfileId getProfileId() {
+		return new UserProfileId(getDomainId(), getGroupId());
 	}
 
 	public String getGroupUid() {

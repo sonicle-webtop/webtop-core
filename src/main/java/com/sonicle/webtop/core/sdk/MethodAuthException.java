@@ -43,7 +43,7 @@ public class MethodAuthException extends AuthException {
 		super("Method [{0}] cannot be accessed", methodName);
 	}
 	
-	public MethodAuthException(String methodName, String serviceId, UserProfile.Id runningProfile) {
+	public MethodAuthException(String methodName, String serviceId, UserProfileId runningProfile) {
 		super("Method [{0}] cannot be accessed by [{1}, {2}]", methodName, serviceId, runningProfile.toString());
 	}
 }

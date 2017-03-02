@@ -36,14 +36,12 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
-import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.dal.UserDAO;
-import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -118,8 +116,8 @@ public final class UserProfile {
 		return principal;
 	}
 	
-	public UserProfile.Id getId() {
-		return new UserProfile.Id(principal.getName());
+	public UserProfileId getId() {
+		return new UserProfileId(principal.getName());
 	}
 	
 	public String getStringId() {
@@ -478,75 +476,6 @@ public final class UserProfile {
 			custom03 =  String.valueOf(LangUtils.ifValue(map, "custom3", custom03));
 		}
 	}
-	
-	public static class Id extends DomainAccount {
-		public Id(String id) {
-			super(id);
-		}
-		
-		public Id(String domainId, String userId) {
-			super(domainId, userId);
-		}
-		
-		public String getDomainId() {
-			return getDomain();
-		}
-		
-		public String getUserId() {
-			return getUser();
-		}
-	}
-	
-	/*
-	public static class Id2 {
-		private final String domainId;
-		private final String userId;
-		
-		public Id2(String id) {
-			String[] tokens = StringUtils.split(id, "@", 2);
-			if(tokens.length != 2) throw new WTRuntimeException("Unable to parse specified profileId [{0}]", id);
-			this.domainId = tokens[1];
-			this.userId = tokens[0];
-		}
-		
-		public Id2(String domainId, String userId) {
-			this.domainId = Check.notNull(domainId);
-			this.userId = Check.notNull(userId);
-		}
-		
-		public String getDomainId() {
-			return domainId;
-		}
-		
-		public String getUserId() {
-			return userId;
-		}
-		
-		@Override
-		public String toString() {
-			return userId + "@" + domainId;
-		}
-		
-		@Override
-		public int hashCode() {
-			return new HashCodeBuilder()
-				.append(domainId)
-				.append(userId)
-				.toHashCode();
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			if(obj instanceof Id2 == false) return false;
-			if(this == obj) return true;
-			final Id2 otherObject = (Id2) obj;
-			return new EqualsBuilder()
-				.append(domainId, otherObject.domainId)
-				.append(userId, otherObject.userId)
-				.isEquals();
-		}
-	}
-	*/
 	
 	private String generateSecretKey() throws NoSuchAlgorithmException {
 		byte[] buffer = new byte[80/8];

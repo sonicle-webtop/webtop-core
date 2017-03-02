@@ -37,6 +37,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class PrivateEnvironment extends AbstractEnvironment {
 		super(wts);
 		csrf = RunContext.getCSRFToken();
 		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
-		UserProfile.Id pid = wts.getProfileId();
+		UserProfileId pid = wts.getProfileId();
 		cus = (pid != null) ? new CoreUserSettings(pid) : null;
 	}
 
@@ -61,7 +62,7 @@ public class PrivateEnvironment extends AbstractEnvironment {
 		return wts.getUserProfile();
 	}
 	
-	public UserProfile.Id getProfileId() {
+	public UserProfileId getProfileId() {
 		return wts.getProfileId();
 	}
 	

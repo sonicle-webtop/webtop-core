@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.SettingDbDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
@@ -410,16 +411,16 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
-	public List<UserProfile.Id> listProfilesWith(String serviceId, String key, Object value) {
+	public List<UserProfileId> listProfilesWith(String serviceId, String key, Object value) {
 		UserSettingDAO dao = UserSettingDAO.getInstance();
-		ArrayList<UserProfile.Id> profiles = new ArrayList<>();
+		ArrayList<UserProfileId> profiles = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 			List<OUserSetting> sets = dao.selectByServiceKeyValue(con, serviceId, key, valueToString(value));
 			for(OUserSetting set : sets) {
-				profiles.add(new UserProfile.Id(set.getDomainId(), set.getUserId()));
+				profiles.add(new UserProfileId(set.getDomainId(), set.getUserId()));
 			}
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Unable to read settings (user) [{}, {}, {}]", serviceId, key, String.valueOf(value), ex);

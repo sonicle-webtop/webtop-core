@@ -92,6 +92,7 @@ import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IRecipientsProvidersSource;
 import com.sonicle.webtop.core.util.ZPushManager;
@@ -127,7 +128,7 @@ public class CoreManager extends BaseManager {
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
 	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
 	
-	public CoreManager(WebTopApp wta, boolean fastInit, UserProfile.Id targetProfileId) {
+	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
 		
@@ -294,7 +295,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<UserProfile.Id> listUserIdsByEmail(String emailAddress) throws WTException {
+	public List<UserProfileId> listUserIdsByEmail(String emailAddress) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		return wtmgr.listUserProfileIdsByEmail(emailAddress);
 	}
@@ -303,7 +304,7 @@ public class CoreManager extends BaseManager {
 		return getUser(getTargetProfileId());
 	}
 	
-	public OUser getUser(UserProfile.Id pid) throws WTException {
+	public OUser getUser(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
@@ -319,7 +320,7 @@ public class CoreManager extends BaseManager {
 		return wta.getWebTopManager().userData(getTargetProfileId());
 	}
 	
-	public String getUserUid(UserProfile.Id pid) throws WTException {
+	public String getUserUid(UserProfileId pid) throws WTException {
 		return wta.getWebTopManager().userToUid(pid,false);
 	}
 	
@@ -327,7 +328,7 @@ public class CoreManager extends BaseManager {
 		return getUserPersonalInfo(getTargetProfileId());
 	}
 	
-	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfile.Id pid) throws WTException {
+	public UserProfile.PersonalInfo getUserPersonalInfo(UserProfileId pid) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		if(RunContext.isSysAdmin()) {
@@ -537,7 +538,7 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public UserProfile.Id userUidToProfileId(String userUid) {
+	public UserProfileId userUidToProfileId(String userUid) {
 		return wta.getWebTopManager().uidToUser(userUid);
 	}
 	
@@ -545,20 +546,20 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public String getInternetUserId(UserProfile.Id pid) throws WTException {
+	public String getInternetUserId(UserProfileId pid) throws WTException {
 		return wta.getWebTopManager().getInternetUserId(pid);
 	}
 	
 	
 	/*
-	public String getUserCompleteEmailAddress(UserProfile.Id pid) throws Exception {
+	public String getUserCompleteEmailAddress(UserProfileId pid) throws Exception {
 		String address = getUserEmailAddress(pid);
 		String displayName = getUserDisplayName(pid);
 		return new InternetAddress(address, displayName).toString();
 	}
 	*/
 	
-	public List<UserProfile.Id> listProfilesWithSetting(String serviceId, String key, Object value) throws WTException {
+	public List<UserProfileId> listProfilesWithSetting(String serviceId, String key, Object value) throws WTException {
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.listProfilesWith(serviceId, key, value);
 	}
@@ -577,7 +578,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OActivity> listLiveActivities(UserProfile.Id profileId) throws WTException {
+	public List<OActivity> listLiveActivities(UserProfileId profileId) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		try {
@@ -665,7 +666,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OCausal> listLiveCausals(UserProfile.Id profileId, String customerId) throws WTException {
+	public List<OCausal> listLiveCausals(UserProfileId profileId, String customerId) throws WTException {
 		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		try {
@@ -814,7 +815,7 @@ public class CoreManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		ShareDAO shadao = ShareDAO.getInstance();
 		UserDAO usedao = UserDAO.getInstance();
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -948,7 +949,7 @@ public class CoreManager extends BaseManager {
 		String groupName = OShare.extractGroupNameFromKey(share.getKey());
 		String permKey = ServiceSharePermission.buildPermissionKey(permissionTarget, groupName);
 		
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		boolean[] perms = new boolean[actions.length];
 		for(int i=0; i<actions.length; i++) {
 			perms[i] = RunContext.isPermitted(targetPid, share.getServiceId(), permKey, actions[i], instance);
@@ -1254,7 +1255,7 @@ public class CoreManager extends BaseManager {
 		return share;
 	}
 			
-	public List<OShare> listShareByOwner(UserProfile.Id pid, String serviceId, String shareKey) throws WTException {
+	public List<OShare> listShareByOwner(UserProfileId pid, String serviceId, String shareKey) throws WTException {
 		WebTopManager usrm = wta.getWebTopManager();
 		ShareDAO dao = ShareDAO.getInstance();
 		Connection con = null;
@@ -1291,7 +1292,7 @@ public class CoreManager extends BaseManager {
 		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
 		UserOptionsServiceData uos = null;
 		//TODO: se admin allora targetprofileSenza problemi altrimenti controllo che corrisponda
-		UserProfile.Id pid = getTargetProfileId();
+		UserProfileId pid = getTargetProfileId();
 		List<String> ids = svcm.listUserOptionServices();
 		for(String id : ids) {
 			// Checks user rights on service...
@@ -1356,7 +1357,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(String serviceId, String context, String query, int max) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1378,7 +1379,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void addServiceStoreEntry(String serviceId, String context, String key, String value) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1416,7 +1417,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteServiceStoreEntry() {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1432,7 +1433,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteServiceStoreEntry(String serviceId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1448,7 +1449,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteServiceStoreEntry(String serviceId, String context, String key) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1464,7 +1465,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void updateMyAutosaveData(String webtopClientId, String serviceId, String context, String key, String value) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1496,7 +1497,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteOfflineOthersAutosaveData(String notWebtopClientId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1516,7 +1517,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteMyAutosaveData(String webtopClientId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1532,7 +1533,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteMyAutosaveData(String webtopClientId, String serviceId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1548,7 +1549,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteMyAutosaveData(String webtopClientId, String serviceId, String context) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1564,7 +1565,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteMyAutosaveData(String webtopClientId, String serviceId, String context, String key) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1580,7 +1581,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<OAutosave> listMyAutosaveData(String webtopClientId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1596,7 +1597,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public boolean hasMyAutosaveData(String webtopClientId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1612,7 +1613,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<OAutosave> listOfflineOthersAutosaveData(String notWebtopClientId) {
-		UserProfile.Id targetPid = getTargetProfileId();
+		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
@@ -1623,7 +1624,7 @@ public class CoreManager extends BaseManager {
 			List<OAutosave> data=asdao.selectOthersByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), notWebtopClientId, listAllowedServices());
 			List<OAutosave> rdata=new ArrayList<OAutosave>();
 			for(OAutosave as: data) {
-				if (!sm.isOnline(new UserProfile.Id(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
+				if (!sm.isOnline(new UserProfileId(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
 					rdata.add(as);
 			}
 			return rdata;
@@ -1730,7 +1731,7 @@ public class CoreManager extends BaseManager {
 	*/
 	
 	/*
-	public List<InternetRecipient> listInternetRecipients(List<String> providerIds, boolean incGlobal, String incDomainId, UserProfile.Id incProfileId, String text) throws WTException {
+	public List<InternetRecipient> listInternetRecipients(List<String> providerIds, boolean incGlobal, String incDomainId, UserProfileId incProfileId, String text) throws WTException {
 		ArrayList<InternetRecipient> items = new ArrayList<>();
 		
 		for(String proid : providerIds) {

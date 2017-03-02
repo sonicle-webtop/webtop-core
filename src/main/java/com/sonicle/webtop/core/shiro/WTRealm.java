@@ -49,7 +49,7 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.UserEntity;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -170,7 +170,7 @@ public class WTRealm extends AuthorizingRealm {
 					principal = new Principal(ad, impersonate, ad.getDomainId(), priUsername, password);
 				}
 				
-				UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
+				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
 				OUser ouser = wta.getWebTopManager().getUser(pid);
 				if (ouser == null) throw new WTException("User not found [{0}]", pid.toString());
 				
@@ -200,7 +200,7 @@ public class WTRealm extends AuthorizingRealm {
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
-		UserProfile.Id pid = new UserProfile.Id(principal.getDomainId(), principal.getUserId());
+		UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
 		
 		HashSet<String> roles = new HashSet<>();
 		HashSet<String> perms = new HashSet<>();

@@ -42,7 +42,7 @@ public class ReminderEmail extends BaseReminder {
 	protected String subject;
 	protected String body;
 	
-	public ReminderEmail(String serviceId, UserProfile.Id profileId, String resource, String objectId) {
+	public ReminderEmail(String serviceId, UserProfileId profileId, String resource, String objectId) {
 		super(serviceId, profileId, resource, objectId);
 		this.rich = true;
 	}

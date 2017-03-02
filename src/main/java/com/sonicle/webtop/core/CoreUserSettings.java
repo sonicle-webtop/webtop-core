@@ -39,6 +39,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 
 /**
  *
@@ -47,12 +48,12 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 public class CoreUserSettings extends BaseUserSettings {
 	private final CoreServiceSettings ss;
 	
-	public CoreUserSettings(UserProfile.Id profileId) {
+	public CoreUserSettings(UserProfileId profileId) {
 		super(CoreManifest.ID, profileId);
 		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}
 
-	public CoreUserSettings(String serviceId, UserProfile.Id profileId) {
+	public CoreUserSettings(String serviceId, UserProfileId profileId) {
 		super(serviceId, profileId);
 		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}

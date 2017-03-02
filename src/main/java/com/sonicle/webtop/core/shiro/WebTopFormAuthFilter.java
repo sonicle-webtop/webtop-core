@@ -39,15 +39,11 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WsPushEndpoint;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.servlet.Login;
-import com.sonicle.webtop.core.servlet.Logout;
-import com.sonicle.webtop.core.servlet.Otp;
-import com.sonicle.webtop.core.servlet.ResourceRequest;
 import com.sonicle.webtop.core.servlet.ServiceRequest;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.servlet.SessionKeepAlive;
-import com.sonicle.webtop.core.servlet.Start;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -148,7 +144,7 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 		if(wta != null) {
 			String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
 			String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
-			UserProfile.Id pid = new UserProfile.Id(domainId, userId);
+			UserProfileId pid = new UserProfileId(domainId, userId);
 			wta.getLogManager().write(pid, CoreManifest.ID, action, null, request, request.getRequestedSessionId(), null);
 		}
 	}

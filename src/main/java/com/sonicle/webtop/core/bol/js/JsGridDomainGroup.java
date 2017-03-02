@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 
 /**
@@ -47,7 +47,7 @@ public class JsGridDomainGroup {
 	public String displayName;
 	
 	public JsGridDomainGroup(OGroup o) {
-		profileId = new UserProfile.Id(o.getDomainId(), o.getGroupId()).toString();
+		profileId = new UserProfileId(o.getDomainId(), o.getGroupId()).toString();
 		groupId = o.getGroupId();
 		displayName = o.getDisplayName();
 	}

@@ -43,7 +43,7 @@ import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
@@ -94,7 +94,7 @@ public class ServiceRequest extends BaseServiceRequest {
 				if(StringUtils.isBlank(id)) throw new Exception("No id specified");
 				
 				// Retrieves instantiated userOptions service (session context away)
-				UserProfile.Id pid = new UserProfile.Id(id);
+				UserProfileId pid = new UserProfileId(id);
 				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), wts.getId(), service, pid);
 				
 				// Gets method and invokes it...

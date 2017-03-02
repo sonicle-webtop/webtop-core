@@ -38,7 +38,7 @@ import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,8 +87,8 @@ public class UserEntity {
 		this.userId = userId;
 	}
 	
-	public UserProfile.Id getProfileId() {
-		return new UserProfile.Id(getDomainId(), getUserId());
+	public UserProfileId getProfileId() {
+		return new UserProfileId(getDomainId(), getUserId());
 	}
 
 	public Boolean getEnabled() {

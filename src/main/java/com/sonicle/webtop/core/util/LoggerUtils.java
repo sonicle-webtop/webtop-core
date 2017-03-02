@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 
@@ -90,7 +90,7 @@ public class LoggerUtils {
 		updateAutoDC();
 	}
 	
-	public synchronized static void setContextDC(UserProfile.Id profile) {
+	public synchronized static void setContextDC(UserProfileId profile) {
 		MDC.put(VAR_USER, profile.getUserId());
 		updateAutoDC();
 	}
@@ -100,7 +100,7 @@ public class LoggerUtils {
 		updateAutoDC();
 	}
 	
-	public synchronized static void setContextDC(UserProfile.Id profile, String service) {
+	public synchronized static void setContextDC(UserProfileId profile, String service) {
 		MDC.put(VAR_USER, profile.getUserId());
 		MDC.put(VAR_SERVICE, service);
 		updateAutoDC();
