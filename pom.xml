@@ -586,12 +586,12 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.executable}</executable>
+									<executable>${sencha.cmd.v6}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
 										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>compile</argument>
-										<argument>--classpath=client-core,client-core-private,D:\Sonicle\Workspaces\wt5\common\sonicle-extjs-extensions\src\sencha\sonicle-extensions\src</argument>
+										<argument>--classpath=client-core,client-core-private,${sencha.workspace}/packages/local/sonicle-extensions/src</argument>
 										<argument>exclude</argument>
 										<argument>-all</argument>
 										<argument>and</argument>
@@ -613,12 +613,12 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.executable}</executable>
+									<executable>${sencha.cmd.v6}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<argument>--sdk-path=${sencha.extjs.sdk}</argument>
+										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>compile</argument>
-										<argument>--classpath=client-core,client-core-public,D:\Sonicle\Workspaces\wt5\common\sonicle-extjs-extensions\src\sencha\sonicle-extensions\src</argument>
+										<argument>--classpath=client-core,client-core-public,${sencha.workspace}/packages/local/sonicle-extensions/src</argument>
 										<argument>exclude</argument>
 										<argument>-all</argument>
 										<argument>and</argument>
@@ -640,12 +640,12 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.executable}</executable>
+									<executable>${sencha.cmd.v6}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<argument>--sdk-path=${sencha.extjs.sdk}</argument>
+										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>compile</argument>
-										<argument>--classpath=client-admin,D:\Sonicle\Workspaces\wt5\common\sonicle-extjs-extensions\src\sencha\sonicle-extensions\src</argument>
+										<argument>--classpath=client-admin,client-core,${sencha.workspace}/packages/local/sonicle-extensions/src</argument>
 										<argument>exclude</argument>
 										<argument>-all</argument>
 										<argument>and</argument>
