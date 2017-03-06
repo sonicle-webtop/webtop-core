@@ -121,7 +121,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					flex: 1
 				}],
 				tbar: [
-					me.addAction('addFetcher', {
+					me.addAct('addFetcher', {
 						text: WT.res('act-add.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-add-xs',
@@ -129,7 +129,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 							me.addFetcherUI();
 						}
 					}),
-					me.addAction('removeFetcher', {
+					me.addAct('removeFetcher', {
 						text: WT.res('act-remove.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-remove-xs',
@@ -140,7 +140,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						}
 					}),
 					'->',
-					me.addAction('refreshFetchers', {
+					me.addAct('refreshFetchers', {
 						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
 						iconCls: 'wt-icon-refresh-xs',
@@ -197,7 +197,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					flex: 1
 				}],
 				tbar: [
-					me.addAction('addRelay', {
+					me.addAct('addRelay', {
 						text: WT.res('act-add.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-add-xs',
@@ -205,7 +205,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 							me.addRelayUI();
 						}
 					}),
-					me.addAction('removeRelay', {
+					me.addAct('removeRelay', {
 						text: WT.res('act-remove.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-remove-xs',
@@ -216,7 +216,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 						}
 					}),
 					'->',
-					me.addAction('refreshRelays', {
+					me.addAct('refreshRelays', {
 						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
 						iconCls: 'wt-icon-refresh-xs',
@@ -237,12 +237,12 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 		me.getViewModel().bind({
 			bindTo: '{gpfetchers.selection}'
 		}, function(sel) {
-			me.getAction('removeFetcher').setDisabled((sel) ? false : true);
+			me.getAct('removeFetcher').setDisabled((sel) ? false : true);
 		});
 		me.getViewModel().bind({
 			bindTo: '{gprelays.selection}'
 		}, function(sel) {
-			me.getAction('removeRelay').setDisabled((sel) ? false : true);
+			me.getAct('removeRelay').setDisabled((sel) ? false : true);
 		});
 	},
 	

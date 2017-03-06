@@ -590,13 +590,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				action: act
 			}, opts.params || {}),
 			success: function(resp, opts) {
-				var obj = Ext.decode(resp.responseText);
+				var json = Ext.decode(resp.responseText);
 				if(sfn) Ext.callback(sfn, scope || me, [resp, opts]);
-				Ext.callback(fn, scope || me, [obj.success, obj, opts]);
+				Ext.callback(fn, scope || me, [json['success'], json, json['metaData'], opts]);
 			},
 			failure: function(resp, opts) {
 				if(ffn) Ext.callback(ffn, scope || me, [resp, opts]);
-				Ext.callback(fn, scope || me, [false, null, opts]);
+				Ext.callback(fn, scope || me, [false, null, null, opts]);
 			},
 			scope: me
 		};

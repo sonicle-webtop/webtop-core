@@ -41,6 +41,7 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
+import com.sonicle.commons.web.json.extjs.ResultMeta;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
@@ -763,15 +764,15 @@ public class Service extends BaseService {
 					ORunnableUpgradeStatement next = upEnv.nextStatement();
 					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
-					new JsonResult("stmts", items, items.size())
+					ResultMeta meta = new ResultMeta()
 							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
-							.set("nextStmtId", nextStmtId)
-							.printTo(out);
+							.set("nextStmtId", nextStmtId);
+					new JsonResult(items, meta, items.size()).printTo(out);
 					
 				} else if (crud.equals("play")) {
 					String stmtBody = ServletUtils.getStringParameter(request, "stmtBody", true);
@@ -803,15 +804,15 @@ public class Service extends BaseService {
 					ORunnableUpgradeStatement next = upEnv.nextStatement();
 					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
-					new JsonResult(items, items.size())
+					ResultMeta meta = new ResultMeta()
 							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
-							.set("nextStmtId", nextStmtId)
-							.printTo(out);
+							.set("nextStmtId", nextStmtId);
+					new JsonResult(items, meta, items.size()).printTo(out);
 					
 				} else if (crud.equals("skip")) {
 					ORunnableUpgradeStatement stmt = upEnv.nextStatement();
@@ -824,15 +825,15 @@ public class Service extends BaseService {
 					ORunnableUpgradeStatement next = upEnv.nextStatement();
 					Integer nextStmtId = (next != null) ? next.getUpgradeStatementId() : null;
 					
-					new JsonResult(items, items.size())
+					ResultMeta meta = new ResultMeta()
 							.set("upgradeTag", upEnv.upgradeTag)
 							.set("pendingCount", upEnv.pendingCount)
 							.set("okCount", upEnv.okCount)
 							.set("errorCount", upEnv.errorCount)
 							.set("warningCount", upEnv.warningCount)
 							.set("skippedCount", upEnv.skippedCount)
-							.set("nextStmtId", nextStmtId)
-							.printTo(out);
+							.set("nextStmtId", nextStmtId);
+					new JsonResult(items, meta, items.size()).printTo(out);
 				}
 			}
 		} catch(Exception ex) {

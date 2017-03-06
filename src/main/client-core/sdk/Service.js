@@ -173,7 +173,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {WTA.ux.Action} The Action that were added.
 	 */
 	addNewAction: function(name, obj) {
-		return this.addAction(WTA.sdk.Service.ACTION_GROUP_NEW, name, obj);
+		return this.addAct(WTA.sdk.Service.ACTION_GROUP_NEW, name, obj);
 	},
 	
 	/**
@@ -181,7 +181,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Boolean} True if so.
 	 */
 	hasNewActions: function() {
-		var acts = this.getActions(WTA.sdk.Service.ACTION_GROUP_NEW);
+		var acts = this.getActs(WTA.sdk.Service.ACTION_GROUP_NEW);
 		return !Ext.Object.isEmpty(acts);
 	},
 	
@@ -190,7 +190,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Array} An array of actions.
 	 */
 	getNewActions: function() {
-		var acts = this.getActions(WTA.sdk.Service.ACTION_GROUP_NEW);
+		var acts = this.getActs(WTA.sdk.Service.ACTION_GROUP_NEW);
 		return (acts) ? Ext.Object.getValues(acts) : [];
 	},
 	
@@ -199,7 +199,7 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * @return {Array} An array of actions.
 	 */
 	getToolboxActions: function() {
-		var acts = this.getActions(WTA.sdk.Service.ACTION_GROUP_TOOLBOX);
+		var acts = this.getActs(WTA.sdk.Service.ACTION_GROUP_TOOLBOX);
 		return (acts) ? Ext.Object.getValues(acts) : [];
 	},
 	

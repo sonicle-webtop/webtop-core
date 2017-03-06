@@ -96,7 +96,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 				flex: 2
 			}],
 			tbar: [
-				me.addAction('add', {
+				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add-xs',
@@ -104,7 +104,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 						me.addGroupUI(null);
 					}
 				}),
-				me.addAction('remove', {
+				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-remove-xs',
@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 					}
 				}),
 				'->',
-				me.addAction('refresh', {
+				me.addAct('refresh', {
 					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
 					iconCls: 'wt-icon-refresh-xs',
@@ -185,7 +185,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 	updateDisabled: function(action) {
 		var me = this,
 				dis = me.isDisabled(action);
-		me.setActionDisabled(action, dis);
+		me.setActDisabled(action, dis);
 	},
 	
 	/**

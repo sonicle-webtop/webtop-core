@@ -855,6 +855,7 @@ public class WebTopSession {
 	
 	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
 		js.appManifest.framework = "ext";
+		js.appManifest.toolkit = "classic";
 		
 		// Include external libraries references
 		// Please do not replace 0.0.0 with the real version, it limits server traffic.
@@ -875,11 +876,16 @@ public class WebTopSession {
 		String extTheme = theme;
 		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
 		String extLang = "-" + locale.getLanguage();
-		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js"); // ExtJs library
-		js.appManifest.addJs(EXTJS_PATH + "packages/ext-locale/build/" + "ext-locale" + extLang + extDebug + ".js"); // ExtJs library localization
-		js.appManifest.addJs(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/" + "ext-theme-" + extTheme + extDebug + ".js"); // ExtJs theme overrides
-		js.appManifest.addCss(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/resources/" + "ext-theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
-		js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
+		js.appManifest.addJs(EXTJS_PATH + "ext-all" + extRtl + extDebug + ".js");
+		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/locale/" + "locale" + extLang + extDebug + ".js");
+		//js.appManifest.addJs(EXTJS_PATH + "packages/ext-locale/build/" + "ext-locale" + extLang + extDebug + ".js"); // ExtJs library localization
+		js.appManifest.addJs(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/" + "theme-" + extTheme + extDebug + ".js");
+		js.appManifest.addCss(EXTJS_PATH + js.appManifest.toolkit + "/" + "theme-" + extTheme + "/resources/" + "theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
+		//js.appManifest.addJs(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/" + "ext-theme-" + extTheme + extDebug + ".js"); // ExtJs theme overrides
+		//js.appManifest.addCss(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/resources/" + "ext-theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
+		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
+		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");	
+		//js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
 		
 		// Include Sonicle ExtJs Extensions references
 		if (WebTopApp.getPropSonicleExtJsExtensionsDevMode()) {
@@ -887,7 +893,7 @@ public class WebTopSession {
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
 		}
-		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extDebug + ".css");
+		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
 	}
 	
 	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {

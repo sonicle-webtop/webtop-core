@@ -252,6 +252,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			}),
 			reader: Ext.apply({
 				type: 'json',
+				keepRawData: true,
 				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}, opts.reader || {}),
@@ -280,6 +281,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			}),
 			reader: Ext.apply({
 				type: 'json',
+				keepRawData: true,
 				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}, opts.reader || {}),
@@ -321,6 +323,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			}),
 			reader: Ext.apply({
 				type: 'json',
+				keepRawData: true,
 				rootProperty: rootp || 'data',
 				messageProperty: 'message'
 			}, opts.reader || {}),

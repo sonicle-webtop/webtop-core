@@ -54,7 +54,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 		
 		Ext.apply(me, {
 			tbar: [
-				me.addAction('select', {
+				me.addAct('select', {
 					text: null,
 					tooltip: me.mys.res('dbUpgrader.act-select.tip'),
 					iconCls: 'wtadm-icon-selectStmt-xs',
@@ -63,7 +63,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					}
 				}),
 				'-',
-				me.addAction('play1', {
+				me.addAct('play1', {
 					text: me.mys.res('dbUpgrader.act-play1.lbl'),
 					tooltip: null,
 					iconCls: 'wtadm-icon-play1Stmt-xs',
@@ -71,7 +71,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 						me.executeStmt('play1');
 					}
 				}),
-				me.addAction('play', {
+				me.addAct('play', {
 					text: me.mys.res('dbUpgrader.act-play.lbl'),
 					tooltip: null,
 					iconCls: 'wtadm-icon-playStmt-xs',
@@ -79,7 +79,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 						me.executeStmt('play');
 					}
 				}),
-				me.addAction('skip', {
+				me.addAct('skip', {
 					text: me.mys.res('dbUpgrader.act-skip.lbl'),
 					tooltip: null,
 					iconCls: 'wtadm-icon-skipStmt-xs',
@@ -151,10 +151,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				store: {
 					autoLoad: true,
 					model: 'Sonicle.webtop.core.admin.model.GridUpgradeRow',
-					proxy: WTF.apiProxy(me.mys.ID, 'ManageDbUpgrades', 'stmts'),
+					proxy: WTF.apiProxy(me.mys.ID, 'ManageDbUpgrades', 'data'),
 					listeners: {
 						load: function(s) {
-							var o = s.getProxy().getReader().rawData;
+							var o = s.getProxy().getReader().metaData;
 							me.nextStmtId = o.nextStmtId;
 							me.updateInfo(o);
 							me.selectStmt(o.nextStmtId);
@@ -224,9 +224,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 		me.lref('tbitag').setText(me.mys.res('dbUpgrader.tbi-tag.lbl') + ': ' + o.upgradeTag);
 	},
 	
-	updateStmts: function(o) {
+	updateStmts: function(data) {
 		var sto = this.lref('gp').getStore(), rec;
-		Ext.iterate(o.data, function(recd) {
+		Ext.iterate(data, function(recd) {
 			rec = sto.getById(recd['upgradeStmtId']);
 			if (rec) rec.set(recd);
 		});
@@ -259,14 +259,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 		me.wait();
 		WT.ajaxReq(me.mys.ID, 'ManageDbUpgrades', {
 			params: pars,
-			callback: function(success, o) {
+			callback: function(success, json, meta) {
 				me.unwait();
 				if(success) {
-					me.nextStmtId = o.nextStmtId;
-					me.updateInfo(o);
-					me.updateStmts(o);
-					me.selectStmt(o.nextStmtId);
-					if ((o.pendingCount === 0) && me.mys.btnMaintenance().pressed) {
+					me.nextStmtId = meta.nextStmtId;
+					me.updateInfo(meta);
+					me.updateStmts(json['data']);
+					me.selectStmt(meta.nextStmtId);
+					if ((meta.pendingCount === 0) && me.mys.btnMaintenance().pressed) {
 						WT.confirm(me.mys.res('dbUpgrader.confirm.maintenance.disable'), function(bid) {
 							if(bid === 'yes') {
 								me.mys.setMaintenanceFlag(false);
@@ -286,7 +286,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 	updateDisabled: function(action) {
 		var me = this,
 				dis = me.isDisabled(action);
-		me.setActionDisabled(action, dis);
+		me.setActDisabled(action, dis);
 	},
 	
 	/**

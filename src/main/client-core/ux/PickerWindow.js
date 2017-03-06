@@ -40,8 +40,9 @@ Ext.define('Sonicle.webtop.core.ux.PickerWindow', {
 	modal: true,
 	closable: false,
 	minimizable: false,
-	width: 300,
+	width: 300
 	
+	/* non serve più, già nella 6.2
 	afterRender: function() {
 		var me = this, keyMap;
 		me.callParent();
@@ -50,4 +51,5 @@ Ext.define('Sonicle.webtop.core.ux.PickerWindow', {
 			keyMap.on(27, me.onEsc, me);
 		}
 	}
+	*/
 });

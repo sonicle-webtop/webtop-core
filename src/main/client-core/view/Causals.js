@@ -52,14 +52,14 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 		/*
 		Ext.apply(me, {
 			tbar: [
-				me.addAction('add', {
+				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
 						me.addCausal(WT.getVar('domainId'));
 					}
 				}),
-				me.addAction('remove', {
+				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
@@ -124,14 +124,14 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				tpl: '{domainDescription} ({domainId})'
 			}],
 			tbar: [
-				me.addAction('add', {
+				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
 						me.addCausal(WT.getVar('domainId'));
 					}
 				}),
-				me.addAction('remove', {
+				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
@@ -141,7 +141,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 					}
 				}),
 				'->',
-				me.addAction('refresh', {
+				me.addAct('refresh', {
 					text: '',
 					tooltip: WT.res('act-refresh.lbl'),
 					iconCls: 'wt-icon-refresh-xs',
@@ -160,7 +160,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 		me.getViewModel().bind({
 			bindTo: '{gp.selection}'
 		}, function(sel) {
-			me.getAction('remove').setDisabled((sel) ? false : true);
+			me.getAct('remove').setDisabled((sel) ? false : true);
 		});
 	},
 	

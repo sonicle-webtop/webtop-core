@@ -194,7 +194,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	initTBar: function() {
 		var me = this, items = [];
 		
-		me.addAction('saveClose', {
+		me.addAct('saveClose', {
 			text: WT.res('act-saveClose.lbl'),
 			tooltip: null,
 			iconCls: 'wt-icon-saveClose-xs',
@@ -204,14 +204,14 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		});
 		
 		if(!me.showSave) {
-			items.push(me.getAction('saveClose'));
+			items.push(me.getAct('saveClose'));
 		} else {
 			items.push({
 				xtype: 'splitbutton',
 				text: WT.res('act-saveClose.lbl'),
 				iconCls: 'wt-icon-saveClose-xs',
 				menu: [
-					me.addAction('save', {
+					me.addAct('save', {
 						text: WT.res('act-save.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-save-xs',
@@ -219,10 +219,10 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 							me.doSave(false);
 						}
 					}),
-					me.getAction('saveClose')
+					me.getAct('saveClose')
 				],
 				handler: function() {
-					me.getAction('saveClose').execute();
+					me.getAct('saveClose').execute();
 				}
 			});
 		}

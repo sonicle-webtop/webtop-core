@@ -117,12 +117,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				flex: 2
 			}],
 			tbar: [
-				me.addAction('add', {
+				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add-xs',
 					menu: [
-						me.addAction('addEmpty', {
+						me.addAct('addEmpty', {
 							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
 							tooltip: null,
 							disabled: !me.authCapUsersWrite,
@@ -130,7 +130,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.addUserUI(null);
 							}
 						}),
-						me.addAction('addImport', {
+						me.addAct('addImport', {
 							text: me.mys.res('domainUsers.act-addImport.lbl'),
 							tooltip: null,
 							disabled: true,
@@ -141,13 +141,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						})
 					]
 				}),
-				me.addAction('remove', {
+				me.addAct('remove', {
 					text: WT.res('act-remove.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-remove-xs',
 					disabled: true,
 					menu: [
-						me.addAction('removeClean', {
+						me.addAct('removeClean', {
 							text: me.mys.res('domainUsers.act-removeClean.lbl'),
 							tooltip: null,
 							handler: function() {
@@ -155,7 +155,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								if(rec) me.deleteUserUI(false, rec);
 							}
 						}),
-						me.addAction('removeDeep', {
+						me.addAct('removeDeep', {
 							text: me.mys.res('domainUsers.act-removeDeep.lbl'),
 							tooltip: null,
 							disabled: !me.authCapUsersWrite,
@@ -166,7 +166,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						})
 					]
 				}),
-				me.addAction('changePassword', {
+				me.addAct('changePassword', {
 					text: WT.res('act-changePassword.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-changePassword-xs',
@@ -177,7 +177,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					}
 				}),
 				'-',
-				me.addAction('enable', {
+				me.addAct('enable', {
 					text: WT.res('act-enable.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-item-enable-xs',
@@ -187,7 +187,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						if(rec) me.updateUserStatusUI(rec, true);
 					}
 				}),
-				me.addAction('disable', {
+				me.addAct('disable', {
 					text: WT.res('act-disable.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-item-disable-xs',
@@ -198,7 +198,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					}
 				}),
 				'->',
-				me.addAction('refresh', {
+				me.addAct('refresh', {
 					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
 					iconCls: 'wt-icon-refresh-xs',
@@ -322,7 +322,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	updateDisabled: function(action) {
 		var me = this,
 				dis = me.isDisabled(action);
-		me.setActionDisabled(action, dis);
+		me.setActDisabled(action, dis);
 	},
 	
 	/**

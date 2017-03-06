@@ -866,7 +866,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						hideGroupedHeader: true
 					}],
 					tbar: [
-						me.addAction('showSyncDeviceInfo', {
+						me.addAct('showSyncDeviceInfo', {
 							text: WT.res('opts.sync.details.tit'),
 							tooltip: null,
 							iconCls: 'wt-icon-info-xs',
@@ -876,7 +876,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							},
 							disabled: true
 						}),
-						me.addAction('deleteSyncDevice', {
+						me.addAct('deleteSyncDevice', {
 							text: WT.res('act-delete.lbl'),
 							tooltip: null,
 							iconCls: 'wt-icon-delete-xs',
@@ -887,7 +887,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 							disabled: true
 						}),
 						'->',
-						me.addAction('refreshSyncDevices', {
+						me.addAct('refreshSyncDevices', {
 							text: null,
 							tooltip: WT.res('act-refresh.lbl'),
 							iconCls: 'wt-icon-refresh-xs',
@@ -898,8 +898,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					],
 					listeners: {
 						selectionchange: function(s,recs) {
-							me.getAction('showSyncDeviceInfo').setDisabled(!recs.length);
-							me.getAction('deleteSyncDevice').setDisabled(!recs.length);
+							me.getAct('showSyncDeviceInfo').setDisabled(!recs.length);
+							me.getAct('deleteSyncDevice').setDisabled(!recs.length);
 						}
 					}
 				}]

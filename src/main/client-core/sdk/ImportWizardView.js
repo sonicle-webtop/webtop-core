@@ -173,7 +173,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				reference: 'gp',
 				store: {
 					model: 'Sonicle.webtop.core.model.ImportMapping',
-					proxy: WTF.proxy(me.mys.ID, me.getAction(), 'mappings', {
+					proxy: WTF.proxy(me.mys.ID, me.getAct(), 'mappings', {
 						extraParams: {op: 'mappings'}
 					}),
 					listeners: {
@@ -196,7 +196,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 						store: {
 							autoLoad: false,
 							model: 'WTA.ux.data.ValueModel',
-							proxy: WTF.proxy(me.mys.ID, me.getAction(), 'columns', {
+							proxy: WTF.proxy(me.mys.ID, me.getAct(), 'columns', {
 								extraParams: {op: 'columns'}
 							}),
 							listeners: {
@@ -418,7 +418,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 								reference: 'fldsheet',
 								store: {
 									model: 'WTA.ux.data.ValueModel',
-									proxy: WTF.proxy(me.mys.ID, me.getAction(), 'sheets', {
+									proxy: WTF.proxy(me.mys.ID, me.getAct(), 'sheets', {
 										extraParams: {op: 'sheets'}
 									}),
 									listeners: {

@@ -87,8 +87,8 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	 * @returns {Boolean}
 	 */
 	isXType: function(obj, xtype) {
-		if(!Ext.isObject(obj)) return false;
-		if(!Ext.isFunction(obj.isXType)) return false;
+		if (!Ext.isObject(obj)) return false;
+		if (!Ext.isFunction(obj.isXType)) return false;
 		return obj.isXType(xtype);
 	},
 	
@@ -98,8 +98,8 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	 * @returns {Boolean} 'True' if passed object is an action.
 	 */
 	isAction: function(obj) {
-		if(!Ext.isObject(obj)) return false;
-		return (obj.isAction && Ext.isFunction(obj.execute));
+		if (!Ext.isObject(obj)) return false;
+		return (obj.isAction === true) && Ext.isFunction(obj.execute);
 	},
 	
 	/**

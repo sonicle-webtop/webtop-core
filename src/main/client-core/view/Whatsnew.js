@@ -96,9 +96,9 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		tab.removeAll(true);
 		WT.ajaxReq(me.mys.ID, 'GetWhatsnewTabs', {
 			params: {full: me.full},
-			callback: function(success, o) {
+			callback: function(success, json) {
 				if(success) {
-					Ext.each(o.data, function(itm) {
+					Ext.each(json['data'], function(itm) {
 						tab.add(me.createTab(itm, me.full));
 					}, me);
 					tab.doLayout();

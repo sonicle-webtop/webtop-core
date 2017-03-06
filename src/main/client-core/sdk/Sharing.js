@@ -149,7 +149,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 					flex: 1
 				}],
 				tbar: [
-					me.addAction('deleteRights', {
+					me.addAct('deleteRights', {
 						text: WT.res('act-delete.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-delete-xs',
@@ -162,7 +162,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 				],
 				listeners: {
 					selectionchange: function(s,recs) {
-						me.getAction('deleteRights').setDisabled(!recs.length);
+						me.getAct('deleteRights').setDisabled(!recs.length);
 						me.lref('elementsperms').setDisabled(!recs.length);
 						me.lref('folderperms').setDisabled(!recs.length);
 						me.lref('rootperms').setDisabled(!recs.length);

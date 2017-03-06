@@ -158,20 +158,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	
 	initActions: function() {
 		var me = this;
-		me.addAction('addDomain', {
+		me.addAct('addDomain', {
 			tooltip: null,
 			handler: function() {
 				me.addDomainUI();
 			}
 		});
-		me.addAction('editDomain', {
+		me.addAct('editDomain', {
 			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();
 				if(node) me.editDomainUI(node);
 			}
 		});
-		me.addAction('deleteDomain', {
+		me.addAct('deleteDomain', {
 			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();
@@ -185,7 +185,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		me.addRef('cxmDomains', Ext.create({
 			xtype: 'menu',
 			items: [
-				me.getAction('addDomain')
+				me.getAct('addDomain')
 			],
 			listeners: {
 				beforeshow: function(s) {
@@ -196,9 +196,9 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		me.addRef('cxmDomain', Ext.create({
 			xtype: 'menu',
 			items: [
-				me.getAction('editDomain'),
-				me.getAction('deleteDomain'),
-				me.getAction('addDomain')
+				me.getAct('editDomain'),
+				me.getAct('deleteDomain'),
+				me.getAct('addDomain')
 			],
 			listeners: {
 				beforeshow: function(s) {
@@ -714,7 +714,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	updateDisabled: function(action) {
 		var me = this,
 				dis = me.isDisabled(action);
-		me.setActionDisabled(action, dis);
+		me.setActDisabled(action, dis);
 	},
 	
 	/**

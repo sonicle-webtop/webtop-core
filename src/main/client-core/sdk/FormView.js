@@ -121,7 +121,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	initTBar: function() {
 		var me = this, items = [];
 		
-		me.addAction('saveClose', {
+		me.addAct('saveClose', {
 			text: WT.res('act-saveClose.lbl'),
 			tooltip: null,
 			iconCls: 'wt-icon-saveClose-xs',
@@ -131,11 +131,11 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 		});
 		
 		if(!me.showSave) {
-			items.push(me.getAction('saveClose'));
+			items.push(me.getAct('saveClose'));
 			/*
 			Ext.apply(me, {
 				tbar: [
-					me.getAction('saveClose')
+					me.getAct('saveClose')
 				]
 			});
 			*/
@@ -145,7 +145,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 				text: WT.res('act-saveClose.lbl'),
 				iconCls: 'wt-icon-saveClose-xs',
 				menu: [
-					me.addAction('save', {
+					me.addAct('save', {
 						text: WT.res('act-save.lbl'),
 						tooltip: null,
 						iconCls: 'wt-icon-save-xs',
@@ -153,10 +153,10 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 							me.doSave(false);
 						}
 					}),
-					me.getAction('saveClose')
+					me.getAct('saveClose')
 				],
 				handler: function() {
-					me.getAction('saveClose').execute();
+					me.getAct('saveClose').execute();
 				}
 			});
 			/*
@@ -166,17 +166,17 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 					text: WT.res('act-saveClose.lbl'),
 					iconCls: 'wt-icon-saveClose-xs',
 					menu: [
-						me.addAction('save', {
+						me.addAct('save', {
 							text: WT.res('act-save.lbl'),
 							iconCls: 'wt-icon-save-xs',
 							handler: function() {
 								me.doSave(false);
 							}
 						}),
-						me.getAction('saveClose')
+						me.getAct('saveClose')
 					],
 					handler: function() {
-						me.getAction('saveClose').execute();
+						me.getAct('saveClose').execute();
 					}
 				}]
 			});

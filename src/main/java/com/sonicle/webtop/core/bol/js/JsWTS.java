@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.json.extjs.ExtManifest;
+import com.sonicle.commons.web.json.extjs.Ext6Manifest;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -43,7 +43,7 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTS {
-	public ExtManifest appManifest = new ExtManifest();
+	public Ext6Manifest appManifest = new Ext6Manifest();
 	public String appType;
 	public String platformName;
 	public String baseUrl;

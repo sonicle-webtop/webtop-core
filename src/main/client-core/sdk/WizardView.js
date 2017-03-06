@@ -253,7 +253,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		}
 	},
 	
-	getAction: function() {
+	getAct: function() {
 		var me = this;
 		if(me.isMultiPath) {
 			return me.action[me.getVM().get('path')];
@@ -470,7 +470,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		}
 		
 		me.wait();
-		WT.ajaxReq(me.mys.ID, me.getAction(), {
+		WT.ajaxReq(me.mys.ID, me.getAct(), {
 			timeout: 1000*60*5,
 			params: params,
 			callback: function(success, json) {

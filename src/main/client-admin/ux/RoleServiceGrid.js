@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleServiceGrid', {
 		me.initActions();
 		me.tbar = me.tbar || [];
 		me.tbar.push(
-			me.addAction,
+			me.addAct,
 			me.removeAction
 		);
 		
@@ -87,7 +87,7 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleServiceGrid', {
 	
 	initActions: function() {
 		var me = this;
-		me.addAction = new Ext.Action({
+		me.addAct = new Ext.Action({
 			text: WT.res('act-add.lbl'),
 			iconCls: 'wt-icon-add-xs',
 			handler: me.onAddClick,

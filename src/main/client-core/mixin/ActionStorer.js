@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @param {Object} obj Action config.
 	 * @returns {WTA.ux.Action} The Action just created.
 	 */
-	createAction: function(name, obj) {
+	createAct: function(name, obj) {
 		var me = this;
 		/*
 		var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
@@ -105,7 +105,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @param {Object/Ext.Action} obj Action instance or config.
 	 * @return {WTA.ux.Action} The Action that were added.
 	 */
-	addAction: function(group, name, obj) {
+	addAct: function(group, name, obj) {
 		var me = this, act;
 		if(arguments.length === 2) {
 			obj = name;
@@ -114,7 +114,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		}
 		if(!me._actions[group]) me._actions[group] = {};
 		
-		act = WTU.isAction(obj) ? obj : me.createAction(name, obj);
+		act = WTU.isAction(obj) ? obj : me.createAct(name, obj);
 		me._actions[group][name] = act;
 		return act;
 	},
@@ -126,7 +126,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @param {String} name The action name.
 	 * @return {WTA.ux.Action} The action.
 	 */
-	getAction: function(group, name) {
+	getAct: function(group, name) {
 		var me = this;
 		if(arguments.length === 1) {
 			name = group;
@@ -141,7 +141,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @param {String} group The action group.
 	 * @returns {Object} The actions map.
 	 */
-	getActions: function(group) {
+	getActs: function(group) {
 		return this._actions[group];
 	},
 	
@@ -153,14 +153,14 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 	 * @param {Boolean} disabled The disabled state.
 	 * @return {WTA.ux.Action} The action.
 	 */
-	setActionDisabled: function(group, name, disabled) {
+	setActDisabled: function(group, name, disabled) {
 		var me = this, act;
 		if(arguments.length === 2) {
 			disabled = name;
 			name = group;
 			group = me.DEFAULT_GROUP;
 		}
-		act = me.getAction(group, name);
+		act = me.getAct(group, name);
 		if(act) act.setDisabled(disabled);
 	},
 	
