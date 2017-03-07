@@ -147,8 +147,9 @@ public final class WebTopManager {
 	public static final String INTERNETNAME_LOCAL = "local";
 	public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
 	public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
-	public static final String DOMAINID_SYSADMIN = "*";
-	public static final String USERID_ADMIN = "admin";
+	public static final String SYSADMIN_DOMAINID = "*";
+	public static final String SYSADMIN_USERID = "admin";
+	public static final String DOMAINADMIN_USERID = "admin";
 	public static final String USERID_ADMINS = "admins";
 	public static final String USERID_USERS = "users";
 	
@@ -338,7 +339,7 @@ public final class WebTopManager {
 			logger.debug("Inserting domain admin");
 			UserEntity ue = new UserEntity();
 			ue.setDomainId(domain.getDomainId());
-			ue.setUserId(USERID_ADMIN);
+			ue.setUserId(DOMAINADMIN_USERID);
 			ue.setEnabled(true);
 			ue.setFirstName("DomainAdmin");
 			ue.setLastName(domain.getDescription());
@@ -1470,7 +1471,7 @@ public final class WebTopManager {
 	}
 	
 	public String getDomainInternetName(String domainId) throws WTException {
-		if (StringUtils.equals(domainId, DOMAINID_SYSADMIN)) {
+		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
 			return INTERNETNAME_LOCAL;
 		} else {
 			ODomain domain = getDomain(domainId);
