@@ -161,7 +161,7 @@ public class Service extends BaseService {
 		boolean domainPasswordPolicy = false;
 		boolean dirCapPasswordWrite = false;
 		try {
-			if (profile.getDomainId().equals(WebTopManager.DOMAINID_SYSADMIN)) {
+			if (profile.getDomainId().equals(WebTopManager.SYSADMIN_DOMAINID)) {
 				dirCapPasswordWrite = true;
 			} else {
 				ODomain domain = coreMgr.getDomain();

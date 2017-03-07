@@ -164,7 +164,7 @@ public final class WebTopApp {
 		synchronized(lockInstance) {
 			if(instance != null) throw new RuntimeException("Application must be started once");
 			SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
-			Subject adminSubject = buildSubject(new UserProfileId("*", "admin"));
+			Subject adminSubject = buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
 			
 			ThreadState threadState = new SubjectThreadState(adminSubject);
 			try {
@@ -198,8 +198,9 @@ public final class WebTopApp {
 	public static final String DOMAINS_FOLDER = "domains";
 	public static final String DBSCRIPTS_FOLDER = "dbscripts";
 	public static final String DBSCRIPTS_POST_FOLDER = "post";
-	public static final String DOMAIN_TEMP_FOLDER = "temp";
-	public static final String DOMAIN_IMAGES_FOLDER = "images";
+	public static final String TEMP_DOMAIN_FOLDER = "temp";
+	public static final String IMAGES_DOMAIN_FOLDER = "images";
+	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
 	private final ServletContext servletContext;
 	private final String osInfo;
@@ -281,7 +282,7 @@ public final class WebTopApp {
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
 		this.logmgr = LogManager.initialize(this); // Log Manager
-		this.wtmgr = WebTopManager.initialize(this); // User Manager
+		this.wtmgr = WebTopManager.initialize(this); // WT Manager
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setmgr); // System locale
 		this.optmgr = OTPManager.initialize(this); // OTP Manager
@@ -448,6 +449,8 @@ public final class WebTopApp {
 	}
 	
 	private void checkDomainsHomesStructure() throws WTException {
+		wtmgr.initDomainHomeFolder(WebTopManager.SYSADMIN_DOMAINID);
+		
 		List<ODomain> domains = wtmgr.listDomains(false);
 		for (ODomain domain : domains) {
 			try {
@@ -544,11 +547,11 @@ public final class WebTopApp {
 	
 	
 	public Subject bindAdminSubjectToSession(String sessionId) {
-		return buildSubject(new UserProfileId("*", "admin"), sessionId);
+		return buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID), sessionId);
 	}
 	
 	private CoreServiceSettings getCoreServiceSettings() {
-		return new CoreServiceSettings(setmgr, CoreManifest.ID, "*");
+		return new CoreServiceSettings(setmgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
 	}
 	
 	
@@ -782,8 +785,8 @@ public final class WebTopApp {
 	 */
 	public String getHomePath(String domainId) {
 		CoreServiceSettings css = getCoreServiceSettings();
-		if (StringUtils.equals(domainId, "*")) {
-			return css.getHomePath() + DOMAINS_FOLDER + "/_/";
+		if (StringUtils.equals(domainId, WebTopManager.SYSADMIN_DOMAINID)) {
+			return css.getHomePath() + DOMAINS_FOLDER + "/" + SYSADMIN_DOMAIN_FOLDER + "/";
 		} else {
 			return css.getHomePath() + DOMAINS_FOLDER + "/" + domainId + "/";
 		}
@@ -796,11 +799,11 @@ public final class WebTopApp {
 	 * @return The path
 	 */
 	public String getTempPath(String domainId) {
-		return getHomePath(domainId) + DOMAIN_TEMP_FOLDER + "/";
+		return getHomePath(domainId) + TEMP_DOMAIN_FOLDER + "/";
 	}
 	
 	public String getImagesPath(String domainId) {
-		return getHomePath(domainId) + DOMAIN_IMAGES_FOLDER + "/";
+		return getHomePath(domainId) + IMAGES_DOMAIN_FOLDER + "/";
 	}
 	
 	/**
