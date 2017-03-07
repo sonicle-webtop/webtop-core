@@ -454,7 +454,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		var me = this,
 				lay = me.getLayout();
 		lay.setActiveItem(page);
-		lay.getActiveItem().doLayout();
+		lay.getActiveItem().updateLayout();
 	},
 	
 	onDoClick: function() {

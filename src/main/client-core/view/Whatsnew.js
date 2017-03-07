@@ -101,7 +101,7 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 					Ext.each(json['data'], function(itm) {
 						tab.add(me.createTab(itm, me.full));
 					}, me);
-					tab.doLayout();
+					tab.updateLayout();
 					if(tab.items.getCount() > 0) tab.setActiveTab(0);
 				}
 			}
