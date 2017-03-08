@@ -281,9 +281,8 @@ public class WT {
 		return getWTA().getServiceHomePath(domainId, serviceId);
 	}
 	
-	public static String getServiceHomePath(String serviceId) {
-		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().getServiceHomePath(runPid.getDomain(), serviceId);
+	public static String getServiceHomePath(String serviceId, UserProfileId profileId) {
+		return getWTA().getServiceHomePath(profileId.getDomain(), serviceId);
 	}
 	
 	public static String getTempPath() {
