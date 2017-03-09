@@ -31,148 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-
-Ext.define('Sonicle.webtop.core.ux.RecipientsGridNavigationModel',{
-	extend: 'Ext.grid.NavigationModel',
-	
-	//remove cell focus style
-	//focusCls: '',
-	
-	startEdit: function(record,c) {
-		this.view.grid.getPlugin('socellediting').startEdit(record, this.view.ownerCt.getColumnManager().getHeaderAtIndex(c));
-	},
-    
-    completeEdit: function() {
-        this.view.grid.getPlugin('socellediting').completeEdit();
-    },
-	
-	onKeyUp: function(ke) {
-		var me=this,
-			c=ke.position.colIdx;
-	
-		me.callParent(arguments);
-		if (c===1) me.startEdit(me.record, 1);
-	},
-	
-	onKeyDown: function(ke) {
-		var me=this,
-			c=ke.position.colIdx;
-
-		this.callParent(arguments);
-		if (c===1) me.startEdit(me.record, 1);
-    },	
-	
-	moveUp: function() {
-		var me=this,
-			ppos=me.previousPosition;
-	
-		if (ppos.rowIdx>0) {
-			me.setPosition(ppos);
-			var newpos=me.move("up");
-			if (newpos) {
-			  me.setPosition(newpos);	
-			  me.startEdit(newpos.record, 1);
-			  return true;
-			}
-		}
-		return false;
-	},
-	
-	moveDown: function(stopExitFocus) {
-		var me=this,
-			ppos=me.previousPosition;
-
-		//depending on key event moment, previousPosition may be invalid
-		//while it is valid current position
-		if (ppos.rowIdx===null) ppos=me.position;
-
-		var lastr=me.view.store.getCount()-1;
-	
-		if (ppos.rowIdx<lastr) {
-			me.setPosition(ppos);
-			var newpos=me.move("down");
-			if (newpos) {
-			  me.setPosition(newpos);	
-			  me.startEdit(newpos.record, 1);
-			  return true;
-			}
-		} else {
-			me.completeEdit();
-			var email=ppos.record.get("email");
-			if (email==="") {
-				if (!stopExitFocus)
-					me.view.grid.fireExitFocus();
-			} else {
-				var g=me.view.grid,
-					rt=ppos.record.get(g.fields.recipientType),
-					rec=g.addRecipient(rt,'');
-				me.setPosition(ppos.rowIdx+1,1,null,null,true);
-				me.startEdit(rec,1);
-				return true;
-			}
-		}
-		return false;
-	}
-});
-
-
-Ext.define('Sonicle.webtop.core.ux.CellEditingPlugin', {
-	extend: 'Ext.grid.plugin.CellEditing',
-	alias: 'plugin.socellediting',
-	
-    onSpecialKey: function(ed, field, e) {
-        var me=this,sm,k=e.getKey();
-
-		if (k === e.ENTER) {
-			me.wasEnterKey=true;
-			return true;
-		}
-		else if (k === e.TAB) {
-            e.stopEvent();
-
-			var moved;
-			if (e.shiftKey) {
-				moved=me.navigationModel.moveUp();
-			} else {
-				moved=me.navigationModel.moveDown();
-			}
-			
-			if (!moved) {
-				/*if (ed) {
-					// Allow the field to act on tabs before onEditorTab, which ends
-					// up calling completeEdit. This is useful for picker type fields.
-					ed.onEditorTab(e);
-				}
-
-				sm = ed.getRefOwner().getSelectionModel();
-				return sm.onEditorTab(ed.editingPlugin, e);*/
-			}
-			return true;
-        }
-		else if (k === e.UP) {
-			if (!me.activeColumn.getEditor().isExpanded) return me.navigationModel.moveUp();
-		} else if (k === e.DOWN) {
-			if (!me.activeColumn.getEditor().isExpanded) return me.navigationModel.moveDown(true);
-		}
-    },
-	
-    onEditComplete : function(ed, value, startValue) {
-		var me=this;
-    	me.callParent(arguments);
-		if (me.wasEnterKey) {
-			me.navigationModel.moveDown(true);
-			me.wasEnterKey=false;
-		}
-		
-    }
-	
-});
-
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WTA.ux.RegipientsGrid',
 	extend: 'Ext.grid.Panel',
 	alias: ['widget.wtrecipientsgrid'],
 	requires: [
+		'WTA.ux.grid.RecipientCellEditor',
+		'WTA.ux.grid.plugin.RecipientCellEditing',
 		'WTA.ux.field.RecipientSuggestCombo',
 		'Sonicle.webtop.core.model.Simple',
 		'Sonicle.webtop.core.store.RcptType'
@@ -207,52 +72,40 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	//messageId: null,
 	
 	initComponent: function() {
-		var me = this,
-			navModel = this.navigationModel = Ext.create('Sonicle.webtop.core.ux.RecipientsGridNavigationModel');
+		var me = this;
 		
 		Ext.apply(me, {
 			selModel: 'cellmodel',
 			hideHeaders: true,
 			viewConfig: {
-				navigationModel: navModel,
 				scrollable: true,
 				markDirty: false
 			},
 			plugins: {
-				ptype: 'socellediting',
-				pluginId: 'socellediting',
+				ptype: 'wtrcptcellediting',
+				pluginId: 'wtrcptcellediting',
 				clicksToEdit: 1,
-				navigationModel: navModel,
 				autoEncode: true
 			},
-			columns: [
-				{
+			columns: [{
 					width: 50, 
-					dataIndex: me.fields.recipientType, 
+					dataIndex: me.fields.recipientType,
 					editor: Ext.create('Ext.form.ComboBox',{
-					  forceSelection: true,
-					  queryMode: 'local',
-					  displayField: 'desc',
-					  triggerAction: 'all',
-					  //selectOnFocus: true,
-					  width: 30,
-					  //editable: false,
-					  store: Ext.create('WTA.store.RcptType',{ autoLoad: true })/*{
-						  model: "Sonicle.webtop.core.model.Simple",
-						  data: [
-							  { id: 'to', desc: WT.res('store.rcptType.to') },
-							  { id: 'cc', desc: WT.res('store.rcptType.cc') },
-							  { id: 'bcc', desc: WT.res('store.rcptType.bcc') }
-						  ]
-					  }*/,
-					  value: 'to',
-					  valueField: 'id'
-					}),
+						forceSelection: true,
+						queryMode: 'local',
+						displayField: 'desc',
+						triggerAction: 'all',
+						//selectOnFocus: true,
+						width: 30,
+						//editable: false,
+						store: Ext.create('WTA.store.RcptType',{ autoLoad: true }),
+						value: 'to',
+						valueField: 'id'
+					}),	
 					renderer: function(value, md, record, ri, ci, s, view) {
 						return '<font color="black">'+WT.res('store.rcptType.'+value)+'</font>';
 					}
-				},
-				{
+				}, {
 					flex: 1,
 					dataIndex: me.fields.email, 
 					//editor: 'textfield'
@@ -285,11 +138,12 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	},
 	
 	startEditAt: function(row) {
-		this.navigationModel.startEdit(this.getStore().getAt(row),1);
+		var rowIdx = this.getStore().getAt(row);
+		this.getPlugin('wtrcptcellediting').startEditByPosition({row: rowIdx, column: 1});
 	},
 	
 	completeEdit: function() {
-		this.navigationModel.completeEdit();
+		this.getPlugin('wtrcptcellediting').completeEdit();
 	},
     
 	fireExitFocus: function() {

@@ -152,7 +152,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			me.fireEvent('beforemodelload', me, opts.pass);
 			model.load({
 				callback: function(rec, op, success) {
-					me.fireEvent('modelload', me, success, model, opts.pass);
+					me.onModelLoad(success, model, undefined, opts.pass);
+					//me.fireEvent('modelload', me, success, model, opts.pass);
 					Ext.callback(opts.callback, opts.scope||me, [ success, model ]);
 				},
 				scope: me
@@ -177,8 +178,9 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
 				
 				if (success && dirty) mdl.dirty = true;
-				me.fireEvent('modelload', me, success, mdl, opts.pass);
-				Ext.callback(opts.callback, opts.scope||me, [ success, mdl ]);
+				me.onModelLoad(success, mdl, undefined, opts.pass);
+				//me.fireEvent('modelload', me, success, mdl, opts.pass);
+				Ext.callback(opts.callback, opts.scope || me, [success, mdl]);
 			});
 			
 			// Apply linking...
@@ -206,6 +208,10 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		}
 	},
 	
+	onModelLoad: function(success, model, op, pass) {
+		this.fireEvent('modelload', this, success, model, op, pass);
+	},
+	
 	/**
 	 * Saves configured model.
 	 * @param {Object} opts 
@@ -223,8 +229,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			me.fireEvent('beforemodelsave', me, model, opts.pass);
 			model.save({
 				callback: function(rec, op, success) {
-					me.fireEvent('modelsave', me, op, success, model, opts.pass);
-					Ext.callback(opts.callback, opts.scope||me, [ success, model ]);
+					me.onModelSave(success, model, op, opts.pass);
+					Ext.callback(opts.callback, opts.scope || me, [success, model]);
 				},
 				scope: me
 			});
@@ -232,6 +238,10 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		} else {
 			return false;
 		}
+	},
+	
+	onModelSave: function(success, model, op, pass) {
+		this.fireEvent('modelsave', this, success, model, op, pass);
 	},
 	
 	privates: {

@@ -177,8 +177,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		var me = this;
 		if(me.autoToolbar) me.initTBar();
 		me.callParent(arguments);
-		me.on('modelsave', me.onModelSave);
-		me.on('modelload', me.onModelLoad);
+		//me.on('modelsave', me.onModelSave);
+		//me.on('modelload', me.onModelLoad);
 	},
 	
 	initTBar: function() {
@@ -312,6 +312,28 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		}
 	},
 	
+	onModelLoad: function(success, model, op, pass) {
+		var me = this;
+		me.mixins.hasmodel.onModelLoad.call(me, success, model, op, pass);
+		me.modelLoading = false;
+		me.unwait();
+		if ((me.getFieldTitle() === true) || Ext.isString(me.getFieldTitle())) {
+			me.getVM().set('_fieldTitle', me.formatFieldTitle(me.getModel()));
+		}
+		me.fireEvent('viewload', me, success, model);
+	},
+	
+	onModelSave: function(success, model, op, pass) {
+		var me = this;
+		me.mixins.hasmodel.onModelSave.call(me, success, model, op, pass);
+		me.unwait();
+		me.fireEvent('viewsave', me, success, model);
+		if (success) {
+			if (pass && pass.closeAfter) me.closeView(false);
+		}
+	},
+	
+	/*
 	onModelLoad: function(s, success, model) {
 		var me = this;
 		me.modelLoading = false;
@@ -329,6 +351,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			if(pass.closeAfter) s.closeView(false);
 		}
 	},
+	*/
 	
 	onModeChange: function(nm, om) {
 		var me = this;
