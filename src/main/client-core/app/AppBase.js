@@ -153,3 +153,18 @@ Ext.override(Ext.util.LruCache, {
         }
     }
 });
+
+
+Ext.override(Ext.dd.DragDropManager, {
+    stopEvent: function(e) {
+        if (this.stopPropagation) {
+            e.stopPropagation();
+        }
+ 
+		//avoid a bug while dragging elements
+        if (this.preventDefault /* && e.pointerType === 'touch' */) {
+            e.preventDefault();
+        }
+    }	
+});
+
