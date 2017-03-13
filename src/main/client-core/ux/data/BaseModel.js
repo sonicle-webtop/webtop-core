@@ -80,6 +80,11 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 		}
 	},
 	
+	constructor: function(cfg) {
+		this.callParent([cfg]);
+		this._pendingCompile = [];
+	},
+	
 	/**
 	 * Sets the specified field only if its (current) value is null.
 	 * @param {String} field The name of the field to update
@@ -121,18 +126,5 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 		dt = !Ext.isDate(date) ? null : Sonicle.Date.copyTime(date, v);
 		me.set(field, dt);
 		return dt;
-	},
-	
-	/**
-	 * Sets validators to a field dinamically.
-	 * NB: after the update of validators a call to {@link Ext.data.Model#getValidation getValidation}
-	 * with the 'refresh' parameter to 'True' is necessary in order to refresh
-	 * the internal validation instance.
-	 * @param {String} field The name of the field
-	 * @param {Object[]} validators An array of {@link Ext.data.validator.Validator validators}
-	 */
-	setFieldValidators: function(field, validators) {
-		var fld = this.getField(field);
-		if (fld) fld.setModelValidators(validators || []);
 	}
 });

@@ -67,7 +67,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		if(!me.getModelName()) Ext.Error.raise('Specify a valid model name');
 		
 		// Pushes some built-in formulas
-		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, me._builtInFormulas(me.getModelProperty())));
+		//vm.setFormulas(Ext.apply(vm.getFormulas() || {}, me._builtInFormulas(me.getModelProperty())));
 		
 		// If necessary, guess model id property name
 		if(!Ext.isString(me.getModelIdProperty())) {
