@@ -162,6 +162,6 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				me.setFieldValidators('ldapUserDisplayNameField');
 				break;
 		}
-		me.getValidation(true);
+		me.updateValidation();
 	}
 });
