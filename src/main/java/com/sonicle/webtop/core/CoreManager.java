@@ -157,13 +157,15 @@ public class CoreManager extends BaseManager {
 	public List<JsSimple> listThemes() throws WTException {
 		ArrayList<JsSimple> items = new ArrayList<>();
 		//TODO: gestire i temi dinamicamente
-		//items.add(new JsSimple("aria", "Aria"));
-		items.add(new JsSimple("classic", "Classic"));
 		items.add(new JsSimple("crisp", "Crisp"));
 		//items.add(new JsSimple("crisp-touch", "Crisp Touch"));
-		items.add(new JsSimple("gray", "Gray"));
+		//items.add(new JsSimple("triton", "Triton"));
 		items.add(new JsSimple("neptune", "Neptune"));
 		//items.add(new JsSimple("neptune-touch", "Neptune Touch"));
+		items.add(new JsSimple("neptune", "Neptune"));
+		//items.add(new JsSimple("aria", "Aria"));
+		items.add(new JsSimple("classic", "Classic"));
+		items.add(new JsSimple("gray", "Gray"));
 		return items;
 	}
 	

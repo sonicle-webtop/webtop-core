@@ -49,6 +49,7 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.wt-menu-bgroup-body .x-table-layout {}
 .wt-menu-feedback { background-image: url('feedback_32.png') !important; width: 32px; }
 .wt-menu-whatsnew { background-image: url('whatsnew_32.png') !important; width: 32px; }
 .wt-menu-options { background-image: url('options_32.png') !important; width: 32px; }

@@ -222,50 +222,61 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					menu: {
 						xtype: 'menu',
 						plain: true,
-						width: 150,
 						items: [{
-							xtype: 'label',
-							text: WT.getVar('userDisplayName'),
-							cls: 'wt-menu-userdetails-main'
-						}, {
-							xtype: 'label',
-							text: WT.getVar('userId'),
-							cls: 'wt-menu-userdetails-sub'
+								xtype: 'label',
+								text: WT.getVar('userDisplayName'),
+								cls: 'wt-menu-userdetails-main'
+							}, {
+								xtype: 'label',
+								text: WT.getVar('userId'),
+								cls: 'wt-menu-userdetails-sub'
 						}, '-', {
 							xtype: 'buttongroup',
+							ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
+							bodyCls: 'wt-menu-bgroup-body',
 							columns: 2,
 							defaults: {
 								xtype: 'button',
 								scale: 'large',
 								iconAlign: 'center',
-								width: '100%',
 								handler: 'onMenuButtonClick'
 							},
 							items: [{
 								itemId: 'feedback',
 								tooltip: WT.res('menu.feedback.tip'),
 								disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
-								iconCls: 'wt-menu-feedback'
+								iconCls: 'wt-menu-feedback',
+								width: '4em',
+								height: '4em'
 							}, {
 								itemId: 'whatsnew',
 								tooltip: WT.res('menu.whatsnew.tip'),
 								disabled: !WT.getVar('wtWhatsnewEnabled'),
-								iconCls: 'wt-menu-whatsnew'
+								iconCls: 'wt-menu-whatsnew',
+								width: '4em',
+								height: '4em'
 							}, {
 								itemId: 'options',
 								tooltip: WT.res('menu.options.tip'),
-								iconCls: 'wt-menu-options'
+								iconCls: 'wt-menu-options',
+								width: '4em',
+								height: '4em'
 							}, {
 								itemId: 'addons',
 								tooltip: WT.res('menu.addons.tip'),
-								iconCls: 'wt-menu-addons'
+								iconCls: 'wt-menu-addons',
+								width: '4em',
+								height: '4em'
 							}/*, {
 								itemId: 'help',
 								tooltip: WT.res('menu.help.tip'),
-								iconCls: 'wt-menu-help'
+								iconCls: 'wt-menu-help',
+								width: '4em',
+								height: '4em'
 							}*/, {
 								itemId: 'logout',
 								colspan: 2,
+								width: '100%',
 								scale: 'small',
 								tooltip: WT.res('menu.logout.tip'),
 								iconCls: 'wt-menu-logout'
