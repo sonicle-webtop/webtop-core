@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
@@ -660,7 +661,7 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);
-		js.baseUrl=SessionManager.getClientUrl(session);
+		js.baseUrl = PathUtils.ensureTrailingSeparator(SessionManager.getClientUrl(session));
 		js.securityToken = RunContext.getCSRFToken();
 		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);

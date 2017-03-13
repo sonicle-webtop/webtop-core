@@ -239,7 +239,21 @@ public final class WebTopManager {
 	
 	public String internetNameToDomain(String internetName) {
 		synchronized (cacheInternetNameToDomain) {
-			return cacheInternetNameToDomain.get(internetName);
+			if (cacheInternetNameToDomain.size() == 1) {
+				// If we have only one domain in cache, simply returns it...
+				Map.Entry<String, String> entry = cacheInternetNameToDomain.entrySet().iterator().next();
+				return entry.getValue();
+			} else {
+				for(int i=2; i<255; i++) {
+					final int iOfNDot = StringUtils.lastOrdinalIndexOf(internetName, ".", i);
+					final String key = StringUtils.substring(internetName, iOfNDot+1);
+					if(cacheInternetNameToDomain.containsKey(key)) {
+						return cacheInternetNameToDomain.get(key);
+					}
+				}
+				return null;
+			}
+			//return cacheInternetNameToDomain.get(internetName);
 		}
 	}
 	

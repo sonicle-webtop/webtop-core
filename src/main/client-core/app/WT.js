@@ -87,7 +87,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getAppBaseUrl: function() {
 		return this.getApp().baseUrl;
-		//return WTS.baseUrl;
 	},
 	
 	/**
@@ -95,8 +94,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String}
 	 */
 	getPublicImagesUrl: function() {
-		return WT.getAppBaseUrl()+"/resources/"+WT.getVar("domainInternetName")+"/images";
-		//return WTS.baseUrl;
+		return WT.getAppBaseUrl() + 'resources/' + WT.getVar('domainInternetName') + '/images';
 	},
 	
 	/**

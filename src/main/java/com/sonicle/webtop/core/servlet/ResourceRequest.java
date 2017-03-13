@@ -113,12 +113,15 @@ public class ResourceRequest extends HttpServlet {
 	
 	@Override
 	protected long getLastModified(HttpServletRequest request) {
+		return lookup(request).getLastModified();
+		/*
 		String pathInfo = request.getPathInfo();
 		if(lastModifiedCache.containsKey(pathInfo)) {
 			return lastModifiedCache.get(pathInfo);
 		} else {
 			return lookup(request).getLastModified();
 		}
+		*/
 	}
 	
 	protected LookupResult lookup(HttpServletRequest req) {
@@ -126,7 +129,7 @@ public class ResourceRequest extends HttpServlet {
 		if (r == null) {
 			String pathInfo = req.getPathInfo();
 			r = lookupNoCache(req, pathInfo);
-			lastModifiedCache.put(pathInfo, r.getLastModified());
+			//if (r.cacheLastModified()) lastModifiedCache.put(pathInfo, r.getLastModified());
 			req.setAttribute("lookupResult", r);
 		}
 		return r;
@@ -201,12 +204,12 @@ public class ResourceRequest extends HttpServlet {
 			// Addresses login image
 			// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
 			// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
-			return lookupLoginImage(req, isVirtualUrl, targetUrl);
+			return lookupLoginImage(req, targetUrl);
 			
 		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
 			// Addresses licence page
 			// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
-			return lookupLicense(req, isVirtualUrl, targetUrl);
+			return lookupLicense(req, targetUrl);
 			
 		} else {
 			if (StringUtils.endsWith(targetPath, ".js")) {
@@ -214,23 +217,23 @@ public class ResourceRequest extends HttpServlet {
 				String sessionId = ServletHelper.getSessionID(req);
 				if (StringUtils.startsWith(path, "resources/libs")) {
 					// If targets lib folder, simply return requested file without handling debug versions
-					return lookupJs(req, true, targetUrl, false);
+					return lookupJs(req, targetUrl, false);
 					
 				} else if (StringUtils.startsWith(path, "boot/")) {
-					return lookupJs(req, true, targetUrl, isDebug(wta, sessionId));
+					return lookupJs(req, targetUrl, isDebug(wta, sessionId));
 					
 				} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
-					return lookupLocaleJs(req, true, targetUrl, subject);
+					return lookupLocaleJs(req, targetUrl, subject);
 					
 				} else {
-					return lookupJs(req, true, targetUrl, isDebug(wta, sessionId));
+					return lookupJs(req, targetUrl, isDebug(wta, sessionId));
 				}
 				
 			} else if (StringUtils.startsWith(path, "laf")) {
-				return lookupLAF(req, true, targetUrl, path, subject, subjectPath);
+				return lookupLAF(req, targetUrl, path, subject, subjectPath);
 				
 			} else {
-				return lookupDefault(req, isVirtualUrl, targetUrl);
+				return lookupDefault(req, isVirtualUrl ? ClientCaching.YES : ClientCaching.AUTO, targetUrl);
 			}
 		}
 	}
@@ -264,7 +267,7 @@ public class ResourceRequest extends HttpServlet {
 			fileUrl = file.toURI().toURL();
 			
 			Resource resFile = getFile(wta, fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), false, resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), ClientCaching.NO, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -275,13 +278,14 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLoginImage(HttpServletRequest request, boolean forceCaching, URL targetUrl) {
+	private LookupResult lookupLoginImage(HttpServletRequest request, URL targetUrl) {
 		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
 		try {
 			String targetPath = targetUrl.getPath();
-			String internetName = ServletUtils.getInternetName(request);
+			//String internetName = ServletUtils.getInternetName(request);
+			String internetName = ServletUtils.getHost(request);
 			String domainId = WT.findDomainByInternetName(internetName);
 			if (!StringUtils.isBlank(domainId)) {
 				String pathname = wta.getImagesPath(domainId) + "login.png";
@@ -296,7 +300,9 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(wta, fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
+			StaticFile sf = new StaticFile(fileUrl.toString(), getMimeType(targetPath), ClientCaching.NO, resFile);
+			sf.cacheLastModified = false;
+			return sf;
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -307,7 +313,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLicense(HttpServletRequest request, boolean forceCaching, URL targetUrl) {
+	private LookupResult lookupLicense(HttpServletRequest request, URL targetUrl) {
 		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
@@ -331,7 +337,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(wta, fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), ClientCaching.NO, resFile);
 			
 		} catch (MalformedURLException | ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -342,7 +348,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupJs(HttpServletRequest request, boolean forceCaching, URL targetUrl, boolean debugVersion) {
+	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, boolean debugVersion) {
 		WebTopApp wta = WebTopApp.get(request);
 		URL fileUrl = null;
 		
@@ -358,7 +364,7 @@ public class ResourceRequest extends HttpServlet {
 			}
 			
 			Resource resFile = getFile(wta, fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), forceCaching, resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), ClientCaching.YES, resFile);
 		
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -369,7 +375,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLocaleJs(HttpServletRequest request, boolean forceCaching, URL targetUrl, String serviceId) {
+	private LookupResult lookupLocaleJs(HttpServletRequest request, URL targetUrl, String serviceId) {
 		WebTopApp wta = WebTopApp.get(request);
 		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
@@ -399,7 +405,7 @@ public class ResourceRequest extends HttpServlet {
 			
 			//logger.trace("Class: {} - Override: {}", clazz, override);
 			Resource resFile = getFile(wta, fileUrl);
-			return new LocaleJsFile(clazz, override, fileUrl.toString(), forceCaching, resFile);
+			return new LocaleJsFile(clazz, override, fileUrl.toString(), ClientCaching.YES, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -410,8 +416,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLAF(HttpServletRequest request, boolean forceCaching, URL targetUrl, String path, String serviceId, String subjectPath) {
-		final String LOOKUP_URL = "/{0}/laf/{1}/{2}";
+	private LookupResult lookupLAF(HttpServletRequest request, URL targetUrl, String path, String serviceId, String subjectPath) {
 		URL fileUrl = null;
 		
 		try {
@@ -431,7 +436,7 @@ public class ResourceRequest extends HttpServlet {
 			if (fileUrl == null) throw new NotFoundException();
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(remainingPath), forceCaching, resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(remainingPath), ClientCaching.YES, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -442,7 +447,7 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupDefault(HttpServletRequest request, boolean forceCaching, URL url) {
+	private LookupResult lookupDefault(HttpServletRequest request, ClientCaching clientCaching, URL url) {
 		//logger.trace("Looking-up file as default");
 		String path = url.getPath();
 		URL fileUrl = null;
@@ -450,7 +455,7 @@ public class ResourceRequest extends HttpServlet {
 		try {
 			fileUrl = this.getClass().getResource(path);
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
-			return new StaticFile(fileUrl.toString(), getMimeType(path), forceCaching, resFile);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), clientCaching, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
@@ -520,40 +525,45 @@ public class ResourceRequest extends HttpServlet {
 	}
 
 	public static interface LookupResult {
+		public boolean cacheLastModified();
+		public long getLastModified();
 		public void respondGet(HttpServletRequest request, HttpServletResponse response) throws IOException;
 		public void respondHead(HttpServletRequest request, HttpServletResponse response);
-		public long getLastModified();
+	}
+	
+	public enum ClientCaching {
+		YES, AUTO, NO
 	}
 	
 	public static class StaticFile implements LookupResult {
+		protected boolean cacheLastModified;
 		protected final String url;
 		protected final String mimeType;
-		protected final boolean forceCaching;
+		protected final ClientCaching clientCaching;
 		protected final String charset;
 		protected final Resource resourceFile;
 		
-		public StaticFile(String url, String mimeType, boolean forceCaching, Resource resourceFile) {
-			this(url, mimeType, forceCaching, null, resourceFile);
+		public StaticFile(String url, String mimeType, ClientCaching clientCaching, Resource resourceFile) {
+			this(url, mimeType, clientCaching, null, resourceFile);
 		}
 		
-		public StaticFile(String url, String mimeType, boolean forceCaching, String charset, Resource resourceFile) {
+		public StaticFile(String url, String mimeType, ClientCaching clientCaching, String charset, Resource resourceFile) {
+			this.cacheLastModified = true;
 			this.url = url;
 			this.mimeType = mimeType;
-			this.forceCaching = forceCaching;
+			this.clientCaching = clientCaching;
 			this.charset = charset;
 			this.resourceFile = resourceFile;
 		}
 		
-		protected void prepareContent() throws IOException {
-			// Do nothing...
+		@Override
+		public boolean cacheLastModified() {
+			return cacheLastModified;
 		}
 		
-		protected InputStream getInputStream() throws IOException {
-			return resourceFile.getInputStream();
-		}
-		
-		protected int getContentLength() {
-			return (int)resourceFile.getSize();
+		@Override
+		public long getLastModified() {
+			return resourceFile.getLastModified();
 		}
 
 		@Override
@@ -565,13 +575,17 @@ public class ResourceRequest extends HttpServlet {
 				prepareContent();
 				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
 				ServletUtils.setContentTypeHeader(response, mimeType);
-				if(forceCaching) {
+				if (clientCaching.equals(ClientCaching.YES)) {
 					ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24*365); // long (365 days)
 				} else {
-					if(StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
-						ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24); // 1 day
-					} else {
+					if (clientCaching.equals(ClientCaching.NO)) {
 						ServletUtils.setCacheControlPrivateNoCache(response);
+					} else {
+						if (StringUtils.startsWith(mimeType, "image") || StringUtils.startsWith(mimeType, "text/css")) {
+							ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24); // 1 day
+						} else {
+							ServletUtils.setCacheControlPrivateNoCache(response);
+						}
 					}
 				}
 					
@@ -589,10 +603,17 @@ public class ResourceRequest extends HttpServlet {
 		public void respondHead(HttpServletRequest request, HttpServletResponse response) {
 			
 		}
-
-		@Override
-		public long getLastModified() {
-			return resourceFile.getLastModified();
+		
+		protected void prepareContent() throws IOException {
+			// Do nothing...
+		}
+		
+		protected InputStream getInputStream() throws IOException {
+			return resourceFile.getInputStream();
+		}
+		
+		protected int getContentLength() {
+			return (int)resourceFile.getSize();
 		}
 	}
 	
@@ -602,8 +623,8 @@ public class ResourceRequest extends HttpServlet {
 		protected String json = null;
 		protected int contentLength = -1;
 		
-		public LocaleJsFile(String clazz, String override, String url, boolean forceCaching, Resource resourceFile) {
-			super(url, "application/javascript", forceCaching, "utf-8", resourceFile);
+		public LocaleJsFile(String clazz, String override, String url, ClientCaching clientCaching, Resource resourceFile) {
+			super(url, "application/javascript", clientCaching, "utf-8", resourceFile);
 			this.clazz = clazz;
 			this.override = override;
 		}
@@ -694,6 +715,11 @@ public class ResourceRequest extends HttpServlet {
 		public Error(int statusCode, String message) {
 			this.statusCode = statusCode;
 			this.message = message;
+		}
+		
+		@Override
+		public boolean cacheLastModified() {
+			return false;
 		}
 		
 		@Override
