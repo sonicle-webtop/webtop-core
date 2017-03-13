@@ -118,16 +118,6 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	}
 });
 
-Ext.override(Ext.data.Validation, {
-	getErrors: function() {
-		var errs = [];
-		Ext.iterate(this.getData(), function(field, value) {
-			if (value !== true) errs.push({id: field, msg: value});
-		});
-		return errs;
-	}
-});
-
 Ext.override(Ext.util.LruCache, {
     // private. Only used by internal methods.
     unlinkEntry: function (entry) {
@@ -153,7 +143,18 @@ Ext.override(Ext.util.LruCache, {
         }
     }
 });
-
+Ext.override(Ext.dd.DragDropManager, {
+    stopEvent: function(e) {
+        if (this.stopPropagation) {
+            e.stopPropagation();
+        }
+ 
+		//avoid a bug while dragging elements
+        if (this.preventDefault /* && e.pointerType === 'touch' */) {
+            e.preventDefault();
+        }
+    }	
+});
 Ext.override(Ext.data.Model, {
 	
 	constructor: function(cfg) {
@@ -196,6 +197,14 @@ Ext.override(Ext.data.Model, {
 	}
 });
 Ext.override(Ext.data.Validation, {
+	
+	getErrors: function() {
+		var errs = [];
+		Ext.iterate(this.getData(), function(field, value) {
+			if (value !== true) errs.push({id: field, msg: value});
+		});
+		return errs;
+	},
 	
 	refresh: function (force) {
 		// If it's an Ext.data.Model instance directly, we can't 
