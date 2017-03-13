@@ -145,6 +145,10 @@ public class WT {
 		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL, publicName);
 	}
 	
+	public static String getPublicImagesUrl(String domainId) {
+		return PathUtils.concatPathParts(WT.getPublicBaseUrl(domainId),"resources",WT.getDomainInternetName(domainId),"images/");
+	}
+	
 	/*
 	public static ServiceManifest findManifest(Class clazz) {
 		String cname = clazz.getName();

@@ -35,6 +35,7 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
@@ -71,6 +72,7 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
+import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
@@ -1084,11 +1086,15 @@ public class Service extends BaseService {
 	
 	public void processListDomainPublicImages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
-			String path=WT.getDomainImagesPath(getWts().getProfileId().getDomainId());
-			ArrayList<JsSimple> items=new ArrayList<>();
+			String domainId=getWts().getProfileId().getDomainId();
+			String path=WT.getDomainImagesPath(domainId);
+			ArrayList<JsPublicImage> items=new ArrayList<>();
 			File dir=new File(path);
+			int id=0;
 			for(File file: dir.listFiles()) {
-				items.add(new JsSimple(file.getName(),file.getName()));
+				String name=file.getName();
+				String url=PathUtils.concatPathParts(WT.getPublicImagesUrl(domainId),name);
+				items.add(new JsPublicImage("img"+(++id),name,url));
 			}
 			new JsonResult("images", items, items.size()).printTo(out);
 		} catch (Exception ex) {
