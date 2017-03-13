@@ -31,13 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.store.PublicImages', {
-	alternateClassName: 'WTA.store.PublicImages',
-	extend: 'Ext.data.Store',
-	requires: [
-		'Sonicle.webtop.core.model.PublicImage'
-	],
+Ext.define('Sonicle.webtop.core.model.PublicImage', {
+	alternateClassName: 'WTA.model.PublicImage',
+	extend: 'WTA.ux.data.SimpleModel',
 	
-	model: 'WTA.model.PublicImage',
-	proxy: WTF.proxy(WT.ID, 'ListDomainPublicImages', 'images')
+	fields: ['id', 'desc', 'url']
+	
 });
