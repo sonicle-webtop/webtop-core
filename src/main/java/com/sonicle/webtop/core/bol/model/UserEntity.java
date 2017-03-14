@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -161,5 +162,16 @@ public class UserEntity {
 
 	public void setServicesPermissions(List<ORolePermission> servicesPermissions) {
 		this.servicesPermissions = servicesPermissions;
+	}
+	
+	public void ensureCoherence() {
+		if (StringUtils.isBlank(displayName)) {
+			setDisplayName(buildDisplayName());
+		}
+	}
+	
+	private String buildDisplayName() {
+		String dn = StringUtils.trim(StringUtils.defaultIfBlank(firstName, "") + " " + StringUtils.defaultIfBlank(lastName, ""));
+		return StringUtils.isBlank(dn) ? userId : dn;
 	}
 }

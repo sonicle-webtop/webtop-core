@@ -120,19 +120,35 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					boxLabel: me.mys.res('user.fld-enabled.lbl')
 				}, {
 					xtype: 'textfield',
-					bind: '{record.displayName}',
-					fieldLabel: me.mys.res('user.fld-displayName.lbl'),
-					width: 400
-				}, {
-					xtype: 'textfield',
 					bind: '{record.firstName}',
 					fieldLabel: me.mys.res('user.fld-firstName.lbl'),
-					width: 400
+					width: 400,
+					listeners: {
+						blur: function() {
+							me.lref('flddisplayname').setEmptyText(me.getModel().buildDisplayName());
+						}
+					}
 				}, {
 					xtype: 'textfield',
 					bind: '{record.lastName}',
 					fieldLabel: me.mys.res('user.fld-lastName.lbl'),
-					width: 400
+					width: 400,
+					listeners: {
+						blur: function() {
+							me.lref('flddisplayname').setEmptyText(me.getModel().buildDisplayName());
+						}
+					}
+				}, {
+					xtype: 'textfield',
+					reference: 'flddisplayname',
+					bind: '{record.displayName}',
+					fieldLabel: me.mys.res('user.fld-displayName.lbl'),
+					width: 400,
+					listeners: {
+						blur: function(s) {
+							s.setEmptyText(me.getModel().buildDisplayName());
+						}
+					}
 				}]
 			}, {
 				xtype: 'tabpanel',

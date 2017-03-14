@@ -62,6 +62,15 @@ Ext.define('Sonicle.webtop.core.app.ThemeMgr', {
 	},
 	
 	/**
+	 * Returns the base hierarchy for the specified theme.
+	 * @param {String} theme The theme name
+	 * @returns {String} The base name
+	 */
+	getBase: function(theme) {
+		return this.hierarchy[theme];
+	},
+	
+	/**
 	 * Get desired component's metric for a theme.
 	 * Note: this method is able to return metric following the theme hierarchy.
 	 * @param {String} theme The theme name

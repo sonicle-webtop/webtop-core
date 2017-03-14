@@ -623,6 +623,21 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		}
 	},
 	
+	handleRequestMetaError: function(metaErr) {
+		if (metaErr) {
+			if (!Ext.isEmpty(metaErr.text)) {
+				WT.error(metaErr.text);
+			} else if (!Ext.isEmpty(metaErr.res)) {
+				var msg = WT.resTpl(metaErr.res);
+				if (msg === metaErr.res) {
+					return WT.res(WT.ID, msg);
+				} else {
+					return msg;
+				}
+			}
+		}
+	},
+	
 	reload: function() {
 		window.location.reload();
 	},

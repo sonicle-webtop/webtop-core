@@ -61,7 +61,7 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		WTF.field('enabled', 'boolean', true),
 		WTF.field('password', 'string', true),
 		WTF.field('password2', 'string', true),
-		WTF.field('displayName', 'string', false),
+		WTF.field('displayName', 'string', true),
 		WTF.field('firstName', 'string', true),
 		WTF.field('lastName', 'string', true)
 	],
@@ -70,5 +70,11 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		WTF.hasMany('assignedRoles', 'Sonicle.webtop.core.admin.model.AssignedRole'),
 		WTF.hasMany('assignedServices', 'Sonicle.webtop.core.admin.model.AssignedService'),
 		WTF.hasMany('permissions', 'Sonicle.webtop.core.admin.model.RolePermission')
-	]
+	],
+	
+	buildDisplayName: function() {
+		var soString = Sonicle.String, s;
+		s = soString.deflt(this.get('firstName'), '') + ' ' + soString.deflt(this.get('lastName'), '');
+		return Ext.String.trim(s);
+	}
 });

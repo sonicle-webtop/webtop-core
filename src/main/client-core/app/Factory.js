@@ -260,6 +260,9 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				type: 'json'
 			}, opts.writer || {}),
 			listeners: Ext.merge({
+				metachange: function(s, meta) {
+					if (meta.error) WT.handleRequestMetaError(meta.error);
+				},
 				exception: function(s, req, op, eop) {
 					WT.handleRequestError(sid, act, req, op);
 				}
@@ -286,6 +289,9 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				messageProperty: 'message'
 			}, opts.reader || {}),
 			listeners: Ext.merge({
+				metachange: function(s, meta) {
+					if (meta.error) WT.handleRequestMetaError(meta.error);
+				},
 				exception: function(s, req, op, eop) {
 					WT.handleRequestError(sid, act, req, op);
 				}
@@ -332,6 +338,9 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				writeAllFields: true
 			}, opts.writer || {}),
 			listeners: {
+				metachange: function(s, meta) {
+					if (meta.error) WT.handleRequestMetaError(meta.error);
+				},
 				exception: function(s, req, op, eop) {
 					WT.handleRequestError(sid, act, req, op);
 				}
