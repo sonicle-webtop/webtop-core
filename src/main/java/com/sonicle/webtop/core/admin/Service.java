@@ -560,7 +560,7 @@ public class Service extends BaseService {
 					try {
 						coreadm.addUser(JsUser.buildUserEntity(pl.data), true, pl.data.password.toCharArray());
 					} catch(WTCyrusException cexc) {
-						jsres.setMessage("Error creating mailbox : "+cexc.getMessage());
+						jsres.setMetaError(new ResultMeta.Error().setText("Error creating mailbox : "+cexc.getMessage()));
 					}
 				} else {
 					coreadm.addUser(JsUser.buildUserEntity(pl.data), false, null);
