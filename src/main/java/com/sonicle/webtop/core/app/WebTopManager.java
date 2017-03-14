@@ -100,11 +100,16 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import com.sun.mail.imap.ACL;
+import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.Rights;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -116,7 +121,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+import javax.mail.Folder;
+import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -626,12 +635,12 @@ public final class WebTopManager {
 			
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
+			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			
 			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_USERS));
 			
 			OUser ouser = null;
 			if(updateDirectory) {
-				AuthenticationDomain ad = createAuthenticationDomain(domain);
 				AbstractDirectory authDir = getAuthDirectory(ad.getDirUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
@@ -681,6 +690,15 @@ public final class WebTopManager {
 			CoreUserSettings cus = new CoreUserSettings(pid);
 			cus.setLanguageTag(css.getDefaultLanguageTag());
 			cus.setTimezone(css.getDefaultTimezone());
+			
+			//create Cyrus user on webtop and ldapWebtop schemes
+			String scheme=ad.getDirUri().getScheme();
+			if (scheme.equals(LdapWebTopDirectory.SCHEME) || scheme.equals(WebTopDirectory.SCHEME)) {
+				String mailbox=ouser.getUserId();
+				if (scheme.equals(LdapWebTopDirectory.SCHEME)) mailbox+="@"+domain.getInternetName();
+				createCyrusUser(mailbox,domain.getDomainId());
+			}
+			
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
@@ -2015,6 +2033,57 @@ public final class WebTopManager {
 			}
 		}
 	}
+	
+    private void createCyrusUser(String login,String domainId) throws WTCyrusException {
+		String host=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"host");
+		int port=Integer.parseInt(wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"port"));
+		String protocol=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", BaseServiceSettings.DEFAULT_PREFIX+"protocol");
+		String adminuser=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.user");
+		String adminpass=wta.getSettingsManager().getServiceSetting(domainId, "com.sonicle.webtop.mail", "admin.password");
+		Store s=getCyrusStore(host,port,protocol,adminuser,adminpass);
+		createCyrusMailbox(login, s);
+		setCyrusAcl(login, login, s);
+		setCyrusAcl(login, adminuser, s);
+		try { s.close(); } catch(Exception exc) { }
+    }
+    
+    private Store getCyrusStore(String host,int port,String protocol,String user,String psw) throws WTCyrusException {
+        Properties props = new Properties(System.getProperties());
+		props.setProperty("mail.store.protocol", protocol);
+		props.setProperty("mail.store.port", ""+port);
+        Session session = Session.getInstance(props, null);
+		try {
+			Store store = session.getStore(protocol);
+			store.connect(host,user,psw);  
+			return store;
+		} catch(Exception exc) {
+			throw new WTCyrusException(exc);
+		}
+	}
+	
+    private void createCyrusMailbox(String login, Store store) throws WTCyrusException {
+		try {
+			char sep=store.getDefaultFolder().getSeparator();
+            Folder c=store.getFolder("user"+sep+login);
+            if (!c.exists())
+                c.create(Folder.HOLDS_FOLDERS);
+		} catch(Exception exc) {
+			throw new WTCyrusException(exc);
+		}
+    }
+	
+    public void setCyrusAcl(String login, String acllogin, Store store) throws WTCyrusException {
+        try{
+			char sep=store.getDefaultFolder().getSeparator();
+            Folder f= store.getFolder("user"+sep+login);
+            IMAPFolder folder=(IMAPFolder)f;
+            Rights r=new Rights("lrswipcda");
+            ACL a=new ACL(acllogin,r);
+            folder.addACL(a); 
+        } catch(Exception exc){
+			throw new WTCyrusException(exc);
+        }
+    }
 	
 	public static class CheckUserResult {
 		public boolean exist;

@@ -86,6 +86,7 @@ import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
@@ -554,12 +555,17 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);
+				JsonResult jsres=new JsonResult();
 				if (!StringUtils.isBlank(pl.data.password)) {
-					coreadm.addUser(JsUser.buildUserEntity(pl.data), true, pl.data.password.toCharArray());
+					try {
+						coreadm.addUser(JsUser.buildUserEntity(pl.data), true, pl.data.password.toCharArray());
+					} catch(WTCyrusException cexc) {
+						jsres.setMessage("Error creating mailbox : "+cexc.getMessage());
+					}
 				} else {
 					coreadm.addUser(JsUser.buildUserEntity(pl.data), false, null);
 				}
-				new JsonResult().printTo(out);
+				jsres.printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsUser> pl = ServletUtils.getPayload(request, JsUser.class);

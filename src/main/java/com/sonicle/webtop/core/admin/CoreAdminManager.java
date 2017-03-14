@@ -64,6 +64,7 @@ import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
 import java.sql.Connection;
@@ -391,7 +392,9 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.addUser(true, user, updatePassord, password);
-		} catch(Exception ex) {
+		} catch(WTCyrusException ex) {
+			throw ex;
+		} catch(WTException ex) {
 			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
 		}
 	}
