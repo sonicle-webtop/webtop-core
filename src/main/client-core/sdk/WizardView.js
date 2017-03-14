@@ -87,7 +87,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		
 		/**
 		 * @cfg {String} endPageHeaderText
-		 * Text to display as header in end page. Default to resource string 'wizard.end.hd'.
+		 * Text to display as header in end page. Default to resource string 'wizard.end.tit'.
 		 */
 		endPageTitleText: '{wizard.end.tit}'
 	},
@@ -497,14 +497,10 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	},
 	
 	resDoButtonText: function() {
-		var me = this,
-				txt = WT.resTpl(me.mys.ID, me.getDoButtonText());
-		return (txt === undefined) ? WT.resTpl(WT.ID, me.getDoButtonText()) : txt;
+		return WT.resTpl(WT.ID, this.getDoButtonText());
 	},
 	
 	resEndPageTitleText: function() {
-		var me = this,
-				txt = WT.resTpl(me.mys.ID, me.getEndPageTitleText());
-		return (txt === undefined) ? WT.resTpl(WT.ID, me.getEndPageTitleText()) : txt;
+		return WT.resTpl(WT.ID, this.getEndPageTitleText());
 	}
 });
