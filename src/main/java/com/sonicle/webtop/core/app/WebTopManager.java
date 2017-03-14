@@ -627,6 +627,7 @@ public final class WebTopManager {
 			ODomain domain = getDomain(user.getDomainId());
 			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
 			
+			user.ensureCoherence();
 			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_USERS));
 			
 			OUser ouser = null;
@@ -720,6 +721,7 @@ public final class WebTopManager {
 		try {
 			con = WT.getConnection(CoreManifest.ID, false);
 			
+			user.ensureCoherence();
 			doUserUpdate(con, user);
 			
 			DbUtils.commitQuietly(con);
