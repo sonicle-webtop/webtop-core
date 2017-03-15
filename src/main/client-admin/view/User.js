@@ -229,7 +229,6 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		
 		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-		//me.getVM().bind('{record}', me.onRecordChanged, me, {deep: true});
 	},
 	
 	onViewLoad: function(s, success) {
@@ -262,73 +261,4 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	onViewInvalid: function(s, mo, errs) {
 		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
 	}
-	
-	/*
-	
-	onViewLoad2: function(s, success) {
-		if (!success) return;
-		var me = this,
-				flduserid = me.lref('flduserid'),
-				fldpassword = me.lref('fldpassword'),
-				fldpassword2 = me.lref('fldpassword2'),
-				mo;
-		if (me.isMode(me.MODE_NEW)) {
-			mo = me.getModel();
-			flduserid.setDisabled(false);
-			if (me.askForPassword) {
-				mo.setFieldValidators('password', [
-					'presence', {
-					type: 'sopassword',
-					complex: me.passwordPolicy
-				}]);
-				mo.setFieldValidators('password2', [
-					'presence', {
-					type: 'soequality',
-					equalField: 'password',
-					fieldLabel: me.mys.res('user.fld-password.lbl')
-				}]);
-				mo.updateValidation();
-				fldpassword.setHidden(false);
-				fldpassword2.setHidden(false);
-			} else {
-				fldpassword.setHidden(true);
-				fldpassword2.setHidden(true);
-			}	
-			flduserid.focus(true);
-			
-		} else {
-			flduserid.setDisabled(true);
-			fldpassword.setHidden(true);
-			fldpassword2.setHidden(true);
-		}
-	},
-	
-	onRecordChanged: function(v) {
-		if (v.validation && !v.validation.isValid()) {
-			var vld = v.validation.data['password'], fld;
-			if (vld) {
-				fld = this.lref('fldpassword');
-				if (fld) {
-					if (vld === true) {
-						fld.clearInvalid();
-					} else {
-						fld.markInvalid(vld);
-					}
-				}
-			}
-			var vld = v.validation.data['password2'], fld;
-			if (vld) {
-				fld = this.lref('fldpassword2');
-				if (fld) {
-					if (vld === true) {
-						fld.clearInvalid();
-					} else {
-						fld.markInvalid(vld);
-					}
-				}
-			}
-		}
-	},
-	
-	*/
 });

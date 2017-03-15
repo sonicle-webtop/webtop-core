@@ -62,8 +62,6 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 			validators: ['sousername']
 		}),
 		WTF.field('enabled', 'boolean', true),
-		//WTF.field('password', 'string', true),
-		//WTF.field('password2', 'string', true),
 		WTF.field('password', 'string', true, {
 			validators: ['wtadmuserpassword']
 		}),

@@ -53,43 +53,26 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('description', 'string', false),
 		WTF.field('userAutoCreation', 'boolean', false, {defaultValue: false}),
 		WTF.field('dirScheme', 'string', false),
-		
-		//WTF.field('dirHost', 'string', true),
-		//WTF.field('dirPort', 'int', true),
-		//WTF.field('dirAdmin', 'string', true),
-		//WTF.field('dirPassword', 'string', true),
-		//WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
-		//WTF.field('dirCaseSensitive', 'boolean', false, {defaultValue: false}),
-		//WTF.field('dirPasswordPolicy', 'boolean', false, {defaultValue: false}),
-		//WTF.field('ldapLoginDn', 'string', true),
-		//WTF.field('ldapLoginFilter', 'string', true),
-		//WTF.field('ldapUserDn', 'string', true),
-		//WTF.field('ldapUserFilter', 'string', true),
-		//WTF.field('ldapUserIdField', 'string', true),
-		//WTF.field('ldapUserFirstnameField', 'string', true),
-		//WTF.field('ldapUserLastnameField', 'string', true),
-		//WTF.field('ldapUserDisplayNameField', 'string', true),
-		
 		WTF.field('dirHost', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad', 'imap', 'smb', 'sftp']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad', 'imap', 'smb', 'sftp']
 			}]
 		}),
 		WTF.field('dirPort', 'int', true),
 		WTF.field('dirAdmin', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
 			}]
 		}),
 		WTF.field('dirPassword', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
 			}]
 		}),
 		WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
@@ -97,159 +80,47 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('dirPasswordPolicy', 'boolean', false, {defaultValue: false}),
 		WTF.field('ldapLoginDn', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth', 'ad']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth', 'ad']
 			}]
 		}),
 		WTF.field('ldapLoginFilter', 'string', true),
 		WTF.field('ldapUserDn', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth', 'ad']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth', 'ad']
 			}]
 		}),
 		WTF.field('ldapUserFilter', 'string', true),
 		WTF.field('ldapUserIdField', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth']
 			}]
 		}),
 		WTF.field('ldapUserFirstnameField', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth']
 			}]
 		}),
 		WTF.field('ldapUserLastnameField', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth']
 			}]
 		}),
 		WTF.field('ldapUserDisplayNameField', 'string', true, {
 			validators: [{
-				type: 'sopresenceif',
-				fieldName: 'dirScheme',
-				fieldValues: ['ldap', 'ldapneth']
+				type: 'sopresence',
+				ifField: 'dirScheme',
+				ifValues: ['ldap', 'ldapneth']
 			}]
 		})
-	],
-	
-	refreshValidatorsForDirScheme: function() {
-		var me = this;
-		switch(me.get('dirScheme')) {
-			case 'webtop':
-				me.setFieldValidators('dirHost');
-				me.setFieldValidators('dirAdmin');
-				me.setFieldValidators('dirPassword');
-				me.setFieldValidators('ldapLoginDn');
-				me.setFieldValidators('ldapUserDn');
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'ldapwebtop':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin', ['presence']);
-				me.setFieldValidators('dirPassword', ['presence']);
-				me.setFieldValidators('ldapLoginDn');
-				me.setFieldValidators('ldapUserDn');
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'ldap':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin', ['presence']);
-				me.setFieldValidators('dirPassword', ['presence']);
-				me.setFieldValidators('ldapLoginDn', ['presence']);
-				me.setFieldValidators('ldapUserDn', ['presence']);
-				me.setFieldValidators('ldapUserIdField', ['presence']);
-				me.setFieldValidators('ldapUserFirstnameField', ['presence']);
-				me.setFieldValidators('ldapUserLastnameField', ['presence']);
-				me.setFieldValidators('ldapUserDisplayNameField', ['presence']);
-				break;
-			case 'ldapneth':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin', ['presence']);
-				me.setFieldValidators('dirPassword', ['presence']);
-				me.setFieldValidators('ldapLoginDn', ['presence']);
-				me.setFieldValidators('ldapUserDn', ['presence']);
-				me.setFieldValidators('ldapUserIdField', ['presence']);
-				me.setFieldValidators('ldapUserFirstnameField', ['presence']);
-				me.setFieldValidators('ldapUserLastnameField', ['presence']);
-				me.setFieldValidators('ldapUserDisplayNameField', ['presence']);
-				break;
-			case 'ad':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin', ['presence']);
-				me.setFieldValidators('dirPassword', ['presence']);
-				me.setFieldValidators('ldapLoginDn', ['presence']);
-				me.setFieldValidators('ldapUserDn', ['presence']);
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'imap':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin');
-				me.setFieldValidators('dirPassword');
-				me.setFieldValidators('ldapLoginDn');
-				me.setFieldValidators('ldapUserDn');
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'smb':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin');
-				me.setFieldValidators('dirPassword');
-				me.setFieldValidators('ldapLoginDn');
-				me.setFieldValidators('ldapUserDn');
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-			case 'sftp':
-				me.setFieldValidators('dirHost', ['presence']);
-				me.setFieldValidators('dirAdmin');
-				me.setFieldValidators('dirPassword');
-				me.setFieldValidators('ldapLoginDn');
-				me.setFieldValidators('ldapUserDn');
-				me.setFieldValidators('ldapUserIdField');
-				me.setFieldValidators('ldapUserFirstnameField');
-				me.setFieldValidators('ldapUserLastnameField');
-				me.setFieldValidators('ldapUserDisplayNameField');
-				break;
-		}
-		me.updateValidation();
-	}
-});
-Ext.define('Sonicle.webtop.core.admin.model.VPresenceIf', {
-	extend: 'Ext.data.validator.Presence',
-	alias: 'data.validator.sopresenceif',
-	
-	fieldName: null,
-	fieldValues: null,
-	
-	validate: function(v, rec) {
-		var me = this, 
-				fValue = rec.get(me.fieldName);
-		
-		if (me.fieldValues.indexOf(fValue) !== -1) {
-			return me.callParent(arguments);
-		}
-		return true;
-	}
+	]
 });
