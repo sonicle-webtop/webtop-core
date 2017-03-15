@@ -50,6 +50,9 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		}
 	}),
 	
+	validatePassword: false,
+	passwordPolicy: false,
+	
 	identifier: 'negativestring',
 	idProperty: 'profileId',
 	fields: [
@@ -59,8 +62,14 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 			validators: ['sousername']
 		}),
 		WTF.field('enabled', 'boolean', true),
-		WTF.field('password', 'string', true),
-		WTF.field('password2', 'string', true),
+		//WTF.field('password', 'string', true),
+		//WTF.field('password2', 'string', true),
+		WTF.field('password', 'string', true, {
+			validators: ['wtadmuserpassword']
+		}),
+		WTF.field('password2', 'string', true, {
+			validators: ['wtadmuserpassword2']
+		}),
 		WTF.field('displayName', 'string', true),
 		WTF.field('firstName', 'string', true),
 		WTF.field('lastName', 'string', true)
@@ -76,5 +85,59 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		var soString = Sonicle.String, s;
 		s = soString.deflt(this.get('firstName'), '') + ' ' + soString.deflt(this.get('lastName'), '');
 		return Ext.String.trim(s);
+	}
+});
+Ext.define('Sonicle.webtop.core.admin.model.VUserPassword', {
+	extend: 'Ext.data.validator.Validator',
+	alias: 'data.validator.wtadmuserpassword',
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.vtors = {};
+		me.callParent([cfg]);
+		me.vtors['pres'] = Ext.create('Ext.data.validator.Presence');
+		me.vtors['pass'] = Ext.create('Sonicle.data.validator.Password', {
+			complex: false
+		});
+		me.vtors['cpass'] = Ext.create('Sonicle.data.validator.Password', {
+			complex: true
+		});
+	},
+	
+	validate: function(v, rec) {
+		var me = this, ret;
+		if (rec.validatePassword) {
+			ret = me.vtors['pres'].validate(v, rec);
+			if (ret !== true) return ret;
+			ret = rec.passwordPolicy ? me.vtors['cpass'].validate(v, rec) : me.vtors['pass'].validate(v, rec);
+			if (ret !== true) return ret;
+		}
+		return true;
+	}
+});
+Ext.define('Sonicle.webtop.core.admin.model.VUserPassword2', {
+	extend: 'Ext.data.validator.Validator',
+	alias: 'data.validator.wtadmuserpassword2',
+	
+	constructor: function(cfg) {
+		var me = this;
+		me.vtors = {};
+		me.callParent([cfg]);
+		me.vtors['pres'] = Ext.create('Ext.data.validator.Presence');
+		me.vtors['equa'] = Ext.create('Sonicle.data.validator.Equality', {
+			equalField: 'password',
+			fieldLabel: ''
+		});
+	},
+	
+	validate: function(v, rec) {
+		var me = this, ret;
+		if (rec.validatePassword) {
+			ret = me.vtors['pres'].validate(v, rec);
+			if (ret !== true) return ret;
+			ret = me.vtors['equa'].validate(v, rec);
+			if (ret !== true) return ret;
+		}
+		return true;
 	}
 });

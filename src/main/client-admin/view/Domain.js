@@ -61,7 +61,8 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 			foEnabled: WTF.checkboxBind('record', 'enabled'),
 			foUserAutoCreation: WTF.checkboxBind('record', 'userAutoCreation'),
 			foDirCaseSensitive: WTF.checkboxBind('record', 'dirCaseSensitive'),
-			foDirPasswordPolicy: WTF.checkboxBind('record', 'dirPasswordPolicy')
+			foDirPasswordPolicy: WTF.checkboxBind('record', 'dirPasswordPolicy'),
+			foActiveDir: WTF.foDefaultIfEmpty('record', 'dirScheme', 'empty')
 		});
 	},
 	
@@ -125,7 +126,9 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 				xtype: 'container',
 				layout: 'card',
 				reference: 'pnldir',
-				activeItem: 'empty',
+				bind: {
+					activeItem: '{foActiveDir}'
+				},
 				flex: 1,
 				items: [{
 					xtype: 'panel',
@@ -689,7 +692,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		});
 		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-		me.getVM().bind('{record.dirScheme}', me.onSchemeChanged, me);
+		//me.getVM().bind('{record.dirScheme}', me.onSchemeChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
@@ -707,11 +710,13 @@ Ext.define('Sonicle.webtop.core.admin.view.Domain', {
 		var me = this;
 		WTU.updateFieldsErrors(me.lref('pnlmain'), errs);
 		WTU.updateFieldsErrors(me.lref('pnldir').getLayout().getActiveItem(), errs);
-	},
+	}
 	
+	/*
 	onSchemeChanged: function(v) {
 		var mo = this.getModel(), scheme = mo.get('dirScheme');
 		this.lref('pnldir').setActiveItem(Ext.isEmpty(scheme) ? 'empty' : scheme);
 		mo.refreshValidatorsForDirScheme();
 	}
+	*/
 });

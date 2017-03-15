@@ -818,15 +818,15 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
-	 * Helper method for defining a {@link Ext.app.bind.Formula} that checks 
-	 * equality between a model's field and passed value.
+	 * Defines a{@link Ext.app.bind.Formula} that checks the equality between 
+	 * a model field's value and passed value.
 	 * @param {String} modelProp ViewModel's property in which the model is stored
 	 * @param {String} fieldName Model's field name
 	 * @param {Mixed} equalsTo Value to match
 	 * @param {Boolean} [not=false] True to apply NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	equalsFormula: function(modelProp, fieldName, equalsTo, not) {
+	foIsEqual: function(modelProp, fieldName, equalsTo, not) {
 		if(arguments.length === 3) not = false;
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
@@ -844,7 +844,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {Boolean} [not=false] True to apply NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
-	isEmptyFormula: function(modelProp, fieldName, not) {
+	foIsEmpty: function(modelProp, fieldName, not) {
 		if(arguments.length === 2) not = false;
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
@@ -852,8 +852,24 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				return (not === true) ? !Ext.isEmpty(val) : Ext.isEmpty(val);
 			}
 		};
-	}
+	},
 	
+	/**
+	 * Defines a {@link Ext.app.bind.Formula} that returns the model field's 
+	 * value if not empty, otherwise the specified default value.
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} fieldName Model's field name
+	 * @param {Mixed} defaultValue Value to apply if empty
+	 * @returns {Object} Formula configuration object
+	 */
+	foDefaultIfEmpty: function(modelProp, fieldName, defaultValue) {
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				return Ext.isEmpty(val) ? defaultValue : val;
+			}
+		};
+	}
 	
 	/*
 	wsMsg: function(service, action, config) {

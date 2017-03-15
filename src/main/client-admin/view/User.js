@@ -229,37 +229,43 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		
 		me.on('viewload', me.onViewLoad);
 		me.on('viewinvalid', me.onViewInvalid);
-		me.getVM().bind('{record}', me.onRecordChanged, me, {deep: true});
-	},
-	
-	onRecordChanged: function(v) {
-		if (v.validation && !v.validation.isValid()) {
-			var vld = v.validation.data['password'], fld;
-			if (vld) {
-				fld = this.lref('fldpassword');
-				if (fld) {
-					if (vld === true) {
-						fld.clearInvalid();
-					} else {
-						fld.markInvalid(vld);
-					}
-				}
-			}
-			var vld = v.validation.data['password2'], fld;
-			if (vld) {
-				fld = this.lref('fldpassword2');
-				if (fld) {
-					if (vld === true) {
-						fld.clearInvalid();
-					} else {
-						fld.markInvalid(vld);
-					}
-				}
-			}
-		}
+		//me.getVM().bind('{record}', me.onRecordChanged, me, {deep: true});
 	},
 	
 	onViewLoad: function(s, success) {
+		var me = this,
+				flduserid = me.lref('flduserid'),
+				fldpassword = me.lref('fldpassword'),
+				fldpassword2 = me.lref('fldpassword2'),
+				mo = me.getModel();
+		
+		if (me.isMode(me.MODE_NEW)) {
+			flduserid.setDisabled(false);
+			if (me.askForPassword) {
+				fldpassword.setHidden(false);
+				fldpassword2.setHidden(false);
+				mo.validatePassword = me.askForPassword;
+				mo.passwordPolicy = me.passwordPolicy;
+			} else {
+				fldpassword.setHidden(true);
+				fldpassword2.setHidden(true);
+			}
+			flduserid.focus(true);
+		} else {
+			flduserid.setDisabled(true);
+			fldpassword.setHidden(true);
+			fldpassword2.setHidden(true);
+		}
+		mo.getValidation(true);
+	},
+	
+	onViewInvalid: function(s, mo, errs) {
+		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
+	}
+	
+	/*
+	
+	onViewLoad2: function(s, success) {
 		if (!success) return;
 		var me = this,
 				flduserid = me.lref('flduserid'),
@@ -297,7 +303,32 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		}
 	},
 	
-	onViewInvalid: function(s, mo, errs) {
-		WTU.updateFieldsErrors(this.lref('pnlmain'), errs);
-	}
+	onRecordChanged: function(v) {
+		if (v.validation && !v.validation.isValid()) {
+			var vld = v.validation.data['password'], fld;
+			if (vld) {
+				fld = this.lref('fldpassword');
+				if (fld) {
+					if (vld === true) {
+						fld.clearInvalid();
+					} else {
+						fld.markInvalid(vld);
+					}
+				}
+			}
+			var vld = v.validation.data['password2'], fld;
+			if (vld) {
+				fld = this.lref('fldpassword2');
+				if (fld) {
+					if (vld === true) {
+						fld.clearInvalid();
+					} else {
+						fld.markInvalid(vld);
+					}
+				}
+			}
+		}
+	},
+	
+	*/
 });

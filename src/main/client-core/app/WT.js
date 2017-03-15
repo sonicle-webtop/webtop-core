@@ -358,6 +358,25 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		);
 	},
 	
+	rawMessage: function(rawValue, opts) {
+		opts = opts || {};
+		if (opts.selectAll === undefined) opts.selectAll = true;
+		if (opts.width === undefined) opts.width = 250;
+		if (opts.textHeight === undefined) opts.textHeight = 150;
+		var msg = Ext.Msg.show({
+			title: opts.title,
+			message: opts.message,
+			buttons: Ext.Msg.OK,
+			multiline: true,
+			width: opts.width || Ext.Msg.minPromptWidth,
+			defaultTextHeight: opts.textHeight || Ext.Msg.defaultTextHeight,
+			value: rawValue
+		});
+		msg.textArea.setEditable(false);
+		if (opts.selectAll) msg.textArea.focus(true, 200);
+		return msg;
+	},
+	
 	/**
 	 * Displays an information message.
 	 * @param {String} msg The message to display.

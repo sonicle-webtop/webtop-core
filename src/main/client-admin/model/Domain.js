@@ -53,21 +53,92 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		WTF.field('description', 'string', false),
 		WTF.field('userAutoCreation', 'boolean', false, {defaultValue: false}),
 		WTF.field('dirScheme', 'string', false),
-		WTF.field('dirHost', 'string', true),
+		
+		//WTF.field('dirHost', 'string', true),
+		//WTF.field('dirPort', 'int', true),
+		//WTF.field('dirAdmin', 'string', true),
+		//WTF.field('dirPassword', 'string', true),
+		//WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
+		//WTF.field('dirCaseSensitive', 'boolean', false, {defaultValue: false}),
+		//WTF.field('dirPasswordPolicy', 'boolean', false, {defaultValue: false}),
+		//WTF.field('ldapLoginDn', 'string', true),
+		//WTF.field('ldapLoginFilter', 'string', true),
+		//WTF.field('ldapUserDn', 'string', true),
+		//WTF.field('ldapUserFilter', 'string', true),
+		//WTF.field('ldapUserIdField', 'string', true),
+		//WTF.field('ldapUserFirstnameField', 'string', true),
+		//WTF.field('ldapUserLastnameField', 'string', true),
+		//WTF.field('ldapUserDisplayNameField', 'string', true),
+		
+		WTF.field('dirHost', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad', 'imap', 'smb', 'sftp']
+			}]
+		}),
 		WTF.field('dirPort', 'int', true),
-		WTF.field('dirAdmin', 'string', true),
-		WTF.field('dirPassword', 'string', true),
+		WTF.field('dirAdmin', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
+			}]
+		}),
+		WTF.field('dirPassword', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldapwebtop', 'ldap', 'ldapneth', 'ad']
+			}]
+		}),
 		WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
 		WTF.field('dirCaseSensitive', 'boolean', false, {defaultValue: false}),
 		WTF.field('dirPasswordPolicy', 'boolean', false, {defaultValue: false}),
-		WTF.field('ldapLoginDn', 'string', true),
+		WTF.field('ldapLoginDn', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth', 'ad']
+			}]
+		}),
 		WTF.field('ldapLoginFilter', 'string', true),
-		WTF.field('ldapUserDn', 'string', true),
+		WTF.field('ldapUserDn', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth', 'ad']
+			}]
+		}),
 		WTF.field('ldapUserFilter', 'string', true),
-		WTF.field('ldapUserIdField', 'string', true),
-		WTF.field('ldapUserFirstnameField', 'string', true),
-		WTF.field('ldapUserLastnameField', 'string', true),
-		WTF.field('ldapUserDisplayNameField', 'string', true)
+		WTF.field('ldapUserIdField', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth']
+			}]
+		}),
+		WTF.field('ldapUserFirstnameField', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth']
+			}]
+		}),
+		WTF.field('ldapUserLastnameField', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth']
+			}]
+		}),
+		WTF.field('ldapUserDisplayNameField', 'string', true, {
+			validators: [{
+				type: 'sopresenceif',
+				fieldName: 'dirScheme',
+				fieldValues: ['ldap', 'ldapneth']
+			}]
+		})
 	],
 	
 	refreshValidatorsForDirScheme: function() {
@@ -163,5 +234,22 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				break;
 		}
 		me.updateValidation();
+	}
+});
+Ext.define('Sonicle.webtop.core.admin.model.VPresenceIf', {
+	extend: 'Ext.data.validator.Presence',
+	alias: 'data.validator.sopresenceif',
+	
+	fieldName: null,
+	fieldValues: null,
+	
+	validate: function(v, rec) {
+		var me = this, 
+				fValue = rec.get(me.fieldName);
+		
+		if (me.fieldValues.indexOf(fValue) !== -1) {
+			return me.callParent(arguments);
+		}
+		return true;
 	}
 });

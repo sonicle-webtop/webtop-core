@@ -298,14 +298,14 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	saveView: function(closeAfter) {
-		var me = this, ok, mo;
+		var me = this, valid, mo;
 		me.wait();
-		ok = me.saveModel({
+		valid = me.saveModel({
 			pass: {
 				closeAfter: closeAfter
 			}
 		});
-		if (!ok) {
+		if (!valid) {
 			me.unwait();
 			mo = me.getModel();
 			if (mo) me.fireEvent('viewinvalid', me, mo, mo.getValidation().getErrors());
