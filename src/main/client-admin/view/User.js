@@ -238,6 +238,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				fldpassword2 = me.lref('fldpassword2'),
 				mo = me.getModel();
 		
+		if (mo) mo.passwordFieldLabel = me.mys.res('user.fld-password.lbl');
 		if (me.isMode(me.MODE_NEW)) {
 			flduserid.setDisabled(false);
 			if (me.askForPassword) {
