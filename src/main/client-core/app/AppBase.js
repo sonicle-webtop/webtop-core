@@ -125,7 +125,6 @@ Ext.override(Ext.window.Window, {
 	onShow: function() {
 		this.callParent(arguments);
 		this.removeCls("x-unselectable");
-		console.log("removed unselectable");
 	}
 	
 });
