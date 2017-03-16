@@ -187,47 +187,6 @@ Ext.override(Ext.dd.DragDropManager, {
         }
     }	
 });
-Ext.override(Ext.data.Model, {
-	
-	constructor: function(cfg) {
-		this._pendingCompile = [];
-		this._validatorFields = {};
-		this.callParent([cfg]);
-	},
-	
-	cloneStaticField: function(field) {
-		//console.log('cloneStaticField');
-		var fld = this.getField(field);
-		return fld ? new Ext.data.Field(fld) : null;
-	},
-	
-	setFieldValidators: function(field, validators) {
-		//console.log('setFieldValidators');
-		var me = this,
-				vFields = me._validatorFields,
-				fld = vFields[field];
-		if (!fld) {
-			fld = me.cloneStaticField(field);
-			if (fld === null) Ext.raise('Invalid field name');
-			vFields[field] = fld;
-		}
-		
-		fld._validators = null;
-		fld.instanceValidators = validators || [];
-		me._pendingCompile.push(field);
-	},
-	
-	updateValidation: function() {
-		//console.log('updateValidation');
-		var me = this;
-		Ext.iterate(me._pendingCompile, function(name) {
-			var fld = me._validatorFields[name];
-			if (fld) fld.compileValidators();
-		});
-		me._pendingCompile = [];
-		me.getValidation(true);
-	}
-});
 Ext.override(Ext.data.Validation, {
 	
 	getErrors: function() {
@@ -236,76 +195,5 @@ Ext.override(Ext.data.Validation, {
 			if (value !== true) errs.push({id: field, msg: value});
 		});
 		return errs;
-	},
-	
-	refresh: function (force) {
-		// If it's an Ext.data.Model instance directly, we can't 
-		// validate it because there can be no fields/validators. 
-		if (this.isBase) {
-			return;
-		}
-
-		var me = this,
-				data = me.data,
-				record = me.record,
-				fields = record.fields,
-				vFields = record._validatorFields,
-				generation = record.generation,
-				recordData = record.data,
-				sep = record.validationSeparator,
-				values = null,
-				defaultMessage, currentValue, error, field, vField,
-				item, i, j, jLen, len, msg, val, name;
-
-		if (force || me.syncGeneration !== generation) {
-			me.syncGeneration = generation;
-
-			for (i = 0, len = fields.length; i < len; ++i) {
-				field = fields[i];
-				name = field.name;
-				val = recordData[name];
-				defaultMessage = field.defaultInvalidMessage;
-				error = 0;
-
-				if (!(name in data)) {
-					// Now is the cheapest time to populate our data object with "true" 
-					// for all validated fields. This ensures that our non-dirty state 
-					// equates to isValid. 
-					data[name] = currentValue = true; // true === valid 
-				} else {
-					currentValue = data[name];
-				}
-
-				if (field.validate !== Ext.emptyFn) {
-					msg = field.validate(val, sep, null, record);
-					if (msg !== true) {
-						error = msg || defaultMessage;
-					}
-				}
-				
-				if (error === 0) {
-					//console.log('record._validatorFieldsssssssssssssssss');
-					vField = vFields[name];
-					if (vField && (vField.validate !== Ext.emptyFn)) {
-						msg = vField.validate(val, sep, null, record);
-						if (msg !== true) {
-							error = msg || defaultMessage;
-						}
-					}
-				}
-
-				if (!error) {
-					error = true; // valid state is stored as true 
-				}
-				if (error !== currentValue) {
-					(values || (values = {}))[name] = error;
-				}
-			}
-
-			if (values) {
-				// only need to do this if something changed... 
-				me.set(values);
-			}
-		}
 	}
 });
