@@ -118,6 +118,26 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	}
 });
 
+Ext.override(Ext.data.PageMap, {
+
+	//fix bug when mistakenly called with start=0 and end=-1
+    hasRange: function(start, end) {
+        var me = this,
+            pageNumber = me.getPageFromRecordIndex(start),
+            endPageNumber = me.getPageFromRecordIndex(end);
+        for (; pageNumber <= endPageNumber; pageNumber++) {
+            if (!me.hasPage(pageNumber)) {
+                return false;
+            }
+        }
+		//here fix bug: if getPage returns null, just return true to go on
+		var xp=me.getPage(endPageNumber);
+        // Check that the last page is filled enough to encapsulate the range.
+        if (xp) return (endPageNumber - 1) * me._pageSize + xp.length > end;
+		return true;
+    }
+});
+
 Ext.override(Ext.util.LruCache, {
     // private. Only used by internal methods.
     unlinkEntry: function (entry) {
