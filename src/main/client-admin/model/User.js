@@ -52,6 +52,7 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 	
 	validatePassword: false,
 	passwordPolicy: false,
+	passwordFieldLabel: '',
 	
 	identifier: 'negativestring',
 	idProperty: 'profileId',
@@ -123,8 +124,7 @@ Ext.define('Sonicle.webtop.core.admin.model.VUserPassword2', {
 		me.callParent([cfg]);
 		me.vtors['pres'] = Ext.create('Ext.data.validator.Presence');
 		me.vtors['equa'] = Ext.create('Sonicle.data.validator.Equality', {
-			equalField: 'password',
-			fieldLabel: ''
+			equalField: 'password'
 		});
 	},
 	
@@ -133,6 +133,7 @@ Ext.define('Sonicle.webtop.core.admin.model.VUserPassword2', {
 		if (rec.validatePassword) {
 			ret = me.vtors['pres'].validate(v, rec);
 			if (ret !== true) return ret;
+			me.vtors['equa'].setFieldLabel(rec.passwordFieldLabel);
 			ret = me.vtors['equa'].validate(v, rec);
 			if (ret !== true) return ret;
 		}
