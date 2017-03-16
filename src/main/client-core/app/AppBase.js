@@ -118,6 +118,17 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	}
 });
 
+Ext.override(Ext.window.Window, {
+
+	//fix bug in windows with unselectable content
+	//[solved in 6.2.1]
+	onShow: function() {
+		this.callParent(arguments);
+		this.removeCls("x-unselectable");
+	}
+	
+});
+
 Ext.override(Ext.data.PageMap, {
 
 	//fix bug when mistakenly called with start=0 and end=-1
