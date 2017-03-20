@@ -34,11 +34,13 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -46,9 +48,14 @@ import java.util.List;
  * @author malbinola
  */
 public abstract class BaseUserSettings extends BaseSettings {
+	
+	public static final String HIDDEN_FOLDERS = "folders.hidden";
+	
 	private SettingsManager setm;
 	protected String serviceId;
 	protected UserProfileId profileId;
+	
+	private HiddenFolders hiddenFolders=null;
 
 	//private BaseUserSettings() {}
 	
@@ -64,6 +71,24 @@ public abstract class BaseUserSettings extends BaseSettings {
 			profiles.add(new UserProfileId(setting.getDomainId(), setting.getUserId()));
 		}
 		return profiles;
+	}
+	
+	public boolean isFolderHidden(String folderId) {
+		return getHiddenFolders().contains(folderId);
+	}
+	
+	public boolean setFolderHidden(String folderId, boolean hidden) {
+		HiddenFolders hf=getHiddenFolders();
+		if (hidden) hf.add(folderId);
+		else hf.remove(folderId);
+		setHiddenFolders(hf);
+		return true;
+	}
+	
+	public HiddenFolders getHiddenFolders() {
+		if (hiddenFolders==null)
+			hiddenFolders=getObject(HIDDEN_FOLDERS, new HiddenFolders(), HiddenFolders.class);
+		return hiddenFolders;
 	}
 	
 	@Override
@@ -135,4 +160,23 @@ public abstract class BaseUserSettings extends BaseSettings {
 		for(OUserSetting el: list) integers.put(el.getKey().substring(ix), Integer.valueOf(el.getValue()));
 		return integers;
 	}
+	
+	private boolean setHiddenFolders(HiddenFolders value) {
+		return setObject(HIDDEN_FOLDERS, value, HiddenFolders.class);
+	}
+	
+	public static class HiddenFolders extends HashSet<String> {
+		public HiddenFolders() {
+			super();
+		}
+		
+		public static HiddenFolders fromJson(String value) {
+			return JsonResult.gson.fromJson(value, HiddenFolders.class);
+		}
+		
+		public static String toJson(HiddenFolders value) {
+			return JsonResult.gson.toJson(value, HiddenFolders.class);
+		}
+	}
+	
 }
