@@ -371,9 +371,9 @@ public class WebTopSession {
 		allowedServices = core.listAllowedServices();
 		
 		BaseManager managerInst = null;
-		BaseService privateInst = null;
 		for(String serviceId : allowedServices) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			
 			// Manager
 			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
 			if(!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
@@ -384,6 +384,12 @@ public class WebTopSession {
 					}
 				}
 			}
+		}
+		
+		BaseService privateInst = null;
+		for(String serviceId : allowedServices) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			
 			// Service initialization
 			svcm.initializeProfile(serviceId, profile.getId());
 			
@@ -461,11 +467,12 @@ public class WebTopSession {
 		if(publicEnv == null) publicEnv = new PublicEnvironment(this);
 		
 		int managersCount = 0, publicCount = 0;
-		BaseManager managerInst = null;
-		BasePublicService publicInst = null;
 		String[] serviceIds = new String[]{CoreManifest.ID, publicServiceId};
+		
+		BaseManager managerInst = null;
 		for(String serviceId : serviceIds) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			
 			// Manager (skip core)
 			if(!serviceId.equals(CoreManifest.ID)) {
 				if(descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
@@ -476,6 +483,12 @@ public class WebTopSession {
 					}
 				}
 			}
+		}
+		
+		BasePublicService publicInst = null;
+		for(String serviceId : serviceIds) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			
 			// PublicService
 			if(descriptor.hasPublicService() && !isPublicServiceCached(serviceId)) {
 				publicInst = svcm.instantiatePublicService(serviceId, publicEnv);

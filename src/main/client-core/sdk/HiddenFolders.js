@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 	
 	mys: null,
 	action: "ManageHiddenFolders",
-	handler: null,
+	callback: null,
 	scope: null,
 
 	initComponent: function() {
@@ -68,7 +68,7 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 									ids: WTU.arrayAsParam(ids)
 								},
 								callback: function(success, json) {
-									Ext.callback(me.handler,me.scope||me);
+									Ext.callback(me.callback,me.scope||me);
 								}
 							});
 
