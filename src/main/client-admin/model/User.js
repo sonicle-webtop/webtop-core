@@ -64,10 +64,10 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 		}),
 		WTF.field('enabled', 'boolean', true),
 		WTF.field('password', 'string', true, {
-			validators: ['wtadmuserpassword']
+			validators: ['wtadm-userpassword']
 		}),
 		WTF.field('password2', 'string', true, {
-			validators: ['wtadmuserpassword2']
+			validators: ['wtadm-userpassword2']
 		}),
 		WTF.field('displayName', 'string', true),
 		WTF.field('firstName', 'string', true),
@@ -88,13 +88,12 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 });
 Ext.define('Sonicle.webtop.core.admin.model.VUserPassword', {
 	extend: 'Ext.data.validator.Validator',
-	alias: 'data.validator.wtadmuserpassword',
+	alias: 'data.validator.wtadm-userpassword',
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.vtors = {};
 		me.callParent([cfg]);
-		me.vtors['pres'] = Ext.create('Ext.data.validator.Presence');
 		me.vtors['pass'] = Ext.create('Sonicle.data.validator.Password', {
 			complex: false
 		});
@@ -104,38 +103,31 @@ Ext.define('Sonicle.webtop.core.admin.model.VUserPassword', {
 	},
 	
 	validate: function(v, rec) {
-		var me = this, ret;
+		var me = this;
 		if (rec.validatePassword) {
-			ret = me.vtors['pres'].validate(v, rec);
-			if (ret !== true) return ret;
-			ret = rec.passwordPolicy ? me.vtors['cpass'].validate(v, rec) : me.vtors['pass'].validate(v, rec);
-			if (ret !== true) return ret;
+			return rec.passwordPolicy ? me.vtors['cpass'].validate(v, rec) : me.vtors['pass'].validate(v, rec);
 		}
 		return true;
 	}
 });
 Ext.define('Sonicle.webtop.core.admin.model.VUserPassword2', {
 	extend: 'Ext.data.validator.Validator',
-	alias: 'data.validator.wtadmuserpassword2',
+	alias: 'data.validator.wtadm-userpassword2',
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.vtors = {};
 		me.callParent([cfg]);
-		me.vtors['pres'] = Ext.create('Ext.data.validator.Presence');
 		me.vtors['equa'] = Ext.create('Sonicle.data.validator.Equality', {
 			equalField: 'password'
 		});
 	},
 	
 	validate: function(v, rec) {
-		var me = this, ret;
+		var me = this;
 		if (rec.validatePassword) {
-			ret = me.vtors['pres'].validate(v, rec);
-			if (ret !== true) return ret;
 			me.vtors['equa'].setFieldLabel(rec.passwordFieldLabel);
-			ret = me.vtors['equa'].validate(v, rec);
-			if (ret !== true) return ret;
+			return me.vtors['equa'].validate(v, rec);
 		}
 		return true;
 	}

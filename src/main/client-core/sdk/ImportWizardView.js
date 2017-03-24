@@ -117,7 +117,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('importwiz.upload.tit')
+				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.upload.tit'))
 			}, {
 				xtype: 'sospacer'
 			}, {
@@ -165,7 +165,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('importwiz.mappings.tit')
+				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mappings.tit'))
 			}, {
 				xtype: 'sospacer'
 			}, {
@@ -237,7 +237,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: WT.res('importwiz.mode.tit')
+				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mode.tit'))
 			}, {
 				xtype: 'sospacer'
 			}, {
@@ -284,7 +284,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					xtype: 'wtwizardpage',
 					items: [{
 						xtype: 'label',
-						html: WT.res('importwiz.txt.s1.tit')
+						html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.txt.s1.tit'))
 					}, {
 						xtype: 'sospacer'
 					}, {
@@ -351,7 +351,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					},
 					items: [{
 						xtype: 'label',
-						html: WT.res('importwiz.txt.s2.tit')
+						html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.txt.s2.tit'))
 					}, {
 						xtype: 'sospacer'
 					}, {
@@ -404,7 +404,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					xtype: 'wtwizardpage',
 					items: [{
 						xtype: 'label',
-						html: WT.res('importwiz.xls.s1.tit')
+						html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.xls.s1.tit'))
 					}, {
 						xtype: 'sospacer'
 					}, {

@@ -39,8 +39,5 @@ Ext.define('Sonicle.webtop.core.ux.panel.Form', {
 	
 	layout: 'anchor',
 	border: false,
-	bodyPadding: 5,
-	fieldDefaults: {
-		msgTarget: 'side'
-	}
+	bodyPadding: 5
 });

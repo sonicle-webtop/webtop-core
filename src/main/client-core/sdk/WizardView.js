@@ -264,7 +264,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	addPathPage: function() {
 		var me = this;
-		me.add(me.createPathPage('', {}));
+		me.add(me.createPathPage('', '', {}));
 		me.onNavigate('path');
 	},
 	
@@ -295,7 +295,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: title
+				html: Sonicle.String.htmlLineBreaks(title)
 			}, {
 				xtype: 'sospacer'
 			}, {
@@ -324,7 +324,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 			xtype: 'wtwizardpage',
 			items: [{
 				xtype: 'label',
-				html: me.resEndPageTitleText()
+				html: Sonicle.String.htmlLineBreaks(me.resEndPageTitleText())
 			}, {
 				xtype: 'sospacer'
 			}, {

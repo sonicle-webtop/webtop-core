@@ -256,6 +256,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Tests if passed key value has the notation of an unmatched key.
+	 * @param {String} key The resource key.
+	 * @returns {Boolean} True if match, false otherwise.
+	 */
+	isUnmatchedResKey: function(key) {
+		return key.startsWith('${') && key.endsWith('}');
+	},
+	
+	/**
 	 * Returns a string resource.
 	 * If id and key are both filled, any other arguments will be used in
 	 * conjunction with {@link Ext.String#format} method in order to replace
@@ -263,7 +272,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
 	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @returns {String} The (formatted) value.
+	 * @returns {String} The (optionally formatted) resource value or '${key}' if not found.
 	 */
 	res: function(id, key) {
 		if(arguments.length === 1) {
@@ -277,7 +286,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		// Returns the key itself whether locale or string are not defined
 		if (!loc) return key;
 		str = loc.strings[key];
-		if (str === undefined) return key;
+		if (str === undefined) return '${'+key+'}';
 		
 		if (arguments.length > 2) {
 			var args = ExArr.merge([str], ExArr.slice(arguments, 2));
