@@ -60,5 +60,5 @@ License: MIT
 Location: https://github.com/iansinnott/jstz
 
 Name: Pure Flat 2013 Stock Icons
-License: 
+License: Lifetime Commercial (http://www.axialis.com/stock-icons/license.html)
 Location: http://www.axialis.com/stock-icons/pure-flat-2013-toolbar.html
