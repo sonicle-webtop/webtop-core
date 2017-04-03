@@ -36,8 +36,8 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	
 	platformName: null,
 	
+	contextPath: null,
 	baseUrl: null,
-	
 	wsPushUrl: null,
 	
 	/**
@@ -56,8 +56,9 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		var me = this;
 		WT.app = me;
 		me.platformName = WTS.platformName;
-		me.baseUrl = WTS.baseUrl;
-		me.wsPushUrl = WTS.wsPushUrl;
+		me.contextPath = WTS.contextPath;
+		me.baseUrl = window.location.origin + me.contextPath;
+		me.wsPushUrl = window.location.origin.replace(/http/, 'ws') + WTS.pushContextPath;
 		me.locales = Ext.create('Ext.util.HashMap');
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);

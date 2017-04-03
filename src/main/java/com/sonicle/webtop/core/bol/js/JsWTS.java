@@ -46,7 +46,7 @@ public class JsWTS {
 	public Ext6Manifest appManifest = new Ext6Manifest();
 	public String appType;
 	public String platformName;
-	public String baseUrl;
+	public String contextPath;
 	public String fileTypes;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();

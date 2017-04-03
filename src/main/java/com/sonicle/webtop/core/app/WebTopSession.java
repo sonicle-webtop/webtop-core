@@ -674,9 +674,6 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);
-		js.baseUrl = PathUtils.ensureTrailingSeparator(SessionManager.getClientUrl(session));
-		js.securityToken = RunContext.getCSRFToken();
-		js.wsPushUrl = ServletHelper.toWsUrl(SessionManager.getClientUrl(session));
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		// Include Core references
@@ -793,7 +790,6 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		fillAppReferences(js, locale, "crisp", false);
-		js.baseUrl=SessionManager.getClientUrl(session);
 		
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();

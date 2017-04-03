@@ -158,9 +158,11 @@ public class SessionManager {
 		return (Locale)session.getAttribute(ATTRIBUTE_CLIENT_LOCALE);
 	}
 	
+	/*
 	public static String getClientUrl(Session session) {
 		return (String)session.getAttribute(ATTRIBUTE_CLIENT_URL);
 	}
+	*/
 	
 	public static void setClientUrl(Session session, String clientUrl) {
 		logger.trace("ClientUrl: {}", clientUrl); //TODO: rimuovere logging

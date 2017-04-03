@@ -68,19 +68,20 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 		return null;
 	}
 	
-	public void writePage(HttpServletResponse response, WebTopSession wts, JsWTSPublic.Vars serviceVars, String baseUrl) throws IOException, TemplateException {
+	public void writePage(HttpServletResponse response, WebTopSession wts, JsWTSPublic.Vars serviceVars, String contextPath) throws IOException, TemplateException {
 		Map vars = new HashMap();
 		JsWTSPublic jswts = new JsWTSPublic();
+		jswts.contextPath = contextPath;
 		wts.fillStartup(jswts, SERVICE_ID);
 		jswts.servicesVars.get(1).putAll(serviceVars);
 		vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
-		writePage(response, baseUrl, vars, wts.getLocale());
+		writePage(response, contextPath, vars, wts.getLocale());
 		ServletUtils.setCacheControlPrivate(response);
 		ServletUtils.setHtmlContentType(response);
 	}
 	
-	public void writePage(HttpServletResponse response, String baseUrl, Map vars, Locale locale) throws IOException, TemplateException {
-		AbstractServlet.fillPageVars(vars, locale, PathUtils.ensureTrailingSeparator(baseUrl));
+	public void writePage(HttpServletResponse response, String contextPath, Map vars, Locale locale) throws IOException, TemplateException {
+		AbstractServlet.fillPageVars(vars, locale, contextPath);
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/public.html");
 		tpl.process(vars, response.getWriter());
 	}

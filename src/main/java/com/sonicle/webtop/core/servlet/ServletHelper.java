@@ -38,6 +38,8 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WsPushEndpoint;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Locale;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -122,6 +124,15 @@ public class ServletHelper {
 			return new Locale("it", "IT");
 		} else {
 			return new Locale("en", "EN");
+		}
+	}
+	
+	public static String getBaseUrl(HttpServletRequest request) {
+		try {
+			String reqUrl = ServletUtils.getRequestURL(request);
+			return PathUtils.ensureTrailingSeparator(new URL(reqUrl).getPath());
+		} catch(MalformedURLException ex) {
+			return null;
 		}
 	}
 	

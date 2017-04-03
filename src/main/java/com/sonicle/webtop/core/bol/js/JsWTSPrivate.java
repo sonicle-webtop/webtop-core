@@ -42,7 +42,7 @@ import java.util.HashMap;
  */
 public class JsWTSPrivate extends JsWTS {
 	public String securityToken;
-	public String wsPushUrl;
+	public String pushContextPath;
 	public String layoutClassName;
 	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();

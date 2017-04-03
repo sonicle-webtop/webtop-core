@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WsPushEndpoint;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
@@ -103,6 +104,9 @@ public class Start extends AbstractServlet {
 			
 			// Startup variables
 			JsWTSPrivate jswts = new JsWTSPrivate();
+			jswts.securityToken = RunContext.getCSRFToken();
+			jswts.contextPath = ServletHelper.getBaseUrl(request);
+			jswts.pushContextPath = jswts.contextPath + WsPushEndpoint.URL;
 			wts.fillStartup(jswts);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			
