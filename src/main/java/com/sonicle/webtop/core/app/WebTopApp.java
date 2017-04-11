@@ -1136,10 +1136,12 @@ public final class WebTopApp {
 		switch(authUri.getScheme()) {
 			case WebTopDirectory.SCHEME:
 				WebTopConfigBuilder wt = new WebTopConfigBuilder();
+				wt.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				wt.setWebTopApp(opts, this);
 				break;
 			case LdapWebTopDirectory.SCHEME:
 				LdapWebTopConfigBuilder ldapwt = new LdapWebTopConfigBuilder();
+				ldapwt.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				ldapwt.setHost(opts, authUri.getHost());
 				ldapwt.setPort(opts, authUri.getPort());
 				ldapwt.setConnectionSecurity(opts, ad.getDirConnSecurity());
@@ -1151,11 +1153,13 @@ public final class WebTopApp {
 			case LdapDirectory.SCHEME:
 				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
 				LdapConfigBuilder ldap = new LdapConfigBuilder();
+				ldap.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				ldap.setHost(opts, authUri.getHost());
 				ldap.setPort(opts, authUri.getPort());
 				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				ldap.setAdminDn(opts, ad.getDirAdmin());
 				ldap.setAdminPassword(opts, getDirPassword(ad));
+				ldap.setIsCaseSensitive(opts, webappIsLatest);
 				if (!StringUtils.isBlank(params.loginDn)) ldap.setLoginDn(opts, params.loginDn);
 				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
 				if (!StringUtils.isBlank(params.userDn)) ldap.setUserDn(opts, params.userDn);
@@ -1168,6 +1172,7 @@ public final class WebTopApp {
 			case LdapNethDirectory.SCHEME:
 				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
 				LdapNethConfigBuilder ldapnts = new LdapNethConfigBuilder();
+				ldapnts.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				ldapnts.setHost(opts, authUri.getHost());
 				ldapnts.setPort(opts, authUri.getPort());
 				ldapnts.setConnectionSecurity(opts, ad.getDirConnSecurity());
@@ -1185,6 +1190,7 @@ public final class WebTopApp {
 			case ADDirectory.SCHEME:
 				params = LangUtils.deserialize(ad.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class);
 				ADConfigBuilder adir = new ADConfigBuilder();
+				adir.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				adir.setHost(opts, authUri.getHost());
 				adir.setPort(opts, authUri.getPort());
 				adir.setConnectionSecurity(opts, ad.getDirConnSecurity());
@@ -1200,17 +1206,20 @@ public final class WebTopApp {
 				break;
 			case ImapDirectory.SCHEME:
 				ImapConfigBuilder imap = new ImapConfigBuilder();
+				imap.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				imap.setHost(opts, authUri.getHost());
 				imap.setPort(opts, authUri.getPort());
 				imap.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				break;
 			case SmbDirectory.SCHEME:
 				SmbConfigBuilder smb = new SmbConfigBuilder();
+				smb.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				smb.setHost(opts, authUri.getHost());
 				smb.setPort(opts, authUri.getPort());
 				break;
 			case SftpDirectory.SCHEME:
 				SftpConfigBuilder sftp = new SftpConfigBuilder();
+				sftp.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				sftp.setHost(opts, authUri.getHost());
 				sftp.setPort(opts, authUri.getPort());
 				break;

@@ -235,6 +235,7 @@ public final class WebTopManager {
 		return new AuthenticationDomain(domain.getDomainId(), 
 				domain.getInternetName(), 
 				domain.getDirUri(), 
+				domain.getDirCaseSensitive(),
 				domain.getDirAdmin(), 
 				(domain.getDirPassword() != null) ? domain.getDirPassword().toCharArray() : null, 
 				EnumUtils.getEnum(ConnectionSecurity.class, domain.getDirConnectionSecurity()),
@@ -243,7 +244,7 @@ public final class WebTopManager {
 	}
 	
 	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
-		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), null, null, null, null);
+		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), false, null, null, null, null);
 	}
 	
 	public String internetNameToDomain(String internetName) {
