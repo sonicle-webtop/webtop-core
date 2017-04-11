@@ -365,7 +365,7 @@ public class ServiceManifest {
 	 * @return The class name.
 	 */
 	public String getLocaleJsClassName(Locale locale, boolean full) {
-		String cn = "Locale_" + locale.toString();
+		String cn = "Locale_" + locale.getLanguage();
 		return (full) ? LangUtils.buildClassName(jsPackage, cn) : cn;
 	}
 	

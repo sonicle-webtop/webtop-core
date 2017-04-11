@@ -387,12 +387,18 @@ public class ResourceRequest extends HttpServlet {
 			if (!matcher.matches()) throw new InternalServerException();
 			String nameBase = matcher.group(1);
 			String nameLoc = matcher.group(2);
+			String[] tokens = StringUtils.split(nameLoc, "_", 2);
 			
 			// Try to get the properties file that match the requested locale...
-			// If not found, look for the basic english locale (en_EN)
-			String[] locales = new String[]{nameLoc, "en_EN"};
-			for (String locale : locales) {
-				fileUrl = getResURL(baseTargetPath + "locale_" + locale + ".properties");
+			// If not found, look for the basic english locale (en)
+			String[] suffixes = null;
+			if (tokens.length == 2) {
+				suffixes = new String[]{nameLoc, tokens[0], "en"};
+			} else {
+				suffixes = new String[]{nameLoc, "en"};
+			}
+			for (String suffix : suffixes) {
+				fileUrl = getResURL(baseTargetPath + "locale_" + suffix + ".properties");
 				if(fileUrl != null) break;
 			}
 			if (fileUrl == null) throw new NotFoundException();
