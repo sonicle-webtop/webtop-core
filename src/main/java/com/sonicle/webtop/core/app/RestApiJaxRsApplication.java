@@ -41,28 +41,35 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
 import org.secnod.shiro.jersey.SubjectFactory;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
 public class RestApiJaxRsApplication extends ResourceConfig {
+	private static final Logger logger = WT.getLogger(RestApiJaxRsApplication.class);
 	
 	public RestApiJaxRsApplication() {
 		super();
-		register(new SubjectFactory());
-		register(new ShiroExceptionMapper());
-		register(new AuthExceptionMapper());
-		register(new WTExceptionMapper());
 		
-		// Loads Api endpoints implementation dinamically
 		WebTopApp wta = WebTopApp.getInstance();
-		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.listRegisteredServices()) {
-			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
-			if(sd.hasRestApi()) {
-				register(svcm.instantiateRestApi(serviceId));
+		if (wta != null) {
+			register(new SubjectFactory());
+			register(new ShiroExceptionMapper());
+			register(new AuthExceptionMapper());
+			register(new WTExceptionMapper());
+
+			// Loads Api endpoints implementation dinamically
+			ServiceManager svcm = wta.getServiceManager();
+			for(String serviceId : svcm.listRegisteredServices()) {
+				ServiceDescriptor sd = svcm.getDescriptor(serviceId);
+				if(sd.hasRestApi()) {
+					register(svcm.instantiateRestApi(serviceId));
+				}
 			}
+		} else {
+			logger.warn("Unable to configure Api endpoints. WTA is null!");
 		}
 	}
 	
