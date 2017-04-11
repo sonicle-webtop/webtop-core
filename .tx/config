@@ -1,0 +1,26 @@
+[main]
+host = https://www.transifex.com
+
+[webtop-core.core-server_locale]
+file_filter = src/main/resources/com/sonicle/webtop/core/locale_<lang>.properties
+source_file = src/main/resources/com/sonicle/webtop/core/locale_en.properties
+source_lang = en
+type = PROPERTIES
+
+[webtop-core.core-client_locale]
+file_filter = src/main/client-core/locale_<lang>.properties
+source_file = src/main/client-core/locale_en.properties
+source_lang = en
+type = PROPERTIES
+
+[webtop-core.admin-server_locale]
+file_filter = src/main/resources/com/sonicle/webtop/core/admin/locale_<lang>.properties
+source_file = src/main/resources/com/sonicle/webtop/core/admin/locale_en.properties
+source_lang = en
+type = PROPERTIES
+
+[webtop-core.admin-client_locale]
+file_filter = src/main/client-admin/locale_<lang>.properties
+source_file = src/main/client-admin/locale_en.properties
+source_lang = en
+type = PROPERTIES
