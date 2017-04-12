@@ -188,10 +188,10 @@ public class JobService extends BaseJobService {
 		private void sendEmail(ReminderEmail reminder) {
 			try {
 				UserProfile.Data ud = WT.getUserData(reminder.getProfileId());
-				InternetAddress from = WT.buildDomainInternetAddress(reminder.getProfileId().getDomainId(), "webtop-notification", null);
-				if(from == null) throw new WTException("Error building sender address");
+				InternetAddress from = WT.getNotificationAddress(reminder.getProfileId().getDomainId());
+				if (from == null) throw new WTException("Error building sender address");
 				InternetAddress to = ud.getEmail();
-				if(to == null) throw new WTException("Error building destination address");
+				if (to == null) throw new WTException("Error building destination address");
 				WT.sendEmail(WT.getGlobalMailSession(reminder.getProfileId()), reminder.getRich(), from, to, reminder.getSubject(), reminder.getBody());
 				
 			} catch(Exception ex) {
@@ -244,7 +244,7 @@ public class JobService extends BaseJobService {
 				String subject = NotificationHelper.buildSubject(userData.getLocale(), jobService.SERVICE_ID, bodyHeader);
 				String html = TplHelper.buildDeviceSyncCheckEmail(userData.getLocale());
 				
-				InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
+				InternetAddress from = WT.getNotificationAddress(pid.getDomainId());
 				if(from == null) throw new WTException("Error building sender address");
 				InternetAddress to = userData.getEmail();
 				if(to == null) throw new WTException("Error building destination address");

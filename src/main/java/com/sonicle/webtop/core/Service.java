@@ -882,8 +882,6 @@ public class Service extends BaseService {
 						if(!MailUtils.isAddressValid(ia)) throw new WTException("Email address not valid"); //TODO: messaggio in lingua
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
-						//TODO: email send
-						logger.debug("{}", config.otp.getVerificationCode());
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 
 					} else if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
@@ -940,13 +938,14 @@ public class Service extends BaseService {
 		}
 	}
 	
+	/*
 	private void sendOtpCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String verificationCode) {
 		try {
 			String bodyHeader = WT.lookupResource(SERVICE_ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER);
 			String subject = NotificationHelper.buildSubject(locale, SERVICE_ID, bodyHeader);
 			String html = TplHelper.buildOtpCodeVerificationEmail(locale, verificationCode);
-
-			InternetAddress from = WT.buildDomainInternetAddress(pid.getDomainId(), "webtop-notification", null);
+			
+			InternetAddress from = WT.getNotificationAddress(pid.getDomainId());
 			if(from == null) throw new WTException("Error building sender address");
 			WT.sendEmail(WT.getGlobalMailSession(pid), true, from, to, subject, html);
 
@@ -956,6 +955,7 @@ public class Service extends BaseService {
 			logger.error("Unable to send email", ex);
 		}
 	}
+	*/
 	
 	/*
 	private void sendOtpCodeEmail2(OSharingLink olink, String path, String ipAddress, String userAgent) throws WTException {
