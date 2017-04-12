@@ -46,9 +46,11 @@ import com.sonicle.security.otp.OTPProviderFactory;
 import com.sonicle.security.otp.provider.GoogleAuth;
 import com.sonicle.security.otp.provider.GoogleAuthOTPKey;
 import com.sonicle.security.otp.provider.SonicleAuth;
+import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
+import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
@@ -56,12 +58,17 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.util.NotificationHelper;
+import freemarker.template.TemplateException;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -142,11 +149,12 @@ public class OTPManager {
 	public EmailConfig configureEmail(UserProfileId pid, String emailAddress) throws WTException {
 		SonicleAuth sa = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 		UserProfile.Data ud = wta.getWebTopManager().userData(pid);
-		if(ud.getEmail() == null) throw new WTException("Valid email address is required");
-		OTPKey otp = sa.generateCredentials(ud.getEmail().getAddress());
 		
-		//TODO: find a way to send email
-		//wta.sendOtpMail(wts, profile.getWebTopDomain(), profile, profile.getLocale(), emailAddress, String.valueOf(otp.getVerificationCode()));
+		InternetAddress to = MailUtils.buildInternetAddress(emailAddress);
+		if (to == null) throw new WTException("Invalid destination address [{0}]", emailAddress);
+		OTPKey otp = sa.generateCredentials(ud.getEmail().getAddress());
+		sendCodeEmail(pid, ud.getLocale(), to, otp.getVerificationCode());
+		
 		return new EmailConfig(otp, emailAddress);
 	}
 	
@@ -206,12 +214,13 @@ public class OTPManager {
 		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			UserProfile.Data ud = wta.getWebTopManager().userData(pid);
-			if(ud.getEmail() == null) throw new WTException("Valid email address is required");
 			
+			String emailAddress = getEmailAddress(pid);
+			InternetAddress to = MailUtils.buildInternetAddress(emailAddress);
+			if (to == null) throw new WTException("Invalid destination address [{0}]", emailAddress);
 			OTPKey otp = te.generateCredentials(ud.getEmail().getAddress());
-			//TODO: find a way to send email
-			//wta.sendOtpMail(wts, profile.getWebTopDomain(), profile, profile.getLocale(), getEmailAddress(profile), String.valueOf(otp.getVerificationCode()));
-			logger.debug("Verification code {}", otp.getVerificationCode());
+			sendCodeEmail(pid, ud.getLocale(), to, otp.getVerificationCode());
+			
 			return new Config(CoreSettings.OTP_DELIVERY_EMAIL, otp);
 		} else {
 			return new Config(CoreSettings.OTP_DELIVERY_GOOGLEAUTH, null);
@@ -324,6 +333,23 @@ public class OTPManager {
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		int duration = 60*60*24*365*2; // 2 years
 		ServletUtils.setEncryptedCookie(secret, response, name, tdc, TrustedDeviceCookie.class, duration);
+	}
+	
+	private void sendCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, int code) throws WTException {
+		try {
+			String bodyHeader = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER);
+			String subject = NotificationHelper.buildSubject(locale, CoreManifest.ID, bodyHeader);
+			String html = TplHelper.buildOtpCodeVerificationEmail(locale, String.valueOf(code));
+			
+			InternetAddress from = WT.getNoReplyAddress(pid.getDomainId());
+			if (from == null) throw new WTException("Error building sender address");
+			WT.sendEmail(WT.getGlobalMailSession(pid), true, from, to, subject, html);
+
+		} catch(IOException | TemplateException ex) {
+			logger.error("Unable to build email template", ex);
+		} catch(MessagingException ex) {
+			logger.error("Unable to send email", ex);
+		}
 	}
 	
 	public static class Config {
