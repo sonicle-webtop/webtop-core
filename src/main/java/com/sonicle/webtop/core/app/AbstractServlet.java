@@ -60,7 +60,7 @@ public abstract class AbstractServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			WebTopApp wta = getWebTopApp(request);
-			LoggerUtils.initDC(wta.getWebAppName());
+			LoggerUtils.initDC(wta.getWebappName());
 			processRequest(request, response);
 			
 		} finally {
@@ -72,7 +72,7 @@ public abstract class AbstractServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			WebTopApp wta = getWebTopApp(request);
-			LoggerUtils.initDC(wta.getWebAppName());
+			LoggerUtils.initDC(wta.getWebappName());
 			processRequest(request, response);
 			
 		} finally {
@@ -84,7 +84,7 @@ public abstract class AbstractServlet extends HttpServlet {
 		String osInfo = wta.getOSInfo();
 		String appServerInfo = wta.getAppServerInfo();
 		String jdk = System.getProperty("java.version");
-		String webappName = wta.getWebAppName();
+		String webappName = wta.getWebappName();
 		vars.put("osInfo", osInfo);
 		vars.put("appServerInfo", appServerInfo);
 		vars.put("jdk", jdk);

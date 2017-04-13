@@ -242,7 +242,7 @@ public class ResourceRequest extends HttpServlet {
 		if(StringUtils.isBlank(sessionId)) return false;
 		WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
 		if(wts == null) {
-			return WebTopApp.getPropDebugMode();
+			return wta.getStartupProperties().getDebugMode();
 		} else {
 			return wts.getDebugMode();
 		}

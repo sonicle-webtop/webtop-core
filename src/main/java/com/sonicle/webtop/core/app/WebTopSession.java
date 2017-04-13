@@ -152,7 +152,7 @@ public class WebTopSession {
 	 * @return 
 	 */
 	public boolean getDebugMode() {
-		return debugMode == null ? WebTopApp.getPropDebugMode() : debugMode;
+		return debugMode == null ? wta.getStartupProperties().getDebugMode() : debugMode;
 	}
 	
 	/**
@@ -882,7 +882,7 @@ public class WebTopSession {
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
 		String extRtl = rtl ? "-rtl" : "";
-		String extDebug = WebTopApp.getPropExtJsDebug() ? "-debug" : "";
+		String extDebug = wta.getStartupProperties().getExtJsDebug() ? "-debug" : "";
 		String extTheme = theme;
 		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
 		String extLang = "-" + locale.getLanguage();
@@ -898,7 +898,7 @@ public class WebTopSession {
 		//js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
 		
 		// Include Sonicle ExtJs Extensions references
-		if (WebTopApp.getPropSonicleExtJsExtensionsDevMode()) {
+		if (wta.getStartupProperties().getSonicleExtJsExtensionsDevMode()) {
 			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");

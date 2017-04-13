@@ -33,36 +33,55 @@
  */
 package com.sonicle.webtop.core.app;
 
-import org.apache.shiro.session.Session;
-
+import com.sonicle.commons.LangUtils;
+import java.util.Properties;
 
 /**
  *
  * @author malbinola
  */
-public class ShiroSessionListener implements org.apache.shiro.session.SessionListener {
-
-	@Override
-	public void onStart(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStarted(sn);
+public class StartupProperties extends Properties {
+		public static final String PROP_EXTJS_DEBUG = "extJsDebug";
+		public static final String PROP_SO_EXT_DEV_MODE = "soExtDevMode";
+		public static final String PROP_DEV_MODE = "devMode";
+		public static final String PROP_DEBUG_MODE = "debugMode";
+		public static final String PROP_SCHEDULER_DISABLED = "schedulerDisabled";
+		public static final String PROP_WEBAPPS_CONFIG_PATH = "webappsConfigPath";
+		
+		public StartupProperties() {
+			super();
 		}
-	}
-
-	@Override
-	public void onStop(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStopped(sn);
+		
+		StartupProperties(Properties defaults) {
+			super(defaults);
 		}
-	}
-
-	@Override
-	public void onExpiration(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionExpired(sn);
+		
+		public boolean getExtJsDebug() {
+			return LangUtils.value(getProperty(PROP_EXTJS_DEBUG, null), false);
 		}
-	}
+
+		public boolean getSonicleExtJsExtensionsDevMode() {
+			return LangUtils.value(getProperty(PROP_SO_EXT_DEV_MODE, null), false);
+		}
+
+		public boolean getDevMode() {
+			return LangUtils.value(getProperty(PROP_DEV_MODE, null), false);
+		}
+
+		public boolean getDebugMode() {
+			return LangUtils.value(getProperty(PROP_DEBUG_MODE, null), false);
+		}
+
+		public boolean getSchedulerDisabled() {
+			return LangUtils.value(getProperty(PROP_SCHEDULER_DISABLED, null), false);
+		}
+		
+		public String getWebappsConfigPath() {
+			return LangUtils.value(getProperty(PROP_WEBAPPS_CONFIG_PATH, null), (String)null);
+		}
+
+		@Override
+		public synchronized Object setProperty(String key, String value) {
+			throw new UnsupportedOperationException("Method disabled");
+		}
 }

@@ -33,36 +33,41 @@
  */
 package com.sonicle.webtop.core.app;
 
-import org.apache.shiro.session.Session;
-
+import com.sonicle.commons.web.ServletUtils;
+import javax.servlet.ServletContext;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class ShiroSessionListener implements org.apache.shiro.session.SessionListener {
-
-	@Override
-	public void onStart(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStarted(sn);
+public class ContextLoader {
+	private static final Logger logger = WT.getLogger(ContextLoader.class);
+	public static final String WEBTOPAPP_ATTRIBUTE_KEY = "webtopapp";
+	
+	protected void initWebTopApp(ServletContext servletContext) throws IllegalStateException {
+		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
+			throw new IllegalStateException("There is already a WebTopApp associated with the current ServletContext.");
+		}
+		try {
+			WebTopApp.start(servletContext);
+			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
+		} catch(Throwable t) {
+			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
+			logger.error("Error initializing WTA [{}]", ServletUtils.getWebappName(servletContext), t);
 		}
 	}
-
-	@Override
-	public void onStop(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStopped(sn);
-		}
-	}
-
-	@Override
-	public void onExpiration(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionExpired(sn);
+	
+	protected void destroyWebTopApp(ServletContext servletContext) {
+		try {
+			Object wta = servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
+			if (wta != null) {
+				((WebTopApp)wta).destroy();
+			}
+		} catch(Throwable t) {
+			logger.error("Error destroying WTA [{}]", ServletUtils.getWebappName(servletContext), t);
+		} finally {
+			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
 	}
 }
