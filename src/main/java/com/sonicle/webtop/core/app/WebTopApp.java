@@ -259,7 +259,7 @@ public final class WebTopApp {
 		if (StringUtils.isBlank(startupProperties.getWebappsConfigPath())) {
 			this.webappConfigPath = null;
 		} else {
-			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), this.webappName);
+			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ServletUtils.getWebappName(context, true));
 		}
 		this.webappIsLatest = false;
 		
