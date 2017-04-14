@@ -48,7 +48,7 @@ public class CoreManifest extends ServiceManifest {
 	public static final String XID = "wt";
 	public static final String JAVA_PACKAGE = "com.sonicle.webtop.core";
 	public static final String JS_PACKAGE = "Sonicle.webtop.core";
-	public static final String VERSION = "5.0.5";
+	public static final String VERSION = "5.0.6";
 	public static final String BUILD_DATE = "2017-04-14";
 	public static final String CONTROLLER_CLASSNAME = "com.sonicle.webtop.core.CoreController";
 	public static final String MANAGER_CLASSNAME = "com.sonicle.webtop.core.CoreManager";
