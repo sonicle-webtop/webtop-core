@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.util.LogEntries;
  */
 public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	protected LogEntries log;
+	protected Throwable lastException;
 	protected int batchSize;
 	public int handledCount;
 	
@@ -54,10 +55,14 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	protected abstract int getBeanStoreSize();
 	protected abstract void clearBeanStore();
 	protected abstract void addBeanToStore(T bean);
-	public abstract void handleStoredBeans() throws BeanHandlerException;
+	public abstract boolean handleStoredBeans();
 	
 	public LogEntries getLog() {
 		return log;
+	}
+	
+	public Throwable getLastException() {
+		return lastException;
 	}
 	
 	public int getBatchSize() {
@@ -68,27 +73,31 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 		this.batchSize = batchSize;
 	}
 	
-	public void flush() throws BeanHandlerException {
+	public boolean flush() {
 		if(getBeanStoreSize() > 0) {
 			try {
-				handleStoredBeans();
+				return handleStoredBeans();
 			} finally {
 				clearBeanStore();
 			}
+		} else {
+			return true;
 		}
 	}
 	
 	@Override
-	public void handle(T bean, LogEntries log) throws BeanHandlerException {
+	public boolean handle(T bean, LogEntries log) {
 		handledCount++;
 		addBeanToStore(bean);
 		log.addAll(log);
 		if(getBeanStoreSize() == batchSize) {
 			try {
-				handleStoredBeans();
+				return handleStoredBeans();
 			} finally {
 				clearBeanStore();
 			}
+		} else {
+			return true;
 		}
 	}
 }

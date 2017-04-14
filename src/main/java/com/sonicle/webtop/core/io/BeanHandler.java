@@ -41,5 +41,5 @@ import com.sonicle.webtop.core.util.LogEntries;
  * @param <T> Bean type.
  */
 public interface BeanHandler<T> {
-	public void handle(T bean, LogEntries log) throws Exception;
+	public boolean handle(T bean, LogEntries log);
 }
