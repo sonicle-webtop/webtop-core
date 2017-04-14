@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
@@ -92,7 +93,12 @@ public class WsPushEndpoint {
 	
 	@OnMessage
 	public void onMessage(String json) {
-		
+		// Communication is only mono-directional, from server -> client
+	}
+	
+	@OnError
+	public void error(Session session, Throwable t) {
+		logger.warn("Websocket Error", t);
 	}
 	
 	public static boolean hasSessions(String sid) {
@@ -118,12 +124,14 @@ public class WsPushEndpoint {
 	}
 	
 	public static void send(Session session, String rawMessage) throws IOException {
-		if(session.isOpen()) {
-			if(!rawMessage.isEmpty() && !rawMessage.equals("[]")) {
-				session.getBasicRemote().sendText(rawMessage);
+		synchronized(session) {
+			if(session.isOpen()) {
+				if(!rawMessage.isEmpty() && !rawMessage.equals("[]")) {
+					session.getBasicRemote().sendText(rawMessage);
+				}
+			} else {
+				throw new IOException("Session is not available");
 			}
-		} else {
-			throw new IOException("Session is not available");
 		}
 	}
 }
