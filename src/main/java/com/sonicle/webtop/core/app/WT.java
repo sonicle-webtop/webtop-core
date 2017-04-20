@@ -231,10 +231,14 @@ public class WT {
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, UserProfileId targetProfileId) {
+		return getServiceManager(serviceId, false, targetProfileId);
+	}
+	
+	public static BaseManager getServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, targetProfileId);
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, fastInit, targetProfileId);
 		}
 	}
 	
