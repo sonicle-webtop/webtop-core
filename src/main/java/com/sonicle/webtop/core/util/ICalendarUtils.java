@@ -233,7 +233,7 @@ public class ICalendarUtils {
 			}
 		}
 		
-		if (matchingAtt != null) {
+		if (matchingAtt == null) {
 			return null;
 		} else {
 			props.add(matchingAtt);
