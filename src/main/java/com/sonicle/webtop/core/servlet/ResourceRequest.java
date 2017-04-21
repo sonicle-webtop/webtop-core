@@ -286,7 +286,7 @@ public class ResourceRequest extends HttpServlet {
 			String targetPath = targetUrl.getPath();
 			//String internetName = ServletUtils.getInternetName(request);
 			String internetName = ServletUtils.getHost(request);
-			String domainId = WT.findDomainByInternetName(internetName);
+			String domainId = WT.findDomainIdByInternetName(internetName);
 			if (!StringUtils.isBlank(domainId)) {
 				String pathname = wta.getImagesPath(domainId) + "login.png";
 				File file = new File(pathname);

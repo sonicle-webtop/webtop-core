@@ -93,20 +93,24 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 	public static class PublicPath extends UrlPathTokens {
 		
 		public PublicPath(String pathInfo) throws MalformedURLException {
-			super(StringUtils.split(pathInfo, "/", 3));
-			if(tokens.length < 2) throw new MalformedURLException("Invalid URL");
+			super(StringUtils.split(pathInfo, "/", 4));
+			if(tokens.length < 3) throw new MalformedURLException("Invalid URL");
 		}
 		
-		public String getPublicName() {
+		public String getDomainPublicName() {
 			return getTokenAt(0);
 		}
 		
-		public String getContext() {
+		public String getServicePublicName() {
 			return getTokenAt(1);
 		}
 		
-		public String getRemainingPath() {
+		public String getContext() {
 			return getTokenAt(2);
+		}
+		
+		public String getRemainingPath() {
+			return getTokenAt(3);
 		}
 	}
 	

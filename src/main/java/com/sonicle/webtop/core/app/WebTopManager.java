@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.DigestUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
@@ -162,6 +163,8 @@ public final class WebTopManager {
 	public static final String USERID_ADMINS = "admins";
 	public static final String USERID_USERS = "users";
 	
+	private final Object lock0 = new Object();
+	private final HashMap<String, String> cachePublicNameToDomain = new HashMap<>();
 	private final HashMap<String, String> cacheInternetNameToDomain = new HashMap<>();
 	
 	private final Object lock1 = new Object();
@@ -182,7 +185,7 @@ public final class WebTopManager {
 	 */
 	private WebTopManager(WebTopApp wta) {
 		this.wta = wta;
-		initInternetNameToDomainCache();
+		initDomainCache();
 		initUserUidCache();
 		initGroupUidCache();
 	}
@@ -195,7 +198,7 @@ public final class WebTopManager {
 		cleanupUserUidCache();
 		cleanupGroupUidCache();
 		cleanupUserCache();
-		cleanupInternetNameToDomainCache();
+		cleanupDomainCache();
 		logger.info("UserManager destroyed");
 	}
 	
@@ -247,8 +250,18 @@ public final class WebTopManager {
 		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), false, null, null, null, null);
 	}
 	
+	public String domainIdToPublicName(String domainId) {
+		return DigestUtils.adler32Hex(domainId);
+	}
+	
+	public String publicNameToDomainId(String domainPublicName) {
+		synchronized(lock0) {
+			return cachePublicNameToDomain.get(domainPublicName);
+		}
+	}
+	
 	public String internetNameToDomain(String internetName) {
-		synchronized (cacheInternetNameToDomain) {
+		synchronized (lock0) {
 			if (cacheInternetNameToDomain.size() == 1) {
 				// If we have only one domain in cache, simply returns it...
 				Map.Entry<String, String> entry = cacheInternetNameToDomain.entrySet().iterator().next();
@@ -421,7 +434,7 @@ public final class WebTopManager {
 		}
 		
 		// Update cache
-		initInternetNameToDomainCache();
+		initDomainCache();
 		
 		return odomain;
 	}
@@ -448,7 +461,7 @@ public final class WebTopManager {
 		}
 		
 		// Update cache
-		initInternetNameToDomainCache();
+		initDomainCache();
 	}
 	
 	public void deleteDomain(String domainId) throws WTException {
@@ -499,7 +512,7 @@ public final class WebTopManager {
 		}
 		
 		// Update cache
-		initInternetNameToDomainCache();
+		initDomainCache();
 		initUserUidCache();
 		initGroupUidCache();
 		cleanupUserCache();
@@ -1891,28 +1904,30 @@ public final class WebTopManager {
 		o.setDirPassword(PasswordUtils.encryptDES(password, new String(new char[]{'p','a','s','s','w','o','r','d'})));
 	}
 	
-	private void initInternetNameToDomainCache() {
+	private void initDomainCache() {
 		Connection con = null;
 		
 		try {
-			synchronized(cacheInternetNameToDomain) {
+			synchronized(lock0) {
 				DomainDAO dao = DomainDAO.getInstance();
 				
 				con = wta.getConnectionManager().getConnection();
-				cleanupInternetNameToDomainCache();
+				cleanupDomainCache();
 				for(ODomain odomain : dao.selectEnabled(con)) {
+					cachePublicNameToDomain.put(domainIdToPublicName(odomain.getDomainId()), odomain.getDomainId());
 					cacheInternetNameToDomain.put(odomain.getInternetName(), odomain.getDomainId());
 				}
 			}
 		} catch(SQLException ex) {
-			throw new WTRuntimeException(ex, "Unable to init domain internetName cache");
+			throw new WTRuntimeException(ex, "Unable to init domain name cache");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	private void cleanupInternetNameToDomainCache() {
-		synchronized(cacheInternetNameToDomain) {
+	private void cleanupDomainCache() {
+		synchronized(lock0) {
+			cachePublicNameToDomain.clear();
 			cacheInternetNameToDomain.clear();
 		}
 	}

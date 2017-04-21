@@ -72,9 +72,9 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {
 		try {
-			if(StringUtils.isBlank(relativePath)) return null;
+			if (StringUtils.isBlank(relativePath)) return null;
 			Resource resource = getExternalPublicFile(wta, serviceId, relativePath);
-			if(resource == null) resource = getInternalPublicFile(wta, serviceId, relativePath);
+			if (resource == null) resource = getInternalPublicFile(wta, serviceId, relativePath);
 			return resource;
 			
 		} catch(Exception ex) {
@@ -89,7 +89,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	}
 	
 	public JarFileResource getInternalPublicFile(WebTopApp wta, String serviceId, String relativePath) throws URISyntaxException, IOException {
-		if(!StringUtils.startsWith(relativePath, PUBLIC_RESOURCES)) return null;
+		if (!StringUtils.startsWith(relativePath, PUBLIC_RESOURCES)) return null;
 		String pathname = LangUtils.joinPaths(LangUtils.packageToPath(serviceId), relativePath);
 		return wta.getJarResource(this.getClass().getResource("/" + pathname));
 	}
@@ -102,7 +102,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 			String mimeType = ServletUtils.guessMimeType(resource.getFilename());
 			os = ServletUtils.prepareForStreamCopy(request, response, mimeType, (int)resource.getSize(), 4*1024);
 			ServletUtils.setContentTypeHeader(response, mimeType);
-			if(StringUtils.startsWith(mimeType, "image")) {
+			if (StringUtils.startsWith(mimeType, "image")) {
 				ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24);
 			} else {
 				ServletUtils.setCacheControlPrivateNoCache(response);
@@ -124,20 +124,20 @@ public class PublicServiceRequest extends BaseServiceRequest {
 			String serviceId = ServletUtils.getStringParameter(request, "service", null);
 			
 			String relativePath = null;
-			if(serviceId != null) { // Checks if service ID is valid
+			if (serviceId != null) { // Checks if service ID is valid
 				wts.initPublicEnvironment(request, serviceId);
 				
 			} else { // Retrieves public service ID using its public name
 				String[] urlParts = splitPath(request.getPathInfo());
-				serviceId = wta.getServiceManager().getServiceIdByPublicName(urlParts[0]);
-				if(serviceId == null) throw new WTRuntimeException("Public name not known [{0}]", urlParts[0]);
+				serviceId = wta.getServiceManager().getServiceIdByPublicName(urlParts[1]);
+				if (serviceId == null) throw new WTRuntimeException("Public name not known [{0}]", urlParts[1]);
 				wts.initPublicEnvironment(request, serviceId);
-				relativePath = urlParts[1];
+				relativePath = urlParts[2];
 			}
 			
 			// Returns direct stream if pathInfo points to a real file
 			Resource resource = getPublicFile(wta, serviceId, relativePath);
-			if(resource != null) {
+			if (resource != null) {
 				writeFile(request, response, resource);
 				
 			} else {
@@ -168,8 +168,17 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	
 	@Override
 	protected String[] splitPath(String pathInfo) throws MalformedURLException {
-		String[] tokens = StringUtils.split(pathInfo, "/", 2);
-		if(tokens.length < 1) throw new MalformedURLException("No service provided");
-		return new String[]{tokens[0], (tokens.length == 2) ? tokens[1] : ""};
+		/*
+			URL path is something like this:
+			.../{domainPublicName}/{servicePublicName}/remaining/path/
+			
+			- domainPublicName: the hashed (adler32) name of the domain ID
+			- servicePublicName: the public name of the service
+		*/
+		
+		String[] tokens = StringUtils.split(pathInfo, "/", 3);
+		if (tokens.length < 1) throw new MalformedURLException("No domain provided");
+		if (tokens.length < 2) throw new MalformedURLException("No service provided");
+		return new String[]{tokens[0], tokens[1], (tokens.length == 3) ? tokens[2] : ""};
 	}
 }
