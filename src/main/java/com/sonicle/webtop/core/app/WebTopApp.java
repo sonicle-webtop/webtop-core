@@ -74,6 +74,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.shiro.WTRealm;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
@@ -179,10 +180,12 @@ public final class WebTopApp {
 				public void run() {
 					ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
 					try {
+						LoggerUtils.initDC(instance.getWebappName());
 						threadState.bind();
 						instance.onAppReady();
 					} finally {
 						threadState.clear();
+						LoggerUtils.clearDC();
 					}
 				}
 			}, 5000);

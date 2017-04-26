@@ -31,39 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.shiro.filter;
 
+import com.sonicle.webtop.core.app.ContextLoader;
 import com.sonicle.webtop.core.util.LoggerUtils;
-import org.apache.shiro.session.Session;
-
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import org.apache.shiro.web.filter.PathMatchingFilter;
 
 /**
  *
  * @author malbinola
  */
-public class ShiroSessionListener implements org.apache.shiro.session.SessionListener {
+public class LoggerDC extends PathMatchingFilter {
 
 	@Override
-	public void onStart(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStarted(sn);
-		}
-	}
-
-	@Override
-	public void onStop(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStopped(sn);
-		}
-	}
-
-	@Override
-	public void onExpiration(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionExpired(sn);
-		}
+	protected boolean preHandle(ServletRequest request, ServletResponse response) throws Exception {
+		LoggerUtils.initDC(ContextLoader.getWabappName(request.getServletContext()));
+		return true;
 	}
 }

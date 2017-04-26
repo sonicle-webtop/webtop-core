@@ -1,12 +1,5 @@
 
 -- ----------------------------
--- Records of activities
--- ----------------------------
-INSERT INTO "core"."activities" VALUES ('1', '*', '*', NULL, 'Permesso', 'f', NULL);
-INSERT INTO "core"."activities" VALUES ('2', '*', '*', NULL, 'Ferie', 'f', NULL);
-INSERT INTO "core"."activities" VALUES ('3', '*', '*', NULL, 'Malattia', 'f', NULL);
-
--- ----------------------------
 -- Records of file_types
 -- ----------------------------
 INSERT INTO "core"."file_types" VALUES ('7z', 'archive', '');

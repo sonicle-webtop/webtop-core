@@ -59,10 +59,7 @@ public abstract class AbstractServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
-			WebTopApp wta = getWebTopApp(request);
-			LoggerUtils.initDC(wta.getWebappName());
 			processRequest(request, response);
-			
 		} finally {
 			LoggerUtils.clearDC();
 		}
@@ -71,10 +68,7 @@ public abstract class AbstractServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
-			WebTopApp wta = getWebTopApp(request);
-			LoggerUtils.initDC(wta.getWebappName());
 			processRequest(request, response);
-			
 		} finally {
 			LoggerUtils.clearDC();
 		}

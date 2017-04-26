@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
 import org.slf4j.Logger;
 
@@ -43,29 +44,41 @@ import org.slf4j.Logger;
  */
 public class ContextLoader {
 	private static final Logger logger = WT.getLogger(ContextLoader.class);
-	public static final String WEBTOPAPP_ATTRIBUTE_KEY = "webtopapp";
+	public static final String WEBAPPNAME_ATTRIBUTE_KEY = "wtwebappname";
+	public static final String WEBTOPAPP_ATTRIBUTE_KEY = "wtapp";
+	
+	public static String getWabappName(ServletContext servletContext) {
+		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
+	}
 	
 	protected void initWebTopApp(ServletContext servletContext) throws IllegalStateException {
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
 			throw new IllegalStateException("There is already a WebTopApp associated with the current ServletContext.");
 		}
+		
+		final String appname = ServletUtils.getWebappName(servletContext);
+		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, appname);
+		
 		try {
+			LoggerUtils.initDC(appname);
 			WebTopApp.start(servletContext);
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
 		} catch(Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
-			logger.error("Error initializing WTA [{}]", ServletUtils.getWebappName(servletContext), t);
+			logger.error("Error initializing WTA [{}]", appname, t);
 		}
 	}
 	
 	protected void destroyWebTopApp(ServletContext servletContext) {
+		final String appname = getWabappName(servletContext);
 		try {
+			LoggerUtils.initDC(appname);
 			Object wta = servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 			if (wta != null) {
 				((WebTopApp)wta).destroy();
 			}
 		} catch(Throwable t) {
-			logger.error("Error destroying WTA [{}]", ServletUtils.getWebappName(servletContext), t);
+			logger.error("Error destroying WTA [{}]", appname, t);
 		} finally {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
