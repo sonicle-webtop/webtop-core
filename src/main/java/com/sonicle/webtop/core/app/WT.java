@@ -139,14 +139,19 @@ public class WT {
 		return getWTA().getPublicBaseUrl(domainId);
 	}
 	
+	public static String getDomainPublicName(String domainId) {
+		return getWTA().getWebTopManager().domainIdToPublicName(domainId);
+	}
+	
 	public static String getServicePublicName(String serviceId) {
 		return getWTA().getServiceManager().getPublicName(serviceId);
 	}
 	
 	public static String getServicePublicUrl(String domainId, String serviceId) {
-		String baseUrl = getPublicBaseUrl(domainId);
-		String publicName = getServicePublicName(serviceId);
-		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL, publicName);
+		final String baseUrl = getPublicBaseUrl(domainId);
+		final String domainPublicName = getDomainPublicName(domainId);
+		final String servicePublicName = getServicePublicName(serviceId);
+		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL, domainPublicName, servicePublicName);
 	}
 	
 	public static String getPublicImagesUrl(String domainId) {
@@ -190,7 +195,11 @@ public class WT {
 		}
 	}
 	
-	public static String findDomainByInternetName(String internetName) {
+	public static String findDomainIdByPublicName(String domainPublicName) {
+		return getWTA().getWebTopManager().publicNameToDomainId(domainPublicName);
+	}
+	
+	public static String findDomainIdByInternetName(String internetName) {
 		return getWTA().getWebTopManager().internetNameToDomain(internetName);
 	}
 	
@@ -231,10 +240,14 @@ public class WT {
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, UserProfileId targetProfileId) {
+		return getServiceManager(serviceId, false, targetProfileId);
+	}
+	
+	public static BaseManager getServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, targetProfileId);
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, fastInit, targetProfileId);
 		}
 	}
 	

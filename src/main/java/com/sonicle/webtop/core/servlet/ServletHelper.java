@@ -55,15 +55,6 @@ import org.apache.commons.lang3.StringUtils;
 public class ServletHelper {
 	
 	/**
-	 * Returns context's root path name, equals to current webapp context name.
-	 * @param context The servlet context
-	 * @return Webapp's name
-	 */
-	public static String getWebAppName(ServletContext context) {
-		return new File(context.getRealPath("/")).getName();
-	}
-	
-	/**
 	 * Retrieve the ID of the current http session.
 	 * @param request The http request
 	 * @return Session's ID

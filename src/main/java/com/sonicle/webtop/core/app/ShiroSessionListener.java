@@ -45,18 +45,24 @@ public class ShiroSessionListener implements org.apache.shiro.session.SessionLis
 	@Override
 	public void onStart(Session sn) {
 		WebTopApp wta = WebTopApp.getInstance();
-		wta.getSessionManager().shiroSessionStarted(sn);
+		if (wta != null) {
+			wta.getSessionManager().shiroSessionStarted(sn);
+		}
 	}
 
 	@Override
 	public void onStop(Session sn) {
 		WebTopApp wta = WebTopApp.getInstance();
-		wta.getSessionManager().shiroSessionStopped(sn);
+		if (wta != null) {
+			wta.getSessionManager().shiroSessionStopped(sn);
+		}
 	}
 
 	@Override
 	public void onExpiration(Session sn) {
 		WebTopApp wta = WebTopApp.getInstance();
-		wta.getSessionManager().shiroSessionExpired(sn);
+		if (wta != null) {
+			wta.getSessionManager().shiroSessionExpired(sn);
+		}
 	}
 }

@@ -35,7 +35,9 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
@@ -70,7 +72,6 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.shiro.WTRealm;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import freemarker.template.Configuration;
@@ -133,7 +134,6 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public final class WebTopApp {
-	public static final String ATTRIBUTE = "webtopapp";
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static WebTopApp instance = null;
 	private static final Object lockInstance = new Object();
@@ -195,6 +195,7 @@ public final class WebTopApp {
 		}
 	}
 	
+	public static final String DATASOURCES_CONFIG_PATH_PARAM = "dataSourcesConfigPath";
 	public static final String DOMAINS_FOLDER = "domains";
 	public static final String DBSCRIPTS_FOLDER = "dbscripts";
 	public static final String DBSCRIPTS_POST_FOLDER = "post";
@@ -207,15 +208,17 @@ public final class WebTopApp {
 	private final Charset systemCharset;
 	private DateTimeZone systemTimeZone;
 	private Locale systemLocale;
+	private final StartupProperties startupProperties;
+	
+	private TomcatManager tomcat = null;
+	private final String webappName;
+	private final String webappConfigPath;
+	private boolean webappIsLatest;
+	private Timer webappVersionCheckTimer = null;
 	
 	private Subject adminSubject;
 	private final Object lockAdminSubject = new Object();
 	private Timer adminTouchTimer = null;
-	
-	private TomcatManager tomcat = null;
-	private String webappName;
-	private boolean webappIsLatest;
-	private Timer webappVersionCheckTimer = null;
 	
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
@@ -244,18 +247,24 @@ public final class WebTopApp {
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
-		logger.info("webtop.extjsdebug = {}", getPropExtJsDebug());
-		logger.info("webtop.soextdevmode = {}", getPropSonicleExtJsExtensionsDevMode());
-		logger.info("webtop.devmode = {}", getPropDevMode());
-		logger.info("webtop.debugmode = {}", getPropDebugMode());
-		logger.info("webtop.scheduler.disabled = {}", getPropSchedulerDisabled());
+		startupProperties = createStartupProperties();
+		logger.info("webtop.extJsDebug = {}", startupProperties.getExtJsDebug());
+		logger.info("webtop.soExtDevMode = {}", startupProperties.getSonicleExtJsExtensionsDevMode());
+		logger.info("webtop.devMode = {}", startupProperties.getDevMode());
+		logger.info("webtop.debugMode = {}", startupProperties.getDebugMode());
+		logger.info("webtop.schedulerSisabled = {}", startupProperties.getSchedulerDisabled());
+		logger.info("webtop.webappsConfigPath = {}", startupProperties.getWebappsConfigPath());
 		
-		this.webappName = ServletHelper.getWebAppName(context);
+		this.webappName = ServletUtils.getWebappName(context);
+		if (StringUtils.isBlank(startupProperties.getWebappsConfigPath())) {
+			this.webappConfigPath = null;
+		} else {
+			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ServletUtils.getWebappName(context, true));
+		}
 		this.webappIsLatest = false;
 		
 		logger.info("WTA initialization started [{}]", webappName);
-		
-		this.conmgr = ConnectionManager.initialize(this); // Connection Manager
+		this.conmgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager
 		this.setmgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesmgr = SessionManager.initialize(this); // Session Manager
 		
@@ -292,7 +301,7 @@ public final class WebTopApp {
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
 			this.scheduler = new StdSchedulerFactory().getScheduler();
-			if(WebTopApp.getPropSchedulerDisabled()) {
+			if(startupProperties.getSchedulerDisabled()) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
 				this.scheduler.start();
@@ -554,57 +563,37 @@ public final class WebTopApp {
 		return new CoreServiceSettings(setmgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
 	}
 	
-	
-	
-	
-	
-	
-	
-	public static boolean getPropExtJsDebug() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.extjsdebug");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropSonicleExtJsExtensionsDevMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.soextdevmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropDevMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.devmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropDebugMode() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.debugmode");
-		return LangUtils.value(prop, false);
-	}
-	
-	public static boolean getPropSchedulerDisabled() {
-		String prop = System.getProperties().getProperty("com.sonicle.webtop.scheduler.disabled");
-		return LangUtils.value(prop, false);
-		//return System.getProperties().containsKey("com.sonicle.webtop.wtdebug");
-	}
-	
-	/**
-	 * Returns webapp's name as configured in the application server.
-	 * @return Webapp's name
-	 */
-	public String getWebAppName() {
-		return webappName;
-	}
-	
-	/**
-	 * Checks if this webapp is the latest version in the application server.
-	 * @return True if this is the last version, false otherwise.
-	 */
-	public boolean isLatest() {
-		return webappIsLatest;
-	}
-	
-	public String getPlatformName() {
-		//TODO: completare rebranding aggiungendo impostazione per override del nome
-		return "WebTop";
+	private StartupProperties createStartupProperties() {
+		final String PREFIX = "com.sonicle.webtop.";
+		Properties props = new Properties();
+		String prop = null;
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_EXTJS_DEBUG, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_EXTJS_DEBUG.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_EXTJS_DEBUG, prop);
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_SO_EXT_DEV_MODE, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_SO_EXT_DEV_MODE.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_SO_EXT_DEV_MODE, prop);
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_DEV_MODE, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_DEV_MODE.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_DEV_MODE, prop);
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_DEBUG_MODE, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_DEBUG_MODE.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_DEBUG_MODE, prop);
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_SCHEDULER_DISABLED, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_SCHEDULER_DISABLED.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_SCHEDULER_DISABLED, prop);
+		
+		prop = System.getProperty(PREFIX + StartupProperties.PROP_WEBAPPS_CONFIG_PATH, null);
+		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_WEBAPPS_CONFIG_PATH.toLowerCase(), null);
+		if (prop != null) props.setProperty(StartupProperties.PROP_WEBAPPS_CONFIG_PATH, prop);
+		//context.getInitParameter
+		
+		return new StartupProperties(props);
 	}
 	
 	public String getAppServerInfo() {
@@ -625,6 +614,35 @@ public final class WebTopApp {
 	
 	public Locale getSystemLocale() {
 		return systemLocale;
+	}
+	
+	public StartupProperties getStartupProperties() {
+		return startupProperties;
+	}
+	
+	/**
+	 * Returns webapp's name as configured in the application server.
+	 * @return Webapp's name
+	 */
+	public String getWebappName() {
+		return webappName;
+	}
+	
+	public String getWebappConfigPath() {
+		return webappConfigPath;
+	}
+	
+	/**
+	 * Checks if this webapp is the latest version in the application server.
+	 * @return True if this is the last version, false otherwise.
+	 */
+	public boolean isLatest() {
+		return webappIsLatest;
+	}
+	
+	public String getPlatformName() {
+		//TODO: completare rebranding aggiungendo impostazione per override del nome
+		return "WebTop";
 	}
 	
 	public MediaTypes getMediaTypes() {
@@ -726,9 +744,15 @@ public final class WebTopApp {
 		}
 	}
 	
+	public String getContextResourcePath(String resource) {
+		return servletContext.getRealPath(resource);
+	}
+	
+	/*
 	public URL getContextResource(String resource) throws MalformedURLException {
 		return servletContext.getResource(resource);
 	}
+	*/
 	
 	public Template loadTemplate(String path) throws IOException {
 		return freemarkerCfg.getTemplate(path, getSystemCharset().name());
@@ -1248,6 +1272,6 @@ public final class WebTopApp {
 	 * @return WebTopApp object
 	 */
 	static WebTopApp get(ServletContext context) {
-		return (WebTopApp) context.getAttribute(ATTRIBUTE);
+		return (WebTopApp) context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
 	}
 }

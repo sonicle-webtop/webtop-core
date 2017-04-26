@@ -63,7 +63,7 @@ public class JsPecBridgeRelay {
 		port = o.getPort();
 		username = o.getUsername();
 		password = o.getPassword();
-		if (o.getProtocol().equals("IMAPS")) {
+		if (o.getProtocol().equals("SMTPS")) {
 			connSecurity = "SSL";
 		}
 	}
@@ -78,7 +78,7 @@ public class JsPecBridgeRelay {
 		o.setUsername(js.username);
 		o.setPassword(js.password);
 		if (js.connSecurity.equals("SSL")) {
-			o.setProtocol("IMAPS");
+			o.setProtocol("SMTPS");
 		}
 		return o;
 	}

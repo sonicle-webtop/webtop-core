@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.PropertyElf;
+import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
@@ -58,11 +59,11 @@ public class DataSourcesConfig {
 		return hm.get(serviceId);
 	}
 	
-	public void parseConfiguration(URL url) throws ConfigurationException {
+	public void parseConfiguration(File file) throws ConfigurationException {
 		HikariConfigMap sources = null;
 		String serviceId = null, sourceName = null;
 		
-		XMLConfiguration config = new XMLConfiguration(url);
+		XMLConfiguration config = new XMLConfiguration(file);
 		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
 		for(HierarchicalConfiguration elService : elServices) {
 			serviceId = elService.getString("[@id]", null);

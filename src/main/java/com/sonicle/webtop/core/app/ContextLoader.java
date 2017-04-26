@@ -31,73 +31,43 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.util.LogEntries;
+import com.sonicle.commons.web.ServletUtils;
+import javax.servlet.ServletContext;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
- * @param <T> Bean type.
  */
-public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
-	protected LogEntries log;
-	protected Throwable lastException;
-	protected int batchSize;
-	public int handledCount;
+public class ContextLoader {
+	private static final Logger logger = WT.getLogger(ContextLoader.class);
+	public static final String WEBTOPAPP_ATTRIBUTE_KEY = "webtopapp";
 	
-	public BatchBeanHandler(LogEntries log) {
-		this.log = log;
-		this.batchSize = 100;
-		this.handledCount = 0;
-	}
-	
-	protected abstract int getBeanStoreSize();
-	protected abstract void clearBeanStore();
-	protected abstract void addBeanToStore(T bean);
-	public abstract boolean handleStoredBeans();
-	
-	public LogEntries getLog() {
-		return log;
-	}
-	
-	public Throwable getLastException() {
-		return lastException;
-	}
-	
-	public int getBatchSize() {
-		return batchSize;
-	}
-	
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
-	
-	public boolean flush() {
-		if(getBeanStoreSize() > 0) {
-			try {
-				return handleStoredBeans();
-			} finally {
-				clearBeanStore();
-			}
-		} else {
-			return true;
+	protected void initWebTopApp(ServletContext servletContext) throws IllegalStateException {
+		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
+			throw new IllegalStateException("There is already a WebTopApp associated with the current ServletContext.");
+		}
+		try {
+			WebTopApp.start(servletContext);
+			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
+		} catch(Throwable t) {
+			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
+			logger.error("Error initializing WTA [{}]", ServletUtils.getWebappName(servletContext), t);
 		}
 	}
 	
-	@Override
-	public boolean handle(T bean, LogEntries log) {
-		handledCount++;
-		addBeanToStore(bean);
-		log.addAll(log);
-		if(getBeanStoreSize() == batchSize) {
-			try {
-				return handleStoredBeans();
-			} finally {
-				clearBeanStore();
+	protected void destroyWebTopApp(ServletContext servletContext) {
+		try {
+			Object wta = servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
+			if (wta != null) {
+				((WebTopApp)wta).destroy();
 			}
-		} else {
-			return true;
+		} catch(Throwable t) {
+			logger.error("Error destroying WTA [{}]", ServletUtils.getWebappName(servletContext), t);
+		} finally {
+			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
 	}
 }

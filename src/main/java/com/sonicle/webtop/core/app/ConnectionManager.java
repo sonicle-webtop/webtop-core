@@ -32,10 +32,13 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.app.DataSourcesConfig.HikariConfigMap;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -44,6 +47,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import javax.sql.DataSource;
 import net.sf.qualitycheck.Check;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -52,23 +56,26 @@ import org.slf4j.Logger;
  */
 public class ConnectionManager implements IConnectionProvider {
 	private static final Logger logger = WT.getLogger(ConnectionManager.class);
-	public static final String DEFAULT_DATASOURCE = "default";
 	private static boolean initialized = false;
 	
 	/**
 	 * Initialization method. This method should be called once.
 	 * 
 	 * @param wta WebTopApp instance.
+	 * @param configPath The optional path in which to look for configuration.
 	 * @return The instance.
 	 */
-	public static synchronized ConnectionManager initialize(WebTopApp wta) {
+	public static synchronized ConnectionManager initialize(WebTopApp wta, String configPath) {
 		if(initialized) throw new RuntimeException("Initialization already done");
-		ConnectionManager conm = new ConnectionManager(wta);
+		ConnectionManager conm = new ConnectionManager(wta, configPath);
 		initialized = true;
 		logger.info("ConnectionManager initialized");
 		return conm;
 	}
 	
+	public static final String CONFIG_NAME = "data-sources.xml";
+	public static final String DEFAULT_CONFIG_RESOURCE_PATH = "/META-INF/" + CONFIG_NAME;
+	public static final String DEFAULT_DATASOURCE = "default";
 	private boolean shutdown = false;
 	private WebTopApp wta = null;
 	private DataSourcesConfig config = null;
@@ -79,9 +86,9 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private ConnectionManager(WebTopApp wta) {
+	private ConnectionManager(WebTopApp wta, String configPath) {
 		this.wta = wta;
-		init();
+		init(configPath);
 	}
 	
 	/**
@@ -99,17 +106,41 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.info("ConnectionManager destroyed");
 	}
 	
-	private void init() {
+	private void init(String webappsConfigPath) {
+		String path = null;
+		File file = null;
+		
 		// Loads dataSources configuration
+		if (!StringUtils.isBlank(webappsConfigPath)) {
+			path = PathUtils.concatPaths(webappsConfigPath, CONFIG_NAME);
+			file = new File(path);
+		}
+		if ((file == null) || !file.exists()) {
+			path = wta.getContextResourcePath(DEFAULT_CONFIG_RESOURCE_PATH);
+			file = new File(path);
+		}
+		if (file == null) throw new WTRuntimeException("Configuration file not found [{0}]", path);
+		
+		config = new DataSourcesConfig();
+		try {
+			logger.debug("Loading dataSources configuration at [{}]", path);
+			config.parseConfiguration(file);
+		} catch(Exception ex) {
+			throw new RuntimeException("Unable to load dataSources configuration file", ex);
+		}
+		
+		
+		/*
 		String configResource = "/META-INF/data-sources.xml";
 		config = new DataSourcesConfig();
 		try {
-			logger.debug("Loading dataSources configuration at [{}]", configResource);
+			logger.debug("Loading dataSources configuration at [{}]", path);
 			URL url = wta.getContextResource(configResource);
 			config.parseConfiguration(url);
 		} catch(Exception ex) {
 			throw new RuntimeException("Unable to load dataSources configuration file", ex);
 		}
+		*/
 		
 		// Setup core sources
 		logger.debug("Setting-up core dataSources...");

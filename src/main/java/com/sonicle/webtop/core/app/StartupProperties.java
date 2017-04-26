@@ -31,73 +31,57 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.io;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.util.LogEntries;
+import com.sonicle.commons.LangUtils;
+import java.util.Properties;
 
 /**
  *
  * @author malbinola
- * @param <T> Bean type.
  */
-public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
-	protected LogEntries log;
-	protected Throwable lastException;
-	protected int batchSize;
-	public int handledCount;
-	
-	public BatchBeanHandler(LogEntries log) {
-		this.log = log;
-		this.batchSize = 100;
-		this.handledCount = 0;
-	}
-	
-	protected abstract int getBeanStoreSize();
-	protected abstract void clearBeanStore();
-	protected abstract void addBeanToStore(T bean);
-	public abstract boolean handleStoredBeans();
-	
-	public LogEntries getLog() {
-		return log;
-	}
-	
-	public Throwable getLastException() {
-		return lastException;
-	}
-	
-	public int getBatchSize() {
-		return batchSize;
-	}
-	
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
-	
-	public boolean flush() {
-		if(getBeanStoreSize() > 0) {
-			try {
-				return handleStoredBeans();
-			} finally {
-				clearBeanStore();
-			}
-		} else {
-			return true;
+public class StartupProperties extends Properties {
+		public static final String PROP_EXTJS_DEBUG = "extJsDebug";
+		public static final String PROP_SO_EXT_DEV_MODE = "soExtDevMode";
+		public static final String PROP_DEV_MODE = "devMode";
+		public static final String PROP_DEBUG_MODE = "debugMode";
+		public static final String PROP_SCHEDULER_DISABLED = "schedulerDisabled";
+		public static final String PROP_WEBAPPS_CONFIG_PATH = "webappsConfigPath";
+		
+		public StartupProperties() {
+			super();
 		}
-	}
-	
-	@Override
-	public boolean handle(T bean, LogEntries log) {
-		handledCount++;
-		addBeanToStore(bean);
-		log.addAll(log);
-		if(getBeanStoreSize() == batchSize) {
-			try {
-				return handleStoredBeans();
-			} finally {
-				clearBeanStore();
-			}
-		} else {
-			return true;
+		
+		StartupProperties(Properties defaults) {
+			super(defaults);
 		}
-	}
+		
+		public boolean getExtJsDebug() {
+			return LangUtils.value(getProperty(PROP_EXTJS_DEBUG, null), false);
+		}
+
+		public boolean getSonicleExtJsExtensionsDevMode() {
+			return LangUtils.value(getProperty(PROP_SO_EXT_DEV_MODE, null), false);
+		}
+
+		public boolean getDevMode() {
+			return LangUtils.value(getProperty(PROP_DEV_MODE, null), false);
+		}
+
+		public boolean getDebugMode() {
+			return LangUtils.value(getProperty(PROP_DEBUG_MODE, null), false);
+		}
+
+		public boolean getSchedulerDisabled() {
+			return LangUtils.value(getProperty(PROP_SCHEDULER_DISABLED, null), false);
+		}
+		
+		public String getWebappsConfigPath() {
+			return LangUtils.value(getProperty(PROP_WEBAPPS_CONFIG_PATH, null), (String)null);
+		}
+
+		@Override
+		public synchronized Object setProperty(String key, String value) {
+			throw new UnsupportedOperationException("Method disabled");
+		}
 }

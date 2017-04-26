@@ -783,6 +783,7 @@ public class CoreAdminManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID, false);
 			relay.setContext(internetName);
 			relay.setRelayId(dao.getSequence(con).intValue());
+			relay.setDebug(false);
 			dao.insert(con, relay);
 			
 			DbUtils.commitQuietly(con);

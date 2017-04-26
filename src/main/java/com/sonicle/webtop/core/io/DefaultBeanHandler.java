@@ -43,5 +43,5 @@ import com.sonicle.webtop.core.util.LogEntries;
 public abstract class DefaultBeanHandler<T> implements BeanHandler<T> {
 
 	@Override
-	public abstract void handle(T bean, LogEntries log) throws Exception;
+	public abstract boolean handle(T bean, LogEntries log);
 }

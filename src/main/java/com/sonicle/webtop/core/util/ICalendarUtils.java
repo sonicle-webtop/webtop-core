@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
+import com.sonicle.commons.time.DateTimeUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +42,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Iterator;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarOutputter;
@@ -48,12 +50,14 @@ import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
@@ -195,7 +199,7 @@ public class ICalendarUtils {
 		return part;
 	}
 	
-	public static Calendar buildInvitationReply(Calendar ical, String prodId, String forAddress, PartStat response) throws URISyntaxException, ParseException, IOException {
+	public static Calendar buildInvitationReply(Calendar ical, String prodId, InternetAddress forAddress, PartStat response) throws URISyntaxException, ParseException, IOException {
 		Calendar nical = new Calendar(ical);
 		PropertyList plist = nical.getProperties();
 		plist.remove(plist.getProperty(Property.METHOD));
@@ -205,30 +209,35 @@ public class ICalendarUtils {
 		
 		VEvent ve = getVEvent(nical);
 		PropertyList props=ve.getProperties();
+		
 		props.remove(props.getProperty(Property.DESCRIPTION));
 		props.remove(props.getProperty(Property.LAST_MODIFIED));
 		props.remove(props.getProperty(Property.CREATED));
 		props.remove(props.getProperty(Property.LOCATION));
 		props.remove(props.getProperty(Property.STATUS));
+		props.add(new LastModified(ICal4jUtils.createDateTime(DateTimeUtils.now(true))));
 
 		// Iterates over attendees...
 		PropertyList atts = ve.getProperties(Property.ATTENDEE);
 		props.removeAll(atts);
-		Attendee matchingAtt=null;
+		Attendee matchingAtt = null;
 		for (Iterator attIt = atts.iterator(); attIt.hasNext();) {
-			matchingAtt = (Attendee) attIt.next();
+			final Attendee att = (Attendee) attIt.next();
 
-			// Keep only right attendee element, we are looking for a specific attendee
-			URI uri = matchingAtt.getCalAddress();
-			if(StringUtils.equals(uri.getSchemeSpecificPart(), forAddress)) {
-				matchingAtt.getParameters().replace(response);
-				//matchingAtt.getParameters().replace(Rsvp.FALSE);
+			// We are looking for a specific attendee...
+			URI uri = att.getCalAddress();
+			if(StringUtils.equalsIgnoreCase(uri.getSchemeSpecificPart(), forAddress.getAddress())) {
+				att.getParameters().replace(response);
+				matchingAtt = att;
 				break;
 			}
 		}
 		
-		props.add(matchingAtt);
-		
-		return nical;
+		if (matchingAtt == null) {
+			return null;
+		} else {
+			props.add(matchingAtt);
+			return nical;
+		}
 	}
 }

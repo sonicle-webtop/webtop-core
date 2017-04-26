@@ -33,8 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -42,34 +40,15 @@ import javax.servlet.ServletContextListener;
  *
  * @author malbinola
  */
-public class ContextListener implements ServletContextListener {
+public class ContextLoaderListener extends ContextLoader implements ServletContextListener {
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
-		
-		try {
-			WebTopApp.start(context);
-			context.setAttribute(WebTopApp.ATTRIBUTE, WebTopApp.getInstance());
-		} catch(Throwable t) {
-			WebTopApp.logger.error("WTA context initialization error [{}]", webappName, t);
-		}
+		initWebTopApp(sce.getServletContext());
 	}
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
-		ServletContext context = sce.getServletContext();
-		String webappName = ServletHelper.getWebAppName(context);
-		
-		try {
-			WebTopApp wta = (WebTopApp)context.getAttribute(WebTopApp.ATTRIBUTE);
-			if(wta != null) wta.destroy();
-			
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error destroying WTA context for {}", webappName, ex);
-		} finally {
-			context.removeAttribute(WebTopApp.ATTRIBUTE);
-		}
+		destroyWebTopApp(sce.getServletContext());
 	}
 }
