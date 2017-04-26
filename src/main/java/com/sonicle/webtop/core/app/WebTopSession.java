@@ -904,6 +904,10 @@ public class WebTopSession {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
 		}
 		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
+		
+		//override Ext.rise() fatal errors in ExtJS debug mode
+		if (WebTopApp.getPropExtJsDebug())
+			js.appManifest.addJs(LIBS_PATH + "ext-override-errors.js");
 	}
 	
 	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {
