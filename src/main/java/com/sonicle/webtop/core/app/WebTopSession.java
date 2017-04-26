@@ -906,7 +906,7 @@ public class WebTopSession {
 		js.appManifest.addCss(EXTJS_PATH + "packages/sonicle-extensions/" + extBaseTheme + "/resources/" + "sonicle-extensions-all" + extRtl + extDebug + ".css");
 		
 		//override Ext.rise() fatal errors in ExtJS debug mode
-		if (WebTopApp.getPropExtJsDebug())
+		if (wta.getStartupProperties().getExtJsDebug())
 			js.appManifest.addJs(LIBS_PATH + "ext-override-errors.js");
 	}
 	
