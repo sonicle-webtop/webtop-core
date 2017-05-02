@@ -155,7 +155,9 @@ public class WT {
 	}
 	
 	public static String getPublicImagesUrl(String domainId) {
-		return PathUtils.concatPathParts(WT.getPublicBaseUrl(domainId),"resources",WT.getDomainInternetName(domainId),"images/");
+		final String baseUrl = getPublicBaseUrl(domainId);
+		final String domainPublicName = getDomainPublicName(domainId);
+		return PathUtils.concatPathParts(baseUrl, "resources", domainPublicName, "images/");
 	}
 	
 	/*
