@@ -189,15 +189,23 @@ public class ResourceRequest extends HttpServlet {
 		
 		if (!isVirtualUrl && path.startsWith("images")) {
 			// Addresses domain public images
-			// URLs like "/{domainInternetName}/images/{relativePathToFile}"
-			// Eg.	"/sonicle.com/images/login.png"
-			//		"/sonicle.com/images/sub/login.png"
+			// URLs like "/{domainPublicName}/images/{relativePathToFile}"
+			// Eg.	"/1bbc048f/images/login.png"
+			//		"/1bbc048f/images/sub/login.png"
 			WebTopApp wta = WebTopApp.get(req);
 			WebTopManager wtMgr = wta.getWebTopManager();
-			String domainId = wtMgr.internetNameToDomain(subject);
+			
+			String domainId = wtMgr.publicNameToDomainId(subject);
+			if (StringUtils.isBlank(domainId)) {
+				// We must support old-style URL using {domainInternetName}
+				// instead of {domainPublicName}
+				// Eg.	"/sonicle.com/images/login.png"
+				domainId = wtMgr.internetNameToDomain(subject);
+			}
 			if (StringUtils.isBlank(domainId)) {
 				return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 			}
+			
 			return lookupDomainImage(req, targetUrl, domainId);
 			
 		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
