@@ -111,7 +111,6 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					//editor: 'textfield'
 					editor: me.rcb=Ext.create({
 						xtype: 'wtrcptsuggestcombo'
-						//width: 400,
 					}),
 					renderer: Ext.util.Format.htmlEncode
 				}
@@ -160,7 +159,33 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 
 	clear: function() {
 		this.getStore().removeAll();
-	}
+	},
+	
+    loadValues: function(v) {
+        var me=this,
+			lines = v.split(/\r\n|\r|\n/g),
+			sm=me.getSelectionModel(),
+			c=sm.getCount(),
+			s=me.store,
+			currec=(c===0?s.getAt(0):sm.getSelectionStart()),
+			rtype=currec.get(me.fields.recipientType),
+			first=null;
+			
+        me.completeEdit();
+        for(var i=0;i<lines.length;++i) {
+            var email=lines[i].trim();
+            if (email.length>0) {
+                if (!first) {
+                    first=email;
+                    currec.set(me.fields.email,email);
+                } else {
+                    me.addRecipient(rtype, email);
+                }
+            }
+        }
+        
+    }
+
 	
 /*	setValue: function(v) {
 		console.log("RecipientsGrid: setValue v="+v);
