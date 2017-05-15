@@ -184,7 +184,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 			return WT.res(me.ID, key);
 		} else {
 			var args = ExArr.slice(arguments, 1);
-			return WT.res.apply(me, ExArr.merge([me.ID, key], args));
+			return WT.res.apply(me, [me.ID, key].concat(args));
 		}
 	},
 	

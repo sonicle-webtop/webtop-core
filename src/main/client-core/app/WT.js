@@ -289,7 +289,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		if (str === undefined) return '${'+key+'}';
 		
 		if (arguments.length > 2) {
-			var args = ExArr.merge([str], ExArr.slice(arguments, 2));
+			var args = [str].concat(ExArr.slice(arguments, 2));
 			return Ext.isDefined(str) ? Ext.String.format.apply(this, args) : loc.strings[key];
 		} else {
 			return str;
