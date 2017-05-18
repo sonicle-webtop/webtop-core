@@ -331,9 +331,9 @@ WITH (OIDS=FALSE)
 DROP TABLE IF EXISTS "core"."shares";
 CREATE TABLE "core"."shares" (
 "share_id" int4 DEFAULT nextval('"core".seq_shares'::regclass) NOT NULL,
-"user_uid" varchar(36),
-"service_id" varchar(255),
-"key" varchar(255),
+"user_uid" varchar(36) NOT NULL,
+"service_id" varchar(255) NOT NULL,
+"key" varchar(255) NOT NULL,
 "instance" varchar(255)
 )
 WITH (OIDS=FALSE)

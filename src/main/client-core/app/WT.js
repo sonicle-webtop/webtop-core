@@ -395,13 +395,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
 	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
 		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('info'),
-			message: msg,
+			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.INFO
 		}, opts.config || {}));
@@ -417,12 +418,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
 	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
 		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('warning'),
-			message: msg,
+			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.WARNING
 		}, opts.config || {}));
@@ -437,13 +439,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
 	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
 		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('error'),
-			message: msg,
+			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.ERROR
 		}, opts.config || {}));
@@ -461,13 +464,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
 	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
 		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('confirm'),
-			message: msg,
+			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.Msg.YESNO,
 			icon: Ext.Msg.QUESTION,
 			fn: function(bid) {
@@ -483,6 +487,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} cb.buttonId The ID of the button pressed.
 	 * @param {Object} scope The scope (`this` reference) in which the function will be executed.
 	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {String} opts.title A custom title.
+	 * @param {Number} opts.buttons A custom bitwise button specifier.
+	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
+	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
 		return this.confirm(msg, cb, scope, Ext.apply({

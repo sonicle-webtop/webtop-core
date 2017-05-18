@@ -360,10 +360,15 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		var obj = {};
 		return Ext.apply({
 			type: 'memory',
+			data: {success: true},
 			reader: Ext.apply({
 				type: 'json',
 				rootProperty: rootp || 'data'
-			}, opts.reader || {})
+			}, opts.reader || {}),
+			writer: Ext.apply({
+				type: 'json',
+				writeAllFields: true
+			}, opts.writer || {})
 		}, obj);
 	},
 	
@@ -458,6 +463,19 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				inverse: inverse
 			}
 		});
+	},
+	
+	/**
+	 * Helper method for building a config object for a hasOne relation.
+	 * @param {String} field The field name
+	 * @param {String} model The linked model name
+	 * @returns {Object} The hasOne config
+	 */
+	hasOne: function(field, model) {
+		return {
+			name: field,
+			model: model
+		};
 	},
 	
 	/**
@@ -813,6 +831,16 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				var o = modelProp ? this.get(modelProp) : this,
 						v = val[objProp || fieldName];
 				if(v !== undefined) o.set(fieldName, v);
+			}
+		};
+	},
+	
+	foCompare: function(modelProp, fieldName, compareFn) {
+		if (!Ext.isFunction(compareFn)) compareFn = function() {return true;};
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				return compareFn(val);
 			}
 		};
 	},

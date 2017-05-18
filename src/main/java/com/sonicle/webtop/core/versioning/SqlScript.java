@@ -66,7 +66,7 @@ public class SqlScript {
 	}
 	
 	private void readFile(InputStreamReader readable) throws IOException {
-		this.statements = new ArrayList<String>();
+		this.statements = new ArrayList<>();
 		String lines[] = null;
 		StringBuilder sbsql = null;
 		

@@ -121,7 +121,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	opts: null,
 	
-	
 	/**
 	 * @event viewload
 	 * @param {WTA.sdk.ModelView} this

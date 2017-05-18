@@ -58,6 +58,44 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		modelIdProperty: null
 	},
 	
+	/**
+	 * @event beforemodelload
+	 * @param {Object} this
+	 * @param {Object} pass Custom parameters to pass back.
+	 */
+	
+	/**
+	 * @event modelload
+	 * @param {Object} this
+	 * @param {Boolean} success True if the operation succeeded.
+	 * @param {Ext.data.Model} model The loaded model.
+	 * @param {Ext.data.operation.Operation} op The operation performed.
+	 * @param {Object} pass Custom parameters to pass back.
+	 */
+	
+	/**
+	 * @event beforemodelvalidate
+	 * @param {Object} this
+	 * @param {Ext.data.Model} model The saved model.
+	 * @param {Object} pass Custom parameters to pass back.
+	 */
+	
+	/**
+	 * @event beforemodelsave
+	 * @param {Object} this
+	 * @param {Ext.data.Model} model The saved model.
+	 * @param {Object} pass Custom parameters to pass back.
+	 */
+	
+	/**
+	 * @event modelsave
+	 * @param {Object} this
+	 * @param {Boolean} success True if the operation succeeded.
+	 * @param {Ext.data.Model} model The saved model.
+	 * @param {Ext.data.operation.Operation} op The operation performed.
+	 * @param {Object} pass Custom parameters to pass back.
+	 */
+	
 	initComponent: function() {
 		var me = this,
 				vm = me.getViewModel();
@@ -135,7 +173,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	/**
 	 * Loads configured model.
 	 * @param {Object} opts 
-	 * @param {Object} opts.data Initial data
+	 * @param {Object} opts.data Initial data (typically )
 	 * @param {Boolean} [opts.dirty=false] The value of dirty flag to keep after loading.
 	 * @param {Object} [opts.pass] Custom parameters to pass to events callbacks
 	 * @param {Function} [opts.callback] The callback function to call
@@ -153,7 +191,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			model.load({
 				callback: function(rec, op, success) {
 					me.onModelLoad(success, model, undefined, opts.pass);
-					//me.fireEvent('modelload', me, success, model, opts.pass);
 					Ext.callback(opts.callback, opts.scope||me, [ success, model ]);
 				},
 				scope: me
@@ -174,12 +211,18 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				single: true
 			}, function() {
 				var mdl = me.getModel(),
-						reader = mdl.getProxy().getReader(),
+						prx = mdl.getProxy(),
+						reader = prx.getReader(),
 						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
 				
-				if (success && dirty) mdl.dirty = true;
+				if (success) {
+					if (mdl.getProxy().type === 'memory') {
+						mdl.set(opts.data || {}, {dirty: dirty});
+					} else {
+						if (dirty) mdl.dirty = true;
+					}
+				}
 				me.onModelLoad(success, mdl, undefined, opts.pass);
-				//me.fireEvent('modelload', me, success, mdl, opts.pass);
 				Ext.callback(opts.callback, opts.scope || me, [success, mdl]);
 			});
 			
@@ -225,19 +268,21 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		var me = this,
 				model = me.getModel();
 		
-		if(model && model.isValid()) {
-			me.fireEvent('beforemodelsave', me, model, opts.pass);
-			model.save({
-				callback: function(rec, op, success) {
-					me.onModelSave(success, model, op, opts.pass);
-					Ext.callback(opts.callback, opts.scope || me, [success, model]);
-				},
-				scope: me
-			});
-			return true;
-		} else {
-			return false;
+		if (model) {
+			me.fireEvent('beforemodelvalidate', me, model, opts.pass);
+			if(model.isValid()) {
+				me.fireEvent('beforemodelsave', me, model, opts.pass);
+				model.save({
+					callback: function(rec, op, success) {
+						me.onModelSave(success, model, op, opts.pass);
+						Ext.callback(opts.callback, opts.scope || me, [success, model]);
+					},
+					scope: me
+				});
+				return true;
+			}
 		}
+		return false;
 	},
 	
 	onModelSave: function(success, model, op, pass) {
