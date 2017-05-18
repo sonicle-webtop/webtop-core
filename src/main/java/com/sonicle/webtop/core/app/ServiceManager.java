@@ -1095,10 +1095,12 @@ public class ServiceManager {
 									}
 									
 								} else if (stmt.getStatementType().equals(OUpgradeStatement.STATEMENT_TYPE_SQL)) {
-									if (!conCache.containsKey(stmt.getStatementDataSource())) {
-										conCache.put(stmt.getStatementDataSource(), getUpgradeStatementConnection(conMgr, stmt));
+									final String sds = stmt.getStatementDataSource();
+									if (StringUtils.isBlank(sds)) throw new WTException("Statement does not provide a DataSource [{0}]", stmt.getUpgradeStatementId());
+									if (!conCache.containsKey(sds)) {
+										conCache.put(sds, getUpgradeStatementConnection(conMgr, stmt));
 									}
-									boolean ret = executeUpgradeStatement(conCache.get(stmt.getStatementDataSource()), stmt, ignoreErrors);
+									boolean ret = executeUpgradeStatement(conCache.get(sds), stmt, ignoreErrors);
 									try {
 										upgdao.update(con, stmt);
 									} catch(DAOException ex) {
@@ -1139,15 +1141,12 @@ public class ServiceManager {
 		return upgradeServiceDb(desc, scripts, upgradeTag, autoUpdate);
 	}
 	
-	private Connection getUpgradeStatementConnection(ConnectionManager conMgr, OUpgradeStatement statement) throws SQLException {
-		if (StringUtils.isEmpty(statement.getStatementDataSource())) {
-			return null;
-		} else {
-			String[] tokens = StringUtils.split(statement.getStatementDataSource(), "@", 2);
-			String namespace = tokens[0];
-			String dataSourceName = tokens[1];
-			return conMgr.getFallbackConnection(namespace, dataSourceName);
-		}
+	private Connection getUpgradeStatementConnection(ConnectionManager conMgr, OUpgradeStatement statement) throws SQLException, WTException {
+		String[] tokens = StringUtils.split(statement.getStatementDataSource(), "@", 2);
+		if (tokens.length != 2) throw new WTException("Invalid DataSource [{0}]. It must in the following format: name@namespace", statement.getStatementDataSource());
+		String namespace = tokens[1];
+		String dataSourceName = tokens[0];
+		return conMgr.getFallbackConnection(namespace, dataSourceName);
 	}
 	
 	public boolean executeUpgradeStatement(OUpgradeStatement statement, boolean ignoreErrors) throws WTException {

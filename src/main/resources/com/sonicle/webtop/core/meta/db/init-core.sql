@@ -334,7 +334,7 @@ CREATE TABLE "core"."shares" (
 "user_uid" varchar(36) NOT NULL,
 "service_id" varchar(255) NOT NULL,
 "key" varchar(255) NOT NULL,
-"instance" varchar(255)
+"instance" varchar(255) NOT NULL
 )
 WITH (OIDS=FALSE)
 
