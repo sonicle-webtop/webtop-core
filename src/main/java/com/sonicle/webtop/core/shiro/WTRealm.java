@@ -41,6 +41,7 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -56,11 +57,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.cache.Cache;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -110,6 +114,20 @@ public class WTRealm extends AuthorizingRealm {
 		}
 	}
 	
+	@Override
+	/*
+	 * Protect caching of impersonated authorization from original user authorization cache
+	 */
+    protected Object getAuthorizationCacheKey(PrincipalCollection principals) {
+		if (principals.getPrimaryPrincipal() instanceof com.sonicle.security.Principal) {
+			com.sonicle.security.Principal sprincipal=(com.sonicle.security.Principal)principals.getPrimaryPrincipal();
+			if (sprincipal.isImpersonated()) {
+				return "admin!"+sprincipal.getUserId()+"@"+sprincipal.getDomainId();
+			}
+		}
+        return principals;
+    }
+
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
@@ -232,7 +250,6 @@ public class WTRealm extends AuthorizingRealm {
 				perms.add(ServicePermission.permissionString(authRes, perm.getAction(), perm.getInstance()));
 			}
 		}
-		
 		return new WTAuthorizationInfo(roles, perms);
 	}
 	
