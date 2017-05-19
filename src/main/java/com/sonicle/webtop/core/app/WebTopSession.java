@@ -894,8 +894,10 @@ public class WebTopSession {
 		//js.appManifest.addJs(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/" + "ext-theme-" + extTheme + extDebug + ".js"); // ExtJs theme overrides
 		//js.appManifest.addCss(EXTJS_PATH + "packages/" + "ext-theme-" + extTheme + "/build/resources/" + "ext-theme-" + extTheme + "-all" + extRtl + extDebug + ".css");
 		js.appManifest.addJs(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + "charts" + extDebug + ".js");
-		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");	
+		js.appManifest.addCss(EXTJS_PATH + "packages/charts/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "charts-all" + extRtl + extDebug + ".css");
 		//js.appManifest.addCss(EXTJS_PATH + "packages/sencha-charts/build/" + extBaseTheme + "/resources/" + "sencha-charts-all" + extRtl + extDebug + ".css");	
+		js.appManifest.addJs(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + "ux" + extDebug + ".js");
+		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
 		
 		// Include Sonicle ExtJs Extensions references
 		if (wta.getStartupProperties().getSonicleExtJsExtensionsDevMode()) {
