@@ -105,7 +105,10 @@ public class SqlUpgradeScript {
 			this.fileSequence = matcher.group(3);
 			
 			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(jarResourceName);
-			if(is == null) throw new ResourceNotFoundException("Null InputStream!");
+			if(is == null) {
+				is = getClass().getResourceAsStream(jarResourceName);
+				if (is == null) throw new ResourceNotFoundException("Null InputStream!");
+			}
 			readFile(new InputStreamReader(is, "ISO-8859-15"), true);
 			//br = new BufferedReader(new InputStreamReader(is, "ISO-8859-15"));
 			//readFile(br);
