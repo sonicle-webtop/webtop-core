@@ -115,8 +115,9 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	/*
 	 * @private
 	 */
-	showHideF3Folder: function(node, show) {
+	showHideF3Node: function(node, show) {
 		node.beginEdit();
+		node.set('checked', show);
 		node.set('_visible', show);
 		node.endEdit();
 	},
@@ -132,7 +133,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		parentNode.cascadeBy(function(n) {
 			if (n !== parentNode) {
 				var tgt = (n.getId() === nodeId);
-				n.set('checked', tgt);
+				//n.set('checked', tgt);
 				me.showHideF3Folder(n, tgt);
 			}
 		});
