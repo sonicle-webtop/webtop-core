@@ -39,10 +39,17 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 		'Sonicle.webtop.core.model.HiddenFolder'
 	],
 	
+	dockableConfig: {
+		width: 300,
+		height: 300,
+		modal: true,
+		minimizable: false,
+		maximizable: false
+	},
 	promptConfirm: false,
 	
-	mys: null,
-	action: "ManageHiddenFolders",
+	action: 'ManageHiddenFolders',
+	extraParams: null,
 	callback: null,
 	scope: null,
 
@@ -50,83 +57,82 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 		var me = this;
 		
 		Ext.apply(me, {
-			buttons: [
-				{
-					xtype: 'button',
-					text: WT.res('act-ok.lbl'),
-					width: 100,
-					handler: function() {
-						var rrecs=me.lref("grdHidden").getStore().getRemovedRecords();
-						if (rrecs.length>0) {
-							var ids=[];
-							Ext.iterate(rrecs, function(rec) {
-								ids.push(rec.get("id"));
-							});							
-							WT.ajaxReq(me.mys.ID, me.action, {
-								params: {
-									crud: 'delete',
-									ids: WTU.arrayAsParam(ids)
-								},
-								callback: function(success, json) {
-									Ext.callback(me.callback,me.scope||me);
-								}
-							});
-
-						}
-						me.closeView(false);
-					}
-				},
-				{
-					xtype: 'button',
-					text: WT.res('act-cancel.lbl'),
-					width: 100,
-					handler: function() {
-						me.closeView(false);
-					}
-				}
-			]
+			buttons: [{
+				text: WT.res('act-ok.lbl'),
+				handler: me.onOkClick,
+				scope: me
+			}, {
+				text: WT.res('act-cancel.lbl'),
+				handler: me.onCancelClick,
+				scope: me
+			}]
 		});
-		
-		
 		me.callParent(arguments);		
 		
-		me.add(
-			{
-				xtype: 'gridpanel',
-				reference: 'grdHidden',
-				region: 'center',
-				loadMask: {msg: WT.res('loading')},
-				selType: 'sorowmodel',
-				hideHeaders: true,
-				store: {
-					autoLoad: true,
-					model: 'Sonicle.webtop.core.model.HiddenFolder',
-					proxy: WTF.apiProxy(me.mys.ID, me.action,'data')
-				},
-				columns: [
-					{
-						dataIndex: 'id',
-						width: 180,
-						hidden: true
-					},
-					{
-						dataIndex: 'desc',
-						flex: 1
-					},
-					{
-						xtype: 'actioncolumn',
-						width: 30,
-						items: [{
-							iconCls: 'fa fa-minus-circle',
-							tooltip: WT.res("act-remove.lbl"),
-							handler: function(g,ri,ci) {
-								g.getStore().removeAt(ri);
-							}
-						}]
+		me.add({
+			region: 'center',
+			xtype: 'gridpanel',
+			reference: 'gp',
+			border: false,
+			loadMask: {msg: WT.res('loading')},
+			selType: 'sorowmodel',
+			hideHeaders: true,
+			store: {
+				autoLoad: true,
+				model: 'Sonicle.webtop.core.model.HiddenFolder',
+				proxy: WTF.apiProxy(me.mys.ID, me.action, 'data', {
+					extraParams: me.extraParams || {}
+				})
+			},
+			columns: [{
+				dataIndex: 'id',
+				width: 180,
+				hidden: true
+			}, {
+				dataIndex: 'desc',
+				flex: 1
+			}, {
+				xtype: 'actioncolumn',
+				width: 30,
+				items: [{
+					iconCls: 'fa fa-minus-circle',
+					tooltip: WT.res('act-remove.lbl'),
+					handler: function(s, ri) {
+						s.getStore().removeAt(ri);
 					}
-				]
-			}
-		);
-	}
+				}]
+			}]
+		});
+	},
 	
+	onOkClick: function() {
+		var me = this,
+				recs = me.lref('gp').getStore().getRemovedRecords();
+		me.fireEvent('viewok', me);
+		if (recs.length > 0) {
+			var ids = [];
+			Ext.iterate(recs, function(rec) {
+				ids.push(rec.get('id'));
+			});							
+			WT.ajaxReq(me.mys.ID, me.action, {
+				params: {
+					crud: 'delete',
+					ids: WTU.arrayAsParam(ids)
+				},
+				callback: function(success, json) {
+					me.fireEvent('viewcallback', me, success, json, ids);
+					Ext.callback(me.callback, me.scope || me, [success, json, ids]);
+					me.closeView(false);
+				}
+			});
+		} else {
+			me.closeView(false);
+		}
+	},
+	
+	onCancelClick: function() {
+		var me = this;
+		me.fireEvent('viewcancel', me);
+		me.closeView(false);
+	}
 });

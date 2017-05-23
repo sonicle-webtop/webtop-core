@@ -112,7 +112,6 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		return (sel.length === 0) ? null : sel[0];
 	},
 	
-	
 	/*
 	 * @private
 	 */
@@ -125,13 +124,32 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 	/*
 	 * @private
 	 */
+	showOneF3FolderOnly: function(parentNode, nodeId) {
+		var me = this,
+				store = parentNode.getTreeStore();
+		
+		store.suspendAutoSync();
+		parentNode.cascadeBy(function(n) {
+			if (n !== parentNode) {
+				var tgt = (n.getId() === nodeId);
+				n.set('checked', tgt);
+				me.showHideF3Folder(n, tgt);
+			}
+		});
+		store.resumeAutoSync();
+		store.sync();
+	},
+	
+	/*
+	 * @private
+	 */
 	showHideAllF3Folders: function(parentNode, show) {
 		var me = this,
 				store = parentNode.getTreeStore();
 		
 		store.suspendAutoSync();
 		parentNode.cascadeBy(function(n) {
-			if(n !== parentNode) {
+			if (n !== parentNode) {
 				n.set('checked', show);
 				me.showHideFolder(n, show);
 			}
@@ -221,7 +239,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 				node;
 		
 		if(sel.length > 0) {
-			if(sel[0].get('_type') === 'root') {
+			if (sel[0].get('_type') === 'root') {
 				node = me.getFolderByRoot(sel[0]);
 				if(node) return node;
 			} else {
