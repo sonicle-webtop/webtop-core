@@ -31,21 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-
 Ext.define('Sonicle.webtop.core.ux.field.HTMLEditor', {
     extend: 'Sonicle.form.field.HTMLEditor',
-	
 	alias: ['widget.wthtmleditor'],
 	
-	initComponent: function() {
-		var me=this;
-
-		//setup localized tooltips
-		Ext.each(Ext.Object.getAllKeys(me.buttonTips),function(key) {
-			me.buttonTips[key].title=WT.res("editor.act-"+key+".tit");
-			me.buttonTips[key].text=WT.res("editor.act-"+key+".tip");
+	constructor: function(cfg) {
+		var me = this;
+		me.language = me.self.mapLanguageCode(WT.getLanguageCode());
+		Ext.each(Ext.Object.getAllKeys(me.buttonTips), function (key) {
+			me.buttonTips[key].title = WT.res('editor.act-' + key + '.tit');
+			me.buttonTips[key].text = WT.res('editor.act-' + key + '.tip');
 		});
-		me.callParent(arguments);
-	}	
+		me.callParent([cfg]);
+	},
 	
+	statics: {
+		LANG_MAPPINGS: {
+			'en': 'en_US',
+			'it': 'it',
+			'es': 'es',
+			'de': 'de',
+			'fr': 'fr_FR'
+		},
+		
+		mapLanguageCode: function(langCode) {
+			var MAP = this.LANG_MAPPINGS,
+					lang = MAP[langCode];
+			return lang ? lang : MAP['en'];
+		}
+	}
 });

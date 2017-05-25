@@ -101,12 +101,27 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
-	 * Returns the startDay in use (0=Sunday, 1=Monday).
-	 * Value is taken from core variable 'startDay'.
-	 * @returns {Integer} The startDay value.
+	 * Return the language in use.
+	 * @returns {String} The language.
 	 */
-	getStartDay: function() {
-		return WT.getVar('startDay');
+	getLanguage: function() {
+		return WT.getVar('language');
+	},
+	
+	/**
+	 * Return the language in use.
+	 * @returns {String} The language.
+	 */
+	getLanguageCode: function() {
+		return WT.getVar('language').split('_')[0];
+	},
+	
+	/**
+	 * Return the language in use.
+	 * @returns {String} The language.
+	 */
+	getLanguageCountry: function() {
+		return WT.getVar('language').split('_')[1];
 	},
 	
 	/**
@@ -116,6 +131,15 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 */
 	getTimezone: function() {
 		return WT.getVar('timezone');
+	},
+	
+	/**
+	 * Returns the startDay in use (0=Sunday, 1=Monday).
+	 * Value is taken from core variable 'startDay'.
+	 * @returns {Integer} The startDay value.
+	 */
+	getStartDay: function() {
+		return WT.getVar('startDay');
 	},
 	
 	/**
