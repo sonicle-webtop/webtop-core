@@ -35,16 +35,12 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	alternateClassName: 'WTA.ux.NotificationButton',
 	extend: 'Ext.button.Button',
 	alias: ['widget.wtnotificationbutton'],
-	/*
-	requires: [
-		'WTA.ux.grid.Notification'
-	],
-	*/
 	uses: [
 		'WTA.model.Notification'
 	],
 	mixins: [
-		'Sonicle.webtop.core.ux.Popupable'
+		'Ext.util.StoreHolder',
+		'Sonicle.mixin.BadgeText'
 	],
 	
 	arrowVisible: false,
@@ -52,47 +48,10 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	
 	initComponent: function() {
 		var me = this;
-		me.store = Ext.create('Ext.data.Store', {
-			model: 'WTA.model.Notification',
-			proxy: {
-				type: 'memory',
-				reader: 'json'
-			}
-		});
+		me.bindStore(me.store || 'ext-empty-store', true, true);
 		
-		me.store.add([
-			me.store.createModel({
-				serviceId: 'com.sonicle.webtop.core',
-				iconCls: 'wt-icon-service-m',
-				title: 'Notifica 1',
-				notifyService: true,
-				autoRemove: true
-			}),
-			me.store.createModel({
-				serviceId: 'com.sonicle.webtop.mail',
-				iconCls: 'wtmail-icon-service-m',
-				title: 'Notifica 2',
-				notifyService: true,
-				autoRemove: false
-			}),
-			me.store.createModel({
-				serviceId: 'com.sonicle.webtop.vfs',
-				iconCls: 'wtvfs-icon-service-m',
-				title: 'Notifica 3',
-				notifyService: false,
-				autoRemove: true
-			}),
-			me.store.createModel({
-				serviceId: 'com.sonicle.webtop.valendar',
-				iconCls: 'wtcal-icon-service-m',
-				title: 'Notifica 4',
-				notifyService: false,
-				autoRemove: false
-			})
-		]);
-			
-		/*
 		Ext.apply(me, {
+			badgeAlignOffset: -2,
 			menu: {
 				xtype: 'menu',
 				plain: true,
@@ -100,10 +59,13 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 				forceLayout: true,
 				items: [{
 					xtype: 'grid',
-					title: 'Notifiche',
 					store: me.store,
 					selModel: {
 						type: 'rowmodel'
+					},
+					viewConfig: {
+						deferEmptyText: false,
+						emptyText: 'Hai letto tutte le notifiche'
 					},
 					hideHeaders: true,
 					columns: [{
@@ -115,20 +77,12 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 						dataIndex: 'title',
 						flex: 1
 					}, {
-						xtype:'actioncolumn',
+						xtype: 'actioncolumn',
 						items: [{
 							iconCls: 'wt-icon-notification-remove-xs',
 							tooltip: 'Rimuovi',
-							handler: function(s, rindx, cindx, itm, e) {
-								//s.getStore().removeAt(rindx);
-								e.stopPropagation();
-								Ext.defer(function() {
-									var sto = me.store;
-									sto.remove(sto.getAt(rindx));
-								}, 100);
-								//var sto = me.store;
-								//sto.remove(sto.getAt(rindx));
-								
+							handler: function(s, rindx) {
+								me.removeGridRecord(s, s.getStore().getAt(rindx));
 							}
 						}],
 						width: 30
@@ -137,20 +91,16 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 						text: 'Rimuovi tutte',
 						handler: function() {
 							me.store.removeAll();
+							me.hideMenu();
 						}
 					}],
 					listeners: {
-						rowdblclick: function(s, rec, el, rindx, e) {
-							e.stopEvent();
-							me.store.remove(rec);
-							
-							//if (rec.get('autoRemove')) me.store.remove(rec);
-							//if (rec.get('notifyService') === true) {
-							//	me.fireEvent('notifyService', me, rec);
-							//} else {
-							//	e.stopPropagation();
-							//}
-							
+						rowdblclick: function(s, rec) {
+							if (rec.get('autoRemove') === true) me.removeGridRecord(s, rec);
+							if (rec.get('notifyService') === true) {
+								me.fireEvent('notifyService', me, rec);
+								me.hideMenu();
+							}
 						}
 					}
 				}],
@@ -158,75 +108,72 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 				width: 250
 			}
 		});
-		*/
+		
 		me.callParent(arguments);
-		me.on('click', me.onClick, me);
 	},
 	
-	onClick: function() {
-		this.expandPopup();
-	},
 	
-	createPopup: function() {
+	
+	/**
+	 * Binds a store to this instance.
+	 * @param {Ext.data.AbstractStore/String} [store] The store to bind or ID of the store.
+	 * When no store given (or when `null` or `undefined` passed), unbinds the existing store.
+	 */
+	bindStore: function(store, /* private */ initial) {
 		var me = this;
-		return Ext.create({
-			xtype: 'grid',
-			floating: true,
-			title: 'Notifiche',
-			store: me.store,
-			selModel: {
-				type: 'rowmodel'
-			},
-			hideHeaders: true,
-			columns: [{
-				xtype: 'soiconcolumn',
-				dataIndex: 'iconCls',
-				iconSize: 32,
-				width: 40
-			}, {
-				dataIndex: 'title',
-				flex: 1
-			}, {
-				xtype:'actioncolumn',
-				items: [{
-					iconCls: 'wt-icon-notification-remove-xs',
-					tooltip: 'Rimuovi',
-					handler: function(s, rindx, cindx, itm, e) {
-						//s.getStore().removeAt(rindx);
-						e.stopPropagation();
-						Ext.defer(function() {
-							var sto = me.store;
-							sto.remove(sto.getAt(rindx));
-						}, 100);
-						//var sto = me.store;
-						//sto.remove(sto.getAt(rindx));
-
-					}
-				}],
-				width: 30
-			}],
-			bbar: ['->', {
-				text: 'Rimuovi tutte',
-				handler: function() {
-					me.store.removeAll();
-				}
-			}],
-			listeners: {
-				rowdblclick: function(s, rec, el, rindx, e) {
-					e.stopEvent();
-					me.store.remove(rec);
-					/*
-					if (rec.get('autoRemove')) me.store.remove(rec);
-					if (rec.get('notifyService') === true) {
-						me.fireEvent('notifyService', me, rec);
-					} else {
-						e.stopPropagation();
-					}
-					*/
-				}
-			},
-			width: 200,
-			height: 300
-		});
+		me.mixins.storeholder.bindStore.call(me, store, initial);
+		store = me.getStore();
+		this.setBadgeText(store.getCount());
+	},
+	
+	/**
+	 * See {@link Ext.util.StoreHolder StoreHolder}.
+	 */
+	getStoreListeners: function(store, o) {
+		var me = this;
+		return {
+			scope: me,
+			datachanged: me.onStoreDataChanged,
+			load: me.onStoreLoad
+		};
+	},
+	
+	onStoreDataChanged: function(s) {
+		this.setBadgeText(this.formatBadgeText(s.getCount()));
+	},
+	
+	onStoreLoad: function(s, recs, success) {
+		this.setBadgeText(this.formatBadgeText(s.getCount()));
+	},
+	
+	privates: {
+		/**
+		 * @private
+		 * Removes the passed record from the grid's store.
+		 * This method acts as workaround for avoiding the menu disappearance
+		 * after a remove operation against the grid's store. Calling directly
+		 * remove() method works only for the last item in the collection.
+		 * @param {Ext.grid.Panel} grid
+		 * @param {Ext.data.Model} rec
+		 */
+		removeGridRecord: function(grid, rec) {
+			var me = this,
+					sto = grid.getStore();
+			sto.suspendEvents();
+			sto.remove(rec);
+			sto.resumeEvents();
+			grid.refresh();
+			me.setBadgeText(me.formatBadgeText(sto.getCount()));
+		},
+		
+		formatBadgeText: function(count) {
+			if (count === 0) {
+				return null;
+			} else if (count >= 10) {
+				return '+9';
+			} else {
+				return count.toString();
+			}
+		}
 	}
 });

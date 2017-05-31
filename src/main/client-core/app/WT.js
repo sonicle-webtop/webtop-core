@@ -501,6 +501,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		}, opts));
 	},
 	
+	showBadgeNotification: function(sid, opts) {
+		opts = opts || {};
+		
+		
+		
+	},
+	
 	/**
 	 * Shows a desktop notification using browser.
 	 * @param {String} sid The service ID.

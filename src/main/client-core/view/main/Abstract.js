@@ -191,11 +191,37 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
 						handler: 'onToolsMenuClick'
 					}, '-']
-				}, /*{
-					xtype: 'wtnotificationbutton'
+				}, {
+					xtype: 'wtnotificationbutton',
+					store: Ext.create('WTA.ux.data.NotificationStore', {
+						data: [{
+							serviceId: 'com.sonicle.webtop.core',
+							iconCls: 'wt-icon-service-m',
+							title: 'Notifica 1',
+							notifyService: true,
+							autoRemove: true
+						}, {
+							serviceId: 'com.sonicle.webtop.mail',
+							iconCls: 'wtmail-icon-service-m',
+							title: 'Notifica 2',
+							notifyService: true,
+							autoRemove: false
+						}, {
+							serviceId: 'com.sonicle.webtop.vfs',
+							iconCls: 'wtvfs-icon-service-m',
+							title: 'Notifica 3',
+							notifyService: false,
+							autoRemove: true
+						}, {
+							serviceId: 'com.sonicle.webtop.valendar',
+							iconCls: 'wtcal-icon-service-m',
+							title: 'Notifica 4',
+							notifyService: false,
+							autoRemove: false
+						}]
+					})
 					
-					
-				}*/, ' ', '-', /*{
+				}, ' ', '-', /*{
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {

@@ -67,7 +67,7 @@ Ext.define('Sonicle.webtop.core.ux.Popupable', {
 	
 	expandPopup: function() {
 		var me = this,
-				bodyEl, ariaDom, pup, doc;
+				bodyEl, pup, doc;
 		
 		if (me.rendered && !me.isExpanded && !me.isDestroyed) {
 			bodyEl = me.bodyEl;
@@ -105,10 +105,11 @@ Ext.define('Sonicle.webtop.core.ux.Popupable', {
 	},
 	
 	alignPopup: function() {
-		if (!this.isDestroyed) {
-			var popup = this.getPopup();
-			if (popup.isVisible() && popup.isFloating()) {
-				this.doAlignPopup();
+		var me = this, pup;
+		if (!me.isDestroyed) {
+			pup = me.getPopup();
+			if (pup.isVisible() && pup.isFloating()) {
+				me.doAlignPopup();
 			}
 		}
 	},
