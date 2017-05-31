@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.SimpleGrouped', {
+Ext.define('Sonicle.webtop.core.ux.data.SimpleGroupedModel', {
 	alternateClassName: 'WTA.ux.data.SimpleGroupedModel',
 	extend: 'Sonicle.webtop.core.ux.data.SimpleModel',
 	
