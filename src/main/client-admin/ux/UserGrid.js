@@ -171,9 +171,9 @@ Ext.define('Sonicle.webtop.core.admin.ux.UserGrid', {
 			if(rec) me.getStore().remove(rec);
 		},
 
-		onPickerPick: function(s, val, rec) {
+		onPickerPick: function(s, vals, recs) {
 			var me = this;
-			me.fireEvent('pick', me, val, rec);
+			me.fireEvent('pick', me, vals, recs);
 			me.picker.close();
 			me.picker = null;
 		}
