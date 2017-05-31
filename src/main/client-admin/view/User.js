@@ -163,11 +163,11 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					},
 					domainId: me.domainId,
 					listeners: {
-						pick: function(s, val) {
+						pick: function(s, vals) {
 							var mo = me.getModel();
 							mo.assignedGroups().add({
 								_fk: mo.getId(),
-								groupId: val
+								groupId: vals[0]
 							});
 						}
 					}
@@ -180,11 +180,11 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					},
 					domainId: me.domainId,
 					listeners: {
-						pick: function(s, val) {
+						pick: function(s, vals) {
 							var mo = me.getModel();
 							mo.assignedRoles().add({
 								_fk: mo.getId(),
-								roleUid: val
+								roleUid: vals[0]
 							});
 						}
 					}
@@ -196,11 +196,11 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 						store: '{record.assignedServices}'
 					},
 					listeners: {
-						pick: function(s, val) {
+						pick: function(s, vals) {
 							var mo = me.getModel();
 							mo.assignedServices().add({
 								_fk: mo.getId(),
-								serviceId: val
+								serviceId: vals[0]
 							});
 						}
 					}

@@ -89,11 +89,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 						store: '{record.assignedServices}'
 					},
 					listeners: {
-						pick: function(s, val) {
+						pick: function(s, vals) {
 							var mo = me.getModel();
 							mo.assignedServices().add({
 								_fk: mo.getId(),
-								serviceId: val
+								serviceId: vals[0]
 							});
 						}
 					}
