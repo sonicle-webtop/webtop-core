@@ -66,7 +66,7 @@ CREATE SEQUENCE "core"."seq_users_associations";
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."activities";
 CREATE TABLE "core"."activities" (
-"activity_id" int4 NOT NULL,
+"activity_id" int4 DEFAULT nextval('"core".seq_activities'::regclass) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
 "revision_status" varchar(1),
@@ -100,7 +100,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."causals";
 CREATE TABLE "core"."causals" (
-"causal_id" int4 NOT NULL,
+"causal_id" int4 DEFAULT nextval('"core".seq_causals'::regclass) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
 "customer_id" varchar(100),
@@ -221,7 +221,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."messages_queue";
 CREATE TABLE "core"."messages_queue" (
-"queue_id" int4 NOT NULL,
+"queue_id" int4 DEFAULT nextval('"core".seq_messages_queue'::regclass) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
 "message_type" varchar(255) NOT NULL,
@@ -358,7 +358,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."snoozed_reminders";
 CREATE TABLE "core"."snoozed_reminders" (
-"snoozed_reminder_id" int4 NOT NULL,
+"snoozed_reminder_id" int4 DEFAULT nextval('"core".seq_snoozed_reminders'::regclass) NOT NULL,
 "domain_id" varchar(20),
 "user_id" varchar(100),
 "service_id" varchar(255),
@@ -378,7 +378,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."syslog";
 CREATE TABLE "core"."syslog" (
-"syslog_id" int8 NOT NULL,
+"syslog_id" int8 DEFAULT nextval('"core".seq_syslog'::regclass) NOT NULL,
 "timestamp" timestamptz(6),
 "domain_id" varchar(20),
 "user_id" varchar(100),
