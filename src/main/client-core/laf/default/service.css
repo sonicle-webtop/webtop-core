@@ -292,6 +292,24 @@ div.wt-wnlist {
 	padding-right: 2px !important;
 }
 
+/* NotificationButton */
+.wt-notifbtn-grid-rowbody {
+	color: gray;
+}
+
+.wt-notifbtn-grid-rowbody-empty {
+	display: none;
+}
+
+/* ExtJs */
+.wt-v-middle {
+	vertical-align: middle;
+}
+
+.wt-bold {
+	font-weight: bold;
+}
+
 /* TinyMCE */
 .mce-tinymce.mce-container {
 	border-width: 0px !important;

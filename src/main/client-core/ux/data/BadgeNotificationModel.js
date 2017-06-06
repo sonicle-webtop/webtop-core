@@ -31,8 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.data.Notification', {
-	alternateClassName: 'WTA.ux.data.NotificationModel',
+Ext.define('Sonicle.webtop.core.ux.data.BadgeNotificationModel', {
+	alternateClassName: 'WTA.ux.data.BadgeNotificationModel',
 	extend: 'WTA.model.Base',
 	
 	identifier: 'negativestring',
@@ -43,8 +43,8 @@ Ext.define('Sonicle.webtop.core.ux.data.Notification', {
 		WTF.roField('iconCls', 'string'),
 		WTF.roField('title', 'string'),
 		WTF.roField('body', 'string'),
-		WTF.roField('notifyService', 'boolean'),
-		WTF.roField('autoRemove', 'boolean'),
-		WTF.field('seen', 'boolean')
+		WTF.roField('data', 'string'),
+		WTF.roField('callbackService', 'boolean'),
+		WTF.roField('autoRemove', 'boolean')
 	]
 });

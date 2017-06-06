@@ -76,6 +76,8 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	 */
 	autosaveRestore: Ext.emptyFn,
 	
+	notificationCallback: Ext.emptyFn,
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.ID = cfg.ID;

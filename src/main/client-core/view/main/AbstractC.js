@@ -333,6 +333,11 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	onCallbackService: function(s, rec) {
+		var svc = WT.getApp().getService(rec.get('serviceId'));
+		if (svc) svc.notificationCallback('badge', rec.get('id'), Ext.JSON.decode(rec.get('data'), true));
+	},
+	
 	createView: function(svc, viewName, opts) {
 		opts = opts || {};
 		var me = this, view, dockCfg, win;
@@ -360,7 +365,21 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		return win;
 	},
 	
+	showBadgeNotification: function(svc, notification) {
+		var sto = this.getStore('notifications'),
+				rec = sto.getById(notification.id);
+		if (rec === null) {
+			sto.add(sto.createModel(notification));
+		} else {
+			rec.set(notification);
+		}
+	},
 	
+	clearBadgeNotification: function(svc, notificationId) {
+		var sto = this.getStore('notifications'),
+				rec = sto.getById(notificationId);
+		if (rec !== null) sto.remove(rec);
+	},
 	
 	onWinActivate: function(s) {
 		this.getView().getTaskBar().activateButton(s);

@@ -49,6 +49,26 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		window.location = 'logout';
 	},
 	
+	showBadgeNotification: function(sid, notification, data, opts) {
+		opts = opts || {};
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().showBadgeNotification(svc, {
+			id: notification.id,
+			serviceId: sid,
+			iconCls: Ext.isEmpty(notification.iconCls) ? svc.cssIconCls('service', 'm') : notification.iconCls,
+			title: notification.title,
+			body: notification.body,
+			data: Ext.JSON.encode(data),
+			callbackService: opts.callbackService === true,
+			autoRemove: opts.autoRemove === true
+		});
+	},
+	
+	clearBadgeNotification: function(sid, notificationId) {
+		return this.getApp().viewport.getController().showBadgeNotification(sid, notificationId);
+	},
+	
 	/**
 	 * Checks against a resource if specified action is allowed.
 	 * @param {String} [id] The service ID.
@@ -63,7 +83,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
-		if(!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
 		return svc.isPermitted(resource, action);
 	},
 	
@@ -79,8 +99,16 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	createView: function(sid, name, opts) {
 		opts = opts || {};
 		var svc = this.getApp().getService(sid);
-		if(!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
 		return this.getApp().viewport.getController().createView(svc, name, opts);
+	},
+	
+	/**
+	 * Activates (switch focus) the specified service.
+	 * @param {String} sid The service ID.
+	 */
+	activateService: function(sid) {
+		WT.getApp().activateService(sid);
 	},
 	
 	/**

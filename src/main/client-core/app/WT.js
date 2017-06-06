@@ -501,13 +501,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		}, opts));
 	},
 	
-	showBadgeNotification: function(sid, opts) {
-		opts = opts || {};
-		
-		
-		
-	},
-	
 	/**
 	 * Shows a desktop notification using browser.
 	 * @param {String} sid The service ID.
@@ -524,7 +517,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				NtfMgr = Sonicle.DesktopNotificationMgr,
 				desc, ico;
 		
-		if(dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
+		if (dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
 			desc = WT.getApp().getDescriptor(sid);
 			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
 			return NtfMgr.notify(opts.title, {
@@ -542,7 +535,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	checkDesktopNotificationAuth: function() {
 		var dn = WT.getVar('desktopNotification');
-		if(dn === 'always' || dn === 'auto') {
+		if (dn === 'always' || dn === 'auto') {
 			Sonicle.DesktopNotificationMgr.ensureAuthorization();
 		}
 	},
@@ -555,8 +548,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Ext.menu.Menu} menu Menu component to show during event.
 	 */
 	registerContextMenu: function(cmp, menu) {
-		if(!menu || !menu.isXType('menu')) return;
-		if(cmp.isXType('dataview')) {
+		if (!menu || !menu.isXType('menu')) return;
+		if (cmp.isXType('dataview')) {
 			cmp.on('itemcontextmenu', function(s,rec,itm,i,e) {
 				WT.showContextMenu(e, menu, {
 					record: rec,
@@ -578,7 +571,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		var me = this;
 		evt.stopEvent();
 		me.hideContextMenu();
-		if(!menu || !menu.isXType('menu')) return;
+		if (!menu || !menu.isXType('menu')) return;
 		menu.menuData = data || {};
 		me.contextMenu = menu;
 		menu.on('hide', function(s) {

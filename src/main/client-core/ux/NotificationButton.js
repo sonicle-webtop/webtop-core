@@ -36,7 +36,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	extend: 'Ext.button.Button',
 	alias: ['widget.wtnotificationbutton'],
 	uses: [
-		'WTA.model.Notification'
+		'WTA.ux.data.BadgeNotificationModel'
 	],
 	mixins: [
 		'Ext.util.StoreHolder',
@@ -46,9 +46,78 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	arrowVisible: false,
 	iconCls: 'wt-icon-notification-xs',
 	
+	grid: null,
+	
 	initComponent: function() {
 		var me = this;
 		me.bindStore(me.store || 'ext-empty-store', true, true);
+		
+		me.grid = Ext.create({
+			xtype: 'grid',
+			store: me.store,
+			selModel: {
+				type: 'rowmodel'
+			},
+			viewConfig: {
+				deferEmptyText: false,
+				emptyText: 'Hai letto tutte le notifiche'
+			},
+			features: [{
+				ftype: 'rowbody',
+				getAdditionalData: function(data, idx, rec, orig) {
+					var body = rec.get('body'), empty = Ext.isEmpty(body);
+					return {
+						rowBody: empty ? '' : Ext.String.htmlEncode(body),
+						rowBodyCls: 'wt-notifbtn-grid-rowbody' + (empty ? '-empty' : '')
+					};
+				}
+			}],
+			hideHeaders: true,
+			columns: [{
+				xtype: 'soiconcolumn',
+				dataIndex: 'iconCls',
+				iconSize: 32,
+				width: 45
+			}, {
+				dataIndex: 'title',
+				renderer: function(val, meta, rec, rIdx, colIdx, sto) {
+					var html = '';
+					html += Ext.String.htmlEncode(val);
+					html += '<br>';
+					html += '<span style="font-size:0.9em;color:grey;">' + Ext.Date.format(new Date(), WT.getShortTimeFmt()) + '</span>';
+					return html; 
+				},
+				tdCls: 'wt-v-middle',
+				flex: 1
+			}, {
+				xtype: 'actioncolumn',
+				items: [{
+					iconCls: 'wt-icon-notification-remove-xs',
+					tooltip: 'Rimuovi',
+					handler: function(s, rindx) {
+						me.removeGridRecord(s, s.getStore().getAt(rindx));
+					}
+				}],
+				tdCls: 'wt-v-middle',
+				width: 30
+			}],
+			bbar: ['->', {
+				text: 'Rimuovi tutte',
+				handler: function() {
+					me.store.removeAll();
+					me.hideMenu();
+				}
+			}],
+			listeners: {
+				rowdblclick: function(s, rec) {
+					if (rec.get('autoRemove') === true) me.removeGridRecord(s, rec);
+					if (rec.get('callbackService') === true) {
+						me.fireEvent('callbackService', me, rec);
+						me.hideMenu();
+					}
+				}
+			}
+		});
 		
 		Ext.apply(me, {
 			badgeAlignOffset: -2,
@@ -57,53 +126,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 				plain: true,
 				layout: 'fit',
 				forceLayout: true,
-				items: [{
-					xtype: 'grid',
-					store: me.store,
-					selModel: {
-						type: 'rowmodel'
-					},
-					viewConfig: {
-						deferEmptyText: false,
-						emptyText: 'Hai letto tutte le notifiche'
-					},
-					hideHeaders: true,
-					columns: [{
-						xtype: 'soiconcolumn',
-						dataIndex: 'iconCls',
-						iconSize: 32,
-						width: 40
-					}, {
-						dataIndex: 'title',
-						flex: 1
-					}, {
-						xtype: 'actioncolumn',
-						items: [{
-							iconCls: 'wt-icon-notification-remove-xs',
-							tooltip: 'Rimuovi',
-							handler: function(s, rindx) {
-								me.removeGridRecord(s, s.getStore().getAt(rindx));
-							}
-						}],
-						width: 30
-					}],
-					bbar: ['->', {
-						text: 'Rimuovi tutte',
-						handler: function() {
-							me.store.removeAll();
-							me.hideMenu();
-						}
-					}],
-					listeners: {
-						rowdblclick: function(s, rec) {
-							if (rec.get('autoRemove') === true) me.removeGridRecord(s, rec);
-							if (rec.get('notifyService') === true) {
-								me.fireEvent('notifyService', me, rec);
-								me.hideMenu();
-							}
-						}
-					}
-				}],
+				items: [me.grid],
 				height: 300,
 				width: 250
 			}
@@ -112,7 +135,10 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 		me.callParent(arguments);
 	},
 	
-	
+	destroy: function() {
+		this.grid = null;
+		this.callParent();
+	},
 	
 	/**
 	 * Binds a store to this instance.
@@ -123,7 +149,8 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 		var me = this;
 		me.mixins.storeholder.bindStore.call(me, store, initial);
 		store = me.getStore();
-		this.setBadgeText(store.getCount());
+		me.setBadgeText(store.getCount());
+		if (me.grid) me.grid.setStore(store);
 	},
 	
 	/**

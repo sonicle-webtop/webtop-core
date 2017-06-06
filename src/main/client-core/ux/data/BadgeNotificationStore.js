@@ -31,11 +31,12 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.data.NotificationStore', {
-	alternateClassName: 'WTA.ux.data.NotificationStore',
+Ext.define('Sonicle.webtop.core.ux.data.BadgeNotificationStore', {
+	alternateClassName: 'WTA.ux.data.BadgeNotificationStore',
+	alias: 'store.wtbadgenotification',
 	extend: 'Ext.data.JsonStore',
 	requires: [
-		'WTA.ux.data.NotificationModel'
+		'WTA.ux.data.BadgeNotificationModel'
 	],
 	
     /**
@@ -46,7 +47,7 @@ Ext.define('Sonicle.webtop.core.ux.data.NotificationStore', {
 	
 	constructor: function(cfg) {
 		cfg = Ext.apply({
-			model: 'WTA.ux.data.NotificationModel',
+			model: 'WTA.ux.data.BadgeNotificationModel',
 			proxy: {
 				type: 'memory',
 				reader: 'json'

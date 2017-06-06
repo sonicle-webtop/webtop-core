@@ -39,7 +39,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.NotificationButton',
 		'WTA.ux.TaskBar',
 		'WTA.ux.ServiceButton',
-		'WTA.ux.ViewWindow'
+		'WTA.ux.ViewWindow',
+		'WTA.ux.data.BadgeNotificationStore'
 	],
 	mixins: [
 		'WTA.mixin.RefStorer'
@@ -48,6 +49,39 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	layout: 'border',
 	referenceHolder: true,
+	
+	viewModel: {
+		stores: {
+			notifications: {
+				type: 'wtbadgenotification',
+				data: [{
+					serviceId: 'com.sonicle.webtop.core',
+					iconCls: 'wt-icon-service-m',
+					title: 'Notifica 1',
+					notifyService: true,
+					autoRemove: true
+				}, {
+					serviceId: 'com.sonicle.webtop.mail',
+					iconCls: 'wtmail-icon-service-m',
+					title: 'Notifica 2',
+					notifyService: true,
+					autoRemove: false
+				}, {
+					serviceId: 'com.sonicle.webtop.vfs',
+					iconCls: 'wtvfs-icon-service-m',
+					title: 'Notifica 3',
+					notifyService: false,
+					autoRemove: true
+				}, {
+					serviceId: 'com.sonicle.webtop.valendar',
+					iconCls: 'wtcal-icon-service-m',
+					title: 'Notifica 4',
+					notifyService: false,
+					autoRemove: false
+				}]
+			}
+		}
+	},
 	
 	config: {
 		servicesCount: -1
@@ -69,6 +103,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	destroy: function() {
 		var me = this;
 		me.mixins.refstorer.destroy.call(me);
+		me.notificationStore = null;
 		me.callParent();
 	},
 	
@@ -193,34 +228,12 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					}, '-']
 				}, {
 					xtype: 'wtnotificationbutton',
-					store: Ext.create('WTA.ux.data.NotificationStore', {
-						data: [{
-							serviceId: 'com.sonicle.webtop.core',
-							iconCls: 'wt-icon-service-m',
-							title: 'Notifica 1',
-							notifyService: true,
-							autoRemove: true
-						}, {
-							serviceId: 'com.sonicle.webtop.mail',
-							iconCls: 'wtmail-icon-service-m',
-							title: 'Notifica 2',
-							notifyService: true,
-							autoRemove: false
-						}, {
-							serviceId: 'com.sonicle.webtop.vfs',
-							iconCls: 'wtvfs-icon-service-m',
-							title: 'Notifica 3',
-							notifyService: false,
-							autoRemove: true
-						}, {
-							serviceId: 'com.sonicle.webtop.valendar',
-							iconCls: 'wtcal-icon-service-m',
-							title: 'Notifica 4',
-							notifyService: false,
-							autoRemove: false
-						}]
-					})
-					
+					bind: {
+						store: '{notifications}',
+						listeners: {
+							callbackService: 'onCallbackService'
+						}
+					}
 				}, ' ', '-', /*{
 					xtype: 'button',
 					glyph: 0xf0c9,
