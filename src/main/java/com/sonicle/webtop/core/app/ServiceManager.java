@@ -83,6 +83,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -1106,7 +1107,7 @@ public class ServiceManager {
 									} catch(DAOException ex) {
 										throw new WTException("Unable to update statement status!", ex);
 									}
-									if(!ret) { // In case of errors...
+									if (!ret) { // In case of errors...
 										requireAdmin = true;
 										break; // Stops iteration!
 									}
@@ -1119,8 +1120,11 @@ public class ServiceManager {
 						} finally {
 							if (!conCache.isEmpty()) {
 								logger.trace("Closing connections [{}]", conCache.size());
-								for(String key: conCache.keySet()) {
-									DbUtils.closeQuietly(conCache.remove(key));
+								Iterator<Entry<String, Connection>> it = conCache.entrySet().iterator();
+								while(it.hasNext()) {
+									final Entry<String, Connection> entry = it.next();
+									DbUtils.closeQuietly(entry.getValue());
+									it.remove();
 								}
 							}
 						}
