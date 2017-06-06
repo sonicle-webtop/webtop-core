@@ -49,6 +49,8 @@ import com.sonicle.webtop.core.versioning.Whatsnew;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
@@ -247,6 +249,7 @@ class ServiceDescriptor {
 		try {
 			String pkgPath = MessageFormat.format("{0}/meta/db/", LangUtils.packageToPath(manifest.getId()));
 			ServiceVersion fileVersion = null;
+			// List all .sql files in dedicated package and defines the right set
 			for(String file: LangUtils.listPackageFiles(getClass(), pkgPath)) {
 				try {
 					if (StringUtils.startsWithIgnoreCase(file, "init")) continue;
@@ -263,6 +266,15 @@ class ServiceDescriptor {
 					//TODO: increment error counter...
 				}
 			}
+			
+			// Filename ordering may not be valid, so reorder the set
+			// using the version information
+			Collections.sort(scripts, new Comparator<SqlUpgradeScript>() {
+				@Override
+				public int compare(SqlUpgradeScript o1, SqlUpgradeScript o2) {
+					return o1.getFileVersion().compareTo(o2.getFileVersion());
+				}
+			});
 			
 		} catch(Exception ex) {
 			logger.error("Error loading upgrade scripts", ex);
