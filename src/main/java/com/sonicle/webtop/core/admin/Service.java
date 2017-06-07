@@ -794,8 +794,9 @@ public class Service extends BaseService {
 						if (executed.isEmpty()) item.setStatementBody(stmtBody);
 						if (!executed.isEmpty() && item.getRequireAdmin()) break;
 						
+						String oldRunStatus = item.getRunStatus();
 						ret = coreadm.executeUpgradeStatement(item, item.getIgnoreErrors());
-						upEnv.updateExecuted(ret, item);
+						upEnv.updateExecuted(true, item.getRunStatus(), oldRunStatus);
 						
 						executed.add(item);
 						if (!ret) break; // Exits, admin must review execution...
@@ -822,8 +823,9 @@ public class Service extends BaseService {
 					
 				} else if (crud.equals("skip")) {
 					ORunnableUpgradeStatement stmt = upEnv.nextStatement();
+					String oldRunStatus = stmt.getRunStatus();
 					coreadm.skipUpgradeStatement(stmt);
-					upEnv.updateExecuted(true, stmt);
+					upEnv.updateExecuted(true, stmt.getRunStatus(), oldRunStatus);
 					
 					// Prepare output
 					List<JsGridUpgradeRow> items = new ArrayList<>();
@@ -947,19 +949,30 @@ public class Service extends BaseService {
 			return next;
 		}
 		
-		public void updateExecuted(boolean success, ORunnableUpgradeStatement stmt) {
-			runnableStmts.set(index, stmt);
-			if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
+		public void updateExecuted(boolean success, String runStatus, String oldRunStatus) {
+			if (oldRunStatus != null) {
+				if (oldRunStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
+					okCount--;
+				} else if (oldRunStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
+					errorCount--;
+				} else if (oldRunStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
+					warningCount--;
+				} else if (oldRunStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
+					skippedCount--;
+				}
+			}
+			if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
 				okCount++;
-			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
+			} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
 				errorCount++;
-			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
+			} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
 				warningCount++;
-			} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
+			} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
 				skippedCount++;
 			}
+			
 			if (success) {
-				pendingCount--;
+				if (oldRunStatus == null) pendingCount--;
 				index = nextIndex();
 			}
 		}
