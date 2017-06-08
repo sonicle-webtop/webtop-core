@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 			},
 			viewConfig: {
 				deferEmptyText: false,
-				emptyText: 'Hai letto tutte le notifiche'
+				emptyText: WT.res('wtnotificationbutton.grid.emp')
 			},
 			features: [{
 				ftype: 'rowbody',
@@ -93,7 +93,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 				xtype: 'actioncolumn',
 				items: [{
 					iconCls: 'wt-icon-notification-remove-xs',
-					tooltip: 'Rimuovi',
+					tooltip: WT.res('wtnotificationbutton.grid.remove.tip'),
 					handler: function(s, rindx) {
 						me.removeGridRecord(s, s.getStore().getAt(rindx));
 					}
@@ -102,7 +102,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 				width: 30
 			}],
 			bbar: ['->', {
-				text: 'Rimuovi tutte',
+				text: WT.res('wtnotificationbutton.btn-remove.lbl'),
 				handler: function() {
 					me.store.removeAll();
 					me.hideMenu();
@@ -110,7 +110,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 			}],
 			listeners: {
 				rowdblclick: function(s, rec) {
-					if (rec.get('autoRemove') === true) me.removeGridRecord(s, rec);
+					if (rec.get('autoClear') === true) me.removeGridRecord(s, rec);
 					if (rec.get('callbackService') === true) {
 						me.fireEvent('callbackService', me, rec);
 						me.hideMenu();

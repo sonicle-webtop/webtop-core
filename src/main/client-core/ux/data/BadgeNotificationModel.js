@@ -36,15 +36,15 @@ Ext.define('Sonicle.webtop.core.ux.data.BadgeNotificationModel', {
 	extend: 'WTA.model.Base',
 	
 	identifier: 'negativestring',
-	idProperty: 'id',
+	idProperty: 'tag',
 	fields: [
-		WTF.roField('id', 'string'),
+		WTF.roField('tag', 'string'),
 		WTF.roField('serviceId', 'string'),
 		WTF.roField('iconCls', 'string'),
 		WTF.roField('title', 'string'),
 		WTF.roField('body', 'string'),
 		WTF.roField('data', 'string'),
-		WTF.roField('callbackService', 'boolean'),
-		WTF.roField('autoRemove', 'boolean')
+		WTF.roField('autoClear', 'boolean'),
+		WTF.roField('callbackService', 'boolean')
 	]
 });

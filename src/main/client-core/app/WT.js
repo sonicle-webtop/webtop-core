@@ -502,45 +502,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Shows a desktop notification using browser.
-	 * @param {String} sid The service ID.
-	 * @param {Object} [opts] Config options.
-	 * @param {Number} [opts.autoClose=5000] Auto close timeout in millis.
-	 * @param {String} opts.title Notification title.
-	 * @param {String} opts.body Notification body.
-	 * @returns {Object} A wrapper containing a close() method to hide the notification. 
-	 */
-	showDesktopNotification: function(sid, opts) {
-		opts = opts || {};
-		var dn = WT.getVar('desktopNotification'),
-				PMgr = Sonicle.PageMgr,
-				NtfMgr = Sonicle.DesktopNotificationMgr,
-				desc, ico;
-		
-		if (dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
-			desc = WT.getApp().getDescriptor(sid);
-			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
-			return NtfMgr.notify(opts.title, {
-				autoClose: opts.autoClose || 5000,
-				icon: WTF.globalImageUrl('wt.ico'),
-				body: opts.body || desc.getName()
-			});
-		}
-		return;
-	},
-	
-	/**
-	 * Checks and if necessary display an authorization 
-	 * request for using desktop notifications.
-	 */
-	checkDesktopNotificationAuth: function() {
-		var dn = WT.getVar('desktopNotification');
-		if (dn === 'always' || dn === 'auto') {
-			Sonicle.DesktopNotificationMgr.ensureAuthorization();
-		}
-	},
-	
-	/**
 	 * Convenience function that registers to contextmenu event of the provided
 	 * component; when the event fires it automatically displays specified menu.
 	 * Context data will be filled in best way as possible.

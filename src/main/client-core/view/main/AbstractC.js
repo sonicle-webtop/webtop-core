@@ -335,7 +335,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	onCallbackService: function(s, rec) {
 		var svc = WT.getApp().getService(rec.get('serviceId'));
-		if (svc) svc.notificationCallback('badge', rec.get('id'), Ext.JSON.decode(rec.get('data'), true));
+		if (svc) svc.notificationCallback('badge', rec.getId(), Ext.JSON.decode(rec.get('data'), true));
 	},
 	
 	createView: function(svc, viewName, opts) {
@@ -375,9 +375,9 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
-	clearBadgeNotification: function(svc, notificationId) {
+	clearBadgeNotification: function(svc, notificationTag) {
 		var sto = this.getStore('notifications'),
-				rec = sto.getById(notificationId);
+				rec = sto.getById(notificationTag);
 		if (rec !== null) sto.remove(rec);
 	},
 	

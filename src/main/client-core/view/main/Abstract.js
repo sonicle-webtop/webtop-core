@@ -53,7 +53,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	viewModel: {
 		stores: {
 			notifications: {
-				type: 'wtbadgenotification',
+				type: 'wtbadgenotification'
+				/*
 				data: [{
 					serviceId: 'com.sonicle.webtop.core',
 					iconCls: 'wt-icon-service-m',
@@ -79,6 +80,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					notifyService: false,
 					autoRemove: false
 				}]
+				*/
 			}
 		}
 	},
@@ -226,7 +228,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
 						handler: 'onToolsMenuClick'
 					}, '-']
-				}, {
+				}, '-', {
 					xtype: 'wtnotificationbutton',
 					bind: {
 						store: '{notifications}',
@@ -234,7 +236,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 							callbackService: 'onCallbackService'
 						}
 					}
-				}, ' ', '-', /*{
+				}, /*{
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {

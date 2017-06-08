@@ -49,41 +49,139 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		window.location = 'logout';
 	},
 	
-	showBadgeNotification: function(sid, notification, data, opts) {
+	/**
+	 * Checks and if necessary display an authorization 
+	 * request for using desktop notifications.
+	 */
+	checkDesktopNotificationAuth: function() {
+		var dn = WT.getVar('desktopNotification');
+		if (dn === 'always' || dn === 'auto') {
+			Sonicle.DesktopNotificationMgr.ensureAuthorization();
+		}
+	},
+	
+	/**
+	 * Shows a desktop notification using browser.
+	 * @param {String} sid The service ID.
+	 * @param {Object} notification The notification object.
+	 * 
+	 * This object is defined as:
+	 * 
+	 * @param {String} [notification.tag] ID string that allows to link 
+	 * notifications together in order to avoid flooding of similar entries.
+	 * If not specified, a unique ID will be generated.
+	 * @param {String} notification.title The title.
+	 * @param {String} [notification.body] The body.
+	 * @param {Mixed} [notification.data] Custom data passed in case of callback.
+	 * 
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * @param {Number} [opts.autoClose=5000] Auto close timeout in millis.
+	 * @param {Boolean} [opts.callbackService=false]
+	 * 
+	 * @returns {Object} A wrapper containing a close() method to hide the notification. 
+	 */
+	showDesktopNotification: function(sid, notification, opts) {
 		opts = opts || {};
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		var PMgr = Sonicle.PageMgr,
+				DeskNotifMgr = Sonicle.DesktopNotificationMgr,
+				dn = WT.getVar('desktopNotification'),
+				callbk = Ext.isBoolean(opts.callbackService) ? opts.callbackService : false,
+				cbFn = null,
+				svc, callbk;
+		
+		if (dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
+			if (Ext.isEmpty(notification.title)) Ext.Error.raise('Title is mandatory');
+			svc = this.getApp().getService(sid);
+			if (!svc) Ext.Error.raise('Service not found ['+sid+']');
+			
+			if (callbk) {
+				cbFn = function(ntf) {
+					svc.notificationCallback('desktop', ntf.tag, ntf.data);
+				};
+			}
+			
+			//ico = Ext.isIE ? 'wt.ico' : 'wt_32.png';
+			return DeskNotifMgr.notify(notification.title, {
+				tag: !Ext.isEmpty(notification.tag) ? notification.tag : Sonicle.UUID.v1(),
+				icon: WTF.globalImageUrl('wt.ico'),
+				body: notification.body || svc.getName(),
+				data: notification.data,
+				autoClose: opts.autoClose || 5000,
+				clickCallback: cbFn
+			});
+		}
+		return;
+	},
+	
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {Object} notification The notification object.
+	 * 
+	 * This object is defined as:
+	 * 
+	 * @param {String} [notification.tag] ID string that allows to link 
+	 * notifications together in order to avoid flooding of similar entries.
+	 * If not specified, a unique ID will be generated.
+	 * @param {String} notification.title The title.
+	 * @param {String} [notification.body] The body.
+	 * @param {Mixed} [notification.data] Custom data passed back during callbacks.
+	 * 
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Boolean} [opts.autoClear=true] Specifies whether to clear the 
+	 * notification on double-click on it. Default to `true`.
+	 * @param {Boolean} [opts.callbackService=false] Specifies whether to notify 
+	 * the service on double-click on the notification. Default to `false`.
+	 */
+	showBadgeNotification: function(sid, notification, opts) {
+		opts = opts || {};
+		var svc = this.getApp().getService(sid),
+				autCle = Ext.isBoolean(opts.autoClear) ? opts.autoClear : true,
+				callbk = Ext.isBoolean(opts.callbackService) ? opts.callbackService : false;
+		
+		if (Ext.isEmpty(notification.tag)) Ext.Error.raise('Tag is mandatory');
+		if (Ext.isEmpty(notification.title)) Ext.Error.raise('Title is mandatory');
+		if (!svc) Ext.Error.raise('Service not found ['+sid+']');
 		return this.getApp().viewport.getController().showBadgeNotification(svc, {
-			id: notification.id,
+			tag: notification.tag,
 			serviceId: sid,
 			iconCls: Ext.isEmpty(notification.iconCls) ? svc.cssIconCls('service', 'm') : notification.iconCls,
 			title: notification.title,
 			body: notification.body,
-			data: Ext.JSON.encode(data),
-			callbackService: opts.callbackService === true,
-			autoRemove: opts.autoRemove === true
+			data: Ext.isDefined(notification.data) ? Ext.JSON.encode(notification.data) : null,
+			autoClear: autCle,
+			callbackService: callbk
 		});
 	},
 	
-	clearBadgeNotification: function(sid, notificationId) {
-		return this.getApp().viewport.getController().showBadgeNotification(sid, notificationId);
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {String} notificationTag The notification identifier.
+	 */
+	clearBadgeNotification: function(sid, notificationTag) {
+		return this.getApp().viewport.getController().clearBadgeNotification(sid, notificationTag);
 	},
 	
 	/**
 	 * Checks against a resource if specified action is allowed.
-	 * @param {String} [id] The service ID.
+	 * @param {String} [sid] The service ID.
 	 * @param {String} resource The resource name.
 	 * @param {String} action The action name.
 	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
 	 */
-	isPermitted: function(id, resource, action) {
+	isPermitted: function(sid, resource, action) {
 		if(arguments.length === 2) {
 			action = resource;
-			resource = id;
-			id = WT.ID;
+			resource = sid;
+			sid = WT.ID;
 		}
-		var svc = this.getApp().getService(id);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+id+']');
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Service not found ['+sid+']');
 		return svc.isPermitted(resource, action);
 	},
 	
