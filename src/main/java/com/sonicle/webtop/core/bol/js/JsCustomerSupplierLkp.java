@@ -33,21 +33,15 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.bol.OCausal;
-
 /**
  *
  * @author malbinola
  */
-public class JsCausal extends JsSimple {
-	public String revisionStatus;
-	public Boolean readOnly;
+public class JsCustomerSupplierLkp extends JsSimple {
+	public String type;
 	
-	public JsCausal() {}
-	
-	public JsCausal(OCausal causal) {
-		super(causal.getCausalId(), causal.getDescription());
-		revisionStatus = causal.getRevisionStatus();
-		readOnly = causal.getReadOnly();
+	public JsCustomerSupplierLkp(String id, String desc, String type) {
+		super(id, desc);
+		this.type = type;
 	}
 }

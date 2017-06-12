@@ -35,7 +35,10 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.grid.column.Icon',
-		'Sonicle.webtop.core.model.ActivityGrid',
+		'Sonicle.grid.column.Lookup',
+		'Sonicle.webtop.core.model.ActivityGrid'
+	],
+	uses: [
 		'Sonicle.webtop.core.view.Activity'
 	],
 	
@@ -43,34 +46,13 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 		title: '{activities.tit}',
 		iconCls: 'wt-icon-activity-xs',
 		width: 600,
-		height: 400
+		height: 400,
+		modal: true
 	},
 	promptConfirm: false,
 	
 	initComponent: function() {
 		var me = this;
-		/*
-		Ext.apply(me, {
-			tbar: [
-				me.addAct('add', {
-					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
-					handler: function() {
-						me.addActivity(WT.getVar('domainId'));
-					}
-				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					iconCls: 'wt-icon-remove-xs',
-					disabled: true,
-					handler: function() {
-						var sm = me.lref('gp').getSelectionModel();
-						me.deleteActivity(sm.getSelection());
-					}
-				})
-			]
-		});
-		*/
 		me.callParent(arguments);
 		
 		me.add({
@@ -82,7 +64,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 				autoLoad: true,
 				autoSync: true,
 				model: 'Sonicle.webtop.core.model.ActivityGrid',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageActivities', 'activities')
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageActivities')
 			},
 			columns: [{
 				xtype: 'rownumberer'	
@@ -101,29 +83,31 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 			}, {
 				dataIndex: 'description',
 				header: me.mys.res('activities.gp.description.lbl'),
-				width: 200
+				flex: 2
+			}, {
+				xtype: 'solookupcolumn',
+				dataIndex: 'userId',
+				header: me.mys.res('activities.gp.user.lbl'),
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
+						extraParams: {wildcard: true}
+					})
+				},
+				displayField: 'desc',
+				flex: 2
 			}, {
 				dataIndex: 'externalId',
 				header: me.mys.res('activities.gp.externalId.lbl'),
 				width: 100
-			}, {
-				xtype: 'templatecolumn',
-				header: me.mys.res('activities.gp.user.lbl'),
-				flex: 1,
-				tpl: '{userDescription} ({userId})'
-			}, {
-				xtype: 'templatecolumn',
-				header: me.mys.res('activities.gp.domain.lbl'),
-				flex: 1,
-				hidden: true,
-				tpl: '{domainDescription} ({domainId})'
 			}],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addActivity(WT.getVar('domainId'));
+						me.addActivity();
 					}
 				}),
 				me.addAct('remove', {
@@ -159,15 +143,14 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 		});
 	},
 	
-	addActivity: function(domainId) {
+	addActivity: function() {
 		var me = this,
-				vwc = this._createActivityView();
+				vct = WT.createView(me.mys.ID, 'view.Activity');
 		
-		vwc.getComponent(0).on('viewsave', me.onActivityViewSave, me);
-		vwc.show(false, function() {
-			vwc.getComponent(0).beginNew({
+		vct.getComponent(0).on('viewsave', me.onActivityViewSave, me);
+		vct.show(false, function() {
+			vct.getComponent(0).beginNew({
 				data: {
-					domainId: domainId,
 					userId: '*'
 				}
 			});
@@ -176,11 +159,11 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 	
 	editActivity: function(id) {
 		var me = this,
-				vw = this._createActivityView();
+				vct = WT.createView(me.mys.ID, 'view.Activity');
 		
-		vw.getComponent(0).on('viewsave', me.onActivityViewSave, me);
-		vw.show(false, function() {
-			vw.getComponent(0).beginEdit({
+		vct.getComponent(0).on('viewsave', me.onActivityViewSave, me);
+		vct.show(false, function() {
+			vct.getComponent(0).beginEdit({
 				data: {
 					activityId: id
 				}
@@ -194,20 +177,11 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 				sto = grid.getStore();
 		
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
-				sto.remove(rec);
-			}
+			if (bid === 'yes') sto.remove(rec);
 		}, me);
 	},
 	
 	onActivityViewSave: function(s) {
 		this.lref('gp').getStore().load();
-	},
-	
-	_createActivityView: function(cfg) {
-		return WT.createView(this.mys.ID, 'view.Activity', {
-			viewCfg: cfg,
-			modal: true
-		});
 	}
 });

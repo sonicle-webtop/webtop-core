@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
@@ -58,16 +59,17 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
-import com.sonicle.webtop.core.bol.CausalGrid;
+import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
-import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsActivity;
+import com.sonicle.webtop.core.bol.js.JsActivityLkp;
 import com.sonicle.webtop.core.bol.js.JsAutosave;
-import com.sonicle.webtop.core.bol.js.JsCausal;
+import com.sonicle.webtop.core.bol.js.JsCausalLkp;
+import com.sonicle.webtop.core.bol.js.JsCustomerSupplierLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
@@ -85,17 +87,17 @@ import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
-import com.sonicle.webtop.core.dal.CustomerDAO;
+import com.sonicle.webtop.core.model.Activity;
+import com.sonicle.webtop.core.model.Causal;
+import com.sonicle.webtop.core.model.CausalExt;
+import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.util.NotificationHelper;
-import freemarker.template.TemplateException;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -477,23 +479,119 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupActivities(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsActivity> items = new ArrayList<>();
+		List<JsActivityLkp> items = new ArrayList<>();
 		
 		try {
 			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 			UserProfileId pid = new UserProfileId(profileId);
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OActivity> activities = coreMgr.listLiveActivities(pid);
-			for(OActivity activity : activities) {
-				items.add(new JsActivity(activity));
+			List<Activity> acts = null;
+			if (coreMgr.hasSameTargetProfile(pid)) {
+				acts = coreMgr.listLiveActivities();
+			} else {
+				CoreManager mgr = WT.getCoreManager(true, pid);
+				acts = mgr.listLiveActivities();
 			}
-			
-			new JsonResult("activities", items, items.size()).printTo(out);
+			for(Activity act : acts) {
+				items.add(new JsActivityLkp(act));
+			}
+			new JsonResult(items, items.size()).printTo(out);
 			
 		} catch (Exception ex) {
 			logger.error("Error in LookupActivities", ex);
-			new JsonResult(false, "Unable to lookup activities").printTo(out);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processLookupCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsCausalLkp> items = new ArrayList<>();
+		
+		try {
+			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
+			String masterDataId = ServletUtils.getStringParameter(request, "masterDataId", null);
+			UserProfileId pid = new UserProfileId(profileId);
+			
+			//TODO: tradurre campo descrizione in base al locale dell'utente
+			List<Causal> caus = null;
+			if (coreMgr.hasSameTargetProfile(pid)) {
+				caus = coreMgr.listLiveCausals(masterDataId);
+			} else {
+				CoreManager mgr = WT.getCoreManager(true, pid);
+				caus = mgr.listLiveCausals(masterDataId);
+			}
+			for(Causal cau : caus) {
+				items.add(new JsCausalLkp(cau));
+			}
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupCausals", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processLookupCustomersSuppliers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsCustomerSupplierLkp> items = new ArrayList<>();
+		
+		try {
+			String query = ServletUtils.getStringParameter(request, "query", "");
+			
+			String[] types = new String[]{
+				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
+				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
+			};
+			List<MasterData> entries = coreMgr.listMasterDataByLike(types, "%" + query + "%");
+			for(MasterData entry : entries) {
+				items.add(new JsCustomerSupplierLkp(entry.getMasterDataId(), entry.getDescription(), entry.getType()));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupCustomersSuppliers", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processLookupStatisticCustomersSuppliers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<JsCustomerSupplierLkp> items = new ArrayList<>();
+		
+		try {
+			String parentMasterDataId = ServletUtils.getStringParameter(request, "parentMasterDataId", null);
+			String query = ServletUtils.getStringParameter(request, "query", "");
+			
+			String[] types = new String[]{
+				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
+				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
+			};
+			List<MasterData> entries = coreMgr.listMasterDataByParentLike(parentMasterDataId, types, "%" + query + "%");
+			for(MasterData entry : entries) {
+				final ArrayList<String> tokens = new ArrayList<>(3);
+				if (!StringUtils.isEmpty(entry.getAddress())) {
+					tokens.add(entry.getAddress());
+				}
+				if (!StringUtils.isEmpty(entry.getCity())) {
+					tokens.add(entry.getCity());
+				}
+				if (!StringUtils.isEmpty(entry.getCountry())) {
+					tokens.add(entry.getCountry());
+				}
+				final String address = StringUtils.join(tokens, ", ");
+				String description = null;
+				if (StringUtils.isEmpty(address)) {
+					description = entry.getDescription();
+				} else {
+					description = MessageFormat.format("{0} ({1})", entry.getDescription(), address);
+				}
+				items.add(new JsCustomerSupplierLkp(entry.getMasterDataId(), description, entry.getType()));
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupStatisticCustomersSuppliers", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -502,56 +600,44 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				if(id == null) {
-					List<VActivity> items = coreMgr.listLiveActivities(queryDomains());
-					new JsonResult("activities", items, items.size()).printTo(out);
-				} else {
-					OActivity item = coreMgr.getActivity(id);
-					new JsonResult(item).printTo(out);
-				}
-				
-			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				coreMgr.addActivity(pl.data);
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
-				coreMgr.updateActivity(pl.data);
-				new JsonResult().printTo(out);
+				List<Activity> items =  coreMgr.listAllLiveActivities();
+				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
-				Payload<MapItem, OActivity> pl = ServletUtils.getPayload(request, OActivity.class);
+				Payload<MapItem, Activity> pl = ServletUtils.getPayload(request, Activity.class);
 				coreMgr.deleteActivity(pl.data.getActivityId());
 				new JsonResult().printTo(out);
 			}
 			
 		} catch(Exception ex) {
-			logger.error("Error in ManageActivities", ex);
-			new JsonResult(false, "Error").printTo(out);
-			
+			logger.error("Error in ManageCausals", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
-	public void processLookupCausals(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsCausal> items = new ArrayList<>();
+	public void processManageActivity(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
-			String customerId = ServletUtils.getStringParameter(request, "customerId", null);
-			UserProfileId pid = new UserProfileId(profileId);
-			
-			//TODO: tradurre campo descrizione in base al locale dell'utente
-			List<OCausal> causals = coreMgr.listLiveCausals( pid, customerId);
-			for(OCausal causal : causals) {
-				items.add(new JsCausal(causal));
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				Integer id = ServletUtils.getIntParameter(request, "id", null);
+				Activity item = coreMgr.getActivity(id);
+				new JsonResult(item).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, Activity> pl = ServletUtils.getPayload(request, Activity.class);
+				coreMgr.addActivity(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, Activity> pl = ServletUtils.getPayload(request, Activity.class);
+				coreMgr.updateActivity(pl.data);
+				new JsonResult().printTo(out);	
 			}
-			new JsonResult("causals", items, items.size()).printTo(out);
 			
-		} catch (Exception ex) {
-			logger.error("Error in LookupCausals", ex);
-			new JsonResult(false, "Unable to lookup causals").printTo(out);
+		} catch(Exception ex) {
+			logger.error("Error in ManageCausal", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -560,108 +646,46 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if(crud.equals(Crud.READ)) {
-				Integer id = ServletUtils.getIntParameter(request, "id", null);
-				if(id == null) {
-					List<CausalGrid> items =  coreMgr.listLiveCausals(queryDomains());
-					new JsonResult("causals", items, items.size()).printTo(out);
-				} else {
-					OCausal item = coreMgr.getCausal(id);
-					new JsonResult(item).printTo(out);
-				}
-				
-			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				coreMgr.addCausal(pl.data);
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
-				coreMgr.updateCausal(pl.data);
-				new JsonResult().printTo(out);
+				List<CausalExt> items =  coreMgr.listAllLiveCausals();
+				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
-				Payload<MapItem, OCausal> pl = ServletUtils.getPayload(request, OCausal.class);
+				Payload<MapItem, CausalExt> pl = ServletUtils.getPayload(request, CausalExt.class);
 				coreMgr.deleteCausal(pl.data.getCausalId());
 				new JsonResult().printTo(out);
 			}
 			
 		} catch(Exception ex) {
-			logger.error("Error executing action ManageCausals", ex);
-			new JsonResult(false, "Error").printTo(out);
+			logger.error("Error in ManageCausals", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
-	public void processLookupCustomers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = new ArrayList<>();
+	public void processManageCausal(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			String query = ServletUtils.getStringParameter(request, "query", "");
-			
-			List<OCustomer> customers = coreMgr.listCustomersByLike("%" + query + "%");
-			for(OCustomer customer : customers) {
-				items.add(new JsSimple(customer.getCustomerId(), customer.getDescription()));
-			}
-			new JsonResult("customers", items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupCustomers", ex);
-			new JsonResult(false, "Error in LookupCustomers").printTo(out);
-		}
-	}
-	
-	public void processLookupStatisticCustomers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Connection con = null;
-		List<JsSimple> items = new ArrayList<>();
-		
-		try {
-			String profileId = ServletUtils.getStringParameter(request, "profileId", true);
-			String parentCustomerId = ServletUtils.getStringParameter(request, "parentCustomerId", null);
-			String query = ServletUtils.getStringParameter(request, "query", "");
-			UserProfileId pid = new UserProfileId(profileId);
-			CustomerDAO cdao = CustomerDAO.getInstance();
-			con = WT.getCoreConnection();
-			
-			//TODO: spostare recupero nel manager
-			List<OCustomer> customers = cdao.viewByParentDomainLike(con, parentCustomerId, pid.getDomainId(), "%" + query + "%");
-			ArrayList<String> parts = null;
-			String address = null, description;
-			for(OCustomer customer : customers) {
-				parts = new ArrayList<>();
-				if(!StringUtils.isEmpty(customer.getAddress())) {
-					parts.add(customer.getAddress());
-				}
-				if(!StringUtils.isEmpty(customer.getCity())) {
-					parts.add(customer.getCity());
-				}
-				if(!StringUtils.isEmpty(customer.getCountry())) {
-					parts.add(customer.getCountry());
-				}
-				address = StringUtils.join(parts, ", ");
-				if(StringUtils.isEmpty(address)) {
-					description = customer.getDescription();
-				} else {
-					description = MessageFormat.format("{0} ({1})", customer.getDescription(), address);
-				}
-				items.add(new JsSimple(customer.getCustomerId(), description));
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				Integer id = ServletUtils.getIntParameter(request, "id", null);
+				Causal item = coreMgr.getCausal(id);
+				new JsonResult(item).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, Causal> pl = ServletUtils.getPayload(request, Causal.class);
+				coreMgr.addCausal(pl.data);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, Causal> pl = ServletUtils.getPayload(request, Causal.class);
+				coreMgr.updateCausal(pl.data);
+				new JsonResult().printTo(out);	
 			}
 			
-			new JsonResult("customers", items, items.size()).printTo(out);
-			
-		} catch (Exception ex) {
-			logger.error("Error in LookupStatisticCustomers", ex);
-			new JsonResult(false, "Error in LookupStatisticCustomers").printTo(out);
-		} finally {
-			DbUtils.closeQuietly(con);
+		} catch(Exception ex) {
+			logger.error("Error in ManageCausal", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	/*
 	public void processGetOptionsUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {

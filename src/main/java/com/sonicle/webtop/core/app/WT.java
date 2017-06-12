@@ -217,10 +217,14 @@ public class WT {
 	}
 	
 	public static CoreManager getCoreManager(UserProfileId targetProfileId) {
+		return getCoreManager(false, targetProfileId);
+	}
+	
+	public static CoreManager getCoreManager(boolean fastInit, UserProfileId targetProfileId) {
 		if(targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getCoreManager();
 		} else {
-			return getWTA().getServiceManager().instantiateCoreManager(false, targetProfileId);
+			return getWTA().getServiceManager().instantiateCoreManager(fastInit, targetProfileId);
 		}
 	}
 	

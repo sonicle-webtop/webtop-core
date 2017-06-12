@@ -52,42 +52,32 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 	},
 	
 	initComponent: function() {
-		var me = this,
-				vm = me.getViewModel();
+		var me = this;
 		me.callParent(arguments);
 		
 		me.add({
 			region: 'center',
-			xtype: 'form',
-			reference: 'main',
-			referenceHolder: true,
+			xtype: 'wtform',
 			layout: 'anchor',
 			modelValidation: true,
-			bodyPadding: 5,
-			defaults: {
-				labelWidth: 100
-			},
-			items: [
+			items: [{
+					xtype: 'textfield',
+					reference: 'flddescription',
+					bind: '{record.description}',
+					fieldLabel: me.mys.res('causal.fld-description.lbl'),
+					anchor: '100%'
+				}, {
+					xtype: 'textfield',
+					bind: '{record.externalId}',
+					fieldLabel: me.mys.res('causal.fld-externalId.lbl'),
+					width: 250
+				}, {
+					xtype: 'checkbox',
+					bind: '{readOnly}',
+					hideEmptyLabel: false,
+					boxLabel: me.mys.res('causal.fld-readOnly.lbl')
+				},
 				WTF.localCombo('id', 'desc', {
-					reference: 'domain',
-					bind: '{record.domainId}',
-					store: {
-						autoLoad: true,
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(me.mys.ID, 'LookupDomains', 'domains', {
-							extraParams: {wildcard: true}
-						})
-					},
-					fieldLabel: me.mys.res('causal.fld-domain.lbl'),
-					anchor: '100%',
-					listeners: {
-						select: function(s, rec) {
-							me.updateUserParams(true);
-						}
-					}
-				}),
-				WTF.localCombo('id', 'desc', {
-					reference: 'user',
 					bind: '{record.userId}',
 					store: {
 						autoLoad: true,
@@ -100,58 +90,27 @@ Ext.define('Sonicle.webtop.core.view.Causal', {
 					anchor: '100%'
 				}),
 				WTF.remoteCombo('id', 'desc', {
-					bind: '{record.customerId}',
+					bind: '{record.masterDataId}',
 					autoLoadOnValue: true,
 					store: {
 						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(WT.ID, 'LookupCustomers', 'customers')
+						proxy: WTF.proxy(WT.ID, 'LookupCustomersSuppliers')
 					},
 					triggers: {
 						clear: WTF.clearTrigger()
 					},
-					fieldLabel: me.mys.res('causal.fld-customer.lbl'),
+					fieldLabel: me.mys.res('causal.fld-masterData.lbl'),
 					anchor: '100%'
-				}),
-			{
-				xtype: 'textfield',
-				bind: '{record.description}',
-				fieldLabel: me.mys.res('causal.fld-description.lbl'),
-				anchor: '100%'
-			}, {
-				xtype: 'textfield',
-				bind: '{record.externalId}',
-				fieldLabel: me.mys.res('causal.fld-externalId.lbl'),
-				width: 250
-			}, {
-				xtype: 'checkbox',
-				bind: '{readOnly}',
-				hideEmptyLabel: false,
-				boxLabel: me.mys.res('causal.fld-readOnly.lbl')
-			}]
+				})
+			]
 		});
 		me.on('viewload', me.onViewLoad);
-		vm.bind('{record.domainId}', me.onDomainChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
 		if(!success) return;
-		var me = this,
-				main = me.lookupReference('main');
+		var me = this;
 		
-		main.lookupReference('user').focus(true);
-	},
-	
-	onDomainChanged: function() {
-		this.updateUserParams(true);
-	},
-	
-	updateUserParams: function(reload) {
-		var me = this,
-				main = me.lookupReference('main'),
-				store = main.lookupReference('user').getStore();
-		WTU.applyExtraParams(store, {
-			domainId: main.lookupReference('domain').getValue()
-		});
-		if(reload) store.load();
+		me.lref('flddescription').focus(true);
 	}
 });

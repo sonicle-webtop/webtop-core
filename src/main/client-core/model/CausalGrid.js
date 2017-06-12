@@ -38,12 +38,9 @@ Ext.define('Sonicle.webtop.core.model.CausalGrid', {
 	idProperty: 'causalId',
 	fields: [
 		WTF.field('causalId', 'int', false),
-		WTF.roField('domainId', 'string'),
-		WTF.roField('domainDescription', 'string'),
 		WTF.roField('userId', 'string'),
-		WTF.roField('userDescription', 'string'),
-		WTF.roField('customerId', 'string'),
-		WTF.roField('customerDescription', 'string'),
+		WTF.roField('masterDataId', 'string'),
+		WTF.roField('masterDataDescription', 'string'),
 		WTF.roField('description', 'string'),
 		WTF.roField('readOnly', 'boolean'),
 		WTF.roField('externalId', 'string')

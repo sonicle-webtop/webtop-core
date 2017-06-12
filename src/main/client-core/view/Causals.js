@@ -35,42 +35,24 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.grid.column.Icon',
+		'Sonicle.grid.column.Lookup',
 		'Sonicle.webtop.core.model.CausalGrid'
-		//'Sonicle.webtop.core.view.Causal'
+	],
+	uses: [
+		'Sonicle.webtop.core.view.Causal'
 	],
 	
 	dockableConfig: {
 		title: '{causals.tit}',
 		iconCls: 'wt-icon-causal-xs',
 		width: 600,
-		height: 400
+		height: 400,
+		modal: true
 	},
 	promptConfirm: false,
 	
 	initComponent: function() {
 		var me = this;
-		/*
-		Ext.apply(me, {
-			tbar: [
-				me.addAct('add', {
-					text: WT.res('act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
-					handler: function() {
-						me.addCausal(WT.getVar('domainId'));
-					}
-				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					iconCls: 'wt-icon-remove-xs',
-					disabled: true,
-					handler: function() {
-						var sm = me.lookupReference('gp').getSelectionModel();
-						me.deleteCausal(sm.getSelection());
-					}
-				})
-			]
-		});
-		*/
 		me.callParent(arguments);
 		
 		me.add({
@@ -82,7 +64,7 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 				autoLoad: true,
 				autoSync: true,
 				model: 'Sonicle.webtop.core.model.CausalGrid',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageCausals', 'causals')
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageCausals')
 			},
 			columns: [{
 				xtype: 'rownumberer'	
@@ -101,34 +83,35 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 			}, {
 				dataIndex: 'description',
 				header: me.mys.res('causals.gp.description.lbl'),
-				width: 200
+				flex: 2
+			}, {
+				xtype: 'solookupcolumn',
+				dataIndex: 'userId',
+				header: me.mys.res('causals.gp.user.lbl'),
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
+						extraParams: {wildcard: true}
+					})
+				},
+				displayField: 'desc',
+				flex: 2
+			}, {
+				dataIndex: 'masterDataDescription',
+				header: me.mys.res('causals.gp.masterData.lbl'),
+				flex: 2
 			}, {
 				dataIndex: 'externalId',
 				header: me.mys.res('causals.gp.externalId.lbl'),
-				width: 100
-			}, {
-				xtype: 'templatecolumn',
-				header: me.mys.res('causals.gp.customer.lbl'),
-				flex: 1,
-				tpl: '{customerId} - {customerDescription}'
-			}, {
-				xtype: 'templatecolumn',
-				header: me.mys.res('causals.gp.user.lbl'),
-				flex: 1,
-				tpl: '{userDescription} ({userId})'
-			}, {
-				xtype: 'templatecolumn',
-				header: me.mys.res('causals.gp.domain.lbl'),
-				flex: 1,
-				hidden: true,
-				tpl: '{domainDescription} ({domainId})'
+				flex: 1
 			}],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addCausal(WT.getVar('domainId'));
+						me.addCausal();
 					}
 				}),
 				me.addAct('remove', {
@@ -164,15 +147,14 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 		});
 	},
 	
-	addCausal: function(domainId) {
+	addCausal: function() {
 		var me = this,
-				vwc = this._createCausalView();
+				vct = WT.createView(me.mys.ID, 'view.Causal');
 		
-		vwc.getComponent(0).on('viewsave', me.onCausalViewSave, me);
-		vwc.show(false, function() {
-			vwc.getComponent(0).beginNew({
+		vct.getComponent(0).on('viewsave', me.onCausalViewSave, me);
+		vct.show(false, function() {
+			vct.getComponent(0).beginNew({
 				data: {
-					domainId: domainId,
 					userId: '*'
 				}
 			});
@@ -181,11 +163,11 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	
 	editCausal: function(id) {
 		var me = this,
-				vw = this._createCausalView();
+				vct = WT.createView(me.mys.ID, 'view.Causal');
 		
-		vw.getComponent(0).on('viewsave', me.onCausalViewSave, me);
-		vw.show(false, function() {
-			vw.getComponent(0).beginEdit({
+		vct.getComponent(0).on('viewsave', me.onCausalViewSave, me);
+		vct.show(false, function() {
+			vct.getComponent(0).beginEdit({
 				data: {
 					causalId: id
 				}
@@ -207,12 +189,5 @@ Ext.define('Sonicle.webtop.core.view.Causals', {
 	
 	onCausalViewSave: function(s) {
 		this.lref('gp').getStore().load();
-	},
-	
-	_createCausalView: function(cfg) {
-		return WT.createView(this.mys.ID, 'view.Causal', {
-			viewCfg: cfg,
-			modal: true
-		});
 	}
 });
