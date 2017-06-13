@@ -177,10 +177,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				acts;
 		
 		if(menu) {
-			for(var i=sidx; i<menu.items.getCount(); i++) {
-				var cmp = menu.getComponent(i);
-				if (cmp) menu.remove(cmp);
-			}
+			WTU.removeItems(menu, sidx);
 			acts = svc.getToolboxActions();
 			Ext.iterate(acts, function(act) {
 				menu.add(act);

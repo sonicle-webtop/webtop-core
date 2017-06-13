@@ -249,6 +249,17 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		cmp.updateHeader();
 	},
 	
+	removeItems: function(cmp, startIndex) {
+		var count = cmp.items.getCount(),
+				itms = [];
+		for(var i=startIndex; i<count; i++) {
+			itms.push(cmp.getComponent(i));
+		}
+		Ext.iterate(itms, function(itm) {
+			cmp.remove(itm);
+		});
+	},
+	
 	applyTbItems: function(obj, dock, items, append) {
 		if(append === undefined) append = true;
 		var me = this,
