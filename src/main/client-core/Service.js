@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	init: function() {
 		var me = this;
 		WT.checkDesktopNotificationAuth();
+		me.initActions();
 		
 		me.onMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
@@ -64,6 +65,30 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}
 			
 		});
+	},
+	
+	initActions: function() {
+		var me = this;
+		if (me.isPermitted('ACTIVITIES', 'MANAGE')) {
+			me.addAct('toolbox', 'manageActivities', {
+				text: WT.res('activities.tit'),
+				tooltip: null,
+				iconCls: 'wt-icon-activity-xs',
+				handler: function() {
+					me.showActivities();
+				}
+			});
+		}
+		if (me.isPermitted('CAUSALS', 'MANAGE')) {
+			me.addAct('toolbox', 'manageCausals', {
+				text: WT.res('causals.tit'),
+				tooltip: null,
+				iconCls: 'wt-icon-causal-xs',
+				handler: function() {
+					me.showCausals();
+				}
+			});
+		}
 	},
 	
 	notifyMyAutosave: function(pl) {

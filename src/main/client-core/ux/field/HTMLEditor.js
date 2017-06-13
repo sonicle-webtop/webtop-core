@@ -47,7 +47,7 @@ Ext.define('Sonicle.webtop.core.ux.field.HTMLEditor', {
 	
 	statics: {
 		LANG_MAPPINGS: {
-			'en': 'en_US',
+			'en': null,
 			'it': 'it',
 			'es': 'es',
 			'de': 'de',

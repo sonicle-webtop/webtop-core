@@ -206,6 +206,20 @@ public class WebTopDirectory extends AbstractDirectory {
 		try {
 			con = wta.getConnectionManager().getConnection();
 			
+			CredentialAlgorithm algo = CredentialAlgorithm.SHA;
+			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
+			
+			if (oldPassword != null) {
+				if (entry != null) {
+					algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
+					boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), entry.getPassword());
+					if(!result) throw new EntryException("Old password does not match the current one");
+				} else {
+					logger.warn("Vault entry not found [{}, {}]", domainId, userId);
+				}
+			}
+			
+			/*
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
 			if(entry == null) throw new DirectoryException("User not found [{0}]", new UserProfileId(domainId, userId).toString());
 			
@@ -214,6 +228,7 @@ public class WebTopDirectory extends AbstractDirectory {
 				boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), entry.getPassword());
 				if(!result) throw new EntryException("Old password does not match the current one");
 			}
+			*/
 			
 			doUpdatePassword(con, domainId, userId, algo, new String(newPassword));
 			
