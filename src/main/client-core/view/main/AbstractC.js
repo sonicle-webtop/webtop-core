@@ -169,15 +169,21 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	setActiveToolboxAction: function(svc) {
 		var me = this,
+				toolsCount = me.getView().fixedToolsCount,
 				north = me.lookupReference('north'),
 				toolboxbtn = north.lookupReference('toolboxbtn'),
+				menu = toolboxbtn ? toolboxbtn.menu : null,
+				sidx = (toolsCount === 0) ? 0 : toolsCount+1,
 				acts;
 		
-		if(toolboxbtn) {
-			toolboxbtn.menu.items.removeRange(3);
+		if(menu) {
+			for(var i=sidx; i<menu.items.getCount(); i++) {
+				var cmp = menu.getComponent(i);
+				if (cmp) menu.remove(cmp);
+			}
 			acts = svc.getToolboxActions();
-			Ext.iterate(acts, function(itm) {
-				toolboxbtn.menu.add(itm);
+			Ext.iterate(acts, function(act) {
+				menu.add(act);
 			});
 		}
 	},
@@ -273,6 +279,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	/*
 	onToolsMenuClick: function(s) {
 		var core = WT.getApp().getService(WT.ID);
 		switch(s.getItemId()) {
@@ -284,6 +291,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				break;
 		}
 	},
+	*/
 	
 	onTaskBarButtonClick: function(s, btn, e) {
 		var winId = btn.getItemId(),

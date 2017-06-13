@@ -89,6 +89,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		servicesCount: -1
 	},
 	
+	fixedToolsCount: 0,
+	
 	createWestCmp: Ext.emptyFn,
 	createCenterCmp: Ext.emptyFn,
 	getSide: Ext.emptyFn,
@@ -167,6 +169,19 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	createNorthCmp: function() {
+		var me = this,
+				acts = WT.getApp().getService(WT.ID).getToolboxActions(),
+				toolsCount = acts.length,
+				toolMnuItms = [];
+		
+		me.fixedToolsCount = toolsCount;
+		if (toolsCount > 0) {
+			Ext.iterate(acts, function(act) {
+				toolMnuItms.push(act);
+			});
+			toolMnuItms.push('-');
+		}
+		
 		return {
 			xtype: 'container',
 			referenceHolder: true,
@@ -215,19 +230,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					reference: 'toolboxbtn',
 					iconCls: 'wt-menu-tools',
 					tooltip: WT.res('menu.tools.lbl'),
-					menu: [{
-						itemId: 'activities',
-						text: WT.res('activities.tit'),
-						iconCls: 'wt-icon-activity-xs',
-						hidden: !WT.isPermitted('ACTIVITIES', 'MANAGE'),
-						handler: 'onToolsMenuClick'
-					}, {
-						itemId: 'causals',
-						text: WT.res('causals.tit'),
-						iconCls: 'wt-icon-causal-xs',
-						hidden: !WT.isPermitted('CAUSALS', 'MANAGE'),
-						handler: 'onToolsMenuClick'
-					}, '-']
+					menu: toolMnuItms
 				}, '-', {
 					xtype: 'wtnotificationbutton',
 					bind: {
