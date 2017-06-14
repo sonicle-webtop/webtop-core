@@ -38,10 +38,7 @@ Ext.define('Sonicle.webtop.core.model.ActivityGrid', {
 	idProperty: 'activityId',
 	fields: [
 		WTF.field('activityId', 'int', false),
-		WTF.roField('domainId', 'string'),
-		WTF.roField('domainDescription', 'string'),
 		WTF.roField('userId', 'string'),
-		WTF.roField('userDescription', 'string'),
 		WTF.roField('description', 'string'),
 		WTF.roField('readOnly', 'boolean'),
 		WTF.roField('externalId', 'string')

@@ -33,13 +33,12 @@
  */
 Ext.define('Sonicle.webtop.core.model.Activity', {
 	extend: 'WTA.model.Base',
-	proxy: WTF.apiProxy(WT.ID, 'ManageActivities'),
+	proxy: WTF.apiProxy(WT.ID, 'ManageActivity'),
 	
 	identifier: 'negative',
 	idProperty: 'activityId',
 	fields: [
 		WTF.field('activityId', 'int', false),
-		WTF.field('domainId', 'string', false),
 		WTF.field('userId', 'string', false),
 		WTF.field('description', 'string', false),
 		WTF.field('readOnly', 'boolean', false, {defaultValue: false}),

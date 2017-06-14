@@ -57,48 +57,12 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'form',
-			reference: 'main',
-			referenceHolder: true,
+			xtype: 'wtform',
 			layout: 'anchor',
 			modelValidation: true,
-			bodyPadding: 5,
-			defaults: {
-				labelWidth: 100
-			},
-			items: [
-				WTF.localCombo('id', 'desc', {
-					reference: 'domain',
-					bind: '{record.domainId}',
-					store: {
-						autoLoad: true,
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(me.mys.ID, 'LookupDomains', 'domains', {
-							extraParams: {wildcard: true}
-						})
-					},
-					fieldLabel: me.mys.res('activity.fld-domain.lbl'),
-					anchor: '100%',
-					listeners: {
-						select: function(s, rec) {
-							me.updateUserParams(true);
-						}
-					}
-				}),
-				WTF.localCombo('id', 'desc', {
-					reference: 'user',
-					bind: '{record.userId}',
-					store: {
-						autoLoad: true,
-						model: 'WTA.model.Simple',
-						proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
-							extraParams: {wildcard: true}
-						})
-					},
-					fieldLabel: me.mys.res('activity.fld-user.lbl'),
-					anchor: '100%'
-				}), {
+			items: [{
 					xtype: 'textfield',
+					reference: 'flddescription',
 					bind: '{record.description}',
 					fieldLabel: me.mys.res('activity.fld-description.lbl'),
 					anchor: '100%'
@@ -112,31 +76,29 @@ Ext.define('Sonicle.webtop.core.view.Activity', {
 					bind: '{readOnly}',
 					hideEmptyLabel: false,
 					boxLabel: me.mys.res('activity.fld-readOnly.lbl')
-			}]
+				},
+				WTF.localCombo('id', 'desc', {
+					reference: 'user',
+					bind: '{record.userId}',
+					store: {
+						autoLoad: true,
+						model: 'WTA.model.Simple',
+						proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
+							extraParams: {wildcard: true}
+						})
+					},
+					fieldLabel: me.mys.res('activity.fld-user.lbl'),
+					anchor: '100%'
+				})
+			]
 		});
 		me.on('viewload', me.onViewLoad);
-		vm.bind('{record.domainId}', me.onDomainChanged, me);
 	},
 	
 	onViewLoad: function(s, success) {
 		if(!success) return;
-		var me = this,
-				main = me.lookupReference('main');
+		var me = this;
 		
-		main.lookupReference('user').focus(true);
-	},
-	
-	onDomainChanged: function() {
-		this.updateUserParams(true);
-	},
-	
-	updateUserParams: function(reload) {
-		var me = this,
-				main = me.lookupReference('main'),
-				store = main.lookupReference('user').getStore();
-		WTU.applyExtraParams(store, {
-			domainId: main.lookupReference('domain').getValue()
-		});
-		if(reload) store.load();
+		me.lref('flddescription').focus(true);
 	}
 });

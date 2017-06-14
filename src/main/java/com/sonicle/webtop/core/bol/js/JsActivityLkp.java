@@ -31,18 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.Causal', {
-	extend: 'WTA.model.Base',
-	proxy: WTF.apiProxy(WT.ID, 'ManageCausal'),
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.webtop.core.model.Activity;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsActivityLkp extends JsSimple {
+	public String revisionStatus;
+	public Boolean readOnly;
 	
-	identifier: 'negative',
-	idProperty: 'causalId',
-	fields: [
-		WTF.field('causalId', 'int', false),
-		WTF.field('userId', 'string', false),
-		WTF.field('masterDataId', 'string', true),
-		WTF.field('description', 'string', false),
-		WTF.field('readOnly', 'boolean', false, {defaultValue: false}),
-		WTF.field('externalId', 'string', true)
-	]
-});
+	public JsActivityLkp() {}
+	
+	public JsActivityLkp(Activity cau) {
+		super(cau.getActivityId(), cau.getDescription());
+		revisionStatus = EnumUtils.toSerializedName(cau.getRevisionStatus());
+		readOnly = cau.getReadOnly();
+	}
+}

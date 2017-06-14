@@ -73,8 +73,8 @@ Ext.define('Sonicle.webtop.core.admin.ux.UserGrid', {
 			me.columns = [{
 				xtype: 'solookupcolumn',
 				dataIndex: 'userId',
-				displayField: 'label',
 				store: me.lookupStore,
+				displayField: 'label',
 				flex: 1
 			}];
 		}

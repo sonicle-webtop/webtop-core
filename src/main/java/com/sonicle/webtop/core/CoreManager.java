@@ -33,13 +33,13 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.webtop.core.CoreServiceSettings.ServicesOrder;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -52,13 +52,13 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VActivity;
-import com.sonicle.webtop.core.bol.CausalGrid;
+import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
-import com.sonicle.webtop.core.bol.OCustomer;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OMasterData;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
@@ -80,14 +80,18 @@ import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
-import com.sonicle.webtop.core.dal.CustomerDAO;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.MasterDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.model.Activity;
+import com.sonicle.webtop.core.model.Causal;
+import com.sonicle.webtop.core.model.CausalExt;
+import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -103,13 +107,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -566,12 +567,18 @@ public class CoreManager extends BaseManager {
 		return setm.listProfilesWith(serviceId, key, value);
 	}
 	
-	public List<VActivity> listLiveActivities(Collection<String> domainIds) throws WTException {
+	public List<Activity> listAllLiveActivities() throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
+		ArrayList<Activity> items = new ArrayList<>();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.viewLiveByDomains(con, domainIds);
+			List<OActivity> oacts = dao.selectLiveByDomain(con, getTargetProfileId().getDomainId());
+			for(OActivity oact : oacts) {
+				items.add(createActivity(oact));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -580,12 +587,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OActivity> listLiveActivities(UserProfileId profileId) throws WTException {
+	public List<Activity> listLiveActivities() throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
+		ArrayList<Activity> items = new ArrayList<>();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.selectLiveByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
+			List<OActivity> oacts = dao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId());
+			for(OActivity oact : oacts) {
+				items.add(createActivity(oact));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -594,12 +607,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public OActivity getActivity(int activityId) throws WTException {
+	public Activity getActivity(int activityId) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.select(con, activityId);
+			OActivity oact = dao.select(con, activityId);
+			return createActivity(oact);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -608,14 +623,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int addActivity(OActivity item) throws WTException {
-		ActivityDAO dao = ActivityDAO.getInstance();
+	public Activity addActivity(Activity activity) throws WTException {
 		Connection con = null;
+		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
+			ensureUserDomain(activity.getDomainId());
+			
 			con = WT.getCoreConnection();
-			item.setActivityId(dao.getSequence(con).intValue());
-			return dao.insert(con, item);
+			activity = doActivityUpdate(true, con, activity);
+			writeLog("ACTIVITY_INSERT", String.valueOf(activity.getActivityId()));
+			
+			return activity;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -624,13 +643,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int updateActivity(OActivity item) throws WTException {
-		ActivityDAO dao = ActivityDAO.getInstance();
+	public Activity updateActivity(Activity activity) throws WTException {
 		Connection con = null;
+		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
+			ensureUserDomain(activity.getDomainId());
+			
 			con = WT.getCoreConnection();
-			return dao.update(con, item);
+			activity = doActivityUpdate(false, con, activity);
+			writeLog("ACTIVITY_UPDATE", String.valueOf(activity.getActivityId()));
+			
+			return activity;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -642,10 +666,17 @@ public class CoreManager extends BaseManager {
 	public int deleteActivity(int activityId) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
+		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
+			Activity act = getActivity(activityId);
+			if (act == null) return -1;
+			ensureUserDomain(act.getDomainId());
+			
 			con = WT.getCoreConnection();
-			return dao.delete(con, activityId);
+			int ret = dao.logicDelete(con, activityId);
+			writeLog("ACTIVITY_DELETE", String.valueOf(activityId));
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -654,12 +685,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<CausalGrid> listLiveCausals(Collection<String> domainIds) throws WTException {
+	public List<CausalExt> listAllLiveCausals() throws WTException {
 		CausalDAO dao = CausalDAO.getInstance();
+		ArrayList<CausalExt> items = new ArrayList<>();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.viewLiveByDomains(con, domainIds);
+			List<VCausal> vcaus = dao.viewLiveByDomain(con, getTargetProfileId().getDomainId());
+			for(VCausal vcai : vcaus) {
+				items.add(createCausalExt(vcai));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -668,12 +705,23 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OCausal> listLiveCausals(UserProfileId profileId, String customerId) throws WTException {
+	public List<Causal> listLiveCausals(String masterDataId) throws WTException {
 		CausalDAO dao = CausalDAO.getInstance();
+		ArrayList<Causal> items = new ArrayList<>();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.selectLiveByDomainUserCustomer(con, profileId.getDomainId(), profileId.getUserId(), customerId);
+			List<OCausal> ocaus = null;
+			if (!StringUtils.isBlank(masterDataId)) {
+				ocaus = dao.selectLiveByDomainUserMasterData(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId(), masterDataId);
+			} else {
+				ocaus = dao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId());
+			}
+			for(OCausal ocau : ocaus) {
+				items.add(createCausal(ocau));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -682,12 +730,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public OCausal getCausal(int causalId) throws WTException {
+	public Causal getCausal(int causalId) throws WTException {
 		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
+		
 		try {
 			con = WT.getCoreConnection();
-			return dao.select(con, causalId);
+			OCausal ocal = dao.select(con, causalId);
+			return createCausal(ocal);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -696,14 +746,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int addCausal(OCausal item) throws WTException {
-		CausalDAO dao = CausalDAO.getInstance();
+	public Causal addCausal(Causal causal) throws WTException {
 		Connection con = null;
+		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
+			ensureUserDomain(causal.getDomainId());
+			
 			con = WT.getCoreConnection();
-			item.setCausalId(dao.getSequence(con).intValue());
-			return dao.insert(con, item);
+			causal = doCausalUpdate(true, con, causal);
+			writeLog("CAUSAL_INSERT", String.valueOf(causal.getCausalId()));
+			
+			return causal;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -712,13 +766,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int updateCausal(OCausal item) throws WTException {
-		CausalDAO dao = CausalDAO.getInstance();
+	public Causal updateCausal(Causal causal) throws WTException {
 		Connection con = null;
+		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
+			ensureUserDomain(causal.getDomainId());
+			
 			con = WT.getCoreConnection();
-			return dao.update(con, item);
+			causal = doCausalUpdate(false, con, causal);
+			writeLog("CAUSAL_UPDATE", String.valueOf(causal.getCausalId()));
+			
+			return causal;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -733,8 +792,14 @@ public class CoreManager extends BaseManager {
 		
 		try {
 			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
+			Causal cau = getCausal(causalId);
+			if (cau == null) return -1;
+			ensureUserDomain(cau.getDomainId());
+			
 			con = WT.getCoreConnection();
-			return dao.delete(con, causalId);
+			int ret = dao.logicDelete(con, causalId);
+			writeLog("CAUSAL_DELETE", String.valueOf(causalId));
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -743,13 +808,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<OCustomer> listCustomersByLike(String like) throws WTException {
-		CustomerDAO dao = CustomerDAO.getInstance();
+	public List<MasterData> listMasterDataByLike(String[] types, String like) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		ArrayList<MasterData> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			return dao.viewByLike(con, like);
+			for(OMasterData omas : masDao.viewByDomainTypeLike(con, getTargetProfileId().getDomainId(), types, like)) {
+				items.add(createMasterData(omas));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -758,13 +827,33 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public OCustomer getCustomer(String customerId) throws WTException {
-		CustomerDAO dao = CustomerDAO.getInstance();
+	public List<MasterData> listMasterDataByParentLike(String parentId, String[] types, String like) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		ArrayList<MasterData> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			return dao.viewById(con, customerId);
+			for(OMasterData omas : masDao.viewStatisticByDomainParentTypeLike(con, getTargetProfileId().getDomainId(), parentId, types, like)) {
+				items.add(createMasterData(omas));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public MasterData getMasterData(String masterDataId) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			OMasterData omas = masDao.selectByDomainId(con, getTargetProfileId().getDomainId(), masterDataId);
+			return createMasterData(omas);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -1816,5 +1905,133 @@ public class CoreManager extends BaseManager {
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid URI");
 		}
+	}
+	
+	private Activity doActivityUpdate(boolean insert, Connection con, Activity act) throws WTException {
+		ActivityDAO dao = ActivityDAO.getInstance();
+		
+		OActivity oact = createOActivity(act);
+		if (oact.getDomainId() == null) oact.setDomainId(getTargetProfileId().getDomainId());
+		
+		if (insert) {
+			oact.setActivityId(dao.getSequence(con).intValue());
+			oact.setRevisionStatus(EnumUtils.toSerializedName(Activity.RevisionStatus.MODIFIED));
+			dao.insert(con, oact);
+		} else {
+			dao.update(con, oact);
+		}
+		
+		return createActivity(oact);
+	}
+	
+	private Causal doCausalUpdate(boolean insert, Connection con, Causal cau) throws WTException {
+		CausalDAO dao = CausalDAO.getInstance();
+		
+		OCausal ocau = createOCausal(cau);
+		if (ocau.getDomainId() == null) ocau.setDomainId(getTargetProfileId().getDomainId());
+		
+		if (insert) {
+			ocau.setCausalId(dao.getSequence(con).intValue());
+			ocau.setRevisionStatus(EnumUtils.toSerializedName(Causal.RevisionStatus.MODIFIED));
+			dao.insert(con, ocau);
+		} else {
+			dao.update(con, ocau);
+		}
+		
+		return createCausal(ocau);
+	}
+	
+	private OActivity createOActivity(Activity cau) {
+		if (cau == null) return null;
+		OActivity ocau = new OActivity();
+		ocau.setActivityId(cau.getActivityId());
+		ocau.setDomainId(cau.getDomainId());
+		ocau.setUserId(cau.getUserId());
+		ocau.setRevisionStatus(EnumUtils.toSerializedName(cau.getRevisionStatus()));
+		ocau.setDescription(cau.getDescription());
+		ocau.setReadOnly(cau.getReadOnly());
+		ocau.setExternalId(cau.getExternalId());
+		return ocau;
+	}
+	
+	private Activity createActivity(OActivity oact) {
+		if (oact == null) return null;
+		Activity act = new Activity();
+		act.setActivityId(oact.getActivityId());
+		act.setDomainId(oact.getDomainId());
+		act.setUserId(oact.getUserId());
+		act.setRevisionStatus(EnumUtils.forSerializedName(oact.getRevisionStatus(), Activity.RevisionStatus.class));
+		act.setDescription(oact.getDescription());
+		act.setReadOnly(oact.getReadOnly());
+		act.setExternalId(oact.getExternalId());
+		return act;
+	}
+	
+	private OCausal createOCausal(Causal cau) {
+		if (cau == null) return null;
+		OCausal ocau = new OCausal();
+		ocau.setCausalId(cau.getCausalId());
+		ocau.setDomainId(cau.getDomainId());
+		ocau.setUserId(cau.getUserId());
+		ocau.setMasterDataId(cau.getMasterDataId());
+		ocau.setRevisionStatus(EnumUtils.toSerializedName(cau.getRevisionStatus()));
+		ocau.setDescription(cau.getDescription());
+		ocau.setReadOnly(cau.getReadOnly());
+		ocau.setExternalId(cau.getExternalId());
+		return ocau;
+	}
+	
+	private Causal createCausal(OCausal ocau) {
+		if (ocau == null) return null;
+		Causal cau = new Causal();
+		cau.setCausalId(ocau.getCausalId());
+		cau.setDomainId(ocau.getDomainId());
+		cau.setUserId(ocau.getUserId());
+		cau.setMasterDataId(ocau.getMasterDataId());
+		cau.setRevisionStatus(EnumUtils.forSerializedName(ocau.getRevisionStatus(), Causal.RevisionStatus.class));
+		cau.setDescription(ocau.getDescription());
+		cau.setReadOnly(ocau.getReadOnly());
+		cau.setExternalId(ocau.getExternalId());
+		return cau;
+	}
+	
+	private CausalExt createCausalExt(VCausal vcau) {
+		if (vcau == null) return null;
+		CausalExt cau = new CausalExt();
+		cau.setCausalId(vcau.getCausalId());
+		cau.setDomainId(vcau.getDomainId());
+		cau.setUserId(vcau.getUserId());
+		cau.setMasterDataId(vcau.getMasterDataId());
+		cau.setRevisionStatus(EnumUtils.forSerializedName(vcau.getRevisionStatus(), Causal.RevisionStatus.class));
+		cau.setDescription(vcau.getDescription());
+		cau.setReadOnly(vcau.getReadOnly());
+		cau.setExternalId(vcau.getExternalId());
+		cau.setMasterDataDescription(vcau.getMasterDataDescription());
+		return cau;
+	}
+	
+	private MasterData createMasterData(OMasterData omd) {
+		if (omd == null) return null;
+		MasterData md = new MasterData();
+		md.setMasterDataId(omd.getMasterDataId());
+		md.setParentMasterDataId(omd.getParentMasterDataId());
+		md.setExternalId(omd.getExternalId());
+		md.setType(omd.getType());
+		md.setRevisionStatus(EnumUtils.forSerializedName(omd.getRevisionStatus(), MasterData.RevisionStatus.class));
+		md.setRevisionTimestamp(omd.getRevisionTimestamp());
+		md.setRevisionSequence(omd.getRevisionSequence());
+		md.setLockStatus(EnumUtils.forSerializedName(omd.getLockStatus(), MasterData.LoskStatus.class));
+		md.setDescription(omd.getDescription());
+		md.setAddress(omd.getAddress());
+		md.setCity(omd.getCity());
+		md.setPostalCode(omd.getPostalCode());
+		md.setState(omd.getState());
+		md.setCountry(omd.getCountry());
+		md.setTelephone(omd.getTelephone());
+		md.setFax(omd.getFax());
+		md.setMobile(omd.getMobile());
+		md.setEmail(omd.getEmail());
+		md.setNotes(omd.getNotes());
+		return md;
 	}
 }

@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -74,6 +73,12 @@ public abstract class BaseManager {
 		return targetProfile;
 	}
 	
+	public boolean hasSameTargetProfile(UserProfileId profileId) {
+		if (profileId == null) return false;
+		if (targetProfile == null) return false;
+		return targetProfile.equals(profileId);
+	}
+	
 	/**
 	 * Checks if service of this runContext matches the passed one.
 	 * For example, in order to ensure that call is coming from a specific service.
@@ -83,7 +88,7 @@ public abstract class BaseManager {
 	 */
 	public void ensureCallerService(String callerServiceIdMustBe, String methodName) throws MethodAuthException {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		if(!StringUtils.equals(callerServiceId, callerServiceIdMustBe)) throw new MethodAuthException(methodName, callerServiceId, RunContext.getRunProfileId());
+		if (!StringUtils.equals(callerServiceId, callerServiceIdMustBe)) throw new MethodAuthException(methodName, callerServiceId, RunContext.getRunProfileId());
 	}
 	
 	/**
@@ -93,8 +98,8 @@ public abstract class BaseManager {
 	 */
 	public void ensureUser() throws AuthException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		if(RunContext.isWebTopAdmin(runPid)) return;
-		if(!runPid.equals(getTargetProfileId())) throw new AuthException("");
+		if (RunContext.isWebTopAdmin(runPid)) return;
+		if (!runPid.equals(getTargetProfileId())) throw new AuthException("");
 	}
 	
 	/**
@@ -104,8 +109,8 @@ public abstract class BaseManager {
 	 */
 	public void ensureUserDomain() throws AuthException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		if(RunContext.isWebTopAdmin(runPid)) return;
-		if(!runPid.hasDomain(getTargetProfileId().getDomainId())) throw new AuthException("Domain ID for the running profile [{0}] does not match with the target [{1}]", runPid.getDomainId(), getTargetProfileId().getDomainId());
+		if (RunContext.isWebTopAdmin(runPid)) return;
+		if (!runPid.hasDomain(getTargetProfileId().getDomainId())) throw new AuthException("Domain ID for the running profile [{0}] does not match with the target [{1}]", runPid.getDomainId(), getTargetProfileId().getDomainId());
 	}
 	
 	/**
@@ -114,9 +119,10 @@ public abstract class BaseManager {
 	 * @throws AuthException When domain IDs do not match.
 	 */
 	public void ensureUserDomain(String domainId) throws AuthException {
+		if (domainId == null) return;
 		UserProfileId runPid = RunContext.getRunProfileId();
-		if(RunContext.isWebTopAdmin(runPid)) return;
-		if(!runPid.hasDomain(domainId)) throw new AuthException("Domain ID for the running profile [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
+		if (RunContext.isWebTopAdmin(runPid)) return;
+		if (!runPid.hasDomain(domainId)) throw new AuthException("Domain ID for the running profile [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
 	}
 	
 	/**

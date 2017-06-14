@@ -1,3 +1,4 @@
+@DataSource[default@com.sonicle.webtop.core]
 
 CREATE SCHEMA "core";
 
@@ -69,9 +70,9 @@ CREATE TABLE "core"."activities" (
 "activity_id" int4 DEFAULT nextval('"core".seq_activities'::regclass) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
-"revision_status" varchar(1),
+"revision_status" varchar(1) NOT NULL,
 "description" varchar(255) NOT NULL,
-"read_only" bool NOT NULL,
+"read_only" bool DEFAULT false NOT NULL,
 "external_id" varchar(100)
 )
 WITH (OIDS=FALSE)
@@ -103,10 +104,10 @@ CREATE TABLE "core"."causals" (
 "causal_id" int4 DEFAULT nextval('"core".seq_causals'::regclass) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
 "user_id" varchar(100) NOT NULL,
-"customer_id" varchar(100),
-"revision_status" varchar(1),
+"master_data_id" varchar(36),
+"revision_status" varchar(1) NOT NULL,
 "description" varchar(255) NOT NULL,
-"read_only" bool NOT NULL,
+"read_only" bool DEFAULT false NOT NULL,
 "external_id" varchar(100)
 )
 WITH (OIDS=FALSE)
@@ -199,6 +200,36 @@ CREATE TABLE "core"."local_vault" (
 "user_id" varchar(100) NOT NULL,
 "password_type" varchar(15) NOT NULL,
 "password" varchar(128)
+)
+WITH (OIDS=FALSE)
+
+;
+
+-- ----------------------------
+-- Table structure for master_data
+-- ----------------------------
+DROP TABLE IF EXISTS "core"."master_data";
+CREATE TABLE "core"."master_data" (
+"domain_id" varchar(20) NOT NULL,
+"master_data_id" varchar(36) NOT NULL,
+"parent_master_data_id" varchar(36),
+"external_id" varchar(36),
+"type" varchar(3) NOT NULL,
+"revision_status" varchar(1) NOT NULL,
+"revision_timestamp" timestamptz(6) NOT NULL,
+"revision_sequence" int4 DEFAULT 0 NOT NULL,
+"lock_status" varchar(1) DEFAULT 'N'::character varying NOT NULL,
+"description" varchar(50),
+"address" varchar(100),
+"city" varchar(50),
+"postal_code" varchar(20),
+"state" varchar(30),
+"country" varchar(50),
+"telephone" varchar(50),
+"fax" varchar(50),
+"mobile" varchar(50),
+"email" varchar(320),
+"notes" varchar(2000)
 )
 WITH (OIDS=FALSE)
 
@@ -501,7 +532,7 @@ WITH (OIDS=FALSE)
 -- Indexes structure for table activities
 -- ----------------------------
 CREATE INDEX "activities_ak1" ON "core"."activities" USING btree ("domain_id", "user_id", "revision_status");
-CREATE INDEX "activities_ak2" ON "core"."activities" USING btree ("external_id");
+CREATE INDEX "activities_ak2" ON "core"."activities" USING btree ("external_id", "domain_id");
 
 -- ----------------------------
 -- Primary Key structure for table activities
@@ -511,7 +542,7 @@ ALTER TABLE "core"."activities" ADD PRIMARY KEY ("activity_id");
 -- ----------------------------
 -- Indexes structure for table autosave
 -- ----------------------------
-CREATE INDEX "autosave_ak1" ON "core"."autosave" ("domain_id", "user_id", "service_id", "context", "key");
+CREATE INDEX "autosave_ak1" ON "core"."autosave" USING btree ("domain_id", "user_id", "service_id", "context", "key");
 
 -- ----------------------------
 -- Primary Key structure for table autosave
@@ -521,8 +552,8 @@ ALTER TABLE "core"."autosave" ADD PRIMARY KEY ("domain_id", "user_id", "webtop_c
 -- ----------------------------
 -- Indexes structure for table causals
 -- ----------------------------
-CREATE INDEX "causals_ak1" ON "core"."causals" USING btree ("domain_id", "user_id", "customer_id", "revision_status");
-CREATE INDEX "causals_ak2" ON "core"."causals" USING btree ("external_id");
+CREATE INDEX "causals_ak1" ON "core"."causals" USING btree ("domain_id", "user_id", "master_data_id", "revision_status");
+CREATE INDEX "causals_ak2" ON "core"."causals" USING btree ("external_id", "domain_id");
 
 -- ----------------------------
 -- Primary Key structure for table causals
@@ -564,6 +595,18 @@ ALTER TABLE "core"."file_types" ADD PRIMARY KEY ("extension", "type", "subtype")
 -- Primary Key structure for table local_vault
 -- ----------------------------
 ALTER TABLE "core"."local_vault" ADD PRIMARY KEY ("domain_id", "user_id");
+
+-- ----------------------------
+-- Indexes structure for table master_data
+-- ----------------------------
+CREATE INDEX "master_data_ak1" ON "core"."master_data" USING btree ("domain_id", "parent_master_data_id", "type", "revision_status", "description");
+CREATE INDEX "master_data_ak2" ON "core"."master_data" USING btree ("domain_id", "type", "revision_status", "description");
+CREATE INDEX "master_data_ak3" ON "core"."master_data" USING btree ("external_id", "domain_id");
+
+-- ----------------------------
+-- Primary Key structure for table master_data
+-- ----------------------------
+ALTER TABLE "core"."master_data" ADD PRIMARY KEY ("domain_id", "master_data_id");
 
 -- ----------------------------
 -- Primary Key structure for table media_types
@@ -608,11 +651,6 @@ ALTER TABLE "core"."roles_associations" ADD PRIMARY KEY ("role_association_id");
 CREATE UNIQUE INDEX "roles_permissions_ak1" ON "core"."roles_permissions" USING btree ("role_uid", "service_id", "key", "action", "instance");
 CREATE INDEX "roles_permissions_ak2" ON "core"."roles_permissions" USING btree ("role_uid", "service_id", "key", "instance");
 CREATE INDEX "roles_permissions_ak3" ON "core"."roles_permissions" USING btree ("service_id", "key", "instance");
-
--- ----------------------------
--- Primary Key structure for table roles_permissions
--- ----------------------------
-ALTER TABLE "core"."roles_permissions" ADD PRIMARY KEY ("role_permission_id");
 
 -- ----------------------------
 -- Primary Key structure for table servicestore_entries
@@ -699,3 +737,9 @@ ALTER TABLE "core"."users_associations" ADD PRIMARY KEY ("user_association_id");
 -- Primary Key structure for table users_info
 -- ----------------------------
 ALTER TABLE "core"."users_info" ADD PRIMARY KEY ("domain_id", "user_id");
+
+-- ----------------------------
+-- Align service version
+-- ----------------------------
+DELETE FROM "core"."settings" WHERE ("settings"."service_id" = 'com.sonicle.webtop.core') AND ("settings"."key" = 'manifest.version');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.11');
