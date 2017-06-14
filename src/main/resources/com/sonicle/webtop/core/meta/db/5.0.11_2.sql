@@ -14,5 +14,6 @@ CASE WHEN ("lock" IS NULL) THEN 'N' ELSE 'L' END AS "lock_status",
 "description", "address", "city", "postalcode", "state", "country", "telephone",
 NULL AS "fax",
 NULL AS "mobile",
-"email", "note", "km"
+"email", "note",
+CAST("km" AS INTEGER)
 FROM "core"."customers";
