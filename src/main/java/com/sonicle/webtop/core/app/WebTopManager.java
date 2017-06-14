@@ -1867,8 +1867,9 @@ public final class WebTopManager {
 		OUser ouser = getUser(pid);
 		if (ouser == null) return null;
 		//if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
-		InternetAddress ia = MailUtils.buildInternetAddress(upi.getEmail(), ouser.getDisplayName());
-		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), ia);
+		InternetAddress profileIa = WT.buildDomainInternetAddress(pid.getDomainId(), pid.getUserId(), ouser.getDisplayName());
+		InternetAddress personalIa = MailUtils.buildInternetAddress(upi.getEmail(), ouser.getDisplayName());
+		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), profileIa, personalIa);
 	}
 	
 	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {

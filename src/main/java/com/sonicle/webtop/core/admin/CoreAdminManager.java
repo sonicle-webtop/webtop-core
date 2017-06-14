@@ -635,7 +635,7 @@ public class CoreAdminManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID, false);
 			fetcher.setContext(internetName);
-			fetcher.setForwardAddress(ud.getEmailAddress());
+			fetcher.setForwardAddress(ud.getProfileEmailAddress());
 			fetcher.setFetcherId(dao.getSequence(con).intValue());
 			dao.insert(con, fetcher);
 			
@@ -669,7 +669,7 @@ public class CoreAdminManager extends BaseManager {
 			if (ud == null) throw new WTException("User-data not found [{0}]", pid.toString());
 			
 			con = WT.getConnection(SERVICE_ID, false);
-			fetcher.setForwardAddress(ud.getEmailAddress());
+			fetcher.setForwardAddress(ud.getProfileEmailAddress());
 			dao.update(con, fetcher);
 			
 			DbUtils.commitQuietly(con);
