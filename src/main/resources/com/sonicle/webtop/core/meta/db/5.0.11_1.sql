@@ -67,7 +67,8 @@ CREATE TABLE "core"."master_data" (
 "fax" varchar(50),
 "mobile" varchar(50),
 "email" varchar(320),
-"notes" varchar(2000)
+"notes" varchar(2000),
+"distance" int4
 )
 WITH (OIDS=FALSE)
 
