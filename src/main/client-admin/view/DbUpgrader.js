@@ -224,14 +224,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 		me.lref('tbitag').setText(me.mys.res('dbUpgrader.tbi-tag.lbl') + ': ' + o.upgradeTag);
 	},
 	
-	updateStmts: function(data) {
-		var sto = this.lref('gp').getStore(), rec;
-		Ext.iterate(data, function(recd) {
-			rec = sto.getById(recd['upgradeStmtId']);
-			if (rec) rec.set(recd);
-		});
-	},
-	
 	executeStmt: function(mode) {
 		var me = this,
 				sel = me.getSelectedStmt(),
@@ -275,6 +267,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					}	
 				}
 			}
+		});
+	},
+	
+	updateStmts: function(data) {
+		var sto = this.lref('gp').getStore(), rec;
+		Ext.iterate(data, function(recd) {
+			rec = sto.getById(recd['upgradeStmtId']);
+			if (rec) rec.set(recd);
 		});
 	},
 	

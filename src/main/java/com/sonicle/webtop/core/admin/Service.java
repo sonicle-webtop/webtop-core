@@ -867,6 +867,7 @@ public class Service extends BaseService {
 	
 	private static class DbUpgraderEnvironment {
 		public String upgradeTag;
+		public int totalCount;
 		public int pendingCount;
 		public int okCount;
 		public int errorCount;
@@ -911,20 +912,22 @@ public class Service extends BaseService {
 					requireAdmin = ignoreErrors = false;
 					sqlComments = annComments = "";
 					
-					if (stmt.getRunStatus() == null) {
-						pendingCount++;
-					} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
-						okCount++;
-					} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
-						errorCount++;
-					} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
-						warningCount++;
-					} else if (stmt.getRunStatus().equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
-						skippedCount++;
+					String runStatus = stmt.getRunStatus();
+					if (!StringUtils.isBlank(runStatus)) {
+						if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_OK)) {
+							okCount++;
+						} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_ERROR)) {
+							errorCount++;
+						} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_WARNING)) {
+							warningCount++;
+						} else if (runStatus.equals(ORunnableUpgradeStatement.RUN_STATUS_SKIPPED)) {
+							skippedCount++;
+						}
 					}
 				}
 			}
 			if (!runnableStmts.isEmpty()) upgradeTag = runnableStmts.get(0).getTag();
+			recalculatePending();
 			index = nextIndex();
 		}
 		
@@ -971,10 +974,12 @@ public class Service extends BaseService {
 				skippedCount++;
 			}
 			
-			if (success) {
-				if (oldRunStatus == null) pendingCount--;
-				index = nextIndex();
-			}
+			recalculatePending();
+			if (success) index = nextIndex();
+		}
+		
+		private void recalculatePending() {
+			pendingCount = runnableStmts.size() - (okCount + warningCount + skippedCount);
 		}
 	}
 }
