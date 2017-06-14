@@ -175,17 +175,19 @@ public final class UserProfile {
 		private Locale locale;
 		private String timezoneId;
 		private DateTimeZone timezone;
-		private InternetAddress email;
+		private InternetAddress profileEmail;
+		private InternetAddress personalEmail;
 		
 		public Data() {}
 		
-		public Data(String displayName, String languageTag, String timezone, InternetAddress email) {
+		public Data(String displayName, String languageTag, String timezone, InternetAddress profileEmail, InternetAddress personalEmail) {
 			this.displayName = displayName;
 			this.languageTag = languageTag;
 			this.locale = LangUtils.languageTagToLocale(languageTag);
 			this.timezoneId = timezone;
 			this.timezone = DateTimeZone.forID(timezone);
-			this.email = email;
+			this.profileEmail = profileEmail;
+			this.personalEmail = personalEmail;
 		}
 
 		public String getDisplayName() {
@@ -208,16 +210,55 @@ public final class UserProfile {
 			return timezone;
 		}
 		
+		public InternetAddress getProfileEmail() {
+			return profileEmail;
+		}
+		
+		public String getProfileEmailAddress() {
+			return profileEmail.getAddress();
+		}
+		
+		public String getProfileFullEmailAddress() {
+			return profileEmail.toString();
+		}
+		
+		public InternetAddress getPersonalEmail() {
+			return personalEmail;
+		}
+		
+		public String getPersonalEmailAddress() {
+			return personalEmail.getAddress();
+		}
+		
+		public String getPersonalFullEmailAddress() {
+			return personalEmail.toString();
+		}
+		
+		/**
+		 * @return 
+		 * @deprecated use {@link #getPersonalEmail()} instead.
+		 */
+		@Deprecated
 		public InternetAddress getEmail() {
-			return email;
+			return getPersonalEmail();
 		}
 		
+		/**
+		 * @return 
+		 * @deprecated use {@link #getPersonalEmailAddress()} instead.
+		 */
+		@Deprecated
 		public String getEmailAddress() {
-			return email.getAddress();
+			return getPersonalEmailAddress();
 		}
 		
+		/**
+		 * @return 
+		 * @deprecated use {@link #getPersonalFullEmailAddress()} instead.
+		 */
+		@Deprecated
 		public String getFullEmailAddress() {
-			return email.toString();
+			return getPersonalFullEmailAddress();
 		}
 	}
 	
