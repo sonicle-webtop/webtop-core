@@ -33,15 +33,24 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.webtop.core.model.MasterData;
+
 /**
  *
  * @author malbinola
  */
 public class JsCustomerSupplierLkp extends JsSimple {
 	public String type;
+	public String lockStatus;
 	
-	public JsCustomerSupplierLkp(String id, String desc, String type) {
-		super(id, desc);
-		this.type = type;
+	public JsCustomerSupplierLkp(MasterData masterData) {
+		this(masterData, masterData.getDescription());
+	}
+	
+	public JsCustomerSupplierLkp(MasterData masterData, String desc) {
+		super(masterData.getMasterDataId(), desc);
+		this.type = masterData.getType();
+		this.lockStatus = EnumUtils.toSerializedName(masterData.getLockStatus());
 	}
 }

@@ -543,7 +543,7 @@ public class Service extends BaseService {
 			};
 			List<MasterData> entries = coreMgr.listMasterDataByLike(types, "%" + query + "%");
 			for(MasterData entry : entries) {
-				items.add(new JsCustomerSupplierLkp(entry.getMasterDataId(), entry.getDescription(), entry.getType()));
+				items.add(new JsCustomerSupplierLkp(entry));
 			}
 			
 			new JsonResult(items, items.size()).printTo(out);
@@ -584,7 +584,7 @@ public class Service extends BaseService {
 				} else {
 					description = MessageFormat.format("{0} ({1})", entry.getDescription(), address);
 				}
-				items.add(new JsCustomerSupplierLkp(entry.getMasterDataId(), description, entry.getType()));
+				items.add(new JsCustomerSupplierLkp(entry, description));
 			}
 			
 			new JsonResult(items, items.size()).printTo(out);
