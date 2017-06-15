@@ -56,7 +56,7 @@ CREATE TABLE "core"."master_data" (
 "revision_status" varchar(1) NOT NULL,
 "revision_timestamp" timestamptz(6) NOT NULL,
 "revision_sequence" int4 DEFAULT 0 NOT NULL,
-"lock_status" varchar(1) DEFAULT 'N'::character varying NOT NULL,
+"lock_status" varchar(1),
 "description" varchar(50),
 "address" varchar(100),
 "city" varchar(50),
@@ -85,9 +85,3 @@ CREATE INDEX "master_data_ak3" ON "core"."master_data" USING btree ("external_id
 -- Primary Key structure for table master_data
 -- ----------------------------
 ALTER TABLE "core"."master_data" ADD PRIMARY KEY ("domain_id", "master_data_id");
-
--- ----------------------------
--- Deprecate customers table
--- ----------------------------
-@IgnoreErrors
-ALTER TABLE "core"."customers" RENAME TO "_customers.old";

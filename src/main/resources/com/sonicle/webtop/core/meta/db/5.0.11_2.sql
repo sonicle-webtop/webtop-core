@@ -10,10 +10,16 @@ SELECT "domain_id", "customer_id", "parent_id", "external_id", "type",
 'M' AS "revision_status",
 NOW() AS "revision_timestamp",
 0 AS "revision_sequence",
-CASE WHEN ("lock" IS NULL) THEN 'N' ELSE 'L' END AS "lock_status",
+CASE WHEN ("lock" IS NULL) THEN NULL ELSE 'L' END AS "lock_status",
 "description", "address", "city", "postalcode", "state", "country", "telephone",
 NULL AS "fax",
 NULL AS "mobile",
 "email", "note",
 CAST("km" AS INTEGER)
 FROM "core"."customers";
+
+-- ----------------------------
+-- Deprecate customers table
+-- ----------------------------
+@IgnoreErrors
+ALTER TABLE "core"."customers" RENAME TO "_customers.old";
