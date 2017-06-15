@@ -85,3 +85,9 @@ CREATE INDEX "master_data_ak3" ON "core"."master_data" USING btree ("external_id
 -- Primary Key structure for table master_data
 -- ----------------------------
 ALTER TABLE "core"."master_data" ADD PRIMARY KEY ("domain_id", "master_data_id");
+
+-- ----------------------------
+-- Deprecate customers table
+-- ----------------------------
+@IgnoreErrors
+ALTER TABLE "core"."customers" RENAME TO "_customers.old";
