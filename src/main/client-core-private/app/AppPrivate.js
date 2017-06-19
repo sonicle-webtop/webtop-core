@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		'Sonicle.PageMgr',
 		'Sonicle.URLMgr',
 		'Sonicle.PrintMgr',
-		'Sonicle.ActivityMonitor',
+		'Sonicle.PageActivityMonitor',
 		'Sonicle.DesktopNotificationMgr',
 		'Sonicle.WebSocketManager',
 		'Sonicle.WebSocket',
@@ -195,10 +195,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		});
 		WTA.ComManager.connect();
 		
-		Sonicle.ActivityMonitor.on('change', function(s, idle) {
+		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
 			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
 		});
-		Sonicle.ActivityMonitor.start();
+		Sonicle.PageActivityMonitor.start();
 		
 		me.hideLoadingLayer();
 	},
