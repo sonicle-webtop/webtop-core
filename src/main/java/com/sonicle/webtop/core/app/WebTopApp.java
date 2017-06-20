@@ -468,7 +468,7 @@ public final class WebTopApp {
 			try {
 				wtmgr.initDomainHomeFolder(domain.getDomainId());
 			} catch(SecurityException ex) {
-				logger.warn("Unable to check domain home [{}]", ex, domain.getDomainId());
+				logger.warn("Unable to check domain home [{}]", domain.getDomainId(), ex);
 			}
 		}
 	}

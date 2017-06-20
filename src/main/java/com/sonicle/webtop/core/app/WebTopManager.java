@@ -1862,13 +1862,17 @@ public final class WebTopManager {
 	}
 	
 	private UserProfile.Data getUserData(UserProfileId pid) throws WTException {
-		CoreUserSettings cus = new CoreUserSettings(pid);
-		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		OUser ouser = getUser(pid);
 		if (ouser == null) return null;
-		//if(ouser == null) throw new WTException("User not found [{0}]", pid.toString());
+		
+		CoreUserSettings cus = new CoreUserSettings(pid);
+		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		InternetAddress profileIa = WT.buildDomainInternetAddress(pid.getDomainId(), pid.getUserId(), ouser.getDisplayName());
 		InternetAddress personalIa = MailUtils.buildInternetAddress(upi.getEmail(), ouser.getDisplayName());
+		if (personalIa == null) {
+			personalIa = profileIa;
+			logger.warn("User does not have a valid email in personal info. Check it! [{}]", pid.toString());
+		}
 		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), profileIa, personalIa);
 	}
 	

@@ -80,6 +80,7 @@ import sun.reflect.Reflection;
  * @author malbinola
  */
 public class WT {
+	private static final Logger logger = getLogger(WT.class);
 	static final HashMap<String, ServiceManifest> manifestCache = new HashMap<>();
 	private static final HashMap<String, String> cnameToServiceIdCache = new HashMap<>();
 	
@@ -368,8 +369,8 @@ public class WT {
 	public static String getDomainInternetName(String domainId) {
 		try {
 			return getWTA().getWebTopManager().getDomainInternetName(domainId);
-		} catch(WTException ex) {
-			//TODO: logging
+		} catch(Exception ex) {
+			logger.warn("Unable to get DomainInternetName [{}]", domainId, ex);
 			return null;
 		}
 	}
@@ -377,8 +378,8 @@ public class WT {
 	public static UserProfile.Data getUserData(UserProfileId profileId) {
 		try {
 			return getWTA().getWebTopManager().userData(profileId);
-		} catch(WTException ex) {
-			//TODO: logging
+		} catch(Exception ex) {
+			logger.warn("Unable to get UserData [{}]", profileId.toString(), ex);
 			return null;
 		}
 	}
@@ -387,7 +388,7 @@ public class WT {
 		try {
 			return getWTA().getWebTopManager().userDataByEmail(emailAddress);
 		} catch(WTException ex) {
-			//TODO: logging
+			logger.warn("Unable to guess UserData [{}]", emailAddress, ex);
 			return null;
 		}
 	}
@@ -396,7 +397,7 @@ public class WT {
 		try {
 			return getWTA().getWebTopManager().userPersonalInfo(profileId);
 		} catch(WTException ex) {
-			//TODO: logging
+			logger.warn("Unable to get PersonalInfo [{}]", profileId.toString(), ex);
 			return null;
 		}
 	}
