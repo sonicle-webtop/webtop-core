@@ -108,10 +108,10 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 					invalidfilesize: function() {
 						WT.warn(WT.res('error.upload.sizeexceeded', SoByt.format(mfs)));
 					},
-					fileuploaded: function(s, file) {
-						me.fireEvent('fileuploaded', me, file);
+					fileuploaded: function(s, file, json, resp) {
+						me.fireEvent('fileuploaded', me, file, json, resp);
 					},
-					uploaderror: function(s) {
+					uploaderror: function(s, message, resp) {
 						WT.error(WT.res('error.upload'));
 					},
 					overallprogress: function(s, percent, total, succeeded, failed, queued, speed) {
