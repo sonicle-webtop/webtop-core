@@ -31,19 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.NotificationMenu', {
-	alternateClassName: 'WTA.ux.NotificationMenu',
-	extend: 'Ext.menu.Menu',
-	alias: ['widget.wtnotificationmenu'],
+Ext.define('Sonicle.webtop.core.model.IMBuddyGrid', {
+	extend: 'WTA.model.Base',
 	
-	initComponent: function() {
-		var me = this;
-		me.menu = {
-			xtype: 'wtnotificationmenu'
-		};
-		me.callParent(arguments);
-	}
-	
-	
-	
+	identifier: 'negativestring',
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string', false),
+		WTF.field('name', 'string', false),
+		WTF.field('presenceStatus', 'string', false),
+		WTF.field('statusMessage', 'string', true)
+	]
 });

@@ -290,6 +290,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	*/
 	
+	
+	
+	onIMStatusMenuStatusSelect: function(s, status) {
+		var me = this,
+				mys = WT.getApp().getService(WT.ID);
+		mys.updateIMPresenceStatus(status);
+	},
+	
 	onTaskBarButtonClick: function(s, btn, e) {
 		var winId = btn.getItemId(),
 				win = Ext.ComponentManager.get(btn.getItemId()),
@@ -384,6 +392,27 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		var sto = this.getStore('notifications'),
 				rec = sto.getById(notificationTag);
 		if (rec !== null) sto.remove(rec);
+	},
+	
+	updateIMPresence: function(status) {
+		var me = this,
+				north = me.lookupReference('north'),
+				mnu = north.lookupReference('imstatusmenu');
+		mnu.setPresenceStatus(status);
+	},
+	
+	updateIMBuddyPresence: function(id, status, message) {
+		var me = this,
+				east = me.lookupReference('east'),
+				gp = east.lookupReference('gpbuddies'),
+				rec = gp.getStore().getById(id);
+				
+		if (rec) {
+			rec.set({
+				presenceStatus: status,
+				statusMessage: message
+			});
+		}
 	},
 	
 	onWinActivate: function(s) {

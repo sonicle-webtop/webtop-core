@@ -33,6 +33,10 @@
 .wt-icon-sharing-xs { background-image: url('sharing_16.png') !important; }
 .wt-icon-notification-xs { background-image: url('notification_16.png') !important; }
 .wt-icon-notification-remove-xs { background-image: url('notification-remove_16.png') !important; }
+.wt-icon-im-status-online-xs { background-image: url('im-status-online_16.png') !important; }
+.wt-icon-im-status-away-xs { background-image: url('im-status-away_16.png') !important; }
+.wt-icon-im-status-dnd-xs { background-image: url('im-status-dnd_16.png') !important; }
+.wt-icon-im-status-offline-xs { background-image: url('im-status-offline_16.png') !important; }
 
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;

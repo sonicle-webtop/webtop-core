@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.xmpp.XMPPHelper;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -61,6 +62,7 @@ import com.sonicle.webtop.core.servlet.Otp;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -78,6 +80,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -104,6 +112,7 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
+	private AbstractXMPPConnection xmppConnection = null;
 	private final Object lock1 = new Object();
 	private javax.mail.Session mailSession = null;
 	
@@ -367,6 +376,13 @@ public class WebTopSession {
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(getSession(), this);
 		comm = new SessionComManager(sesm, getId(), profile.getId());
+		if (!RunContext.isImpersonated()) {
+			try {
+				xmppConnection = XMPPHelper.setupConnection("192.168.1.131", 5222, "sonicle.com", "matteo", "Matteo,1234");
+			} catch(Exception ex) {
+				logger.error("Unable to connect to XMPP server [{}]", ex);
+			}
+		}
 		
 		allowedServices = core.listAllowedServices();
 		
@@ -553,6 +569,10 @@ public class WebTopSession {
 			}
 		}
 		return mailSession;
+	}
+	
+	public AbstractXMPPConnection getXMPPConnection() {
+		return xmppConnection;
 	}
 	
 	/**

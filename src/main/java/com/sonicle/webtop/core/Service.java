@@ -58,6 +58,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
+import com.sonicle.webtop.core.app.ws.IMUpdateBuddyPresenceMsg;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -72,6 +73,7 @@ import com.sonicle.webtop.core.bol.js.JsCausalLkp;
 import com.sonicle.webtop.core.bol.js.JsCustomerSupplierLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
+import com.sonicle.webtop.core.bol.js.JsIMBuddyGrid;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
@@ -97,6 +99,11 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.xmpp.Buddy;
+import com.sonicle.webtop.core.xmpp.BuddyPresence;
+import com.sonicle.webtop.core.xmpp.PresenceStatus;
+import com.sonicle.webtop.core.xmpp.XMPPService;
+import com.sonicle.webtop.core.xmpp.XMPPServiceListener;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -105,6 +112,7 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -115,8 +123,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
+import org.jxmpp.jid.Jid;
 import org.slf4j.Logger;
 
 /**
@@ -130,6 +140,7 @@ public class Service extends BaseService {
 	private CoreManager coreMgr;
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
+	private XMPPService xmpp;
 	
 	/*
 	private WebTopApp getApp() {
@@ -142,6 +153,83 @@ public class Service extends BaseService {
 		coreMgr = getCoreManager();
 		ss = new CoreServiceSettings(SERVICE_ID, getEnv().getProfileId().getDomainId());
 		us = new CoreUserSettings(getEnv().getProfileId());
+		
+		AbstractXMPPConnection xmppCon = getEnv().getWebTopSession().getXMPPConnection();
+		if (xmppCon != null) {
+			try {
+				xmpp = new XMPPService(getWts().getXMPPConnection(), new XMPPServiceListenerImpl());
+				xmpp.login();
+			} catch(Exception ex) {
+				logger.error("XMPP error", ex);
+			}
+		}
+	}
+	
+	
+	
+	public void processManageIMPresence(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String presenceStatus = ServletUtils.getStringParameter(request, "presenceStatus", null);
+			String statusMessage = ServletUtils.getStringParameter(request, "statusMessage", null);
+			
+			PresenceStatus ps = EnumUtils.forSerializedName(presenceStatus, PresenceStatus.class);
+			if (ps == null) {
+				ps = PresenceStatus.ONLINE;
+			}
+			if (statusMessage == null) {
+				statusMessage = "Hey there! I've been using WebTop Chat";
+			}
+			xmpp.updatePresence(ps, statusMessage);
+			new JsonResult().printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMPresence", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageIMBuddies(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsIMBuddyGrid> items = new ArrayList<>();
+				for(Buddy buddy : xmpp.listBuddies()) {
+					items.add(new JsIMBuddyGrid(buddy));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMBuddies", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	private class XMPPServiceListenerImpl implements XMPPServiceListener {
+
+		@Override
+		public void buddiesAdded(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void buddiesUpdated(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void buddiesDeleted(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void presenceChanged(Jid jid, BuddyPresence presence, BuddyPresence bestPresence) {
+			logger.debug("presenceChanged {}", jid.toString());
+			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
+			getWts().notify(new IMUpdateBuddyPresenceMsg(jid.asBareJid().toString(), presenceStatus, bestPresence.getStatusMessage()));
+		}
 	}
 	
 	private CoreManager getCoreManager() {

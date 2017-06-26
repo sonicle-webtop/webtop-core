@@ -65,6 +65,15 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}
 			
 		});
+		
+		me.onMessage('imUpdateBuddyPresence', function(msg) {
+			var me = this, pl = msg.payload;
+			me.getVP().getController().updateIMBuddyPresence(pl.jid, pl.presenceStatus, pl.statusMessage);
+		});
+	},
+	
+	getVP: function() {
+		return WT.getApp().viewport;
 	},
 	
 	initActions: function() {
@@ -204,6 +213,32 @@ Ext.define('Sonicle.webtop.core.Service', {
 				}, 200);
 			});
 		}
+	},
+	
+	updateIMPresenceStatus: function(status, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageIMPresence', {
+			params: {
+				presenceStatus: status
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
+	updateIMStatusMessage: function(message, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageIMPresence', {
+			params: {
+				statusMessage: message
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
 	},
 	
 	changeUserPassword: function(oldPassword, newPassword, opts) {
