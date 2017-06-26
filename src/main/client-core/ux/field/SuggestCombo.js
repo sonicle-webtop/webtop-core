@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	
 	/**
 	 * @cfg {String} sid
-	 * Webtop service ID.
+	 * WebTop service ID.
 	 */
 	
 	config: {
@@ -69,9 +69,8 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 	
 	initComponent: function() {
 		var me = this;
-		me.plugins=me.plugins||[];
-		me.plugins.push(
-			{
+		me.plugins = me.plugins || [];
+		me.plugins.push({
 				ptype: 'soenterkeyplugin',
 				preventEnterFiringOnPickerExpanded: me.preventEnterFiringOnPickerExpanded
 			},
