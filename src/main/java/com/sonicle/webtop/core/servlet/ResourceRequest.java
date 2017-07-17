@@ -37,8 +37,8 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PropertiesEx;
 import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -51,14 +51,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -692,7 +689,7 @@ public class ResourceRequest extends HttpServlet {
 				PropertiesEx properties = new PropertiesEx();
 				properties.load(is, true); // Important! True to preserve unicode escapes found in properties
 				for(final String name: properties.stringPropertyNames()) {
-					final String s = "\"" + name + "\"" + ":" + "\"" + properties.getProperty(name) + "\"";
+					final String s = "\"" + name + "\"" + ":" + JsonResult.GSON.toJson(properties.getProperty(name));
 					strings.add(s);
 				}
 				
