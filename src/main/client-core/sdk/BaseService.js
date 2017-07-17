@@ -34,8 +34,8 @@
 Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	mixins: [
 		'Ext.mixin.Observable',
-		'WTA.mixin.RefStorer',
-		'WTA.mixin.ActionStorer'
+		'Sonicle.mixin.RefHolder',
+		'WTA.mixin.ActHolder'
 	],
 	
 	/**
@@ -84,9 +84,16 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 		me.XID = cfg.XID;
 		me.initConfig(cfg);
 		me.mixins.observable.constructor.call(me, cfg);
-		me.mixins.refstorer.constructor.call(me, cfg);
-		me.mixins.actionstorer.constructor.call(me, cfg);
+		me.mixins.refholder.constructor.call(me, cfg);
+		me.mixins.wtactholder.constructor.call(me, cfg);
 		me.callParent(arguments);
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.mixins.refholder.destroy.call(me);
+		me.mixins.wtactholder.destroy.call(me);
+		me.callParent();
 	},
 	
 	/**

@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.sdk.FormView', {
 	config: {
 		/**
 		 * @cgf {String} formRefKey
-		 * Key to use within {@link WTA.mixin.RefStorer#getRef} method in order
+		 * Key to use within {@link Sonicle.mixin.RefHolder#getRef} method in order
 		 * to retrieve the form component of this view.
 		 */
 		formRefKey: 'form',
