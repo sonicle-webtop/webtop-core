@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.data.BadgeNotificationStore'
 	],
 	mixins: [
-		'WTA.mixin.RefStorer'
+		'Sonicle.mixin.RefHolder'
 	],
 	controller: Ext.create('WTA.view.main.AbstractC'),
 	
@@ -100,13 +100,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.mixins.refstorer.constructor.call(me, cfg);
+		me.mixins.refholder.constructor.call(me, cfg);
 		me.callParent([cfg]);
 	},
 	
 	destroy: function() {
 		var me = this;
-		me.mixins.refstorer.destroy.call(me);
+		me.mixins.refholder.destroy.call(me);
 		me.notificationStore = null;
 		me.callParent();
 	},

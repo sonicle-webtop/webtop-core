@@ -37,11 +37,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	requires: [
 		'WTA.sdk.model.ServiceVars'
 	],
-	mixins: [
-		'Ext.mixin.Observable',
-		'WTA.mixin.RefStorer',
-		'WTA.mixin.ActionStorer'
-	],
 	statics: {
 		TOOLBAR_REF_NAME: 'tbcmp',
 		TOOL_REF_NAME: 'toolcmp',

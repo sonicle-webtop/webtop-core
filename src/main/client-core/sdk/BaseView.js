@@ -40,10 +40,10 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 		'Sonicle.plugin.NoAutocomplete'
 	],
 	mixins: [
+		'Sonicle.mixin.RefHolder',
+		'WTA.mixin.ActHolder',
 		'WTA.mixin.PanelUtil',
-		'WTA.mixin.Waitable',
-		'WTA.mixin.ActionStorer',
-		'WTA.mixin.RefStorer'
+		'WTA.mixin.Waitable'
 	],
 	
 	layout: 'border',
@@ -59,15 +59,15 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.mixins.actionstorer.constructor.call(me, cfg);
-		me.mixins.refstorer.constructor.call(me, cfg);
+		me.mixins.refholder.constructor.call(me, cfg);
+		me.mixins.wtactholder.constructor.call(me, cfg);
 		me.callParent([cfg]);
 	},
 	
 	destroy: function() {
 		var me = this;
-		me.mixins.actionstorer.destroy.call(me);
-		me.mixins.refstorer.destroy.call(me);
+		me.mixins.refholder.destroy.call(me);
+		me.mixins.wtactholder.destroy.call(me);
 		me.callParent();
 	}
 });

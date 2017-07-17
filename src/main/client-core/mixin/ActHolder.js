@@ -31,36 +31,22 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
-	alternateClassName: 'WTA.mixin.ActionStorer',
-	extend: 'Ext.Mixin',
+Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
+	alternateClassName: 'WTA.mixin.ActHolder',
+	extend: 'Sonicle.mixin.ActHolder',
+	
 	mixinConfig: {
-		id: 'actionstorer'
-		/*
-		extended: function (baseClass, derivedClass, classBody) {
-			classBody._actions = {};
-		}
-		*/
-	},
-	
-	DEFAULT_GROUP: 'default',
-	_actions: null,
-	
-	constructor: function(cfg) {
-		this._actions = {};
-	},
-	
-	destroy: function() {
-		this._actions = null;
+		id: 'wtactholder'
 	},
 	
 	/**
 	 * Creates an Action instance.
+	 * @param {String} group The action group.
 	 * @param {String} name The action name.
-	 * @param {Object} obj Action config.
+	 * @param {Object} cfg The action config.
 	 * @returns {WTA.ux.Action} The Action just created.
 	 */
-	createAct: function(name, obj) {
+	createAction: function(group, name, cfg) {
 		var me = this;
 		/*
 		var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
@@ -77,17 +63,17 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 			scope: obj.scope || this
 		}, obj));
 		*/
-		var txt = Ext.isDefined(obj.text) ? obj.text : me._buildText(null, name),
-				tip = Ext.isDefined(obj.tooltip) ? obj.tooltip : me._buildTip(null, name),
-				cls = Ext.isDefined(obj.iconCls) ? obj.iconCls : me._buildIconCls(name),
-				cb = obj.handler,
-				sco = obj.scope || this;
+		var txt = Ext.isDefined(cfg.text) ? cfg.text : me._buildText(null, name),
+				tip = Ext.isDefined(cfg.tooltip) ? cfg.tooltip : me._buildTip(null, name),
+				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name),
+				cb = cfg.handler,
+				sco = cfg.scope || this;
 
-		delete obj.text;
-		delete obj.tooltip;
-		delete obj.iconCls;
-		delete obj.handler;
-		delete obj.scope;
+		delete cfg.text;
+		delete cfg.tooltip;
+		delete cfg.iconCls;
+		delete cfg.handler;
+		delete cfg.scope;
 
 		return Ext.create('WTA.ux.Action', Ext.apply({
 			text: txt,
@@ -95,54 +81,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 			iconCls: cls,
 			handler: cb,
 			scope: sco || this
-		}, obj));
-	},
-	
-	/**
-	 * Adds an action into the specified group.
-	 * @param {String} [group] The action group.
-	 * @param {String} name The action name.
-	 * @param {Object/Ext.Action} obj Action instance or config.
-	 * @return {WTA.ux.Action} The Action that were added.
-	 */
-	addAct: function(group, name, obj) {
-		var me = this, act;
-		if(arguments.length === 2) {
-			obj = name;
-			name = group;
-			group = me.DEFAULT_GROUP;
-		}
-		if(!me._actions[group]) me._actions[group] = {};
-		
-		act = WTU.isAction(obj) ? obj : me.createAct(name, obj);
-		me._actions[group][name] = act;
-		return act;
-	},
-	
-	/**
-	 * Gets an action from the specified group.
-	 * If not provided, 'default' group is used.
-	 * @param {String} [group] The action group.
-	 * @param {String} name The action name.
-	 * @return {WTA.ux.Action} The action.
-	 */
-	getAct: function(group, name) {
-		var me = this;
-		if(arguments.length === 1) {
-			name = group;
-			group = me.DEFAULT_GROUP;
-		}
-		if(!me._actions[group]) return undefined;
-		return me._actions[group][name];
-	},
-	
-	/**
-	 * Gets all actions belonging to group.
-	 * @param {String} group The action group.
-	 * @returns {Object} The actions map.
-	 */
-	getActs: function(group) {
-		return this._actions[group];
+		}, cfg));
 	},
 	
 	/**
@@ -158,7 +97,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActionStorer', {
 		if(arguments.length === 2) {
 			disabled = name;
 			name = group;
-			group = me.DEFAULT_GROUP;
+			group = Sonicle.mixin.ActHolder.DEFAULT_GROUP;
 		}
 		act = me.getAct(group, name);
 		if(act) act.setDisabled(disabled);

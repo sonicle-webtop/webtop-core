@@ -35,9 +35,9 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	alternateClassName: 'WTA.sdk.UserOptionsView',
 	extend: 'Ext.tab.Panel',
 	mixins: [
+		'WTA.mixin.ActHolder',
 		'WTA.mixin.PanelUtil',
 		'WTA.mixin.Waitable',
-		'WTA.mixin.ActionStorer',
 		'WTA.mixin.HasModel'
 	],
 	requires: [
@@ -74,13 +74,13 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		me.mixins.actionstorer.constructor.call(me, cfg);
+		me.mixins.wtactholder.constructor.call(me, cfg);
 		me.callParent([cfg]);
 	},
 	
 	destroy: function() {
 		var me = this;
-		me.mixins.actionstorer.destroy.call(me);
+		me.mixins.wtactholder.destroy.call(me);
 		me.callParent();
 	},
 	
