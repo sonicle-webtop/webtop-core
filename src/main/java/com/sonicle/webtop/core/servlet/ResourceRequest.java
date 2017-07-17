@@ -689,7 +689,7 @@ public class ResourceRequest extends HttpServlet {
 				PropertiesEx properties = new PropertiesEx();
 				properties.load(is, true); // Important! True to preserve unicode escapes found in properties
 				for(final String name: properties.stringPropertyNames()) {
-					final String s = "\"" + name + "\"" + ":" + LangUtils.escapeDoubleQuote(properties.getProperty(name));
+					final String s = "\"" + name + "\"" + ":" + "\"" + LangUtils.escapeDoubleQuote(properties.getProperty(name)) + "\"";
 					strings.add(s);
 				}
 				
