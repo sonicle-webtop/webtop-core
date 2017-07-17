@@ -31,25 +31,27 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.xmpp;
 
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.webtop.core.xmpp.Buddy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author malbinola
  */
-public class JsIMBuddyGrid {
-	public String id;
-	public String name;
-	public String presenceStatus;
-	public String statusMessage;
+public class ConversationHistory {
+	private final ArrayList<ChatRoom> chats;
 	
-	public JsIMBuddyGrid(Buddy buddy) {
-		this.id = buddy.getId();
-		this.name = buddy.getName();
-		this.presenceStatus = EnumUtils.toSerializedName(buddy.getPresence().getPresenceStatus());
-		this.statusMessage = buddy.getPresence().getStatusMessage();
+	public ConversationHistory() {
+		this.chats = new ArrayList<>();
+	}
+	
+	public void addChat(ChatRoom chat) {
+		this.chats.add(chat);
+	}
+	
+	public List<ChatRoom> getChats() {
+		return this.chats;
 	}
 }

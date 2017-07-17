@@ -33,34 +33,36 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
-import org.jivesoftware.smack.roster.RosterEntry;
+import org.jxmpp.jid.EntityBareJid;
 
 /**
  *
  * @author malbinola
  */
-public class Buddy {
-	private final RosterEntry entry;
-	private final BuddyPresence presence;
-	
-	public Buddy(RosterEntry entry, BuddyPresence presence) {
-		this.entry = entry;
-		this.presence = presence;
+public class ChatRoom {
+	private final EntityBareJid chatJid;
+	private final EntityBareJid ownerJid;
+	private String name;
+
+	public ChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name) {
+		this.chatJid = chatJid;
+		this.ownerJid = ownerJid;
+		this.name = name;
+	}
+
+	public EntityBareJid getChatJid() {
+		return chatJid;
 	}
 	
-	public RosterEntry getRawRosterEntry() {
-		return entry;
-	}
-	
-	public String getId() {
-		return entry.getJid().toString();
+	public EntityBareJid getOwnerJid() {
+		return ownerJid;
 	}
 	
 	public String getName() {
-		return entry.getName();
+		return name;
 	}
-	
-	public BuddyPresence getPresence() {
-		return presence;
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

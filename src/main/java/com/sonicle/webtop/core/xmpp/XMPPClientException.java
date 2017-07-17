@@ -31,29 +31,25 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
-
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.util.HashMap;
+package com.sonicle.webtop.core.xmpp;
 
 /**
  *
  * @author malbinola
  */
-public class IMUpdateBuddyPresenceMsg extends ServiceMessage {
-	public static final String ACTION = "imUpdateBuddyPresence"; 
+public class XMPPClientException extends Exception {
 	
-	public IMUpdateBuddyPresenceMsg(String jid, String presenceStatus, String statusMessage) {
-		super(CoreManifest.ID, ACTION);
-		this.payload = payload(jid, presenceStatus, statusMessage);
+	public XMPPClientException() {}
+	
+	public XMPPClientException(String message) {
+		super(message);
 	}
-	
-	private Object payload(String jid, String presenceStatus, String statusMessage) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("jid", jid);
-		pl.put("presenceStatus", presenceStatus);
-		pl.put("statusMessage", statusMessage);
-		return pl;
+
+	public XMPPClientException(Throwable cause) {
+		super(cause);
+	}
+
+	public XMPPClientException(String message, Throwable cause) {
+		super(message, cause);
 	}
 }

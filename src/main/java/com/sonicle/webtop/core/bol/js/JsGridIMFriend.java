@@ -31,22 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
-	alternateClassName: 'WTA.ux.ViewWindow',
-	extend: 'Sonicle.webtop.core.ux.Window',
-	alias: ['widget.wtviewwindow'],
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.webtop.core.xmpp.Friend;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsGridIMFriend {
+	public String id;
+	public String nick;
+	public String presenceStatus;
+	public String statusMessage;
+	public String dChatId;
 	
-	utag: null,
+	public JsGridIMFriend() {}
 	
-	getUTag: function() {
-		return this.utag;
-	},
-	
-	getView: function() {
-		return this.getComponent(0);
-	},
-	
-	getDockableConfig: function() {
-		return this.getView().getDockableConfig();
+	public JsGridIMFriend(Friend friend, String dChatId) {
+		this.id = friend.getId();
+		this.nick = friend.getNickame();
+		this.presenceStatus = EnumUtils.toSerializedName(friend.getPresence().getPresenceStatus());
+		this.statusMessage = friend.getPresence().getStatusMessage();
+		this.dChatId = dChatId;
 	}
-});
+}

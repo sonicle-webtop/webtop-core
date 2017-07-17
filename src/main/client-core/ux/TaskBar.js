@@ -44,10 +44,11 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 	},
 	
 	/**
-	 * @property {String} active
-	 * Currently active service
+	 * @readonly
+	 * @property {String} activeSid
+	 * Currently active service ID
 	 */
-	active: null,
+	activeSid: null,
 	
 	itemIds: Ext.create('Ext.util.HashMap'),
 	
@@ -68,14 +69,16 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 		return this.getComponent(itemId);
 	},
 	
-	activateService: function(svc) {
-		var me = this,
-				id = svc.ID;
-		// If already active...exits
-		if(me.active === id) return false;
-		me.updateButtonVisibility(me.active, false);
-		me.updateButtonVisibility(id, true);
-		me.active = id;
+	getActiveService: function() {
+		return this.activeSid;
+	},
+	
+	setActiveService: function(sid) {
+		var me = this;
+		if (me.activeSid === sid) return false;
+		me.updateButtonVisibility(me.activeSid, false);
+		me.updateButtonVisibility(sid, true);
+		me.activeSid = sid;
 	},
 	
 	addButton: function(win) {
@@ -86,22 +89,22 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 	removeButton: function(win) {
 		var me = this,
 				cmp = me.getButton(win.getId());
-		if(cmp) me.remove(cmp);
+		if (cmp) me.remove(cmp);
 	},
 	
 	updateButtonTitle: function(win) {
 		var me = this,
 				cmp = me.getButton(win.getId());
-		if(cmp) {
+		if (cmp) {
 			cmp.setText(Ext.util.Format.ellipsis(win.getTitle(), 20));
 			cmp.setTooltip(win.getTitle());
 		}
 	},
 	
-	activateButton: function(win) {
+	toggleButton: function(win, state) {
 		var me = this,
 				cmp = me.getButton(win.getId());
-		if(cmp) cmp.toggle(true);
+		if (cmp) cmp.toggle(state);
 	},
 	
 	
@@ -112,51 +115,10 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 	
 	
 	
-	
-	createButton: function(win) {
-		var me = this,
-				dockCfg = win.getDockableConfig();
-		return Ext.create({
-			xtype: 'wttaskbarbutton',
-			itemId: win.getId(),
-			text: Ext.util.Format.ellipsis(win.getTitle(), 20),
-			tooltip: win.getTitle(),
-			iconCls: win.getIconCls(),
-			listeners: {
-				click: me.onButtonClick,
-				contextmenu: me.onButtonContextMenu,
-				scope: me
-			},
-			constrainToService: dockCfg.constrainToService
-		});
-	},
-	
-	onButtonClick: function(s, e) {
-		if(s.isComponent && s.isXType('wttaskbarbutton')) {
-			this.fireEvent('buttonclick', this, s, e);
-		}
-	},
-	
-	onButtonContextMenu: function(s, e) {
-		if(s.isComponent && s.isXType('wttaskbarbutton')) {
-			this.fireEvent('buttoncontextmenu', this, s, e);
-		}
-	},
-	
-	updateButtonVisibility: function(sid, visible) {
-		var me = this,
-				ids = me.getCachedIds(sid),
-				cmp;
-		
-		Ext.iterate(ids, function(id) {
-			cmp = me.getTaskButton(id);
-			if(cmp && cmp.constrainToService) cmp.setHidden(!visible); 
-		});
-	},
 	
 	cacheId: function(sid, itemId) {
 		var me = this;
-		if(me.itemIds.containsKey(sid)) {
+		if (me.itemIds.containsKey(sid)) {
 			me.itemIds.get(sid).push(itemId);
 		} else {
 			me.itemIds.add(sid, [itemId]);
@@ -165,15 +127,58 @@ Ext.define('Sonicle.webtop.core.ux.TaskBar', {
 	
 	uncacheId: function(sid, itemId) {
 		var me = this;
-		if(me.itemIds.containsKey(sid)) {
+		if (me.itemIds.containsKey(sid)) {
 			me.itemIds.get(sid).remove(itemId);
 		}
 	},
 	
 	getCachedIds: function(sid) {
 		var me = this;
-		if(me.itemIds.containsKey(sid)) {
+		if (me.itemIds.containsKey(sid)) {
 			return me.itemIds.get(sid);
+		}
+	},
+	
+	privates: {
+		onButtonClick: function(s, e) {
+			if (s.isComponent && s.isXType('wttaskbarbutton')) {
+				this.fireEvent('buttonclick', this, s, e);
+			}
+		},
+
+		onButtonContextMenu: function(s, e) {
+			if (s.isComponent && s.isXType('wttaskbarbutton')) {
+				this.fireEvent('buttoncontextmenu', this, s, e);
+			}
+		},
+		
+		createButton: function(win) {
+			var me = this,
+					dockCfg = win.getDockableConfig();
+			return Ext.create({
+				xtype: 'wttaskbarbutton',
+				itemId: win.getId(),
+				text: Ext.util.Format.ellipsis(win.getTitle(), 20),
+				tooltip: win.getTitle(),
+				iconCls: win.getIconCls(),
+				listeners: {
+					click: me.onButtonClick,
+					contextmenu: me.onButtonContextMenu,
+					scope: me
+				},
+				constrainToService: dockCfg.constrainToService
+			});
+		},
+		
+		updateButtonVisibility: function(sid, visible) {
+			var me = this,
+					ids = me.getCachedIds(sid),
+					cmp;
+
+			Ext.iterate(ids, function(id) {
+				cmp = me.getTaskButton(id);
+				if(cmp && cmp.constrainToService) cmp.setHidden(!visible); 
+			});
 		}
 	}
 });

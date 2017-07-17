@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.TaskBarButton', {
 	alias: ['widget.wttaskbarbutton'],
 	
 	enableToggle: true,
-	toggleGroup: 'all',
+	toggleGroup: 'taskbarbutton',
 	margin: '0 2 0 3',
 	width: 140,
 	

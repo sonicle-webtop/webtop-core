@@ -455,4 +455,18 @@ public class CoreSettings {
 	 * before sending a notification alert
 	 */
 	public static final String DEVICES_SYNC_ALERT_TOLERANCE = "devices.sync.alert.tolerance";
+	
+	/**
+	 * [user]
+	 * [enum]
+	 * Chat presence status
+	 */
+	public static final String IM_PRESENCE_STATUS = "im.presencestatus";
+	
+	/**
+	 * [user]
+	 * [string]
+	 * Chat status message
+	 */
+	public static final String IM_STATUS_MESSAGE = "im.statusmessage";
 }

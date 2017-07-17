@@ -33,17 +33,21 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
-import java.util.Collection;
-import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.EntityBareJid;
 
 /**
  *
  * @author malbinola
  */
-public interface XMPPServiceListener {
+public class DirectChatRoom extends ChatRoom {
+	private final EntityBareJid withJid;
 	
-	public void buddiesAdded(Collection<Jid> jids);
-	public void buddiesUpdated(Collection<Jid> jids);
-	public void buddiesDeleted(Collection<Jid> jids);
-	public void presenceChanged(Jid jid, BuddyPresence presence, BuddyPresence bestPresence);
+	public DirectChatRoom(EntityBareJid jid, EntityBareJid ownerJid, String name, EntityBareJid withJid) {
+		super(jid, ownerJid, name);
+		this.withJid = withJid;
+	}
+	
+	public EntityBareJid getWithJid() {
+		return withJid;
+	}
 }

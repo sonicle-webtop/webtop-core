@@ -33,10 +33,21 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
+import static com.sonicle.webtop.core.xmpp.XMPPClient.logger;
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.TLSUtils;
+import org.jooq.tools.StringUtils;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 /**
  *
@@ -44,20 +55,73 @@ import org.jivesoftware.smack.util.TLSUtils;
  */
 public class XMPPHelper {
 	
-	public static AbstractXMPPConnection setupConnection(String host, int port, String xmppDomain, String username, String password) throws Exception {
-		XMPPTCPConnectionConfiguration.Builder config = XMPPTCPConnectionConfiguration.builder()
-			.setHost(host)
-			.setPort(port)
-			.setXmppDomain(xmppDomain)
-			.setUsernameAndPassword(username, password);
-		TLSUtils.acceptAllCertificates(config);
-		TLSUtils.disableHostnameVerificationForTlsCertificates(config);
-		return setupConnection(config.build());
+	public static XMPPTCPConnectionConfiguration.Builder setupConfigBuilder(String host, int port, String xmppDomain, String username, String password, String resource) {
+		try {
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPTCPConnectionConfiguration.builder()
+				.setHost(host)
+				.setPort(port)
+				.setXmppDomain(xmppDomain)
+				.setUsernameAndPassword(username, password)
+				.setResource(resource);
+			TLSUtils.acceptAllCertificates(builder);
+			TLSUtils.disableHostnameVerificationForTlsCertificates(builder);
+			return builder;
+		} catch(Exception ex) {
+			return null;
+		}
+	}
+	
+	/*
+	public static AbstractXMPPConnection setupConnection(String host, int port, String xmppDomain, String username, String password, String resource) throws Exception {
+		return setupConfigBuilder(setupConfiguration(host, port, xmppDomain, username, password, resource)).build();
 	}
 	
 	public static AbstractXMPPConnection setupConnection(XMPPTCPConnectionConfiguration config) throws Exception {
 		AbstractXMPPConnection xmpp = new XMPPTCPConnection(config);
 		xmpp.connect();
 		return xmpp;
+	}
+	*/
+	
+	public static String buildGuessedNickname(String entityBareJid) {
+		return "~" + entityBareJid;
+	}
+	
+	public static EntityBareJid asEntityBareJid(String jid) {
+		try {
+			return JidCreate.entityBareFrom(jid);
+		} catch(XmppStringprepException ex) {
+			return null;
+		}
+	}
+	
+	public static String asResourcepartString(Jid jid) {
+		return XMPPHelper.asResourcepartString(jid.getResourceOrNull());
+	}
+	
+	public static String asResourcepartString(Resourcepart resourcepart) {
+		return (resourcepart != null) ? resourcepart.toString() : null;
+	}
+	
+	public static Localpart asLocalpart(CharSequence localpart) {
+		return asLocalpart(localpart.toString());
+	}
+	
+	public static Localpart asLocalpart(String localpart) {
+		try {
+			return Localpart.from(localpart);
+		} catch(XmppStringprepException ex) {
+			logger.error("Error creating Localpart from string [{}]", ex, localpart);
+			return null;
+		}
+	}
+	
+	public static Resourcepart asResourcepart(String resource) {
+		try {
+			return Resourcepart.from(resource);
+		} catch(XmppStringprepException ex) {
+			logger.error("Error creating Resourcepart from string [{}]", ex, resource);
+			return null;
+		}
 	}
 }

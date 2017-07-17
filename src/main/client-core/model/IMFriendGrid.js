@@ -31,57 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
-	alternateClassName: 'WTA.ux.IMStatusMenu',
-	extend: 'Ext.menu.Menu',
-	alias: ['widget.wtimstatusmenu'],
+Ext.define('Sonicle.webtop.core.model.IMFriendGrid', {
+	extend: 'WTA.model.Base',
 	
-	config: {
-		/**
-		 * @cfg {online|away|dnd|offline} presenceStatus
-		 * The selected IM status.
-		 */
-		presenceStatus: null
-	},
-	
-	constructor: function(cfg) {
-		var me = this,
-				icfg = me.getInitialConfig(),
-				ps = cfg.presenceStatus || icfg.presenceStatus;
-		
-		Ext.apply(me, {
-			items: me.buildItems(['online', 'away', 'dnd', 'offline'], ps)
-		});
-		me.callParent([cfg]);
-	},
-	
-	updatePresenceStatus: function(nv, ov) {
-		if (!this.isConfiguring) {
-			var itm = this.getComponent(nv);
-			if (itm) itm.setChecked(true);
-		}
-	},
-	
-	privates: {
-		buildItems: function(statuses, active) {
-			var me = this, items = [];
-			Ext.each(statuses, function(status) {
-				items.push({
-					xtype: 'menucheckitem',
-					itemId: status,
-					text: WT.res('im.gp-friends.status.'+status),
-					iconCls: WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs'),
-					group: 'imstatus',
-					checked: (status === active),
-					checkHandler: me.checkHandler,
-					scope: me
-				});
-			});
-			return items;
-		},
-		
-		checkHandler: function(itm, checked) {
-			if (checked) this.fireEvent('presencestatusselect', this, itm.getItemId(), itm);
-		}
-	}
+	identifier: 'negativestring',
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string', false),
+		WTF.field('nick', 'string', false),
+		WTF.field('presenceStatus', 'string', false),
+		WTF.field('statusMessage', 'string', true),
+		WTF.field('dChatId', 'string', true),
+		WTF.calcField('online', 'boolean', ['presenceStatus'], function(v,rec) {
+			return (rec.get('presenceStatus') === 'offline') ? false : true;
+		})
+	]
 });

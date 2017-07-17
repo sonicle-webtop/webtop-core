@@ -321,6 +321,14 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 		if(me.ctInited) me.ownerCt.hide();
 	},
 	
+	getViewTitle: function() {
+		return this.getVM().get('_viewTitle');
+	},
+	
+	setViewTitle: function(title) {
+		this.getVM().set('_viewTitle', title);
+	},
+	
 	/**
 	 * Shows the confirm message.
 	 */

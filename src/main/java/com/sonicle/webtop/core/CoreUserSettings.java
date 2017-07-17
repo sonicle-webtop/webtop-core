@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -40,6 +41,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.xmpp.PresenceStatus;
 
 /**
  *
@@ -220,8 +222,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean getDevicesSyncAlertEnabled() {
 		Boolean value = getBoolean(DEVICES_SYNC_ALERT_ENABLED, null);
-		if(value != null) return value;
-		return ss.getDefaultDevicesSyncAlertEnabled();
+		return (value != null) ? value : ss.getDefaultDevicesSyncAlertEnabled();
 	}
 	
 	public boolean setDevicesSyncAlertEnabled(Boolean value) {
@@ -236,6 +237,24 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setInteger(DEVICES_SYNC_ALERT_TOLERANCE, value);
 	}
 	
+	public String getIMStatusMessage() {
+		return getString(IM_STATUS_MESSAGE, null);
+	}
+	
+	public boolean setIMStatusMessage(String value) {
+		return setString(IM_STATUS_MESSAGE, value);
+	}
+	
+	public PresenceStatus getIMPresenceStatus() {
+		String value = getString(DESKTOP_NOTIFICATION, null);
+		return EnumUtils.forSerializedName(value, PresenceStatus.ONLINE, PresenceStatus.class);
+	}
+	
+	public boolean setIMPresenceStatus(PresenceStatus value) {
+		if (value == null) return false;
+		return setString(DESKTOP_NOTIFICATION, EnumUtils.toSerializedName(value));
+	}
+	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
 		return setm.getUserSetting(profile, serviceId, WHATSNEW_VERSION);
 	}
@@ -243,6 +262,4 @@ public class CoreUserSettings extends BaseUserSettings {
 	public static boolean setWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId, String value) {
 		return setm.setUserSetting(profile, serviceId, WHATSNEW_VERSION, value);
 	}
-	
-	
 }

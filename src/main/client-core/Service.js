@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WTA.sdk.Service',
 	requires: [
 		'Sonicle.webtop.core.model.ServiceVars',
+		'Sonicle.webtop.core.view.IMChat',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals'
 	],
@@ -66,14 +67,31 @@ Ext.define('Sonicle.webtop.core.Service', {
 			
 		});
 		
-		me.onMessage('imUpdateBuddyPresence', function(msg) {
+		me.onMessage('imUpdateFriendPresence', function(msg) {
 			var me = this, pl = msg.payload;
-			me.getVP().getController().updateIMBuddyPresence(pl.jid, pl.presenceStatus, pl.statusMessage);
+			me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 		});
+		me.onMessage('imChatRoomMessage', function(msg) {
+			var me = this, pl = msg.payload,
+				ts = Ext.Date.parse(pl.timestamp, 'Y-m-d H:i:s', true);
+			me.newIMChatMessage(pl.chatId, pl.fromId, pl.fromNick, ts, 'none', pl.msgUid, pl.msgText);
+		});
+		
+		Ext.defer(function() {
+			me.initIM({
+				callback: function(success) {
+					if (success) me.getVPController().getIMPanel().loadFriends();
+				}
+			});
+		}, 1000);
 	},
 	
 	getVP: function() {
 		return WT.getApp().viewport;
+	},
+	
+	getVPController: function() {
+		return this.getVP().getController();
 	},
 	
 	initActions: function() {
@@ -215,11 +233,89 @@ Ext.define('Sonicle.webtop.core.Service', {
 		}
 	},
 	
+	updateIMPresenceStatusUI: function(status) {
+		var me = this;
+		me.updateIMPresenceStatus(status, {
+			callback: function(success) {
+				if (success) me.getVPController().getIMButton().setPresenceStatus(status);
+			}
+		});
+	},
+	
+	updateIMStatusMessageUI: function(message) {
+		var me = this;
+		me.updateIMStatusMessage(message, {
+			callback: function(success) {
+				if (success) me.getVPController().updateIMStatusMessage(message);
+			}
+		});
+	},
+	
+	newIMChatMessage: function(chatId, fromId, fromNick, timestamp, action, msgUid, msgText) {
+		var me = this, vct = WT.getView(me.ID, me.imChatTag(chatId)), data, ret;
+		if (vct) {
+			// blink chat window if minimized...
+			vct.getView().newMessage(msgUid, fromId, fromNick, timestamp, action, msgText);
+		} else {
+			// notify with indicator/desktop notification
+			WT.showNotification(me.ID, {
+				title: fromNick,
+				body: msgText,
+				data: {
+					chatId: chatId
+				}
+			});
+		}
+	},
+	
+	openIMChatUI: function(chatId, chatName) {
+		var me = this, vct = WT.getView(me.ID, me.imChatTag(chatId));
+		if (!vct) {
+			vct = me.createIMChatView(chatId, chatName);
+			vct.show();
+		} else {
+			vct.show();
+		}
+	},
+	
+	addIMChatUI: function(chatId, chatName, friendIds) {
+		var me = this, vct = WT.getView(me.ID, me.imChatTag(chatId));
+		if (!vct) {
+			me.prepareIMChat(chatId, friendIds, {
+				callback: function(success, json) {
+					if (success) {
+						me.getVPController().getIMPanel().newChat(chatId, chatName);
+						vct = me.createIMChatView(chatId, chatName);
+						vct.show();
+					} else {
+						WT.error(json.text);
+					}
+				}
+			});
+		} else {
+			vct.show();
+		}
+	},
+	
+	initIM: function(opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageIM', {
+			params: {
+				crud: 'init'
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
 	updateIMPresenceStatus: function(status, opts) {
 		opts = opts || {};
 		var me = this;
-		WT.ajaxReq(me.ID, 'ManageIMPresence', {
+		WT.ajaxReq(me.ID, 'ManageIM', {
 			params: {
+				crud: 'presence',
 				presenceStatus: status
 			},
 			callback: function(success, json) {
@@ -231,9 +327,26 @@ Ext.define('Sonicle.webtop.core.Service', {
 	updateIMStatusMessage: function(message, opts) {
 		opts = opts || {};
 		var me = this;
-		WT.ajaxReq(me.ID, 'ManageIMPresence', {
+		WT.ajaxReq(me.ID, 'ManageIM', {
 			params: {
+				crud: 'presence',
 				statusMessage: message
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
+	prepareIMChat: function(chatId, withUsers, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(this.ID, 'ManageIMChat', {
+			params: {
+				crud: 'prepare',
+				chatId: chatId,
+				chatName: null,
+				withUsers: WTU.arrayAsParam(withUsers)
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);
@@ -253,5 +366,21 @@ Ext.define('Sonicle.webtop.core.Service', {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);
 			}
 		});
+	},
+	
+	privates: {
+		imChatTag: function(chatId) {
+			return 'imchat-' + chatId;
+		},
+		
+		createIMChatView: function(chatId, chatName) {
+			return WT.createView(this.ID, 'view.IMChat', {
+				tag: this.imChatTag(chatId),
+				viewCfg: {
+					chatId: chatId,
+					chatName: chatName
+				}
+			});
+		}
 	}
 });

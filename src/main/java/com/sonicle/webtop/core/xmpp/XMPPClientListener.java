@@ -31,22 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
-	alternateClassName: 'WTA.ux.ViewWindow',
-	extend: 'Sonicle.webtop.core.ux.Window',
-	alias: ['widget.wtviewwindow'],
+package com.sonicle.webtop.core.xmpp;
+
+import java.util.Collection;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.packet.Message;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
+
+/**
+ *
+ * @author malbinola
+ */
+public interface XMPPClientListener {
 	
-	utag: null,
+	public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence);
+	public void onChatRoomUpdated(ChatRoom chatRoom);
+	public void onChatRoomAdded(ChatRoom chatRoom);
 	
-	getUTag: function() {
-		return this.utag;
-	},
+	public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message);
+	public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message);
+	public void onChatRoomParticipantJoined(ChatRoom chatRoom, EntityFullJid participant);
+	public void onChatRoomParticipantLeft(ChatRoom chatRoom, EntityFullJid participant, boolean kicked);
 	
-	getView: function() {
-		return this.getComponent(0);
-	},
+	public void friendsAdded(Collection<Jid> jids);
+	public void friendsUpdated(Collection<Jid> jids);
+	public void friendsDeleted(Collection<Jid> jids);
 	
-	getDockableConfig: function() {
-		return this.getView().getDockableConfig();
-	}
-});
+	
+}

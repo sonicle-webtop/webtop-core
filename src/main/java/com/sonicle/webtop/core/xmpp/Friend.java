@@ -31,22 +31,36 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
-	alternateClassName: 'WTA.ux.ViewWindow',
-	extend: 'Sonicle.webtop.core.ux.Window',
-	alias: ['widget.wtviewwindow'],
+package com.sonicle.webtop.core.xmpp;
+
+import org.jivesoftware.smack.roster.RosterEntry;
+
+/**
+ *
+ * @author malbinola
+ */
+public class Friend {
+	private final RosterEntry entry;
+	private final FriendPresence presence;
 	
-	utag: null,
-	
-	getUTag: function() {
-		return this.utag;
-	},
-	
-	getView: function() {
-		return this.getComponent(0);
-	},
-	
-	getDockableConfig: function() {
-		return this.getView().getDockableConfig();
+	public Friend(RosterEntry entry, FriendPresence presence) {
+		this.entry = entry;
+		this.presence = presence;
 	}
-});
+	
+	public RosterEntry getRawRosterEntry() {
+		return entry;
+	}
+	
+	public String getId() {
+		return entry.getJid().asEntityBareJidOrThrow().toString();
+	}
+	
+	public String getNickame() {
+		return entry.getName();
+	}
+	
+	public FriendPresence getPresence() {
+		return presence;
+	}
+}

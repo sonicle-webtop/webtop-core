@@ -46,6 +46,7 @@ import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -58,7 +59,8 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
-import com.sonicle.webtop.core.app.ws.IMUpdateBuddyPresenceMsg;
+import com.sonicle.webtop.core.app.ws.IMChatRoomMessageMsg;
+import com.sonicle.webtop.core.app.ws.IMUpdateFriendPresenceMsg;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -73,8 +75,10 @@ import com.sonicle.webtop.core.bol.js.JsCausalLkp;
 import com.sonicle.webtop.core.bol.js.JsCustomerSupplierLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
-import com.sonicle.webtop.core.bol.js.JsIMBuddyGrid;
+import com.sonicle.webtop.core.bol.js.JsGridIMChat;
+import com.sonicle.webtop.core.bol.js.JsGridIMFriend;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
+import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
@@ -92,6 +96,8 @@ import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
+import com.sonicle.webtop.core.model.IMHistoryChat;
+import com.sonicle.webtop.core.model.IMHistoryMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -99,11 +105,15 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.xmpp.Buddy;
-import com.sonicle.webtop.core.xmpp.BuddyPresence;
+import com.sonicle.webtop.core.xmpp.Friend;
+import com.sonicle.webtop.core.xmpp.FriendPresence;
+import com.sonicle.webtop.core.xmpp.ChatMessage;
+import com.sonicle.webtop.core.xmpp.ChatRoom;
+import com.sonicle.webtop.core.xmpp.ConversationHistory;
+import com.sonicle.webtop.core.xmpp.DirectChatRoom;
+import com.sonicle.webtop.core.xmpp.GroupChatRoom;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
-import com.sonicle.webtop.core.xmpp.XMPPService;
-import com.sonicle.webtop.core.xmpp.XMPPServiceListener;
+import com.sonicle.webtop.core.xmpp.XMPPClient;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -124,10 +134,22 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.packet.Message;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.slf4j.Logger;
+import com.sonicle.webtop.core.xmpp.XMPPClientListener;
+import com.sonicle.webtop.core.xmpp.XMPPHelper;
+import java.util.HashMap;
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.impl.JidCreate;
 
 /**
  *
@@ -140,7 +162,7 @@ public class Service extends BaseService {
 	private CoreManager coreMgr;
 	private CoreServiceSettings ss;
 	private CoreUserSettings us;
-	private XMPPService xmpp;
+	private XMPPClient xmppCli;
 	
 	/*
 	private WebTopApp getApp() {
@@ -150,85 +172,28 @@ public class Service extends BaseService {
 	
 	@Override
 	public void initialize() throws Exception {
+		final UserProfile profile = getEnv().getProfile();
 		coreMgr = getCoreManager();
-		ss = new CoreServiceSettings(SERVICE_ID, getEnv().getProfileId().getDomainId());
-		us = new CoreUserSettings(getEnv().getProfileId());
+		ss = new CoreServiceSettings(SERVICE_ID, profile.getId().getDomainId());
+		us = new CoreUserSettings(profile.getId());
 		
-		AbstractXMPPConnection xmppCon = getEnv().getWebTopSession().getXMPPConnection();
-		if (xmppCon != null) {
-			try {
-				xmpp = new XMPPService(getWts().getXMPPConnection(), new XMPPServiceListenerImpl());
-				xmpp.login();
-			} catch(Exception ex) {
-				logger.error("XMPP error", ex);
-			}
-		}
-	}
-	
-	
-	
-	public void processManageIMPresence(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
-		try {
-			String presenceStatus = ServletUtils.getStringParameter(request, "presenceStatus", null);
-			String statusMessage = ServletUtils.getStringParameter(request, "statusMessage", null);
-			
-			PresenceStatus ps = EnumUtils.forSerializedName(presenceStatus, PresenceStatus.class);
-			if (ps == null) {
-				ps = PresenceStatus.ONLINE;
+		ConversationHistory history = new ConversationHistory();
+		for(IMHistoryChat chat : coreMgr.listIMHistoryChats()) {
+			if (!chat.getIsGroupChat()) {
+				history.addChat(createDirectChatRoom(chat));
+			} else {
+				//TODO
+				//history.addChat(createGroupChatRoom(chat));
 			}
-			if (statusMessage == null) {
-				statusMessage = "Hey there! I've been using WebTop Chat";
-			}
-			xmpp.updatePresence(ps, statusMessage);
-			new JsonResult().printTo(out);
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageIMPresence", ex);
-			new JsonResult(ex).printTo(out);
 		}
-	}
-	
-	public void processManageIMBuddies(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.READ)) {
-				List<JsIMBuddyGrid> items = new ArrayList<>();
-				for(Buddy buddy : xmpp.listBuddies()) {
-					items.add(new JsIMBuddyGrid(buddy));
-				}
-				new JsonResult(items, items.size()).printTo(out);
-			}
-			
-		} catch(Exception ex) {
-			logger.error("Error in ManageIMBuddies", ex);
-			new JsonResult(ex).printTo(out);
-		}
-	}
-	
-	private class XMPPServiceListenerImpl implements XMPPServiceListener {
-
-		@Override
-		public void buddiesAdded(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
-		}
-
-		@Override
-		public void buddiesUpdated(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
-		}
-
-		@Override
-		public void buddiesDeleted(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
-		}
-
-		@Override
-		public void presenceChanged(Jid jid, BuddyPresence presence, BuddyPresence bestPresence) {
-			logger.debug("presenceChanged {}", jid.toString());
-			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
-			getWts().notify(new IMUpdateBuddyPresenceMsg(jid.asBareJid().toString(), presenceStatus, bestPresence.getStatusMessage()));
+		Principal principal = profile.getPrincipal();
+		if (!principal.isImpersonated()) {
+			final String xmppResource = getWts().getId() + "@" + WT.getPlatformName();
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder("www.sonicle.com", 5222, "sonicle.com", principal.getUserId(), new String(principal.getPassword()), xmppResource);
+			final String nickname = profile.getDisplayName();
+			xmppCli = new XMPPClient(builder, nickname, new XMPPServiceListenerImpl(), history);
 		}
 	}
 	
@@ -290,6 +255,9 @@ public class Service extends BaseService {
 		co.put("shortTimeFormat", us.getShortTimeFormat());
 		co.put("longTimeFormat", us.getLongTimeFormat());
 		
+		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
+		co.put("imStatusMessage", us.getIMStatusMessage());
+		
 		return co;
 	}
 	
@@ -301,21 +269,6 @@ public class Service extends BaseService {
 	
 	private WebTopSession getWts() {
 		return getEnv().getWebTopSession();
-	}
-	
-	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try {
-			char[] oldPassword = ServletUtils.getStringParameter(request, "oldPassword", true).toCharArray();
-			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
-			
-			coreMgr.updateUserPassword(oldPassword, newPassword);
-			
-			new JsonResult().printTo(out);
-			
-		} catch(Exception ex) {
-			logger.error("Error in ChangeUserPassword", ex);
-			new JsonResult(ex).printTo(out);
-		}
 	}
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -450,15 +403,6 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error").printTo(out);
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	public void processLookupDomains(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<JsSimple> items = new ArrayList<>();
@@ -679,6 +623,34 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error in LookupStatisticCustomersSuppliers", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		List<ServiceMessage> messages = new ArrayList();
+		
+		try {
+			messages = ((CorePrivateEnvironment)getEnv()).getSession().getEnqueuedMessages();
+			
+		} catch (Exception ex) {
+			logger.error("Error executing action ServerEvents", ex);
+		} finally {
+			new JsonResult(JsonResult.gson.toJson(messages)).printTo(out);
+		}
+	}
+	
+	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			char[] oldPassword = ServletUtils.getStringParameter(request, "oldPassword", true).toCharArray();
+			char[] newPassword = ServletUtils.getStringParameter(request, "newPassword", true).toCharArray();
+			
+			coreMgr.updateUserPassword(oldPassword, newPassword);
+			
+			new JsonResult().printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in ChangeUserPassword", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
@@ -1275,27 +1247,341 @@ public class Service extends BaseService {
 		}
 	}
 	
+	/*
 	private List<String> queryDomains() {
 		List<String> domains = new ArrayList<>();
 		if(RunContext.isWebTopAdmin()) domains.add("*");
 		domains.add(getWts().getProfileId().getDomainId());
 		return domains;
 	}
+	*/
 	
 	
 	
-	
-	
-	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<ServiceMessage> messages = new ArrayList();
+	public void processManageIM(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
-			messages = ((CorePrivateEnvironment)getEnv()).getSession().getEnqueuedMessages();
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals("init")) {
+				if (xmppCli != null) {
+					ConversationHistory history = new ConversationHistory();
+					for(IMHistoryChat chat : coreMgr.listIMHistoryChats()) {
+						if (!chat.getIsGroupChat()) {
+							history.addChat(createDirectChatRoom(chat));
+						} else {
+							//TODO
+							//history.addChat(createGroupChatRoom(chat));
+						}
+					}
+
+					xmppCli.updatePresence(us.getIMPresenceStatus(), "Hey there! I'm on WebTop");
+
+					new JsonResult().printTo(out);
+				}
+
+			} else if (crud.equals("presence")) {
+				String presenceStatus = ServletUtils.getStringParameter(request, "presenceStatus", null);
+				String statusMessage = ServletUtils.getStringParameter(request, "statusMessage", null);
+				
+				PresenceStatus ps = EnumUtils.forSerializedName(presenceStatus, PresenceStatus.class);
+				if (ps == null) ps = PresenceStatus.ONLINE;
+				if (statusMessage == null) statusMessage = "Hey there! I'm on WebTop";
+
+				if (xmppCli != null) {
+					xmppCli.updatePresence(ps, statusMessage);
+					us.setIMPresenceStatus(ps);
+					us.setIMStatusMessage(statusMessage);
+
+					new JsonResult().printTo(out);
+				}
+			}
 			
-		} catch (Exception ex) {
-			logger.error("Error executing action ServerEvents", ex);
-		} finally {
-			new JsonResult(JsonResult.gson.toJson(messages)).printTo(out);
+		} catch(Exception ex) {
+			logger.error("Error in ManageIM", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageIMFriends(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsGridIMFriend> items = new ArrayList<>();
+				if (xmppCli != null) {
+					for(Friend friend : xmppCli.listFriends()) {
+						// Generates a chat Jid for direct chats
+						final String chatJid = xmppCli.generateChatJid(friend.getId()).toString();
+						items.add(new JsGridIMFriend(friend, chatJid));
+					}
+				}	
+				new JsonResult(items, items.size()).printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMFriends", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageIMChats(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsGridIMChat> items = new ArrayList<>();
+				for(IMHistoryChat chat : coreMgr.listIMHistoryChats()) {
+					items.add(new JsGridIMChat(chat));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				Payload<MapItem, JsGridIMChat> pl = ServletUtils.getPayload(request, JsGridIMChat.class);
+				coreMgr.deleteIMHistoryChat(pl.data.id);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMChats", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageIMChat(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals("prepare")) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				ServletUtils.StringArray withUsers = ServletUtils.getObjectParameter(request, "withUsers", ServletUtils.StringArray.class, true);
+				
+				if (xmppCli != null) {
+					// Ensure chat object is ready in XMPPClient
+					if (XMPPClient.isGroupChat(chatId)) {
+						String chatName = ServletUtils.getStringParameter(request, "chatName", true);
+
+
+					} else {
+						EntityBareJid chatWithJid = XMPPHelper.asEntityBareJid(withUsers.get(0));
+						xmppCli.newChat(chatWithJid);
+					}
+					
+					new JsonResult().printTo(out);
+				}
+				
+			} else if (crud.equals("send")) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				String text = ServletUtils.getStringParameter(request, "text", true);
+				
+				if (xmppCli != null) {
+					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
+					ChatMessage message = xmppCli.sendMessage(chatJid, text);
+					if (message == null) throw new Exception("Message is null");
+
+					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
+				}
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMChat", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageIMMessages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
+		DateTimeZone utz = up.getTimeZone();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				String date = ServletUtils.getStringParameter(request, "date", null);
+				
+				boolean history;
+				LocalDate ld = null;
+				if (date == null) {
+					history = false;
+					ld = DateTime.now().withZone(utz).toLocalDate();
+				} else {
+					history = true;
+					ld = DateTimeUtils.parseYmdHmsWithZone(date, "00:00:00", utz).toLocalDate();
+				}
+				
+				if (xmppCli != null) {
+					EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
+					
+					LocalDate lastDate = null;
+					HashMap<String, String> cacheNicks = new HashMap<>();
+					List<JsGridIMMessage> items = new ArrayList<>();
+					for(IMHistoryMessage mes : coreMgr.listIMHistoryMessages(chatId, ld)) {
+						if (!mes.getDate().equals(lastDate)) {
+							lastDate = mes.getDate();
+							items.add(JsGridIMMessage.asDateSeparator(mes.getMessageUid() + "!", ld));
+						}
+						
+						if (!cacheNicks.containsKey(mes.getSenderJid())) {
+							if (xmppCli.isAuthenticated()) {
+								cacheNicks.put(mes.getSenderJid(), xmppCli.getFriendNickname(XMPPHelper.asEntityBareJid(mes.getSenderJid())));
+							} else {
+								cacheNicks.put(mes.getSenderJid(), XMPPHelper.buildGuessedNickname(mes.getSenderJid()));
+							}
+						}
+						
+						final String nick = cacheNicks.get(mes.getSenderJid());
+						items.add(new JsGridIMMessage(myJid.equals(mes.getSenderJid()), mes, nick, utz));
+					}
+
+					new JsonResult(items, items.size()).printTo(out);
+				}	
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageIMMessages", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	private DirectChatRoom createDirectChatRoom(IMHistoryChat chat) {
+		final EntityBareJid jid = XMPPHelper.asEntityBareJid(chat.getChatJid());
+		final EntityBareJid ownerJid = XMPPHelper.asEntityBareJid(chat.getOwnerJid());
+		final EntityBareJid withJid = XMPPHelper.asEntityBareJid(chat.getWithJid());
+		return new DirectChatRoom(jid, ownerJid, chat.getName(), withJid);
+	}
+	
+	private class XMPPServiceListenerImpl implements XMPPClientListener {
+		
+		@Override
+		public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence) {
+			logger.debug("presenceChanged {}", jid.toString());
+			final EntityBareJid targetJid = jid.asEntityBareJidIfPossible();
+			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
+			getWts().notify(new IMUpdateFriendPresenceMsg(targetJid.toString(), presenceStatus, bestPresence.getStatusMessage()));
+		}
+		
+		@Override
+		public void onChatRoomUpdated(ChatRoom chatRoom) {
+			if (chatRoom instanceof GroupChatRoom) {
+				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
+				logger.debug("Group chat name changed [{}, {}]", gcr.getChatJid().toString(), gcr.getName());
+			}
+		}
+		
+		@Override
+		public void onChatRoomAdded(ChatRoom chatRoom) {
+			if (chatRoom instanceof DirectChatRoom) {
+				DirectChatRoom dcr = (DirectChatRoom)chatRoom;
+				logger.debug("Adding direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getOwnerJid().toString());
+				
+				try {
+					IMHistoryChat hchat = new IMHistoryChat();
+					hchat.setChatJid(dcr.getChatJid().toString());
+					hchat.setOwnerJid(dcr.getOwnerJid().toString());
+					hchat.setName(dcr.getName());
+					hchat.setIsGroupChat(false);
+					hchat.setWithJid(dcr.getWithJid().toString());
+					coreMgr.addIMHistoryChat(hchat);
+					
+				} catch(WTException ex) {
+					logger.error("Error saving direct chat [{}]", ex, dcr.getChatJid().toString());
+				}
+				
+			} else if (chatRoom instanceof GroupChatRoom) {
+				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
+				logger.debug("Adding group chat room [{}, {}]", gcr.getChatJid().toString(), gcr.getOwnerJid().toString());
+				
+				try {
+					IMHistoryChat hchat = new IMHistoryChat();
+					hchat.setChatJid(gcr.getChatJid().toString());
+					hchat.setOwnerJid(gcr.getOwnerJid().toString());
+					hchat.setName(gcr.getName());
+					hchat.setIsGroupChat(true);
+					coreMgr.addIMHistoryChat(hchat);
+					
+				} catch(WTException ex) {
+					logger.error("Error saving group chat [{}]", ex, gcr.getChatJid().toString());
+				}
+			}
+		}
+		
+		@Override
+		public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message) {
+			logger.debug("Message sent {}, {}, {}", chatRoom.getChatJid().toString(), message.getStanzaId(), message.getRawMessage().getBody());
+			
+			try {
+				IMHistoryMessage hmes = new IMHistoryMessage();
+				hmes.setChatJid(chatRoom.getChatJid().toString());
+				hmes.setSenderJid(message.getFromUser().toString());
+				hmes.setSenderResource(message.getFromUserResource());
+				hmes.setDate(message.getTimestamp().withZone(getEnv().getProfile().getTimeZone()).toLocalDate());
+				hmes.setTimestamp(message.getTimestamp());
+				hmes.setAction(IMHistoryMessage.Action.NONE);
+				hmes.setText(message.getText());
+				hmes.setMessageUid(message.getMessageUid());
+				hmes.setStanzaId(message.getStanzaId());
+				coreMgr.addIMHistoryMessage(hmes);
+
+			} catch(WTException ex) {
+				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
+			}
+		}
+		
+		@Override
+		public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message) {
+			DateTimeZone utz = getEnv().getProfile().getTimeZone();
+			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+			if (chatRoom instanceof DirectChatRoom) {
+				DirectChatRoom dcr = (DirectChatRoom)chatRoom;
+				logger.debug("Incoming message from direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getWithJid());
+				getWts().notify(new IMChatRoomMessageMsg(dcr.getChatJid().toString(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
+				
+			} else if (chatRoom instanceof GroupChatRoom) {
+				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
+				
+				//logger.debug("Adding group chat room [{}, {}]", gcr.getJid().toString(), gcr.getCreatorJid().toString());
+			}
+			
+			try {
+				IMHistoryMessage hmes = new IMHistoryMessage();
+				hmes.setChatJid(chatRoom.getChatJid().toString());
+				hmes.setSenderJid(message.getFromUser().toString());
+				hmes.setSenderResource(message.getFromUserResource());
+				hmes.setDate(message.getTimestamp().withZone(utz).toLocalDate());
+				hmes.setTimestamp(message.getTimestamp());
+				hmes.setAction(IMHistoryMessage.Action.NONE);
+				hmes.setText(message.getText());
+				hmes.setMessageUid(message.getMessageUid());
+				hmes.setStanzaId(message.getStanzaId());
+				coreMgr.addIMHistoryMessage(hmes);
+
+			} catch(WTException ex) {
+				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
+			}
+		}
+		
+		@Override
+		public void friendsAdded(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void friendsUpdated(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void friendsDeleted(Collection<Jid> jids) {
+			logger.debug("{}", jids.toString());
+		}
+
+		@Override
+		public void onChatRoomParticipantJoined(ChatRoom chatRoom, EntityFullJid participant) {
+			logger.debug("{} joins group chat {}", participant.toString(), chatRoom.getChatJid().toString());
+		}
+
+		@Override
+		public void onChatRoomParticipantLeft(ChatRoom chatRoom, EntityFullJid participant, boolean kicked) {
+			logger.debug("{} leaves group chat {}", participant.toString(), chatRoom.getChatJid().toString());
 		}
 	}
 }

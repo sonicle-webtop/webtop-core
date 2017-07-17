@@ -40,9 +40,10 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.TaskBar',
 		'WTA.ux.ServiceButton',
 		'WTA.ux.ViewWindow',
-		'WTA.ux.IMStatusMenu',
+		'WTA.ux.IMButton',
+		'WTA.ux.IMPanel',
 		'WTA.ux.data.BadgeNotificationStore',
-		'Sonicle.webtop.core.model.IMBuddyGrid'
+		'Sonicle.webtop.core.model.IMFriendGrid'
 	],
 	mixins: [
 		'WTA.mixin.RefStorer'
@@ -234,6 +235,16 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					tooltip: WT.res('menu.tools.lbl'),
 					menu: toolMnuItms
 				}, '-', {
+					xtype: 'wtimbutton',
+					reference: 'imbtn',
+					presenceStatus: WT.getVar('imPresenceStatus'),
+					statusMessage: WT.getVar('imStatusMessage'),
+					listeners: {
+						//toggle: 'onIMToggle',
+						click: 'onIMClick',
+						presencestatusselect: 'onIMStatusMenuStatusSelect'
+					}
+				}, {
 					xtype: 'wtnotificationbutton',
 					bind: {
 						store: '{notifications}',
@@ -242,6 +253,22 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						}
 					}
 				}, /*{
+					xtype: 'button',
+					arrowVisible: false,
+					menu: {
+						items: [{
+							text: 'Stato in linea',
+							reference: 'imstatusmenu',
+							menu: {
+								xtype: 'wtimstatusmenu',
+								presenceStatus: WT.getVar('imPresenceStatus'),
+								listeners: {
+									presencestatusselect: 'onIMStatusMenuStatusSelect'
+								}
+							}
+						}]
+					}
+				}, {
 					xtype: 'button',
 					glyph: 0xf0c9,
 					menu: {
@@ -276,16 +303,6 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 								xtype: 'label',
 								text: WT.getVar('userId'),
 								cls: 'wt-menu-userdetails-sub'
-						}, '-', {
-							text: 'WebChat',
-							reference: 'imstatusmenu',
-							menu: {
-								xtype: 'wtimstatusmenu',
-								presenceStatus: 'online',
-								listeners: {
-									presencestatusselect: 'onIMStatusMenuStatusSelect'
-								}
-							}
 						}, '-', {
 							xtype: 'buttongroup',
 							ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
@@ -423,43 +440,11 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	createEastCmp: function() {
 		var me = this;
 		return {
-			xtype: 'container',
-			layout: 'fit',
-			items: [{
-				xtype: 'gridpanel',
-				reference: 'gpbuddies',
-				border: false,
-				store: {
-					autoLoad: true,
-					model: 'Sonicle.webtop.core.model.IMBuddyGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMBuddies')
-				},
-				columns: [{
-					xtype: 'soiconcolumn',
-					dataIndex: 'presenceStatus',
-					sortable: false,
-					menuDisabled: true,
-					stopSelection: true,
-					getIconCls: function (v, rec) {
-						return WTF.cssIconCls(WT.XID, 'im-status-' + v, 'xs');
-					},
-					getTip: function(v, rec) {
-						return WT.res('im.gp-buddies.status.'+v);
-					},
-					width: 30
-				}, {
-					dataIndex: 'name',
-					renderer: function(val, meta, rec, rIdx, colIdx, sto) {
-						var html = '', sta = rec.get('status');
-						html += Ext.String.htmlEncode(val);
-						html += '<br>';
-						html += '<span style="font-size:0.9em;color:grey;">' + (Ext.isEmpty(sta) ? '&nbsp;' : Ext.String.htmlEncode(sta)) + '</span>';
-						return html; 
-					},
-					flex: 1
-				}]
-			}],
-			width: 200
+			xtype: 'wtimpanel',
+			listeners: {
+				frienddblclick: 'onIMPanelFriendDblClick',
+				chatdblclick: 'onIMPanelChatDblClick'
+			}
 		};
 	},
 	

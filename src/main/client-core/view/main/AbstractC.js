@@ -38,7 +38,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	svctbmap: null,
 	toolmap: null,
 	mainmap: null,
-	views: Ext.create('Ext.util.HashMap'),
+	viewCtsById: null,
+	viewCtsByUTag: null,
 	
 	/**
 	 * @property {Boolean} isActivating
@@ -57,6 +58,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = {};
 		me.toolmap = {};
 		me.mainmap = {};
+		me.viewCtsById = {};
+		me.viewCtsByUTag = {};
 		me.callParent(arguments);
 	},
 	
@@ -66,8 +69,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = null;
 		me.toolmap = null;
 		me.mainmap = null;
-		me.views.destroy();
-		me.views = null;
+		me.viewCtsById = null;
+		me.viewCtsByUTag = null;
 	},
 	
 	/**
@@ -76,11 +79,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	 */
 	addServiceCmps: function(svc) {
 		var me = this,
-				id = svc.ID,
 				north = null,
 				tb = null, tool = null, main = null;
 		
-		if(me.svctbmap[id]) return; // Checks if service has been already added
+		if(me.svctbmap[svc.ID]) return; // Checks if service has been already added
 		
 		// Retrieves service toolbar
 		if(Ext.isFunction(svc.getToolbar)) {
@@ -89,7 +91,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if(!tb || !tb.isToolbar) {
 			tb = Ext.create({xtype: 'toolbar'});
 		}
-		me.svctbmap[id] = tb.getId();
+		me.svctbmap[svc.ID] = tb.getId();
 		north = me.lookupReference('north');
 		north.lookupReference('servicetb').add(tb);
 		
@@ -227,7 +229,16 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		var me = this,
 				vw = me.getView(),
 				taskbar = vw.getTaskBar();
-		taskbar.activateService(svc);
+		taskbar.setActiveService(svc.ID);
+	},
+	
+	getIMButton: function() {
+		var north = this.lookupReference('north');
+		return north.lookupReference('imbtn');
+	},
+	
+	getIMPanel: function() {
+		return this.lookupReference('east');
 	},
 	
 	onToolResize: function(s, w) {
@@ -290,12 +301,24 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	*/
 	
-	
+	onIMClick: function(s) {
+		var east = this.lookupReference('east');
+		east.toggleCollapse();
+	},
 	
 	onIMStatusMenuStatusSelect: function(s, status) {
-		var me = this,
-				mys = WT.getApp().getService(WT.ID);
-		mys.updateIMPresenceStatus(status);
+		var mys = WT.getApp().getService(WT.ID);
+		mys.updateIMPresenceStatusUI(status);
+	},
+	
+	onIMPanelFriendDblClick: function(s, friendId, friendNick, chatId) {
+		var mys = WT.getApp().getService(WT.ID);
+		mys.addIMChatUI(chatId, friendNick, [friendId]);
+	},
+	
+	onIMPanelChatDblClick: function(s, chatId, name) {
+		var mys = WT.getApp().getService(WT.ID);
+		mys.openIMChatUI(chatId, name);
 	},
 	
 	onTaskBarButtonClick: function(s, btn, e) {
@@ -351,21 +374,26 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if (svc) svc.notificationCallback('badge', rec.getId(), Ext.JSON.decode(rec.get('data'), true));
 	},
 	
-	createView: function(svc, viewName, opts) {
+	createServiceView: function(svc, viewName, opts) {
 		opts = opts || {};
-		var me = this, view, dockCfg, win;
+		var me = this,
+				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
+				view, dockCfg, utag, win;
 		
 		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
-			mys: svc
+			mys: svc,
+			tag: tag
 		});
 		view = Ext.create(svc.preNs(viewName), opts.viewCfg);
 		//dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
 		//view.setDockableConfig(dockCfg);
 		dockCfg = view.getDockableConfig();
+		utag = me.generateUTag(svc.ID, tag);
 		
 		win = Ext.create(Ext.apply({
 			xtype: 'wtviewwindow',
 			layout: 'fit',
+			utag: utag,
 			width: dockCfg.width,
 			height: dockCfg.height,
 			modal: dockCfg.modal,
@@ -373,9 +401,23 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			maximizable: dockCfg.maximizable,
 			items: [view]
 		}));
+		me.viewCtsById[win.getId()] = win;
+		if (utag) me.viewCtsByUTag[utag] = win;
 		me.toggleWinListeners(win, 'on');
 		me.getView().getTaskBar().addButton(win);
 		return win;
+	},
+	
+	hasServiceView: function(svc, tag) {
+		var map = this.viewCtsByUTag,
+				utag = this.generateUTag(svc.ID, tag);
+		return map.hasOwnProperty(utag) && map[utag] !== undefined;
+	},
+	
+	getServiceView: function(svc, tag) {
+		var map = this.viewCtsByUTag,
+				utag = this.generateUTag(svc.ID, tag);
+		return map.hasOwnProperty(utag) ? map[utag] : undefined;
 	},
 	
 	showBadgeNotification: function(svc, notification) {
@@ -394,54 +436,11 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if (rec !== null) sto.remove(rec);
 	},
 	
-	updateIMPresence: function(status) {
-		var me = this,
-				north = me.lookupReference('north'),
-				mnu = north.lookupReference('imstatusmenu');
-		mnu.setPresenceStatus(status);
-	},
-	
-	updateIMBuddyPresence: function(id, status, message) {
-		var me = this,
-				east = me.lookupReference('east'),
-				gp = east.lookupReference('gpbuddies'),
-				rec = gp.getStore().getById(id);
-				
-		if (rec) {
-			rec.set({
-				presenceStatus: status,
-				statusMessage: message
-			});
-		}
-	},
-	
-	onWinActivate: function(s) {
-		this.getView().getTaskBar().activateButton(s);
-	},
-	
-	onWinDestroy: function(s) {
-		var me = this;
-		me.toggleWinListeners(s, 'un');
-		me.getView().getTaskBar().removeButton(s);
-	},
-	
-	onWinTitleChange: function(s) {
-		var me = this;
-		me.getView().getTaskBar().updateButtonTitle(s);
-	},
-	
-	toggleWinListeners: function(win, fn) {
-		var me = this;
-		win[fn]('activate',  me.onWinActivate, me);
-		win[fn]('destroy',  me.onWinDestroy, me);
-		win[fn]('titlechange',  me.onWinTitleChange, me);
-	},
-	
 	showOptions: function() {
 		var me = this,
 				mys = WT.getApp().getService(WT.ID);
 		
-		me.createView(mys, 'view.Options', {
+		me.createServiceView(mys, 'view.Options', {
 			viewCfg: {
 				profileId: WT.getVar('profileId')
 			}
@@ -452,14 +451,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		var me = this,
 				mys = WT.getApp().getService(WT.ID);
 		
-		me.createView(mys, 'view.Addons').show();
+		me.createServiceView(mys, 'view.Addons').show();
 	},
 	
 	showWhatsnew: function(full) {
 		var me = this,
 				mys = WT.getApp().getService(WT.ID);
 		
-		me.createView(mys, 'view.Whatsnew', {
+		me.createServiceView(mys, 'view.Whatsnew', {
 			viewCfg: {
 				full: full
 			}
@@ -469,11 +468,46 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	showFeedback: function() {
 		var me = this,
 				mys = WT.getApp().getService(WT.ID),
-				vw;
+				vct;
 		
-		vw = me.createView(mys, 'view.Feedback');
-		vw.show(false, function() {
-			vw.getComponent(0).beginNew();
+		vct = me.createServiceView(mys, 'view.Feedback');
+		vct.show(false, function() {
+			vct.getComponent(0).beginNew();
 		});
+	},
+	
+	privates: {
+		
+		toggleWinListeners: function(win, fn) {
+			var me = this;
+			win[fn]('activate',  me.onWinActivate, me);
+			win[fn]('hide',  me.onWinHide, me);
+			win[fn]('destroy',  me.onWinDestroy, me);
+			win[fn]('titlechange',  me.onWinTitleChange, me);
+		},
+		
+		onWinActivate: function(s) {
+			this.getView().getTaskBar().toggleButton(s, true);
+		},
+
+		onWinHide: function(s) {
+			this.getView().getTaskBar().toggleButton(s, false);
+		},
+
+		onWinTitleChange: function(s) {
+			this.getView().getTaskBar().updateButtonTitle(s);
+		},
+
+		onWinDestroy: function(s) {
+			var me = this, utag = s.getUTag();
+			me.getView().getTaskBar().removeButton(s);
+			me.toggleWinListeners(s, 'un');
+			delete me.viewCtsByUTag[utag];
+			delete me.viewCtsById[s.getId()];
+		},
+		
+		generateUTag: function(sid, tag) {
+			return tag ? Sonicle.Crypto.md5(tag + '@' + sid) : null;
+		}
 	}
 });

@@ -31,15 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.IMBuddyGrid', {
+Ext.define('Sonicle.webtop.core.model.IMChatGrid', {
 	extend: 'WTA.model.Base',
 	
 	identifier: 'negativestring',
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
-		WTF.field('name', 'string', false),
-		WTF.field('presenceStatus', 'string', false),
-		WTF.field('statusMessage', 'string', true)
+		WTF.field('name', 'string', false)
 	]
 });

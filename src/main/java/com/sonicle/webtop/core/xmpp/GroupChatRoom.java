@@ -31,22 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
-	alternateClassName: 'WTA.ux.ViewWindow',
-	extend: 'Sonicle.webtop.core.ux.Window',
-	alias: ['widget.wtviewwindow'],
+package com.sonicle.webtop.core.xmpp;
+
+import org.jxmpp.jid.EntityBareJid;
+
+/**
+ *
+ * @author malbinola
+ */
+public class GroupChatRoom extends ChatRoom {
+	private final boolean iAmOwner;
 	
-	utag: null,
-	
-	getUTag: function() {
-		return this.utag;
-	},
-	
-	getView: function() {
-		return this.getComponent(0);
-	},
-	
-	getDockableConfig: function() {
-		return this.getView().getDockableConfig();
+	public GroupChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name, boolean iAmOwner) {
+		super(chatJid, ownerJid, name);
+		this.iAmOwner = iAmOwner;
 	}
-});
+	
+	public boolean iAmOwner() {
+		return iAmOwner;
+	}
+}

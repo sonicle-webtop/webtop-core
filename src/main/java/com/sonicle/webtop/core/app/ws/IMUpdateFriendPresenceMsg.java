@@ -31,30 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.xmpp;
+package com.sonicle.webtop.core.app.ws;
 
-import org.jivesoftware.smack.packet.Presence;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class BuddyPresence {
-	private final Presence presence;
+public class IMUpdateFriendPresenceMsg extends ServiceMessage {
+	public static final String ACTION = "imUpdateFriendPresence";
 	
-	public BuddyPresence(Presence presence) {
-		this.presence = presence;
+	public IMUpdateFriendPresenceMsg(String entityBareJid, String presenceStatus, String statusMessage) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(entityBareJid, presenceStatus, statusMessage);
 	}
 	
-	public Presence getRawPresence() {
-		return presence;
-	}
-	
-	public String getStatusMessage() {
-		return presence.getStatus();
-	}
-	
-	public PresenceStatus getPresenceStatus() {
-		return PresenceStatus.presenceStatus(presence);
+	private Object payload(String entityBareJid, String presenceStatus, String statusMessage) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("id", entityBareJid);
+		pl.put("presenceStatus", presenceStatus);
+		pl.put("statusMessage", statusMessage);
+		return pl;
 	}
 }

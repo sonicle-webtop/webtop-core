@@ -31,22 +31,32 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ViewWindow', {
-	alternateClassName: 'WTA.ux.ViewWindow',
-	extend: 'Sonicle.webtop.core.ux.Window',
-	alias: ['widget.wtviewwindow'],
+package com.sonicle.webtop.core.app.ws;
+
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
+
+/**
+ *
+ * @author malbinola
+ */
+public class IMChatRoomMessageMsg extends ServiceMessage {
+	public static final String ACTION = "imChatRoomMessage";
 	
-	utag: null,
-	
-	getUTag: function() {
-		return this.utag;
-	},
-	
-	getView: function() {
-		return this.getComponent(0);
-	},
-	
-	getDockableConfig: function() {
-		return this.getView().getDockableConfig();
+	public IMChatRoomMessageMsg(String chatEntityBareJid, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(chatEntityBareJid, fromEntityBareJid, fromNickname, timestamp, messageUid, messageText);
 	}
-});
+	
+	private Object payload(String chatEntityBareJid, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("chatId", chatEntityBareJid);
+		pl.put("fromId", fromEntityBareJid);
+		pl.put("fromNick", fromNickname);
+		pl.put("timestamp", timestamp);
+		pl.put("msgUid", messageUid);
+		pl.put("msgText", messageText);
+		return pl;
+	}
+}

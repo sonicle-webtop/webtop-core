@@ -33,10 +33,16 @@
 .wt-icon-sharing-xs { background-image: url('sharing_16.png') !important; }
 .wt-icon-notification-xs { background-image: url('notification_16.png') !important; }
 .wt-icon-notification-remove-xs { background-image: url('notification-remove_16.png') !important; }
+.wt-icon-im-chat-xs { background-image: url('im-chat_16.png') !important; }
+.wt-icon-im-history-xs { background-image: url('history_16.png') !important; }
 .wt-icon-im-status-online-xs { background-image: url('im-status-online_16.png') !important; }
 .wt-icon-im-status-away-xs { background-image: url('im-status-away_16.png') !important; }
 .wt-icon-im-status-dnd-xs { background-image: url('im-status-dnd_16.png') !important; }
 .wt-icon-im-status-offline-xs { background-image: url('im-status-offline_16.png') !important; }
+.wt-icon-im-pstatus-online-xs { background-image: url('im-pstatus-online_16.png') !important; }
+.wt-icon-im-pstatus-away-xs { background-image: url('im-pstatus-away_16.png') !important; }
+.wt-icon-im-pstatus-dnd-xs { background-image: url('im-pstatus-dnd_16.png') !important; }
+.wt-icon-im-pstatus-offline-xs { background-image: url('im-pstatus-offline_16.png') !important; }
 
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;
@@ -320,3 +326,94 @@ div.wt-wnlist {
 .mce-tinymce.mce-container {
 	border-width: 0px !important;
 }
+
+.wt-chatmsgcol-sysmsg {
+	position: relative;
+	line-height: 15px;
+	padding: 5px;
+    margin-left: auto;
+	margin-right: auto;
+	max-width: 85%;
+	border-radius: 5px;
+	color: rgba(69,90,100,0.95);
+	clear: both;
+	white-space: normal;
+	word-wrap: break-word;
+	text-align: center;
+}
+
+.wt-chatmsgcol-sysmsg.wt-chatmsgcol-sysmsg-info {
+	background-color: rgba(225,245,254,0.92);
+}
+
+.wt-chatmsgcol-sysmsg.wt-chatmsgcol-sysmsg-warn {
+	background-color: rgba(255,245,196,0.95);
+}
+
+.wt-chatmsgcol-msg {
+	position: relative;
+	line-height: 15px;
+	padding: 5px;
+	max-width: 85%;
+	color: #000;
+	clear: both;
+	white-space: normal;
+	word-wrap: break-word;
+}
+
+.wt-chatmsgcol-msg:after {
+	position: absolute;
+	border-style: solid;
+	width: 0;
+	height: 0;
+	content: "";
+}
+
+.wt-chatmsgcol-msg.wt-chatmsgcol-msg-received {
+	float: left;
+	border-radius: 0px 5px 5px 5px;
+	background-color: #fafafa;
+}
+
+.wt-chatmsgcol-msg.wt-chatmsgcol-msg-received:after {
+	top: 0;
+	left: -10px;
+	border-width: 0px 10px 10px 0;
+	border-color: transparent #fafafa transparent transparent;
+}
+
+.wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent {
+	float: right;
+	border-radius: 5px 0px 5px 5px;
+	background-color: #f1e7c2;
+	/*background: #e1ffc7;*/
+}
+
+.wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent:after {
+	top: 0;
+	right: -10px;
+	border-width: 0px 0 10px 10px;
+	border-color: transparent transparent transparent #f1e7c2;
+	/*border-color: transparent transparent transparent #e1ffc7;*/
+}
+
+.wt-chatmsgcol-sender {
+	display: inline-block;
+	position: relative;
+	top: -4px;
+	padding: 0 7px 0 0;
+	font-size:0.9em;
+	color: grey;
+}
+
+.wt-chatmsgcol-meta {
+	display: inline-block;
+	position: relative;
+	bottom: -4px;
+	float: right;
+	padding: 0 0 0 7px;
+	font-size:0.8em;
+	color: grey;
+}
+
+

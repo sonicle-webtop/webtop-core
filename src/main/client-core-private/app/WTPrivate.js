@@ -50,6 +50,24 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
+	 * Displays a notification to the user. Firstly it tries with a desktop
+	 * notification, if disabled or not available then a badge notification
+	 * will be used instead.
+	 * @param {String} sid The service ID.
+	 * @param {Object} notification The notification object.
+	 * @param {Object} [opts] Config options.
+	 */
+	showNotification: function(sid, notification, opts) {
+		var me = this, ret;
+		ret = me.showDesktopNotification(sid, notification, opts);
+		if (ret !== undefined) {
+			return ret;
+		} else {
+			return me.showBadgeNotification(sid, notification, opts);
+		}
+	},
+	
+	/**
 	 * Checks and if necessary display an authorization 
 	 * request for using desktop notifications.
 	 */
@@ -111,7 +129,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 				clickCallback: cbFn
 			});
 		}
-		return;
+		return undefined;
 	},
 	
 	/**
@@ -190,15 +208,40 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @param {String} sid The service ID.
 	 * @param {String} name The class name or alias.
 	 * @param {Object} opts
+	 * @param {String} opts.tag
 	 * @param {Object} opts.viewCfg
 	 * @param {Object} opts.containerCfg
-	 * @returns {Ext.window.Window} The container.
+	 * @returns {Ext.window.Window} The container containing WebTop view.
 	 */
 	createView: function(sid, name, opts) {
 		opts = opts || {};
 		var svc = this.getApp().getService(sid);
 		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().createView(svc, name, opts);
+		return this.getApp().viewport.getController().createServiceView(svc, name, opts);
+	},
+	
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {String} tag
+	 * @returns {Boolean}
+	 */
+	hasView: function(sid, tag) {
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().hasServiceView(svc, tag);
+	},
+	
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {String} tag
+	 * @returns {Ext.window.Window} The container containing WebTop view.
+	 */
+	getView: function(sid, tag) {
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().getServiceView(svc, tag);
 	},
 	
 	/**

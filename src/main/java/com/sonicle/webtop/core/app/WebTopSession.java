@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.xmpp.XMPPHelper;
-import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
@@ -59,10 +58,8 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
-import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -81,10 +78,6 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -376,14 +369,6 @@ public class WebTopSession {
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(getSession(), this);
 		comm = new SessionComManager(sesm, getId(), profile.getId());
-		if (!RunContext.isImpersonated()) {
-			try {
-				xmppConnection = XMPPHelper.setupConnection("192.168.1.131", 5222, "sonicle.com", "matteo", "Matteo,1234");
-			} catch(Exception ex) {
-				logger.error("Unable to connect to XMPP server [{}]", ex);
-			}
-		}
-		
 		allowedServices = core.listAllowedServices();
 		
 		BaseManager managerInst = null;
@@ -569,10 +554,6 @@ public class WebTopSession {
 			}
 		}
 		return mailSession;
-	}
-	
-	public AbstractXMPPConnection getXMPPConnection() {
-		return xmppConnection;
 	}
 	
 	/**
@@ -890,6 +871,7 @@ public class WebTopSession {
 		// Include external libraries references
 		// Please do not replace 0.0.0 with the real version, it limits server traffic.
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
+		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
