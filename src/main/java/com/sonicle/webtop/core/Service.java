@@ -1550,7 +1550,7 @@ public class Service extends BaseService {
 				hmes.setMessageUid(message.getMessageUid());
 				hmes.setStanzaId(message.getStanzaId());
 				coreMgr.addIMHistoryMessage(hmes);
-
+				
 			} catch(WTException ex) {
 				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
 			}
@@ -1563,7 +1563,7 @@ public class Service extends BaseService {
 			if (chatRoom instanceof DirectChatRoom) {
 				DirectChatRoom dcr = (DirectChatRoom)chatRoom;
 				logger.debug("Incoming message from direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getWithJid());
-				getWts().notify(new IMChatRoomMessageMsg(dcr.getChatJid().toString(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
+				getWts().notify(new IMChatRoomMessageMsg(dcr.getChatJid().toString(), dcr.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
 				
 			} else if (chatRoom instanceof GroupChatRoom) {
 				GroupChatRoom gcr = (GroupChatRoom)chatRoom;

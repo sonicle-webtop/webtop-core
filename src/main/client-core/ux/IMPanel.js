@@ -37,6 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	alias: ['widget.wtimpanel'],
 	requires: [
 		'Sonicle.form.trigger.Clear',
+		'Sonicle.grid.column.Icon',
 		'Sonicle.webtop.core.model.IMFriendGrid',
 		'Sonicle.webtop.core.model.IMChatGrid'
 	],
@@ -118,6 +119,18 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				columns: [{
 					dataIndex: 'name',
 					flex: 1
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'hot',
+					getIconCls: function(v,rec) {
+						return v ? WTF.cssIconCls(WT.XID, 'im-chat-hot', 'xs') : null;
+					},
+					getTip: function(v,rec) {
+						return v ? WT.res(WT.ID, 'wtimpanel.gpchats.hot.true') : null;
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					header: '',
+				width: 30
 				}],
 				dockedItems: [{
 					xtype: 'textfield',
@@ -231,12 +244,12 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}]);
 	},
 	
-	gpFriends: function() {
-		return this.lookupReference('gpfriends');
-	},
-	
 	gpChats: function() {
 		return this.lookupReference('gpchats');
+	},
+	
+	gpFriends: function() {
+		return this.lookupReference('gpfriends');
 	},
 	
 	cxmChat: function() {
@@ -249,16 +262,45 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}));
 	},
 	
-	toggleCollapse: function() {
-		this.floatCollapsedPanel();
+	newChat: function(id, name) {
+		var sto = this.gpChats().getStore();
+		sto.add(sto.createModel({
+			id: id,
+			name: name
+		}));
 	},
 	
-	expand: function(animate) {
-		return this;
+	searchChat: function(query) {
+		var sto = this.lookupReference('gpchats').getStore(),
+				filters = sto.getFilters();
+
+		if (query) {
+			filters.beginUpdate();
+			if (filters.getCount() > 0) {
+				filters.each(function(fil) {
+					fil.setValue(query);
+				});
+			} else {
+				Ext.iterate(['name'], function(field) {
+					filters.add(new Ext.util.Filter({
+						id: 'search-'+field,
+						anyMatch: true,
+						caseSensitive: false,
+						property: field,
+						value: query
+					}));
+				});
+			}
+			filters.endUpdate();
+		} else {
+			sto.clearFilter();
+		}
 	},
 	
-	collapse: function(animate) {
-		return this;
+	updateChatHotMarker: function(chatId, visible) {
+		var sto = this.gpChats().getStore(),
+				rec = sto.getById(chatId);
+		if (rec) rec.set('hot', visible);
 	},
 	
 	loadFriends: function() {
@@ -304,39 +346,18 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}
 	},
 	
-	newChat: function(id, name) {
-		var sto = this.gpChats().getStore();
-		sto.add(sto.createModel({
-			id: id,
-			name: name
-		}));
+	
+	
+	toggleCollapse: function() {
+		this.floatCollapsedPanel();
 	},
 	
-	searchChat: function(query) {
-		var sto = this.lookupReference('gpchats').getStore(),
-				filters = sto.getFilters();
-
-		if (query) {
-			filters.beginUpdate();
-			if (filters.getCount() > 0) {
-				filters.each(function(fil) {
-					fil.setValue(query);
-				});
-			} else {
-				Ext.iterate(['name'], function(field) {
-					filters.add(new Ext.util.Filter({
-						id: 'search-'+field,
-						anyMatch: true,
-						caseSensitive: false,
-						property: field,
-						value: query
-					}));
-				});
-			}
-			filters.endUpdate();
-		} else {
-			sto.clearFilter();
-		}
+	expand: function(animate) {
+		return this;
+	},
+	
+	collapse: function(animate) {
+		return this;
 	},
 	
 	privates: {
@@ -349,6 +370,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		},
 		
 		fireChatDblClickFromRec: function(rec) {
+			rec.set('hot', false);
 			this.fireEvent('chatdblclick', this, rec.get('id'), rec.get('name'));
 		},
 		
@@ -356,6 +378,12 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			WT.confirm(WT.res('wtimpanel.confirm.chat.delete'), function(bid) {
 				if (bid === 'yes') rec.drop();
 			}, this);
+		}
+	},
+	
+	statics: {
+		isGroupChat: function(chatId) {
+			return chatId.indexOf('@gchat') !== -1;
 		}
 	}
 });

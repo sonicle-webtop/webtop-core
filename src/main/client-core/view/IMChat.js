@@ -64,7 +64,7 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 		cfg.myUserId = 'matteo@sonicle.com';
 		if (Ext.isEmpty(cfg.chatId)) Ext.raise('Config `chatId` is mandatory.');
 		if (Ext.isEmpty(cfg.chatName)) Ext.raise('Config `chatName` is mandatory.');
-		me.groupChat = me.self.isGroupChat(cfg.chatId);
+		me.groupChat = WTA.ux.IMPanel.isGroupChat(cfg.chatId);
 		me.callParent([cfg]);
 		me.setViewTitle(cfg.chatName);
 	},
@@ -271,12 +271,6 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				arr.push(!Ext.isEmpty(fri.name) ? fri.name : fri.id);
 			});
 			return arr.join(', ');
-		}
-	},
-	
-	statics: {
-		isGroupChat: function(chatId) {
-			return chatId.indexOf('@gchat') !== -1;
 		}
 	}
 });
