@@ -75,6 +75,13 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 		Ext.apply(me, {
 			tbar: ['->', {
 				xtype: 'button',
+				tooltip: 'Allega',
+				iconCls: 'wt-icon-im-attach-xs',
+				handler: function() {
+					
+				}
+			}, {
+				xtype: 'button',
 				tooltip: me.mys.res('imchat.btn-history.tip'),
 				iconCls: 'wt-icon-im-history-xs',
 				menu: {

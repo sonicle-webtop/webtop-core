@@ -79,6 +79,7 @@ import com.sonicle.webtop.core.bol.js.JsGridIMChat;
 import com.sonicle.webtop.core.bol.js.JsGridIMFriend;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
+import com.sonicle.webtop.core.bol.js.JsGroupChat;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
@@ -173,9 +174,10 @@ public class Service extends BaseService {
 	@Override
 	public void initialize() throws Exception {
 		final UserProfile profile = getEnv().getProfile();
+		UserProfileId pid = profile.getId();
 		coreMgr = getCoreManager();
-		ss = new CoreServiceSettings(SERVICE_ID, profile.getId().getDomainId());
-		us = new CoreUserSettings(profile.getId());
+		ss = new CoreServiceSettings(SERVICE_ID, pid.getDomainId());
+		us = new CoreUserSettings(pid);
 		
 		
 		ConversationHistory history = new ConversationHistory();
@@ -191,7 +193,8 @@ public class Service extends BaseService {
 		Principal principal = profile.getPrincipal();
 		if (!principal.isImpersonated()) {
 			final String xmppResource = getWts().getId() + "@" + WT.getPlatformName();
-			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder("www.sonicle.com", 5222, "sonicle.com", principal.getUserId(), new String(principal.getPassword()), xmppResource);
+			final String internetName = WT.getDomainInternetName(pid.getDomainId());
+			XMPPTCPConnectionConfiguration.Builder builder = XMPPHelper.setupConfigBuilder(ss.getXMPPHost(), ss.getXMPPPort(), internetName, principal.getUserId(), new String(principal.getPassword()), xmppResource);
 			final String nickname = profile.getDisplayName();
 			xmppCli = new XMPPClient(builder, nickname, new XMPPServiceListenerImpl(), history);
 		}
@@ -1438,6 +1441,33 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageIMMessages", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageGroupChat(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if(crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", null);
+				
+				
+				//new JsonResult(new JsGroupChat(group)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsGroupChat> pl = ServletUtils.getPayload(request, JsGroupChat.class);
+				
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsGroupChat> pl = ServletUtils.getPayload(request, JsGroupChat.class);
+				
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageGroupChat", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}

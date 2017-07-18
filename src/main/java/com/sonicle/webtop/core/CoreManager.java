@@ -953,30 +953,6 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	/*
-	public List<IMHistoryMessage> listIMHistoryMessages(String chatJid, DateTime date) throws WTException {
-		IMHistoryMessageDAO dao = IMHistoryMessageDAO.getInstance();
-		ArrayList<IMHistoryMessage> items = new ArrayList<>();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
-			final DateTime fromDate = date.withTimeAtStartOfDay();
-			final DateTime toDate = fromDate.plusDays(1);
-			List<OIMHistoryMessage> omess = dao.selectByProfileChatDates(con, getTargetProfileId(), chatJid, fromDate, toDate);
-			for(OIMHistoryMessage omes : omess) {
-				items.add(createIMHistoryMessage(omes));
-			}
-			return items;
-			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	*/
-	
 	public void addIMHistoryMessage(IMHistoryMessage message) throws WTException {
 		IMHistoryMessageDAO dao = IMHistoryMessageDAO.getInstance();
 		Connection con = null;

@@ -92,6 +92,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getInteger(SMTP_PORT, 25);
     }
 	
+	public String getXMPPHost() {
+        return getString(XMPP_HOST, "localhost");
+    }
+    
+    public int getXMPPPort() {
+        return getInteger(XMPP_PORT, 5222);
+    }
+	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
 	}

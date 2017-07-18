@@ -126,6 +126,20 @@ public class CoreSettings {
 	public static final String SMTP_PORT = "smtp.port";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Defines XMPP server host
+	 */
+	public static final String XMPP_HOST = "xmpp.host";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Defines XMPP server port
+	 */
+	public static final String XMPP_PORT = "xmpp.port";
+	
+	/**
 	 * [domain+system][*]
 	 * [string]
 	 * Activate syslog

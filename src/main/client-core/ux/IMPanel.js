@@ -90,9 +90,63 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		me.add([{
 			xtype: 'tabpanel',
 			reference: 'tab',
-			activeItem: 'chats',
+			activeTab: 'chats',
 			border: true,
 			items: [{
+				xtype: 'gridpanel',
+				itemId: 'chats',
+				reference: 'gpchats',
+				title: WT.res('wtimpanel.chats.tit'),
+				border: false,
+				viewConfig: {
+					markDirty: false,
+					deferEmptyText: false,
+					emptyText: WT.res('wtimpanel.gpchats.emp')
+				},
+				store: {
+					autoLoad: true,
+					autoSync: true,
+					model: 'Sonicle.webtop.core.model.IMChatGrid',
+					proxy: WTF.apiProxy(WT.ID, 'ManageIMChats'),
+					sorters: ['name'],
+					listeners: {
+						load: function(s) {
+							if (s.getCount() === 0) me.lookupReference('tab').setActiveTab('friends');
+						}
+					}
+				},
+				columns: [{
+					dataIndex: 'name',
+					flex: 1
+				}],
+				dockedItems: [{
+					xtype: 'textfield',
+					dock: 'top',
+					hideFieldLabel: true,
+					emptyText: WT.res('wtimpanel.gpchats.search.emp'),
+					triggers: {
+						clear: {
+							type: 'soclear'
+						}
+					},
+					listeners: {
+						change: {
+							fn: me.onChatsSearchChange,
+							scope: me,
+							options: {buffer: 300}
+						}
+					}
+				}],
+				listeners: {
+					rowdblclick: function(s, rec) {
+						me.fireChatDblClickFromRec(rec);
+					},
+					rowcontextmenu: function(s, rec, el, rowIdx, e) {
+						e.stopEvent();
+						me.cxmChat().showAt(e.getXY());
+					}
+				}
+			}, {
 				xtype: 'gridpanel',
 				itemId: 'friends',
 				reference: 'gpfriends',
@@ -171,60 +225,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						} else {
 							me.fireEvent('frienddblclick', me, rec.get('id'), rec.get('nick'), rec.get('dChatId'));
 						}
-					}
-				}
-			}, {
-				xtype: 'gridpanel',
-				itemId: 'chats',
-				reference: 'gpchats',
-				title: WT.res('wtimpanel.chats.tit'),
-				border: false,
-				viewConfig: {
-					markDirty: false,
-					deferEmptyText: false,
-					emptyText: WT.res('wtimpanel.gpchats.emp')
-				},
-				store: {
-					autoLoad: true,
-					autoSync: true,
-					model: 'Sonicle.webtop.core.model.IMChatGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMChats'),
-					sorters: ['name'],
-					listeners: {
-						load: function(s) {
-							if (s.getCount() === 0) me.lookupReference('tab').setActiveItem('friends');
-						}
-					}
-				},
-				columns: [{
-					dataIndex: 'name',
-					flex: 1
-				}],
-				dockedItems: [{
-					xtype: 'textfield',
-					dock: 'top',
-					hideFieldLabel: true,
-					emptyText: WT.res('wtimpanel.gpchats.search.emp'),
-					triggers: {
-						clear: {
-							type: 'soclear'
-						}
-					},
-					listeners: {
-						change: {
-							fn: me.onChatsSearchChange,
-							scope: me,
-							options: {buffer: 300}
-						}
-					}
-				}],
-				listeners: {
-					rowdblclick: function(s, rec) {
-						me.fireChatDblClickFromRec(rec);
-					},
-					rowcontextmenu: function(s, rec, el, rowIdx, e) {
-						e.stopEvent();
-						me.cxmChat().showAt(e.getXY());
 					}
 				}
 			}]

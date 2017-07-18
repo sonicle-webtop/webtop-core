@@ -34,14 +34,8 @@
 package com.sonicle.webtop.core.xmpp;
 
 import static com.sonicle.webtop.core.xmpp.XMPPClient.logger;
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.roster.Roster;
-import org.jivesoftware.smack.roster.RosterEntry;
-import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.TLSUtils;
-import org.jooq.tools.StringUtils;
-import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
