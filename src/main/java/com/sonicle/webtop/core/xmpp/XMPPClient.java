@@ -76,7 +76,6 @@ import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 import org.slf4j.Logger;
@@ -225,9 +224,8 @@ public class XMPPClient {
 			final EntityBareJid chatJid = createChatJid(withUser);
 			final String withUserNick = getRosterEntryNickname(roster, withUser, true);
 			
-			DChat chatObj = null;
 			synchronized(directChats) {
-				chatObj = directChats.get(chatJid);
+				DChat chatObj = directChats.get(chatJid);
 				if (chatObj == null) {
 					final ChatManager chatMgr = getChatManager();
 					final Chat chat = chatMgr.chatWith(withUser);
@@ -247,9 +245,8 @@ public class XMPPClient {
 		final EntityBareJid myJid = userJid.asEntityBareJid();
 		final EntityBareJid chatJid = createGroupChatJid();
 		
-		GChat chatObj = null;
 		synchronized(groupChats) {
-			chatObj = groupChats.get(chatJid);
+			GChat chatObj = groupChats.get(chatJid);
 			if (chatObj == null) {
 				try {
 					final MultiUserChatManager muChatMgr = getMUChatManager();
@@ -277,6 +274,17 @@ public class XMPPClient {
 		return chatJid;
 	}
 	
+	public void forgetChat(EntityBareJid chatJid) throws XMPPClientException {
+		checkAuthentication();
+		
+		synchronized(directChats) {
+			if (directChats.containsKey(chatJid)) doRemoveChat(chatJid);
+		}
+		synchronized(groupChats) {
+			if (groupChats.containsKey(chatJid)) doRemoveGroupChat(chatJid);
+		}
+	}
+	
 	public ChatMessage sendMessage(EntityBareJid chatJid, String text) throws XMPPClientException {
 		checkAuthentication();
 		
@@ -286,18 +294,17 @@ public class XMPPClient {
 		Message message = new Message();
 		message.setBody(text);
 		
-		DChat chatObj1 = null;
 		synchronized(directChats) {
-			chatObj1 = directChats.get(chatJid);
-			if (chatObj1 != null) {
+			DChat chatObj = directChats.get(chatJid);
+			if (chatObj != null) {
 				try {
 					final DateTime ts = DateTime.now(DateTimeZone.UTC);
-					chatObj1.getRawChat().send(message);
+					chatObj.getRawChat().send(message);
 					ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
 					
 					// TODO: threadify this?
 					try {
-						listener.onChatRoomMessageSent(chatObj1.getChatRoom(), chatMessage);
+						listener.onChatRoomMessageSent(chatObj.getChatRoom(), chatMessage);
 					} catch(Throwable t) {
 						logger.error("Listener error", t);
 					}
@@ -310,18 +317,17 @@ public class XMPPClient {
 			}
 		}
 		
-		GChat chatObj2 = null;
 		synchronized(groupChats) {
-			chatObj2 = groupChats.get(chatJid);
-			if (chatObj2 != null) {
+			GChat chatObj = groupChats.get(chatJid);
+			if (chatObj != null) {
 				try {
 					final DateTime ts = DateTime.now(DateTimeZone.UTC);
-					chatObj2.getRawChat().sendMessage(message);
+					chatObj.getRawChat().sendMessage(message);
 					ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
 					
 					// TODO: threadify this?
 					try {
-						listener.onChatRoomMessageSent(chatObj2.getChatRoom(), chatMessage);
+						listener.onChatRoomMessageSent(chatObj.getChatRoom(), chatMessage);
 					} catch(Throwable t) {
 						logger.error("Listener error", t);
 					}
@@ -349,6 +355,33 @@ public class XMPPClient {
 		}
 		
 		return chatObj;
+	}
+	
+	private void doRemoveChat(EntityBareJid chatJid) {
+		logger.debug("Removing direct chat [{}]", chatJid.toString());
+		DChat chatObj = directChats.remove(chatJid);
+		
+		try {
+			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid());
+		} catch(Throwable t) {
+			logger.error("Listener error", t);
+		}
+	}
+	
+	private void doRemoveGroupChat(EntityBareJid chatJid) {
+		logger.debug("Removing group chat [{}]", chatJid.toString());
+		GChat chatObj = groupChats.remove(chatJid);
+		
+		MultiUserChat chat = chatObj.getRawChat();
+		chat.removeSubjectUpdatedListener(chatObj);
+		chat.removeMessageListener(chatObj);
+		chat.removeParticipantStatusListener(chatObj);
+		
+		try {
+			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid());
+		} catch(Throwable t) {
+			logger.error("Listener error", t);
+		}
 	}
 	
 	private GChat doAddGroupChat(EntityBareJid chatJid, EntityBareJid creatorJid, String name, boolean iAmOwner, MultiUserChat chat) {

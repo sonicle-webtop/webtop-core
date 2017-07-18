@@ -31,34 +31,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.xmpp;
+package com.sonicle.webtop.core.app.ws;
 
-import java.util.Collection;
-import org.jivesoftware.smack.chat2.Chat;
-import org.jivesoftware.smack.packet.Message;
-import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.EntityFullJid;
-import org.jxmpp.jid.Jid;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public interface XMPPClientListener {
+public class IMChatRoomUpdated extends ServiceMessage {
+	public static final String ACTION = "imChatRoomUpdated";
 	
-	public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence);
-	public void onChatRoomUpdated(ChatRoom chatRoom);
-	public void onChatRoomAdded(ChatRoom chatRoom);
-	public void onChatRoomRemoved(EntityBareJid chatJid);
+	public IMChatRoomUpdated(String chatEntityBareJid, String chatName) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(chatEntityBareJid, chatName);
+	}
 	
-	public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message);
-	public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message);
-	public void onChatRoomParticipantJoined(ChatRoom chatRoom, EntityFullJid participant);
-	public void onChatRoomParticipantLeft(ChatRoom chatRoom, EntityFullJid participant, boolean kicked);
-	
-	public void friendsAdded(Collection<Jid> jids);
-	public void friendsUpdated(Collection<Jid> jids);
-	public void friendsDeleted(Collection<Jid> jids);
-	
-	
+	private Object payload(String chatEntityBareJid, String chatName) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("chatId", chatEntityBareJid);
+		pl.put("chatName", chatName);
+		return pl;
+	}
 }

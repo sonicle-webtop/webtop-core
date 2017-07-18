@@ -59,8 +59,10 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
-import com.sonicle.webtop.core.app.ws.IMChatRoomMessageMsg;
-import com.sonicle.webtop.core.app.ws.IMUpdateFriendPresenceMsg;
+import com.sonicle.webtop.core.app.ws.IMChatRoomAdded;
+import com.sonicle.webtop.core.app.ws.IMChatRoomMessageReceived;
+import com.sonicle.webtop.core.app.ws.IMChatRoomUpdated;
+import com.sonicle.webtop.core.app.ws.IMUpdateFriendPresence;
 import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -1340,7 +1342,12 @@ public class Service extends BaseService {
 				
 			} else if(crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsGridIMChat> pl = ServletUtils.getPayload(request, JsGridIMChat.class);
+				
+				if (xmppCli != null) {
+					xmppCli.forgetChat(XMPPHelper.asEntityBareJid(pl.data.id));
+				}
 				coreMgr.deleteIMHistoryChat(pl.data.id);
+				
 				new JsonResult().printTo(out);
 			}
 			
@@ -1486,15 +1493,12 @@ public class Service extends BaseService {
 			logger.debug("presenceChanged {}", jid.toString());
 			final EntityBareJid targetJid = jid.asEntityBareJidIfPossible();
 			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
-			getWts().notify(new IMUpdateFriendPresenceMsg(targetJid.toString(), presenceStatus, bestPresence.getStatusMessage()));
+			getWts().notify(new IMUpdateFriendPresence(targetJid.toString(), presenceStatus, bestPresence.getStatusMessage()));
 		}
 		
 		@Override
 		public void onChatRoomUpdated(ChatRoom chatRoom) {
-			if (chatRoom instanceof GroupChatRoom) {
-				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
-				logger.debug("Group chat name changed [{}, {}]", gcr.getChatJid().toString(), gcr.getName());
-			}
+			getWts().notify(new IMChatRoomUpdated(chatRoom.getChatJid().toString(), chatRoom.getName()));
 		}
 		
 		@Override
@@ -1532,6 +1536,12 @@ public class Service extends BaseService {
 					logger.error("Error saving group chat [{}]", ex, gcr.getChatJid().toString());
 				}
 			}
+			getWts().notify(new IMChatRoomAdded(chatRoom.getChatJid().toString(), chatRoom.getName()));
+		}
+		
+		@Override
+		public void onChatRoomRemoved(EntityBareJid chatJid) {
+			
 		}
 		
 		@Override
@@ -1563,7 +1573,7 @@ public class Service extends BaseService {
 			if (chatRoom instanceof DirectChatRoom) {
 				DirectChatRoom dcr = (DirectChatRoom)chatRoom;
 				logger.debug("Incoming message from direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getWithJid());
-				getWts().notify(new IMChatRoomMessageMsg(dcr.getChatJid().toString(), dcr.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
+				getWts().notify(new IMChatRoomMessageReceived(dcr.getChatJid().toString(), dcr.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
 				
 			} else if (chatRoom instanceof GroupChatRoom) {
 				GroupChatRoom gcr = (GroupChatRoom)chatRoom;

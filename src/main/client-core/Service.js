@@ -68,13 +68,21 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 		
 		me.onMessage('imUpdateFriendPresence', function(msg) {
-			var me = this, pl = msg.payload;
+			var pl = msg.payload;
 			me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 		});
-		me.onMessage('imChatRoomMessage', function(msg) {
-			var me = this, pl = msg.payload,
+		me.onMessage('imChatRoomAdded', function(msg) {
+			var pl = msg.payload;
+			me.getVPController().getIMPanel().addChat(pl.chatId, pl.chatName);
+		});
+		me.onMessage('imChatRoomUpdated', function(msg) {
+			var pl = msg.payload;
+			me.getVPController().getIMPanel().updateChatName(pl.chatId, pl.chatName);
+		});
+		me.onMessage('imChatRoomMessageReceived', function(msg) {
+			var pl = msg.payload,
 				ts = Ext.Date.parse(pl.timestamp, 'Y-m-d H:i:s', true);
-			me.newIMChatMessage(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, 'none', pl.msgUid, pl.msgText);
+			me.addChatRoomMessageUI(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, 'none', pl.msgUid, pl.msgText);
 		});
 		
 		Ext.defer(function() {
@@ -88,7 +96,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 	notificationCallback: function(type, tag, data) {
 		var me = this;
-		if (tag.startsWith(me.self.NOTAG_NEW_MESSAGE)) {
+		if (tag.startsWith(me.self.NOTAG_IM_NEWMSG)) {
 			me.openIMChatUI(data.chatId, data.chatName);
 		}
 	},
@@ -258,7 +266,40 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
-	newIMChatMessage: function(chatId, chatName, fromId, fromNick, timestamp, action, msgUid, msgText) {
+	
+	
+	openIMChatUI: function(chatId, chatName) {
+		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChat(chatId));
+		me.getVPController().getIMPanel().updateChatHotMarker(chatId, false);
+		WT.clearBadgeNotification(me.ID, me.self.noTagIMNewMsg(chatId));
+		if (!vct) {
+			vct = me.createIMChatView(chatId, chatName);
+			vct.show();
+		} else {
+			vct.show();
+		}
+	},
+	
+	addIMChatUI: function(chatId, chatName, friendIds) {
+		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChat(chatId));
+		if (!vct) {
+			me.prepareIMChat(chatId, friendIds, {
+				callback: function(success, json) {
+					if (success) {
+						me.getVPController().getIMPanel().addChat(chatId, chatName);
+						vct = me.createIMChatView(chatId, chatName);
+						vct.show();
+					} else {
+						WT.error(json.text);
+					}
+				}
+			});
+		} else {
+			vct.show();
+		}
+	},
+	
+	addChatRoomMessageUI: function(chatId, chatName, fromId, fromNick, timestamp, action, msgUid, msgText) {
 		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChat(chatId));
 		if (vct) {
 			//TODO: valutare se far lampeggiare il bottone nella taskbar se minimizata
@@ -283,37 +324,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 				body: body,
 				data: data
 			}, {callbackService: true});
-		}
-	},
-	
-	openIMChatUI: function(chatId, chatName) {
-		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChat(chatId));
-		me.getVPController().getIMPanel().updateChatHotMarker(chatId, false);
-		WT.clearBadgeNotification(me.ID, me.self.noTagIMNewMsg(chatId));
-		if (!vct) {
-			vct = me.createIMChatView(chatId, chatName);
-			vct.show();
-		} else {
-			vct.show();
-		}
-	},
-	
-	addIMChatUI: function(chatId, chatName, friendIds) {
-		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChat(chatId));
-		if (!vct) {
-			me.prepareIMChat(chatId, friendIds, {
-				callback: function(success, json) {
-					if (success) {
-						me.getVPController().getIMPanel().newChat(chatId, chatName);
-						vct = me.createIMChatView(chatId, chatName);
-						vct.show();
-					} else {
-						WT.error(json.text);
-					}
-				}
-			});
-		} else {
-			vct.show();
 		}
 	},
 	

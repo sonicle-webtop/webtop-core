@@ -262,12 +262,24 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}));
 	},
 	
-	newChat: function(id, name) {
+	addChat: function(id, name) {
 		var sto = this.gpChats().getStore();
 		sto.add(sto.createModel({
 			id: id,
 			name: name
 		}));
+	},
+	
+	updateChatName: function(id, name) {
+		var sto = this.gpChats().getStore(),
+				rec = sto.getById(id);
+		if (rec) rec.set('name', name);
+	},
+	
+	updateChatHotMarker: function(id, visible) {
+		var sto = this.gpChats().getStore(),
+				rec = sto.getById(id);
+		if (rec) rec.set('hot', visible);
 	},
 	
 	searchChat: function(query) {
@@ -295,12 +307,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		} else {
 			sto.clearFilter();
 		}
-	},
-	
-	updateChatHotMarker: function(chatId, visible) {
-		var sto = this.gpChats().getStore(),
-				rec = sto.getById(chatId);
-		if (rec) rec.set('hot', visible);
 	},
 	
 	loadFriends: function() {

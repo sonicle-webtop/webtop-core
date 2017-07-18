@@ -41,10 +41,10 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class IMChatRoomMessageMsg extends ServiceMessage {
-	public static final String ACTION = "imChatRoomMessage";
+public class IMChatRoomMessageReceived extends ServiceMessage {
+	public static final String ACTION = "imChatRoomMessageReceived";
 	
-	public IMChatRoomMessageMsg(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
+	public IMChatRoomMessageReceived(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
 		super(CoreManifest.ID, ACTION);
 		this.payload = payload(chatEntityBareJid, chatName, fromEntityBareJid, fromNickname, timestamp, messageUid, messageText);
 	}

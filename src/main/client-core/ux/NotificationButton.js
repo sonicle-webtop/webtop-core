@@ -136,8 +136,8 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	},
 	
 	destroy: function() {
-		this.grid = null;
 		this.callParent();
+		this.grid = null;
 	},
 	
 	/**

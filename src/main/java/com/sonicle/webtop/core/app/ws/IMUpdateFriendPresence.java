@@ -41,10 +41,10 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class IMUpdateFriendPresenceMsg extends ServiceMessage {
+public class IMUpdateFriendPresence extends ServiceMessage {
 	public static final String ACTION = "imUpdateFriendPresence";
 	
-	public IMUpdateFriendPresenceMsg(String entityBareJid, String presenceStatus, String statusMessage) {
+	public IMUpdateFriendPresence(String entityBareJid, String presenceStatus, String statusMessage) {
 		super(CoreManifest.ID, ACTION);
 		this.payload = payload(entityBareJid, presenceStatus, statusMessage);
 	}
