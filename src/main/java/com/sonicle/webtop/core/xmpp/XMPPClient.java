@@ -120,16 +120,22 @@ public class XMPPClient {
 		this.mucInvitationListener = new XmppsMUCInvitationListener();
 	}
 	
-	public synchronized boolean isConnected() {
-		return con.isConnected();
+	public boolean isConnected() {
+		synchronized(con) {
+			return con.isConnected();
+		}
 	}
 	
-	public synchronized boolean isAuthenticated() {
-		return con.isAuthenticated();
+	public boolean isAuthenticated() {
+		synchronized(con) {
+			return con.isAuthenticated();
+		}
 	}
 	
-	public synchronized void disconnect() {
-		con.disconnect();
+	public void disconnect() {
+		synchronized(con) {
+			con.disconnect();
+		}
 	}
 	
 	public EntityFullJid getUserJid() {
@@ -486,23 +492,27 @@ public class XMPPClient {
 		}
 	}
 	
-	private synchronized void checkAuthentication() throws XMPPClientException {
-		checkConnection();
-		
-		try {
-			if (!con.isAuthenticated()) login();
-		} catch(SmackException | XMPPException | InterruptedException | IOException ex) {
-			logger.error("Unable to login", ex);
-			throw new XMPPClientException(ex);
+	private void checkAuthentication() throws XMPPClientException {
+		synchronized(con) {
+			checkConnection();
+			
+			try {
+				if (!con.isAuthenticated()) login();
+			} catch(SmackException | XMPPException | InterruptedException | IOException ex) {
+				logger.error("Unable to login", ex);
+				throw new XMPPClientException(ex);
+			}
 		}
 	}
 	
-	private synchronized void checkConnection() throws XMPPClientException {
-		try {
-			if (!con.isConnected()) con.connect();
-		} catch(SmackException | XMPPException | InterruptedException | IOException ex) {
-			logger.error("Unable to establish a connection", ex);
-			throw new XMPPClientException(ex);
+	private void checkConnection() throws XMPPClientException {
+		synchronized(con) {
+			try {
+				if (!con.isConnected()) con.connect();
+			} catch(SmackException | XMPPException | InterruptedException | IOException ex) {
+				logger.error("Unable to establish a connection", ex);
+				throw new XMPPClientException(ex);
+			}
 		}
 	}
 	
