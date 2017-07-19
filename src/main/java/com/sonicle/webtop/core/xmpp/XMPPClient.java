@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jivesoftware.smack.AbstractXMPPConnection;
@@ -101,6 +102,7 @@ public class XMPPClient {
 	private final XmppsMUCInvitationListener mucInvitationListener;
 	private final Map<EntityBareJid, DChat> directChats = new HashMap<>();
 	private final Map<EntityBareJid, GChat> groupChats = new HashMap<>();
+	private final AtomicBoolean isDisconnecting = new AtomicBoolean(false);
 	
 	public XMPPClient(XMPPTCPConnectionConfiguration.Builder builder, String nickname, XMPPClientListener listener) {
 		this(builder, nickname, listener, null);
@@ -134,7 +136,10 @@ public class XMPPClient {
 	
 	public void disconnect() {
 		synchronized(con) {
+			isDisconnecting.set(true);
+			internalLogout();
 			con.disconnect();
+			isDisconnecting.set(false);
 		}
 	}
 	
@@ -460,7 +465,7 @@ public class XMPPClient {
 		}
 	}
 	
-	private void login() throws SmackException, XMPPException, InterruptedException, IOException {
+	private void internalLogin() throws SmackException, XMPPException, InterruptedException, IOException {
 		final Roster roster = getRoster();
 		roster.addRosterListener(rosterListener);
 		final ChatManager chatMgr = getChatManager();
@@ -492,12 +497,23 @@ public class XMPPClient {
 		}
 	}
 	
+	private void internalLogout() {
+		final MultiUserChatManager muChatMgr = getMUChatManager();
+		muChatMgr.removeInvitationListener(mucInvitationListener);
+		final ChatManager chatMgr = getChatManager();
+		chatMgr.removeListener(dcIncomingMessageListener);
+		final Roster roster = getRoster();
+		roster.removeRosterListener(rosterListener);
+		
+		directChats.clear();
+	}
+	
 	private void checkAuthentication() throws XMPPClientException {
 		synchronized(con) {
 			checkConnection();
 			
 			try {
-				if (!con.isAuthenticated()) login();
+				if (!con.isAuthenticated()) internalLogin();
 			} catch(SmackException | XMPPException | InterruptedException | IOException ex) {
 				logger.error("Unable to login", ex);
 				throw new XMPPClientException(ex);
@@ -520,21 +536,26 @@ public class XMPPClient {
 
 		@Override
 		public void entriesAdded(Collection<Jid> clctn) {
+			if (isDisconnecting.get()) return;
 			listener.friendsAdded(clctn);
 		}
 
 		@Override
 		public void entriesUpdated(Collection<Jid> clctn) {
+			if (isDisconnecting.get()) return;
 			listener.friendsUpdated(clctn);
 		}
 
 		@Override
 		public void entriesDeleted(Collection<Jid> clctn) {
+			if (isDisconnecting.get()) return;
 			listener.friendsDeleted(clctn);
 		}
 
 		@Override
 		public void presenceChanged(Presence prsnc) {
+			if (isDisconnecting.get()) return;
+			
 			final FriendPresence presence = new FriendPresence(prsnc);
 			logger.debug("Presence changed [{}, {}]", EnumUtils.toSerializedName(presence.getPresenceStatus()), prsnc.getFrom().toString());
 			try {
@@ -549,6 +570,7 @@ public class XMPPClient {
 
 		@Override
 		public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+			if (isDisconnecting.get()) return;
 			
 			try {
 				final Roster roster = getRoster();
@@ -583,6 +605,7 @@ public class XMPPClient {
 
 		@Override
 		public void invitationReceived(XMPPConnection xmppc, MultiUserChat multiUserChat, EntityJid inviterJid, String reason, String password, Message message, MUCUser.Invite invitation) {
+			if (isDisconnecting.get()) return;
 			final MultiUserChatManager muChatMgr = getMUChatManager();
 			final EntityBareJid chatJid = multiUserChat.getRoom();
 			
