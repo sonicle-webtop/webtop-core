@@ -212,7 +212,9 @@ public class Service extends BaseService {
 
 	@Override
 	public void cleanup() throws Exception {
-		
+		if (xmppCli != null) {
+			xmppCli.disconnect();
+		}
 	}
 
 	@Override
