@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.sdk.interfaces;
 
 import com.sonicle.webtop.core.bol.OUserSetting;
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.List;
 
 /**
@@ -43,12 +43,12 @@ import java.util.List;
  */
 public interface IUserSettingManager {
 	
+	public String getUserSetting(UserProfileId profileId, String serviceId, String key);
 	public String getUserSetting(String domainId, String userId, String serviceId, String key);
-	public String getUserSetting(UserProfile userProfile, String serviceId, String key);
-	public List<OUserSetting> getUserSettings(UserProfile userProfile, String serviceId, String key);
+	public List<OUserSetting> getUserSettings(UserProfileId profileId, String serviceId, String key);
 	public List<OUserSetting> getUserSettings(String domainId, String userId, String serviceId, String key);
-	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value);
+	public boolean setUserSetting(UserProfileId profileId, String serviceId, String key, Object value);
 	public boolean setUserSetting(String domainId, String userId, String serviceId, String key, Object value);
-	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key);
+	public boolean deleteUserSetting(UserProfileId profileId, String serviceId, String key);
 	public boolean deleteUserSetting(String domainId, String userId, String serviceId, String key);
 }

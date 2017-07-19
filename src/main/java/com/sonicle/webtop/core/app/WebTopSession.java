@@ -392,7 +392,7 @@ public class WebTopSession {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
 			
 			// Service initialization
-			svcm.initializeProfile(serviceId, profile.getId());
+			svcm.prepareProfile(serviceId, profile.getId());
 			
 			// PrivateService
 			if(descriptor.hasPrivateService()) {
@@ -1004,7 +1004,7 @@ public class WebTopSession {
 	public void resetWhatsnew(String serviceId, UserProfile profile) {
 		if(!isReady()) return;
 		ServiceManager svcm = wta.getServiceManager();
-		svcm.resetWhatsnew(serviceId, profile);
+		svcm.resetWhatsnew(serviceId, profile.getId());
 	}
 	
 	public void notify(ServiceMessage message) {
