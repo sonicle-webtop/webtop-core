@@ -156,7 +156,8 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				border: false,
 				rowLines: false,
 				viewConfig: {
-					markDirty: false
+					markDirty: false,
+					stripeRows: false
 				},
 				store: {
 					autoLoad: true,
@@ -186,6 +187,7 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				rowLines: false,
 				viewConfig: {
 					markDirty: false,
+					stripeRows: false,
 					deferEmptyText: false,
 					emptyText: WT.res('imchat.gphistory.emp')
 				},
@@ -212,6 +214,12 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				}]
 			}]
 		});
+		
+		me.on('viewshow', me.onViewShow);
+	},
+	
+	onViewShow: function(s) {
+		this.lref('fldmessage').focus(true);
 	},
 	
 	sendMessage: function(text) {
