@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk.interfaces;
 
+import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 
@@ -44,4 +45,5 @@ public interface IControllerHandlesProfiles {
 	
 	public void addProfile(UserProfileId profileId) throws WTException;
 	public void removeProfile(UserProfileId profileId, boolean deep) throws WTException;
+	public void upgradeProfile(UserProfileId profileId, ServiceVersion current, ServiceVersion lastSeen) throws WTException;
 }

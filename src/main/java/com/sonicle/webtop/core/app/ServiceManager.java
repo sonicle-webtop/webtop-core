@@ -509,21 +509,25 @@ public class ServiceManager {
 	}
 	
 	/**
-	 * Checks if a specific user need initialization for specified service.
-	 * If so, it initializes the user calling the controller implementation 
-	 * (if present) related to IControllerHandlesProfiles interface.
-	 * In any case this method ends applying a specific user-setting marking 
-	 * initialization as done.
+	 * Checks if a specific user is ready for the specified service.
+	 * Firstly it will check initialization flag, if not present it
+	 * initializes the user calling the addProfile method implementation
+	 * related to IControllerHandlesProfiles interface (if present).
+	 * At the end of the process the user is initialized.
+	 * Lastly, if above initialization will not take place and the service
+	 * is upgraded for the user, the upgradeProfile method implementation
+	 * related to the IControllerHandlesProfiles interface will be called.
 	 * @param serviceId The service ID.
-	 * @param profileId The user profile ID.
+	 * @param profileId The user ID.
 	 */
-	public void initializeProfile(String serviceId, UserProfileId profileId) {
-		if(!profileInitializedCheck(serviceId, profileId)) {
-			ServiceDescriptor descr = getDescriptor(serviceId);
-			if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
-				BaseController instance = getController(serviceId);
-				IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
-				
+	public void prepareProfile(String serviceId, UserProfileId profileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		
+		if (descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
+			BaseController instance = getController(serviceId);
+			IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
+			
+			if (!checkAndSetProfileInitialization(serviceId, profileId)) {
 				logger.debug("Initializing profile for service [{}]", serviceId);
 				try {
 					LoggerUtils.setContextDC(instance.SERVICE_ID);
@@ -533,6 +537,21 @@ public class ServiceManager {
 					logger.error("Controller: addProfile() throws errors", t);
 				} finally {
 					LoggerUtils.clearContextServiceDC();
+				}
+				
+			} else {
+				ProfileVersionEvaluationResult res = evaluateProfileVersion(descr.getManifest(), profileId);
+				if (res.upgraded) {
+					logger.debug("Upgrading profile for service [{}]", serviceId);
+					try {
+						LoggerUtils.setContextDC(instance.SERVICE_ID);
+						controller.upgradeProfile(profileId, res.currentVersion, res.lastSeenVersion);
+					} catch(Throwable t) {
+						//TODO: valutare se ritornare un booleano per verifica
+						logger.error("Controller: addProfile() throws errors", t);
+					} finally {
+						LoggerUtils.clearContextServiceDC();
+					}
 				}
 			}
 		}
@@ -569,15 +588,28 @@ public class ServiceManager {
 	 * @param profileId The user profile ID.
 	 * @return The original value read before any update.
 	 */
-	private boolean profileInitializedCheck(String serviceId, UserProfileId profileId) {
+	private boolean checkAndSetProfileInitialization(String serviceId, UserProfileId profileId) {
 		synchronized(lock2) {
 			SettingsManager setMgr = wta.getSettingsManager();
 			boolean value = LangUtils.value(setMgr.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED), false);
-			if(!value) {
+			if (!value) {
 				setMgr.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, CoreSettings.INITIALIZED, true);
 			}
 			return value;
 		}
+	}	
+	
+	public ProfileVersionEvaluationResult evaluateProfileVersion(String serviceId, UserProfileId profileId) {
+		ServiceDescriptor desc = getDescriptor(serviceId);
+		return evaluateProfileVersion(desc.getManifest(), profileId);
+	}
+	
+	public ProfileVersionEvaluationResult evaluateProfileVersion(ServiceManifest manifest, UserProfileId profileId) {
+		SettingsManager setm = wta.getSettingsManager();
+		ServiceVersion manifestVer = manifest.getVersion();
+		ServiceVersion userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profileId, manifest.getId()));
+		boolean upgraded = (manifestVer.compareTo(userVer) > 0);
+		return new ProfileVersionEvaluationResult(manifestVer, userVer, upgraded);
 	}
 	
 	/**
@@ -587,23 +619,19 @@ public class ServiceManager {
 	 * @return True if so, false otherwise.
 	 */
 	public boolean needWhatsnew(String serviceId, UserProfile profile) {
-		SettingsManager setm = wta.getSettingsManager();
-		ServiceVersion manifestVer = null, userVer = null;
+		ServiceDescriptor desc = getDescriptor(serviceId);
 		
 		// Gets current service's version info and last version for this user
-		ServiceDescriptor desc = getDescriptor(serviceId);
-		manifestVer = desc.getManifest().getVersion();
-		userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
+		ProfileVersionEvaluationResult res = evaluateProfileVersion(desc.getManifest(), profile.getId());
 		
-		boolean notseen = (manifestVer.compareTo(userVer) > 0);
 		boolean show = false;
-		if(notseen) {
-			String html = desc.getWhatsnew(profile.getLocale(), userVer);
+		if(res.upgraded) {
+			String html = desc.getWhatsnew(profile.getLocale(), res.lastSeenVersion);
 			if(StringUtils.isEmpty(html)) {
 				// If content is empty, updates whatsnew version for the user;
 				// it basically realign versions in user-settings.
 				logger.trace("Whatsnew empty [{}]", serviceId);
-				resetWhatsnew(serviceId, profile);
+				resetWhatsnew(serviceId, profile.getId());
 			} else {
 				show = true;
 			}
@@ -626,7 +654,7 @@ public class ServiceManager {
 		ServiceDescriptor desc = getDescriptor(serviceId);
 		if(!full) {
 			SettingsManager setm = wta.getSettingsManager();
-			fromVersion = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile, serviceId));
+			fromVersion = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profile.getId(), serviceId));
 		}
 		return desc.getWhatsnew(profile.getLocale(), fromVersion);
 	}
@@ -635,15 +663,15 @@ public class ServiceManager {
 	 * Resets whatsnew updating service's version in user-setting
 	 * to the current one.
 	 * @param serviceId The service ID.
-	 * @param profile The user profile.
+	 * @param profileId The user profile ID.
 	 */
-	public synchronized void resetWhatsnew(String serviceId, UserProfile profile) {
+	public void resetWhatsnew(String serviceId, UserProfileId profileId) {
 		SettingsManager setm = wta.getSettingsManager();
 		ServiceVersion manifestVer = null;
 		
 		// Gets current service's version info
 		manifestVer = getManifest(serviceId).getVersion();
-		CoreUserSettings.setWhatsnewVersion(setm, profile, serviceId, manifestVer.toString());
+		CoreUserSettings.setWhatsnewVersion(setm, profileId, serviceId, manifestVer.toString());
 	}
 	
 	
@@ -769,17 +797,18 @@ public class ServiceManager {
 		try {
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("PrivateService: instantiation failure [{}]", descr.getManifest().getPrivateServiceClassName(), t);
+			logger.error("PrivateService: instantiation failure [{}]", t, descr.getManifest().getPrivateServiceClassName());
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
+		logger.trace("PrivateService: calling initialize() [{}]", serviceId);
 		try {
 			LoggerUtils.setContextDC(serviceId);
 			instance.initialize();
 		} catch(Throwable t) {
-			logger.error("PrivateService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+			logger.error("PrivateService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
@@ -788,11 +817,12 @@ public class ServiceManager {
 	}
 	
 	public void cleanupPrivateService(BaseService instance) {
+		logger.trace("PrivateService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
-			LoggerUtils.setContextDC(instance.getManifest().getId());
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.cleanup();
 		} catch(Throwable t) {
-			logger.error("PrivateService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+			logger.error("PrivateService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
@@ -806,7 +836,7 @@ public class ServiceManager {
 		try {
 			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("UserOptions: instantiation failure [{}]", descr.getManifest().getUserOptionsServiceClassName(), t);
+			logger.error("UserOptions: instantiation failure [{}]", t, descr.getManifest().getUserOptionsServiceClassName());
 			return null;
 		}
 		instance.configure(sessionProfile, targetProfileId);
@@ -821,17 +851,18 @@ public class ServiceManager {
 		try {
 			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("PublicService: instantiation failure [{}]", descr.getManifest().getPublicServiceClassName(), t);
+			logger.error("PublicService: instantiation failure [{}]", t, descr.getManifest().getPublicServiceClassName());
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
+		logger.trace("PrivateService: calling initialize() [{}]", serviceId);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable t) {
-			logger.error("PublicService: initialize() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+			logger.error("PublicService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
@@ -840,11 +871,12 @@ public class ServiceManager {
 	}
 	
 	public void cleanupPublicService(BasePublicService instance) {
+		logger.trace("PublicService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
-			LoggerUtils.setContextDC(instance.getManifest().getId());
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.cleanup();
 		} catch(Throwable t) {
-			logger.error("PublicService: cleanup() throws errors [{}]", instance.getClass().getCanonicalName(), t);
+			logger.error("PublicService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
@@ -871,7 +903,7 @@ public class ServiceManager {
 		try {
 			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("JobService: instantiation failure [{}]", descr.getManifest().getJobServiceClassName(), t);
+			logger.error("JobService: instantiation failure [{}]", t, descr.getManifest().getJobServiceClassName());
 			return null;
 		}
 		instance.configure(wta.getAdminSubject());
@@ -879,22 +911,24 @@ public class ServiceManager {
 	}
 	
 	private void initializeJobService(BaseJobService instance) {
+		logger.trace("JobService: calling initialize() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			instance.initialize();
 		} catch(Throwable t) {
-			logger.error("JobService: initialize() throws errors [{}]", t);
+			logger.error("JobService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
 	}
 	
 	private void cleanupJobService(BaseJobService instance) {
+		logger.trace("JobService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.getManifest().getId());
 			instance.cleanup();
 		} catch(Throwable t) {
-			logger.error("JobService: cleanup() throws errors [{}]", t);
+			logger.error("JobService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
@@ -1369,6 +1403,18 @@ public class ServiceManager {
 			
 		} catch(SchedulerException ex) {
 			logger.error("Error deleting tasks for group [{}]", serviceId, ex);
+		}
+	}
+	
+	public static class ProfileVersionEvaluationResult {
+		public final ServiceVersion currentVersion;
+		public final ServiceVersion lastSeenVersion;
+		public final boolean upgraded;
+		
+		public ProfileVersionEvaluationResult(ServiceVersion currentVersion, ServiceVersion lastSeenVersion, boolean upgraded) {
+			this.currentVersion = currentVersion;
+			this.lastSeenVersion = lastSeenVersion;
+			this.upgraded = upgraded;
 		}
 	}
 }

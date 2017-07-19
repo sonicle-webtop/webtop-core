@@ -38,7 +38,6 @@ import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
-import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 
 /**
@@ -236,13 +235,11 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setInteger(DEVICES_SYNC_ALERT_TOLERANCE, value);
 	}
 	
-	public static String getWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId) {
-		return setm.getUserSetting(profile, serviceId, WHATSNEW_VERSION);
+	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {
+		return setm.getUserSetting(profileId, serviceId, WHATSNEW_VERSION);
 	}
 	
-	public static boolean setWhatsnewVersion(SettingsManager setm, UserProfile profile, String serviceId, String value) {
-		return setm.setUserSetting(profile, serviceId, WHATSNEW_VERSION, value);
+	public static boolean setWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId, String value) {
+		return setm.setUserSetting(profileId, serviceId, WHATSNEW_VERSION, value);
 	}
-	
-	
 }

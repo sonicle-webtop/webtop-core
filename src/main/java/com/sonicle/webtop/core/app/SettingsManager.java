@@ -364,26 +364,26 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	/**
 	 * Gets the setting value indicated by the specified key.
 	 * Returns a null value if the key is not found.
-	 * @param userProfile The user profile to extract domain and user information.
+	 * @param profileId The profile ID to extract domain and user information.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
 	@Override
-	public String getUserSetting(UserProfile userProfile, String serviceId, String key) {
-		return getUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
+	public String getUserSetting(UserProfileId profileId, String serviceId, String key) {
+		return getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}
 	
 	/**
 	 * Gets the setting values compliant to the specified key.
-	 * @param userProfile The user profile to extract domain and user information.
+	 * @param profileId The profile ID to extract domain and user information.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting. (treated as LIKE query)
 	 * @return List of settings.
 	 */
 	@Override
-	public List<OUserSetting> getUserSettings(UserProfile userProfile, String serviceId, String key) {
-		return getUserSettings(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
+	public List<OUserSetting> getUserSettings(UserProfileId profileId, String serviceId, String key) {
+		return getUserSettings(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}
 	
 	/**
@@ -449,15 +449,15 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	
 	/**
 	 * Sets the setting value indicated by the specified key.
-	 * @param userProfile The user profile to extract domain and user information.
+	 * @param profileId The profile ID to extract domain and user information.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @param value The value to set.
 	 * @return True if setting was succesfully written, otherwise false.
 	 */
 	@Override
-	public boolean setUserSetting(UserProfile userProfile, String serviceId, String key, Object value) {
-		return setUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key, value);
+	public boolean setUserSetting(UserProfileId profileId, String serviceId, String key, Object value) {
+		return setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
 	}
 	
 	/**
@@ -496,21 +496,21 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 				DbUtils.closeQuietly(con);
 			}
 		} else {
-			deleteUserSetting(domainId,userId,serviceId,key);
+			deleteUserSetting(domainId, userId, serviceId, key);
 			return true;
 		}
 	}
 	
 	/**
 	 * Deletes the setting value indicated by the specified key.
-	 * @param userProfile The user profile to extract domain and user information.
+	 * @param profileId The profile ID to extract domain and user information.
 	 * @param serviceId The service ID.
 	 * @param key The name of the setting.
 	 * @return True if setting was succesfully deleted, otherwise false.
 	 */
 	@Override
-	public boolean deleteUserSetting(UserProfile userProfile, String serviceId, String key) {
-		return deleteUserSetting(userProfile.getDomainId(), userProfile.getUserId(), serviceId, key);
+	public boolean deleteUserSetting(UserProfileId profileId, String serviceId, String key) {
+		return deleteUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
 	}
 	
 	/**
