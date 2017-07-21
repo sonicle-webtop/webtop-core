@@ -113,6 +113,9 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					listeners: {
 						load: function(s) {
 							if (s.getCount() === 0) me.lookupReference('tab').setActiveTab('friends');
+						},
+						remove: function(s, recs) {
+							console.log('store removeee');
 						}
 					}
 				},
@@ -262,13 +265,20 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}));
 	},
 	
+	loadChats: function() {
+		this.gpChats().getStore().load();
+	},
+	
+	/*
 	addChat: function(id, name) {
 		var sto = this.gpChats().getStore();
 		sto.add(sto.createModel({
 			id: id,
-			name: name
+			name: name,
+			hot: false
 		}));
 	},
+	*/
 	
 	updateChatName: function(id, name) {
 		var sto = this.gpChats().getStore(),

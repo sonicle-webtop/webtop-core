@@ -34,8 +34,7 @@
 Ext.define('Sonicle.webtop.core.view.IMChat', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		//'Sonicle.grid.column.Icon',
-		//'Sonicle.grid.column.Lookup',
+		'Sonicle.picker.Emoji',
 		'Sonicle.webtop.core.ux.grid.column.ChatMessage',
 		'Sonicle.webtop.core.model.IMMessageGrid'
 	],
@@ -107,12 +106,45 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				items: [{
 					xtype: 'button',
 					ui: 'default-toolbar',
-					tooltip: me.mys.res('imchat.btn-emoji.tip'),
 					glyph: 'xf118@FontAwesome',
-					handler: function() {
-						console.log('Not supported yet!');
+					enableToggle: true,
+					toggleHandler: function(s, state) {
+						var cmp = me.lref('pnlemojis');
+						if (state) {
+							s.setGlyph('xf078@FontAwesome');
+							cmp.expand();
+						} else {
+							s.setGlyph('xf118@FontAwesome');
+							cmp.collapse();
+						}
 					}
-				}, ' ', {
+				}/*, {
+					xtype: 'button',
+					ui: 'default-toolbar',
+					glyph: 'xf118@FontAwesome',
+					arrowVisible: false,
+					menu: {
+						xtype: 'soemojimenu',
+						hideOnClick: false,
+						pickerConfig: {
+							recentsText: me.mys.res('soemojipicker.recents.tip'),
+							peopleText: me.mys.res('soemojipicker.people.tip'),
+							natureText: me.mys.res('soemojipicker.nature.tip'),
+							foodsText: me.mys.res('soemojipicker.foods.tip'),
+							activityText: me.mys.res('soemojipicker.activity.tip'),
+							placesText: me.mys.res('soemojipicker.places.tip'),
+							objectsText: me.mys.res('soemojipicker.objects.tip'),
+							symbolsText: me.mys.res('soemojipicker.symbols.tip'),
+							flagsText: me.mys.res('soemojipicker.flags.tip')
+						},
+						listeners: {
+							select: function(s, emoji) {
+								var fld = me.lref('fldmessage');
+								fld.setValue(fld.getValue()+emoji);
+							}
+						}
+					}
+				}*/, ' ', {
 					xtype: 'textarea',
 					reference: 'fldmessage',
 					emptyText: me.mys.res('imchat.fld-message.emp'),
@@ -143,7 +175,6 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 			}
 		});
 		me.callParent(arguments);
-		
 		me.add({
 			region: 'center',
 			xtype: 'container',
@@ -213,6 +244,33 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 					flex: 1
 				}]
 			}]
+		}, {
+			region: 'south',
+			xtype: 'soemojipicker',
+			reference: 'pnlemojis',
+			header: false,
+			collapsed: true,
+			collapsible: true,
+			collapseMode: 'placeholder',
+			placeholder: {
+				xtype: 'component',
+				width: 0
+			},
+			recentsText: me.mys.res('soemojipicker.recents.tip'),
+			peopleText: me.mys.res('soemojipicker.people.tip'),
+			natureText: me.mys.res('soemojipicker.nature.tip'),
+			foodsText: me.mys.res('soemojipicker.foods.tip'),
+			activityText: me.mys.res('soemojipicker.activity.tip'),
+			placesText: me.mys.res('soemojipicker.places.tip'),
+			objectsText: me.mys.res('soemojipicker.objects.tip'),
+			symbolsText: me.mys.res('soemojipicker.symbols.tip'),
+			flagsText: me.mys.res('soemojipicker.flags.tip'),
+			listeners: {
+				select: function(s, emoji) {
+					var fld = me.lref('fldmessage');
+					fld.setValue(fld.getValue()+emoji);
+				}
+			}
 		});
 		
 		me.on('viewshow', me.onViewShow);
@@ -234,10 +292,12 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				text: text
 			},
 			callback: function(success, json) {
+				var fld = me.lref('fldmessage');
 				if (success) {
 					me.addMessage(json.data);
+					fld.focus(true);
 				} else {
-					me.lref('fldmessage').setValue(text);
+					fld.setValue(text);
 				}
 			}
 		});

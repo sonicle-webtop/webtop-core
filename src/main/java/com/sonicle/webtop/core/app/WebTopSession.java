@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.xmpp.XMPPHelper;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
@@ -78,7 +77,6 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -105,7 +103,6 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private SessionComManager comm = null;
-	private AbstractXMPPConnection xmppConnection = null;
 	private final Object lock1 = new Object();
 	private javax.mail.Session mailSession = null;
 	
@@ -872,6 +869,7 @@ public class WebTopSession {
 		// Please do not replace 0.0.0 with the real version, it limits server traffic.
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
 		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
+		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");

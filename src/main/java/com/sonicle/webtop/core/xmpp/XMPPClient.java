@@ -285,6 +285,23 @@ public class XMPPClient {
 		return chatJid;
 	}
 	
+	public List<ChatRoom> getChats() throws XMPPClientException {
+		checkAuthentication();
+		
+		ArrayList<ChatRoom> chats = new ArrayList<>();
+		synchronized(directChats) {
+			for(DChat chatObj : directChats.values()) {
+				chats.add(chatObj.getChatRoom());
+			}
+		}
+		synchronized(groupChats) {
+			for(GChat chatObj : groupChats.values()) {
+				chats.add(chatObj.getChatRoom());
+			}
+		}
+		return chats;
+	}
+	
 	public void forgetChat(EntityBareJid chatJid) throws XMPPClientException {
 		checkAuthentication();
 		

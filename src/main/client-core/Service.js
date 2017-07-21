@@ -34,7 +34,9 @@
 Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WTA.sdk.Service',
 	requires: [
-		'Sonicle.webtop.core.model.ServiceVars',
+		'Sonicle.webtop.core.model.ServiceVars'
+	],
+	uses: [
 		'Sonicle.webtop.core.view.IMChat',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals'
@@ -72,8 +74,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 		});
 		me.onMessage('imChatRoomAdded', function(msg) {
-			var pl = msg.payload;
-			me.getVPController().getIMPanel().addChat(pl.chatId, pl.chatName);
+			me.getVPController().getIMPanel().loadChats();
+			//var pl = msg.payload;
+			//me.getVPController().getIMPanel().addChat(pl.chatId, pl.chatName);
 		});
 		me.onMessage('imChatRoomUpdated', function(msg) {
 			var pl = msg.payload;
@@ -286,7 +289,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 			me.prepareIMChat(chatId, friendIds, {
 				callback: function(success, json) {
 					if (success) {
-						me.getVPController().getIMPanel().addChat(chatId, chatName);
 						vct = me.createIMChatView(chatId, chatName);
 						vct.show();
 					} else {

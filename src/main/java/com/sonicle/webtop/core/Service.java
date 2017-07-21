@@ -1337,9 +1337,17 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
 				List<JsGridIMChat> items = new ArrayList<>();
-				for(IMHistoryChat chat : coreMgr.listIMHistoryChats()) {
-					items.add(new JsGridIMChat(chat));
+				
+				if (xmppCli != null) {
+					for(ChatRoom chat : xmppCli.getChats()) {
+						items.add(new JsGridIMChat(chat));
+					}
+				} else {
+					for(IMHistoryChat chat : coreMgr.listIMHistoryChats()) {
+						items.add(new JsGridIMChat(chat));
+					}
 				}
+					
 				new JsonResult(items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {

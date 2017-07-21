@@ -39,6 +39,6 @@ Ext.define('Sonicle.webtop.core.model.IMChatGrid', {
 	fields: [
 		WTF.field('id', 'string', false),
 		WTF.field('name', 'string', false),
-		WTF.field('hot', 'boolean', false)
+		WTF.field('hot', 'boolean', false, {defaultValue: false})
 	]
 });
