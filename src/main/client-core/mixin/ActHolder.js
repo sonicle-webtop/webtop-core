@@ -46,7 +46,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	 * @param {Object} cfg The action config.
 	 * @returns {WTA.ux.Action} The Action just created.
 	 */
-	createAction: function(group, name, cfg) {
+	createAct: function(group, name, cfg) {
 		var me = this;
 		/*
 		var txt = Ext.isDefined(obj.text) ? obj.txt : me._buildText(obj.ID, name),
