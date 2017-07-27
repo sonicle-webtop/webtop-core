@@ -33,17 +33,18 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
+import org.joda.time.DateTime;
 import org.jxmpp.jid.EntityBareJid;
 
 /**
  *
  * @author malbinola
  */
-public class DirectChatRoom extends ChatRoom {
+public class InstantChatRoom extends ChatRoom {
 	private final EntityBareJid withJid;
 	
-	public DirectChatRoom(EntityBareJid jid, EntityBareJid ownerJid, String name, EntityBareJid withJid) {
-		super(jid, ownerJid, name);
+	public InstantChatRoom(EntityBareJid jid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity, EntityBareJid withJid) {
+		super(jid, ownerJid, name, lastSeenActivity);
 		this.withJid = withJid;
 	}
 	

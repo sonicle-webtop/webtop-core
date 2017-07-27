@@ -42,12 +42,13 @@ Ext.define('Sonicle.webtop.core.ux.grid.ChatPartecipant', {
 		var me = this;
 		Ext.apply(cfg, {
 			lookupConfig: {
-				action: 'LookupChatPartecipants',
-				displayField: 'label'
+				model: 'Sonicle.webtop.core.model.ChatPartecipantLkp',
+				action: 'LookupIMFriends',
+				displayField: 'desc'
 			},
 			columnConfig: {
 				dataIndex: 'friendId',
-				displayField: 'label'
+				displayField: 'desc'
 			},
 			pickerConfig: {
 				titleKey: 'wtchatpartecipantgrid.picker.tit',

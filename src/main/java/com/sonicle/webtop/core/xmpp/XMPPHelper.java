@@ -34,8 +34,11 @@
 package com.sonicle.webtop.core.xmpp;
 
 import static com.sonicle.webtop.core.xmpp.XMPPClient.logger;
+import java.util.ArrayList;
+import java.util.List;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.TLSUtils;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
@@ -77,8 +80,20 @@ public class XMPPHelper {
 	}
 	*/
 	
-	public static String buildGuessedNickname(String entityBareJid) {
-		return "~" + entityBareJid;
+	public static boolean jidEquals(Jid jid1, Jid jid2) {
+		return jid1.compareTo(jid2) == 0;
+	}
+	
+	public static boolean jidBareEquals(Jid jid1, Jid jid2) {
+		return jid1.asBareJid().compareTo(jid2.asBareJid()) == 0;
+	}
+	
+	public static String buildGuessedString(BareJid jid) {
+		return buildGuessedString(jid.toString());
+	}
+	
+	public static String buildGuessedString(String bareJid) {
+		return "~" + bareJid;
 	}
 	
 	public static EntityBareJid asEntityBareJid(String jid) {
@@ -117,5 +132,19 @@ public class XMPPHelper {
 			logger.error("Error creating Resourcepart from string [{}]", ex, resource);
 			return null;
 		}
+	}
+	
+	public static List<String> asFormListSingleType(String value) {
+		List<String> list = new ArrayList<>();
+		list.add(value);
+		return list;
+	}
+	
+	public static List<String> asFormListMultiType(String... values) {
+		List<String> list = new ArrayList<>();
+		for(String value : values) {
+			list.add(value);
+		}
+		return list;
 	}
 }

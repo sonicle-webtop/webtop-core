@@ -33,21 +33,21 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
+import org.joda.time.DateTime;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 
 /**
  *
  * @author malbinola
  */
 public class GroupChatRoom extends ChatRoom {
-	private final boolean iAmOwner;
 	
-	public GroupChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name, boolean iAmOwner) {
-		super(chatJid, ownerJid, name);
-		this.iAmOwner = iAmOwner;
+	public GroupChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity) {
+		super(chatJid, ownerJid, name, lastSeenActivity);
 	}
 	
-	public boolean iAmOwner() {
-		return iAmOwner;
+	public boolean iAmOwner(Jid myJid) {
+		return getOwnerJid().equals(myJid.asEntityBareJidIfPossible());
 	}
 }

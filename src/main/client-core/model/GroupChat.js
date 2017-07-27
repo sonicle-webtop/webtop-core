@@ -36,7 +36,12 @@ Ext.define('Sonicle.webtop.core.model.GroupChat', {
 	requires: [
 		'Sonicle.webtop.core.model.GroupChatPartecipant'
 	],
-	proxy: WTF.apiProxy(WT.ID, 'ManageGroupChat'),
+	proxy: WTF.apiProxy(WT.ID, 'ManageGroupChat', 'data', {
+		writer: {
+			type: 'sojson',
+			writeAssociations: true
+		}
+	}),
 	
 	identifier: 'negativestring',
 	idProperty: 'id',

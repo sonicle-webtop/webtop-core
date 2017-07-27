@@ -31,27 +31,29 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.IMChat', {
-	extend: 'WTA.sdk.DockableView',
+Ext.define('Sonicle.webtop.core.ux.IMChat', {
+	alternateClassName: 'WTA.ux.IMChat',
+	extend: 'Ext.panel.Panel',
+	alias: ['widget.wtimchat'],
 	requires: [
 		'Sonicle.picker.Emoji',
 		'Sonicle.webtop.core.ux.grid.column.ChatMessage',
 		'Sonicle.webtop.core.model.IMMessageGrid'
 	],
+	mixins: [
+		'WTA.mixin.PanelUtil'
+	],
 	
-	dockableConfig: {
-		iconCls: 'wt-icon-im-chat-xs',
-		width: 420,
-		height: 450
+	config: {
+		hotMarker: false
 	},
-	promptConfirm: false,
 	
-	myUserId: null,
 	chatId: null,
 	chatName: null,
-	
 	groupChat: false,
 	
+	layout: 'border',
+	referenceHolder: true,
 	viewModel: {
 		data: {
 			historyDate: null
@@ -60,46 +62,64 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 	
 	constructor: function(cfg) {
 		var me = this;
-		cfg.myUserId = 'matteo@sonicle.com';
 		if (Ext.isEmpty(cfg.chatId)) Ext.raise('Config `chatId` is mandatory.');
 		if (Ext.isEmpty(cfg.chatName)) Ext.raise('Config `chatName` is mandatory.');
 		me.groupChat = WTA.ux.IMPanel.isGroupChat(cfg.chatId);
+		
+		Ext.apply(cfg || {}, {
+			title: cfg.chatName,
+			iconCls: me.self.buildIconCls(me.groupChat, Ext.isBoolean(cfg.hotMarker) ? cfg.hotMarker : false)
+		});
 		me.callParent([cfg]);
-		me.setViewTitle(cfg.chatName);
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this, tbarItms = [];
 		
-		Ext.apply(me, {
-			tbar: ['->', {
-				xtype: 'button',
-				tooltip: 'Allega',
-				iconCls: 'wt-icon-im-attach-xs',
-				handler: function() {
-					
-				}
+		me.setHotMarker(me.hotMarker);
+		if (!me.groupChat) {
+			tbarItms.push({
+				xtype: 'tbtext',
+				html: WT.res('wtimchat.tbi-status.lbl')
 			}, {
-				xtype: 'button',
-				tooltip: me.mys.res('imchat.btn-history.tip'),
-				iconCls: 'wt-icon-im-history-xs',
-				menu: {
-					xtype: 'datemenu',
-					listeners: {
-						select: function(s, date) {
-							var lay = me.lref('card').getLayout(), gp;
-							me.getVM().set('historyDate', Ext.Date.format(date, 'Y-m-d'));
-							if (Sonicle.Date.isToday(date)) {
-								lay.setActiveItem(me.lref('gplast'));
-							} else {
-								gp = me.lref('gphistory');
-								gp.getStore().load();
-								lay.setActiveItem(gp);
-							}
+				reference: 'itmpresence',
+				text: '',
+				iconCls: '',
+				focusable: false,
+				disabled: true
+			});
+		}
+		tbarItms.push('->', /*{
+			xtype: 'button',
+			tooltip: 'Allega',
+			iconCls: 'wt-icon-im-attach-xs',
+			handler: function() {
+
+			}
+		},*/ {
+			xtype: 'button',
+			tooltip: WT.res('wtimchat.btn-history.tip'),
+			iconCls: 'wt-icon-im-history-xs',
+			menu: {
+				xtype: 'datemenu',
+				listeners: {
+					select: function(s, date) {
+						var lay = me.lref('card').getLayout(), gp;
+						me.getVM().set('historyDate', Ext.Date.format(date, 'Y-m-d'));
+						if (Sonicle.Date.isToday(date)) {
+							lay.setActiveItem(me.lref('gplast'));
+						} else {
+							gp = me.lref('gphistory');
+							gp.getStore().load();
+							lay.setActiveItem(gp);
 						}
 					}
 				}
-			}],
+			}
+		});
+		
+		Ext.apply(me, {
+			tbar: tbarItms,
 			bbar: {
 				xtype: 'toolbar',
 				ui: 'footer',
@@ -118,36 +138,10 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 							cmp.collapse();
 						}
 					}
-				}/*, {
-					xtype: 'button',
-					ui: 'default-toolbar',
-					glyph: 'xf118@FontAwesome',
-					arrowVisible: false,
-					menu: {
-						xtype: 'soemojimenu',
-						hideOnClick: false,
-						pickerConfig: {
-							recentsText: me.mys.res('soemojipicker.recents.tip'),
-							peopleText: me.mys.res('soemojipicker.people.tip'),
-							natureText: me.mys.res('soemojipicker.nature.tip'),
-							foodsText: me.mys.res('soemojipicker.foods.tip'),
-							activityText: me.mys.res('soemojipicker.activity.tip'),
-							placesText: me.mys.res('soemojipicker.places.tip'),
-							objectsText: me.mys.res('soemojipicker.objects.tip'),
-							symbolsText: me.mys.res('soemojipicker.symbols.tip'),
-							flagsText: me.mys.res('soemojipicker.flags.tip')
-						},
-						listeners: {
-							select: function(s, emoji) {
-								var fld = me.lref('fldmessage');
-								fld.setValue(fld.getValue()+emoji);
-							}
-						}
-					}
-				}*/, ' ', {
+				}, ' ', {
 					xtype: 'textarea',
 					reference: 'fldmessage',
-					emptyText: me.mys.res('imchat.fld-message.emp'),
+					emptyText: WT.res('wtimchat.fld-message.emp'),
 					grow: true,
 					growMin: 40,
 					enterIsSpecial: true,
@@ -164,7 +158,7 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				}, ' ', {
 					xtype: 'button',
 					ui: 'default-toolbar',
-					tooltip: me.mys.res('imchat.btn-send.tip'),
+					tooltip: WT.res('wtimchat.btn-send.tip'),
 					glyph: 'xf1d9@FontAwesome',
 					handler: function() {
 						var fld = me.lref('fldmessage');
@@ -193,7 +187,7 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				store: {
 					autoLoad: true,
 					model: 'Sonicle.webtop.core.model.IMMessageGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMMessages', 'data', {
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMMessages', 'data', {
 						extraParams: {
 							chatId: me.chatId
 						}
@@ -220,11 +214,11 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 					markDirty: false,
 					stripeRows: false,
 					deferEmptyText: false,
-					emptyText: WT.res('imchat.gphistory.emp')
+					emptyText: WT.res('wtimchat.gphistory.emp')
 				},
 				store: {
 					model: 'Sonicle.webtop.core.model.IMMessageGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMMessages', 'data', {
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMMessages', 'data', {
 						extraParams: {
 							chatId: me.chatId
 						}
@@ -256,15 +250,15 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 				xtype: 'component',
 				width: 0
 			},
-			recentsText: me.mys.res('soemojipicker.recents.tip'),
-			peopleText: me.mys.res('soemojipicker.people.tip'),
-			natureText: me.mys.res('soemojipicker.nature.tip'),
-			foodsText: me.mys.res('soemojipicker.foods.tip'),
-			activityText: me.mys.res('soemojipicker.activity.tip'),
-			placesText: me.mys.res('soemojipicker.places.tip'),
-			objectsText: me.mys.res('soemojipicker.objects.tip'),
-			symbolsText: me.mys.res('soemojipicker.symbols.tip'),
-			flagsText: me.mys.res('soemojipicker.flags.tip'),
+			recentsText: WT.res('soemojipicker.recents.tip'),
+			peopleText: WT.res('soemojipicker.people.tip'),
+			natureText: WT.res('soemojipicker.nature.tip'),
+			foodsText: WT.res('soemojipicker.foods.tip'),
+			activityText: WT.res('soemojipicker.activity.tip'),
+			placesText: WT.res('soemojipicker.places.tip'),
+			objectsText: WT.res('soemojipicker.objects.tip'),
+			symbolsText: WT.res('soemojipicker.symbols.tip'),
+			flagsText: WT.res('soemojipicker.flags.tip'),
 			listeners: {
 				select: function(s, emoji) {
 					var fld = me.lref('fldmessage');
@@ -273,11 +267,12 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 			}
 		});
 		
-		me.on('viewshow', me.onViewShow);
+		me.on('activate', me.onActivate);
+		if (!me.groupChat) me.refreshFriendPresence();
 	},
 	
-	onViewShow: function(s) {
-		this.lref('fldmessage').focus(true);
+	getChatId: function() {
+		return this.chatId;
 	},
 	
 	sendMessage: function(text) {
@@ -285,7 +280,7 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 		me.lref('card').getLayout().setActiveItem(me.lref('gplast'));
 		if (Ext.isEmpty(text)) return;
 		
-		WT.ajaxReq(me.mys.ID, 'ManageIMChat', {
+		WT.ajaxReq(WT.ID, 'ManageIMChat', {
 			params: {
 				crud: 'send',
 				chatId: me.chatId,
@@ -315,30 +310,55 @@ Ext.define('Sonicle.webtop.core.view.IMChat', {
 		});
 	},
 	
+	setFriendPresence: function(status) {
+		var me = this,
+				btn = me.lref('itmpresence');
+		if (btn) {
+			btn.setText(WT.res('im.pstatus.'+status));
+			btn.setIconCls(WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs'));
+		}
+	},
+	
+	refreshFriendPresence: function() {
+		var me = this;
+		WT.ajaxReq(WT.ID, 'ManageIMChat', {
+			params: {
+				crud: 'presence',
+				chatId: me.chatId
+			},
+			callback: function(success, json) {
+				if (success) {
+					me.setFriendPresence(json.data);
+				}
+			}
+		});
+	},
+	
+	updateHotMarker: function(nv) {
+		var me = this;
+		me.setIconCls(me.self.buildIconCls(me.groupChat, nv));
+	},
+	
 	privates: {
+		onActivate: function(s) {
+			s.setHotMarker(false);
+			s.lref('fldmessage').focus(true);
+		},
+		
 		addMessage: function(data) {
 			var gp = this.lref('gplast'),
 				sto = gp.getStore(),
 				rec;
 			rec = sto.add(sto.createModel(data))[0];
 			gp.getView().focusRow(rec);
-		},
-		
-		generateTitle: function() {
-			var me = this;
-			if (!me.groupChat) {
-				return me.concatFriendNames();
-			} else {
-				return !Ext.isEmpty(me.chatName) ? me.chatName : me.concatFriendNames();
-			}
-		},
-		
-		concatFriendNames: function() {
-			var arr = [];
-			Ext.iterate(this.friends, function(fri) {
-				arr.push(!Ext.isEmpty(fri.name) ? fri.name : fri.id);
-			});
-			return arr.join(', ');
+		}
+	},
+	
+	statics: {
+		buildIconCls: function(group, hot) {
+			var ico = group ? 'im-gchat' : 'im-ichat';
+			if (hot) ico += '-hot';
+			return WTF.cssIconCls(WT.XID, ico, 'xs');
 		}
 	}
 });

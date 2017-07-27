@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	requires: [
 		'Sonicle.form.trigger.Clear',
 		'Sonicle.grid.column.Icon',
+		'Sonicle.webtop.core.ux.IMStatusMenu',
 		'Sonicle.webtop.core.model.IMFriendGrid',
 		'Sonicle.webtop.core.model.IMChatGrid'
 	],
@@ -45,6 +46,30 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		'Sonicle.mixin.ActHolder',
 		'Sonicle.mixin.RefHolder'
 	],
+	
+	config: {
+		/**
+		 * @cfg {online|away|dnd|offline} presenceStatus
+		 * The selected IM status.
+		 */
+		presenceStatus: null
+	},
+	
+	/**
+	 * @event presencestatuschange
+	 */
+	
+	/**
+	 * @event addgroupchatclick
+	 */
+	
+	/**
+	 * @event frienddblclick
+	 */
+	
+	/**
+	 * @event chatdblclick
+	 */
 	
 	layout: 'fit',
 	header: false,
@@ -77,7 +102,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	
 	initComponent: function() {
 		var me = this;
-		me.callParent(arguments);
 		
 		me.addAct('deleteChat', {
 			text: WT.res('act-remove.lbl'),
@@ -87,6 +111,34 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				if (rec) me.removeChatFromRec(rec);
 			}
 		});
+		me.addAct('addGroupChat', {
+			text: WT.res('wtimpanel.act-addGroupChat.lbl'),
+			//iconCls: WTF.cssIconCls(WT.XID, 'remove', 'xs'),
+			handler: function() {
+				me.fireEvent('addgroupchatclick', me);
+			}
+		});
+		
+		Ext.apply(me, {
+			tbar: [{
+				xtype: 'tbtext',
+				html: WT.res('wtimpanel.mni-status.txt')
+			}, {
+				reference: 'btnstatus',
+				text: WTA.ux.IMStatusMenu.statusText(me.presenceStatus),
+				tooltip: WT.res('wtimpanel.btn-status.tip'),
+				iconCls: WTA.ux.IMStatusMenu.statusIconCls(me.presenceStatus),
+				menu: {
+					xtype: 'wtimstatusmenu',
+					listeners: {
+						presencestatusselect: me.onBtnStatusPresenseSelect,
+						scope: me
+					}
+				}
+			}]
+		});
+		
+		me.callParent(arguments);
 		
 		me.add([{
 			xtype: 'tabpanel',
@@ -108,7 +160,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					autoLoad: true,
 					autoSync: true,
 					model: 'Sonicle.webtop.core.model.IMChatGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMChats'),
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChats'),
 					sorters: ['name'],
 					listeners: {
 						load: function(s) {
@@ -173,9 +225,9 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				},
 				store: {
 					model: 'Sonicle.webtop.core.model.IMFriendGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageIMFriends'),
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMFriends'),
 					groupField: 'online',
-					groupDir: 'DESC',
+					groupDir: 'ASC',
 					sorters: ['nick']
 				},
 				columns: [{
@@ -185,7 +237,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					menuDisabled: true,
 					stopSelection: true,
 					getIconCls: function (v, rec) {
-						return WTF.cssIconCls(WT.XID, 'im-pstatus-' + v, 'xs');
+						return WTF.cssIconCls(WT.XID, 'im-pstatus-'+v, 'xs');
 					},
 					getTip: function(v, rec) {
 						return WT.res('im.pstatus.'+v);
@@ -204,12 +256,12 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				}],
 				features: [{
 					ftype: 'grouping',
-					startCollapsed: false,
+					startCollapsed: true,
 					groupHeaderTpl: [
 						'{groupValue:this.formatValue} ({children.length})',
 						{
 							formatValue: function(v) {
-								return WT.res('wtimpanel.gpfriends.group.' + (v ? 'online' : 'offline'));
+								return WT.res('wtimpanel.gpfriends.group.' + ((v === 1) ? 'online' : 'offline'));
 							}
 						}
 					]
@@ -233,6 +285,11 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					}
 				}],
 				listeners: {
+					afterrender: function(s) {
+						Ext.defer(function() {
+							s.getView().findFeature('grouping').expand("1", {highlight: true});
+						}, 200);
+					},
 					rowdblclick: function(s, rec) {
 						var chatId = rec.get('dChatId'),
 								rec2 = me.lookupReference('gpchats').getStore().getById(chatId);
@@ -247,12 +304,11 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}]);
 	},
 	
-	gpChats: function() {
-		return this.lookupReference('gpchats');
-	},
-	
-	gpFriends: function() {
-		return this.lookupReference('gpfriends');
+	updatePresenceStatus: function(nv, ov) {
+		var me = this;
+		if (!me.isConfiguring) {
+			me.btnStatus().menu.setPresenceStatus(nv);
+		}
 	},
 	
 	cxmChat: function() {
@@ -260,7 +316,9 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		return me.getRef('cxmChat') || me.addRef('cxmChat', Ext.create({
 			xtype: 'menu',
 			items: [
-				me.getAct('deleteChat')
+				me.getAct('deleteChat'),
+				'-',
+				me.getAct('addGroupChat')
 			]
 		}));
 	},
@@ -268,17 +326,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	loadChats: function() {
 		this.gpChats().getStore().load();
 	},
-	
-	/*
-	addChat: function(id, name) {
-		var sto = this.gpChats().getStore();
-		sto.add(sto.createModel({
-			id: id,
-			name: name,
-			hot: false
-		}));
-	},
-	*/
 	
 	updateChatName: function(id, name) {
 		var sto = this.gpChats().getStore(),
@@ -362,8 +409,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}
 	},
 	
-	
-	
 	toggleCollapse: function() {
 		this.floatCollapsedPanel();
 	},
@@ -377,6 +422,27 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	},
 	
 	privates: {
+		btnStatus: function() {
+			return this.lookupReference('btnstatus');
+		},
+
+		gpChats: function() {
+			return this.lookupReference('gpchats');
+		},
+
+		gpFriends: function() {
+			return this.lookupReference('gpfriends');
+		},
+		
+		onBtnStatusPresenseSelect: function(s, status) {
+			var me = this,
+					Menu = WTA.ux.IMStatusMenu,
+					btn = me.lookupReference('btnstatus');
+			btn.setText(Menu.statusText(status));
+			btn.setIconCls(Menu.statusIconCls(status));
+			me.fireEvent('presencestatuschange', me, status);
+		},
+		
 		onFriendsSearchChange: function(s) {
 			this.searchFriend(s.getValue());
 		},
@@ -399,7 +465,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	
 	statics: {
 		isGroupChat: function(chatId) {
-			return chatId.indexOf('@gchat') !== -1;
+			return chatId.indexOf('@instant.') === -1;
 		}
 	}
 });

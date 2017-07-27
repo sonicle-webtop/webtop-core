@@ -155,5 +155,12 @@ public class CoreManifest extends ServiceManifest {
 			- ACCESS: ability to sync data with devices
 		*/
 		permissions.add(new ServicePermission("DEVICES_SYNC", new String[]{ServicePermission.ACTION_ACCESS}));
+		
+		/*
+			WEBCHAT
+			Device synchroniztion
+			- ACCESS: ability to sync data with devices
+		*/
+		permissions.add(new ServicePermission("WEBCHAT", new String[]{ServicePermission.ACTION_ACCESS}));
 	}
 }

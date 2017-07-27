@@ -57,33 +57,6 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		stores: {
 			notifications: {
 				type: 'wtbadgenotification'
-				/*
-				data: [{
-					serviceId: 'com.sonicle.webtop.core',
-					iconCls: 'wt-icon-service-m',
-					title: 'Notifica 1',
-					notifyService: true,
-					autoRemove: true
-				}, {
-					serviceId: 'com.sonicle.webtop.mail',
-					iconCls: 'wtmail-icon-service-m',
-					title: 'Notifica 2',
-					notifyService: true,
-					autoRemove: false
-				}, {
-					serviceId: 'com.sonicle.webtop.vfs',
-					iconCls: 'wtvfs-icon-service-m',
-					title: 'Notifica 3',
-					notifyService: false,
-					autoRemove: true
-				}, {
-					serviceId: 'com.sonicle.webtop.valendar',
-					iconCls: 'wtcal-icon-service-m',
-					title: 'Notifica 4',
-					notifyService: false,
-					autoRemove: false
-				}]
-				*/
 			}
 		}
 	},
@@ -154,7 +127,9 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		me.addToRegion('north', me.createNorthCmp());
 		me.addToRegion('west', me.createWestCmp());
 		me.addToRegion('center', me.createCenterCmp());
-		me.addToRegion('east', me.createEastCmp());
+		if (WT.getVar('imEnabled') === true) {
+			me.addToRegion('east', me.createEastCmp());
+		}
 		//me.addToRegion('south', me.createSouthCmp());
 	},
 	
@@ -175,7 +150,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		var me = this,
 				acts = WT.getApp().getService(WT.ID).getToolboxActions(),
 				toolsCount = acts.length,
-				toolMnuItms = [];
+				toolMnuItms = [],
+				menuTbItms = [];
 		
 		me.fixedToolsCount = toolsCount;
 		if (toolsCount > 0) {
@@ -184,6 +160,199 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			});
 			toolMnuItms.push('-');
 		}
+		
+		menuTbItms.push({
+			xtype: 'button',
+			reference: 'toolboxbtn',
+			iconCls: 'wt-menu-tools',
+			tooltip: WT.res('menu.tools.lbl'),
+			menu: toolMnuItms
+		}, '-');
+		if (WT.getVar('imEnabled') === true) {
+			menuTbItms.push({
+				xtype: 'wtimbutton',
+				reference: 'imbtn',
+				presenceStatus: WT.getVar('imPresenceStatus'),
+				statusMessage: WT.getVar('imStatusMessage'),
+				listeners: {
+					click: 'onIMClick'
+				},
+				width: 48
+			});
+		}
+		menuTbItms.push({
+			xtype: 'wtnotificationbutton',
+			bind: {
+				store: '{notifications}',
+				listeners: {
+					callbackService: 'onCallbackService'
+				}
+			}
+		}, /*{
+			xtype: 'button',
+			glyph: 0xf0c9,
+			menu: {
+				items: [{
+					xtype: 'panel',
+					layout: 'anchor',
+					border: false,
+					items: [{
+						xtype: 'label',
+						text: WT.getVar('userDisplayName'),
+						cls: 'wt-menu-userdetails-main'
+					}, {
+						xtype: 'label',
+						text: WT.getVar('userId'),
+						cls: 'wt-menu-userdetails-sub'
+					}],
+					width: 150
+				}]
+			}
+		},*/ {
+			xtype: 'button',
+			glyph: 0xf0c9,
+			arrowVisible: false,
+			menu: {
+				xtype: 'menu',
+				plain: true,
+				items: [{
+						xtype: 'label',
+						text: WT.getVar('userDisplayName'),
+						cls: 'wt-menu-userdetails-main'
+					}, {
+						xtype: 'label',
+						text: WT.getVar('userId'),
+						cls: 'wt-menu-userdetails-sub'
+				}, '-', {
+					xtype: 'buttongroup',
+					ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
+					bodyCls: 'wt-menu-bgroup-body',
+					columns: 2,
+					defaults: {
+						xtype: 'button',
+						scale: 'large',
+						iconAlign: 'center',
+						handler: 'onMenuButtonClick'
+					},
+					items: [{
+						itemId: 'feedback',
+						tooltip: WT.res('menu.feedback.tip'),
+						disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
+						iconCls: 'wt-menu-feedback',
+						width: '4em',
+						height: '4em'
+					}, {
+						itemId: 'whatsnew',
+						tooltip: WT.res('menu.whatsnew.tip'),
+						disabled: !WT.getVar('wtWhatsnewEnabled'),
+						iconCls: 'wt-menu-whatsnew',
+						width: '4em',
+						height: '4em'
+					}, {
+						itemId: 'options',
+						tooltip: WT.res('menu.options.tip'),
+						iconCls: 'wt-menu-options',
+						width: '4em',
+						height: '4em'
+					}, {
+						itemId: 'addons',
+						tooltip: WT.res('menu.addons.tip'),
+						iconCls: 'wt-menu-addons',
+						width: '4em',
+						height: '4em'
+					}/*, {
+						itemId: 'help',
+						tooltip: WT.res('menu.help.tip'),
+						iconCls: 'wt-menu-help',
+						width: '4em',
+						height: '4em'
+					}*/, {
+						itemId: 'logout',
+						colspan: 2,
+						width: '100%',
+						scale: 'small',
+						tooltip: WT.res('menu.logout.tip'),
+						iconCls: 'wt-menu-logout'
+					}]
+				}]
+
+
+				/*
+				items: [{
+					xtype: 'buttongroup',
+					columns: 2,
+					/*
+					defaults: {
+						xtype: 'button',
+						scale: 'large',
+						iconAlign: 'center',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					},
+
+					items: [{
+						xtype: 'label',
+						text: 'Matteo Albinola',
+						cls: 'wt-menu-user',
+						colspan: 2
+					}, {
+						xtype: 'label',
+						text: 'matteo.albinola@sonicle.com',
+						cls: 'wt-menu-useremail',
+						colspan: 2
+					}, {
+						xtype: 'button',
+						itemId: 'feedback',
+						scale: 'large',
+						iconAlign: 'center',
+						tooltip: WT.res('menu.feedback.tip'),
+						disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
+						iconCls: 'wt-menu-feedback',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					}, {
+						xtype: 'button',
+						itemId: 'whatsnew',
+						scale: 'large',
+						iconAlign: 'center',
+						tooltip: WT.res('menu.whatsnew.tip'),
+						disabled: !WT.getVar('wtWhatsnewEnabled'),
+						iconCls: 'wt-menu-whatsnew',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					}, {
+						xtype: 'button',
+						itemId: 'options',
+						scale: 'large',
+						iconAlign: 'center',
+						tooltip: WT.res('menu.options.tip'),
+						iconCls: 'wt-menu-options',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					}, {
+						xtype: 'button',
+						itemId: 'help',
+						scale: 'large',
+						iconAlign: 'center',
+						tooltip: WT.res('menu.help.tip'),
+						iconCls: 'wt-menu-help',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					}, {
+						xtype: 'button',
+						itemId: 'logout',
+						colspan: 2,
+						scale: 'small',
+						tooltip: WT.res('menu.logout.tip'),
+						iconCls: 'wt-menu-logout',
+						width: '100%',
+						handler: 'onMenuButtonClick'
+					}]
+				}]
+
+			*/
+			}
+		});
 		
 		return {
 			xtype: 'container',
@@ -228,222 +397,21 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 					paddingTop: 0,
 					paddingBottom: 0
 				},
-				items: [{
-					xtype: 'button',
-					reference: 'toolboxbtn',
-					iconCls: 'wt-menu-tools',
-					tooltip: WT.res('menu.tools.lbl'),
-					menu: toolMnuItms
-				}, '-', {
-					xtype: 'wtimbutton',
-					reference: 'imbtn',
-					presenceStatus: WT.getVar('imPresenceStatus'),
-					statusMessage: WT.getVar('imStatusMessage'),
-					listeners: {
-						//toggle: 'onIMToggle',
-						click: 'onIMClick',
-						presencestatusselect: 'onIMStatusMenuStatusSelect'
-					}
-				}, {
-					xtype: 'wtnotificationbutton',
-					bind: {
-						store: '{notifications}',
-						listeners: {
-							callbackService: 'onCallbackService'
-						}
-					}
-				}, /*{
-					xtype: 'button',
-					arrowVisible: false,
-					menu: {
-						items: [{
-							text: 'Stato in linea',
-							reference: 'imstatusmenu',
-							menu: {
-								xtype: 'wtimstatusmenu',
-								presenceStatus: WT.getVar('imPresenceStatus'),
-								listeners: {
-									presencestatusselect: 'onIMStatusMenuStatusSelect'
-								}
-							}
-						}]
-					}
-				}, {
-					xtype: 'button',
-					glyph: 0xf0c9,
-					menu: {
-						items: [{
-							xtype: 'panel',
-							layout: 'anchor',
-							border: false,
-							items: [{
-								xtype: 'label',
-								text: WT.getVar('userDisplayName'),
-								cls: 'wt-menu-userdetails-main'
-							}, {
-								xtype: 'label',
-								text: WT.getVar('userId'),
-								cls: 'wt-menu-userdetails-sub'
-							}],
-							width: 150
-						}]
-					}
-				},*/ {
-					xtype: 'button',
-					glyph: 0xf0c9,
-					arrowVisible: false,
-					menu: {
-						xtype: 'menu',
-						plain: true,
-						items: [{
-								xtype: 'label',
-								text: WT.getVar('userDisplayName'),
-								cls: 'wt-menu-userdetails-main'
-							}, {
-								xtype: 'label',
-								text: WT.getVar('userId'),
-								cls: 'wt-menu-userdetails-sub'
-						}, '-', {
-							xtype: 'buttongroup',
-							ui: WTA.ThemeMgr.getBase(WT.getTheme()) === 'classic' ? 'default-panel' : 'default',
-							bodyCls: 'wt-menu-bgroup-body',
-							columns: 2,
-							defaults: {
-								xtype: 'button',
-								scale: 'large',
-								iconAlign: 'center',
-								handler: 'onMenuButtonClick'
-							},
-							items: [{
-								itemId: 'feedback',
-								tooltip: WT.res('menu.feedback.tip'),
-								disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
-								iconCls: 'wt-menu-feedback',
-								width: '4em',
-								height: '4em'
-							}, {
-								itemId: 'whatsnew',
-								tooltip: WT.res('menu.whatsnew.tip'),
-								disabled: !WT.getVar('wtWhatsnewEnabled'),
-								iconCls: 'wt-menu-whatsnew',
-								width: '4em',
-								height: '4em'
-							}, {
-								itemId: 'options',
-								tooltip: WT.res('menu.options.tip'),
-								iconCls: 'wt-menu-options',
-								width: '4em',
-								height: '4em'
-							}, {
-								itemId: 'addons',
-								tooltip: WT.res('menu.addons.tip'),
-								iconCls: 'wt-menu-addons',
-								width: '4em',
-								height: '4em'
-							}/*, {
-								itemId: 'help',
-								tooltip: WT.res('menu.help.tip'),
-								iconCls: 'wt-menu-help',
-								width: '4em',
-								height: '4em'
-							}*/, {
-								itemId: 'logout',
-								colspan: 2,
-								width: '100%',
-								scale: 'small',
-								tooltip: WT.res('menu.logout.tip'),
-								iconCls: 'wt-menu-logout'
-							}]
-						}]
-					
-					
-					/*
-					items: [{
-							xtype: 'buttongroup',
-							columns: 2,
-							/*
-							defaults: {
-								xtype: 'button',
-								scale: 'large',
-								iconAlign: 'center',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							},
-							
-							items: [{
-								xtype: 'label',
-								text: 'Matteo Albinola',
-								cls: 'wt-menu-user',
-								colspan: 2
-							}, {
-								xtype: 'label',
-								text: 'matteo.albinola@sonicle.com',
-								cls: 'wt-menu-useremail',
-								colspan: 2
-							}, {
-								xtype: 'button',
-								itemId: 'feedback',
-								scale: 'large',
-								iconAlign: 'center',
-								tooltip: WT.res('menu.feedback.tip'),
-								disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
-								iconCls: 'wt-menu-feedback',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							}, {
-								xtype: 'button',
-								itemId: 'whatsnew',
-								scale: 'large',
-								iconAlign: 'center',
-								tooltip: WT.res('menu.whatsnew.tip'),
-								disabled: !WT.getVar('wtWhatsnewEnabled'),
-								iconCls: 'wt-menu-whatsnew',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							}, {
-								xtype: 'button',
-								itemId: 'options',
-								scale: 'large',
-								iconAlign: 'center',
-								tooltip: WT.res('menu.options.tip'),
-								iconCls: 'wt-menu-options',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							}, {
-								xtype: 'button',
-								itemId: 'help',
-								scale: 'large',
-								iconAlign: 'center',
-								tooltip: WT.res('menu.help.tip'),
-								iconCls: 'wt-menu-help',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							}, {
-								xtype: 'button',
-								itemId: 'logout',
-								colspan: 2,
-								scale: 'small',
-								tooltip: WT.res('menu.logout.tip'),
-								iconCls: 'wt-menu-logout',
-								width: '100%',
-								handler: 'onMenuButtonClick'
-							}]
-						}]
-					
-					*/
-					}
-				}]
+				items: menuTbItms
 			}]
 		};
 	},
 	
 	createEastCmp: function() {
-		var me = this;
 		return {
 			xtype: 'wtimpanel',
+			presenceStatus: WT.getVar('imPresenceStatus'),
+			statusMessage: WT.getVar('imStatusMessage'),
 			listeners: {
+				presencestatuschange: 'onIMPanelPresenceStatusChange',
 				frienddblclick: 'onIMPanelFriendDblClick',
-				chatdblclick: 'onIMPanelChatDblClick'
+				chatdblclick: 'onIMPanelChatDblClick',
+				addgroupchatclick: 'onIMPanelAddGroupChatClick'
 			}
 		};
 	},

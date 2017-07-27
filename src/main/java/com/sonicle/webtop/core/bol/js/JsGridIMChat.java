@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.model.IMHistoryChat;
+import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.xmpp.ChatRoom;
 
 /**
@@ -46,7 +46,7 @@ public class JsGridIMChat {
 	
 	public JsGridIMChat() {}
 
-	public JsGridIMChat(IMHistoryChat historyChat) {
+	public JsGridIMChat(IMChat historyChat) {
 		this.id = historyChat.getChatJid();
 		this.name = historyChat.getName();
 	}

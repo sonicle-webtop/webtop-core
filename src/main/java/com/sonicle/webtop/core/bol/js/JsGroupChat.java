@@ -43,7 +43,7 @@ import java.util.List;
 public class JsGroupChat {
 	public String id;
 	public String name;
-	List<Partecipant> partecipants = new ArrayList<>();
+	public List<Partecipant> partecipants = new ArrayList<>();
 	
 	public JsGroupChat() {}
 	

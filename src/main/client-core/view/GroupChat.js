@@ -39,9 +39,11 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 		'Sonicle.webtop.core.model.GroupChat'
 	],
 	
+	confirm: 'yn',
+	
 	dockableConfig: {
 		title: '{groupChat.tit}',
-		iconCls: 'wt-icon-groupChat-xs',
+		iconCls: 'wt-icon-im-gchat-xs',
 		width: 430,
 		height: 250
 	},
@@ -82,7 +84,8 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 							friendId: vals[0]
 						});
 					}
-				}
+				},
+				flex: 1
 			}]
 		});
 		me.on('viewload', me.onViewLoad);

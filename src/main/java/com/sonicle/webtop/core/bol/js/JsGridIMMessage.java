@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.webtop.core.model.IMHistoryMessage;
+import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.xmpp.ChatMessage;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -61,7 +61,7 @@ public class JsGridIMMessage {
 		return new JsGridIMMessage(id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, false);
 	}
 	
-	public JsGridIMMessage(boolean isSent, IMHistoryMessage message, String senderNick, DateTimeZone utz) {
+	public JsGridIMMessage(boolean isSent, IMMessage message, String senderNick, DateTimeZone utz) {
 		DateTimeFormatter ymdhms = DateTimeUtils.createYmdHmsFormatter(utz);
 		this.id = message.getMessageUid();
 		this.fromId = message.getSenderJid();

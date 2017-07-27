@@ -36,6 +36,10 @@
 .wt-icon-im-chat-xs { background-image: url('im-chat_16.png') !important; }
 .wt-icon-im-chat-m { background-image: url('im-chat_32.png') !important; }
 .wt-icon-im-chat-hot-xs { background-image: url('im-chat-hot_16.png') !important; }
+.wt-icon-im-ichat-xs { background-image: url('im-ichat_16.png') !important; }
+.wt-icon-im-ichat-hot-xs { background-image: url('im-ichat-hot_16.png') !important; }
+.wt-icon-im-gchat-xs { background-image: url('im-gchat_16.png') !important; }
+.wt-icon-im-gchat-hot-xs { background-image: url('im-gchat-hot_16.png') !important; }
 .wt-icon-im-history-xs { background-image: url('history_16.png') !important; }
 .wt-icon-im-attach-xs { background-image: url('attach_16.png') !important; }
 .wt-icon-im-status-online-xs { background-image: url('im-status-online_16.png') !important; }

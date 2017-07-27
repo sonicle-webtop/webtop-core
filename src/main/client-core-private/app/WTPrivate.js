@@ -49,6 +49,14 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		window.location = 'logout';
 	},
 	
+	isSysAdmin: function() {
+		return this.isPermitted('SYSADMIN', 'ACCESS');
+	},
+	
+	isWTAdmin: function() {
+		return this.isPermitted('WTADMIN', 'ACCESS');
+	},
+	
 	/**
 	 * Displays a notification to the user. Firstly it tries with a desktop
 	 * notification, if disabled or not available then a badge notification

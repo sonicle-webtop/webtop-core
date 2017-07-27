@@ -39,6 +39,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 		'Ext.XTemplate'
 	],
 	
+	// https://codepen.io/zenorocha/pen/eZxYOK
+	
 	dateFormat: 'Y-m-d',
 	timeFormat: 'H:i',
 	senderIdField: 'fromId',

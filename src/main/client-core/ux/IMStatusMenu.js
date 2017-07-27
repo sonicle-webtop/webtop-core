@@ -44,6 +44,10 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 		presenceStatus: null
 	},
 	
+	/**
+	 * @event presencestatusselect
+	 */
+	
 	constructor: function(cfg) {
 		var me = this,
 				icfg = me.getInitialConfig(),
@@ -69,8 +73,8 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 				items.push({
 					xtype: 'menucheckitem',
 					itemId: status,
-					text: WT.res('im.gp-friends.status.'+status),
-					iconCls: WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs'),
+					text: me.self.statusText(status),
+					iconCls: me.self.statusIconCls(status),
 					group: 'imstatus',
 					checked: (status === active),
 					checkHandler: me.checkHandler,
@@ -82,6 +86,16 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 		
 		checkHandler: function(itm, checked) {
 			if (checked) this.fireEvent('presencestatusselect', this, itm.getItemId(), itm);
+		}
+	},
+	
+	statics: {
+		statusText: function(status) {
+			return WT.res('im.pstatus.'+status);
+		},
+		
+		statusIconCls: function(status) {
+			return WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs');
 		}
 	}
 });

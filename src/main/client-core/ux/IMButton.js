@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.ux.IMButton', {
 	alternateClassName: 'WTA.ux.IMButton',
-	extend: 'Ext.button.Split',
+	extend: 'Ext.button.Button',
 	alias: ['widget.wtimbutton'],
 	requires: [
 		'WTA.ux.IMStatusMenu'
@@ -47,71 +47,33 @@ Ext.define('Sonicle.webtop.core.ux.IMButton', {
 		presenceStatus: null
 	},
 	
-	statusmenu: null,
-	
-	referenceHolder: true,
-	
 	constructor: function(cfg) {
 		var me = this,
 				icfg = me.getInitialConfig(),
 				ps = cfg.presenceStatus || icfg.presenceStatus;
 		
 		Ext.apply(me, {
-			tooltip: WT.res(WT.ID, 'wtimbutton.tip', WT.res('im.pstatus.'+ps)),
-			iconCls: WTF.cssIconCls(WT.XID, 'im-status-'+ps, 'xs'),
-			menu: {
-				items: [{
-					itemId: 'status',
-					text: WT.res('wtimbutton.mni-status.txt'),
-					menu: {
-						items: me.buildStatusItems(['online', 'away', 'dnd', 'offline'], ps)
-					}
-				}]
-			}
+			tooltip: me.self.statusTooltip(ps),
+			iconCls: me.self.statusIconCls(ps)
 		});
 		me.callParent([cfg]);
 	},
 	
-	destroy: function() {
-		this.statusmenu = null;
-		this.callParent();
-	},
-	
 	updatePresenceStatus: function(nv, ov) {
-		var me = this, mnu, itm;
+		var me = this;
 		if (!me.isConfiguring) {
-			me.setTooltip(WT.res(WT.ID, 'imbutton.tip', WT.res('im.pstatus.'+nv)));
-			me.setIconCls(WTF.cssIconCls(WT.XID, 'im-status-'+nv, 'xs'));
-			me.statusmenu.getComponent(nv).setChecked(true);
+			me.setTooltip(me.self.statusTooltip(nv));
+			me.setIconCls(me.self.statusIconCls(nv));
 		}
 	},
 	
-	onRender: function() {
-		var me = this;
-		me.callParent(arguments);
-		me.statusmenu = me.down('menuitem#status').getMenu();
-	},
-	
-	privates: {
-		buildStatusItems: function(statuses, active) {
-			var me = this, items = [];
-			Ext.each(statuses, function(status) {
-				items.push({
-					xtype: 'menucheckitem',
-					itemId: status,
-					text: WT.res('im.pstatus.'+status),
-					iconCls: WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs'),
-					group: 'pstatus',
-					checked: (status === active),
-					checkHandler: me.statusCheckHandler,
-					scope: me
-				});
-			});
-			return items;
+	statics: {
+		statusTooltip: function(status) {
+			return WT.res(WT.ID, 'wtimbutton.tip', WT.res('im.pstatus.'+status));
 		},
 		
-		statusCheckHandler: function(itm, checked) {
-			if (checked) this.fireEvent('presencestatusselect', this, itm.getItemId(), itm);
+		statusIconCls: function(status) {
+			return WTF.cssIconCls(WT.XID, 'im-status-'+status, 'xs');
 		}
 	}
 });

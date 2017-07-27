@@ -58,8 +58,8 @@ import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.bol.OIMHistoryChat;
-import com.sonicle.webtop.core.bol.OIMHistoryMessage;
+import com.sonicle.webtop.core.bol.OIMChat;
+import com.sonicle.webtop.core.bol.OIMMessage;
 import com.sonicle.webtop.core.bol.OMasterData;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.ORolePermission;
@@ -83,8 +83,8 @@ import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.DAOException;
-import com.sonicle.webtop.core.dal.IMHistoryChatDAO;
-import com.sonicle.webtop.core.dal.IMHistoryMessageDAO;
+import com.sonicle.webtop.core.dal.IMChatDAO;
+import com.sonicle.webtop.core.dal.IMMessageDAO;
 import com.sonicle.webtop.core.dal.MasterDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.RolePermissionDAO;
@@ -95,8 +95,8 @@ import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
-import com.sonicle.webtop.core.model.IMHistoryChat;
-import com.sonicle.webtop.core.model.IMHistoryMessage;
+import com.sonicle.webtop.core.model.IMChat;
+import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
@@ -869,16 +869,16 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<IMHistoryChat> listIMHistoryChats() throws WTException {
-		IMHistoryChatDAO dao = IMHistoryChatDAO.getInstance();
-		ArrayList<IMHistoryChat> items = new ArrayList<>();
+	public List<IMChat> listIMChats() throws WTException {
+		IMChatDAO dao = IMChatDAO.getInstance();
+		ArrayList<IMChat> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			List<OIMHistoryChat> ochats = dao.selectByProfile(con, getTargetProfileId());
-			for(OIMHistoryChat ocha : ochats) {
-				items.add(createIMHistoryChat(ocha));
+			List<OIMChat> ochats = dao.selectAliveByProfile(con, getTargetProfileId());
+			for(OIMChat ocha : ochats) {
+				items.add(createIMChat(ocha));
 			}
 			return items;
 			
@@ -889,20 +889,20 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public IMHistoryChat addIMHistoryChat(IMHistoryChat chat) throws WTException {
-		IMHistoryChatDAO dao = IMHistoryChatDAO.getInstance();
+	public IMChat addIMChat(IMChat chat) throws WTException {
+		IMChatDAO dao = IMChatDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
-			OIMHistoryChat ocha = createOIMHistoryChat(chat);
+			OIMChat ocha = createOIMChat(chat);
 			ocha.setId(dao.getSequence(con).intValue());
 			ocha.setDomainId(getTargetProfileId().getDomainId());
 			ocha.setUserId(getTargetProfileId().getUserId());
-			dao.insert(con, ocha);	
+			dao.insert(con, ocha, createRevisionTimestamp());	
 			
-			return createIMHistoryChat(ocha);
+			return createIMChat(ocha);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -911,16 +911,35 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int deleteIMHistoryChat(String chatJid) throws WTException {
-		IMHistoryChatDAO hchaDao = IMHistoryChatDAO.getInstance();
-		IMHistoryMessageDAO hmesDao = IMHistoryMessageDAO.getInstance();
+	public boolean updateIMChatLastSeenActivity(String chatJid) throws WTException {
+		return updateIMChatLastSeenActivity(chatJid, createRevisionTimestamp());
+	}
+	
+	public boolean updateIMChatLastSeenActivity(String chatJid, DateTime lastSeenActivity) throws WTException {
+		IMChatDAO dao = IMChatDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return dao.updateLastActivityByProfileChat(con, getTargetProfileId(), chatJid, lastSeenActivity, createRevisionTimestamp()) == 1;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int deleteIMChat(String chatJid) throws WTException {
+		IMChatDAO chaDao = IMChatDAO.getInstance();
+		IMMessageDAO mesDao = IMMessageDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection(false);
 			
-			int ret = hchaDao.deleteByProfileChat(con, getTargetProfileId(), chatJid);
-			hmesDao.deleteByProfileChat(con, getTargetProfileId(), chatJid);
+			int ret = chaDao.logicDeleteByProfileChat(con, getTargetProfileId(), chatJid, createRevisionTimestamp());
+			mesDao.deleteByProfileChat(con, getTargetProfileId(), chatJid);
 			DbUtils.commitQuietly(con);
 			return ret;
 			
@@ -932,17 +951,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<IMHistoryMessage> listIMHistoryMessages(String chatJid, LocalDate date) throws WTException {
-		IMHistoryMessageDAO dao = IMHistoryMessageDAO.getInstance();
-		ArrayList<IMHistoryMessage> items = new ArrayList<>();
+	public List<IMMessage> listIMMessages(String chatJid, LocalDate date) throws WTException {
+		IMMessageDAO dao = IMMessageDAO.getInstance();
+		ArrayList<IMMessage> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
-			List<OIMHistoryMessage> omess = dao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date);
-			for(OIMHistoryMessage omes : omess) {
-				items.add(createIMHistoryMessage(omes));
+			List<OIMMessage> omess = dao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date);
+			for(OIMMessage omes : omess) {
+				items.add(createIMMessage(omes));
 			}
 			return items;
 			
@@ -953,14 +972,29 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void addIMHistoryMessage(IMHistoryMessage message) throws WTException {
-		IMHistoryMessageDAO dao = IMHistoryMessageDAO.getInstance();
+	public List<String> listIMMessageStanzaIDs(String chatJid) throws WTException {
+		IMMessageDAO dao = IMMessageDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return dao.selectStanzaIDsByProfileChat(con, getTargetProfileId(), chatJid);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addIMMessage(IMMessage message) throws WTException {
+		IMMessageDAO dao = IMMessageDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
-			OIMHistoryMessage omes = createOIMHistoryMessage(message);
+			OIMMessage omes = createOIMMessage(message);
 			omes.setId(dao.getSequence(con).intValue());
 			omes.setDomainId(getTargetProfileId().getDomainId());
 			omes.setUserId(getTargetProfileId().getUserId());
@@ -2146,37 +2180,43 @@ public class CoreManager extends BaseManager {
 		return md;
 	}
 	
-	private OIMHistoryChat createOIMHistoryChat(IMHistoryChat cha) {
+	private OIMChat createOIMChat(IMChat cha) {
 		if (cha == null) return null;
-		OIMHistoryChat ocha = new OIMHistoryChat();
+		OIMChat ocha = new OIMChat();
 		ocha.setId(cha.getId());
 		ocha.setDomainId(cha.getDomainId());
 		ocha.setUserId(cha.getUserId());
 		ocha.setChatJid(cha.getChatJid());
+		ocha.setRevisionStatus(EnumUtils.toSerializedName(cha.getRevisionStatus()));
+		ocha.setRevisionTimestamp(cha.getRevisionTimestamp());
 		ocha.setOwnerJid(cha.getOwnerJid());
 		ocha.setName(cha.getName());
 		ocha.setIsGroupChat(cha.getIsGroupChat());
+		ocha.setLastSeenActivity(cha.getLastSeenActivity());
 		ocha.setWithJid(cha.getWithJid());
 		return ocha;
 	}
 	
-	private IMHistoryChat createIMHistoryChat(OIMHistoryChat ocha) {
+	private IMChat createIMChat(OIMChat ocha) {
 		if (ocha == null) return null;
-		IMHistoryChat cha = new IMHistoryChat();
+		IMChat cha = new IMChat();
 		cha.setId(ocha.getId());
 		cha.setDomainId(ocha.getDomainId());
 		cha.setUserId(ocha.getUserId());
+		cha.setRevisionStatus(EnumUtils.forSerializedName(ocha.getRevisionStatus(), IMChat.RevisionStatus.class));
+		cha.setRevisionTimestamp(ocha.getRevisionTimestamp());
 		cha.setChatJid(ocha.getChatJid());
 		cha.setOwnerJid(ocha.getOwnerJid());
 		cha.setName(ocha.getName());
 		cha.setIsGroupChat(ocha.getIsGroupChat());
+		cha.setLastSeenActivity(ocha.getLastSeenActivity());
 		cha.setWithJid(ocha.getWithJid());
 		return cha;
 	}
 	
-	private OIMHistoryMessage createOIMHistoryMessage(IMHistoryMessage mes) {
+	private OIMMessage createOIMMessage(IMMessage mes) {
 		if (mes == null) return null;
-		OIMHistoryMessage omes = new OIMHistoryMessage();
+		OIMMessage omes = new OIMMessage();
 		omes.setId(mes.getId());
 		omes.setDomainId(mes.getDomainId());
 		omes.setUserId(mes.getUserId());
@@ -2192,9 +2232,9 @@ public class CoreManager extends BaseManager {
 		return omes;
 	}
 	
-	private IMHistoryMessage createIMHistoryMessage(OIMHistoryMessage omes) {
+	private IMMessage createIMMessage(OIMMessage omes) {
 		if (omes == null) return null;
-		IMHistoryMessage mes = new IMHistoryMessage();
+		IMMessage mes = new IMMessage();
 		mes.setId(omes.getId());
 		mes.setDomainId(omes.getDomainId());
 		mes.setUserId(omes.getUserId());
@@ -2203,10 +2243,14 @@ public class CoreManager extends BaseManager {
 		mes.setSenderResource(omes.getSenderResource());
 		mes.setDate(omes.getDate());
 		mes.setTimestamp(omes.getTimestamp());
-		mes.setAction(EnumUtils.forSerializedName(omes.getAction(), IMHistoryMessage.Action.class));
+		mes.setAction(EnumUtils.forSerializedName(omes.getAction(), IMMessage.Action.class));
 		mes.setText(omes.getText());
 		mes.setMessageUid(omes.getMessageUid());
 		mes.setStanzaId(omes.getStanzaId());
 		return mes;
+	}
+	
+	private DateTime createRevisionTimestamp() {
+		return DateTime.now(DateTimeZone.UTC);
 	}
 }

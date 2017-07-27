@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Pickable', {
 	/**
 	 * @cfg {Object} lookupConfig
 	 * 
+	 * @cfg {String} lookupConfig.model
 	 * @cfg {String} lookupConfig.service
 	 * @cfg {String} lookupConfig.action
 	 * @cfg {String} lookupConfig.rootp
@@ -192,6 +193,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Pickable', {
 	privates: {
 		onAddClick: function () {
 			var me = this;
+			me.lookupStore.clearFilter();
 			me.picker = me.createPicker();
 			me.picker.show();
 		},

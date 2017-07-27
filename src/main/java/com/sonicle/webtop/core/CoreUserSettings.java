@@ -245,13 +245,13 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public PresenceStatus getIMPresenceStatus() {
-		String value = getString(DESKTOP_NOTIFICATION, null);
+		String value = getString(IM_PRESENCE_STATUS, null);
 		return EnumUtils.forSerializedName(value, PresenceStatus.ONLINE, PresenceStatus.class);
 	}
 	
 	public boolean setIMPresenceStatus(PresenceStatus value) {
 		if (value == null) return false;
-		return setString(DESKTOP_NOTIFICATION, EnumUtils.toSerializedName(value));
+		return setString(IM_PRESENCE_STATUS, EnumUtils.toSerializedName(value));
 	}
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {

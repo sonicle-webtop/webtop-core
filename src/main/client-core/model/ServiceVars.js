@@ -60,6 +60,9 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.calcField('use24HourTime', 'boolean', 'shortTimeFormat', function(v, rec) {
 			var tf = rec.get('shortTimeFormat');
 			return (Ext.isString(tf)) ? (tf.indexOf('a') === -1) : true;
-		})
+		}),
+		WTF.field('imEnabled', 'boolean'),
+		WTF.field('imPresenceStatus', 'string'),
+		WTF.field('imStatusMessage', 'string')
 	]
 });

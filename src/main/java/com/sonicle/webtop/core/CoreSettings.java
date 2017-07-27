@@ -140,6 +140,13 @@ public class CoreSettings {
 	public static final String XMPP_PORT = "xmpp.port";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Defines XMPP MultiUserChat subdomain
+	 */
+	public static final String XMPP_MUC_SUBDOMAIN = "xmpp.muc.subdomain";
+	
+	/**
 	 * [domain+system][*]
 	 * [string]
 	 * Activate syslog

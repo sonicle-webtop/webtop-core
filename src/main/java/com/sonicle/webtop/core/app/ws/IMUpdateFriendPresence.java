@@ -44,14 +44,15 @@ import java.util.HashMap;
 public class IMUpdateFriendPresence extends ServiceMessage {
 	public static final String ACTION = "imUpdateFriendPresence";
 	
-	public IMUpdateFriendPresence(String entityBareJid, String presenceStatus, String statusMessage) {
+	public IMUpdateFriendPresence(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(entityBareJid, presenceStatus, statusMessage);
+		this.payload = payload(friendBareId, instantChatId, presenceStatus, statusMessage);
 	}
 	
-	private Object payload(String entityBareJid, String presenceStatus, String statusMessage) {
+	private Object payload(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
 		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("id", entityBareJid);
+		pl.put("id", friendBareId);
+		pl.put("chatId", instantChatId);
 		pl.put("presenceStatus", presenceStatus);
 		pl.put("statusMessage", statusMessage);
 		return pl;

@@ -34,7 +34,10 @@
 package com.sonicle.webtop.core.xmpp;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import org.jxmpp.jid.EntityBareJid;
 
 /**
  *
@@ -42,16 +45,33 @@ import java.util.List;
  */
 public class ConversationHistory {
 	private final ArrayList<ChatRoom> chats;
+	private final HashMap<EntityBareJid, HashSet<String>> messageStanzaIds;
 	
 	public ConversationHistory() {
 		this.chats = new ArrayList<>();
+		this.messageStanzaIds = new HashMap<>();
 	}
 	
 	public void addChat(ChatRoom chat) {
+		addChat(chat, null);
+	}
+	
+	public void addChat(ChatRoom chat, List<String> stanzaIds) {
 		this.chats.add(chat);
+		if (stanzaIds != null) {
+			this.messageStanzaIds.put(chat.getChatJid(), new HashSet(stanzaIds));
+		}
 	}
 	
 	public List<ChatRoom> getChats() {
 		return this.chats;
+	}
+	
+	public HashSet<String> getStanzaIds(EntityBareJid chatJid) {
+		if (messageStanzaIds.containsKey(chatJid)) {
+			return messageStanzaIds.get(chatJid);
+		} else {
+			return null;
+		}
 	}
 }

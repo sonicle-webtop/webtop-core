@@ -42,10 +42,12 @@ import org.jivesoftware.smack.roster.RosterEntry;
 public class Friend {
 	private final RosterEntry entry;
 	private final FriendPresence presence;
+	private final String instantChatJid;
 	
-	public Friend(RosterEntry entry, FriendPresence presence) {
+	public Friend(RosterEntry entry, FriendPresence presence, String instantChatJid) {
 		this.entry = entry;
 		this.presence = presence;
+		this.instantChatJid = instantChatJid;
 	}
 	
 	public RosterEntry getRawRosterEntry() {
@@ -62,5 +64,9 @@ public class Friend {
 	
 	public FriendPresence getPresence() {
 		return presence;
+	}
+	
+	public String getInstantChatJid() {
+		return instantChatJid;
 	}
 }

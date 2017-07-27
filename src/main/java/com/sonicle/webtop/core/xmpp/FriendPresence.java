@@ -41,9 +41,11 @@ import org.jivesoftware.smack.packet.Presence;
  */
 public class FriendPresence {
 	private final Presence presence;
+	private final String instantChatJid;
 	
-	public FriendPresence(Presence presence) {
+	public FriendPresence(Presence presence, String instantChatJid) {
 		this.presence = presence;
+		this.instantChatJid = instantChatJid;
 	}
 	
 	public Presence getRawPresence() {
@@ -56,5 +58,9 @@ public class FriendPresence {
 	
 	public PresenceStatus getPresenceStatus() {
 		return PresenceStatus.presenceStatus(presence);
+	}
+	
+	public String getInstantChatJid() {
+		return instantChatJid;
 	}
 }

@@ -306,19 +306,24 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		east.toggleCollapse();
 	},
 	
-	onIMStatusMenuStatusSelect: function(s, status) {
+	onIMPanelPresenceStatusChange: function(s, status) {
 		var mys = WT.getApp().getService(WT.ID);
 		mys.updateIMPresenceStatusUI(status);
 	},
 	
 	onIMPanelFriendDblClick: function(s, friendId, friendNick, chatId) {
 		var mys = WT.getApp().getService(WT.ID);
-		mys.addIMChatUI(chatId, friendNick, [friendId]);
+		mys.openChatRoomUI(chatId, friendNick);
 	},
 	
 	onIMPanelChatDblClick: function(s, chatId, name) {
 		var mys = WT.getApp().getService(WT.ID);
-		mys.openIMChatUI(chatId, name);
+		mys.openChatRoomUI(chatId, name);
+	},
+	
+	onIMPanelAddGroupChatClick: function(s) {
+		var mys = WT.getApp().getService(WT.ID);
+		mys.addGroupChat();
 	},
 	
 	onTaskBarButtonClick: function(s, btn, e) {
