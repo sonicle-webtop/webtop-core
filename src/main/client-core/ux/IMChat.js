@@ -291,6 +291,9 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				if (success) {
 					me.addMessage(json.data);
 					fld.focus(true);
+					if (WT.getVar('imSoundOnMessageSent')) {
+						Sonicle.Sound.play('wt-im-sent');
+					}
 				} else {
 					fld.setValue(text);
 				}

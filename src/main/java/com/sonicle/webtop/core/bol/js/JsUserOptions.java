@@ -85,6 +85,11 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean otpDeviceIsTrusted;
 	public String otpDeviceTrustedOn;
 	
+	public Boolean imSoundOnFriendConnect;
+	public Boolean imSoundOnFriendDisconnect;
+	public Boolean imSoundOnMessageReceived;
+	public Boolean imSoundOnMessageSent;
+	
 	public JsUserOptions() {
 		super();
 	}

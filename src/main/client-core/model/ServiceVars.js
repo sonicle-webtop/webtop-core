@@ -63,6 +63,10 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		}),
 		WTF.field('imEnabled', 'boolean'),
 		WTF.field('imPresenceStatus', 'string'),
-		WTF.field('imStatusMessage', 'string')
+		WTF.field('imStatusMessage', 'string'),
+		WTF.field('imSoundOnFriendConnect', 'boolean'),
+		WTF.field('imSoundOnFriendDisconnect', 'boolean'),
+		WTF.field('imSoundOnMessageReceived', 'boolean'),
+		WTF.field('imSoundOnMessageSent', 'boolean')
 	]
 });

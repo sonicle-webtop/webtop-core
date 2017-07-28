@@ -85,6 +85,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 				var pl = msg.payload,
 					ts = Ext.Date.parse(pl.timestamp, 'Y-m-d H:i:s', true);
 				me.newChatRoomMessageUI(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, 'none', pl.msgUid, pl.msgText);
+				if (WT.getVar('imSoundOnMessageReceived')) {
+					Sonicle.Sound.play('wt-im-receive');
+				}
 			});
 
 			Ext.defer(function() {

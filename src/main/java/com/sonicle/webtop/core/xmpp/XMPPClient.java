@@ -285,6 +285,23 @@ public class XMPPClient {
 		return createInstantChatJid(withUser);
 	}
 	
+	public List<ChatRoom> listChats() throws XMPPClientException {
+		checkAuthentication();
+		
+		ArrayList<ChatRoom> chats = new ArrayList<>();
+		synchronized(instantChats) {
+			for(IChat chatObj : instantChats.values()) {
+				chats.add(chatObj.getChatRoom());
+			}
+		}
+		synchronized(groupChats) {
+			for(GChat chatObj : groupChats.values()) {
+				chats.add(chatObj.getChatRoom());
+			}
+		}
+		return chats;
+	}
+	
 	public EntityBareJid newInstantChat(EntityBareJid withFriend) throws XMPPClientException {
 		checkAuthentication();
 		
@@ -345,21 +362,18 @@ public class XMPPClient {
 		return chatJid;
 	}
 	
-	public List<ChatRoom> getChats() throws XMPPClientException {
+	public void existChat(String chatJid) throws XMPPClientException {
+		existChat(XMPPHelper.asEntityBareJid(chatJid));
+	}
+	
+	public boolean existChat(EntityBareJid chatJid) throws XMPPClientException {
 		checkAuthentication();
 		
-		ArrayList<ChatRoom> chats = new ArrayList<>();
-		synchronized(instantChats) {
-			for(IChat chatObj : instantChats.values()) {
-				chats.add(chatObj.getChatRoom());
-			}
+		if (isInstantChat(chatJid)) {
+			return instantChats.containsKey(chatJid);
+		} else {
+			return groupChats.containsKey(chatJid);
 		}
-		synchronized(groupChats) {
-			for(GChat chatObj : groupChats.values()) {
-				chats.add(chatObj.getChatRoom());
-			}
-		}
-		return chats;
 	}
 	
 	public void forgetChat(String chatJid) throws XMPPClientException {
@@ -369,35 +383,63 @@ public class XMPPClient {
 	public void forgetChat(EntityBareJid chatJid) throws XMPPClientException {
 		checkAuthentication();
 		
-		synchronized(instantChats) {
-			if (instantChats.containsKey(chatJid)) doRemoveChat(chatJid);
-		}
-		
-		try {
-			synchronized(groupChats) {
-				if (groupChats.containsKey(chatJid)) doRemoveGroupChat(chatJid);
+		if (isInstantChat(chatJid)) {
+			synchronized(instantChats) {
+				if (instantChats.containsKey(chatJid)) doRemoveChat(chatJid);
 			}
-		} catch(XMPPException | SmackException | InterruptedException ex) {
-			throw new XMPPClientException(ex);
+			
+		} else {
+			try {
+				synchronized(groupChats) {
+					if (groupChats.containsKey(chatJid)) doRemoveGroupChat(chatJid);
+				}
+			} catch(XMPPException | SmackException | InterruptedException ex) {
+				throw new XMPPClientException(ex);
+			}
 		}
 	}
 	
-	public List<String> getChatOccupants(String chatJid) throws XMPPClientException {
-		return getChatOccupants(XMPPHelper.asEntityBareJid(chatJid));
+	public List<String> getChatPartecipants(String chatJid) throws XMPPClientException {
+		return getChatPartecipants(XMPPHelper.asEntityBareJid(chatJid));
 	}
 	
-	public List<String> getChatOccupants(EntityBareJid chatJid) throws XMPPClientException {
-		ArrayList<String> occupants = new ArrayList<>();
+	public List<String> getChatPartecipants(EntityBareJid chatJid) throws XMPPClientException {
+		ArrayList<String> partecipants = new ArrayList<>();
 		
 		if (isInstantChat(chatJid)) {
 			synchronized(instantChats) {
 				IChat chatObj = instantChats.get(chatJid);
-				if (chatObj == null) throw new XMPPClientException("Chat not found");
-				occupants.add(chatObj.getChatRoom().getWithJid().toString());
-				return occupants;
+				if (chatObj == null) return null;
+				partecipants.add(userJid.asEntityBareJidString());
+				partecipants.add(chatObj.getChatRoom().getWithJid().toString());
+				return partecipants;
 			}
 		} else {
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("Not implemented for now");
+		}
+	}
+	
+	public FriendPresence getChatPresence(String chatJid) throws XMPPClientException {
+		return getChatPresence(XMPPHelper.asEntityBareJid(chatJid));
+	}
+	
+	public FriendPresence getChatPresence(EntityBareJid chatJid) throws XMPPClientException {
+		checkAuthentication();
+		
+		if (isInstantChat(chatJid)) {
+			synchronized(instantChats) {
+				EntityBareJid presenceUser = null;
+				IChat chatObj = instantChats.get(chatJid);
+				if (chatObj == null) {
+					presenceUser = cacheInstantChatToFriend.get(chatJid.toString());
+					if (presenceUser == null) return null;
+				} else {
+					presenceUser = chatObj.getChatRoom().getWithJid();
+				}
+				return getFriendPresence(presenceUser);
+			}
+		} else {
+			throw new UnsupportedOperationException("Feature not available for a groupChat");
 		}
 	}
 	

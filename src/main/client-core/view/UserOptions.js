@@ -58,7 +58,11 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				return get('record.canManageUpi');
 			},
 			isOTPActive: WTF.foIsEmpty('record', 'otpDelivery', true),
-			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled')
+			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled'),
+			imSoundOnFriendConnect: WTF.checkboxBind('record', 'imSoundOnFriendConnect'),
+			imSoundOnFriendDisconnect: WTF.checkboxBind('record', 'imSoundOnFriendDisconnect'),
+			imSoundOnMessageReceived: WTF.checkboxBind('record', 'imSoundOnMessageReceived'),
+			imSoundOnMessageSent: WTF.checkboxBind('record', 'imSoundOnMessageSent')
 		}
 	},
 	
@@ -912,6 +916,81 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					single: true
 				}
 			}
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.im.tit'),
+			items: [{
+				xtype: 'soformseparator',
+				title: WT.res('opts.im.sound.tit')
+			}, {
+				xtype: 'checkbox',
+				bind: '{imSoundOnFriendConnect}',
+				hideEmptyLabel: false,
+				boxLabel: WT.res(me.ID, 'opts.im.fld-soundOnFriendConnect.lbl'),
+				labelWidth: 20,
+				listeners: {
+					change: {
+						fn: function(s) {
+							//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+							Ext.defer(function() {
+								me.onBlurAutoSave(s);
+							}, 200);
+						},
+						scope: me
+					}
+				}
+			}, {
+				xtype: 'checkbox',
+				bind: '{imSoundOnFriendDisconnect}',
+				hideEmptyLabel: false,
+				boxLabel: WT.res(me.ID, 'opts.im.fld-soundOnFriendDisconnect.lbl'),
+				labelWidth: 20,
+				listeners: {
+					change: {
+						fn: function(s) {
+							//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+							Ext.defer(function() {
+								me.onBlurAutoSave(s);
+							}, 200);
+						},
+						scope: me
+					}
+				}
+			}, {
+				xtype: 'checkbox',
+				bind: '{imSoundOnMessageReceived}',
+				hideEmptyLabel: false,
+				boxLabel: WT.res(me.ID, 'opts.im.fld-soundOnMessageReceived.lbl'),
+				labelWidth: 20,
+				listeners: {
+					change: {
+						fn: function(s) {
+							//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+							Ext.defer(function() {
+								me.onBlurAutoSave(s);
+							}, 200);
+						},
+						scope: me
+					}
+				}
+			}, {
+				xtype: 'checkbox',
+				bind: '{imSoundOnMessageSent}',
+				hideEmptyLabel: false,
+				boxLabel: WT.res(me.ID, 'opts.im.fld-soundOnMessageSent.lbl'),
+				labelWidth: 20,
+				listeners: {
+					change: {
+						fn: function(s) {
+							//TODO: workaround...il modello veniva salvato prima dell'aggionamento
+							Ext.defer(function() {
+								me.onBlurAutoSave(s);
+							}, 200);
+						},
+						scope: me
+					}
+				}
+			}]
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);

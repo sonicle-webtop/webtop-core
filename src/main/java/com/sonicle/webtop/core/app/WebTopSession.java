@@ -76,7 +76,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
-import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -870,6 +869,7 @@ public class WebTopSession {
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
 		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
 		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
+		js.appManifest.addJs(LIBS_PATH + "ion.sound.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");

@@ -253,6 +253,10 @@ public class Service extends BaseService {
 		co.put("imEnabled", !RunContext.isWebTopAdmin() && RunContext.isPermitted(CoreManifest.ID, "WEBCHAT", "ACCESS"));
 		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
 		co.put("imStatusMessage", us.getIMStatusMessage());
+		co.put("imSoundOnFriendConnect", us.getIMSoundOnFriendConnect());
+		co.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
+		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
+		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
 		
 		return co;
 	}
@@ -1335,7 +1339,7 @@ public class Service extends BaseService {
 				List<JsGridIMChat> items = new ArrayList<>();
 				
 				if (xmppCli != null) {
-					for(ChatRoom chat : xmppCli.getChats()) {
+					for(ChatRoom chat : xmppCli.listChats()) {
 						items.add(new JsGridIMChat(chat));
 					}
 				} else {
@@ -1389,15 +1393,20 @@ public class Service extends BaseService {
 				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
 				
 				if (xmppCli != null) {
-					List<String> occupants = xmppCli.getChatOccupants(chatId);
-					if (occupants.isEmpty()) throw new WTException("Occupats not found");
+					if (!XMPPClient.isInstantChat(chatId)) throw new WTException("Presence feature non available for a grupchat");
 					
-					FriendPresence presence = xmppCli.getFriendPresence(occupants.get(0));
-					final String presenceStatus = EnumUtils.toSerializedName(presence.getPresenceStatus());
+					String presenceStatus = null;
+					FriendPresence presence = xmppCli.getChatPresence(chatId);
+					if (presence == null) {
+						presenceStatus = EnumUtils.toSerializedName(PresenceStatus.OFFLINE);
+					} else {
+						presenceStatus = EnumUtils.toSerializedName(presence.getPresenceStatus());
+					}
+					
 					new JsonResult(presenceStatus).printTo(out);
 					
 				} else {
-					throw new WTException("Client non available");
+					throw new WTException("XMPPClient not available");
 				}
 				
 			} else if (crud.equals("send")) {

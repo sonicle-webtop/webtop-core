@@ -48,6 +48,13 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	
 	grid: null,
 	
+	constructor: function(cfg) {
+		Ext.apply(cfg || {}, {
+			tooltip: WT.res('wtnotificationbutton.tip')
+		});
+		this.callParent([cfg]);
+	},
+	
 	initComponent: function() {
 		var me = this;
 		me.bindStore(me.store || 'ext-empty-store', true, true);

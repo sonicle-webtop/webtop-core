@@ -490,4 +490,32 @@ public class CoreSettings {
 	 * Chat status message
 	 */
 	public static final String IM_STATUS_MESSAGE = "im.statusmessage";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Play a sound when a friend connects
+	 */
+	public static final String IM_SOUND_ON_FRIEND_CONNECT = "im.sound.on.friend.connect";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Play a sound when a friend disconnects
+	 */
+	public static final String IM_SOUND_ON_FRIEND_DISCONNECT = "im.sound.on.friend.disconnect";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Play a sound when a message is received
+	 */
+	public static final String IM_SOUND_ON_MESSAGE_RECEIVED = "im.sound.on.message.received";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Play a sound when a message is sent
+	 */
+	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
 }

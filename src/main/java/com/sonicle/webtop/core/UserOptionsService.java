@@ -146,6 +146,12 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
+				// WebChat
+				jso.imSoundOnFriendConnect = us.getIMSoundOnFriendConnect();
+				jso.imSoundOnFriendDisconnect = us.getIMSoundOnFriendDisconnect();
+				jso.imSoundOnMessageReceived = us.getIMSoundOnMessageReceived();
+				jso.imSoundOnMessageSent = us.getIMSoundOnMessageSent();
+				
 				new JsonResult(jso).printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
@@ -206,6 +212,12 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// sync
 				if(pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
 				if(pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
+				
+				// WebChat
+				if (pl.map.has("imSoundOnFriendConnect"))  us.setIMSoundOnFriendConnect(pl.data.imSoundOnFriendConnect);
+				if (pl.map.has("imSoundOnFriendDisconnect"))  us.setIMSoundOnFriendDisconnect(pl.data.imSoundOnFriendDisconnect);
+				if (pl.map.has("imSoundOnMessageReceived"))  us.setIMSoundOnMessageReceived(pl.data.imSoundOnMessageReceived);
+				if (pl.map.has("imSoundOnMessageSent"))  us.setIMSoundOnMessageSent(pl.data.imSoundOnMessageSent);
 				
 				if(upCacheNeedsUpdate) core.cleanUserProfileCache();
 				

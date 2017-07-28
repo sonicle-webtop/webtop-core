@@ -254,6 +254,38 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(IM_PRESENCE_STATUS, EnumUtils.toSerializedName(value));
 	}
 	
+	public boolean getIMSoundOnFriendConnect() {
+		return getBoolean(IM_SOUND_ON_FRIEND_CONNECT, true);
+	}
+	
+	public boolean setIMSoundOnFriendConnect(boolean value) {
+		return getBoolean(IM_SOUND_ON_FRIEND_CONNECT, value);
+	}
+	
+	public boolean getIMSoundOnFriendDisconnect() {
+		return getBoolean(IM_SOUND_ON_FRIEND_DISCONNECT, false);
+	}
+	
+	public boolean setIMSoundOnFriendDisconnect(boolean value) {
+		return getBoolean(IM_SOUND_ON_FRIEND_DISCONNECT, value);
+	}
+	
+	public boolean getIMSoundOnMessageReceived() {
+		return getBoolean(IM_SOUND_ON_MESSAGE_RECEIVED, true);
+	}
+	
+	public boolean setIMSoundOnMessageReceived(boolean value) {
+		return getBoolean(IM_SOUND_ON_MESSAGE_RECEIVED, value);
+	}
+	
+	public boolean getIMSoundOnMessageSent() {
+		return getBoolean(IM_SOUND_ON_MESSAGE_SENT, false);
+	}
+	
+	public boolean setIMSoundOnMessageSent(boolean value) {
+		return getBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
+	}
+	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {
 		return setm.getUserSetting(profileId, serviceId, WHATSNEW_VERSION);
 	}

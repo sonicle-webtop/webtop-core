@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		'Sonicle.DesktopNotificationMgr',
 		'Sonicle.WebSocketManager',
 		'Sonicle.WebSocket',
+		'Sonicle.Sound',
 		'Sonicle.upload.Uploader',
 		'Sonicle.data.proxy.Ajax',
 		'Sonicle.data.identifier.NegativeString',
@@ -111,7 +112,17 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	},
 	
 	launch: function() {
-		var me = this, desc;
+		var me = this,
+				SoSnd = Sonicle.Sound,
+				desc;
+		
+		SoSnd.setPath('resources/com.sonicle.webtop.core/0.0.0/resources/sounds/');
+		SoSnd.add([
+			{alias: 'wt-im-connect', name: 'im-connect'},
+			{alias: 'wt-im-disconnect', name: 'im-disconnect'},
+			{alias: 'wt-im-receive', name: 'im-receive'},
+			{alias: 'wt-im-send', name: 'im-send'}
+		]);
 		
 		// Loads service descriptors from startup object
 		Ext.each(WTS.services, function(obj) {

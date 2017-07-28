@@ -79,10 +79,11 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	collapseMode: 'placeholder',		
 	referenceHolder: true,
 	width: 200,
+	border: true,
 	
 	constructor: function(cfg) {
 		var me = this;
-		Ext.apply(me, {
+		Ext.apply(cfg || {}, {
 			placeholder: {
 				xtype: 'component',
 				width: 0
@@ -144,7 +145,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			xtype: 'tabpanel',
 			reference: 'tab',
 			activeTab: 'chats',
-			border: true,
+			border: false,
 			items: [{
 				xtype: 'gridpanel',
 				itemId: 'chats',
@@ -371,13 +372,22 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	},
 	
 	updateFriendPresence: function(id, status, message) {
-		var sto = this.gpFriends().getStore(),
-				rec = sto.getById(id);
+		var me = this,
+				sto = me.gpFriends().getStore(),
+				rec = sto.getById(id), changed;
 		if (rec) {
+			changed = rec.get('presenceStatus') !== status;
 			rec.set({
 				presenceStatus: status,
 				statusMessage: message
 			});
+			if (changed) {
+				if (WT.getVar('imSoundOnFriendConnect') && me.self.isOnline(status)) {
+					Sonicle.Sound.play('wt-im-connect');
+				} else if (WT.getVar('imSoundOnFriendDisconnect') && !me.self.isOnline(status)) {
+					Sonicle.Sound.play('wt-im-disconnect');
+				}
+			}
 		}
 	},
 	
@@ -464,6 +474,10 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	},
 	
 	statics: {
+		isOnline: function(presenceStatus) {
+			return presenceStatus !== 'offline';
+		},
+
 		isGroupChat: function(chatId) {
 			return chatId.indexOf('@instant.') === -1;
 		}
