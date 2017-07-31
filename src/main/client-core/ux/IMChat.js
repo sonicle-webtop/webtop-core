@@ -195,7 +195,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					listeners: {
 						load: function(s) {
 							var rec = s.last();
-							if (rec) me.lref('gplast').getView().focusRow(rec);
+							if (rec) me.scrollToRecord(me.lref('gplast'), rec);
 						}
 					}
 				},
@@ -353,7 +353,22 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				sto = gp.getStore(),
 				rec;
 			rec = sto.add(sto.createModel(data))[0];
-			gp.getView().focusRow(rec);
+			this.scrollToRecord(gp, rec);
+		},
+		
+		scrollToRecord: function(gp, rec) {
+			var view = gp.getView(),
+					scroll = view.getScrollable(),
+					row = view.getRowByRecord(rec),
+					cell, scroll;
+			
+			if (scroll && row) {
+				cell = Ext.fly(row).down(view.getCellSelector(), true);
+				if (cell) {
+					cell = new Ext.dom.Fly(cell);
+					scroll.scrollIntoView(cell);
+				}
+			}
 		}
 	},
 	
