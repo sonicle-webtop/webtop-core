@@ -323,7 +323,13 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	
 	onIMPanelAddGroupChatClick: function(s) {
 		var mys = WT.getApp().getService(WT.ID);
-		mys.addGroupChat();
+		mys.addGroupChat({
+			callback: function(success, rec) {
+				if (success) {
+					mys.openChatRoomUI(rec.get('id'), rec.get('name'));
+				}
+			}
+		});
 	},
 	
 	onTaskBarButtonClick: function(s, btn, e) {

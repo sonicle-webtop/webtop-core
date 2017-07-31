@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.webtop.core.xmpp.GroupChatRoom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,14 @@ public class JsGroupChat {
 	public List<Partecipant> partecipants = new ArrayList<>();
 	
 	public JsGroupChat() {}
+	
+	public JsGroupChat(GroupChatRoom chat, List<String> partecipants) {
+		this.id = chat.getChatJid().asEntityBareJidString();
+		this.name = chat.getName();
+		for(String partecipant : partecipants) {
+			this.partecipants.add(new Partecipant(partecipant));
+		}
+	}
 	
 	public static class Partecipant {
 		public String friendId;

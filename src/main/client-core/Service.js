@@ -430,7 +430,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	privates: {
 		createIMChatsView: function() {
 			return WT.createView(this.ID, 'view.IMChats', {
-				tag: this.self.vwTagIMChats(),
+				tag: this.self.vwTagIMChats()
 			});
 		},
 		

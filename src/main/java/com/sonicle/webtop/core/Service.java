@@ -1387,6 +1387,8 @@ public class Service extends BaseService {
 					}
 					
 					new JsonResult().printTo(out);
+				} else {
+					throw new WTException("XMPPClient not available");
 				}
 				
 			} else if (crud.equals("presence")) {
@@ -1419,6 +1421,8 @@ public class Service extends BaseService {
 					if (message == null) throw new Exception("Message is null");
 
 					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
+				} else {
+					throw new WTException("XMPPClient not available");
 				}
 			}
 			
@@ -1471,9 +1475,11 @@ public class Service extends BaseService {
 						final String nick = cacheNicks.get(mes.getSenderJid());
 						items.add(new JsGridIMMessage(myJid.equals(mes.getSenderJid()), mes, nick, utz));
 					}
-
 					new JsonResult(items, items.size()).printTo(out);
-				}	
+					
+				} else {
+					throw new WTException("XMPPClient not available");
+				}
 			}
 			
 		} catch(Exception ex) {
@@ -1486,11 +1492,12 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				
-				
-				//new JsonResult(new JsGroupChat(group)).printTo(out);
+				ChatRoom chat = xmppCli.getChat(id);
+				List<String> partecipants = xmppCli.getChatPartecipants(id);
+				new JsonResult(new JsGroupChat((GroupChatRoom)chat, partecipants)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsGroupChat> pl = ServletUtils.getPayload(request, JsGroupChat.class);
@@ -1500,10 +1507,14 @@ public class Service extends BaseService {
 					for(JsGroupChat.Partecipant partecipant : pl.data.partecipants) {
 						withUsers.add(XMPPHelper.asEntityBareJid(partecipant.friendId));
 					}
-					xmppCli.newGroupChat(pl.data.name, withUsers);
+					EntityBareJid chatId = xmppCli.newGroupChat(pl.data.name, withUsers);
+					pl.data.id = chatId.asEntityBareJidString();
+					
+					new JsonResult(pl.data).printTo(out);
+					
+				} else {
+					throw new WTException("XMPPClient not available");
 				}
-				
-				new JsonResult().printTo(out);
 				
 			} else if(crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsGroupChat> pl = ServletUtils.getPayload(request, JsGroupChat.class);

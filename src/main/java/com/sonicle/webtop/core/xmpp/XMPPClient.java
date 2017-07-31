@@ -362,6 +362,22 @@ public class XMPPClient {
 		return chatJid;
 	}
 	
+	public ChatRoom getChat(String chatJid) throws XMPPClientException {
+		return getChat(XMPPHelper.asEntityBareJid(chatJid));
+	}
+	
+	public ChatRoom getChat(EntityBareJid chatJid) throws XMPPClientException {
+		checkAuthentication();
+		
+		if (isInstantChat(chatJid)) {
+			IChat chatObj = instantChats.get(chatJid);
+			return (chatObj != null) ? chatObj.getChatRoom() : null;
+		} else {
+			GChat chatObj = groupChats.get(chatJid);
+			return (chatObj != null) ? chatObj.getChatRoom() : null;
+		}
+	}
+	
 	public void existChat(String chatJid) throws XMPPClientException {
 		existChat(XMPPHelper.asEntityBareJid(chatJid));
 	}
@@ -944,6 +960,7 @@ public class XMPPClient {
 			if (isDisconnecting.get()) return;
 			final MultiUserChatManager muChatMgr = getMUChatManager();
 			final EntityBareJid chatJid = multiUserChat.getRoom();
+			final String name = reason;
 			
 			logger.debug("Group chat invitation received [{}, {}]", chatJid.toString(), inviterJid.toString());
 			MultiUserChat muc = muChatMgr.getMultiUserChat(chatJid);
@@ -952,7 +969,7 @@ public class XMPPClient {
 			synchronized(groupChats) {
 				chatObj = groupChats.get(chatJid);
 				if (chatObj == null) {
-					chatObj = doAddGroupChat(false, chatJid, inviterJid.asEntityBareJid(), null, null, muc);
+					chatObj = doAddGroupChat(false, chatJid, inviterJid.asEntityBareJid(), name, null, muc);
 				}
 				
 				if (!muc.isJoined()) {
