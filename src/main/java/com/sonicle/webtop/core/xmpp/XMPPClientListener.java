@@ -34,8 +34,6 @@
 package com.sonicle.webtop.core.xmpp;
 
 import java.util.Collection;
-import org.jivesoftware.smack.chat2.Chat;
-import org.jivesoftware.smack.packet.Message;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
@@ -48,7 +46,7 @@ public interface XMPPClientListener {
 	
 	public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence);
 	public void onChatRoomUpdated(ChatRoom chatRoom);
-	public void onChatRoomAdded(ChatRoom chatRoom);
+	public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick);
 	public void onChatRoomRemoved(EntityBareJid chatJid);
 	
 	public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message);

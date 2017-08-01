@@ -119,7 +119,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		onTabChatsTabChange: function(s, ntab) {
 			var me = this;
 			me.setViewTitle(ntab.getTitle());
-			me.mys.clearChatNotification(ntab.getChatId());
+			me.mys.clearIMNewMsgNotification(ntab.getChatId());
 		},
 		
 		addChat: function(chatId, chatName, hotMarker) {

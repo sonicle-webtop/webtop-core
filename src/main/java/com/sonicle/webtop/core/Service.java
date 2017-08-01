@@ -1557,7 +1557,7 @@ public class Service extends BaseService {
 		}
 		
 		@Override
-		public void onChatRoomAdded(ChatRoom chatRoom) {
+		public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick) {
 			if (chatRoom instanceof InstantChatRoom) {
 				InstantChatRoom dcr = (InstantChatRoom)chatRoom;
 				logger.debug("Adding direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getOwnerJid().toString());
@@ -1591,7 +1591,7 @@ public class Service extends BaseService {
 					logger.error("Error saving group chat [{}]", ex, gcr.getChatJid().toString());
 				}
 			}
-			getWts().notify(new IMChatRoomAdded(chatRoom.getChatJid().toString(), chatRoom.getName()));
+			getWts().notify(new IMChatRoomAdded(chatRoom.getChatJid().toString(), chatRoom.getName(), chatRoom.getOwnerJid().asEntityBareJidString(), ownerNick));
 		}
 		
 		@Override

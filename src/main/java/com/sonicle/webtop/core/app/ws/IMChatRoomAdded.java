@@ -44,15 +44,17 @@ import java.util.HashMap;
 public class IMChatRoomAdded extends ServiceMessage {
 	public static final String ACTION = "imChatRoomAdded";
 	
-	public IMChatRoomAdded(String chatEntityBareJid, String chatName) {
+	public IMChatRoomAdded(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatEntityBareJid, chatName);
+		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick);
 	}
 	
-	private Object payload(String chatEntityBareJid, String chatName) {
+	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
 		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("chatId", chatEntityBareJid);
+		pl.put("chatId", chatBareJid);
 		pl.put("chatName", chatName);
+		pl.put("ownerId", ownerBareJid);
+		pl.put("ownerNick", ownerNick);
 		return pl;
 	}
 }

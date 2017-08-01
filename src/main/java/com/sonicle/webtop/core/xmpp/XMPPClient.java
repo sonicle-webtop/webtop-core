@@ -538,13 +538,21 @@ public class XMPPClient {
 		
 		if (!skipListeners) {
 			try {
-				listener.onChatRoomAdded(chatObj.getChatRoom());
+				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom));
 			} catch(Throwable t) {
 				logger.error("Listener error", t);
 			}
 		}
 		
 		return chatObj;
+	}
+	
+	private String getChatOwnerNick(ChatRoom chatRoom) throws XMPPClientException {
+		if (XMPPHelper.jidEquals(chatRoom.getOwnerJid(), getUserJid())) {
+			return getUserNickame();
+		} else {
+			return getFriendNickname(chatRoom.getOwnerJid(), true);
+		}
 	}
 	
 	private void doRemoveChat(EntityBareJid chatJid) {
@@ -569,7 +577,7 @@ public class XMPPClient {
 		
 		if (!skipListeners) {
 			try {
-				listener.onChatRoomAdded(chatObj.getChatRoom());
+				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom));
 			} catch(Throwable t) {
 				logger.error("Listener error", t);
 			}

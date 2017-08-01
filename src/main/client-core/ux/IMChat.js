@@ -76,6 +76,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	initComponent: function() {
 		var me = this, tbarItms = [];
 		
+		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
 		me.setHotMarker(me.hotMarker);
 		if (!me.groupChat) {
 			tbarItms.push({
@@ -180,9 +181,16 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				reference: 'gplast',
 				border: false,
 				rowLines: false,
+				bufferedRenderer: false,
 				viewConfig: {
 					markDirty: false,
-					stripeRows: false
+					stripeRows: false,
+					listeners: {
+						viewready: function(s) {
+							me.scrollToEnd();
+						},
+						scope: me
+					}
 				},
 				store: {
 					autoLoad: true,
@@ -194,9 +202,9 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					}),
 					listeners: {
 						load: function(s) {
-							var rec = s.last();
-							if (rec) me.scrollToRecord(me.lref('gplast'), rec);
-						}
+							me.scrollToEnd();
+						},
+						scope: me
 					}
 				},
 				columns: [{
@@ -269,6 +277,15 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		
 		me.on('activate', me.onActivate);
 		if (!me.groupChat) me.refreshFriendPresence();
+	},
+	
+	destroy: function() {
+		var me = this;
+		me.callParent();
+		if (me.scrollTask) {
+			me.scrollTask.cancel();
+			me.scrollTask = null;
+		}
 	},
 	
 	getChatId: function() {
@@ -344,29 +361,60 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	
 	privates: {
 		onActivate: function(s) {
+			if (s.scrollOnActivate) {
+				s.scrollOnActivate = false;
+				s.scrollToEnd();
+			}
 			s.setHotMarker(false);
-			s.lref('fldmessage').focus(true);
+			s.lref('fldmessage').focus(true);					
 		},
 		
 		addMessage: function(data) {
-			var gp = this.lref('gplast'),
+			var me = this,
+				gp = me.lref('gplast'),
 				sto = gp.getStore(),
 				rec;
 			rec = sto.add(sto.createModel(data))[0];
-			this.scrollToRecord(gp, rec);
+			me.scrollToEnd();
 		},
 		
-		scrollToRecord: function(gp, rec) {
-			var view = gp.getView(),
-					scroll = view.getScrollable(),
-					row = view.getRowByRecord(rec),
-					cell, scroll;
-			
-			if (scroll && row) {
-				cell = Ext.fly(row).down(view.getCellSelector(), true);
-				if (cell) {
-					cell = new Ext.dom.Fly(cell);
-					scroll.scrollIntoView(cell);
+		scrollToEnd: function() {
+			var me = this;
+			if (me.isVisible()) {
+				me.scrollTask.delay(200);
+			} else {
+				me.scrollOnActivate = true;
+			}
+		},
+		
+		onScrollTask: function() {
+			/* 1 - Scroll to last record
+			var gp = this.lref('gplast'),
+					rec = gp.getStore().last();
+			if (rec) this.scrollViewToRecord(gp.getView(), rec);
+			*/
+			// 2 - Scroll to end
+			this.scrollViewToEnd(this.lref('gplast').getView());
+		},
+		
+		scrollViewToEnd: function(view) {
+			var scroll = view.getScrollable();
+			if (view.rendered && scroll) {
+				scroll.scrollTo(Infinity, Infinity, false);
+			}
+		},
+		
+		scrollViewToRecord: function(view, rec) {
+			var scroll = view.getScrollable(),
+					row, cell, scroll;
+			if (view.rendered) {
+				row = view.getRowByRecord(rec);
+				if (scroll && row) {
+					cell = Ext.fly(row).down(view.getCellSelector(), true);
+					if (cell) {
+						cell = new Ext.dom.Fly(cell);
+						scroll.scrollIntoView(cell);
+					}
 				}
 			}
 		}
