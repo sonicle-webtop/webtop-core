@@ -104,6 +104,10 @@ public class ChatMessage {
 		return message.getBody();
 	}
 	
+	public static DateTime nowTimestamp() {
+		return DateTime.now(DateTimeZone.UTC);
+	}
+	
 	public static String buildUniqueId(Jid fromUser, DateTime timestamp) {
 		return buildUniqueId(fromUser.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromUser), timestamp);
 	}

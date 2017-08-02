@@ -1411,7 +1411,19 @@ public class Service extends BaseService {
 				} else {
 					throw new WTException("XMPPClient not available");
 				}
-			}
+				
+			}/* else if (crud.equals("sendasfile")) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				if (xmppCli != null) {
+					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
+					ChatMessage message = xmppCli.sendMessage(chatJid, "webtop.sonicle.com/webtop/test.pdf", "application/pdf", 100);
+					if (message == null) throw new Exception("Message is null");
+
+					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
+				} else {
+					throw new WTException("XMPPClient not available");
+				}
+			}*/
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageIMChat", ex);
@@ -1444,6 +1456,7 @@ public class Service extends BaseService {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
 					EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
 					
+					final DateTime messageTs = ChatMessage.nowTimestamp();
 					LocalDate lastDate = null;
 					HashMap<String, String> cacheNicks = new HashMap<>();
 					List<JsGridIMMessage> items = new ArrayList<>();
@@ -1452,14 +1465,14 @@ public class Service extends BaseService {
 					
 					// Add unavailable warning at the beginning
 					if (history && chat.isUnavailable() && !messages.isEmpty()) {
-						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable1", chat.getLastSeenActivity());
-						items.add(JsGridIMMessage.asWarnAction(msgId, chat.getLastSeenActivity(), "unavailable"));
+						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable1", messageTs);
+						items.add(JsGridIMMessage.asWarnAction(msgId, messageTs, "unavailable"));
 					}
 					
 					for(IMMessage mes : messages) {
 						if (!mes.getDate().equals(lastDate)) {
 							lastDate = mes.getDate();
-							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-date", chat.getLastSeenActivity());
+							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-date", messageTs);
 							items.add(JsGridIMMessage.asDateAction(msgId, ld));
 						}
 						
@@ -1477,8 +1490,8 @@ public class Service extends BaseService {
 					
 					// Add unavailable warning at the end
 					if (chat.isUnavailable()) {
-						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable2", chat.getLastSeenActivity());
-						items.add(JsGridIMMessage.asWarnAction(msgId, chat.getLastSeenActivity(), "unavailable"));
+						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable2", messageTs);
+						items.add(JsGridIMMessage.asWarnAction(msgId, messageTs, "unavailable"));
 					}
 					
 					new JsonResult(items, items.size()).printTo(out);
