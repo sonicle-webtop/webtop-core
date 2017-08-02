@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.xmpp;
 
 import java.util.Collection;
+import org.joda.time.DateTime;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.Jid;
@@ -45,9 +46,10 @@ import org.jxmpp.jid.Jid;
 public interface XMPPClientListener {
 	
 	public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence);
-	public void onChatRoomUpdated(ChatRoom chatRoom);
-	public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick);
-	public void onChatRoomRemoved(EntityBareJid chatJid);
+	public void onChatRoomUpdated(ChatRoom chatRoom, boolean self);
+	public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick, boolean self);
+	public void onChatRoomRemoved(EntityBareJid chatJid, String chatName, EntityBareJid ownerJid, String ownerNick);
+	public void onChatRoomUnavailable(ChatRoom chatRoom, String ownerNick);
 	
 	public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message);
 	public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message);

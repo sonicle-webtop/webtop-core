@@ -58,6 +58,7 @@ import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.XMPPError;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
@@ -72,7 +73,9 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.Occupant;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
+import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
+import org.jivesoftware.smackx.muc.UserStatusListener;
 import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
@@ -317,7 +320,7 @@ public class XMPPClient {
 				if (chatObj == null) {
 					final ChatManager chatMgr = getChatManager();
 					final Chat chat = chatMgr.chatWith(withFriend);
-					chatObj = doAddChat(false, chatJid, userJid.asEntityBareJid(), withUserNick, null, withFriend, chat);
+					chatObj = doAddChat(false, true, chatJid, userJid.asEntityBareJid(), withUserNick, null, withFriend, chat);
 				}
 			}
 			return chatJid;
@@ -347,7 +350,7 @@ public class XMPPClient {
 					muc.sendConfigurationForm(answerForm);
 					muc.changeSubject(name);
 					muc.join(userNickname);
-					chatObj = doAddGroupChat(false, chatJid, myJid, name, null, muc);
+					chatObj = doAddGroupChat(false, true, chatJid, myJid, name, null, muc);
 					
 					for(EntityBareJid withFriend : withFriends) {
 						muc.invite(withFriend, name);
@@ -527,18 +530,18 @@ public class XMPPClient {
 		throw new XMPPClientException("Chat not found. Please create a chat before try to send messages in it!");
 	}
 	
-	private IChat doAddChat(boolean skipListeners, EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity, EntityBareJid withJid, Chat chat) {
-		return doAddChat(skipListeners, new InstantChatRoom(chatJid, ownerJid, name, lastSeenActivity, withJid), chat);
+	private IChat doAddChat(boolean skipListeners, boolean self, EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity, EntityBareJid withJid, Chat chat) {
+		return doAddChat(skipListeners, self, new InstantChatRoom(chatJid, ownerJid, name, lastSeenActivity, withJid), chat);
 	}
 	
-	private IChat doAddChat(boolean skipListeners, InstantChatRoom chatRoom, Chat chat) {
+	private IChat doAddChat(boolean skipListeners, boolean self, InstantChatRoom chatRoom, Chat chat) {
 		logger.debug("Adding instant chat [{}]", chatRoom.getChatJid().toString());
 		IChat chatObj = new IChat(chatRoom, chat);
 		instantChats.put(chatRoom.getChatJid(), chatObj);
 		
 		if (!skipListeners) {
 			try {
-				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom));
+				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom), self);
 			} catch(Throwable t) {
 				logger.error("Listener error", t);
 			}
@@ -560,24 +563,25 @@ public class XMPPClient {
 		IChat chatObj = instantChats.remove(chatJid);
 		
 		try {
-			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid());
+			final ChatRoom chatRoom = chatObj.getChatRoom();
+			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid(), chatRoom.getName(), chatRoom.getOwnerJid(), getChatOwnerNick(chatRoom));
 		} catch(Throwable t) {
 			logger.error("Listener error", t);
 		}
 	}
 	
-	private GChat doAddGroupChat(boolean skipListeners, EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity, MultiUserChat chat) {
-		return doAddGroupChat(skipListeners, new GroupChatRoom(chatJid, ownerJid, name, lastSeenActivity), chat);
+	private GChat doAddGroupChat(boolean skipListeners, boolean self, EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity, MultiUserChat chat) {
+		return doAddGroupChat(skipListeners, self, new GroupChatRoom(chatJid, ownerJid, name, lastSeenActivity), chat);
 	}
 	
-	private GChat doAddGroupChat(boolean skipListeners, GroupChatRoom chatRoom, MultiUserChat chat) {
+	private GChat doAddGroupChat(boolean skipListeners, boolean self, GroupChatRoom chatRoom, MultiUserChat chat) {
 		logger.debug("Creating group chat [{}]", chatRoom.getChatJid().toString());
 		GChat chatObj = new GChat(chatRoom);
 		groupChats.put(chatRoom.getChatJid(), chatObj);
 		
 		if (!skipListeners) {
 			try {
-				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom));
+				listener.onChatRoomAdded(chatObj.getChatRoom(), getChatOwnerNick(chatRoom), self);
 			} catch(Throwable t) {
 				logger.error("Listener error", t);
 			}
@@ -585,6 +589,7 @@ public class XMPPClient {
 		
 		chat.addSubjectUpdatedListener(chatObj);
 		chat.addMessageListener(chatObj);
+		chat.addUserStatusListener(chatObj);
 		chat.addParticipantStatusListener(chatObj);
 		
 		return chatObj;
@@ -597,15 +602,18 @@ public class XMPPClient {
 		MultiUserChat chat = chatObj.getRawChat();
 		chat.removeSubjectUpdatedListener(chatObj);
 		chat.removeMessageListener(chatObj);
+		chat.removeUserStatusListener(chatObj);
 		chat.removeParticipantStatusListener(chatObj);
+		if (XMPPHelper.jidEquals(chatObj.getChatRoom().getOwnerJid(), getUserJid().asEntityBareJid())) {
+			chat.destroy("Cleanup", null);
+		}
 		
 		try {
-			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid());
+			final ChatRoom chatRoom = chatObj.getChatRoom();
+			listener.onChatRoomRemoved(chatObj.getChatRoom().getChatJid(), chatRoom.getName(), chatRoom.getOwnerJid(), getChatOwnerNick(chatRoom));
 		} catch(Throwable t) {
 			logger.error("Listener error", t);
 		}
-		
-		chat.destroy("Cleanup", null);
 	}
 	
 	private void checkRosterLoaded(final Roster roster) throws SmackException, InterruptedException {
@@ -819,7 +827,7 @@ public class XMPPClient {
 			for(ChatRoom chat : history.getChats()) {
 				if (chat instanceof InstantChatRoom) {
 					final InstantChatRoom chatObj = (InstantChatRoom)chat;
-					doAddChat(true, chatObj, null);
+					doAddChat(true, true, chatObj, null);
 				}
 			}
 		}
@@ -831,9 +839,20 @@ public class XMPPClient {
 		if (restoreHistory && (history != null)) {
 			for(ChatRoom chat : history.getChats()) {
 				if (chat instanceof GroupChatRoom) {
-					final GroupChatRoom chatObj = (GroupChatRoom)chat;
-					final MultiUserChat muc = muChatMgr.getMultiUserChat(chat.getChatJid());
-					doAddGroupChat(true, chatObj, muc);
+					final GroupChatRoom chatRoom = (GroupChatRoom)chat;
+					
+					RoomInfo info = getRoomInfo(muChatMgr, chat.getChatJid());
+					if (info != null) {
+						final MultiUserChat muc = muChatMgr.getMultiUserChat(chat.getChatJid());
+						doAddGroupChat(true, true, chatRoom, muc);
+					} else {
+						logger.debug("Group chat unavailable [{}, {}]", chatRoom.getChatJid(), chatRoom.getName());
+						try {
+							listener.onChatRoomUnavailable(chatRoom, getChatOwnerNick(chatRoom));
+						} catch(Throwable t) {
+							logger.error("Listener error", t);
+						}
+					}
 				}
 			}
 		}
@@ -855,6 +874,20 @@ public class XMPPClient {
 				boolean joined = joinMuc(muc, chatObj.getChatRoom().getLastSeenActivity());
 				if (joined) logger.debug("Group chat re-joined [{}]", muc.getNickname());
 			}
+		}
+	}
+	
+	private RoomInfo getRoomInfo(MultiUserChatManager mucManager, EntityBareJid chatJid) throws SmackException, XMPPException, InterruptedException, IOException {
+		try {
+			return mucManager.getRoomInfo(chatJid);
+		} catch(XMPPException.XMPPErrorException ex) {
+			if (ex.getXMPPError().getCondition() == XMPPError.Condition.item_not_found) {
+				return null;
+			} else {
+				throw ex;
+			}
+		} catch(SmackException | XMPPException | InterruptedException ex) {
+			throw ex;
 		}
 	}
 	
@@ -943,7 +976,7 @@ public class XMPPClient {
 				synchronized(instantChats) {
 					chatObj = instantChats.get(chatJid);
 					if (chatObj == null) {
-						chatObj = doAddChat(false, chatJid, from, fromNick, ts, from, chat);
+						chatObj = doAddChat(false, false, chatJid, from, fromNick, ts, from, chat);
 					}
 				}
 				chatObj.getChatRoom().setLastSeenActivity(ts);
@@ -977,7 +1010,7 @@ public class XMPPClient {
 			synchronized(groupChats) {
 				chatObj = groupChats.get(chatJid);
 				if (chatObj == null) {
-					chatObj = doAddGroupChat(false, chatJid, inviterJid.asEntityBareJid(), name, null, muc);
+					chatObj = doAddGroupChat(false, false, chatJid, inviterJid.asEntityBareJid(), name, null, muc);
 				}
 				
 				if (!muc.isJoined()) {
@@ -1015,7 +1048,7 @@ public class XMPPClient {
 		}
 	}
 	
-	private class GChat implements SubjectUpdatedListener, MessageListener, ParticipantStatusListener {
+	private class GChat implements SubjectUpdatedListener, MessageListener, UserStatusListener, ParticipantStatusListener {
 		private final GroupChatRoom chatRoom;
 		
 		public GChat(GroupChatRoom chatRoom) {
@@ -1032,9 +1065,9 @@ public class XMPPClient {
 		
 		@Override
 		public void subjectUpdated(String subject, EntityFullJid from) {
+			chatRoom.setName(subject);
 			try {
-				chatRoom.setName(subject);
-				listener.onChatRoomUpdated(chatRoom);
+				listener.onChatRoomUpdated(chatRoom, false);
 			} catch(Throwable t) {
 				logger.error("Listener error", t);
 			}
@@ -1113,6 +1146,59 @@ public class XMPPClient {
 		}
 		
 		@Override
+		public void kicked(Jid actor, String reason) {}
+
+		@Override
+		public void voiceGranted() {}
+
+		@Override
+		public void voiceRevoked() {}
+
+		@Override
+		public void banned(Jid actor, String reason) {}
+
+		@Override
+		public void membershipGranted() {}
+
+		@Override
+		public void membershipRevoked() {}
+
+		@Override
+		public void moderatorGranted() {}
+
+		@Override
+		public void moderatorRevoked() {}
+
+		@Override
+		public void ownershipGranted() {}
+
+		@Override
+		public void ownershipRevoked() {}
+
+		@Override
+		public void adminGranted() {}
+
+		@Override
+		public void adminRevoked() {}
+
+		@Override
+		public void roomDestroyed(MultiUserChat alternateMuc, String reason) {
+			/*
+			if (isDisconnecting.get()) return;
+			final EntityBareJid chatJid = getChatRoom().getChatJid();
+			
+			logger.debug("Group chat destroyed [{}, {}]", chatJid.toString(), reason);
+			try {
+				synchronized(groupChats) {
+					if (groupChats.containsKey(chatJid)) doRemoveGroupChat(false, chatJid);
+				}
+			} catch(XMPPException | SmackException | InterruptedException ex) {
+				logger.error("UserStatusListener error", ex);
+			}
+			*/
+		}
+		
+		@Override
 		public void joined(EntityFullJid participant) {
 			try {
 				listener.onChatRoomParticipantJoined(chatRoom, participant);
@@ -1149,31 +1235,31 @@ public class XMPPClient {
 		public void banned(EntityFullJid efj, Jid jid, String string) {}
 
 		@Override
-		public void membershipGranted(EntityFullJid efj) {}
+		public void membershipGranted(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void membershipRevoked(EntityFullJid efj) {}
+		public void membershipRevoked(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void moderatorGranted(EntityFullJid efj) {}
+		public void moderatorGranted(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void moderatorRevoked(EntityFullJid efj) {}
+		public void moderatorRevoked(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void ownershipGranted(EntityFullJid efj) {}
+		public void ownershipGranted(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void ownershipRevoked(EntityFullJid efj) {}
+		public void ownershipRevoked(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void adminGranted(EntityFullJid efj) {}
+		public void adminGranted(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void adminRevoked(EntityFullJid efj) {}
+		public void adminRevoked(EntityFullJid efj) {logger.debug("{}",efj.toString());}
 
 		@Override
-		public void nicknameChanged(EntityFullJid efj, Resourcepart r) {}
+		public void nicknameChanged(EntityFullJid efj, Resourcepart r) {logger.debug("{}",efj.toString());}
 	}
 	
 	public static boolean isGroupChat(EntityBareJid chatJid) {

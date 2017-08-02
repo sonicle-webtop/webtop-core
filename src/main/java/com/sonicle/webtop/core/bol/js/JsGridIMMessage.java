@@ -33,9 +33,11 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.xmpp.ChatMessage;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
@@ -56,9 +58,14 @@ public class JsGridIMMessage {
 	
 	public JsGridIMMessage() {}
 	
-	public static JsGridIMMessage asDateSeparator(String id, LocalDate date) {
+	public static JsGridIMMessage asDateAction(String id, LocalDate date) {
 		DateTimeFormatter ymd = DateTimeUtils.createYmdFormatter();
-		return new JsGridIMMessage(id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, false);
+		return new JsGridIMMessage("!"+id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, false);
+	}
+	
+	public static JsGridIMMessage asWarnAction(String id, DateTime timestamp, String key) {
+		DateTimeFormatter ymdmhs = DateTimeUtils.createYmdHmsFormatter();
+		return new JsGridIMMessage("!"+id, null, null, false, ymdmhs.print(timestamp), "warn", key, false);
 	}
 	
 	public JsGridIMMessage(boolean isSent, IMMessage message, String senderNick, DateTimeZone utz) {
@@ -68,7 +75,7 @@ public class JsGridIMMessage {
 		this.fromNick = senderNick;
 		this.isSent = isSent;
 		this.timestamp = ymdhms.print(message.getTimestamp());
-		this.action = "none";
+		this.action = EnumUtils.toSerializedName(message.getAction());
 		this.text = message.getText();
 		this.fromArchive = true;
 	}

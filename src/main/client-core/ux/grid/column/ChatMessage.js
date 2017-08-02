@@ -106,14 +106,22 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 				text: htmlText
 			});
 		} else {
+			var actionCls = me.infoSysMessageCls;
 			if (action === 'date') {
 				text = Ext.Date.format(ts, me.dateFormat);
 				htmlText = Ext.String.htmlEncode(text);
+			} else if (action === 'close') {
+				text = WT.res(WT.ID, 'wtchatmessagecolumn.close', rec.get(me.senderNickField));
+				htmlText = Ext.String.htmlEncode(text);
+			} else if (action === 'warn') {
+				text = WT.res('wtchatmessagecolumn.warn.'+text);
+				htmlText = Ext.String.htmlEncode(text);
+				actionCls = me.warnSysMessageCls;
 			}
 			return me.tpl.apply({
 				action: action,
 				sysMessageCls: me.sysMessageCls,
-				sysMessageActionCls: me.infoSysMessageCls,
+				sysMessageActionCls: actionCls,
 				width: Ext.util.TextMetrics.measure(this.el, text).width +10,
 				time: vts,
 				text: htmlText

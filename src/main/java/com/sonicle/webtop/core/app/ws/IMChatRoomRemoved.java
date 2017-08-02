@@ -41,21 +41,20 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class IMChatRoomAdded extends ServiceMessage {
-	public static final String ACTION = "imChatRoomAdded";
+public class IMChatRoomRemoved extends ServiceMessage {
+	public static final String ACTION = "imChatRoomRemoved";
 	
-	public IMChatRoomAdded(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
+	public IMChatRoomRemoved(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick, self);
+		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick);
 	}
 	
-	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
+	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
 		HashMap<String, Object> pl = new HashMap<>();
 		pl.put("chatId", chatBareJid);
 		pl.put("chatName", chatName);
 		pl.put("ownerId", ownerBareJid);
 		pl.put("ownerNick", ownerNick);
-		pl.put("self", self);
 		return pl;
 	}
 }

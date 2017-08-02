@@ -869,18 +869,46 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<IMChat> listIMChats() throws WTException {
+	public List<IMChat> listIMChats(boolean skipUnavailable) throws WTException {
 		IMChatDAO dao = IMChatDAO.getInstance();
 		ArrayList<IMChat> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			List<OIMChat> ochats = dao.selectAliveByProfile(con, getTargetProfileId());
+			List<String> revStatuses = null;
+			if (skipUnavailable) {
+				revStatuses = Arrays.asList(
+					EnumUtils.toSerializedName(IMChat.RevisionStatus.MODIFIED)
+				);
+			} else {
+				revStatuses = Arrays.asList(
+					EnumUtils.toSerializedName(IMChat.RevisionStatus.MODIFIED),
+					EnumUtils.toSerializedName(IMChat.RevisionStatus.UNAVAILABLE)
+				);
+			}
+			List<OIMChat> ochats = dao.selectByProfileRevStatus(con, getTargetProfileId(), revStatuses);
 			for(OIMChat ocha : ochats) {
 				items.add(createIMChat(ocha));
 			}
 			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public IMChat getIMChat(String chatJid) throws WTException {
+		IMChatDAO dao = IMChatDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			
+			OIMChat ocha = dao.selectByProfileChat(con, getTargetProfileId(), chatJid);
+			return (ocha != null) ? createIMChat(ocha) : null;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -922,6 +950,22 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			return dao.updateLastActivityByProfileChat(con, getTargetProfileId(), chatJid, lastSeenActivity, createRevisionTimestamp()) == 1;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean updateIMChatAvailablity(String chatJid, boolean available) throws WTException {
+		IMChatDAO dao = IMChatDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			IMChat.RevisionStatus revisionStatus = available ? IMChat.RevisionStatus.MODIFIED : IMChat.RevisionStatus.UNAVAILABLE;
+			return dao.updateRevisionStatusByProfileChat(con, getTargetProfileId(), chatJid, createRevisionTimestamp(), revisionStatus) == 1;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
