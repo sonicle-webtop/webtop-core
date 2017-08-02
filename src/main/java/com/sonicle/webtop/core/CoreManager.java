@@ -907,7 +907,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			
-			OIMChat ocha = dao.selectByProfileChat(con, getTargetProfileId(), chatJid);
+			OIMChat ocha = dao.selectAliveByProfileChat(con, getTargetProfileId(), chatJid);
 			return (ocha != null) ? createIMChat(ocha) : null;
 			
 		} catch(SQLException | DAOException ex) {
