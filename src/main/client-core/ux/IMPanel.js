@@ -166,9 +166,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					listeners: {
 						load: function(s) {
 							if (s.getCount() === 0) me.lookupReference('tab').setActiveTab('friends');
-						},
-						remove: function(s, recs) {
-							console.log('store removeee');
 						}
 					}
 				},
@@ -287,9 +284,12 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				}],
 				listeners: {
 					afterrender: function(s) {
+						Ext.defer(me.expandOnlineGroup, 200, me, [me.gpFriends()]);
+						/*
 						Ext.defer(function() {
 							s.getView().findFeature('grouping').expand("1", {highlight: true});
 						}, 200);
+						*/
 					},
 					rowdblclick: function(s, rec) {
 						var chatId = rec.get('dChatId'),
@@ -389,6 +389,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				}
 			}
 		}
+		me.expandOnlineGroup(me.gpFriends());
 	},
 	
 	searchFriend: function(query) {
@@ -470,6 +471,14 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			WT.confirm(WT.res('wtimpanel.confirm.chat.delete'), function(bid) {
 				if (bid === 'yes') rec.drop();
 			}, this);
+		},
+		
+		expandOnlineGroup: function(grid) {
+			var view = grid.getView(),
+					feat = grid.getView().findFeature('grouping');
+			if (view.rendered && feat.getGroup('1')) {
+				feat.expand('1', {highlight: true});
+			}
 		}
 	},
 	
