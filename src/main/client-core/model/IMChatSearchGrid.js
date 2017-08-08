@@ -31,33 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.grid.ChatPartecipant', {
-	extend: 'Sonicle.webtop.core.ux.grid.Pickable',
-	alias: 'widget.wtchatpartecipantgrid',
-	requires: [
-		'Sonicle.webtop.core.model.ChatPartecipantLkp'
-	],
+Ext.define('Sonicle.webtop.core.model.IMChatSearchGrid', {
+	extend: 'WTA.model.Base',
 	
-	constructor: function(cfg) {
-		var me = this;
-		Ext.apply(cfg, {
-			lookupConfig: {
-				model: 'Sonicle.webtop.core.model.ChatPartecipantLkp',
-				action: 'LookupIMFriends',
-				displayField: 'desc'
-			},
-			columnConfig: {
-				dataIndex: 'friendId',
-				displayField: 'desc'
-			},
-			pickerConfig: {
-				titleKey: 'wtchatpartecipantgrid.picker.tit',
-				searchTextKey: 'textfield.search.emp',
-				valueField: 'id',
-				displayField: 'desc'
-			},
-			emptyTextKey: 'wtchatpartecipantgrid.emp'
-		});
-		me.callParent([cfg]);
-	}
+	identifier: 'negativestring',
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string', false),
+		WTF.field('fromId', 'string', false),
+		WTF.field('fromNick', 'string', false),
+		WTF.field('date', 'date', false, {dateFormat: 'Y-m-d'}),
+		WTF.field('timestamp', 'date', false, {dateFormat: 'Y-m-d H:i:s'}),
+		WTF.field('action', 'string', false, {defaultValue: 'none'}),
+		WTF.field('text', 'string', false)
+	]
 });

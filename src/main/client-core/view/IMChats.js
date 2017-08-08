@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 	
 	dockableConfig: {
 		iconCls: 'wt-icon-im-chat-xs',
-		width: 450,
+		width: 550,
 		height: 500
 	},
 	promptConfirm: false,

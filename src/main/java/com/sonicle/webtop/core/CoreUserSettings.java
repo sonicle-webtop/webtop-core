@@ -254,12 +254,22 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(IM_PRESENCE_STATUS, EnumUtils.toSerializedName(value));
 	}
 	
+	public Integer getIMUploadMaxFileSize() {
+		Integer value = getInteger(IM_UPLOAD_MAXFILESIZE, null);
+		if (value != null) return value;
+		return ss.getIMUploadMaxFileSize();
+	}
+	
+	public boolean setIMUploadMaxFileSize(Integer value) {
+		return setInteger(IM_UPLOAD_MAXFILESIZE, value);
+	}
+	
 	public boolean getIMSoundOnFriendConnect() {
 		return getBoolean(IM_SOUND_ON_FRIEND_CONNECT, true);
 	}
 	
 	public boolean setIMSoundOnFriendConnect(boolean value) {
-		return getBoolean(IM_SOUND_ON_FRIEND_CONNECT, value);
+		return setBoolean(IM_SOUND_ON_FRIEND_CONNECT, value);
 	}
 	
 	public boolean getIMSoundOnFriendDisconnect() {
@@ -267,7 +277,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean setIMSoundOnFriendDisconnect(boolean value) {
-		return getBoolean(IM_SOUND_ON_FRIEND_DISCONNECT, value);
+		return setBoolean(IM_SOUND_ON_FRIEND_DISCONNECT, value);
 	}
 	
 	public boolean getIMSoundOnMessageReceived() {
@@ -275,7 +285,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean setIMSoundOnMessageReceived(boolean value) {
-		return getBoolean(IM_SOUND_ON_MESSAGE_RECEIVED, value);
+		return setBoolean(IM_SOUND_ON_MESSAGE_RECEIVED, value);
 	}
 	
 	public boolean getIMSoundOnMessageSent() {
@@ -283,7 +293,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	}
 	
 	public boolean setIMSoundOnMessageSent(boolean value) {
-		return getBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
+		return setBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
 	}
 	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {

@@ -870,6 +870,8 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
 		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
 		js.appManifest.addJs(LIBS_PATH + "ion.sound.min.js");
+		js.appManifest.addJs(LIBS_PATH + "linkify.min.js");
+		js.appManifest.addJs(LIBS_PATH + "linkify-string.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");

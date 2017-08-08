@@ -85,6 +85,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean otpDeviceIsTrusted;
 	public String otpDeviceTrustedOn;
 	
+	public Integer imUploadMaxFileSize;
 	public Boolean imSoundOnFriendConnect;
 	public Boolean imSoundOnFriendDisconnect;
 	public Boolean imSoundOnMessageReceived;

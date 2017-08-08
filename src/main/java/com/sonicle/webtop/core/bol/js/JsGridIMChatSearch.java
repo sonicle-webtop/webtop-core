@@ -31,53 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.mixin.Waitable', {
-	alternateClassName: 'WTA.mixin.Waitable',
-	extend: 'Ext.Mixin',
-	mixinConfig: {
-		id: 'waitable'
-	},
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.webtop.core.model.IMMessage;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsGridIMChatSearch {
+	public String id;
+	public String fromId;
+	public String fromNick;
+	public String date;
+	public String timestamp;
+	public String action;
+	public String text;
 	
-	_waitCount: 0,
+	public JsGridIMChatSearch() {}
 	
-	/**
-	 * Signals to apply the loading mask.
-	 * Every time this method will be called, a counter will be incremented.
-	 * Mask will be effectively added only on the first call (when counter=1).
-	 * @param {String} [msg] The message to show within the indicator.
-	 */
-	wait: function(msg) {
-		var me = this, cmp = me.ownerCt || me;
-		me._waitCount++;		
-		if(me._waitCount === 1) {
-			cmp.setLoading(msg || WT.res('waiting'));
-			//cmp.mask(msg || WT.res('waiting'));
-		}
-	},
-	
-	/**
-	 * Updates (if displayed) the message of the loading indicator.
-	 * @param {String} [msg] The message to show within the indicator.
-	 */
-	waitUpdate: function(msg) {
-		var me = this, cmp = me.ownerCt || me;
-		if(me._waitCount >= 1) {
-			cmp.setLoading(msg || WT.res('waiting'));
-		}
-	},
-	
-	/**
-	 * Signals to remove the loading mask.
-	 * Every time this method will be called, a counter will be decremented.
-	 * Mask will be effectively removed only when the counter is equal to 0.
-	 */
-	unwait: function(force) {
-		var me = this, cmp = me.ownerCt || me;
-		me._waitCount--;
-		if((me._waitCount === 0) || (force === true)) {
-			me._waitCount = 0;
-			cmp.setLoading(false);
-			//cmp.unmask();
-		}
+	public JsGridIMChatSearch(IMMessage message, String senderNick, DateTimeZone utz) {
+		DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+		
+		this.id = message.getMessageUid();
+		this.fromId = message.getSenderJid();
+		this.fromNick = senderNick;
+		this.date = message.getDate().toString();
+		this.timestamp = fmt.print(message.getTimestamp());
+		this.action = EnumUtils.toSerializedName(message.getAction());
+		this.text = message.getText();
 	}
-});
+}

@@ -175,7 +175,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Pickable', {
 				valueField: pkCfg.valueField,
 				displayField: pkCfg.displayField,
 				searchField: pkCfg.displayField,
-				emptyText: WT.res('grid.emptyText'),
+				emptyText: WT.res('grid.emp'),
 				searchText: WT.res(WT.ID, pkCfg.searchTextKey),
 				okText: WT.res('act-ok.lbl'),
 				cancelText: WT.res('act-cancel.lbl'),

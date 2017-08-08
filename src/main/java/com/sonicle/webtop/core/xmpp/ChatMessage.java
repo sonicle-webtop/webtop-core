@@ -34,7 +34,9 @@
 package com.sonicle.webtop.core.xmpp;
 
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -102,6 +104,15 @@ public class ChatMessage {
 	
 	public String getText() {
 		return message.getBody();
+	}
+	
+	public OutOfBandData getOutOfBandExtension() {
+		ExtensionElement ee = message.getExtension(OutOfBandData.NAMESPACE);
+		if ((ee != null) && (ee instanceof OutOfBandData)) {
+			return (OutOfBandData)ee;
+		} else {
+			return null;
+		}
 	}
 	
 	public static DateTime nowTimestamp() {

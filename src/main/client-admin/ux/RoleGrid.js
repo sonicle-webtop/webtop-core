@@ -118,8 +118,8 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleGrid', {
 				valueField: 'id',
 				displayField: 'desc',
 				searchField: 'desc',
-				emptyText: WT.res('grid.emptyText'),
-				searchText: WT.res(WT.ID + '.admin', 'wtadmrolegrid.picker.search'),
+				emptyText: WT.res('grid.emp'),
+				searchText: WT.res('textfield.search.emp'),
 				okText: WT.res('act-ok.lbl'),
 				cancelText: WT.res('act-cancel.lbl'),
 				listeners: {

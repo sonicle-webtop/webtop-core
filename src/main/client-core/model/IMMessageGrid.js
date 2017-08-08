@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.model.IMMessageGrid', {
 		WTF.field('isSent', 'boolean', false),
 		WTF.field('timestamp', 'date', false, {dateFormat: 'Y-m-d H:i:s'}),
 		WTF.field('action', 'string', false, {defaultValue: 'none'}),
+		WTF.field('data', 'string', true),
 		WTF.field('text', 'string', false),
 		WTF.field('fromArchive', 'boolean', false, {defaultValue: false})
 	]

@@ -239,6 +239,7 @@ CREATE TABLE "core"."im_messages" (
 "timestamp" timestamptz(6) NOT NULL,
 "action" varchar(10) NOT NULL,
 "text" varchar(255),
+"data" text,
 "message_uid" varchar(255) NOT NULL,
 "stanza_id" varchar(255)
 )
@@ -660,7 +661,8 @@ ALTER TABLE "core"."im_chats" ADD PRIMARY KEY ("id");
 -- ----------------------------
 -- Indexes structure for table im_messages
 -- ----------------------------
-CREATE INDEX "im_history_ak1" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid");
+CREATE INDEX "im_messages_ak1" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "date");
+CREATE INDEX "im_messages_ak2" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "text");
 
 -- ----------------------------
 -- Primary Key structure for table im_messages
@@ -818,4 +820,4 @@ ALTER TABLE "core"."users_info" ADD PRIMARY KEY ("domain_id", "user_id");
 -- Align service version
 -- ----------------------------
 DELETE FROM "core"."settings" WHERE ("settings"."service_id" = 'com.sonicle.webtop.core') AND ("settings"."key" = 'manifest.version');
-INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.13');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.16');

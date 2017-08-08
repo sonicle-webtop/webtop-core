@@ -78,6 +78,7 @@ import com.sonicle.webtop.core.bol.js.JsGridIMChat;
 import com.sonicle.webtop.core.bol.js.JsGridIMFriend;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
+import com.sonicle.webtop.core.bol.js.JsGridIMChatSearch;
 import com.sonicle.webtop.core.bol.js.JsGroupChat;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
@@ -103,8 +104,10 @@ import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UploadException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
 import com.sonicle.webtop.core.xmpp.Friend;
 import com.sonicle.webtop.core.xmpp.FriendPresence;
 import com.sonicle.webtop.core.xmpp.ChatMessage;
@@ -140,7 +143,11 @@ import org.jxmpp.jid.Jid;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.xmpp.XMPPClientListener;
 import com.sonicle.webtop.core.xmpp.XMPPHelper;
+import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
+import com.sonicle.webtop.vfs.IVfsManager;
+import com.sonicle.webtop.vfs.model.SharingLink;
 import java.util.HashMap;
+import org.apache.commons.vfs2.FileObject;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -173,6 +180,8 @@ public class Service extends BaseService {
 		ss = new CoreServiceSettings(SERVICE_ID, pid.getDomainId());
 		us = new CoreUserSettings(pid);
 		
+		registerUploadListener(UPLOAD_CONTEXT_WEBCHAT, new OnUploadCloudFile());
+		
 		Principal principal = profile.getPrincipal();
 		if (!principal.isImpersonated()) {
 			ConversationHistory history = new ConversationHistory();
@@ -199,6 +208,10 @@ public class Service extends BaseService {
 	
 	private CoreAdminManager getCoreAdminManager() {
 		return (CoreAdminManager)WT.getServiceManager(CoreAdminManifest.ID);
+	}
+	
+	private IVfsManager getVfsManager() {
+		return (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
 	}
 
 	@Override
@@ -255,6 +268,7 @@ public class Service extends BaseService {
 		co.put("imEnabled", !RunContext.isWebTopAdmin() && RunContext.isPermitted(CoreManifest.ID, "WEBCHAT", "ACCESS"));
 		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
 		co.put("imStatusMessage", us.getIMStatusMessage());
+		co.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize());
 		co.put("imSoundOnFriendConnect", us.getIMSoundOnFriendConnect());
 		co.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
@@ -1365,6 +1379,14 @@ public class Service extends BaseService {
 				}
 				coreMgr.deleteIMChat(pl.data.id);
 				
+				final IVfsManager vfsMgr = getVfsManager();
+				if (vfsMgr != null) {
+					final String path = "/" + WEBCHAT_VFS_FOLDER + "/" + pl.data.id + "/";
+					int myDocsStoreId = vfsMgr.getMyDocumentsStoreId();
+					
+					vfsMgr.deleteStoreFile(myDocsStoreId, path);
+				}
+				
 				new JsonResult().printTo(out);
 			}
 			
@@ -1404,7 +1426,7 @@ public class Service extends BaseService {
 				
 				if (xmppCli != null) {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
-					ChatMessage message = xmppCli.sendMessage(chatJid, text);
+					ChatMessage message = xmppCli.sendTextMessage(chatJid, text);
 					if (message == null) throw new Exception("Message is null");
 
 					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
@@ -1412,18 +1434,17 @@ public class Service extends BaseService {
 					throw new WTException("XMPPClient not available");
 				}
 				
-			}/* else if (crud.equals("sendasfile")) {
+			} else if (crud.equals("sendasfile")) {
 				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
 				if (xmppCli != null) {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
-					ChatMessage message = xmppCli.sendMessage(chatJid, "webtop.sonicle.com/webtop/test.pdf", "application/pdf", 100);
-					if (message == null) throw new Exception("Message is null");
-
+					ChatMessage message = xmppCli.sendFileMessage(chatJid, "test.pdf", "webtop.sonicle.com/webtop/test.pdf", "application/pdf", 100);
+					
 					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
 				} else {
 					throw new WTException("XMPPClient not available");
 				}
-			}*/
+			}
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageIMChat", ex);
@@ -1431,7 +1452,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processManageGridIMMessages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processManageGridIMChatMessages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		UserProfile up = getEnv().getProfile();
 		DateTimeZone utz = up.getTimeZone();
 		
@@ -1452,7 +1473,7 @@ public class Service extends BaseService {
 				}
 				
 				IMChat chat = coreMgr.getIMChat(chatId);
-				if ((xmppCli != null) && (chat != null)) {
+				if (xmppCli != null) {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
 					EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
 					
@@ -1464,9 +1485,11 @@ public class Service extends BaseService {
 					List<IMMessage> messages = coreMgr.listIMMessages(chatId, ld);
 					
 					// Add unavailable warning at the beginning
-					if (history && chat.isUnavailable() && !messages.isEmpty()) {
-						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable1", messageTs);
-						items.add(JsGridIMMessage.asWarnAction(msgId, messageTs, "unavailable"));
+					if (history && !messages.isEmpty()) {
+						if (chat != null && chat.isUnavailable()) {
+							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable1", messageTs);
+							items.add(JsGridIMMessage.asWarnAction(msgId, messageTs, "unavailable"));
+						}
 					}
 					
 					for(IMMessage mes : messages) {
@@ -1483,13 +1506,12 @@ public class Service extends BaseService {
 								cacheNicks.put(mes.getSenderJid(), XMPPHelper.buildGuessedString(mes.getSenderJid()));
 							}
 						}
-						
 						final String nick = cacheNicks.get(mes.getSenderJid());
 						items.add(new JsGridIMMessage(myJid.equals(mes.getSenderJid()), mes, nick, utz));
 					}
 					
 					// Add unavailable warning at the end
-					if (chat.isUnavailable()) {
+					if (chat != null && chat.isUnavailable()) {
 						final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-unavailable2", messageTs);
 						items.add(JsGridIMMessage.asWarnAction(msgId, messageTs, "unavailable"));
 					}
@@ -1502,7 +1524,51 @@ public class Service extends BaseService {
 			}
 			
 		} catch(Exception ex) {
-			logger.error("Error in ManageGridIMMessages", ex);
+			logger.error("Error in ManageGridIMChatMessages", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageGridIMChatSearch(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
+		DateTimeZone utz = up.getTimeZone();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				String query = ServletUtils.getStringParameter(request, "query", null);
+				
+				if (xmppCli != null) {
+					//EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
+					//EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
+					
+					List<JsGridIMChatSearch> items = new ArrayList<>();
+					if (query != null) {
+						HashMap<String, String> cacheNicks = new HashMap<>();
+						List<IMMessage> messages = coreMgr.findIMMessagesByQuery(chatId, "%"+query+"%");
+						for(IMMessage mes : messages) {
+							if (!cacheNicks.containsKey(mes.getSenderJid())) {
+								if (xmppCli.isAuthenticated()) {
+									cacheNicks.put(mes.getSenderJid(), xmppCli.getFriendNickname(XMPPHelper.asEntityBareJid(mes.getSenderJid())));
+								} else {
+									cacheNicks.put(mes.getSenderJid(), XMPPHelper.buildGuessedString(mes.getSenderJid()));
+								}
+							}
+							final String nick = cacheNicks.get(mes.getSenderJid());
+							items.add(new JsGridIMChatSearch(mes, nick, utz));
+						}
+					}
+					
+					new JsonResult(items, items.size()).printTo(out);
+					
+				} else {
+					throw new WTException("XMPPClient not available");
+				}
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageGridIMChatSearch", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
@@ -1569,6 +1635,12 @@ public class Service extends BaseService {
 		mes.setTimestamp(message.getTimestamp());
 		mes.setAction(IMMessage.Action.NONE);
 		mes.setText(message.getText());
+		mes.setData(null);
+		OutOfBandData oob = message.getOutOfBandExtension();
+		if (oob != null) {
+			mes.setAction(IMMessage.Action.FILE);
+			mes.setData(JsGridIMMessage.toData(message.getText(), oob));
+		}
 		mes.setMessageUid(message.getMessageUid());
 		mes.setStanzaId(message.getStanzaId());
 		return mes;
@@ -1583,6 +1655,7 @@ public class Service extends BaseService {
 		mes.setTimestamp(timestamp);
 		mes.setAction(action);
 		mes.setText(text);
+		mes.setData(null);
 		mes.setMessageUid(ChatMessage.buildUniqueId(senderJid, timestamp));
 		mes.setStanzaId(null);
 		return mes;
@@ -1758,6 +1831,61 @@ public class Service extends BaseService {
 		@Override
 		public void onChatRoomParticipantLeft(ChatRoom chatRoom, EntityFullJid participant, boolean kicked) {
 			logger.debug("{} leaves group chat {}", participant.toString(), chatRoom.getChatJid().toString());
+		}
+	}
+	
+	public static final String WEBCHAT_VFS_FOLDER = "WebChat";
+	private static final String UPLOAD_CONTEXT_WEBCHAT = "UploadWebChatFile";
+	
+	private class OnUploadCloudFile implements IServiceUploadStreamListener {
+		@Override
+		public void onUpload(String context, HttpServletRequest request, HashMap<String, String> multipartParams, WebTopSession.UploadedFile file, InputStream is, MapItem responseData) throws UploadException {
+			
+			if (context.equals(UPLOAD_CONTEXT_WEBCHAT)) {
+				final IVfsManager vfsMgr = getVfsManager();
+				if (xmppCli == null) throw new UploadException("XMPPClient not available");
+				if (vfsMgr == null) throw new UploadException("VfsManager not available");
+				
+				try {
+					String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+					
+					final String path = "/" + WEBCHAT_VFS_FOLDER + "/" + chatId + "/";
+					int myDocsStoreId = vfsMgr.getMyDocumentsStoreId();
+					
+					FileObject foPath = vfsMgr.getStoreFile(myDocsStoreId, path);
+					foPath.createFolder(); // Ensure hierarchy existence
+					String newPath = vfsMgr.addStoreFileFromStream(myDocsStoreId, path, file.getFilename(), is, false);
+					FileObject foNew = vfsMgr.getStoreFile(myDocsStoreId, newPath);
+					
+					SharingLink sl = new SharingLink.BuilderForAdd(myDocsStoreId, newPath)
+							.permanent()
+							.free()
+							.silent()
+							.build();
+					sl = vfsMgr.addDownloadLink(sl);
+					String[] urls = vfsMgr.getSharingLinkPublicURLs(sl);
+					
+					ChatMessage message = xmppCli.sendFileMessage(chatId, file.getFilename(), urls[1], file.getMediaType(), foNew.getContent().getSize());
+					
+					
+					JsGridIMMessage js = new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone());
+					responseData.put("id", js.id);
+					responseData.put("fromId", js.fromId);
+					responseData.put("fromNick", js.fromNick);
+					responseData.put("isSent", js.isSent);
+					responseData.put("timestamp", js.timestamp);
+					responseData.put("action", js.action);
+					responseData.put("text", js.text);
+					responseData.put("data", js.data);
+					responseData.put("fromArchive", js.fromArchive);
+					
+				} catch(UploadException ex) {
+					throw ex;
+				} catch(Throwable t) {
+					logger.error("Error uploading chat file", t);
+					throw new UploadException("Upload failure");
+				}
+			}
 		}
 	}
 }

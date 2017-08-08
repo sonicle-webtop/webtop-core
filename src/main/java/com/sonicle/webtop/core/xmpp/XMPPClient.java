@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.xmpp;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.IdentifierUtils;
+import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,6 +60,7 @@ import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
@@ -138,6 +140,10 @@ public class XMPPClient {
 	private final AtomicBoolean isDisconnecting = new AtomicBoolean(false);
 	private Presence lastPresence = null;
 	private ConcurrentHashMap<String, EntityBareJid> cacheInstantChatToFriend = new ConcurrentHashMap<>();
+	
+	static {
+		ProviderManager.addExtensionProvider(OutOfBandData.ELEMENT_NAME, OutOfBandData.NAMESPACE, new OutOfBandData.Provider());
+	}
 	
 	public XMPPClient(XMPPTCPConnectionConfiguration.Builder builder, String mucSubdomain, String nickname, XMPPClientListener listener) {
 		this(builder, mucSubdomain, nickname, listener, null);
@@ -462,14 +468,33 @@ public class XMPPClient {
 		}
 	}
 	
-	public ChatMessage sendMessage(EntityBareJid chatJid, String text) throws XMPPClientException {
+	public ChatMessage sendTextMessage(String chatBareJid, String text) throws XMPPClientException {
+		return sendTextMessage(XMPPHelper.asEntityBareJid(chatBareJid), text);
+	}
+	
+	public ChatMessage sendTextMessage(EntityBareJid chatJid, String text) throws XMPPClientException {
+		Message message = new Message();
+		message.setBody(text);
+		return internalSendMessage(chatJid, message);
+	}
+	
+	public ChatMessage sendFileMessage(String chatBareJid, String name, String url, String mediaType, long size) throws XMPPClientException {
+		return sendFileMessage(XMPPHelper.asEntityBareJid(chatBareJid), name, url, mediaType, size);
+	}
+	
+	public ChatMessage sendFileMessage(EntityBareJid chatJid, String name, String url, String mediaType, long size) throws XMPPClientException {
+		Message message = new Message();
+		message.setBody(name);
+		OutOfBandData oobData = new OutOfBandData(url, mediaType, size);
+		message.addExtension(oobData);
+		return internalSendMessage(chatJid, message);
+	}
+	
+	private ChatMessage internalSendMessage(EntityBareJid chatJid, Message message) throws XMPPClientException {
 		checkAuthentication();
 		
 		final EntityBareJid myJid = userJid.asEntityBareJid();
 		final String myResource = XMPPHelper.asResourcepartString(userJid.getResourceOrNull());
-		
-		Message message = new Message();
-		message.setBody(text);
 		
 		if (isInstantChat(chatJid)) {
 			synchronized(instantChats) {
@@ -483,7 +508,7 @@ public class XMPPClient {
 				}
 				if (chatObj != null) {
 					try {
-						final DateTime ts = DateTime.now(DateTimeZone.UTC);
+						final DateTime ts = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().send(message);
 						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
 
@@ -507,7 +532,7 @@ public class XMPPClient {
 				GChat chatObj = groupChats.get(chatJid);
 				if (chatObj != null) {
 					try {
-						final DateTime ts = DateTime.now(DateTimeZone.UTC);
+						final DateTime ts = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().sendMessage(message);
 						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
 
@@ -965,7 +990,7 @@ public class XMPPClient {
 			if (isDisconnecting.get()) return;
 			
 			try {
-				final DateTime ts = DateTime.now(DateTimeZone.UTC);
+				final DateTime ts = ChatMessage.nowTimestamp();
 				final Roster roster = getRoster();
 				checkRosterLoaded(roster);
 
@@ -1075,7 +1100,7 @@ public class XMPPClient {
 
 		@Override
 		public void processMessage(Message message) {
-			final DateTime ts = DateTime.now(DateTimeZone.UTC);
+			final DateTime ts = ChatMessage.nowTimestamp();
 			final Roster roster = getRoster();
 			chatRoom.setLastSeenActivity(ts);
 			

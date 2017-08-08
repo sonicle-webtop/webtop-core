@@ -147,6 +147,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
 				// WebChat
+				jso.imUploadMaxFileSize = us.getIMUploadMaxFileSize();
 				jso.imSoundOnFriendConnect = us.getIMSoundOnFriendConnect();
 				jso.imSoundOnFriendDisconnect = us.getIMSoundOnFriendDisconnect();
 				jso.imSoundOnMessageReceived = us.getIMSoundOnMessageReceived();
@@ -214,6 +215,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if(pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
 				
 				// WebChat
+				if (pl.map.has("imUploadMaxFileSize")) us.setIMUploadMaxFileSize(pl.data.imUploadMaxFileSize);
 				if (pl.map.has("imSoundOnFriendConnect"))  us.setIMSoundOnFriendConnect(pl.data.imSoundOnFriendConnect);
 				if (pl.map.has("imSoundOnFriendDisconnect"))  us.setIMSoundOnFriendDisconnect(pl.data.imSoundOnFriendDisconnect);
 				if (pl.map.has("imSoundOnMessageReceived"))  us.setIMSoundOnMessageReceived(pl.data.imSoundOnMessageReceived);

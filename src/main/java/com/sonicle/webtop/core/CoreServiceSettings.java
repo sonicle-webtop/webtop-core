@@ -152,6 +152,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
+	public Integer getIMUploadMaxFileSize() {
+		Integer value = getInteger(IM_UPLOAD_MAXFILESIZE, null);
+		return (value != null) ? value : getUploadMaxFileSize();
+	}
+	
 	public ServicesOrder getServicesOrder() {
 		ServicesOrder value = getObject(SERVICES_ORDER, null, ServicesOrder.class);
 		return (value != null) ? value : getDefaultServicesOrder();

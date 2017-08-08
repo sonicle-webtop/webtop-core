@@ -37,11 +37,15 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	alias: ['widget.wtimchat'],
 	requires: [
 		'Sonicle.picker.Emoji',
+		'Sonicle.plugin.FileDrop',
+		'Sonicle.upload.Button',
 		'Sonicle.webtop.core.ux.grid.column.ChatMessage',
-		'Sonicle.webtop.core.model.IMMessageGrid'
+		'Sonicle.webtop.core.model.IMMessageGrid',
+		'Sonicle.webtop.core.model.IMChatSearchGrid'
 	],
 	mixins: [
-		'WTA.mixin.PanelUtil'
+		'WTA.mixin.PanelUtil',
+		'WTA.mixin.Waitable'
 	],
 	
 	config: {
@@ -51,12 +55,14 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	chatId: null,
 	chatName: null,
 	groupChat: false,
+	dateFormat: null,
+	timeFormat: null,
 	
 	layout: 'border',
 	referenceHolder: true,
 	viewModel: {
 		data: {
-			historyDate: null
+			chatDate: null
 		}
 	},
 	
@@ -65,6 +71,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		if (Ext.isEmpty(cfg.chatId)) Ext.raise('Config `chatId` is mandatory.');
 		if (Ext.isEmpty(cfg.chatName)) Ext.raise('Config `chatName` is mandatory.');
 		me.groupChat = WTA.ux.IMPanel.isGroupChat(cfg.chatId);
+		me.dateFormat = WT.getShortDateFmt();
+		me.timeFormat = WT.getShortTimeFmt();
 		
 		Ext.apply(cfg || {}, {
 			title: cfg.chatName,
@@ -74,7 +82,10 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	},
 	
 	initComponent: function() {
-		var me = this, tbarItms = [];
+		var me = this,
+				gptodayId = Ext.id(null, 'gridpanel'),
+				maxSize = WT.getVar('imUploadMaxFileSize'),
+				tbarItms = [];
 		
 		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
 		me.setHotMarker(me.hotMarker);
@@ -90,30 +101,61 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				disabled: true
 			});
 		}
-		tbarItms.push('->', /*{
-			xtype: 'button',
-			tooltip: 'Allega',
-			iconCls: 'wt-icon-im-attach-xs',
-			handler: function() {
-
+		tbarItms.push('->', {
+			xtype: 'souploadbutton',
+			tooltip: WT.res('wtimchat.btn-attach.tip'),
+			iconCls: 'wt-icon-attach-xs',
+			uploaderConfig: WTF.uploader(WT.ID, 'UploadWebChatFile', {
+				extraParams: {
+					chatId: me.chatId
+				},
+				dropElement: gptodayId,
+				maxFileSize: maxSize
+			}),
+			listeners: {
+				invalidfilesize: function() {
+					WT.warn(WT.res(WT.ID, 'error.upload.sizeexceeded', Sonicle.Bytes.format(maxSize)));
+				},
+				fileuploaded: function(s, file, json) {
+					me.addMessage(json.data);
+					if (WT.getVar('imSoundOnMessageSent')) {
+						Sonicle.Sound.play('wt-im-sent');
+					}
+				},
+				uploadstarted: function() {
+					me.wait();
+				},
+				uploadcomplete: function() {
+					me.unwait();
+				},
+				uploaderror: function(s, message, json) {
+					me.unwait(true);
+					WT.error(WT.res('error.upload'));
+				},
+				uploadprogress: function(s, file, percent) {
+					me.waitUpdate(Ext.String.format('{0}: {1}%', file.name, percent));
+				}
 			}
-		},*/ {
+		}, '-', {
+			xtype: 'button',
+			tooltip: WT.res('wtimchat.gpchatsearch.tit'),
+			iconCls: 'wt-icon-search-xs',
+			handler: function() {
+				me.lref('gpchatsearch').toggleCollapse();
+			}
+		}, {
 			xtype: 'button',
 			tooltip: WT.res('wtimchat.btn-history.tip'),
-			iconCls: 'wt-icon-im-history-xs',
+			iconCls: 'wt-icon-history-xs',
 			menu: {
 				xtype: 'datemenu',
 				listeners: {
+					beforeshow: function(s) {
+						var date = me.getVM().get('chatDate');
+						if (date && s.picker) s.picker.setValue(date);
+					},
 					select: function(s, date) {
-						var lay = me.lref('card').getLayout(), gp;
-						me.getVM().set('historyDate', Ext.Date.format(date, 'Y-m-d'));
-						if (Sonicle.Date.isToday(date)) {
-							lay.setActiveItem(me.lref('gplast'));
-						} else {
-							gp = me.lref('gphistory');
-							gp.getStore().load();
-							lay.setActiveItem(gp);
-						}
+						me.showDate(date);
 					}
 				}
 			}
@@ -170,7 +212,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			}
 		});
 		me.callParent(arguments);
-		me.add({
+		
+		me.add([{
 			region: 'center',
 			xtype: 'container',
 			layout: 'card',
@@ -178,13 +221,15 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			activeItem: 0,
 			items: [{
 				xtype: 'grid',
-				reference: 'gplast',
+				id: gptodayId,
+				reference: 'gptoday',
 				border: false,
 				rowLines: false,
 				bufferedRenderer: false,
 				viewConfig: {
 					markDirty: false,
 					stripeRows: false,
+					enableTextSelection: true,
 					listeners: {
 						viewready: function(s) {
 							me.scrollToEnd();
@@ -195,7 +240,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				store: {
 					autoLoad: true,
 					model: 'Sonicle.webtop.core.model.IMMessageGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMMessages', 'data', {
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChatMessages', 'data', {
 						extraParams: {
 							chatId: me.chatId
 						}
@@ -212,6 +257,10 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					dataIndex: 'id',
 					dateFormat: WT.getShortDateFmt(),
 					flex: 1
+				}],
+				plugins: [{
+					ptype: 'sofiledrop',
+					text: WT.res('sofiledrop.text')
 				}]
 			}, {
 				xtype: 'grid',
@@ -221,12 +270,13 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				viewConfig: {
 					markDirty: false,
 					stripeRows: false,
+					enableTextSelection: true,
 					deferEmptyText: false,
 					emptyText: WT.res('wtimchat.gphistory.emp')
 				},
 				store: {
 					model: 'Sonicle.webtop.core.model.IMMessageGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMMessages', 'data', {
+					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChatMessages', 'data', {
 						extraParams: {
 							chatId: me.chatId
 						}
@@ -234,7 +284,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					listeners: {
 						beforeload: function(s) {
 							WTU.applyExtraParams(s, {
-								date: me.getVM().get('historyDate')
+								date: Ext.Date.format(me.getVM().get('chatDate'), 'Y-m-d')
 							});
 						}
 					}
@@ -247,6 +297,91 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				}]
 			}]
 		}, {
+			region: 'east',
+			xtype: 'gridpanel',
+			reference: 'gpchatsearch',
+			title: WT.res('wtimchat.gpchatsearch.tit'),
+			border: true,
+			collapsed: true,
+			collapsible: true,
+			store: {
+				autoLoad: false,
+				model: 'Sonicle.webtop.core.model.IMChatSearchGrid',
+				proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChatSearch', 'data', {
+					extraParams: {
+						chatId: me.chatId
+					}
+				}),
+				groupField: 'date',
+				groupDir: 'DESC',
+				//sorters: ['date', 'timestamp'],
+				listeners: {
+					beforeload: function(s) {
+						s.getProxy().abort();
+					}
+				}
+			},
+			columns: [{
+				dataIndex: 'id',
+				renderer: function(val, meta, rec, rIdx, colIdx, sto) {
+					var html = '';
+					html += Ext.String.htmlEncode(Ext.Date.format(rec.get('timestamp'), me.dateFormat + ' ' + me.timeFormat));
+					html += '<br>';
+					html += Ext.String.htmlEncode(rec.get('fromNick'));
+					html += '<br>';
+					html += '<span style="font-size:0.9em;color:grey;">';
+					html += Ext.String.htmlEncode(rec.get('text'));
+					html += '</span>';
+					return html; 
+				},
+				flex: 1
+			}],
+			features: [{
+				ftype: 'grouping',
+				groupHeaderTpl: [
+					'{groupValue:this.formatValue} ({children.length})',
+					{
+						format: me.dateFormat,
+						formatValue: function(v) {
+							return Ext.Date.format(v, this.format);
+						}
+					}
+				]
+			}],
+			dockedItems: [{
+				xtype: 'textfield',
+				dock: 'top',
+				reference: 'fldchatsearch',
+				hideFieldLabel: true,
+				emptyText: WT.res('textfield.search.emp'),
+				triggers: {
+					clear: {
+						type: 'soclear'
+					}
+				},
+				listeners: {
+					change: {
+						fn: function(s) {
+							this.searchChat(s.getValue());
+						},
+						scope: me,
+						options: {buffer: 300}
+					}
+				}
+			}],
+			listeners: {
+				beforeexpand: function() {
+					me.lref('pnlemojis').collapse();
+				},
+				expand: function() {
+					me.lref('fldchatsearch').focus(true, 100);
+				},
+				rowdblclick: function(s, rec) {
+					me.showDate(rec.get('date'), rec.get('id'));
+				}
+			},
+			width: '40%'
+		}, {
 			region: 'south',
 			xtype: 'soemojipicker',
 			reference: 'pnlemojis',
@@ -254,10 +389,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			collapsed: true,
 			collapsible: true,
 			collapseMode: 'placeholder',
-			placeholder: {
-				xtype: 'component',
-				width: 0
-			},
+			placeholder: { xtype: 'component', width: 0},
 			recentsText: WT.res('soemojipicker.recents.tip'),
 			peopleText: WT.res('soemojipicker.people.tip'),
 			natureText: WT.res('soemojipicker.nature.tip'),
@@ -273,7 +405,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					fld.setValue(fld.getValue()+emoji);
 				}
 			}
-		});
+		}]);
 		
 		me.on('activate', me.onActivate);
 		if (!me.groupChat) me.refreshFriendPresence();
@@ -292,9 +424,37 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		return this.chatId;
 	},
 	
+	showDate: function(date, messageId) {
+		var me = this,
+				lay = me.lref('card').getLayout(),
+				gp,
+				focusMessage = function(grid, id) {
+					var rec = grid.getStore().getById(id);
+					if (rec) {
+						grid.getView().focusRow(rec);
+						grid.setSelection(rec);
+					}
+				};
+		
+		me.getVM().set('chatDate', date);
+		if (Sonicle.Date.isToday(date)) {
+			gp = me.lref('gptoday');
+			lay.setActiveItem(gp);
+			if (messageId) focusMessage(gp, messageId);
+		} else {
+			gp = me.lref('gphistory');
+			lay.setActiveItem(gp);
+			gp.getStore().load({
+				callback: function(recs, op, success) {
+					if (success && messageId) focusMessage(gp, messageId);
+				}
+			});
+		}
+	},
+	
 	sendMessage: function(text) {
 		var me = this;
-		me.lref('card').getLayout().setActiveItem(me.lref('gplast'));
+		me.lref('card').getLayout().setActiveItem(me.lref('gptoday'));
 		if (Ext.isEmpty(text)) return;
 		
 		WT.ajaxReq(WT.ID, 'ManageIMChat', {
@@ -307,7 +467,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				var fld = me.lref('fldmessage');
 				if (success) {
 					me.addMessage(json.data);
-					fld.focus(true);
+					fld.focus(true, 100);
 					if (WT.getVar('imSoundOnMessageSent')) {
 						Sonicle.Sound.play('wt-im-sent');
 					}
@@ -359,6 +519,12 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		me.setIconCls(me.self.buildIconCls(me.groupChat, nv));
 	},
 	
+	searchChat: function(query) {
+		var me = this,
+				gp = me.lref('gpchatsearch');
+		WTU.loadWithExtraParams(gp.getStore(), {query: query});
+	},
+	
 	privates: {
 		onActivate: function(s) {
 			if (s.scrollOnActivate) {
@@ -371,7 +537,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		
 		addMessage: function(data) {
 			var me = this,
-				gp = me.lref('gplast'),
+				gp = me.lref('gptoday'),
 				sto = gp.getStore(),
 				rec;
 			rec = sto.add(sto.createModel(data))[0];
@@ -389,12 +555,12 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		
 		onScrollTask: function() {
 			/* 1 - Scroll to last record
-			var gp = this.lref('gplast'),
+			var gp = this.lref('gptoday'),
 					rec = gp.getStore().last();
 			if (rec) this.scrollViewToRecord(gp.getView(), rec);
 			*/
 			// 2 - Scroll to end
-			this.scrollViewToEnd(this.lref('gplast').getView());
+			this.scrollViewToEnd(this.lref('gptoday').getView());
 		},
 		
 		scrollViewToEnd: function(view) {

@@ -183,7 +183,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					header: '',
-				width: 30
+					width: 30
 				}],
 				dockedItems: [{
 					xtype: 'textfield',

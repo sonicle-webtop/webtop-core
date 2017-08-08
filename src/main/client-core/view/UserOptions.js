@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'WTA.store.DateFmtLong',
 		'WTA.store.TimeFmtShort',
 		'WTA.store.TimeFmtLong',
+		'Sonicle.form.field.Bytes',
 		'Sonicle.form.field.Icon',
 		'Sonicle.plugin.FieldTooltip',
 		'Sonicle.webtop.core.ux.PermStatusField'
@@ -920,6 +921,19 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.im.tit'),
 			items: [{
+				xtype: 'sobytesfield',
+				bind: '{record.imUploadMaxFileSize}',
+				disabled: !WT.isPermitted('WTADMIN', 'ACCESS'),
+				emptyText: Sonicle.Bytes.format(WT.getVar('wtUploadMaxFileSize')),
+				fieldLabel: WT.res(me.ID, 'opts.im.fld-imUploadMaxFileSize.lbl'),
+				width: 280,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
+			}, {
 				xtype: 'soformseparator',
 				title: WT.res('opts.im.sound.tit')
 			}, {

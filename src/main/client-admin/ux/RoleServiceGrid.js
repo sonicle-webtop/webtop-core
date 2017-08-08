@@ -114,8 +114,8 @@ Ext.define('Sonicle.webtop.core.admin.ux.RoleServiceGrid', {
 				valueField: 'id',
 				displayField: 'label',
 				searchField: 'label',
-				emptyText: WT.res('grid.emptyText'),
-				searchText: WT.res(WT.ID + '.admin', 'wtadmroleservicegrid.picker.search'),
+				emptyText: WT.res('grid.emp'),
+				searchText: WT.res('textfield.search.emp'),
 				okText: WT.res('act-ok.lbl'),
 				cancelText: WT.res('act-cancel.lbl'),
 				listeners: {

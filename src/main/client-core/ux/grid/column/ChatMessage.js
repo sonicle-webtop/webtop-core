@@ -48,18 +48,26 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 	isSentField: 'isSent',
 	timestampField: 'timestamp',
 	actionField: 'action',
+	dataField: 'data',
 	textField: 'text',
 	
 	messageCls: 'wt-'+'chatmsgcol-msg',
 	messageSentCls: 'wt-'+'chatmsgcol-msg-sent',
 	messageReceivedCls: 'wt-'+'chatmsgcol-msg-received',
 	messageSenderCls: 'wt-'+'chatmsgcol-sender',
-	messageMetaCls: 'wt-'+'chatmsgcol-meta',
-	messageMetaTimeCls: 'wt-'+'chatmsgcol-meta-time',
+	messageMetaCls: 'wt-'+'chatmsgcol-msgmeta',
+	messageMetaTimeCls: 'wt-'+'chatmsgcol-msgmeta-time',
+	fileWrapCls: 'wt-'+'chatmsgcol-filewrap',
+	fileBodyCls: 'wt-'+'chatmsgcol-filebody',
+	fileBodyIconCls: 'wt-'+'chatmsgcol-filebody-icon',
+	fileBodyTextCls: 'wt-'+'chatmsgcol-filebody-text',
+	fileMetaCls: 'wt-'+'chatmsgcol-filemeta',
+	imagefileBodyCls: 'wt-'+'chatmsgcol-imgfilebody',
 	sysMessageCls: 'wt-'+'chatmsgcol-sysmsg',
 	infoSysMessageCls: 'wt-'+'chatmsgcol-sysmsg-info',
 	warnSysMessageCls: 'wt-'+'chatmsgcol-sysmsg-warn',
 	
+	enableTextSelection: true,
 	tpl: [
 		'<tpl switch="action">',
 			'<tpl case="none">',
@@ -70,6 +78,28 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 					'<span class="{messageSenderCls}">{nick}</span></br>',
 				'</tpl>',
 					'{text}',
+					'<span class="{messageMetaCls}">',
+						'<span class="{messageMetaTimeCls}">{time}</span>',
+					'</span>',
+					'</div>',
+			'<tpl case="file">',
+				'<tpl if="isSent">',
+					'<div class="{messageCls} {messageSentCls}">',
+				'<tpl else>',
+					'<div class="{messageCls} {messageReceivedCls}">',
+					'<span class="{messageSenderCls}">{nick}</span></br>',
+				'</tpl>',
+					'<a class="{fileWrapCls}" href="{url}" target="_blank">',
+						'<tpl if="isImage">',
+							'<img class="{imagefileBodyCls}" src="{url}" alt="" />',
+						'<tpl else>',
+							'<div class="{fileBodyCls}">',
+								'<div class="{fileBodyIconCls} {fileIconCls}"></div>',
+								'<span class="{fileBodyTextCls}">{text}</span>',
+							'</div>',
+						'</tpl>',
+					'</a>',
+					'<span class="{fileMetaCls}">{size}</span>',
 					'<span class="{messageMetaCls}">',
 						'<span class="{messageMetaTimeCls}">{time}</span>',
 					'</span>',
@@ -90,9 +120,29 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 			vts = Ext.isEmpty(ts) ? '' : Ext.Date.format(ts, me.timeFormat),
 			htmlText = Ext.isEmpty(text) ? '&nbsp;' : Ext.String.htmlEncode(text);
 		
-		if (action === 'none') {
-			var isSent = rec.get(me.isSentField) === true;
-			return me.tpl.apply({
+		if (action === 'none' || action === 'file') {
+			var isSent = rec.get(me.isSentField) === true, obj, data;
+			if (action === 'none') {
+				obj = {
+					text: htmlText.linkify()
+				};
+			} else if (action === 'file') {
+				data = Ext.JSON.decode(rec.get(me.dataField), true) || {};
+				obj = {
+					fileWrapCls: me.fileWrapCls,
+					fileBodyCls: me.fileBodyCls,
+					fileBodyIconCls: me.fileBodyIconCls,
+					fileBodyTextCls: me.fileBodyTextCls,
+					fileMetaCls: me.fileMetaCls,
+					imagefileBodyCls: me.imagefileBodyCls,
+					isImage: Ext.String.startsWith(data.mime, 'image'),
+					text: htmlText,
+					url: data ? data.url : '#',
+					size: Sonicle.Bytes.format(data ? data.size : 0),
+					fileIconCls: WTF.fileTypeCssIconCls(data ? data.ext : '', 'm')
+				};
+			}
+			return me.tpl.apply(Ext.apply({
 				action: action,
 				messageCls: me.messageCls,
 				messageSentCls: me.messageSentCls,
@@ -102,9 +152,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 				messageMetaTimeCls: me.messageMetaTimeCls,
 				isSent: isSent,
 				nick: rec.get(me.senderNickField),
-				time: vts,
-				text: htmlText
-			});
+				time: vts
+			}, obj || {}));
 		} else {
 			var actionCls = me.infoSysMessageCls;
 			if (action === 'date') {

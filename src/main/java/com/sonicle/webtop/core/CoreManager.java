@@ -1016,6 +1016,32 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public List<IMMessage> findIMMessagesByQuery(String chatJid, String query) throws WTException {
+		IMMessageDAO dao = IMMessageDAO.getInstance();
+		ArrayList<IMMessage> items = new ArrayList<>();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			
+			List<OIMMessage> omess = null;
+			if (query == null) {
+				omess = dao.findByProfileChat(con, getTargetProfileId(), chatJid);
+			} else {
+				omess = dao.findByProfileChatLike(con, getTargetProfileId(), chatJid, query);
+			}
+			for(OIMMessage omes : omess) {
+				items.add(createIMMessage(omes));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public List<String> listIMMessageStanzaIDs(String chatJid) throws WTException {
 		IMMessageDAO dao = IMMessageDAO.getInstance();
 		Connection con = null;
@@ -2271,6 +2297,7 @@ public class CoreManager extends BaseManager {
 		omes.setTimestamp(mes.getTimestamp());
 		omes.setAction(EnumUtils.toSerializedName(mes.getAction()));
 		omes.setText(mes.getText());
+		omes.setData(mes.getData());
 		omes.setMessageUid(mes.getMessageUid());
 		omes.setStanzaId(mes.getStanzaId());
 		return omes;
@@ -2289,6 +2316,7 @@ public class CoreManager extends BaseManager {
 		mes.setTimestamp(omes.getTimestamp());
 		mes.setAction(EnumUtils.forSerializedName(omes.getAction(), IMMessage.Action.class));
 		mes.setText(omes.getText());
+		mes.setData(omes.getData());
 		mes.setMessageUid(omes.getMessageUid());
 		mes.setStanzaId(omes.getStanzaId());
 		return mes;

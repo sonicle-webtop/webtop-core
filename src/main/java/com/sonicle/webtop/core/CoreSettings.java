@@ -492,6 +492,13 @@ public class CoreSettings {
 	public static final String IM_STATUS_MESSAGE = "im.statusmessage";
 	
 	/**
+	 * [user+domain+system]
+	 * [int]
+	 * Maximum file size for chat uploads
+	 */
+	public static final String IM_UPLOAD_MAXFILESIZE = "im.upload.maxfilesize";
+	
+	/**
 	 * [user]
 	 * [boolean]
 	 * Play a sound when a friend connects

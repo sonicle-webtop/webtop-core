@@ -35,8 +35,12 @@ package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.xmpp.ChatMessage;
+import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
+import org.apache.commons.io.FilenameUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -54,22 +58,14 @@ public class JsGridIMMessage {
 	public String timestamp;
 	public String action;
 	public String text;
+	public String data;
 	public Boolean fromArchive;
 	
 	public JsGridIMMessage() {}
 	
-	public static JsGridIMMessage asDateAction(String id, LocalDate date) {
-		DateTimeFormatter ymd = DateTimeUtils.createYmdFormatter();
-		return new JsGridIMMessage("!"+id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, false);
-	}
-	
-	public static JsGridIMMessage asWarnAction(String id, DateTime timestamp, String key) {
-		DateTimeFormatter ymdmhs = DateTimeUtils.createYmdHmsFormatter();
-		return new JsGridIMMessage("!"+id, null, null, false, ymdmhs.print(timestamp), "warn", key, false);
-	}
-	
 	public JsGridIMMessage(boolean isSent, IMMessage message, String senderNick, DateTimeZone utz) {
 		DateTimeFormatter ymdhms = DateTimeUtils.createYmdHmsFormatter(utz);
+		
 		this.id = message.getMessageUid();
 		this.fromId = message.getSenderJid();
 		this.fromNick = senderNick;
@@ -77,11 +73,13 @@ public class JsGridIMMessage {
 		this.timestamp = ymdhms.print(message.getTimestamp());
 		this.action = EnumUtils.toSerializedName(message.getAction());
 		this.text = message.getText();
+		this.data = message.getData();
 		this.fromArchive = true;
 	}
 	
 	public JsGridIMMessage(boolean isSent, ChatMessage message, DateTimeZone utz) {
 		DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
+		
 		this.id = message.getMessageUid();
 		this.fromId = message.getFromUser().toString();
 		this.fromNick = message.getFromUserNickname();
@@ -89,10 +87,16 @@ public class JsGridIMMessage {
 		this.timestamp = fmt.print(message.getTimestamp());
 		this.action = "none";
 		this.text = message.getText();
+		this.data = null;
+		OutOfBandData oob = message.getOutOfBandExtension();
+		if (oob != null) {
+			this.action = "file";
+			this.data = JsGridIMMessage.toData(message.getText(), oob);
+		}
 		this.fromArchive = false;
 	}
 
-	public JsGridIMMessage(String id, String fromId, String fromNick, Boolean isSent, String timestamp, String action, String text, boolean fromArchive) {
+	public JsGridIMMessage(String id, String fromId, String fromNick, Boolean isSent, String timestamp, String action, String text, String data, boolean fromArchive) {
 		this.id = id;
 		this.fromId = fromId;
 		this.fromNick = fromNick;
@@ -100,6 +104,27 @@ public class JsGridIMMessage {
 		this.timestamp = timestamp;
 		this.action = action;
 		this.text = text;
+		this.data = data;
 		this.fromArchive = fromArchive;
+	}
+	
+	public static JsGridIMMessage asDateAction(String id, LocalDate date) {
+		DateTimeFormatter ymd = DateTimeUtils.createYmdFormatter();
+		return new JsGridIMMessage("!"+id, null, null, false, ymd.print(date) + " 00:00:00", "date", null, null, false);
+	}
+	
+	public static JsGridIMMessage asWarnAction(String id, DateTime timestamp, String key) {
+		DateTimeFormatter ymdmhs = DateTimeUtils.createYmdHmsFormatter();
+		return new JsGridIMMessage("!"+id, null, null, false, ymdmhs.print(timestamp), "warn", key, null, false);
+	}
+	
+	public static String toData(String filename, OutOfBandData oob) {
+		if (oob == null) return "";
+		MapItem mi = new MapItem();
+		mi.add("url", oob.getUrl());
+		mi.add("mime", oob.getMime());
+		mi.add("ext", FilenameUtils.getExtension(filename));
+		mi.add("size", oob.getLength());
+		return JsonResult.GSON.toJson(mi);
 	}
 }
