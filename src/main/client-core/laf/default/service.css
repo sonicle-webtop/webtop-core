@@ -479,7 +479,7 @@ div.wt-wnlist {
     overflow: hidden;
     cursor: pointer;
     box-sizing: border-box;
-    border: 1px solid rgba(75,89,97,0.1);
+    /*border: 1px solid rgba(75,89,97,0.1);*/
 	background-color: rgba(75,89,97,0.1);
 	text-decoration: none;
 	color: #262626;
@@ -517,6 +517,18 @@ div.wt-wnlist {
 }
 
 .wt-chatmsgcol-imgfilebody {
-	width: 200px;
-	height: 200px;
+	display: -webkit-flex;
+	display: flex;
+	position: relative;
+	overflow: hidden;
+	-webkit-align-items: center;
+	align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+	width: 250px;
+	max-height: 250px;
+}
+
+.wt-chatmsgcol-imgfilebody img {
+	width: 100%;
 }
