@@ -157,7 +157,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 				messageMetaTimeCls: me.messageMetaTimeCls,
 				hiddenMetaCls: me.hiddenMetaCls,
 				isSent: isSent,
-				nick: nick,
+				nick: me.escapeAttr(nick),
 				time: time,
 				msgClipText: msgClipText
 			}, obj || {}));
@@ -191,5 +191,9 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 	
 	buildFileClipText: function(url, mime, size) {
 		return '&nbsp;[' + mime + ', ' + size + ', ' + Ext.String.htmlEncode(url) + ']';
+	},
+	
+	escapeAttr: function(s) {
+		return s.replace(/\"/g, '\\"');
 	}
 });

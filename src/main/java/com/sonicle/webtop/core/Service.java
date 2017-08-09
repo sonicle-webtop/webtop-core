@@ -1775,31 +1775,17 @@ public class Service extends BaseService {
 			DateTimeZone utz = getEnv().getProfile().getTimeZone();
 			DateTimeFormatter fmt = DateTimeUtils.createYmdHmsFormatter(utz);
 			
-			if (chatRoom instanceof InstantChatRoom) {
-				InstantChatRoom dcr = (InstantChatRoom)chatRoom;
-				logger.debug("Incoming message from instant chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getName());
-				getWts().notify(new IMChatRoomMessageReceived(dcr.getChatJid().toString(), dcr.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
-				
-			} else if (chatRoom instanceof GroupChatRoom) {
-				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
-				logger.debug("Incoming message from group chat room [{}, {}]", gcr.getChatJid().toString(), gcr.getName());
-				getWts().notify(new IMChatRoomMessageReceived(gcr.getChatJid().toString(), gcr.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), message.getText()));
+			String action = EnumUtils.toSerializedName(IMMessage.Action.NONE);
+			String data = null;
+			OutOfBandData oob = message.getOutOfBandExtension();
+			if (oob != null) {
+				action = EnumUtils.toSerializedName(IMMessage.Action.FILE);
+				data = JsGridIMMessage.toData(message.getText(), oob);
 			}
+			getWts().notify(new IMChatRoomMessageReceived(chatRoom.getChatJid().toString(), chatRoom.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), action, message.getText(), data));
 			
 			try {
 				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message, utz);
-				/*
-				IMMessage mes = new IMMessage();
-				mes.setChatJid(chatRoom.getChatJid().toString());
-				mes.setSenderJid(message.getFromUser().toString());
-				mes.setSenderResource(message.getFromUserResource());
-				mes.setDate(message.getTimestamp().withZone(utz).toLocalDate());
-				mes.setTimestamp(message.getTimestamp());
-				mes.setAction(IMMessage.Action.NONE);
-				mes.setText(message.getText());
-				mes.setMessageUid(message.getMessageUid());
-				mes.setStanzaId(message.getStanzaId());
-				*/
 				coreMgr.addIMMessage(mes);
 				coreMgr.updateIMChatLastSeenActivity(chatRoom.getChatJid().toString(), chatRoom.getLastSeenActivity());
 

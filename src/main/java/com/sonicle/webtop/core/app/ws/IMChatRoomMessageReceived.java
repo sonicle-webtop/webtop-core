@@ -44,20 +44,22 @@ import java.util.HashMap;
 public class IMChatRoomMessageReceived extends ServiceMessage {
 	public static final String ACTION = "imChatRoomMessageReceived";
 	
-	public IMChatRoomMessageReceived(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
+	public IMChatRoomMessageReceived(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatEntityBareJid, chatName, fromEntityBareJid, fromNickname, timestamp, messageUid, messageText);
+		this.payload = payload(chatEntityBareJid, chatName, fromEntityBareJid, fromNickname, timestamp, uid, action, text, data);
 	}
 	
-	private Object payload(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String messageUid, String messageText) {
+	private Object payload(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
 		HashMap<String, Object> pl = new HashMap<>();
 		pl.put("chatId", chatEntityBareJid);
 		pl.put("chatName", chatName);
 		pl.put("fromId", fromEntityBareJid);
 		pl.put("fromNick", fromNickname);
-		pl.put("timestamp", timestamp);
-		pl.put("msgUid", messageUid);
-		pl.put("msgText", messageText);
+		pl.put("ts", timestamp);
+		pl.put("uid", uid);
+		pl.put("action", action);
+		pl.put("text", text);
+		pl.put("data", data);
 		return pl;
 	}
 }

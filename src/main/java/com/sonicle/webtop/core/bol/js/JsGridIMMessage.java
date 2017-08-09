@@ -85,12 +85,12 @@ public class JsGridIMMessage {
 		this.fromNick = message.getFromUserNickname();
 		this.isSent = isSent;
 		this.timestamp = fmt.print(message.getTimestamp());
-		this.action = "none";
+		this.action = EnumUtils.toSerializedName(IMMessage.Action.NONE);
 		this.text = message.getText();
 		this.data = null;
 		OutOfBandData oob = message.getOutOfBandExtension();
 		if (oob != null) {
-			this.action = "file";
+			this.action = EnumUtils.toSerializedName(IMMessage.Action.FILE);
 			this.data = JsGridIMMessage.toData(message.getText(), oob);
 		}
 		this.fromArchive = false;

@@ -84,14 +84,14 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		this.addChat(chatId, chatName, false);
 	},
 	
-	newChatMessage: function(chatId, chatName, fromId, fromNick, msgTimestamp, msgAction, msgUid, msgText) {
+	newChatMessage: function(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data) {
 		var me = this,
 				map = me.chatMap,
 				pnl = map[chatId];
 		if (!pnl) {
 			me.addChat(chatId, chatName, true);
 		} else {
-			pnl.newMessage(msgUid, fromId, fromNick, msgTimestamp, msgAction, msgText);
+			pnl.newMessage(uid, fromId, fromNick, timestamp, action, text, data);
 			if (!me.isChatActive(chatId)) pnl.setHotMarker(true);
 		}
 	},

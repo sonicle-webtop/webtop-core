@@ -481,7 +481,7 @@ div.wt-wnlist {
     box-sizing: border-box;
     border: 1px solid rgba(75,89,97,0.1);
 	background-color: rgba(75,89,97,0.1);
-	text-decoration: underline;
+	text-decoration: none;
 	color: #262626;
 }
 

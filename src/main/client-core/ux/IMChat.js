@@ -478,7 +478,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		});
 	},
 	
-	newMessage: function(uid, fromId, fromNick, timestamp, action, text) {
+	newMessage: function(uid, fromId, fromNick, timestamp, action, text, data) {
 		this.addMessage({
 			id: uid,
 			fromId: fromId,
@@ -486,6 +486,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			timestamp: timestamp,
 			action: action,
 			text: text,
+			data: data,
 			fromArchive: false
 		});
 	},

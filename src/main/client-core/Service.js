@@ -92,8 +92,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 			me.onMessage('imChatRoomMessageReceived', function(msg) {
 				var pl = msg.payload,
-					ts = Ext.Date.parse(pl.timestamp, 'Y-m-d H:i:s', true);
-				me.newChatRoomMessageUI(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, 'none', pl.msgUid, pl.msgText);
+					ts = Ext.Date.parse(pl.ts, 'Y-m-d H:i:s', true);
+				me.newChatRoomMessageUI(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, pl.uid, pl.action, pl.text, pl.data);
 			});
 
 			Ext.defer(function() {
@@ -359,18 +359,18 @@ Ext.define('Sonicle.webtop.core.Service', {
 		}
 	},
 	
-	newChatRoomMessageUI: function(chatId, chatName, fromId, fromNick, msgTimestamp, msgAction, msgUid, msgText) {
+	newChatRoomMessageUI: function(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data) {
 		var me = this,
 				vct = WT.getView(me.ID, me.self.vwTagIMChats()),
 				isGroup = WTA.ux.IMPanel.isGroupChat(chatId),
-				noBody = isGroup ? (fromNick + ': ' + msgText) : msgText,
+				noBody = isGroup ? (fromNick + ': ' + text) : text,
 				noData = {chatId: chatId, chatName: chatName},
 				vw;
 		
 		if (vct) {
 			//TODO: valutare se far lampeggiare il bottone nella taskbar se minimizzata
 			vw = vct.getView();
-			vw.newChatMessage(chatId, chatName, fromId, fromNick, msgTimestamp, msgAction, msgUid, msgText);
+			vw.newChatMessage(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data);
 			if (!vw.isChatActive(chatId)) {
 				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {badge: true, sound: true});
 			} else {
