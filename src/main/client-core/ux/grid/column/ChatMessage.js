@@ -51,7 +51,9 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 	dataField: 'data',
 	textField: 'text',
 	
+	hiddenMetaCls: 'wt-'+'chatmsgcol-hidmeta',
 	messageCls: 'wt-'+'chatmsgcol-msg',
+	messageTextCls: 'wt-'+'chatmsgcol-msg-text',
 	messageSentCls: 'wt-'+'chatmsgcol-msg-sent',
 	messageReceivedCls: 'wt-'+'chatmsgcol-msg-received',
 	messageSenderCls: 'wt-'+'chatmsgcol-sender',
@@ -67,45 +69,43 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 	infoSysMessageCls: 'wt-'+'chatmsgcol-sysmsg-info',
 	warnSysMessageCls: 'wt-'+'chatmsgcol-sysmsg-warn',
 	
-	enableTextSelection: true,
 	tpl: [
-		'<tpl switch="action">',
-			'<tpl case="none">',
-				'<tpl if="isSent">',
-					'<div class="{messageCls} {messageSentCls}">',
-				'<tpl else>',
-					'<div class="{messageCls} {messageReceivedCls}">',
-					'<span class="{messageSenderCls}">{nick}</span></br>',
-				'</tpl>',
-					'{text}',
-					'<span class="{messageMetaCls}">',
-						'<span class="{messageMetaTimeCls}">{time}</span>',
-					'</span>',
-					'</div>',
-			'<tpl case="file">',
-				'<tpl if="isSent">',
-					'<div class="{messageCls} {messageSentCls}">',
-				'<tpl else>',
-					'<div class="{messageCls} {messageReceivedCls}">',
-					'<span class="{messageSenderCls}">{nick}</span></br>',
-				'</tpl>',
+		'<tpl if="action == \'none\' || action == \'file\'">',
+			'<tpl if="isSent">',
+				'<div class="{messageCls} {messageSentCls}">',
+				'<span class="{hiddenMetaCls}"><br></span>',
+			'<tpl else>',
+				'<div class="{messageCls} {messageReceivedCls}">',
+					'<span class="{messageSenderCls}" data-content="{nick}"></span><br>',
+			'</tpl>',
+					'<span class="{hiddenMetaCls}">{msgClipText}</span>',
+			'<tpl if="action == \'none\'">',
+					'<span class="{messageTextCls}">{text}</span>',
+			'<tpl else>',
 					'<a class="{fileWrapCls}" href="{url}" target="_blank">',
 						'<tpl if="isImage">',
 							'<img class="{imagefileBodyCls}" src="{url}" alt="" />',
+							'<span class="{hiddenMetaCls}">{fileClipText}</span>',
 						'<tpl else>',
 							'<div class="{fileBodyCls}">',
 								'<div class="{fileBodyIconCls} {fileIconCls}"></div>',
-								'<span class="{fileBodyTextCls}">{text}</span>',
+								'<span class="{fileBodyTextCls}">',
+									'<span class="{messageTextCls}">{text}</span>',
+									'<span class="{hiddenMetaCls}">{fileClipText}</span>',
+								'</span>',
 							'</div>',
 						'</tpl>',
 					'</a>',
-					'<span class="{fileMetaCls}">{size}</span>',
+					'<span class="{fileMetaCls}" data-content="{size}"></span>',
+			'</tpl>',
 					'<span class="{messageMetaCls}">',
-						'<span class="{messageMetaTimeCls}">{time}</span>',
+						'<span class="{messageMetaTimeCls}" data-content="{time}"></span>',
 					'</span>',
-					'</div>',
-			'<tpl default>',
-				'<div style="width:{width}px;" class="{sysMessageCls} {sysMessageActionCls}">{text}</div>',
+				'</div>',
+		'<tpl else>',
+				'<div style="width:{width}px;" class="{sysMessageCls} {sysMessageActionCls}">',
+					'<span class="{messageTextCls} x-unselectable">{text}</span>',
+				'</div>',
 		'</tpl>',
 		{
 			compiled: true
@@ -117,17 +117,20 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 			action = rec.get(me.actionField),
 			ts = rec.get(me.timestampField),
 			text = rec.get(me.textField),
-			vts = Ext.isEmpty(ts) ? '' : Ext.Date.format(ts, me.timeFormat),
-			htmlText = Ext.isEmpty(text) ? '&nbsp;' : Ext.String.htmlEncode(text);
+			time = Ext.isEmpty(ts) ? '' : Ext.Date.format(ts, me.timeFormat),
+			htmlText = text ? text : '';
 		
 		if (action === 'none' || action === 'file') {
-			var isSent = rec.get(me.isSentField) === true, obj, data;
+			var isSent = rec.get(me.isSentField) === true,
+					nick = rec.get(me.senderNickField),
+					msgClipText = me.buildMsgClipText(ts, nick),
+					obj;
 			if (action === 'none') {
 				obj = {
 					text: htmlText.linkify()
 				};
 			} else if (action === 'file') {
-				data = Ext.JSON.decode(rec.get(me.dataField), true) || {};
+				var data = Ext.JSON.decode(rec.get(me.dataField), true) || {};
 				obj = {
 					fileWrapCls: me.fileWrapCls,
 					fileBodyCls: me.fileBodyCls,
@@ -137,44 +140,56 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 					imagefileBodyCls: me.imagefileBodyCls,
 					isImage: Ext.String.startsWith(data.mime, 'image'),
 					text: htmlText,
-					url: data ? data.url : '#',
-					size: Sonicle.Bytes.format(data ? data.size : 0),
-					fileIconCls: WTF.fileTypeCssIconCls(data ? data.ext : '', 'm')
+					url: data.url ? data.url : '#',
+					size: Sonicle.Bytes.format(data.size),
+					fileIconCls: WTF.fileTypeCssIconCls(data ? data.ext : '', 'm'),
+					fileClipText: me.buildFileClipText(data.url, data.mime, data.size)
 				};
 			}
 			return me.tpl.apply(Ext.apply({
 				action: action,
 				messageCls: me.messageCls,
+				messageTextCls: me.messageTextCls,
 				messageSentCls: me.messageSentCls,
 				messageReceivedCls: me.messageReceivedCls,
 				messageSenderCls: me.messageSenderCls,
 				messageMetaCls: me.messageMetaCls,
 				messageMetaTimeCls: me.messageMetaTimeCls,
+				hiddenMetaCls: me.hiddenMetaCls,
 				isSent: isSent,
-				nick: rec.get(me.senderNickField),
-				time: vts
+				nick: nick,
+				time: time,
+				msgClipText: msgClipText
 			}, obj || {}));
 		} else {
 			var actionCls = me.infoSysMessageCls;
 			if (action === 'date') {
 				text = Ext.Date.format(ts, me.dateFormat);
-				htmlText = Ext.String.htmlEncode(text);
 			} else if (action === 'close') {
 				text = WT.res(WT.ID, 'wtchatmessagecolumn.close', rec.get(me.senderNickField));
-				htmlText = Ext.String.htmlEncode(text);
 			} else if (action === 'warn') {
 				text = WT.res('wtchatmessagecolumn.warn.'+text);
-				htmlText = Ext.String.htmlEncode(text);
 				actionCls = me.warnSysMessageCls;
 			}
 			return me.tpl.apply({
 				action: action,
+				messageTextCls: me.messageTextCls,
 				sysMessageCls: me.sysMessageCls,
 				sysMessageActionCls: actionCls,
 				width: Ext.util.TextMetrics.measure(this.el, text).width +10,
-				time: vts,
-				text: htmlText
+				time: time,
+				text: text
 			});	
 		}
+	},
+	
+	buildMsgClipText: function(ts, nick) {
+		return '['
+			+ Ext.Date.format(ts, this.dateFormat + ' ' + this.timeFormat)
+			+ '][' + Ext.String.htmlEncode(nick) + ']&nbsp;';
+	},
+	
+	buildFileClipText: function(url, mime, size) {
+		return '&nbsp;[' + mime + ', ' + size + ', ' + Ext.String.htmlEncode(url) + ']';
 	}
 });

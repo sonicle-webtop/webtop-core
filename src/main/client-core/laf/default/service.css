@@ -329,6 +329,13 @@ div.wt-wnlist {
 	font-weight: bold;
 }
 
+.wt-selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
 /* TinyMCE */
 .mce-tinymce.mce-container {
 	border-width: 0px !important;
@@ -357,6 +364,14 @@ div.wt-wnlist {
 	background-color: rgba(255,245,196,0.95);
 }
 
+.wt-chatmsgcol-hidmeta {
+	position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+}
+
 .wt-chatmsgcol-msg {
 	position: relative;
 	line-height: 15px;
@@ -378,6 +393,7 @@ div.wt-wnlist {
 
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-received {
 	float: left;
+	margin-left: 10px;
 	border-radius: 0px 5px 5px 5px;
 	background-color: #fafafa;
 }
@@ -391,17 +407,25 @@ div.wt-wnlist {
 
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent {
 	float: right;
+	margin-right: 10px;
 	border-radius: 5px 0px 5px 5px;
-	background-color: #f1e7c2;
-	/*background: #e1ffc7;*/
+	background-color: #f8f8c8;
+	/*background-color: #f1e7c2;*/
+	/*background: #e1ffc7;*//*WhatsApp color*/
 }
 
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent:after {
 	top: 0;
 	right: -10px;
 	border-width: 0px 0 10px 10px;
-	border-color: transparent transparent transparent #f1e7c2;
-	/*border-color: transparent transparent transparent #e1ffc7;*/
+	border-color: transparent transparent transparent #f8f8c8;
+	/*border-color: transparent transparent transparent #f1e7c2;*/
+	/*border-color: transparent transparent transparent #e1ffc7;*//*WhatsApp color*/
+}
+
+.wt-chatmsgcol-msg-text a {
+	text-decoration: underline;
+	color: #039be5;
 }
 
 .wt-chatmsgcol-sender {
@@ -411,6 +435,10 @@ div.wt-wnlist {
 	padding: 0 7px 0 0;
 	font-size:0.9em;
 	color: grey;
+}
+
+.wt-chatmsgcol-sender:before {
+	content: attr(data-content);
 }
 
 .wt-chatmsgcol-msgmeta {
@@ -423,6 +451,10 @@ div.wt-wnlist {
 	color: grey;
 }
 
+.wt-chatmsgcol-msgmeta-time:before {
+	content: attr(data-content);
+}
+
 .wt-chatmsgcol-filemeta {
 	display: inline-block;
 	position: relative;
@@ -431,6 +463,10 @@ div.wt-wnlist {
 	padding: 0 7px 0 0;
 	font-size:0.8em;
 	color: grey;
+}
+
+.wt-chatmsgcol-filemeta:before {
+	content: attr(data-content);
 }
 
 .wt-chatmsgcol-filewrap {
@@ -445,6 +481,8 @@ div.wt-wnlist {
     box-sizing: border-box;
     border: 1px solid rgba(75,89,97,0.1);
 	background-color: rgba(75,89,97,0.1);
+	text-decoration: underline;
+	color: #262626;
 }
 
 .wt-chatmsgcol-filebody {
