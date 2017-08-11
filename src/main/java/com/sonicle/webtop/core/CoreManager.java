@@ -995,6 +995,22 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public List<LocalDate> listIMMessageDates(String chatJid, int year) throws WTException {
+		IMMessageDAO dao = IMMessageDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			
+			return dao.selectDatesByProfileChatYear(con, getTargetProfileId(), chatJid, year);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public List<IMMessage> listIMMessages(String chatJid, LocalDate date) throws WTException {
 		IMMessageDAO dao = IMMessageDAO.getInstance();
 		ArrayList<IMMessage> items = new ArrayList<>();

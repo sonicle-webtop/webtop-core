@@ -37,6 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	alias: ['widget.wtimchat'],
 	requires: [
 		'Sonicle.picker.Emoji',
+		'Sonicle.picker.RemoteDate',
 		'Sonicle.plugin.FileDrop',
 		'Sonicle.upload.Button',
 		'Sonicle.webtop.core.ux.grid.column.ChatMessage',
@@ -144,11 +145,21 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				me.lref('gpchatsearch').toggleCollapse();
 			}
 		}, {
-			xtype: 'button',
+			xtype: 'splitbutton',
 			tooltip: WT.res('wtimchat.btn-history.tip'),
 			iconCls: 'wt-icon-history-xs',
 			menu: {
 				xtype: 'datemenu',
+				pickerCfg: {
+					xtype: 'soremotedatepicker',
+					ajaxUrl: WTF.requestBaseUrl(),
+					ajaxExtraParams: {
+						service: WT.ID,
+						action: 'ManageIMChat',
+						crud: 'dates',
+						chatId: me.chatId
+					}
+				},
 				listeners: {
 					beforeshow: function(s) {
 						var date = me.getVM().get('chatDate');
@@ -158,6 +169,9 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 						me.showDate(date);
 					}
 				}
+			},
+			handler: function() {
+				me.showDate(new Date());
 			}
 		});
 		
@@ -427,14 +441,14 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	showDate: function(date, messageId) {
 		var me = this,
 				lay = me.lref('card').getLayout(),
-				gp,
 				focusMessage = function(grid, id) {
 					var rec = grid.getStore().getById(id);
 					if (rec) {
 						grid.getView().focusRow(rec);
 						grid.setSelection(rec);
 					}
-				};
+				},
+				gp;
 		
 		me.getVM().set('chatDate', date);
 		if (Sonicle.Date.isToday(date)) {

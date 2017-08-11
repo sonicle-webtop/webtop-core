@@ -146,6 +146,7 @@ import com.sonicle.webtop.core.xmpp.XMPPHelper;
 import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import com.sonicle.webtop.vfs.IVfsManager;
 import com.sonicle.webtop.vfs.model.SharingLink;
+import java.net.URI;
 import java.util.HashMap;
 import org.apache.commons.vfs2.FileObject;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -1420,6 +1421,18 @@ public class Service extends BaseService {
 					throw new WTException("XMPPClient not available");
 				}
 				
+			} else if (crud.equals("dates")) {
+				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
+				int year = ServletUtils.getIntParameter(request, "year", true);
+				
+				List<String> items = new ArrayList<>();
+				List<LocalDate> dates = coreMgr.listIMMessageDates(chatId, year);
+				for(LocalDate date : dates) {
+					items.add(date.toString());
+				}
+				
+				new JsonResult(items).printTo(out);
+				
 			} else if (crud.equals("send")) {
 				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
 				String text = ServletUtils.getStringParameter(request, "text", true);
@@ -1434,16 +1447,6 @@ public class Service extends BaseService {
 					throw new WTException("XMPPClient not available");
 				}
 				
-			} else if (crud.equals("sendasfile")) {
-				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
-				if (xmppCli != null) {
-					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
-					ChatMessage message = xmppCli.sendFileMessage(chatJid, "test.pdf", "webtop.sonicle.com/webtop/test.pdf", "application/pdf", 100);
-					
-					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
-				} else {
-					throw new WTException("XMPPClient not available");
-				}
 			}
 			
 		} catch(Exception ex) {
@@ -1540,9 +1543,6 @@ public class Service extends BaseService {
 				String query = ServletUtils.getStringParameter(request, "query", null);
 				
 				if (xmppCli != null) {
-					//EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
-					//EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
-					
 					List<JsGridIMChatSearch> items = new ArrayList<>();
 					if (query != null) {
 						HashMap<String, String> cacheNicks = new HashMap<>();
@@ -1748,18 +1748,6 @@ public class Service extends BaseService {
 			
 			try {
 				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message, utz);
-				/*
-				IMMessage mes = new IMMessage();
-				mes.setChatJid(chatRoom.getChatJid().toString());
-				mes.setSenderJid(message.getFromUser().toString());
-				mes.setSenderResource(message.getFromUserResource());
-				mes.setDate(message.getTimestamp().withZone(getEnv().getProfile().getTimeZone()).toLocalDate());
-				mes.setTimestamp(message.getTimestamp());
-				mes.setAction(IMMessage.Action.NONE);
-				mes.setText(message.getText());
-				mes.setMessageUid(message.getMessageUid());
-				mes.setStanzaId(message.getStanzaId());
-				*/
 				coreMgr.addIMMessage(mes);
 				coreMgr.updateIMChatLastSeenActivity(chatRoom.getChatJid().toString(), chatRoom.getLastSeenActivity());
 				
@@ -1767,8 +1755,6 @@ public class Service extends BaseService {
 				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
 			}
 		}
-		
-	
 		
 		@Override
 		public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message) {
@@ -1849,9 +1835,9 @@ public class Service extends BaseService {
 							.silent()
 							.build();
 					sl = vfsMgr.addDownloadLink(sl);
-					String[] urls = vfsMgr.getSharingLinkPublicURLs(sl);
+					URI[] urls = vfsMgr.getSharingLinkPublicURLs(sl);
 					
-					ChatMessage message = xmppCli.sendFileMessage(chatId, file.getFilename(), urls[1], file.getMediaType(), foNew.getContent().getSize());
+					ChatMessage message = xmppCli.sendFileMessage(chatId, file.getFilename(), urls[2].toString(), file.getMediaType(), foNew.getContent().getSize());
 					
 					
 					JsGridIMMessage js = new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone());

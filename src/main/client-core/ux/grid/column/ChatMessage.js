@@ -85,7 +85,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 					'<a class="{fileWrapCls}" href="{url}" target="_blank">',
 						'<tpl if="isImage">',
 							'<div class="{imagefileBodyCls}">',
-								'<img src="{url}" alt="" />',
+								'<img src="{url}" alt="&nbsp;&#x26a0;&nbsp;{text}" />',
 							'</div>',
 							'<span class="{hiddenMetaCls}">{fileClipText}</span>',
 						'<tpl else>',
