@@ -170,6 +170,22 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					}
 				},
 				columns: [{
+					xtype: 'soiconcolumn',
+					dataIndex: 'id',
+					getIconCls: function (v) {
+						return WTF.cssIconCls(WT.XID, me.self.isGroupChat(v) ? 'im-gchat' : 'im-ichat', 'xs');
+					},
+					getTip: function(v) {
+						if (me.self.isGroupChat(v)) {
+							return WT.res('wtimpanel.gpchats.type.group');
+						} else {
+							return WT.res('wtimpanel.gpchats.type.instant');
+						}
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					header: '',
+					width: 30
+				}, {
 					dataIndex: 'name',
 					flex: 1
 				}, {
