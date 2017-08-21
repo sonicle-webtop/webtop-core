@@ -364,6 +364,10 @@ div.wt-wnlist {
 	background-color: rgba(255,245,196,0.95);
 }
 
+.wt-chatmsgcol-sysmsg > span:before {
+	content: attr(data-content);
+}
+
 .wt-chatmsgcol-hidmeta {
 	position: absolute;
     width: 0.1px;
@@ -451,7 +455,7 @@ div.wt-wnlist {
 	color: grey;
 }
 
-.wt-chatmsgcol-msgmeta-time:before {
+.wt-chatmsgcol-msgmeta > span:before {
 	content: attr(data-content);
 }
 

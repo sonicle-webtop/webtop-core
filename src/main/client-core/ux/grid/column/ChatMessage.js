@@ -73,7 +73,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 		'<tpl if="action == \'none\' || action == \'file\'">',
 			'<tpl if="isSent">',
 				'<div class="{messageCls} {messageSentCls}">',
-				'<span class="{hiddenMetaCls}"><br></span>',
+					'<span class="{hiddenMetaCls}"><br></span>',
 			'<tpl else>',
 				'<div class="{messageCls} {messageReceivedCls}">',
 					'<span class="{messageSenderCls}" data-content="{nick}"></span><br>',
@@ -106,7 +106,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 				'</div>',
 		'<tpl else>',
 				'<div style="width:{width}px;" class="{sysMessageCls} {sysMessageActionCls}">',
-					'<span class="{messageTextCls} x-unselectable">{text}</span>',
+					'<span class="{messageTextCls} x-unselectable" data-content="{text}"></span>',
 				'</div>',
 		'</tpl>',
 		{
@@ -180,7 +180,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 				sysMessageActionCls: actionCls,
 				width: Ext.util.TextMetrics.measure(this.el, text).width +10,
 				time: time,
-				text: text
+				text: me.escapeAttr(text)
 			});	
 		}
 	},
