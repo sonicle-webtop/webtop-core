@@ -69,7 +69,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 		
 		if (WT.getVar('imEnabled')) {
-			me.onMessage('imUpdateFriendPresence', function(msg) {
+			me.onMessage('imFriendsUpdated', function(msg) {
+				me.getVPController().getIMPanel().loadFriends();
+			});
+			me.onMessage('imFriendPresenceUpdated', function(msg) {
 				var pl = msg.payload;
 				me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 				me.setChatRoomFriendPresenceUI(pl.chatId, pl.presenceStatus);

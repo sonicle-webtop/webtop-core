@@ -64,7 +64,8 @@ import com.sonicle.webtop.core.app.ws.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.app.ws.IMChatRoomRemoved;
 import com.sonicle.webtop.core.app.ws.IMChatRoomClosed;
 import com.sonicle.webtop.core.app.ws.IMChatRoomUpdated;
-import com.sonicle.webtop.core.app.ws.IMUpdateFriendPresence;
+import com.sonicle.webtop.core.app.ws.IMFriendPresenceUpdated;
+import com.sonicle.webtop.core.app.ws.IMFriendsUpdated;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
@@ -1398,6 +1399,8 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageIMChat(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
+		DateTimeZone utz = up.getTimeZone();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
@@ -1426,7 +1429,7 @@ public class Service extends BaseService {
 				int year = ServletUtils.getIntParameter(request, "year", true);
 				
 				List<String> items = new ArrayList<>();
-				List<LocalDate> dates = coreMgr.listIMMessageDates(chatId, year);
+				List<LocalDate> dates = coreMgr.listIMMessageDates(chatId, year, utz);
 				for(LocalDate date : dates) {
 					items.add(date.toString());
 				}
@@ -1436,13 +1439,28 @@ public class Service extends BaseService {
 			} else if (crud.equals("send")) {
 				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
 				String text = ServletUtils.getStringParameter(request, "text", true);
+				String lastSeenDate = ServletUtils.getStringParameter(request, "lastSeenDate", null);
+				
+				LocalDate lastSeen = (lastSeenDate == null) ? null : DateTimeUtils.parseYmdHmsWithZone(lastSeenDate, "00:00:00", utz).toLocalDate();
 				
 				if (xmppCli != null) {
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
+					List<JsGridIMMessage> items = new ArrayList<>();
+					
 					ChatMessage message = xmppCli.sendTextMessage(chatJid, text);
 					if (message == null) throw new Exception("Message is null");
-
-					new JsonResult(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone())).printTo(out);
+					
+					if (lastSeen != null) {
+						final LocalDate mesDate = message.getTimestampDate(utz);
+						if (!mesDate.equals(lastSeen)) {
+							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-date", message.getTimestamp());
+							items.add(JsGridIMMessage.asDateAction(msgId, mesDate));
+						}
+					}
+					items.add(new JsGridIMMessage(true, message, getEnv().getProfile().getTimeZone()));
+					
+					new JsonResult(items, items.size()).printTo(out);
+					
 				} else {
 					throw new WTException("XMPPClient not available");
 				}
@@ -1465,15 +1483,9 @@ public class Service extends BaseService {
 				String chatId = ServletUtils.getStringParameter(request, "chatId", true);
 				String date = ServletUtils.getStringParameter(request, "date", null);
 				
-				boolean history;
-				LocalDate ld = null;
-				if (date == null) {
-					history = false;
-					ld = DateTime.now().withZone(utz).toLocalDate();
-				} else {
-					history = true;
-					ld = DateTimeUtils.parseYmdHmsWithZone(date, "00:00:00", utz).toLocalDate();
-				}
+				final LocalDate nowLd = DateTime.now().withZone(utz).toLocalDate();
+				LocalDate ld = (date == null) ? nowLd : DateTimeUtils.parseYmdHmsWithZone(date, "00:00:00", utz).toLocalDate();
+				boolean history = (ld.compareTo(nowLd) != 0);
 				
 				IMChat chat = coreMgr.getIMChat(chatId);
 				if (xmppCli != null) {
@@ -1485,7 +1497,7 @@ public class Service extends BaseService {
 					HashMap<String, String> cacheNicks = new HashMap<>();
 					List<JsGridIMMessage> items = new ArrayList<>();
 					
-					List<IMMessage> messages = coreMgr.listIMMessages(chatId, ld);
+					List<IMMessage> messages = coreMgr.listIMMessages(chatId, ld, utz, !history);
 					
 					// Add unavailable warning at the beginning
 					if (history && !messages.isEmpty()) {
@@ -1496,10 +1508,11 @@ public class Service extends BaseService {
 					}
 					
 					for(IMMessage mes : messages) {
-						if (!mes.getDate().equals(lastDate)) {
-							lastDate = mes.getDate();
-							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-date", messageTs);
-							items.add(JsGridIMMessage.asDateAction(msgId, ld));
+						final LocalDate mesDate = mes.getTimestampDate(utz);
+						if (!mesDate.equals(lastDate)) {
+							lastDate = mesDate;
+							final String msgId = ChatMessage.buildUniqueId(chatJid, "dummy-date", mes.getTimestamp());
+							items.add(JsGridIMMessage.asDateAction(msgId, lastDate));
 						}
 						
 						if (!cacheNicks.containsKey(mes.getSenderJid())) {
@@ -1546,7 +1559,7 @@ public class Service extends BaseService {
 					List<JsGridIMChatSearch> items = new ArrayList<>();
 					if (query != null) {
 						HashMap<String, String> cacheNicks = new HashMap<>();
-						List<IMMessage> messages = coreMgr.findIMMessagesByQuery(chatId, "%"+query+"%");
+						List<IMMessage> messages = coreMgr.findIMMessagesByQuery(chatId, "%"+query+"%", utz);
 						for(IMMessage mes : messages) {
 							if (!cacheNicks.containsKey(mes.getSenderJid())) {
 								if (xmppCli.isAuthenticated()) {
@@ -1626,13 +1639,13 @@ public class Service extends BaseService {
 		return new InstantChatRoom(chatJid, ownerJid, chat.getName(), chat.getLastSeenActivity(), withJid);
 	}
 	
-	private IMMessage createIMMessage(EntityBareJid chatJid, ChatMessage message, DateTimeZone utz) {
+	private IMMessage createIMMessage(EntityBareJid chatJid, ChatMessage message) {
 		IMMessage mes = new IMMessage();
 		mes.setChatJid(chatJid.toString());
 		mes.setSenderJid(message.getFromUser().toString());
 		mes.setSenderResource(message.getFromUserResource());
-		mes.setDate(message.getTimestamp().withZone(utz).toLocalDate());
 		mes.setTimestamp(message.getTimestamp());
+		mes.setDeliveryTimestamp(message.getDeliveryTimestamp());
 		mes.setAction(IMMessage.Action.NONE);
 		mes.setText(message.getText());
 		mes.setData(null);
@@ -1646,13 +1659,13 @@ public class Service extends BaseService {
 		return mes;
 	}
 	
-	private IMMessage createIMMessage(EntityBareJid chatJid, EntityBareJid senderJid, DateTime timestamp, IMMessage.Action action, String text, DateTimeZone utz) {
+	private IMMessage createIMMessage(EntityBareJid chatJid, EntityBareJid senderJid, DateTime timestamp, DateTime deliveryTimestamp, IMMessage.Action action, String text) {
 		IMMessage mes = new IMMessage();
 		mes.setChatJid(chatJid.toString());
 		mes.setSenderJid(senderJid.toString());
 		mes.setSenderResource(null);
-		mes.setDate(timestamp.withZone(utz).toLocalDate());
 		mes.setTimestamp(timestamp);
+		mes.setDeliveryTimestamp(deliveryTimestamp);
 		mes.setAction(action);
 		mes.setText(text);
 		mes.setData(null);
@@ -1664,11 +1677,26 @@ public class Service extends BaseService {
 	private class XMPPServiceListenerImpl implements XMPPClientListener {
 		
 		@Override
+		public void onFriendsAdded(Collection<Jid> jids) {
+			getWts().notify(new IMFriendsUpdated());
+		}
+
+		@Override
+		public void onFriendsUpdated(Collection<Jid> jids) {
+			getWts().notify(new IMFriendsUpdated());
+		}
+
+		@Override
+		public void onFriendsDeleted(Collection<Jid> jids) {
+			getWts().notify(new IMFriendsUpdated());
+		}
+		
+		@Override
 		public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence) {
 			logger.debug("presenceChanged {}", jid.toString());
 			final EntityBareJid targetJid = jid.asEntityBareJidIfPossible();
 			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
-			getWts().notify(new IMUpdateFriendPresence(targetJid.toString(), bestPresence.getInstantChatJid(), presenceStatus, bestPresence.getStatusMessage()));
+			getWts().notify(new IMFriendPresenceUpdated(targetJid.toString(), bestPresence.getInstantChatJid(), presenceStatus, bestPresence.getStatusMessage()));
 		}
 		
 		@Override
@@ -1727,11 +1755,11 @@ public class Service extends BaseService {
 		
 		@Override
 		public void onChatRoomUnavailable(ChatRoom chatRoom, String ownerNick) {
-			DateTimeZone utz = getEnv().getProfile().getTimeZone();
+			//DateTimeZone utz = getEnv().getProfile().getTimeZone();
 			
 			try {
 				coreMgr.updateIMChatAvailablity(chatRoom.getChatJid().asEntityBareJidString(), false);
-				IMMessage mes = createIMMessage(chatRoom.getChatJid(), chatRoom.getOwnerJid(), chatRoom.getLastSeenActivity(), IMMessage.Action.CHAT_CLOSE, null, utz);
+				IMMessage mes = createIMMessage(chatRoom.getChatJid(), chatRoom.getOwnerJid(), chatRoom.getLastSeenActivity(), null, IMMessage.Action.CHAT_CLOSE, null);
 				coreMgr.addIMMessage(mes);
 
 			} catch(WTException ex) {
@@ -1743,11 +1771,11 @@ public class Service extends BaseService {
 		
 		@Override
 		public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message) {
-			DateTimeZone utz = getEnv().getProfile().getTimeZone();
+			//DateTimeZone utz = getEnv().getProfile().getTimeZone();
 			logger.debug("Message sent {}, {}, {}", chatRoom.getChatJid().toString(), message.getStanzaId(), message.getRawMessage().getBody());
 			
 			try {
-				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message, utz);
+				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message);
 				coreMgr.addIMMessage(mes);
 				coreMgr.updateIMChatLastSeenActivity(chatRoom.getChatJid().toString(), chatRoom.getLastSeenActivity());
 				
@@ -1771,28 +1799,13 @@ public class Service extends BaseService {
 			getWts().notify(new IMChatRoomMessageReceived(chatRoom.getChatJid().toString(), chatRoom.getName(), message.getFromUser().toString(), message.getFromUserNickname(), fmt.print(message.getTimestamp()), message.getMessageUid(), action, message.getText(), data));
 			
 			try {
-				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message, utz);
+				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message);
 				coreMgr.addIMMessage(mes);
 				coreMgr.updateIMChatLastSeenActivity(chatRoom.getChatJid().toString(), chatRoom.getLastSeenActivity());
 
 			} catch(WTException ex) {
 				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
 			}
-		}
-		
-		@Override
-		public void friendsAdded(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
-		}
-
-		@Override
-		public void friendsUpdated(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
-		}
-
-		@Override
-		public void friendsDeleted(Collection<Jid> jids) {
-			logger.debug("{}", jids.toString());
 		}
 
 		@Override

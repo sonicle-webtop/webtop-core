@@ -51,7 +51,6 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
-import com.sonicle.webtop.core.bol.VActivity;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAutosave;
@@ -112,7 +111,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -995,14 +993,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<LocalDate> listIMMessageDates(String chatJid, int year) throws WTException {
+	public List<LocalDate> listIMMessageDates(String chatJid, int year, DateTimeZone timezone) throws WTException {
 		IMMessageDAO dao = IMMessageDAO.getInstance();
+		ArrayList<LocalDate> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			
-			return dao.selectDatesByProfileChatYear(con, getTargetProfileId(), chatJid, year);
+			List<DateTime> dts = dao.selectDatesByProfileChatYear(con, getTargetProfileId(), chatJid, year, timezone);
+			for(DateTime dt : dts) {
+				items.add(dt.withZone(timezone).toLocalDate());
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -1011,7 +1013,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<IMMessage> listIMMessages(String chatJid, LocalDate date) throws WTException {
+	public List<IMMessage> listIMMessages(String chatJid, LocalDate date, DateTimeZone timezone, boolean byDelivery) throws WTException {
 		IMMessageDAO dao = IMMessageDAO.getInstance();
 		ArrayList<IMMessage> items = new ArrayList<>();
 		Connection con = null;
@@ -1019,7 +1021,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			
-			List<OIMMessage> omess = dao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date);
+			List<OIMMessage> omess = dao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date, timezone, byDelivery);
 			for(OIMMessage omes : omess) {
 				items.add(createIMMessage(omes));
 			}
@@ -1032,7 +1034,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<IMMessage> findIMMessagesByQuery(String chatJid, String query) throws WTException {
+	public List<IMMessage> findIMMessagesByQuery(String chatJid, String query, DateTimeZone timezone) throws WTException {
 		IMMessageDAO dao = IMMessageDAO.getInstance();
 		ArrayList<IMMessage> items = new ArrayList<>();
 		Connection con = null;
@@ -2309,8 +2311,8 @@ public class CoreManager extends BaseManager {
 		omes.setChatJid(mes.getChatJid());
 		omes.setSenderJid(mes.getSenderJid());
 		omes.setSenderResource(mes.getSenderResource());
-		omes.setDate(mes.getDate());
 		omes.setTimestamp(mes.getTimestamp());
+		omes.setDeliveryTimestamp(mes.getDeliveryTimestamp());
 		omes.setAction(EnumUtils.toSerializedName(mes.getAction()));
 		omes.setText(mes.getText());
 		omes.setData(mes.getData());
@@ -2328,8 +2330,8 @@ public class CoreManager extends BaseManager {
 		mes.setChatJid(omes.getChatJid());
 		mes.setSenderJid(omes.getSenderJid());
 		mes.setSenderResource(omes.getSenderResource());
-		mes.setDate(omes.getDate());
 		mes.setTimestamp(omes.getTimestamp());
+		mes.setDeliveryTimestamp(omes.getDeliveryTimestamp());
 		mes.setAction(EnumUtils.forSerializedName(omes.getAction(), IMMessage.Action.class));
 		mes.setText(omes.getText());
 		mes.setData(omes.getData());

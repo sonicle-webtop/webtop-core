@@ -235,8 +235,8 @@ CREATE TABLE "core"."im_messages" (
 "chat_jid" varchar(255) NOT NULL,
 "sender_jid" varchar(255) NOT NULL,
 "sender_resource" varchar(255),
-"date" date,
 "timestamp" timestamptz(6) NOT NULL,
+"delivery_timestamp" timestamptz(6),
 "action" varchar(10) NOT NULL,
 "text" varchar(255),
 "data" text,
@@ -661,8 +661,9 @@ ALTER TABLE "core"."im_chats" ADD PRIMARY KEY ("id");
 -- ----------------------------
 -- Indexes structure for table im_messages
 -- ----------------------------
-CREATE INDEX "im_messages_ak1" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "date");
-CREATE INDEX "im_messages_ak2" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "text");
+CREATE INDEX "im_messages_ak1" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "timestamp");
+CREATE INDEX "im_messages_ak2" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "delivery_timestamp");
+CREATE INDEX "im_messages_ak3" ON "core"."im_messages" USING btree ("domain_id", "user_id", "chat_jid", "text");
 
 -- ----------------------------
 -- Primary Key structure for table im_messages

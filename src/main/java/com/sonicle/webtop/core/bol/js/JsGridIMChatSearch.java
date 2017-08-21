@@ -60,7 +60,7 @@ public class JsGridIMChatSearch {
 		this.id = message.getMessageUid();
 		this.fromId = message.getSenderJid();
 		this.fromNick = senderNick;
-		this.date = message.getDate().toString();
+		this.date = message.getTimestampDate(utz).toString();
 		this.timestamp = fmt.print(message.getTimestamp());
 		this.action = EnumUtils.toSerializedName(message.getAction());
 		this.text = message.getText();

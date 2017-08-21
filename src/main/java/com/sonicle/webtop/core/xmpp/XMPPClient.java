@@ -508,9 +508,9 @@ public class XMPPClient {
 				}
 				if (chatObj != null) {
 					try {
-						final DateTime ts = ChatMessage.nowTimestamp();
+						final DateTime now = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().send(message);
-						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
+						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), now, now, message);
 
 						// TODO: threadify this?
 						try {
@@ -532,9 +532,9 @@ public class XMPPClient {
 				GChat chatObj = groupChats.get(chatJid);
 				if (chatObj != null) {
 					try {
-						final DateTime ts = ChatMessage.nowTimestamp();
+						final DateTime now = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().sendMessage(message);
-						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), ts, message);
+						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), now, now, message);
 
 						// TODO: threadify this?
 						try {
@@ -954,19 +954,34 @@ public class XMPPClient {
 		@Override
 		public void entriesAdded(Collection<Jid> clctn) {
 			if (isDisconnecting.get()) return;
-			listener.friendsAdded(clctn);
+			try {
+				logger.debug("Entry added [{}]", clctn);
+				listener.onFriendsAdded(clctn);
+			} catch(Throwable t) {
+				logger.error("Listener error", t);
+			}
 		}
 
 		@Override
 		public void entriesUpdated(Collection<Jid> clctn) {
 			if (isDisconnecting.get()) return;
-			listener.friendsUpdated(clctn);
+			try {
+				logger.debug("Entry updated [{}]", clctn);
+				listener.onFriendsUpdated(clctn);
+			} catch(Throwable t) {
+				logger.error("Listener error", t);
+			}
 		}
 
 		@Override
 		public void entriesDeleted(Collection<Jid> clctn) {
 			if (isDisconnecting.get()) return;
-			listener.friendsDeleted(clctn);
+			try {
+				logger.debug("Entry deleted [{}]", clctn);
+				listener.onFriendsDeleted(clctn);
+			} catch(Throwable t) {
+				logger.error("Listener error", t);
+			}
 		}
 
 		@Override
@@ -990,7 +1005,8 @@ public class XMPPClient {
 			if (isDisconnecting.get()) return;
 			
 			try {
-				final DateTime ts = ChatMessage.nowTimestamp();
+				final DateTime now = ChatMessage.nowTimestamp();
+				final DateTime delay = retrieveDelayInformation(message);
 				final Roster roster = getRoster();
 				checkRosterLoaded(roster);
 
@@ -1001,13 +1017,23 @@ public class XMPPClient {
 				synchronized(instantChats) {
 					chatObj = instantChats.get(chatJid);
 					if (chatObj == null) {
-						chatObj = doAddChat(false, false, chatJid, from, fromNick, ts, from, chat);
+						chatObj = doAddChat(false, false, chatJid, from, fromNick, now, from, chat);
 					}
 				}
-				chatObj.getChatRoom().setLastSeenActivity(ts);
+				chatObj.getChatRoom().setLastSeenActivity(now);
+				
+				DateTime msgTs, delivTs;
+				if (delay != null) {
+					logger.debug("Message is delayed {}", delay);
+					msgTs = delay;
+					delivTs = now;
+				} else {
+					msgTs = now;
+					delivTs = now;
+				}
 
 				try {
-					ChatMessage chatMessage = new ChatMessage(chatJid, message.getFrom(), fromNick, ts, message);
+					ChatMessage chatMessage = new ChatMessage(chatJid, message.getFrom(), fromNick, msgTs, delivTs, message);
 					listener.onChatRoomMessageReceived(chatObj.getChatRoom(), chatMessage);
 				} catch(Throwable t) {
 					logger.error("Listener error", t);
@@ -1100,9 +1126,10 @@ public class XMPPClient {
 
 		@Override
 		public void processMessage(Message message) {
-			final DateTime ts = ChatMessage.nowTimestamp();
+			final DateTime now = ChatMessage.nowTimestamp();
+			final DateTime delay = retrieveDelayInformation(message);
 			final Roster roster = getRoster();
-			chatRoom.setLastSeenActivity(ts);
+			chatRoom.setLastSeenActivity(now);
 			
 			if (message.getSubjects().size() > 0) {
 				logger.warn("Subject update {}", message);
@@ -1119,10 +1146,10 @@ public class XMPPClient {
 				final EntityFullJid fromJid = guessedFrom.jid;
 				final String fromNick = guessedFrom.nick;
 				
+				// Ignore messages coming from myself
 				if (XMPPHelper.jidEquals(fromJid, getUserJid())) skipListener = true;
 				
 				if (!skipListener) {
-					DateTime delay = retrieveDelayInformation(message);
 					if (delay != null && history != null) {
 						final HashSet<String> idsInHistory = history.getStanzaIds(getChatRoom().getChatJid());
 						if (idsInHistory != null) {
@@ -1132,8 +1159,18 @@ public class XMPPClient {
 				}
 				
 				if (!skipListener) {
+					DateTime msgTs, delivTs;
+					if (delay != null) {
+						logger.debug("Message is delayed {}", delay);
+						msgTs = delay;
+						delivTs = now;
+					} else {
+						msgTs = now;
+						delivTs = now;
+					}
+					
 					try {
-						ChatMessage chatMessage = new ChatMessage(chatRoom.getChatJid(), fromJid.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromJid.getResourceOrNull()), fromNick, ts, message);
+						ChatMessage chatMessage = new ChatMessage(chatRoom.getChatJid(), fromJid.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromJid.getResourceOrNull()), fromNick, msgTs, delivTs, message);
 						listener.onChatRoomMessageReceived(chatRoom, chatMessage);
 					} catch(Throwable t) {
 						logger.error("Listener error", t);

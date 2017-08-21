@@ -35,26 +35,15 @@ package com.sonicle.webtop.core.app.ws;
 
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class IMUpdateFriendPresence extends ServiceMessage {
-	public static final String ACTION = "imUpdateFriendPresence";
+public class IMFriendsUpdated extends ServiceMessage {
+	public static final String ACTION = "imFriendsUpdated";
 	
-	public IMUpdateFriendPresence(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
+	public IMFriendsUpdated() {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(friendBareId, instantChatId, presenceStatus, statusMessage);
-	}
-	
-	private Object payload(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("id", friendBareId);
-		pl.put("chatId", instantChatId);
-		pl.put("presenceStatus", presenceStatus);
-		pl.put("statusMessage", statusMessage);
-		return pl;
 	}
 }

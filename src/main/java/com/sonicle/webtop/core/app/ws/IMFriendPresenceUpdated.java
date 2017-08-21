@@ -31,30 +31,30 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.xmpp;
+package com.sonicle.webtop.core.app.ws;
 
-import java.util.Collection;
-import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.EntityFullJid;
-import org.jxmpp.jid.Jid;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public interface XMPPClientListener {
+public class IMFriendPresenceUpdated extends ServiceMessage {
+	public static final String ACTION = "imFriendPresenceUpdated";
 	
-	public void onFriendsAdded(Collection<Jid> jids);
-	public void onFriendsUpdated(Collection<Jid> jids);
-	public void onFriendsDeleted(Collection<Jid> jids);
-	public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence);
-	public void onChatRoomUpdated(ChatRoom chatRoom, boolean self);
-	public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick, boolean self);
-	public void onChatRoomRemoved(EntityBareJid chatJid, String chatName, EntityBareJid ownerJid, String ownerNick);
-	public void onChatRoomUnavailable(ChatRoom chatRoom, String ownerNick);
+	public IMFriendPresenceUpdated(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(friendBareId, instantChatId, presenceStatus, statusMessage);
+	}
 	
-	public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message);
-	public void onChatRoomMessageReceived(ChatRoom chatRoom, ChatMessage message);
-	public void onChatRoomParticipantJoined(ChatRoom chatRoom, EntityFullJid participant);
-	public void onChatRoomParticipantLeft(ChatRoom chatRoom, EntityFullJid participant, boolean kicked);
+	private Object payload(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("id", friendBareId);
+		pl.put("chatId", instantChatId);
+		pl.put("presenceStatus", presenceStatus);
+		pl.put("statusMessage", statusMessage);
+		return pl;
+	}
 }

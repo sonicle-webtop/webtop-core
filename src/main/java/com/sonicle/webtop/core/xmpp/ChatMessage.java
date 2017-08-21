@@ -40,6 +40,7 @@ import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Message;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 
@@ -53,19 +54,21 @@ public class ChatMessage {
 	private final String fromUserResource;
 	private final String fromUserNickame;
 	private final DateTime timestamp;
+	private final DateTime deliveryTimestamp;
 	private final String messageUid;
 	private final Message message;
 	
-	public ChatMessage(EntityBareJid chatJid, Jid fromUser, String fromUserNickame, DateTime timestamp, Message message) {
-		this(chatJid, fromUser.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromUser), fromUserNickame, timestamp, message);
+	public ChatMessage(EntityBareJid chatJid, Jid fromUser, String fromUserNickame, DateTime timestamp, DateTime deliveryTimestamp, Message message) {
+		this(chatJid, fromUser.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromUser), fromUserNickame, timestamp, deliveryTimestamp, message);
 	}
 	
-	public ChatMessage(EntityBareJid chatJid, EntityBareJid fromUser, String fromUserResource, String fromUserNickame, DateTime timestamp, Message message) {
+	public ChatMessage(EntityBareJid chatJid, EntityBareJid fromUser, String fromUserResource, String fromUserNickame, DateTime timestamp, DateTime deliveryTimestamp, Message message) {
 		this.chatJid = chatJid;
 		this.fromUser = fromUser;
 		this.fromUserResource = fromUserResource;
 		this.fromUserNickame = fromUserNickame;
 		this.timestamp = timestamp;
+		this.deliveryTimestamp = deliveryTimestamp;
 		this.messageUid = buildUniqueId(fromUser, fromUserResource, timestamp);
 		this.message = message;
 	}
@@ -88,6 +91,22 @@ public class ChatMessage {
 	
 	public DateTime getTimestamp() {
 		return timestamp;
+	}
+	
+	public LocalDate getTimestampDate(DateTimeZone timezone) {
+		return timestamp.withZone(timezone).toLocalDate();
+	}
+	
+	public DateTime getDeliveryTimestamp() {
+		return deliveryTimestamp;
+	}
+	
+	public LocalDate getDeliveryTimestampDate(DateTimeZone timezone) {
+		if (deliveryTimestamp != null) {
+			return deliveryTimestamp.withZone(timezone).toLocalDate();
+		} else {
+			return getTimestampDate(timezone);
+		}
 	}
 	
 	public String getMessageUid() {

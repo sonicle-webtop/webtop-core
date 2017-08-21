@@ -63,7 +63,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	referenceHolder: true,
 	viewModel: {
 		data: {
-			chatDate: null
+			chatDate: null,
+			lastTimestamp: null
 		}
 	},
 	
@@ -261,6 +262,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					}),
 					listeners: {
 						load: function(s) {
+							var rec = s.last();
+							me.getVM().set('lastTimestamp', rec ? rec.get('timestamp') : null);
 							me.scrollToEnd();
 						},
 						scope: me
@@ -475,12 +478,15 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			params: {
 				crud: 'send',
 				chatId: me.chatId,
-				text: text
+				text: text,
+				lastSeenDate: Ext.Date.format(me.getVM().get('lastTimestamp'), 'Y-m-d')
 			},
 			callback: function(success, json) {
 				var fld = me.lref('fldmessage');
 				if (success) {
-					me.addMessage(json.data);
+					Ext.iterate(json.data, function(item) {
+						me.addMessage(item);
+					});
 					fld.focus(true, 100);
 					if (WT.getVar('imSoundOnMessageSent')) {
 						Sonicle.Sound.play('wt-im-sent');
@@ -556,6 +562,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				sto = gp.getStore(),
 				rec;
 			rec = sto.add(sto.createModel(data))[0];
+			me.getVM().set('lastTimestamp', rec.get('timestamp'));
 			me.scrollToEnd();
 		},
 		
