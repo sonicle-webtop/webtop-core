@@ -37,7 +37,6 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PropertiesEx;
 import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
@@ -689,7 +688,8 @@ public class ResourceRequest extends HttpServlet {
 				PropertiesEx properties = new PropertiesEx();
 				properties.load(is, true); // Important! True to preserve unicode escapes found in properties
 				for(final String name: properties.stringPropertyNames()) {
-					final String s = "\"" + name + "\"" + ":" + "\"" + LangUtils.escapeDoubleQuote(properties.getProperty(name)) + "\"";
+					//TODO: Si può forse applicare? LangUtils.escapeJsonDoubleQuote -> StringEscapeUtils.escapeJson
+					final String s = "\"" + name + "\"" + ":" + "\"" + LangUtils.escapeJsonDoubleQuote(properties.getProperty(name)) + "\"";
 					strings.add(s);
 				}
 				

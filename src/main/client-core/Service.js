@@ -101,8 +101,12 @@ Ext.define('Sonicle.webtop.core.Service', {
 
 			Ext.defer(function() {
 				me.initIM({
-					callback: function(success) {
-						if (success) me.getVPController().getIMPanel().loadFriends();
+					callback: function(success, json) {
+						if (success) {
+							me.getVPController().getIMPanel().loadFriends();
+						} else {
+							if (!Ext.isEmpty(json.message)) WT.warn(json.message);
+						}
 					}
 				});
 			}, 1000);

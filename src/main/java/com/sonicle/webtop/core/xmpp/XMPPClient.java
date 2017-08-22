@@ -200,7 +200,7 @@ public class XMPPClient {
 			presence = new Presence(Presence.Type.unavailable);
 		}
 		presence.setMode(Presence.Mode.away);
-		presence.setPriority(24);
+		//presence.setPriority(24);
 		return presence;
 	}
 	
@@ -215,18 +215,33 @@ public class XMPPClient {
 	public void updatePresence(PresenceStatus presenceStatus, String statusText) throws XMPPClientException {
 		checkAuthentication();
 		
+		Presence presence = new Presence(PresenceStatus.presenceType(presenceStatus));
+		//presence.setPriority(24);
+		Presence.Mode mode = PresenceStatus.presenceMode(presenceStatus);
+		if (mode != null) presence.setMode(mode);
+		if (statusText != null) presence.setStatus(statusText);
+		
 		try {
-			Presence presence = new Presence(PresenceStatus.presenceType(presenceStatus));
-			presence.setPriority(24);
-			Presence.Mode mode = PresenceStatus.presenceMode(presenceStatus);
-			if (mode != null) presence.setMode(mode);
-			if (statusText != null) presence.setStatus(statusText);
-			con.sendStanza(presence);
-			this.lastPresence = presence;
+			internalSendPresence(presence);
 			
 		} catch(SmackException | InterruptedException ex) {
 			throw new XMPPClientException(ex);
 		}
+		
+		/*
+		try {
+			Presence presence = new Presence(PresenceStatus.presenceType(presenceStatus));
+			//presence.setPriority(24);
+			Presence.Mode mode = PresenceStatus.presenceMode(presenceStatus);
+			if (mode != null) presence.setMode(mode);
+			if (statusText != null) presence.setStatus(statusText);
+			this.lastPresence = presence;
+			con.sendStanza(presence);
+			
+		} catch(SmackException | InterruptedException ex) {
+			throw new XMPPClientException(ex);
+		}
+		*/
 	}
 	
 	public List<Friend> listFriends() throws XMPPClientException {
@@ -900,6 +915,15 @@ public class XMPPClient {
 				if (joined) logger.debug("Group chat re-joined [{}]", muc.getNickname());
 			}
 		}
+		
+		if (this.lastPresence != null) {
+			internalSendPresence(this.lastPresence);
+		}
+	}
+	
+	private void internalSendPresence(Presence presence) throws SmackException, InterruptedException {
+		this.lastPresence = presence;
+		con.sendStanza(presence);
 	}
 	
 	private RoomInfo getRoomInfo(MultiUserChatManager mucManager, EntityBareJid chatJid) throws SmackException, XMPPException, InterruptedException, IOException {

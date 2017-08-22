@@ -118,6 +118,7 @@ import com.sonicle.webtop.core.xmpp.InstantChatRoom;
 import com.sonicle.webtop.core.xmpp.GroupChatRoom;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
 import com.sonicle.webtop.core.xmpp.XMPPClient;
+import com.sonicle.webtop.core.xmpp.XMPPClientException;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1276,17 +1277,24 @@ public class Service extends BaseService {
 	}
 	*/
 	
-	
-	
 	public void processManageIM(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals("init")) {
 				if (xmppCli != null) {
-					xmppCli.updatePresence(us.getIMPresenceStatus(), "Hey there! I'm on WebTop");
-
+					try {
+						xmppCli.updatePresence(us.getIMPresenceStatus(), "Hey there! I'm on WebTop");
+						
+					} catch(XMPPClientException ex1) {
+						if (!xmppCli.isConnected()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_CONNECTION));
+						if (!xmppCli.isAuthenticated()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_AUTHENTICATION));
+						throw ex1;
+					}
 					new JsonResult().printTo(out);
+					
+				} else {
+					throw new WTException("XMPPClient not available");
 				}
 				
 			} else if (crud.equals("presence")) {
@@ -1303,6 +1311,9 @@ public class Service extends BaseService {
 					us.setIMStatusMessage(statusMessage);
 
 					new JsonResult().printTo(out);
+					
+				} else {
+					throw new WTException("XMPPClient not available");
 				}
 			}
 			

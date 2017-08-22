@@ -437,10 +437,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * This object may contain any of the following properties:
 	 * 
-	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {String} [opts.title] A custom title.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
@@ -462,10 +462,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * This object may contain any of the following properties:
 	 * 
-	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {String} [opts.title] A custom title.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
@@ -490,10 +490,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * This object may contain any of the following properties:
 	 * 
-	 * @param {String} opts.title A custom title.
-	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {String} [opts.title] A custom title.
+	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
 		return this.confirm(msg, cb, scope, Ext.apply({

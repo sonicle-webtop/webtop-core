@@ -38,6 +38,9 @@ package com.sonicle.webtop.core;
  * @author malbinola
  */
 public class CoreLocaleKey {
+	public static final String SERVICE_NAME = "service.name";
+	public static final String SERVICE_DESCRIPTION = "service.description";
+	
 	public static final String TPL_LOGIN_USERNAME_PLACEHOLDER = "tpl.login.username.placeholder";
 	public static final String TPL_LOGIN_PASSWORD_PLACEHOLDER = "tpl.login.password.placeholder";
 	public static final String TPL_LOGIN_DOMAIN_LABEL = "tpl.login.domain.label";
@@ -65,8 +68,8 @@ public class CoreLocaleKey {
 	
 	//public static final String OTP_SETUP_ERROR_CODE = "otp.setup.error.code";
 	
-	public static final String SERVICE_NAME = "service.name";
-	public static final String SERVICE_DESCRIPTION = "service.description";
+	public static final String XMPP_ERROR_CONNECTION = "xmpp.error.connection";
+	public static final String XMPP_ERROR_AUTHENTICATION = "xmpp.error.authentication";
 	public static final String LOCALE_X = "locale.{0}";
 	public static final String WORD_DATE_DAY = "word.date.day";
 	public static final String WORD_DATE_MONTH = "word.date.month";
