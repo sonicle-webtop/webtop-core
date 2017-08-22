@@ -306,9 +306,19 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		east.toggleCollapse();
 	},
 	
-	onIMPanelPresenceStatusChange: function(s, status) {
-		var mys = WT.getApp().getService(WT.ID);
-		mys.updateIMPresenceStatusUI(status);
+	onIMPanelPresenceStatusSelect: function(s, status) {
+		var me = this,
+				mys = WT.getApp().getService(WT.ID);
+		mys.updateIMPresenceStatus(status, {
+			callback: function(success) {
+				if (success) {
+					s.setPresenceStatus(status);
+					me.getIMButton().setPresenceStatus(status);
+				} else {
+					s.setPresenceStatus(s.getPresenceStatus());
+				}
+			}
+		});
 	},
 	
 	onIMPanelFriendDblClick: function(s, friendId, friendNick, chatId) {

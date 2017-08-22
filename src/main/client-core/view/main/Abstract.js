@@ -172,7 +172,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			menuTbItms.push({
 				xtype: 'wtimbutton',
 				reference: 'imbtn',
-				presenceStatus: WT.getVar('imPresenceStatus'),
+				presenceStatus: 'offline',
+				//presenceStatus: WT.getVar('imPresenceStatus'),
 				statusMessage: WT.getVar('imStatusMessage'),
 				listeners: {
 					click: 'onIMClick'
@@ -405,10 +406,11 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	createEastCmp: function() {
 		return {
 			xtype: 'wtimpanel',
-			presenceStatus: WT.getVar('imPresenceStatus'),
+			presenceStatus: 'offline',
+			//presenceStatus: WT.getVar('imPresenceStatus'),
 			statusMessage: WT.getVar('imStatusMessage'),
 			listeners: {
-				presencestatuschange: 'onIMPanelPresenceStatusChange',
+				presencestatusselect: 'onIMPanelPresenceStatusSelect',
 				frienddblclick: 'onIMPanelFriendDblClick',
 				chatdblclick: 'onIMPanelChatDblClick',
 				addgroupchatclick: 'onIMPanelAddGroupChatClick'

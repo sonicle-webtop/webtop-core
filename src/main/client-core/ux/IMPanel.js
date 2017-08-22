@@ -56,6 +56,10 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	},
 	
 	/**
+	 * @event presencestatusselect
+	 */
+	
+	/**
 	 * @event presencestatuschange
 	 */
 	
@@ -131,6 +135,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				iconCls: WTA.ux.IMStatusMenu.statusIconCls(me.presenceStatus),
 				menu: {
 					xtype: 'wtimstatusmenu',
+					presenceStatus: me.getPresenceStatus(),
 					listeners: {
 						presencestatusselect: me.onBtnStatusPresenseSelect,
 						scope: me
@@ -324,7 +329,12 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	updatePresenceStatus: function(nv, ov) {
 		var me = this;
 		if (!me.isConfiguring) {
-			me.btnStatus().menu.setPresenceStatus(nv);
+			var Menu = WTA.ux.IMStatusMenu,
+					btn = me.btnStatus();
+			btn.setText(Menu.statusText(nv));
+			btn.setIconCls(Menu.statusIconCls(nv));
+			btn.menu.setPresenceStatus(nv);
+			me.fireEvent('presencestatuschange', me, nv, ov);
 		}
 	},
 	
@@ -462,12 +472,8 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		},
 		
 		onBtnStatusPresenseSelect: function(s, status) {
-			var me = this,
-					Menu = WTA.ux.IMStatusMenu,
-					btn = me.lookupReference('btnstatus');
-			btn.setText(Menu.statusText(status));
-			btn.setIconCls(Menu.statusIconCls(status));
-			me.fireEvent('presencestatuschange', me, status);
+			var me = this;
+			me.fireEvent('presencestatusselect', me, status);
 		},
 		
 		onFriendsSearchChange: function(s) {

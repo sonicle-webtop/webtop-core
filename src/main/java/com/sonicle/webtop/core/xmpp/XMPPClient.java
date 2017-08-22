@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackConfiguration;
@@ -525,6 +525,9 @@ public class XMPPClient {
 					try {
 						final DateTime now = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().send(message);
+						if (logger.isTraceEnabled()) {
+							logger.trace("Message sent [{}, {}]", now, StringUtils.abbreviate(message.getBody(), 20));
+						}
 						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), now, now, message);
 
 						// TODO: threadify this?
@@ -549,6 +552,9 @@ public class XMPPClient {
 					try {
 						final DateTime now = ChatMessage.nowTimestamp();
 						chatObj.getRawChat().sendMessage(message);
+						if (logger.isTraceEnabled()) {
+							logger.trace("Message sent [{}, {}]", now, StringUtils.abbreviate(message.getBody(), 20));
+						}
 						ChatMessage chatMessage = new ChatMessage(chatJid, myJid, myResource, userNickname.toString(), now, now, message);
 
 						// TODO: threadify this?
@@ -1029,8 +1035,6 @@ public class XMPPClient {
 			if (isDisconnecting.get()) return;
 			
 			try {
-				final DateTime now = ChatMessage.nowTimestamp();
-				final DateTime delay = retrieveDelayInformation(message);
 				final Roster roster = getRoster();
 				checkRosterLoaded(roster);
 
@@ -1041,19 +1045,25 @@ public class XMPPClient {
 				synchronized(instantChats) {
 					chatObj = instantChats.get(chatJid);
 					if (chatObj == null) {
-						chatObj = doAddChat(false, false, chatJid, from, fromNick, now, from, chat);
+						chatObj = doAddChat(false, false, chatJid, from, fromNick, ChatMessage.nowTimestamp(), from, chat);
 					}
 				}
+				
+				final DateTime delay = retrieveDelayInformation(message);
+				final DateTime now = ChatMessage.nowTimestamp();
 				chatObj.getChatRoom().setLastSeenActivity(now);
 				
 				DateTime msgTs, delivTs;
 				if (delay != null) {
-					logger.debug("Message is delayed {}", delay);
 					msgTs = delay;
 					delivTs = now;
 				} else {
 					msgTs = now;
 					delivTs = now;
+				}
+				
+				if (logger.isTraceEnabled()) {
+					logger.trace("Message received [{}, {}, {}]", msgTs, delivTs, StringUtils.abbreviate(message.getBody(), 20));
 				}
 
 				try {
@@ -1150,10 +1160,7 @@ public class XMPPClient {
 
 		@Override
 		public void processMessage(Message message) {
-			final DateTime now = ChatMessage.nowTimestamp();
-			final DateTime delay = retrieveDelayInformation(message);
 			final Roster roster = getRoster();
-			chatRoom.setLastSeenActivity(now);
 			
 			if (message.getSubjects().size() > 0) {
 				logger.warn("Subject update {}", message);
@@ -1173,6 +1180,7 @@ public class XMPPClient {
 				// Ignore messages coming from myself
 				if (XMPPHelper.jidEquals(fromJid, getUserJid())) skipListener = true;
 				
+				final DateTime delay = retrieveDelayInformation(message);
 				if (!skipListener) {
 					if (delay != null && history != null) {
 						final HashSet<String> idsInHistory = history.getStanzaIds(getChatRoom().getChatJid());
@@ -1182,17 +1190,23 @@ public class XMPPClient {
 					}
 				}
 				
+				final DateTime now = ChatMessage.nowTimestamp();
+				chatRoom.setLastSeenActivity(now);
+				
+				DateTime msgTs, delivTs;
+				if (delay != null) {
+					msgTs = delay;
+					delivTs = now;
+				} else {
+					msgTs = now;
+					delivTs = now;
+				}
+				
+				if (logger.isTraceEnabled()) {
+					logger.trace("Message received [{}, {}, {}]", msgTs, delivTs, StringUtils.abbreviate(message.getBody(), 20));
+				}
+				
 				if (!skipListener) {
-					DateTime msgTs, delivTs;
-					if (delay != null) {
-						logger.debug("Message is delayed {}", delay);
-						msgTs = delay;
-						delivTs = now;
-					} else {
-						msgTs = now;
-						delivTs = now;
-					}
-					
 					try {
 						ChatMessage chatMessage = new ChatMessage(chatRoom.getChatJid(), fromJid.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromJid.getResourceOrNull()), fromNick, msgTs, delivTs, message);
 						listener.onChatRoomMessageReceived(chatRoom, chatMessage);
@@ -1200,7 +1214,6 @@ public class XMPPClient {
 						logger.error("Listener error", t);
 					}
 				}
-				
 				
 				// In groupchat the sender jid is not directly reconducible to
 				// an internal roster jid: it is like to "chat@conference.domain.top/nick"

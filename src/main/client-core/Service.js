@@ -103,7 +103,13 @@ Ext.define('Sonicle.webtop.core.Service', {
 				me.initIM({
 					callback: function(success, json) {
 						if (success) {
-							me.getVPController().getIMPanel().loadFriends();
+							var pnlIm = me.getVPController().getIMPanel(),
+								ps = json.data ? json.data.presenceStatus : null;
+							if (ps) {
+								pnlIm.setPresenceStatus(json.data.presenceStatus);
+								me.getVPController().getIMButton().setPresenceStatus(ps);
+							}
+							pnlIm.loadFriends();
 						} else {
 							if (!Ext.isEmpty(json.message)) WT.warn(json.message);
 						}

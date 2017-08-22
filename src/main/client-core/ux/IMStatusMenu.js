@@ -60,9 +60,9 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 	},
 	
 	updatePresenceStatus: function(nv, ov) {
-		if (!this.isConfiguring) {
-			var itm = this.getComponent(nv);
-			if (itm) itm.setChecked(true);
+		var me = this, itm;
+		if (!me.isConfiguring) {
+			me.checkStatus(nv);
 		}
 	},
 	
@@ -77,15 +77,24 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 					iconCls: me.self.statusIconCls(status),
 					group: 'imstatus',
 					checked: (status === active),
-					checkHandler: me.checkHandler,
-					scope: me
+					listeners: {
+						click: me.onMenuItemClick,
+						scope: me
+					}
 				});
 			});
 			return items;
 		},
 		
-		checkHandler: function(itm, checked) {
-			if (checked) this.fireEvent('presencestatusselect', this, itm.getItemId(), itm);
+		checkStatus: function(status) {
+			var itm  = this.getComponent(status);
+			if (itm) itm.setChecked(true);
+		},
+		
+		onMenuItemClick: function(itm) {
+			var me = this, status = itm.getItemId();
+			me.checkStatus(me.getPresenceStatus()); // Restore previous checked status
+			me.fireEvent('presencestatusselect', me, status, itm);
 		}
 	},
 	

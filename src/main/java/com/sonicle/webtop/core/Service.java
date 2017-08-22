@@ -81,6 +81,7 @@ import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
 import com.sonicle.webtop.core.bol.js.JsGridIMChatSearch;
 import com.sonicle.webtop.core.bol.js.JsGroupChat;
+import com.sonicle.webtop.core.bol.js.JsIMInit;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
@@ -1283,15 +1284,18 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals("init")) {
 				if (xmppCli != null) {
+					PresenceStatus ps = us.getIMPresenceStatus();
+					String statusMessage = "Hey there! I'm on WebTop";
+							
 					try {
-						xmppCli.updatePresence(us.getIMPresenceStatus(), "Hey there! I'm on WebTop");
+						xmppCli.updatePresence(ps, statusMessage);
 						
 					} catch(XMPPClientException ex1) {
 						if (!xmppCli.isConnected()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_CONNECTION));
 						if (!xmppCli.isAuthenticated()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_AUTHENTICATION));
 						throw ex1;
 					}
-					new JsonResult().printTo(out);
+					new JsonResult(new JsIMInit(ps, statusMessage)).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");
@@ -1309,7 +1313,6 @@ public class Service extends BaseService {
 					xmppCli.updatePresence(ps, statusMessage);
 					us.setIMPresenceStatus(ps);
 					us.setIMStatusMessage(statusMessage);
-
 					new JsonResult().printTo(out);
 					
 				} else {
@@ -1500,14 +1503,15 @@ public class Service extends BaseService {
 				
 				IMChat chat = coreMgr.getIMChat(chatId);
 				if (xmppCli != null) {
+					List<JsGridIMMessage> items = new ArrayList<>();
 					EntityBareJid chatJid = XMPPHelper.asEntityBareJid(chatId);
 					EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
 					
 					final DateTime messageTs = ChatMessage.nowTimestamp();
 					LocalDate lastDate = null;
-					HashMap<String, String> cacheNicks = new HashMap<>();
-					List<JsGridIMMessage> items = new ArrayList<>();
 					
+					HashMap<String, String> cacheNicks = new HashMap<>();
+					cacheNicks.put(myJid.toString(), xmppCli.getUserNickame()); // Fill cache with my data
 					List<IMMessage> messages = coreMgr.listIMMessages(chatId, ld, utz, !history);
 					
 					// Add unavailable warning at the beginning
@@ -1568,9 +1572,13 @@ public class Service extends BaseService {
 				
 				if (xmppCli != null) {
 					List<JsGridIMChatSearch> items = new ArrayList<>();
+					EntityBareJid myJid = xmppCli.getUserJid().asEntityBareJid();
+					
 					if (query != null) {
 						HashMap<String, String> cacheNicks = new HashMap<>();
+						cacheNicks.put(myJid.toString(), xmppCli.getUserNickame()); // Fill cache with my data
 						List<IMMessage> messages = coreMgr.findIMMessagesByQuery(chatId, "%"+query+"%", utz);
+						
 						for(IMMessage mes : messages) {
 							if (!cacheNicks.containsKey(mes.getSenderJid())) {
 								if (xmppCli.isAuthenticated()) {
@@ -1719,7 +1727,7 @@ public class Service extends BaseService {
 		public void onChatRoomAdded(ChatRoom chatRoom, String ownerNick, boolean self) {
 			if (chatRoom instanceof InstantChatRoom) {
 				InstantChatRoom dcr = (InstantChatRoom)chatRoom;
-				logger.debug("Adding direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getOwnerJid().toString());
+				logger.trace("Adding direct chat room [{}, {}]", dcr.getChatJid().toString(), dcr.getOwnerJid().toString());
 				
 				try {
 					IMChat chat = new IMChat();
@@ -1736,7 +1744,7 @@ public class Service extends BaseService {
 				
 			} else if (chatRoom instanceof GroupChatRoom) {
 				GroupChatRoom gcr = (GroupChatRoom)chatRoom;
-				logger.debug("Adding group chat room [{}, {}]", gcr.getChatJid().toString(), gcr.getOwnerJid().toString());
+				logger.trace("Adding group chat room [{}, {}]", gcr.getChatJid().toString(), gcr.getOwnerJid().toString());
 				
 				try {
 					IMChat chat = new IMChat();
@@ -1783,7 +1791,7 @@ public class Service extends BaseService {
 		@Override
 		public void onChatRoomMessageSent(ChatRoom chatRoom, ChatMessage message) {
 			//DateTimeZone utz = getEnv().getProfile().getTimeZone();
-			logger.debug("Message sent {}, {}, {}", chatRoom.getChatJid().toString(), message.getStanzaId(), message.getRawMessage().getBody());
+			logger.trace("Message sent {}, {}, {}", chatRoom.getChatJid().toString(), message.getStanzaId(), message.getRawMessage().getBody());
 			
 			try {
 				IMMessage mes = createIMMessage(chatRoom.getChatJid(), message);
