@@ -31,12 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.ChatPartecipantLkp', {
-	extend: 'WTA.ux.data.SimpleModel',
+Ext.define('Sonicle.webtop.core.model.GroupChatMember', {
+	extend: 'WTA.ux.data.BaseModel',
 	
+	identifier: 'negativestring',
+	idProperty: 'friendId',
 	fields: [
-		WTF.calcField('label', 'string', ['id', 'desc'], function(v, rec) {
-			return WTA.ux.data.SimpleModel.buildLabel('*', rec.get('desc'));
-		})
+		WTF.field('friendId', 'string', false),
+		WTF.field('friendRole', 'string', true)
 	]
 });

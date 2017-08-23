@@ -110,6 +110,7 @@ import com.sonicle.webtop.core.sdk.UploadException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
+import com.sonicle.webtop.core.xmpp.ChatMember;
 import com.sonicle.webtop.core.xmpp.Friend;
 import com.sonicle.webtop.core.xmpp.FriendPresence;
 import com.sonicle.webtop.core.xmpp.ChatMessage;
@@ -1613,16 +1614,16 @@ public class Service extends BaseService {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				
 				ChatRoom chat = xmppCli.getChat(id);
-				List<String> partecipants = xmppCli.getChatPartecipants(id);
-				new JsonResult(new JsGroupChat((GroupChatRoom)chat, partecipants)).printTo(out);
+				List<ChatMember> members = xmppCli.getChatMembers(id);
+				new JsonResult(new JsGroupChat((GroupChatRoom)chat, members)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsGroupChat> pl = ServletUtils.getPayload(request, JsGroupChat.class);
 				
 				if (xmppCli != null) {
 					ArrayList<EntityBareJid> withUsers = new ArrayList<>();
-					for(JsGroupChat.Partecipant partecipant : pl.data.partecipants) {
-						withUsers.add(XMPPHelper.asEntityBareJid(partecipant.friendId));
+					for(JsGroupChat.Member member : pl.data.members) {
+						withUsers.add(XMPPHelper.asEntityBareJid(member.friendId));
 					}
 					EntityBareJid chatId = xmppCli.newGroupChat(pl.data.name, withUsers);
 					pl.data.id = chatId.asEntityBareJidString();

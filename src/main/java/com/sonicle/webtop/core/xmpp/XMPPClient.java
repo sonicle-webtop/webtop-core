@@ -69,6 +69,7 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqlast.packet.LastActivity;
+import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -191,19 +192,6 @@ public class XMPPClient {
 		}
 	}
 	
-	private Presence createOfflinePresence() {
-		Presence presence = null;
-		if (this.lastPresence != null) {
-			presence = this.lastPresence.clone();
-			presence.setType(Presence.Type.unavailable);
-		} else {
-			presence = new Presence(Presence.Type.unavailable);
-		}
-		presence.setMode(Presence.Mode.away);
-		//presence.setPriority(24);
-		return presence;
-	}
-	
 	public EntityFullJid getUserJid() {
 		return this.userJid;
 	}
@@ -227,21 +215,6 @@ public class XMPPClient {
 		} catch(SmackException | InterruptedException ex) {
 			throw new XMPPClientException(ex);
 		}
-		
-		/*
-		try {
-			Presence presence = new Presence(PresenceStatus.presenceType(presenceStatus));
-			//presence.setPriority(24);
-			Presence.Mode mode = PresenceStatus.presenceMode(presenceStatus);
-			if (mode != null) presence.setMode(mode);
-			if (statusText != null) presence.setStatus(statusText);
-			this.lastPresence = presence;
-			con.sendStanza(presence);
-			
-		} catch(SmackException | InterruptedException ex) {
-			throw new XMPPClientException(ex);
-		}
-		*/
 	}
 	
 	public List<Friend> listFriends() throws XMPPClientException {
@@ -439,23 +412,66 @@ public class XMPPClient {
 		}
 	}
 	
-	public List<String> getChatPartecipants(String chatJid) throws XMPPClientException {
-		return getChatPartecipants(XMPPHelper.asEntityBareJid(chatJid));
+	public List<ChatMember> getChatMembers(String chatJid) throws XMPPClientException {
+		return getChatMembers(XMPPHelper.asEntityBareJid(chatJid));
 	}
 	
-	public List<String> getChatPartecipants(EntityBareJid chatJid) throws XMPPClientException {
-		ArrayList<String> partecipants = new ArrayList<>();
+	public List<ChatMember> getChatMembers(EntityBareJid chatJid) throws XMPPClientException {
+		ArrayList<ChatMember> members = new ArrayList<>();
+		
+		checkAuthentication();
+		
+		final EntityBareJid myJid = userJid.asEntityBareJid();
 		
 		if (isInstantChat(chatJid)) {
 			synchronized(instantChats) {
 				IChat chatObj = instantChats.get(chatJid);
 				if (chatObj == null) return null;
-				partecipants.add(userJid.asEntityBareJidString());
-				partecipants.add(chatObj.getChatRoom().getWithJid().toString());
-				return partecipants;
+				
+				try {
+					final Roster roster = getRoster();
+					checkRosterLoaded(roster);
+					
+					final String withNickname = getRosterEntryNickname(roster, chatObj.getChatRoom().getWithJid(), true);
+					if (chatObj.getChatRoom().isOwner(myJid)) {
+						members.add(new ChatMember(myJid, MemberRole.OWNER, userNickname.toString()));
+						members.add(new ChatMember(chatObj.getChatRoom().getWithJid(), MemberRole.PARTECIPANT, withNickname));
+					} else {
+						members.add(new ChatMember(chatObj.getChatRoom().getWithJid(), MemberRole.OWNER, withNickname));
+						members.add(new ChatMember(myJid, MemberRole.PARTECIPANT, userNickname.toString()));
+					}
+					
+				} catch(SmackException | InterruptedException ex) {
+					throw new XMPPClientException(ex);
+				}
+				return members;
 			}
 		} else {
-			throw new UnsupportedOperationException("Not implemented for now");
+			synchronized(groupChats) {
+				GChat chatObj = groupChats.get(chatJid);
+				if (chatObj == null) return null;
+				
+				try {
+					final MultiUserChat muc = chatObj.getRawChat();
+					final Roster roster = getRoster();
+					checkRosterLoaded(roster);
+					
+					for(Affiliate aff : muc.getOwners()) {
+						final EntityBareJid jid = aff.getJid().asEntityBareJidOrThrow();
+						final String nick = getEntryNickname(roster, jid, true);
+						members.add(new ChatMember(jid, MemberRole.OWNER, nick));
+					}
+					for(Affiliate aff : muc.getMembers()) {
+						final EntityBareJid jid = aff.getJid().asEntityBareJidOrThrow();
+						final String nick = getEntryNickname(roster, jid, true);
+						members.add(new ChatMember(jid, MemberRole.PARTECIPANT, nick));
+					}
+					return members;
+					
+				} catch(XMPPException | SmackException | InterruptedException ex) {
+					throw new XMPPClientException(ex);
+				}
+			}
 		}
 	}
 	
@@ -662,6 +678,19 @@ public class XMPPClient {
 		}
 	}
 	
+	private Presence createOfflinePresence() {
+		Presence presence = null;
+		if (this.lastPresence != null) {
+			presence = this.lastPresence.clone();
+			presence.setType(Presence.Type.unavailable);
+		} else {
+			presence = new Presence(Presence.Type.unavailable);
+		}
+		presence.setMode(Presence.Mode.away);
+		//presence.setPriority(24);
+		return presence;
+	}
+	
 	private void checkRosterLoaded(final Roster roster) throws SmackException, InterruptedException {
 		if (!roster.isLoaded()) roster.reloadAndWait();
 	}
@@ -706,6 +735,14 @@ public class XMPPClient {
 	
 	private MultiUserChatManager getMUChatManager() {
 		return MultiUserChatManager.getInstanceFor(con);
+	}
+	
+	private String getEntryNickname(Roster roster, BareJid jid, boolean guessIfNull) {
+		if (XMPPHelper.jidBareEquals(jid, userJid)) {
+			return userNickname.toString();
+		} else {
+			return getRosterEntryNickname(roster, jid, guessIfNull);
+		}
 	}
 	
 	private String getRosterEntryNickname(Roster roster, BareJid jid, boolean guessIfNull) {
@@ -1174,11 +1211,9 @@ public class XMPPClient {
 				// NB: Now we assume that the nick provided is reconducible to a real user!
 				final Jid rawFromJid = message.getFrom();
 				final GuessMucFromResult guessedFrom = guessMucFrom(roster, getRawChat(), rawFromJid.asEntityFullJidOrThrow());
-				final EntityFullJid fromJid = guessedFrom.jid;
-				final String fromNick = guessedFrom.nick;
 				
 				// Ignore messages coming from myself
-				if (XMPPHelper.jidEquals(fromJid, getUserJid())) skipListener = true;
+				if (XMPPHelper.jidEquals(guessedFrom.jid, getUserJid())) skipListener = true;
 				
 				final DateTime delay = retrieveDelayInformation(message);
 				if (!skipListener) {
@@ -1208,7 +1243,7 @@ public class XMPPClient {
 				
 				if (!skipListener) {
 					try {
-						ChatMessage chatMessage = new ChatMessage(chatRoom.getChatJid(), fromJid.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(fromJid.getResourceOrNull()), fromNick, msgTs, delivTs, message);
+						ChatMessage chatMessage = new ChatMessage(chatRoom.getChatJid(), guessedFrom.jid.asEntityBareJidIfPossible(), XMPPHelper.asResourcepartString(guessedFrom.jid.getResourceOrNull()), guessedFrom.nick, msgTs, delivTs, message);
 						listener.onChatRoomMessageReceived(chatRoom, chatMessage);
 					} catch(Throwable t) {
 						logger.error("Listener error", t);
@@ -1375,6 +1410,16 @@ public class XMPPClient {
 	
 	public static boolean isInstantChat(String chatEntityBareJid) {
 		return StringUtils.contains(chatEntityBareJid, "@"+CHAT_DOMAIN_PREFIX+".");
+	}
+	
+	private final class GuessMucAffiliateResult {
+		public EntityBareJid jid;
+		public String nick;
+		
+		public GuessMucAffiliateResult(EntityBareJid jid, String nick) {
+			this.jid = jid;
+			this.nick = nick;
+		}
 	}
 	
 	private final class GuessMucFromResult {

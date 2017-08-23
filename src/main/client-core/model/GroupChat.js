@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.model.GroupChat', {
 	extend: 'WTA.model.Base',
 	requires: [
-		'Sonicle.webtop.core.model.GroupChatPartecipant'
+		'Sonicle.webtop.core.model.GroupChatMember'
 	],
 	proxy: WTF.apiProxy(WT.ID, 'ManageGroupChat', 'data', {
 		writer: {
@@ -50,6 +50,6 @@ Ext.define('Sonicle.webtop.core.model.GroupChat', {
 		WTF.field('name', 'string', false)
 	],
 	hasMany: [
-		WTF.hasMany('partecipants', 'Sonicle.webtop.core.model.GroupChatPartecipant')
+		WTF.hasMany('members', 'Sonicle.webtop.core.model.GroupChatMember')
 	]
 });

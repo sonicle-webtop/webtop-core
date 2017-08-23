@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.webtop.core.xmpp.ChatMember;
 import com.sonicle.webtop.core.xmpp.GroupChatRoom;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,25 +46,27 @@ import java.util.List;
 public class JsGroupChat {
 	public String id;
 	public String name;
-	public List<Partecipant> partecipants = new ArrayList<>();
+	public List<Member> members = new ArrayList<>();
 	
 	public JsGroupChat() {}
 	
-	public JsGroupChat(GroupChatRoom chat, List<String> partecipants) {
+	public JsGroupChat(GroupChatRoom chat, List<ChatMember> members) {
 		this.id = chat.getChatJid().asEntityBareJidString();
 		this.name = chat.getName();
-		for(String partecipant : partecipants) {
-			this.partecipants.add(new Partecipant(partecipant));
+		for(ChatMember member : members) {
+			this.members.add(new Member(member));
 		}
 	}
 	
-	public static class Partecipant {
+	public static class Member {
 		public String friendId;
+		public String friendRole;
 		
-		public Partecipant() {}
+		public Member() {}
 		
-		public Partecipant(String friendId) {
-			this.friendId = friendId;
+		public Member(ChatMember member) {
+			this.friendId = member.getId();
+			this.friendRole = EnumUtils.toSerializedName(member.getRole());
 		}
 	}
 }

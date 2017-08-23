@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 	alternateClassName: 'WTA.view.GroupChat',
 	extend: 'WTA.sdk.ModelView',
 	requires: [
-		'Sonicle.webtop.core.ux.grid.ChatPartecipant',
+		'Sonicle.webtop.core.ux.grid.ChatMember',
 		'Sonicle.webtop.core.model.GroupChat'
 	],
 	
@@ -72,15 +72,15 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 					anchor: '100%'
 				}]
 			}, {
-				xtype: 'wtchatpartecipantgrid',
+				xtype: 'wtchatmembergrid',
 				sid: me.mys.ID,
-				title: me.mys.res('groupChat.gppartecipant.tit'),
+				title: me.mys.res('groupChat.gpmember.tit'),
 				bind: {
-					store: '{record.partecipants}'
+					store: '{record.members}'
 				},
 				listeners: {
 					pick: function(s, vals, recs) {
-						me.getModel().partecipants().add({
+						me.getModel().members().add({
 							friendId: vals[0]
 						});
 					}

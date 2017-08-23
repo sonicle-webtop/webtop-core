@@ -108,8 +108,22 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	initComponent: function() {
 		var me = this;
 		
+		me.addAct('openChat', {
+			text: WT.res('act-open.lbl'),
+			handler: function() {
+				var rec = me.gpChats().getSelection()[0];
+				if (rec) me.fireChatDblClickFromRec(rec);
+			}
+		});
+		me.addAct('openFriendChat', {
+			text: WT.res('wtimpanel.act-openFriendChat.lbl'),
+			handler: function() {
+				var gp = me.gpFriends(), rec = gp.getSelection()[0];
+				if (rec) me.onFriendDblClick(gp, rec);
+			}
+		});
 		me.addAct('deleteChat', {
-			text: WT.res('act-remove.lbl'),
+			text: WT.res('act-delete.lbl'),
 			iconCls: WTF.cssIconCls(WT.XID, 'remove', 'xs'),
 			handler: function() {
 				var rec = me.gpChats().getSelection()[0];
@@ -306,20 +320,13 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				listeners: {
 					afterrender: function(s) {
 						Ext.defer(me.expandOnlineGroup, 200, me, [me.gpFriends()]);
-						/*
-						Ext.defer(function() {
-							s.getView().findFeature('grouping').expand("1", {highlight: true});
-						}, 200);
-						*/
 					},
 					rowdblclick: function(s, rec) {
-						var chatId = rec.get('dChatId'),
-								rec2 = me.lookupReference('gpchats').getStore().getById(chatId);
-						if (rec2) {
-							me.fireChatDblClickFromRec(rec2);
-						} else {
-							me.fireEvent('frienddblclick', me, rec.get('id'), rec.get('nick'), rec.get('dChatId'));
-						}
+						me.onFriendDblClick(s, rec);
+					},
+					rowcontextmenu: function(s, rec, el, rowIdx, e) {
+						e.stopEvent();
+						me.cxmFriend().showAt(e.getXY());
 					}
 				}
 			}]
@@ -343,9 +350,20 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		return me.getRef('cxmChat') || me.addRef('cxmChat', Ext.create({
 			xtype: 'menu',
 			items: [
+				me.getAct('openChat'),
 				me.getAct('deleteChat'),
 				'-',
 				me.getAct('addGroupChat')
+			]
+		}));
+	},
+	
+	cxmFriend: function() {
+		var me = this;
+		return me.getRef('cxmFriend') || me.addRef('cxmFriend', Ext.create({
+			xtype: 'menu',
+			items: [
+				me.getAct('openFriendChat')
 			]
 		}));
 	},
@@ -474,6 +492,17 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		onBtnStatusPresenseSelect: function(s, status) {
 			var me = this;
 			me.fireEvent('presencestatusselect', me, status);
+		},
+		
+		onFriendDblClick: function(s, rec) {
+			var me = this,
+					chatId = rec.get('dChatId'),
+					rec2 = me.gpChats().getStore().getById(chatId);
+			if (rec2) {
+				me.fireChatDblClickFromRec(rec2);
+			} else {
+				me.fireEvent('frienddblclick', me, rec.get('id'), rec.get('nick'), rec.get('dChatId'));
+			}
 		},
 		
 		onFriendsSearchChange: function(s) {

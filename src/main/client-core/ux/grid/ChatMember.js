@@ -31,12 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.model.GroupChatPartecipant', {
-	extend: 'WTA.ux.data.BaseModel',
+Ext.define('Sonicle.webtop.core.ux.grid.ChatMember', {
+	extend: 'Sonicle.webtop.core.ux.grid.Pickable',
+	alias: 'widget.wtchatmembergrid',
+	requires: [
+		'Sonicle.webtop.core.model.ChatMemberLkp'
+	],
 	
-	identifier: 'negativestring',
-	idProperty: 'friendId',
-	fields: [
-		WTF.field('friendId', 'string', false)
-	]
+	constructor: function(cfg) {
+		var me = this;
+		Ext.apply(cfg, {
+			lookupConfig: {
+				model: 'Sonicle.webtop.core.model.ChatMemberLkp',
+				action: 'LookupIMFriends',
+				displayField: 'desc'
+			},
+			columnConfig: {
+				dataIndex: 'friendId',
+				displayField: 'desc'
+			},
+			pickerConfig: {
+				titleKey: 'wtchatmembergrid.picker.tit',
+				searchTextKey: 'textfield.search.emp',
+				valueField: 'id',
+				displayField: 'desc'
+			},
+			emptyTextKey: 'wtchatmembergrid.emp'
+		});
+		me.callParent([cfg]);
+	}
 });

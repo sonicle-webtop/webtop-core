@@ -31,14 +31,14 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ChatPartecipantGrid', {
+Ext.define('Sonicle.webtop.core.ux.ChatMemberGrid', {
 	extend: 'Ext.grid.Panel',
-	alias: 'widget.wtchatpartecipantgrid',
+	alias: 'widget.wtchatmembergrid',
 	requires: [
 		'Sonicle.picker.List',
 		'Sonicle.grid.column.Lookup',
 		'WTA.ux.PickerWindow',
-		'Sonicle.webtop.core.model.ChatPartecipantLkp'
+		'Sonicle.webtop.core.model.ChatMemberLkp'
 	],
 	
 	/*
@@ -51,8 +51,8 @@ Ext.define('Sonicle.webtop.core.ux.ChatPartecipantGrid', {
 		
 		me.lookupStore = Ext.create('Ext.data.Store', {
 			autoLoad: true,
-			model: 'Sonicle.webtop.core.model.ChatPartecipantLkp',
-			proxy: WTF.proxy(WT.ID, 'LookupChatPartecipants', 'data')
+			model: 'Sonicle.webtop.core.model.ChatMemberLkp',
+			proxy: WTF.proxy(WT.ID, 'LookupChatMembers', 'data')
 		});
 		
 		me.selModel = {
@@ -62,7 +62,7 @@ Ext.define('Sonicle.webtop.core.ux.ChatPartecipantGrid', {
 		if (!me.viewConfig) {
 			me.viewConfig = {
 				deferEmptyText: false,
-				emptyText: WT.res(WT.ID, 'wtchatpartecipantgrid.emp')
+				emptyText: WT.res(WT.ID, 'wtchatmembergrid.emp')
 			};
 		}
 		
@@ -100,7 +100,7 @@ Ext.define('Sonicle.webtop.core.ux.ChatPartecipantGrid', {
 		var me = this;
 		return Ext.create({
 			xtype: 'wtpickerwindow',
-			title: WT.res(WT.ID, 'wtchatpartecipantgrid.picker.tit'),
+			title: WT.res(WT.ID, 'wtchatmembergrid.picker.tit'),
 			height: 350,
 			items: [{
 				xtype: 'solistpicker',

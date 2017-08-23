@@ -33,51 +33,32 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
-import org.joda.time.DateTime;
 import org.jxmpp.jid.EntityBareJid;
 
 /**
  *
  * @author malbinola
  */
-public class ChatRoom {
-	private final EntityBareJid chatJid;
-	private final EntityBareJid ownerJid;
-	private String name;
-	private DateTime lastSeenActivity;
-
-	public ChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity) {
-		this.chatJid = chatJid;
-		this.ownerJid = ownerJid;
-		this.name = name;
-		this.lastSeenActivity = lastSeenActivity;
-	}
-
-	public EntityBareJid getChatJid() {
-		return chatJid;
-	}
+public class ChatMember {
+	private final EntityBareJid jid;
+	private final MemberRole role;
+	private final String nickname;
 	
-	public EntityBareJid getOwnerJid() {
-		return ownerJid;
-	}
-	
-	public String getName() {
-		return name;
+	public ChatMember(EntityBareJid jid, MemberRole role, String nickname) {
+		this.jid = jid;
+		this.role = role;
+		this.nickname = nickname;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public String getId() {
+		return jid.toString();
 	}
 
-	public DateTime getLastSeenActivity() {
-		return lastSeenActivity;
+	public MemberRole getRole() {
+		return role;
 	}
 
-	public void setLastSeenActivity(DateTime lastSeenActivity) {
-		this.lastSeenActivity = lastSeenActivity;
-	}
-	
-	public boolean isOwner(EntityBareJid jid) {
-		return XMPPHelper.jidEquals(ownerJid, jid);
+	public String getNickname() {
+		return nickname;
 	}
 }

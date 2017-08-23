@@ -33,51 +33,13 @@
  */
 package com.sonicle.webtop.core.xmpp;
 
-import org.joda.time.DateTime;
-import org.jxmpp.jid.EntityBareJid;
+import com.google.gson.annotations.SerializedName;
 
 /**
  *
  * @author malbinola
  */
-public class ChatRoom {
-	private final EntityBareJid chatJid;
-	private final EntityBareJid ownerJid;
-	private String name;
-	private DateTime lastSeenActivity;
-
-	public ChatRoom(EntityBareJid chatJid, EntityBareJid ownerJid, String name, DateTime lastSeenActivity) {
-		this.chatJid = chatJid;
-		this.ownerJid = ownerJid;
-		this.name = name;
-		this.lastSeenActivity = lastSeenActivity;
-	}
-
-	public EntityBareJid getChatJid() {
-		return chatJid;
-	}
-	
-	public EntityBareJid getOwnerJid() {
-		return ownerJid;
-	}
-	
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public DateTime getLastSeenActivity() {
-		return lastSeenActivity;
-	}
-
-	public void setLastSeenActivity(DateTime lastSeenActivity) {
-		this.lastSeenActivity = lastSeenActivity;
-	}
-	
-	public boolean isOwner(EntityBareJid jid) {
-		return XMPPHelper.jidEquals(ownerJid, jid);
-	}
+public enum MemberRole {
+	@SerializedName("partecipant") PARTECIPANT,
+	@SerializedName("owner") OWNER;
 }

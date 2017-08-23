@@ -132,14 +132,21 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 		// Inject a custom implementation of walkCells which only goes up or down
 		me.getView().walkCells = this.walkCells;
 		
-		// Set up our default editor set for the 4 atomic data types 
+		// Set up our default editor set for the some data types
 		me.editors = {
 			'string': new Ext.grid.CellEditor({field: new Ext.form.field.Text({selectOnFocus: true})}),
 			'boolean' : new Ext.grid.CellEditor({field: new Ext.form.field.ComboBox({
 				editable: false,
 				store: [[true, me.headerCt.trueText], [false, me.headerCt.falseText]]
 			})}),
-			'number': new Ext.grid.CellEditor({field: new Ext.form.field.Number({selectOnFocus: true})}),
+			'number': new Ext.grid.CellEditor({field: new Ext.form.field.Number({
+					selectOnFocus: true,
+					allowDecimals: true
+			})}),
+			'integer': new Ext.grid.CellEditor({field: new Ext.form.field.Number({
+					selectOnFocus: true,
+					allowDecimals: false
+			})}),
 			'date': new Ext.grid.CellEditor({field: new Ext.form.field.Date({selectOnFocus: true})})
 		};
 	},
@@ -213,6 +220,9 @@ Ext.define('Sonicle.webtop.core.ux.grid.Setting', {
 				break;
 			case 'number':
 				ed = me.editors['number'];
+				break;
+			case 'integer':
+				ed = me.editors['integer'];
 				break;
 			case 'date':
 				ed = me.editors['date'];
