@@ -424,6 +424,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			}
 		}]);
 		
+		me.on('afterrender', me.onAfterrender, me, {single: true});
 		me.on('activate', me.onActivate);
 		if (!me.groupChat) me.refreshFriendPresence();
 	},
@@ -547,13 +548,17 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	},
 	
 	privates: {
+		onAfterrender: function(s) {
+			s.lref('fldmessage').focus(true, true);
+		},
+
 		onActivate: function(s) {
 			if (s.scrollOnActivate) {
 				s.scrollOnActivate = false;
 				s.scrollToEnd();
 			}
 			s.setHotMarker(false);
-			s.lref('fldmessage').focus(true);					
+			s.lref('fldmessage').focus(true, true);
 		},
 		
 		addMessage: function(data) {

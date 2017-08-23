@@ -172,13 +172,12 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			menuTbItms.push({
 				xtype: 'wtimbutton',
 				reference: 'imbtn',
-				presenceStatus: 'offline',
-				//presenceStatus: WT.getVar('imPresenceStatus'),
+				presenceStatus: 'offline', // We start offline, the real status will be set on init
 				statusMessage: WT.getVar('imStatusMessage'),
 				listeners: {
 					click: 'onIMClick'
-				},
-				width: 48
+				}
+				//width: 48
 			});
 		}
 		menuTbItms.push({
