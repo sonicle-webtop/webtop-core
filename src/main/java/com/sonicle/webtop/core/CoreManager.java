@@ -504,7 +504,7 @@ public class CoreManager extends BaseManager {
 	
 	private void buildProfileRecipientsProviderCache() {
 		for(String serviceId : listAllowedServices()) {
-			BaseManager manager = WT.getServiceManager(serviceId, getTargetProfileId());
+			BaseManager manager = WT.getServiceManager(serviceId, true, getTargetProfileId());
 			if(manager instanceof IRecipientsProvidersSource) {
 				List<RecipientsProviderBase> providers = ((IRecipientsProvidersSource)manager).returnRecipientsProviders();
 				if(providers == null) continue;

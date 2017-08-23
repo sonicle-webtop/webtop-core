@@ -236,22 +236,22 @@ public class WT {
 	
 	public static BaseManager getServiceManager(String serviceId) {
 		WebTopSession session = RunContext.getWebTopSession();
-		if(session != null) {
+		if (session != null) {
 			return session.getServiceManager(serviceId);
 		} else {
 			// For admin subject during application startup
 			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
-			return getWTA().getServiceManager().instantiateServiceManager(serviceId, false, RunContext.getRunProfileId());
+			return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
 		}
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, UserProfileId targetProfileId) {
-		return getServiceManager(serviceId, false, targetProfileId);
+		return getServiceManager(serviceId, true, targetProfileId);
 	}
 	
 	public static BaseManager getServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
-		if(targetProfileId.equals(RunContext.getRunProfileId())) {
+		if (targetProfileId.equals(RunContext.getRunProfileId())) {
 			return getServiceManager(serviceId);
 		} else {
 			return getWTA().getServiceManager().instantiateServiceManager(serviceId, fastInit, targetProfileId);
