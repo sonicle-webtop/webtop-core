@@ -638,6 +638,21 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		}
 	},
 	
+	/**
+	 * Convenience function to run a default action on an email.
+	 * At the moment, WT will search for the mail service and start a new email.
+	 * @param {String} address The email address.
+	 */
+	handleMailAddress: function(address) {
+		var mys=WT.getApp().getService("com.sonicle.webtop.mail");
+		if (mys) {
+			mys.startNewMessage(mys.currentFolder,{
+				recipients: [ { rtype: 'to', email: address } ],
+				format: mys.getVar("format")
+			});
+		}
+	},
+	
 	reload: function() {
 		window.location.reload();
 	},
