@@ -218,7 +218,7 @@ public class WT {
 	}
 	
 	public static CoreManager getCoreManager(UserProfileId targetProfileId) {
-		return getCoreManager(false, targetProfileId);
+		return getCoreManager(true, targetProfileId);
 	}
 	
 	public static CoreManager getCoreManager(boolean fastInit, UserProfileId targetProfileId) {

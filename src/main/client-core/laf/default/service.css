@@ -529,10 +529,9 @@ div.wt-wnlist {
 	align-items: center;
     -webkit-justify-content: center;
     justify-content: center;
-	width: 250px;
 	max-height: 250px;
 }
 
 .wt-chatmsgcol-imgfilebody img {
-	width: 100%;
+	max-width: 250px;
 }
