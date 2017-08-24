@@ -47,8 +47,8 @@ public class CoreAdminManifest extends ServiceManifest {
 	public static final String XID = "wtadm";
 	public static final String JAVA_PACKAGE = "com.sonicle.webtop.core.admin";
 	public static final String JS_PACKAGE = "Sonicle.webtop.core.admin";
-	public static final String VERSION = "5.0.17";
-	public static final String BUILD_DATE = "2017-08-23";
+	public static final String VERSION = "5.0.18";
+	public static final String BUILD_DATE = "2017-08-24";
 	public static final String CONTROLLER_CLASSNAME = "com.sonicle.webtop.core.admin.Controller";
 	public static final String MANAGER_CLASSNAME = "com.sonicle.webtop.core.admin.CoreAdminManager";
 	public static final String PRIVATE_SERVICE_CLASSNAME = "com.sonicle.webtop.core.admin.Service";
