@@ -83,10 +83,10 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		return url;
 		*/
 		
-		var pars = Ext.apply(params || {}, {
+		var pars = Ext.apply({
 			service: sid,
 			action: action
-		});
+		}, params || {});
 		return WTF.requestBaseUrl(pars);
 	},
 	
@@ -99,11 +99,12 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @return {String} The encoded URL
 	 */
 	processBinUrl: function(sid, action, params) {
-		var pars = Ext.apply(params || {}, {
+		//Do note change parameters order, needed by message editor cids management
+		var pars = Ext.apply({
 			service: sid,
 			action: action,
 			nowriter: true
-		});
+		}, params || {});
 		return WTF.requestBaseUrl(pars);
 	},
 	
