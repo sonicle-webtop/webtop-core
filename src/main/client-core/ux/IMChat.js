@@ -119,6 +119,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					WT.warn(WT.res(WT.ID, 'error.upload.sizeexceeded', Sonicle.Bytes.format(maxSize)));
 				},
 				fileuploaded: function(s, file, json) {
+					me.lref('card').getLayout().setActiveItem(me.lref('gptoday'));
 					me.addMessage(json.data);
 					if (WT.getVar('imSoundOnMessageSent')) {
 						Sonicle.Sound.play('wt-im-sent');
