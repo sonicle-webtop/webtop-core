@@ -142,7 +142,7 @@ public class WebTopDirectory extends AbstractDirectory {
 			if (algo.equals(CredentialAlgorithm.PLAIN)) {
 				logger.debug("Encrypting PLAIN password");
 				CredentialAlgorithm newAlgo = CredentialAlgorithm.SHA;
-				doUpdatePassword(con, principal.getDomainId(), principal.getUserId(), newAlgo, entry.getPassword());
+				doUpdatePassword(false, con, principal.getDomainId(), principal.getUserId(), newAlgo, entry.getPassword());
 			}
 			
 			return createUserEntry(principal);
@@ -210,27 +210,17 @@ public class WebTopDirectory extends AbstractDirectory {
 			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
 			
 			if (oldPassword != null) {
-				if (entry != null) {
+				if (entry == null) {
+					logger.warn("Cannot check oldPassword. Vault entry not found [{}, {}]", domainId, userId);
+				} else {
 					algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
 					boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), entry.getPassword());
 					if(!result) throw new EntryException("Old password does not match the current one");
-				} else {
-					logger.warn("Vault entry not found [{}, {}]", domainId, userId);
 				}
 			}
 			
-			/*
-			OLocalVaultEntry entry = lvdao.selectByDomainUser(con, domainId, userId);
-			if(entry == null) throw new DirectoryException("User not found [{0}]", new UserProfileId(domainId, userId).toString());
-			
-			CredentialAlgorithm algo = CredentialAlgorithm.valueOf(entry.getPasswordType());
-			if(oldPassword != null) {
-				boolean result = CredentialAlgorithm.compare(algo, new String(oldPassword), entry.getPassword());
-				if(!result) throw new EntryException("Old password does not match the current one");
-			}
-			*/
-			
-			doUpdatePassword(con, domainId, userId, algo, new String(newPassword));
+			int ret = doUpdatePassword(false, con, domainId, userId, algo, userId);
+			if (ret == 0) doUpdatePassword(true, con, domainId, userId, algo, userId);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new DirectoryException(ex, "DB error");
@@ -265,13 +255,27 @@ public class WebTopDirectory extends AbstractDirectory {
 		throw new DirectoryException("Capability not supported");
 	}
 	
-	private int doUpdatePassword(Connection con, String domainId, String userId, CredentialAlgorithm algo, String password) throws DAOException {
-		return doUpdatePassword(con, domainId, userId, algo.name(), CredentialAlgorithm.encrypt(algo, password));
+	private int doUpdatePassword(boolean insert, Connection con, String domainId, String userId, CredentialAlgorithm algo, String password) throws DAOException {
+		return doUpdatePassword(insert, con, domainId, userId, algo.name(), CredentialAlgorithm.encrypt(algo, password));
 	}
 	
-	private int doUpdatePassword(Connection con, String domainId, String userId, String passwordType, String password) throws DAOException {
-		LocalVaultDAO lvdao = LocalVaultDAO.getInstance();
-		return lvdao.updatePasswordByDomainUser(con, domainId, userId, passwordType, password);
+	private int doUpdatePassword(boolean insert, Connection con, String domainId, String userId, String passwordType, String password) throws DAOException {
+		LocalVaultDAO lvDao = LocalVaultDAO.getInstance();
+		
+		if (insert) {
+			return lvDao.insert(con, createOLocalVaultEntry(domainId, userId, passwordType, password));
+		} else {
+			return lvDao.updatePasswordByDomainUser(con, domainId, userId, passwordType, password);
+		}
+	}
+	
+	protected OLocalVaultEntry createOLocalVaultEntry(String domainId, String userId, String passwordType, String password) {
+		OLocalVaultEntry olve = new OLocalVaultEntry();
+		olve.setDomainId(domainId);
+		olve.setUserId(userId);
+		olve.setPasswordType(passwordType);
+		olve.setPassword(password);
+		return olve;
 	}
 	
 	protected AuthUser createUserEntry(Principal principal) {
