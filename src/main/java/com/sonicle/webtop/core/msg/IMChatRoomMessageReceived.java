@@ -31,54 +31,35 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.msg;
 
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
  * @author malbinola
  */
-public class ServiceMessage {
-	protected String service;
-	protected String action;
-	protected Object payload;
+public class IMChatRoomMessageReceived extends ServiceMessage {
+	public static final String ACTION = "imChatRoomMessageReceived";
 	
-	public ServiceMessage(String service, String action) {
-		super();
-		this.service = service;
-		this.action = action;
+	public IMChatRoomMessageReceived(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(chatEntityBareJid, chatName, fromEntityBareJid, fromNickname, timestamp, uid, action, text, data);
 	}
 	
-	public ServiceMessage(String service, String action, Object payload) {
-		super();
-		this.service = service;
-		this.action = action;
-		this.payload = payload;
-	}
-	
-	public final String getService() {
-		return service;
-	}
-	
-	public final ServiceMessage setService(String value) {
-		service = value;
-		return this;
-	}
-	
-	public final String getAction() {
-		return action;
-	}
-	
-	public final ServiceMessage setAction(String value) {
-		action = value;
-		return this;
-	}
-	
-	public synchronized final ServiceMessage setMappedPayload(String name, Object value) {
-		if ((payload == null) || !(payload instanceof Map)) payload = new HashMap<>();
-		((Map)payload).put(name, value);
-		return this;
+	private Object payload(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("chatId", chatEntityBareJid);
+		pl.put("chatName", chatName);
+		pl.put("fromId", fromEntityBareJid);
+		pl.put("fromNick", fromNickname);
+		pl.put("ts", timestamp);
+		pl.put("uid", uid);
+		pl.put("action", action);
+		pl.put("text", text);
+		pl.put("data", data);
+		return pl;
 	}
 }

@@ -31,30 +31,49 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.sdk.msg;
 
-import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class IMChatRoomClosed extends ServiceMessage {
-	public static final String ACTION = "imChatRoomClosed";
+public abstract class ResultServiceMessage extends ServiceMessage {
 	
-	public IMChatRoomClosed(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
-		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick);
+	public ResultServiceMessage(String service, String action) {
+		super(service, action);
 	}
 	
-	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("chatId", chatBareJid);
-		pl.put("chatName", chatName);
-		pl.put("ownerId", ownerBareJid);
-		pl.put("ownerNick", ownerNick);
-		return pl;
+	public ResultServiceMessage(String service, String action, String tag, boolean success) {
+		super(service, action);
+		setTag(tag);
+		setSuccess(success);
+	}
+	
+	public ResultServiceMessage(String service, String action, String tag, boolean success, String message) {
+		this(service, action, tag, success);
+		setMessage(message);
+	}
+	
+	public final ResultServiceMessage setTag(String tag) {
+		setMappedPayload("tag", tag);
+		return this;
+	}
+	
+	public final ResultServiceMessage setSuccess(boolean success) {
+		setMappedPayload("success", success);
+		return this;
+	}
+	
+	public final ResultServiceMessage setMessage(String message) {
+		setMappedPayload("message", message);
+		return this;
+	}
+	
+	public final ResultServiceMessage setThrowable(Throwable throwable) {
+		setSuccess(false);
+		setMessage(throwable.getMessage());
+		return this;
 	}
 }

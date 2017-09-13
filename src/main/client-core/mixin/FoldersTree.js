@@ -132,9 +132,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		store.suspendAutoSync();
 		parentNode.cascadeBy(function(n) {
 			if (n !== parentNode) {
-				var tgt = (n.getId() === nodeId);
-				//n.set('checked', tgt);
-				me.showHideF3Folder(n, tgt);
+				me.showHideF3Node(n, (n.getId() === nodeId));
 			}
 		});
 		store.resumeAutoSync();
@@ -151,8 +149,7 @@ Ext.define('Sonicle.webtop.core.mixin.FoldersTree', {
 		store.suspendAutoSync();
 		parentNode.cascadeBy(function(n) {
 			if (n !== parentNode) {
-				n.set('checked', show);
-				me.showHideFolder(n, show);
+				me.showHideF3Node(n, show);
 			}
 		});
 		store.resumeAutoSync();

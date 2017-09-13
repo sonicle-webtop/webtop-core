@@ -99,6 +99,14 @@ public abstract class BaseSettings {
 		return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
 	}
 	
+	public <E extends Enum<E>> E getEnum(String key, E defaultValue, Class<E> enumClass) {
+		E e = EnumUtils.forSerializedName(getString(key, null), null, enumClass);
+		return (e != null) ? e : defaultValue;
+	}
+	
+	/**
+	 * @deprecated Use getEnum(String key, E defaultValue, Class<E> enumClass) instead!
+	 */
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, String key, E defaultValue) {
 		E e = EnumUtils.forValue(enumClass, getString(key, null));
 		return (e != null) ? e : defaultValue;

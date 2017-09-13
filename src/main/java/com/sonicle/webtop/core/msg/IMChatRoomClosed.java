@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -41,10 +41,10 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class IMChatRoomRemoved extends ServiceMessage {
-	public static final String ACTION = "imChatRoomRemoved";
+public class IMChatRoomClosed extends ServiceMessage {
+	public static final String ACTION = "imChatRoomClosed";
 	
-	public IMChatRoomRemoved(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
+	public IMChatRoomClosed(String chatBareJid, String chatName, String ownerBareJid, String ownerNick) {
 		super(CoreManifest.ID, ACTION);
 		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick);
 	}

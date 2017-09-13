@@ -31,35 +31,19 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class IMChatRoomMessageReceived extends ServiceMessage {
-	public static final String ACTION = "imChatRoomMessageReceived";
+public class IMFriendsUpdated extends ServiceMessage {
+	public static final String ACTION = "imFriendsUpdated";
 	
-	public IMChatRoomMessageReceived(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
+	public IMFriendsUpdated() {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatEntityBareJid, chatName, fromEntityBareJid, fromNickname, timestamp, uid, action, text, data);
-	}
-	
-	private Object payload(String chatEntityBareJid, String chatName, String fromEntityBareJid, String fromNickname, String timestamp, String uid, String action, String text, String data) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("chatId", chatEntityBareJid);
-		pl.put("chatName", chatName);
-		pl.put("fromId", fromEntityBareJid);
-		pl.put("fromNick", fromNickname);
-		pl.put("ts", timestamp);
-		pl.put("uid", uid);
-		pl.put("action", action);
-		pl.put("text", text);
-		pl.put("data", data);
-		return pl;
 	}
 }

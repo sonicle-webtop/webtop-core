@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
-import com.sonicle.webtop.core.app.ws.AutosaveMessage;
+import com.sonicle.webtop.core.msg.AutosaveMessage;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
@@ -257,6 +257,17 @@ public class WebTopSession {
 		synchronized(propsBag) {
 			return propsBag.has(serviceId+"@"+key);
 		}
+	}
+	
+	/**
+	 * Checks if this session contains a mapping for the specified key,
+	 * otherwise throws an exception.
+	 * @param serviceId The service ID to which the object is mapped.
+	 * @param key The key to which the object is mapped.
+	 * @throws WTException 
+	 */
+	public void hasPropertyOrThrow(String serviceId, String key) throws WTException {
+		if (!hasProperty(serviceId, key)) throw new WTException("Missing session property [{0}, {1}]", serviceId, key);
 	}
 	
 	public String getRefererURI() {

@@ -31,19 +31,33 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.sdk.msg;
 
-import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author malbinola
  */
-public class IMFriendsUpdated extends ServiceMessage {
-	public static final String ACTION = "imFriendsUpdated";
+public abstract class NotificationServiceMessage extends ServiceMessage {
 	
-	public IMFriendsUpdated() {
-		super(CoreManifest.ID, ACTION);
+	public NotificationServiceMessage(String service, String action, String tag, String title, String body) {
+		this(service, action, tag, title, body, null);
+	}
+	
+	public NotificationServiceMessage(String service, String action, String tag, String title, String body, Map<String, Object> data) {
+		super(service, action);
+		this.payload = createPayload(tag, title, body, data);
+	}
+	
+	protected Object createPayload(String tag, String title, String body, Map<String, Object> data) {
+		Map<String, Object> pl = new HashMap<>();
+		if (data != null) pl.putAll(data);
+		pl.put("tag", tag);
+		pl.put("title", title);
+		pl.put("body", body);
+		return pl;
 	}
 }

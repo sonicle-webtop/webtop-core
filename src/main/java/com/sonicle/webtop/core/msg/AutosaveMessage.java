@@ -31,7 +31,7 @@
  * feasible for technical reasons, the Appropriate Legal Notices must display
  * the words "Powered by Sonicle WebTop".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.bol.js.JsAutosaveMessage;
 import com.sonicle.webtop.core.sdk.ServiceMessage;

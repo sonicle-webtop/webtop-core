@@ -332,6 +332,10 @@ public class WT {
 		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
 	}
 	
+	public static boolean deleteTempFile(File file) throws WTException {
+		return deleteTempFile(file.getName());
+	}
+	
 	public static boolean deleteTempFile(String filename) throws WTException {
 		UserProfileId runPid = RunContext.getRunProfileId();
 		return getWTA().deleteTempFile(runPid.getDomain(), filename);

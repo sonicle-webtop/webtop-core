@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.msg;
 
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -41,18 +41,20 @@ import java.util.HashMap;
  *
  * @author malbinola
  */
-public class IMChatRoomUpdated extends ServiceMessage {
-	public static final String ACTION = "imChatRoomUpdated";
+public class IMFriendPresenceUpdated extends ServiceMessage {
+	public static final String ACTION = "imFriendPresenceUpdated";
 	
-	public IMChatRoomUpdated(String chatEntityBareJid, String chatName) {
+	public IMFriendPresenceUpdated(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
 		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatEntityBareJid, chatName);
+		this.payload = payload(friendBareId, instantChatId, presenceStatus, statusMessage);
 	}
 	
-	private Object payload(String chatEntityBareJid, String chatName) {
+	private Object payload(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
 		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("chatId", chatEntityBareJid);
-		pl.put("chatName", chatName);
+		pl.put("id", friendBareId);
+		pl.put("chatId", instantChatId);
+		pl.put("presenceStatus", presenceStatus);
+		pl.put("statusMessage", statusMessage);
 		return pl;
 	}
 }

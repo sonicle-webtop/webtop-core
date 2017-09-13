@@ -1267,7 +1267,7 @@ public class ServiceManager {
 		
 		// Upgrade check!
 		if(manifestVer.compareTo(currentVer) > 0) {
-			logger.info("Upgraded! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
+			logger.info("Upgrade found! [{} -> {}] Updating version setting...", currentVer.toString(), manifestVer.toString());
 			manifest.setOldVersion(currentVer);
 			setm.setServiceSetting(manifest.getId(), CoreSettings.MANIFEST_VERSION, manifestVer.toString());
 			return true;

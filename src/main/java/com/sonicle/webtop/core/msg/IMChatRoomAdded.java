@@ -31,29 +31,31 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.msg;
 
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
+import java.util.HashMap;
 
 /**
  *
  * @author malbinola
  */
-public class WTRuntimeException extends RuntimeException {
+public class IMChatRoomAdded extends ServiceMessage {
+	public static final String ACTION = "imChatRoomAdded";
 	
-	public WTRuntimeException() {
-		super();
+	public IMChatRoomAdded(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
+		super(CoreManifest.ID, ACTION);
+		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick, self);
 	}
 	
-	public WTRuntimeException(String message) {
-		super(message);
-	}
-	
-	public WTRuntimeException(String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments));
-	}
-	
-	public WTRuntimeException(Throwable cause, String message, Object... arguments) {
-		super(MessageFormat.format(message, arguments), cause);
+	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
+		HashMap<String, Object> pl = new HashMap<>();
+		pl.put("chatId", chatBareJid);
+		pl.put("chatName", chatName);
+		pl.put("ownerId", ownerBareJid);
+		pl.put("ownerNick", ownerNick);
+		pl.put("self", self);
+		return pl;
 	}
 }

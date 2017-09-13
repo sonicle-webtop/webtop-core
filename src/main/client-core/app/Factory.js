@@ -846,6 +846,16 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		};
 	},
 	
+	foGetFn: function(modelProp, fieldName, getFn) {
+		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				return getFn(val);
+			}
+		};
+	},
+	
 	/**
 	 * Defines a{@link Ext.app.bind.Formula} that checks the equality between 
 	 * a model field's value and passed value.

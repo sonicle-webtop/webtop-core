@@ -31,31 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.util.HashMap;
 
 /**
  *
  * @author malbinola
+ * @param <K>
+ * @param <V>
  */
-public class IMChatRoomAdded extends ServiceMessage {
-	public static final String ACTION = "imChatRoomAdded";
-	
-	public IMChatRoomAdded(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
-		super(CoreManifest.ID, ACTION);
-		this.payload = payload(chatBareJid, chatName, ownerBareJid, ownerNick, self);
-	}
-	
-	private Object payload(String chatBareJid, String chatName, String ownerBareJid, String ownerNick, boolean self) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("chatId", chatBareJid);
-		pl.put("chatName", chatName);
-		pl.put("ownerId", ownerBareJid);
-		pl.put("ownerNick", ownerNick);
-		pl.put("self", self);
-		return pl;
+public class AsyncActionCollection<K, V extends BaseServiceAsyncAction> extends HashMap<K, V> {
+
+	@Override
+	public void clear() {
+		for(BaseServiceAsyncAction asyncAction : this.values()) {
+			asyncAction.stop();
+		}
+		super.clear();
 	}
 }

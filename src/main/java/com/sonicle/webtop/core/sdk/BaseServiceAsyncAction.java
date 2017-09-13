@@ -31,30 +31,79 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app.ws;
+package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.util.HashMap;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.util.LoggerUtils;
+import org.apache.shiro.subject.Subject;
+import org.jooq.tools.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class IMFriendPresenceUpdated extends ServiceMessage {
-	public static final String ACTION = "imFriendPresenceUpdated";
+public abstract class BaseServiceAsyncAction implements Runnable {
+	public final String SERVICE_ID;
+	protected UserProfileId runProfileId;
+	protected String threadName;
+	protected Thread thread;
+	protected volatile boolean shouldStop = false;
+	protected volatile boolean completed = false;
 	
-	public IMFriendPresenceUpdated(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
-		super(CoreManifest.ID, ACTION);
-		this.payload = payload(friendBareId, instantChatId, presenceStatus, statusMessage);
+	public abstract void executeAction();
+	
+	public BaseServiceAsyncAction() {
+		SERVICE_ID = WT.findServiceId(this.getClass());
 	}
 	
-	private Object payload(String friendBareId, String instantChatId, String presenceStatus, String statusMessage) {
-		HashMap<String, Object> pl = new HashMap<>();
-		pl.put("id", friendBareId);
-		pl.put("chatId", instantChatId);
-		pl.put("presenceStatus", presenceStatus);
-		pl.put("statusMessage", statusMessage);
-		return pl;
+	public BaseServiceAsyncAction(String name) {
+		this();
+		threadName = name;
+	}
+	
+	public final void setName(String name) {
+		threadName = name;
+	}
+	
+	public synchronized void start(Subject runSubject, UserProfileId runProfileId) {
+		if ((thread != null) && thread.isAlive()) return;
+		shouldStop = false;
+		completed = false;
+		this.runProfileId = runProfileId;
+		if (StringUtils.isBlank(threadName)) {
+			thread = new Thread(runSubject.associateWith(this));
+		} else {
+			thread = new Thread(runSubject.associateWith(this), threadName);
+		}		
+		thread.start();
+	}
+	
+	public synchronized void stop() {
+		if ((thread != null) && !thread.isAlive()) return;
+		shouldStop = true;
+		thread.interrupt();
+	}
+	
+	public void completed() {
+		completed = true;
+	}
+	
+	public boolean isCompleted() {
+		return completed;
+	}
+	
+	public boolean isRunning() {
+		if (thread == null) return false;
+		return thread.isAlive() && !completed;
+	}
+
+	@Override
+	public void run() {
+		try {
+			LoggerUtils.setContextDC(runProfileId, SERVICE_ID);
+			this.executeAction();
+		} finally {
+			LoggerUtils.clearContextServiceDC();
+		}
 	}
 }

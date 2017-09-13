@@ -160,6 +160,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	viewModel: {
 		data: {
+			tag: null,
 			/**
 			 * Save here resulting data after wizard completion
 			 */
@@ -169,14 +170,17 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	
 	initComponent: function() {
 		var me = this,
-				vm = me.getVM();
+				vm = me.getVM(),
+				ic = me.getInitialConfig(),
+				data = ic['data'] || {};
 		
-		me.pages = me.initPages();
-		me.action = me.initAction();
-		
+		vm.set('tag', !Ext.isEmpty(data.tag) ? data.tag : me.getId());
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			pathgroup: WTF.radioGroupBind(null, 'path', me.getId()+'-pathgroup')
 		}));
+		
+		me.pages = me.initPages();
+		me.action = me.initAction();
 		
 		Ext.apply(me, {
 			tbar: [
