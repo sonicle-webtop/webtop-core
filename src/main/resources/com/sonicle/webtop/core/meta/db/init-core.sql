@@ -238,7 +238,7 @@ CREATE TABLE "core"."im_messages" (
 "timestamp" timestamptz(6) NOT NULL,
 "delivery_timestamp" timestamptz(6),
 "action" varchar(10) NOT NULL,
-"text" varchar(255),
+"text" text,
 "data" text,
 "message_uid" varchar(255) NOT NULL,
 "stanza_id" varchar(255)
