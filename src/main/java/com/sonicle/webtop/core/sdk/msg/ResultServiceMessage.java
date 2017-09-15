@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk.msg;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
@@ -72,8 +73,17 @@ public abstract class ResultServiceMessage extends ServiceMessage {
 	}
 	
 	public final ResultServiceMessage setThrowable(Throwable throwable) {
+		setThrowable(throwable, false);
+		return this;
+	}
+	
+	public final ResultServiceMessage setThrowable(Throwable throwable, boolean deepest) {
 		setSuccess(false);
-		setMessage(throwable.getMessage());
+		if (deepest) {
+			setMessage(LangUtils.getThrowableDeepestMessage(throwable));
+		} else {
+			setMessage(throwable.getMessage());
+		}
 		return this;
 	}
 }
