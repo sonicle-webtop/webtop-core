@@ -127,34 +127,6 @@ WITH (OIDS=FALSE)
 ;
 
 -- ----------------------------
--- Table structure for customers
--- ----------------------------
-DROP TABLE IF EXISTS "core"."customers";
-CREATE TABLE "core"."customers" (
-"customer_id" varchar(15) NOT NULL,
-"description" varchar(50),
-"type" varchar(1),
-"address" varchar(100),
-"city" varchar(30),
-"state" varchar(30),
-"postalcode" varchar(20),
-"country" varchar(30),
-"telephone" varchar(50),
-"email" varchar(80),
-"from_drm" varchar(5),
-"parent_id" varchar(15),
-"external_id" varchar(100),
-"status" varchar(1),
-"domain_id" varchar(20),
-"km" varchar(15),
-"lock" varchar(20),
-"note" varchar(2000)
-)
-WITH (OIDS=FALSE)
-
-;
-
--- ----------------------------
 -- Table structure for domain_settings
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."domain_settings";
@@ -274,7 +246,7 @@ CREATE TABLE "core"."master_data" (
 "revision_status" varchar(1) NOT NULL,
 "revision_timestamp" timestamptz(6) NOT NULL,
 "revision_sequence" int4 DEFAULT 0 NOT NULL,
-"lock_status" varchar(1) DEFAULT 'N'::character varying NOT NULL,
+"lock_status" varchar(1),
 "description" varchar(50),
 "address" varchar(100),
 "city" varchar(50),
@@ -285,7 +257,8 @@ CREATE TABLE "core"."master_data" (
 "fax" varchar(50),
 "mobile" varchar(50),
 "email" varchar(320),
-"notes" varchar(2000)
+"notes" varchar(2000),
+"distance" int4
 )
 WITH (OIDS=FALSE)
 
@@ -617,16 +590,6 @@ CREATE INDEX "causals_ak2" ON "core"."causals" USING btree ("external_id", "doma
 ALTER TABLE "core"."causals" ADD PRIMARY KEY ("causal_id");
 
 -- ----------------------------
--- Indexes structure for table customers
--- ----------------------------
-CREATE INDEX "customers_ak1" ON "core"."customers" USING btree ("description", "status");
-
--- ----------------------------
--- Primary Key structure for table customers
--- ----------------------------
-ALTER TABLE "core"."customers" ADD PRIMARY KEY ("customer_id");
-
--- ----------------------------
 -- Primary Key structure for table domain_settings
 -- ----------------------------
 ALTER TABLE "core"."domain_settings" ADD PRIMARY KEY ("domain_id", "service_id", "key");
@@ -821,4 +784,4 @@ ALTER TABLE "core"."users_info" ADD PRIMARY KEY ("domain_id", "user_id");
 -- Align service version
 -- ----------------------------
 DELETE FROM "core"."settings" WHERE ("settings"."service_id" = 'com.sonicle.webtop.core') AND ("settings"."key" = 'manifest.version');
-INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.17');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.19');
