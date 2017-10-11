@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +73,7 @@ public class ServiceManifest {
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
 	protected ArrayList<ServicePermission> permissions;
+	protected ArrayList<Portlet> portlets;
 	
 	
 	public ServiceManifest() {
@@ -151,16 +151,16 @@ public class ServiceManifest {
 		
 		
 		permissions = new ArrayList<>();
-		if(!svcEl.configurationsAt("permissions").isEmpty()) {
+		if (!svcEl.configurationsAt("permissions").isEmpty()) {
 			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
 			for(HierarchicalConfiguration elPerm : elPerms) {
-				if(elPerm.containsKey("[@group]")) {
+				if (elPerm.containsKey("[@group]")) {
 					String groupName = elPerm.getString("[@group]");
-					if(StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
+					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
 					
-					if(elPerm.containsKey("[@actions]")) {
+					if (elPerm.containsKey("[@actions]")) {
 						String[] actions = StringUtils.split(elPerm.getString("[@actions]"), ",");
-						if(actions.length == 0) throw new Exception("Resource must declare at least 1 action");
+						if (actions.length == 0) throw new Exception("Resource must declare at least 1 action");
 						permissions.add(new ServicePermission(groupName, actions));
 					} else {
 						throw new Exception("Permission must declare actions supported on group");
@@ -170,11 +170,22 @@ public class ServiceManifest {
 			
 			List<HierarchicalConfiguration> elShPerms = svcEl.configurationsAt("permissions.sharePermission");
 			for(HierarchicalConfiguration elShPerm : elShPerms) {
-				if(elShPerm.containsKey("[@group]")) {
+				if (elShPerm.containsKey("[@group]")) {
 					String groupName = elShPerm.getString("[@group]");
-					if(StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
-					
+					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
 					permissions.add(new ServiceSharePermission(groupName));
+				}
+			}
+		}
+		
+		portlets = new ArrayList<>();
+		if (!svcEl.configurationsAt("portlets").isEmpty()) {
+			List<HierarchicalConfiguration> elWidgets = svcEl.configurationsAt("portlets.portlet");
+			for(HierarchicalConfiguration elWidget : elWidgets) {
+				if (elWidget.containsKey("[@jsClassName]")) {
+					final String jsClassName = elWidget.getString("[@jsClassName]");
+					if (StringUtils.isBlank(jsClassName)) throw new Exception("Invalid value for attribute [portlet->jsClassName]");
+					portlets.add(new Portlet(LangUtils.buildClassName(jsPackage, jsClassName)));
 				}
 			}
 		}
@@ -437,5 +448,17 @@ public class ServiceManifest {
 	
 	public ArrayList<ServicePermission> getDeclaredPermissions() {
 		return permissions;
+	}
+	
+	public ArrayList<Portlet> getPortlets() {
+		return portlets;
+	}
+	
+	public static class Portlet {
+		public final String jsClassName;
+		
+		public Portlet(String jsClassName) {
+			this.jsClassName = jsClassName;
+		}
 	}
 }

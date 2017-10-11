@@ -751,6 +751,9 @@ public class WebTopSession {
 				manifest.getUserOptionsModelJsClassName(true)
 			);
 		}
+		for(ServiceManifest.Portlet portlet : manifest.getPortlets()) {
+			jssvc.portletClassNames.add(portlet.jsClassName);
+		}
 		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME));
 		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION));
 		jssvc.version = manifest.getVersion().toString();

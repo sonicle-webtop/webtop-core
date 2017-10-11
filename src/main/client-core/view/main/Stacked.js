@@ -41,6 +41,49 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	l1ButtonsLimit: 3,
 	addedCount: 0,
 	
+	getCollapsible: function() {
+		return this.getWest();
+	},
+	
+	getToolsCard: function() {
+		return this.getWest().lookupReference('tool');
+	},
+	
+	getMainCard: function() {
+		return this.getCenter();
+	},
+	
+	addServiceButton: function(desc) {
+		var me = this,
+				west = me.lookupReference('west'),
+				l = west.lookupReference('launchers'),
+				l1 = west.lookupReference('launcher1'),
+				l2 = west.lookupReference('launcher2'),
+				cmp;
+		
+		me.addedCount++;
+		if(me.addedCount <= me.l1ButtonsLimit) {
+			cmp = l1.add(Ext.create('WTA.ux.StackServiceButton', desc, {
+				handler: 'onLauncherButtonClick'
+			}));
+			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
+		} else {
+			cmp = l2.add(Ext.create('WTA.ux.ServiceButton', desc, {
+				scale: 'small',
+				handler: 'onLauncherButtonClick'
+			}));
+		}
+		
+		// When last service is added...
+		if(me.addedCount === me.getServicesCount()) {
+			// Toolbar item real height depends on theme (touch or not) and on
+			// choosen scale. We need to measure it getting current height 
+			// during first item insertion.
+			l.setHeight(me.calculateHeight(l1, l2));
+			l.updateLayout();
+		}
+	},
+	
 	createWestCmp: function() {
 		var me = this, items;
 		items = [{
@@ -62,7 +105,9 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				reference: 'launcher2',
 				enableOverflow: true,
 				border: false,
-				items: []
+				items: [
+					this.createPortalButton({scale: 'small'})
+				]
 			});
 		}
 		
@@ -97,63 +142,11 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	
 	createCenterCmp: function() {
 		return {
-			region: 'center',
 			xtype: 'container',
-			layout: 'border',
-			cls: 'wt-center-stacked',
-			items: [{
-				region: 'center',
-				xtype: 'container',
-				reference: 'main',
-				layout: 'card',
-				items: []
-			},
-				this.createTaskBar({region: 'south'})
-			]
+			//cls: 'wt-center-stacked',
+			layout: 'card',
+			items: []
 		};
-	},
-	
-	getSide: function() {
-		return this.lookupReference('west');
-	},
-	
-	getToolStack: function() {
-		return this.lookupReference('west').lookupReference('tool');
-	},
-	
-	getMainStack: function() {
-		return this.lookupReference('center').lookupReference('main');
-	},
-	
-	addServiceButton: function(desc) {
-		var me = this,
-				west = me.lookupReference('west'),
-				l = west.lookupReference('launchers'),
-				l1 = west.lookupReference('launcher1'),
-				l2 = west.lookupReference('launcher2'),
-				cmp;
-		
-		me.addedCount++;
-		if(me.addedCount <= me.l1ButtonsLimit) {
-			cmp = l1.add(Ext.create('WTA.ux.StackServiceButton', desc, {
-				handler: 'onLauncherButtonClick'
-			}));
-			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
-		} else {
-			cmp = l2.add(Ext.create('WTA.ux.ServiceButton', desc, {
-				scale: 'small',
-				handler: 'onLauncherButtonClick'
-			}));
-		}
-		
-		// When last service is added...
-		if(me.addedCount === me.getServicesCount()) {
-			// Toolbar item real height depends on theme (touch or not) and on
-			// choosen scale. We need to measure it getting current height 
-			// during first item insertion.
-			l.setHeight(me.calculateHeight(l1, l2));
-			l.updateLayout();
-		}
 	},
 	
 	calculateHeight: function(l1, l2) {

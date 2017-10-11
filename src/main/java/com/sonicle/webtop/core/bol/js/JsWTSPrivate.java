@@ -81,6 +81,7 @@ public class JsWTSPrivate extends JsWTS {
 		public String serviceClassName;
 		public String serviceVarsClassName;
 		public ServiceUserOptions userOptions;
+		public ArrayList<String> portletClassNames = new ArrayList<>();
 		public String name;
 		public String description;
 		public String version;

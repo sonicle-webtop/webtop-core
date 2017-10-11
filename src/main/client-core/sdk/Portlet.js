@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2017 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,75 +29,40 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2017 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.pub.Viewport', {
-	alternateClassName: 'WTA.view.pub.Viewport',
-	extend: 'Ext.container.Viewport',
+Ext.define('Sonicle.webtop.core.sdk.Portlet', {
+	alternateClassName: 'WTA.sdk.Portlet',
+	extend: 'Ext.dashboard.Part',
 	
-	layout: 'border',
-	referenceHolder: true,
-	
-	mainmap: null,
-	
-	constructor: function() {
-		var me = this;
-		me.mainmap = {};
-		me.callParent(arguments);
+	config: {
+		title: null,
+		bodyClass: null,
+		bodyConfig: null
 	},
 	
-	destroy: function() {
-		var me = this;
-		me.callParent(arguments);
-		me.mainmap = null;
-	},
-	
-	/**
-	 * Adds passed service to wiewport's layout.
-	 * @param {WTA.sdk.PublicService} svc The service instance.
-	 */
-	addService: function(svc) {
+	constructor: function(cfg) {
 		var me = this,
-				id = svc.ID,
-				main = null;
+				icfg = me.getInitialConfig(),
+				type = WTU.idfy(me.$className);
 		
-		if (me.mainmap[id]) return; // Checks if service has been already added
+		if (Ext.isEmpty(icfg.bodyClass)) Ext.Error.raise('`bodyClass` is mandatory');
 		
-		// Retrieves service components
-		if (Ext.isFunction(svc.getMainComponent)) main = svc.getMainComponent.call(svc);
-		me.addServiceComponents(svc, main);
-	},
-	
-	addServiceComponents: function(svc, main) {
-		var me = this;
-		
-		if (!main || !main.isXType('container')) {
-			main = Ext.create({xtype: 'wtpanel'});
-		}
-		me.mainmap[svc.ID] = main.getId();
-		me.addToRegion('center', main);
-	},
-	
-	/*
-	 * @private
-	 * Adds passed config to chosen layout region.
-	 * @param {String} region Border layout region
-	 * @param {Ext.Component} cmp The component to add
-	 */
-	addToRegion: function(region, cmp) {
-		var me = this;
-		if(cmp) {
-			if(cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
-			}
-			me.add(cmp);
-		}
+		me['type'] = type;
+		cfg.viewTemplate = Ext.merge(icfg.viewTemplate || {}, {
+			layout: 'fit',
+			title: WT.resTpl(cfg.sid, icfg.title),
+			items: [Ext.apply(icfg.bodyConfig || {}, {
+					xclass: icfg.bodyClass,
+					sid: cfg.sid
+			})],
+			tools: [{
+				type: 'refresh',
+				callback: function(s) {
+					s.getComponent(0).refresh();
+				}
+			}]
+		});
+		me.callParent([cfg]);
 	}
 });

@@ -73,57 +73,70 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.viewCtsByUTag = null;
 	},
 	
+	getIMButton: function() {
+		var north = this.lookupReference('north');
+		return north.lookupReference('imbtn');
+	},
+	
+	getIMPanel: function() {
+		return this.lookupReference('east');
+	},
+	
 	/**
 	 * Adds passed components to wiewport's layout.
 	 * @param {WTA.sdk.Service} svc The service instance.
 	 */
-	addServiceCmps: function(svc) {
+	addService: function(svc) {
 		var me = this,
 				north = null,
 				tb = null, tool = null, main = null;
 		
-		if(me.svctbmap[svc.ID]) return; // Checks if service has been already added
+		if (me.svctbmap[svc.ID]) return; // Checks if service has been already added
+		north = me.lookupReference('north');
 		
-		// Retrieves service toolbar
-		if(Ext.isFunction(svc.getToolbar)) {
-			tb = svc.getToolbar.call(svc);
-		}
-		if(!tb || !tb.isToolbar) {
+		// Retrieves toolbar component
+		if (Ext.isFunction(svc.getToolbar)) tb = svc.getToolbar.call(svc);
+		if (!tb || !tb.isToolbar) {
 			tb = Ext.create({xtype: 'toolbar'});
 		}
 		me.svctbmap[svc.ID] = tb.getId();
-		north = me.lookupReference('north');
 		north.lookupReference('servicetb').add(tb);
 		
-		// Retrieves service components
-		if(Ext.isFunction(svc.getToolComponent)) {
-			tool = svc.getToolComponent.call(svc);
-		}
-		if(Ext.isFunction(svc.getMainComponent)) {
-			main = svc.getMainComponent.call(svc);
-		}
+		// Retrieves tool/main component
+		if (Ext.isFunction(svc.getToolComponent)) tool = svc.getToolComponent.call(svc);
+		if (Ext.isFunction(svc.getMainComponent)) main = svc.getMainComponent.call(svc);
 		me.addServiceComponents(svc, tool, main);
 	},
 	
 	addServiceComponents: function(svc, tool, main) {
 		var me = this,
 				vw = me.getView(),
-				tStack = vw.getToolStack(),
-				mStack = vw.getMainStack();
+				tools = vw.getToolsCard(),
+				mains = vw.getMainCard();
 		
-		if(!tool || !tool.isPanel) {
-			tool = Ext.create({xtype: 'panel', header: false});
+		if (!tool || !tool.isPanel) {
+			tool = Ext.create({xtype: 'wtpanel', header: false});
 		} else {
 			WTU.removeHeader(tool);
 		}
 		me.toolmap[svc.ID] = tool.getId();
-		tStack.add(tool);
+		tools.add(tool);
 		
-		if(!main || !main.isXType('container')) {
-			main = Ext.create({xtype: 'panel'});
+		if (!main || !main.isXType('container')) {
+			main = Ext.create({xtype: 'wtpanel'});
 		}
 		me.mainmap[svc.ID] = main.getId();
-		mStack.add(main);
+		mains.add(main);
+	},
+	
+	addServiceButton: function(desc) {
+		if (desc.getId() !== WT.ID) {
+			this.getView().addServiceButton(desc);
+		}
+	},
+	
+	addNewActions: function(acts) {
+		this.getView().addNewActions(acts);
 	},
 	
 	/**
@@ -134,111 +147,20 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	activateService: function(svc) {
 		var me = this,
 				id = svc.ID;
-		// If already active...exits
-		if(me.active === id) return false;
+		
+		if (me.active === id) return false;
 		me.isActivating = true;
+		
 		// Activate components
-		me.setActiveServiceToolbar(svc);
-		if(svc.hasNewActions()) me.setActiveNewAction(svc);
+		me.setActiveToolbar(svc);
+		if (svc.hasNewActions()) me.setActiveNewActions(svc);
 		me.setActiveToolboxAction(svc);
-		me.setActiveServiceComponents(svc);
-		me.setActiveServiceViews(svc);
-		// -------------------
+		me.setActiveComponents(svc);
+		me.setActiveOnTaskbar(svc);
+		
 		me.active = id;
 		me.isActivating = false;
 		return true;
-	},
-	
-	/**
-	 * @private
-	 * Sets specified service newAction as default.
-	 * @param {WTA.sdk.Service} svc The service instance.
-	 */
-	setActiveNewAction: function(svc) {
-		var me = this,
-				north = me.lookupReference('north'),
-				newtb = north.lookupReference('newtb'),
-				newbtn = newtb.lookupReference('newbtn'),
-				first;
-		
-		if(newbtn) {
-			first = svc.getNewActions()[0];
-			newbtn.activeAction = first;
-			newbtn.setTooltip(first.getText());
-			newbtn.setIconCls(first.getIconCls());
-		}
-	},
-	
-	setActiveToolboxAction: function(svc) {
-		var me = this,
-				toolsCount = me.getView().fixedToolsCount,
-				north = me.lookupReference('north'),
-				toolboxbtn = north.lookupReference('toolboxbtn'),
-				menu = toolboxbtn ? toolboxbtn.menu : null,
-				sidx = (toolsCount === 0) ? 0 : toolsCount+1,
-				acts;
-		
-		if(menu) {
-			WTU.removeItems(menu, sidx);
-			acts = svc.getToolboxActions();
-			Ext.iterate(acts, function(act) {
-				menu.add(act);
-			});
-		}
-	},
-	
-	/**
-	 * @private
-	 * Shows active service toolbar.
-	 * @param {WTA.sdk.Service} svc The service instance.
-	 */
-	setActiveServiceToolbar: function(svc) {
-		var me = this,
-				north = me.lookupReference('north'),
-				svctb = north.lookupReference('servicetb');
-		
-		svctb.getLayout().setActiveItem(me.svctbmap[svc.ID]);
-	},
-	
-	/**
-	 * @private
-	 * Shows active service components.
-	 * @param {WTA.sdk.Service} svc The service instance.
-	 */
-	setActiveServiceComponents: function(svc) {
-		var me = this,
-				vw = me.getView(),
-				side = vw.getSide(),
-				tStack = vw.getToolStack(),
-				mStack = vw.getMainStack(),
-				active;
-		
-		tStack.getLayout().setActiveItem(me.toolmap[svc.ID]);
-		active = tStack.getLayout().getActiveItem();
-		if(active) side.setTitle(active.getTitle());
-		side.setWidth(svc.getVar('viewportToolWidth') || 200);
-		mStack.getLayout().setActiveItem(me.mainmap[svc.ID]);
-	},
-	
-	/**
-	 * @private
-	 * Shows active service views (if present).
-	 * @param {WTA.sdk.Service} svc The service instance.
-	 */
-	setActiveServiceViews: function(svc) {
-		var me = this,
-				vw = me.getView(),
-				taskbar = vw.getTaskBar();
-		taskbar.setActiveService(svc.ID);
-	},
-	
-	getIMButton: function() {
-		var north = this.lookupReference('north');
-		return north.lookupReference('imbtn');
-	},
-	
-	getIMPanel: function() {
-		return this.lookupReference('east');
 	},
 	
 	onToolResize: function(s, w) {
@@ -255,6 +177,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				}
 			});
 		}
+	},
+	
+	onPortalButtonClick: function(s) {
+		WT.getApp().activateService(WT.ID);
 	},
 	
 	onLauncherButtonClick: function(s) {
@@ -500,6 +426,68 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	privates: {
+		setActiveNewActions: function(svc) {
+			var me = this,
+					north = me.lookupReference('north'),
+					newtb = north.lookupReference('newtb'),
+					newbtn = newtb.lookupReference('newbtn'),
+					first;
+
+			if (newbtn) {
+				first = svc.getNewActions()[0];
+				newbtn.activeAction = first;
+				newbtn.setTooltip(first.getText());
+				newbtn.setIconCls(first.getIconCls());
+			}
+		},
+		
+		setActiveToolboxAction: function(svc) {
+			var me = this,
+					toolsCount = me.getView().fixedToolsCount,
+					north = me.lookupReference('north'),
+					toolboxbtn = north.lookupReference('toolboxbtn'),
+					menu = toolboxbtn ? toolboxbtn.menu : null,
+					sidx = (toolsCount === 0) ? 0 : toolsCount+1,
+					acts;
+
+			if (menu) {
+				WTU.removeItems(menu, sidx);
+				acts = svc.getToolboxActions();
+				Ext.iterate(acts, function(act) {
+					menu.add(act);
+				});
+			}
+		},
+		
+		setActiveToolbar: function(svc) {
+			var me = this,
+					north = me.lookupReference('north'),
+					svctb = north.lookupReference('servicetb');
+
+			svctb.getLayout().setActiveItem(me.svctbmap[svc.ID]);
+		},
+		
+		setActiveComponents: function(svc) {
+			var me = this,
+					vw = me.getView(),
+					side = vw.getCollapsible(),
+					tools = vw.getToolsCard(),
+					mains = vw.getMainCard(),
+					active;
+			
+			tools.getLayout().setActiveItem(me.toolmap[svc.ID]);
+			active = tools.getLayout().getActiveItem();
+			if (active) side.setTitle(active.getTitle());
+			side.setWidth(svc.getVar('viewportToolWidth') || 200);
+			mains.getLayout().setActiveItem(me.mainmap[svc.ID]);
+		},
+		
+		setActiveOnTaskbar: function(svc) {
+			var me = this,
+					vw = me.getView(),
+					taskbar = vw.getTaskBar();
+			taskbar.setActiveService(svc.ID);
+		},
 		
 		toggleWinListeners: function(win, fn) {
 			var me = this;

@@ -35,6 +35,33 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 	alternateClassName: 'WTA.view.main.Queued',
 	extend: 'WTA.view.main.Abstract',
 	
+	getPortalButton: function() {
+		return this._getLauncher().getComponent(WT.ID);
+	},
+	
+	getCollapsible: function() {
+		return this.getWest();
+	},
+	
+	getToolsCard: function() {
+		return this.getWest().lookupReference('tool');
+	},
+	
+	getMainCard: function() {
+		return this.getCenter();
+	},
+	
+	_getLauncher: function() {
+		return this.getWest().lookupReference('launcher');
+	},
+	
+	addServiceButton: function(desc) {
+		this._getLauncher().add(Ext.create('WTA.ux.ServiceButton', desc, {
+			scale: 'medium',
+			handler: 'onLauncherButtonClick'
+		}));
+	},
+	
 	createWestCmp: function() {
 		return {
 			xtype: 'panel',
@@ -55,9 +82,11 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 				region: 'south',
 				xtype: 'toolbar',
 				reference: 'launcher',
-				enableOverflow: true,
 				border: false,
-				items: []
+				enableOverflow: true,
+				items: [
+					this.createPortalButton({scale: 'medium'})
+				]
 			}],
 			listeners: {
 				resize: 'onToolResize'
@@ -67,44 +96,9 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 	
 	createCenterCmp: function() {
 		return {
-			region: 'center',
 			xtype: 'container',
-			layout: 'border',
-			cls: 'wt-center-queued',
-			items: [{
-				region: 'center',
-				xtype: 'container',
-				reference: 'main',
-				layout: 'card',
-				items: []
-			},
-				this.createTaskBar({region: 'south'})
-			]
+			layout: 'card',
+			items: []
 		};
-	},
-	
-	getSide: function() {
-		return this.lookupReference('west');
-	},
-	
-	getToolStack: function() {
-		return this.lookupReference('west').lookupReference('tool');
-	},
-	
-	getMainStack: function() {
-		return this.lookupReference('center').lookupReference('main');
-	},
-	
-	addServiceButton: function(desc) {
-		var me = this,
-				west = me.lookupReference('west'),
-				l = west.lookupReference('launcher'),
-				cmp;
-		
-		cmp = l.add(Ext.create('WTA.ux.ServiceButton', desc, {
-			scale: 'medium',
-			handler: 'onLauncherButtonClick'
-		}));
-		//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
 	}
 });

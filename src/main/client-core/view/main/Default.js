@@ -35,6 +35,29 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	alternateClassName: 'WTA.view.main.Default',
 	extend: 'WTA.view.main.Abstract',
 	
+	getPortalButton: function() {
+		return this.getWest().getComponent(WT.ID);
+	},
+	
+	getCollapsible: function() {
+		return this.getToolsCard();
+	},
+	
+	getToolsCard: function() {
+		return this.getCenter().lookupReference('tool');
+	},
+	
+	getMainCard: function() {
+		return this.getCenter().lookupReference('main');
+	},
+	
+	addServiceButton: function(desc) {
+		this.getWest().add(Ext.create('WTA.ux.ServiceButton', desc, {
+			scale: 'large',
+			handler: 'onLauncherButtonClick'
+		}));//.setBadgeText(Ext.Number.randomInt(0,99)+'');
+	},
+	
 	createWestCmp: function() {
 		return {
 			xtype: 'toolbar',
@@ -42,7 +65,9 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			border: false,
 			cls: 'wt-launcher',
 			enableOverflow: true,
-			items: []
+			items: [
+				this.createPortalButton({scale: 'large'})
+			]
 		};
 	},
 	
@@ -50,7 +75,6 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		return {
 			xtype: 'container',
 			layout: 'border',
-			cls: 'wt-center-default',
 			items: [{
 				region: 'west',
 				xtype: 'panel',
@@ -68,39 +92,10 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			}, {
 				region: 'center',
 				xtype: 'container',
-				layout: 'border',
-				items: [{
-					region: 'center',
-					xtype: 'container',
-					reference: 'main',
-					layout: 'card',
-					items: []
-				},
-					this.createTaskBar({region: 'south'})
-				]
+				reference: 'main',
+				layout: 'card',
+				items: []
 			}]
 		};
-	},
-	
-	getSide: function() {
-		return this.getToolStack();
-	},
-	
-	getToolStack: function() {
-		return this.lookupReference('center').lookupReference('tool');
-	},
-	
-	getMainStack: function() {
-		return this.lookupReference('center').lookupReference('main');
-	},
-	
-	addServiceButton: function(desc) {
-		var me = this,
-				west = me.lookupReference('west');
-		
-		west.add(Ext.create('WTA.ux.ServiceButton', desc, {
-			scale: 'large',
-			handler: 'onLauncherButtonClick'
-		}));//.setBadgeText(Ext.Number.randomInt(0,99)+'');
 	}
 });

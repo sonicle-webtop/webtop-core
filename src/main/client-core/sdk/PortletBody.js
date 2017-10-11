@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2017 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,75 +29,35 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2017 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.pub.Viewport', {
-	alternateClassName: 'WTA.view.pub.Viewport',
-	extend: 'Ext.container.Viewport',
+Ext.define('Sonicle.webtop.core.sdk.PortletBody', {
+	alternateClassName: 'WTA.sdk.PortletBody',
+	extend: 'Ext.panel.Panel',
+	mixins: [
+		'Sonicle.mixin.RefHolder',
+		'WTA.mixin.ActHolder',
+		'WTA.mixin.PanelUtil',
+		'WTA.mixin.Waitable'
+	],
 	
 	layout: 'border',
+	border: false,
 	referenceHolder: true,
 	
-	mainmap: null,
-	
-	constructor: function() {
-		var me = this;
-		me.mainmap = {};
-		me.callParent(arguments);
-	},
-	
-	destroy: function() {
-		var me = this;
-		me.callParent(arguments);
-		me.mainmap = null;
-	},
-	
 	/**
-	 * Adds passed service to wiewport's layout.
-	 * @param {WTA.sdk.PublicService} svc The service instance.
+	 * @property {WTA.sdk.Service} mys
+	 * Reference to service instance.
 	 */
-	addService: function(svc) {
-		var me = this,
-				id = svc.ID,
-				main = null;
-		
-		if (me.mainmap[id]) return; // Checks if service has been already added
-		
-		// Retrieves service components
-		if (Ext.isFunction(svc.getMainComponent)) main = svc.getMainComponent.call(svc);
-		me.addServiceComponents(svc, main);
-	},
+	mys: null,
 	
-	addServiceComponents: function(svc, main) {
-		var me = this;
-		
-		if (!main || !main.isXType('container')) {
-			main = Ext.create({xtype: 'wtpanel'});
-		}
-		me.mainmap[svc.ID] = main.getId();
-		me.addToRegion('center', main);
-	},
+	refresh: Ext.emptyFn,
+	search: Ext.emptyFn,
 	
-	/*
-	 * @private
-	 * Adds passed config to chosen layout region.
-	 * @param {String} region Border layout region
-	 * @param {Ext.Component} cmp The component to add
-	 */
-	addToRegion: function(region, cmp) {
+	initComponent: function() {
 		var me = this;
-		if(cmp) {
-			if(cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
-			}
-			me.add(cmp);
-		}
+		me.mys = WT.getApp().getService(me.sid);
+		delete me.sid;
+		me.callParent(arguments);
 	}
 });

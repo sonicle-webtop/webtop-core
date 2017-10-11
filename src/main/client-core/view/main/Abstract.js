@@ -67,12 +67,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	fixedToolsCount: 0,
 	
+	getPortalButton: Ext.emptyFn,
+	getCollapsible: Ext.emptyFn,
+	getToolsCard: Ext.emptyFn,
+	getMainCard: Ext.emptyFn,
+	addServiceButton: Ext.emptyFn,
 	createWestCmp: Ext.emptyFn,
 	createCenterCmp: Ext.emptyFn,
-	getSide: Ext.emptyFn,
-	getToolStack: Ext.emptyFn,
-	getMainStack: Ext.emptyFn,
-	addServiceButton: Ext.emptyFn,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -88,7 +89,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this, cmp;
 		
 		me.addRef('cxmTaskBar', Ext.create({
 			xtype: 'menu',
@@ -125,25 +126,27 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		me.callParent(arguments);
 		
 		me.addToRegion('north', me.createNorthCmp());
-		me.addToRegion('west', me.createWestCmp());
-		me.addToRegion('center', me.createCenterCmp());
+		me.addToRegion('south', me.createSouthCmp());
 		if (WT.getVar('imEnabled') === true) {
 			me.addToRegion('east', me.createEastCmp());
 		}
-		//me.addToRegion('south', me.createSouthCmp());
+		
+		cmp = me.createWestCmp();
+		if (cmp) me.addToRegion('west', cmp);
+		cmp = me.createCenterCmp();
+		if (cmp) me.addToRegion('center', cmp);
 	},
 	
-	createTaskBar: function(cfg) {
-		return Ext.apply(cfg || {}, {
-			xtype: 'wttaskbar',
-			reference: 'taskbar',
-			height: 35,
-			items: [],
-			listeners: {
-				buttonclick: 'onTaskBarButtonClick',
-				buttoncontextmenu: 'onTaskBarButtonContextMenu'
-			}
-		});
+	getWest: function() {
+		return this.lookupReference('west');
+	},
+	
+	getCenter: function() {
+		return this.lookupReference('center');
+	},
+	
+	getTaskBar: function() {
+		return this.lookupReference('south');
 	},
 	
 	createNorthCmp: function() {
@@ -402,6 +405,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		};
 	},
 	
+	createSouthCmp: function() {
+		return this.createTaskBar({
+			border: '1 0 0 0',
+			height: 35
+		});
+	},
+	
 	createEastCmp: function() {
 		return {
 			xtype: 'wtimpanel',
@@ -417,31 +427,34 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		};
 	},
 	
-	getTaskBar: function() {
-		return this.lookupReference('center').lookupReference('taskbar');
+	createPortalButton: function(cfg) {
+		return Ext.apply({
+			itemId: WT.ID,
+			glyph: 0xf015,
+			handler: 'onPortalButtonClick'
+		}, cfg || {});
+	},
+	
+	createTaskBar: function(cfg) {
+		return Ext.apply({
+			xtype: 'wttaskbar',
+			items: [],
+			listeners: {
+				buttonclick: 'onTaskBarButtonClick',
+				buttoncontextmenu: 'onTaskBarButtonContextMenu'
+			}
+		}, cfg || {});
 	},
 	
 	/**
 	 * Adds specified actions to wiewport's layout.
 	 * @param {Ext.Action[]} acts Service actions to add.
 	 */
-	addServiceNewActions: function(acts) {
+	addNewActions: function(acts) {
 		var me = this,
 				north = me.lookupReference('north'),
 				newtb = north.lookupReference('newtb'),
 				newbtn = newtb.lookupReference('newbtn');
-		
-		/*
-		if(!newbtn) {
-			newbtn = newtb.add(Ext.create({
-				xtype: 'splitbutton',
-				reference: 'newbtn',
-				text: WT.res('new.btn-new.lbl'),
-				menu: [],
-				handler: 'onNewActionButtonClick'
-			}));
-		}
-		*/
 		
 		var menu = newbtn.getMenu();
 		Ext.each(acts, function(act) {
@@ -457,8 +470,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	 */
 	addToRegion: function(region, cmp) {
 		var me = this;
-		if(cmp) {
-			if(cmp.isComponent) {
+		if (cmp) {
+			if (cmp.isComponent) {
 				cmp.setRegion(region);
 				cmp.setReference(region);
 			} else {

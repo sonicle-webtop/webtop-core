@@ -104,6 +104,7 @@ import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UploadException;

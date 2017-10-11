@@ -139,6 +139,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				serviceVarsClassName: obj.serviceVarsClassName,
 				localeClassName: obj.localeClassName,
 				userOptions: obj.userOptions,
+				portletClassNames: obj.portletClassNames,
 				name: obj.name,
 				description: obj.description,
 				company: obj.company
@@ -158,8 +159,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		
 		// Instantiates core service
 		var cdesc = me.services.getAt(0);
-		cdesc.getInstance();
-		cdesc.initService();
+		if (!cdesc.getInstance()) Ext.raise('Unable to instantiate core');
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({
@@ -167,30 +167,31 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		});
 		vpc = me.viewport.getController();
 		
-		// Inits loaded services and activate the default one
+		// Instantiates other services
 		Ext.each(me.getDescriptors(), function(desc) {
-			if(!desc.getMaintenance()) {
-				if(desc.initService()) {
-					var svc = desc.getInstance();
-					vp.addServiceButton(desc);
-					if(svc.hasNewActions()) vp.addServiceNewActions(svc.getNewActions());
-					// Saves first succesfully activated service for later displaying default
-					if(def === null) def = desc.getId();
-				}
-			} else {
-				//TODO: show grayed button
+			desc.getInstance();
+		});
+		
+		// Inits loaded services and activate the default one
+		Ext.each(me.getDescriptors(false), function(desc) {
+			if (desc.initService()) {
+				var svc = desc.getInstance();
+				vpc.addServiceButton(desc);
+				if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
+				// Saves first succesfully activated service for later displaying default
+				if (def === null) def = desc.getId();
 			}
 		});
 		
 		// Sets default service
-		if(WTS.defaultService) {
+		if (WTS.defaultService) {
 			var desc = me.getDescriptor(WTS.defaultService);
-			if(desc.isInited()) def = WTS.defaultService;
+			if (desc.isInited()) def = WTS.defaultService;
 		}
-		if(def !== null) me.activateService(def);
+		if (def !== null) me.activateService(def);
 		
 		// If necessary, show whatsnew
-		if(WT.getVar('isWhatsnewNeeded')) {
+		if (WT.getVar('isWhatsnewNeeded')) {
 			vpc.showWhatsnew(false);
 		}
 		
@@ -224,7 +225,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				inst = me.getService(id);
 				
 		if (!inst) return;
-		vpc.addServiceCmps(inst);
+		vpc.addService(inst);
 		me.currentService = id;
 		if (vpc.activateService(inst)) {
 			inst.activationCount++;

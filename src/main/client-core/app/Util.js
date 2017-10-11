@@ -46,6 +46,26 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
+	 * Construct an alias using passed string.
+	 * @param {String} prefix The prefix
+	 * @param {String} s The source string
+	 * @returns {String} Aliased string
+	 */
+	aliasize: function(prefix, s) {
+		return prefix + '.' + s.toLowerCase().replace(/\./g, '');
+	},
+	
+	/*
+	 * Makes a string suitale for use as ID.
+	 * Resulting string will be lowercase without any dots.
+	 * @param {String} s The source string
+	 * @returns {String} The resulting string
+	 */
+	idfy: function(s) {
+		return s.toLowerCase().replace(/\./g, '');
+	},
+	
+	/**
 	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
 	 * @param {Mixed} value The value
 	 * @param {Mixed} ifEmpty The fallback value

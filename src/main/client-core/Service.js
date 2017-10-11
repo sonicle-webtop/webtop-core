@@ -45,9 +45,35 @@ Ext.define('Sonicle.webtop.core.Service', {
 	vwrem: null,
 	
 	init: function() {
-		var me = this;
+		var me = this, dparts = {}, cont;
 		WT.checkDesktopNotificationAuth();
 		me.initActions();
+		
+		Ext.iterate(WT.getApp().getDescriptors(false), function(desc) {
+			Ext.iterate(desc.getPortletClassNames(), function(cname) {
+				dparts[WTU.idfy(cname)] = {
+					xclass: cname,
+					sid: desc.getId()
+				};
+			});
+		});
+		cont = Ext.JSON.decode(me.getVar('portalContent'), true) || [];
+		
+		me.setMainComponent(Ext.create({
+			xtype: 'dashboard',
+			stateful: false,
+			columnWidths: [
+				0.25,0.25,0.25,0.25
+			],
+			parts: dparts
+			/*
+			defaultContent: [{
+				type: 'soniclewebtoptasksportletmytasks',
+				columnIndex: 2,
+				height: 400
+			}]
+			*/
+		}));
 		
 		me.onMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
@@ -401,6 +427,18 @@ Ext.define('Sonicle.webtop.core.Service', {
 		WT.ajaxReq(me.ID, 'ManageIM', {
 			params: {
 				crud: 'init'
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
+	updatePortalContent: function(content, opts) {
+		var me = this;
+		WT.ajaxReq(me.ID, 'UpdatePortalContent', {
+			params: {
+				content: content
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);

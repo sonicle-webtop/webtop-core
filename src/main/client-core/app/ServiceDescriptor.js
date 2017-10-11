@@ -49,6 +49,7 @@ Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
 		serviceClassName: null,
 		serviceVarsClassName: null,
 		userOptions: null,
+		portletClassNames: null,
 		name: null,
 		desription: null,
 		company: null
@@ -65,7 +66,7 @@ Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
 	
 	getInstance: function() {
 		var me = this;
-		if(!me.instance) {
+		if (!me.instance) {
 			var cn = me.getServiceClassName();
 			if(!Ext.isString(cn)) return null;
 			try {
@@ -85,7 +86,27 @@ Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
 	},
 	
 	initService: function() {
-		var me = this;
+		var me = this, svc;
+		
+		if (!me.inited) {
+			WTA.Log.debug('Initializing service [{0}]', me.getId());
+			svc = me.getInstance();
+			if (!svc) return false;
+			
+			// Calls initialization method
+			try {
+				svc.privateInit.call(svc);
+				svc.init.call(svc);
+				me.inited = true;
+			} catch(e) {
+				WTA.Log.error('Error while calling init() method');
+				WTA.Log.exception(e);
+				return false;
+			}
+		}
+		return true;
+		
+		/*
 		WTA.Log.debug('Initializing service [{0}]', me.getId());
 		var svc = me.getInstance();
 		if(svc === null) return false;
@@ -101,6 +122,7 @@ Ext.define('Sonicle.webtop.core.app.ServiceDescriptor', {
 			WTA.Log.exception(e);
 			return false;
 		}
+		*/
 	},
 	
 	isInited: function() {
