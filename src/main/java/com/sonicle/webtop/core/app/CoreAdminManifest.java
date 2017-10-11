@@ -75,7 +75,5 @@ public class CoreAdminManifest extends ServiceManifest {
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
-		
-		permissions = new ArrayList<>();
 	}
 }

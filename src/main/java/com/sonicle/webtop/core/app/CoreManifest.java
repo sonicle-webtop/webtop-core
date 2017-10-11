@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
-import java.util.ArrayList;
 
 /**
  *
@@ -93,8 +92,6 @@ public class CoreManifest extends ServiceManifest {
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
-		
-		permissions = new ArrayList<>();
 		
 		/*
 			SYSADMIN (internal)
@@ -162,7 +159,5 @@ public class CoreManifest extends ServiceManifest {
 			- ACCESS: ability to sync data with devices
 		*/
 		permissions.add(new ServicePermission("WEBCHAT", new String[]{ServicePermission.ACTION_ACCESS}));
-		
-		portlets = new ArrayList<>();
 	}
 }

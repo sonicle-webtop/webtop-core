@@ -72,8 +72,8 @@ public class ServiceManifest {
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
-	protected ArrayList<ServicePermission> permissions;
-	protected ArrayList<Portlet> portlets;
+	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
+	protected ArrayList<Portlet> portlets = new ArrayList<>();
 	
 	
 	public ServiceManifest() {
@@ -84,7 +84,6 @@ public class ServiceManifest {
 		companyEmail = "sonicle@sonicle.com";
 		companyWebSite = "http://www.sonicle.com";
 		supportEmail = "sonicle@sonicle.com";
-		permissions = new ArrayList<>();
 	}
 	
 	public ServiceManifest(HierarchicalConfiguration svcEl) throws Exception {
@@ -149,8 +148,6 @@ public class ServiceManifest {
 		
 		hidden = svcEl.getBoolean("hidden", false);
 		
-		
-		permissions = new ArrayList<>();
 		if (!svcEl.configurationsAt("permissions").isEmpty()) {
 			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
 			for(HierarchicalConfiguration elPerm : elPerms) {
@@ -178,7 +175,6 @@ public class ServiceManifest {
 			}
 		}
 		
-		portlets = new ArrayList<>();
 		if (!svcEl.configurationsAt("portlets").isEmpty()) {
 			List<HierarchicalConfiguration> elWidgets = svcEl.configurationsAt("portlets.portlet");
 			for(HierarchicalConfiguration elWidget : elWidgets) {
