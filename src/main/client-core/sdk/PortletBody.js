@@ -46,12 +46,18 @@ Ext.define('Sonicle.webtop.core.sdk.PortletBody', {
 	referenceHolder: true,
 	
 	/**
+	 * @cfg {String} sid
+	 * WebTop service ID.
+	 */
+	
+	/**
 	 * @property {WTA.sdk.Service} mys
 	 * Reference to service instance.
 	 */
 	mys: null,
 	
 	refresh: Ext.emptyFn,
+	recents: Ext.emptyFn,
 	search: Ext.emptyFn,
 	
 	initComponent: function() {

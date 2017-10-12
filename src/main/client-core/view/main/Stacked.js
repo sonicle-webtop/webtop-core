@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	alternateClassName: 'WTA.view.main.Stacked',
 	extend: 'WTA.view.main.Abstract',
 	requires: [
-		'WTA.ux.StackServiceButton'
+		'WTA.ux.ServiceButtonStacked'
 	],
 	
 	l1ButtonsLimit: 3,
@@ -63,15 +63,19 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 		
 		me.addedCount++;
 		if(me.addedCount <= me.l1ButtonsLimit) {
-			cmp = l1.add(Ext.create('WTA.ux.StackServiceButton', desc, {
+			l1.add({
+				xclass: 'WTA.ux.ServiceButtonStacked',
+				sid: desc.getId(),
 				handler: 'onLauncherButtonClick'
-			}));
+			});
 			//cmp.setBadgeText(Ext.Number.randomInt(0,99)+'');
 		} else {
-			cmp = l2.add(Ext.create('WTA.ux.ServiceButton', desc, {
+			l2.add({
+				xclass: 'WTA.ux.ServiceButton',
+				sid: desc.getId(),
 				scale: 'small',
 				handler: 'onLauncherButtonClick'
-			}));
+			});
 		}
 		
 		// When last service is added...

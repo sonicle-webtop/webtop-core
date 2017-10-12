@@ -13,6 +13,10 @@
 .wt-icon-service-s { background-image: url('service_24.png') !important; }
 .wt-icon-service-m { background-image: url('service_32.png') !important; }
 .wt-icon-service-l { background-image: url('service_48.png') !important; }
+.wt-icon-portal-xs { background-image: url('portal_16.png') !important; }
+.wt-icon-portal-s { background-image: url('portal_24.png') !important; }
+.wt-icon-portal-m { background-image: url('portal_32.png') !important; }
+.wt-icon-portal-l { background-image: url('portal_48.png') !important; }
 
 .wt-icon-empty { background-image: url('empty.png') !important;}
 .wt-icon-empty-xs { width: 16px; height: 16px; background-image: url('empty.png') !important;}

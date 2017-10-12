@@ -34,6 +34,7 @@
 Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
 	alternateClassName: 'WTA.ux.ServiceButton',
 	extend: 'Ext.button.Button',
+	/*
 	requires: [
 		'Sonicle.plugin.BadgeText'
 	],
@@ -41,38 +42,58 @@ Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
 		ptype: 'sobadgetext',
 		align: 'bl'
 	}],
+	*/
 	
 	textAlign: 'left',
 	
-	constructor: function(desc, cfg) {
+	config: {
+		iconName: 'service'
+	},
+	
+	/**
+	 * @cfg {String} sid
+	 * WebTop service ID.
+	 */
+	
+	constructor: function(cfg) {
+		var me = this, desc;
+		if (Ext.isEmpty(cfg.sid)) Ext.raise('`sid` is mandatory');
+		desc = WT.getApp().getDescriptor(cfg.sid);
+		Ext.apply(cfg, me.buildButtonCfg(cfg, desc));
+		me.callParent([cfg]);
+	},
+	
+	buildButtonCfg: function(cfg, desc) {
 		var me = this,
-				scale = cfg.scale || me.scale,
-				tip, iconSize;
-		
-		// Defines tooltips
-		var tip = {title: desc.getName()};
-		if(WTS.isadmin) { // TODO: gestire tooltip per admin
-			var build = desc.getBuild();
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany())
-			});
-		} else {
-			Ext.apply(tip, {
-				text: Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany())
-			});
-		}
-		
-		// Defines icon
-		iconSize = 'xs';
-		if(scale === 'medium') iconSize = 's';
-		if(scale === 'large') iconSize = 'm';
-		
-		Ext.apply(cfg, {
+				iconName = me.getInitialConfig('iconName'),
+				scale = cfg.scale || me.scale;
+		return {
 			itemId: desc.getId(),
 			overflowText: desc.getName(),
-			tooltip: tip,
-			iconCls: WTF.cssIconCls(desc.getXid(), 'service-' + iconSize)
-		});
-		me.callParent([cfg]);
+			tooltip: me.buildTooltip(desc),
+			iconCls: WTF.cssIconCls(desc.getXid(), iconName, me.getIconSize(scale))
+		};
+	},
+	
+	buildTooltip: function(desc) {
+		var text, build;
+		if (WT.isPermitted('WTADMIN', 'ACCESS')) {
+			build = desc.getBuild();
+			text = Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany());
+		} else {
+			text = Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany());
+		}
+		return {
+			title: desc.getName(),
+			text: text
+		};
+	},
+	
+	privates: {
+		getIconSize: function(scale) {
+			if (scale === 'large') return 'm';
+			if (scale === 'medium') return 's';
+			return 'xs';
+		}
 	}
 });

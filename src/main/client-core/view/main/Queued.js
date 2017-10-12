@@ -56,10 +56,12 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 	},
 	
 	addServiceButton: function(desc) {
-		this._getLauncher().add(Ext.create('WTA.ux.ServiceButton', desc, {
+		this._getLauncher().add({
+			xclass: 'WTA.ux.ServiceButton',
+			sid: desc.getId(),
 			scale: 'medium',
 			handler: 'onLauncherButtonClick'
-		}));
+		});
 	},
 	
 	createWestCmp: function() {

@@ -68,8 +68,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 			parts: dparts
 			/*
 			defaultContent: [{
-				type: 'soniclewebtoptasksportletmytasks',
-				columnIndex: 2,
+				type: 'soniclewebtoptasksportlettasks',
+				columnIndex: 0,
 				height: 400
 			}]
 			*/

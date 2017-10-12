@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.NotificationButton',
 		'WTA.ux.TaskBar',
 		'WTA.ux.ServiceButton',
+		'WTA.ux.ServiceButtonPortal',
 		'WTA.ux.ViewWindow',
 		'WTA.ux.IMButton',
 		'WTA.ux.IMPanel',
@@ -429,8 +430,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	createPortalButton: function(cfg) {
 		return Ext.apply({
-			itemId: WT.ID,
-			glyph: 0xf015,
+			xclass: 'WTA.ux.ServiceButtonPortal',
+			sid: WT.ID,
 			handler: 'onPortalButtonClick'
 		}, cfg || {});
 	},

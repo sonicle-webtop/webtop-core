@@ -52,10 +52,12 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	},
 	
 	addServiceButton: function(desc) {
-		this.getWest().add(Ext.create('WTA.ux.ServiceButton', desc, {
+		this.getWest().add({
+			xclass: 'WTA.ux.ServiceButton',
+			sid: desc.getId(),
 			scale: 'large',
 			handler: 'onLauncherButtonClick'
-		}));//.setBadgeText(Ext.Number.randomInt(0,99)+'');
+		});
 	},
 	
 	createWestCmp: function() {

@@ -31,17 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.StackServiceButton', {
-	alternateClassName: 'WTA.ux.StackServiceButton',
+Ext.define('Sonicle.webtop.core.ux.ServiceButtonStacked', {
+	alternateClassName: 'WTA.ux.ServiceButtonStacked',
 	extend: 'WTA.ux.ServiceButton',
 	
 	scale: 'medium',
 	
-	constructor: function(desc, cfg) {
-		var me = this;
-		Ext.apply(cfg, {
+	buildButtonCfg: function(cfg, desc) {
+		return Ext.apply(this.callParent(arguments), {
 			text: desc.getName()
 		});
-		me.callParent(arguments);
 	}
 });

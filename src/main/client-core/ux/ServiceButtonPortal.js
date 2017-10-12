@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2017 Sonicle S.r.l.
+ * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,48 +29,23 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2017 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.Portlet', {
-	alternateClassName: 'WTA.sdk.Portlet',
-	extend: 'Ext.dashboard.Part',
+Ext.define('Sonicle.webtop.core.ux.ServiceButtonPortal', {
+	alternateClassName: 'WTA.ux.ServiceButtonPortal',
+	extend: 'WTA.ux.ServiceButton',
 	
-	config: {
-		title: null,
-		iconCls: null,
-		bodyClass: null,
-		bodyConfig: null
+	iconName: 'portal',
+	
+	buildButtonCfg: function(cfg, desc) {
+		return Ext.apply(this.callParent(arguments), {
+			overflowText: 'Home'
+		});
 	},
 	
-	/**
-	 * @cfg {String} sid
-	 * WebTop service ID.
-	 */
-	
-	constructor: function(cfg) {
-		var me = this,
-				icfg = me.getInitialConfig(),
-				type = WTU.idfy(me.$className);
-		
-		if (Ext.isEmpty(cfg.sid)) Ext.raise('`sid` is mandatory');
-		if (Ext.isEmpty(icfg.bodyClass)) Ext.raise('`bodyClass` is mandatory');
-		
-		me['type'] = type;
-		cfg.viewTemplate = Ext.merge(icfg.viewTemplate || {}, {
-			layout: 'fit',
-			title: WT.resTpl(cfg.sid, icfg.title),
-			iconCls: icfg.iconCls,
-			items: [Ext.apply(icfg.bodyConfig || {}, {
-					xclass: icfg.bodyClass,
-					sid: cfg.sid
-			})],
-			tools: [{
-				type: 'refresh',
-				callback: function(s) {
-					s.getComponent(0).refresh();
-				}
-			}]
+	buildTooltip: function(desc) {
+		return Ext.apply(this.callParent(arguments), {
+			title: 'Home'
 		});
-		me.callParent([cfg]);
 	}
 });
