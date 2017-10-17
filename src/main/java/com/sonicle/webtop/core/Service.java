@@ -91,7 +91,7 @@ import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
-import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import com.sonicle.webtop.core.model.Recipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServicePermission;
@@ -102,6 +102,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -1143,14 +1144,15 @@ public class Service extends BaseService {
 	}
 		
 	public void processListInternetRecipientsSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsSimple> items = new ArrayList<>();
+		
 		try {
-			List<String> srcids=coreMgr.listInternetRecipientsSources();
-			ArrayList<JsSimple> srcs=new ArrayList<>();
-			for(String srcid: srcids) {
-				RecipientsProviderBase provider = coreMgr.getProfileRecipientsProvider(srcid);
-				srcs.add(new JsSimple(srcid,provider.getDescription()));
+			for(String soid : coreMgr.listRecipientProviderSourceIds()) {
+				RecipientsProviderBase provider = coreMgr.getProfileRecipientsProvider(soid);
+				items.add(new JsSimple(soid, provider.getDescription()));
 			}
-			new JsonResult("sources", srcs, srcs.size()).printTo(out);
+			new JsonResult("sources", items, items.size()).printTo(out);
+			
 		} catch (Exception ex) {
 			logger.error("Error in ListInternetRecipientsSource", ex);
 			new JsonResult(false, "Error in ListInternetRecipientsSources").printTo(out);
@@ -1158,7 +1160,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageInternetRecipients(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<InternetRecipient> items = null;
+		List<Recipient> items = null;
 		
 		try {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
@@ -1168,10 +1170,10 @@ public class Service extends BaseService {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
-				if(sources.isEmpty()) {
-					items = coreMgr.listInternetRecipients(query, limit);
+				if (sources.isEmpty()) {
+					items = coreMgr.listProviderRecipients(RecipientFieldType.EMAIL, query, limit);
 				} else {
-					items = coreMgr.listInternetRecipients(sources, query, limit);
+					items = coreMgr.listProviderRecipients(RecipientFieldType.EMAIL, sources, query, limit);
 				}
 				new JsonResult("recipients", items, items.size()).printTo(out);
 			}

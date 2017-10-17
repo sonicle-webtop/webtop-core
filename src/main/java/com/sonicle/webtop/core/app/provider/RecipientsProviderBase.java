@@ -33,7 +33,8 @@
  */
 package com.sonicle.webtop.core.app.provider;
 
-import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import com.sonicle.webtop.core.model.Recipient;
+import com.sonicle.webtop.core.model.RecipientFieldType;
 import java.util.List;
 
 /**
@@ -57,6 +58,6 @@ public abstract class RecipientsProviderBase {
 		return description;
 	}
 	
-	public abstract List<InternetRecipient> getRecipients(String queryText, int max);
-	public abstract List<InternetRecipient> expandToRecipients(String virtualRecipient);
+	public abstract List<Recipient> getRecipients(RecipientFieldType fieldType, String queryText, int max);
+	public abstract List<Recipient> expandToRecipients(String virtualRecipient);
 }

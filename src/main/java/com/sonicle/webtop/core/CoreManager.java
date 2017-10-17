@@ -72,7 +72,7 @@ import com.sonicle.webtop.core.model.ServiceSharePermission;
 import com.sonicle.webtop.core.model.SharePermsElements;
 import com.sonicle.webtop.core.model.SharePermsFolder;
 import com.sonicle.webtop.core.model.IncomingShareRoot;
-import com.sonicle.webtop.core.bol.model.InternetRecipient;
+import com.sonicle.webtop.core.model.Recipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.Sharing;
 import com.sonicle.webtop.core.model.SharePermsRoot;
@@ -97,6 +97,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -111,6 +112,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -129,6 +131,8 @@ import org.slf4j.Logger;
 public class CoreManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
 	private WebTopApp wta = null;
+	
+	public static final String RECIPIENT_PROVIDER_AUTO_SOURCE_ID = "auto";
 	
 	private final HashSet<String> cacheReady = new HashSet<>();
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
@@ -496,11 +500,7 @@ public class CoreManager extends BaseManager {
 	
 
 	
-	/*
-	private LinkedHashMap<String, RecipientsProviderBase> getDomainRecipientsProviders() {
-		
-	}
-	*/
+	
 	
 	private void buildProfileRecipientsProviderCache() {
 		for(String serviceId : listAllowedServices()) {
@@ -1946,7 +1946,7 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			AutosaveDAO asdao = AutosaveDAO.getInstance();
 			List<OAutosave> data=asdao.selectOthersByUserServices(con, targetPid.getDomainId(), targetPid.getUserId(), notWebtopClientId, listAllowedServices());
-			List<OAutosave> rdata=new ArrayList<OAutosave>();
+			List<OAutosave> rdata=new ArrayList<>();
 			for(OAutosave as: data) {
 				if (!sm.isOnline(new UserProfileId(as.getDomainId(),as.getUserId()), as.getWebtopClientId()))
 					rdata.add(as);
@@ -1960,135 +1960,121 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public RecipientsProviderBase getProfileRecipientsProvider(String srouceId) {
-		return getProfileRecipientsProviders().get(srouceId);
+	public void autoLearnInternetRecipient(String email) {
+		addServiceStoreEntry(SERVICE_ID, "recipients", email, email);
 	}
 	
-	public List<String> listInternetRecipientsSources() throws WTException {
+	public RecipientsProviderBase getProfileRecipientsProvider(String sourceId) {
+		return getProfileRecipientsProviders().get(sourceId);
+	}
+	
+	/**
+	 * Returns the available source IDs.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<String> listRecipientProviderSourceIds() throws WTException {
 		return new ArrayList<>(getProfileRecipientsProviders().keySet());
 	}
 	
-	public List<InternetRecipient> listInternetRecipients(String queryText, int max) throws WTException {
-		List<String> list=listInternetRecipientsSources();
-		list.add(0,"");
-		return listInternetRecipients(list, queryText, max);
+	/**
+	 * Returns a list of recipients beloging to a specified type.
+	 * The search will include all available sources; including also the 
+	 * automatic ({@link #RECIPIENT_PROVIDER_AUTO_SOURCE_ID}) one used to store
+	 * the auto-learn texts.
+	 * @param fieldType The desired recipient type.
+	 * @param queryText A text to filter out returned results.
+	 * @param max Max number of results.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max) throws WTException {
+		final ArrayList<String> ids = new ArrayList<>();
+		ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+		ids.addAll(listRecipientProviderSourceIds());
+		return listProviderRecipients(fieldType, ids, queryText, max);
 	}
 	
-	public List<InternetRecipient> listInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
-		ArrayList<InternetRecipient> items = new ArrayList<>();
+	/**
+	 * Returns a list of recipients beloging to a specified type.
+	 * @param fieldType The desired recipient type.
+	 * @param sourceIds A collection of sources in which look for.
+	 * @param queryText A text to filter out returned results.
+	 * @param max Max number of results.
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, Collection<String> sourceIds, String queryText, int max) throws WTException {
+		ArrayList<Recipient> items = new ArrayList<>();
 		
 		int remaining = max;
-		for(String soid : sourceIds) {
-			final List<InternetRecipient> recipients;
-			//zero length source id means auto learnt
-			if (soid.length() == 0) {
-				List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+		for(String soId : sourceIds) {
+			List<Recipient> recipients = null;
+			if (StringUtils.equals(soId, RECIPIENT_PROVIDER_AUTO_SOURCE_ID)) {
 				recipients = new ArrayList<>();
-				for(OServiceStoreEntry entry: entries) {
-					InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
-					if (ia != null) {
-						recipients.add(new InternetRecipient("auto", lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), "auto", ia.getPersonal(), ia.getAddress()));
+				//TODO: Find a way to handle other RecipientFieldTypes
+				if (fieldType.equals(RecipientFieldType.EMAIL)) {
+					final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+					for(OServiceStoreEntry entry: entries) {
+						final InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
+						recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
 					}
 				}
 				
 			} else {
-				RecipientsProviderBase provider = getProfileRecipientsProviders().get(soid);
-				if(provider == null) continue;
+				final RecipientsProviderBase provider = getProfileRecipientsProviders().get(soId);
+				if (provider == null) continue;
 				
-				recipients = provider.getRecipients(queryText, remaining);
-				if(recipients == null) continue;
+				try {
+					recipients = provider.getRecipients(fieldType, queryText, remaining);
+				} catch(Throwable t) {
+					logger.error("Error calling RecipientProvider [{}]", t, soId);
+				}
+				if (recipients == null) continue;
 			}
 			
-			for(InternetRecipient recipient : recipients) {
+			for(Recipient recipient : recipients) {
 				remaining--;
-				if(remaining < 0) break; 
-				recipient.setSource(soid); // Force composed id
+				if (remaining < 0) break; 
+				recipient.setSource(soId); // Force composed id!
 				items.add(recipient);
 			}
-			if(remaining <= 0) break;
-			/*
-			if(recipients != null) {
-				if(recipients.size() > remaining) {
-					items.addAll(recipients.subList(0, remaining-1));
-					break;
-				} else {
-					remaining -=  recipients.size();
-					items.addAll(recipients);
-				}
-			}
-			*/
+			if (remaining <= 0) break;
 		}
-		
 		return items;
 	}
 	
-	public List<InternetRecipient> expandToInternetRecipients(String virtualRecipient) throws WTException {
-		ArrayList<InternetRecipient> items = new ArrayList<>();
-		VirtualAddress virtAdd = new VirtualAddress(virtualRecipient);
+	/**
+	 * Expands a virtualRecipient address into a real set of recipients.
+	 * @param virtualRecipientAddress
+	 * @return
+	 * @throws WTException 
+	 */
+	public List<Recipient> expandVirtualProviderRecipient(String virtualRecipientAddress) throws WTException {
+		ArrayList<Recipient> items = new ArrayList<>();
+		VirtualAddress va = new VirtualAddress(virtualRecipientAddress);
 		
-		for (String srcId : listInternetRecipientsSources()) {
-			RecipientsProviderBase provider = getProfileRecipientsProviders().get(srcId);
+		for (String soId : listRecipientProviderSourceIds()) {
+			final RecipientsProviderBase provider = getProfileRecipientsProviders().get(soId);
 			if (provider == null) continue;
-			
-			if (!StringUtils.isBlank(virtAdd.getDomain()) && !StringUtils.startsWith(srcId, virtAdd.getDomain())) {
+			if (!StringUtils.isBlank(va.getDomain()) && !StringUtils.startsWith(soId, va.getDomain())) {
 				continue;
 			}
-			final List<InternetRecipient> recipients = provider.expandToRecipients(virtAdd.getLocal());
+			
+			List<Recipient> recipients = null;
+			try {
+				recipients = provider.expandToRecipients(va.getLocal());
+			} catch(Throwable t) {
+				logger.error("Error calling RecipientProvider [{}]", t, soId);
+			}
 			if (recipients == null) continue;
-			for (InternetRecipient recipient : recipients) {
-				recipient.setSource(srcId);
+			for (Recipient recipient : recipients) {
+				recipient.setSource(soId);
 				items.add(recipient);
 			}
 		}
 		return items;
 	}
-	
-	public void learnInternetRecipient(String email) {
-		addServiceStoreEntry(SERVICE_ID, "recipients", email, email);
-	}
-	
-	/*
-	public List<InternetRecipient> listDomainInternetRecipients(List<String> sourceIds, String queryText, int max) throws WTException {
-		
-		
-	}
-	*/
-	
-	/*
-	public List<InternetRecipient> listInternetRecipients(List<String> providerIds, boolean incGlobal, String incDomainId, UserProfileId incProfileId, String text) throws WTException {
-		ArrayList<InternetRecipient> items = new ArrayList<>();
-		
-		for(String proid : providerIds) {
-			for(RecipientsProviderBase provider : getProfileRecipientsProviders()) {
-				if(provider != null) {
-					if(incGlobal && (provider instanceof IGlobalRecipientsProvider)) {
-						try {
-							items.addAll(((IGlobalRecipientsProvider)provider).getRecipients(text));
-						} catch(Throwable t) {
-							logger.error("Error querying provider", t);
-						}	
-					}
-					if(!StringUtils.isBlank(incDomainId) && (provider instanceof IDomainRecipientsProvider)) {
-						try {
-							items.addAll(((IDomainRecipientsProvider)provider).getRecipients(incDomainId, text));
-						} catch(Throwable t) {
-							logger.error("Error querying provider", t);
-						}
-					}
-					if((incProfileId != null) && (provider instanceof IProfileRecipientsProvider)) {
-						try {
-							items.addAll(((IProfileRecipientsProvider)provider).getRecipients(incProfileId, text));
-						} catch(Throwable t) {
-							logger.error("Error querying provider", t);
-						}
-					}
-
-				}
-			}
-		}
-		return items;
-	}
-	*/
 	
 	public List<SyncDevice> listZPushDevices() throws WTException {
 		try {
