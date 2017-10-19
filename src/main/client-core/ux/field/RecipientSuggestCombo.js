@@ -55,7 +55,13 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		 * @cfg {int} limit
 		 * limit records number.
 		 */
-		limit: 100
+		limit: 100,
+		
+		/**
+		 * @cfg {boolean} fax
+		 * show only fax contacts.
+		 */
+		fax: false
 	},
 	
 	escapeDisplayed: true,
@@ -87,7 +93,8 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 				proxy: WTF.apiProxy(WT.ID, 'ManageInternetRecipients', 'recipients', {
 					extraParams: {
 						sources: me.getSources(),
-						limit: me.getLimit()
+						limit: me.getLimit(),
+						fax: me.getFax()
 					}
 				})
 			}
