@@ -56,6 +56,12 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	action: 'LookupRecipients',
 
 	/**
+	 * @cfg {String} rftype
+	 * Recipient field type for lookups, defaults to email.
+	 */
+	rftype: 'email',
+
+	/**
 	 * @cfg {Object} fields
 	 * The default field names on the underlying store
 	 */
@@ -110,7 +116,8 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					dataIndex: me.fields.email, 
 					//editor: 'textfield'
 					editor: me.rcb=Ext.create({
-						xtype: 'wtrcptsuggestcombo'
+						xtype: 'wtrcptsuggestcombo',
+						rftype: me.rftype
 					}),
 					renderer: Ext.util.Format.htmlEncode
 				}

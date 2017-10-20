@@ -302,6 +302,42 @@ public class CoreSettings {
 	public static final String PUBLIC_NAME = "public.name";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 */
+	public static final String FAX_FILETYPES = "fax.filetypes";
+	
+	/**
+	 * [domain+system]
+	 * [int]
+	 */
+	public static final String FAX_MAXRECIPIENTS = "fax.maxrecipients";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 */
+	public static final String FAX_PATTERN = "fax.pattern";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 */
+	public static final String FAX_SUBJECT = "fax.subject";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 */
+	public static final String FAX_SMTP_HOST = "fax.smtp.host";
+	
+	/**
+	 * [domain+system]
+	 * [int]
+	 */
+	public static final String FAX_SMTP_PORT = "fax.smtp.port";
+	
+	/**
 	 * [string][system+domain][*]
 	 * Overrides support email address
 	 */

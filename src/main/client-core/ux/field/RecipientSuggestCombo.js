@@ -58,10 +58,11 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		limit: 100,
 		
 		/**
-		 * @cfg {boolean} fax
-		 * show only fax contacts.
+		 * @rftype {String} recipient field type for lookup
+		 * email|fax|telephone...see RecipientFieldType.
+		 * defaults to email
 		 */
-		fax: false
+		rftype: "email"
 	},
 	
 	escapeDisplayed: true,
@@ -94,7 +95,7 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 					extraParams: {
 						sources: me.getSources(),
 						limit: me.getLimit(),
-						fax: me.getFax()
+						rftype: me.getRftype()
 					}
 				})
 			}
@@ -132,11 +133,15 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 						nav = pick.getNavigationModel(),
 						rec = nav.getRecord();
 
-				if(rec && rec.get("source")==="") {
+				if(rec && rec.get("source")===this.self.SOURCE_AUTO) {
 					rec.drop();
 					s.getStore().sync();
 				}
 			}
 		}
+	},
+	
+	statics: {
+		SOURCE_AUTO: 'auto'
 	}
 });

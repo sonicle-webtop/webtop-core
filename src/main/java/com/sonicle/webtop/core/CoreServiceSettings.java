@@ -144,6 +144,30 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getInteger(OTP_TRUST_DEVICE_DURATION, 0);
 	}
 	
+	public String getFaxFileTypes() {
+		return getString(FAX_FILETYPES, "pdf,txt");
+	}
+	
+	public int getFaxMaxRecipients() {
+		return getInteger(FAX_MAXRECIPIENTS, 1);
+	}
+	
+	public String getFaxPattern() {
+		return getString(FAX_PATTERN, "{number}@fax.provider.net");
+	}
+	
+	public String getFaxSubject() {
+		return getString(FAX_SUBJECT, "");
+	}
+	
+	public String getFaxSMTPHost() {
+		return getString(FAX_SMTP_HOST, "localhost");
+	}
+	
+	public int getFaxMaxSMTPPort() {
+		return getInteger(FAX_SMTP_PORT, 25);
+	}
+	
 	public String getDevicesSyncShellUri() {
 		return getString(DEVICES_SYNC_SHELL_URI, "sh://localhost");
 	}
