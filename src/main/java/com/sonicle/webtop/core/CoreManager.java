@@ -813,13 +813,32 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataByLike(String[] types, String like) throws WTException {
+	public List<MasterData> listMasterDataByIds(Collection<String> masterDataIds) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
-		ArrayList<MasterData> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
+			ArrayList<MasterData> items = new ArrayList<>();
+			for(OMasterData omas : masDao.viewByIdsDomain(con, masterDataIds, getTargetProfileId().getDomainId())) {
+				items.add(createMasterData(omas));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<MasterData> listMasterDataByLike(String[] types, String like) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			ArrayList<MasterData> items = new ArrayList<>();
 			for(OMasterData omas : masDao.viewByDomainTypeLike(con, getTargetProfileId().getDomainId(), types, like)) {
 				items.add(createMasterData(omas));
 			}
@@ -834,11 +853,11 @@ public class CoreManager extends BaseManager {
 	
 	public List<MasterData> listMasterDataByParentLike(String parentId, String[] types, String like) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
-		ArrayList<MasterData> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
+			ArrayList<MasterData> items = new ArrayList<>();
 			for(OMasterData omas : masDao.viewStatisticByDomainParentTypeLike(con, getTargetProfileId().getDomainId(), parentId, types, like)) {
 				items.add(createMasterData(omas));
 			}
