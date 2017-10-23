@@ -855,6 +855,10 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes) throws WTException {
+		return listChildrenMasterDataByType(parentId, masterDataTypes, null);
+	}
+	
 	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes, String pattern) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
