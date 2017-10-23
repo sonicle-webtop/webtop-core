@@ -153,6 +153,7 @@ import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import com.sonicle.webtop.vfs.IVfsManager;
 import com.sonicle.webtop.vfs.model.SharingLink;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.apache.commons.vfs2.FileObject;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -592,12 +593,11 @@ public class Service extends BaseService {
 		try {
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			
-			String[] types = new String[]{
+			final List<String> types = Arrays.asList(
 				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
 				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
-			};
-			List<MasterData> entries = coreMgr.listMasterDataByLike(types, "%" + query + "%");
-			for(MasterData entry : entries) {
+			);
+			for(MasterData entry : coreMgr.listMasterDataByType(types, "%" + query + "%")) {
 				items.add(new JsCustomerSupplierLkp(entry));
 			}
 			
@@ -616,12 +616,11 @@ public class Service extends BaseService {
 			String parentMasterDataId = ServletUtils.getStringParameter(request, "parentMasterDataId", null);
 			String query = ServletUtils.getStringParameter(request, "query", "");
 			
-			String[] types = new String[]{
+			final List<String> types = Arrays.asList(
 				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
 				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
-			};
-			List<MasterData> entries = coreMgr.listMasterDataByParentLike(parentMasterDataId, types, "%" + query + "%");
-			for(MasterData entry : entries) {
+			);
+			for(MasterData entry : coreMgr.listChildrenMasterDataByType(parentMasterDataId, types, "%" + query + "%")) {
 				final ArrayList<String> tokens = new ArrayList<>(3);
 				if (!StringUtils.isEmpty(entry.getAddress())) {
 					tokens.add(entry.getAddress());
