@@ -1166,15 +1166,24 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
+			RecipientFieldType rft = ServletUtils.getEnumParameter(request, "rftype", RecipientFieldType.EMAIL, RecipientFieldType.class);
 			if (crud.equals(Crud.READ)) {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(RecipientFieldType.EMAIL, query, limit);
+					items = coreMgr.listProviderRecipients(rft, query, limit);
 				} else {
-					items = coreMgr.listProviderRecipients(RecipientFieldType.EMAIL, sources, query, limit);
+					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
 				}
+				
+				if (rft.equals(RecipientFieldType.FAX)) {
+					//compile fax email patterns
+					for(Recipient r: items) {
+						r.setAddress(compileFaxPattern(r));
+					}
+				}
+				
 				new JsonResult("recipients", items, items.size()).printTo(out);
 			}
 			else if (crud.equals(Crud.DELETE)) {
@@ -1191,6 +1200,21 @@ public class Service extends BaseService {
 			logger.error("Error in ManageInternetRecipients", ex);
 			new JsonResult(false, "Error in ManageInternetRecipients").printTo(out);
 		}
+	}
+	
+	private String compileFaxPattern(Recipient r) {
+		String faxAddress=r.getAddress();
+		//fix fax number with "+"
+        StringBuffer newfax=new StringBuffer();
+        for(char c: faxAddress.toCharArray()) {
+            if (Character.isDigit(c)) newfax.append(c);
+            else if (c=='+') {
+                if (newfax.length()==0) newfax.append("00");
+            }
+        }
+		String username=r.getPersonal().toLowerCase().replaceAll(" ", ".");
+		String faxPattern=ss.getFaxPattern();
+		return faxPattern.replace("{username}", username).replace("{number}", newfax.toString());
 	}
 	
 	
