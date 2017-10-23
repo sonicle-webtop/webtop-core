@@ -115,6 +115,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Checks if specified service is loaded.
+	 * @param {String} sid The service ID.
+	 */
+	hasService: function(sid) {
+		return this.getApp().hasDescriptor(sid);
+	},
+	
+	/**
 	 * Loads a CSS file by adding in the page a new link element.
 	 * @param {String} url The URL from which to load the CSS.
 	 */
@@ -681,14 +689,5 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getLaf: function() {
 		return WT.getVar('laf');
-	},
-	
-	/**
-	 * Returns the Service API interface.
-	 * @param {String} id The service ID.
-	 * @returns {Object} The service API object.
-	 */
-	getServiceApi: function(id) {
-		return WT.getApp().getServiceApi(id);
 	}
 });

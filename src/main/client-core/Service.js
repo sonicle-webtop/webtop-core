@@ -45,7 +45,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	vwrem: null,
 	
 	init: function() {
-		var me = this, dparts = {}, cont;
+		var me = this, dparts = {}, cont = [];
 		WT.checkDesktopNotificationAuth();
 		me.initActions();
 		
@@ -55,9 +55,14 @@ Ext.define('Sonicle.webtop.core.Service', {
 					xclass: cname,
 					sid: desc.getId()
 				};
+				cont.push({
+					type: WTU.idfy(cname),
+					columnIndex: cont.length,
+					height: 400
+				});
 			});
 		});
-		cont = Ext.JSON.decode(me.getVar('portalContent'), true) || [];
+		//cont = Ext.JSON.decode(me.getVar('portalContent'), true) || [];
 		
 		me.setMainComponent(Ext.create({
 			xtype: 'dashboard',
@@ -65,14 +70,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 			columnWidths: [
 				0.25,0.25,0.25,0.25
 			],
-			parts: dparts
-			/*
-			defaultContent: [{
-				type: 'soniclewebtoptasksportlettasks',
-				columnIndex: 0,
-				height: 400
-			}]
-			*/
+			parts: dparts,
+			defaultContent: cont
 		}));
 		
 		me.onMessage('reminderNotify', function(msg) {

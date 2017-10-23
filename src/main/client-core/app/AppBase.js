@@ -66,11 +66,11 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	
 	/**
 	 * Returns desired locale instance.
-	 * @param {String} id The service ID.
+	 * @param {String} sid The service ID.
 	 * @returns {WT.Locale}
 	 */
-	getLocale: function(id) {
-		return this.locales.get(id);
+	getLocale: function(sid) {
+		return this.locales.get(sid);
 	},
 	
 	/**
@@ -90,31 +90,39 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	},
 	
 	/**
+	 * Checks if specified service descriptor is present.
+	 * @param {String} sid The service ID.
+	 */
+	hasDescriptor: function(sid) {
+		return this.services.containsKey(sid);
+	},
+	
+	/**
 	 * Returns a service descriptor.
-	 * @param {String} id The service ID.
+	 * @param {String} sid The service ID.
 	 * @returns {WTA.ServiceDescriptor} The instance or undefined if not found. 
 	 */
-	getDescriptor: function(id) {
-		return this.services.get(id);
+	getDescriptor: function(sid) {
+		return this.services.get(sid);
 	},
 	
 	/**
 	 * Returns a service instance.
-	 * @param {String} id The service ID.
+	 * @param {String} sid The service ID.
 	 * @returns {WTA.sdk.Service} The instance or null if not found. 
 	 */
-	getService: function(id) {
-		var desc = this.getDescriptor(id);
+	getService: function(sid) {
+		var desc = this.getDescriptor(sid);
 		return (desc) ? desc.getInstance() : null;
 	},
 	
 	/**
 	 * Returns a service version.
-	 * @param {String} id The service ID.
+	 * @param {String} sid The service ID.
 	 * @returns {String} The version string. 
 	 */
-	getServiceVersion: function(id) {
-		var desc = this.getDescriptor(id);
+	getServiceVersion: function(sid) {
+		var desc = this.getDescriptor(sid);
 		return (desc) ? desc.getVersion() : "0.0.0";
 	}
 });
