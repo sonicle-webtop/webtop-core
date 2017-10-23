@@ -49,12 +49,96 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		window.location = 'logout';
 	},
 	
+	/**
+	 * Activates (switch focus) the specified service.
+	 * @param {String} sid The service ID.
+	 */
+	activateService: function(sid) {
+		this.getApp().activateService(sid);
+	},
+	
+	/**
+	 * Returns the ID of currently active (displayed) service.
+	 * @returns {String}
+	 */
+	getActiveService: function() {
+		return this.getApp().viewport.getController().active;
+	},
+	
+	/**
+	 * Returns the Service API interface.
+	 * @param {String} sid The service ID.
+	 * @returns {Object} The service API object.
+	 */
+	getServiceApi: function(sid) {
+		return this.getApp().getServiceApi(sid);
+	},
+	
+	/**
+	 * Checks against a resource if specified action is allowed.
+	 * @param {String} [sid] The service ID.
+	 * @param {String} resource The resource name.
+	 * @param {String} action The action name.
+	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
+	 */
+	isPermitted: function(sid, resource, action) {
+		if(arguments.length === 2) {
+			action = resource;
+			resource = sid;
+			sid = WT.ID;
+		}
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Service not found ['+sid+']');
+		return svc.isPermitted(resource, action);
+	},
+	
 	isSysAdmin: function() {
 		return this.isPermitted('SYSADMIN', 'ACCESS');
 	},
 	
 	isWTAdmin: function() {
 		return this.isPermitted('WTADMIN', 'ACCESS');
+	},
+	
+	/**
+	 * Creates a displayable view.
+	 * @param {String} sid The service ID.
+	 * @param {String} name The class name or alias.
+	 * @param {Object} opts
+	 * @param {String} opts.tag
+	 * @param {Object} opts.viewCfg
+	 * @param {Object} opts.containerCfg
+	 * @returns {Ext.window.Window} The container containing WebTop view.
+	 */
+	createView: function(sid, name, opts) {
+		opts = opts || {};
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().createServiceView(svc, name, opts);
+	},
+	
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {String} tag
+	 * @returns {Boolean}
+	 */
+	hasView: function(sid, tag) {
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().hasServiceView(svc, tag);
+	},
+	
+	/**
+	 * 
+	 * @param {String} sid The service ID.
+	 * @param {String} tag
+	 * @returns {Ext.window.Window} The container containing WebTop view.
+	 */
+	getView: function(sid, tag) {
+		var svc = this.getApp().getService(sid);
+		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
+		return this.getApp().viewport.getController().getServiceView(svc, tag);
 	},
 	
 	/**
@@ -191,81 +275,6 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 */
 	clearBadgeNotification: function(sid, notificationTag) {
 		return this.getApp().viewport.getController().clearBadgeNotification(sid, notificationTag);
-	},
-	
-	/**
-	 * Checks against a resource if specified action is allowed.
-	 * @param {String} [sid] The service ID.
-	 * @param {String} resource The resource name.
-	 * @param {String} action The action name.
-	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
-	 */
-	isPermitted: function(sid, resource, action) {
-		if(arguments.length === 2) {
-			action = resource;
-			resource = sid;
-			sid = WT.ID;
-		}
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Service not found ['+sid+']');
-		return svc.isPermitted(resource, action);
-	},
-	
-	/**
-	 * Creates a displayable view.
-	 * @param {String} sid The service ID.
-	 * @param {String} name The class name or alias.
-	 * @param {Object} opts
-	 * @param {String} opts.tag
-	 * @param {Object} opts.viewCfg
-	 * @param {Object} opts.containerCfg
-	 * @returns {Ext.window.Window} The container containing WebTop view.
-	 */
-	createView: function(sid, name, opts) {
-		opts = opts || {};
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().createServiceView(svc, name, opts);
-	},
-	
-	/**
-	 * 
-	 * @param {String} sid The service ID.
-	 * @param {String} tag
-	 * @returns {Boolean}
-	 */
-	hasView: function(sid, tag) {
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().hasServiceView(svc, tag);
-	},
-	
-	/**
-	 * 
-	 * @param {String} sid The service ID.
-	 * @param {String} tag
-	 * @returns {Ext.window.Window} The container containing WebTop view.
-	 */
-	getView: function(sid, tag) {
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().getServiceView(svc, tag);
-	},
-	
-	/**
-	 * Activates (switch focus) the specified service.
-	 * @param {String} sid The service ID.
-	 */
-	activateService: function(sid) {
-		WT.getApp().activateService(sid);
-	},
-	
-	/**
-	 * Returns the ID of currently active (displayed) service.
-	 * @returns {String}
-	 */
-	getActiveService: function() {
-		return this.getApp().viewport.getController().active;
 	},
 	
 	/**
