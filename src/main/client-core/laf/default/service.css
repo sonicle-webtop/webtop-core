@@ -243,6 +243,13 @@
 	height: 48px;
 }
 
+.wt-tree-node-bold {
+	font-weight: bold;
+}
+.wt-tree-node-grey {
+	color: grey;
+}
+
 /* VIEWPORT */
 .wt-header {
 	

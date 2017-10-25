@@ -146,13 +146,14 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * notification, if disabled or not available then a badge notification
 	 * will be used instead.
 	 * @param {String} sid The service ID.
+	 * @param {Boolean} fallback
 	 * @param {Object} notification The notification object.
 	 * @param {Object} [opts] Config options.
 	 */
-	showNotification: function(sid, notification, opts) {
+	showNotification: function(sid, fallback, notification, opts) {
 		var me = this, ret;
 		ret = me.showDesktopNotification(sid, notification, opts);
-		if (ret !== undefined) {
+		if (fallback && ret !== undefined) {
 			return ret;
 		} else {
 			return me.showBadgeNotification(sid, notification, opts);

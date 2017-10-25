@@ -52,10 +52,10 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 		this.handledCount = 0;
 	}
 	
-	protected abstract int getBeanStoreSize();
-	protected abstract void clearBeanStore();
-	protected abstract void addBeanToStore(T bean);
-	public abstract boolean handleStoredBeans();
+	protected abstract int getCurrentBeanBufferSize();
+	protected abstract void clearBeanBuffer();
+	protected abstract void addBeanToBuffer(T bean);
+	public abstract boolean handleBufferedBeans();
 	
 	public LogEntries getLog() {
 		return log;
@@ -74,11 +74,11 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	}
 	
 	public boolean flush() {
-		if(getBeanStoreSize() > 0) {
+		if (getCurrentBeanBufferSize() > 0) {
 			try {
-				return handleStoredBeans();
+				return handleBufferedBeans();
 			} finally {
-				clearBeanStore();
+				clearBeanBuffer();
 			}
 		} else {
 			return true;
@@ -88,13 +88,13 @@ public abstract class BatchBeanHandler<T> implements BeanHandler<T> {
 	@Override
 	public boolean handle(T bean, LogEntries log) {
 		handledCount++;
-		addBeanToStore(bean);
+		addBeanToBuffer(bean);
 		log.addAll(log);
-		if(getBeanStoreSize() == batchSize) {
+		if (getCurrentBeanBufferSize() == batchSize) {
 			try {
-				return handleStoredBeans();
+				return handleBufferedBeans();
 			} finally {
-				clearBeanStore();
+				clearBeanBuffer();
 			}
 		} else {
 			return true;
