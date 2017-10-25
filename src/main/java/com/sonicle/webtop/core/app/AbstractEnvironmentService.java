@@ -263,6 +263,10 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	}
 	
 	public WebTopSession.UploadedFile addAsUploadedFile(String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
+		return addAsUploadedFile(SERVICE_ID, tag, filename, mediaType, is);
+	}
+	
+	public WebTopSession.UploadedFile addAsUploadedFile(String serviceId, String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
 		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
 		File file = WT.createTempFile();
 		FileOutputStream fos = null;
@@ -273,7 +277,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 		} finally {
 			IOUtils.closeQuietly(fos);
 		}
-		WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, SERVICE_ID, file.getName(), tag, filename, size, mtype);
+		WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, serviceId, file.getName(), tag, filename, size, mtype);
 		env.wts.addUploadedFile(uploadedFile);
 		return uploadedFile;
 	}
