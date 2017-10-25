@@ -62,7 +62,7 @@ Ext.define('Sonicle.webtop.core.sdk.PortletBody', {
 	
 	initComponent: function() {
 		var me = this;
-		me.mys = WT.getApp().getService(me.sid);
+		if (!me.mys) me.mys = WT.getApp().getService(me.sid);
 		delete me.sid;
 		me.callParent(arguments);
 	}
