@@ -813,7 +813,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataByIds(Collection<String> masterDataIds) throws WTException {
+	public List<MasterData> listMasterData(Collection<String> masterDataIds) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
@@ -832,14 +832,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataByLike(String[] types, String like) throws WTException {
+	public List<MasterData> listMasterDataByType(Collection<String> masterDataTypes) throws WTException {
+		return listMasterDataByType(masterDataTypes, null);
+	}
+	
+	public List<MasterData> listMasterDataByType(Collection<String> masterDataTypes, String pattern) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ArrayList<MasterData> items = new ArrayList<>();
-			for(OMasterData omas : masDao.viewByDomainTypeLike(con, getTargetProfileId().getDomainId(), types, like)) {
+			for (OMasterData omas : masDao.viewByDomainTypePattern(con, getTargetProfileId().getDomainId(), masterDataTypes, pattern)) {
 				items.add(createMasterData(omas));
 			}
 			return items;
@@ -851,14 +855,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataByParentLike(String parentId, String[] types, String like) throws WTException {
+	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes) throws WTException {
+		return listChildrenMasterDataByType(parentId, masterDataTypes, null);
+	}
+	
+	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes, String pattern) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ArrayList<MasterData> items = new ArrayList<>();
-			for(OMasterData omas : masDao.viewStatisticByDomainParentTypeLike(con, getTargetProfileId().getDomainId(), parentId, types, like)) {
+			for (OMasterData omas : masDao.viewStatisticByDomainParentTypePattern(con, getTargetProfileId().getDomainId(), parentId, masterDataTypes, pattern)) {
 				items.add(createMasterData(omas));
 			}
 			return items;
