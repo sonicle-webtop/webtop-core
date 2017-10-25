@@ -74,6 +74,35 @@ Ext.define('Sonicle.webtop.core.Service', {
 			defaultContent: cont
 		}));
 		
+		me.setToolbar(Ext.create({
+			xtype: 'toolbar',
+			referenceHolder: true,
+			items: [
+				'->',
+				{
+					xtype: 'textfield',
+					tooltip: me.res('searchportlets.tip'),
+					plugins: ['sofieldtooltip'],
+					triggers: {
+						search: {
+							cls: Ext.baseCSSPrefix + 'form-search-trigger',
+							handler: function(s) {
+								me.queryPortlets(s.getValue());
+							}
+						}
+					},
+					listeners: {
+						specialkey: function(s, e) {
+							if(e.getKey() === e.ENTER) {
+								me.queryPortlets(s.getValue());
+							}
+						}
+					},
+					width: 200
+				}
+			]
+		}));
+		
 		me.onMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
 			me.showReminder(pl);
@@ -141,6 +170,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 					}
 				});
 			}, 1000);
+		}
+	},
+	
+	queryPortlets: function(s) {
+		var me=this,
+			db=me.getMainComponent();
+	
+		for(i=0;i<db.items.items.length;i+=2) {
+			var portletBody=db.items.items[i].items.items[0].items.items[0];
+			portletBody.search(s);
 		}
 	},
 	
