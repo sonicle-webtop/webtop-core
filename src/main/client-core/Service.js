@@ -179,7 +179,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 		for(i=0;i<db.items.items.length;i+=2) {
 			var portletBody=db.items.items[i].items.items[0].items.items[0];
-			portletBody.search(s);
+			if (!s || s.trim().length===0) portletBody.recents();
+			else portletBody.search(s);
 		}
 	},
 	
