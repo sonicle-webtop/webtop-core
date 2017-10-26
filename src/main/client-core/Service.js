@@ -171,6 +171,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 				});
 			}, 1000);
 		}
+		
+		me.on("activate",function() {
+			var me=this,
+				db=me.getMainComponent();
+
+			for(i=0;i<db.items.items.length;i+=2) {
+				var portletBody=db.items.items[i].items.items[0].items.items[0];
+				portletBody.refresh();
+			}
+		});
 	},
 	
 	queryPortlets: function(s) {
