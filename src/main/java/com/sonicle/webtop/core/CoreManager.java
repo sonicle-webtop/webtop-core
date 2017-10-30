@@ -573,14 +573,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<Activity> listAllLiveActivities() throws WTException {
-		ActivityDAO dao = ActivityDAO.getInstance();
+		ActivityDAO actDao = ActivityDAO.getInstance();
 		ArrayList<Activity> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			List<OActivity> oacts = dao.selectLiveByDomain(con, getTargetProfileId().getDomainId());
-			for(OActivity oact : oacts) {
+			for(OActivity oact : actDao.selectLiveByDomain(con, getTargetProfileId().getDomainId())) {
 				items.add(createActivity(oact));
 			}
 			return items;
@@ -593,14 +592,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<Activity> listLiveActivities() throws WTException {
-		ActivityDAO dao = ActivityDAO.getInstance();
+		ActivityDAO actDao = ActivityDAO.getInstance();
 		ArrayList<Activity> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			List<OActivity> oacts = dao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId());
-			for(OActivity oact : oacts) {
+			for(OActivity oact : actDao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId())) {
 				items.add(createActivity(oact));
 			}
 			return items;
@@ -813,7 +811,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterData(Collection<String> masterDataIds) throws WTException {
+	public List<MasterData> listMasterDataIn(Collection<String> masterDataIds) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
@@ -832,18 +830,18 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataByType(Collection<String> masterDataTypes) throws WTException {
-		return listMasterDataByType(masterDataTypes, null);
+	public List<MasterData> listMasterData(Collection<String> masterDataTypes) throws WTException {
+		return listMasterData(masterDataTypes, null);
 	}
 	
-	public List<MasterData> listMasterDataByType(Collection<String> masterDataTypes, String pattern) throws WTException {
+	public List<MasterData> listMasterData(Collection<String> masterDataTypes, String pattern) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ArrayList<MasterData> items = new ArrayList<>();
-			for (OMasterData omas : masDao.viewByDomainTypePattern(con, getTargetProfileId().getDomainId(), masterDataTypes, pattern)) {
+			for (OMasterData omas : masDao.viewParentsByDomainTypePattern(con, getTargetProfileId().getDomainId(), masterDataTypes, pattern)) {
 				items.add(createMasterData(omas));
 			}
 			return items;
@@ -855,18 +853,37 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes) throws WTException {
-		return listChildrenMasterDataByType(parentId, masterDataTypes, null);
-	}
-	
-	public List<MasterData> listChildrenMasterDataByType(String parentId, Collection<String> masterDataTypes, String pattern) throws WTException {
+	public List<MasterData> listChildrenMasterData(Collection<String> masterDataTypes) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			ArrayList<MasterData> items = new ArrayList<>();
-			for (OMasterData omas : masDao.viewStatisticByDomainParentTypePattern(con, getTargetProfileId().getDomainId(), parentId, masterDataTypes, pattern)) {
+			for (OMasterData omas : masDao.viewChildrenByDomainType(con, getTargetProfileId().getDomainId(), masterDataTypes)) {
+				items.add(createMasterData(omas));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<MasterData> listChildrenMasterData(String parentId, Collection<String> masterDataTypes) throws WTException {
+		return listChildrenMasterData(parentId, masterDataTypes, null);
+	}
+	
+	public List<MasterData> listChildrenMasterData(String parentId, Collection<String> masterDataTypes, String pattern) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			ArrayList<MasterData> items = new ArrayList<>();
+			for (OMasterData omas : masDao.viewChildrenByDomainParentTypePattern(con, getTargetProfileId().getDomainId(), parentId, masterDataTypes, pattern)) {
 				items.add(createMasterData(omas));
 			}
 			return items;

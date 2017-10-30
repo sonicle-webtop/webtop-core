@@ -597,7 +597,7 @@ public class Service extends BaseService {
 				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
 				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
 			);
-			for(MasterData entry : coreMgr.listMasterDataByType(types, "%" + query + "%")) {
+			for(MasterData entry : coreMgr.listMasterData(types, "%" + query + "%")) {
 				items.add(new JsCustomerSupplierLkp(entry));
 			}
 			
@@ -620,7 +620,7 @@ public class Service extends BaseService {
 				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
 				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
 			);
-			for(MasterData entry : coreMgr.listChildrenMasterDataByType(parentMasterDataId, types, "%" + query + "%")) {
+			for(MasterData entry : coreMgr.listChildrenMasterData(parentMasterDataId, types, "%" + query + "%")) {
 				final ArrayList<String> tokens = new ArrayList<>(3);
 				if (!StringUtils.isEmpty(entry.getAddress())) {
 					tokens.add(entry.getAddress());
