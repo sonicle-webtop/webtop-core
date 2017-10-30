@@ -37,8 +37,11 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang3.StringUtils;
 
@@ -60,7 +63,6 @@ public class ServiceManifest {
 	protected String supportEmail;
 	protected String controllerClassName;
 	protected String managerClassName;
-	protected String restApiClassName;
 	protected String privateServiceClassName;
 	protected String userOptionsServiceClassName;
 	protected String publicServiceClassName;
@@ -72,6 +74,7 @@ public class ServiceManifest {
 	protected String userOptionsViewJsClassName;
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
+	protected Map<String, RestApiEndpoint> restApiEndpoints = new LinkedHashMap<>();
 	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
 	protected ArrayList<Portlet> portlets = new ArrayList<>();
 	
@@ -111,18 +114,66 @@ public class ServiceManifest {
 		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
 		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
 		
-		if(!svcEl.containsKey("controllerClassName")) throw new Exception("Invalid value for property [controllerClassName]");
-		controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+		List<HierarchicalConfiguration> hconf = null;
 		
-		if(svcEl.containsKey("managerClassName")) {
-			managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+		hconf = svcEl.configurationsAt("controller");
+		if (!hconf.isEmpty()) {
+			if (hconf.size() != 1) throw new Exception(invalidCardinalityEx("controller", "1"));
+			
+			final String name = hconf.get(0).getString("[@name]");
+			if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("controller", "name"));
+			controllerClassName = buildJavaClassName(javaPackage, name);
+			
+		} else { // Old-style configuration
+			if (!svcEl.containsKey("controllerClassName")) throw new Exception(invalidValueEx("controllerClassName"));
+			controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
 		}
 		
-		if(svcEl.containsKey("restApiClassName")) {
-			restApiClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("restApiClassName"), "RestApi"));
+		hconf = svcEl.configurationsAt("manager");
+		if (!hconf.isEmpty()) {
+			if (!hconf.isEmpty()) {
+				if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("manager", "*1"));
+
+				final String name = hconf.get(0).getString("[@name]");
+				if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("manager", "name"));
+				managerClassName = buildJavaClassName(javaPackage, name);
+			}
+			
+		} else { // Old-style configuration
+			if (svcEl.containsKey("managerClassName")) {
+				managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
+			}
 		}
 		
-		if(svcEl.containsKey("serviceClassName")) {
+		
+		
+		/*
+		hconf = svcEl.configurationsAt("privateService");
+		if (!hconf.isEmpty()) {
+			if (!hconf.isEmpty()) {
+				if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("manager", "*1"));
+
+				final String cn = hconf.get(0).getString("[@className]");
+				if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("privateService", "className"));
+				final String jcn = hconf.get(0).getString("[@jsClassName]");
+				if (StringUtils.isBlank(jcn)) throw new Exception(invalidAttributeValueEx("privateService", "jsClassName"));
+				
+				privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+				privateServiceJsClassName = jcn;
+				privateServiceVarsModelJsClassName = hconf.get(0).getString("[@jsClassName]");
+			}
+			
+		} else { // Old-style configuration
+			if (svcEl.containsKey("serviceClassName")) {
+				String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
+				privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+				privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
+				privateServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceVarsModelJsClassName"), "model.ServiceVars");
+			}
+		}
+		*/
+		
+		if (svcEl.containsKey("serviceClassName")) {
 			String cn = StringUtils.defaultIfEmpty(svcEl.getString("serviceClassName"), "Service");
 			privateServiceClassName = LangUtils.buildClassName(javaPackage, cn);
 			privateServiceJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("serviceJsClassName"), cn);
@@ -147,6 +198,18 @@ public class ServiceManifest {
 		}
 		
 		hidden = svcEl.getBoolean("hidden", false);
+		
+		hconf = svcEl.configurationsAt("restApiEndpoint");
+		if (!hconf.isEmpty()) {
+			for (HierarchicalConfiguration el : hconf) {
+				final String name = el.getString("[@name]");
+				if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("restApiEndpoint", "name"));
+				final String path = el.getString("[@path]", "");
+				
+				if (restApiEndpoints.containsKey(path)) throw new Exception(invalidAttributeValueEx("restApiEndpoint", "path"));
+				restApiEndpoints.put(path, new RestApiEndpoint(buildJavaClassName(javaPackage, name), path));
+			}
+		}
 		
 		if (!svcEl.configurationsAt("permissions").isEmpty()) {
 			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
@@ -289,13 +352,12 @@ public class ServiceManifest {
 		return managerClassName;
 	}
 	
-	/**
-	 * Gets the class name of server-side REST Api implementation.
-	 * (eg. com.sonicle.webtop.core.CoreRestApi)
-	 * @return The class name.
-	 */
-	public String getRestApiClassName() {
-		return restApiClassName;
+	public RestApiEndpoint getApiEndpoint(String path) {
+		return restApiEndpoints.get(path);
+	}
+	
+	public Collection<RestApiEndpoint> getApiEndpoints() {
+		return restApiEndpoints.values();
 	}
 	
 	/**
@@ -448,6 +510,36 @@ public class ServiceManifest {
 	
 	public ArrayList<Portlet> getPortlets() {
 		return portlets;
+	}
+	
+	private String buildJavaClassName(String javaPackage, String className) {
+		if (StringUtils.startsWith(className, ".")) {
+			return LangUtils.buildClassName(javaPackage, className);
+		} else {
+			return className;
+		}
+	}
+	
+	private String invalidValueEx(String elName) {
+		return "Invalid value for element '" + elName + "'";
+	}
+	
+	private String invalidAttributeValueEx(String elName, String attName) {
+		return "Invalid value for element '" + elName + "@" + attName + "'";
+	}
+	
+	private String invalidCardinalityEx(String elName, String expCardinality) {
+		return "Invalid cardinality for element '" + elName + "', expected " + expCardinality;
+	}
+	
+	public static class RestApiEndpoint {
+		public final String className;
+		public final String path;
+		
+		public RestApiEndpoint(String className, String path) {
+			this.className = className;
+			this.path = path;
+		}
 	}
 	
 	public static class Portlet {

@@ -239,8 +239,6 @@ public class WT {
 		if (session != null) {
 			return session.getServiceManager(serviceId);
 		} else {
-			// For admin subject during application startup
-			WebTopApp.logger.warn("Manager instantiated on the fly", new Exception());
 			return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
 		}
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);

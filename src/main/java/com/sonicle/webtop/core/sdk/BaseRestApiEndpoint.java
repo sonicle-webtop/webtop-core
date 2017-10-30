@@ -31,45 +31,57 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.sdk;
 
-import java.io.IOException;
-import java.util.HashSet;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.WT;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class RestApiFilter implements Filter {
-	private final HashSet<String> validIds = new HashSet<>();
+public abstract class BaseRestApiEndpoint extends AbstractService {
 	
-	@Override
-	public void init(FilterConfig fc) throws ServletException {
-		WebTopApp wta = WebTopApp.get(fc.getServletContext());
-		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.listRegisteredServices()) {
-			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
-			if(sd.hasRestApiEndpoints()) validIds.add(serviceId);
+	public BaseRestApiEndpoint() {
+		super();
+	}
+	
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
+		return WT.getManifest(SERVICE_ID);
+	}
+	
+	protected Response ok(Object data) {
+		return Response.ok(JsonResult.GSON.toJson(data)).build();
+	}
+	
+	protected Response error() {
+		return error(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), null);
+	}
+	
+	protected Response error(int status) {
+		return error(status, null);
+	}
+	
+	protected Response error(int status, String message) {
+		if (StringUtils.isBlank(message)) {
+			return Response.status(status)
+					.entity(new MapItem())
+					.type(MediaType.APPLICATION_JSON)
+					.build();
+		} else {
+			return Response.status(status)
+					.entity(new MapItem().add("message", message))
+					.type(MediaType.APPLICATION_JSON)
+					.build();
 		}
-	}
-
-	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		//TODO: implementare filtro di controllo se la porzione di url è valida
-		chain.doFilter(request, response);
-		//HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-		//RequestDispatcher requestDispatcher = httpServletRequest.getRequestDispatcher("/com.sonicle.webtop.core");
-		//requestDispatcher.forward(request, response);
-	}
-
-	@Override
-	public void destroy() {
-		validIds.clear();
 	}
 }

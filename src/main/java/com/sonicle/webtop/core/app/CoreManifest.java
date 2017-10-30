@@ -77,7 +77,7 @@ public class CoreManifest extends ServiceManifest {
 		buildDate = BUILD_DATE;
 		controllerClassName = CONTROLLER_CLASSNAME;
 		managerClassName = MANAGER_CLASSNAME;
-		restApiClassName = REST_API_CLASSNAME;
+		restApiEndpoints.put("", new RestApiEndpoint(REST_API_CLASSNAME, ""));
 		privateServiceClassName = PRIVATE_SERVICE_CLASSNAME;
 		privateServiceJsClassName = PRIVATE_SERVICE_JS_CLASSNAME;
 		privateServiceVarsModelJsClassName = PRIVATE_SERVICEVARS_MODEL_JS_CLASSNAME;

@@ -33,28 +33,19 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
-import com.sonicle.commons.web.json.RestJsonResult;
-import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsSimple;
-import com.sonicle.webtop.core.bol.model.SessionInfo;
-import com.sonicle.webtop.core.sdk.BaseRestApi;
+import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.util.List;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.StatusType;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -62,41 +53,11 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 @Path("com.sonicle.webtop.core")
-public class CoreRestApi extends BaseRestApi {
+public class CoreRestApi extends BaseRestApiEndpoint {
 	private static final Logger logger = WT.getLogger(CoreRestApi.class);
 	
 	public CoreRestApi() {
 		super();
-	}
-	
-	private Response ok(Object data) {
-		return Response.ok(JsonResult.GSON.toJson(data)).build();
-	}
-	
-	private Response error() {
-		return error(Status.INTERNAL_SERVER_ERROR.getStatusCode(), null);
-	}
-	
-	private Response error(int status) {
-		return error(status, null);
-	}
-	
-	private Response error(int status, String message) {
-		if(StringUtils.isBlank(message)) {
-			return Response.status(status)
-					.entity(new MapItem())
-					.type(MediaType.APPLICATION_JSON)
-					.build();
-		} else {
-			return Response.status(status)
-					.entity(new MapItem().add("message", message))
-					.type(MediaType.APPLICATION_JSON)
-					.build();
-		}
-	}
-	
-	private CoreManager getManager() {
-		return WT.getCoreManager();
 	}
 	
 	@GET
@@ -163,5 +124,9 @@ public class CoreRestApi extends BaseRestApi {
 	public Response isDeviceSynchronizationEnabled() throws WTException {
 		boolean bool = RunContext.isPermitted(SERVICE_ID, "DEVICES_SYNC");
 		return ok(new MapItem().add("response", bool));
+	}
+	
+	private CoreManager getManager() {
+		return WT.getCoreManager();
 	}
 }

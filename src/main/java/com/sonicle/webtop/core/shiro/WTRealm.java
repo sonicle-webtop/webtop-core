@@ -62,6 +62,7 @@ import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.cache.Cache;
@@ -80,21 +81,30 @@ public class WTRealm extends AuthorizingRealm {
 	
 	@Override
 	protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-		if(token instanceof UsernamePasswordDomainToken) {
-			UsernamePasswordDomainToken upt = (UsernamePasswordDomainToken)token;
+		if (token instanceof UsernamePasswordToken) {
+			UsernamePasswordToken upt = (UsernamePasswordToken)token;
+			
+			String domainId = null;
+			if (token instanceof UsernamePasswordDomainToken) {
+				domainId = ((UsernamePasswordDomainToken)token).getDomain();
+			}
 			//logger.debug("isRememberMe={}",upt.isRememberMe());
 			
-			String domainId = upt.getDomain();
 			String sprincipal = (String)upt.getPrincipal();
 			String internetDomain = StringUtils.lowerCase(StringUtils.substringAfterLast(sprincipal, "@"));
 			String username = StringUtils.substringBeforeLast(sprincipal, "@");
 			logger.debug("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
 			
 			Principal principal = authenticateUser(domainId, internetDomain, username, upt.getPassword());
+			
 			// Update token with new values resulting from authentication
-			upt.setDomain(principal.getDomainId());
+			if (token instanceof UsernamePasswordDomainToken) {
+				((UsernamePasswordDomainToken)token).setDomain(principal.getDomainId());
+			}
 			upt.setUsername(principal.getUserId());
+			
 			return new WebTopAuthenticationInfo(principal, upt.getPassword(), this.getName());
+			
 		} else {
 			return null;
 		}

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.HttpClientUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
@@ -78,6 +79,7 @@ import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -116,6 +118,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpClient;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -265,6 +268,17 @@ public final class WebTopApp {
 			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ServletUtils.getWebappName(context, true));
 		}
 		this.webappIsLatest = false;
+		
+		HttpClient httpcli = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			URI uri = new URI("http://www.sonicle.com/images/empty.png");
+			httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
+			HttpClientUtils.get(httpcli, uri, baos);
+		} catch(Throwable t) {
+		} finally {
+			HttpClientUtils.closeQuietly(httpcli);
+		}
 		
 		logger.info("WTA initialization started [{}]", webappName);
 		this.conmgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager

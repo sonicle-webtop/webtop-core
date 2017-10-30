@@ -44,7 +44,7 @@ import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
-import com.sonicle.webtop.core.sdk.BaseRestApi;
+import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
@@ -442,11 +442,11 @@ public class ServiceManager {
 	 * Lists IDs of services that have api implementation.
 	 * @return List of services' IDs.
 	 */
-	public List<String> listServicesWithRestApi() {
+	public List<String> listServicesWithRestApiEndpoints() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock1) {
-			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasRestApi()) list.add(descr.getManifest().getId());
+			for (ServiceDescriptor descr : descriptors.values()) {
+				if (descr.hasRestApiEndpoints()) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
@@ -775,6 +775,7 @@ public class ServiceManager {
 		}
 	}
 	
+	/*
 	public BaseRestApi instantiateRestApi(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
@@ -787,6 +788,7 @@ public class ServiceManager {
 			return null;
 		}
 	}
+	*/
 	
 	public BaseService instantiatePrivateService(String serviceId, PrivateEnvironment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);

@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.Resource;
 import org.secnod.shiro.jaxrs.ShiroExceptionMapper;
 import org.secnod.shiro.jersey.SubjectFactory;
 
@@ -54,22 +55,52 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 		WebTopApp wta = WebTopApp.getInstance();
 		if (wta != null) {
 			register(new SubjectFactory());
+			//register(new ServiceModelProcessor());
 			register(new ShiroExceptionMapper());
 			register(new AuthExceptionMapper());
 			register(new WTExceptionMapper());
 
 			// Loads Api endpoints implementation dinamically
 			ServiceManager svcm = wta.getServiceManager();
-			for(String serviceId : svcm.listRegisteredServices()) {
-				ServiceDescriptor sd = svcm.getDescriptor(serviceId);
-				if(sd.hasRestApi()) {
-					register(svcm.instantiateRestApi(serviceId));
+			for (String serviceId : svcm.listRegisteredServices()) {
+				ServiceDescriptor desc = svcm.getDescriptor(serviceId);
+				if (!desc.hasRestApiEndpoints()) continue;
+				
+				for (ServiceDescriptor.ApiEndpointClass apiClass : desc.getRestApiEndpoints()) {
+					registerResources(Resource.builder(apiClass.clazz).path(apiClass.path).build());
 				}
 			}
 		}
 	}
 	
-	public class AuthExceptionMapper implements ExceptionMapper<AuthException> {
+	/*
+	private static class ServiceModelProcessor implements ModelProcessor {
+		
+		@Override
+		public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
+			ResourceModel.Builder newModelBuilder = new ResourceModel.Builder(false);
+			
+			for (final Resource resource: resourceModel.getResources()) {
+				final Class handlerClass = resource.getHandlerClasses().iterator().next();
+				System.out.println(resource.getPath());
+				final String newPath = WT.findServiceId(handlerClass) + "/" + StringUtils.removeStart(resource.getPath(), "/");
+				System.out.println(newPath);
+				final Resource.Builder resourceBuilder = Resource.builder(resource);
+				resourceBuilder.path(newPath);
+				newModelBuilder.addResource(resourceBuilder.build());
+			}
+			
+			return newModelBuilder.build();
+		}
+
+		@Override
+		public ResourceModel processSubResource(ResourceModel subResourceModel, Configuration configuration) {
+			return subResourceModel;
+		}
+	}
+	*/
+	
+	private static class AuthExceptionMapper implements ExceptionMapper<AuthException> {
 
 		@Override
 		public Response toResponse(AuthException e) {
@@ -77,7 +108,7 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 		}
 	}
 	
-	public class WTExceptionMapper implements ExceptionMapper<WTException> {
+	private static class WTExceptionMapper implements ExceptionMapper<WTException> {
 
 		@Override
 		public Response toResponse(WTException e) {

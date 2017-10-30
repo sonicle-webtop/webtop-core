@@ -34,7 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.sdk.BaseRestApi;
+import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BasePublicService;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -65,51 +66,29 @@ class ServiceDescriptor {
 	private ServiceManifest manifest = null;
 	private Class controllerClass = null;
 	private Class managerClass = null;
-	private Class restApiClass = null;
 	private Class privateServiceClass = null;
 	private Class publicServiceClass = null;
 	private Class jobServiceClass = null;
 	private Class userOptionsServiceClass = null;
+	private final List<ApiEndpointClass> restApiEndpointClasses = new ArrayList<>();
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
 		
-		// Loads controller class
-		String className = manifest.getControllerClassName();
-		if(!StringUtils.isBlank(className)) {
-			controllerClass = loadClass(className, BaseController.class, "Controller");
-		}
-		// Loads manager class
-		className = manifest.getManagerClassName();
-		if(!StringUtils.isBlank(className)) {
-			managerClass = loadClass(className, BaseManager.class, "Manager");
-		}
-		// Loads api service class
-		className = manifest.getRestApiClassName();
-		if(!StringUtils.isBlank(className)) {
-			restApiClass = loadClass(className, BaseRestApi.class, "RestApi");
-		}
-		// Loads (private) service class
-		className = manifest.getPrivateServiceClassName();
-		if(!StringUtils.isBlank(className)) {
-			privateServiceClass = loadClass(className, BaseService.class, "Service");
-		}
-		// Loads public service class
-		className = manifest.getPublicServiceClassName();
-		if(!StringUtils.isBlank(className)) {
-			publicServiceClass = loadClass(className, BasePublicService.class, "PublicService");
-		}
-		// Loads job service class
-		className = manifest.getJobServiceClassName();
-		if(!StringUtils.isBlank(className)) {
-			jobServiceClass = loadClass(className, BaseJobService.class, "JobService");
-		}
-		// Loads userOptions service class
-		className = manifest.getUserOptionsServiceClassName();
-		if(!StringUtils.isBlank(className)) {
-			userOptionsServiceClass = loadClass(className, BaseUserOptionsService.class, "UserOptionsService");
+		controllerClass = loadClass(true, manifest.getControllerClassName(), BaseController.class, "Controller");
+		managerClass = loadClass(true, manifest.getManagerClassName(), BaseManager.class, "Manager");
+		privateServiceClass = loadClass(true, manifest.getPrivateServiceClassName(), BaseService.class, "Service");
+		publicServiceClass = loadClass(true, manifest.getPublicServiceClassName(), BasePublicService.class, "PublicService");
+		jobServiceClass = loadClass(true, manifest.getJobServiceClassName(), BaseJobService.class, "JobService");
+		userOptionsServiceClass = loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
+		
+		for (ServiceManifest.RestApiEndpoint rae : manifest.getApiEndpoints()) {
+			final Class clazz = loadClass(false, rae.className, BaseRestApiEndpoint.class, "RestApiEndpoint");
+			if (clazz != null) {
+				restApiEndpointClasses.add(new ApiEndpointClass(clazz, sanitizeApiEndpointPath(manifest.getId(), rae.path)));
+			}
 		}
 	}
 
@@ -131,14 +110,6 @@ class ServiceDescriptor {
 
 	public Class getManagerClass() {
 		return managerClass;
-	}
-	
-	public boolean hasRestApi() {
-		return (restApiClass != null);
-	}
-
-	public Class getRestApiClass() {
-		return restApiClass;
 	}
 
 	public boolean hasPrivateService() {
@@ -172,6 +143,14 @@ class ServiceDescriptor {
 	public Class getJobServiceClass() {
 		return jobServiceClass;
 	}
+	
+	public boolean hasRestApiEndpoints() {
+		return !restApiEndpointClasses.isEmpty();
+	}
+	
+	public List<ApiEndpointClass> getRestApiEndpoints() {
+		return restApiEndpointClasses;
+	}
 
 	public boolean isUpgraded() {
 		return upgraded;
@@ -181,18 +160,34 @@ class ServiceDescriptor {
 		this.upgraded = upgraded;
 	}
 	
-	private Class loadClass(String className, Class apiClass, String description) {
+	private String sanitizeApiEndpointPath(String serviceId, String path) {
+		if (StringUtils.isBlank(path)) {
+			return serviceId;
+		} else {
+			return serviceId + "/" + StringUtils.removeStart(path, "/");
+		}
+	}
+	
+	private Class loadClass(boolean skipIfBlank, String className, Class sdkAssignableClass, String description) {
+		if (skipIfBlank && StringUtils.isBlank(className)) {
+			return null;
+		} else {
+			return loadClass(className, sdkAssignableClass, description);
+		}
+	}
+	
+	private Class loadClass(String className, Class sdkAssignableClass, String description) {
 		Class clazz = null;
 		
 		try {
 			clazz = Class.forName(className);
-			if(!apiClass.isAssignableFrom(clazz)) throw new ClassCastException();
+			if (!sdkAssignableClass.isAssignableFrom(clazz)) throw new ClassCastException();
 			return clazz;
 
 		} catch(ClassNotFoundException ex) {
 			logger.debug("{} class not found [{}]", description, className);
 		} catch(ClassCastException ex) {
-			logger.warn("A valid {} class must extends '{}' class", description, apiClass.toString());
+			logger.warn("A valid {} class must extends '{}' class", description, sdkAssignableClass.toString());
 		} catch(Throwable t) {
 			logger.error("Unable to load class [{}]", className, t);
 		}
@@ -288,5 +283,15 @@ class ServiceDescriptor {
 		// Defines variables to place substitutions in whatsnew html
 		variables.put("WHATSNEW_URL", MessageFormat.format("resources/{0}/whatsnew", manifest.getJarPath()));
 		return variables;
+	}
+	
+	public static class ApiEndpointClass {
+		public final Class clazz;
+		public final String path;
+		
+		public ApiEndpointClass(Class clazz, String path) {
+			this.clazz = clazz;
+			this.path = path;
+		}
 	}
 }
