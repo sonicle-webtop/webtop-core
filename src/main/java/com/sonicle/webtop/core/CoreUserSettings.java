@@ -95,6 +95,15 @@ public class CoreUserSettings extends BaseUserSettings {
 		return ss.getDefaultRtl();
 	}
 	
+	public String getStartupService() {
+		String value = getString(STARTUP_SERVICE, null);
+		return (value != null) ? value : ss.getDefaultStartupService();
+	}
+	
+	public boolean setStartupService(String value) {
+		return setString(STARTUP_SERVICE, value);
+	}
+	
 	public String getDesktopNotification() {
 		String value = getString(DESKTOP_NOTIFICATION, null);
 		if(value != null) return value;

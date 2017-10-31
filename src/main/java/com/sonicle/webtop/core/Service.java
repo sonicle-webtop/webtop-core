@@ -264,6 +264,7 @@ public class Service extends BaseService {
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());
+		co.put("startupService", us.getStartupService());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
 		co.put("language", us.getLanguageTag());
@@ -397,7 +398,7 @@ public class Service extends BaseService {
 		try {
 			Boolean assignableOnly = ServletUtils.getBooleanParameter(request, "assignableOnly", false);
 			
-			for(String sid : coreMgr.listInstalledServices()) {
+			for(String sid : coreMgr.listWTInstalledServices()) {
 				if(assignableOnly && sid.equals(CoreManifest.ID)) continue;
 				items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
 			}
@@ -413,7 +414,7 @@ public class Service extends BaseService {
 		ArrayList<JsServicePermissionLkp> items = new ArrayList<>();
 		
 		try {
-			for(String sid : coreMgr.listInstalledServices()) {
+			for(String sid : coreMgr.listWTInstalledServices()) {
 				for(ServicePermission perm : coreMgr.listServicePermissions(sid)) {
 					for(String action : perm.getActions()) {
 						items.add(new JsServicePermissionLkp(sid, perm.getGroupName(), action));

@@ -44,17 +44,22 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.model.ServicePermission;
+import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -87,6 +92,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.theme = us.getTheme();
 				jso.layout = us.getLayout();
 				jso.laf = us.getLookAndFeel();
+				jso.startupService = sanitizeStartupService(core, us.getStartupService());
 				jso.desktopNotification = us.getDesktopNotification();
 				
 				// i18n
@@ -160,21 +166,22 @@ public class UserOptionsService extends BaseUserOptionsService {
 				boolean upCacheNeedsUpdate = false;
 				
 				// main
-				if(pl.map.has("displayName")) {
+				if (pl.map.has("displayName")) {
 					upCacheNeedsUpdate = true;
 					core.updateUserDisplayName(pl.data.displayName);
 				}
-				if(pl.map.has("theme")) us.setTheme(pl.data.theme);
-				if(pl.map.has("layout")) us.setLayout(pl.data.layout);
-				if(pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
-				if(pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
+				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
+				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
+				if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if (pl.map.has("startupService")) us.setStartupService(pl.data.startupService);
+				if (pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
 				
 				// i18n
-				if(pl.map.has("language")) {
+				if (pl.map.has("language")) {
 					upCacheNeedsUpdate = true;
 					us.setLanguageTag(pl.data.language);
 				}
-				if(pl.map.has("timezone")) {
+				if (pl.map.has("timezone")) {
 					upCacheNeedsUpdate = true;
 					us.setTimezone(pl.data.timezone);
 				}
@@ -236,17 +243,31 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
-/*	public void processDeactivateOTP(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		CoreManager core = WT.getCoreManager(getRunContext());
+	public void processLookupStartupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
+		CoreManager core = WT.getCoreManager(getTargetProfileId());
+		Locale locale = WT.getUserData(getTargetProfileId()).getLocale();
+		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
-			OTPManager otpm = core.getOTPManager();
-			otpm.deactivate(getTargetProfileId());
-			new JsonResult().printTo(out);
+			for (String sid : core.listAllowedServices()) {
+				if (sid.equals(CoreManifest.ID)) {
+					items.add(new JsSimple(sid, "Home"));
+				} else {
+					items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
+				}
+			}
+			new JsonResult(items).printTo(out);
 			
-		} catch (Exception ex) {
-			logger.error("Error executing action DeactivateOTP", ex);
-			new JsonResult(false).printTo(out);
+		} catch(Exception ex) {
+			logger.error("Error in LookupStartupServices", ex);
 		}
-	}*/
+	}
+	
+	private String sanitizeStartupService(CoreManager coreMgr, String startupService) {
+		if (StringUtils.isBlank(startupService)) {
+			return null;
+		} else {
+			return coreMgr.listAllowedServices().contains(startupService) ? startupService : null;
+		}
+	}
 }

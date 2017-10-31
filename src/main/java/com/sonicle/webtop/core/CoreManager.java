@@ -117,6 +117,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -416,14 +417,13 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public List<String> listInstalledServices() {
+	public List<String> listWTInstalledServices() {
 		ServiceManager svcm = wta.getServiceManager();
 		return svcm.listRegisteredServices();
 	}
 	
-	public List<String> listAllowedServices() {
-		ArrayList<String> ids = new ArrayList<>();
-		
+	public Set<String> listAllowedServices() {
+		LinkedHashSet<String> ids = new LinkedHashSet<>();
 		ensureUserDomain();
 		if (RunContext.isSysAdmin()) {
 			ids.add(CoreManifest.ID);
@@ -435,7 +435,6 @@ public class CoreManager extends BaseManager {
 			for (String id : svcm.listRegisteredServices()) {
 				// We don't want to add admin service during impersonation
 				if (id.equals(CoreAdminManifest.ID) && RunContext.isImpersonated()) continue;
-				
 				if (RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
 			}
 		}
@@ -1038,13 +1037,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<LocalDate> listIMMessageDates(String chatJid, int year, DateTimeZone timezone) throws WTException {
-		IMMessageDAO dao = IMMessageDAO.getInstance();
+		IMMessageDAO imesDao = IMMessageDAO.getInstance();
 		ArrayList<LocalDate> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			List<DateTime> dts = dao.selectDatesByProfileChatYear(con, getTargetProfileId(), chatJid, year, timezone);
+			List<DateTime> dts = imesDao.selectDatesByProfileChatYear(con, getTargetProfileId(), chatJid, year, timezone);
 			for(DateTime dt : dts) {
 				items.add(dt.withZone(timezone).toLocalDate());
 			}
@@ -1058,14 +1057,14 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<IMMessage> listIMMessages(String chatJid, LocalDate date, DateTimeZone timezone, boolean byDelivery) throws WTException {
-		IMMessageDAO dao = IMMessageDAO.getInstance();
+		IMMessageDAO imesDao = IMMessageDAO.getInstance();
 		ArrayList<IMMessage> items = new ArrayList<>();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
-			List<OIMMessage> omess = dao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date, timezone, byDelivery);
+			List<OIMMessage> omess = imesDao.selectByProfileChatDate(con, getTargetProfileId(), chatJid, date, timezone, byDelivery);
 			for(OIMMessage omes : omess) {
 				items.add(createIMMessage(omes));
 			}
@@ -1079,7 +1078,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<IMMessage> findIMMessagesByQuery(String chatJid, String query, DateTimeZone timezone) throws WTException {
-		IMMessageDAO dao = IMMessageDAO.getInstance();
+		IMMessageDAO imesDao = IMMessageDAO.getInstance();
 		ArrayList<IMMessage> items = new ArrayList<>();
 		Connection con = null;
 		
@@ -1088,9 +1087,9 @@ public class CoreManager extends BaseManager {
 			
 			List<OIMMessage> omess = null;
 			if (query == null) {
-				omess = dao.findByProfileChat(con, getTargetProfileId(), chatJid);
+				omess = imesDao.findByProfileChat(con, getTargetProfileId(), chatJid);
 			} else {
-				omess = dao.findByProfileChatLike(con, getTargetProfileId(), chatJid, query);
+				omess = imesDao.findByProfileChatLike(con, getTargetProfileId(), chatJid, query);
 			}
 			for(OIMMessage omes : omess) {
 				items.add(createIMMessage(omes));
@@ -1105,12 +1104,12 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<String> listIMMessageStanzaIDs(String chatJid) throws WTException {
-		IMMessageDAO dao = IMMessageDAO.getInstance();
+		IMMessageDAO imesDao = IMMessageDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			return dao.selectStanzaIDsByProfileChat(con, getTargetProfileId(), chatJid);
+			return imesDao.selectStanzaIDsByProfileChat(con, getTargetProfileId(), chatJid);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -1120,17 +1119,17 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void addIMMessage(IMMessage message) throws WTException {
-		IMMessageDAO dao = IMMessageDAO.getInstance();
+		IMMessageDAO imesDao = IMMessageDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
 			
 			OIMMessage omes = createOIMMessage(message);
-			omes.setId(dao.getSequence(con).intValue());
+			omes.setId(imesDao.getSequence(con).intValue());
 			omes.setDomainId(getTargetProfileId().getDomainId());
 			omes.setUserId(getTargetProfileId().getUserId());
-			dao.insert(con, omes);	
+			imesDao.insert(con, omes);	
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");

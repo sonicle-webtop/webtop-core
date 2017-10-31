@@ -49,6 +49,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.field('theme', 'string'), // Also a user-option
 		WTF.field('layout', 'string'), // Also a user-option
 		WTF.field('laf', 'string'), // Also a user-option
+		WTF.field('startupService', 'string'), // Also a user-option
 		WTF.field('desktopNotification', 'string'), // Also a user-option
 		WTF.field('language', 'string'), // Also a user-option
 		WTF.field('timezone', 'string'), // Also a user-option
