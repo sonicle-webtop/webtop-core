@@ -85,6 +85,7 @@ Ext.define('Sonicle.webtop.core.view.main.Queued', {
 				xtype: 'toolbar',
 				reference: 'launcher',
 				border: false,
+				cls: 'wt-launcher',
 				enableOverflow: true,
 				items: [
 					this.createPortalButton({scale: 'medium'})

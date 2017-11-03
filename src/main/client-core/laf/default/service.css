@@ -250,13 +250,9 @@
 	color: grey;
 }
 
-/* VIEWPORT */
-.wt-header {
-	
-}
-.wt-launcher {
-	
-}
+.wt-header { /* Override this in service-{theme}.css file */ }
+.wt-launcher { /* Override this in service-{theme}.css file */ }
+.wt-portal { /* Override this in service-{theme}.css file */ }
 
 /* WHATSNEW */
 .wt-whatsnew {
