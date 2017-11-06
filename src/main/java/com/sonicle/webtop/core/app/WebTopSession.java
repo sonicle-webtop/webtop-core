@@ -885,6 +885,7 @@ public class WebTopSession {
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "moxie.js");
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
+		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
