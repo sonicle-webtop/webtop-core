@@ -44,7 +44,6 @@ import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
-import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
@@ -712,7 +711,7 @@ public class ServiceManager {
 	}
 	
 	public boolean canExecuteTaskWork(JobKey taskKey) {
-		if(wta.isLatest()) {
+		if (wta.isLatest()) {
 			return true;
 		} else {
 			unscheduleAllJobServicesTasks();
