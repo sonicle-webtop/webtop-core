@@ -321,6 +321,36 @@ Ext.override(Ext.data.proxy.Server, {
 	}
 });
 
+Ext.override(Ext.toolbar.Toolbar, {
+	lookupComponent: function(comp) {
+		var me = this,
+				defls = me.defaults || {},
+				isAct = comp.isAction,
+				comp = me.callParent(arguments);
+		if (isAct) {
+			if (defls.hasOwnProperty('text')) comp.text = defls.text;
+			if (defls.hasOwnProperty('tooltip')) comp.tooltip = defls.tooltip;
+		}
+		return comp;
+	}
+});
+
+Ext.override(Ext.menu.Menu, {
+	/**
+	 * @cfg {Boolean} disableActionTooltips
+	 * `false` to enable tooltip display for {@link Ext.Action actions}.
+	 */
+	disableActionTooltips: true,
+	
+	lookupItemFromObject: function(cmp) {
+		var me = this,
+				isAct = cmp.isAction,
+				cmp = me.callParent(arguments);
+		if (isAct && me.disableActionTooltips) cmp.tooltip = null;
+		return cmp;
+	}
+});
+
 Ext.override(Ext.menu.Item, {
 	onClick: function(e) {
 		e.menuData = WT.getContextMenuData();
