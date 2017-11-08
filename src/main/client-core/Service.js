@@ -58,7 +58,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 				cont.push({
 					type: WTU.idfy(cname),
 					columnIndex: cont.length,
-					height: 400
+					height: 300
 				});
 			});
 		});
@@ -78,30 +78,34 @@ Ext.define('Sonicle.webtop.core.Service', {
 		me.setToolbar(Ext.create({
 			xtype: 'toolbar',
 			referenceHolder: true,
-			items: [
-				'->',
-				{
-					xtype: 'textfield',
-					tooltip: me.res('searchportlets.tip'),
-					plugins: ['sofieldtooltip'],
-					triggers: {
-						search: {
-							cls: Ext.baseCSSPrefix + 'form-search-trigger',
-							handler: function(s) {
-								me.queryPortlets(s.getValue());
-							}
+			layout: {
+				pack: 'center'
+			},
+			items: [{
+				xtype: 'textfield',
+				emptyText: me.res('gsearch.emp'),
+				plugins: ['sofieldtooltip'],
+				triggers: {
+					clear: WTF.clearTrigger(),
+					search: {
+						cls: Ext.baseCSSPrefix + 'form-search-trigger',
+						handler: function(s) {
+							me.queryPortlets(s.getValue());
+						}
+					}
+				},
+				listeners: {
+					specialkey: function(s, e) {
+						if (e.getKey() === e.ENTER) {
+							me.queryPortlets(s.getValue());
 						}
 					},
-					listeners: {
-						specialkey: function(s, e) {
-							if(e.getKey() === e.ENTER) {
-								me.queryPortlets(s.getValue());
-							}
-						}
-					},
-					width: 200
-				}
-			]
+					clear: function() {
+						me.queryPortlets(null);
+					}
+				},
+				width: '50%'
+			}]
 		}));
 		
 		me.onMessage('reminderNotify', function(msg) {
