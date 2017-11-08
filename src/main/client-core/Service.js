@@ -83,6 +83,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			},
 			items: [{
 				xtype: 'textfield',
+				reference: 'fldgsearch',
 				emptyText: me.res('gsearch.emp'),
 				plugins: ['sofieldtooltip'],
 				triggers: {
@@ -177,14 +178,15 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}, 1000);
 		}
 		
-		me.on("activate",function() {
-			var me=this,
-				db=me.getMainComponent();
-
-			for(i=0;i<db.items.items.length;i+=2) {
-				var portletBody=db.items.items[i].items.items[0].items.items[0];
-				portletBody.refresh();
+		me.on('activate', function() {
+			var me = this,
+				dboard = me.getMainComponent(), pbody;
+				
+			for(var i=0;i<dboard.items.items.length;i+=2) {
+				pbody = dboard.items.items[i].items.items[0].items.items[0];
+				if (pbody) pbody.refresh();
 			}
+			me.getToolbar().lookupReference('fldgsearch').focus(true, 400);
 		});
 	},
 	
