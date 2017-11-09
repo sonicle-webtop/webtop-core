@@ -74,6 +74,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.shiro.WTRealm;
+import com.sonicle.webtop.core.util.ICalendarUtils;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
@@ -256,6 +257,11 @@ public final class WebTopApp {
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
 		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", String.valueOf(false));
+		ICalendarUtils.setUnfoldingRelaxed(true);
+		ICalendarUtils.setParsingRelaxed(true);
+		ICalendarUtils.setValidationRelaxed(true);
+		ICalendarUtils.setCompatibilityOutlook(true);
+		ICalendarUtils.setCompatibilityNotes(true);
 		
 		startupProperties = createStartupProperties();
 		logger.info("webtop.extJsDebug = {}", startupProperties.getExtJsDebug());
