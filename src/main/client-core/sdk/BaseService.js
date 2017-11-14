@@ -122,12 +122,12 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	},
 	
 	/**
-	 * Builds a state ID string prepending a name with service's XID.
-	 * @param {type} name The component or unique reference name.
-	 * @return {String} A string ID
+	 * Builds a state ID useful for saving data into local storage.
+	 * @param {String} name The component or unique reference name.
+	 * @return {String} The generated ID
 	 */
 	buildStateId: function(name) {
-		return this.XID + '-' + name;
+		return WT.buildStateId(this.XID, name);
 	},
 	
 	/**

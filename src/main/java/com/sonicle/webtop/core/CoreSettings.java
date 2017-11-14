@@ -388,6 +388,13 @@ public class CoreSettings {
 	/**
 	 * [user][default]
 	 * [string]
+	 * Preferred service ID to set after sign-in
+	 */
+	public static final String STARTUP_SERVICE = "startup.service";
+	
+	/**
+	 * [user][default]
+	 * [string]
 	 * Desktop notification
 	 */
 	public static final String DESKTOP_NOTIFICATION = "notifications.desktop";

@@ -95,6 +95,15 @@ public class CoreUserSettings extends BaseUserSettings {
 		return ss.getDefaultRtl();
 	}
 	
+	public String getStartupService() {
+		String value = getString(STARTUP_SERVICE, null);
+		return (value != null) ? value : ss.getDefaultStartupService();
+	}
+	
+	public boolean setStartupService(String value) {
+		return setString(STARTUP_SERVICE, value);
+	}
+	
 	public String getDesktopNotification() {
 		String value = getString(DESKTOP_NOTIFICATION, null);
 		if(value != null) return value;
@@ -254,14 +263,13 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(IM_PRESENCE_STATUS, EnumUtils.toSerializedName(value));
 	}
 	
-	public Integer getIMUploadMaxFileSize() {
-		Integer value = getInteger(IM_UPLOAD_MAXFILESIZE, null);
-		if (value != null) return value;
-		return ss.getIMUploadMaxFileSize();
+	public Long getIMUploadMaxFileSize() {
+		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
+		return (value != null) ? value : ss.getIMUploadMaxFileSize();
 	}
 	
-	public boolean setIMUploadMaxFileSize(Integer value) {
-		return setInteger(IM_UPLOAD_MAXFILESIZE, value);
+	public boolean setIMUploadMaxFileSize(Long value) {
+		return setLong(IM_UPLOAD_MAXFILESIZE, value);
 	}
 	
 	public boolean getIMSoundOnFriendConnect() {

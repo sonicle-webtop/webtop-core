@@ -169,7 +169,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String} The resulting string.
 	 */
 	preNs: function(ns, cn) {
-		if(arguments.length === 1) {
+		if (arguments.length === 1) {
 			cn = ns;
 			ns = WT.NS;
 		}
@@ -177,8 +177,22 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Builds a state ID useful for saving data into local storage.
+	 * @param {String} [xid] The service XID.
+	 * @param {String} name The component or unique reference name.
+	 * @returns {String} The generated ID
+	 */
+	buildStateId: function(xid, name) {
+		if (arguments.length === 1) {
+			name = xid;
+			xid = WT.XID;
+		}
+		return xid + '-' + name;
+	},
+	
+	/**
 	 * Checks against a resource if specified action is allowed.
-	 * @param {String} [id] The service ID
+	 * @param {String} [id] The service ID.
 	 * @return {String} Corresponding service's XID
 	 */
 	findXid: function(id) {

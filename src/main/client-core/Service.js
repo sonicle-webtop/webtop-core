@@ -58,7 +58,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 				cont.push({
 					type: WTU.idfy(cname),
 					columnIndex: cont.length,
-					height: 400
+					height: 300
 				});
 			});
 		});
@@ -67,6 +67,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		me.setMainComponent(Ext.create({
 			xtype: 'dashboard',
 			stateful: false,
+			bodyCls: 'wt-portal',
 			columnWidths: [
 				0.25,0.25,0.25,0.25
 			],
@@ -77,30 +78,35 @@ Ext.define('Sonicle.webtop.core.Service', {
 		me.setToolbar(Ext.create({
 			xtype: 'toolbar',
 			referenceHolder: true,
-			items: [
-				'->',
-				{
-					xtype: 'textfield',
-					tooltip: me.res('searchportlets.tip'),
-					plugins: ['sofieldtooltip'],
-					triggers: {
-						search: {
-							cls: Ext.baseCSSPrefix + 'form-search-trigger',
-							handler: function(s) {
-								me.queryPortlets(s.getValue());
-							}
+			layout: {
+				pack: 'center'
+			},
+			items: [{
+				xtype: 'textfield',
+				reference: 'fldgsearch',
+				emptyText: me.res('gsearch.emp'),
+				plugins: ['sofieldtooltip'],
+				triggers: {
+					clear: WTF.clearTrigger(),
+					search: {
+						cls: Ext.baseCSSPrefix + 'form-search-trigger',
+						handler: function(s) {
+							me.queryPortlets(s.getValue());
+						}
+					}
+				},
+				listeners: {
+					specialkey: function(s, e) {
+						if (e.getKey() === e.ENTER) {
+							me.queryPortlets(s.getValue());
 						}
 					},
-					listeners: {
-						specialkey: function(s, e) {
-							if(e.getKey() === e.ENTER) {
-								me.queryPortlets(s.getValue());
-							}
-						}
-					},
-					width: 200
-				}
-			]
+					clear: function() {
+						me.queryPortlets(null);
+					}
+				},
+				width: '50%'
+			}]
 		}));
 		
 		me.onMessage('reminderNotify', function(msg) {
@@ -172,14 +178,15 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}, 1000);
 		}
 		
-		me.on("activate",function() {
-			var me=this,
-				db=me.getMainComponent();
-
-			for(i=0;i<db.items.items.length;i+=2) {
-				var portletBody=db.items.items[i].items.items[0].items.items[0];
-				portletBody.refresh();
+		me.on('activate', function() {
+			var me = this,
+				dboard = me.getMainComponent(), pbody;
+				
+			for(var i=0;i<dboard.items.items.length;i+=2) {
+				pbody = dboard.items.items[i].items.items[0].items.items[0];
+				if (pbody) pbody.refresh();
 			}
+			me.getToolbar().lookupReference('fldgsearch').focus(true, 400);
 		});
 	},
 	

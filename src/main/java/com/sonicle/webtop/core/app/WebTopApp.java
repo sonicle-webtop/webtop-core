@@ -74,6 +74,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.shiro.WTRealm;
+import com.sonicle.webtop.core.util.ICalendarUtils;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
@@ -186,6 +187,8 @@ public final class WebTopApp {
 						LoggerUtils.initDC(instance.getWebappName());
 						threadState.bind();
 						instance.onAppReady();
+					} catch(InterruptedException ex) {
+						// Do nothing...
 					} finally {
 						threadState.clear();
 						LoggerUtils.clearDC();
@@ -253,6 +256,13 @@ public final class WebTopApp {
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
+		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", String.valueOf(false));
+		ICalendarUtils.setUnfoldingRelaxed(true);
+		ICalendarUtils.setParsingRelaxed(true);
+		ICalendarUtils.setValidationRelaxed(true);
+		ICalendarUtils.setCompatibilityOutlook(true);
+		ICalendarUtils.setCompatibilityNotes(true);
+		
 		startupProperties = createStartupProperties();
 		logger.info("webtop.extJsDebug = {}", startupProperties.getExtJsDebug());
 		logger.info("webtop.soExtDevMode = {}", startupProperties.getSonicleExtJsExtensionsDevMode());
@@ -260,6 +270,10 @@ public final class WebTopApp {
 		logger.info("webtop.debugMode = {}", startupProperties.getDebugMode());
 		logger.info("webtop.schedulerSisabled = {}", startupProperties.getSchedulerDisabled());
 		logger.info("webtop.webappsConfigPath = {}", startupProperties.getWebappsConfigPath());
+		
+		//logger.info("getContextPath: {}", context.getContextPath());
+		//logger.info("getServletContextName: {}", context.getServletContextName());
+		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
 		this.webappName = ServletUtils.getWebappName(context);
 		if (StringUtils.isBlank(startupProperties.getWebappsConfigPath())) {
@@ -318,7 +332,7 @@ public final class WebTopApp {
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
 			this.scheduler = new StdSchedulerFactory().getScheduler();
-			if(startupProperties.getSchedulerDisabled()) {
+			if (startupProperties.getSchedulerDisabled()) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
 				this.scheduler.start();
@@ -390,7 +404,7 @@ public final class WebTopApp {
 		logger.info("WTA shutdown completed [{}]", webappName);
 	}
 	
-	private void onAppReady() {
+	private void onAppReady() throws InterruptedException {
 		logger.trace("onAppReady...");
 		try {
 
@@ -414,7 +428,7 @@ public final class WebTopApp {
 			logger.info("Checking webapp version...");
 			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
 			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setmgr);
-			if(StringUtils.isBlank(tomcatUri)) {
+			if (StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
 				this.webappIsLatest = true;
 			} else {
@@ -432,23 +446,29 @@ public final class WebTopApp {
 					this.webappIsLatest = false;
 				}
 			}
-			if(webappVersionCheckTimer == null) {
+			if (webappVersionCheckTimer == null) {
 				logger.warn("Webapp version automatic check will NOT be performed!");
 			}
-			if(webappIsLatest) {
+			if (webappIsLatest) {
 				logger.info("This webapp [{}] is the latest", webappName);
 			} else {
 				logger.info("This webapp [{}] is NOT the latest", webappName);
 			}
 			
 			svcm.initializeJobServices();
-			try {
-				logger.info("Scheduling JobServices tasks...");
-				svcm.scheduleAllJobServicesTasks();
-				if(!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
-			} catch (SchedulerException ex) {
-				logger.error("Error", ex);
-			}
+			if (isLatest()) {
+				logger.debug("Sleeping for 60sec for avoid concurrency");
+				Thread.sleep(60000);
+				if (isLatest()) {
+					try {
+						logger.info("Scheduling JobServices tasks...");
+						svcm.scheduleAllJobServicesTasks();
+						if (!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
+					} catch (SchedulerException ex) {
+						logger.error("Error", ex);
+					}
+				}
+			}	
 			
 		} catch(IllegalStateException ex) {
 			// Due to NB redeploys in development...simply ignore this!
@@ -534,33 +554,25 @@ public final class WebTopApp {
 	
 	private void onWebappVersionCheck() {
 		logger.trace("onWebappVersionCheck...");
-		if(tomcat == null) return;
+		if (tomcat == null) return;
 		
 		logger.trace("Checking webapp version...");
 		boolean oldLatest = webappIsLatest;
 		webappIsLatest = checkIsLastestWebapp(webappName);
-		if(webappIsLatest && !oldLatest) {
-			logger.info("This webapp [{}] is the latest", webappName);
+		if (webappIsLatest && !oldLatest) {
+			logger.info("Webapp [{}] is the latest", webappName);
 			svcm.scheduleAllJobServicesTasks();
-		} else if(!webappIsLatest && oldLatest) {
-			logger.info("This webapp [{}] is NOT the latest", webappName);
+		} else if (!webappIsLatest && oldLatest) {
+			logger.info("Webapp [{}] is NO more the latest", webappName);
 		} else {
-			logger.trace("No changes!");
+			logger.trace("No version changes found!");
 		}
 	}
 	
 	private boolean checkIsLastestWebapp(String appName) {
 		try {
-			ListOrderedSet names = new ListOrderedSet();
-			for(TomcatManager.DeployedApp app : tomcat.listDeployedApplications(appName)) {
-				if(app.isRunning) {
-					names.add(app.name);
-				} else {
-					if(app.name.equals(appName)) names.add(app.name);
-				}
-			}
-			String last = (String)names.get(names.size()-1);
-			return appName.equals(last);
+			List<TomcatManager.DeployedApp> apps = tomcat.listDeployedApplications(StringUtils.substringBefore(appName, "##"));
+			return !apps.isEmpty() && appName.equals(apps.get(0).name);
 			
 		} catch(Exception ex) {
 			logger.error("Unable to query TomcatManager", ex);

@@ -264,6 +264,7 @@ public class Service extends BaseService {
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());
+		co.put("startupService", us.getStartupService());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
 		co.put("language", us.getLanguageTag());
@@ -397,7 +398,7 @@ public class Service extends BaseService {
 		try {
 			Boolean assignableOnly = ServletUtils.getBooleanParameter(request, "assignableOnly", false);
 			
-			for(String sid : coreMgr.listInstalledServices()) {
+			for(String sid : coreMgr.listWTInstalledServices()) {
 				if(assignableOnly && sid.equals(CoreManifest.ID)) continue;
 				items.add(new JsSimple(sid, WT.lookupResource(sid, locale, BaseService.RESOURCE_SERVICE_NAME)));
 			}
@@ -413,7 +414,7 @@ public class Service extends BaseService {
 		ArrayList<JsServicePermissionLkp> items = new ArrayList<>();
 		
 		try {
-			for(String sid : coreMgr.listInstalledServices()) {
+			for(String sid : coreMgr.listWTInstalledServices()) {
 				for(ServicePermission perm : coreMgr.listServicePermissions(sid)) {
 					for(String action : perm.getActions()) {
 						items.add(new JsServicePermissionLkp(sid, perm.getGroupName(), action));
@@ -1184,12 +1185,16 @@ public class Service extends BaseService {
 				}
 				
 				new JsonResult("recipients", items, items.size()).printTo(out);
-			}
-			else if (crud.equals(Crud.DELETE)) {
+				
+			} else if (crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsInternetAddress> pl = ServletUtils.getPayload(request, JsInternetAddress.class);
-				if (pl.data.source.isEmpty()) {
-					coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", pl.data.address.toUpperCase());
+				if (CoreManager.RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(pl.data.source)) {
+					final InternetAddress ia = MailUtils.buildInternetAddress(pl.data.address, pl.data.personal);
+					if (ia != null) {
+						coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", ia.toString().toUpperCase());
+					}
 					new JsonResult().printTo(out);
+					
 				} else {
 					throw new Exception("Cannot delete from source "+pl.data.source+" ["+pl.data.sourceName+"]");
 				}

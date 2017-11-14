@@ -96,6 +96,7 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 			reference: 'launcher1',
 			vertical: true,
 			border: false,
+			cls: 'wt-launcher',
 			layout: {
 				type: 'vbox',
 				align: 'stretch'
@@ -107,8 +108,9 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 				region: 'south',
 				xtype: 'toolbar',
 				reference: 'launcher2',
-				enableOverflow: true,
 				border: false,
+				cls: 'wt-launcher',
+				enableOverflow: true,
 				items: [
 					this.createPortalButton({scale: 'small'})
 				]
@@ -147,7 +149,6 @@ Ext.define('Sonicle.webtop.core.view.main.Stacked', {
 	createCenterCmp: function() {
 		return {
 			xtype: 'container',
-			//cls: 'wt-center-stacked',
 			layout: 'card',
 			items: []
 		};

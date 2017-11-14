@@ -130,7 +130,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLayouts', 'layouts')
 				},
 				fieldLabel: WT.res('opts.main.fld-layout.lbl'),
-				width: 300,
+				width: 330,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -147,7 +147,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
 				},
 				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
-				width: 300,
+				width: 330,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -155,6 +155,31 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}
 				},
 				needReload: true
+			}),
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.startupService}',
+				store: {
+					autoLoad: true,
+					model: 'WTA.model.Simple',
+					proxy: WTF.proxy(me.ID, 'LookupStartupServices', null, {
+						extraParams: {
+							options: true,
+							id: me.profileId
+						}
+					})
+				},
+				triggers: {
+					clear: WTF.clearTrigger()
+				},
+				fieldLabel: WT.res('opts.main.fld-startupService.lbl'),
+				emptyText: WT.res('opts.main.fld-startupService.emp'),
+				width: 330,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				}
 			}), {
 				xtype: 'sospacer'
 			}, {

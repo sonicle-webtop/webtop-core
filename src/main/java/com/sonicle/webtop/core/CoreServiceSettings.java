@@ -79,8 +79,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(ADDON_NOTIFIER_URL, null);
 	}
 	
-	public Integer getUploadMaxFileSize() {
-		Integer value = getInteger(UPLOAD_MAXFILESIZE, null);
+	public Long getUploadMaxFileSize() {
+		final Long value = getLong(UPLOAD_MAXFILESIZE, null);
 		return (value != null) ? value : getDefaultUploadMaxFileSize();
 	}
 	
@@ -176,8 +176,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
-	public Integer getIMUploadMaxFileSize() {
-		Integer value = getInteger(IM_UPLOAD_MAXFILESIZE, null);
+	public Long getIMUploadMaxFileSize() {
+		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
 		return (value != null) ? value : getUploadMaxFileSize();
 	}
 	
@@ -260,8 +260,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return value;
 	}
 	
-	private Integer getDefaultUploadMaxFileSize() {
-		return getInteger(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, 20971520);
+	private Long getDefaultUploadMaxFileSize() {
+		return getLong(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, (long)20971520);
 	}
 	
 	public String getDefaultTheme() {
@@ -278,6 +278,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public boolean getDefaultRtl() {
 		return getBoolean(DEFAULT_PREFIX + RTL, false);
+	}
+	
+	public String getDefaultStartupService() {
+		return getString(DEFAULT_PREFIX + STARTUP_SERVICE, null);
 	}
 	
 	public String getDefaultDesktopNotification() {

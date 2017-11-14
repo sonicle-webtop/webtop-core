@@ -47,7 +47,6 @@ public class JsWTSPrivate extends JsWTS {
 	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
-	public String defaultService;
 	
 	public JsWTSPrivate() {
 		this.appType = "private";

@@ -44,6 +44,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String theme;
 	public String layout;
 	public String laf;
+	public String startupService;
 	public String desktopNotification;
 	public String language;
 	public String timezone;
@@ -85,7 +86,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean otpDeviceIsTrusted;
 	public String otpDeviceTrustedOn;
 	
-	public Integer imUploadMaxFileSize;
+	public Long imUploadMaxFileSize;
 	public Boolean imSoundOnFriendConnect;
 	public Boolean imSoundOnFriendDisconnect;
 	public Boolean imSoundOnMessageReceived;

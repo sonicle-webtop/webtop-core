@@ -153,12 +153,14 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		me.onRequiresLoaded.call(me);
 	},
 	
+	
+	
 	onRequiresLoaded: function() {
 		var me = this,
-				def = null, vp, vpc;
+				cdesc, vp, vpc;
 		
 		// Instantiates core service
-		var cdesc = me.services.getAt(0);
+		cdesc = me.services.getAt(0);
 		if (!cdesc.getInstance()) Ext.raise('Unable to instantiate core');
 		
 		// Creates main viewport
@@ -178,17 +180,12 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				var svc = desc.getInstance();
 				vpc.addServiceButton(desc);
 				if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
-				// Saves first succesfully activated service for later displaying default
-				if (def === null) def = desc.getId();
 			}
 		});
 		
-		// Sets default service
-		if (WTS.defaultService) {
-			var desc = me.getDescriptor(WTS.defaultService);
-			if (desc.isInited()) def = WTS.defaultService;
-		}
-		if (def !== null) me.activateService(def);
+		// Sets startup service
+		var deflt = me.findDefaultService();
+		me.activateService(deflt);
 		
 		// If necessary, show whatsnew
 		if (WT.getVar('isWhatsnewNeeded')) {
@@ -229,6 +226,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		me.currentService = id;
 		if (vpc.activateService(inst)) {
 			inst.activationCount++;
+			Ext.state.Manager.set(WT.buildStateId('lastservice'), id);
 			inst.fireEvent('activate');
 		}
 	},
@@ -289,6 +287,20 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		*/
 	},
 	
+	findDefaultService: function() {
+		var me = this,
+				arr = [WT.getVar('startupService'), Ext.state.Manager.get(WT.buildStateId('lastservice'))],
+				desc;
+		
+		for (var i=0; i<arr.length; i++) {
+			if (!Ext.isEmpty(arr[i])) {
+				desc = me.getDescriptor(arr[i]);
+				if (desc && desc.isInited()) return arr[i]; 
+			}
+		}
+		return WT.ID;
+	},
+	
 	/**
 	 * Returns the Service API interface.
 	 * @param {String} id The service ID.
@@ -306,6 +318,36 @@ Ext.override(Ext.data.proxy.Server, {
 		this.addListener('exception', function(s,resp,op) {
 			if(resp.status === 401) WT.reload();
 		});
+	}
+});
+
+Ext.override(Ext.toolbar.Toolbar, {
+	lookupComponent: function(comp) {
+		var me = this,
+				defls = me.defaults || {},
+				isAct = comp.isAction,
+				comp = me.callParent(arguments);
+		if (isAct) {
+			if (defls.hasOwnProperty('text')) comp.text = defls.text;
+			if (defls.hasOwnProperty('tooltip')) comp.tooltip = defls.tooltip;
+		}
+		return comp;
+	}
+});
+
+Ext.override(Ext.menu.Menu, {
+	/**
+	 * @cfg {Boolean} disableActionTooltips
+	 * `false` to enable tooltip display for {@link Ext.Action actions}.
+	 */
+	disableActionTooltips: true,
+	
+	lookupItemFromObject: function(cmp) {
+		var me = this,
+				isAct = cmp.isAction,
+				cmp = me.callParent(arguments);
+		if (isAct && me.disableActionTooltips) cmp.tooltip = null;
+		return cmp;
 	}
 });
 

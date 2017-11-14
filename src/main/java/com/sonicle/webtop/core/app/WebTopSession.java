@@ -69,6 +69,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -97,7 +98,7 @@ public class WebTopSession {
 	private CorePrivateEnvironment privateCoreEnv = null;
 	private PublicEnvironment publicEnv = null;
 	private final HashMap<String, BaseManager> managers = new HashMap<>();
-	private List<String> allowedServices = null;
+	private Set<String> allowedServices = null;
 	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
@@ -690,19 +691,9 @@ public class WebTopSession {
 		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
 		// Evaluate services
-		JsWTSPrivate.Service last = null;
-		String deflt = null;
 		for(String serviceId : getPrivateServices(true)) {
 			fillStartupForService(js, serviceId, locale, theme, lookAndFeel);
-			last = js.services.get(js.services.size()-1);
-			//TODO: gestire la manutenzione
-			if((deflt == null) && !last.id.equals(CoreManifest.ID) && !last.maintenance) {
-				// Candidate startup (default) service must not be in maintenance
-				// and id should not be equal to core service!
-				deflt = last.id;
-			}
 		}
-		js.defaultService = deflt;
 	}
 	
 	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale, String theme, String lookAndFeel) {
@@ -894,6 +885,7 @@ public class WebTopSession {
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "moxie.js");
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
+		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
