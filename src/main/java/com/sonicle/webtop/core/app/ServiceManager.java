@@ -87,10 +87,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.Duration;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -804,29 +806,37 @@ public class ServiceManager {
 		instance.configure(environment);
 		
 		// Calls initialization method
+		long start = 0, end = 0;
 		logger.trace("PrivateService: calling initialize() [{}]", serviceId);
 		try {
 			LoggerUtils.setContextDC(serviceId);
+			start = System.nanoTime();
 			instance.initialize();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("PrivateService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PrivateService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
 		
 		return instance;
 	}
 	
 	public void cleanupPrivateService(BaseService instance) {
+		long start = 0, end = 0;
 		logger.trace("PrivateService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			start = System.nanoTime();
 			instance.cleanup();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("PrivateService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PrivateService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfileId targetProfileId) {
@@ -858,29 +868,37 @@ public class ServiceManager {
 		instance.configure(environment);
 		
 		// Calls initialization method
-		logger.trace("PrivateService: calling initialize() [{}]", serviceId);
+		long start = 0, end = 0;
+		logger.trace("PublicService: calling initialize() [{}]", serviceId);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			start = System.nanoTime();
 			instance.initialize();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("PublicService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PublicService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
 		
 		return instance;
 	}
 	
 	public void cleanupPublicService(BasePublicService instance) {
+		long start = 0, end = 0;
 		logger.trace("PublicService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			start = System.nanoTime();
 			instance.cleanup();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("PublicService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PublicService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private boolean createJobService(String serviceId) {
@@ -912,27 +930,35 @@ public class ServiceManager {
 	}
 	
 	private void initializeJobService(BaseJobService instance) {
+		long start = 0, end = 0;
 		logger.trace("JobService: calling initialize() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			start = System.nanoTime();
 			instance.initialize();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("JobService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("JobService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private void cleanupJobService(BaseJobService instance) {
+		long start = 0, end = 0;
 		logger.trace("JobService: calling cleanup() [{}]", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.getManifest().getId());
+			start = System.nanoTime();
 			instance.cleanup();
+			end = System.nanoTime();
 		} catch(Throwable t) {
 			logger.error("JobService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("JobService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	
