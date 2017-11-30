@@ -1016,7 +1016,7 @@ public class ServiceManager {
 				manifests.add(manifest);
 				
 			} catch(Exception ex) {
-				logger.warn("Service descriptor skipped. Cause: {}", ex.getMessage());
+				logger.warn("Service descriptor  for '{}' version {} skipped. Cause: {}", elService.getString("shortName"), elService.getString("version"), ex.getMessage());
 			}
 		}
 		return manifests;
