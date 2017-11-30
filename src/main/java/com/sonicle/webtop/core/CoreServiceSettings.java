@@ -79,11 +79,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(ADDON_NOTIFIER_URL, null);
 	}
 	
-	public Long getUploadMaxFileSize() {
-		final Long value = getLong(UPLOAD_MAXFILESIZE, null);
-		return (value != null) ? value : getDefaultUploadMaxFileSize();
-	}
-	
 	public String getSMTPHost() {
         return getString(SMTP_HOST, "localhost");
     }
@@ -176,9 +171,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
-	public Long getIMUploadMaxFileSize() {
+	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
-		return (value != null) ? value : getUploadMaxFileSize();
+		if (fallbackOnDefault && (value == null)) {
+			return getDefaultIMUploadMaxFileSize();
+		} else {
+			return value;
+		}
 	}
 	
 	public ServicesOrder getServicesOrder() {
@@ -260,10 +259,6 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return value;
 	}
 	
-	private Long getDefaultUploadMaxFileSize() {
-		return getLong(DEFAULT_PREFIX + UPLOAD_MAXFILESIZE, (long)20971520);
-	}
-	
 	public String getDefaultTheme() {
 		return getString(DEFAULT_PREFIX + THEME, "crisp");
 	}
@@ -318,6 +313,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public boolean getDefaultDevicesSyncAlertEnabled() {
 		return getBoolean(DEFAULT_PREFIX + DEVICES_SYNC_ALERT_ENABLED, false);
+	}
+	
+	public long getDefaultIMUploadMaxFileSize() {
+		return getLong(DEFAULT_PREFIX + IM_UPLOAD_MAXFILESIZE, (long)10485760); // 10MB
 	}
 	
 	public static class ServicesOrder extends ArrayList<String> {

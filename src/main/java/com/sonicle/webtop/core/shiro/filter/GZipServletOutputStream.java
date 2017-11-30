@@ -31,25 +31,60 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.shiro.filter;
 
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
-import javax.websocket.server.ServerEndpointConfig;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.zip.GZIPOutputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 
 /**
  *
  * @author malbinola
  */
-public class WsPushEndpointConfigurator extends ServerEndpointConfig.Configurator {
+public class GZipServletOutputStream extends ServletOutputStream {
+	private final GZIPOutputStream gzipOutputStream;
+	private final AtomicBoolean opened = new AtomicBoolean(true);
 	
-    @Override
-    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
-    {
-		Subject subject = SecurityUtils.getSubject();
-		config.getUserProperties().put("sessionId", subject.getSession().getId().toString());
-		//config.getUserProperties().put("shiroSession", subject.getSession());
-    }
+	public GZipServletOutputStream(OutputStream output) throws IOException {
+		super();
+		this.gzipOutputStream = new GZIPOutputStream(output);
+	}
+	
+	@Override
+	public boolean isReady() {
+		return true;
+	}
+
+	@Override
+	public void setWriteListener(WriteListener wl) {}
+
+	@Override
+	public void flush() throws IOException {
+		this.gzipOutputStream.flush();
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (opened.compareAndSet(true, false)) this.gzipOutputStream.close();
+	}
+
+	@Override
+	public void write(int b) throws IOException {
+		if (!opened.get()) throw new IOException("Stream closed");
+		this.gzipOutputStream.write(b);
+	}
+
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+		 if (!opened.get()) throw new IOException("Stream closed");
+		 this.gzipOutputStream.write(b, off, len);
+	}
+
+	@Override
+	public void write(byte[] b) throws IOException {
+		write(b, 0, b.length);
+	}
 }

@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2017 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,32 +29,53 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2017 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.shiro.filter;
 
-import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.commons.web.ServletUtils;
+import java.io.IOException;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.web.filter.PathMatchingFilter;
-import org.apache.shiro.web.util.WebUtils;
 
 /**
  *
  * @author malbinola
  */
-public class CSRFCheck extends PathMatchingFilter {
-
+public class GZip extends PathMatchingFilter {
+	private String compressibleMediaTypes = "text/html,text/xml,text/plain,text/css,text/javascript,application/javascript";
+	
 	@Override
-	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-		final String csrf = request.getParameter("csrf");
-		if (StringUtils.equals(RunContext.getCSRFToken(), csrf)) {
-			return true;
+	public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {
+		final HttpServletRequest httpRequest = (HttpServletRequest) request;
+		final HttpServletResponse httpResponse = (HttpServletResponse) response;
+		
+		if (shouldCompress(httpRequest, httpResponse)) {
+			final GZipServletResponseWrapper wrappedResponse = new GZipServletResponseWrapper(httpResponse);
+			super.doFilterInternal(request, wrappedResponse, chain);
+			wrappedResponse.finish();
 		} else {
-			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
-			return false;
+			super.doFilterInternal(request, response, chain);
 		}
+	}
+	
+	private boolean shouldCompress(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+		if (!ServletUtils.acceptsDeflate(httpRequest)) return false;
+		if (hasSkipCompression(httpResponse)) return false;
+		return isContentTypeCompressible(httpResponse);
+	}
+	
+	private boolean hasSkipCompression(HttpServletResponse response) {
+		return StringUtils.containsIgnoreCase(response.getHeader("X-Skip-Compress"), "1");
+	}
+	
+	private boolean isContentTypeCompressible(HttpServletResponse response) {
+		return StringUtils.containsIgnoreCase(compressibleMediaTypes, ServletUtils.getContentTypeHeader(response));
 	}
 }

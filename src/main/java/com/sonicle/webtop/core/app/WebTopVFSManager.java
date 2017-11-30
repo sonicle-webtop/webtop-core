@@ -33,23 +33,26 @@
  */
 package com.sonicle.webtop.core.app;
 
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
-import javax.websocket.server.ServerEndpointConfig;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.impl.DefaultFileReplicator;
+import org.apache.commons.vfs2.impl.DefaultFileSystemManager;
+import org.apache.commons.vfs2.impl.PrivilegedFileReplicator;
 
 /**
  *
  * @author malbinola
  */
-public class WsPushEndpointConfigurator extends ServerEndpointConfig.Configurator {
+public class WebTopVFSManager extends DefaultFileSystemManager {
 	
-    @Override
-    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
-    {
-		Subject subject = SecurityUtils.getSubject();
-		config.getUserProperties().put("sessionId", subject.getSession().getId().toString());
-		//config.getUserProperties().put("shiroSession", subject.getSession());
-    }
+	@Override
+	public void init() throws FileSystemException {
+		final DefaultFileReplicator replicator = createDefaultFileReplicator();
+		setReplicator(new PrivilegedFileReplicator(replicator));
+		setTemporaryFileStore(replicator);
+		super.init();
+	}
+	
+	protected DefaultFileReplicator createDefaultFileReplicator() {
+		return new DefaultFileReplicator();
+	}
 }

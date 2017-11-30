@@ -59,8 +59,10 @@ public class RestApiJaxRsApplication extends ResourceConfig {
 			register(new ShiroExceptionMapper());
 			register(new AuthExceptionMapper());
 			register(new WTExceptionMapper());
-
-			// Loads Api endpoints implementation dinamically
+			
+			// Register primary application API endpoint
+			register(new RestApi(wta));
+			// Loads API endpoints implementation dinamically
 			ServiceManager svcm = wta.getServiceManager();
 			for (String serviceId : svcm.listRegisteredServices()) {
 				ServiceDescriptor desc = svcm.getDescriptor(serviceId);

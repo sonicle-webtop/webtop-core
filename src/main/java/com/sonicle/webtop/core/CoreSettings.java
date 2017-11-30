@@ -109,7 +109,7 @@ public class CoreSettings {
 	 * [long]
 	 * Maximum file size for uploads
 	 */
-	public static final String UPLOAD_MAXFILESIZE = "upload.maxfilesize";
+	//public static final String UPLOAD_MAXFILESIZE = "upload.maxfilesize";/////////////////////////////////////////////////+default
 	
 	/**
 	 * [domain+system]

@@ -116,9 +116,12 @@ import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.collections.set.ListOrderedSet;
+import org.apache.commons.httpclient.contrib.ssl.EasySSLProtocolSocketFactory;
+import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -256,6 +259,11 @@ public final class WebTopApp {
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
 		
+		// Ignore SSL checks for old commons-http components.
+		// This is required in order to avoid error when accessing WebDAV 
+		// secured servers throught vfs2.
+		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
+		
 		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", String.valueOf(false));
 		ICalendarUtils.setUnfoldingRelaxed(true);
 		ICalendarUtils.setParsingRelaxed(true);
@@ -292,6 +300,12 @@ public final class WebTopApp {
 		} catch(Throwable t) {
 		} finally {
 			HttpClientUtils.closeQuietly(httpcli);
+		}
+		
+		try {
+			initVFSManager();
+		} catch(FileSystemException ex) {
+			throw new WTRuntimeException(ex, "Error initializing VFS");
 		}
 		
 		logger.info("WTA initialization started [{}]", webappName);
@@ -468,11 +482,28 @@ public final class WebTopApp {
 						logger.error("Error", ex);
 					}
 				}
-			}	
+			}
 			
 		} catch(IllegalStateException ex) {
 			// Due to NB redeploys in development...simply ignore this!
 		}
+	}
+	
+	private void initVFSManager() throws FileSystemException {
+		WebTopVFSManager vfsMgr = new WebTopVFSManager();
+		vfsMgr.addProvider("file", new org.apache.commons.vfs2.provider.local.DefaultLocalFileProvider());
+		vfsMgr.addProvider("ftp", new org.apache.commons.vfs2.provider.ftp.FtpFileProvider());
+		vfsMgr.addProvider("ftps", new org.apache.commons.vfs2.provider.ftps.FtpsFileProvider());
+		vfsMgr.addProvider("sftp", new org.apache.commons.vfs2.provider.sftp.SftpFileProvider());
+		vfsMgr.addProvider("http", new org.apache.commons.vfs2.provider.http.HttpFileProvider());
+		vfsMgr.addProvider("https", new org.apache.commons.vfs2.provider.https.HttpsFileProvider());
+		vfsMgr.addProvider("dropbox", new com.sonicle.vfs2.provider.dropbox.DbxFileProvider());
+		vfsMgr.addProvider("googledrive", new com.sonicle.vfs2.provider.googledrive.GDriveFileProvider());
+		vfsMgr.addProvider("webdav", new com.sonicle.vfs2.provider.webdav.WebdavFileProvider());
+		vfsMgr.addProvider("webdavs", new com.sonicle.vfs2.provider.webdavs.WebdavsFileProvider());
+		vfsMgr.addProvider("smb", new org.apache.commons.vfs2.provider.smb.SmbFileProvider());
+		vfsMgr.init();
+		VFS.setManager(vfsMgr);
 	}
 	
 	private void checkHomeStructure() {

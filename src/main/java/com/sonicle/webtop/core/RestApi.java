@@ -31,89 +31,79 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core;
 
-import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
-import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.js.JsSimple;
+import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
+import com.sonicle.webtop.core.sdk.WTException;
+import java.util.List;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseRestApiEndpoint extends AbstractService {
+public class RestApi extends BaseRestApiEndpoint {
+	private static final Logger logger = WT.getLogger(RestApi.class);
 	
-	public BaseRestApiEndpoint() {
+	public RestApi() {
 		super();
 	}
 	
-	/**
-	 * Gets WebTop Service manifest class.
-	 * @return The manifest.
-	 */
-	public final ServiceManifest getManifest() {
-		return WT.getManifest(SERVICE_ID);
+	@GET
+	@Path("/themes")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response themesList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listThemes();
+		return ok(items);
 	}
 	
-	protected Response respOk(Object data) {
-		return Response.ok(JsonResult.GSON.toJson(data)).build();
+	@GET
+	@Path("/layouts")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response layoutsList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listLayouts();
+		return ok(items);
 	}
 	
-	protected Response respStatus(Response.Status status) {
-		return Response.status(status).build();
+	@GET
+	@Path("/lafs")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response lafsList() throws WTException {
+		CoreManager core = getManager();
+		List<JsSimple> items = core.listLAFs();
+		return ok(items);
 	}
 	
-	protected Response respError() {
-		return respError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), null);
+	@GET
+	@Path("/domains")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response listDomains() throws WTException {
+		CoreManager core = getManager();
+		List<ODomain> items = core.listDomains(true);
+		return ok(items);
 	}
 	
-	protected Response respError(int status) {
-		return respError(status, null);
+	@GET
+	@Path("/me/devicesSynchronization/enabled")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response isDeviceSynchronizationEnabled() throws WTException {
+		boolean bool = RunContext.isPermitted(SERVICE_ID, "DEVICES_SYNC");
+		return ok(new MapItem().add("response", bool));
 	}
 	
-	protected Response respError(int status, String message) {
-		if (StringUtils.isBlank(message)) {
-			return Response.status(status)
-					.entity(new MapItem())
-					.type(MediaType.APPLICATION_JSON)
-					.build();
-		} else {
-			return Response.status(status)
-					.entity(new MapItem().add("message", message))
-					.type(MediaType.APPLICATION_JSON)
-					.build();
-		}
-	}
-	
-	/**
-	 * @deprecated Use respondOk instead
-	 */
-	protected Response ok(Object data) {
-		return respOk(data);
-	}
-	
-	/**
-	 * @deprecated Use respondError instead
-	 */
-	protected Response error() {
-		return error(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), null);
-	}
-	
-	/**
-	 * @deprecated Use respondError instead
-	 */
-	protected Response error(int status) {
-		return error(status, null);
-	}
-	
-	/**
-	 * @deprecated Use respondError instead
-	 */
-	protected Response error(int status, String message) {
-		return respError(status, message);
+	private CoreManager getManager() {
+		return WT.getCoreManager();
 	}
 }

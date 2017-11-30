@@ -252,7 +252,6 @@ public class Service extends BaseService {
 		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
-		co.put("wtUploadMaxFileSize", ss.getUploadMaxFileSize());
 		co.put("domainPasswordPolicy", domainPasswordPolicy);
 		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
 		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
@@ -277,7 +276,7 @@ public class Service extends BaseService {
 		co.put("imEnabled", !RunContext.isWebTopAdmin() && RunContext.isPermitted(CoreManifest.ID, "WEBCHAT", "ACCESS"));
 		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
 		co.put("imStatusMessage", us.getIMStatusMessage());
-		co.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize());
+		co.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize(true));
 		co.put("imSoundOnFriendConnect", us.getIMSoundOnFriendConnect());
 		co.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());

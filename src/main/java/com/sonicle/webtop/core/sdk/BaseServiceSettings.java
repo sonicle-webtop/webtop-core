@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 
@@ -57,6 +59,10 @@ public abstract class BaseServiceSettings extends BaseSettings {
 		setMgr = WebTopApp.getInstance().getSettingsManager();
 		this.serviceId = serviceId;
 		this.domainId = domainId;
+	}
+	
+	public CoreServiceSettings createCoreServiceSettings() {
+		return new CoreServiceSettings(CoreManifest.ID, domainId);
 	}
 	
 	@Override

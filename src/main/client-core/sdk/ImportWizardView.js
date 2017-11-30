@@ -37,6 +37,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	requires: [
 		'Sonicle.upload.Field',
 		'WTA.ux.data.ValueModel',
+		'WTA.ux.UploadBar',
 		'WTA.ux.panel.Form',
 		'WTA.model.ImportMapping',
 		'WTA.store.TxtLineSeparator',
@@ -143,8 +144,9 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 								uploadcomplete: function() {
 									me.unwait();
 								},
-								uploaderror: function() {
+								uploaderror: function(s, file, cause) {
 									me.unwait();
+									WTA.ux.UploadBar.handleUploadError(s, file, cause);
 								}
 							}
 						})

@@ -105,19 +105,16 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 					}
 				},
 				listeners: {
-					invalidfilesize: function() {
-						WT.warn(WT.res(WT.ID, 'error.upload.sizeexceeded', SoByt.format(mfs)));
+					uploaderror: function(s, file, cause) {
+						me.self.handleUploadError(s, file, cause);
 					},
 					fileuploaded: function(s, file, json, resp) {
 						me.fireEvent('fileuploaded', me, file, json, resp);
 					},
-					uploaderror: function(s, message, resp) {
-						WT.error(WT.res('error.upload'));
-					},
 					overallprogress: function(s, percent, total, succeeded, failed, queued, speed) {
 						var pro = me.getProgress(),
 								drh = me.geDropHere();
-						if(queued > 0) {
+						if (queued > 0) {
 							pro.updateProgress(percent*0.01, WT.res('wtuploadbar.progress.lbl', percent, queued-1, SoByt.format(speed || 0)));
 							pro.setHidden(false);
 							drh.setHidden(true);
@@ -167,5 +164,15 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	
 	geDropHere: function() {
 		return this.getComponent('drophere');
+	},
+	
+	statics: {
+		handleUploadError: function(uploader, file, cause) {
+			if (cause === 'size') {
+				WT.warn(WT.res(WT.ID, 'error.upload.sizeexceeded', Sonicle.Bytes.format(uploader.getConfig('maxFileSize'))));
+			} else {
+				WT.error(WT.res('error.upload'));
+			}
+		}
 	}
 });

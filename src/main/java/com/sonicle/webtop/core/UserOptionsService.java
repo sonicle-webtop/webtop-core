@@ -153,7 +153,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
 				// WebChat
-				jso.imUploadMaxFileSize = us.getIMUploadMaxFileSize();
+				jso.imUploadMaxFileSize = us.getIMUploadMaxFileSize(true);
 				jso.imSoundOnFriendConnect = us.getIMSoundOnFriendConnect();
 				jso.imSoundOnFriendDisconnect = us.getIMSoundOnFriendDisconnect();
 				jso.imSoundOnMessageReceived = us.getIMSoundOnMessageReceived();

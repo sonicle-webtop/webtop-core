@@ -31,102 +31,71 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core;
+package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import java.util.List;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-@Path("com.sonicle.webtop.core")
-public class CoreRestApi extends BaseRestApiEndpoint {
-	private static final Logger logger = WT.getLogger(CoreRestApi.class);
-	
-	public CoreRestApi() {
+@Path("app")
+public class RestApi extends BaseRestApiEndpoint {
+	private WebTopApp wta = null;
+
+	public RestApi(WebTopApp wta) {
 		super();
+		this.wta = wta;
 	}
 	
-	@GET
-	@Path("/themes")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response themesList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listThemes();
-		return ok(items);
-	}
-	
-	@GET
-	@Path("/layouts")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response layoutsList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listLayouts();
-		return ok(items);
-	}
-	
-	@GET
-	@Path("/lafs")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response lafsList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listLAFs();
-		return ok(items);
-	}
-	
-	/*
 	@GET
 	@Path("/sessions")
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response listSessions() throws WTException {
-		CoreManager core = getManager();
-		List<SessionInfo> items = core.listSessions();
-		return ok(items);
+		return respOk(getSessionManager().listOnlineSessions());
 	}
-	*/
+	
+	@GET
+	@Path("/sessions/{id}/exist")
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response existSession(@PathParam("id") String id) throws WTException {
+		return respStatus(getSessionManager().isOnline(id) ? Response.Status.OK : Response.Status.NOT_FOUND);
+	}
 	
 	/*
 	@DELETE
 	@Path("/sessions/{id}")
 	@Produces({MediaType.APPLICATION_JSON})
-	public Response deleteSession(@PathParam("id")String id) throws WTException {
-		CoreManager core = getManager();
-		core.invalidateSession(id);
-		return ok(new MapItem());
+	public Response deleteSession(@PathParam("id") String id) throws WTException {
+		getSessionManager().invalidateSession(id);
+		return respOk(new MapItem());
 	}
 	*/
 	
-	@GET
-	@Path("/domains")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response listDomains() throws WTException {
-		CoreManager core = getManager();
-		List<ODomain> items = core.listDomains(true);
-		return ok(items);
+	private SessionManager getSessionManager() throws WTException {
+		final SessionManager mgr = wta.getSessionManager();
+		if (mgr == null) throw new WTException("Invalid manager");
+		return mgr;
 	}
 	
-	@GET
-	@Path("/me/devicesSynchronization/enabled")
-	@Produces({MediaType.APPLICATION_JSON})
-	public Response isDeviceSynchronizationEnabled() throws WTException {
-		boolean bool = RunContext.isPermitted(SERVICE_ID, "DEVICES_SYNC");
-		return ok(new MapItem().add("response", bool));
+	private CoreManager getCoreManager() {
+		return getManager(RunContext.getRunProfileId());
 	}
 	
-	private CoreManager getManager() {
-		return WT.getCoreManager();
+	private CoreManager getManager(UserProfileId targetProfileId) {
+		return (CoreManager)WT.getServiceManager(SERVICE_ID, targetProfileId);
 	}
 }

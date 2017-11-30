@@ -40,6 +40,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		'Sonicle.picker.RemoteDate',
 		'Sonicle.plugin.FileDrop',
 		'Sonicle.upload.Button',
+		'WTA.ux.UploadBar',
 		'Sonicle.webtop.core.ux.grid.column.ChatMessage',
 		'Sonicle.webtop.core.model.IMMessageGrid',
 		'Sonicle.webtop.core.model.IMChatSearchGrid'
@@ -86,7 +87,6 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	initComponent: function() {
 		var me = this,
 				gptodayId = Ext.id(null, 'gridpanel'),
-				maxSize = WT.getVar('imUploadMaxFileSize'),
 				tbarItms = [];
 		
 		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
@@ -112,11 +112,18 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					chatId: me.chatId
 				},
 				dropElement: gptodayId,
-				maxFileSize: maxSize
+				maxFileSize: WT.getVar('imUploadMaxFileSize')
 			}),
 			listeners: {
-				invalidfilesize: function() {
-					WT.warn(WT.res(WT.ID, 'error.upload.sizeexceeded', Sonicle.Bytes.format(maxSize)));
+				uploadstarted: function() {
+					me.wait();
+				},
+				uploadcomplete: function() {
+					me.unwait();
+				},
+				uploaderror: function(s, file, cause) {
+					me.unwait(true);
+					WTA.ux.UploadBar.handleUploadError(s, file, cause);
 				},
 				fileuploaded: function(s, file, json) {
 					me.lref('card').getLayout().setActiveItem(me.lref('gptoday'));
@@ -124,16 +131,6 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 					if (WT.getVar('imSoundOnMessageSent')) {
 						Sonicle.Sound.play('wt-im-sent');
 					}
-				},
-				uploadstarted: function() {
-					me.wait();
-				},
-				uploadcomplete: function() {
-					me.unwait();
-				},
-				uploaderror: function(s, message, json) {
-					me.unwait(true);
-					WT.error(WT.res('error.upload'));
 				},
 				uploadprogress: function(s, file, percent) {
 					me.waitUpdate(Ext.String.format('{0}: {1}%', file.name, percent));

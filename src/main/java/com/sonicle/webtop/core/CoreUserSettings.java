@@ -263,9 +263,9 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(IM_PRESENCE_STATUS, EnumUtils.toSerializedName(value));
 	}
 	
-	public Long getIMUploadMaxFileSize() {
+	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
-		return (value != null) ? value : ss.getIMUploadMaxFileSize();
+		return (value != null) ? value : ss.getIMUploadMaxFileSize(fallbackOnDefault);
 	}
 	
 	public boolean setIMUploadMaxFileSize(Long value) {

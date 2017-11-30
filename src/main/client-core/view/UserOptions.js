@@ -949,7 +949,6 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'sobytesfield',
 				bind: '{record.imUploadMaxFileSize}',
 				disabled: !WT.isPermitted('WTADMIN', 'ACCESS'),
-				emptyText: Sonicle.Bytes.format(WT.getVar('wtUploadMaxFileSize')),
 				fieldLabel: WT.res(me.ID, 'opts.im.fld-imUploadMaxFileSize.lbl'),
 				width: 280,
 				listeners: {
