@@ -219,8 +219,8 @@ public class WebTopDirectory extends AbstractDirectory {
 				}
 			}
 			
-			int ret = doUpdatePassword(false, con, domainId, userId, algo, userId);
-			if (ret == 0) doUpdatePassword(true, con, domainId, userId, algo, userId);
+			int ret = doUpdatePassword(false, con, domainId, userId, algo, new String(newPassword));
+			if (ret == 0) doUpdatePassword(true, con, domainId, userId, algo, new String(newPassword));
 			
 		} catch(SQLException | DAOException ex) {
 			throw new DirectoryException(ex, "DB error");
