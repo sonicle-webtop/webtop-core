@@ -17,7 +17,7 @@ tinymce.PluginManager.add('contextmenu', function(editor) {
 		var contextmenu, doc = editor.getDoc();
 
 		// Block TinyMCE menu on ctrlKey
-		if (e.ctrlKey && !contextmenuNeverUseNative) {
+		if (!e.ctrlKey && !contextmenuNeverUseNative) {
 			return;
 		}
 
