@@ -933,9 +933,8 @@ public class Service extends BaseService {
 						throw new WTException("Notifier not available");
 					}
 					is = this.getClass().getResourceAsStream("/webtop/addons/webtop.exe");
-					OutputStream os = response.getOutputStream();
 					ServletUtils.setFileStreamHeadersForceDownload(response, "notifier.exe");
-					IOUtils.copy(is, os);
+					IOUtils.copy(is, response.getOutputStream());
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
