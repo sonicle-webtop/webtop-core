@@ -38,7 +38,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
@@ -283,11 +283,11 @@ public final class WebTopApp {
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		this.webappName = ServletUtils.getWebappName(context);
+		this.webappName = ContextUtils.getWebappName(context);
 		if (StringUtils.isBlank(startupProperties.getWebappsConfigPath())) {
 			this.webappConfigPath = null;
 		} else {
-			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ServletUtils.getWebappName(context, true));
+			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ContextUtils.getWebappName(context, true));
 		}
 		this.webappIsLatest = false;
 		

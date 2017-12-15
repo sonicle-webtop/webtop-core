@@ -797,8 +797,8 @@ public final class WebTopManager {
 			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
-			if(directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-				if(oldPassword != null) {
+			if (directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				if (oldPassword != null) {
 					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), oldPassword, newPassword);
 				} else {
 					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), newPassword);

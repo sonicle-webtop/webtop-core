@@ -106,6 +106,10 @@ public class WebTopSession {
 	private final Object lock1 = new Object();
 	private javax.mail.Session mailSession = null;
 	
+	public WebTopSession(Session session) {
+		this(WebTopApp.getInstance(), session);
+	}
+	
 	WebTopSession(WebTopApp wta, Session session) {
 		this.wta = wta;
 		this.session = session;

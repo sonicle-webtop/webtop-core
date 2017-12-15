@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class ContextLoader {
 			throw new IllegalStateException("There is already a WebTopApp associated with the current ServletContext.");
 		}
 		
-		final String appname = ServletUtils.getWebappName(servletContext);
+		final String appname = ContextUtils.getWebappName(servletContext);
 		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, appname);
 		
 		try {
