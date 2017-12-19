@@ -100,13 +100,13 @@ public class PublicServiceRequest extends BaseServiceRequest {
 
 		try {
 			String mimeType = ServletUtils.guessMimeType(resource.getFilename());
-			os = ServletUtils.prepareForStreamCopy(request, response, mimeType, (int)resource.getSize(), 4*1024);
 			ServletUtils.setContentTypeHeader(response, mimeType);
 			if (StringUtils.startsWith(mimeType, "image")) {
 				ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24);
 			} else {
 				ServletUtils.setCacheControlPrivateNoCache(response);
 			}
+			os = ServletUtils.prepareForStreamCopy(request, response, mimeType, (int)resource.getSize(), ServletUtils.GZIP_MIN_THRESHOLD);
 			is = resource.getInputStream();
 			ServletUtils.transferStreams(is, os);
 		} finally {

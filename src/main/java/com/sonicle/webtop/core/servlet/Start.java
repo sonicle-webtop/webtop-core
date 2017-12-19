@@ -110,6 +110,9 @@ public class Start extends AbstractServlet {
 			wts.fillStartup(jswts);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			
+			ServletUtils.setHtmlContentType(response);
+			ServletUtils.setCacheControlPrivateNoCache(response);
+			
 			// Load and build template
 			Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/private.html");
 			tpl.process(vars, response.getWriter());
@@ -124,10 +127,6 @@ public class Start extends AbstractServlet {
 			
 		} catch(Exception ex) {
 			logger.error("Error", ex);
-			
-		} finally {
-			response.setHeader("Cache-Control", "private, no-cache");
-			ServletHelper.setPageContentType(response);
 		}
 	}
 	

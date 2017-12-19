@@ -34,14 +34,12 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.AbstractEnvironmentService;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.PublicEnvironment;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
 import com.sonicle.webtop.core.servlet.PublicServiceRequest;
@@ -76,12 +74,14 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 		jswts.servicesVars.get(1).putAll(serviceVars);
 		vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 		writePage(response, contextPath, vars, wts.getLocale());
-		ServletUtils.setCacheControlPrivate(response);
-		ServletUtils.setHtmlContentType(response);
 	}
 	
 	public void writePage(HttpServletResponse response, String contextPath, Map vars, Locale locale) throws IOException, TemplateException {
 		AbstractServlet.fillPageVars(vars, locale, contextPath);
+		
+		ServletUtils.setHtmlContentType(response);
+		ServletUtils.setCacheControlPrivate(response);
+		
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/public.html");
 		tpl.process(vars, response.getWriter());
 	}

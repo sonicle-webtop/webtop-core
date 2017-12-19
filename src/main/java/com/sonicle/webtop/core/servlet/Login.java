@@ -107,17 +107,14 @@ public class Login extends AbstractServlet {
 				domains.add(new HtmlSelect(dom.getDomainId(), dom.getDescription()));
 			}
 			
-			buildPage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
+			writePage(wta, css, locale, domains, maintenanceMessage, failureMessage, response);
 			
 		} catch(Exception ex) {
 			logger.error("Error", ex);
-		} finally {
-			ServletHelper.setPrivateCache(response);
-			ServletHelper.setPageContentType(response);
 		}
 	}
 	
-	private void buildPage(WebTopApp wta, CoreServiceSettings css, Locale locale, List<HtmlSelect> domains, String maintenanceMessage, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
+	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, List<HtmlSelect> domains, String maintenanceMessage, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		boolean showDomain = (css.getHideLoginDomains()) ? false : (domains.size() > 1);
 		
 		Map tplMap = new HashMap();
@@ -133,6 +130,9 @@ public class Login extends AbstractServlet {
 		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_LOGIN_SUBMIT_LABEL, true));
 		tplMap.put("showDomain", showDomain);
 		tplMap.put("domains", domains);
+		
+		ServletUtils.setHtmlContentType(response);
+		ServletUtils.setCacheControlPrivate(response);
 		
 		// Load and build template
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/login.html");

@@ -94,7 +94,7 @@ public class Otp extends AbstractServlet {
 				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG, config); // Save for later...
 				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, 0); // Save for later...
 				
-				buildPage(wta, css, locale, deliveryMode, null, response);
+				writePage(wta, css, locale, deliveryMode, null, response);
 				
 			} else {
 				config = (OTPManager.Config)wts.getProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG);
@@ -120,7 +120,7 @@ public class Otp extends AbstractServlet {
 					if(tries >= 3) throw new NoMoreTriesException();
 					wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, tries); // Save for later...
 					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
-					buildPage(wta, css, locale, deliveryMode, failureMessage, response);
+					writePage(wta, css, locale, deliveryMode, failureMessage, response);
 				}
 			}
 			
@@ -134,9 +134,6 @@ public class Otp extends AbstractServlet {
 		} catch(Exception ex) {
 			logger.error("Error", ex);
 			//TODO: pagina di errore
-		} finally {
-			ServletHelper.setPrivateCache(response);
-			ServletHelper.setPageContentType(response);
 		}
 	}
 	
@@ -175,7 +172,7 @@ public class Otp extends AbstractServlet {
 		return false;
 	}
 	
-	private void buildPage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
+	private void writePage(WebTopApp wta, CoreServiceSettings css, Locale locale, String deliveryMode, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
 		AbstractServlet.fillPageVars(tplMap, locale, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
@@ -189,6 +186,9 @@ public class Otp extends AbstractServlet {
 		tplMap.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_SUBMIT_LABEL, true));
 		tplMap.put("trustLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_TRUST_LABEL, true));
 		tplMap.put("showTrustCheckbox", css.getOTPDeviceTrustEnabled());
+		
+		ServletUtils.setHtmlContentType(response);
+		ServletUtils.setCacheControlPrivate(response);
 		
 		// Load and build template
 		Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/otp.html");

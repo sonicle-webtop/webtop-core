@@ -51,7 +51,7 @@ public class Logout extends AbstractServlet {
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletHelper.setPrivateCache(response);
+		ServletUtils.setCacheControlPrivate(response);
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		RunContext.getSubject().logout();
 		ServletUtils.redirectRequest(request, response);

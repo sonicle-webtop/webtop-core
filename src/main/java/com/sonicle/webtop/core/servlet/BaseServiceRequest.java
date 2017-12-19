@@ -98,13 +98,13 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 				ArrayList<Object> invokeArgs = new ArrayList<>();
 				invokeArgs.add(request);
 				invokeArgs.add(response);
-				if(!methodInfo.nowriter) {
-					ServletUtils.setCacheControlPrivateNoCache(response);
+				if (!methodInfo.nowriter) {
 					ServletUtils.setJsonContentType(response);
+					ServletUtils.setCacheControlPrivateNoCache(response);
 					out = response.getWriter();
 					invokeArgs.add(out);
 				}
-				if(args.length > 0) invokeArgs.addAll(Arrays.asList(args));
+				if (args.length > 0) invokeArgs.addAll(Arrays.asList(args));
 				LoggerUtils.setContextDC(service);
 				methodInfo.method.invoke(instance, invokeArgs.toArray());
 				
@@ -118,6 +118,42 @@ public abstract class BaseServiceRequest extends AbstractServlet {
 			IOUtils.closeQuietly(out);
 		}
 	}
+	
+	/*
+	protected void invokeMethod22(Object instance, MethodInfo methodInfo, String service, HttpServletRequest request, HttpServletResponse response, Object... args) throws Exception {
+		try {
+			HttpServletResponseWrapper wrappedResponse = null;
+			
+			try {
+				ArrayList<Object> invokeArgs = new ArrayList<>();
+				invokeArgs.add(request);
+				if (!methodInfo.nowriter) {
+					ServletUtils.setCacheControlPrivateNoCache(response);
+					ServletUtils.setJsonContentType(response);
+					if (ServletUtils.acceptsDeflate(request)) {
+						wrappedResponse = new GZipResponseWrapper(response);
+					} else {
+						wrappedResponse = new WriterResponseWrapper(response);
+					}
+					invokeArgs.add(wrappedResponse);
+					invokeArgs.add(wrappedResponse.getWriter());
+					
+				} else {
+					invokeArgs.add(response);
+				}
+				
+				if (args.length > 0) invokeArgs.addAll(Arrays.asList(args));
+				LoggerUtils.setContextDC(service);
+				methodInfo.method.invoke(instance, invokeArgs.toArray());
+				
+			} finally {
+				if (wrappedResponse != null) ((ClosableServletResponse)wrappedResponse).close();
+			}
+		} catch(Throwable t) {
+			throw new Exception("Error during method invocation", t);
+		}
+	}
+	*/
 	
 	public static class MethodInfo {
 		public Method method;
