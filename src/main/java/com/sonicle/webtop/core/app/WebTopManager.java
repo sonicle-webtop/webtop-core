@@ -35,8 +35,8 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.DigestUtils;
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
@@ -1642,7 +1642,7 @@ public final class WebTopManager {
 		UserDAO udao = UserDAO.getInstance();
 		UserInfoDAO uidao = UserInfoDAO.getInstance();
 		
-		InternetAddress email = MailUtils.buildInternetAddress(user.getUserId(), domain.getInternetName(), null);
+		InternetAddress email = InternetAddressUtils.toInternetAddress(user.getUserId(), domain.getInternetName(), null);
 		if(email == null) throw new WTException("Cannot create a valid email address [{0}, {1}]", user.getUserId(), domain.getInternetName());
 		
 		// Insert User record
@@ -1868,7 +1868,7 @@ public final class WebTopManager {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
 		InternetAddress profileIa = WT.buildDomainInternetAddress(pid.getDomainId(), pid.getUserId(), ouser.getDisplayName());
-		InternetAddress personalIa = MailUtils.buildInternetAddress(upi.getEmail(), ouser.getDisplayName());
+		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(upi.getEmail(), ouser.getDisplayName());
 		if (personalIa == null) {
 			personalIa = profileIa;
 			logger.warn("User does not have a valid email in personal info. Check it! [{}]", pid.toString());

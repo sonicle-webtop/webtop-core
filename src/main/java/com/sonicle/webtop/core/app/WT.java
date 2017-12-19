@@ -33,8 +33,8 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -116,7 +116,7 @@ public class WT {
 	
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
 		String internetName = WT.getDomainInternetName(domainId);
-		return MailUtils.buildInternetAddress(local, internetName, personal);
+		return InternetAddressUtils.toInternetAddress(local, internetName, personal);
 	}
 	
 	public static InternetAddress getNoReplyAddress(String domainId) {

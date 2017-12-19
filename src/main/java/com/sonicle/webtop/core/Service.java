@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -105,7 +105,6 @@ import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UploadException;
@@ -125,7 +124,6 @@ import com.sonicle.webtop.core.xmpp.XMPPClient;
 import com.sonicle.webtop.core.xmpp.XMPPClientException;
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.sql.Connection;
@@ -974,30 +972,30 @@ public class Service extends BaseService {
 		
 		try {
 			String operation = ServletUtils.getStringParameter(request, "operation", true);
-			if(operation.equals("configure") || operation.equals("activate") || operation.equals("deactivate")) {
+			if (operation.equals("configure") || operation.equals("activate") || operation.equals("deactivate")) {
 				// These work only on a target user!
 				String profileId = ServletUtils.getStringParameter(request, "profileId", true);
 				
 				UserProfileId targetPid = new UserProfileId(profileId);
 				corem = (targetPid.equals(coreMgr.getTargetProfileId())) ? coreMgr : WT.getCoreManager(targetPid);
 				
-				if(operation.equals("configure")) {
+				if (operation.equals("configure")) {
 					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-					if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
+					if (deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
-						InternetAddress ia = MailUtils.buildInternetAddress(address, null);
-						if(!MailUtils.isAddressValid(ia)) throw new WTException("Email address not valid"); //TODO: messaggio in lingua
+						InternetAddress ia = InternetAddressUtils.toInternetAddress(address, null);
+						if (!InternetAddressUtils.isAddressValid(ia)) throw new WTException("Email address not valid"); //TODO: messaggio in lingua
 						
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 
-					} else if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
+					} else if (deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 					}
 					new JsonResult(true).printTo(out);
 					
-				} else if(operation.equals("activate")) {
+				} else if (operation.equals("activate")) {
 					int code = ServletUtils.getIntParameter(request, "code", true);
 
 					OTPManager.Config config = (OTPManager.Config)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
@@ -1007,33 +1005,33 @@ public class Service extends BaseService {
 						throw new WTLocalizedException(lookupResource(CoreLocaleKey.OTP_SETUP_ERROR_CODE), "Invalid code");
 					}
 					*/
-					if(!enabled) throw new WTException("Invalid code"); //TODO: messaggio in lingua
+					if (!enabled) throw new WTException("Invalid code"); //TODO: messaggio in lingua
 					wts.clearProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					
 					new JsonResult().printTo(out);
 
-				} else if(operation.equals("deactivate")) {
+				} else if (operation.equals("deactivate")) {
 					corem.otpDeactivate();
 					new JsonResult().printTo(out);
 
 				}
-			} else if(operation.equals("untrustthis")) {
+			} else if (operation.equals("untrustthis")) {
 				// This works only on current session user!
 				OTPManager otpm = coreMgr.getOTPManager();
 				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(pid, request);
-				if(tdc != null) {
+				if (tdc != null) {
 					otpm.removeTrustedDevice(pid, tdc.deviceId);
 					otpm.clearTrustedDeviceCookie(pid, response);
 				}
 				new JsonResult().printTo(out);
 				
-			} else if(operation.equals("untrustothers")) {
+			} else if (operation.equals("untrustothers")) {
 				// This works only on current session user!
 				OTPManager otpm = coreMgr.getOTPManager();
 				TrustedDeviceCookie thistdc = otpm.readTrustedDeviceCookie(pid, request);
 				List<JsTrustedDevice> tds = otpm.listTrustedDevices(pid);
 				for(JsTrustedDevice td: tds) {
-					if((thistdc != null) && (td.deviceId.equals(thistdc.deviceId))) continue;
+					if ((thistdc != null) && (td.deviceId.equals(thistdc.deviceId))) continue;
 					otpm.removeTrustedDevice(pid, td.deviceId);
 				}
 				new JsonResult().printTo(out);
@@ -1187,7 +1185,7 @@ public class Service extends BaseService {
 			} else if (crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsInternetAddress> pl = ServletUtils.getPayload(request, JsInternetAddress.class);
 				if (CoreManager.RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(pl.data.source)) {
-					final InternetAddress ia = MailUtils.buildInternetAddress(pl.data.address, pl.data.personal);
+					final InternetAddress ia = InternetAddressUtils.toInternetAddress(pl.data.address, pl.data.personal);
 					if (ia != null) {
 						coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", ia.toString().toUpperCase());
 					}

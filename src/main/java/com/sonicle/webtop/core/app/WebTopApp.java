@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
@@ -1086,7 +1087,7 @@ public final class WebTopApp {
 			String from, String[] to, String[] cc, String[] bcc, 
 			String subject, String body) throws MessagingException {
 		
-		InternetAddress iafrom=MailUtils.buildInternetAddress(from);
+		InternetAddress iafrom=InternetAddressUtils.toInternetAddress(from);
 		InternetAddress iato[]=null;
 		InternetAddress iacc[]=null;
 		InternetAddress iabcc[]=null;
@@ -1095,7 +1096,7 @@ public final class WebTopApp {
 			iato=new InternetAddress[to.length];
 			int i=0;
             for(String addr: to) {
-                iato[i++]=MailUtils.buildInternetAddress(addr);
+                iato[i++]=InternetAddressUtils.toInternetAddress(addr);
             }
 		}
 		
@@ -1103,7 +1104,7 @@ public final class WebTopApp {
 			iacc=new InternetAddress[cc.length];
 			int i=0;
             for(String addr: cc) {
-                iacc[i++]=MailUtils.buildInternetAddress(addr);
+                iacc[i++]=InternetAddressUtils.toInternetAddress(addr);
             }
 		}
 		
@@ -1111,7 +1112,7 @@ public final class WebTopApp {
 			iabcc=new InternetAddress[bcc.length];
 			int i=0;
             for(String addr: bcc) {
-                iabcc[i++]=MailUtils.buildInternetAddress(addr);
+                iabcc[i++]=InternetAddressUtils.toInternetAddress(addr);
             }
 		}
 		

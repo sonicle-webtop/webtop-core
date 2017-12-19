@@ -34,8 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
-import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -562,7 +562,7 @@ public class CoreManager extends BaseManager {
 	public String getUserCompleteEmailAddress(UserProfileId pid) throws Exception {
 		String address = getUserEmailAddress(pid);
 		String displayName = getUserDisplayName(pid);
-		return new InternetAddress(address, displayName).toString();
+		return new InternetAddress(address, displayName).toUnicodeString();
 	}
 	*/
 	
@@ -2059,7 +2059,7 @@ public class CoreManager extends BaseManager {
 				if (fieldType.equals(RecipientFieldType.EMAIL)) {
 					final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
 					for(OServiceStoreEntry entry: entries) {
-						final InternetAddress ia = MailUtils.buildInternetAddress(entry.getValue());
+						final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
 						if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
 					}
 				}

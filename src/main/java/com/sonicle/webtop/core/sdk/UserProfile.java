@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
@@ -219,7 +220,7 @@ public final class UserProfile {
 		}
 		
 		public String getProfileFullEmailAddress() {
-			return profileEmail.toString();
+			return InternetAddressUtils.toFullAddress(profileEmail);
 		}
 		
 		public InternetAddress getPersonalEmail() {
@@ -231,7 +232,7 @@ public final class UserProfile {
 		}
 		
 		public String getPersonalFullEmailAddress() {
-			return personalEmail.toString();
+			return InternetAddressUtils.toFullAddress(personalEmail);
 		}
 		
 		/**
