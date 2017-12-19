@@ -74,7 +74,6 @@ import org.slf4j.Logger;
 public class ResourceRequest extends HttpServlet {
 	public static final String URL = "resources"; // This must reflect web.xml!
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
-	protected static final int DEFLATE_THRESHOLD = 4*1024;
 	protected static final int BUFFER_SIZE = 4*1024;
 	private static final Pattern PATTERN_VIRTUAL_URL = Pattern.compile("^"
 			+ RegexUtils.MATCH_URL_SEPARATOR
@@ -583,7 +582,6 @@ public class ResourceRequest extends HttpServlet {
 			
 			try {
 				prepareContent();
-				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), DEFLATE_THRESHOLD);
 				ServletUtils.setContentTypeHeader(response, mimeType);
 				if (clientCaching.equals(ClientCaching.YES)) {
 					ServletUtils.setCacheControlPrivateMaxAge(response, 60*60*24*365); // long (365 days)
@@ -598,7 +596,7 @@ public class ResourceRequest extends HttpServlet {
 						}
 					}
 				}
-					
+				os = ServletUtils.prepareForStreamCopy(request, response, mimeType, getContentLength(), ServletUtils.GZIP_MIN_THRESHOLD);
 				is = getInputStream();
 				ServletUtils.transferStreams(is, os);
 				os.flush();
@@ -610,13 +608,9 @@ public class ResourceRequest extends HttpServlet {
 		}
 
 		@Override
-		public void respondHead(HttpServletRequest request, HttpServletResponse response) {
-			
-		}
+		public void respondHead(HttpServletRequest request, HttpServletResponse response) {}
 		
-		protected void prepareContent() throws IOException {
-			// Do nothing...
-		}
+		protected void prepareContent() throws IOException {}
 		
 		protected InputStream getInputStream() throws IOException {
 			return resourceFile.getInputStream();
