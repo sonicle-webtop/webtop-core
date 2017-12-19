@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro.filter;
+package com.sonicle.webtop.core.servlet.response;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -39,32 +39,45 @@ import java.io.PrintWriter;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.apache.lucene.util.IOUtils;
 
 /**
  *
  * @author malbinola
  */
-public class GZipServletResponseWrapper extends HttpServletResponseWrapper {
-	private GZipServletOutputStream gzipOutputStream = null;
-	private PrintWriter printWriter;
+public class GzippableResponseWrapper extends HttpServletResponseWrapper {
+	protected ServletOutputStream gzipOutputStream;
+	protected PrintWriter writer;
+	protected int gzipMinTreshold = 860;
 	
-	public GZipServletResponseWrapper(HttpServletResponse response) {
+	public GzippableResponseWrapper(HttpServletResponse response) {
 		super(response);
-		response.addHeader("Content-Encoding", "gzip");
+		// explicitly reset content length, as the size of zipped stream is unknown
+		response.setContentLength(-1);
 	}
 	
-	public void finish() throws IOException {
-		if (printWriter != null) printWriter.close();
-		if (gzipOutputStream != null) gzipOutputStream.close();
+	public void setGzipMinThreshold(int gzipMinTreshold) {
+		this.gzipMinTreshold = gzipMinTreshold;
+	}
+	
+	public void finishResponse() throws IOException {
+		IOUtils.close(writer);
+		IOUtils.close(gzipOutputStream);
+	}
+	
+	protected ServletOutputStream createOutputStream() throws IOException {
+		GZippableOutputStream stream = new GZippableOutputStream((HttpServletResponse)getResponse());
+		stream.setGzipMinThreshold(gzipMinTreshold);
+		return stream;
 	}
 	
 	@Override
 	public void flushBuffer() throws IOException {
-		if (printWriter != null) printWriter.flush();
+		if (writer != null) writer.flush();
 		
 		IOException exception1 = null;
 		try {
-			if (this.gzipOutputStream != null) this.gzipOutputStream.flush();
+			if (gzipOutputStream != null) gzipOutputStream.flush();
 		} catch(IOException ex) {
 			exception1 = ex;
 		}
@@ -79,26 +92,33 @@ public class GZipServletResponseWrapper extends HttpServletResponseWrapper {
 		if (exception1 != null) throw exception1;
 		if (exception2 != null) throw exception2;
 	}
-
+	
 	@Override
 	public ServletOutputStream getOutputStream() throws IOException {
-		if (this.printWriter != null) throw new IllegalStateException("PrintWriter obtained already. Cannot get OutputStream");
-		if (this.gzipOutputStream == null) this.gzipOutputStream = new GZipServletOutputStream(getResponse().getOutputStream());
-		return this.gzipOutputStream;
+		if (writer != null) throw new IllegalStateException("PrintWriter obtained already. Cannot get OutputStream");
+		if (gzipOutputStream == null) {
+			gzipOutputStream = createOutputStream();
+		}
+		return gzipOutputStream;
 	}
 	
 	@Override
 	public PrintWriter getWriter() throws IOException {
-		if (this.printWriter != null) throw new IllegalStateException("PrintWriter obtained already. Cannot get OutputStream");
-		if (this.printWriter == null) {
-			this.gzipOutputStream = new GZipServletOutputStream(getResponse().getOutputStream());
-			this.printWriter = new PrintWriter(new OutputStreamWriter(this.gzipOutputStream, getResponse().getCharacterEncoding()));
+		if (writer != null) return writer;
+		if (gzipOutputStream != null) throw new IllegalStateException("getOutputStream() has already been called for this response");
+		gzipOutputStream = createOutputStream();
+		String charEnc = getResponse().getCharacterEncoding();
+		if (charEnc != null) {
+			writer = new PrintWriter(new OutputStreamWriter(gzipOutputStream, charEnc));
+		} else {
+			writer = new PrintWriter(gzipOutputStream);
 		}
-		return this.printWriter;
+		return writer;
 	}
 	
 	@Override
-	public void setContentLength(int len) {
-		// Ignore this, content length of zipped response does not match the original content length
-	}
+	public void setContentLength(int length) {}
+	
+	@Override
+	public void setContentLengthLong(long length) {}
 }

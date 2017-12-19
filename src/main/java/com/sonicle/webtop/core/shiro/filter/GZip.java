@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.shiro.filter;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.servlet.response.GzippableResponseWrapper;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -41,7 +42,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.web.filter.PathMatchingFilter;
 
 /**
@@ -49,7 +49,6 @@ import org.apache.shiro.web.filter.PathMatchingFilter;
  * @author malbinola
  */
 public class GZip extends PathMatchingFilter {
-	private String compressibleMediaTypes = "text/html,text/xml,text/plain,text/css,text/javascript,application/javascript";
 	
 	@Override
 	public void doFilterInternal(ServletRequest request, ServletResponse response, FilterChain chain) throws ServletException, IOException {
@@ -57,25 +56,15 @@ public class GZip extends PathMatchingFilter {
 		final HttpServletResponse httpResponse = (HttpServletResponse) response;
 		
 		if (shouldCompress(httpRequest, httpResponse)) {
-			final GZipServletResponseWrapper wrappedResponse = new GZipServletResponseWrapper(httpResponse);
+			final GzippableResponseWrapper wrappedResponse = new GzippableResponseWrapper(httpResponse);
 			super.doFilterInternal(request, wrappedResponse, chain);
-			wrappedResponse.finish();
+			wrappedResponse.finishResponse();
 		} else {
 			super.doFilterInternal(request, response, chain);
 		}
 	}
 	
-	private boolean shouldCompress(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-		if (!ServletUtils.acceptsDeflate(httpRequest)) return false;
-		if (hasSkipCompression(httpResponse)) return false;
-		return isContentTypeCompressible(httpResponse);
-	}
-	
-	private boolean hasSkipCompression(HttpServletResponse response) {
-		return StringUtils.containsIgnoreCase(response.getHeader("X-Skip-Compress"), "1");
-	}
-	
-	private boolean isContentTypeCompressible(HttpServletResponse response) {
-		return StringUtils.containsIgnoreCase(compressibleMediaTypes, ServletUtils.getContentTypeHeader(response));
+	protected boolean shouldCompress(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+		return ServletUtils.acceptsDeflate(httpRequest);
 	}
 }
