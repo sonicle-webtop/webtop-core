@@ -39,11 +39,11 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.shiro.WTSessionManager;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -78,7 +78,7 @@ public class Login extends AbstractServlet {
 		
 		try {
 			Session session = RunContext.getSession();
-			Locale locale = SessionManager.getClientLocale(session);
+			Locale locale = WTSessionManager.getClientLocale(session);
 			
 			boolean maintenance = wta.getServiceManager().isInMaintenance(CoreManifest.ID);
 			

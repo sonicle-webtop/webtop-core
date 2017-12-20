@@ -77,7 +77,7 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 		if(location != null) {
 			Session session = RunContext.getSession();
 			if(session != null) {
-				SessionManager.setClientUrl(session, ServletHelper.sanitizeBaseUrl(location));
+				WTSessionManager.setClientUrl(session, ServletHelper.sanitizeBaseUrl(location));
 			}
 		}
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");

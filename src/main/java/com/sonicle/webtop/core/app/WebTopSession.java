@@ -57,6 +57,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
+import com.sonicle.webtop.core.shiro.WTSessionManager;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.util.Arrays;
@@ -163,7 +164,7 @@ public class WebTopSession {
 	 * @return The network address. 
 	 */
 	public String getRemoteIP() {
-		return SessionManager.getClientIP(session);
+		return WTSessionManager.getClientIP(session);
 	}
 	
 	/**
@@ -171,7 +172,7 @@ public class WebTopSession {
 	 * @return Bowser user-agent. 
 	 */
 	public String getPlainUserAgent() {
-		return SessionManager.getClientUserAgent(session);
+		return WTSessionManager.getClientUserAgent(session);
 	}
 	
 	/**
@@ -179,7 +180,7 @@ public class WebTopSession {
 	 * @return A readable ReadableUserAgent object. 
 	 */
 	public ReadableUserAgent getUserAgent() {
-		return SessionManager.getClientReadableUserAgent(session);
+		return WTSessionManager.getClientReadableUserAgent(session);
 	}
 	
 	/**
@@ -192,7 +193,7 @@ public class WebTopSession {
 		if(profile != null) {
 			return profile.getLocale();
 		} else {
-			return SessionManager.getClientLocale(session);
+			return WTSessionManager.getClientLocale(session);
 		}
 	}
 	
@@ -276,7 +277,7 @@ public class WebTopSession {
 	}
 	
 	public String getRefererURI() {
-		return SessionManager.getRefererUri(session);
+		return WTSessionManager.getRefererUri(session);
 	}
 	
 	public boolean isReady() {

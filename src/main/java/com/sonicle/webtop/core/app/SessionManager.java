@@ -33,30 +33,22 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.bol.model.SessionInfo;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.util.IdentifierUtils;
+import com.sonicle.webtop.core.shiro.WTSessionManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import net.sf.uadetector.ReadableUserAgent;
-import org.apache.commons.lang.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.SessionException;
 import org.apache.shiro.session.mgt.DefaultSessionKey;
-import org.apache.shiro.web.subject.support.WebDelegatingSubject;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 
@@ -81,17 +73,6 @@ public class SessionManager {
 		logger.info("SessionManager initialized");
 		return sesm;
 	}
-	
-	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
-	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "wtcid";
-	public static final String ATTRIBUTE_CSRF_TOKEN = "csrf";
-	public static final String ATTRIBUTE_CLIENT_IP = "clientIp";
-	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
-	public static final String ATTRIBUTE_CLIENT_RA_USERAGENT = "clientReadableUA";
-	public static final String ATTRIBUTE_CLIENT_LOCALE = "clientLocale";
-	public static final String ATTRIBUTE_CLIENT_URL = "clientUrl";
-	public static final String ATTRIBUTE_REFERER_URI = "refererUri";
-	public static final String COOKIE_WEBTOP_CLIENTID = "wtClientId";
 	
 	private WebTopApp wta = null;
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
@@ -120,61 +101,6 @@ public class SessionManager {
 		profileSidsCache.clear();
 		wta = null;
 		logger.info("SessionManager destroyed");
-	}
-	
-	private HttpServletRequest getServletRequest() {
-		return (HttpServletRequest)((WebDelegatingSubject)SecurityUtils.getSubject()).getServletRequest();
-	}
-	
-	private HttpServletResponse getServletResponse() {
-		return (HttpServletResponse)((WebDelegatingSubject)SecurityUtils.getSubject()).getServletResponse();
-	}
-	
-	public static WebTopSession getWebTopSession(Session session) {
-		return (WebTopSession)session.getAttribute(ATTRIBUTE_WEBTOP_SESSION);
-	}
-	
-	public static String getWebTopClientID(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_WEBTOP_CLIENTID);
-	}
-	
-	public static String getCSRFToken(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_CSRF_TOKEN);
-	}
-	
-	public static String getClientIP(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_CLIENT_IP);
-	}
-	
-	public static String getClientUserAgent(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_CLIENT_USERAGENT);
-	}
-	
-	public static ReadableUserAgent getClientReadableUserAgent(Session session) {
-		return (ReadableUserAgent)session.getAttribute(ATTRIBUTE_CLIENT_USERAGENT);
-	}
-	
-	public static Locale getClientLocale(Session session) {
-		return (Locale)session.getAttribute(ATTRIBUTE_CLIENT_LOCALE);
-	}
-	
-	/*
-	public static String getClientUrl(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_CLIENT_URL);
-	}
-	*/
-	
-	public static void setClientUrl(Session session, String clientUrl) {
-		logger.trace("ClientUrl: {}", clientUrl); //TODO: rimuovere logging
-		session.setAttribute(ATTRIBUTE_CLIENT_URL, clientUrl);
-	}
-	
-	public static String getRefererUri(Session session) {
-		return (String)session.getAttribute(ATTRIBUTE_REFERER_URI);
-	}
-	
-	private void dumpRequestData(Session session, HttpServletRequest request) {
-		
 	}
 	
 	void shiroSessionStarted(Session session) {
@@ -214,43 +140,19 @@ public class SessionManager {
 	}
 	
 	private void startShiroSession(Session session) throws Exception {
-		logger.trace("Shiro session created [{}]", session.getId());
-		WebTopSession wts = new WebTopSession(wta, session);
-		
-		HttpServletRequest request = getServletRequest();
-		String wtcid = ServletUtils.getCookie(request, COOKIE_WEBTOP_CLIENTID);
-		if (StringUtils.isBlank(wtcid)) {
-			wtcid = IdentifierUtils.getUUIDTimeBased();
-			HttpServletResponse response = getServletResponse();
-			ServletUtils.setCookie(response, COOKIE_WEBTOP_CLIENTID, wtcid, 60*60*24*365*10);
-		}
-		session.setAttribute(ATTRIBUTE_WEBTOP_CLIENTID, wtcid);
-		session.setAttribute(ATTRIBUTE_WEBTOP_SESSION, wts);
-		session.setAttribute(ATTRIBUTE_CSRF_TOKEN, IdentifierUtils.getCRSFToken());
-		
-		// Dump into session some client data
-		if(session.getAttribute("dump") == null) {
-			session.setAttribute("dump", true);
-			String ua = ServletUtils.getUserAgent(request);
-			session.setAttribute(ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
-			session.setAttribute(ATTRIBUTE_CLIENT_USERAGENT, ua);
-			session.setAttribute(ATTRIBUTE_CLIENT_RA_USERAGENT, WebTopApp.getUserAgentInfo(ua));
-			session.setAttribute(ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
-			session.setAttribute(ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
-		}
-		logger.trace("WTS created [{}]", session.getId());
+		logger.trace("Session started [{}]", session.getId());
 	}
 	
 	private void stopShiroSession(Session session) throws Exception {
-		logger.trace("Shiro session created [{}]", session.getId());
-		WebTopSession wts = SessionManager.getWebTopSession(session);
+		logger.trace("Shiro session stop [{}]", session.getId());
+		WebTopSession wts = WTSessionManager.getWebTopSession(session);
 		if (wts != null) {
 			String sid = session.getId().toString();
 			UserProfileId pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
 			wts.cleanup();
 			if(pid != null) {
 				unregisterWebTopSession(session, pid);
-				wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, getClientIP(session), getClientUserAgent(session), sid, null);
+				wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, WTSessionManager.getClientIP(session), WTSessionManager.getClientUserAgent(session), sid, null);
 			}
 			logger.trace("WTS destroyed [{}]", sid);
 		}
@@ -264,7 +166,7 @@ public class SessionManager {
 			if(pid == null) throw new WTException("Session [{0}] is not bound to a user", sid);
 			
 			onlineSessions.put(sid, wts);
-			String wtcid = getWebTopClientID(session);
+			String wtcid = WTSessionManager.getWebTopClientID(session);
 			onlineWebTopClientIds.add(pid.toString() + "|" + wtcid);
 			if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
 			profileSidsCache.get(pid).add(sid);
@@ -281,7 +183,7 @@ public class SessionManager {
 						profileSidsCache.get(profileId).remove(sid);
 						if(profileSidsCache.get(profileId).isEmpty()) profileSidsCache.remove(profileId);
 					}
-					String wtcid = getWebTopClientID(session);
+					String wtcid = WTSessionManager.getWebTopClientID(session);
 					onlineWebTopClientIds.remove(profileId.toString() + "|" + wtcid);
 					onlineSessions.remove(sid);
 				} else {

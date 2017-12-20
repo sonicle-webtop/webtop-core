@@ -37,6 +37,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.shiro.WTSessionManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -96,7 +97,7 @@ public class RunContext {
 	}
 	
 	public static String getWebTopClientID(Session session) {
-		return (session == null) ? null : SessionManager.getWebTopClientID(session);
+		return (session == null) ? null : WTSessionManager.getWebTopClientID(session);
 	}
 	
 	public static String getCSRFToken() {
@@ -104,12 +105,12 @@ public class RunContext {
 	}
 	
 	public static String getCSRFToken(Session session) {
-		return (session == null) ? null : SessionManager.getCSRFToken(session);
+		return (session == null) ? null : WTSessionManager.getCSRFToken(session);
 	}
 	
 	public static WebTopSession getWebTopSession() {
 		Session session = getSession();
-		return (session == null) ? null : SessionManager.getWebTopSession(session);
+		return (session == null) ? null : WTSessionManager.getWebTopSession(session);
 	}
 	
 	public static boolean isPermitted(String serviceId, String key) {

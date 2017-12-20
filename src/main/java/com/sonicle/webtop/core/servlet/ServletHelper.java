@@ -37,13 +37,10 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WsPushEndpoint;
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -100,14 +97,6 @@ public class ServletHelper {
 		SecurityUtils.getSubject().logout();
 	}
 	*/
-	
-	public static void setPrivateCache(HttpServletResponse response) {
-		response.setHeader("Cache-Control", "private");
-	}
-	
-	public static void setPageContentType(HttpServletResponse response) {
-		response.setContentType("text/html;charset=UTF-8");
-	}
 	
 	public static Locale homogenizeLocale(HttpServletRequest request) {
 		Locale locale = request.getLocale();
