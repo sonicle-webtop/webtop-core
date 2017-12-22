@@ -1151,11 +1151,9 @@ public final class WebTopApp {
 		if (rich) {
 			MimeMultipart alternative=new MimeMultipart("alternative");
 			MimeBodyPart mbp2=new MimeBodyPart();
-			mbp2.setText(body, "UTF-8");
-			mbp2.setHeader("Content-type", "text/html");
+			mbp2.setContent(body, MailUtils.buildPartContentType("text/html", "UTF-8"));
 			MimeBodyPart mbp1=new MimeBodyPart();
-			mbp1.setText(MailUtils.htmlToText(MailUtils.htmlunescapesource(body)));
-			mbp1.setHeader("Content-type", "text/plain");
+			mbp1.setContent(MailUtils.htmlToText(MailUtils.htmlunescapesource(body)), MailUtils.buildPartContentType("text/plain", "UTF-8"));
 			alternative.addBodyPart(mbp1);
 			alternative.addBodyPart(mbp2);
 			MimeBodyPart altbody=new MimeBodyPart();
@@ -1163,8 +1161,7 @@ public final class WebTopApp {
 			mp.addBodyPart(altbody);
 		} else {
 			MimeBodyPart mbp1=new MimeBodyPart();
-			mbp1.setText(body);
-			mbp1.setHeader("Content-type", "text/plain");
+			mbp1.setContent(body, MailUtils.buildPartContentType("text/plain", "UTF-8"));
 			mp.addBodyPart(mbp1);
 		}
 		
