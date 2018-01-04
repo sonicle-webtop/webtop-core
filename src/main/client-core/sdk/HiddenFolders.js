@@ -84,6 +84,10 @@ Ext.define('Sonicle.webtop.core.sdk.HiddenFolders', {
 					extraParams: me.extraParams || {}
 				})
 			},
+			viewConfig: {
+				deferEmptyText: false,
+				emptyText: WT.res('grid.emp')
+			},
 			columns: [{
 				dataIndex: 'id',
 				width: 180,
