@@ -83,7 +83,10 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 		if (!ready) {
 			internalInitCache();
 		} else {
-			if (!ownerToShareRoot.containsKey(owner)) internalInitCache();
+			if (!ownerToShareRoot.containsKey(owner)) {
+				clear();
+				internalInitCache();
+			}
 		}
 		return ownerToShareRoot.get(owner);
 	}
@@ -97,7 +100,10 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 		if (!ready) {
 			internalInitCache();
 		} else {
-			if (!ownerToWildcardShareFolder.containsKey(owner) && ownerToShareRoot.isEmpty()) internalInitCache();
+			if (!ownerToWildcardShareFolder.containsKey(owner) && ownerToShareRoot.isEmpty()) {
+				clear();
+				internalInitCache();
+			}
 		}
 		return ownerToWildcardShareFolder.get(owner);
 	}
@@ -106,9 +112,14 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 		if (!ready) {
 			internalInitCache();
 		} else {
-			if (!folderToShareFolder.containsKey(folderId)) internalInitCache();
+			if (!folderToShareFolder.containsKey(folderId) && !folderToWildcardShareFolder.containsKey(folderId)){
+				clear();
+				internalInitCache();
+			}
 		}
-		return folderToShareFolder.get(folderId);
+		if (folderToShareFolder.containsKey(folderId)) return folderToShareFolder.get(folderId);
+		if (folderToWildcardShareFolder.containsKey(folderId)) return folderToWildcardShareFolder.get(folderId);
+		return null;
 	}
 	
 	public final synchronized List<T> getFolderIds() {
@@ -120,7 +131,7 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 		if (!ready) internalInitCache();
 		final List<T> ids = new ArrayList<>();
 		if (rootShareToFolderShare.containsKey(shareRootId)) ids.addAll(rootShareToFolderShare.getCollection(shareRootId));
-		return ids;
+		return Collections.unmodifiableList(ids);
 	}
 	
 	public final synchronized String getShareRootIdByFolderId(T folderId) {
