@@ -72,6 +72,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
+import net.sf.uadetector.ReadableDeviceCategory;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -685,6 +686,10 @@ public class WebTopSession {
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
 		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
+		//ReadableDeviceCategory.Category deviceCategory = getUserAgent().getDeviceCategory().getCategory();
+		//if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+		//	theme += "-touch";
+		//}
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);

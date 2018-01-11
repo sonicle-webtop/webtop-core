@@ -96,6 +96,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
 		Ext.themeName = WTS.servicesVars[0].theme;
+		// TODO: Disable DD for mobile devices
+		//if (Ext.os.deviceType !== 'Desktop') {
+		//	Ext.dd.DragDropManager.lock();
+		//}
 		Ext.getDoc().on('contextmenu', function(e) {
 			e.preventDefault(); // Disable browser context if no context menu is defined
 		});

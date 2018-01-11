@@ -39,12 +39,16 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import java.io.Serializable;
 import java.util.Locale;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.SessionContext;
+import org.apache.shiro.web.servlet.ShiroHttpServletRequest;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
@@ -68,6 +72,25 @@ public class WTSessionManager extends DefaultWebSessionManager {
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
 	public static final String ATTRIBUTE_CLIENT_RA_USERAGENT = "clientReadableUA";
 	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
+
+	/*
+	@Override
+	protected Session createSession(SessionContext context) throws AuthorizationException {
+		if (WebUtils.isHttp(context)) {
+			HttpServletRequest request = WebUtils.getHttpRequest(context);
+			HttpSession httpSession = request.getSession(false);
+			if (httpSession == null) {
+				logger.debug("Session non exist");
+				httpSession = request.getSession();
+				logger.debug("Session created {}", httpSession.getId());
+			} else {
+				logger.debug("Session already exist {}", httpSession.getId());
+			}
+		}
+		
+		return super.createSession(context);
+	}
+	*/
 	
 	@Override
 	protected Session newSessionInstance(SessionContext context) {
@@ -101,6 +124,32 @@ public class WTSessionManager extends DefaultWebSessionManager {
 		//final String clientId = (String)session.getAttribute(ATTRIBUTE_WEBTOP_CLIENTID);
 		//ServletUtils.setCookie(WebUtils.getHttpResponse(context), COOKIE_WEBTOP_CLIENTID, clientId, 60*60*24*365*10);
 	}
+
+	@Override
+	protected Serializable getSessionId(ServletRequest request, ServletResponse response) {
+		Serializable ser = super.getSessionId(request, response);
+		//logger.trace("getSessionId(): {}", ser);
+		String id = getSessionIdCookieValue(request, response);
+		//logger.trace("getSessionIdCookieValue(): {}", id);
+		Object refSesId = request.getAttribute(ShiroHttpServletRequest.REFERENCED_SESSION_ID);
+		//logger.trace("refSesId: {}", refSesId);
+		return ser;
+	}
+	
+	private String getSessionIdCookieValue(ServletRequest request, ServletResponse response) {
+        if (!isSessionIdCookieEnabled()) {
+            //log.debug("Session ID cookie is disabled - session id will not be acquired from a request cookie.");
+            return null;
+        }
+        if (!(request instanceof HttpServletRequest)) {
+            //log.debug("Current request is not an HttpServletRequest - cannot get session ID cookie.  Returning null.");
+            return null;
+        }
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        return getSessionIdCookie().readValue(httpRequest, WebUtils.toHttp(response));
+    }
+	
+	
 	
 	public static String getCSRFToken(Session session) {
 		return (String)session.getAttribute(ATTRIBUTE_CSRF_TOKEN);
@@ -132,7 +181,7 @@ public class WTSessionManager extends DefaultWebSessionManager {
 	}
 	
 	public static ReadableUserAgent getClientReadableUserAgent(Session session) {
-		return (ReadableUserAgent)session.getAttribute(ATTRIBUTE_CLIENT_USERAGENT);
+		return (ReadableUserAgent)session.getAttribute(ATTRIBUTE_CLIENT_RA_USERAGENT);
 	}
 	
 	public static WebTopSession getWebTopSession(Session session) {
