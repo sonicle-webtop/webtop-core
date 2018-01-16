@@ -93,6 +93,8 @@ public class WebTopSession {
 	private Session session;
 	private Boolean debugMode;
 	private final WebTopApp wta;
+	private final Object lock0 = new Object();
+	private ReadableUserAgent readableUserAgent = null;
 	private final PropertyBag propsBag = new PropertyBag();
 	private int initLevel = 0;
 	private UserProfile profile = null;
@@ -181,7 +183,15 @@ public class WebTopSession {
 	 * @return A readable ReadableUserAgent object. 
 	 */
 	public ReadableUserAgent getUserAgent() {
-		return WTSessionManager.getClientReadableUserAgent(session);
+		synchronized(lock0) {
+			if (readableUserAgent == null) {
+				String plainUa = getPlainUserAgent();
+				if (!StringUtils.isBlank(plainUa)) {
+					readableUserAgent = WebTopApp.getUserAgentInfo(plainUa);
+				}
+			}
+			return readableUserAgent;
+		}
 	}
 	
 	/**

@@ -35,7 +35,6 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
@@ -44,7 +43,6 @@ import java.util.Locale;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.SessionContext;
@@ -70,7 +68,6 @@ public class WTSessionManager extends DefaultWebSessionManager {
 	public static final String ATTRIBUTE_REFERER_URI = "refererUri";
 	public static final String ATTRIBUTE_CLIENT_LOCALE = "clientLocale";
 	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
-	public static final String ATTRIBUTE_CLIENT_RA_USERAGENT = "clientReadableUA";
 	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
 
 	/*
@@ -108,9 +105,7 @@ public class WTSessionManager extends DefaultWebSessionManager {
 		session.setAttribute(ATTRIBUTE_WEBTOP_CLIENTID, clientId);
 		session.setAttribute(ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
 		session.setAttribute(ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
-		String ua = ServletUtils.getUserAgent(request);
-		session.setAttribute(ATTRIBUTE_CLIENT_USERAGENT, ua);
-		session.setAttribute(ATTRIBUTE_CLIENT_RA_USERAGENT, WebTopApp.getUserAgentInfo(ua));
+		session.setAttribute(ATTRIBUTE_CLIENT_USERAGENT, ServletUtils.getUserAgent(request));
 		
 		//session.setAttribute(WTSessionIdGenerator.SID_SUFFIX, ContextUtils.getWebappVersion(request.getServletContext()));
 		return session;
@@ -178,10 +173,6 @@ public class WTSessionManager extends DefaultWebSessionManager {
 	
 	public static String getClientUserAgent(Session session) {
 		return (String)session.getAttribute(ATTRIBUTE_CLIENT_USERAGENT);
-	}
-	
-	public static ReadableUserAgent getClientReadableUserAgent(Session session) {
-		return (ReadableUserAgent)session.getAttribute(ATTRIBUTE_CLIENT_RA_USERAGENT);
 	}
 	
 	public static WebTopSession getWebTopSession(Session session) {
