@@ -84,12 +84,12 @@ public class Otp extends AbstractServlet {
 			Locale locale = wts.getLocale();
 			
 			boolean skip = skipOTP(wta, pid, request);
-			if(skip) throw new SkipException();
+			if (skip) throw new SkipException();
 			
 			OTPManager otpm = wta.getOTPManager();
 			String deliveryMode = otpm.getDeliveryMode(pid);
 			OTPManager.Config config = null;
-			if(!wts.hasProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG)) {
+			if (!wts.hasProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG)) {
 				config = otpm.prepareCheckCode(pid);
 				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG, config); // Save for later...
 				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, 0); // Save for later...
@@ -99,14 +99,14 @@ public class Otp extends AbstractServlet {
 			} else {
 				config = (OTPManager.Config)wts.getProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG);
 				Integer tries = (Integer)wts.getProperty(CoreManifest.ID, WTSPROP_OTP_TRIES);
-				if(tries == null) throw new NoMoreTriesException();
+				if (tries == null) throw new NoMoreTriesException();
 				tries++;
 				
 				int userCode = ServletUtils.getIntParameter(request, "wtcode", 0);
-				if(otpm.checkCode(pid, config, userCode)) {
-					if(css.getOTPDeviceTrustEnabled()) {
+				if (otpm.checkCode(pid, config, userCode)) {
+					if (css.getOTPDeviceTrustEnabled()) {
 						boolean trust = ServletUtils.getBooleanParameter(request, "wttrust", false);
-						if(trust) {
+						if (trust) {
 							String userAgent = ServletUtils.getUserAgent(request);
 							JsTrustedDevice js = otpm.trustThisDevice(pid, userAgent);
 							otpm.writeTrustedDeviceCookie(pid, response, new TrustedDeviceCookie(js));
@@ -117,7 +117,7 @@ public class Otp extends AbstractServlet {
 					throw new SkipException();
 					
 				} else {
-					if(tries >= 3) throw new NoMoreTriesException();
+					if (tries >= 3) throw new NoMoreTriesException();
 					wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, tries); // Save for later...
 					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
 					writePage(wta, css, locale, deliveryMode, failureMessage, response);
@@ -125,11 +125,10 @@ public class Otp extends AbstractServlet {
 			}
 			
 		} catch(NoMoreTriesException ex) {
-			SecurityUtils.getSubject().logout();
-			if(wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
-			ServletUtils.forwardRequest(request, response, "login");
+			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
+			ServletUtils.forwardRequest(request, response, "logout");
 		} catch(SkipException ex) {
-			if(wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
+			if (wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
 			ServletUtils.forwardRequest(request, response, "start");
 		} catch(Exception ex) {
 			logger.error("Error", ex);
@@ -143,7 +142,7 @@ public class Otp extends AbstractServlet {
 		
 		// Tests enabling parameters
 		boolean sysEnabled = css.getOTPEnabled(), profileEnabled = otpm.isEnabled(pid);
-		if(!sysEnabled || !profileEnabled) { //TODO: valutare se escludere admin
+		if (!sysEnabled || !profileEnabled) { //TODO: valutare se escludere admin
 			logger.debug("OTP check skipped [{}, {}]", sysEnabled, profileEnabled);
 			return true;
 		}
@@ -152,7 +151,7 @@ public class Otp extends AbstractServlet {
 		logger.debug("Checking OTP from remote address {}", remoteIP);
 		
 		// Checks if request comes from a configured trusted network and skip check
-		if(otpm.isTrusted(pid, remoteIP)) {
+		if (otpm.isTrusted(pid, remoteIP)) {
 			logger.debug("OTP check skipped: request comes from a trusted address.");
 			return true;
 		}
@@ -160,11 +159,11 @@ public class Otp extends AbstractServlet {
 		// Checks cookie that marks a trusted device
 		JsTrustedDevice td = null;
 		TrustedDeviceCookie cookie = otpm.readTrustedDeviceCookie(pid, request);
-		if((cookie != null) && otpm.isThisDeviceTrusted(pid, cookie)) {
+		if ((cookie != null) && otpm.isThisDeviceTrusted(pid, cookie)) {
 			td = otpm.getTrustedDevice(pid, cookie.deviceId);
 		}
 		
-		if(td != null) {
+		if (td != null) {
 			logger.debug("OTP check skipped: request comes from a trusted device [{}]", td.deviceId);
 			return true;
 		}
