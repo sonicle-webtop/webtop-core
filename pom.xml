@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sonicle.webtop</groupId>
 	<artifactId>webtop-core</artifactId>
-	<version>5.1.2</version>
+	<version>5.1.3</version>
 	<packaging>jar</packaging>
 	<name>webtop-core</name>
 	
@@ -385,6 +385,7 @@
 						</goals>
 						<configuration>
 							<jsEngine>CLEANER</jsEngine>
+							<cleanerRemoveSingleLineComments>false</cleanerRemoveSingleLineComments>
 							<skipMerge>true</skipMerge>
 							<nosuffix>true</nosuffix>
 							<jsSourceDir>client-core</jsSourceDir>
