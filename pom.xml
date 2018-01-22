@@ -14,6 +14,9 @@
 	</parent>
 	
 	<properties>
+		<webtop.service.i18n.languages>en,it,es,de</webtop.service.i18n.languages>
+		<webtop.service.i18n.tx.push.languages>it</webtop.service.i18n.tx.push.languages>
+		<webtop.service.i18n.tx.pull.languages>es,de</webtop.service.i18n.tx.pull.languages>
 	</properties>
 	
 	<repositories>
@@ -933,10 +936,67 @@
 										<argument>push</argument>
 										<argument>-t</argument>
 										<argument>-l</argument>
-										<argument>it</argument>
+										<argument>${webtop.service.i18n.tx.push.languages}</argument>
 										<argument>-f</argument>
 										<argument>--no-interactive</argument>
 									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		
+		<profile>
+			<id>transifex-pull</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>${exec-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>transifex-pull-translation</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>tx</executable>
+									<workingDirectory>${project.basedir}</workingDirectory>
+									<arguments>
+										<argument>pull</argument>
+										<argument>-l</argument>
+										<argument>${webtop.service.i18n.tx.pull.languages}</argument>
+										<argument>-f</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>native2ascii-maven-plugin</artifactId>
+						<version>2.0.0</version>
+						<executions>
+							<execution>
+								<id>escape-i18n-properties</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>inplace</goal>
+								</goals>
+								<configuration>
+									<dir>${project.basedir}</dir>
+									<encoding>ISO-8859-1</encoding>
+									<excludes>
+										<exclude>**/*_en.properties</exclude>
+										<exclude>**/*_it.properties</exclude>
+									</excludes>
 								</configuration>
 							</execution>
 						</executions>
