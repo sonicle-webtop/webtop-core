@@ -46,6 +46,18 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
+	 * Convenience handler that completely disable the event, stopping its
+	 * propagation and preventing browser default behaviour.
+	 * @param {Ext.EventObject} event The event object
+	 * @returns {Boolean}
+	 */
+	onDisabledEvent: function(event) {
+		event.stopPropagation();
+		event.preventDefault();
+		return false;
+	},
+	
+	/**
 	 * Construct an alias using passed string.
 	 * @param {String} prefix The prefix
 	 * @param {String} s The source string
