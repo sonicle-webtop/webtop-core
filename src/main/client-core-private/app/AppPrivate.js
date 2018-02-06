@@ -101,7 +101,11 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		//	Ext.dd.DragDropManager.lock();
 		//}
 		Ext.getDoc().on('contextmenu', function(e) {
-			e.preventDefault(); // Disable browser context if no context menu is defined
+			var t=e.getTarget();
+			if (t.tagName==="TEXTAREA"||(t.tagName==="INPUT" && t.type==='text')) {
+				
+			}
+			else e.preventDefault(); // Disable browser context if not a text or text area field
 		});
 		
 		// Inits state provider
