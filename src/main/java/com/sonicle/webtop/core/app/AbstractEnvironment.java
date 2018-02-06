@@ -44,7 +44,46 @@ public abstract class AbstractEnvironment {
 		this.wts = wts;
 	}
 	
-	public WebTopSession getWebTopSession() {
+	public WebTopSession getSession() {
 		return wts;
+	}
+	
+	public String getCSRFToken() {
+		return wts.getCSRFToken();
+	}
+	
+	public String getClientTrackingID() {
+		return wts.getClientTrackingID();
+	}
+	
+	public String getRefererUri() {
+		return wts.getRefererUri();
+	}
+	
+	/**
+	 * @deprecated use {@link #getSession()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public WebTopSession getWebTopSession() {
+		return getSession();
+	}
+	
+	/**
+	 * @deprecated use {@link #getCSRFToken()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public String getSecurityToken() {
+		return getCSRFToken();
+	}
+	
+	/**
+	 * @deprecated use {@link #getRefererUri()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public String getSessionRefererUri() {
+		return getRefererUri();
 	}
 }

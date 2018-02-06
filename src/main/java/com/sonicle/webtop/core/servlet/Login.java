@@ -39,11 +39,12 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.shiro.WTSessionManager;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -57,6 +58,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.session.Session;
+import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 
 /**
@@ -69,16 +71,25 @@ public class Login extends AbstractServlet {
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";
 	public static final String LOGINFAILURE_MAINTENANCE = "maintenance";
+
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		if (!ServletUtils.isForwarded(request) && StringUtils.endsWithIgnoreCase(request.getRequestURL().toString(), "/"+URL)) {
+			WebUtils.issueRedirect(request, response, "/");
+		} else {
+			super.doGet(request, response);
+		}
+	}
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = getWebTopApp(request);
-		WebTopManager usem = wta.getWebTopManager();
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		
 		try {
-			Session session = RunContext.getSession();
-			Locale locale = WTSessionManager.getClientLocale(session);
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
+			WebTopManager usem = wta.getWebTopManager();
+			WebTopSession wts = SessionContext.getCurrent();
+			Locale locale = wts.getLocale();
 			
 			boolean maintenance = wta.getServiceManager().isInMaintenance(CoreManifest.ID);
 			

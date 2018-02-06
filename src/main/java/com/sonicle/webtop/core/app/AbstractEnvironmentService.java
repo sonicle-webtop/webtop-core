@@ -105,19 +105,19 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	}
 	
 	public final boolean hasUploadedFile(String uploadId) {
-		return env.wts.hasUploadedFile(uploadId);
+		return getEnv().getSession().hasUploadedFile(uploadId);
 	}
 	
 	public final WebTopSession.UploadedFile getUploadedFile(String uploadId) {
-		return env.wts.getUploadedFile(uploadId);
+		return getEnv().getSession().getUploadedFile(uploadId);
 	}
 	
 	public final void removeUploadedFile(String uploadId) {
-		env.wts.removeUploadedFile(uploadId, true);
+		getEnv().getSession().removeUploadedFile(uploadId, true);
 	}
 	
 	public final void removeUploadedFileByTag(String tag) {
-		env.wts.removeUploadedFileByTag(tag);
+		getEnv().getSession().removeUploadedFileByTag(tag);
 	}
 	
 	public void processUpload(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -165,12 +165,12 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 							// file upload throwing a UploadException.
 							InputStream is = null;
 							try {
-								env.wts.addUploadedFile(uploadedFile);
+								getEnv().getSession().addUploadedFile(uploadedFile);
 								is = fis.openStream();
 								istream.onUpload(cntx, request, multipartParams, uploadedFile, is, data);
 							} finally {
 								IOUtils.closeQuietly(is);
-								env.wts.removeUploadedFile(uploadedFile, false);
+								getEnv().getSession().removeUploadedFile(uploadedFile, false);
 							}
 						}
 					}
@@ -219,7 +219,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 
 							// Creates uploaded object
 							uploadedFile = new WebTopSession.UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
-							env.wts.addUploadedFile(uploadedFile);
+							getEnv().getSession().addUploadedFile(uploadedFile);
 
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
@@ -231,7 +231,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 								try {
 									iupload.onUpload(cntx, request, multipartParams, uploadedFile, data);
 								} catch(UploadException ex2) {
-									env.wts.removeUploadedFile(uploadedFile, true);
+									getEnv().getSession().removeUploadedFile(uploadedFile, true);
 									throw ex2;
 								}
 							}
@@ -278,7 +278,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 			IOUtils.closeQuietly(fos);
 		}
 		WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, serviceId, file.getName(), tag, filename, size, mtype);
-		env.wts.addUploadedFile(uploadedFile);
+		getEnv().getSession().addUploadedFile(uploadedFile);
 		return uploadedFile;
 	}
 	

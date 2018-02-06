@@ -31,31 +31,66 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.web.util.WebUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereSession;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends AbstractServlet {
-	public static final String URL = "logout"; // This must reflect web.xml!
+public class PushConnection {
+	private final static Logger logger = WT.getLogger(PushConnection.class);
+	private final AtmosphereSession session;
+	private final ArrayList<ServiceMessage> initialMessages;
 	
-	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletUtils.setCacheControlPrivate(response);
-		LoggerUtils.setContextDC(RunContext.getRunProfileId());
-		RunContext.getSubject().logout();
-		WebUtils.issueRedirect(request, response, "/");
-		//ServletUtils.redirectRequest(request, response, "/");
+	public PushConnection(AtmosphereResource resource, Collection<ServiceMessage> initialMessages) {
+		this.session = new AtmosphereSession(resource);
+		this.initialMessages = new ArrayList<>(initialMessages);
+	}
+	
+	public void close() {
+		AtmosphereResource resource = null;
+		try {
+			resource = session.tryAcquire(1);
+		} catch(InterruptedException ex) {}
+		if (resource == null) return;
+		
+		String uuid = resource.uuid();
+		try {
+			resource.close();
+		} catch(IOException ex) {
+			logger.error("Error closing atmosphere connection [{}]", ex, uuid);
+		}
+	}
+	
+	public void flush() {
+		send(new ArrayList<ServiceMessage>(0));
+	}
+	
+	public void send(Collection<ServiceMessage> messages) {
+		writeOnResource(messages);
+	}
+	
+	private void writeOnResource(Collection<ServiceMessage> messages) {
+		AtmosphereResource resource = null;
+		try {
+			resource = session.tryAcquire(5);
+		} catch(InterruptedException ex) {}
+		if (resource == null) return;
+		
+		if (!initialMessages.isEmpty()) {
+			resource.write(JsonResult.gson.toJson(initialMessages));
+		}
+		if (!messages.isEmpty()) {
+			resource.write(JsonResult.gson.toJson(messages));
+		}
 	}
 }

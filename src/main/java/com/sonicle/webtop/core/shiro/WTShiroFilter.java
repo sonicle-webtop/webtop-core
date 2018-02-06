@@ -31,31 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.util.LoggerUtils;
-import java.io.IOException;
-import javax.servlet.ServletException;
+import com.sonicle.webtop.core.app.WebTopManager;
+import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.servlet.PublicRequest;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.web.util.WebUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.web.servlet.ShiroFilter;
+import org.apache.shiro.web.subject.WebSubject;
+import org.apache.shiro.mgt.SecurityManager;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends AbstractServlet {
-	public static final String URL = "logout"; // This must reflect web.xml!
-	
+public class WTShiroFilter extends ShiroFilter {
+
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletUtils.setCacheControlPrivate(response);
-		LoggerUtils.setContextDC(RunContext.getRunProfileId());
-		RunContext.getSubject().logout();
-		WebUtils.issueRedirect(request, response, "/");
-		//ServletUtils.redirectRequest(request, response, "/");
+	protected WebSubject createSubject(ServletRequest request, ServletResponse response) {
+		String servletPath = ((HttpServletRequest)request).getServletPath();
+		if (StringUtils.equals(servletPath, "/"+PublicRequest.URL)) {
+			return createAdminSubject(getSecurityManager(), request, response);
+		} else {
+			return super.createSubject(request, response);
+		}
+	}
+	
+	private WebSubject createAdminSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response) {
+		UserProfileId profileId = new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
+		return RunContext.buildWebSubject(securityManager, request, response, profileId);
 	}
 }

@@ -34,16 +34,14 @@
 package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
-import com.sonicle.webtop.core.app.WsPushEndpoint;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.servlet.Login;
-import com.sonicle.webtop.core.servlet.ServiceRequest;
+import com.sonicle.webtop.core.servlet.PrivateRequest;
 import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.servlet.SessionKeepAlive;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -68,17 +66,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author gbulfon
  */
-public class WebTopFormAuthFilter extends FormAuthenticationFilter {
-	private static final Logger logger = (Logger) LoggerFactory.getLogger(WebTopFormAuthFilter.class);
+public class WTFormAuthFilter extends FormAuthenticationFilter {
+	private static final Logger logger = (Logger) LoggerFactory.getLogger(WTFormAuthFilter.class);
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
 		String location = ServletUtils.getStringParameter(request, "location", null);
-		if(location != null) {
-			Session session = RunContext.getSession();
-			if(session != null) {
-				WTSessionManager.setClientUrl(session, ServletHelper.sanitizeBaseUrl(location));
-			}
+		if (location != null) {
+			Session session = SessionContext.getSession();
+			if(session != null) session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, ServletHelper.sanitizeBaseUrl(location));
 		}
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");
 		return super.onLoginSuccess(token, subject, request, response);
@@ -94,10 +90,10 @@ public class WebTopFormAuthFilter extends FormAuthenticationFilter {
 	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {		
 		try {
 			String url = ((HttpServletRequest)request).getRequestURL().toString();
-			if(StringUtils.contains(url, ServiceRequest.URL)
+			if (StringUtils.contains(url, PrivateRequest.URL)
 					|| StringUtils.contains(url, "ServiceRequest") // For compatibility only!
-					|| StringUtils.contains(url, SessionKeepAlive.URL)
-					|| StringUtils.contains(url, WsPushEndpoint.URL)) {
+					/*|| StringUtils.contains(url, SessionKeepAlive.URL)
+					|| StringUtils.contains(url, WsPushEndpoint.URL)*/) {
 				((HttpServletResponse)response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
 			} else {
 				// Do a forward instead of classic redirect. It avoids ugly URL suffixes.

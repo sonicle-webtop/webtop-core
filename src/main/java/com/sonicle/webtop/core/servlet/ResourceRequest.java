@@ -141,103 +141,108 @@ public class ResourceRequest extends HttpServlet {
 		boolean isVirtualUrl = false, jsPathFound = false;
 		URL targetUrl = null;
 		
-		// Builds a convenient URL for the servlet relative URL
 		try {
-			//String reqPath = req.getPathInfo();
-			//logger.trace("Requested path [{}]", reqPath);
-			
-			Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
-			if(matcher.matches()) {
-				// Matches URLs like: /{service.id}/{service.version}/{remaining.url.part}
-				// Eg. /com.sonicle.webtop.core/5.1.1/laf/default/service.css
-				//	{service.id} -> com.sonicle.webtop.core
-				//	{service.version} -> 5.1.1
-				//	{remaining.url.part} -> laf/default/service.css
-				isVirtualUrl = true;
-				subject = matcher.group(1);
-				path = matcher.group(3);
-				
-				if (!WebTopApp.get(req).getServiceManager().hasService(subject)) {
-					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-				}
-				targetUrl = new URL("http://fake/client/"+subject+"/"+path);
-				
-			} else {
-				isVirtualUrl = false;
-				String[] urlParts = splitPath(reqPath);
-				subject = urlParts[0];
-				jsPath = WebTopApp.get(req).getServiceManager().getServiceJsPath(subject);
-				jsPathFound = (jsPath != null);
-				subjectPath = (jsPathFound) ? jsPath : urlParts[0];
-				path = urlParts[1];
-				
-				targetUrl = new URL("http://fake/"+subjectPath+"/"+path);
-			}
-			targetPath = targetUrl.getPath();
-			
-			//logger.trace("Translated path [{}]", translPath);
-			if (isForbidden(targetPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-			
-		} catch(MalformedURLException ex) {
-			return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
-		}
-		
-		if (!isVirtualUrl && path.startsWith("images")) {
-			// Addresses domain public images
-			// URLs like "/{domainPublicName}/images/{relativePathToFile}"
-			// Eg.	"/1bbc048f/images/login.png"
-			//		"/1bbc048f/images/sub/login.png"
 			WebTopApp wta = WebTopApp.get(req);
-			WebTopManager wtMgr = wta.getWebTopManager();
 			
-			String domainId = wtMgr.publicNameToDomainId(subject);
-			if (StringUtils.isBlank(domainId)) {
-				// We must support old-style URL using {domainInternetName}
-				// instead of {domainPublicName}
-				// Eg.	"/sonicle.com/images/login.png"
-				domainId = wtMgr.internetNameToDomain(subject);
-			}
-			if (StringUtils.isBlank(domainId)) {
+			// Builds a convenient URL for the servlet relative URL
+			try {
+				//String reqPath = req.getPathInfo();
+				//logger.trace("Requested path [{}]", reqPath);
+
+				Matcher matcher = PATTERN_VIRTUAL_URL.matcher(reqPath);
+				if(matcher.matches()) {
+					// Matches URLs like: /{service.id}/{service.version}/{remaining.url.part}
+					// Eg. /com.sonicle.webtop.core/5.1.1/laf/default/service.css
+					//	{service.id} -> com.sonicle.webtop.core
+					//	{service.version} -> 5.1.1
+					//	{remaining.url.part} -> laf/default/service.css
+					isVirtualUrl = true;
+					subject = matcher.group(1);
+					path = matcher.group(3);
+
+					if (!wta.getServiceManager().hasService(subject)) {
+						return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+					}
+					targetUrl = new URL("http://fake/client/"+subject+"/"+path);
+
+				} else {
+					isVirtualUrl = false;
+					String[] urlParts = splitPath(reqPath);
+					subject = urlParts[0];
+					jsPath = wta.getServiceManager().getServiceJsPath(subject);
+					jsPathFound = (jsPath != null);
+					subjectPath = (jsPathFound) ? jsPath : urlParts[0];
+					path = urlParts[1];
+
+					targetUrl = new URL("http://fake/"+subjectPath+"/"+path);
+				}
+				targetPath = targetUrl.getPath();
+
+				//logger.trace("Translated path [{}]", translPath);
+				if (isForbidden(targetPath)) return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+
+			} catch(MalformedURLException ex1) {
 				return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
 			}
-			
-			return lookupDomainImage(req, targetUrl, domainId);
-			
-		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
-			// Addresses login image
-			// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
-			// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
-			return lookupLoginImage(req, targetUrl);
-			
-		} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
-			// Addresses licence page
-			// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
-			return lookupLicense(req, targetUrl);
-			
-		} else {
-			if (StringUtils.endsWith(targetPath, ".js")) {
-				WebTopApp wta = WebTopApp.get(req);
-				String sessionId = ServletHelper.getSessionID(req);
-				if (StringUtils.startsWith(path, "resources/libs")) {
-					// If targets lib folder, simply return requested file without handling debug versions
-					return lookupJs(req, targetUrl, false);
-					
-				} else if (StringUtils.startsWith(path, "boot/")) {
-					return lookupJs(req, targetUrl, isDebug(wta, sessionId));
-					
-				} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
-					return lookupLocaleJs(req, targetUrl, subject);
-					
-				} else {
-					return lookupJs(req, targetUrl, isDebug(wta, sessionId));
+
+			if (!isVirtualUrl && path.startsWith("images")) {
+				// Addresses domain public images
+				// URLs like "/{domainPublicName}/images/{relativePathToFile}"
+				// Eg.	"/1bbc048f/images/login.png"
+				//		"/1bbc048f/images/sub/login.png"
+				WebTopManager wtMgr = wta.getWebTopManager();
+
+				String domainId = wtMgr.publicNameToDomainId(subject);
+				if (StringUtils.isBlank(domainId)) {
+					// We must support old-style URL using {domainInternetName}
+					// instead of {domainPublicName}
+					// Eg.	"/sonicle.com/images/login.png"
+					domainId = wtMgr.internetNameToDomain(subject);
 				}
-				
-			} else if (StringUtils.startsWith(path, "laf")) {
-				return lookupLAF(req, targetUrl, path, subject, subjectPath);
-				
+				if (StringUtils.isBlank(domainId)) {
+					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
+				}
+
+				return lookupDomainImage(req, targetUrl, domainId);
+
+			} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/images/login.png")) {
+				// Addresses login image
+				// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
+				// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
+				return lookupLoginImage(req, targetUrl);
+
+			} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
+				// Addresses licence page
+				// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
+				return lookupLicense(req, targetUrl);
+
 			} else {
-				return lookupDefault(req, isVirtualUrl ? ClientCaching.YES : ClientCaching.AUTO, targetUrl);
+				if (StringUtils.endsWith(targetPath, ".js")) {
+					String sessionId = ServletHelper.getSessionID(req);
+					if (StringUtils.startsWith(path, "resources/libs")) {
+						// If targets lib folder, simply return requested file without handling debug versions
+						return lookupJs(req, targetUrl, false);
+
+					} else if (StringUtils.startsWith(path, "boot/")) {
+						return lookupJs(req, targetUrl, isDebug(wta, sessionId));
+
+					} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
+						return lookupLocaleJs(req, targetUrl, subject);
+
+					} else {
+						return lookupJs(req, targetUrl, isDebug(wta, sessionId));
+					}
+
+				} else if (StringUtils.startsWith(path, "laf")) {
+					return lookupLAF(req, targetUrl, path, subject, subjectPath);
+
+				} else {
+					return lookupDefault(req, isVirtualUrl ? ClientCaching.YES : ClientCaching.AUTO, targetUrl);
+				}
 			}
+			
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
@@ -257,11 +262,11 @@ public class ResourceRequest extends HttpServlet {
 	}
 	
 	private LookupResult lookupDomainImage(HttpServletRequest request, URL targetUrl, String domainId) {
-		WebTopApp wta = WebTopApp.get(request);
+		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			String targetPath = targetUrl.getPath();
+			WebTopApp wta = WebTopApp.get(request);
 			String remainingPath = StringUtils.substringAfter(targetPath, "images/");
 			if (StringUtils.isBlank(remainingPath)) throw new NotFoundException();
 			String imagesPath = wta.getImagesPath(domainId);
@@ -278,15 +283,17 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
 	private LookupResult lookupLoginImage(HttpServletRequest request, URL targetUrl) {
-		WebTopApp wta = WebTopApp.get(request);
+		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			String targetPath = targetUrl.getPath();
+			WebTopApp wta = WebTopApp.get(request);
 			//String internetName = ServletUtils.getInternetName(request);
 			String internetName = ServletUtils.getHost(request);
 			String domainId = WT.findDomainIdByInternetName(internetName);
@@ -313,15 +320,17 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
 	private LookupResult lookupLicense(HttpServletRequest request, URL targetUrl) {
-		WebTopApp wta = WebTopApp.get(request);
+		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			String targetPath = targetUrl.getPath();
+			WebTopApp wta = WebTopApp.get(request);
 			WebTopManager wtMgr = wta.getWebTopManager();
 			if (wtMgr != null) {
 				String internetName = ServletUtils.getInternetName(request);
@@ -348,15 +357,16 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
 	private LookupResult lookupJs(HttpServletRequest request, URL targetUrl, boolean debugVersion) {
-		WebTopApp wta = WebTopApp.get(request);
+		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			String targetPath = targetUrl.getPath();
 			if(debugVersion) {
 				String dpath = targetPath.substring(0, targetPath.length() - 3) + "-debug.js";
 				fileUrl = getResURL(dpath);
@@ -366,7 +376,7 @@ public class ResourceRequest extends HttpServlet {
 				fileUrl = getResURL(targetPath);
 			}
 			
-			Resource resFile = getFile(wta, fileUrl);
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
 			return new StaticFile(fileUrl.toString(), getMimeType(targetPath), ClientCaching.YES, resFile);
 		
 		} catch (ForbiddenException ex) {
@@ -375,15 +385,17 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
 	private LookupResult lookupLocaleJs(HttpServletRequest request, URL targetUrl, String serviceId) {
-		WebTopApp wta = WebTopApp.get(request);
 		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
+			WebTopApp wta = WebTopApp.get(request);
 			String fileName = FilenameUtils.getName(targetPath);
 			String baseTargetPath = StringUtils.substringBefore(targetPath, fileName);
 			Matcher matcher = PATTERN_LOCALE_FILE.matcher(fileName);
@@ -422,6 +434,8 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
@@ -453,6 +467,8 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
@@ -472,6 +488,8 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	

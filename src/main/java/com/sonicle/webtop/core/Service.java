@@ -290,12 +290,12 @@ public class Service extends BaseService {
 	}
 	
 	private WebTopSession getWts() {
-		return getEnv().getWebTopSession();
+		return getEnv().getSession();
 	}
 	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
-		Locale locale = getEnv().getWebTopSession().getLocale();
+		Locale locale = getEnv().getSession().getLocale();
 		
 		try {
 			for(AppLocale apploc : WT.getInstalledLocales()) {
@@ -389,7 +389,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		Locale locale = getEnv().getWebTopSession().getLocale();
+		Locale locale = getEnv().getSession().getLocale();
 		ArrayList<JsSimple> items = new ArrayList<>();
 		
 		try {
@@ -541,7 +541,7 @@ public class Service extends BaseService {
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
 			List<Activity> acts = null;
-			if (coreMgr.hasSameTargetProfile(pid)) {
+			if (coreMgr.isTargetProfileEqualTo(pid)) {
 				acts = coreMgr.listLiveActivities();
 			} else {
 				CoreManager mgr = WT.getCoreManager(true, pid);
@@ -568,7 +568,7 @@ public class Service extends BaseService {
 			
 			//TODO: tradurre campo descrizione in base al locale dell'utente
 			List<Causal> caus = null;
-			if (coreMgr.hasSameTargetProfile(pid)) {
+			if (coreMgr.isTargetProfileEqualTo(pid)) {
 				caus = coreMgr.listLiveCausals(masterDataId);
 			} else {
 				CoreManager mgr = WT.getCoreManager(true, pid);
@@ -648,7 +648,7 @@ public class Service extends BaseService {
 	}
 	
 	
-	
+	/*
 	public void processServerEvents(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		List<ServiceMessage> messages = new ArrayList();
 		
@@ -661,6 +661,7 @@ public class Service extends BaseService {
 			new JsonResult(JsonResult.gson.toJson(messages)).printTo(out);
 		}
 	}
+	*/
 	
 	public void processChangeUserPassword(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
@@ -831,7 +832,7 @@ public class Service extends BaseService {
 	}
 	
 	public void processLookupSessionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		WebTopSession wts = getEnv().getWebTopSession();
+		WebTopSession wts = getEnv().getSession();
 		Locale locale = wts.getLocale();
 		
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -1242,11 +1243,9 @@ public class Service extends BaseService {
 		try {
 			con=getConnection();
 			boolean mine=ServletUtils.getBooleanParameter(request, "mine", true);
-			String webtopClientId=RunContext.getWebTopClientID();
-			List<OAutosave> items;
-			if (mine) items=coreMgr.listMyAutosaveData(webtopClientId);
-			else items=coreMgr.listOfflineOthersAutosaveData(webtopClientId);
+			String cid = getWts().getWebTopClientID();
 			
+			List<OAutosave> items = (mine) ? coreMgr.listMyAutosaveData(cid) : coreMgr.listOfflineOthersAutosaveData(cid);
 			for(OAutosave item: items) {
 				getWts().notify(new ServiceMessage(item.getServiceId(),"autosaveRestore",
 						new JsAutosave(
@@ -1274,12 +1273,15 @@ public class Service extends BaseService {
 		try {
 			con=getConnection();
 			boolean allOthers=ServletUtils.getBooleanParameter(request, "allOthers", false);
+			String cid = getWts().getWebTopClientID();
 			
-			if (allOthers) coreMgr.deleteOfflineOthersAutosaveData(RunContext.getWebTopClientID());
-			else {
+			if (allOthers) {
+				coreMgr.deleteOfflineOthersAutosaveData(cid);
+			} else {
 				boolean allMine=ServletUtils.getBooleanParameter(request, "allMine", false);
-				if (allMine) coreMgr.deleteMyAutosaveData(RunContext.getWebTopClientID());
-				else {
+				if (allMine) {
+					coreMgr.deleteMyAutosaveData(cid);
+				} else {
 					String serviceId=ServletUtils.getStringParameter(request, "serviceId", true);
 					String context=ServletUtils.getStringParameter(request, "context", true);
 					String key=ServletUtils.getStringParameter(request, "key", true);

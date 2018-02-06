@@ -31,25 +31,40 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.shiro;
 
-import javax.websocket.HandshakeResponse;
-import javax.websocket.server.HandshakeRequest;
-import javax.websocket.server.ServerEndpointConfig;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.Subject;
+import com.sonicle.security.Principal;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 
 /**
  *
- * @author malbinola
+ * @author gbulfon
  */
-public class WsPushEndpointConfigurator extends ServerEndpointConfig.Configurator {
+public class WTAuthenticationInfo implements AuthenticationInfo {
+	private final Principal soniclePrincipal;
+	private final char[] credentials;
+	private final SimplePrincipalCollection principals = new SimplePrincipalCollection();
 	
-    @Override
-    public void modifyHandshake(ServerEndpointConfig config, HandshakeRequest request, HandshakeResponse response)
-    {
-		Subject subject = SecurityUtils.getSubject();
-		config.getUserProperties().put("sessionId", subject.getSession().getId().toString());
-		//config.getUserProperties().put("shiroSession", subject.getSession());
-    }
+	
+	public WTAuthenticationInfo(Principal principal, char[] credentials, String realmName) {
+		this.soniclePrincipal = principal;
+		this.credentials = credentials;
+		principals.add(principal, realmName);
+	}
+
+	public Principal getSoniclePrincipal() {
+		return soniclePrincipal;
+	}
+
+	@Override
+	public PrincipalCollection getPrincipals() {
+		return principals;
+	}
+
+	@Override
+	public Object getCredentials() {
+		return credentials;
+	}
 }

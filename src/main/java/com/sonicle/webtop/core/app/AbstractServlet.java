@@ -52,7 +52,7 @@ public abstract class AbstractServlet extends HttpServlet {
 	
 	protected abstract void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException;
 	
-	protected WebTopApp getWebTopApp(HttpServletRequest request) {
+	protected WebTopApp getWebTopApp(HttpServletRequest request) throws ServletException {
 		return WebTopApp.get(request);
 	}
 	
@@ -60,6 +60,8 @@ public abstract class AbstractServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			processRequest(request, response);
+		} catch(Throwable t) {
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
 		} finally {
 			LoggerUtils.clearDC();
 		}
@@ -69,6 +71,8 @@ public abstract class AbstractServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		try {
 			processRequest(request, response);
+		} catch(Throwable t) {
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, t.getMessage());
 		} finally {
 			LoggerUtils.clearDC();
 		}

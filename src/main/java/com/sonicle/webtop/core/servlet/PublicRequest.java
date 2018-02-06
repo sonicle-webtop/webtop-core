@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -44,7 +44,6 @@ import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.io.Resource;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,18 +55,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.subject.Subject;
-import org.apache.shiro.subject.support.SubjectThreadState;
-import org.apache.shiro.util.ThreadState;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class PublicServiceRequest extends BaseServiceRequest {
+public class PublicRequest extends BaseRequest {
 	public static final String URL = "public"; // This must reflect web.xml!
-	private static final Logger logger = WT.getLogger(PublicServiceRequest.class);
+	private static final Logger logger = WT.getLogger(PublicRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
 	public Resource getPublicFile(WebTopApp wta, String serviceId, String relativePath) {
@@ -118,7 +114,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		WebTopApp wta = WebTopApp.get(request);
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(true);
 		
 		try {
 			String serviceId = ServletUtils.getStringParameter(request, "service", null);
@@ -149,15 +145,7 @@ public class PublicServiceRequest extends BaseServiceRequest {
 
 				// Gets method and invokes it...
 				MethodInfo meinfo = getMethod(instance.getClass(), serviceId, action, nowriter);
-				
-				Subject subject = getWebTopApp(request).bindAdminSubjectToSession(RunContext.getSessionId());
-				ThreadState threadState = new SubjectThreadState(subject);
-				threadState.bind();
-				try {
-					invokeMethod(instance, meinfo, serviceId, request, response);
-				} finally {
-					threadState.clear();
-				}
+				invokeMethod(instance, meinfo, serviceId, request, response);
 			}
 			
 		} catch(Exception ex) {

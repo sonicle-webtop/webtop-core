@@ -69,7 +69,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		
 		'Sonicle.webtop.core.app.WTPrivate',
 		'Sonicle.webtop.core.app.ServiceDescriptor',
-		'Sonicle.webtop.core.app.ComManager',
+		'Sonicle.webtop.core.app.Atmosphere',
 		'Sonicle.webtop.core.sdk.Service'
 	
 	].concat(WTS.appRequires || []),
@@ -200,9 +200,9 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			vpc.showWhatsnew(false);
 		}
 		
-		// Inits messages (webSocket/ServerEvents)
-		WTA.ComManager.setConnectionWarnMsg(WT.res('warn.connectionlost'));
-		WTA.ComManager.on('receive', function(s,messages) {
+		WTA.Atmosphere.setUrl(me.pushUrl);
+		WTA.Atmosphere.setUuid(WT.getSessionId());
+		WTA.Atmosphere.on('receive', function(s,messages) {
 			Ext.each(messages, function(msg) {
 				if (msg && msg.service) {
 					var svc = me.getService(msg.service);
@@ -210,7 +210,16 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				}
 			});
 		});
-		WTA.ComManager.connect();
+		WTA.Atmosphere.on('connectionwarn', function(s, resume) {
+			WT.warn(WT.res('warn.connectionlost'), {
+				config: {
+					fn: function() {
+						resume();
+					}
+				}
+			});
+		});
+		WTA.Atmosphere.connect();
 		
 		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
 			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));

@@ -98,12 +98,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Returns the Push URL for websocket.
+	 * Returns the sessionId.
 	 * @returns {String}
 	 */
-	getWsPushUrl: function() {
-		return this.getApp().wsPushUrl;
-		//return WTS.wsPushUrl;
+	getSessionId: function() {
+		return WTS.sessionId;
 	},
 	
 	/**

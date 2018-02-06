@@ -31,40 +31,23 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.servlet;
 
-import com.sonicle.security.Principal;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.SimplePrincipalCollection;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
-public class WebTopAuthenticationInfo implements AuthenticationInfo {
-	private final Principal soniclePrincipal;
-	private final char[] credentials;
-	private final SimplePrincipalCollection principals = new SimplePrincipalCollection();
+public class RestApi extends ServletContainer {
+	public static final String URL = "api"; // This must reflect web.xml!
 	
+	public RestApi() {
+		super();
+	}
 	
-	public WebTopAuthenticationInfo(Principal principal, char[] credentials, String realmName) {
-		this.soniclePrincipal = principal;
-		this.credentials = credentials;
-		principals.add(principal, realmName);
-	}
-
-	public Principal getSoniclePrincipal() {
-		return soniclePrincipal;
-	}
-
-	@Override
-	public PrincipalCollection getPrincipals() {
-		return principals;
-	}
-
-	@Override
-	public Object getCredentials() {
-		return credentials;
+	public RestApi(ResourceConfig resourceConfig) {
+		super(resourceConfig);
 	}
 }

@@ -57,7 +57,6 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
-import com.sonicle.webtop.core.shiro.WTSessionManager;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.util.Arrays;
@@ -72,7 +71,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
-import net.sf.uadetector.ReadableDeviceCategory;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -106,7 +104,6 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
-	private SessionComManager comm = null;
 	private final Object lock1 = new Object();
 	private javax.mail.Session mailSession = null;
 	
@@ -138,12 +135,107 @@ public class WebTopSession {
 		}
 	}
 	
+	// TODO: rimuovere metodi deprecati
+	
+	/**
+	 * @deprecated use {@link #getClientRemoteIP()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public String getRemoteIP() {
+		return getClientRemoteIP();
+	}
+	
+	/**
+	 * @deprecated use {@link #getClientPlainUserAgent()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public String getPlainUserAgent() {
+		return getClientPlainUserAgent();
+	}
+	
+	/**
+	 * @deprecated use {@link #getClientTrackingID()} instead.
+	 * @return 
+	 */
+	@Deprecated
+	public String getWebTopClientID() {
+		return getClientTrackingID();
+	}
+	
+	
+	
 	/**
 	 * Returns the associated user session.
 	 * @return Session object
 	 */
 	public Session getSession() {
 		return session;
+	}
+	
+	/**
+	 * Convenience method to get genenated CSRF token.
+	 * @return Generated CSRF token
+	 */
+	public String getCSRFToken() {
+		return SessionContext.getCSRFToken(session);
+	}
+	
+	/**
+	 * Convenience method to get WebTop genenated client identifier.
+	 * @return WebTop client identifier
+	 */
+	public String getClientTrackingID() {
+		return SessionContext.getWebTopClientID(session);
+	}
+	
+	/**
+	 * Convenience method to get client's IP address.
+	 * @return The network address
+	 */
+	public String getClientRemoteIP() {
+		return SessionContext.getClientIP(session);
+	}
+	
+	/**
+	 * Convenience method to get client's browser URL.
+	 * @return The network address
+	 */
+	public String getClientUrl() {
+		return SessionContext.getClientUrl(session);
+	}
+	
+	/**
+	 * Convenience method to get client's plain user-agent info.
+	 * @return user-agent info
+	 */
+	public String getClientPlainUserAgent() {
+		return SessionContext.getClientUserAgent(session);
+	}
+	
+	/**
+	 * Convenience method to get client's parsed user-agent info.
+	 * @return A readable ReadableUserAgent object. 
+	 */
+	public ReadableUserAgent getClientUserAgent() {
+		synchronized(lock0) {
+			if (readableUserAgent == null) {
+				String plainUa = getClientPlainUserAgent();
+				if (!StringUtils.isBlank(plainUa)) {
+					readableUserAgent = WebTopApp.getUserAgentInfo(plainUa);
+				}
+			}
+			return readableUserAgent;
+		}
+	}
+	
+	/**
+	 * Convenience method to get the referer-uri.
+	 * @return The referer-uri
+	 */
+	public String getRefererUri() {
+		return SessionContext.getRefererUri(session);
 	}
 	
 	/**
@@ -163,48 +255,16 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Returns client's IP address.
-	 * @return The network address. 
-	 */
-	public String getRemoteIP() {
-		return WTSessionManager.getClientIP(session);
-	}
-	
-	/**
-	 * Returns plain client's user-agent info.
-	 * @return Bowser user-agent. 
-	 */
-	public String getPlainUserAgent() {
-		return WTSessionManager.getClientUserAgent(session);
-	}
-	
-	/**
-	 * Returns parsed client's user-agent info.
-	 * @return A readable ReadableUserAgent object. 
-	 */
-	public ReadableUserAgent getUserAgent() {
-		synchronized(lock0) {
-			if (readableUserAgent == null) {
-				String plainUa = getPlainUserAgent();
-				if (!StringUtils.isBlank(plainUa)) {
-					readableUserAgent = WebTopApp.getUserAgentInfo(plainUa);
-				}
-			}
-			return readableUserAgent;
-		}
-	}
-	
-	/**
 	 * Return current locale.
 	 * It can be the UserProfile's locale or the locale specified during
 	 * the initial HTTP request to the server.
 	 * @return The locale.
 	 */
 	public Locale getLocale() {
-		if(profile != null) {
+		if (profile != null) {
 			return profile.getLocale();
 		} else {
-			return WTSessionManager.getClientLocale(session);
+			return SessionContext.getClientLocale(session);
 		}
 	}
 	
@@ -287,10 +347,6 @@ public class WebTopSession {
 		if (!hasProperty(serviceId, key)) throw new WTException("Missing session property [{0}, {1}]", serviceId, key);
 	}
 	
-	public String getRefererURI() {
-		return WTSessionManager.getRefererUri(session);
-	}
-	
 	public boolean isReady() {
 		return initLevel == 2;
 	}
@@ -353,6 +409,7 @@ public class WebTopSession {
 		
 		Subject subject = RunContext.getSubject();
 		UserProfileId profileId = RunContext.getRunProfileId(subject);
+		session.setAttribute(SessionManager.ATTRIBUTE_GUESSING_USERNAME, profileId.toString());
 		
 		emptyServiceManagers();
 		
@@ -391,8 +448,7 @@ public class WebTopSession {
 		privateEnv = new PrivateEnvironment(this);
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
-		sesm.registerWebTopSession(getSession(), this);
-		comm = new SessionComManager(sesm, getId(), profile.getId());
+		sesm.registerWebTopSession(this);
 		allowedServices = core.listAllowedServices();
 		
 		BaseManager managerInst = null;
@@ -459,9 +515,9 @@ public class WebTopSession {
 		
 		initLevel = 2;
 
-		String webtopClientId=RunContext.getWebTopClientID();
-		boolean mine=core.hasMyAutosaveData(webtopClientId);
-		List<OAutosave> odata=core.listOfflineOthersAutosaveData(webtopClientId);
+		String cid=getWebTopClientID();
+		boolean mine=core.hasMyAutosaveData(cid);
+		List<OAutosave> odata=core.listOfflineOthersAutosaveData(cid);
 		boolean others=(odata==null)?false:odata.size()>0;
 		if (mine || others) {
 			this.notify(new AutosaveMessage(core.SERVICE_ID,mine,others));
@@ -898,6 +954,7 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "linkify.min.js");
 		js.appManifest.addJs(LIBS_PATH + "linkify-string.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
+		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
 		// Uncomment these lines to load debug versions of the libraries ----->
@@ -1035,18 +1092,13 @@ public class WebTopSession {
 	}
 	
 	public void notify(ServiceMessage message) {
-		if(!isReady()) return;
-		comm.notify(message);
+		if (!isReady()) return;
+		wta.getSessionManager().push(getId(), message);
 	}
 	
 	public void notify(List<ServiceMessage> messages) {
-		if(!isReady()) return;
-		comm.notify(messages);
-	}
-	
-	public List<ServiceMessage> getEnqueuedMessages() {
-		if(!isReady()) return null;
-		return comm.popEnqueuedMessages();
+		if (!isReady()) return;
+		wta.getSessionManager().push(getId(), messages);
 	}
 	
 	public void addUploadedFile(UploadedFile uploadedFile) {

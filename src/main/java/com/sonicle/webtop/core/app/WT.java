@@ -46,7 +46,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.servlet.PublicServiceRequest;
+import com.sonicle.webtop.core.servlet.PublicRequest;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -154,7 +154,7 @@ public class WT {
 		final String baseUrl = getPublicBaseUrl(domainId);
 		final String domainPublicName = getDomainPublicName(domainId);
 		final String servicePublicName = getServicePublicName(serviceId);
-		return PathUtils.concatPathParts(baseUrl, PublicServiceRequest.URL, domainPublicName, servicePublicName);
+		return PathUtils.concatPathParts(baseUrl, PublicRequest.URL, domainPublicName, servicePublicName);
 	}
 	
 	public static String getPublicImagesUrl(String domainId) {
@@ -209,7 +209,7 @@ public class WT {
 	}
 	
 	public static CoreManager getCoreManager() {
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(false);
 		if(wts != null) {
 			return (CoreManager)wts.getServiceManager(CoreManifest.ID);
 		} else {
@@ -237,9 +237,9 @@ public class WT {
 	}
 	
 	public static BaseManager getServiceManager(String serviceId) {
-		WebTopSession session = RunContext.getWebTopSession();
-		if (session != null) {
-			return session.getServiceManager(serviceId);
+		WebTopSession wts = SessionContext.getCurrent(false);
+		if (wts != null) {
+			return wts.getServiceManager(serviceId);
 		} else {
 			return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
 		}
@@ -380,6 +380,7 @@ public class WT {
 	}
 	
 	public static UserProfile.Data getUserData(UserProfileId profileId) {
+		if (profileId == null) return null;
 		try {
 			return getWTA().getWebTopManager().userData(profileId);
 		} catch(Exception ex) {

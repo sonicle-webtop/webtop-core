@@ -48,11 +48,9 @@ public class PrivateEnvironment extends AbstractEnvironment {
 	//private final static Logger logger = WT.getLogger(SessionEnvironment.class);
 	protected final CoreServiceSettings css;
 	protected final CoreUserSettings cus;
-	protected final String csrf;
 
 	public PrivateEnvironment(WebTopSession wts) {
 		super(wts);
-		csrf = RunContext.getCSRFToken();
 		css = new CoreServiceSettings(CoreManifest.ID, wts.getProfileDomainId());
 		UserProfileId pid = wts.getProfileId();
 		cus = (pid != null) ? new CoreUserSettings(pid) : null;
@@ -74,20 +72,11 @@ public class PrivateEnvironment extends AbstractEnvironment {
 		return cus;
 	}
 	
-	public String getSessionRefererUri() {
-		return wts.getRefererURI();
-	}
-	
 	public void notify(ServiceMessage message) {
 		wts.notify(message);
 	}
 	
 	public void notify(List<ServiceMessage> messages) {
 		wts.notify(messages);
-	}
-	
-	public String getSecurityToken() {
-		//TODO: valore di ritorno provvisorio, rimuovere in seguito!
-		return csrf;
 	}
 }

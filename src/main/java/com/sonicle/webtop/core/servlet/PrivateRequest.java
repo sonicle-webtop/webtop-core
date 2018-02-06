@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -57,15 +58,15 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class ServiceRequest extends BaseServiceRequest {
+public class PrivateRequest extends BaseRequest {
 	public static final String URL = "service-request"; // This must reflect web.xml!
-	private static final Logger logger = WT.getLogger(ServiceRequest.class);
+	private static final Logger logger = WT.getLogger(PrivateRequest.class);
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(true);
 		
 		try {
 			String service = ServletUtils.getStringParameter(request, "service", true);
