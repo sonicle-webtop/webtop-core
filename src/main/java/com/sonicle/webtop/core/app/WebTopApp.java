@@ -93,6 +93,8 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -1176,6 +1178,74 @@ public final class WebTopApp {
         
         Transport.send(msg);
 	}
+	
+	public void sendEmail(javax.mail.Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
+		MimeMultipart mp = new MimeMultipart("mixed");
+		if (rich) {
+			MimeMultipart alternative = new MimeMultipart("alternative");
+			MimeBodyPart mbp2 = new MimeBodyPart();
+			mbp2.setContent(body, MailUtils.buildPartContentType("text/html", "UTF-8"));
+			MimeBodyPart mbp1 = new MimeBodyPart();
+			mbp1.setContent(MailUtils.htmlToText(MailUtils.htmlunescapesource(body)), MailUtils.buildPartContentType("text/plain", "UTF-8"));
+			alternative.addBodyPart(mbp1);
+			alternative.addBodyPart(mbp2);
+			MimeBodyPart altbody = new MimeBodyPart();
+			altbody.setContent(alternative);
+			mp.addBodyPart(altbody);
+		} else {
+			MimeBodyPart mbp1 = new MimeBodyPart();
+			mbp1.setContent(body, MailUtils.buildPartContentType("text/plain", "UTF-8"));
+			mp.addBodyPart(mbp1);
+		}
+		sendEmail(session, from, to, cc, bcc, subject, mp);
+	}
+	
+	public void sendEmail(javax.mail.Session session, String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String subject, MimeMultipart part) throws MessagingException {
+		InternetAddress iaFrom = InternetAddressUtils.toInternetAddress(from);
+		ArrayList<InternetAddress> iaTo = null;
+		ArrayList<InternetAddress> iaCc = null;
+		ArrayList<InternetAddress> iaBcc = null;
+		
+		if (to != null) {
+			iaTo = new ArrayList<>(to.size());
+			for (String s : to) iaTo.add(InternetAddressUtils.toInternetAddress(s));
+		}
+        if (cc != null) {
+			iaCc = new ArrayList<>(cc.size());
+			for (String s : cc) iaCc.add(InternetAddressUtils.toInternetAddress(s));
+		}
+        if (bcc != null) {
+			iaBcc = new ArrayList<>(bcc.size());
+			for (String s : bcc) iaBcc.add(InternetAddressUtils.toInternetAddress(s));
+		}
+		
+		sendEmail(session, iaFrom, iaTo, iaCc, iaBcc, subject, part);
+	}
+	
+	public void sendEmail(javax.mail.Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
+		
+		try {
+			subject = MimeUtility.encodeText(subject);
+		} catch (Exception ex) {}
+		
+		MimeMessage message = new MimeMessage(session);
+		message.setSubject(subject);
+		message.addFrom(new InternetAddress[] {from});
+		
+		if (to != null) {
+			for(InternetAddress ia: to) message.addRecipient(Message.RecipientType.TO, ia);
+		}
+		if (cc != null) {
+			for(InternetAddress ia: cc) message.addRecipient(Message.RecipientType.CC, ia);
+		}
+		if (bcc != null) {
+			for(InternetAddress ia: bcc) message.addRecipient(Message.RecipientType.BCC, ia);
+		}
+		
+		message.setContent(part);
+		message.setSentDate(new java.util.Date());
+		Transport.send(message);
+	}	
 	
 	public void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
 		List<WebTopSession> sessions = sesmgr.getWebTopSessions(profileId);

@@ -59,6 +59,7 @@ import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +68,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
 import org.apache.commons.lang3.StringUtils;
@@ -472,6 +474,19 @@ public class WT {
 		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body, parts);
 	}
 	
+	
+	public static void sendEmail(Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
+		getWTA().sendEmail(session, rich, from, to, cc, bcc, subject, body, parts);
+	}
+	
+	public static void sendEmail(Session session, String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String subject, MimeMultipart part) throws MessagingException {
+		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
+	}
+	
+	public static void sendEmail(Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
+		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
+	}
+		
 	/**
 	 * Retrieves MediaType associated to a file extension from the local table.
 	 * @param extension The file extension.
