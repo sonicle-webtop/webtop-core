@@ -103,7 +103,7 @@ public class WTRealm extends AuthorizingRealm {
 			}
 			upt.setUsername(principal.getUserId());
 			
-			return new WebTopAuthenticationInfo(principal, upt.getPassword(), this.getName());
+			return new WTAuthenticationInfo(principal, upt.getPassword(), this.getName());
 			
 		} else {
 			return null;
@@ -233,11 +233,14 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> roles = new HashSet<>();
 		HashSet<String> perms = new HashSet<>();
 		
-		if(Principal.xisAdmin(pid.toString())) {
+		if (Principal.xisAdmin(pid.toString())) {
+			roles.add("SYSADMIN");
+			roles.add("WTADMIN");
 			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
-		
+			
 		} else if (principal.isImpersonated()) {
+			roles.add("WTADMIN");
 			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		}
 		

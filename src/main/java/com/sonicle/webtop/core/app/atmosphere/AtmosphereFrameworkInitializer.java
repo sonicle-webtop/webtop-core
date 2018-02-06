@@ -31,39 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
-
-import com.sonicle.webtop.core.util.LoggerUtils;
-import org.apache.shiro.session.Session;
-
+package com.sonicle.webtop.core.app.atmosphere;
 
 /**
  *
  * @author malbinola
  */
-public class ShiroSessionListener implements org.apache.shiro.session.SessionListener {
-
-	@Override
-	public void onStart(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStarted(sn);
-		}
+public class AtmosphereFrameworkInitializer extends org.atmosphere.cpr.AtmosphereFrameworkInitializer {
+	
+	public AtmosphereFrameworkInitializer(boolean isFilter, boolean autoDetectHandlers) {
+		super(isFilter, autoDetectHandlers);
 	}
-
-	@Override
-	public void onStop(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionStopped(sn);
-		}
+	
+	/*
+	public AtmosphereFrameworkInitializer configureFramework(ServletConfig sc) throws ServletException {
+		return configureFramework(sc, true, false, AtmosphereFramework.class);
 	}
-
-	@Override
-	public void onExpiration(Session sn) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if (wta != null) {
-			wta.getSessionManager().shiroSessionExpired(sn);
-		}
-	}
+	*/
 }

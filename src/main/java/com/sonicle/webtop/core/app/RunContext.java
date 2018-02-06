@@ -37,13 +37,14 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.shiro.WTSessionManager;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.web.subject.WebSubject;
 
 /**
  *
@@ -51,14 +52,30 @@ import org.apache.shiro.mgt.SecurityManager;
  */
 public class RunContext {
 	
+	public static WebSubject buildWebSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response, UserProfileId profileId) {
+		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
+		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
+		builder.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"));
+		return builder.buildWebSubject();
+	}
+	
+	public static Subject buildSubject(UserProfileId profileId) {
+		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
+		return new Subject.Builder()
+				.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"))
+				.buildSubject();
+	}
+	
 	public static Subject getSubject() {
 		return SecurityUtils.getSubject();
 	}
 	
 	public static Principal getPrincipal() {
-		Subject subject=getSubject();
-		Principal principal=(subject!=null?((Principal)subject.getPrincipal()):null);
-		return principal;
+		return getPrincipal(getSubject());
+	}
+	
+	public static Principal getPrincipal(Subject subject) {
+		return (subject == null) ? null : (Principal)subject.getPrincipal();
 	}
 	
 	public static boolean isImpersonated() {
@@ -69,48 +86,13 @@ public class RunContext {
 		return principal.isImpersonated();
 	}
 	
-	public static Session getSession() {
-		return getSession(getSubject());
-	}
-	
-	public static Session getSession(Subject subject) {
-		return (subject == null) ? null : (Session)subject.getSession(false);
-	}
-	
-	public static String getSessionId() {
-		Session session = getSession();
-		return (session != null) ? session.getId().toString() : null;
-	}
-	
 	public static UserProfileId getRunProfileId() {
 		return getRunProfileId(getSubject());
 	}
 	
 	public static UserProfileId getRunProfileId(Subject subject) {
-		if(subject == null) return null;
-		if(subject.getPrincipal() == null) return null;
-		return new UserProfileId(((Principal)subject.getPrincipal()).getName());
-	}
-	
-	public static String getWebTopClientID() {
-		return getWebTopClientID(getSession());
-	}
-	
-	public static String getWebTopClientID(Session session) {
-		return (session == null) ? null : WTSessionManager.getWebTopClientID(session);
-	}
-	
-	public static String getCSRFToken() {
-		return getCSRFToken(getSession());
-	}
-	
-	public static String getCSRFToken(Session session) {
-		return (session == null) ? null : WTSessionManager.getCSRFToken(session);
-	}
-	
-	public static WebTopSession getWebTopSession() {
-		Session session = getSession();
-		return (session == null) ? null : WTSessionManager.getWebTopSession(session);
+		Principal principal = getPrincipal(subject);
+		return (principal == null) ? null : new UserProfileId(principal.getName());
 	}
 	
 	public static boolean isPermitted(String serviceId, String key) {

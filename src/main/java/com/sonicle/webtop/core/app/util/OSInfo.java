@@ -31,31 +31,60 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.util;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.util.LoggerUtils;
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.web.util.WebUtils;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends AbstractServlet {
-	public static final String URL = "logout"; // This must reflect web.xml!
+public class OSInfo {
 	
-	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletUtils.setCacheControlPrivate(response);
-		LoggerUtils.setContextDC(RunContext.getRunProfileId());
-		RunContext.getSubject().logout();
-		WebUtils.issueRedirect(request, response, "/");
-		//ServletUtils.redirectRequest(request, response, "/");
+	public static String build() {
+		String host = getCmdOutput("uname -n");
+		String domainName = StringUtils.defaultString(getCmdOutput("domainname"));
+		String osName = getCmdOutput("uname -s");
+		if (StringUtils.isEmpty(osName)) osName = System.getProperty("os.name");
+		String osRelease = getCmdOutput("uname -r");
+		if (StringUtils.isEmpty(osRelease)) osRelease = System.getProperty("os.version");
+		String osVersion = StringUtils.defaultString(getCmdOutput("uname -v"));
+		String osArch = getCmdOutput("uname -m");
+		if (StringUtils.isEmpty(osArch)) osArch = System.getProperty("os.arch");
+		
+		// Builds string
+		StringBuilder sb = new StringBuilder();
+		if (new File("/sonicle/etc/xstream.conf").exists()) {
+			sb.append("Sonicle XStream Server");
+			sb.append(" - ");
+		}
+		sb.append(host);
+		if (!StringUtils.isEmpty(domainName)) {
+			sb.append(" at ");
+			sb.append(domainName);
+		}
+		sb.append(" - ");
+		sb.append(osName);
+		sb.append(" ");
+		sb.append(osRelease);
+		sb.append(" ");
+		sb.append(osVersion);
+		sb.append(" ");
+		sb.append(osArch);
+		return sb.toString();
+	}
+	
+	private static String getCmdOutput(String command) {
+		String output = null;
+		try {
+			Process pro = Runtime.getRuntime().exec(command);
+			BufferedReader br = new BufferedReader(new InputStreamReader(pro.getInputStream()));
+			output = br.readLine();
+			pro.waitFor();
+		} catch (Throwable th) { /* Do nothing! */ }
+		return output;
 	}
 }

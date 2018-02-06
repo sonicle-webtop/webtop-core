@@ -31,31 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.util.LoggerUtils;
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.web.util.WebUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+import org.glassfish.hk2.api.PerLookup;
+import org.secnod.shiro.jersey.TypeFactory;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends AbstractServlet {
-	public static final String URL = "logout"; // This must reflect web.xml!
+public class JerseySubjectFactory extends TypeFactory<Subject> {
 	
+	public JerseySubjectFactory() {
+		super(Subject.class);
+	}
+	
+	@PerLookup
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletUtils.setCacheControlPrivate(response);
-		LoggerUtils.setContextDC(RunContext.getRunProfileId());
-		RunContext.getSubject().logout();
-		WebUtils.issueRedirect(request, response, "/");
-		//ServletUtils.redirectRequest(request, response, "/");
+	public Subject provide() {
+		return SecurityUtils.getSubject();
 	}
 }

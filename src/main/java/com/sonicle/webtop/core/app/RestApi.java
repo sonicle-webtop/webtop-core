@@ -61,6 +61,7 @@ public class RestApi extends BaseRestApiEndpoint {
 		this.wta = wta;
 	}
 	
+	/*
 	@GET
 	@Path("/sessions")
 	@Produces({MediaType.APPLICATION_JSON})
@@ -74,6 +75,7 @@ public class RestApi extends BaseRestApiEndpoint {
 	public Response existSession(@PathParam("id") String id) throws WTException {
 		return respStatus(getSessionManager().isOnline(id) ? Response.Status.OK : Response.Status.NOT_FOUND);
 	}
+	*/
 	
 	/*
 	@DELETE

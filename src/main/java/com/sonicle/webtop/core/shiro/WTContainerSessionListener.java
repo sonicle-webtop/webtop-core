@@ -31,31 +31,42 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.AbstractServlet;
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.util.LoggerUtils;
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.apache.shiro.web.util.WebUtils;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WebTopApp;
+import javax.servlet.http.HttpSessionEvent;
+import javax.servlet.http.HttpSessionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class Logout extends AbstractServlet {
-	public static final String URL = "logout"; // This must reflect web.xml!
+public class WTContainerSessionListener implements HttpSessionListener {
+	private static final Logger logger = LoggerFactory.getLogger(WTContainerSessionListener.class);
 	
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ServletUtils.setCacheControlPrivate(response);
-		LoggerUtils.setContextDC(RunContext.getRunProfileId());
-		RunContext.getSubject().logout();
-		WebUtils.issueRedirect(request, response, "/");
-		//ServletUtils.redirectRequest(request, response, "/");
+	public void sessionCreated(HttpSessionEvent hse) {
+		if (logger.isTraceEnabled()) logger.trace("sessionCreated [{}]", hse.getSession().getId());
+	}
+
+	@Override
+	public void sessionDestroyed(HttpSessionEvent hse) {
+		if (logger.isTraceEnabled()) logger.trace("sessionDestroyed [{}]", hse.getSession().getId());
+		SessionManager sessionManager = getSessionManager();
+		if (sessionManager != null) {
+			sessionManager.onContainerSessionDestroyed(hse.getSession());
+		} else {
+			logger.warn("SessionManager is null");
+		}
+	}
+	
+	private SessionManager getSessionManager() {
+		WebTopApp app = WebTopApp.getInstance();
+		if (app != null) return app.getSessionManager();
+		logger.warn("WebTopApp is null");
+		return null;
 	}
 }

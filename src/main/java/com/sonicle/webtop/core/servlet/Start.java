@@ -34,17 +34,19 @@
 package com.sonicle.webtop.core.servlet;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WsPushEndpoint;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
@@ -71,7 +73,7 @@ public class Start extends AbstractServlet {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
 		SettingsManager setm = wta.getSettingsManager();
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(true);
 		
 		try {
 			logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
@@ -104,9 +106,10 @@ public class Start extends AbstractServlet {
 			
 			// Startup variables
 			JsWTSPrivate jswts = new JsWTSPrivate();
-			jswts.securityToken = RunContext.getCSRFToken();
+			jswts.sessionId = wts.getId();
+			jswts.securityToken = wts.getCSRFToken();
 			jswts.contextPath = ServletHelper.getBaseUrl(request);
-			jswts.pushContextPath = jswts.contextPath + WsPushEndpoint.URL;
+			jswts.pushUrl = PathUtils.concatPaths(wts.getClientUrl(), PushEndpoint.URL);
 			wts.fillStartup(jswts);
 			vars.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
 			

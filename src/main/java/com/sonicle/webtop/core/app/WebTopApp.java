@@ -33,14 +33,13 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.util.OSInfo;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.MailUtils;
 import com.sonicle.commons.PathUtils;
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.ContextUtils;
-import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.PasswordUtils;
@@ -65,9 +64,7 @@ import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
-import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -91,7 +88,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -112,6 +108,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import net.sf.uadetector.ReadableUserAgent;
 import net.sf.uadetector.UserAgentStringParser;
@@ -131,7 +128,6 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -236,15 +232,15 @@ public final class WebTopApp {
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
 	private Configuration freemarkerCfg = null;
-	private I18nManager i18nmgr = null;
-	private ConnectionManager conmgr = null;
-	private LogManager logmgr = null;
-	private WebTopManager wtmgr = null;
-	private SettingsManager setmgr = null;
-	private ServiceManager svcm = null;
-	private SessionManager sesmgr = null;
-	private OTPManager optmgr = null;
-	private ReportManager rptmgr = null;
+	private I18nManager i18nMgr = null;
+	private ConnectionManager conMgr = null;
+	private LogManager logMgr = null;
+	private WebTopManager wtMgr = null;
+	private SettingsManager setMgr = null;
+	private ServiceManager svcMgr = null;
+	private SessionManager sesMgr = null;
+	private OTPManager otpMgr = null;
+	private ReportManager rptMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
@@ -310,9 +306,9 @@ public final class WebTopApp {
 		}
 		
 		logger.info("WTA initialization started [{}]", webappName);
-		this.conmgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager
-		this.setmgr = SettingsManager.initialize(this); // Settings Manager
-		this.sesmgr = SessionManager.initialize(this); // Session Manager
+		this.conMgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager
+		this.setMgr = SettingsManager.initialize(this); // Settings Manager
+		this.sesMgr = SessionManager.initialize(this); // Session Manager
 		
 		// Checks home directory
 		logger.info("Checking home structure...");
@@ -320,13 +316,13 @@ public final class WebTopApp {
 		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{0}]", homeDir.toString());
 		checkHomeStructure();
 		
-		this.mediaTypes = MediaTypes.init(conmgr);
-		this.fileTypes = FileTypes.init(conmgr);
+		this.mediaTypes = MediaTypes.init(conMgr);
+		this.fileTypes = FileTypes.init(conMgr);
 		
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
 		String[] tags = new String[]{"it_IT", "en_EN", "es_ES", "de_DE"};
-		this.i18nmgr = I18nManager.initialize(this, tags);
+		this.i18nMgr = I18nManager.initialize(this, tags);
 		
 		// Template Engine
 		logger.info("Initializing template engine");
@@ -336,12 +332,12 @@ public final class WebTopApp {
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.logmgr = LogManager.initialize(this); // Log Manager
-		this.wtmgr = WebTopManager.initialize(this); // WT Manager
+		this.logMgr = LogManager.initialize(this); // Log Manager
+		this.wtMgr = WebTopManager.initialize(this); // WT Manager
 		
-		this.systemLocale = CoreServiceSettings.getSystemLocale(setmgr); // System locale
-		this.optmgr = OTPManager.initialize(this); // OTP Manager
-		this.rptmgr = ReportManager.initialize(this); // Report Manager
+		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
+		this.otpMgr = OTPManager.initialize(this); // OTP Manager
+		this.rptMgr = ReportManager.initialize(this); // Report Manager
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
@@ -356,9 +352,7 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Unable to start scheduler");
 		}
 		
-		this.svcm = ServiceManager.initialize(this, this.scheduler); // Service Manager
-		
-		
+		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
 		
 		org.apache.shiro.session.Session session = adminSubject.getSession(false);
 		logger.info("Admin session created [{}]", session.getId().toString());
@@ -377,11 +371,11 @@ public final class WebTopApp {
 		tomcat = null;
 		
 		// Service Manager
-		svcm.cleanup();
-		svcm = null;
+		svcMgr.cleanup();
+		svcMgr = null;
 		// Session Manager
-		sesmgr.cleanup();
-		sesmgr = null;
+		sesMgr.cleanup();
+		sesMgr = null;
 		// Scheduler
 		try {
 			scheduler.shutdown(true);
@@ -390,26 +384,26 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
 		}
 		// Report Manager
-		rptmgr.cleanup();
-		rptmgr = null;
+		rptMgr.cleanup();
+		rptMgr = null;
 		// OTP Manager
-		optmgr.cleanup();
-		optmgr = null;
+		otpMgr.cleanup();
+		otpMgr = null;
 		// Settings Manager
-		setmgr.cleanup();
-		setmgr = null;
+		setMgr.cleanup();
+		setMgr = null;
 		// Auth Manager
 		//autm.cleanup();
 		//autm = null;
 		// User Manager
-		wtmgr.cleanup();
-		wtmgr = null;
+		wtMgr.cleanup();
+		wtMgr = null;
 		// Connection Manager
-		conmgr.cleanup();
-		conmgr = null;
+		conMgr.cleanup();
+		conMgr = null;
 		// I18nManager Manager
 		//I18nManager.cleanup();
-		i18nmgr = null;
+		i18nMgr = null;
 		
 		// Destroy admin session
 		synchronized(lockAdminSubject) {
@@ -422,8 +416,6 @@ public final class WebTopApp {
 	private void onAppReady() throws InterruptedException {
 		logger.trace("onAppReady...");
 		try {
-
-			
 			logger.info("Checking domains homes structure...");
 			try {
 				checkDomainsHomesStructure();
@@ -442,7 +434,7 @@ public final class WebTopApp {
 			// Check webapp version
 			logger.info("Checking webapp version...");
 			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
-			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setmgr);
+			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setMgr);
 			if (StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
 				this.webappIsLatest = true;
@@ -470,14 +462,14 @@ public final class WebTopApp {
 				logger.info("This webapp [{}] is NOT the latest", webappName);
 			}
 			
-			svcm.initializeJobServices();
+			svcMgr.initializeJobServices();
 			if (isLatest()) {
 				logger.debug("Sleeping for 60sec for avoid concurrency");
 				Thread.sleep(60000);
 				if (isLatest()) {
 					try {
 						logger.info("Scheduling JobServices tasks...");
-						svcm.scheduleAllJobServicesTasks();
+						svcMgr.scheduleAllJobServicesTasks();
 						if (!scheduler.isStarted()) logger.warn("Tasks succesfully scheduled but scheduler is not running");
 					} catch (SchedulerException ex) {
 						logger.error("Error", ex);
@@ -527,12 +519,12 @@ public final class WebTopApp {
 	}
 	
 	private void checkDomainsHomesStructure() throws WTException {
-		wtmgr.initDomainHomeFolder(WebTopManager.SYSADMIN_DOMAINID);
+		wtMgr.initDomainHomeFolder(WebTopManager.SYSADMIN_DOMAINID);
 		
-		List<ODomain> domains = wtmgr.listDomains(false);
+		List<ODomain> domains = wtMgr.listDomains(false);
 		for (ODomain domain : domains) {
 			try {
-				wtmgr.initDomainHomeFolder(domain.getDomainId());
+				wtMgr.initDomainHomeFolder(domain.getDomainId());
 			} catch(SecurityException ex) {
 				logger.warn("Unable to check domain home [{}]", domain.getDomainId(), ex);
 			}
@@ -593,7 +585,7 @@ public final class WebTopApp {
 		webappIsLatest = checkIsLastestWebapp(webappName);
 		if (webappIsLatest && !oldLatest) {
 			logger.info("Webapp [{}] is the latest", webappName);
-			svcm.scheduleAllJobServicesTasks();
+			svcMgr.scheduleAllJobServicesTasks();
 		} else if (!webappIsLatest && oldLatest) {
 			logger.info("Webapp [{}] is NO more the latest", webappName);
 		} else {
@@ -621,7 +613,7 @@ public final class WebTopApp {
 	}
 	
 	private CoreServiceSettings getCoreServiceSettings() {
-		return new CoreServiceSettings(setmgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
+		return new CoreServiceSettings(setMgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
 	}
 	
 	private StartupProperties createStartupProperties() {
@@ -719,7 +711,7 @@ public final class WebTopApp {
 	 * @return I18nManager instance.
 	 */
 	public I18nManager getI18nManager() {
-		return i18nmgr;
+		return i18nMgr;
 	}
 	
 	/**
@@ -727,7 +719,7 @@ public final class WebTopApp {
 	 * @return ConnectionManager instance.
 	 */
 	public ConnectionManager getConnectionManager() {
-		return conmgr;
+		return conMgr;
 	}
 	
 	/**
@@ -735,7 +727,7 @@ public final class WebTopApp {
 	 * @return SettingsManager instance.
 	 */
 	public SettingsManager getSettingsManager() {
-		return setmgr;
+		return setMgr;
 	}
 	
 	/**
@@ -743,7 +735,7 @@ public final class WebTopApp {
 	 * @return UserManager instance.
 	 */
 	public LogManager getLogManager() {
-		return logmgr;
+		return logMgr;
 	}
 	
 	/**
@@ -751,7 +743,7 @@ public final class WebTopApp {
 	 * @return WebTopManager instance.
 	 */
 	public WebTopManager getWebTopManager() {
-		return wtmgr;
+		return wtMgr;
 	}
 	
 	/**
@@ -759,7 +751,7 @@ public final class WebTopApp {
 	 * @return ServiceManager instance.
 	 */
 	public ServiceManager getServiceManager() {
-		return svcm;
+		return svcMgr;
 	}
 	
 	/**
@@ -767,7 +759,7 @@ public final class WebTopApp {
 	 * @return OTPManager instance.
 	 */
 	public OTPManager getOTPManager() {
-		return optmgr;
+		return otpMgr;
 	}
 	
 	/**
@@ -775,7 +767,7 @@ public final class WebTopApp {
 	 * @return ReportManager instance.
 	 */
 	public ReportManager getReportManager() {
-		return rptmgr;
+		return rptMgr;
 	}
 	
 	/**
@@ -783,7 +775,7 @@ public final class WebTopApp {
 	 * @return SessionManager instance.
 	 */
 	public SessionManager getSessionManager() {
-		return sesmgr;
+		return sesMgr;
 	}
 	
 	/**
@@ -1178,36 +1170,7 @@ public final class WebTopApp {
 	}
 	
 	public void notify(UserProfileId profileId, List<ServiceMessage> messages, boolean enqueueIfOffline) {
-		List<WebTopSession> sessions = sesmgr.getWebTopSessions(profileId);
-		if(!sessions.isEmpty()) {
-			for(WebTopSession session : sessions) {
-				session.notify(messages);
-			}
-		} else { // No user active sessions found!
-			if(enqueueIfOffline) {
-				Connection con = null;
-				
-				try {
-					MessageQueueDAO mqdao = MessageQueueDAO.getInstance();
-					con = conmgr.getConnection();
-					OMessageQueue queued = null;
-					for(ServiceMessage message : messages) {
-						queued = new OMessageQueue();
-						queued.setQueueId(mqdao.getSequence(con).intValue());
-						queued.setDomainId(profileId.getDomainId());
-						queued.setUserId(profileId.getUserId());
-						queued.setMessageType(message.getClass().getName());
-						queued.setMessageRaw(JsonResult.gson.toJson(message));
-						queued.setQueuedOn(DateTime.now(DateTimeZone.UTC));
-						mqdao.insert(con, queued);
-					}
-				} catch(Exception ex) {
-					ex.printStackTrace();
-				} finally {
-					DbUtils.closeQuietly(con);
-				}
-			}
-		}
+		sesMgr.push(profileId, messages, enqueueIfOffline);
 	}
 	
 	public DirectoryOptions createDirectoryOptions(AuthenticationDomain ad) {
@@ -1319,8 +1282,9 @@ public final class WebTopApp {
 	 * Gets WebTopApp object stored as context's attribute.
 	 * @param request The http request
 	 * @return WebTopApp object
+	 * @throws javax.servlet.ServletException
 	 */
-	public static WebTopApp get(HttpServletRequest request) {
+	public static WebTopApp get(HttpServletRequest request) throws ServletException {
 		return get(request.getSession().getServletContext());
 	}
 	
@@ -1328,8 +1292,11 @@ public final class WebTopApp {
 	 * Gets WebTopApp object stored as context's attribute.
 	 * @param context The servlet context
 	 * @return WebTopApp object
+	 * @throws javax.servlet.ServletException
 	 */
-	static WebTopApp get(ServletContext context) {
-		return (WebTopApp) context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
+	static WebTopApp get(ServletContext context) throws ServletException {
+		WebTopApp wta = (WebTopApp)context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
+		if (wta == null) throw new ServletException("WebTop environment is not loaded correctly. Please see log files for more details.");
+		return wta;
 	}
 }

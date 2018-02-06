@@ -33,58 +33,10 @@
  */
 package com.sonicle.webtop.core.app;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import org.apache.commons.lang3.StringUtils;
-
 /**
  *
  * @author malbinola
  */
-public class OSInfo {
+public class PushConnection2 {
 	
-	public static String build() {
-		String host = getCmdOutput("uname -n");
-		String domainName = StringUtils.defaultString(getCmdOutput("domainname"));
-		String osName = getCmdOutput("uname -s");
-		if(StringUtils.isEmpty(osName)) osName = System.getProperty("os.name");
-		String osRelease = getCmdOutput("uname -r");
-		if(StringUtils.isEmpty(osRelease)) osRelease = System.getProperty("os.version");
-		String osVersion = StringUtils.defaultString(getCmdOutput("uname -v"));
-		String osArch = getCmdOutput("uname -m");
-		if(StringUtils.isEmpty(osArch)) osArch = System.getProperty("os.arch");
-		
-		// Builds string
-		StringBuilder sb = new StringBuilder();
-		if(new File("/sonicle/etc/xstream.conf").exists()) {
-			sb.append("Sonicle XStream Server");
-			sb.append(" - ");
-		}
-		sb.append(host);
-		if(!StringUtils.isEmpty(domainName)) {
-			sb.append(" at ");
-			sb.append(domainName);
-		}
-		sb.append(" - ");
-		sb.append(osName);
-		sb.append(" ");
-		sb.append(osRelease);
-		sb.append(" ");
-		sb.append(osVersion);
-		sb.append(" ");
-		sb.append(osArch);
-		return sb.toString();
-	}
-	
-	public static String getCmdOutput(String command) {
-		String output = null;
-		try {
-			Process pro = Runtime.getRuntime().exec(command);
-			BufferedReader br = new BufferedReader(new InputStreamReader(pro.getInputStream()));
-			output = br.readLine();
-			pro.waitFor();
-		} catch (Throwable th) { /* Do nothing! */ }
-		return output;
-	}
 }

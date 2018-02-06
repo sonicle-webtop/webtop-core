@@ -41,8 +41,9 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTSPrivate extends JsWTS {
+	public String sessionId;
 	public String securityToken;
-	public String pushContextPath;
+	public String pushUrl;
 	public String layoutClassName;
 	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();

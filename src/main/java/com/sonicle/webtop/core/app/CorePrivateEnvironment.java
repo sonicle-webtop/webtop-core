@@ -48,8 +48,4 @@ public class CorePrivateEnvironment extends PrivateEnvironment {
 	public WebTopApp getApp() {
 		return wta;
 	}
-	
-	public WebTopSession getSession() {
-		return wts;
-	}
 }

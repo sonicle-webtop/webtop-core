@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
@@ -76,7 +77,7 @@ public class Otp extends AbstractServlet {
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
 		WebTopApp wta = getWebTopApp(request);
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(false);
 		
 		try {
 			UserProfileId pid = wts.getUserProfile().getId();

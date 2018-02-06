@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import java.util.Locale;
@@ -57,26 +58,99 @@ public abstract class BaseManager {
 		this.fastInit = fastInit;
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
-		this.locale = null;
-		locale = findLocale();
+		this.locale = guessLocale();
 	}
 	
-	protected Locale findLocale() {
-		WebTopSession wts = RunContext.getWebTopSession();
-		if (wts != null) return wts.getLocale();
-		UserProfile.Data ud = WT.getUserData(getTargetProfileId());
+	protected final Locale guessLocale() {
+		UserProfile.Data ud = null;
+		ud = WT.getUserData(getTargetProfileId());
+		if (ud != null) return ud.getLocale();
+		ud = WT.getUserData(RunContext.getRunProfileId());
 		if (ud != null) return ud.getLocale();
 		return WT.LOCALE_ENGLISH;
 	}
 	
+	/**
+	 * Returns the current targetProfile; it can be null.
+	 * @return 
+	 */
 	public UserProfileId getTargetProfileId() {
 		return targetProfile;
 	}
 	
-	public boolean hasSameTargetProfile(UserProfileId profileId) {
+	/**
+	 * Returns specified software name that is using this manager. Defaults to null.
+	 * @return provided software name, or null if no value is provided
+	 */
+	public String getSoftwareName() {
+		return softwareName;
+	}
+	
+	/**
+	 * Sets the current software name value.
+	 * @param softwareName 
+	 */
+	public void setSoftwareName(String softwareName) {
+		this.softwareName = softwareName;
+	}
+	
+	/**
+	 * Gets current locale.
+	 * By default locale is guessed during initialization by taking the first
+	 * non-null value from the following: (1) targetProfile locale,
+	 * (3) runningProfile locale, (3) english locale (fallback).
+	 * @return 
+	 */
+	public Locale getLocale() {
+		return locale;
+	}
+	
+	/**
+	 * Sets the current associated locale.
+	 * @param locale 
+	 */
+	public void setLocale(Locale locale) {
+		this.locale = locale;
+	}
+	
+	/**
+	 * Returns the manifest associated to the service owning this manager.
+	 * @return The service's manifest
+	 */
+	public ServiceManifest getManifest() {
+		return WT.getManifest(SERVICE_ID);
+	}
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key) {
+		return WT.lookupResource(SERVICE_ID, locale, key);
+	}
+    
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @param escapeHtml True to apply HTML escaping.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
+		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
+	}
+	
+	/**
+	 * Checks if passed profile is equal to the current one,
+	 * taking into account possible null values.
+	 * @param profileId The userProfile to check
+	 * @return 
+	 */
+	public boolean isTargetProfileEqualTo(UserProfileId profileId) {
 		if (profileId == null) return false;
-		if (targetProfile == null) return false;
-		return targetProfile.equals(profileId);
+		return profileId.equals(targetProfile);
 	}
 	
 	/**
@@ -125,67 +199,14 @@ public abstract class BaseManager {
 		if (!runPid.hasDomain(domainId)) throw new AuthException("Domain ID for the running profile [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
 	}
 	
-	/**
-	 * Returns specified software name that is using this manager. Defaults to null.
-	 * @return provided software name, or null if no value is provided
-	 */
-	public String getSoftwareName() {
-		return softwareName;
-	}
-	
-	/**
-	 * Sets the current software name value.
-	 * @param softwareName 
-	 */
-	public void setSoftwareName(String softwareName) {
-		this.softwareName = softwareName;
-	}
-	
-	public Locale getLocale() {
-		return locale;
-	}
-	
-	public void setLocale(Locale locale) {
-		this.locale = locale;
+	public final void writeLog(String action, String data) {
+		WT.writeLog(action, softwareName, data);
 	}
 	
 	public Session getMailSession() {
-		WebTopSession wts = RunContext.getWebTopSession();
+		WebTopSession wts = SessionContext.getCurrent(false);
 		Session s=(wts != null) ? wts.getMailSession() : null;
 		if (s==null) s=WT.getGlobalMailSession(getTargetProfileId());
 		return s;
-	}
-	
-	/**
-	 * Returns the manifest associated to the service owning this manager.
-	 * @return The service's manifest
-	 */
-	public ServiceManifest getManifest() {
-		return WT.getManifest(SERVICE_ID);
-	}
-	
-	/**
-	 * Returns the localized string associated to the key.
-	 * @param locale The requested locale.
-	 * @param key The resource key.
-	 * @return The translated string, or null if not found.
-	 */
-	public final String lookupResource(Locale locale, String key) {
-		return WT.lookupResource(SERVICE_ID, locale, key);
-	}
-    
-	/**
-	 * Returns the localized string associated to the key.
-	 * @param locale The requested locale.
-	 * @param key The resource key.
-	 * @param escapeHtml True to apply HTML escaping.
-	 * @return The translated string, or null if not found.
-	 */
-	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
-		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
-	}
-	
-	public final void writeLog(String action, String data) {
-		WT.writeLog(action, softwareName, data);
 	}
 }

@@ -132,7 +132,7 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	public void processManageAutosave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<String[]> items = null;
 		CoreManager core = WT.getCoreManager();
-		String webtopClientId=RunContext.getWebTopClientID();
+		String cid = getEnv().getClientTrackingID();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
@@ -141,10 +141,10 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 			if (crud.equals(Crud.READ)) {
 			} else if (crud.equals(Crud.UPDATE)) {
 				String value = ServletUtils.getStringParameter(request, "value", true);
-				core.updateMyAutosaveData(webtopClientId, SERVICE_ID, cntx, key, value);
+				core.updateMyAutosaveData(cid, SERVICE_ID, cntx, key, value);
 				new JsonResult().printTo(out);
 			} else if (crud.equals(Crud.DELETE)) {
-				core.deleteMyAutosaveData(webtopClientId, SERVICE_ID, cntx, key);
+				core.deleteMyAutosaveData(cid, SERVICE_ID, cntx, key);
 				new JsonResult().printTo(out);
 			}
 		} catch(Exception ex) {

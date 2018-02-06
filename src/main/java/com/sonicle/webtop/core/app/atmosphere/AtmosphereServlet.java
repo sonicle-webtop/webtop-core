@@ -31,23 +31,48 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.atmosphere;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.servlet.ServletContainer;
+import com.sonicle.webtop.core.app.PushEndpoint;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.atmosphere.client.TrackMessageSizeInterceptor;
+import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereInterceptor;
+import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
+import org.atmosphere.interceptor.BroadcastOnPostAtmosphereInterceptor;
+import org.atmosphere.interceptor.HeartbeatInterceptor;
+import org.atmosphere.interceptor.JavaScriptProtocol;
 
 /**
  *
  * @author malbinola
  */
-public class RestApiServlet extends ServletContainer {
-	public static final String URL = "api"; // This must reflect web.xml!
+public class AtmosphereServlet extends org.atmosphere.cpr.AtmosphereServlet {
 	
-	public RestApiServlet() {
-		super();
+	public AtmosphereServlet() {
+		this(false);
 	}
 	
-	public RestApiServlet(ResourceConfig resourceConfig) {
-		super(resourceConfig);
+	public AtmosphereServlet(boolean isFilter) {
+		super(isFilter, false);
+	}
+	
+	@Override
+	protected AtmosphereFramework newAtmosphereFramework() {
+		AtmosphereFramework framework = super.newAtmosphereFramework();
+		framework.addAtmosphereHandler("/push", new PushEndpoint(), handlerInterceptors());
+		return framework;
+	}
+	
+	private List<AtmosphereInterceptor> handlerInterceptors() {
+		List<AtmosphereInterceptor> interceptors = new ArrayList<>();
+		interceptors.add(new AtmosphereResourceLifecycleInterceptor());
+		interceptors.add(new BroadcastOnPostAtmosphereInterceptor());
+		interceptors.add(new TrackMessageSizeInterceptor());
+		interceptors.add(new HeartbeatInterceptor());
+		interceptors.add(new JavaScriptProtocol());
+		return interceptors;
 	}
 }

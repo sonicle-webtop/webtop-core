@@ -31,14 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.app.AbstractServlet;
-import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WebTopApp;
+import org.atmosphere.config.service.Disconnect;
+import org.atmosphere.config.service.ManagedService;
+import org.atmosphere.config.service.Ready;
+import org.atmosphere.config.service.Resume;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,15 +48,48 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class SessionKeepAlive extends AbstractServlet {
-	public static final String URL = "keep-alive"; // This must reflect web.xml!
-	private static final Logger logger = LoggerFactory.getLogger(SessionKeepAlive.class);
-
-	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// Access session object without creating new one. This maintains the session alive!
-		HttpSession session = request.getSession(false);
-		if(logger.isTraceEnabled()) logger.trace("Session keep-alive [{}]", session.getId());
-		response.setStatus(HttpServletResponse.SC_NO_CONTENT); // Send a 204
+//@ManagedService(path = "/wasync/push")
+public class WAsyncEndpoint {
+	private static final Logger logger = LoggerFactory.getLogger(WAsyncEndpoint.class);
+	
+	@Ready
+	public void onReady(final AtmosphereResource resource) {
+		SessionManager sessionManager = getSessionManager();
+		if (sessionManager != null) {
+			sessionManager.onPushResourceConnect(resource);
+		} else {
+			logger.error("SessionManager is null");
+		}
+	}
+	
+	@Resume
+	public void onResume(AtmosphereResourceEvent event) {
+		logger.debug("");
+		
+		/*
+		SessionManager sessionManager = getSessionManager();
+		if (sessionManager != null) {
+			sessionManager.onPushResourceDisconnect(event.getResource());
+		} else {
+			logger.error("SessionManager is null");
+		}
+		*/
+	}
+	
+	@Disconnect
+	public void onDisconnect(AtmosphereResourceEvent event) {
+		SessionManager sessionManager = getSessionManager();
+		if (sessionManager != null) {
+			sessionManager.onPushResourceDisconnect(event.getResource());
+		} else {
+			logger.error("SessionManager is null");
+		}
+	}
+	
+	private SessionManager getSessionManager() {
+		WebTopApp app = WebTopApp.getInstance();
+		if (app != null) return app.getSessionManager();
+		logger.warn("WebTopApp is null");
+		return null;
 	}
 }

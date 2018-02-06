@@ -52,7 +52,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public abstract class BaseServiceRequest extends AbstractServlet {
+public abstract class BaseRequest extends AbstractServlet {
 	
 	protected String[] splitPath(String pathInfo) throws MalformedURLException {
 		String[] tokens = StringUtils.split(pathInfo, "/", 2);

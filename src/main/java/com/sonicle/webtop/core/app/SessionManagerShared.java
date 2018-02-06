@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpSession;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereServlet;
 import org.codehaus.plexus.util.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -62,8 +61,8 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class SessionManager {
-	private static final Logger logger = WT.getLogger(SessionManager.class);
+public class SessionManagerShared {
+	private static final Logger logger = WT.getLogger(SessionManagerShared.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -72,41 +71,38 @@ public class SessionManager {
 	 * @param wta WebTopApp instance.
 	 * @return The instance.
 	 */
-	public static synchronized SessionManager initialize(WebTopApp wta) {
+	public static synchronized SessionManagerShared initialize(WebTopApp wta) {
 		if(initialized) throw new RuntimeException("Initialization already done");
-		SessionManager sesm = new SessionManager(wta);
+		SessionManagerShared sesm = new SessionManagerShared(wta);
 		initialized = true;
 		logger.info("SessionManager initialized");
 		return sesm;
 	}
 	
-	public static final String ATTRIBUTE_CONTEXT_NAME = "webtop.ContextName";
-	public static final String ATTRIBUTE_CSRF_TOKEN = "webtop.CSRF";
-	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "webtop.clientId";
-	public static final String ATTRIBUTE_CLIENT_IP = "webtop.clientIp";
-	public static final String ATTRIBUTE_CLIENT_URL = "webtop.clientUrl";
-	public static final String ATTRIBUTE_REFERER_URI = "webtop.refererUri";
-	public static final String ATTRIBUTE_CLIENT_LOCALE = "webtop.clientLocale";
-	public static final String ATTRIBUTE_CLIENT_USERAGENT = "webtop.clientUA";
-	public static final String ATTRIBUTE_WEBTOP_SESSION = "webtop.Session";
-	public static final String ATTRIBUTE_GUESSING_LOCALE = "Locale";
-	public static final String ATTRIBUTE_GUESSING_USERNAME = "UserName";
+	public static final String ATTRIBUTE_CONTEXT_NAME = "contextName";
+	public static final String ATTRIBUTE_CSRF_TOKEN = "csrf";
+	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "clientId";
+	public static final String ATTRIBUTE_CLIENT_IP = "clientIp";
+	public static final String ATTRIBUTE_CLIENT_URL = "clientUrl";
+	public static final String ATTRIBUTE_REFERER_URI = "refererUri";
+	public static final String ATTRIBUTE_CLIENT_LOCALE = "clientLocale";
+	public static final String ATTRIBUTE_CLIENT_USERAGENT = "clientUA";
+	public static final String ATTRIBUTE_WEBTOP_SESSION = "wts";
 	
 	private WebTopApp wta = null;
 	private final Object lock = new Object();
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
-	private final HashSet<String> onlineClienTrackingIds = new HashSet<>();
+	private final HashSet<String> onlineWebTopClientIds = new HashSet<>();
+	private final HashMap<String, PushConnection> pushConnections = new HashMap<>();
+	private final HashMap<String, Integer> wsPushSessions = new HashMap<>();
 	private final HashMap<UserProfileId, ProfileSids> profileSidsCache = new HashMap<>();
-	private final HashMap<String, String> uuidToSessionId = new HashMap<>();
-	private final HashMap<String, PushConnectionList> pushConnections = new HashMap<>();
-	private static class PushConnectionList extends LinkedHashMap<String, PushConnection> {}
 	
 	/**
 	 * Private constructor.
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private SessionManager(WebTopApp wta) {
+	private SessionManagerShared(WebTopApp wta) {
 		this.wta = wta;
 	}
 	
@@ -114,33 +110,38 @@ public class SessionManager {
 	 * Performs cleanup process.
 	 */
 	protected void cleanup() {
+		// Internal structures should be empty during this method call.
+		// Sessions listeners should have called session destroy!
+		if(!onlineSessions.isEmpty() || !profileSidsCache.isEmpty()) logger.warn("Internal structures should be empty... Why is this not true?");
 		onlineSessions.clear();
-		onlineClienTrackingIds.clear();
+		wsPushSessions.clear();
 		profileSidsCache.clear();
-		uuidToSessionId.clear();
-		pushConnections.clear();
 		wta = null;
 		logger.info("SessionManager destroyed");
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public void push(String sessionId, ServiceMessage message) {
 		push(sessionId, Arrays.asList(message));
 	}
 	
-	public boolean push(String sessionId, Collection<ServiceMessage> messages) {
+	public void push(String sessionId, Collection<ServiceMessage> messages) {
 		synchronized(lock) {
 			if (onlineSessions.containsKey(sessionId)) {
-				PushConnectionList pushCons = pushConnections.get(sessionId);
-				if (pushCons != null) {
-					for(PushConnection pushCon : pushCons.values()) {
-						pushCon.send(messages);
-					}
-					return true;
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) {
+					pushCon.send(messages);
 				} else {
 					logger.error("PushConnection not available [{}]", sessionId);
 				}
 			}
-			return false;
 		}
 	}
 	
@@ -156,7 +157,7 @@ public class SessionManager {
 					push(sessionId, messages);
 				}
 			} else {
-				if (enqueueIfOffline) {
+				if(enqueueIfOffline) {
 					enqueueMessages(profileId, messages);
 				}
 			}
@@ -166,18 +167,11 @@ public class SessionManager {
 	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
 		String sessionId = webtopSession.getId();
 		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] is already registered", sessionId);
-			
-			UserProfileId profileId = webtopSession.getProfileId();
-			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
-
-			onlineSessions.put(sessionId, webtopSession);
-			pushConnections.put(sessionId, new PushConnectionList());
-			if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
-			profileSidsCache.get(profileId).add(sessionId);
-			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
-			
-			logger.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
+			if (!onlineSessions.containsKey(sessionId)) {
+				internalRegisterSession(sessionId, webtopSession);
+			} else {
+				throw new WTException("Session [{0}] is already registered", sessionId);
+			}
 		}
 	}
 	
@@ -187,68 +181,20 @@ public class SessionManager {
 			synchronized(lock) {
 				try {
 					String sessionId = webtopSession.getId();
-					String clientTrackingId = webtopSession.getClientTrackingID();
+					String clientId = SessionContext.getWebTopClientID(session);
 					UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
-					
-					onlineSessions.remove(sessionId);
 					pushConnections.remove(sessionId);
-					if (profileId != null) {
-						profileSidsCache.get(profileId).remove(sessionId);
-						onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
-					}
-					
 					webtopSession.cleanup();
+
 					if (profileId != null) {
+						internalUnregisterSession(sessionId, clientId, profileId);
 						wta.getLogManager().write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientIP(session), SessionContext.getClientUserAgent(session), sessionId, null);
 					}
-					
-					logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
-					
+					logger.trace("WTS destroyed [{}]", sessionId);
 				} catch(Throwable t) {
-					logger.error("Error destroying session", t);
+					logger.error("{}", t);
 				}
 			}
-		}
-	}
-	
-	public void onPushResourceConnect(AtmosphereResource resource) {
-		HttpSession session = resource.session(false);
-		if (session != null) {
-			String sessionId = session.getId();
-			String uuid = resource.uuid();
-			
-			synchronized(lock) {
-				WebTopSession webtopSession = onlineSessions.get(sessionId);
-				String oldSessionId = uuidToSessionId.put(uuid, sessionId);
-				if (oldSessionId != null) logger.warn("uuid mapped with multiple sessions [{} -> {}, {}]", uuid, oldSessionId, sessionId);
-				PushConnection pushCon = new PushConnection(resource, listEnqueuedMessages(webtopSession.getProfileId()));
-				pushConnections.get(sessionId).put(uuid, pushCon);
-				pushCon.flush();
-			}
-			logger.trace("Push connection added [{}@{}]", uuid, sessionId);
-		}
-		///Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
-	}
-	
-	public void onPushResourceDisconnect(AtmosphereResource resource) {
-		HttpSession session = resource.session(false);
-		if (session != null) {
-			String sessionId = session.getId();
-			String uuid = resource.uuid();
-			
-			synchronized(lock) {
-				WebTopSession webtopSession = onlineSessions.get(sessionId);
-				if (webtopSession == null) {
-					logger.debug("WebTopSession is null"); // Può capitareeeeeeeeeeeeeeeeeeeeeee...ma quando?
-				}
-				uuidToSessionId.remove(uuid);
-				PushConnection pushCon = pushConnections.get(sessionId).remove(uuid);
-				if (pushCon != null) {
-					pushCon.close();
-					logger.trace("Push link closed [{}]", uuid);
-				}
-			}
-			logger.trace("Push connection removed [{}@{}]", uuid, sessionId);
 		}
 	}
 	
@@ -257,6 +203,47 @@ public class SessionManager {
 		if (session != null) {
 			ServletUtils.touchSession(session);
 			logger.trace("Push connection heartbeat [{}]", session.getId());
+		}
+	}
+	
+	public void onPushResourceConnect(AtmosphereResource resource) {
+		HttpSession session = resource.session(false);
+		if (session != null) {
+			String uuid = resource.uuid();
+			String sessionId = session.getId();
+			if (!StringUtils.equalsIgnoreCase(sessionId, uuid)) {
+				logger.warn("Push uuid is not equal to sessionId [{} <> {}]", uuid, sessionId);
+			}
+			synchronized(lock) {
+				WebTopSession webtopSession = onlineSessions.get(sessionId);
+				if ((webtopSession != null) && !pushConnections.containsKey(sessionId)) {
+					pushConnections.put(sessionId, new PushConnection(resource, listEnqueuedMessages(webtopSession.getProfileId())));
+					logger.trace("Push connection established [{}]", sessionId);
+				}
+			}
+		}
+		///Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
+	}
+	
+	public void onPushResourceDisconnect(AtmosphereResource resource) {
+		HttpSession session = resource.session(false);
+		if (session != null) {
+			String uuid = resource.uuid();
+			String sessionId = session.getId();
+			if (!StringUtils.equalsIgnoreCase(sessionId, uuid)) {
+				logger.warn("Push uuid is not equal to sessionId [{} <> {}]", uuid, sessionId);
+			}
+			synchronized(lock) {
+				WebTopSession webtopSession = onlineSessions.get(sessionId);
+				if (webtopSession == null) {
+					logger.debug("WebTopSession is null"); // Può capitareeeeeeeeeeeeeeeeeeeeeee
+				}
+				PushConnection pushCon = pushConnections.remove(sessionId);
+				if (pushCon != null) {
+					pushCon.close();
+					logger.trace("Push connection closed [{}]", sessionId);
+				}
+			}
 		}
 	}
 	
@@ -319,13 +306,183 @@ public class SessionManager {
 		}
 	}
 	
+	private void internalRegisterSession(String sessionId, WebTopSession webtopSession) throws WTException {
+		String clientId = webtopSession.getRemoteIP();
+		UserProfileId profileId = webtopSession.getProfileId();
+		if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
+		onlineSessions.put(sessionId, webtopSession);
+		onlineWebTopClientIds.add(profileId.toString() + "|" + clientId);
+		if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
+		profileSidsCache.get(profileId).add(sessionId);
+		logger.trace("Session registered [{}, {}]", sessionId, profileId);
+	}
+	
+	private void internalUnregisterSession(String sessionId, String clientId, UserProfileId profileId) throws WTException {
+		if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
+		if (profileSidsCache.get(profileId) != null) {
+			profileSidsCache.get(profileId).remove(sessionId);
+		}
+		onlineWebTopClientIds.remove(profileId.toString() + "|" + clientId);
+		onlineSessions.remove(sessionId);
+		logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	
+	/*
+	void wsSessionOpened(String sessionId, javax.websocket.Session ws) throws WTException {
+		registerWsPushSession(sessionId, ws);
+	}
+	
+	void wsSessionClosed(String sessionId) throws WTException {
+		try {
+			unregisterWsPushSession(sessionId);
+		} catch (Exception ex) {
+			logger.error("Error unregistering push websocket session [{}]", sessionId, ex);
+		}
+	}
+	
+	private void stopShiroSession(Session session) throws Exception {
+		logger.trace("Shiro session stop [{}]", session.getId());
+		WebTopSession wts = WTSessionManager.getWebTopSession(session);
+		if (wts != null) {
+			String sid = session.getId().toString();
+			UserProfileId pid = wts.getProfileId(); // Extract userProfile info before cleaning session!
+			wts.cleanup();
+			if(pid != null) {
+				unregisterWebTopSession(session, pid);
+				wta.getLogManager().write(pid, CoreManifest.ID, "LOGOUT", null, WTSessionManager.getClientIP(session), WTSessionManager.getClientUserAgent(session), sid, null);
+			}
+			logger.trace("WTS destroyed [{}]", sid);
+		}
+	}
+	
+	void registerWebTopSession(Session session, WebTopSession wts) throws WTException {
+		synchronized(onlineSessions) {
+			String sid = session.getId().toString();
+			if(onlineSessions.containsKey(sid)) throw new WTException("Session [{0}] is already registered", sid);
+			UserProfileId pid = wts.getUserProfile().getId();
+			if(pid == null) throw new WTException("Session [{0}] is not bound to a user", sid);
+			
+			onlineSessions.put(sid, wts);
+			String wtcid = WTSessionManager.getWebTopClientID(session);
+			onlineWebTopClientIds.add(pid.toString() + "|" + wtcid);
+			if(profileSidsCache.get(pid) == null) profileSidsCache.put(pid, new ProfileSids());
+			profileSidsCache.get(pid).add(sid);
+			logger.trace("Session registered [{}, {}]", sid, pid);
+		}
+	}
+	
+	private void unregisterWebTopSession(Session session, UserProfileId profileId) throws WTException {
+		synchronized(onlineSessions) {
+			String sid = session.getId().toString();
+			if(onlineSessions.containsKey(sid)) {
+				if(profileId != null) {
+					if(profileSidsCache.get(profileId) != null) {
+						profileSidsCache.get(profileId).remove(sid);
+						if(profileSidsCache.get(profileId).isEmpty()) profileSidsCache.remove(profileId);
+					}
+					String wtcid = WTSessionManager.getWebTopClientID(session);
+					onlineWebTopClientIds.remove(profileId.toString() + "|" + wtcid);
+					onlineSessions.remove(sid);
+				} else {
+					logger.warn("Session [{}] is not bound to a user", sid);
+				}
+			}
+		}
+	}
+	
+	private void registerWsPushSession(String sessionId, javax.websocket.Session ws)  throws WTException {
+		synchronized(onlineSessions) {
+			if(!onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] not found", sessionId);
+			
+			int count = 0;
+			if(wsPushSessions.containsKey(sessionId)) count = wsPushSessions.get(sessionId);
+			wsPushSessions.put(sessionId, count+1);
+			if(count == 0) {
+				WebTopSession wts = onlineSessions.get(sessionId);
+				pushData(sessionId, wts.getEnqueuedMessages());
+			}
+			logger.trace("Push channel associated [{}, count:{}]", sessionId, count+1);
+		}
+	}
+	
+	private int countWsPushSessions(String sessionId) {
+		synchronized(onlineSessions) {
+			return wsPushSessions.containsKey(sessionId) ? wsPushSessions.get(sessionId) : 0;
+		}
+	}
+	
+	private void unregisterWsPushSession(String sessionId) throws WTException {
+		synchronized(onlineSessions) {
+			if(wsPushSessions.containsKey(sessionId)) {
+				int count = wsPushSessions.get(sessionId);
+				if(count == 1) {
+					wsPushSessions.remove(sessionId);
+				} else {
+					wsPushSessions.put(sessionId, count-1);
+				}
+				logger.trace("Push channel disconnected [{}, count:{}]", sessionId, count-1);
+			}
+		}
+	}
+	
+	public boolean pushData(String sessionId, Object data) {
+		try {
+			if(WsPushEndpoint.hasSessions(sessionId)) {
+				WsPushEndpoint.send(sessionId, JsonResult.gson.toJson(data));
+				return true;
+			}
+		} catch(IOException ex) {
+			logger.error("Unable to send through push channel", ex);
+		}
+		return false;
+	}
+	*/
+	
 	public WebTopSession getWebTopSession(String sessionId) {
-		return onlineSessions.get(sessionId);
+		synchronized(onlineSessions) {
+			return onlineSessions.get(sessionId);
+		}
 	}
 	
 	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
 		List<WebTopSession> list = new ArrayList<>();
-		synchronized(lock) {
+		synchronized(onlineSessions) {
 			if(profileSidsCache.get(profileId) != null) {
 				for(String sid : profileSidsCache.get(profileId)) {
 					list.add(onlineSessions.get(sid));
@@ -340,7 +497,7 @@ public class SessionManager {
 	}
 	
 	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
-		return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
+		return onlineWebTopClientIds.contains(profileId.toString() + "|" + webtopClientId);
 	}
 	
 	private static class ProfileSids extends HashSet<String> {

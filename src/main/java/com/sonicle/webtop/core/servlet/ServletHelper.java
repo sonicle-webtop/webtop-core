@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WsPushEndpoint;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
@@ -100,7 +99,7 @@ public class ServletHelper {
 	
 	public static Locale homogenizeLocale(HttpServletRequest request) {
 		Locale locale = request.getLocale();
-		if(locale.getLanguage().equals("it")) {
+		if (locale.getLanguage().equals("it")) {
 			return new Locale("it", "IT");
 		} else {
 			return new Locale("en", "EN");
@@ -121,16 +120,11 @@ public class ServletHelper {
 		url = StringUtils.substringBefore(url, Logout.URL);
 		url = StringUtils.substringBefore(url, Otp.URL);
 		url = StringUtils.substringBefore(url, Start.URL);
-		url = StringUtils.substringBefore(url, SessionKeepAlive.URL);
 		url = StringUtils.substringBefore(url, ResourceRequest.URL);
-		url = StringUtils.substringBefore(url, ServiceRequest.URL);
-		url = StringUtils.substringBefore(url, PublicServiceRequest.URL);
-		url = StringUtils.substringBefore(url, RestApiServlet.URL);
+		url = StringUtils.substringBefore(url, PrivateRequest.URL);
+		url = StringUtils.substringBefore(url, PublicRequest.URL);
+		url = StringUtils.substringBefore(url, RestApi.URL);
 		return url;
-	}
-	
-	public static String toWsUrl(String baseUrl) {
-		return PathUtils.concatPaths(StringUtils.replaceOnce(baseUrl, "http", "ws"), WsPushEndpoint.URL);
 	}
 	
 	public static boolean isPublic(HttpServletRequest request) {
