@@ -52,8 +52,6 @@ import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpSession;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereServlet;
-import org.codehaus.plexus.util.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;

@@ -74,6 +74,7 @@ public class WTContainerSessionManager extends ServletContainerSessionManager {
 		session.setAttribute(SessionManager.ATTRIBUTE_CSRF_TOKEN, IdentifierUtils.getCRSFToken());
 		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, clientId);
 		session.setAttribute(SessionManager.ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
+		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
 		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
 		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT, ServletUtils.getUserAgent(request));
 		session.setAttribute(SessionManager.ATTRIBUTE_GUESSING_LOCALE, request.getLocale());
