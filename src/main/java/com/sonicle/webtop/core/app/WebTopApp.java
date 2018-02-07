@@ -264,6 +264,9 @@ public final class WebTopApp {
 		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 		
 		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", String.valueOf(false));
+		System.setProperty("mail.mime.decodetext.strict", String.valueOf(false));
+		System.setProperty("mail.mime.decodefilename", String.valueOf(true));
+		
 		ICalendarUtils.setUnfoldingRelaxed(true);
 		ICalendarUtils.setParsingRelaxed(true);
 		ICalendarUtils.setValidationRelaxed(true);
