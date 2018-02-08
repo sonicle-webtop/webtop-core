@@ -113,6 +113,15 @@ public abstract class BaseManager {
 		this.locale = locale;
 	}
 	
+	public Locale getProfileOrTargetLocale(UserProfileId profile) {
+		Locale loc = getLocale();
+		if (profile != null) {
+			UserProfile.Data ud = WT.getUserData(profile);
+			if (ud != null) loc = ud.getLocale();
+		}
+		return loc;
+	}
+	
 	/**
 	 * Returns the manifest associated to the service owning this manager.
 	 * @return The service's manifest
