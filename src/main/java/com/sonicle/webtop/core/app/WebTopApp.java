@@ -1358,7 +1358,7 @@ public final class WebTopApp {
 	 * @throws javax.servlet.ServletException
 	 */
 	public static WebTopApp get(HttpServletRequest request) throws ServletException {
-		return get(request.getSession().getServletContext());
+		return get(request.getServletContext());
 	}
 	
 	/**

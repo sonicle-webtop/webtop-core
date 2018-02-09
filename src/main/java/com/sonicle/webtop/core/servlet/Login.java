@@ -74,11 +74,44 @@ public class Login extends AbstractServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (!ServletUtils.isForwarded(request) && StringUtils.endsWithIgnoreCase(request.getRequestURL().toString(), "/"+URL)) {
+		boolean redirect = false;
+		
+		if (logger.isTraceEnabled()) {
+			logger.trace("X-REQUEST-URI: {}", request.getHeader("X-REQUEST-URI"));
+			logger.trace("requestUrl: {}", request.getRequestURL().toString());
+			logger.trace("pathInfo: {}", request.getPathInfo());
+			logger.trace("forwardServletPath: {}", getRequestForwardServletPath(request));
+		}
+		
+		if (ServletUtils.isForwarded(request)) {
+			String forwardServletPath = getRequestForwardServletPath(request);
+			if (StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Login.URL)
+					|| StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Logout.URL)) {
+				redirect = true;
+			}
+		} else {
+			String requestUrl = request.getRequestURL().toString();
+			if (StringUtils.endsWithIgnoreCase(requestUrl, "/"+URL)) {
+				redirect = true;
+			}
+		}
+		
+		if (redirect) {
 			WebUtils.issueRedirect(request, response, "/");
 		} else {
 			super.doGet(request, response);
 		}
+	}
+	
+	private String getRequestForwardServletPath(HttpServletRequest request) {
+		return (String)request.getAttribute(javax.servlet.RequestDispatcher.FORWARD_SERVLET_PATH);
+	}
+	
+	private String getBaseUrl(HttpServletRequest request) {
+		StringBuffer url = request.getRequestURL();
+		String uri = request.getRequestURI();
+		String ctx = request.getContextPath();
+		return url.substring(0, url.length() - uri.length() + ctx.length()) + "/";
 	}
 	
 	@Override

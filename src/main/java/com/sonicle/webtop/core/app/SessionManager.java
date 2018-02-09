@@ -237,7 +237,7 @@ public class SessionManager {
 			synchronized(lock) {
 				WebTopSession webtopSession = onlineSessions.get(sessionId);
 				if (webtopSession == null) {
-					logger.debug("WebTopSession is null"); // Può capitareeeeeeeeeeeeeeeeeeeeeee...ma quando?
+					logger.debug("WebTopSession is null [{}@{}]", uuid, sessionId);
 				}
 				uuidToSessionId.remove(uuid);
 				PushConnection pushCon = pushConnections.get(sessionId).remove(uuid);
