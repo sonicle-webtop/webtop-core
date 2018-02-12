@@ -57,6 +57,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.servlet.Otp;
+import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
 import java.util.Arrays;
@@ -71,6 +72,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -88,9 +90,11 @@ public class WebTopSession {
 	private static final Logger logger = WT.getLogger(WebTopSession.class);
 	public static final String PROP_REQUEST_DUMP = "REQUESTDUMP";
 	
-	private Session session;
-	private Boolean debugMode;
 	private final WebTopApp wta;
+	private HttpSession session;
+	private final String csrfToken;
+	private Boolean debugMode;
+	
 	private final Object lock0 = new Object();
 	private ReadableUserAgent readableUserAgent = null;
 	private final PropertyBag propsBag = new PropertyBag();
@@ -107,13 +111,14 @@ public class WebTopSession {
 	private final Object lock1 = new Object();
 	private javax.mail.Session mailSession = null;
 	
-	public WebTopSession(Session session) {
+	public WebTopSession(HttpSession session) {
 		this(WebTopApp.getInstance(), session);
 	}
 	
-	WebTopSession(WebTopApp wta, Session session) {
+	WebTopSession(WebTopApp wta, HttpSession session) {
 		this.wta = wta;
 		this.session = session;
+		this.csrfToken = IdentifierUtils.getCRSFToken();
 	}
 	
 	synchronized void cleanup() throws Exception {
@@ -155,22 +160,13 @@ public class WebTopSession {
 		return getClientPlainUserAgent();
 	}
 	
-	/**
-	 * @deprecated use {@link #getClientTrackingID()} instead.
-	 * @return 
-	 */
-	@Deprecated
-	public String getWebTopClientID() {
-		return getClientTrackingID();
-	}
-	
 	
 	
 	/**
 	 * Returns the associated user session.
 	 * @return Session object
 	 */
-	public Session getSession() {
+	public HttpSession getSession() {
 		return session;
 	}
 	
@@ -179,7 +175,7 @@ public class WebTopSession {
 	 * @return Generated CSRF token
 	 */
 	public String getCSRFToken() {
-		return SessionContext.getCSRFToken(session);
+		return csrfToken;
 	}
 	
 	/**
@@ -195,7 +191,7 @@ public class WebTopSession {
 	 * @return The network address
 	 */
 	public String getClientRemoteIP() {
-		return SessionContext.getClientIP(session);
+		return SessionContext.getClientRemoteIP(session);
 	}
 	
 	/**
@@ -211,7 +207,7 @@ public class WebTopSession {
 	 * @return user-agent info
 	 */
 	public String getClientPlainUserAgent() {
-		return SessionContext.getClientUserAgent(session);
+		return SessionContext.getClientPlainUserAgent(session);
 	}
 	
 	/**
@@ -515,7 +511,7 @@ public class WebTopSession {
 		
 		initLevel = 2;
 
-		String cid=getWebTopClientID();
+		String cid=getClientTrackingID();
 		boolean mine=core.hasMyAutosaveData(cid);
 		List<OAutosave> odata=core.listOfflineOthersAutosaveData(cid);
 		boolean others=(odata==null)?false:odata.size()>0;

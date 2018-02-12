@@ -92,12 +92,12 @@ public class PushEndpoint extends BaseAsyncEndpoint {
 
 	@Override
 	protected void onResume(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException {
-		logger.debug("onResume");
+		//logger.trace("onResume");
 	}
 
 	@Override
 	protected void onTimeout(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException {
-		logger.debug("onTimeout");
+		//logger.trace("onTimeout");
 	}
 	
 	@Override
@@ -112,7 +112,7 @@ public class PushEndpoint extends BaseAsyncEndpoint {
 
 	@Override
 	protected void onMessage(AtmosphereResourceEvent event, AtmosphereResponse response, String message) throws IOException {
-		logger.debug("onMessage");
+		logger.trace("onMessage: {}", message);
 	}
 	
 	private SessionManager getSessionManager() {

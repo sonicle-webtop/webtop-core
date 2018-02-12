@@ -38,10 +38,12 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.servlet.Login;
 import com.sonicle.webtop.core.servlet.PrivateRequest;
 import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -54,7 +56,6 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
-import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -68,13 +69,21 @@ import org.slf4j.LoggerFactory;
  */
 public class WTFormAuthFilter extends FormAuthenticationFilter {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(WTFormAuthFilter.class);
+	public static final String COOKIE_WEBTOP_CLIENTID = "CID";
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
-		String location = ServletUtils.getStringParameter(request, "location", null);
-		if (location != null) {
-			Session session = SessionContext.getSession();
-			if(session != null) session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, ServletHelper.sanitizeBaseUrl(location));
+		WebTopSession webtopSession = SessionContext.getCurrent();
+		if (webtopSession != null) {
+			String clientId = ServletUtils.getCookie((HttpServletRequest)request, COOKIE_WEBTOP_CLIENTID);
+			if (StringUtils.isBlank(clientId)) {
+				ServletUtils.setCookie((HttpServletResponse)response, COOKIE_WEBTOP_CLIENTID, IdentifierUtils.getUUIDTimeBased(), 60*60*24*365*10);
+			}
+			
+			String location = ServletUtils.getStringParameter(request, "location", null);
+			if (location != null) {
+				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, ServletHelper.sanitizeBaseUrl(location));
+			}
 		}
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");
 		return super.onLoginSuccess(token, subject, request, response);

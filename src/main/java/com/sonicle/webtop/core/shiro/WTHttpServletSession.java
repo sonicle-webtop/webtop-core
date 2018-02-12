@@ -33,46 +33,26 @@
  */
 package com.sonicle.webtop.core.shiro;
 
+import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.WebTopApp;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sonicle.webtop.core.servlet.ServletHelper;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.shiro.web.session.HttpServletSession;
 
 /**
  *
  * @author malbinola
  */
-public class WTContainerSessionListener implements HttpSessionListener {
-	private static final Logger logger = LoggerFactory.getLogger(WTContainerSessionListener.class);
+public class WTHttpServletSession extends HttpServletSession {
 	
-	@Override
-	public void sessionCreated(HttpSessionEvent hse) {
-		if (logger.isTraceEnabled()) logger.trace("sessionCreated [{}]", hse.getSession().getId());
-		SessionManager sessionManager = getSessionManager();
-		if (sessionManager != null) {
-			sessionManager.onContainerSessionCreated(hse.getSession());
-		} else {
-			logger.warn("SessionManager is null");
-		}
-	}
-
-	@Override
-	public void sessionDestroyed(HttpSessionEvent hse) {
-		if (logger.isTraceEnabled()) logger.trace("sessionDestroyed [{}]", hse.getSession().getId());
-		SessionManager sessionManager = getSessionManager();
-		if (sessionManager != null) {
-			sessionManager.onContainerSessionDestroyed(hse.getSession());
-		} else {
-			logger.warn("SessionManager is null");
-		}
-	}
-	
-	private SessionManager getSessionManager() {
-		WebTopApp app = WebTopApp.getInstance();
-		if (app != null) return app.getSessionManager();
-		logger.warn("WebTopApp is null");
-		return null;
+	public WTHttpServletSession(HttpSession httpSession, HttpServletRequest request, String host) {
+		super(httpSession, host);
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_REQUEST_DUMPED, "true");
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT, ServletUtils.getUserAgent(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_GUESSING_LOCALE, request.getLocale());
 	}
 }

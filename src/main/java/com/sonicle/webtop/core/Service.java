@@ -1243,7 +1243,7 @@ public class Service extends BaseService {
 		try {
 			con=getConnection();
 			boolean mine=ServletUtils.getBooleanParameter(request, "mine", true);
-			String cid = getWts().getWebTopClientID();
+			String cid = getWts().getClientTrackingID();
 			
 			List<OAutosave> items = (mine) ? coreMgr.listMyAutosaveData(cid) : coreMgr.listOfflineOthersAutosaveData(cid);
 			for(OAutosave item: items) {
@@ -1273,7 +1273,7 @@ public class Service extends BaseService {
 		try {
 			con=getConnection();
 			boolean allOthers=ServletUtils.getBooleanParameter(request, "allOthers", false);
-			String cid = getWts().getWebTopClientID();
+			String cid = getWts().getClientTrackingID();
 			
 			if (allOthers) {
 				coreMgr.deleteOfflineOthersAutosaveData(cid);

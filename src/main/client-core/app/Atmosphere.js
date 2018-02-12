@@ -102,6 +102,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			connectTimeout: 10*1000,
 			trackMessageLength : true,
 			reconnectInterval: 10*1000,
+			maxReconnectOnClose: 99, // (6 reconn/min * 10min session TTL) = 60 rounded to...
 			onOpen: function(resp) {
 				//console.log('onOpen');
 				var trnsp = resp.transport;

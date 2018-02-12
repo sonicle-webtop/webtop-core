@@ -49,43 +49,27 @@ public class SessionContext {
 	}
 	
 	public static WebTopSession getCurrent(boolean createIfNotAvail) {
-		Session session = getSession(RunContext.getSubject(), createIfNotAvail);
+		Session session = getShiroSession(RunContext.getSubject(), createIfNotAvail);
 		return getWebTopSession(session);
 	}
 	
-	public static Session getSession() {
-		return getSession(false);
+	public static Session getShiroSession() {
+		return getShiroSession(false);
 	}
 	
-	public static Session getSession(boolean createIfNotAvail) {
-		return getSession(RunContext.getSubject(), createIfNotAvail);
+	public static Session getShiroSession(boolean createIfNotAvail) {
+		return getShiroSession(RunContext.getSubject(), createIfNotAvail);
 	}
 	
-	public static Session getSession(Subject subject, boolean createIfNotAvail) {
+	public static Session getShiroSession(Subject subject, boolean createIfNotAvail) {
 		return (subject == null) ? null : (Session)subject.getSession(createIfNotAvail);
-	}
-	
-	public static String getCSRFToken(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CSRF_TOKEN);
-	}
-	
-	public static String getCSRFToken(Session session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CSRF_TOKEN);
 	}
 	
 	public static String getWebTopClientID(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
 	}
 	
-	public static String getWebTopClientID(Session session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
-	}
-	
-	public static String getClientIP(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_IP);
-	}
-	
-	public static String getClientIP(Session session) {
+	public static String getClientRemoteIP(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_IP);
 	}
 	
@@ -93,15 +77,7 @@ public class SessionContext {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_URL);
 	}
 	
-	public static String getClientUrl(Session session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_URL);
-	}
-	
 	public static String getRefererUri(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_REFERER_URI);
-	}
-	
-	public static String getRefererUri(Session session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_REFERER_URI);
 	}
 	
@@ -109,15 +85,7 @@ public class SessionContext {
 		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
 	}
 	
-	public static Locale getClientLocale(Session session) {
-		return (session == null) ? null : (Locale)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE);
-	}
-	
-	public static String getClientUserAgent(HttpSession session) {
-		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT);
-	}
-	
-	public static String getClientUserAgent(Session session) {
+	public static String getClientPlainUserAgent(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT);
 	}
 	

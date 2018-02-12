@@ -51,7 +51,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpSession;
+import org.apache.shiro.subject.Subject;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.FrameworkConfig;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -78,6 +80,7 @@ public class SessionManager {
 		return sesm;
 	}
 	
+	public static final String ATTRIBUTE_REQUEST_DUMPED = "webtop.REQUEST_DUMPED";
 	public static final String ATTRIBUTE_CONTEXT_NAME = "webtop.ContextName";
 	public static final String ATTRIBUTE_CSRF_TOKEN = "webtop.CSRF";
 	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "webtop.clientId";
@@ -179,6 +182,10 @@ public class SessionManager {
 		}
 	}
 	
+	public void onContainerSessionCreated(HttpSession session) {
+		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION, new WebTopSession(wta, session));
+	}
+	
 	public void onContainerSessionDestroyed(HttpSession session) {
 		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
 		if (webtopSession != null) {
@@ -197,7 +204,7 @@ public class SessionManager {
 					
 					webtopSession.cleanup();
 					if (profileId != null) {
-						wta.getLogManager().write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientIP(session), SessionContext.getClientUserAgent(session), sessionId, null);
+						wta.getLogManager().write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
 					}
 					
 					logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
@@ -222,8 +229,8 @@ public class SessionManager {
 				PushConnection pushCon = new PushConnection(resource, listEnqueuedMessages(webtopSession.getProfileId()));
 				pushConnections.get(sessionId).put(uuid, pushCon);
 				pushCon.flush();
+				logger.trace("Push connection added [{}@{}]", uuid, sessionId);
 			}
-			logger.trace("Push connection added [{}@{}]", uuid, sessionId);
 		}
 		///Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
 	}
@@ -245,17 +252,20 @@ public class SessionManager {
 					pushCon.close();
 					logger.trace("Push link closed [{}]", uuid);
 				}
+				logger.trace("Push connection removed [{}@{}]", uuid, sessionId);
 			}
-			logger.trace("Push connection removed [{}@{}]", uuid, sessionId);
 		}
 	}
 	
 	public void onPushResourceHeartbeat(AtmosphereResource resource) {
-		HttpSession session = resource.session(false);
-		if (session != null) {
-			ServletUtils.touchSession(session);
-			logger.trace("Push connection heartbeat [{}]", session.getId());
-		}
+		Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
+		if ((subject != null) && subject.isAuthenticated()) {
+			HttpSession session = resource.session(false);
+			if (session != null) {
+				ServletUtils.touchSession(session);
+				logger.trace("Push connection heartbeat [{}]", session.getId());
+			}
+		} 	
 	}
 	
 	private ArrayList<ServiceMessage> listEnqueuedMessages(UserProfileId profileId) {

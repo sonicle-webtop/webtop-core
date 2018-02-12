@@ -38,6 +38,7 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
@@ -80,6 +81,7 @@ public class Login extends AbstractServlet {
 			logger.trace("X-REQUEST-URI: {}", request.getHeader("X-REQUEST-URI"));
 			logger.trace("requestUrl: {}", request.getRequestURL().toString());
 			logger.trace("pathInfo: {}", request.getPathInfo());
+			logger.trace("baseUrl: {}", getBaseUrl(request));
 			logger.trace("forwardServletPath: {}", getRequestForwardServletPath(request));
 		}
 		
@@ -87,6 +89,10 @@ public class Login extends AbstractServlet {
 			String forwardServletPath = getRequestForwardServletPath(request);
 			if (StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Login.URL)
 					|| StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Logout.URL)) {
+				redirect = true;
+			}
+			if (StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+PushEndpoint.URL)) {
+				WebUtils.getAndClearSavedRequest(request);
 				redirect = true;
 			}
 		} else {

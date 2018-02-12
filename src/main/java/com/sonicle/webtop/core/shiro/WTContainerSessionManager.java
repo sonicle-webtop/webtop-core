@@ -33,54 +33,91 @@
  */
 package com.sonicle.webtop.core.shiro;
 
-import com.sonicle.commons.web.ContextUtils;
-import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.util.IdentifierUtils;
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
+import javax.servlet.http.HttpSession;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.session.Session;
+import org.apache.shiro.session.SessionException;
 import org.apache.shiro.session.mgt.SessionContext;
+import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 import org.apache.shiro.web.util.WebUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
 public class WTContainerSessionManager extends ServletContainerSessionManager {
-	private static final Logger logger = LoggerFactory.getLogger(WTContainerSessionManager.class);
-	
-	public static final String COOKIE_WEBTOP_CLIENTID = "CID";
-
-	@Override
-	protected Session createSession(SessionContext sessionContext) throws AuthorizationException {
-		final HttpServletRequest request = WebUtils.getHttpRequest(sessionContext);
 		
-		String clientId = ServletUtils.getCookie(request, COOKIE_WEBTOP_CLIENTID);
-		if (StringUtils.isBlank(clientId)) {
-			clientId = IdentifierUtils.getUUIDTimeBased();
-			ServletUtils.setCookie(WebUtils.getHttpResponse(sessionContext), COOKIE_WEBTOP_CLIENTID, clientId, 60*60*24*365*10);
+	@Override
+	public Session getSession(SessionKey key) throws SessionException {
+		// This override roughly refers to upstream implementation except the
+		// createSession call. We need to access to the original servlet request
+		// that originating the session. Unfortunately we do not have any other
+		// options except this way.
+		
+		if (!WebUtils.isHttp(key)) {
+			String msg = "SessionKey must be an HTTP compatible implementation.";
+			throw new IllegalArgumentException(msg);
 		}
 		
-		Session session = super.createSession(sessionContext);
+		HttpServletRequest request = WebUtils.getHttpRequest(key);
 		
-		session.setAttribute(SessionManager.ATTRIBUTE_CONTEXT_NAME, ContextUtils.getWebappName(request.getServletContext()));
-		session.setAttribute(SessionManager.ATTRIBUTE_CSRF_TOKEN, IdentifierUtils.getCRSFToken());
-		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, clientId);
-		session.setAttribute(SessionManager.ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
-		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
-		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
-		session.setAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT, ServletUtils.getUserAgent(request));
-		session.setAttribute(SessionManager.ATTRIBUTE_GUESSING_LOCALE, request.getLocale());
+		Session session = null;
 		
-		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION, new WebTopSession(session));
+		HttpSession httpSession = request.getSession(false);
+		if (httpSession != null) {
+			session = createSession(httpSession, request);
+		}
 		
 		return session;
+	}
+	
+	@Override
+	protected Session createSession(SessionContext sessionContext) throws AuthorizationException {
+		// This override roughly refers to upstream implementation except the
+		// createSession call. We need to access to the original servlet request
+		// that originating the session. Unfortunately we do not have any other
+		// options except this way.
+		
+		if (!WebUtils.isHttp(sessionContext)) {
+			String msg = "SessionContext must be an HTTP compatible implementation.";
+			throw new IllegalArgumentException(msg);
+		}
+		
+		HttpServletRequest request = WebUtils.getHttpRequest(sessionContext);
+		
+		HttpSession httpSession = request.getSession();
+		
+		String host = getHost(sessionContext);
+		
+		return createSession(httpSession, request, host);
+	}
+
+	@Override
+	protected Session createSession(HttpSession httpSession, String host) {
+		// Simply make sure that this method is no longer used!
+		
+		throw new IllegalArgumentException("No more supported");
+	}
+	
+	protected Session createSession(HttpSession httpSession, HttpServletRequest request) {
+		return createSession(httpSession, request, request.getRemoteHost());
+	}
+	
+	protected Session createSession(HttpSession httpSession, HttpServletRequest request, String host) {
+		return new WTHttpServletSession(httpSession, request, host);
+	}
+	
+	private String getHost(SessionContext context) {
+		String host = context.getHost();
+		if (host == null) {
+			ServletRequest request = WebUtils.getRequest(context);
+			if (request != null) {
+				host = request.getRemoteHost();
+			}
+		}
+		return host;
 	}
 }
