@@ -88,6 +88,7 @@ public class PushConnection {
 		
 		if (!initialMessages.isEmpty()) {
 			resource.write(JsonResult.gson.toJson(initialMessages));
+			initialMessages.clear();
 		}
 		if (!messages.isEmpty()) {
 			resource.write(JsonResult.gson.toJson(messages));

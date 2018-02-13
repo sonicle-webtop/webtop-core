@@ -210,13 +210,17 @@ public class ServiceManager {
 		boolean maintenanceDisabled = isMaintenanceDisabled();
 		boolean requireAdmin = false;
 		
+		if (maintenanceDisabled) {
+			logger.warn("Special key [{}] is active. Maintenance will be forcedly disabled!", CoreSettings.MAINTENANCE_ENABLED);
+		}
+		
 		// Always insert the maintenance flag. If useless 
 		// (requireAdmin=false) it will be removed at the end of the
 		// initialization process. In case of unexpected errors, we are
-		// sure that clients cannot connect before admin intervention.
+		// sure that users cannot connect before admin intervention.
 		boolean oldMaintenance = isInMaintenance(CoreManifest.ID);
 		if (!oldMaintenance) setMaintenance(CoreManifest.ID, true);
-
+		
 		// Defines a proper upgrade-tag
 		String upgradeTag = getUpgradeTag();
 		logger.info("Database upgrades will be appended to {}", upgradeTag);
@@ -270,25 +274,22 @@ public class ServiceManager {
 			requireAdmin = requireAdmin | postUpgradeServiceDb(desc, upgradeTag, dbAutoUpgrade);
 		}
 		
+		boolean newMaintenance = true;
 		if (requireAdmin) {
-			logger.warn("SysAdmin intervention is needed!");
+			logger.info("SysAdmin intervention is needed!");
 		} else {
 			// Admin support is not needed. Restore the maintenance value 
 			// read before startup. This prevents from overriding changes made 
 			// by a previous application startup
-			if (!oldMaintenance) {
-				logger.debug("Maintenance mode disabled");
-				setMaintenance(CoreManifest.ID, false);
-			} else {
-				logger.debug("Maintenance mode keep enabled");
+			newMaintenance = oldMaintenance;
+			if (maintenanceDisabled) {
+				// Forcedly turn-off maintenance
+				newMaintenance = false;
 			}
 		}
 		
-		// Forcedly turn-off maintenance
-		if (maintenanceDisabled) {
-			logger.debug("Maintenance forcedly disabled (independently from startup state)");
-			wta.getSettingsManager().setServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE, false);
-		}
+		if (!newMaintenance) setMaintenance(CoreManifest.ID, false);
+		logger.info("Maintenance mode: {}", newMaintenance);
 		
 		// Instantiate job services
 		int okJobs = 0, failJobs = 0;
