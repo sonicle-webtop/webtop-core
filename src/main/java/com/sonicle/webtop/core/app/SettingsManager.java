@@ -74,10 +74,10 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @return The instance.
 	 */
 	public static synchronized SettingsManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		SettingsManager setm = new SettingsManager(wta);
 		initialized = true;
-		logger.info("SettingsManager initialized");
+		logger.info("Initialized");
 		return setm;
 	}
 	
@@ -95,9 +95,9 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	/**
 	 * Performs cleanup process.
 	 */
-	protected void cleanup() {
+	void cleanup() {
 		wta = null;
-		logger.info("SettingsManager destroyed");
+		logger.info("Cleaned up");
 	}
 	
 	/**

@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 import org.slf4j.Logger;
@@ -49,8 +51,9 @@ public class WTContainerSessionListener implements HttpSessionListener {
 	
 	@Override
 	public void sessionCreated(HttpSessionEvent hse) {
-		if (logger.isTraceEnabled()) logger.trace("sessionCreated [{}]", hse.getSession().getId());
-		SessionManager sessionManager = getSessionManager();
+		HttpSession session = hse.getSession();
+		if (logger.isTraceEnabled()) logger.trace("sessionCreated [{}]", session.getId());
+		SessionManager sessionManager = getSessionManager(session.getServletContext());
 		if (sessionManager != null) {
 			sessionManager.onContainerSessionCreated(hse.getSession());
 		} else {
@@ -60,8 +63,9 @@ public class WTContainerSessionListener implements HttpSessionListener {
 
 	@Override
 	public void sessionDestroyed(HttpSessionEvent hse) {
-		if (logger.isTraceEnabled()) logger.trace("sessionDestroyed [{}]", hse.getSession().getId());
-		SessionManager sessionManager = getSessionManager();
+		HttpSession session = hse.getSession();
+		if (logger.isTraceEnabled()) logger.trace("sessionDestroyed [{}]", session.getId());
+		SessionManager sessionManager = getSessionManager(session.getServletContext());
 		if (sessionManager != null) {
 			sessionManager.onContainerSessionDestroyed(hse.getSession());
 		} else {
@@ -69,10 +73,19 @@ public class WTContainerSessionListener implements HttpSessionListener {
 		}
 	}
 	
-	private SessionManager getSessionManager() {
-		WebTopApp app = WebTopApp.getInstance();
+	private SessionManager getSessionManager(ServletContext servletContext) {
+		WebTopApp app = getWebTopApp(servletContext);
 		if (app != null) return app.getSessionManager();
 		logger.warn("WebTopApp is null");
 		return null;
+	}
+	
+	private WebTopApp getWebTopApp(ServletContext servletContext) {
+		try {
+			return WebTopApp.get(servletContext);
+		} catch(IllegalStateException ex) {
+			logger.error("WebTopApp not available", ex);
+			return null;
+		}
 	}
 }

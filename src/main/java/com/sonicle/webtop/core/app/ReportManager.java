@@ -65,10 +65,10 @@ public class ReportManager {
 	 * @return The instance.
 	 */
 	public static synchronized ReportManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		ReportManager rptm = new ReportManager(wta);
 		initialized = true;
-		logger.info("ReportManager initialized.");
+		logger.info("Initialized");
 		return rptm;
 	}
 	
@@ -86,8 +86,9 @@ public class ReportManager {
 	/**
 	 * Performs cleanup process.
 	 */
-	public void cleanup() {
-		
+	void cleanup() {
+		wta = null;
+		logger.info("Cleaned up");
 	}
 	
 	private void exportReportToPdfStream(JasperPrint jasperPrint, OutputStream outputStream) throws JRException {

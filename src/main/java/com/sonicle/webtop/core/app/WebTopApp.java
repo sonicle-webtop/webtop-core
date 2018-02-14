@@ -43,7 +43,6 @@ import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.manager.TomcatManager;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.PasswordUtils;
-import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.ADConfigBuilder;
 import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.DirectoryOptions;
@@ -125,8 +124,6 @@ import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
-import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
@@ -145,59 +142,30 @@ public final class WebTopApp {
 	private static WebTopApp instance = null;
 	private static final Object lockInstance = new Object();
 	
-	private static Subject buildSubject(UserProfileId pid) {
-		return buildSubject(pid, null);
-	}
-	
-	private static Subject buildSubject(UserProfileId pid, String sessionId) {
-		Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
-		PrincipalCollection principals = new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		if(StringUtils.isBlank(sessionId)) {
-			return new Subject.Builder().principals(principals).buildSubject();
-		} else {
-			return new Subject.Builder().principals(principals).sessionId(sessionId).buildSubject();
+	/**
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param request The http request
+	 * @return WebTopApp object
+	 * @throws javax.servlet.ServletException
+	 */
+	public static WebTopApp get(HttpServletRequest request) throws ServletException {
+		try {
+			return get(request.getServletContext());
+		} catch(IllegalStateException ex) {
+			throw new ServletException(ex.getMessage());
 		}
-	}
-	
-	Subject getAdminSubject() {
-		return adminSubject;
 	}
 	
 	/**
-	 * Start method. This method should be called once.
-	 * @param context ServletContext instance.
+	 * Gets WebTopApp object stored as context's attribute.
+	 * @param context The servlet context
+	 * @return WebTopApp object
+	 * @throws java.lang.IllegalStateException
 	 */
-	public static void start(ServletContext context) {
-		synchronized(lockInstance) {
-			if(instance != null) throw new RuntimeException("Application must be started once");
-			SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
-			Subject adminSubject = buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
-			
-			ThreadState threadState = new SubjectThreadState(adminSubject);
-			try {
-				threadState.bind();
-				instance = new WebTopApp(context, adminSubject);
-			} finally {
-				threadState.clear();
-			}
-			
-			new Timer("onAppReady").schedule(new TimerTask() {
-				@Override
-				public void run() {
-					ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
-					try {
-						LoggerUtils.initDC(instance.getWebappName());
-						threadState.bind();
-						instance.onAppReady();
-					} catch(InterruptedException ex) {
-						// Do nothing...
-					} finally {
-						threadState.clear();
-						LoggerUtils.clearDC();
-					}
-				}
-			}, 5000);
-		}
+	public static WebTopApp get(ServletContext context) throws IllegalStateException {
+		WebTopApp wta = (WebTopApp)context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
+		if (wta == null) throw new IllegalStateException("WebTop environment is not loaded correctly. Please see log files for more details.");
+		return wta;
 	}
 	
 	public static WebTopApp getInstance() {
@@ -215,21 +183,17 @@ public final class WebTopApp {
 	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
 	private final ServletContext servletContext;
+	private final String webappName;
 	private final String osInfo;
 	private final Charset systemCharset;
-	private DateTimeZone systemTimeZone;
+	private final DateTimeZone systemTimeZone;
 	private Locale systemLocale;
-	private final StartupProperties startupProperties;
-	
-	private TomcatManager tomcat = null;
-	private final String webappName;
+	private StartupProperties startupProps;
 	private final String webappConfigPath;
+	private Subject adminSubject;
+	private TomcatManager tomcat = null;
 	private boolean webappIsLatest;
 	private Timer webappVersionCheckTimer = null;
-	
-	private Subject adminSubject;
-	private final Object lockAdminSubject = new Object();
-	private Timer adminTouchTimer = null;
 	
 	private MediaTypes mediaTypes = null;
 	private FileTypes fileTypes = null;
@@ -247,13 +211,9 @@ public final class WebTopApp {
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
-	/**
-	 * Private constructor.
-	 * Instances of this class must be created using static start method.
-	 */
-	private WebTopApp(ServletContext context, Subject adminSubject) {
-		this.servletContext = context;
-		this.adminSubject = adminSubject;
+	WebTopApp(ServletContext servletContext) {
+		this.servletContext = servletContext;
+		this.webappName = ContextUtils.getWebappName(servletContext);
 		this.osInfo = OSInfo.build();
 		this.systemCharset = Charset.forName("UTF-8");
 		this.systemTimeZone = DateTimeZone.getDefault();
@@ -263,9 +223,9 @@ public final class WebTopApp {
 		// secured servers throught vfs2.
 		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 		
-		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", String.valueOf(false));
-		System.setProperty("mail.mime.decodetext.strict", String.valueOf(false));
-		System.setProperty("mail.mime.decodefilename", String.valueOf(true));
+		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
+		System.setProperty("mail.mime.decodetext.strict", "false");
+		System.setProperty("mail.mime.decodefilename", "true");
 		
 		ICalendarUtils.setUnfoldingRelaxed(true);
 		ICalendarUtils.setParsingRelaxed(true);
@@ -273,24 +233,82 @@ public final class WebTopApp {
 		ICalendarUtils.setCompatibilityOutlook(true);
 		ICalendarUtils.setCompatibilityNotes(true);
 		
-		startupProperties = createStartupProperties();
-		logger.info("webtop.extJsDebug = {}", startupProperties.getExtJsDebug());
-		logger.info("webtop.soExtDevMode = {}", startupProperties.getSonicleExtJsExtensionsDevMode());
-		logger.info("webtop.devMode = {}", startupProperties.getDevMode());
-		logger.info("webtop.debugMode = {}", startupProperties.getDebugMode());
-		logger.info("webtop.schedulerSisabled = {}", startupProperties.getSchedulerDisabled());
-		logger.info("webtop.webappsConfigPath = {}", startupProperties.getWebappsConfigPath());
+		this.startupProps = createStartupProperties();
+		logger.info("webtop.extJsDebug = {}", startupProps.getExtJsDebug());
+		logger.info("webtop.soExtDevMode = {}", startupProps.getSonicleExtJsExtensionsDevMode());
+		logger.info("webtop.devMode = {}", startupProps.getDevMode());
+		logger.info("webtop.debugMode = {}", startupProps.getDebugMode());
+		logger.info("webtop.schedulerSisabled = {}", startupProps.getSchedulerDisabled());
+		logger.info("webtop.webappsConfigPath = {}", startupProps.getWebappsConfigPath());
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		this.webappName = ContextUtils.getWebappName(context);
-		if (StringUtils.isBlank(startupProperties.getWebappsConfigPath())) {
+		if (StringUtils.isBlank(startupProps.getWebappsConfigPath())) {
 			this.webappConfigPath = null;
 		} else {
-			this.webappConfigPath = PathUtils.concatPaths(startupProperties.getWebappsConfigPath(), ContextUtils.getWebappName(context, true));
+			this.webappConfigPath = PathUtils.concatPaths(startupProps.getWebappsConfigPath(), ContextUtils.getWebappName(servletContext, true));
 		}
+		this.adminSubject = buildSysAdminSubject();
+	}
+	
+	public void init() {
+		synchronized(lockInstance) {
+			ThreadState threadState = new SubjectThreadState(adminSubject);
+			try {
+				threadState.bind();
+				internalInit();
+			} finally {
+				threadState.clear();
+			}
+			instance = this;
+		}	
+		
+		new Timer("onAppReady").schedule(new TimerTask() {
+			@Override
+			public void run() {
+				ThreadState threadState = new SubjectThreadState(adminSubject);
+				try {
+					LoggerUtils.initDC(webappName);
+					threadState.bind();
+					onAppReady();
+				} catch(InterruptedException ex) {
+					// Do nothing...
+				} finally {
+					threadState.clear();
+				}
+			}
+		}, 5000);
+	}
+	
+	public void destroy() {
+		synchronized(lockInstance) {
+			ThreadState threadState = new SubjectThreadState(adminSubject);
+			try {
+				threadState.bind();
+				internalDestroy();
+			} finally {
+				threadState.clear();
+			}
+			instance = null;
+		}
+	}
+	
+	
+	
+	private Subject buildSysAdminSubject() {
+		SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
+		return RunContext.buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
+	}
+	
+	Subject getAdminSubject() {
+		return adminSubject;
+	}
+	
+	
+	
+	private void internalInit() {
 		this.webappIsLatest = false;
 		
 		HttpClient httpcli = null;
@@ -347,8 +365,15 @@ public final class WebTopApp {
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			//TODO: gestire le opzioni di configurazione dello scheduler
-			this.scheduler = new StdSchedulerFactory().getScheduler();
-			if (startupProperties.getSchedulerDisabled()) {
+			Properties quartzProps = new Properties();
+			quartzProps.put("org.quartz.scheduler.skipUpdateCheck", true);
+			quartzProps.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
+			quartzProps.put("org.quartz.threadPool.threadCount", "10");
+			quartzProps.put("org.quartz.threadPool.threadPriority", "5");
+			quartzProps.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+			
+			this.scheduler = new StdSchedulerFactory(quartzProps).getScheduler();
+			if (startupProps.getSchedulerDisabled()) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
 				this.scheduler.start();
@@ -359,20 +384,13 @@ public final class WebTopApp {
 		
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
 		
-		org.apache.shiro.session.Session session = adminSubject.getSession(false);
-		logger.info("Admin session created [{}]", session.getId().toString());
-		scheduleAdminTouchTask(session.getTimeout());
-		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
 	
-	public void destroy() {
+	private void internalDestroy() {
 		logger.info("WTA shutdown started [{}]", webappName);
 		
-		// Destroy timers
-		if(webappVersionCheckTimer != null) webappVersionCheckTimer.cancel();
-		if(adminTouchTimer != null) adminTouchTimer.cancel();
-		
+		clearWebappVersionCheckTask();
 		tomcat = null;
 		
 		// Service Manager
@@ -386,7 +404,7 @@ public final class WebTopApp {
 			scheduler.shutdown(true);
 			scheduler = null;
 		} catch(SchedulerException ex) {
-			throw new WTRuntimeException(ex, "Error cleaning-up scheduler");
+			logger.error("Error shutting-down scheduler", ex);
 		}
 		// Report Manager
 		rptMgr.cleanup();
@@ -407,19 +425,14 @@ public final class WebTopApp {
 		conMgr.cleanup();
 		conMgr = null;
 		// I18nManager Manager
-		//I18nManager.cleanup();
+		i18nMgr.cleanup();
 		i18nMgr = null;
-		
-		// Destroy admin session
-		synchronized(lockAdminSubject) {
-			adminSubject.logout();
-		}
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
 	}
 	
 	private void onAppReady() throws InterruptedException {
-		logger.trace("onAppReady...");
+		logger.debug("onAppReady...");
 		try {
 			logger.info("Checking domains homes structure...");
 			try {
@@ -469,7 +482,8 @@ public final class WebTopApp {
 			
 			svcMgr.initializeJobServices();
 			if (isLatest()) {
-				logger.debug("Sleeping for 60sec for avoid concurrency");
+				// Sleep a little bit for avoid concurrency with other webapp checks
+				logger.debug("Waiting 60sec before continue...");
 				Thread.sleep(60000);
 				if (isLatest()) {
 					try {
@@ -536,40 +550,13 @@ public final class WebTopApp {
 		}
 	}
 	
-	private void scheduleAdminTouchTask(long sessionTimeout) {
-		long period = (sessionTimeout < 600000) ? sessionTimeout/2 : (long)(sessionTimeout*0.9);
-		adminTouchTimer = new Timer("adminTouch");
-		adminTouchTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				onAdminTouch();
-			}
-		}, period, period);
-		logger.info("adminTouch task scheduled [{}sec]", period/1000);
-	}
-	
-	private void onAdminTouch() {
-		logger.trace("onAdminTouch...");
-		synchronized(lockAdminSubject) {
-			if(adminSubject != null) {
-				org.apache.shiro.session.Session session = adminSubject.getSession(false);
-				if(session != null) {
-					session.touch();
-					logger.trace("Renewalling admin session [{}]", session.getLastAccessTime());
-				} else {
-					logger.warn("Admin session not found");
-				}
-			}
-		}
-	}
-	
 	private void scheduleWebappVersionCheckTask() {
 		long period = 60000;
 		webappVersionCheckTimer = new Timer("webappVersionCheck");
-		adminTouchTimer.schedule(new TimerTask() {
+		webappVersionCheckTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				ThreadState threadState = new SubjectThreadState(instance.getAdminSubject());
+				ThreadState threadState = new SubjectThreadState(adminSubject);
 				try {
 					threadState.bind();
 					instance.onWebappVersionCheck();
@@ -578,23 +565,31 @@ public final class WebTopApp {
 				}
 			}
 		}, period, period);
-		logger.info("webappVersionCheck task scheduled [{}sec]", period/1000);
+		logger.info("Task 'webappVersionCheck' scheduled [{}sec]", period/1000);
+	}
+	
+	private void clearWebappVersionCheckTask() {
+		if (webappVersionCheckTimer != null) {
+			webappVersionCheckTimer.cancel();
+		}
+		webappVersionCheckTimer = null;
+		logger.info("Task 'webappVersionCheck' destroyed");
 	}
 	
 	private void onWebappVersionCheck() {
-		logger.trace("onWebappVersionCheck...");
+		logger.debug("onWebappVersionCheck...");
 		if (tomcat == null) return;
 		
-		logger.trace("Checking webapp version...");
+		logger.info("Checking webapp version...");
 		boolean oldLatest = webappIsLatest;
 		webappIsLatest = checkIsLastestWebapp(webappName);
 		if (webappIsLatest && !oldLatest) {
-			logger.info("Webapp [{}] is the latest", webappName);
+			logger.info("App instance [{}] is the latest", webappName);
 			svcMgr.scheduleAllJobServicesTasks();
 		} else if (!webappIsLatest && oldLatest) {
-			logger.info("Webapp [{}] is NO more the latest", webappName);
+			logger.info("App instance [{}] is NO more the latest", webappName);
 		} else {
-			logger.trace("No version changes found!");
+			logger.debug("No version changes found!");
 		}
 	}
 	
@@ -612,10 +607,6 @@ public final class WebTopApp {
 	
 	
 	
-	
-	public Subject bindAdminSubjectToSession(String sessionId) {
-		return buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID), sessionId);
-	}
 	
 	private CoreServiceSettings getCoreServiceSettings() {
 		return new CoreServiceSettings(setMgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
@@ -654,6 +645,14 @@ public final class WebTopApp {
 		return new StartupProperties(props);
 	}
 	
+	/**
+	 * Returns webapp's name as configured in the application server.
+	 * @return Webapp's name
+	 */
+	public String getWebappName() {
+		return webappName;
+	}
+	
 	public String getAppServerInfo() {
 		return servletContext.getServerInfo();
 	}
@@ -675,15 +674,7 @@ public final class WebTopApp {
 	}
 	
 	public StartupProperties getStartupProperties() {
-		return startupProperties;
-	}
-	
-	/**
-	 * Returns webapp's name as configured in the application server.
-	 * @return Webapp's name
-	 */
-	public String getWebappName() {
-		return webappName;
+		return startupProps;
 	}
 	
 	public String getWebappConfigPath() {
@@ -1351,25 +1342,5 @@ public final class WebTopApp {
 		return (s != null) ? s.toCharArray() : null;
 	}
 	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param request The http request
-	 * @return WebTopApp object
-	 * @throws javax.servlet.ServletException
-	 */
-	public static WebTopApp get(HttpServletRequest request) throws ServletException {
-		return get(request.getServletContext());
-	}
 	
-	/**
-	 * Gets WebTopApp object stored as context's attribute.
-	 * @param context The servlet context
-	 * @return WebTopApp object
-	 * @throws javax.servlet.ServletException
-	 */
-	static WebTopApp get(ServletContext context) throws ServletException {
-		WebTopApp wta = (WebTopApp)context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
-		if (wta == null) throw new ServletException("WebTop environment is not loaded correctly. Please see log files for more details.");
-		return wta;
-	}
 }

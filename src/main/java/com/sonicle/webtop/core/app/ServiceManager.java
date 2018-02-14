@@ -120,10 +120,10 @@ public class ServiceManager {
 	 * @return The instance.
 	 */
 	public static synchronized ServiceManager initialize(WebTopApp wta, Scheduler scheduler) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		ServiceManager svcm = new ServiceManager(wta, scheduler);
 		initialized = true;
-		logger.info("ServiceManager initialized");
+		logger.info("Initialized");
 		return svcm;
 	}
 	
@@ -175,7 +175,7 @@ public class ServiceManager {
 		publicNameToServiceId.clear();
 		scheduler = null;
 		wta = null;
-		logger.info("ServiceManager destroyed");
+		logger.info("Cleaned up");
 	}
 	
 	private String getUpgradeTag() {
@@ -1374,7 +1374,7 @@ public class ServiceManager {
 		JobBuilder jb = JobBuilder.newJob(taskDef.clazz)
 				.usingJobData(data)
 				.withIdentity(classBaseName, serviceId);
-		if(!StringUtils.isEmpty(taskDef.description)) jb.withDescription(taskDef.description);
+		if (!StringUtils.isEmpty(taskDef.description)) jb.withDescription(taskDef.description);
 		return jb.build();
 	}
 	
@@ -1389,48 +1389,45 @@ public class ServiceManager {
 	
 	private void scheduleJobServiceTasks(String serviceId, BaseJobService service) {
 		List<TaskDefinition> taskDefs = null;
-		JobDetail jobDetail = null;
-		Trigger trigger = null;
 		
+		// Gets task definitions from base service definition
 		try {
-			// Gets task definitions from base service definition
-			try {
-				LoggerUtils.setContextDC(serviceId);
-				taskDefs = service.returnTasks();
-			} catch(Exception ex) {
-				logger.error("JobService method returns errors [returnTask()]", ex);
-				throw ex;
-			} finally {
-				LoggerUtils.clearContextServiceDC();
-			}
-			if(taskDefs != null) {
-				unscheduleJobServiceTasks(serviceId);
-				
-				// Schedule job defining its trigger and details
-				for(TaskDefinition taskDef : taskDefs) {
-					jobDetail = createJobTask(serviceId, service, taskDef);
-					trigger = createJobTaskTrigger(serviceId, taskDef);
+			LoggerUtils.setContextDC(serviceId);
+			taskDefs = service.returnTasks();
+		} catch(Throwable t) {
+			logger.error("JobService method returns errors [returnTask()]", t);
+		} finally {
+			LoggerUtils.clearContextServiceDC();
+		}
+		
+		unscheduleJobServiceTasks(serviceId);
+		
+		if (taskDefs != null) {
+			// Schedule job defining its trigger and details
+			for(TaskDefinition taskDef : taskDefs) {
+				JobDetail jobDetail = createJobTask(serviceId, service, taskDef);
+				Trigger trigger = createJobTaskTrigger(serviceId, taskDef);
+				try {
 					scheduler.scheduleJob(jobDetail, trigger);
-					//scheduler.scheduleJob(jobDetail, taskDef.trigger);
 					logger.debug("Task scheduled [{}]", jobDetail.getKey().toString());
+					
+				} catch(SchedulerException ex) {
+					logger.error("Error scheduling task [{}]", jobDetail.getKey().toString(), ex);
 				}
 			}
-			
-		} catch(SchedulerException ex) {
-			logger.error("Error scheduling task [{}]", jobDetail.getKey().toString(), ex);
-		} catch(Exception ex) {
-			logger.error("Error instantiating task [{}]", jobDetail.getKey().toString(), ex);
 		}
 	}
 	
-	private void unscheduleJobServiceTasks(String serviceId) {
+	private boolean unscheduleJobServiceTasks(String serviceId) {
 		try {
 			Set<JobKey> keys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(serviceId));
 			scheduler.deleteJobs(new ArrayList<>(keys));
 			logger.debug("Deleted tasks for group [{}]", serviceId);
+			return true;
 			
 		} catch(SchedulerException ex) {
 			logger.error("Error deleting tasks for group [{}]", serviceId, ex);
+			return false;
 		}
 	}
 	

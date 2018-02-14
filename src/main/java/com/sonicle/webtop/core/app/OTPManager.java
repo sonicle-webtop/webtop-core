@@ -92,10 +92,10 @@ public class OTPManager {
 	 * @return The instance.
 	 */
 	static synchronized OTPManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		OTPManager otpm = new OTPManager(wta);
 		initialized = true;
-		logger.info("OTPManager initialized");
+		logger.info("Initialized");
 		return otpm;
 	}
 	
@@ -115,7 +115,7 @@ public class OTPManager {
 	 */
 	void cleanup() {
 		wta = null;
-		logger.info("OTPManager destroyed");
+		logger.info("Cleaned up");
 	}
 	
 	public boolean isEnabled(UserProfileId pid) {

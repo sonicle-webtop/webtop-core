@@ -77,8 +77,10 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		if (webtopSession != null) {
 			String clientId = ServletUtils.getCookie((HttpServletRequest)request, COOKIE_WEBTOP_CLIENTID);
 			if (StringUtils.isBlank(clientId)) {
-				ServletUtils.setCookie((HttpServletResponse)response, COOKIE_WEBTOP_CLIENTID, IdentifierUtils.getUUIDTimeBased(), 60*60*24*365*10);
+				clientId = IdentifierUtils.getUUIDTimeBased();
+				ServletUtils.setCookie((HttpServletResponse)response, COOKIE_WEBTOP_CLIENTID, clientId, 60*60*24*365*10);
 			}
+			webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, clientId);
 			
 			String location = ServletUtils.getStringParameter(request, "location", null);
 			if (location != null) {

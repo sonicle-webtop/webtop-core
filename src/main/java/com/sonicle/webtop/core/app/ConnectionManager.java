@@ -66,10 +66,10 @@ public class ConnectionManager implements IConnectionProvider {
 	 * @return The instance.
 	 */
 	public static synchronized ConnectionManager initialize(WebTopApp wta, String configPath) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		ConnectionManager conm = new ConnectionManager(wta, configPath);
 		initialized = true;
-		logger.info("ConnectionManager initialized");
+		logger.info("Initialized");
 		return conm;
 	}
 	
@@ -94,7 +94,7 @@ public class ConnectionManager implements IConnectionProvider {
 	/**
 	 * Performs cleanup process.
 	 */
-	public void cleanup() {
+	void cleanup() {
 		synchronized(pools) {
 			shutdown = true;
 			for(HikariDataSource pool: pools.values()) {
@@ -103,7 +103,7 @@ public class ConnectionManager implements IConnectionProvider {
 			pools.clear();
 		}
 		wta = null;
-		logger.info("ConnectionManager destroyed");
+		logger.info("Cleaned up");
 	}
 	
 	private void init(String webappsConfigPath) {

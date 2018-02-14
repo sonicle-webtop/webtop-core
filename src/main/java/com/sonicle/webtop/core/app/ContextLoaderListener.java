@@ -44,11 +44,11 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-		initWebTopApp(sce.getServletContext());
+		initApp(sce.getServletContext());
 	}
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
-		destroyWebTopApp(sce.getServletContext());
+		destroyApp(sce.getServletContext());
 	}
 }

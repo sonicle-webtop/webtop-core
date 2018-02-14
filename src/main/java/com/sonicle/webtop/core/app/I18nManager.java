@@ -61,7 +61,7 @@ public class I18nManager {
 		if(initialized) throw new RuntimeException("Initialization already done");
 		I18nManager locm = new I18nManager(wta, languageTags);
 		initialized = true;
-		logger.info("I18nManager initialized.");
+		logger.info("Initialized");
 		return locm;
 	}
 	
@@ -87,9 +87,11 @@ public class I18nManager {
 	/**
 	 * Performs cleanup process.
 	 */
-	public void cleanup() {
+	void cleanup() {
 		timezones.clear();
 		locales.clear();
+		wta = null;
+		logger.info("Cleaned up");
 	}
 	
 	public List<TimeZone> getTimezones() {

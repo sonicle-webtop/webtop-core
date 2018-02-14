@@ -73,10 +73,10 @@ public class SessionManager {
 	 * @return The instance.
 	 */
 	public static synchronized SessionManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		SessionManager sesm = new SessionManager(wta);
 		initialized = true;
-		logger.info("SessionManager initialized");
+		logger.info("Initialized");
 		return sesm;
 	}
 	
@@ -114,14 +114,14 @@ public class SessionManager {
 	/**
 	 * Performs cleanup process.
 	 */
-	protected void cleanup() {
+	void cleanup() {
 		onlineSessions.clear();
 		onlineClienTrackingIds.clear();
 		profileSidsCache.clear();
 		uuidToSessionId.clear();
 		pushConnections.clear();
 		wta = null;
-		logger.info("SessionManager destroyed");
+		logger.info("Cleaned up");
 	}
 	
 	public void push(String sessionId, ServiceMessage message) {

@@ -149,7 +149,7 @@ public final class WebTopManager {
 		if(initialized) throw new RuntimeException("Initialization already done");
 		WebTopManager instance = new WebTopManager(wta);
 		initialized = true;
-		logger.info("WebTopManager initialized");
+		logger.info("Initialized");
 		return instance;
 	}
 	
@@ -194,12 +194,12 @@ public final class WebTopManager {
 	 * Performs cleanup process.
 	 */
 	void cleanup() {
-		wta = null;
 		cleanupUserUidCache();
 		cleanupGroupUidCache();
 		cleanupUserCache();
 		cleanupDomainCache();
-		logger.info("UserManager destroyed");
+		wta = null;
+		logger.info("Cleaned up");
 	}
 	
 	public void cleanUserProfileCache(UserProfileId pid) {

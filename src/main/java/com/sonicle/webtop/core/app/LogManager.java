@@ -61,10 +61,10 @@ public class LogManager {
 	 * @return The instance.
 	 */
 	public static synchronized LogManager initialize(WebTopApp wta) {
-		if(initialized) throw new RuntimeException("Initialization already done");
+		if (initialized) throw new RuntimeException("Initialization already done");
 		LogManager logm = new LogManager(wta);
 		initialized = true;
-		logger.info("LogManager initialized.");
+		logger.info("Initialized");
 		return logm;
 	}
 	
@@ -83,11 +83,12 @@ public class LogManager {
 	 * Performs cleanup process.
 	 */
 	public void cleanup() {
-		
+		wta = null;
+		logger.info("Cleaned up");
 	}
 	
 	public boolean isEnabled(String domainId, String serviceId) {
-		if(!initialized) return false;
+		if (!initialized) return false;
 		CoreServiceSettings css = new CoreServiceSettings(serviceId, domainId);
 		//TODO: valutare se introdurre il caching
 		return css.getSysLogEnabled();
@@ -101,8 +102,8 @@ public class LogManager {
 	
 	public boolean write(UserProfileId profileId, String serviceId, String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
 		Connection con = null;
-		if(!initialized) return false;
-		if(!isEnabled(profileId.getDomain(), serviceId)) return false;
+		if (!initialized) return false;
+		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
 		
 		try {
 			con = WT.getCoreConnection();

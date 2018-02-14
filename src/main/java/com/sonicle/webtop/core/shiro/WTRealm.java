@@ -41,7 +41,6 @@ import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory.AuthUser;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
-import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -57,15 +56,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
-import org.apache.shiro.cache.Cache;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
@@ -93,7 +89,7 @@ public class WTRealm extends AuthorizingRealm {
 			String sprincipal = (String)upt.getPrincipal();
 			String internetDomain = StringUtils.lowerCase(StringUtils.substringAfterLast(sprincipal, "@"));
 			String username = StringUtils.substringBeforeLast(sprincipal, "@");
-			logger.debug("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
+			logger.trace("doGetAuthenticationInfo [{}, {}, {}]", domainId, internetDomain, username);
 			
 			Principal principal = authenticateUser(domainId, internetDomain, username, upt.getPassword());
 			
@@ -112,11 +108,11 @@ public class WTRealm extends AuthorizingRealm {
 	
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-		if(principals == null) throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
+		if (principals == null) throw new AuthorizationException("PrincipalCollection method argument cannot be null.");
 		
 		try {
 			Principal principal = (Principal)principals.getPrimaryPrincipal();
-			logger.debug("doGetAuthorizationInfo - {}", principal);
+			logger.trace("doGetAuthorizationInfo [{}]", principal);
 			return loadAuthorizationInfo(principal);
 			
 		} catch(Exception ex) {

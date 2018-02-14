@@ -33,10 +33,12 @@
  */
 package com.sonicle.webtop.core.app;
 
+import ch.qos.logback.classic.LoggerContext;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -51,9 +53,9 @@ public class ContextLoader {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
 	}
 	
-	protected void initWebTopApp(ServletContext servletContext) throws IllegalStateException {
+	protected void initApp(ServletContext servletContext) throws IllegalStateException {
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
-			throw new IllegalStateException("There is already a WebTopApp associated with the current ServletContext.");
+			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");
 		}
 		
 		final String appname = ContextUtils.getWebappName(servletContext);
@@ -61,26 +63,30 @@ public class ContextLoader {
 		
 		try {
 			LoggerUtils.initDC(appname);
-			WebTopApp.start(servletContext);
+			WebTopApp wta = new WebTopApp(servletContext);
+			wta.init();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
+			
 		} catch(Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 			logger.error("Error initializing WTA [{}]", appname, t);
 		}
 	}
 	
-	protected void destroyWebTopApp(ServletContext servletContext) {
+	protected void destroyApp(ServletContext servletContext) {
 		final String appname = getWabappName(servletContext);
 		try {
 			LoggerUtils.initDC(appname);
-			Object wta = servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
-			if (wta != null) {
-				((WebTopApp)wta).destroy();
-			}
+			WebTopApp wta = WebTopApp.get(servletContext);
+			if (wta != null) wta.destroy();
+			
 		} catch(Throwable t) {
 			logger.error("Error destroying WTA [{}]", appname, t);
 		} finally {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
+		
+		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
+		loggerContext.stop();
 	}
 }
