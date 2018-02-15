@@ -192,7 +192,7 @@ public final class WebTopApp {
 	private final String webappConfigPath;
 	private Subject adminSubject;
 	private TomcatManager tomcat = null;
-	private boolean webappIsLatest;
+	private boolean webappIsTheLatest;
 	private Timer webappVersionCheckTimer = null;
 	
 	private MediaTypes mediaTypes = null;
@@ -309,7 +309,7 @@ public final class WebTopApp {
 	
 	
 	private void internalInit() {
-		this.webappIsLatest = false;
+		this.webappIsTheLatest = false;
 		
 		HttpClient httpcli = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -451,30 +451,30 @@ public final class WebTopApp {
 			
 			// Check webapp version
 			logger.info("Checking webapp version...");
-			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
+				//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
 			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setMgr);
 			if (StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
-				this.webappIsLatest = true;
+				this.webappIsTheLatest = true;
 			} else {
 				try {
 					this.tomcat = new TomcatManager(tomcatUri);
 					this.tomcat.testConnection();
-					this.webappIsLatest = checkIsLastestWebapp(webappName);
+					this.webappIsTheLatest = checkIfIsTheLastest(webappName);
 					scheduleWebappVersionCheckTask();
 					
 				} catch(URISyntaxException ex1) {
 					logger.warn("Invalid configuration for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
-					this.webappIsLatest = false;
+					this.webappIsTheLatest = false;
 				} catch(Exception ex1) {
 					logger.error("Error connecting to TomcatManager", ex1);
-					this.webappIsLatest = false;
+					this.webappIsTheLatest = false;
 				}
 			}
 			if (webappVersionCheckTimer == null) {
 				logger.warn("Webapp version automatic check will NOT be performed!");
 			}
-			if (webappIsLatest) {
+			if (webappIsTheLatest) {
 				logger.info("This webapp [{}] is the latest", webappName);
 			} else {
 				logger.info("This webapp [{}] is NOT the latest", webappName);
@@ -581,22 +581,24 @@ public final class WebTopApp {
 		if (tomcat == null) return;
 		
 		logger.info("Checking webapp version...");
-		boolean oldLatest = webappIsLatest;
-		webappIsLatest = checkIsLastestWebapp(webappName);
-		if (webappIsLatest && !oldLatest) {
+		boolean oldLatest = webappIsTheLatest;
+		webappIsTheLatest = checkIfIsTheLastest(webappName);
+		if (webappIsTheLatest && !oldLatest) {
 			logger.info("App instance [{}] is the latest", webappName);
 			svcMgr.scheduleAllJobServicesTasks();
-		} else if (!webappIsLatest && oldLatest) {
+		} else if (!webappIsTheLatest && oldLatest) {
 			logger.info("App instance [{}] is NO more the latest", webappName);
 		} else {
 			logger.debug("No version changes found!");
 		}
 	}
 	
-	private boolean checkIsLastestWebapp(String appName) {
+	private boolean checkIfIsTheLastest(String webappName) {
 		try {
-			List<TomcatManager.DeployedApp> apps = tomcat.listDeployedApplications(StringUtils.substringBefore(appName, "##"));
-			return !apps.isEmpty() && appName.equals(apps.get(0).name);
+			String baseName = StringUtils.substringBefore(webappName, "##");
+			List<TomcatManager.DeployedApp> apps = tomcat.listDeployedApplications(baseName);
+			
+			return !apps.isEmpty() && webappName.equals(apps.get(apps.size()-1).name);
 			
 		} catch(Exception ex) {
 			logger.error("Unable to query TomcatManager", ex);
@@ -686,7 +688,7 @@ public final class WebTopApp {
 	 * @return True if this is the last version, false otherwise.
 	 */
 	public boolean isLatest() {
-		return webappIsLatest;
+		return webappIsTheLatest;
 	}
 	
 	public String getPlatformName() {
@@ -1268,7 +1270,7 @@ public final class WebTopApp {
 				ldap.setConnectionSecurity(opts, ad.getDirConnSecurity());
 				ldap.setAdminDn(opts, ad.getDirAdmin());
 				ldap.setAdminPassword(opts, getDirPassword(ad));
-				ldap.setIsCaseSensitive(opts, webappIsLatest);
+				ldap.setIsCaseSensitive(opts, webappIsTheLatest);
 				if (!StringUtils.isBlank(params.loginDn)) ldap.setLoginDn(opts, params.loginDn);
 				if (!StringUtils.isBlank(params.loginFilter)) ldap.setLoginFilter(opts, params.loginFilter);
 				if (!StringUtils.isBlank(params.userDn)) ldap.setUserDn(opts, params.userDn);
