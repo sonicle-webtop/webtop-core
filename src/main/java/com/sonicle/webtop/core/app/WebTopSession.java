@@ -418,7 +418,7 @@ public class WebTopSession {
 		profile = new UserProfile(core, principal);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
-		if(!otpEnabled) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
+		if (!otpEnabled || principal.isImpersonated()) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
 		
 		initLevel = 1;
 	}

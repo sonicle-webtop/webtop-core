@@ -80,13 +80,13 @@ public class Start extends AbstractServlet {
 			
 			// Checks maintenance mode
 			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
-			if(maintenance && false) throw new MaintenanceException();
+			if (maintenance && false) throw new MaintenanceException();
 			
 			wts.initPrivate(request);
 			
 			// Checks if otp page needs to be displayed
 			boolean isOtpVerified = wts.hasProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED);
-			if(!isOtpVerified) throw new OtpException();
+			if (!isOtpVerified) throw new OtpException();
 			
 			wts.initPrivateEnvironment(request);
 			Locale locale = wts.getLocale();

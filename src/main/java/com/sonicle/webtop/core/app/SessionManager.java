@@ -198,7 +198,12 @@ public class SessionManager {
 					onlineSessions.remove(sessionId);
 					pushConnections.remove(sessionId);
 					if (profileId != null) {
-						profileSidsCache.get(profileId).remove(sessionId);
+						if (profileSidsCache.containsKey(profileId)) {
+							// List at key may have not been prepared. Incase of 
+							// active OPT configuration session is effectively 
+							// only after code validation.
+							profileSidsCache.get(profileId).remove(sessionId);
+						}
 						onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
 					}
 					
