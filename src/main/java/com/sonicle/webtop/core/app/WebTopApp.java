@@ -580,7 +580,7 @@ public final class WebTopApp {
 		logger.debug("onWebappVersionCheck...");
 		if (tomcat == null) return;
 		
-		logger.info("Checking webapp version...");
+		logger.debug("Checking webapp version...");
 		boolean oldLatest = webappIsTheLatest;
 		webappIsTheLatest = checkIfIsTheLastest(webappName);
 		if (webappIsTheLatest && !oldLatest) {
@@ -596,9 +596,10 @@ public final class WebTopApp {
 	private boolean checkIfIsTheLastest(String webappName) {
 		try {
 			String baseName = StringUtils.substringBefore(webappName, "##");
-			List<TomcatManager.DeployedApp> apps = tomcat.listDeployedApplications(baseName);
-			
-			return !apps.isEmpty() && webappName.equals(apps.get(apps.size()-1).name);
+			for (TomcatManager.DeployedApp app : tomcat.listDeployedApplications(baseName)) {
+				if (app.name.compareTo(webappName) > 0) return false;
+			}
+			return true;
 			
 		} catch(Exception ex) {
 			logger.error("Unable to query TomcatManager", ex);
