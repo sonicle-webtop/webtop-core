@@ -122,8 +122,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.VFS;
 import org.apache.http.client.HttpClient;
-import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
@@ -190,6 +191,7 @@ public final class WebTopApp {
 	private Locale systemLocale;
 	private StartupProperties startupProps;
 	private final String webappConfigPath;
+	private DefaultSecurityManager shiroSecurityManager;
 	private Subject adminSubject;
 	private TomcatManager tomcat = null;
 	private boolean webappIsTheLatest;
@@ -213,10 +215,10 @@ public final class WebTopApp {
 	
 	WebTopApp(ServletContext servletContext) {
 		this.servletContext = servletContext;
-		this.webappName = ContextUtils.getWebappName(servletContext);
-		this.osInfo = OSInfo.build();
-		this.systemCharset = Charset.forName("UTF-8");
-		this.systemTimeZone = DateTimeZone.getDefault();
+		webappName = ContextUtils.getWebappName(servletContext);
+		osInfo = OSInfo.build();
+		systemCharset = Charset.forName("UTF-8");
+		systemTimeZone = DateTimeZone.getDefault();
 		
 		// Ignore SSL checks for old commons-http components.
 		// This is required in order to avoid error when accessing WebDAV 
@@ -233,7 +235,7 @@ public final class WebTopApp {
 		ICalendarUtils.setCompatibilityOutlook(true);
 		ICalendarUtils.setCompatibilityNotes(true);
 		
-		this.startupProps = createStartupProperties();
+		startupProps = createStartupProperties();
 		logger.info("webtop.extJsDebug = {}", startupProps.getExtJsDebug());
 		logger.info("webtop.soExtDevMode = {}", startupProps.getSonicleExtJsExtensionsDevMode());
 		logger.info("webtop.devMode = {}", startupProps.getDevMode());
@@ -246,11 +248,12 @@ public final class WebTopApp {
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
 		if (StringUtils.isBlank(startupProps.getWebappsConfigPath())) {
-			this.webappConfigPath = null;
+			webappConfigPath = null;
 		} else {
-			this.webappConfigPath = PathUtils.concatPaths(startupProps.getWebappsConfigPath(), ContextUtils.getWebappName(servletContext, true));
+			webappConfigPath = PathUtils.concatPaths(startupProps.getWebappsConfigPath(), ContextUtils.getWebappName(servletContext, true));
 		}
-		this.adminSubject = buildSysAdminSubject();
+		shiroSecurityManager = buildSecurityManager();
+		adminSubject = buildSysAdminSubject(shiroSecurityManager);
 	}
 	
 	public void init() {
@@ -295,18 +298,23 @@ public final class WebTopApp {
 		}
 	}
 	
-	
-	
-	private Subject buildSysAdminSubject() {
-		SecurityUtils.setSecurityManager(new DefaultSecurityManager(new WTRealm()));
-		return RunContext.buildSubject(new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
-	}
-	
 	Subject getAdminSubject() {
 		return adminSubject;
 	}
 	
+	private DefaultSecurityManager buildSecurityManager() {
+		DefaultSecurityManager newSecurityManager = new DefaultSecurityManager(new WTRealm());
+		newSecurityManager.setCacheManager(new MemoryConstrainedCacheManager());
+		DefaultSessionManager sessionManager = (DefaultSessionManager)newSecurityManager.getSessionManager();
+		sessionManager.setGlobalSessionTimeout(-1);
+		sessionManager.setDeleteInvalidSessions(false);
+		sessionManager.setSessionValidationSchedulerEnabled(false);
+		return newSecurityManager;
+	}
 	
+	private Subject buildSysAdminSubject(DefaultSecurityManager securityManager) {
+		return RunContext.buildSubject(securityManager, new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID));
+	}
 	
 	private void internalInit() {
 		this.webappIsTheLatest = false;
@@ -606,10 +614,6 @@ public final class WebTopApp {
 			return false;
 		}
 	}
-	
-	
-	
-	
 	
 	private CoreServiceSettings getCoreServiceSettings() {
 		return new CoreServiceSettings(setMgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);

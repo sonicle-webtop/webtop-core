@@ -52,18 +52,18 @@ import org.apache.shiro.web.subject.WebSubject;
  */
 public class RunContext {
 	
+	public static Subject buildSubject(SecurityManager securityManager, UserProfileId profileId) {
+		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
+		return new Subject.Builder(securityManager)
+				.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"))
+				.buildSubject();
+	}
+	
 	public static WebSubject buildWebSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response, UserProfileId profileId) {
 		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
 		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
 		builder.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"));
 		return builder.buildWebSubject();
-	}
-	
-	public static Subject buildSubject(UserProfileId profileId) {
-		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
-		return new Subject.Builder()
-				.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"))
-				.buildSubject();
 	}
 	
 	public static Subject getSubject() {
