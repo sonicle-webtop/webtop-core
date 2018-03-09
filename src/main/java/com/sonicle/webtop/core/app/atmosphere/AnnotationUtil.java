@@ -33,19 +33,35 @@
  */
 package com.sonicle.webtop.core.app.atmosphere;
 
+import java.util.List;
+import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereInterceptor;
+
 /**
  *
  * @author malbinola
  */
-public class AtmosphereFrameworkInitializer extends org.atmosphere.cpr.AtmosphereFrameworkInitializer {
+public class AnnotationUtil extends org.atmosphere.annotation.AnnotationUtil {
 	
-	public AtmosphereFrameworkInitializer(boolean isFilter, boolean autoDetectHandlers) {
-		super(isFilter, autoDetectHandlers);
+	/**
+	 * Cloned from Atmosphere v.3 trunk code.
+	 * Remove whole AnnotationUtil class after upgrade.
+	 * 
+	 * @param framework
+	 * @param interceptors
+	 * @param l 
+	 */
+	public static void interceptorsForHandler(AtmosphereFramework framework, List<Class<? extends AtmosphereInterceptor>> interceptors, List<AtmosphereInterceptor> l) {
+		for (Class<? extends AtmosphereInterceptor> i : interceptors) {
+			if (!framework.excludedInterceptors().contains(i.getName())
+					&& (!AtmosphereFramework.DEFAULT_ATMOSPHERE_INTERCEPTORS.contains(i))) {
+				try {
+					logger.info("Adding {}", i);
+					l.add(framework.newClassInstance(AtmosphereInterceptor.class, i));
+				} catch (Throwable e) {
+					logger.warn("", e);
+				}
+			}
+		}
 	}
-	
-	/*
-	public AtmosphereFrameworkInitializer configureFramework(ServletConfig sc) throws ServletException {
-		return configureFramework(sc, true, false, AtmosphereFramework.class);
-	}
-	*/
 }

@@ -41,7 +41,18 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 	config: {
 		url: null,
 		
-		uuid: 0,
+		/**
+		 * @cfg {Boolean} eventsDebug
+		 * If active, displays debugging info on subsockets callbacks.
+		 */
+		eventsDebug: false,
+		
+		/**
+		 * @cfg {Integer} clientHeartbeatInterval
+		 * The time interval (in millis) between each heartbeat calls.
+		 * If set to -1, function will be completely disabled.
+		 */
+		clientHeartbeatInterval: 60*1000,
 		
 		/**
 		 * @cfg {Integer} connectionLostTimeout
@@ -54,17 +65,12 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		 * @cfg {Integer} connectionWarnTimeout
 		 * Amount of time (in millis) after display a connection warning alert.
 		 */
-		connectionWarnTimeout: 10*1000,
-		
-		/**
-		 * @cfg {Integer} clientHeartbeatInterval
-		 * The time interval (in millis) between each heartbeat calls.
-		 * If set to -1, function will be completely disabled.
-		 */
-		clientHeartbeatInterval: 60*1000
+		connectionWarnTimeout: 10*1000
 	},
 	
-	socket: null,
+	subSocket: null,
+	serverUnreachable: 0,
+	serverStateInvalid: 0,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -72,122 +78,120 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		me.mixins.observable.constructor.call(me, cfg);
 	},
 	
-	connect: function() {
+	connect: function(force) {
 		var me = this,
 				atm = atmosphere;
-		if (me.socket === null) {
-			me.socket = atm.subscribe(me.createRequest());
+		if (force) me.disconnect();
+		if (me.subSocket === null) {
+			me.subSocket = atm.subscribe(me.createRequest());
 		}	
 	},
 	
 	disconnect: function() {
-		var me = this;
-		if (me.socket !== null) {
-			me.socket.unsubscribe();
-			me.socket = null;
+		var me = this,
+				atm = atmosphere;
+		if (me.subSocket !== null) {
+			atm.unsubscribeUrl(me.subSocket.getUrl());
+			me.subSocket = null;
 		}
 	},
 	
 	createRequest: function() {
 		var me = this;
 		return {
+			shared: false,
 			url: me.getUrl(),
-			//uuid: me.getUuid(),
-			//shared: true,
-			//logLevel: 'debug',
-			contentType: 'application/json',
+			logLevel: 'info',
+			//contentType: 'application/json',
+			suspend: true,
+			enableProtocol: true,
+			trackMessageLength : true,
 			transport: 'websocket',
 			//transport: 'long-polling',
 			fallbackTransport: 'long-polling',
-			connectTimeout: 10*1000,
-			trackMessageLength : true,
-			reconnectInterval: 10*1000,
-			maxReconnectOnClose: 99, // (6 reconn/min * 10min session TTL) = 60 rounded to...
+			timeout: 300*1000, // The maximum time a connection stay opened when no message (or event) are sent or received.
+			//connectTimeout: 10*1000, // The connect timeout. If the client fails to connect, the fallbackTransport will be used.
+			connectTimeout: 30*1000,
+			reconnectInterval: 0, // The interval before an attempt to reconnect will be made.
+			pollingInterval: 0, // Reconnect interval when long-polling transport is used and a response received.
+			maxReconnectOnClose: 10,
+			reconnectOnServerError: true,
 			onOpen: function(resp) {
-				//console.log('onOpen');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					if (resp.request.async === true) {
-						me.startHBTask();
-					}
-					me.clearConnLostTimeout();
-					me.clearConnWarnTimeout();
+				if (me.getEventsDebug()) console.log('onOpen ['+resp.status+', '+resp.state+']');
+				me.updateSrvUnreachable(true);
+				if (me.isHBNeeded(resp)) {
+					me.startHBTask();
 				}
 			},
-			onReopen: function(resp) {
-				//console.log('onReopen');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					if (resp.async === true) {
-						me.startHBTask();
-					}
-					me.clearConnLostTimeout();
-					me.clearConnWarnTimeout();
+			onReopen: function(req, resp) {
+				if (me.getEventsDebug()) console.log('onReopen ['+resp.status+', '+resp.state+']');
+				me.updateSrvUnreachable(true);
+				if (me.isHBNeeded(resp)) {
+					me.startHBTask();
 				}
 			},
 			onClose: function(resp) {
-				//console.log('onClose');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					me.stopHBTask();
-					if (resp.transport === 'websocket') {
-
-					}
-					me.startConnLostTimeout();
+				if (me.getEventsDebug()) console.log('onClose ['+resp.status+', '+resp.state+']');
+				me.stopHBTask();
+				if (me.isWebsocket(resp)) {
+					me.updateSrvUnreachable();
 				}
 			},
 			onReconnect: function(req, resp) {
-				//console.log('onReconnect');
+				if (me.getEventsDebug()) console.log('onReconnect ['+resp.status+', '+resp.state+']');
+				/*
+				if (me.isLongPolling(resp)) {
+					if (resp.status === 204) {
+						me.updateSrvStateInvalid();
+					} else if (resp.status === 500) {
+						me.updateSrvUnreachable();
+					}
+				}
+				*/
 			},
 			onClientTimeout: function(resp) {
-				//console.log('onClientTimeout');
+				if (me.getEventsDebug()) console.log('onClientTimeout ['+resp.status+', '+resp.state+']');
 			},
 			onTransportFailure: function(err, req) {
-				//console.log('onTransportFailure');
+				if (me.getEventsDebug()) console.log('onTransportFailure');
 			},
 			onMessage: function(resp) {
 				//console.log('onMessage');
 				me.handleMessages(resp.responseBody);
 			},
 			onError: function(resp) {
-				//console.log('onError');
+				if (me.getEventsDebug()) console.log('onError ['+resp.status+', '+resp.state+']');
+				
+				if (resp.state === 'error') {
+					if (resp.status === 0) {
+						me.updateSrvUnreachable();
+					} else if ((resp.status === 401) && (resp.status === 404)) {
+						me.updateSrvStateInvalid();
+					}
+				}
+				
+				/*
+				if (me.isLongPolling(resp)) {
+					if (resp.status === 0) {
+						me.updateSrvUnreachable();
+					}
+				}
+				*/
 			}
 		};
 	},
 	
-	startConnLostTimeout: function() {
-		var me = this;
-		me.clearConnLostTimeout();
-		me.connLost = setTimeout(function() {
-			me.fireEventArgs('connectionlost', [me]);
-			me.startConnWarnTimeout();
-		}, me.getConnectionLostTimeout());
+	handleMessages: function(raw) {
+		var obj = Ext.JSON.decode(raw, true);
+		if (Ext.isArray(obj)) this.fireEventArgs('receive', [this, obj]);
 	},
 	
-	clearConnLostTimeout: function() {
+	isHBNeeded: function(resp) {
 		var me = this;
-		if (me.connLost) {
-			clearTimeout(me.connLost);
-			me.connLost = null;
-		}
-	},
-	
-	startConnWarnTimeout: function() {
-		var me = this;
-		me.clearConnWarnTimeout();
-		me.connWarn = setTimeout(function() {
-			var fn = function() {
-				if (me.connWarn) me.startConnWarnTimeout();
-			};
-			me.fireEventArgs('connectionwarn', [me, fn]);
-		}, me.getConnectionWarnTimeout());
-	},
-	
-	clearConnWarnTimeout: function() {
-		var me = this;
-		if (me.connWarn) {
-			clearTimeout(me.connWarn);
-			me.connWarn = null;
+		if (me.isWebsocket(resp)) {
+			return true;
+		} else {
+			return me.isLongPolling(resp) && (resp.request.connectTimeout < 0);
 		}
 	},
 	
@@ -212,8 +216,84 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		}
 	},
 	
-	handleMessages: function(raw) {
-		var obj = Ext.JSON.decode(raw, true);
-		if (Ext.isArray(obj)) this.fireEventArgs('receive', [this, obj]);
+	updateSrvUnreachable: function(reset) {
+		var me = this;
+		if (reset === true) {
+			if (me.serverUnreachable > 0) {
+				console.log('fire SERVER-ONLINE');
+				me.fireEventArgs('serveronline', [me]);
+			}
+			me.serverUnreachable = 0;
+			me.stopConnLostTimeout();
+		} else {
+			me.serverUnreachable++;
+			if (me.serverUnreachable === 1) {
+				me.startConnLostTimeout();
+				console.log('fire SERVER-UNREACHABLE');
+				me.fireEventArgs('serverunreachable', [me]);
+			}
+		}
+	},
+	
+	updateSrvStateInvalid: function(reset) {
+		var me = this;
+		if (reset === true) {
+			me.serverStateInvalid = 0;
+		} else {
+			me.serverStateInvalid++;
+			if (me.serverStateInvalid === 1) {
+				console.log('fire SERVER-STATE-INVALID');
+				me.fireEventArgs('serverstateinvalid', [me]);
+			}
+		}
+	},
+	
+	startConnLostTimeout: function(reset) {
+		var me = this;
+		if (reset === true) me.stopConnLostTimeout();
+		if (!me.connLost) {
+			me.connLost = setTimeout(function() {
+				me.fireEventArgs('connlost', [me]);
+				me.startConnWarnTimeout();
+			}, me.getConnectionLostTimeout());
+		}
+	},
+	
+	stopConnLostTimeout: function() {
+		var me = this;
+		if (me.connLost) {
+			clearTimeout(me.connLost);
+			me.connLost = null;
+		}
+		me.stopConnWarnTimeout();
+	},
+	
+	startConnWarnTimeout: function() {
+		var me = this;
+		me.stopConnWarnTimeout();
+		me.connWarn = setTimeout(function() {
+			var fn = function() {
+				if (me.connWarn) me.startConnWarnTimeout();
+			};
+			me.fireEventArgs('connwarn', [me, fn]);
+		}, me.getConnectionWarnTimeout());
+	},
+	
+	stopConnWarnTimeout: function() {
+		var me = this;
+		if (me.connWarn) {
+			clearTimeout(me.connWarn);
+			me.connWarn = null;
+		}
+	},
+	
+	privates: {
+		isWebsocket: function(resp) {
+			return (resp.transport === 'websocket');
+		},
+
+		isLongPolling: function(resp) {
+			return (resp.transport === 'long-polling');
+		}
 	}
 });

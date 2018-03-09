@@ -35,11 +35,12 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.AtmosphereSession;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.Universe;
+import org.jooq.tools.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -48,50 +49,74 @@ import org.slf4j.Logger;
  */
 public class PushConnection {
 	private final static Logger logger = WT.getLogger(PushConnection.class);
-	private final AtmosphereSession session;
+	private final String sessionId;
+	private final String broadcasterPath;
 	private final ArrayList<ServiceMessage> initialMessages;
 	
-	public PushConnection(AtmosphereResource resource, Collection<ServiceMessage> initialMessages) {
-		this.session = new AtmosphereSession(resource);
+	public PushConnection(String sessionId, Collection<ServiceMessage> initialMessages) {
+		this.sessionId = sessionId;
+		this.broadcasterPath = "/"+PushEndpoint.URL+"/"+sessionId;
 		this.initialMessages = new ArrayList<>(initialMessages);
 	}
 	
-	public void close() {
-		AtmosphereResource resource = null;
-		try {
-			resource = session.tryAcquire(1);
-		} catch(InterruptedException ex) {}
-		if (resource == null) return;
-		
-		String uuid = resource.uuid();
-		try {
-			resource.close();
-		} catch(IOException ex) {
-			logger.error("Error closing atmosphere connection [{}]", ex, uuid);
-		}
+	public boolean flush() {
+		return send(new ArrayList<ServiceMessage>(0));
 	}
 	
-	public void flush() {
-		send(new ArrayList<ServiceMessage>(0));
+	public boolean send(Collection<ServiceMessage> messages) {
+		return writeOnBroadcast(messages);
 	}
 	
-	public void send(Collection<ServiceMessage> messages) {
-		writeOnResource(messages);
-	}
-	
-	private void writeOnResource(Collection<ServiceMessage> messages) {
-		AtmosphereResource resource = null;
-		try {
-			resource = session.tryAcquire(5);
-		} catch(InterruptedException ex) {}
-		if (resource == null) return;
-		
+	private boolean writeOnBroadcast(Collection<ServiceMessage> messages) {
+		BroadcasterFactory factory = Universe.broadcasterFactory();
 		if (!initialMessages.isEmpty()) {
-			resource.write(JsonResult.gson.toJson(initialMessages));
+			//String s = preparePayload(messages);
+			//logger.trace("send: {}", s);
+			//getBroadcaster(factory).broadcast(s);
+			getBroadcaster(factory).broadcast(preparePayload(messages));
 			initialMessages.clear();
 		}
 		if (!messages.isEmpty()) {
-			resource.write(JsonResult.gson.toJson(messages));
+			//String s = preparePayload(messages);
+			//logger.trace("send: {}", s);
+			//getBroadcaster(factory).broadcast(s);
+			getBroadcaster(factory).broadcast(preparePayload(messages));
+		}
+		return true;
+	}
+	
+	private String preparePayload(Collection<ServiceMessage> messages) {
+		return StringUtils.replace(JsonResult.gson.toJson(messages), "|", "\\u007c");
+	}
+	
+	private Broadcaster getBroadcaster(BroadcasterFactory factory) {
+		return factory.lookup(broadcasterPath, true);
+	}
+	
+	/*
+	private boolean writeOnResource(Collection<ServiceMessage> messages) {
+		Broadcaster broadcaster = getBroadcaster(Universe.broadcasterFactory());
+		if (broadcaster != null) {
+			if (!initialMessages.isEmpty()) {
+				String s = JsonResult.gson.toJson(initialMessages);
+				logger.trace("send: {}", s);
+				broadcaster.broadcast(s);
+				//broadcaster.broadcast(JsonResult.gson.toJson(initialMessages));
+				initialMessages.clear();
+			}
+			if (!messages.isEmpty()) {
+				String s = JsonResult.gson.toJson(messages);
+				logger.trace("send: {}", s);
+				broadcaster.broadcast(s);
+				//broadcaster.broadcast(JsonResult.gson.toJson(messages));
+			}
+			return true;
+		} else {
+			if (!messages.isEmpty()) {
+				initialMessages.addAll(messages);
+			}
+			return false;
 		}
 	}
+	*/
 }

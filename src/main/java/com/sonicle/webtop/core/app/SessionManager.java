@@ -99,8 +99,7 @@ public class SessionManager {
 	private final HashSet<String> onlineClienTrackingIds = new HashSet<>();
 	private final HashMap<UserProfileId, ProfileSids> profileSidsCache = new HashMap<>();
 	private final HashMap<String, String> uuidToSessionId = new HashMap<>();
-	private final HashMap<String, PushConnectionList> pushConnections = new HashMap<>();
-	private static class PushConnectionList extends LinkedHashMap<String, PushConnection> {}
+	private final HashMap<String, PushConnection> pushConnections = new HashMap<>();
 	
 	/**
 	 * Private constructor.
@@ -131,12 +130,9 @@ public class SessionManager {
 	public boolean push(String sessionId, Collection<ServiceMessage> messages) {
 		synchronized(lock) {
 			if (onlineSessions.containsKey(sessionId)) {
-				PushConnectionList pushCons = pushConnections.get(sessionId);
-				if (pushCons != null) {
-					for(PushConnection pushCon : pushCons.values()) {
-						pushCon.send(messages);
-					}
-					return true;
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) {
+					return pushCon.send(messages);
 				} else {
 					logger.error("PushConnection not available [{}]", sessionId);
 				}
@@ -173,7 +169,7 @@ public class SessionManager {
 			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
 
 			onlineSessions.put(sessionId, webtopSession);
-			pushConnections.put(sessionId, new PushConnectionList());
+			pushConnections.put(sessionId, new PushConnection(sessionId, listEnqueuedMessages(webtopSession.getProfileId())));
 			if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
 			profileSidsCache.get(profileId).add(sessionId);
 			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
@@ -221,54 +217,17 @@ public class SessionManager {
 		}
 	}
 	
-	public void onPushResourceConnect(AtmosphereResource resource) {
-		HttpSession session = resource.session(false);
-		if (session != null) {
-			String sessionId = session.getId();
-			String uuid = resource.uuid();
-			
-			synchronized(lock) {
-				WebTopSession webtopSession = onlineSessions.get(sessionId);
-				String oldSessionId = uuidToSessionId.put(uuid, sessionId);
-				if (oldSessionId != null) logger.warn("uuid mapped with multiple sessions [{} -> {}, {}]", uuid, oldSessionId, sessionId);
-				PushConnection pushCon = new PushConnection(resource, listEnqueuedMessages(webtopSession.getProfileId()));
-				pushConnections.get(sessionId).put(uuid, pushCon);
-				pushCon.flush();
-				logger.trace("Push connection added [{}@{}]", uuid, sessionId);
-			}
-		}
-		///Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
-	}
-	
-	public void onPushResourceDisconnect(AtmosphereResource resource) {
-		HttpSession session = resource.session(false);
-		if (session != null) {
-			String sessionId = session.getId();
-			String uuid = resource.uuid();
-			
-			synchronized(lock) {
-				WebTopSession webtopSession = onlineSessions.get(sessionId);
-				if (webtopSession == null) {
-					logger.debug("WebTopSession is null [{}@{}]", uuid, sessionId);
+	public void onPushResourceHeartbeat(String sessionId, AtmosphereResource resource) {
+		synchronized(lock) {
+			if (onlineSessions.containsKey(sessionId)) {
+				Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
+				if ((subject != null) && subject.isAuthenticated()) {
+					HttpSession session = resource.session(false);
+					if (session != null) {
+						ServletUtils.touchSession(session);
+						logger.trace("Session touched [{}]", session.getId());
+					}
 				}
-				uuidToSessionId.remove(uuid);
-				PushConnection pushCon = pushConnections.get(sessionId).remove(uuid);
-				if (pushCon != null) {
-					pushCon.close();
-					logger.trace("Push link closed [{}]", uuid);
-				}
-				logger.trace("Push connection removed [{}@{}]", uuid, sessionId);
-			}
-		}
-	}
-	
-	public void onPushResourceHeartbeat(AtmosphereResource resource) {
-		Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
-		if ((subject != null) && subject.isAuthenticated()) {
-			HttpSession session = resource.session(false);
-			if (session != null) {
-				ServletUtils.touchSession(session);
-				logger.trace("Push connection heartbeat [{}]", session.getId());
 			}
 		} 	
 	}

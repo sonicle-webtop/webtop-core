@@ -200,8 +200,8 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			vpc.showWhatsnew(false);
 		}
 		
-		WTA.Atmosphere.setUrl(me.pushUrl);
-		WTA.Atmosphere.setUuid(WT.getSessionId());
+		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
+		WTA.Atmosphere.setEventsDebug(true);
 		WTA.Atmosphere.on('receive', function(s,messages) {
 			Ext.each(messages, function(msg) {
 				if (msg && msg.service) {
@@ -210,7 +210,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				}
 			});
 		});
-		WTA.Atmosphere.on('connectionwarn', function(s, resume) {
+		WTA.Atmosphere.on('connwarn', function(s, resume) {
 			WT.warn(WT.res('warn.connectionlost'), {
 				config: {
 					fn: function() {

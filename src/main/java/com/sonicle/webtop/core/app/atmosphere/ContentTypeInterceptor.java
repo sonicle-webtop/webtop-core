@@ -31,12 +31,21 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.app.atmosphere;
+
+import org.atmosphere.cpr.Action;
+import org.atmosphere.cpr.AtmosphereInterceptorAdapter;
+import org.atmosphere.cpr.AtmosphereResource;
 
 /**
  *
  * @author malbinola
  */
-public class PushConnection2 {
-	
+public class ContentTypeInterceptor extends AtmosphereInterceptorAdapter {
+
+	@Override
+	public Action inspect(AtmosphereResource r) {
+		r.getResponse().setHeader("Content-Type", "application/json; charset=UTF-8");
+		return super.inspect(r);
+	}
 }
