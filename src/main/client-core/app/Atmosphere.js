@@ -201,7 +201,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		if (!Ext.isDefined(me.hbTask) && (ival > 0)) {
 			me.hbTask = Ext.TaskManager.start({
 				run: function () {
-					if (me.socket) me.socket.push('X');
+					if (me.subSocket) me.subSocket.push('X');
 				},
 				interval: ival
 			});
