@@ -50,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 import org.atmosphere.cache.BroadcastMessage;
 import org.atmosphere.cache.BroadcasterCacheInspector;
 import org.atmosphere.cache.CacheMessage;
-import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.BroadcasterCache;
 import org.atmosphere.cpr.BroadcasterCacheListener;
@@ -67,7 +66,7 @@ import org.atmosphere.util.UUIDProvider;
  *
  * @author malbinola
  */
-public class FixedUUIDBroadcasterCache implements BroadcasterCache {
+public class UUIDBroadcasterCache implements BroadcasterCache {
 
     private final static Logger logger = LoggerFactory.getLogger(UUIDBroadcasterCache.class);
 
@@ -82,6 +81,8 @@ public class FixedUUIDBroadcasterCache implements BroadcasterCache {
     protected final List<Object> emptyList = Collections.<Object>emptyList();
     protected final List<BroadcasterCacheListener> listeners = new LinkedList<BroadcasterCacheListener>();
     private UUIDProvider uuidProvider;
+	private static final String NULL_ATR_ID = "0000000-0000-0000-0000-000000000000";
+	private boolean cacheForAllOnNull = false;
 
     /**
      * This class wraps all messages to be delivered to a client. The class is thread safe to be accessed in a
@@ -173,14 +174,18 @@ public class FixedUUIDBroadcasterCache implements BroadcasterCache {
         if (!inspect(message)) {
             cache = false;
         }
-
-        CacheMessage cacheMessage = new CacheMessage(messageId, message.message(), uuid);;
+		
+        CacheMessage cacheMessage = new CacheMessage(messageId, message.message(), uuid);
         if (cache) {
             if (uuid.equals(NULL)) {
-                //no clients are connected right now, caching message for all active clients
-                for (Map.Entry<String, Long> entry : activeClients.entrySet()) {
-                    addMessageIfNotExists(broadcasterId, entry.getKey(), cacheMessage);
-                }
+				if (cacheForAllOnNull) {
+					//no clients are connected right now, caching message for all active clients
+					for (Map.Entry<String, Long> entry : activeClients.entrySet()) {
+						addMessageIfNotExists(broadcasterId, entry.getKey(), cacheMessage);
+					}
+				} else {
+					addMessageIfNotExists(broadcasterId, NULL_ATR_ID, cacheMessage);
+				}
             } else {
                 cacheCandidate(broadcasterId, uuid);
                 addMessageIfNotExists(broadcasterId, uuid, cacheMessage);
@@ -188,11 +193,23 @@ public class FixedUUIDBroadcasterCache implements BroadcasterCache {
         }
         return cacheMessage;
     }
-
+	
     @Override
     public List<Object> retrieveFromCache(String broadcasterId, String uuid) {
-
-        List<Object> result = new ArrayList<Object>();
+        List<Object> result = new ArrayList<>();
+		
+		if (!cacheForAllOnNull) {
+			ClientQueue nullClientQueue = messages.remove(NULL_ATR_ID);
+			if (nullClientQueue != null) {
+				ConcurrentLinkedQueue<CacheMessage> clientMessages = nullClientQueue.getQueue();
+				for (CacheMessage cacheMessage : clientMessages) {
+					result.add(cacheMessage.getMessage());
+					logger.trace("Removing for NullAtmosphereResource {} cached message {}", uuid, cacheMessage.getMessage());
+					nullClientQueue.getQueue().remove(cacheMessage);
+					nullClientQueue.getIds().remove(cacheMessage.getId());
+				}
+			}
+		} 
 
         ClientQueue clientQueue;
         cacheCandidate(broadcasterId, uuid);
@@ -264,6 +281,8 @@ public class FixedUUIDBroadcasterCache implements BroadcasterCache {
             // Make sure the client is not in the process of being invalidated
             if (activeClients.get(clientId) != null) {
                 messages.put(clientId, clientQueue);
+			} else if (!cacheForAllOnNull && NULL_ATR_ID.equals(clientId)) {
+				messages.put(clientId, clientQueue);
             } else {
                 // The entry has been invalidated
                 logger.debug("Client {} is no longer active. Not caching message {}}", clientId, message);

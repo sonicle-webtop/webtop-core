@@ -51,12 +51,13 @@ public class PushConnection {
 	private final static Logger logger = WT.getLogger(PushConnection.class);
 	private final String sessionId;
 	private final String broadcasterPath;
-	private final ArrayList<ServiceMessage> initialMessages;
 	
 	public PushConnection(String sessionId, Collection<ServiceMessage> initialMessages) {
 		this.sessionId = sessionId;
-		this.broadcasterPath = "/"+PushEndpoint.URL+"/"+sessionId;
-		this.initialMessages = new ArrayList<>(initialMessages);
+		this.broadcasterPath = "/" + PushEndpoint.URL + "/" + sessionId;
+		if (!initialMessages.isEmpty()) {
+			writeOnBroadcast(initialMessages);
+		}
 	}
 	
 	public boolean flush() {
@@ -69,17 +70,7 @@ public class PushConnection {
 	
 	private boolean writeOnBroadcast(Collection<ServiceMessage> messages) {
 		BroadcasterFactory factory = Universe.broadcasterFactory();
-		if (!initialMessages.isEmpty()) {
-			//String s = preparePayload(messages);
-			//logger.trace("send: {}", s);
-			//getBroadcaster(factory).broadcast(s);
-			getBroadcaster(factory).broadcast(preparePayload(messages));
-			initialMessages.clear();
-		}
 		if (!messages.isEmpty()) {
-			//String s = preparePayload(messages);
-			//logger.trace("send: {}", s);
-			//getBroadcaster(factory).broadcast(s);
 			getBroadcaster(factory).broadcast(preparePayload(messages));
 		}
 		return true;
@@ -92,31 +83,4 @@ public class PushConnection {
 	private Broadcaster getBroadcaster(BroadcasterFactory factory) {
 		return factory.lookup(broadcasterPath, true);
 	}
-	
-	/*
-	private boolean writeOnResource(Collection<ServiceMessage> messages) {
-		Broadcaster broadcaster = getBroadcaster(Universe.broadcasterFactory());
-		if (broadcaster != null) {
-			if (!initialMessages.isEmpty()) {
-				String s = JsonResult.gson.toJson(initialMessages);
-				logger.trace("send: {}", s);
-				broadcaster.broadcast(s);
-				//broadcaster.broadcast(JsonResult.gson.toJson(initialMessages));
-				initialMessages.clear();
-			}
-			if (!messages.isEmpty()) {
-				String s = JsonResult.gson.toJson(messages);
-				logger.trace("send: {}", s);
-				broadcaster.broadcast(s);
-				//broadcaster.broadcast(JsonResult.gson.toJson(messages));
-			}
-			return true;
-		} else {
-			if (!messages.isEmpty()) {
-				initialMessages.addAll(messages);
-			}
-			return false;
-		}
-	}
-	*/
 }

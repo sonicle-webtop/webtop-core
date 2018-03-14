@@ -36,10 +36,8 @@ package com.sonicle.webtop.core.app;
 import java.io.IOException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
-import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.client.TrackMessageSizeInterceptor;
 import org.atmosphere.config.service.Disconnect;
-import org.atmosphere.config.service.Get;
 import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.PathParam;
 import org.atmosphere.config.service.Post;
@@ -62,8 +60,7 @@ import org.slf4j.LoggerFactory;
  */
 @ManagedService(
 		path = "/"+PushEndpoint.URL+"/{sessionId}",
-		//broadcasterCache = UUIDBroadcasterCache.class,
-		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.FixedUUIDBroadcasterCache.class,
+		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
 			com.sonicle.webtop.core.app.atmosphere.ContentTypeInterceptor.class,
 			AtmosphereResourceLifecycleInterceptor.class,
