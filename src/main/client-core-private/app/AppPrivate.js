@@ -210,14 +210,11 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				}
 			});
 		});
-		WTA.Atmosphere.on('connwarn', function(s, resume) {
-			WT.warn(WT.res('warn.connectionlost'), {
-				config: {
-					fn: function() {
-						resume();
-					}
-				}
-			});
+		WTA.Atmosphere.on('serverunreachable', function(s) {
+			me.connWarnTask();
+		});
+		WTA.Atmosphere.on('serveronline', function(s) {
+			me.connWarnTask(true);
 		});
 		WTA.Atmosphere.connect();
 		
@@ -227,6 +224,43 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		Sonicle.PageActivityMonitor.start();
 		
 		me.hideLoadingLayer();
+	},
+	
+	connWarnTask: function(stop) {
+		var me = this;
+		if (stop === true) {
+			if (Ext.isDefined(me.cwTask)) {
+				Ext.TaskManager.stop(me.cwTask);
+				delete me.cwTask;
+			}
+		} else {
+			if (!Ext.isDefined(me.cwTask)) {
+				me.cwTask = Ext.TaskManager.start({
+					run: function(count) {
+						if (count === 1) {
+							WT.warn(WT.res('warn.connectionlost'));
+						} else {
+							WT.showBadgeNotification(WT.ID, {
+								tag: 'conlost',
+								//iconCls: me.cssIconCls('im-chat', 'm'),
+								//title: WT.res('not.conlost.tit'),
+								//body: WT.res('not.conlost.body')
+								title: 'Connection problems',
+								body: 'Server is unreachable, please check your connection.'
+							});
+							
+						}
+					},
+					interval: 10*1000,
+					fireOnStart: false
+				});
+			}
+		}
+	},
+	
+	logout: function() {
+		WTA.Atmosphere.disconnect();
+		WT.logout();
 	},
 	
 	/**

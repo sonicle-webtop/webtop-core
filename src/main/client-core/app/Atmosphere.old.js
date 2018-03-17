@@ -52,11 +52,26 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		 * The time interval (in millis) between each heartbeat calls.
 		 * If set to -1, function will be completely disabled.
 		 */
-		clientHeartbeatInterval: 60*1000
+		clientHeartbeatInterval: 60*1000,
+		
+		/**
+		 * @cfg {Integer} connectionLostTimeout
+		 * Amount of time (in millis) after fire the connectionlost event.
+		 * Note that this event will fire only one time after the connection problem.
+		 */
+		connectionLostTimeout: 5*1000,
+		
+		/**
+		 * @cfg {Integer} connectionWarnTimeout
+		 * Amount of time (in millis) after display a connection warning alert.
+		 */
+		connectionWarnTimeout: 10*1000
 	},
 	
 	subSocket: null,
+	switchingTransport: false,
 	serverUnreachable: 0,
+	serverStateInvalid: 0,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -69,18 +84,17 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				atm = atmosphere;
 		if (force) me.disconnect();
 		if (me.subSocket === null) {
+			me.switchingTransport = false;
 			me.subSocket = atm.subscribe(me.createRequest());
 		}	
 	},
 	
 	disconnect: function() {
 		var me = this,
-				atm = atmosphere,
-				sock = me.subSocket;
-		if (sock !== null) {
+				atm = atmosphere;
+		if (me.subSocket !== null) {
+			atm.unsubscribeUrl(me.subSocket.getUrl());
 			me.subSocket = null;
-			atm.unsubscribeUrl(sock.getUrl());
-			me.stopHBTask();
 		}
 	},
 	
@@ -98,72 +112,78 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			//transport: 'long-polling',
 			fallbackTransport: 'long-polling',
 			timeout: 300*1000, // The maximum time a connection stay opened when no message (or event) are sent or received.
-			connectTimeout: -1, // The connect timeout. If the client fails to connect, the fallbackTransport will be used.
+			//connectTimeout: 10*1000, // The connect timeout. If the client fails to connect, the fallbackTransport will be used.
+			//connectTimeout: 30*1000,
+			connectTimeout: -1, // The timeout after switch to fallback and also the timeout for long-polling for every close/open.
 			reconnectInterval: 0, // The interval before an attempt to reconnect will be made.
-			pollingInterval: 0, // Reconnect interval when long-polling transport is used and a response received.
-			maxReconnectOnClose: Number.MAX_VALUE,
+			pollingInterval: 5, // Reconnect interval when long-polling transport is used and a response received.
+			maxReconnectOnClose: 10,
 			reconnectOnServerError: true,
 			onOpen: function(resp) {
 				if (me.getEventsDebug()) console.log('onOpen ['+resp.status+', '+resp.state+']');
-				
-				if (!me.subSocket) return;
+				me.switchingTransport = false;
 				me.updateSrvUnreachable(true);
+				
+				// Sets connect timeout according to current transport
 				if (me.isWebsocket(resp)) {
-					delete me.ws1ReconnectDone;
-					me.initWebsocketParams(this);
+					// The amount of time in order to switch to fallback transport
+					this.connectTimeout = -1;
+					this.reconnectInterval = 0;
+					this.maxReconnectOnClose = 10;
 				} else if (me.isLongPolling(resp)) {
-					me.initLongPollingParams(this);
+					// The amount of time in order to cancel current pending request and open a new one
+					this.connectTimeout = 30*1000;
+					this.reconnectInterval = 0;
+					this.maxReconnectOnClose = Number.MAX_VALUE;
 				}
+				
 				if (me.isHBNeeded(resp)) {
 					me.startHBTask();
 				}
 			},
 			onReopen: function(req, resp) {
 				if (me.getEventsDebug()) console.log('onReopen ['+resp.status+', '+resp.state+']');
-				
-				if (!me.subSocket) return;
-				if (me.isWebsocket(resp)) {
-					me.updateSrvUnreachable(true);
-				} else if (me.isLongPolling(resp)) {
-					if (resp.status === 200) {
-						me.updateSrvUnreachable(true);
-					}
-				}
+				me.switchingTransport = false;
+				me.updateSrvUnreachable(true);
 				if (me.isHBNeeded(resp)) {
 					me.startHBTask();
 				}
 			},
 			onClose: function(resp) {
 				if (me.getEventsDebug()) console.log('onClose ['+resp.status+', '+resp.state+']');
-				
-				if (!me.subSocket) return;
 				me.stopHBTask();
+				/*
+				if (me.isWebsocket(resp)) {
+					me.updateSrvUnreachable();
+				}
+				*/
 			},
 			onReconnect: function(req, resp) {
 				if (me.getEventsDebug()) console.log('onReconnect ['+resp.status+', '+resp.state+']');
 				
-				if (!me.subSocket) return;
-				if (me.isWebsocket(resp)) {
-					if (me.ws1ReconnectDone === true) {
-						me.updateSrvUnreachable();
-					} else {
-						me.ws1ReconnectDone = true;
-					}
-				} else if (me.isLongPolling(resp)) {
+				if (me.isLongPolling(resp)) {
 					if (resp.status === 500) {
 						req.reconnectInterval = 5*1000;
-						req.maxReconnectOnClose = 2*120;
-						me.updateSrvUnreachable();
-					} else if (resp.status === 204) {
 						me.updateSrvUnreachable();
 					}
 				}
+				
+				/*
+				if (me.isLongPolling(resp)) {
+					if (resp.status === 204) {
+						me.updateSrvStateInvalid();
+					} else if (resp.status === 500) {
+						me.updateSrvUnreachable();
+					}
+				}
+				*/
 			},
 			onClientTimeout: function(resp) {
 				if (me.getEventsDebug()) console.log('onClientTimeout ['+resp.status+', '+resp.state+']');
 			},
 			onTransportFailure: function(err, req) {
 				if (me.getEventsDebug()) console.log('onTransportFailure');
+				me.switchingTransport = true;
 			},
 			onMessage: function(resp) {
 				//console.log('onMessage');
@@ -172,33 +192,23 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			onError: function(resp) {
 				if (me.getEventsDebug()) console.log('onError ['+resp.status+', '+resp.state+']');
 				
-				if (!me.subSocket) return;
 				if (resp.state === 'error') {
 					if (resp.status === 0) {
-						// Handle net::ERR_INTERNET_DISCONNECTED error
+						me.updateSrvUnreachable();
+					} else if ((resp.status === 401) && (resp.status === 404)) {
+						me.updateSrvStateInvalid();
+					}
+				}
+				
+				/*
+				if (me.isLongPolling(resp)) {
+					if (resp.status === 0) {
 						me.updateSrvUnreachable();
 					}
 				}
+				*/
 			}
 		};
-	},
-	
-	initWebsocketParams: function(req) {
-		// The amount of time in order to switch to fallback transport
-		req.connectTimeout = -1;
-		// The amount of time between each reconnect tries
-		req.reconnectInterval = 5*1000;
-		// Max unsuccesful retries
-		req.maxReconnectOnClose = 2*120;
-	},
-	
-	initLongPollingParams: function(req) {
-		// The amount of time in order to cancel current pending request and open a new one
-		req.connectTimeout = 30*1000;
-		// Immediate reconnect after each cycle open/pending/close (changed in case of fallback)
-		req.reconnectInterval = 0;
-		// Max unsuccesful retries
-		req.maxReconnectOnClose = Number.MAX_VALUE;
 	},
 	
 	handleMessages: function(raw) {
@@ -244,17 +254,68 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				me.fireEventArgs('serveronline', [me]);
 			}
 			me.serverUnreachable = 0;
+			me.stopConnLostTimeout();
 		} else {
 			me.serverUnreachable++;
 			if (me.serverUnreachable === 1) {
+				me.startConnLostTimeout();
 				console.log('fire SERVER-UNREACHABLE');
 				me.fireEventArgs('serverunreachable', [me]);
 			}
 		}
 	},
 	
-	isServerUnreachable: function() {
-		return this.serverUnreachable > 0;
+	updateSrvStateInvalid: function(reset) {
+		var me = this;
+		if (reset === true) {
+			me.serverStateInvalid = 0;
+		} else {
+			me.serverStateInvalid++;
+			if (me.serverStateInvalid === 1) {
+				console.log('fire SERVER-STATE-INVALID');
+				me.fireEventArgs('serverstateinvalid', [me]);
+			}
+		}
+	},
+	
+	startConnLostTimeout: function(reset) {
+		var me = this;
+		if (reset === true) me.stopConnLostTimeout();
+		console.log('switchingTransport='+me.switchingTransport);
+		if (!me.connLost) {
+			me.connLost = setTimeout(function() {
+				me.fireEventArgs('connlost', [me]);
+				me.startConnWarnTimeout();
+			}, me.getConnectionLostTimeout());
+		}
+	},
+	
+	stopConnLostTimeout: function() {
+		var me = this;
+		if (me.connLost) {
+			clearTimeout(me.connLost);
+			me.connLost = null;
+		}
+		me.stopConnWarnTimeout();
+	},
+	
+	startConnWarnTimeout: function() {
+		var me = this;
+		me.stopConnWarnTimeout();
+		me.connWarn = setTimeout(function() {
+			var fn = function() {
+				if (me.connWarn) me.startConnWarnTimeout();
+			};
+			me.fireEventArgs('connwarn', [me, fn]);
+		}, me.getConnectionWarnTimeout());
+	},
+	
+	stopConnWarnTimeout: function() {
+		var me = this;
+		if (me.connWarn) {
+			clearTimeout(me.connWarn);
+			me.connWarn = null;
+		}
 	},
 	
 	privates: {

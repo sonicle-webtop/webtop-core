@@ -196,7 +196,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		var me = this, wnd;
 		switch(s.getItemId()) {
 			case 'logout':
-				WT.logout();
+				WT.getApp().logout();
 				break;
 			case 'feedback':
 				me.showFeedback();
