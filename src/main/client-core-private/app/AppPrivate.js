@@ -201,26 +201,28 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		}
 		
 		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
-		WTA.Atmosphere.setEventsDebug(true);
-		WTA.Atmosphere.on('receive', function(s,messages) {
-			Ext.each(messages, function(msg) {
-				if (msg && msg.service) {
-					var svc = me.getService(msg.service);
-					if(svc) svc.handleMessage(msg);
-				}
-			});
-		});
-		WTA.Atmosphere.on('serverunreachable', function(s) {
-			me.connWarnTask();
-		});
-		WTA.Atmosphere.on('serveronline', function(s) {
-			me.connWarnTask(true);
+		WTA.Atmosphere.on({
+			receive: function(s,messages) {
+				Ext.each(messages, function(msg) {
+					if (msg && msg.service) {
+						var svc = me.getService(msg.service);
+						if(svc) svc.handleMessage(msg);
+					}
+				});
+			},
+			serverunreachable: function(s) {
+				me.connWarnTask();
+			},
+			serveronline: function(s) {
+				me.connWarnTask(true);
+			}
 		});
 		WTA.Atmosphere.connect();
-		
+		/*
 		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
 			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
 		});
+		*/
 		Sonicle.PageActivityMonitor.start();
 		
 		me.hideLoadingLayer();
@@ -232,23 +234,24 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			if (Ext.isDefined(me.cwTask)) {
 				Ext.TaskManager.stop(me.cwTask);
 				delete me.cwTask;
+				
+				WT.showBadgeNotification(WT.ID, {
+					tag: 'connrestored',
+					title: WT.res('not.conn.restored.tit'),
+					body: WT.res('not.conn.restored.body')
+				});
 			}
 		} else {
 			if (!Ext.isDefined(me.cwTask)) {
 				me.cwTask = Ext.TaskManager.start({
 					run: function(count) {
+						WT.showBadgeNotification(WT.ID, {
+							tag: 'connlost',
+							title: WT.res('not.conn.lost.tit'),
+							body: WT.res('not.conn.lost.body')
+						});
 						if (count === 1) {
 							WT.warn(WT.res('warn.connectionlost'));
-						} else {
-							WT.showBadgeNotification(WT.ID, {
-								tag: 'conlost',
-								//iconCls: me.cssIconCls('im-chat', 'm'),
-								//title: WT.res('not.conlost.tit'),
-								//body: WT.res('not.conlost.body')
-								title: 'Connection problems',
-								body: 'Server is unreachable, please check your connection.'
-							});
-							
 						}
 					},
 					interval: 10*1000,

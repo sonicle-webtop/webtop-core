@@ -39,6 +39,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 	],
 	
 	config: {
+		/**
+		 * @cfg {String} url
+		 * The URL for push connection.
+		 */
 		url: null,
 		
 		/**
@@ -90,7 +94,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			shared: false,
 			url: me.getUrl(),
 			logLevel: 'debug',
-			//contentType: 'application/json',
+			contentType: 'application/json; charset=UTF-8',
 			suspend: true,
 			enableProtocol: true,
 			trackMessageLength : true,
@@ -109,7 +113,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				if (!me.subSocket) return;
 				me.updateSrvUnreachable(true);
 				if (me.isWebsocket(resp)) {
-					delete me.ws1ReconnectDone;
+					delete me.ws1stReconnect;
 					me.initWebsocketParams(this);
 				} else if (me.isLongPolling(resp)) {
 					me.initLongPollingParams(this);
@@ -144,10 +148,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				
 				if (!me.subSocket) return;
 				if (me.isWebsocket(resp)) {
-					if (me.ws1ReconnectDone === true) {
+					if (me.ws1stReconnect === true) {
 						me.updateSrvUnreachable();
 					} else {
-						me.ws1ReconnectDone = true;
+						me.ws1stReconnect = true;
 					}
 				} else if (me.isLongPolling(resp)) {
 					if (resp.status === 500) {
@@ -240,14 +244,12 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		var me = this;
 		if (reset === true) {
 			if (me.serverUnreachable > 0) {
-				console.log('fire SERVER-ONLINE');
 				me.fireEventArgs('serveronline', [me]);
 			}
 			me.serverUnreachable = 0;
 		} else {
 			me.serverUnreachable++;
 			if (me.serverUnreachable === 1) {
-				console.log('fire SERVER-UNREACHABLE');
 				me.fireEventArgs('serverunreachable', [me]);
 			}
 		}
