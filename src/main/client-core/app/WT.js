@@ -282,7 +282,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {Boolean} True if match, false otherwise.
 	 */
 	isUnmatchedResKey: function(key) {
-		return key.startsWith('${') && key.endsWith('}');
+		return Ext.String.startsWith(key, '${') && Ext.String.endsWith(key, '}');
 	},
 	
 	/**
@@ -330,11 +330,11 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String} The value.
 	 */
 	resTpl: function(id, tpl) {
-		if(arguments.length === 1) {
+		if (arguments.length === 1) {
 			tpl = id;
 			id = WT.ID;
 		}
-		if(Ext.isString(tpl) && tpl.startsWith('{') && tpl.endsWith('}')) {
+		if (Ext.isString(tpl) && Ext.String.startsWith(tpl, '{') && Ext.String.endsWith(tpl, '}')) {
 			var s = tpl.substr(1, tpl.length-2),
 					tokens = s.split('@');
 			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);

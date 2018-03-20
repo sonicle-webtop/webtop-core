@@ -203,9 +203,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 	notificationCallback: function(type, tag, data) {
 		var me = this;
-		if (tag.startsWith(me.self.NOTAG_IM_NEWMSG)) {
+		if (Ext.String.startsWith(tag, me.self.NOTAG_IM_NEWMSG)) {
 			me.openChatRoomUI(data.chatId, data.chatName);
-		} else if (tag.startsWith(me.self.NOTAG_IM_CHAT)) {
+		} else if (Ext.String.startsWith(tag, me.self.NOTAG_IM_CHAT)) {
 			me.openChatRoomUI(data.chatId, data.chatName);
 		}
 	},
