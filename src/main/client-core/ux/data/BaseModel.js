@@ -85,6 +85,11 @@ Ext.define('Sonicle.webtop.core.ux.data.BaseModel', {
 		this._pendingCompile = [];
 	},
 	
+	setExtraParams: function(params) {
+		var proxy = this.getProxy();
+		if (proxy) WTU.applyExtraParams(proxy, params);
+	},
+	
 	/**
 	 * Sets the specified field only if its (current) value is null.
 	 * @param {String} field The name of the field to update

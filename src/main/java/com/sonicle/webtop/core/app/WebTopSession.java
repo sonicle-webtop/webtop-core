@@ -942,7 +942,7 @@ public class WebTopSession {
 		js.appManifest.toolkit = "classic";
 		
 		// Include external libraries references
-		// Please do not replace 0.0.0 with the real version, it limits server traffic.
+		// Do not replace 0.0.0 with the real version, it limits server traffic.
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
 		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
 		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
@@ -959,6 +959,7 @@ public class WebTopSession {
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
 		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
+		js.appManifest.addJs(LIBS_PATH + "rrule/2.1.0/" + "rrule.min.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
