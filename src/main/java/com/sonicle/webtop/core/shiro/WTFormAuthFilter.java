@@ -86,7 +86,9 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			
 			String location = ServletUtils.getStringParameter(request, "location", null);
 			if (location != null) {
-				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, ServletHelper.sanitizeBaseUrl(location));
+				String url = ServletHelper.sanitizeBaseUrl(location);
+				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, url);
+				logger.trace("[{}] Location: {}", webtopSession.getId(), url);
 			}
 		}
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");

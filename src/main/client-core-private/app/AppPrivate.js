@@ -201,6 +201,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		}
 		
 		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
+		WTA.Atmosphere.setEventsDebug(true);
 		WTA.Atmosphere.on({
 			receive: function(s,messages) {
 				Ext.each(messages, function(msg) {
@@ -250,9 +251,11 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 							title: WT.res('not.conn.lost.tit'),
 							body: WT.res('not.conn.lost.body')
 						});
+						/*
 						if (count === 1) {
 							WT.warn(WT.res('warn.connectionlost'));
 						}
+						*/
 					},
 					interval: 10*1000,
 					fireOnStart: false
