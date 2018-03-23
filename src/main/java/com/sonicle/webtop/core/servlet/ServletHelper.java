@@ -116,15 +116,15 @@ public class ServletHelper {
 	}
 	
 	public static String sanitizeBaseUrl(String url) {
-		url = StringUtils.substringBefore(url, Login.URL);
-		url = StringUtils.substringBefore(url, Logout.URL);
-		url = StringUtils.substringBefore(url, Otp.URL);
-		url = StringUtils.substringBefore(url, Start.URL);
-		url = StringUtils.substringBefore(url, ResourceRequest.URL);
-		url = StringUtils.substringBefore(url, PrivateRequest.URL);
-		url = StringUtils.substringBefore(url, PublicRequest.URL);
-		url = StringUtils.substringBefore(url, RestApi.URL);
-		return url;
+		url = StringUtils.substringBefore(url, "/"+Login.URL);
+		url = StringUtils.substringBefore(url, "/"+Logout.URL);
+		url = StringUtils.substringBefore(url, "/"+Otp.URL);
+		url = StringUtils.substringBefore(url, "/"+Start.URL);
+		url = StringUtils.substringBefore(url, "/"+ResourceRequest.URL);
+		url = StringUtils.substringBefore(url, "/"+PrivateRequest.URL);
+		url = StringUtils.substringBefore(url, "/"+PublicRequest.URL);
+		url = StringUtils.substringBefore(url, "/"+RestApi.URL);
+		return PathUtils.ensureTrailingSeparator(url);
 	}
 	
 	public static boolean isPublic(HttpServletRequest request) {
