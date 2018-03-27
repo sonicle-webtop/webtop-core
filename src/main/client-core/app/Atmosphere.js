@@ -46,13 +46,20 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		url: null,
 		
 		/**
-		 * @cfg {Boolean} eventsDebug
+		 * @cfg {Boolean} [eventsDebug=false]
 		 * If active, displays debugging info on subsockets callbacks.
 		 */
 		eventsDebug: false,
 		
 		/**
-		 * @cfg {Integer} clientHeartbeatInterval
+		 * @cfg {Integer} [transportAutoResetAfter=20]
+		 * Force transport reset (disconnect->connect) after this 
+		 * number of unsuccesful reconnects.
+		 */
+		transportAutoResetAfter: 20,
+		
+		/**
+		 * @cfg {Integer} [clientHeartbeatInterval=60000]
 		 * The time interval (in millis) between each heartbeat calls.
 		 * If set to -1, function will be completely disabled.
 		 */
@@ -73,7 +80,8 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				atm = atmosphere;
 		if (force) me.disconnect();
 		if (me.subSocket === null) {
-			me.subSocket = atm.subscribe(me.createRequest());
+			if (!me.request) me.request = me.createRequest();
+			me.subSocket = atm.subscribe(me.request);
 		}	
 	},
 	
@@ -111,9 +119,11 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				if (me.getEventsDebug()) console.log('onOpen ['+resp.status+', '+resp.state+']');
 				
 				if (!me.subSocket) return;
+				me.request.uuid = resp.request.uuid; // Carry the UUID. This is required if you want to call subscribe(request) again.
+				delete me.wsReconnectCount;
+				delete me.allowAutoReset;
 				me.updateSrvUnreachable(true);
 				if (me.isWebsocket(resp)) {
-					delete me.ws1stReconnect;
 					me.initWebsocketParams(this);
 				} else if (me.isLongPolling(resp)) {
 					me.initLongPollingParams(this);
@@ -142,17 +152,26 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				
 				if (!me.subSocket) return;
 				me.stopHBTask();
+				if (me.isWebsocket(resp)) {
+					me.allowAutoReset = true;
+				}
 			},
 			onReconnect: function(req, resp) {
 				if (me.getEventsDebug()) console.log('onReconnect ['+resp.status+', '+resp.state+']');
 				
 				if (!me.subSocket) return;
 				if (me.isWebsocket(resp)) {
-					if (me.ws1stReconnect === true) {
+					if (!Ext.isDefined(me.wsReconnectCount)) me.wsReconnectCount = 0;
+					me.wsReconnectCount++;
+					if (me.wsReconnectCount === 1) {
 						me.updateSrvUnreachable();
-					} else {
-						me.ws1stReconnect = true;
 					}
+					var thres = me.getTransportAutoResetAfter();
+					if ((me.allowAutoReset === true) && (thres !== -1) && (me.wsReconnectCount === thres)) {
+						me.fireEventArgs('beforeautoreset', [me]);
+						me.connect(true);
+					}
+					
 				} else if (me.isLongPolling(resp)) {
 					if (resp.status === 500) {
 						req.reconnectInterval = 5*1000;
