@@ -77,7 +77,7 @@ Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
 	
 	buildTooltip: function(desc) {
 		var text, build;
-		if (WT.isPermitted('WTADMIN', 'ACCESS')) {
+		if (WT.isWTAdmin()) {
 			build = desc.getBuild();
 			text = Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany());
 		} else {

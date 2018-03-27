@@ -132,6 +132,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			{alias: 'wt-im-send', name: 'im-send'}
 		]);
 		
+		Ext.iterate(WTS.roles, function(role) {
+			me.roles[role] = true;
+		});
+		
 		// Loads service descriptors from startup object
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WTA.ServiceDescriptor', {

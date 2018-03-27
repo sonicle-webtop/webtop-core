@@ -79,7 +79,10 @@ public class RunContext {
 	}
 	
 	public static boolean isImpersonated() {
-		Subject subject = getSubject();
+		return isImpersonated(getSubject());
+	}
+	
+	public static boolean isImpersonated(Subject subject) {
 		if (subject == null) return false;
 		Principal principal = (Principal)subject.getPrincipal();
 		if (principal == null) return false;
