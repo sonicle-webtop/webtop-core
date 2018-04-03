@@ -148,12 +148,14 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	/*
 	private void initAllowedServices() {
 		synchronized(cacheAllowedServices) {
 			cacheAllowedServices.addAll(doListAllowedServices());
 			cacheReady.add("cacheAllowedServices");
 		}
 	}
+	*/
 
 	public ServiceManager getServiceManager() {
 		ensureCallerService(SERVICE_ID, "getServiceManager");
@@ -423,8 +425,9 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Set<String> listAllowedServices() {
+		ensureProfile(false); // In other cases result may be inconsistent!
+		
 		LinkedHashSet<String> ids = new LinkedHashSet<>();
-		ensureUserDomain();
 		if (RunContext.isSysAdmin()) {
 			ids.add(CoreManifest.ID);
 			ids.add(CoreAdminManifest.ID);
@@ -433,20 +436,10 @@ public class CoreManager extends BaseManager {
 		} else {
 			ServiceManager svcm = wta.getServiceManager();
 			for (String id : svcm.listRegisteredServices()) {
-				// We don't want to add admin service during impersonation
-				if (id.equals(CoreAdminManifest.ID) && RunContext.isImpersonated()) continue;
-				if (RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+				if (RunContext.isPermitted(true, SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
 			}
 		}
 		return ids;
-		/*
-		synchronized(cacheAllowedServices) {
-			if(!cacheReady.contains("cacheAllowedServices")) {
-				initAllowedServices();
-			}
-			return cacheAllowedServices;
-		}
-		*/
 	}
 	
 	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
@@ -478,23 +471,7 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	
-	
-	private List<String> doListAllowedServices() {
-		ArrayList<String> ids = new ArrayList<>();
-		
-		ensureUserDomain();
-		if(RunContext.isSysAdmin()) {
-			ids.add(CoreManifest.ID);
-			ids.add(CoreAdminManifest.ID);
-		} else {
-			ServiceManager svcm = wta.getServiceManager();
-			for(String id : svcm.listRegisteredServices()) {
-				if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
-			}
-		}
-		return ids;
-	}
+
 	
 	
 
@@ -629,8 +606,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
-			ensureUserDomain(activity.getDomainId());
+			ensureProfileDomain(activity.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			activity = doActivityUpdate(true, con, activity);
@@ -649,8 +626,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
-			ensureUserDomain(activity.getDomainId());
+			ensureProfileDomain(activity.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			activity = doActivityUpdate(false, con, activity);
@@ -670,10 +647,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "ACTIVITIES", "MANAGE");
 			Activity act = getActivity(activityId);
 			if (act == null) return -1;
-			ensureUserDomain(act.getDomainId());
+			ensureProfileDomain(act.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			int ret = dao.logicDelete(con, activityId);
@@ -752,8 +729,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
-			ensureUserDomain(causal.getDomainId());
+			ensureProfileDomain(causal.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			causal = doCausalUpdate(true, con, causal);
@@ -772,8 +749,8 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
-			ensureUserDomain(causal.getDomainId());
+			ensureProfileDomain(causal.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			causal = doCausalUpdate(false, con, causal);
@@ -793,10 +770,10 @@ public class CoreManager extends BaseManager {
 		Connection con = null;
 		
 		try {
-			RunContext.ensureIsPermitted(SERVICE_ID, "CAUSALS", "MANAGE");
 			Causal cau = getCausal(causalId);
 			if (cau == null) return -1;
-			ensureUserDomain(cau.getDomainId());
+			ensureProfileDomain(cau.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
 			int ret = dao.logicDelete(con, causalId);
@@ -1251,7 +1228,7 @@ public class CoreManager extends BaseManager {
 			ArrayList<OShare> folders = new ArrayList<>();
 			List<OShare> shares = shadao.selectByUserServiceKey(con, rootShare.getUserUid(), rootShare.getServiceId(), folderShareKey);
 			for(OShare share : shares) {
-				if(RunContext.isPermitted(getTargetProfileId(), rootShare.getServiceId(), folderPermissionKey, ServicePermission.ACTION_READ, share.getShareId().toString())) {
+				if(RunContext.isPermitted(true, getTargetProfileId(), rootShare.getServiceId(), folderPermissionKey, ServicePermission.ACTION_READ, share.getShareId().toString())) {
 					folders.add(share);
 				}
 			}
@@ -1319,7 +1296,7 @@ public class CoreManager extends BaseManager {
 		UserProfileId targetPid = getTargetProfileId();
 		boolean[] perms = new boolean[actions.length];
 		for(int i=0; i<actions.length; i++) {
-			perms[i] = RunContext.isPermitted(targetPid, share.getServiceId(), permKey, actions[i], instance);
+			perms[i] = RunContext.isPermitted(true, targetPid, share.getServiceId(), permKey, actions[i], instance);
 		}
 		return perms;
 	}
@@ -1659,11 +1636,10 @@ public class CoreManager extends BaseManager {
 		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
 		UserOptionsServiceData uos = null;
 		//TODO: se admin allora targetprofileSenza problemi altrimenti controllo che corrisponda
-		UserProfileId pid = getTargetProfileId();
-		List<String> ids = svcm.listUserOptionServices();
-		for(String id : ids) {
+		UserProfileId targetPid = getTargetProfileId();
+		for (String id : svcm.listUserOptionServices()) {
 			// Checks user rights on service...
-			if(RunContext.isPermitted(SERVICE_ID, "SERVICE", "ACCESS", id)) {
+			if (RunContext.isPermitted(true, targetPid, SERVICE_ID, "SERVICE", "ACCESS", id)) {
 				uos = new UserOptionsServiceData(svcm.getManifest(id));
 				uos.name = wta.lookupResource(id, getLocale(), CoreLocaleKey.SERVICE_NAME);
 				items.add(uos);

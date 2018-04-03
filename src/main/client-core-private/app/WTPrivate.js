@@ -74,6 +74,41 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return this.getApp().getServiceApi(sid);
 	},
 	
+	/**
+	 * Returns `true` if this current profile is the SysAdmin.
+	 * @returns {Boolean}
+	 */
+	isSysAdmin: function() {
+		return this.hasRole('SYSADMIN');
+	},
+	
+	/**
+	 * Returns `true` if this current profile has admin rights.
+	 * @returns {Boolean}
+	 */
+	isAdmin: function() {
+		return this.hasRole('WTADMIN');
+	},
+	
+	/**
+	 * @deprecated
+	 */
+	isWTAdmin: function() {
+		return this.isAdmin();
+	},
+	
+	/**
+	 * Returns `true` if this current profile has been impersonated.
+	 * @returns {Boolean}
+	 */
+	isProfileImpersonated: function() {
+		return this.hasRole('IMPERSONATED_USER');
+	},
+	
+	isProfileActingAsAdmin: function() {
+		return this.isWTAdmin() || this.isProfileImpersonated();
+	},
+	
 	hasRole: function(role) {
 		return this.getApp().hasRoles([role])[0];
 	},
@@ -104,6 +139,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return svc.isPermitted(resource, action);
 	},
 	
+	/*
 	isSysAdmin: function() {
 		return this.isPermitted('SYSADMIN', 'ACCESS');
 	},
@@ -111,6 +147,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	isWTAdmin: function() {
 		return this.isPermitted('WTADMIN', 'ACCESS');
 	},
+	*/
 	
 	/**
 	 * Creates a displayable view.

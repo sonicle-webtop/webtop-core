@@ -37,6 +37,8 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.ServiceManager;
+import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OSnoozedReminder;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.model.ReminderMessage;
@@ -212,24 +214,26 @@ public class JobService extends BaseJobService {
 		
 		@Override
 		public void executeWork() {
+			SettingsManager setMgr = getSettingsManager();
 			DateTime now = DateTime.now(DateTimeZone.UTC).withMillisOfSecond(0);
 			List<SyncDevice> devices = null;
 			
 			logger.trace("DevicesSyncCheckJob started [{}]", now);
 			try {
-				List<UserProfileId> pids = jobService.core.listProfilesWithSetting(jobService.SERVICE_ID, CoreSettings.DEVICES_SYNC_ALERT_ENABLED, true);
-				if(!pids.isEmpty()) devices = jobService.core.listZPushDevices();
-				for(UserProfileId pid : pids) {
-					// Skip profiles that don't have permission for syncing devices
-					if(!RunContext.isPermitted(pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
-					
-					UserProfile.Data ud = WT.getUserData(pid);
-					// Skip profiles that cannot receive email alerts
-					if(ud.getEmail() == null) continue;
-					
-					int daysTolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
-					if(!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, daysTolerance * 24)) {
-						sendEmail(pid, ud);
+				List<UserProfileId> pids = getProfilesToCheck();
+				if ((pids != null) && (!pids.isEmpty())) {
+					devices = jobService.core.listZPushDevices();
+					for (UserProfileId pid : pids) {
+						// Skip profiles that don't have permission for syncing devices
+						if (!RunContext.isPermitted(true, pid, jobService.SERVICE_ID, "DEVICES_SYNC", "ACCESS")) continue;
+						
+						UserProfile.Data ud = WT.getUserData(pid);
+						if (ud.getEmail() == null) continue; // Skip profiles that cannot receive email alerts
+						
+						int daysTolerance = new CoreUserSettings(pid).getDevicesSyncAlertTolerance();
+						if (!checkSyncStatusForUser(devices, ud.getEmail().getAddress(), now, daysTolerance * 24)) {
+							sendEmail(pid, ud);
+						}
 					}
 				}
 			} catch(WTException ex) {
@@ -267,6 +271,16 @@ public class JobService extends BaseJobService {
 				}	
 			}
 			return true;
+		}
+		
+		private List<UserProfileId> getProfilesToCheck() {
+			SettingsManager setMgr = getSettingsManager();
+			return (setMgr == null) ? null : setMgr.listProfilesWith(jobService.SERVICE_ID, CoreSettings.DEVICES_SYNC_ALERT_ENABLED, true);
+		}
+		
+		private SettingsManager getSettingsManager() {
+			WebTopApp wta = WebTopApp.getInstance();
+			return (wta != null) ? wta.getSettingsManager() : null;
 		}
 	}
 }

@@ -104,7 +104,7 @@ public class CoreManifest extends ServiceManifest {
 			Mark WebTop admins (users that can act as admins)
 			- ACCESS: can manage webtop palform
 		*/
-		permissions.add(new ServicePermission("WTADMIN", new String[]{ServicePermission.ACTION_ACCESS}));
+		//permissions.add(new ServicePermission("WTADMIN", new String[]{ServicePermission.ACTION_ACCESS}));
 		
 		/*
 			SERVICE (internal)

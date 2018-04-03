@@ -230,14 +230,13 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> perms = new HashSet<>();
 		
 		if (Principal.xisAdmin(pid.toString())) {
-			roles.add("SYSADMIN");
-			roles.add("WTADMIN");
-			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
-			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
-			
+			roles.add(WebTopManager.ROLE_SYSADMIN);
+			roles.add(WebTopManager.ROLE_WTADMIN);
+			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
+			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		} else if (principal.isImpersonated()) {
-			roles.add("WTADMIN");
-			perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
+			roles.add(WebTopManager.ROLE_IMPERSONATED_USER);
+			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		}
 		
 		// Force core private service permission for any principal

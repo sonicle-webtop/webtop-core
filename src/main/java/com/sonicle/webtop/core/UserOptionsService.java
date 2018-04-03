@@ -81,11 +81,14 @@ public class UserOptionsService extends BaseUserOptionsService {
 			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
 			OUser user = core.getUser();
-			if(user == null) throw new WTException("Unable to find a user [{0}, {1}]", getTargetDomainId(), getTargetUserId());
+			if (user == null) throw new WTException("Unable to find a user [{0}, {1}]", getTargetDomainId(), getTargetUserId());
 			UserProfile.PersonalInfo upi = core.getUserPersonalInfo();
 			
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
+				jso.canManagePassword = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
+				jso.canManageUpi = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
+				jso.canSyncDevices = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				
 				// main
 				jso.displayName = user.getDisplayName();
@@ -105,7 +108,6 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.longTimeFormat = us.getLongTimeFormat();
 				
 				// profileInfo
-				jso.canManageUpi = RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
 				jso.upiTitle = upi.getTitle();
 				jso.upiFirstName = upi.getFirstName();
 				jso.upiLastName = upi.getLastName();
@@ -136,9 +138,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 				boolean isTrusted = false;
 				String trustedOn = null;
 				TrustedDeviceCookie tdc = otpm.readTrustedDeviceCookie(getTargetProfileId(), request);
-				if(otpm.isThisDeviceTrusted(getTargetProfileId(), tdc)) {
+				if (otpm.isThisDeviceTrusted(getTargetProfileId(), tdc)) {
 					JsTrustedDevice td = otpm.getTrustedDevice(getTargetProfileId(), tdc.deviceId);
-					if(td != null) {
+					if (td != null) {
 						isTrusted = true;
 						trustedOn = td.getISOTimestamp();
 					}
@@ -148,7 +150,6 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.otpDeviceTrustedOn = trustedOn;
 				
 				// Sync
-				jso.canSyncDevices = RunContext.isPermitted(getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
@@ -161,7 +162,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				
 				new JsonResult(jso).printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+			} else if (crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(payload, JsUserOptions.class);
 				boolean upCacheNeedsUpdate = false;
 				
@@ -185,41 +186,41 @@ public class UserOptionsService extends BaseUserOptionsService {
 					upCacheNeedsUpdate = true;
 					us.setTimezone(pl.data.timezone);
 				}
-				if(pl.map.has("startDay")) us.setStartDay(pl.data.startDay);
-				if(pl.map.has("shortDateFormat")) us.setShortDateFormat(pl.data.shortDateFormat);
-				if(pl.map.has("longDateFormat")) us.setLongDateFormat(pl.data.longDateFormat);
-				if(pl.map.has("shortTimeFormat")) us.setShortTimeFormat(pl.data.shortTimeFormat);
-				if(pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
+				if (pl.map.has("startDay")) us.setStartDay(pl.data.startDay);
+				if (pl.map.has("shortDateFormat")) us.setShortDateFormat(pl.data.shortDateFormat);
+				if (pl.map.has("longDateFormat")) us.setLongDateFormat(pl.data.longDateFormat);
+				if (pl.map.has("shortTimeFormat")) us.setShortTimeFormat(pl.data.shortTimeFormat);
+				if (pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
 				
 				// User personal info
-				if(RunContext.isPermitted(getSessionProfile().getId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
+				if (RunContext.isImpersonated() || RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
 					upCacheNeedsUpdate = true;
-					if(pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
-					if(pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
-					if(pl.map.has("upiLastName")) upi.setLastName(pl.data.upiLastName);
-					if(pl.map.has("upiNickname")) upi.setNickname(pl.data.upiNickname);
-					if(pl.map.has("upiGender")) upi.setGender(pl.data.upiGender);
-					if(pl.map.has("upiEmail")) upi.setEmail(pl.data.upiEmail);
-					if(pl.map.has("upiTelephone")) upi.setTelephone(pl.data.upiTelephone);
-					if(pl.map.has("upiFax")) upi.setFax(pl.data.upiFax);
-					if(pl.map.has("upiPager")) upi.setPager(pl.data.upiPager);
-					if(pl.map.has("upiMobile")) upi.setMobile(pl.data.upiMobile);
-					if(pl.map.has("upiAddress")) upi.setAddress(pl.data.upiAddress);
-					if(pl.map.has("upiCity")) upi.setCity(pl.data.upiCity);
-					if(pl.map.has("upiPostalCode")) upi.setPostalCode(pl.data.upiPostalCode);
-					if(pl.map.has("upiState")) upi.setState(pl.data.upiState);
-					if(pl.map.has("upiCountry")) upi.setCountry(pl.data.upiCountry);
-					if(pl.map.has("upiCompany")) upi.setCompany(pl.data.upiCompany);
-					if(pl.map.has("upiFunction")) upi.setFunction(pl.data.upiFunction);
-					if(pl.map.has("upiCustom1")) upi.setCustom01(pl.data.upiCustom1);
-					if(pl.map.has("upiCustom2")) upi.setCustom02(pl.data.upiCustom2);
-					if(pl.map.has("upiCustom3")) upi.setCustom03(pl.data.upiCustom3);
+					if (pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
+					if (pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
+					if (pl.map.has("upiLastName")) upi.setLastName(pl.data.upiLastName);
+					if (pl.map.has("upiNickname")) upi.setNickname(pl.data.upiNickname);
+					if (pl.map.has("upiGender")) upi.setGender(pl.data.upiGender);
+					if (pl.map.has("upiEmail")) upi.setEmail(pl.data.upiEmail);
+					if (pl.map.has("upiTelephone")) upi.setTelephone(pl.data.upiTelephone);
+					if (pl.map.has("upiFax")) upi.setFax(pl.data.upiFax);
+					if (pl.map.has("upiPager")) upi.setPager(pl.data.upiPager);
+					if (pl.map.has("upiMobile")) upi.setMobile(pl.data.upiMobile);
+					if (pl.map.has("upiAddress")) upi.setAddress(pl.data.upiAddress);
+					if (pl.map.has("upiCity")) upi.setCity(pl.data.upiCity);
+					if (pl.map.has("upiPostalCode")) upi.setPostalCode(pl.data.upiPostalCode);
+					if (pl.map.has("upiState")) upi.setState(pl.data.upiState);
+					if (pl.map.has("upiCountry")) upi.setCountry(pl.data.upiCountry);
+					if (pl.map.has("upiCompany")) upi.setCompany(pl.data.upiCompany);
+					if (pl.map.has("upiFunction")) upi.setFunction(pl.data.upiFunction);
+					if (pl.map.has("upiCustom1")) upi.setCustom01(pl.data.upiCustom1);
+					if (pl.map.has("upiCustom2")) upi.setCustom02(pl.data.upiCustom2);
+					if (pl.map.has("upiCustom3")) upi.setCustom03(pl.data.upiCustom3);
 					core.updateUserPersonalInfo(upi);
 				}
 				
 				// sync
-				if(pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
-				if(pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
+				if (pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
+				if (pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
 				
 				// WebChat
 				if (pl.map.has("imUploadMaxFileSize")) us.setIMUploadMaxFileSize(pl.data.imUploadMaxFileSize);
@@ -228,7 +229,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("imSoundOnMessageReceived"))  us.setIMSoundOnMessageReceived(pl.data.imSoundOnMessageReceived);
 				if (pl.map.has("imSoundOnMessageSent"))  us.setIMSoundOnMessageSent(pl.data.imSoundOnMessageSent);
 				
-				if(upCacheNeedsUpdate) core.cleanUserProfileCache();
+				if (upCacheNeedsUpdate) core.cleanUserProfileCache();
 				
 				new JsonResult().printTo(out);
 			}

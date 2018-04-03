@@ -40,6 +40,10 @@ import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
  * @author malbinola
  */
 public class JsUserOptions extends JsUserOptionsBase {
+	public Boolean canManagePassword; // Read-only
+	public Boolean canManageUpi; // Read-only
+	public Boolean canSyncDevices; // Read-only
+	
 	public String displayName;
 	public String theme;
 	public String layout;
@@ -54,7 +58,6 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String shortTimeFormat;
 	public String longTimeFormat;
 	
-	public Boolean canManageUpi; // Read-only
 	public String upiTitle;
 	public String upiFirstName;
 	public String upiLastName;
@@ -76,7 +79,6 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String upiCustom2;
 	public String upiCustom3;
 	
-	public Boolean canSyncDevices; // Read-only
 	public Boolean syncAlertEnabled;
 	public Integer syncAlertTolerance;
 	

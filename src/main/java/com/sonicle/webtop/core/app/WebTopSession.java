@@ -64,6 +64,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -762,10 +763,19 @@ public class WebTopSession {
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-private");
 		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
+		fillRolesMap(js.roles);
+		
 		// Evaluate services
 		for(String serviceId : getPrivateServices(true)) {
 			fillStartupForService(js, serviceId, locale, theme, lookAndFeel);
 		}
+	}
+	
+	private void fillRolesMap(HashSet<String> roles) {
+		Subject subject = RunContext.getSubject();
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_SYSADMIN);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_WTADMIN);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_IMPERSONATED_USER);
 	}
 	
 	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale, String theme, String lookAndFeel) {
@@ -777,16 +787,16 @@ public class WebTopSession {
 		JsWTSPrivate.Permissions perms = new JsWTSPrivate.Permissions();
 		
 		// Generates service auth permissions
-		for(ServicePermission perm : manifest.getDeclaredPermissions()) {
-			if(perm instanceof ServiceSharePermission) continue;
+		for (ServicePermission perm : manifest.getDeclaredPermissions()) {
+			if (perm instanceof ServiceSharePermission) continue;
 			
 			JsWTSPrivate.Actions acts = new JsWTSPrivate.Actions();
-			for(String act : perm.getActions()) {
-				if(RunContext.isPermitted(subject, serviceId, perm.getGroupName(), act)) {
+			for (String act : perm.getActions()) {
+				if (RunContext.isPermitted(true, subject, serviceId, perm.getGroupName(), act)) {
 					acts.put(act, true);
 				}
 			}
-			if(!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
+			if (!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
 		}
 		
 		// Fill application manifest with service references (NOTE: core service is skipped here!)
@@ -1059,6 +1069,10 @@ public class WebTopSession {
 			int i = so.indexOf(serviceId);
 			return (i != -1) ? i : 99;
 		}
+	}
+	
+	private void pushIfSubjectHasRole(HashSet<String> roles, Subject subject, String hasRole) {
+		if (RunContext.hasRole(subject, hasRole)) roles.add(hasRole);
 	}
 	
 	private boolean isWhatsnewNeeded() {
