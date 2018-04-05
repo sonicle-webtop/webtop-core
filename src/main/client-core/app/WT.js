@@ -568,7 +568,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	hideContextMenu: function() {
 		var cxm = this.contextMenu;
-		if(cxm) cxm.hide();
+		if (cxm) cxm.hide();
 	},
 	
 	/**
@@ -585,7 +585,12 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} svc The service ID.
 	 * @param {String} act The service action to call.
 	 * @param {Object} [opts] Config options.
-	 * @param {Object} [opts.params] Any custom params.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.Ajax#timeout}.
+	 * @param {Object} [opts.params] Extra request params.
+	 * @param {Object} [opts.jsonData] Data attached to the request sent as payload.
 	 * @param {Function} [opts.callback] The callback function to call.
 	 * @param {Boolean} opts.callback.success
 	 * @param {Object} opts.callback.json
@@ -619,8 +624,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			},
 			scope: me
 		};
-		if(opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
-		if(opts.jsonData) {
+		if (opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
+		if (opts.jsonData) {
 			Ext.apply(obj, {jsonData: opts.jsonData});
 			hdrs['Content-Type'] = 'application/json';
 		} else {
@@ -632,10 +637,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	handleRequestError: function(sid, act, req, op) {
-		if(!req.aborted) {
-			if(req.status === 200) {
+		if (!req.aborted) {
+			if (req.status === 200) {
 				var msg = op.getError();
-				if(!Ext.isEmpty(msg)) {
+				if (!Ext.isEmpty(msg)) {
 					WT.error(msg);
 				} else {
 					WT.error(WT.res(WT.ID, 'error.request.action', act, sid));
@@ -668,7 +673,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		var mys=WT.getApp().getService("com.sonicle.webtop.mail");
 		if (mys) {
 			mys.startNewMessage(mys.currentFolder,{
-				recipients: [ { rtype: 'to', email: address } ],
+				recipients: [{rtype: 'to', email: address}],
 				format: mys.getVar("format")
 			});
 		}
