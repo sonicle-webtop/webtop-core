@@ -69,6 +69,52 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 	subSocket: null,
 	serverUnreachable: 0,
 	
+	/**
+	 * @event connect
+	 * Fires when a connect is invoked.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event disconnect
+	 * Fires when a disconnect is invoked.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event subsocketevent
+	 * Fires when a subsocket event is fired and {@link #eventsDebug} is `true`.
+	 * @param {WTA.Atmosphere} this
+	 * @param {String} event The internal event name.
+	 * @param {Number} status The internal response status.
+	 * @param {String} status The internal response state.
+	 */
+	
+	/**
+	 * @event beforeautoreset
+	 * Fires before channel is being auto-resetted.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event receive
+	 * Fires when a message is received.
+	 * @param {WTA.Atmosphere} this
+	 * @param {Object} message The json message.
+	 */
+	
+	/**
+	 * @event serverunreachable
+	 * Fires when channel connection is lost and server became unreachable.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event serveronline
+	 * Fires when channel connection has been restored.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent(cfg);
@@ -80,6 +126,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				atm = atmosphere;
 		if (force) me.disconnect();
 		if (me.subSocket === null) {
+			me.fireEventArgs('connect', [me]);
 			if (!me.request) me.request = me.createRequest();
 			me.subSocket = atm.subscribe(me.request);
 		}	
@@ -93,6 +140,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			me.subSocket = null;
 			atm.unsubscribeUrl(sock.getUrl());
 			me.stopHBTask();
+			me.fireEventArgs('disconnect', [me]);
 		}
 	},
 	
@@ -116,7 +164,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			maxReconnectOnClose: Number.MAX_VALUE,
 			reconnectOnServerError: true,
 			onOpen: function(resp) {
-				if (me.getEventsDebug()) console.log('onOpen ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onOpen ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'open', resp.status, resp.state]);
+				}
 				
 				if (!me.subSocket) return;
 				me.request.uuid = resp.request.uuid; // Carry the UUID. This is required if you want to call subscribe(request) again.
@@ -133,7 +184,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				}
 			},
 			onReopen: function(req, resp) {
-				if (me.getEventsDebug()) console.log('onReopen ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onReopen ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'reopen', resp.status, resp.state]);
+				}
 				
 				if (!me.subSocket) return;
 				if (me.isWebsocket(resp)) {
@@ -148,7 +202,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				}
 			},
 			onClose: function(resp) {
-				if (me.getEventsDebug()) console.log('onClose ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onClose ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'close', resp.status, resp.state]);
+				}
 				
 				if (!me.subSocket) return;
 				me.stopHBTask();
@@ -157,7 +214,10 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				}
 			},
 			onReconnect: function(req, resp) {
-				if (me.getEventsDebug()) console.log('onReconnect ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onReconnect ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'reconnect', resp.status, resp.state]);
+				}
 				
 				if (!me.subSocket) return;
 				if (me.isWebsocket(resp)) {
@@ -183,17 +243,26 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				}
 			},
 			onClientTimeout: function(resp) {
-				if (me.getEventsDebug()) console.log('onClientTimeout ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onClientTimeout ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'clientTimeout', resp.status, resp.state]);
+				}
 			},
 			onTransportFailure: function(err, req) {
-				if (me.getEventsDebug()) console.log('onTransportFailure');
+				if (me.getEventsDebug()) {
+					console.log('onTransportFailure');
+					me.fireEventArgs('subsocketevent', [me, 'transportFailure', '', '']);
+				}
 			},
 			onMessage: function(resp) {
 				//console.log('onMessage');
 				me.handleMessages(resp.responseBody);
 			},
 			onError: function(resp) {
-				if (me.getEventsDebug()) console.log('onError ['+resp.status+', '+resp.state+']');
+				if (me.getEventsDebug()) {
+					console.log('onError ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'error', resp.status, resp.state]);
+				}
 				
 				if (!me.subSocket) return;
 				if (resp.state === 'error') {

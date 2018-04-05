@@ -293,6 +293,31 @@ public class Service extends BaseService {
 		return getEnv().getSession();
 	}
 	
+	public void processLogMessage(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String level = ServletUtils.getStringParameter(request, "level", "debug");
+			String message = ServletUtils.getStringParameter(request, "message", true);
+			
+			if (level.equals("debug")) {
+				logger.debug("{}", message);
+			} else if (level.equals("info")) {
+				logger.info("{}", message);
+			} else if (level.equals("warn")) {
+				logger.warn("{}", message);
+			} else if (level.equals("error")) {
+				logger.error("{}", message);
+			} else {
+				logger.trace("{}", message);
+			}
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LogMessage", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processLookupLanguages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		LinkedHashMap<String, JsSimple> items = new LinkedHashMap<>();
 		Locale locale = getEnv().getSession().getLocale();

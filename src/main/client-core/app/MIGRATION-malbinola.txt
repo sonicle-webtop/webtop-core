@@ -1,9 +1,0 @@
-SERVICE
--i riferimenti ai componenti principali del servizio (toolbar, tool e main) vengono gestiti dal servizio
-Nel metodo init() vengono impostati attraverso i metodi setToolbar, setToolComponent, setMainComponent
-Il recupero avviene per mezzo dei getter
-
-WT
-- Nuovi WT.info e WT.warn per visualizzare messaggi
-- Nuova segnatura per WT.error: (msg, opts)
-- Nuova segnatura per WT.confirm:  (msg, cb, scope, opts)

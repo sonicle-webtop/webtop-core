@@ -228,22 +228,28 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 		
 	/**
-	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy}.
-	 * @param {String} sid The service ID
-	 * @param {String} act The action name
-	 * @param {String} rootp The rootProperty
-	 * @param {Object} [opts]
-	 * @param {Object} [opts.extraParams]
-	 * @param {String} [opts.model]
+	 * Helper method for building a config object for a generic {@link Ext.data.proxy.Ajax proxy}.
+	 * @param {String} sid The service ID.
+	 * @param {String} act The action name.
+	 * @param {String} [rootp] The property that contains data items corresponding to the Model.
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.data.proxy.Server#timeout}.
+	 * @param {Boolean} [opts.autoAbort] Whether this request should abort any other previous pending requests. Defaults to `false`.
+	 * @param {String} [opts.model] The name of the Model to tie to this Proxy.
+	 * @param {Object} [opts.extraParams] Extra request params.
 	 * @param {Object} [opts.reader]
 	 * @param {Object} [opts.writer]
-	 * @returns {Object} Object config
+	 * @returns {Object} Proxy config object
 	 */
 	proxy: function(sid, act, rootp, opts) {
 		opts = opts || {};
 		var obj = {};
-		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
-		if(opts.model) Ext.apply(obj, {model: opts.model});
+		if (opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
+		if (opts.autoAbort) Ext.apply(obj, {autoAbort: true});
+		if (opts.model) Ext.apply(obj, {model: opts.model});
 		return Ext.apply({
 			type: 'soajax',
 			url: WTF.requestBaseUrl(),
@@ -271,11 +277,27 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		}, obj);
 	},
 	
+	/**
+	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy} that reads Json data.
+	 * @param {String} sid The service ID.
+	 * @param {String} act The action name.
+	 * @param {String} [rootp] The property that contains data items corresponding to the Model.
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.data.proxy.Server#timeout}.
+	 * @param {Boolean} [opts.autoAbort] Whether this request should abort any other previous pending requests. Defaults to `false`.
+	 * @param {String} [opts.model] The name of the Model to tie to this Proxy.
+	 * @param {Object} [opts.extraParams] Extra request params.
+	 * @returns {Object} Proxy config object
+	 */
 	proxyReader: function(sid, act, rootp, opts) {
 		opts = opts || {};
 		var obj = {};
-		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
-		if(opts.model) Ext.apply(obj, {model: opts.model});
+		if (opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
+		if (opts.autoAbort) Ext.apply(obj, {autoAbort: true});
+		if (opts.model) Ext.apply(obj, {model: opts.model});
 		return Ext.apply({
 			type: 'soajax',
 			url: WTF.requestBaseUrl(),
@@ -304,18 +326,23 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * Helper method for building a config object for a {@link Ext.data.proxy.Ajax proxy} using CRUD api.
 	 * @param {String} sid The service ID
 	 * @param {String} act The action name
-	 * @param {String} rootp The rootProperty
-	 * @param {Object} [opts]
-	 * @param {Object} [opts.extraParams]
-	 * @param {Object} [opts.reader]
-	 * @param {Object} [opts.writer]
-	 * @returns {Object} Object config
+	 * @param {String} [rootp] The property that contains data items corresponding to the Model.
+	 * @param {Object} [opts] Config options.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.data.proxy.Server#timeout}.
+	 * @param {Boolean} [opts.autoAbort] Whether this request should abort any other previous pending requests. Defaults to `false`.
+	 * @param {String} [opts.model] The name of the Model to tie to this Proxy.
+	 * @param {Object} [opts.extraParams] Extra request params.
+	 * @returns {Object} Proxy config object
 	 */
 	apiProxy: function(sid, act, rootp, opts) {
 		opts = opts || {};
 		var obj = {};
-		if(opts.autoAbort) Ext.apply(obj, {autoAbort: true});
-		if(opts.model) Ext.apply(obj, {model: opts.model});
+		if (opts.timeout) Ext.apply(obj, {timeout: opts.timeout});
+		if (opts.autoAbort) Ext.apply(obj, {autoAbort: true});
+		if (opts.model) Ext.apply(obj, {model: opts.model});
 		return Ext.apply({
 			type: 'soajax',
 			api: {
