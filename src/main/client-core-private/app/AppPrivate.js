@@ -215,11 +215,25 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 					}
 				});
 			},
+			connect: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> connect', WT.getSessionId()), 'info');
+			},
+			disconnect: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> disconnect', WT.getSessionId()), 'info');
+			},
+			beforeautoreset: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> beforeautoreset', WT.getSessionId()), 'info');
+			},
 			serverunreachable: function(s) {
 				me.connWarnTask();
+				me.log(Ext.String.format('[{0}] Atmosphere -> serverunreachable', WT.getSessionId()), 'info');
 			},
 			serveronline: function(s) {
 				me.connWarnTask(true);
+				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'info');
+			},
+			subsocketevent: function(s, evt, status, state) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}]', WT.getSessionId(), evt, status, state), 'info');
 			}
 		});
 		WTA.Atmosphere.connect();
@@ -370,6 +384,19 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	getServiceApi: function(id) {
 		var svc = this.getService(id);
 		return svc ? svc.getApiInstance() : null;
+	},
+	
+	log: function(msg, level) {
+		if (arguments.length === 1) {
+			level = 'debug';
+		}
+		WT.ajaxReq(WT.ID, 'LogMessage', {
+			timeout: 10*1000,
+			params: {
+				level: level,
+				message: msg
+			}
+		});
 	}
 });
 

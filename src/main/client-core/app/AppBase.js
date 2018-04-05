@@ -164,6 +164,12 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	}
 });
 
+// This is the way to override ExtJs default timeouts.
+// We can control timeout specifically in the places we need it. So keep commented for now!
+//Ext.Ajax.timeout = 60*1000;
+//Ext.override(Ext.data.proxy.Server, {timeout: 60*1000});
+//Ext.override(Ext.data.Connection, {timeout: 60*1000});
+
 Ext.override(Ext.window.Window, {
 
 	//fix bug in windows with unselectable content
