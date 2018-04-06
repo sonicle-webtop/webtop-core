@@ -232,7 +232,8 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				me.connWarnTask(true);
 				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'info');
 			},
-			subsocketevent: function(s, evt, status, state) {
+			subsocketevent: function(s, evt, transp, status, state) {
+				if (transp === 'long-polling' && ['reopen', 'reconnect'].indexOf(evt) !== -1) return;
 				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}]', WT.getSessionId(), evt, status, state), 'info');
 			}
 		});
