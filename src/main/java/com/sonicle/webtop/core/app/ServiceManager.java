@@ -1078,7 +1078,7 @@ public class ServiceManager {
 			publicNameToServiceId.put(publicName, serviceId);
 			
 			// Adds service references into static map in order to facilitate ID lookup
-			WT.manifestCache.put(serviceId, manifest);
+			WT.registerManifest(serviceId, manifest);
 			
 			return desc;
 		}
