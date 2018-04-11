@@ -294,8 +294,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		WT.showContextMenu(e, this.getView().getRef('cxmTaskBar'), {winId: btn.getItemId()});
 	},
 	
-	onTaskBarButtonContextClick: function(s) {
-		var win = Ext.ComponentManager.get(WT.getContextMenuData().winId);
+	onTaskBarButtonContextClick: function(s,e) {
+		var win = Ext.ComponentManager.get(e.menuData.winId);
 		switch(s.getItemId()) {
 			case 'restore':
 				if(win.isVisible()) {
@@ -343,6 +343,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			xtype: 'wtviewwindow',
 			layout: 'fit',
 			utag: utag,
+			constrain: true,
 			width: dockCfg.width,
 			height: dockCfg.height,
 			modal: dockCfg.modal,

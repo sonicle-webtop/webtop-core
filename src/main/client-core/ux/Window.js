@@ -37,15 +37,15 @@ Ext.define('Sonicle.webtop.core.ux.Window', {
 	alias: ['widget.wtwindow'],
 	
 	canRestore: function() {
-		return (this.maximized === true) || (this.hidden === true);
+		return (this.hidden);
 	},
 	
 	canMaximize: function() {
-		return (this.maximized === false) && (this.hidden === false);
+		return (this.maximize)&& (!this.hidden);
 	},
 	
 	canMinimize: function() {
-		return (this.maximized === true) || (this.hidden === false);
+		return  (!this.hidden);
 	},
 	
 	minimize: function() {

@@ -115,11 +115,11 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			}],
 			listeners: {
 				beforeshow: function(s) {
-					var win = Ext.ComponentManager.get(WT.getContextMenuData().winId),
+					var win = Ext.ComponentManager.get(s.menuData.winId),
 							items = s.items;
 					items.get('restore').setDisabled(!win.canRestore());
-					items.get('minimize').setDisabled((win.minimizable) ? !win.canMinimize() : true);
-					items.get('maximize').setDisabled((win.maximizable) ? !win.canMaximize() : true);
+					items.get('minimize').setDisabled((win.canMinimize()) ? !win.canMinimize() : true);
+					items.get('maximize').setDisabled((win.canMaximize()) ? !win.canMaximize() : true);
 				}
 			}
 		}));
