@@ -234,7 +234,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			},
 			subsocketevent: function(s, evt, transp, status, state) {
 				if (transp === 'long-polling' && ['reopen', 'reconnect'].indexOf(evt) !== -1) return;
-				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}]', WT.getSessionId(), evt, status, state), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}, {4}]', WT.getSessionId(), transp, evt, status, state), 'info');
 			}
 		});
 		WTA.Atmosphere.connect();
