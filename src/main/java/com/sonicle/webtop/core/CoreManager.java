@@ -134,6 +134,7 @@ public class CoreManager extends BaseManager {
 	private WebTopApp wta = null;
 	
 	public static final String RECIPIENT_PROVIDER_AUTO_SOURCE_ID = "auto";
+	public static final String RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID = "webtop";
 	
 	private final HashSet<String> cacheReady = new HashSet<>();
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
@@ -2024,7 +2025,8 @@ public class CoreManager extends BaseManager {
 	 * Returns a list of recipients beloging to a specified type.
 	 * The search will include all available sources; including also the 
 	 * automatic ({@link #RECIPIENT_PROVIDER_AUTO_SOURCE_ID}) one used to store
-	 * the auto-learn texts.
+	 * the auto-learn texts, and the ({@link #RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID})
+	 * one containing internal webtop users
 	 * @param fieldType The desired recipient type.
 	 * @param queryText A text to filter out returned results.
 	 * @param max Max number of results.
@@ -2033,6 +2035,7 @@ public class CoreManager extends BaseManager {
 	 */
 	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
+		ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
 		ids.addAll(listRecipientProviderSourceIds());
 		return listProviderRecipients(fieldType, ids, queryText, max);
@@ -2060,10 +2063,39 @@ public class CoreManager extends BaseManager {
 					final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
 					for(OServiceStoreEntry entry: entries) {
 						final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
-						if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+						if (ia!=null) recipients.add(
+								new Recipient(
+										RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+										lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), 
+										RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+										ia.getPersonal(), 
+										ia.getAddress()
+								)
+						);
 					}
 				}
 				
+			} else if (StringUtils.equals(soId, RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID)) {
+				recipients = new ArrayList<>();
+				//TODO: Find a way to handle other RecipientFieldTypes
+				if (fieldType.equals(RecipientFieldType.EMAIL)) {
+					List<OUser> users=listUsers(true);
+					for(OUser user: users) {
+						UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
+						if (userData!=null) {
+							if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
+								recipients.add(
+									new Recipient(
+											RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
+											lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
+											RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+											user.getDisplayName(), 
+											userData.getPersonalEmailAddress()
+									)
+								);
+						}
+					}
+				}
 			} else {
 				final RecipientsProviderBase provider = getProfileRecipientsProviders().get(soId);
 				if (provider == null) continue;
