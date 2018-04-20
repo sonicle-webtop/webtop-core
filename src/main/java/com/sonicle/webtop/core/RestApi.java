@@ -99,7 +99,7 @@ public class RestApi extends BaseRestApiEndpoint {
 	@Path("/me/devicesSynchronization/enabled")
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response isDeviceSynchronizationEnabled() throws WTException {
-		boolean bool = RunContext.isPermitted(SERVICE_ID, "DEVICES_SYNC");
+		boolean bool = RunContext.isPermitted(true, SERVICE_ID, "DEVICES_SYNC");
 		return ok(new MapItem().add("response", bool));
 	}
 	

@@ -271,7 +271,7 @@ public class Service extends BaseService {
 		co.put("longDateFormat", us.getLongDateFormat());
 		co.put("shortTimeFormat", us.getShortTimeFormat());
 		co.put("longTimeFormat", us.getLongTimeFormat());
-		co.put("imEnabled", !RunContext.isWebTopAdmin() && RunContext.isPermitted(CoreManifest.ID, "WEBCHAT", "ACCESS"));
+		co.put("imEnabled", !RunContext.isImpersonated() && RunContext.isPermitted(true, CoreManifest.ID, "WEBCHAT", "ACCESS"));
 		co.put("imPresenceStatus", EnumUtils.toSerializedName(us.getIMPresenceStatus()));
 		co.put("imStatusMessage", us.getIMStatusMessage());
 		co.put("imUploadMaxFileSize", us.getIMUploadMaxFileSize(true));

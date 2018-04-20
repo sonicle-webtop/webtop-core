@@ -37,6 +37,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.apache.shiro.SecurityUtils;
@@ -98,182 +99,219 @@ public class RunContext {
 		return (principal == null) ? null : new UserProfileId(principal.getName());
 	}
 	
-	public static boolean isPermitted(String serviceId, String key) {
-		return isPermitted(getSubject(), serviceId, key);
-	}
-	
-	public static boolean isPermitted(String serviceId, String key, String action) {
-		return isPermitted(getSubject(), serviceId, key, action);
-	}
-	
-	public static boolean isPermitted(String serviceId, String key, String action, String instance) {
-		return isPermitted(getSubject(), serviceId, key, action, instance);
-	}
-	
-	public static boolean isPermitted(Subject subject, String serviceId, String key) {
-		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, key);
-	}
-	
-	public static boolean isPermitted(Subject subject, String serviceId, String key, String action) {
-		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, key, action);
-	}
-	
-	public static boolean isPermitted(Subject subject, String serviceId, String key, String action, String instance) {
-		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isPermitted(principals, serviceId, key, action, instance);
-	}
-	
-	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, key);
-	}
-	
-	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key, String action) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
-	}
-	
-	public static boolean isPermitted(UserProfileId profileId, String serviceId, String key, String action, String instance) {
-		return isPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
-	}
-	
-	public static boolean isSysAdmin() {
-		return isSysAdmin(getSubject());
-	}
-	
-	public static boolean isWebTopAdmin() {
-		return isWebTopAdmin(getSubject());
-	}
-	
-	public static boolean isSysAdmin(Subject subject) {
-		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isSysAdmin(principals);
-	}
-	
-	public static boolean isWebTopAdmin(Subject subject) {
-		PrincipalCollection principals = subject.getPrincipals();
-		return !principals.isEmpty() && isWebTopAdmin(principals);
-	}
-	
-	public static boolean isSysAdmin(UserProfileId profileId) {
-		return isSysAdmin(buildPrincipalCollection(profileId));
-	}
-	
-	public static boolean isWebTopAdmin(UserProfileId profileId) {
-		return isWebTopAdmin(buildPrincipalCollection(profileId));
-	}
-	
-	public static void ensureIsPermitted(String serviceId, String key) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, key);
-	}
-	
-	public static void ensureIsPermitted(String serviceId, String key, String action) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, key, action);
-	}
-	
-	public static void ensureIsPermitted(String serviceId, String key, String action, String instance) throws AuthException {
-		ensureIsPermitted(getSubject(), serviceId, key, action, instance);
-	}
-	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String key) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, key);
-	}
-	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String key, String action) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, key, action);
-	}
-	
-	public static void ensureIsPermitted(Subject subject, String serviceId, String key, String action, String instance) throws AuthException {
-		ensureIsPermitted(subject.getPrincipals(), serviceId, key, action, instance);
-	}
-	
-	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key);
-	}
-	
-	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key, String action) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action);
-	}
-	
-	public static void ensureIsPermitted(UserProfileId profileId, String serviceId, String key, String action, String instance) throws AuthException {
-		ensureIsPermitted(buildPrincipalCollection(profileId), serviceId, key, action, instance);
-	}
-		
-	public static void ensureIsSysAdmin() throws AuthException {
-		ensureIsSysAdmin(getSubject());
-	}
-	
 	public static void ensureIsWebTopAdmin() throws AuthException {
 		ensureIsWebTopAdmin(getSubject());
-	}
-	
-	public static void ensureIsSysAdmin(Subject subject) throws AuthException {
-		ensureIsSysAdmin(subject.getPrincipals());
 	}
 	
 	public static void ensureIsWebTopAdmin(Subject subject) throws AuthException {
 		ensureIsWebTopAdmin(subject.getPrincipals());
 	}
 	
-	public static void ensureIsSysAdmin(UserProfileId profileId) throws AuthException {
-		ensureIsSysAdmin(buildPrincipalCollection(profileId));
-	}
-	
 	public static void ensureIsWebTopAdmin(UserProfileId profileId) throws AuthException {
 		ensureIsWebTopAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	static PrincipalCollection buildPrincipalCollection(UserProfileId pid) {
-		Subject subject = getSubject();
-		if((subject != null) && pid.equals(getRunProfileId(subject))) {
-			return subject.getPrincipals();
-		} else {
-			Principal principal = new Principal(pid.getDomainId(), pid.getUserId());
-			return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		}
+	public static boolean isWebTopAdmin() {
+		return isWebTopAdmin(getSubject());
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key) {
-		return isPermitted(principals, serviceId, key, "ACCESS", "*");
+	public static boolean isWebTopAdmin(Subject subject) {
+		return isWebTopAdmin(subject.getPrincipals());
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action) {
-		return isPermitted(principals, serviceId, key, action, "*");
+	public static boolean isWebTopAdmin(UserProfileId profileId) {
+		return isWebTopAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	private static boolean isPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) {
-		SecurityManager manager = SecurityUtils.getSecurityManager();
-		if(manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING)) return true;
-		return manager.isPermitted(principals, ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, key), action, instance));
+	public static void ensureIsSysAdmin() throws AuthException {
+		ensureIsSysAdmin(getSubject());
 	}
 	
-	private static boolean isSysAdmin(PrincipalCollection principals) {
-		SecurityManager manager = SecurityUtils.getSecurityManager();
-		return manager.isPermitted(principals, WebTopManager.SYSADMIN_PSTRING);
+	public static void ensureIsSysAdmin(Subject subject) throws AuthException {
+		ensureIsSysAdmin(subject.getPrincipals());
 	}
 	
-	private static boolean isWebTopAdmin(PrincipalCollection principals) {
-		SecurityManager manager = SecurityUtils.getSecurityManager();
-		return manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING);
+	public static void ensureIsSysAdmin(UserProfileId profileId) throws AuthException {
+		ensureIsSysAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key) throws AuthException {
-		if(!isPermitted(principals, serviceId, key)) throw new AuthException("ACCESS permission on {0} is required", key);
+	public static boolean isSysAdmin() {
+		return isSysAdmin(getSubject());
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key, String action) throws AuthException {
-		if(!isPermitted(principals, serviceId, key, action)) throw new AuthException("{0} permission on {1} is required", action, key);
+	public static boolean isSysAdmin(Subject subject) {
+		return isSysAdmin(subject.getPrincipals());
 	}
 	
-	private static void ensureIsPermitted(PrincipalCollection principals, String serviceId, String key, String action, String instance) throws AuthException {
-		if(!isPermitted(principals, serviceId, key, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, key, instance);
+	public static boolean isSysAdmin(UserProfileId profileId) {
+		return isSysAdmin(buildPrincipalCollection(profileId));
 	}
 	
-	private static void ensureIsSysAdmin(PrincipalCollection principals) throws AuthException {
-		if(!isSysAdmin(principals)) throw new AuthException("SysAdmin is required");
+	public static boolean hasRole(String role) {
+		return hasRole(getSubject(), role);
+	}
+	
+	public static boolean hasRole(Subject subject, String role) {
+		return hasRole(subject.getPrincipals(), role);
+	}
+	
+	public static boolean hasAllRoles(Collection<String> roles) {
+		return hasAllRoles(getSubject(), roles);
+	}
+	
+	public static boolean hasAllRoles(Subject subject, Collection<String> roles) {
+		return hasAllRoles(subject.getPrincipals(), roles);
+	}
+	
+	public static boolean isPermitted(boolean strict, String serviceId, String key) {
+		return isPermitted(strict, getSubject(), serviceId, key);
+	}
+	
+	public static boolean isPermitted(boolean strict, String serviceId, String key, String action) {
+		return isPermitted(strict, getSubject(), serviceId, key, action);
+	}
+	
+	public static boolean isPermitted(boolean strict, String serviceId, String key, String action, String instance) {
+		return isPermitted(strict, getSubject(), serviceId, key, action, instance);
+	}
+	
+	public static boolean isPermitted(boolean strict, Subject subject, String serviceId, String key) {
+		return isPermitted(strict, subject.getPrincipals(), serviceId, key);
+	}
+	
+	public static boolean isPermitted(boolean strict, Subject subject, String serviceId, String key, String action) {
+		return isPermitted(strict, subject.getPrincipals(), serviceId, key, action);
+	}
+	
+	public static boolean isPermitted(boolean strict, Subject subject, String serviceId, String key, String action, String instance) {
+		return isPermitted(strict, subject.getPrincipals(), serviceId, key, action, instance);
+	}
+	
+	public static boolean isPermitted(boolean strict, UserProfileId profileId, String serviceId, String key) {
+		return isPermitted(strict, buildPrincipalCollection(profileId), serviceId, key);
+	}
+	
+	public static boolean isPermitted(boolean strict, UserProfileId profileId, String serviceId, String key, String action) {
+		return isPermitted(strict, buildPrincipalCollection(profileId), serviceId, key, action);
+	}
+	
+	public static boolean isPermitted(boolean strict, UserProfileId profileId, String serviceId, String key, String action, String instance) {
+		return isPermitted(strict, buildPrincipalCollection(profileId), serviceId, key, action, instance);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, String serviceId, String key) throws AuthException {
+		ensureIsPermitted(strict, getSubject(), serviceId, key);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(strict, getSubject(), serviceId, key, action);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(strict, getSubject(), serviceId, key, action, instance);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, Subject subject, String serviceId, String key) throws AuthException {
+		ensureIsPermitted(strict, subject.getPrincipals(), serviceId, key);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, Subject subject, String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(strict, subject.getPrincipals(), serviceId, key, action);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, Subject subject, String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(strict, subject.getPrincipals(), serviceId, key, action, instance);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, UserProfileId profileId, String serviceId, String key) throws AuthException {
+		ensureIsPermitted(strict, buildPrincipalCollection(profileId), serviceId, key);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, UserProfileId profileId, String serviceId, String key, String action) throws AuthException {
+		ensureIsPermitted(strict, buildPrincipalCollection(profileId), serviceId, key, action);
+	}
+	
+	public static void ensureIsPermitted(boolean strict, UserProfileId profileId, String serviceId, String key, String action, String instance) throws AuthException {
+		ensureIsPermitted(strict, buildPrincipalCollection(profileId), serviceId, key, action, instance);
 	}
 	
 	private static void ensureIsWebTopAdmin(PrincipalCollection principals) throws AuthException {
-		if(!isWebTopAdmin(principals)) throw new AuthException("WebTopAdmin is required");
+		if (!isWebTopAdmin(principals)) throw new AuthException("WebTopAdmin is required");
+	}
+	
+	private static boolean isWebTopAdmin(PrincipalCollection principals) {
+		return hasRole(principals, WebTopManager.ROLE_WTADMIN);
+		/*
+		if (principals.isEmpty()) return false;
+		SecurityManager manager = SecurityUtils.getSecurityManager();
+		return manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING);
+		*/
+	}
+	
+	private static void ensureIsSysAdmin(PrincipalCollection principals) throws AuthException {
+		if (!isSysAdmin(principals)) throw new AuthException("SysAdmin is required");
+	}
+	
+	private static boolean isSysAdmin(PrincipalCollection principals) {
+		return hasRole(principals, WebTopManager.ROLE_SYSADMIN);
+		/*
+		if (principals.isEmpty()) return false;
+		SecurityManager manager = SecurityUtils.getSecurityManager();
+		return manager.isPermitted(principals, WebTopManager.SYSADMIN_PSTRING);
+		*/
+	}
+	
+	private static boolean hasRole(PrincipalCollection principals, String role) {
+		return hasRole(SecurityUtils.getSecurityManager(), principals, role);
+	}
+	
+	private static boolean hasRole(SecurityManager manager, PrincipalCollection principals, String role) {
+		return manager.hasRole(principals, role);
+	}
+	
+	private static boolean hasAllRoles(PrincipalCollection principals, Collection<String> roles) {
+		return hasAllRoles(SecurityUtils.getSecurityManager(), principals, roles);
+	}
+	
+	private static boolean hasAllRoles(SecurityManager manager, PrincipalCollection principals, Collection<String> roles) {
+		return manager.hasAllRoles(principals, roles);
+	}
+	
+	private static void ensureIsPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key) throws AuthException {
+		if (!isPermitted(strict, principals, serviceId, key)) throw new AuthException("ACCESS permission on {0} is required", key);
+	}
+	
+	private static void ensureIsPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key, String action) throws AuthException {
+		if (!isPermitted(strict, principals, serviceId, key, action)) throw new AuthException("{0} permission on {1} is required", action, key);
+	}
+	
+	private static void ensureIsPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key, String action, String instance) throws AuthException {
+		if (!isPermitted(strict, principals, serviceId, key, action, instance)) throw new AuthException("{0} permission on {1}@{2} is required", action, key, instance);
+	}
+	
+	private static boolean isPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key) {
+		return isPermitted(strict, principals, serviceId, key, "ACCESS", "*");
+	}
+	
+	private static boolean isPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key, String action) {
+		return isPermitted(strict, principals, serviceId, key, action, "*");
+	}
+	
+	private static boolean isPermitted(boolean strict, PrincipalCollection principals, String serviceId, String key, String action, String instance) {
+		if (principals.isEmpty()) return false;
+		SecurityManager manager = SecurityUtils.getSecurityManager();
+		if (!strict && isWebTopAdmin(principals)) return true;
+		//if (manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING)) return true;
+		return manager.isPermitted(principals, ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, key), action, instance));
+	}
+	
+	static PrincipalCollection buildPrincipalCollection(UserProfileId profileId) {
+		Subject subject = getSubject();
+		if ((subject != null) && profileId.equals(getRunProfileId(subject))) {
+			return subject.getPrincipals();
+		} else {
+			Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
+			return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		}
 	}
 }

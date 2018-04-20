@@ -155,8 +155,11 @@ public final class WebTopManager {
 	
 	private WebTopApp wta = null;
 	public static final String INTERNETNAME_LOCAL = "local";
-	public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
-	public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
+	public static final String ROLE_SYSADMIN = "SYSADMIN";
+	public static final String ROLE_WTADMIN = "WTADMIN";
+	public static final String ROLE_IMPERSONATED_USER = "IMPERSONATED_USER";
+	//public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
+	//public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	public static final String SYSADMIN_DOMAINID = "*";
 	public static final String SYSADMIN_USERID = "admin";
 	public static final String DOMAINADMIN_USERID = "admin";

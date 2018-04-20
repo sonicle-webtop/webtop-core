@@ -52,10 +52,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	viewModel: {
 		formulas: {
-			foPasswordDisabled: function(get) {
-				return get('record.canManagePassword');
-			},
-			upiFieldEditable: function(get) {
+			foCanManagePassword: function(get) {
+				//TODO: following check does not work in case of editing logged as sysadmin, cap is related to admin domain!!!
+				if (!WT.getVar('domainDirCapPasswordWrite')) return false;
+ 				return get('record.canManagePassword');
+ 			},
+			foCanManageUpi: function(get) {
+				if (WT.isProfileActingAsAdmin()) return true;
 				return get('record.canManageUpi');
 			},
 			isOTPActive: WTF.foIsEmpty('record', 'otpDelivery', true),
@@ -75,7 +78,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		
 		vm = me.getViewModel();
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
-			areMine: function() {
+			foIsMyProfile: function() {
 				return WT.getVar('profileId') === me.profileId;
 			}
 		}));
@@ -232,7 +235,9 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				items: [{
 					xtype: 'button',
-					disabled: !(WT.getVar('domainDirCapPasswordWrite') && WT.isPermitted('PASSWORD', 'MANAGE')),
+					bind: {
+						disabled: '{!foCanManagePassword}'
+					},
 					text: WT.res('opts.main.btn-changePassword.lbl'),
 					width: 250,
 					handler: function() {
@@ -368,7 +373,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiTitle}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-title.lbl'),
 				width: 250,
@@ -382,7 +387,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiFirstName}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-firstName.lbl'),
 				width: 300,
@@ -396,7 +401,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiLastName}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				width: 300,
 				fieldLabel: WT.res('opts.upi.fld-lastName.lbl'),
@@ -410,7 +415,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiNickname}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-nickname.lbl'),
 				width: 300,
@@ -424,7 +429,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			WTF.remoteCombo('id', 'desc', {
 				bind: {
 					value: '{record.upiGender}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				autoLoadOnValue: true,
 				store: Ext.create('Sonicle.webtop.core.store.Gender'),
@@ -443,7 +448,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiEmail}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				width: 400,
 				fieldLabel: WT.res('opts.upi.fld-email.lbl'),
@@ -457,7 +462,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiMobile}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-mobile.lbl'),
 				width: 300,
@@ -471,7 +476,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiTelephone}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-telephone.lbl'),
 				width: 300,
@@ -485,7 +490,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiFax}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-fax.lbl'),
 				width: 300,
@@ -499,7 +504,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiPager}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-pager.lbl'),
 				width: 300,
@@ -513,7 +518,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiAddress}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-address.lbl'),
 				width: 400,
@@ -527,7 +532,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCity}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-city.lbl'),
 				width: 400,
@@ -541,7 +546,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiPostalCode}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-postalCode.lbl'),
 				width: 300,
@@ -555,7 +560,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiState}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-state.lbl'),
 				width: 300,
@@ -569,7 +574,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCountry}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-country.lbl'),
 				width: 300,
@@ -583,7 +588,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCompany}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-company.lbl'),
 				width: 300,
@@ -597,7 +602,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiFunction}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-function.lbl'),
 				width: 300,
@@ -611,7 +616,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCustom1}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom1.lbl'),
 				width: 300,
@@ -625,7 +630,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCustom2}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom2.lbl'),
 				width: 300,
@@ -639,7 +644,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiCustom3}',
-					disabled: '{!upiFieldEditable}'
+					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom3.lbl'),
 				width: 300,
@@ -757,7 +762,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}, {
 							xtype: 'button',
 							bind: {
-								disabled: '{!areMine}'
+								disabled: '{!foIsMyProfile}'
 							},
 							text: WT.res('opts.otp.btn-untrustthis.lbl'),
 							handler: function() {
@@ -792,7 +797,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}, {
 						xtype: 'button',
 						bind: {
-							disabled: '{!areMine}'
+							disabled: '{!foIsMyProfile}'
 						},
 						text: WT.res('opts.otp.btn-untrustother.lbl'),
 						handler: function() {
@@ -948,7 +953,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			items: [{
 				xtype: 'sobytesfield',
 				bind: '{record.imUploadMaxFileSize}',
-				disabled: !WT.isPermitted('WTADMIN', 'ACCESS'),
+				disabled: !WT.isProfileActingAsAdmin(),
 				fieldLabel: WT.res(me.ID, 'opts.im.fld-imUploadMaxFileSize.lbl'),
 				width: 280,
 				listeners: {
