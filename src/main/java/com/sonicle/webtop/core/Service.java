@@ -40,6 +40,7 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
+import com.sonicle.commons.web.DispositionType;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -150,6 +151,7 @@ import com.sonicle.webtop.core.xmpp.XMPPHelper;
 import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import com.sonicle.webtop.vfs.IVfsManager;
 import com.sonicle.webtop.vfs.model.SharingLink;
+import java.io.StringReader;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -914,15 +916,68 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	static final String WHATSNEW_STYLES=
+		"html * { font-family: Arial !important; }\n"+
+		".wt-whatsnew {\n" +
+		"	padding: 10px;\n" +
+		"	font-family: Helvetica, Arial, sans-serif;\n" +
+		"}\n" +
+		".wt-whatsnew > div.wt-wntitle:first-child {\n" +
+		"	margin-top: 0;\n" +
+		"}\n" +
+		"div.wt-wntitle {\n" +
+		"	margin-top: 1em;\n" +
+		"	/*font-size: 220%;*/\n" +
+		"	font-size: 150%;\n" +
+		"	font-weight: bold;\n" +
+		"}\n" +
+		"div.wt-wnsubtitle {\n" +
+		"	margin-top: 0em;\n" +
+		"	/*font-size: 130%;*/\n" +
+		"	font-size: 110%;\n" +
+		"	font-family: Georgia,\"Times New Roman\",Times,serif;\n" +
+		"	font-style: italic;\n" +
+		"	color: #797c80;\n" +
+		"}\n" +
+		"div.wt-wnlist {\n" +
+		"	margin-top: 1em;\n" +
+		"	/*font-size: 110%;*/\n" +
+		"}\n" +
+		".wt-wnlist ul {\n" +
+		"	padding-left: 30px;\n" +
+		"}\n" +
+		".wt-wnlist ul li {\n" +
+		"	list-style: initial;\n" +
+		"}\n" +
+		".wt-wnlist ul li h1, .wt-wnlist ul li h2, .wt-wnlist ul li h3 {\n" +
+		"	margin-top: .2em;\n" +
+		"	font-size: 110%;\n" +
+		"	font-weight: bold;\n" +
+		"}\n" +
+		".wt-wnlist ul li p {\n" +
+		"	margin-bottom: .5em;\n" +
+		"}\n" +
+		".wt-wnlist ul li img {\n" +
+		"	padding: .2em;\n" +
+		"	margin-bottom: .5em;\n" +
+		"	background-color: #fff;\n" +
+		"	box-shadow: 2px 2px 5px #e1e1e1;\n" +
+		"	border: solid 1px #ccc;\n" +
+		"}\n";
+	
+	public void processGetWhatsnewHTML(HttpServletRequest request, HttpServletResponse response) {
 		WebTopSession wts = ((CorePrivateEnvironment)getEnv()).getSession();
 		
 		try {
 			String id = ServletUtils.getStringParameter(request, "id", true);
 			boolean full = ServletUtils.getBooleanParameter(request, "full", false);
-			
-			String html = wts.getWhatsnewHtml(id, getEnv().getProfile(), full);
-			out.println(html);
+			String baseUrl=PathUtils.concatPaths(wts.getClientUrl(), "resources/"+id+"/whatsnew/");
+			String html = 
+					"<html><head><base href=\""+baseUrl+"\"><style>"+WHATSNEW_STYLES+"</style></head><body>"+
+					wts.getWhatsnewHtml(id, getEnv().getProfile(), full)+
+					"</body><html>";
+			ServletUtils.setContentTypeHeader(response, "text/html");
+			IOUtils.copy(new StringReader(html), response.getOutputStream());
 			
 		} catch (Exception ex) {
 			logger.error("Error in GetWhatsnewHTML", ex);

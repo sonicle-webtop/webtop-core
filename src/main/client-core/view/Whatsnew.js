@@ -79,7 +79,8 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 			},
 			listeners: {
 				tabchange: function(s,nt,ot) {
-					if(!nt.html && nt.loader) nt.loader.load();
+					var iframe=nt.items.getAt(0);
+					if(!iframe.html && iframe.loader) iframe.loader.load();
 				}
 			},
 			items: []
@@ -112,12 +113,16 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		return Ext.create('Ext.panel.Panel', {
 			itemId: wn.id,
 			title: wn.title,
-			loader: WT.componentLoader(this.mys.ID, 'GetWhatsnewHTML', {
-				params: {
-					id: wn.id,
-					full: full
-				}
-			})
+			layout: 'fit',
+			items: [
+				Ext.create('Ext.ux.IFrame',{
+					src: WTF.processUrl(this.mys.ID, 'GetWhatsnewHTML', {
+							id: wn.id,
+							full: full,
+							nowriter: true
+						})
+				})
+			]
 		});
 	},
 	
