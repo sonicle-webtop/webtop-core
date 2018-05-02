@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -56,6 +57,7 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
+import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -84,7 +86,9 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			
 			String location = ServletUtils.getStringParameter(request, "location", null);
 			if (location != null) {
-				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, ServletHelper.sanitizeBaseUrl(location));
+				String url = ServletHelper.sanitizeBaseUrl(location);
+				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, url);
+				logger.trace("[{}] Location: {}", webtopSession.getId(), url);
 			}
 		}
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");
@@ -96,20 +100,25 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_FAILURE");
 		return super.onLoginFailure(token, e, request, response);
 	}
+
+	@Override
+	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+		String ctxRequestUrl = ServletUtils.getContextRequestURI((HttpServletRequest)request);
+		if (StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/" + PrivateRequest.URL)
+				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/ServiceRequest") // for compatibility purpose only!
+				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/" + PushEndpoint.URL)) {
+			ServletUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+			return false;
+		} else {
+			return super.onAccessDenied(request, response);
+		}
+	}
 	
 	@Override
 	protected void redirectToLogin(ServletRequest request, ServletResponse response) throws IOException {		
 		try {
-			String url = ((HttpServletRequest)request).getRequestURL().toString();
-			if (StringUtils.contains(url, PrivateRequest.URL)
-					|| StringUtils.contains(url, "ServiceRequest") // For compatibility only!
-					/*|| StringUtils.contains(url, SessionKeepAlive.URL)
-					|| StringUtils.contains(url, WsPushEndpoint.URL)*/) {
-				((HttpServletResponse)response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-			} else {
-				// Do a forward instead of classic redirect. It avoids ugly URL suffixes.
-				ServletUtils.forwardRequest((HttpServletRequest)request, (HttpServletResponse)response, getLoginUrl());
-			}
+			// Do a forward instead of classic redirect. It avoids ugly URL suffixes.
+			ServletUtils.forwardRequest((HttpServletRequest)request, (HttpServletResponse)response, getLoginUrl());
 		} catch(ServletException ex) {
 			throw new IOException(ex);
 		}

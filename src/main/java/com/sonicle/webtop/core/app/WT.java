@@ -63,7 +63,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -71,7 +73,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 import javax.sql.DataSource;
 import net.sf.jasperreports.engine.JRException;
-import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,10 +84,30 @@ import sun.reflect.Reflection;
  */
 public class WT {
 	private static final Logger logger = getLogger(WT.class);
-	static final HashMap<String, ServiceManifest> manifestCache = new HashMap<>();
-	private static final HashMap<String, String> cnameToServiceIdCache = new HashMap<>();
+	private static final Map<String, ServiceManifest> manifestCache = new TreeMap<>();
+	private static final Map<String, String> cnameToServiceIdCache = new HashMap<>();
 	
 	public static final Locale LOCALE_ENGLISH = new Locale("en", "EN");
+	
+	static void registerManifest(String serviceId, ServiceManifest manifest) {
+		manifestCache.put(serviceId, manifest);
+	}
+	
+	public static String findServiceId(Class clazz) {
+		String cname = clazz.getName();
+		synchronized(cnameToServiceIdCache) {
+			if (cnameToServiceIdCache.containsKey(cname)) {
+				return cnameToServiceIdCache.get(cname);
+			} else {
+				String matchingSid = null;
+				for (String sid : manifestCache.keySet()) {
+					if (cname.startsWith(sid)) matchingSid = sid;
+				}
+				if (matchingSid != null) cnameToServiceIdCache.put(cname, matchingSid);
+				return matchingSid;
+			}
+		}
+	}
 	
 	private static WebTopApp getWTA() {
 		return WebTopApp.getInstance();
@@ -181,24 +202,6 @@ public class WT {
 		return null;
 	}
 	*/
-	
-	public static String findServiceId(Class clazz) {
-		String cname = clazz.getName();
-		synchronized(cnameToServiceIdCache) {
-			if(cnameToServiceIdCache.containsKey(cname)) {
-				return cnameToServiceIdCache.get(cname);
-			} else {
-				String matchingSid = null;
-				for(String sid : manifestCache.keySet()) {
-					// Stopping to the first match is not enought, we have to
-					// check all installed services
-					if(StringUtils.startsWith(cname, sid)) matchingSid = sid;
-				}
-				if(matchingSid != null) cnameToServiceIdCache.put(cname, matchingSid);
-				return matchingSid;
-			}
-		}
-	}
 	
 	public static String findDomainIdByPublicName(String domainPublicName) {
 		return getWTA().getWebTopManager().publicNameToDomainId(domainPublicName);

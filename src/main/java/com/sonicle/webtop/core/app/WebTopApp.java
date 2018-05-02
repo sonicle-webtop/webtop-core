@@ -165,7 +165,7 @@ public final class WebTopApp {
 	 */
 	public static WebTopApp get(ServletContext context) throws IllegalStateException {
 		WebTopApp wta = (WebTopApp)context.getAttribute(ContextLoader.WEBTOPAPP_ATTRIBUTE_KEY);
-		if (wta == null) throw new IllegalStateException("WebTop environment is not loaded correctly. Please see log files for more details.");
+		if (wta == null) throw new IllegalStateException("WebTop environment is not correctly loaded. Please see log files for more details.");
 		return wta;
 	}
 	

@@ -47,6 +47,12 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	locales: null,
 	
 	/**
+	 * @property {Objects} roles
+	 * A map of assigned roles.
+	 */
+	roles: null,
+	
+	/**
 	 * @property {Ext.util.Collection} services
 	 * A collection of service descriptors.
 	 */
@@ -60,6 +66,7 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		me.baseUrl = window.location.origin + me.contextPath;
 		me.pushUrl = WTS.pushUrl;
 		me.locales = Ext.create('Ext.util.HashMap');
+		me.roles = {};
 		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);
 	},
@@ -71,6 +78,36 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	 */
 	getLocale: function(sid) {
 		return this.locales.get(sid);
+	},
+	
+	/**
+	 * Checks passed role set against current user profile.
+	 * @param {Array} roles The role set
+	 * @returns {Array} Positional array of results.
+	 */
+	hasRoles: function(roles) {
+		var me = this, arr = [], i;
+		for (i=0; i<roles.length; i++) {
+			if (me.roles[roles[i]]) {
+				arr.push(true);
+			} else {
+				arr.push(false);
+			}
+		}
+		return arr;
+	},
+	
+	/**
+	 * Checks if whole role set is satisfied.
+	 * @param {Array} roles The role set
+	 * @returns {Boolean} True if current profile has all roles, false otherwise.
+	 */
+	hasAllRoles: function(roles) {
+		var me = this, i;
+		for (i=0; i<roles.length; i++) {
+			if (!me.roles[roles[i]]) return false;
+		}
+		return true;
 	},
 	
 	/**
@@ -126,6 +163,12 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		return (desc) ? desc.getVersion() : "0.0.0";
 	}
 });
+
+// This is the way to override ExtJs default timeouts.
+// We can control timeout specifically in the places we need it. So keep commented for now!
+//Ext.Ajax.timeout = 60*1000;
+//Ext.override(Ext.data.proxy.Server, {timeout: 60*1000});
+//Ext.override(Ext.data.Connection, {timeout: 60*1000});
 
 Ext.override(Ext.window.Window, {
 

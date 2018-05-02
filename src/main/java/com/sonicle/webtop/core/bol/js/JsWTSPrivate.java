@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.bol.js;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  *
@@ -45,6 +46,7 @@ public class JsWTSPrivate extends JsWTS {
 	public String securityToken;
 	public String pushUrl;
 	public String layoutClassName;
+	public HashSet<String> roles = new HashSet<>();
 	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	public ArrayList<Permissions> servicesPerms = new ArrayList<>();

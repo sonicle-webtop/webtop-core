@@ -137,78 +137,82 @@ public class WTRealm extends AuthorizingRealm {
 	private Principal authenticateUser(String domainId, String internetDomain, String username, char[] password) throws AuthenticationException {
 		WebTopApp wta = WebTopApp.getInstance();
 		WebTopManager wtMgr = wta.getWebTopManager();
-		AuthenticationDomain ad = null, ad2 = null;
+		AuthenticationDomain authAd = null, priAd = null;
 		boolean autoCreate = false, impersonate = false;
 		
 		try {
 			DirectoryManager dirManager = DirectoryManager.getManager();
 			
+			// Defines authentication domains for the auth phase and for 
+			// building the right principal
 			logger.debug("Building the authentication domain");
 			if (isSysAdmin(internetDomain, username)) {
 				impersonate = false;
-				ad = wtMgr.createSysAdminAuthenticationDomain();
+				authAd = priAd = wtMgr.createSysAdminAuthenticationDomain();
 				
 			} else {
 				if (wta.getServiceManager().isInMaintenance(CoreManifest.ID)) throw new WTException("Maintenance is active. Only sys-admin can login.");
 				ODomain domain = null;
-				if(!StringUtils.isBlank(internetDomain)) {
+				if (!StringUtils.isBlank(internetDomain)) {
 					List<ODomain> domains = wtMgr.listByInternetDomain(internetDomain);
-					if(domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{0}]", internetDomain);
-					if(domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{0}]", internetDomain);
+					if (domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{0}]", internetDomain);
+					if (domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{0}]", internetDomain);
 					domain = domains.get(0);
 				} else {
 					domain = wtMgr.getDomain(domainId);
-					if((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
+					if ((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
 				}
 				
 				if (isSysAdminImpersonate(username)) {
 					impersonate = true;
-					ad = wtMgr.createSysAdminAuthenticationDomain();
-					ad2 = wtMgr.createAuthenticationDomain(domain);
+					authAd = wtMgr.createSysAdminAuthenticationDomain();
+					priAd = wtMgr.createAuthenticationDomain(domain);
 				} else if (isDomainAdminImpersonate(username)) {
 					impersonate = true;
-					ad = wtMgr.createAuthenticationDomain(domain);
+					authAd = priAd = wtMgr.createAuthenticationDomain(domain);
 				} else {
 					impersonate = false;
-					ad = wtMgr.createAuthenticationDomain(domain);
+					authAd = priAd = wtMgr.createAuthenticationDomain(domain);
 				}
 				autoCreate = domain.getUserAutoCreation();
 			}
 			
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			AbstractDirectory directory = dirManager.getDirectory(ad.getDirUri().getScheme());
-			if(directory == null) throw new WTException("Directory not supported [{0}]", ad.getDirUri().getScheme());
+			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
+			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
+			if (directory == null) throw new WTException("Directory not supported [{0}]", authAd.getDirUri().getScheme());
 			
-			String sntzUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
-			logger.debug("Authenticating principal [{}, {}]", ad.getDomainId(), sntzUsername);
-			Principal principal = new Principal(ad, impersonate, ad.getDomainId(), sntzUsername, password);
-			AuthUser userEntry = directory.authenticate(opts, principal);
-			principal.setDisplayName(userEntry.displayName);
+			// Prepare principal for authentication
+			String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
+			Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
+			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
+			AuthUser userEntry = directory.authenticate(opts, authPrincipal);
 			
+			// Authentication phase passed succesfully, now build the right principal!
+			Principal principal = null;
 			if (impersonate) {
-				String priUsername = sanitizeImpersonateUsername(username);
-				if (isSysAdminImpersonate(username)) {
-					if (ad2 == null) throw new WTException("ad2 is null");
-					principal = new Principal(ad2, impersonate, ad2.getDomainId(), priUsername, password);
-				} else {
-					principal = new Principal(ad, impersonate, ad.getDomainId(), priUsername, password);
-				}
+				String impUsername = sanitizeImpersonateUsername(username);
+				principal = new Principal(priAd, impersonate, priAd.getDomainId(), impUsername, password);
 				
 				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
 				OUser ouser = wta.getWebTopManager().getUser(pid);
+				// We cannot continue if the user is not present, impersonation needs it!
 				if (ouser == null) throw new WTException("User not found [{0}]", pid.toString());
-				
 				principal.setDisplayName(ouser.getDisplayName());
+				
+			} else {
+				// Authentication result points to the right userId...
+				principal = new Principal(priAd, impersonate, priAd.getDomainId(), userEntry.userId, password);
+				principal.setDisplayName(StringUtils.defaultIfBlank(userEntry.displayName, userEntry.userId));
 			}
 
 			synchronized (lock1) {
 				WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
-				if(autoCreate && !chk.exist) {
+				if (autoCreate && !chk.exist) {
 					logger.debug("Creating user [{}]", principal.getSubjectId());
 					wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
-				} else if(!chk.exist) {
+				} else if (!chk.exist) {
 					throw new WTException("User does not exist [{0}]", principal.getSubjectId());
-				} else if(chk.exist && !chk.enabled) {
+				} else if (chk.exist && !chk.enabled) {
 					throw new WTException("User is disabled [{0}]", principal.getSubjectId());
 				}
 			}

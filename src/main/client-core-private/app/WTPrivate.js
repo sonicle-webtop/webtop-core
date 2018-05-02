@@ -74,6 +74,18 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return this.getApp().getServiceApi(sid);
 	},
 	
+	hasRole: function(role) {
+		return this.getApp().hasRoles([role])[0];
+	},
+	
+	hasRoles: function(roles) {
+		return this.getApp().hasRoles(roles);
+	},
+	
+	hasAllRoles: function(roles) {
+		return this.getApp().hasAllRoles(roles);
+	},
+	
 	/**
 	 * Checks against a resource if specified action is allowed.
 	 * @param {String} [sid] The service ID.
@@ -82,7 +94,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @return {Boolean} 'True' if action is allowed, 'False' otherwise.
 	 */
 	isPermitted: function(sid, resource, action) {
-		if(arguments.length === 2) {
+		if (arguments.length === 2) {
 			action = resource;
 			resource = sid;
 			sid = WT.ID;

@@ -39,32 +39,82 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 	],
 	
 	config: {
+		/**
+		 * @cfg {String} url
+		 * The URL for push connection.
+		 */
 		url: null,
 		
-		uuid: 0,
-		
 		/**
-		 * @cfg {Integer} connectionLostTimeout
-		 * Amount of time (in millis) after fire the connectionlost event.
-		 * Note that this event will fire only one time after the connection problem.
+		 * @cfg {Boolean} [eventsDebug=false]
+		 * If active, displays debugging info on subsockets callbacks.
 		 */
-		connectionLostTimeout: 5*1000,
+		eventsDebug: false,
 		
 		/**
-		 * @cfg {Integer} connectionWarnTimeout
-		 * Amount of time (in millis) after display a connection warning alert.
+		 * @cfg {Integer} [transportAutoResetAfter=20]
+		 * Force transport reset (disconnect->connect) after this 
+		 * number of unsuccesful reconnects.
 		 */
-		connectionWarnTimeout: 10*1000,
+		transportAutoResetAfter: 20,
 		
 		/**
-		 * @cfg {Integer} clientHeartbeatInterval
+		 * @cfg {Integer} [clientHeartbeatInterval=60000]
 		 * The time interval (in millis) between each heartbeat calls.
 		 * If set to -1, function will be completely disabled.
 		 */
 		clientHeartbeatInterval: 60*1000
 	},
 	
-	socket: null,
+	subSocket: null,
+	serverUnreachable: 0,
+	
+	/**
+	 * @event connect
+	 * Fires when a connect is invoked.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event disconnect
+	 * Fires when a disconnect is invoked.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event subsocketevent
+	 * Fires when a subsocket event is fired and {@link #eventsDebug} is `true`.
+	 * @param {WTA.Atmosphere} this
+	 * @param {String} event The internal event name.
+	 * @param {String} transport The internal transport used.
+	 * @param {Number} status The internal response status.
+	 * @param {String} status The internal response state.
+	 */
+	
+	/**
+	 * @event beforeautoreset
+	 * Fires before channel is being auto-resetted.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event receive
+	 * Fires when a message is received.
+	 * @param {WTA.Atmosphere} this
+	 * @param {Object} message The json message.
+	 */
+	
+	/**
+	 * @event serverunreachable
+	 * Fires when channel connection is lost and server became unreachable.
+	 * @param {WTA.Atmosphere} this
+	 */
+	
+	/**
+	 * @event serveronline
+	 * Fires when channel connection has been restored.
+	 * @param {WTA.Atmosphere} this
+	 */
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -72,122 +122,242 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		me.mixins.observable.constructor.call(me, cfg);
 	},
 	
-	connect: function() {
+	connect: function(force) {
 		var me = this,
 				atm = atmosphere;
-		if (me.socket === null) {
-			me.socket = atm.subscribe(me.createRequest());
+		if (force) me.disconnect();
+		if (me.subSocket === null) {
+			me.fireEventArgs('connect', [me]);
+			if (!me.request) {
+				me.request = me.createRequest();
+			} else {
+				me.initDefltTransportParams(me.request);
+			}
+			me.subSocket = atm.subscribe(me.request);
 		}	
 	},
 	
 	disconnect: function() {
-		var me = this;
-		if (me.socket !== null) {
-			me.socket.unsubscribe();
-			me.socket = null;
+		var me = this,
+				atm = atmosphere,
+				sock = me.subSocket;
+		if (sock !== null) {
+			me.subSocket = null;
+			atm.unsubscribeUrl(sock.getUrl());
+			me.stopHBTask();
+			me.fireEventArgs('disconnect', [me]);
 		}
 	},
 	
+	initDefltTransportParams: function(req) {
+		var me = this;
+		req = Ext.apply(req, {
+			transport: me.self.T_WS,
+			//transport: me.self.T_LP,
+			fallbackTransport: me.self.T_LP
+		});
+		me.initTransportParams(req, req.transport, 'before');
+		return req;
+	},
+	
+	initTransportParams: function(req, transport, event) {
+		if (transport === this.self.T_WS) {
+			if (event === 'before') {
+				// The amount of time in order to switch to fallback transport
+				req.connectTimeout = 30*1000;
+				// The amount of time between each reconnect tries
+				reconnectInterval: 0;
+				// Max unsuccesful retries
+				maxReconnectOnClose: Number.MAX_VALUE;
+			} else {
+				// The amount of time in order to switch to fallback transport
+				req.connectTimeout = -1;
+				// The amount of time between each reconnect try
+				req.reconnectInterval = 5*1000;
+				// Max unsuccesful retries
+				req.maxReconnectOnClose = 2*120;
+			}
+		} else if (transport === this.self.T_LP) {
+			if (event === 'before') {
+				req.connectTimeout = -1; // No timeout, we want an immediate reconnect after failure
+				req.reconnectInterval = 0;
+				req.maxReconnectOnClose = Number.MAX_VALUE;
+			} else if (event === 'error') {
+				req.connectTimeout = -1;
+				req.reconnectInterval = 5*1000; // Dalay a little each reconnect tentative
+				req.maxReconnectOnClose = 2*120; // Limit number of unsuccesful retries
+			} else {
+				// The amount of time in order to cancel current pending request and open a new one
+				req.connectTimeout = 30*1000;
+				// Immediate reconnect after each cycle open/pending/close
+				req.reconnectInterval = 0;
+				// Max unsuccesful retries
+				req.maxReconnectOnClose = Number.MAX_VALUE;
+			}
+		}	
+	},
+	
+	/*
+	initWebsocketParams: function(req) {
+		// The amount of time in order to switch to fallback transport
+		req.connectTimeout = -1;
+		// The amount of time between each reconnect tries
+		req.reconnectInterval = 5*1000;
+		// Max unsuccesful retries
+		req.maxReconnectOnClose = 2*120;
+	},
+	
+	initLongPollingParams: function(req) {
+		// The amount of time in order to cancel current pending request and open a new one
+		req.connectTimeout = 30*1000;
+		// Immediate reconnect after each cycle open/pending/close (changed in case of fallback)
+		req.reconnectInterval = 0;
+		// Max unsuccesful retries
+		req.maxReconnectOnClose = Number.MAX_VALUE;
+	},
+	*/
+	
 	createRequest: function() {
 		var me = this;
-		return {
+		return me.initDefltTransportParams({
+			shared: false,
 			url: me.getUrl(),
-			//uuid: me.getUuid(),
-			//shared: true,
-			//logLevel: 'debug',
-			contentType: 'application/json',
-			transport: 'websocket',
-			//transport: 'long-polling',
-			fallbackTransport: 'long-polling',
-			connectTimeout: 10*1000,
+			logLevel: 'debug',
+			contentType: 'application/json; charset=UTF-8',
+			suspend: true,
+			enableProtocol: true,
 			trackMessageLength : true,
-			reconnectInterval: 10*1000,
-			maxReconnectOnClose: 99, // (6 reconn/min * 10min session TTL) = 60 rounded to...
+			//transport: 'websocket',
+			////transport: 'long-polling',
+			//fallbackTransport: 'long-polling',
+			//timeout: 300*1000, // The maximum time a connection stay opened when no message (or event) are sent or received.
+			//connectTimeout: -1, // The connect timeout. If the client fails to connect, the fallbackTransport will be used.
+			//reconnectInterval: 0, // The interval before an attempt to reconnect will be made.
+			//pollingInterval: 0, // Reconnect interval when long-polling transport is used and a response received.
+			//maxReconnectOnClose: Number.MAX_VALUE,
+			reconnectOnServerError: true,
 			onOpen: function(resp) {
-				//console.log('onOpen');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					if (resp.request.async === true) {
-						me.startHBTask();
-					}
-					me.clearConnLostTimeout();
-					me.clearConnWarnTimeout();
+				if (me.getEventsDebug()) {
+					console.log('onOpen ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'open', resp.transport, resp.status, resp.state]);
+				}
+				
+				if (!me.subSocket) return;
+				me.request.uuid = resp.request.uuid; // Carry the UUID. This is required if you want to call subscribe(request) again.
+				delete me.wsReconnectCount;
+				delete me.allowAutoReset;
+				me.initTransportParams(this, resp.transport, 'open');
+				me.updateSrvUnreachable(true);
+				if (me.isHBNeeded(resp)) {
+					me.startHBTask();
 				}
 			},
-			onReopen: function(resp) {
-				//console.log('onReopen');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					if (resp.async === true) {
-						me.startHBTask();
+			onReopen: function(req, resp) {
+				if (me.getEventsDebug()) {
+					console.log('onReopen ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'reopen', resp.transport, resp.status, resp.state]);
+				}
+				
+				if (!me.subSocket) return;
+				me.initTransportParams(this, resp.transport, 'open');
+				if (me.isWS(resp.transport)) {
+					me.updateSrvUnreachable(true);
+				} else if (me.isLP(resp.transport)) {
+					if (resp.status === 200) {
+						me.updateSrvUnreachable(true);
 					}
-					me.clearConnLostTimeout();
-					me.clearConnWarnTimeout();
+				}
+				if (me.isHBNeeded(resp)) {
+					me.startHBTask();
 				}
 			},
 			onClose: function(resp) {
-				//console.log('onClose');
-				var trnsp = resp.transport;
-				if ((trnsp === 'websocket') || (trnsp === 'long-polling')) {
-					me.stopHBTask();
-					if (resp.transport === 'websocket') {
-
-					}
-					me.startConnLostTimeout();
+				if (me.getEventsDebug()) {
+					console.log('onClose ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'close', resp.transport, resp.status, resp.state]);
+				}
+				
+				if (!me.subSocket) return;
+				me.stopHBTask();
+				if (me.isWS(resp.transport)) {
+					me.allowAutoReset = true;
 				}
 			},
 			onReconnect: function(req, resp) {
-				//console.log('onReconnect');
+				if (me.getEventsDebug()) {
+					console.log('onReconnect ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'reconnect', resp.transport, resp.status, resp.state]);
+				}
+				
+				if (!me.subSocket) return;
+				if (me.isWS(resp.transport)) {
+					if (!Ext.isDefined(me.wsReconnectCount)) me.wsReconnectCount = 0;
+					me.wsReconnectCount++;
+					if (me.wsReconnectCount === 1) {
+						me.updateSrvUnreachable();
+					}
+					var thres = me.getTransportAutoResetAfter();
+					if ((me.allowAutoReset === true) && (thres !== -1) && (me.wsReconnectCount === thres)) {
+						me.fireEventArgs('beforeautoreset', [me]);
+						me.connect(true);
+					}
+					
+				} else if (me.isLP(resp.transport)) {
+					if (resp.status === 500) {
+						me.initTransportParams(req, me.self.T_LP, 'error');
+						me.updateSrvUnreachable();
+					} else if (resp.status === 204) {
+						me.updateSrvUnreachable();
+					}
+				}
 			},
 			onClientTimeout: function(resp) {
-				//console.log('onClientTimeout');
+				if (me.getEventsDebug()) {
+					console.log('onClientTimeout ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'clientTimeout', resp.transport, resp.status, resp.state]);
+				}
 			},
 			onTransportFailure: function(err, req) {
-				//console.log('onTransportFailure');
+				if (me.getEventsDebug()) {
+					console.log('onTransportFailure');
+					me.fireEventArgs('subsocketevent', [me, 'transportFailure', req.transport, '', '']);
+				}
+				if (req.transport === me.self.T_WS) {
+					me.initTransportParams(req, me.self.T_LP, 'before');
+				}
 			},
 			onMessage: function(resp) {
 				//console.log('onMessage');
 				me.handleMessages(resp.responseBody);
 			},
 			onError: function(resp) {
-				//console.log('onError');
+				if (me.getEventsDebug()) {
+					console.log('onError ['+resp.status+', '+resp.state+']');
+					me.fireEventArgs('subsocketevent', [me, 'error', resp.transport, resp.status, resp.state]);
+				}
+				
+				if (!me.subSocket) return;
+				if (resp.state === 'error') {
+					if (resp.status === 0) {
+						// Handle net::ERR_INTERNET_DISCONNECTED error
+						me.updateSrvUnreachable();
+					}
+				}
 			}
-		};
+		});
 	},
 	
-	startConnLostTimeout: function() {
-		var me = this;
-		me.clearConnLostTimeout();
-		me.connLost = setTimeout(function() {
-			me.fireEventArgs('connectionlost', [me]);
-			me.startConnWarnTimeout();
-		}, me.getConnectionLostTimeout());
+	handleMessages: function(raw) {
+		var obj = Ext.JSON.decode(raw, true);
+		if (Ext.isArray(obj)) this.fireEventArgs('receive', [this, obj]);
 	},
 	
-	clearConnLostTimeout: function() {
+	isHBNeeded: function(resp) {
 		var me = this;
-		if (me.connLost) {
-			clearTimeout(me.connLost);
-			me.connLost = null;
-		}
-	},
-	
-	startConnWarnTimeout: function() {
-		var me = this;
-		me.clearConnWarnTimeout();
-		me.connWarn = setTimeout(function() {
-			var fn = function() {
-				if (me.connWarn) me.startConnWarnTimeout();
-			};
-			me.fireEventArgs('connectionwarn', [me, fn]);
-		}, me.getConnectionWarnTimeout());
-	},
-	
-	clearConnWarnTimeout: function() {
-		var me = this;
-		if (me.connWarn) {
-			clearTimeout(me.connWarn);
-			me.connWarn = null;
+		if (me.isWS(resp.transport)) {
+			return true;
+		} else {
+			return me.isLP(resp.transport) && (resp.request.connectTimeout < 0);
 		}
 	},
 	
@@ -197,7 +367,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		if (!Ext.isDefined(me.hbTask) && (ival > 0)) {
 			me.hbTask = Ext.TaskManager.start({
 				run: function () {
-					if (me.socket) me.socket.push('X');
+					if (me.subSocket) me.subSocket.push('X');
 				},
 				interval: ival
 			});
@@ -212,8 +382,38 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 		}
 	},
 	
-	handleMessages: function(raw) {
-		var obj = Ext.JSON.decode(raw, true);
-		if (Ext.isArray(obj)) this.fireEventArgs('receive', [this, obj]);
+	updateSrvUnreachable: function(reset) {
+		var me = this;
+		if (reset === true) {
+			if (me.serverUnreachable > 0) {
+				me.fireEventArgs('serveronline', [me]);
+			}
+			me.serverUnreachable = 0;
+		} else {
+			me.serverUnreachable++;
+			if (me.serverUnreachable === 1) {
+				me.fireEventArgs('serverunreachable', [me]);
+			}
+		}
+	},
+	
+	isServerUnreachable: function() {
+		return this.serverUnreachable > 0;
+	},
+	
+	privates: {
+		isWS: function(transport) {
+			return transport === this.self.T_WS;
+		},
+		
+		isLP: function(transport) {
+			return transport === this.self.T_LP;
+		}
+	},
+	
+	statics: {
+		T_NO: 'none',
+		T_WS: 'websocket',
+		T_LP: 'long-polling'
 	}
 });

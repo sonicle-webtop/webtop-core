@@ -132,6 +132,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			{alias: 'wt-im-send', name: 'im-send'}
 		]);
 		
+		Ext.iterate(WTS.roles, function(role) {
+			me.roles[role] = true;
+		});
+		
 		// Loads service descriptors from startup object
 		Ext.each(WTS.services, function(obj) {
 			desc = Ext.create('WTA.ServiceDescriptor', {
@@ -200,33 +204,88 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			vpc.showWhatsnew(false);
 		}
 		
-		WTA.Atmosphere.setUrl(me.pushUrl);
-		WTA.Atmosphere.setUuid(WT.getSessionId());
-		WTA.Atmosphere.on('receive', function(s,messages) {
-			Ext.each(messages, function(msg) {
-				if (msg && msg.service) {
-					var svc = me.getService(msg.service);
-					if(svc) svc.handleMessage(msg);
-				}
-			});
-		});
-		WTA.Atmosphere.on('connectionwarn', function(s, resume) {
-			WT.warn(WT.res('warn.connectionlost'), {
-				config: {
-					fn: function() {
-						resume();
+		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
+		WTA.Atmosphere.setEventsDebug(true);
+		WTA.Atmosphere.on({
+			receive: function(s,messages) {
+				Ext.each(messages, function(msg) {
+					if (msg && msg.service) {
+						var svc = me.getService(msg.service);
+						if(svc) svc.handleMessage(msg);
 					}
-				}
-			});
+				});
+			},
+			connect: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> connect', WT.getSessionId()), 'info');
+			},
+			disconnect: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> disconnect', WT.getSessionId()), 'info');
+			},
+			beforeautoreset: function(s) {
+				me.log(Ext.String.format('[{0}] Atmosphere -> beforeautoreset', WT.getSessionId()), 'info');
+			},
+			serverunreachable: function(s) {
+				me.connWarnTask();
+				me.log(Ext.String.format('[{0}] Atmosphere -> serverunreachable', WT.getSessionId()), 'info');
+			},
+			serveronline: function(s) {
+				me.connWarnTask(true);
+				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'info');
+			},
+			subsocketevent: function(s, evt, transp, status, state) {
+				if (transp === 'long-polling' && ['reopen', 'reconnect'].indexOf(evt) !== -1) return;
+				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}, {4}]', WT.getSessionId(), transp, evt, status, state), 'info');
+			}
 		});
 		WTA.Atmosphere.connect();
-		
+		/*
 		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
 			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
 		});
+		*/
 		Sonicle.PageActivityMonitor.start();
 		
 		me.hideLoadingLayer();
+	},
+	
+	connWarnTask: function(stop) {
+		var me = this;
+		if (stop === true) {
+			if (Ext.isDefined(me.cwTask)) {
+				Ext.TaskManager.stop(me.cwTask);
+				delete me.cwTask;
+				
+				WT.showBadgeNotification(WT.ID, {
+					tag: 'connrestored',
+					title: WT.res('not.conn.restored.tit'),
+					body: WT.res('not.conn.restored.body')
+				});
+			}
+		} else {
+			if (!Ext.isDefined(me.cwTask)) {
+				me.cwTask = Ext.TaskManager.start({
+					run: function(count) {
+						WT.showBadgeNotification(WT.ID, {
+							tag: 'connlost',
+							title: WT.res('not.conn.lost.tit'),
+							body: WT.res('not.conn.lost.body')
+						});
+						/*
+						if (count === 1) {
+							WT.warn(WT.res('warn.connectionlost'));
+						}
+						*/
+					},
+					interval: 10*1000,
+					fireOnStart: false
+				});
+			}
+		}
+	},
+	
+	logout: function() {
+		WTA.Atmosphere.disconnect();
+		WT.logout();
 	},
 	
 	/**
@@ -326,6 +385,19 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	getServiceApi: function(id) {
 		var svc = this.getService(id);
 		return svc ? svc.getApiInstance() : null;
+	},
+	
+	log: function(msg, level) {
+		if (arguments.length === 1) {
+			level = 'debug';
+		}
+		WT.ajaxReq(WT.ID, 'LogMessage', {
+			timeout: 10*1000,
+			params: {
+				level: level,
+				message: msg
+			}
+		});
 	}
 });
 

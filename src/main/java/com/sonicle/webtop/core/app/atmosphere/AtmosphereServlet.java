@@ -33,46 +33,46 @@
  */
 package com.sonicle.webtop.core.app.atmosphere;
 
-import com.sonicle.webtop.core.app.PushEndpoint;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import org.atmosphere.client.TrackMessageSizeInterceptor;
-import org.atmosphere.cpr.AtmosphereFramework;
-import org.atmosphere.cpr.AtmosphereInterceptor;
-import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.atmosphere.interceptor.BroadcastOnPostAtmosphereInterceptor;
-import org.atmosphere.interceptor.HeartbeatInterceptor;
-import org.atmosphere.interceptor.JavaScriptProtocol;
-
 /**
  *
  * @author malbinola
  */
 public class AtmosphereServlet extends org.atmosphere.cpr.AtmosphereServlet {
+	/*
+	private static final Logger logger = LoggerFactory.getLogger(AtmosphereServlet.class);
 	
-	public AtmosphereServlet() {
-		this(false);
-	}
+	private static final List<Class<? extends AtmosphereInterceptor>> PUSH_INTERCEPTORS = new LinkedList<Class<? extends AtmosphereInterceptor>>() {
+		{
+			add(ShiroInterceptor.class);
+			add(HeartbeatInterceptor.class);
+			add(JavaScriptProtocol.class);
+		}
+	};
 	
-	public AtmosphereServlet(boolean isFilter) {
-		super(isFilter, false);
+	@Override
+	protected AtmosphereServlet configureFramework(ServletConfig sc, boolean init) throws ServletException {
+		super.configureFramework(sc, init);
+		configureEnpoints(initializer.framework());
+		return this;
 	}
 	
 	@Override
 	protected AtmosphereFramework newAtmosphereFramework() {
-		AtmosphereFramework framework = super.newAtmosphereFramework();
-		framework.addAtmosphereHandler("/push", new PushEndpoint(), handlerInterceptors());
-		return framework;
+		logger.info("Call to newAtmosphereFramework directly!!!");
+		return super.newAtmosphereFramework();
 	}
 	
-	private List<AtmosphereInterceptor> handlerInterceptors() {
-		List<AtmosphereInterceptor> interceptors = new ArrayList<>();
-		interceptors.add(new AtmosphereResourceLifecycleInterceptor());
-		interceptors.add(new BroadcastOnPostAtmosphereInterceptor());
-		interceptors.add(new TrackMessageSizeInterceptor());
-		interceptors.add(new HeartbeatInterceptor());
-		interceptors.add(new JavaScriptProtocol());
-		return interceptors;
+	protected void configureEnpoints(AtmosphereFramework framework) {
+		framework.setBroadcasterCacheClassName(UUIDBroadcasterCache.class.getName());
+		
+		List<AtmosphereInterceptor> pushInterceptors = new LinkedList<>();
+		AnnotationUtil.defaultManagedServiceInterceptors(framework, pushInterceptors);
+		AnnotationUtil.interceptorsForHandler(framework, PUSH_INTERCEPTORS, pushInterceptors);
+		
+		String path = "/push/{sessionId}";
+		Broadcaster pushBroadcaster = framework.getBroadcasterFactory().lookup(path, true);
+		framework.addAtmosphereHandler(path, new PushEndpoint4(), pushBroadcaster, pushInterceptors);
 	}
+	
+	*/
 }

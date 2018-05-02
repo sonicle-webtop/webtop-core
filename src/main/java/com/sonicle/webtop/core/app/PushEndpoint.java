@@ -33,17 +33,22 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.sdk.BaseAsyncEndpoint;
 import java.io.IOException;
-import org.atmosphere.cache.UUIDBroadcasterCache;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.client.TrackMessageSizeInterceptor;
-import org.atmosphere.config.service.AtmosphereHandlerService;
+import org.atmosphere.config.service.Disconnect;
+import org.atmosphere.config.service.ManagedService;
+import org.atmosphere.config.service.PathParam;
+import org.atmosphere.config.service.Post;
+import org.atmosphere.config.service.Ready;
+import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import org.atmosphere.interceptor.HeartbeatInterceptor;
 import org.atmosphere.interceptor.IdleResourceInterceptor;
+import org.atmosphere.interceptor.JavaScriptProtocol;
 import org.atmosphere.interceptor.ShiroInterceptor;
 import org.atmosphere.interceptor.SuspendTrackerInterceptor;
 import org.slf4j.Logger;
@@ -53,66 +58,69 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-
-@AtmosphereHandlerService(
-		path = "/"+PushEndpoint.URL,
-		broadcasterCache = UUIDBroadcasterCache.class,
+@ManagedService(
+		path = "/"+PushEndpoint.URL+"/{sessionId}",
+		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
-			ShiroInterceptor.class,
+			com.sonicle.webtop.core.app.atmosphere.ContentTypeInterceptor.class,
 			AtmosphereResourceLifecycleInterceptor.class,
 			TrackMessageSizeInterceptor.class,
 			IdleResourceInterceptor.class,
 			SuspendTrackerInterceptor.class,
-			HeartbeatInterceptor.class
+			JavaScriptProtocol.class,
+			HeartbeatInterceptor.class,
+			ShiroInterceptor.class
 		}
 )
-public class PushEndpoint extends BaseAsyncEndpoint {
+public class PushEndpoint {
 	private static final Logger logger = LoggerFactory.getLogger(PushEndpoint.class);
 	public static final String URL = "push"; // This must reflect web.xml!
 	
-	@Override
-	protected void onOpen(AtmosphereResource resource) throws IOException {
-		SessionManager sessionManager = getSessionManager();
-		if (sessionManager != null) {
-			sessionManager.onPushResourceConnect(resource);
-		} else {
-			logger.error("SessionManager is null");
-		}
-	}
-
-	@Override
-	protected void onDisconnect(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException {
-		SessionManager sessionManager = getSessionManager();
-		if (sessionManager != null) {
-			sessionManager.onPushResourceDisconnect(event.getResource());
-		} else {
-			logger.error("SessionManager is null");
-		}
-	}
-
-	@Override
-	protected void onResume(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException {
-		//logger.trace("onResume");
-	}
-
-	@Override
-	protected void onTimeout(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException {
-		//logger.trace("onTimeout");
+	@PathParam("sessionId")
+	private String sessionId;
+	
+	@Ready
+	public void onReady(AtmosphereResource resource) {
+		if (logger.isTraceEnabled()) logger.trace("onReady [{}, {}]", sessionId, resource.uuid());
 	}
 	
-	@Override
-	protected void onHeartbeat(AtmosphereResource resource) throws IOException {
+	@Disconnect
+	public void onDisconnect(AtmosphereResourceEvent event) {
+		if (logger.isTraceEnabled()) logger.trace("onDisconnect [{}, {}]", sessionId, event.getResource().uuid());
+	}
+	
+	@Post
+	public void onPost(AtmosphereResource resource) {
+		if (logger.isTraceEnabled()) logger.trace("onPost [{}, {}]", sessionId, resource.uuid());
+		
+		if (!isSessionValid(resource)) {
+			logger.warn("No session available for push channel. Ignoring request! [{}]", sessionId);
+			return;
+		}
+		
+		AtmosphereRequest request = resource.getRequest();
+		try {
+			String line = request.getReader().readLine().trim();
+			if (StringUtils.equals(line, "X")) {
+				invokeOnHeartbeat(sessionId, resource);
+			}
+		} catch(IOException ex) {
+			logger.error("Error reading", ex);
+		}
+	}
+	
+	protected void invokeOnHeartbeat(String sessionId, AtmosphereResource resource) throws IOException {
 		SessionManager sessionManager = getSessionManager();
 		if (sessionManager != null) {
-			sessionManager.onPushResourceHeartbeat(resource);
+			sessionManager.onPushResourceHeartbeat(sessionId, resource);
 		} else {
 			logger.error("SessionManager is null");
 		}
 	}
-
-	@Override
-	protected void onMessage(AtmosphereResourceEvent event, AtmosphereResponse response, String message) throws IOException {
-		logger.trace("onMessage: {}", message);
+	
+	private boolean isSessionValid(AtmosphereResource resource) {
+		HttpSession session = resource.session(false);
+		return (session == null) ? false : StringUtils.equals(session.getId(), sessionId);
 	}
 	
 	private SessionManager getSessionManager() {
