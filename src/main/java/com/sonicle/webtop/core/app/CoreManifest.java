@@ -77,7 +77,6 @@ public class CoreManifest extends ServiceManifest {
 		buildDate = BUILD_DATE;
 		controllerClassName = CONTROLLER_CLASSNAME;
 		managerClassName = MANAGER_CLASSNAME;
-		restApiEndpoints.put("", new RestApiEndpoint(REST_API_CLASSNAME, ""));
 		privateServiceClassName = PRIVATE_SERVICE_CLASSNAME;
 		privateServiceJsClassName = PRIVATE_SERVICE_JS_CLASSNAME;
 		privateServiceVarsModelJsClassName = PRIVATE_SERVICEVARS_MODEL_JS_CLASSNAME;
@@ -92,6 +91,9 @@ public class CoreManifest extends ServiceManifest {
 		companyEmail = COMPANY_EMAIL;
 		companyWebSite = COMPANY_WEBSITE;
 		supportEmail = SUPPORT_EMAIL;
+		
+		restApiEndpoints.put("", new RestApiEndpoint(REST_API_CLASSNAME, ""));
+		restApis.put("openapi-v1.json", new ServiceManifest.RestApi("com/sonicle/webtop/core/openapi-v1.json", "v1", "com.sonicle.webtop.core.rest.v1"));
 		
 		/*
 			SYSADMIN (internal)

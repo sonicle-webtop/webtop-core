@@ -31,60 +31,59 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet.test1;
+package com.sonicle.webtop.core.sdk;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.GZIPOutputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
+import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.WT;
+import javax.ws.rs.core.Response;
 
 /**
  *
  * @author malbinola
  */
-public class GZipServletOutputStream extends ServletOutputStream {
-	private final GZIPOutputStream gzipOutputStream;
-	private final AtomicBoolean opened = new AtomicBoolean(true);
+public abstract class BaseRestApiResource extends AbstractService {
 	
-	public GZipServletOutputStream(OutputStream output) throws IOException {
+	public BaseRestApiResource() {
 		super();
-		this.gzipOutputStream = new GZIPOutputStream(output);
 	}
 	
-	@Override
-	public boolean isReady() {
-		return true;
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
+		return WT.getManifest(SERVICE_ID);
 	}
-
-	@Override
-	public void setWriteListener(WriteListener wl) {}
-
-	@Override
-	public void flush() throws IOException {
-		this.gzipOutputStream.flush();
+	
+	public Response respOk() {
+		return Response.ok().build();
 	}
-
-	@Override
-	public void close() throws IOException {
-		if (opened.compareAndSet(true, false)) this.gzipOutputStream.close();
+	
+	public Response respOk(Object entity) {
+		return Response.ok(entity).build();
 	}
-
-	@Override
-	public void write(int b) throws IOException {
-		if (!opened.get()) throw new IOException("Stream closed");
-		this.gzipOutputStream.write(b);
+	
+	public Response respOkCreated() {
+		return Response.status(Response.Status.CREATED).build();
 	}
-
-	@Override
-	public void write(byte[] b, int off, int len) throws IOException {
-		 if (!opened.get()) throw new IOException("Stream closed");
-		 this.gzipOutputStream.write(b, off, len);
+	
+	public Response respOkCreated(Object entity) {
+		return Response.ok(entity).status(Response.Status.CREATED).build();
 	}
-
-	@Override
-	public void write(byte[] b) throws IOException {
-		write(b, 0, b.length);
+	
+	public Response respOkNoContent() {
+		return Response.status(Response.Status.NO_CONTENT).build();
+	}
+	
+	public Response respErrorBadRequest() {
+		return Response.status(Response.Status.BAD_REQUEST).build();
+	}
+	
+	public Response respError(WTException ex) {
+		return Response.serverError().build();
+	}
+	
+	public Response respErrorNotFound() {
+		return Response.status(Response.Status.NOT_FOUND).build();
 	}
 }

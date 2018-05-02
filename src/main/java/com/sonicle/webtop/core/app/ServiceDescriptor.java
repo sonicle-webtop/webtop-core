@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.util.ClassHelper;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.BaseController;
@@ -46,15 +47,24 @@ import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.versioning.ResourceNotFoundException;
 import com.sonicle.webtop.core.versioning.SqlUpgradeScript;
 import com.sonicle.webtop.core.versioning.Whatsnew;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 
 /**
@@ -71,24 +81,29 @@ class ServiceDescriptor {
 	private Class jobServiceClass = null;
 	private Class userOptionsServiceClass = null;
 	private final List<ApiEndpointClass> restApiEndpointClasses = new ArrayList<>();
+	private final List<OpenApiDefinition> openApiDefinitions = new ArrayList<>();
 	private boolean upgraded = false;
 	private final HashMap<String, Whatsnew> whatsnewCache = new HashMap<>();
 
 	public ServiceDescriptor(ServiceManifest manifest) {
 		this.manifest = manifest;
 		
-		controllerClass = loadClass(true, manifest.getControllerClassName(), BaseController.class, "Controller");
-		managerClass = loadClass(true, manifest.getManagerClassName(), BaseManager.class, "Manager");
-		privateServiceClass = loadClass(true, manifest.getPrivateServiceClassName(), BaseService.class, "Service");
-		publicServiceClass = loadClass(true, manifest.getPublicServiceClassName(), BasePublicService.class, "PublicService");
-		jobServiceClass = loadClass(true, manifest.getJobServiceClassName(), BaseJobService.class, "JobService");
-		userOptionsServiceClass = loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
+		controllerClass = ClassHelper.loadClass(true, manifest.getControllerClassName(), BaseController.class, "Controller");
+		managerClass = ClassHelper.loadClass(true, manifest.getManagerClassName(), BaseManager.class, "Manager");
+		privateServiceClass = ClassHelper.loadClass(true, manifest.getPrivateServiceClassName(), BaseService.class, "Service");
+		publicServiceClass = ClassHelper.loadClass(true, manifest.getPublicServiceClassName(), BasePublicService.class, "PublicService");
+		jobServiceClass = ClassHelper.loadClass(true, manifest.getJobServiceClassName(), BaseJobService.class, "JobService");
+		userOptionsServiceClass = ClassHelper.loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
 		
 		for (ServiceManifest.RestApiEndpoint rae : manifest.getApiEndpoints()) {
-			final Class clazz = loadClass(false, rae.className, BaseRestApiEndpoint.class, "RestApiEndpoint");
+			final Class clazz = ClassHelper.loadClass(false, rae.className, BaseRestApiEndpoint.class, "RestApiEndpoint");
 			if (clazz != null) {
 				restApiEndpointClasses.add(new ApiEndpointClass(clazz, sanitizeApiEndpointPath(manifest.getId(), rae.path)));
 			}
+		}
+		for (ServiceManifest.RestApi ra : manifest.getRestApis()) {
+			Set<Class<?>> classes = findSubTypesClassesOf(ra.implPackage, com.sonicle.webtop.core.sdk.BaseRestApiResource.class);
+			openApiDefinitions.add(new OpenApiDefinition(ra.oasFilePath, ra.context, ra.implPackage, classes));
 		}
 	}
 
@@ -101,7 +116,7 @@ class ServiceDescriptor {
 	}
 	
 	public boolean doesControllerImplements(Class clazz) {
-		return implementsInterface(controllerClass, clazz);
+		return ClassHelper.isImplementingInterface(controllerClass, clazz);
 	}
 	
 	public boolean hasManager() {
@@ -151,6 +166,14 @@ class ServiceDescriptor {
 	public List<ApiEndpointClass> getRestApiEndpoints() {
 		return restApiEndpointClasses;
 	}
+	
+	public boolean hasOpenApiDefinitions() {
+		return !openApiDefinitions.isEmpty();
+	}
+	
+	public List<OpenApiDefinition> getOpenApiDefinitions() {
+		return openApiDefinitions;
+	}
 
 	public boolean isUpgraded() {
 		return upgraded;
@@ -160,45 +183,7 @@ class ServiceDescriptor {
 		this.upgraded = upgraded;
 	}
 	
-	private String sanitizeApiEndpointPath(String serviceId, String path) {
-		if (StringUtils.isBlank(path)) {
-			return serviceId;
-		} else {
-			return serviceId + "/" + StringUtils.removeStart(path, "/");
-		}
-	}
 	
-	private Class loadClass(boolean skipIfBlank, String className, Class sdkAssignableClass, String description) {
-		if (skipIfBlank && StringUtils.isBlank(className)) {
-			return null;
-		} else {
-			return loadClass(className, sdkAssignableClass, description);
-		}
-	}
-	
-	private Class loadClass(String className, Class sdkAssignableClass, String description) {
-		Class clazz = null;
-		
-		try {
-			clazz = Class.forName(className);
-			if (!sdkAssignableClass.isAssignableFrom(clazz)) throw new ClassCastException();
-			return clazz;
-
-		} catch(ClassNotFoundException ex) {
-			logger.debug("{} class not found [{}]", description, className);
-		} catch(ClassCastException ex) {
-			logger.warn("A valid {} class must extends '{}' class", description, sdkAssignableClass.toString());
-		} catch(Throwable t) {
-			logger.error("Unable to load class [{}]", className, t);
-		}
-		return null;
-	}
-	
-	private boolean implementsInterface(Class clazz, Class interfaceClass) {
-		if(clazz == null) return false;
-		if(interfaceClass == null) return false;
-		return interfaceClass.isAssignableFrom(clazz);
-	}
 	
 	/**
 	 * Loads what's new file for specified service.
@@ -249,8 +234,8 @@ class ServiceDescriptor {
 				try {
 					if (StringUtils.startsWithIgnoreCase(file, "init")) continue;
 					fileVersion = SqlUpgradeScript.extractVersion(file);
-					if(fileVersion.compareTo(manifest.getOldVersion()) <= 0) continue; // Skip all version sections below oldVersion (included)
-					if(fileVersion.compareTo(manifest.getVersion()) > 0) continue; // Skip all version sections after manifestVersion
+					if (fileVersion.compareTo(manifest.getOldVersion()) <= 0) continue; // Skip all version sections below oldVersion (included)
+					if (fileVersion.compareTo(manifest.getVersion()) > 0) continue; // Skip all version sections after manifestVersion
 					
 					resName = "/" + pkgPath + file;
 					logger.debug("Reading upgrade script [{}]", resName);
@@ -278,12 +263,51 @@ class ServiceDescriptor {
 		return scripts;
 	}
 	
+	public Info buildOpenApiInfo(OpenApiDefinition apiDefinition) {
+		String title = WT.lookupResource(manifest.getId(), WT.LOCALE_ENGLISH, BaseService.RESOURCE_SERVICE_NAME);
+		Contact contact = null;
+		if (!StringUtils.isBlank(manifest.getSupportEmail())) {
+			new Contact().email(manifest.getSupportEmail());
+		}
+		
+		return new Info()
+				.title(title + " Rest API")
+				.version("v1")
+				.contact(contact);
+	}
+	
+	private String sanitizeApiEndpointPath(String serviceId, String path) {
+		if (StringUtils.isBlank(path)) {
+			return serviceId;
+		} else {
+			return serviceId + "/" + StringUtils.removeStart(path, "/");
+		}
+	}
+	
 	private HashMap<String, String> defineWhatsnewVariables() {
 		HashMap<String, String> variables = new HashMap<>();
 		// Defines variables to place substitutions in whatsnew html
 		variables.put("WHATSNEW_URL", MessageFormat.format("resources/{0}/whatsnew", manifest.getJarPath()));
 		return variables;
 	}
+	
+	private Set<Class<?>> findSubTypesClassesOf(String targetPackage, Class subTypeOf) {
+		Set<Class<?>> output = new HashSet<>();
+		
+		Reflections reflections = new Reflections(new ConfigurationBuilder()
+				.setUrls(ClasspathHelper.forPackage(targetPackage))
+				.setScanners(new SubTypesScanner())
+				.filterInputsBy(new FilterBuilder().includePackage(targetPackage)));
+		
+		Set<Class<?>> classes = reflections.getSubTypesOf(subTypeOf);
+		for (Class<?> clazz : classes) {
+			if (clazz.getPackage().getName().startsWith(targetPackage)) {
+				output.add(clazz);
+			}
+		}
+		return output;
+	}
+	
 	
 	public static class ApiEndpointClass {
 		public final Class clazz;
@@ -292,6 +316,20 @@ class ServiceDescriptor {
 		public ApiEndpointClass(Class clazz, String path) {
 			this.clazz = clazz;
 			this.path = path;
+		}
+	}
+	
+	public static class OpenApiDefinition {
+		public final String oasFile;
+		public final String context;
+		public final String implPackage;
+		public final Set<Class<?>> resourceClasses;
+		
+		public OpenApiDefinition(String oasFile, String context, String implPackage, Set<Class<?>> resourceClasses) {
+			this.oasFile = oasFile;
+			this.context = context;
+			this.implPackage = implPackage;
+			this.resourceClasses = resourceClasses;
 		}
 	}
 }

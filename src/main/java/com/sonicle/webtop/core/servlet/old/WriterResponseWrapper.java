@@ -31,79 +31,41 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet.test1;
+package com.sonicle.webtop.core.servlet.old;
 
-import com.sonicle.commons.web.ServletUtils;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author malbinola
  */
-public class GZipResponseWrapper extends HttpServletResponseWrapper implements ClosableServletResponse {
-	private GZipServletOutputStream outputStream = null;
+public class WriterResponseWrapper extends HttpServletResponseWrapper implements ClosableServletResponse {
 	private PrintWriter writer = null;
 	
-	public GZipResponseWrapper(HttpServletResponse response) {
+	public WriterResponseWrapper(HttpServletResponse response) {
 		super(response);
-		ServletUtils.setCompressedContentHeader(response);
 	}
 	
 	@Override
 	public void close() throws IOException {
-		if (writer != null) writer.close();
-		if (outputStream != null) outputStream.close();
+		IOUtils.closeQuietly(writer);
 	}
-	
-	@Override
-	public void flushBuffer() throws IOException {
-		if (writer != null) writer.flush();
-		IOException ex1 = null;
-		try {
-			if (outputStream != null) outputStream.flush();
-		} catch(IOException ex) {
-			ex1 = ex;
-		}
-		IOException ex2 = null;
-		try {
-			super.flushBuffer();
-		} catch(IOException ex) {
-			ex2 = ex;
-		}
-		if (ex1 != null) throw ex1;
-		if (ex2 != null) throw ex2;
-	}
-	
+
 	@Override
 	public ServletOutputStream getOutputStream() throws IOException {
-		if (writer != null) {
-			throw new IllegalStateException("PrintWriter obtained already - cannot get OutputStream");
-		}
-		if (outputStream == null) {
-			outputStream = new GZipServletOutputStream(getResponse().getOutputStream());
-		}
-		return outputStream;
+		throw new IllegalStateException("Call getWriter() instead.");
 	}
 	
 	@Override
 	public PrintWriter getWriter() throws IOException {
-		if (writer == null && outputStream != null) {
-			throw new IllegalStateException("OutputStream obtained already - cannot get PrintWriter");
-		}
 		if (writer == null) {
-			outputStream = new GZipServletOutputStream(getResponse().getOutputStream());
-			writer = new PrintWriter(new OutputStreamWriter(outputStream, getResponse().getCharacterEncoding()));
+			writer = super.getWriter();
 		}
 		return writer;
-	}
-	
-	@Override
-	public void setContentLength(int len) {
-		// Ignore this, content length of zipped response does not match the original content length
 	}
 }

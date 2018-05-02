@@ -35,8 +35,10 @@ package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.sonicle.commons.web.ContextUtils;
+import com.sonicle.webtop.core.servlet.RestApi;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration.Dynamic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +69,51 @@ public class ContextLoader {
 			wta.init();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
 			
+			// TODO: Add atmosphere servlet dynamically (like below)
+			/*
+			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereFramework.analytics", "false");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterCacheClass", "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterLifeCyclePolicy", "BroadcasterLifeCyclePolicy.EMPTY");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JSR356AsyncSupport");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionSupport", "true");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionCreate", "false");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.shareableThreadPool", "true");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereInterceptor", "org.atmosphere.interceptor.ShiroInterceptor");
+			atmosphereServlet.setLoadOnStartup(1);
+			atmosphereServlet.setAsyncSupported(true);
+			atmosphereServlet.addMapping("/push/*");
+			*/
+			
+			// Adds RestApiServlets dynamically
+			ServiceManager svcMgr = wta.getServiceManager();
+			for (String serviceId : svcMgr.listRegisteredServices()) {
+				ServiceDescriptor desc = svcMgr.getDescriptor(serviceId);
+				
+				if (desc.hasOpenApiDefinitions() || desc.hasRestApiEndpoints()) {
+					addRestApiServlet(servletContext, desc);
+				}
+			}
+			
 		} catch(Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 			logger.error("Error initializing WTA [{}]", appname, t);
 		}
+	}
+	
+	private void addRestApiServlet(ServletContext servletContext, ServiceDescriptor desc) {
+		String serviceId = desc.getManifest().getId();
+		String name = serviceId + "@RestApiServlet";
+		String path = "/" + com.sonicle.webtop.core.servlet.RestApi.URL + "/" + serviceId + "/*";
+		
+		logger.debug("Adding RestApi servlet [{}] -> [{}]", name, path);
+		Dynamic servlet = servletContext.addServlet(name, com.sonicle.webtop.core.servlet.RestApi.class);
+		servlet.setInitParameter("javax.ws.rs.Application", "com.sonicle.webtop.core.app.JaxRsServiceApplication");
+		servlet.setInitParameter("com.sun.jersey.config.feature.DisableWADL", "true");
+		servlet.setInitParameter(RestApi.INIT_PARAM_WEBTOP_SERVICE_ID, serviceId);
+		servlet.setLoadOnStartup(2);
+		servlet.setAsyncSupported(true);
+		servlet.addMapping(path);
 	}
 	
 	protected void destroyApp(ServletContext servletContext) {

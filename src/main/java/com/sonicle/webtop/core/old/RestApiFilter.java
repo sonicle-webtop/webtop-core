@@ -31,24 +31,47 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.old;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.servlet.ServletContainer;
+import java.io.IOException;
+import java.util.HashSet;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
  *
  * @author malbinola
  */
-public class RestApi extends ServletContainer {
-	public static final String URL = "api"; // This must reflect web.xml!
-	public static final String INIT_PARAM_WEBTOP_SERVICE_ID = "webtop.serviceId";
+public class RestApiFilter implements Filter {
+	private final HashSet<String> validIds = new HashSet<>();
 	
-	public RestApi() {
-		super();
+	@Override
+	public void init(FilterConfig fc) throws ServletException {
+		/*
+		WebTopApp wta = WebTopApp.get(fc.getServletContext());
+		ServiceManager svcm = wta.getServiceManager();
+		for(String serviceId : svcm.listRegisteredServices()) {
+			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
+			if(sd.hasRestApiEndpoints()) validIds.add(serviceId);
+		}
+		*/
 	}
-	
-	public RestApi(ResourceConfig resourceConfig) {
-		super(resourceConfig);
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+		//TODO: implementare filtro di controllo se la porzione di url è valida
+		chain.doFilter(request, response);
+		//HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+		//RequestDispatcher requestDispatcher = httpServletRequest.getRequestDispatcher("/com.sonicle.webtop.core");
+		//requestDispatcher.forward(request, response);
+	}
+
+	@Override
+	public void destroy() {
+		validIds.clear();
 	}
 }

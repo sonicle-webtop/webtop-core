@@ -31,45 +31,60 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.servlet.old;
 
 import java.io.IOException;
-import java.util.HashSet;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.zip.GZIPOutputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 
 /**
  *
  * @author malbinola
  */
-public class RestApiFilter implements Filter {
-	private final HashSet<String> validIds = new HashSet<>();
+public class GZipServletOutputStream extends ServletOutputStream {
+	private final GZIPOutputStream gzipOutputStream;
+	private final AtomicBoolean opened = new AtomicBoolean(true);
+	
+	public GZipServletOutputStream(OutputStream output) throws IOException {
+		super();
+		this.gzipOutputStream = new GZIPOutputStream(output);
+	}
 	
 	@Override
-	public void init(FilterConfig fc) throws ServletException {
-		WebTopApp wta = WebTopApp.get(fc.getServletContext());
-		ServiceManager svcm = wta.getServiceManager();
-		for(String serviceId : svcm.listRegisteredServices()) {
-			ServiceDescriptor sd = svcm.getDescriptor(serviceId);
-			if(sd.hasRestApiEndpoints()) validIds.add(serviceId);
-		}
+	public boolean isReady() {
+		return true;
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		//TODO: implementare filtro di controllo se la porzione di url è valida
-		chain.doFilter(request, response);
-		//HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-		//RequestDispatcher requestDispatcher = httpServletRequest.getRequestDispatcher("/com.sonicle.webtop.core");
-		//requestDispatcher.forward(request, response);
+	public void setWriteListener(WriteListener wl) {}
+
+	@Override
+	public void flush() throws IOException {
+		this.gzipOutputStream.flush();
 	}
 
 	@Override
-	public void destroy() {
-		validIds.clear();
+	public void close() throws IOException {
+		if (opened.compareAndSet(true, false)) this.gzipOutputStream.close();
+	}
+
+	@Override
+	public void write(int b) throws IOException {
+		if (!opened.get()) throw new IOException("Stream closed");
+		this.gzipOutputStream.write(b);
+	}
+
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+		 if (!opened.get()) throw new IOException("Stream closed");
+		 this.gzipOutputStream.write(b, off, len);
+	}
+
+	@Override
+	public void write(byte[] b) throws IOException {
+		write(b, 0, b.length);
 	}
 }

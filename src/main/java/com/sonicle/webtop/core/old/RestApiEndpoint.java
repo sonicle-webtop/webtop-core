@@ -31,12 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.old;
 
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -53,10 +57,10 @@ import javax.ws.rs.core.Response;
  * @author malbinola
  */
 @Path("app")
-public class RestApi extends BaseRestApiEndpoint {
+public class RestApiEndpoint extends BaseRestApiEndpoint {
 	private WebTopApp wta = null;
 
-	public RestApi(WebTopApp wta) {
+	public RestApiEndpoint(WebTopApp wta) {
 		super();
 		this.wta = wta;
 	}

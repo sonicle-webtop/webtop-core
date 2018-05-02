@@ -31,15 +31,38 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet.test1;
+package com.sonicle.webtop.core.rest.v1;
 
-import java.io.IOException;
+import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.swagger.v1.api.DavApi;
+import com.sonicle.webtop.core.swagger.v1.model.PrincipalInfo;
+import javax.ws.rs.core.Response;
+import org.jooq.tools.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public interface ClosableServletResponse {
+public class Dav extends DavApi {
 	
-	public void close() throws IOException;
+	@Override
+	public Response getPrincipalInfo(String profileUsername) {
+		UserProfileId pid = WT.guessUserProfileIdProfileUsername(profileUsername);
+		if (pid == null) return respErrorNotFound();
+		UserProfile.Data ud = WT.getUserData(pid);
+		if (ud == null) return respErrorNotFound();
+		return respOk(createPrincipal(pid, profileUsername, ud));
+	}
+	
+	private PrincipalInfo createPrincipal(UserProfileId profileId, String profileUsername, UserProfile.Data data) {
+		return new PrincipalInfo()
+				.profileId(profileId.toString())
+				.profileUsername(profileUsername)
+				.displayName(StringUtils.defaultIfBlank(data.getDisplayName(), profileId.getUserId()))
+				.emailAddress(data.getPersonalEmailAddress());
+				//.timezoneId(data.getTimeZoneId())
+				//.languageTag(data.getLanguageTag());
+	}
 }

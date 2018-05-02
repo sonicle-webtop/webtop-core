@@ -101,6 +101,7 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -1455,6 +1456,49 @@ public final class WebTopManager {
 			} else {
 				return cacheUserToData.get(pid);
 			}
+		}
+	}
+	
+	public void ensureProfileDomain(String domainId) throws AuthException {
+		if (domainId == null) return;
+		UserProfileId runPid = RunContext.getRunProfileId();
+		if (RunContext.isWebTopAdmin(runPid)) return;
+		if (!runPid.hasDomain(domainId)) throw new AuthException("Running profile's domain [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
+	}
+	
+	public UserProfileId guessUserProfileIdByProfileUsername(String profileUsername) throws WTException {
+		UserProfileId iaPid = null;
+		try {
+			iaPid = new UserProfileId(profileUsername);
+		} catch(UnsupportedOperationException ex) {
+			return null;
+		}
+		
+		String domainId = internetNameToDomain(iaPid.getDomain());
+		if (domainId == null) return null;
+		ensureProfileDomain(domainId);
+		return new UserProfileId(domainId, iaPid.getUser());
+	}
+	
+	public UserProfileId guessUserProfileIdByPersonalAddress(String personalAddress) throws WTException {
+		UserInfoDAO uiDao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			List<UserId> uids = uiDao.viewByEmail(con, personalAddress);
+			if (uids.isEmpty()) return null;
+			
+			UserId uid = uids.get(0);
+			ensureProfileDomain(uid.getDomainId());
+			return new UserProfileId(uid.getDomainId(), uid.getUserId());
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	

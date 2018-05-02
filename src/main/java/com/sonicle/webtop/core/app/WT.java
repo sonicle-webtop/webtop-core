@@ -213,12 +213,23 @@ public class WT {
 	
 	public static CoreManager getCoreManager() {
 		WebTopSession wts = SessionContext.getCurrent(false);
+		CoreManager manager = null;
+		if (wts != null) {
+			manager = (CoreManager)wts.getServiceManager(CoreManifest.ID);
+		}
+		if (manager == null) {
+			// For admin subject during application startup
+			manager = getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getRunProfileId());
+		}
+		return manager;
+		/*
 		if(wts != null) {
 			return (CoreManager)wts.getServiceManager(CoreManifest.ID);
 		} else {
 			// For admin subject during application startup
 			return getWTA().getServiceManager().instantiateCoreManager(false, RunContext.getRunProfileId());
 		}
+		*/
 		//return RunContext.getWebTopSession().getCoreManager();
 	}
 	
@@ -241,11 +252,21 @@ public class WT {
 	
 	public static BaseManager getServiceManager(String serviceId) {
 		WebTopSession wts = SessionContext.getCurrent(false);
+		BaseManager manager = null;
+		if (wts != null) {
+			manager = wts.getServiceManager(serviceId);
+		}
+		if (manager == null) {
+			manager = getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
+		}
+		return manager;
+		/*
 		if (wts != null) {
 			return wts.getServiceManager(serviceId);
 		} else {
 			return getWTA().getServiceManager().instantiateServiceManager(serviceId, true, RunContext.getRunProfileId());
 		}
+		*/
 		//return RunContext.getWebTopSession().getServiceManager(serviceId);
 	}
 	
@@ -378,6 +399,26 @@ public class WT {
 			return getWTA().getWebTopManager().getDomainInternetName(domainId);
 		} catch(Exception ex) {
 			logger.warn("Unable to get DomainInternetName [{}]", domainId, ex);
+			return null;
+		}
+	}
+	
+	public static UserProfileId guessUserProfileIdProfileUsername(String profileUsername) {
+		if (profileUsername == null) return null;
+		try {
+			return getWTA().getWebTopManager().guessUserProfileIdByProfileUsername(profileUsername);
+		} catch(WTException ex) {
+			logger.warn("Unable to get profileId [{}]", profileUsername, ex);
+			return null;
+		}
+	}
+	
+	public static UserProfileId guessUserProfileIdByEmailAddress(String personalAddress) {
+		if (personalAddress == null) return null;
+		try {
+			return getWTA().getWebTopManager().guessUserProfileIdByPersonalAddress(personalAddress);
+		} catch(WTException ex) {
+			logger.warn("Unable to get profileId [{}]", personalAddress, ex);
 			return null;
 		}
 	}

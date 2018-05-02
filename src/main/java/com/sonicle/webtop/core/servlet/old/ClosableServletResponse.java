@@ -31,24 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.servlet.old;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.servlet.ServletContainer;
+import java.io.IOException;
 
 /**
  *
  * @author malbinola
  */
-public class RestApi extends ServletContainer {
-	public static final String URL = "api"; // This must reflect web.xml!
-	public static final String INIT_PARAM_WEBTOP_SERVICE_ID = "webtop.serviceId";
+public interface ClosableServletResponse {
 	
-	public RestApi() {
-		super();
-	}
-	
-	public RestApi(ResourceConfig resourceConfig) {
-		super(resourceConfig);
-	}
+	public void close() throws IOException;
 }

@@ -1,0 +1,107 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "WebTop Core",
+    "contact": {
+      "email": "dev-team@sonicle.com"
+    }
+  },
+  "security": [
+    {
+      "Basic authentication": []
+    }
+  ],
+  "paths": {
+    "/dav/principals/{profileUsername}": {
+      "get": {
+        "tags": [
+          "dav-principals"
+        ],
+        "summary": "Returns principal info",
+        "operationId": "getPrincipalInfo",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PrincipalInfo"
+            }
+          },
+          "400": {
+            "description": "Invalid parameter"
+          },
+          "404": {
+            "description": "Principal not found"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "profileUsername",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Full profile username",
+          "x-example": "john.doe@sonicle.com"
+        }
+      ]
+    }
+  },
+  "securityDefinitions": {
+    "Basic authentication": {
+      "type": "basic"
+    }
+  },
+  "definitions": {
+    "Error": {
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "description": {
+          "type": "string",
+          "example": "Bad query parameter [$size]: Invalid integer value [abc]"
+        },
+        "reason": {
+          "type": "string",
+          "example": "Bad Request"
+        }
+      },
+      "description": "This general detailed error structure is used throughout this API.",
+      "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\",\n  \"reasonPhrase\": \"Bad Request\"\n}"
+    },
+    "PrincipalInfo": {
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "type": "string"
+        },
+        "profileUsername": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "timezoneId": {
+          "type": "string"
+        },
+        "languageTag": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

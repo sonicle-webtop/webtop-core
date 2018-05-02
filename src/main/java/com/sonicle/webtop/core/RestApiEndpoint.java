@@ -52,10 +52,10 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class RestApi extends BaseRestApiEndpoint {
-	private static final Logger logger = WT.getLogger(RestApi.class);
+public class RestApiEndpoint extends BaseRestApiEndpoint {
+	private static final Logger logger = WT.getLogger(RestApiEndpoint.class);
 	
-	public RestApi() {
+	public RestApiEndpoint() {
 		super();
 	}
 	

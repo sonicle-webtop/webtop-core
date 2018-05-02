@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -50,6 +51,8 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class ServiceManifest {
+	private static final String JAVAPKG_REST = "rest";
+	
 	protected String id;
 	protected String xid;
 	protected String javaPackage;
@@ -75,6 +78,7 @@ public class ServiceManifest {
 	protected String userOptionsModelJsClassName;
 	protected Boolean hidden;
 	protected Map<String, RestApiEndpoint> restApiEndpoints = new LinkedHashMap<>();
+	protected Map<String, RestApi> restApis = new LinkedHashMap<>();
 	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
 	protected ArrayList<Portlet> portlets = new ArrayList<>();
 	
@@ -211,6 +215,21 @@ public class ServiceManifest {
 			}
 		}
 		
+		if (!svcEl.configurationsAt("restApis").isEmpty()) {
+			List<HierarchicalConfiguration> restApiEls = svcEl.configurationsAt("restApis.restApi");
+			for (HierarchicalConfiguration el : restApiEls) {
+				final String oasFile = el.getString("[@oasFile]");
+				if (StringUtils.isBlank(oasFile)) throw new Exception(invalidAttributeValueEx("restApis.restApi", "oasFile"));
+				final String context = oasFileToContext(oasFile);
+				final String implPackage = el.getString("[@package]", "." + JAVAPKG_REST + "." + context);
+				
+				if (restApis.containsKey(oasFile)) throw new Exception(invalidAttributeValueEx("restApis.restApi", "oasFile"));
+				//String oasFilePath = LangUtils.packageToPath(buildJavaPackage(javaPackage, "." + JAVAPKG_REST)) + "/" + oasFile;
+				String oasFilePath = LangUtils.packageToPath(javaPackage) + "/" + oasFile;
+				restApis.put(oasFile, new RestApi(oasFilePath, context, buildJavaPackage(javaPackage, implPackage)));
+			}
+		}
+		
 		if (!svcEl.configurationsAt("permissions").isEmpty()) {
 			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
 			for(HierarchicalConfiguration elPerm : elPerms) {
@@ -239,15 +258,19 @@ public class ServiceManifest {
 		}
 		
 		if (!svcEl.configurationsAt("portlets").isEmpty()) {
-			List<HierarchicalConfiguration> elWidgets = svcEl.configurationsAt("portlets.portlet");
-			for(HierarchicalConfiguration elWidget : elWidgets) {
-				if (elWidget.containsKey("[@jsClassName]")) {
-					final String jsClassName = elWidget.getString("[@jsClassName]");
+			List<HierarchicalConfiguration> elPortlets = svcEl.configurationsAt("portlets.portlet");
+			for(HierarchicalConfiguration el : elPortlets) {
+				if (el.containsKey("[@jsClassName]")) {
+					final String jsClassName = el.getString("[@jsClassName]");
 					if (StringUtils.isBlank(jsClassName)) throw new Exception("Invalid value for attribute [portlet->jsClassName]");
 					portlets.add(new Portlet(LangUtils.buildClassName(jsPackage, jsClassName)));
 				}
 			}
 		}
+	}
+	
+	private String oasFileToContext(String oasFile) {
+		return StringUtils.removeStartIgnoreCase(FilenameUtils.getBaseName(oasFile), "openapi-").toLowerCase();
 	}
 	
 	/**
@@ -358,6 +381,10 @@ public class ServiceManifest {
 	
 	public Collection<RestApiEndpoint> getApiEndpoints() {
 		return restApiEndpoints.values();
+	}
+	
+	public Collection<RestApi> getRestApis() {
+		return restApis.values();
 	}
 	
 	/**
@@ -520,6 +547,14 @@ public class ServiceManifest {
 		}
 	}
 	
+	private String buildJavaPackage(String javaBasePackage, String javaPackage) {
+		if (StringUtils.startsWith(javaPackage, ".")) {
+			return LangUtils.joinClassPackages(javaBasePackage, javaPackage);
+		} else {
+			return javaPackage;
+		}
+	}
+	
 	private String invalidValueEx(String elName) {
 		return "Invalid value for element '" + elName + "'";
 	}
@@ -539,6 +574,18 @@ public class ServiceManifest {
 		public RestApiEndpoint(String className, String path) {
 			this.className = className;
 			this.path = path;
+		}
+	}
+	
+	public static class RestApi {
+		public final String oasFilePath;
+		public final String context;
+		public final String implPackage;
+		
+		public RestApi(String oasFilePath, String context, String implPackage) {
+			this.oasFilePath = oasFilePath;
+			this.context = context;
+			this.implPackage = implPackage;
 		}
 	}
 	
