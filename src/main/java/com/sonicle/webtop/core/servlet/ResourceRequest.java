@@ -216,6 +216,8 @@ public class ResourceRequest extends HttpServlet {
 				// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
 				return lookupLicense(req, targetUrl);
 
+			} else if (!isVirtualUrl && path.startsWith("whatsnew/")) {
+				return lookupWhatsnew(req, targetUrl, path, subject);
 			} else {
 				if (StringUtils.endsWith(targetPath, ".js")) {
 					String sessionId = ServletHelper.getSessionID(req);
@@ -460,6 +462,28 @@ public class ResourceRequest extends HttpServlet {
 			
 			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
 			return new StaticFile(fileUrl.toString(), getMimeType(remainingPath), ClientCaching.YES, resFile);
+			
+		} catch (ForbiddenException ex) {
+			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+		} catch(NotFoundException ex) {
+			return new Error(HttpServletResponse.SC_NO_CONTENT, "Not Content");
+		} catch(InternalServerException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
+		} catch(ServletException ex) {
+			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+		}
+	}
+	
+	private LookupResult lookupWhatsnew(HttpServletRequest request, URL targetUrl, String path, String serviceId) {
+		URL fileUrl = null;
+		
+		try {
+			String resPath="/"+LangUtils.packageToPath(serviceId)+"/meta/"+path;
+			fileUrl = getResURL(resPath);
+			if (fileUrl == null) throw new NotFoundException();
+			
+			Resource resFile = getFile(WebTopApp.get(request), fileUrl);
+			return new StaticFile(fileUrl.toString(), getMimeType(path), ClientCaching.YES, resFile);
 			
 		} catch (ForbiddenException ex) {
 			return new Error(HttpServletResponse.SC_FORBIDDEN, "Forbidden");

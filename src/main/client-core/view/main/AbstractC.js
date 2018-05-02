@@ -202,7 +202,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				me.showFeedback();
 				break;
 			case 'whatsnew':
-				me.showWhatsnew();
+				me.showWhatsnew(true);
 				break;
 			case 'addons':
 				me.showAddons();
