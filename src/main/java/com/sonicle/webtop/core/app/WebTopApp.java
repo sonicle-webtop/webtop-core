@@ -1142,6 +1142,7 @@ public final class WebTopApp {
                 msg.addRecipient(Message.RecipientType.BCC, addr);
             }
         
+		body = StringUtils.defaultString(body);
         MimeMultipart mp=new MimeMultipart("mixed");
 		if (rich) {
 			MimeMultipart alternative=new MimeMultipart("alternative");
@@ -1174,6 +1175,9 @@ public final class WebTopApp {
 	
 	public void sendEmail(javax.mail.Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
 		MimeMultipart mp = new MimeMultipart("mixed");
+		body = StringUtils.defaultString(body);
+		
+		// Adds text parts from passed body
 		if (rich) {
 			MimeMultipart alternative = new MimeMultipart("alternative");
 			MimeBodyPart mbp2 = new MimeBodyPart();
@@ -1190,6 +1194,14 @@ public final class WebTopApp {
 			mbp1.setContent(body, MailUtils.buildPartContentType("text/plain", "UTF-8"));
 			mp.addBodyPart(mbp1);
 		}
+		
+		// Adds remaining parts to the mixed one
+		if (parts != null) {
+			for (MimeBodyPart p : parts) {
+				mp.addBodyPart(p);
+			}
+		}
+		
 		sendEmail(session, from, to, cc, bcc, subject, mp);
 	}
 	
