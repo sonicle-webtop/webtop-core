@@ -79,6 +79,9 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String upiCustom2;
 	public String upiCustom3;
 	
+	public String pbxUsername;
+	public String pbxPassword;
+	
 	public Boolean syncAlertEnabled;
 	public Integer syncAlertTolerance;
 	

@@ -1034,6 +1034,40 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}
 				}
 			}]
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.pbx.tit'),
+			items: [
+				{
+					xtype: 'soformseparator',
+					title: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
+				}, {
+					xtype: 'textfield',
+					bind: {
+						value: '{record.pbxUsername}'
+					},
+					disabled: !WT.getVar("pbxConfigured"),
+					plugins: 'sonoautocomplete',
+					fieldLabel: WT.res('opts.pbx.fld-username.lbl'),
+					width: 440,
+					emptyText: WT.res('opts.pbx.fld-username-empty.lbl'),
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
+					xtype: 'sopasswordfield',
+					bind: {
+						value: '{record.pbxPassword}',
+					},
+					disabled: !WT.getVar("pbxConfigured"),
+					plugins: 'sonoautocomplete',
+					//inputType: 'password',
+					fieldLabel: WT.res('opts.pbx.fld-password.lbl'),
+					width: 440,
+					emptyText: WT.res('opts.pbx.fld-password-empty.lbl'),
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}				
+			]
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);

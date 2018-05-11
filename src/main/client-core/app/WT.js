@@ -679,6 +679,49 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		}
 	},
 	
+	/**
+	 * Wrapper for Ext.toast()
+	 * @param {String} config The Ext.toast() config object.
+	 */
+	toast: function(config) {
+		Ext.toast(config);
+	},
+	
+	/**
+	 * Convenience function to run a phone call through the configured pbx.
+	 * @param {String} number The number to call.
+	 */
+	handlePbxCall: function(number) {
+		if (WT.getVar("pbxConfigured")) {
+			WT.toast({
+				 html: number,
+				 title: WT.res('pbx.call.toast.lbl'),
+				 width: 300,
+				 align: 'br',
+				 timeout: 10000
+			});
+			WT.ajaxReq(WT.ID, 'PbxCall', {
+				params: {
+					number: number
+				},
+				callback: function(success, json) {
+					if(success) {
+					} else {
+						WT.error(json.message);
+					}
+				}
+			});
+		} else {
+			WT.toast({
+				 html: WT.res('opts.pbx.unconfigured.tit'),
+				 title: WT.res('error'),
+				 width: 300,
+				 align: 'br',
+				 timeout: 10000
+			});
+		}
+	},
+	
 	reload: function() {
 		window.location.reload();
 	},

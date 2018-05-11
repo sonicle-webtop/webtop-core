@@ -515,10 +515,38 @@ public class CoreSettings {
 	/**
 	 * [user]
 	 * [int] (number of days 1->30)
-	 * Specified the maximum difference between current time and last-sync time 
+	 * Specifies the maximum difference between current time and last-sync time 
 	 * before sending a notification alert
 	 */
 	public static final String DEVICES_SYNC_ALERT_TOLERANCE = "devices.sync.alert.tolerance";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the PBX provider, if available. 
+	 */
+	public static final String PBX_PROVIDER = "pbx.provider";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the PBX NethVoice provider webrest URL, if available. 
+	 */
+	public static final String PBX_PROVIDER_NETHVOICE_WEBREST_URL = "pbx.provider.nethvoice.webrest.url";
+	
+	/**
+	 * [user]
+	 * [string]
+	 * Specifies the PBX username, when different from WebTop username. 
+	 */
+	public static final String PBX_USERNAME = "pbx.username";
+	
+	/**
+	 * [user]
+	 * [string]
+	 * Specifies the PBX password, when different from WebTop password. 
+	 */
+	public static final String PBX_PASSWORD = "pbx.password";
 	
 	/**
 	 * [user]

@@ -171,6 +171,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getTime(DEVICES_SYNC_CHECK_TIME, "12:00", "HH:mm");
 	}
 	
+	public String getPbxProvider() {
+		return getString(PBX_PROVIDER,null);
+	}
+	
+	public String getNethVoiceWebrestURL() {
+		return getString(PBX_PROVIDER_NETHVOICE_WEBREST_URL,null);
+	}
+	
 	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
 		if (fallbackOnDefault && (value == null)) {

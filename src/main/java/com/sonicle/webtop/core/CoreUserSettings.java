@@ -245,6 +245,22 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setInteger(DEVICES_SYNC_ALERT_TOLERANCE, value);
 	}
 	
+	public String getPbxUsername() {
+		return getString(PBX_USERNAME, null);
+	}
+	
+	public boolean setPbxUsername(String value) {
+		return setString(PBX_USERNAME, value);
+	}
+	
+	public String getPbxPassword() {
+		return getString(PBX_PASSWORD, null);
+	}
+	
+	public boolean setPbxPassword(String value) {
+		return setString(PBX_PASSWORD, value);
+	}
+	
 	public String getIMStatusMessage() {
 		return getString(IM_STATUS_MESSAGE, null);
 	}
