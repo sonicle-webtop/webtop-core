@@ -153,6 +153,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.syncAlertEnabled = us.getDevicesSyncAlertEnabled();
 				jso.syncAlertTolerance = us.getDevicesSyncAlertTolerance();
 				
+				// PBX
+				jso.pbxUsername = us.getPbxUsername();
+				jso.pbxPassword = us.getPbxPassword();
+				
 				// WebChat
 				jso.imUploadMaxFileSize = us.getIMUploadMaxFileSize(true);
 				jso.imSoundOnFriendConnect = us.getIMSoundOnFriendConnect();
@@ -221,6 +225,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// sync
 				if (pl.map.has("syncAlertEnabled")) us.setDevicesSyncAlertEnabled(pl.data.syncAlertEnabled);
 				if (pl.map.has("syncAlertTolerance")) us.setDevicesSyncAlertTolerance(pl.data.syncAlertTolerance);
+				
+				// PBX
+				if (pl.map.has("pbxUsername")) us.setPbxUsername(pl.data.pbxUsername);
+				if (pl.map.has("pbxPassword")) us.setPbxPassword(pl.data.pbxPassword);
 				
 				// WebChat
 				if (pl.map.has("imUploadMaxFileSize")) us.setIMUploadMaxFileSize(pl.data.imUploadMaxFileSize);

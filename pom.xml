@@ -258,7 +258,6 @@
 			<groupId>com.googlecode.ez-vcard</groupId>
 			<artifactId>ez-vcard</artifactId>
 			<version>${ez-vcard.version}</version>
-			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jsoup</groupId>
@@ -324,6 +323,11 @@
 			<artifactId>smack-extensions</artifactId>
 			<version>4.2.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.mashape.unirest</groupId>
+			<artifactId>unirest-java</artifactId>
+			<version>1.4.9</version>
+		</dependency>		
 		<!-- WebTop libraries -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>

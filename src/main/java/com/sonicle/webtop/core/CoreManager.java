@@ -50,6 +50,8 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.pbx.PbxProvider;
+import com.sonicle.webtop.core.app.pbx.NethVoice;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -141,6 +143,8 @@ public class CoreManager extends BaseManager {
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
 	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
 	
+	private PbxProvider pbx=null;
+	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
@@ -158,6 +162,17 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	*/
+	
+	private void initPbx() {
+		if (pbx==null) {
+			UserProfileId pid=getTargetProfileId();
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
+			String provider=css.getPbxProvider();
+			if (provider!=null) {
+				pbx=PbxProvider.getInstance(provider, pid);
+			}
+		}
+	}
 
 	public ServiceManager getServiceManager() {
 		ensureCallerService(SERVICE_ID, "getServiceManager");
@@ -1204,6 +1219,49 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	/**
+	 * Check if a PBX has been configured.
+	 * @return true if the PBX instance has been configured, false otherwise
+	 */
+	
+	public boolean pbxConfigured() {
+		initPbx();
+		return pbx!=null;
+	}
+	
+	/**
+	 * Get the configured PBX provider instance.
+	 * @return The PBX provider instance
+	 */
+	
+	public PbxProvider pbxGetProvider(String number) {
+		initPbx();
+		return pbx;
+	}
+	
+	/**
+	 * Run PBX call through the configured PBX provider.
+	 * @param number The number to call
+	 * @return true if the call was accpeted by the provider, false otherwise
+	 */
+	
+	public void pbxCall(String number) throws WTException {
+		initPbx();
+		if (pbx==null) {
+			throw new WTException("Pbx not initialized");
+		}
+		UserProfileId targetPid = getTargetProfileId();
+		CoreUserSettings us = new CoreUserSettings(targetPid);
+		
+		//use webtop username/password or from user settings
+		String username=us.getPbxUsername();
+		if (username==null) username=targetPid.getUserId();
+		String spassword=us.getPbxPassword();
+		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
+		
+		pbx.call(number, username, password);
 	}
 	
 	/**

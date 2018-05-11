@@ -281,6 +281,7 @@ public class Service extends BaseService {
 		co.put("imSoundOnFriendDisconnect", us.getIMSoundOnFriendDisconnect());
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
 		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
+		co.put("pbxConfigured",coreMgr.pbxConfigured());
 		
 		return co;
 	}
@@ -1026,6 +1027,23 @@ public class Service extends BaseService {
 			logger.error("Error in action DownloadFiles", ex);
 			ServletUtils.writeError(response, HttpServletResponse.SC_NOT_FOUND);
 		}
+	}
+	
+	public void processPbxCall(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		String number = ServletUtils.getStringParameter(request, "number", null);
+
+		if (coreMgr.pbxConfigured() && number!=null) {
+			try {
+				coreMgr.pbxCall(number);
+				new JsonResult().printTo(out);
+			} catch(WTException exc) {
+				logger.error("Error during PBX Call",exc);
+				new JsonResult(false,exc.getMessage()).printTo(out);
+			}
+		} else {
+			new JsonResult(false,"No PBX Configured").printTo(out);
+		}
+			
 	}
 	
 	public void processSnoozeReminder(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
