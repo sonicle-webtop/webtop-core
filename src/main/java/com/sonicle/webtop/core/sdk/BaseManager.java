@@ -70,6 +70,16 @@ public abstract class BaseManager {
 		return WT.LOCALE_ENGLISH;
 	}
 	
+	protected WTException wrapThrowable(Throwable t) {
+		if (t instanceof WTException) {
+			return (WTException)t;
+		} else if ((t instanceof WTException) || (t instanceof WTException)) {
+			return new WTException(t, "DB error");
+		} else {
+			return new WTException(t);
+		}
+	}
+	
 	/**
 	 * Returns the current targetProfile; it can be null.
 	 * @return 

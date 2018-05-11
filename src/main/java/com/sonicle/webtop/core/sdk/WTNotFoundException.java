@@ -33,61 +33,25 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractService;
-import com.sonicle.webtop.core.app.WT;
-import javax.ws.rs.core.Response;
-
 /**
  *
  * @author malbinola
  */
-public abstract class BaseRestApiResource extends AbstractService {
+public class WTNotFoundException extends WTException {
 	
-	public BaseRestApiResource() {
+	public WTNotFoundException() {
 		super();
 	}
 	
-	/**
-	 * Gets WebTop Service manifest class.
-	 * @return The manifest.
-	 */
-	public final ServiceManifest getManifest() {
-		return WT.getManifest(SERVICE_ID);
+	public WTNotFoundException(Throwable cause) {
+		super(cause);
 	}
 	
-	public Response respOk() {
-		return Response.ok().build();
+	public WTNotFoundException(String message, Object... arguments) {
+		super(message, arguments);
 	}
 	
-	public Response respOk(Object entity) {
-		return Response.ok(entity).build();
-	}
-	
-	public Response respOkCreated() {
-		return Response.status(Response.Status.CREATED).build();
-	}
-	
-	public Response respOkCreated(Object entity) {
-		return Response.ok(entity).status(Response.Status.CREATED).build();
-	}
-	
-	public Response respOkNoContent() {
-		return Response.status(Response.Status.NO_CONTENT).build();
-	}
-	
-	public Response respErrorBadRequest() {
-		return Response.status(Response.Status.BAD_REQUEST).build();
-	}
-	
-	public Response respError(WTException ex) {
-		return Response.serverError().build();
-	}
-	
-	public Response respErrorNotFound() {
-		return Response.status(Response.Status.NOT_FOUND).build();
-	}
-	
-	public Response respErrorNotAllowed() {
-		return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+	public WTNotFoundException(Throwable cause, String message, Object... arguments) {
+		super(cause, message, arguments);
 	}
 }
