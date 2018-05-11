@@ -1,0 +1,6 @@
+$	5.1.7
+	%	Versione 5.2.0
+	*	<h1>NethVoice Switchboard Integration</h1>
+		<p>The system can now be configured to integrate with NethVoice switchboards,
+		allowing implementation of direct calls from WebTop. It is already possible
+		to use this feature from the contacts grid.</p>

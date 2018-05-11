@@ -1,33 +1,6 @@
-$	5.0.1
-	%	Versione 5.0.1
-	*	<h1>Feedback e segnalazioni</h1>
-		<p>Con il nuovo modulo feedback è possibile inviare facilmente delle 
-		segnalazioni e commenti inerenti i servizi della piattaforma. Tali
-		notifiche saranno successivamente prese in gestione dagli specifici 
-		team di supporto della piattaforma.</p>
-		<img src="{WHATSNEW_URL}/4.5.0_feedback.png"/>
-$	5.0.0
-	%	Versione 5.0.0
-	*	<h1>Informazioni personali</h1>
-		<p>Nella scheda <i>Opzioni > Generale > Informazioni personali</i> è possibile
-		visualizzare e mantenere(*) le proprie informazioni personali. </p>
-		<p>( * disponibile solamente per gli utenti abilitati ove il fornitore dei
-		dati non sia configurato in sola lettura)</p>
-	*	<h1>Nuova modalità OTP</h1>
-		<p>Nella scheda <i>Opzioni > Generale > OTP</i> vi sono ora due modalità: 
-		la classica verifica tramite messaggio di posta e la nuova procedura
-		di autenticazione tramite l'app per smartphone GoogleAuthenticator</p>
-	*	<h1>Bugfix problemi minori ed incremento prestazioni</h1>
-$	4.5.0
-	%	Versione 4.5.0
-	*	<h1>Pannello What's New</h1>
-		<p>Al primo login dopo l'installazione di un nuovo rilascio 
-		(sia di servizio che di piattaforma WebTop), vengono mostrate all'utente
-		le novità applicative installate.</p>
-		<img src="{WHATSNEW_URL}/4.5.0_whatsnew.png"/>
-	*	<h1>Informazioni sui servizi</h1>
-		<p>Posizionando il cursore sopra il bottone di attivazione di un servizio,
-		vengono mostrate le informazioni relative al servizio stesso: numero di
-		versione e produttore.</p>
-$	4.0.10
-	%	Versione iniziale
+$	5.1.7
+	%	Version 5.2.0
+	*	<h1>Integrazione centralino telefonico NethVoice</h1>
+		<p>Il sistema è ora configurabile per integrarsi ai centralini NethVoice,
+		consentendo l'implementazione di chiamate dirette da WebTop. E' già possibile
+		utilizzare questa funzionalità dai contatti.</p>
