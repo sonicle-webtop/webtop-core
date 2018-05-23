@@ -968,6 +968,10 @@ public final class WebTopApp {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getPublicBaseUrl();
 	}
 	
+	public String getDavServerBaseUrl(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDavServerBaseUrl();
+	}
+	
 	/**
 	 * Returns the localized string for Core service bound to the specified key.
 	 * @param locale Desired locale.

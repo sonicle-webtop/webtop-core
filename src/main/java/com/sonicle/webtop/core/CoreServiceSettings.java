@@ -51,6 +51,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(PUBLIC_BASE_URL, null);
 	}
 	
+	public String getDavServerBaseUrl() {
+		return getString(DAVSERVER_BASE_URL, null);
+	}
+	
 	public Boolean getHasPecBridgeManagement() {
 		return getBoolean(CONFIG_PECBRIDGE_MANAGEMENT, false);
 	}

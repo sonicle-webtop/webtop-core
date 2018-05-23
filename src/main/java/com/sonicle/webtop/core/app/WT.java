@@ -163,6 +163,10 @@ public class WT {
 		return getWTA().getPublicBaseUrl(domainId);
 	}
 	
+	public static String getDavServerBaseUrl(String domainId) {
+		return getWTA().getDavServerBaseUrl(domainId);
+	}
+	
 	public static String getDomainPublicName(String domainId) {
 		return getWTA().getWebTopManager().domainIdToPublicName(domainId);
 	}

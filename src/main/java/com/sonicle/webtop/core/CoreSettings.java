@@ -69,6 +69,13 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [string]
+	 * Defines how the dav-server is reachable from outside
+	 */
+	public static final String DAVSERVER_BASE_URL = "davserver.url";
+	
+	/**
+	 * [domain+system]
 	 * [boolean]
 	 * Defines if PECBridge management is enabled
 	 */
