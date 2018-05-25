@@ -86,8 +86,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 			
 			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
-				jso.canManagePassword = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
-				jso.canManageUpi = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
+				boolean iAmSysAdmin = RunContext.isSysAdmin();
+				jso.canManagePassword = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
+				jso.canManageUpi = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
 				jso.canSyncDevices = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				
 				// main
