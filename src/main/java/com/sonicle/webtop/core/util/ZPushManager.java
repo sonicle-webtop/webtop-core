@@ -34,17 +34,20 @@
 package com.sonicle.webtop.core.util;
 
 import com.sonicle.commons.shell.Shell;
+import com.sonicle.webtop.core.app.WT;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
 public class ZPushManager {
+	public static final Logger logger = WT.getLogger(ZPushManager.class);
 	private final String phpPath;
 	private final String zpushPath;
 	private final URI uri;
@@ -62,11 +65,12 @@ public class ZPushManager {
 		try {
 			String cmd = "list";
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			return parseListOutput(lines);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -77,11 +81,12 @@ public class ZPushManager {
 		try {
 			String cmd = "lastsync";
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			return parseLastsyncOutput(lines);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -92,11 +97,12 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("list -u {0}", user);
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			return parseListDevicesOfUserOutput(lines, lineSep);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -107,11 +113,12 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("list -d {0} -u {1}", device, user);
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			return parseListUsersOfDeviceOutput(lines, lineSep);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -122,10 +129,11 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -u {0}", user);
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -136,10 +144,11 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -d {0}", device);
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
 	}
 	
@@ -150,11 +159,18 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -u {0} -d {1}", user, device);
 			shell = new Shell(uri);
-			lines = shell.execute(buildShellCommand(cmd));
+			logger.debug("ZPush CMD: {}", cmd);
+			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
-			if (shell!=null) shell.close();
+			if (shell != null) shell.close();
 		}
+	}
+	
+	private List<String> runAdminCommand(Shell shell, String cmd) throws Exception {
+		String shellCmd = buildShellCommand(cmd);
+		logger.trace("Shell CMD: {}", shellCmd);
+		return shell.execute(shellCmd);
 	}
 	
 	private String buildShellCommand(String zpushCmd) {
