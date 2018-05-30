@@ -123,61 +123,6 @@ public class SessionManager {
 		logger.info("Cleaned up");
 	}
 	
-	public void push(String sessionId, ServiceMessage message) {
-		push(sessionId, Arrays.asList(message));
-	}
-	
-	public boolean push(String sessionId, Collection<ServiceMessage> messages) {
-		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) {
-				PushConnection pushCon = pushConnections.get(sessionId);
-				if (pushCon != null) {
-					return pushCon.send(messages);
-				} else {
-					logger.error("PushConnection not available [{}]", sessionId);
-				}
-			}
-			return false;
-		}
-	}
-	
-	public void push(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
-		push(profileId, Arrays.asList(message), enqueueIfOffline);
-	}
-	
-	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
-		synchronized(lock) {
-			ProfileSids sessionIds = profileSidsCache.get(profileId);
-			if ((sessionIds != null) && !sessionIds.isEmpty()) {
-				for(String sessionId : profileSidsCache.get(profileId)) {
-					push(sessionId, messages);
-				}
-			} else {
-				if (enqueueIfOffline) {
-					enqueueMessages(profileId, messages);
-				}
-			}
-		}
-	}
-	
-	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
-		String sessionId = webtopSession.getId();
-		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] is already registered", sessionId);
-			
-			UserProfileId profileId = webtopSession.getProfileId();
-			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
-
-			onlineSessions.put(sessionId, webtopSession);
-			pushConnections.put(sessionId, new PushConnection(sessionId, listEnqueuedMessages(webtopSession.getProfileId())));
-			if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
-			profileSidsCache.get(profileId).add(sessionId);
-			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
-			
-			logger.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
-		}
-	}
-	
 	public void onContainerSessionCreated(HttpSession session) {
 		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_SESSION, new WebTopSession(wta, session));
 	}
@@ -230,6 +175,143 @@ public class SessionManager {
 				}
 			}
 		} 	
+	}
+	
+	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
+		String sessionId = webtopSession.getId();
+		synchronized(lock) {
+			if (onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] is already registered", sessionId);
+			
+			UserProfileId profileId = webtopSession.getProfileId();
+			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
+
+			onlineSessions.put(sessionId, webtopSession);
+			pushConnections.put(sessionId, new PushConnection(sessionId, listEnqueuedMessages(webtopSession.getProfileId())));
+			if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
+			profileSidsCache.get(profileId).add(sessionId);
+			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
+			
+			logger.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
+		}
+	}
+	
+	public WebTopSession getWebTopSession(String sessionId) {
+		return onlineSessions.get(sessionId);
+	}
+	
+	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
+		List<WebTopSession> list = new ArrayList<>();
+		synchronized(lock) {
+			if(profileSidsCache.get(profileId) != null) {
+				for(String sid : profileSidsCache.get(profileId)) {
+					list.add(onlineSessions.get(sid));
+				}
+			}
+		}
+		return list;
+	}
+	
+	public boolean isOnline(String sessionId) {
+		return onlineSessions.containsKey(sessionId);
+	}
+	
+	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
+		return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
+	}
+	
+	/*
+	public void push(String sessionId, ServiceMessage message) {
+		push(sessionId, Arrays.asList(message));
+	}
+	
+	public boolean push(String sessionId, Collection<ServiceMessage> messages) {
+		synchronized(lock) {
+			if (onlineSessions.containsKey(sessionId)) {
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) {
+					return pushCon.send(messages);
+				} else {
+					logger.error("PushConnection not available [{}]", sessionId);
+				}
+			}
+			return false;
+		}
+	}
+	
+	public void push(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
+		push(profileId, Arrays.asList(message), enqueueIfOffline);
+	}
+	
+	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
+		synchronized(lock) {
+			ProfileSids sessionIds = profileSidsCache.get(profileId);
+			if ((sessionIds != null) && !sessionIds.isEmpty()) {
+				for(String sessionId : profileSidsCache.get(profileId)) {
+					push(sessionId, messages);
+				}
+			} else {
+				if (enqueueIfOffline) {
+					enqueueMessages(profileId, messages);
+				}
+			}
+		}
+	}
+	*/
+	
+	public void push(String sessionId, ServiceMessage message) {
+		push(sessionId, Arrays.asList(message));
+	}
+	
+	public void push(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
+		push(profileId, Arrays.asList(message), enqueueIfOffline);
+	}
+	
+	public void push(String sessionId, Collection<ServiceMessage> messages) {
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				internalPush(sessionId, messages);
+			}
+		};
+		t.start();
+	}
+	
+	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				internalPush(profileId, messages, enqueueIfOffline);
+			}
+		};
+		t.start();
+	}
+	
+	private void internalPush(String sessionId, Collection<ServiceMessage> messages) {
+		synchronized(lock) {
+			if (onlineSessions.containsKey(sessionId)) {
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) {
+					pushCon.send(messages);
+				} else {
+					logger.error("PushConnection not available [{}]", sessionId);
+				}
+			}
+		}
+	}
+	
+	private void internalPush(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
+		synchronized(lock) {
+			ProfileSids sessionIds = profileSidsCache.get(profileId);
+			if ((sessionIds != null) && !sessionIds.isEmpty()) {
+				for(String sessionId : profileSidsCache.get(profileId)) {
+					internalPush(sessionId, messages);
+				}
+			} else {
+				if (enqueueIfOffline) {
+					enqueueMessages(profileId, messages);
+				}
+			}
+		}
 	}
 	
 	private ArrayList<ServiceMessage> listEnqueuedMessages(UserProfileId profileId) {
@@ -289,30 +371,6 @@ public class SessionManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-	}
-	
-	public WebTopSession getWebTopSession(String sessionId) {
-		return onlineSessions.get(sessionId);
-	}
-	
-	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
-		List<WebTopSession> list = new ArrayList<>();
-		synchronized(lock) {
-			if(profileSidsCache.get(profileId) != null) {
-				for(String sid : profileSidsCache.get(profileId)) {
-					list.add(onlineSessions.get(sid));
-				}
-			}
-		}
-		return list;
-	}
-	
-	public boolean isOnline(String sessionId) {
-		return onlineSessions.containsKey(sessionId);
-	}
-	
-	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
-		return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
 	}
 	
 	private static class ProfileSids extends HashSet<String> {
