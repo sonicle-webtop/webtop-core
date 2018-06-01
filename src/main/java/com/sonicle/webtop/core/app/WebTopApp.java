@@ -142,7 +142,8 @@ import org.slf4j.Logger;
 public final class WebTopApp {
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static WebTopApp instance = null;
-	private static final Object lockInstance = new Object();
+	private static boolean isStartingUp = false;
+	private static boolean isShuttingDown = false;
 	
 	/**
 	 * Gets WebTopApp object stored as context's attribute.
@@ -171,9 +172,15 @@ public final class WebTopApp {
 	}
 	
 	public static WebTopApp getInstance() {
-		synchronized(lockInstance) {
-			return instance;
-		}
+		return instance;
+	}
+	
+	public static boolean isStartingUp() {
+		return isStartingUp;
+	}
+	
+	public static boolean isShuttingDown() {
+		return isShuttingDown;
 	}
 	
 	public static final String DATASOURCES_CONFIG_PATH_PARAM = "dataSourcesConfigPath";
@@ -257,17 +264,17 @@ public final class WebTopApp {
 		adminSubject = buildSysAdminSubject(shiroSecurityManager);
 	}
 	
-	public void init() {
-		synchronized(lockInstance) {
-			ThreadState threadState = new SubjectThreadState(adminSubject);
-			try {
-				threadState.bind();
-				internalInit();
-			} finally {
-				threadState.clear();
-			}
+	void boot() {
+		isStartingUp = true;
+		ThreadState threadState = new SubjectThreadState(adminSubject);
+		try {
+			threadState.bind();
+			internalInit();
 			instance = this;
-		}	
+		} finally {
+			threadState.clear();
+			isStartingUp = false;
+		}
 		
 		new Timer("onAppReady").schedule(new TimerTask() {
 			@Override
@@ -286,16 +293,16 @@ public final class WebTopApp {
 		}, 5000);
 	}
 	
-	public void destroy() {
-		synchronized(lockInstance) {
-			ThreadState threadState = new SubjectThreadState(adminSubject);
-			try {
-				threadState.bind();
-				internalDestroy();
-			} finally {
-				threadState.clear();
-			}
+	void shutdown() {
+		isShuttingDown = true;
+		ThreadState threadState = new SubjectThreadState(adminSubject);
+		try {
+			threadState.bind();
+			internalDestroy();
+		} finally {
+			threadState.clear();
 			instance = null;
+			isShuttingDown = false;
 		}
 	}
 	
@@ -979,6 +986,10 @@ public final class WebTopApp {
 	
 	public String getPublicBaseUrl(String domainId) {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getPublicBaseUrl();
+	}
+	
+	public String getDavServerBaseUrl(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDavServerBaseUrl();
 	}
 	
 	/**

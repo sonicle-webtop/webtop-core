@@ -69,6 +69,13 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [string]
+	 * Defines how the dav-server is reachable from outside
+	 */
+	public static final String DAVSERVER_BASE_URL = "davserver.url";
+	
+	/**
+	 * [domain+system]
 	 * [boolean]
 	 * Defines if PECBridge management is enabled
 	 */
@@ -400,7 +407,7 @@ public class CoreSettings {
 	public static final String DESKTOP_NOTIFICATION = "notifications.desktop";
 	public static final String DESKTOP_NOTIFICATION_NEVER = "never";
 	public static final String DESKTOP_NOTIFICATION_ALWAYS = "always";
-	public static final String DESKTOP_NOTIFICATION_BACKGROUND = "background";
+	public static final String DESKTOP_NOTIFICATION_AUTO = "auto";
 	
 	/**
 	 * [user][default]

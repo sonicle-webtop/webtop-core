@@ -66,8 +66,8 @@ public class ContextLoader {
 		try {
 			LoggerUtils.initDC(appname);
 			WebTopApp wta = new WebTopApp(servletContext);
-			wta.init();
-			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, WebTopApp.getInstance());
+			wta.boot();
+			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, wta);
 			
 			// TODO: Add atmosphere servlet dynamically (like below)
 			/*
@@ -120,8 +120,7 @@ public class ContextLoader {
 		final String appname = getWabappName(servletContext);
 		try {
 			LoggerUtils.initDC(appname);
-			WebTopApp wta = WebTopApp.get(servletContext);
-			if (wta != null) wta.destroy();
+			WebTopApp.get(servletContext).shutdown();
 			
 		} catch(Throwable t) {
 			logger.error("Error destroying WTA [{}]", appname, t);

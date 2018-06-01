@@ -1561,8 +1561,8 @@ public final class WebTopManager {
 	}
 	
 	public String getInternetUserId(UserProfileId pid) throws WTException {
-		ODomain domain = getDomain(pid.getDomainId());
-		return new UserProfileId(domain.getInternetName(), pid.getUserId()).toString();
+		String internetName = getDomainInternetName(pid.getDomainId());
+		return new UserProfileId(internetName, pid.getUserId()).toString();
 	}
 	
 	public String getDomainInternetName(String domainId) throws WTException {

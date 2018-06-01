@@ -2181,6 +2181,28 @@ public class CoreManager extends BaseManager {
 		try {
 			ZPushManager zpush = createZPushManager();
 			
+			boolean noFilter = false, domainMatch = false;
+			String match = null;
+			if (RunContext.isImpersonated() || !RunContext.isWebTopAdmin()) {
+				match = getInternetUserId(getTargetProfileId());
+			} else {
+				if (RunContext.isSysAdmin()) {
+					noFilter = true;
+				} else {
+					domainMatch = true;
+					match = "@" + wta.getWebTopManager().getDomainInternetName(getTargetProfileId().getDomainId());
+				}
+			}
+			
+			ArrayList<SyncDevice> devices = new ArrayList<>();
+			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
+			for (ZPushManager.LastsyncRecord rec : recs) {
+				if (noFilter || StringUtils.equalsIgnoreCase(rec.syncronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.syncronizedUser, match))) {
+					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
+				}
+			}
+			
+			/*
 			boolean sysadmin = RunContext.isSysAdmin();
 			String internetId = (sysadmin) ? null : getInternetUserId(getTargetProfileId());
 
@@ -2191,8 +2213,9 @@ public class CoreManager extends BaseManager {
 					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
 				}
 			}
-
+			*/
 			return devices;
+			
 		} catch(Exception ex) {
 			logger.error("Error listing zpush devices",ex);
 			throw new WTException(ex);

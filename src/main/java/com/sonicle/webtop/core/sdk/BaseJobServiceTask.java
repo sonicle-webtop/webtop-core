@@ -56,15 +56,17 @@ public abstract class BaseJobServiceTask implements Job {
 	@Override
 	public final void execute(JobExecutionContext jec) throws JobExecutionException {
 		this.jec = jec;
-		if (WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-			Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
-			ThreadState threadState = new SubjectThreadState(subject);
-			
-			try {
-				threadState.bind();
-				executeWork();
-			} finally {
-				threadState.clear();
+		if (!WebTopApp.isShuttingDown()) {
+			if (WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
+				Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
+				ThreadState threadState = new SubjectThreadState(subject);
+
+				try {
+					threadState.bind();
+					executeWork();
+				} finally {
+					threadState.clear();
+				}
 			}
 		}
 	}
