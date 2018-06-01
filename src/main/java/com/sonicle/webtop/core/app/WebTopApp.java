@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.mashape.unirest.http.Unirest;
 import com.sonicle.webtop.core.app.util.OSInfo;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.http.HttpClientUtils;
@@ -330,6 +331,11 @@ public final class WebTopApp {
 			HttpClientUtils.closeQuietly(httpcli);
 		}
 		
+		//configure accept all for ssl on Unirest
+		Unirest.setHttpClient(
+				HttpClientUtils.configureSSLAcceptAll().build()
+		);
+		
 		try {
 			initVFSManager();
 		} catch(FileSystemException ex) {
@@ -435,6 +441,13 @@ public final class WebTopApp {
 		// I18nManager Manager
 		i18nMgr.cleanup();
 		i18nMgr = null;
+		
+		//close all Unirest threads
+		try {
+			Unirest.shutdown();
+		} catch(IOException exc) {
+			logger.error("Unirest.shutdown()",exc);
+		}
 		
 		logger.info("WTA shutdown completed [{}]", webappName);
 	}
