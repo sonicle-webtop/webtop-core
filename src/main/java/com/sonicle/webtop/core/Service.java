@@ -849,10 +849,10 @@ public class Service extends BaseService {
 			
 			UserProfileId targetPid = new UserProfileId(id);
 			if(getWts().getProfileId().equals(targetPid)) {
-				data = coreMgr.listUserOptionServices();
+				data = coreMgr.getAllowedUserOptionServices();
 			} else {
 				CoreManager xcore = WT.getCoreManager(targetPid);
-				data = xcore.listUserOptionServices();
+				data = xcore.getAllowedUserOptionServices();
 			}
 			
 			/*

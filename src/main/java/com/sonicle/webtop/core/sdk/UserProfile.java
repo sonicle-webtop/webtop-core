@@ -37,6 +37,7 @@ import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.WT;
@@ -171,6 +172,7 @@ public final class UserProfile {
 	}
 	
 	public static class Data {
+		private DomainAccount internetAccount;
 		private String displayName;
 		private String languageTag;
 		private Locale locale;
@@ -181,7 +183,8 @@ public final class UserProfile {
 		
 		public Data() {}
 		
-		public Data(String displayName, String languageTag, String timezone, InternetAddress profileEmail, InternetAddress personalEmail) {
+		public Data(DomainAccount internetAccount, String displayName, String languageTag, String timezone, InternetAddress profileEmail, InternetAddress personalEmail) {
+			this.internetAccount = internetAccount;
 			this.displayName = displayName;
 			this.languageTag = languageTag;
 			this.locale = LangUtils.languageTagToLocale(languageTag);
@@ -189,6 +192,10 @@ public final class UserProfile {
 			this.timezone = DateTimeZone.forID(timezone);
 			this.profileEmail = profileEmail;
 			this.personalEmail = personalEmail;
+		}
+		
+		public DomainAccount getInternetAccount() {
+			return internetAccount;
 		}
 
 		public String getDisplayName() {

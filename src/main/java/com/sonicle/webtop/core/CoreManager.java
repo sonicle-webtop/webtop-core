@@ -426,8 +426,24 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	
-	
+	/**
+	 * Returns UserOption services data for current target user.
+	 */
+	public List<UserOptionsServiceData> getAllowedUserOptionServices() {
+		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
+		
+		UserProfileId targetPid = getTargetProfileId();
+		ServiceManager svcm = wta.getServiceManager();
+		for (String serviceId : svcm.listUserOptionServices()) {
+			if (RunContext.isPermitted(true, targetPid, SERVICE_ID, "SERVICE", "ACCESS", serviceId)) {
+				UserOptionsServiceData uosd = new UserOptionsServiceData(svcm.getManifest(serviceId));
+				uosd.name = wta.lookupResource(serviceId, getLocale(), CoreLocaleKey.SERVICE_NAME);
+				items.add(uosd);
+			}
+		}
+		
+		return items;
+	}
 	
 	
 	
@@ -1689,23 +1705,6 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
-	}
-	
-	public List<UserOptionsServiceData> listUserOptionServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		ArrayList<UserOptionsServiceData> items = new ArrayList<>();
-		UserOptionsServiceData uos = null;
-		//TODO: se admin allora targetprofileSenza problemi altrimenti controllo che corrisponda
-		UserProfileId targetPid = getTargetProfileId();
-		for (String id : svcm.listUserOptionServices()) {
-			// Checks user rights on service...
-			if (RunContext.isPermitted(true, targetPid, SERVICE_ID, "SERVICE", "ACCESS", id)) {
-				uos = new UserOptionsServiceData(svcm.getManifest(id));
-				uos.name = wta.lookupResource(id, getLocale(), CoreLocaleKey.SERVICE_NAME);
-				items.add(uos);
-			}
-		}
-		return items;
 	}
 	
 	public OSnoozedReminder snoozeReminder(ReminderInApp reminder, DateTime remindOn) throws WTException {
