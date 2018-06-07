@@ -668,7 +668,7 @@ public class WebTopSession {
 	 * @return A list of service ids.
 	 */
 	public List<String> getPrivateServices(boolean sortByOrder) {
-		if(!isReady()) return null;
+		if (!isReady()) return null;
 		synchronized(privateServices) {
 			List<String> ids = Arrays.asList(privateServices.keySet().toArray(new String[privateServices.size()]));
 			if (sortByOrder) {
@@ -758,16 +758,35 @@ public class WebTopSession {
 		fillAppReferences(js, locale, theme, false);
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
+		List<String> privateSids = getPrivateServices(true);
+				
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-private");
 		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
+		// Include other services references
+		if (RunContext.isWebTopAdmin()) {
+			for (String sid : svcm.listRegisteredServices()) {
+				if (sid.equals(CoreManifest.ID)) continue;
+				ServiceDescriptor descriptor = svcm.getDescriptor(sid);
+				fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
+			}
+		} else {
+			for (String sid : privateSids) {
+				if (sid.equals(CoreManifest.ID)) continue;
+				ServiceDescriptor descriptor = svcm.getDescriptor(sid);
+				fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
+			}
+		}
+		
 		fillRolesMap(js.roles);
 		
 		// Evaluate services
-		for(String serviceId : getPrivateServices(true)) {
-			fillStartupForService(js, serviceId, locale, theme, lookAndFeel);
+		for (String sid : privateSids) {
+			ServiceDescriptor descriptor = svcm.getDescriptor(sid);
+			//fillServiceReferences(svcm, js, descriptor, locale, theme, lookAndFeel);
+			fillStartupForService(svcm, js, descriptor, locale);
 		}
 	}
 	
@@ -778,34 +797,32 @@ public class WebTopSession {
 		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_IMPERSONATED_USER);
 	}
 	
-	private JsWTSPrivate.Service fillStartupForService(JsWTSPrivate js, String serviceId, Locale locale, String theme, String lookAndFeel) {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
-		ServiceManifest manifest = sdesc.getManifest();
+	private void fillServiceReferences(ServiceManager svcm, JsWTS js, ServiceDescriptor descriptor, Locale locale, String theme, String lookAndFeel) {
+		ServiceManifest manifest = descriptor.getManifest();
+		if (manifest.getId().equals(CoreManifest.ID)) throw new WTRuntimeException("Core service's references should not be added in this way");
+		
+		// Includes service references
+		fillServiceJsReferences(svcm.isInDevMode(manifest.getId()), js, manifest, locale);
+		// Includes service stylesheet references
+		fillServiceCssReferences(js, manifest, theme, lookAndFeel);
+	}
+	
+	private JsWTSPrivate.Service fillStartupForService(ServiceManager svcm, JsWTSPrivate js, ServiceDescriptor descriptor, Locale locale) {
+		ServiceManifest manifest = descriptor.getManifest();
 		Subject subject = RunContext.getSubject();
 		
-		JsWTSPrivate.Permissions perms = new JsWTSPrivate.Permissions();
-		
 		// Generates service auth permissions
+		JsWTSPrivate.Permissions perms = new JsWTSPrivate.Permissions();
 		for (ServicePermission perm : manifest.getDeclaredPermissions()) {
 			if (perm instanceof ServiceSharePermission) continue;
 			
 			JsWTSPrivate.Actions acts = new JsWTSPrivate.Actions();
 			for (String act : perm.getActions()) {
-				if (RunContext.isPermitted(true, subject, serviceId, perm.getGroupName(), act)) {
+				if (RunContext.isPermitted(true, subject, manifest.getId(), perm.getGroupName(), act)) {
 					acts.put(act, true);
 				}
 			}
 			if (!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
-		}
-		
-		// Fill application manifest with service references (NOTE: core service is skipped here!)
-		if (!serviceId.equals(CoreManifest.ID)) {
-			// Includes service references
-			fillServiceJsReferences(svcm.isInDevMode(serviceId), js, manifest, locale);
-
-			// Includes service stylesheet references
-			fillServiceCssReferences(js, manifest, theme, lookAndFeel);
 		}
 		
 		// Completes service info
@@ -818,7 +835,7 @@ public class WebTopSession {
 		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
 		jssvc.serviceClassName = manifest.getPrivateServiceJsClassName(true);
 		jssvc.serviceVarsClassName = manifest.getPrivateServiceVarsModelJsClassName(true);
-		if(sdesc.hasUserOptionsService()) {
+		if (descriptor.hasUserOptionsService()) {
 			jssvc.userOptions = new JsWTSPrivate.ServiceUserOptions(
 				manifest.getUserOptionsViewJsClassName(true),
 				manifest.getUserOptionsModelJsClassName(true)
@@ -827,15 +844,15 @@ public class WebTopSession {
 		for(ServiceManifest.Portlet portlet : manifest.getPortlets()) {
 			jssvc.portletClassNames.add(portlet.jsClassName);
 		}
-		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME));
-		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION));
+		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_NAME));
+		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_DESCRIPTION));
 		jssvc.version = manifest.getVersion().toString();
 		jssvc.build = manifest.getBuildDate();
 		jssvc.company = StringEscapeUtils.escapeJson(manifest.getCompany());
-		jssvc.maintenance = svcm.isInMaintenance(serviceId);
+		jssvc.maintenance = svcm.isInMaintenance(manifest.getId());
 		
 		js.services.add(jssvc);
-		js.servicesVars.add(getServiceVars(serviceId));
+		js.servicesVars.add(getServiceVars(manifest.getId()));
 		js.servicesPerms.add(perms);
 		
 		return jssvc;
@@ -961,9 +978,21 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "linkify-string.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.min.js");
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
 		// Uncomment these lines to load debug versions of the libraries ----->
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
+		////js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
 		//js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.js");
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "moxie.js");
 		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");

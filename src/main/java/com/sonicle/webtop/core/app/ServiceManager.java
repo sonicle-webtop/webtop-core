@@ -503,8 +503,8 @@ public class ServiceManager {
 	public List<String> listUserOptionServices() {
 		ArrayList<String> list = new ArrayList<>();
 		synchronized(lock1) {
-			for(ServiceDescriptor descr : descriptors.values()) {
-				if(descr.hasUserOptionsService()) list.add(descr.getManifest().getId());
+			for (ServiceDescriptor descr : descriptors.values()) {
+				if (descr.hasUserOptionsService()) list.add(descr.getManifest().getId());
 			}
 		}
 		return list;
