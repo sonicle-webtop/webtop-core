@@ -124,10 +124,4 @@ public class NethVoice extends PbxProvider {
 		return formatter.toString();
 	}
 	
-	public static void main(String args[]) throws Exception {
-		String username="demo204";
-		char password[]="Nethesis,1234".toCharArray();
-		NethVoice nethvoice=new NethVoice("https://nethvoice-demo.neth.eu/webrest");
-		nethvoice.call("201", username, password);
-	}
 }

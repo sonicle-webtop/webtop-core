@@ -216,25 +216,25 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				});
 			},
 			connect: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> connect', WT.getSessionId()), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> connect', WT.getSessionId()), 'debug');
 			},
 			disconnect: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> disconnect', WT.getSessionId()), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> disconnect', WT.getSessionId()), 'debug');
 			},
 			beforeautoreset: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> beforeautoreset', WT.getSessionId()), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> beforeautoreset', WT.getSessionId()), 'debug');
 			},
 			serverunreachable: function(s) {
 				me.connWarnTask();
-				me.log(Ext.String.format('[{0}] Atmosphere -> serverunreachable', WT.getSessionId()), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> serverunreachable', WT.getSessionId()), 'debug');
 			},
 			serveronline: function(s) {
 				me.connWarnTask(true);
-				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'debug');
 			},
 			subsocketevent: function(s, evt, transp, status, state) {
 				if (transp === 'long-polling' && ['reopen', 'reconnect'].indexOf(evt) !== -1) return;
-				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}, {4}]', WT.getSessionId(), transp, evt, status, state), 'info');
+				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}, {4}]', WT.getSessionId(), transp, evt, status, state), 'debug');
 			}
 		});
 		WTA.Atmosphere.connect();
