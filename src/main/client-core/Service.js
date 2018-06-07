@@ -34,7 +34,8 @@
 Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WTA.sdk.Service',
 	requires: [
-		'Sonicle.webtop.core.model.ServiceVars'
+		'Sonicle.webtop.core.model.ServiceVars',
+		'Sonicle.webtop.core.app.RTCManager'
 	],
 	uses: [
 		'Sonicle.webtop.core.view.IMChats',
@@ -170,6 +171,14 @@ Ext.define('Sonicle.webtop.core.Service', {
 								me.getVPController().getIMButton().setPresenceStatus(ps);
 							}
 							pnlIm.loadFriends();
+							
+							console.log("initializing bosh with "+json.data.userId+" / "+json.data.password);
+							//if BOSH url configured, intialize RTC
+							var boshUrl=WT.getVar('boshUrl');
+							if (boshUrl) {
+								me.initRTCManager(boshUrl,json.data.userId,json.data.password);
+							}
+							
 						} else {
 							if (!Ext.isEmpty(json.message)) WT.warn(json.message);
 						}
@@ -486,6 +495,34 @@ Ext.define('Sonicle.webtop.core.Service', {
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+		
+	},
+	
+	initRTCManager: function(boshUrl,jid,pass) {
+		WTA.RTCManager.setBoshUrl(boshUrl);
+		WTA.RTCManager.initConnection();
+		WTA.RTCManager.connect(jid,pass,function(status, condition) {
+			switch (status) {
+				case Strophe.Status.CONNECTING:
+				   console.log("connecting");
+				   break;
+				case Strophe.Status.CONNECTED:
+				   console.log("connected");
+				   break;
+				case Strophe.Status.ATTACHED:
+				   console.log("attached");
+				   break;
+				case Strophe.Status.DISCONNECTED:
+				   console.log("disconnected");
+				   break;
+				case Strophe.Status.CONNFAIL:
+				   console.log("connfail");
+				   break;
+				case Strophe.Status.AUTHFAIL:
+				   console.log("authfail");
+				   break;
 			}
 		});
 	},

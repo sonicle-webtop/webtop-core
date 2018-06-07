@@ -31,27 +31,43 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
-
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.webtop.core.xmpp.PresenceStatus;
-
-/**
- *
- * @author malbinola
- */
-public class JsIMInit {
-	public String presenceStatus;
-	public String statusMessage;
-	public String userId;
-	public String password;
+Ext.define('Sonicle.webtop.core.app.RTCManager', {
+	alternateClassName: 'WTA.RTCManager',
+	singleton: true,
+	mixins: [
+		'Ext.mixin.Observable'
+	],
 	
-	public JsIMInit() {}
+	config: {
+		
+		/**
+		 * @cfg {String} boshUrl
+		 * Url of BOSH enabled jabber instance.
+		 */
+		boshUrl: window.location.origin+"/http-bind/",
+		
+	},
 	
-	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, char password[]) {
-		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
-		this.statusMessage = statusMessage;
-		this.userId = userId;
-		this.password = new String(password);
+	conn: null,
+	
+	constructor: function(config) {
+		var me = this;
+		me.callParent(config);
+		me.mixins.observable.constructor.call(me, config);
+	},
+	
+	initConnection: function() {
+		var me=this;
+		me.conn=new Strophe.Connection(me.getBoshUrl());
+	},
+	
+	connect: function(jid,pass,callback) {
+		var me=this;
+		me.conn.connect(jid,pass,callback);
+	},
+	
+	startCall: function(jid) {
+		me.conn.jingle.initiate(jid);
 	}
-}
+	
+});

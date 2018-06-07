@@ -33,25 +33,18 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.webtop.core.xmpp.PresenceStatus;
-
 /**
  *
- * @author malbinola
+ * @author gabriele.bulfon
  */
-public class JsIMInit {
-	public String presenceStatus;
-	public String statusMessage;
+public class JsAuthMessage {
+
 	public String userId;
 	public String password;
 	
-	public JsIMInit() {}
-	
-	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, char password[]) {
-		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
-		this.statusMessage = statusMessage;
-		this.userId = userId;
-		this.password = new String(password);
+	public JsAuthMessage(String userId, String password) {
+		this.userId=userId;
+		this.password=password;
 	}
+	
 }

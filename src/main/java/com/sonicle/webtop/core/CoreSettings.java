@@ -154,6 +154,14 @@ public class CoreSettings {
 	public static final String XMPP_MUC_SUBDOMAIN = "xmpp.muc.subdomain";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the xmpp BOSH url, if available. 
+	 */
+	public static final String XMPP_BOSH_URL = "xmpp.bosh.url";
+	
+	
+	/**
 	 * [domain+system][*]
 	 * [string]
 	 * Activate syslog
@@ -603,4 +611,5 @@ public class CoreSettings {
 	 * Play a sound when a message is sent
 	 */
 	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
+	
 }
