@@ -40,6 +40,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.security.PasswordUtils;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
@@ -1912,15 +1913,18 @@ public final class WebTopManager {
 		OUser ouser = getUser(pid);
 		if (ouser == null) return null;
 		
+		String internetName = WT.getDomainInternetName(pid.getDomainId());
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		UserProfile.PersonalInfo upi = userPersonalInfo(pid);
-		InternetAddress profileIa = WT.buildDomainInternetAddress(pid.getDomainId(), pid.getUserId(), ouser.getDisplayName());
+		
+		DomainAccount internetAccount = new DomainAccount(internetName, pid.getUserId());
+		InternetAddress profileIa = InternetAddressUtils.toInternetAddress(pid.getUserId(), internetName, ouser.getDisplayName());
 		InternetAddress personalIa = InternetAddressUtils.toInternetAddress(upi.getEmail(), ouser.getDisplayName());
 		if (personalIa == null) {
 			personalIa = profileIa;
 			logger.warn("User does not have a valid email in personal info. Check it! [{}]", pid.toString());
 		}
-		return new UserProfile.Data(ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), profileIa, personalIa);
+		return new UserProfile.Data(internetAccount, ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), profileIa, personalIa);
 	}
 	
 	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {
