@@ -98,20 +98,17 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		
 		me.vct=WT.createView(WT.ID, 'view.RTC');
 		me.vct.show(false,function() {
-			var vel=me.vct.getView().getComponent(0).getEl();
-			me.lvid=vel.down('.so-rtc-lvideo').dom.id,
-			me.rvid=vel.down('.so-rtc-rvideo').dom.id;
+			var rtc=me.vct.getView().getComponent(0);
+			me.lvid=rtc.getLocalVideoId(),
+			me.rvid=rtc.getRemoteVideoId();
 					
 			var constraints=me.getUserMediaConstraints(['audio','video'])
 			
 			try {
 				RTC.getUserMedia(constraints,function(stream) {
 					console.log("local media ready");
-					var lvel=$("#"+me.lvid);
-					lvel.muted=true;
-					lvel.volume=0;
 					me.conn.jingle.localStream = stream;
-					RTC.attachMediaStream(lvel, stream);
+					RTC.attachMediaStream($("#"+me.lvid), stream);
 				
 					me.conn.jingle.initiate(jid,me.conn.jid);
 				},function(error) {
@@ -127,23 +124,20 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	},
 	
 	answerCall: function(sid) {
-		var me=this;
+		var me=this;	
 		
 		me.vct=WT.createView(WT.ID, 'view.RTC');
 		me.vct.show(false,function() {
-			var vel=me.vct.getView().getComponent(0).getEl();
-			me.lvid=vel.down('.so-rtc-lvideo').dom.id,
-			me.rvid=vel.down('.so-rtc-rvideo').dom.id;
+			var rtc=me.vct.getView().getComponent(0);
+			me.lvid=rtc.getLocalVideoId(),
+			me.rvid=rtc.getRemoteVideoId();
 					
 			var constraints=me.getUserMediaConstraints(['audio','video'])
 			try {
 				RTC.getUserMedia(constraints,function(stream) {
 					console.log("local media ready");
-					var lvel=$("#"+me.lvid);
-					lvel.muted=true;
-					lvel.volume=0;
 					me.conn.jingle.localStream = stream;
-					RTC.attachMediaStream(lvel, stream);
+					RTC.attachMediaStream($("#"+me.lvid), stream);
 				
 					var sess = me.conn.jingle.sessions[sid];
 					sess.sendAnswer();
@@ -240,15 +234,6 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		
 		return constraints;
 
-	},
-	
-	getUserMedia: function(constraints,onsuccess,onerror) {
-		try {
-			RTC.getUserMedia(constraints,onsuccess,onerror);
-		} catch (e) {
-			console.error('GUM failed: ', e);
-			$(document).trigger('mediafailure.jingle');
-		}
 	}
 	
 });

@@ -977,6 +977,7 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "ion.sound.min.js");
 		js.appManifest.addJs(LIBS_PATH + "linkify.min.js");
 		js.appManifest.addJs(LIBS_PATH + "linkify-string.min.js");
+		js.appManifest.addJs(LIBS_PATH + "screenfull/3.3.2/" + "screenfull.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
 		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");

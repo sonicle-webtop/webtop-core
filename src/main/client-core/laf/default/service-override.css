@@ -6,3 +6,84 @@
 
 /* Avoids annoying focus border on focused cells */
 .x-grid-item-focused .x-grid-cell-inner:before { display: none; }
+
+.so-rtc-videoWrap:hover .so-rtc-controlbar {
+	opacity: 1;
+}
+
+.so-rtc-controlbar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	transition: 1s opacity;
+	opacity: 0;
+	z-index: 9090;
+}
+
+.so-rtc-controlbar.so-rtc-controlbar-top {
+	top: 5%;
+	bottom: initial;
+}
+
+.so-rtc-controlbar.so-rtc-controlbar-bottom {
+	top: initial;
+	bottom: 5%;
+}
+
+.so-rtc-controlbar.so-rtc-controlbar-visible {
+	opacity: 1;
+}
+
+.so-rtc-controlbar > div {
+	display: inline-block;
+	padding: 0 5px;
+	background-color: rgba(0, 0, 0, 0.5);
+	border-radius: 22px;
+	height: 44px;
+}
+
+.so-rtc-controlbar .so-rtc-controlbar-button {
+	display: inline-block;
+	width: 44px;
+	height: 44px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 90%;
+	margin: 0 5px;
+	cursor: pointer;
+	opacity: 0.7;
+}
+
+.so-rtc-controlbar .so-rtc-controlbar-button:hover {
+	opacity: 1;
+}
+
+.so-rtc-controlbar .so-rtc-button-hangup {
+	background-image: url('rtc-hangup.svg');
+}
+
+.so-rtc-controlbar .so-rtc-button-fullscreen {
+	background-image: url('rtc-fullscreen.svg');
+}
+
+.so-rtc-rvideo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #888;
+	color: #f6f6f6;
+}
+
+.so-rtc-lvideo {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	margin: 1em;
+	border: 2px solid #fff;
+	border-radius: 2px;
+	width: 30%;
+	min-width: 160px;
+}
