@@ -971,6 +971,7 @@ public class WebTopSession {
 		// Include external libraries references
 		// Do not replace 0.0.0 with the real version, it limits server traffic.
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
+		js.appManifest.addJs(LIBS_PATH + "jquery-3.0.0.min.js");
 		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
 		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
 		js.appManifest.addJs(LIBS_PATH + "ion.sound.min.js");
@@ -980,13 +981,24 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
 		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.min.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.min.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.min.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.min.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.min.js");
+		
+		//minified
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.min.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.min.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.min.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.min.js");
+		//full
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
+		
+		
+		
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
 		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
-		// Uncomment these lines to load debug versions of the libraries ----->
+		
+// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
 		////js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");

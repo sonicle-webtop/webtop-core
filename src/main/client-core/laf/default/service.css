@@ -545,3 +545,20 @@ div.wt-wnlist {
 .wt-chatmsgcol-imgfilebody img {
 	max-width: 250px;
 }
+
+
+.so-rtc-lvideo {
+	position: absolute;
+	width: 200px;
+	bottom: 0;
+	right: 0;
+	margin: 1em;
+}
+
+.so-rtc-rvideo {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}

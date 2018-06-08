@@ -172,7 +172,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 							}
 							pnlIm.loadFriends();
 							
-							console.log("initializing bosh with "+json.data.userId+" / "+json.data.password);
 							//if BOSH url configured, intialize RTC
 							var boshUrl=WT.getVar('boshUrl');
 							if (boshUrl) {
@@ -503,7 +502,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	initRTCManager: function(boshUrl,jid,pass) {
 		WTA.RTCManager.setBoshUrl(boshUrl);
 		WTA.RTCManager.initConnection();
-		WTA.RTCManager.connect(jid,pass,function(status, condition) {
+		WTA.RTCManager.connect(jid+"/rtc",pass,function(status, condition) {
 			switch (status) {
 				case Strophe.Status.CONNECTING:
 				   console.log("connecting");

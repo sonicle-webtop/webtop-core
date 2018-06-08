@@ -219,11 +219,13 @@ JingleSession.prototype.sendIceCandidate = function (candidate) {
                         }, 20);
 
                     }
-                    this.drip_container.push(event.candidate);
+                    //this.drip_container.push(event.candidate);
+                    this.drip_container.push(candidate);
                     return;
                 } else {
                     console.log('sending single candidate');
-                    self.sendIceCandidates([event.candidate]);
+                    //self.sendIceCandidates([event.candidate]);
+                    self.sendIceCandidates([candidate]);
                 }
             }
         }
