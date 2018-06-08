@@ -23,8 +23,8 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 	
 	renderTpl: [
 		'<div id="{id}-videoWrap" data-ref="videoWrap" class="{videoWrapCls}">',
-			'<video id="{id}-rvideo" data-ref="rvideo" class="{rvideoCls}" autoplay>{notSupportedText}</video>',
-			'<video id="{id}-lvideo" data-ref="lvideo" class="{lvideoCls}" autoplay>{notSupportedText}</video>',
+			'<video id="{id}-rvideo" data-ref="rvideo" class="{rvideoCls}" autoplay="true">{notSupportedText}</video>',
+			'<video id="{id}-lvideo" data-ref="lvideo" class="{lvideoCls}" muted="true" volume="0" autoplay="true">{notSupportedText}</video>',
 			'<div id="{id}-controlBar" data-ref="controlBar" class="{controlBarCls}">',
 				'<div>',
 					'<div class="{controlBarCls}-button {hangUpButtonCls}"></div>',
