@@ -286,14 +286,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Returns a string resource.
+	 * Returns the localized string associated to the key.
 	 * If id and key are both filled, any other arguments will be used in
 	 * conjunction with {@link Ext.String#format} method in order to replace
 	 * tokens defined in resource string.
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
 	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @returns {String} The (optionally formatted) resource value or '${key}' if not found.
+	 * @returns {String} The localized (optionally formatted) resource value or '${key}' if not found.
 	 */
 	res: function(id, key) {
 		if(arguments.length === 1) {

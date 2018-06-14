@@ -69,6 +69,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 
@@ -326,7 +327,9 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			ODomain domain = wtmgr.getDomain(domainId);
-			return wtmgr.listDirectoryUsers(domain);
+			List<DirectoryUser> items = wtmgr.listDirectoryUsers(domain);
+			Collections.sort(items, (DirectoryUser o1, DirectoryUser o2) -> o1.getDirUser().userId.compareTo(o2.getDirUser().userId));
+			return items;
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to list directory users [{0}]", domainId);
@@ -426,6 +429,19 @@ public class CoreAdminManager extends BaseManager {
 			wtmgr.updateUserPassword(pid, null, newPassword);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to change user password [{0}]", pid.toString());
+		}
+	}
+	
+	public void updateUserEmailDomain(List<UserProfileId> pids, String newEmailDomain) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			wtmgr.updateUserEmailDomain(pids, newEmailDomain);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to change email domain [{}]", newEmailDomain);
 		}
 	}
 	

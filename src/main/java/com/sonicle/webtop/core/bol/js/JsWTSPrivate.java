@@ -47,7 +47,6 @@ public class JsWTSPrivate extends JsWTS {
 	public String pushUrl;
 	public String layoutClassName;
 	public HashSet<String> roles = new HashSet<>();
-	public ArrayList<JsWTSPrivate.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	public ArrayList<Permissions> servicesPerms = new ArrayList<>();
 	
@@ -65,36 +64,29 @@ public class JsWTSPrivate extends JsWTS {
 		}
 	}
 	
-	public static class Permissions extends HashMap<String, Actions> {
-		
+	@Override
+	public Manifest createManifestInstance() {
+		return new PrivateManifest();
 	}
 	
-	public static class Actions extends HashMap<String, Object> {
-		
+	@Override
+	public Service createServiceInstance() {
+		return new PrivateService();
 	}
 	
-	public static class Service {
-		public int index;
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String localeClassName;
-		public String serviceClassName;
-		public String serviceVarsClassName;
-		public ServiceUserOptions userOptions;
-		public ArrayList<String> portletClassNames = new ArrayList<>();
-		public String name;
-		public String description;
+	public static class Permissions extends HashMap<String, Actions> {}
+	
+	public static class Actions extends HashMap<String, Object> {}
+	
+	public static class PrivateManifest extends Manifest {
 		public String version;
 		public String build;
-		public String company;
-		public boolean maintenance;
 	}
 	
-	public static class Vars extends HashMap<String, Object> {
-		public Vars() {
-			super();
-		}
+	public static class PrivateService extends Service {
+		public ServiceUserOptions userOptions;
+		public ArrayList<String> portletCNs = new ArrayList<>();
 	}
+	
+	public static class Vars extends HashMap<String, Object> {}
 }

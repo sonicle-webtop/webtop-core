@@ -99,49 +99,40 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 	},
 	
 	launch: function() {
-		var me = this, desc;
+		var me = this;
 		
-		// Loads service descriptors from startup object
-		Ext.each(WTS.services, function(obj) {
-			desc = Ext.create('WTA.DescriptorPublic', {
-				index: obj.index,
-				maintenance: obj.maintenance,
-				id: obj.id,
-				xid: obj.xid,
-				ns: obj.ns,
-				path: obj.path,
-				serviceClassName: obj.serviceClassName,
-				serviceVarsClassName: obj.serviceVarsClassName,
-				localeClassName: obj.localeClassName,
-				name: obj.name,
-				description: obj.description,
-				company: obj.company
-			});
+		// Initialize services' descriptors
+		me.initDescriptors();
+		Ext.iterate(WTS.services, function(obj, idx) {
+			var desc = me.descriptors.get(obj.id);
+			if (!desc) Ext.raise('This should never happen (famous last words)');
 			
-			me.locales.add(obj.id, Ext.create(obj.localeClassName));
-			me.services.add(desc);
-		}, me);
+			desc.setOrder(idx);
+			desc.setMaintenance(obj.maintenance);
+			desc.setServiceClassName(obj.serviceCN);
+			desc.setServiceVarsClassName(obj.serviceVarsCN);
+			
+			me.services.push(obj.id);
+		});
 		
-		//TODO: portare il metodo onRequiresLoaded direttamente qui!
-		me.onRequiresLoaded.call(me);
-	},
-	
-	onRequiresLoaded: function() {
-		var me = this, cdesc, pdesc, vp;
+		var sids = me.getServices(),
+				vp, desc;
 		
-		// Instantiates core service
-		cdesc = me.services.getAt(0);
-		cdesc.getInstance();
-		cdesc.initService();
+		// Initialize core service (this will implicitly creates its instance)
+		me.getDescriptor(sids[0]).initService();
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create();
 		
-		// Inits the only public service
-		pdesc = me.services.getAt(1);
-		if(pdesc.initService()) {
-			vp.addService(pdesc.getInstance());
+		// Instantiates remaining services (the only one remaining)
+		desc = me.getDescriptor(sids[1]);
+		if (desc.initService()) {
+			vp.addService(desc.getInstance());
 		}
+	},
+	
+	createServiceDescriptor: function(cfg) {
+		return Ext.create('WTA.DescriptorPublic', cfg);
 	},
 	
 	/**

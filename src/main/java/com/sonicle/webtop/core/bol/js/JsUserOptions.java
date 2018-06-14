@@ -40,9 +40,10 @@ import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
  * @author malbinola
  */
 public class JsUserOptions extends JsUserOptionsBase {
-	public Boolean canManagePassword; // Read-only
-	public Boolean canManageUpi; // Read-only
-	public Boolean canSyncDevices; // Read-only
+	public Boolean permPasswordManage; // Read-only
+	public Boolean permUpiManage; // Read-only
+	public Boolean permSyncDevicesAccess; // Read-only
+	public Boolean permWebchatAccess; // Read-only
 	
 	public String displayName;
 	public String theme;

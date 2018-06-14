@@ -395,7 +395,8 @@ Ext.define('Sonicle.webtop.core.sdk.DockableView', {
 	 */
 	resTitle: function() {
 		var me = this,
+				sid = Ext.isString(me.mys) ? me.mys : me.mys.ID,
 				cfg = me.getDockableConfig();
-		return (cfg) ? WT.resTpl(me.mys.ID, cfg.title) : null;
+		return (cfg) ? WT.resTpl(sid, cfg.title) : null;
 	}
 });

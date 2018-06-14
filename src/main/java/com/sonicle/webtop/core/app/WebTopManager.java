@@ -119,6 +119,7 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -126,6 +127,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.mail.Folder;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -781,6 +783,36 @@ public final class WebTopManager {
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public int updateUserEmailDomain(List<UserProfileId> pids, String newEmailDomain) throws WTException {
+		UserInfoDAO uiDao = UserInfoDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			if (pids.isEmpty()) return -1;
+			con = wta.getConnectionManager().getConnection(false);
+			
+			String domainId = pids.get(0).getDomainId();
+			List<String> userIds = pids.stream().map(pid -> pid.getUserId()).collect(Collectors.toList());
+			String emailDomain = "@" + StringUtils.removeStart(newEmailDomain, "@");
+			int ret = uiDao.updateEmailDomainByProfiles(con, domainId, userIds, emailDomain);
+			DbUtils.commitQuietly(con);
+			
+			// Clean-up cache!
+			for (UserProfileId pid : pids) cleanUserProfileCache(pid);
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			DbUtils.rollbackQuietly(con);
+			throw wrapThrowable(ex);
+		} catch(Throwable t) {
+			DbUtils.rollbackQuietly(con);
+			throw t;
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -2188,6 +2220,16 @@ public final class WebTopManager {
 		public EntityPermissions(ArrayList<ORolePermission> others, ArrayList<ORolePermission> services) {
 			this.others = others;
 			this.services = services;
+		}
+	}
+	
+	protected WTException wrapThrowable(Throwable t) {
+		if (t instanceof WTException) {
+			return (WTException)t;
+		} else if ((t instanceof WTException) || (t instanceof WTException)) {
+			return new WTException(t, "DB error");
+		} else {
+			return new WTException(t);
 		}
 	}
 }

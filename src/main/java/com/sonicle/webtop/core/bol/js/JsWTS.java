@@ -37,12 +37,14 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.extjs.Ext6Manifest;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *
  * @author malbinola
  */
-public class JsWTS {
+public abstract class JsWTS {
 	public Ext6Manifest appManifest = new Ext6Manifest();
 	public String appType;
 	public String platformName;
@@ -50,8 +52,41 @@ public class JsWTS {
 	public String fileTypes;
 	public HashMap<String, String> appPaths = new HashMap<>();
 	public ArrayList<String> appRequires = new ArrayList<>();
+	public Map<String, JsWTS.Manifest> manifests = new LinkedHashMap<>();
+	public ArrayList<JsWTS.Service> services = new ArrayList<>();
+	public ArrayList<JsWTS.XLocale> locales = new ArrayList<>();
 	
 	public String toJson() {
 		return JsonResult.GSON.toJson(this);
+	}
+	
+	public abstract Manifest createManifestInstance();
+	public abstract Service createServiceInstance();
+	
+	public static class Manifest {
+		public String xid;
+		public String ns;
+		public String path;
+		public String name;
+		public String description;
+		public String company;
+		public String localeCN;
+		public Boolean maintenance;
+	}
+	
+	public static class Service {
+		public String id;
+		public String serviceCN;
+		public String serviceVarsCN;
+	}
+	
+	public static class XLocale {
+		public final String sid;
+		public final String localeClassName;
+		
+		public XLocale(String sid, String localeClassName) {
+			this.sid = sid;
+			this.localeClassName = localeClassName;
+		}
 	}
 }

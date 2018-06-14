@@ -47,16 +47,23 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	locales: null,
 	
 	/**
+	 * @property {Ext.util.HashMap} locales
+	 * A collection of locale classes.
+	 */
+	descriptors: null,
+	
+	/**
+	 * @property {Array} services
+	 * Array of active service IDs. The order in the collection infers
+	 * the appearance order of services in the UI. 
+	 */
+	services2: null,
+	
+	/**
 	 * @property {Objects} roles
 	 * A map of assigned roles.
 	 */
 	roles: null,
-	
-	/**
-	 * @property {Ext.util.Collection} services
-	 * A collection of service descriptors.
-	 */
-	services: null,
 	
 	constructor: function() {
 		var me = this;
@@ -66,9 +73,34 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		me.baseUrl = window.location.origin + me.contextPath;
 		me.pushUrl = WTS.pushUrl;
 		me.locales = Ext.create('Ext.util.HashMap');
+		me.descriptors = Ext.create('Ext.util.HashMap');
+		me.services = [];
 		me.roles = {};
-		me.services = Ext.create('Ext.util.Collection');
 		me.callParent(arguments);
+	},
+	
+	initDescriptors: function() {
+		var me = this;
+		
+		Ext.iterate(WTS.manifests, function(sid, obj) {
+			me.locales.add(sid, Ext.create(obj.localeCN));
+			var desc = me.createServiceDescriptor({
+				id: sid,
+				xid: obj.xid,
+				ns: obj.ns,
+				path: obj.path,
+				name: obj.name,
+				description: obj.description,
+				company: obj.company,
+				version: obj.version,
+				build: obj.build
+			});
+			me.descriptors.add(sid, desc);
+		});
+	},
+	
+	createServiceDescriptor: function(cfg) {
+		Ext.raise('If you see this there is something wrong. This method must be overridden!');
 	},
 	
 	/**
@@ -113,14 +145,16 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	/**
 	 * Returns loaded service descriptors.
 	 * @param {Boolean} [skip] False to include core descriptor. Default to true.
-	 * @returns {WTA.ServiceDescriptor[]}
+	 * @returns {WTA.DescriptorBase[]}
 	 */
 	getDescriptors: function(skip) {
-		if(!Ext.isDefined(skip)) skip = true;
-		var ret = [];
-		this.services.each(function(desc) {
-			if(!skip || (desc.getIndex() !== 0)) { // Skip core descriptor at index 0
-				Ext.Array.push(ret, desc);
+		if (!Ext.isDefined(skip)) skip = true;
+		var me = this, ret = [];
+		Ext.iterate(me.services, function(sid, ix) {
+			if (!skip || (ix !== 0)) { // Skip core descriptor at index 0
+				var desc = me.getDescriptor(sid);
+				if (!desc) Ext.raise('');
+				ret.push(desc);
 			}
 		});
 		return ret;
@@ -131,16 +165,20 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	 * @param {String} sid The service ID.
 	 */
 	hasDescriptor: function(sid) {
-		return this.services.containsKey(sid);
+		return this.descriptors.containsKey(sid);
 	},
 	
 	/**
 	 * Returns a service descriptor.
 	 * @param {String} sid The service ID.
-	 * @returns {WTA.ServiceDescriptor} The instance or undefined if not found. 
+	 * @returns {WTA.ServiceBase} The instance or undefined if not found. 
 	 */
 	getDescriptor: function(sid) {
-		return this.services.get(sid);
+		return this.descriptors.get(sid);
+	},
+	
+	getServices: function() {
+		return this.services;
 	},
 	
 	/**

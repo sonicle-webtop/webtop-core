@@ -161,9 +161,10 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 */
 	createView: function(sid, name, opts) {
 		opts = opts || {};
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().createServiceView(svc, name, opts);
+		var app = this.getApp(),
+				desc = app.getDescriptor(sid);
+		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
+		return app.getViewportController().createServiceView(desc, name, opts);
 	},
 	
 	/**
@@ -173,9 +174,10 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @returns {Boolean}
 	 */
 	hasView: function(sid, tag) {
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().hasServiceView(svc, tag);
+		var app = this.getApp(),
+				desc = app.getDescriptor(sid);
+		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
+		return app.getViewportController().hasServiceView(desc, tag);
 	},
 	
 	/**
@@ -185,9 +187,10 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @returns {Ext.window.Window} The container containing WebTop view.
 	 */
 	getView: function(sid, tag) {
-		var svc = this.getApp().getService(sid);
-		if (!svc) Ext.Error.raise('Unable to get service with ID ['+sid+']');
-		return this.getApp().viewport.getController().getServiceView(svc, tag);
+		var app = this.getApp(),
+				desc = app.getDescriptor(sid);
+		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
+		return app.getViewportController().getServiceView(desc, tag);
 	},
 	
 	/**

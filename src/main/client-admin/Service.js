@@ -568,6 +568,21 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
+	updateUsersEmailDomain: function(profileIds, domainPart, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomainUsers', {
+			params: {
+				crud: 'updateEmailDomain',
+				profileIds: WTU.arrayAsParam(profileIds),
+				domainPart: domainPart
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json]);
+			}
+		});
+	},
+	
 	deleteUsers: function(deep, profileIds, opts) {
 		opts = opts || {};
 		var me = this;

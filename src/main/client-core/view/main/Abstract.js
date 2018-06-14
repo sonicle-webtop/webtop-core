@@ -46,6 +46,9 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.data.BadgeNotificationStore',
 		'Sonicle.webtop.core.model.IMFriendGrid'
 	],
+	uses: [
+		'WTA.view.Options'
+	],
 	mixins: [
 		'Sonicle.mixin.RefHolder'
 	],

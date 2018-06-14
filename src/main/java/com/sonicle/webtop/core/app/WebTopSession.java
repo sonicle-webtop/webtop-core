@@ -762,6 +762,7 @@ public class WebTopSession {
 				
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
+		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-private");
 		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
@@ -801,13 +802,14 @@ public class WebTopSession {
 		ServiceManifest manifest = descriptor.getManifest();
 		if (manifest.getId().equals(CoreManifest.ID)) throw new WTRuntimeException("Core service's references should not be added in this way");
 		
+		fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(manifest.getId()));
 		// Includes service references
 		fillServiceJsReferences(svcm.isInDevMode(manifest.getId()), js, manifest, locale);
 		// Includes service stylesheet references
 		fillServiceCssReferences(js, manifest, theme, lookAndFeel);
 	}
 	
-	private JsWTSPrivate.Service fillStartupForService(ServiceManager svcm, JsWTSPrivate js, ServiceDescriptor descriptor, Locale locale) {
+	private void fillStartupForService(ServiceManager svcm, JsWTSPrivate js, ServiceDescriptor descriptor, Locale locale) {
 		ServiceManifest manifest = descriptor.getManifest();
 		Subject subject = RunContext.getSubject();
 		
@@ -825,37 +827,22 @@ public class WebTopSession {
 			if (!acts.isEmpty()) perms.put(perm.getGroupName(), acts);
 		}
 		
-		// Completes service info
-		JsWTSPrivate.Service jssvc = new JsWTSPrivate.Service();
-		jssvc.index = js.services.size();
-		jssvc.id = manifest.getId();
-		jssvc.xid = manifest.getXId();
-		jssvc.ns = manifest.getJsPackageName();
-		jssvc.path = manifest.getJsBaseUrl(false);
-		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
-		jssvc.serviceClassName = manifest.getPrivateServiceJsClassName(true);
-		jssvc.serviceVarsClassName = manifest.getPrivateServiceVarsModelJsClassName(true);
+		JsWTSPrivate.PrivateService jssvc2 = (JsWTSPrivate.PrivateService)js.createServiceInstance();
+		jssvc2.id = manifest.getId();
+		jssvc2.serviceCN = manifest.getPrivateServiceJsClassName(true);
+		jssvc2.serviceVarsCN = manifest.getPrivateServiceVarsModelJsClassName(true);
 		if (descriptor.hasUserOptionsService()) {
-			jssvc.userOptions = new JsWTSPrivate.ServiceUserOptions(
+			jssvc2.userOptions = new JsWTSPrivate.ServiceUserOptions(
 				manifest.getUserOptionsViewJsClassName(true),
 				manifest.getUserOptionsModelJsClassName(true)
 			);
 		}
 		for(ServiceManifest.Portlet portlet : manifest.getPortlets()) {
-			jssvc.portletClassNames.add(portlet.jsClassName);
+			jssvc2.portletCNs.add(portlet.jsClassName);
 		}
-		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_NAME));
-		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_DESCRIPTION));
-		jssvc.version = manifest.getVersion().toString();
-		jssvc.build = manifest.getBuildDate();
-		jssvc.company = StringEscapeUtils.escapeJson(manifest.getCompany());
-		jssvc.maintenance = svcm.isInMaintenance(manifest.getId());
-		
-		js.services.add(jssvc);
+		js.services.add(jssvc2);
 		js.servicesVars.add(getServiceVars(manifest.getId()));
 		js.servicesPerms.add(perms);
-		
-		return jssvc;
 	}
 	
 	private JsWTSPrivate.Vars getServiceVars(String serviceId) {
@@ -894,6 +881,7 @@ public class WebTopSession {
 		
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
+		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-public");
 		fillServiceCssReferences(js, coreManifest, "crisp", "default");
 		
@@ -901,39 +889,26 @@ public class WebTopSession {
 		fillStartupForPublicService(js, publicServiceId, locale);
 	}
 	
-	private JsWTSPublic.Service fillStartupForPublicService(JsWTSPublic js, String serviceId, Locale locale) {
+	private void fillStartupForPublicService(JsWTSPublic js, String serviceId, Locale locale) {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceDescriptor sdesc = svcm.getDescriptor(serviceId);
 		ServiceManifest manifest = sdesc.getManifest();
 		
 		// Fill application manifest with service references (NOTE: core service is skipped here!)
 		if (!serviceId.equals(CoreManifest.ID)) {
+			fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(serviceId));
 			// Includes service references
 			fillServiceJsReferences(svcm.isInDevMode(serviceId), js, manifest, locale);
-			
 			// Includes service stylesheet references
 			fillServiceCssReferences(js, manifest, "crisp", "default");
 		}
 		
-		// Completes service info
-		JsWTSPublic.Service jssvc = new JsWTSPublic.Service();
-		jssvc.index = js.services.size();
-		jssvc.id = manifest.getId();
-		jssvc.xid = manifest.getXId();
-		jssvc.ns = manifest.getJsPackageName();
-		jssvc.path = manifest.getJsBaseUrl(false);
-		jssvc.localeClassName = manifest.getLocaleJsClassName(locale, true);
-		jssvc.serviceClassName = manifest.getPublicServiceJsClassName(true);
-		jssvc.serviceVarsClassName = manifest.getPublicServiceVarsModelJsClassName(true);
-		jssvc.name = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_NAME));
-		jssvc.description = StringEscapeUtils.escapeJson(wta.lookupResource(serviceId, locale, CoreLocaleKey.SERVICE_DESCRIPTION));
-		jssvc.company = StringEscapeUtils.escapeJson(manifest.getCompany());
-		jssvc.maintenance = svcm.isInMaintenance(serviceId);
-		
-		js.services.add(jssvc);
+		JsWTSPublic.PublicService jssvc2 = (JsWTSPublic.PublicService)js.createServiceInstance();
+		jssvc2.id = manifest.getId();
+		jssvc2.serviceCN = manifest.getPublicServiceJsClassName(true);
+		jssvc2.serviceVarsCN = manifest.getPublicServiceVarsModelJsClassName(true);
+		js.services.add(jssvc2);
 		js.servicesVars.add(getPublicServiceVars(serviceId));
-		
-		return jssvc;
 	}
 	
 	private JsWTSPublic.Vars getPublicServiceVars(String serviceId) {
@@ -1051,6 +1026,43 @@ public class WebTopSession {
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getId() + suffix + ".js"); // Service concatenated js
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		}
+		js.locales.add(new JsWTS.XLocale(manifest.getId(), manifest.getLocaleJsClassName(locale, true)));
+	}
+	
+	private void fillServiceManifest(JsWTS js, ServiceManifest manifest, Locale locale, boolean maintenance) {
+		JsWTS.Manifest jsman = js.createManifestInstance();
+		
+		jsman.xid = manifest.getXId();
+		jsman.ns = manifest.getJsPackageName();
+		jsman.path = manifest.getJsBaseUrl(false);
+		jsman.name = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_NAME));
+		jsman.description = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_DESCRIPTION));
+		jsman.company = StringEscapeUtils.escapeJson(manifest.getCompany());
+		jsman.localeCN = manifest.getLocaleJsClassName(locale, true);
+		jsman.maintenance = maintenance;
+		
+		if (jsman instanceof JsWTSPrivate.PrivateManifest) {
+			((JsWTSPrivate.PrivateManifest)jsman).version = manifest.getVersion().toString();
+			((JsWTSPrivate.PrivateManifest)jsman).build = manifest.getBuildDate();
+		}
+		
+		js.manifests.put(manifest.getId(), jsman);
+		
+		//JsWTS.Manifest jsman = new JsWTS.Manifest();
+		//jsman.xid = manifest.getXId();
+		//jsman.ns = manifest.getJsPackageName();
+		//jsman.path = manifest.getJsBaseUrl(false);
+		//jsman.name = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_NAME));
+		//jsman.description = StringEscapeUtils.escapeJson(wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_DESCRIPTION));
+		//jsman.version = manifest.getVersion().toString();
+		//jsman.build = manifest.getBuildDate();
+		//jsman.company = StringEscapeUtils.escapeJson(manifest.getCompany());
+		//jsman.localeClassName = manifest.getLocaleJsClassName(locale, true);
+		//js.manifests.put(manifest.getId(), jsman);
+		
+		//String localizedName = wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_NAME);
+		//String localizedDescription = wta.lookupResource(manifest.getId(), locale, CoreLocaleKey.SERVICE_DESCRIPTION);
+		//js.manifests.put(manifest.getId(), new JsWTS.Manifest(manifest, localizedName, localizedDescription, manifest.getLocaleJsClassName(locale, true)));
 	}
 	
 	private void fillServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale) {
@@ -1063,6 +1075,7 @@ public class WebTopSession {
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getBundleJsFileName()); // Service concatenated js
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		}
+		js.locales.add(new JsWTS.XLocale(manifest.getId(), manifest.getLocaleJsClassName(locale, true)));
 	}
 	
 	private void fillServiceCssReferences(JsWTS js, ServiceManifest manifest, String theme, String lookAndFeel) {

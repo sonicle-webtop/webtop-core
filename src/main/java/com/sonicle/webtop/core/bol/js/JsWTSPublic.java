@@ -41,7 +41,6 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsWTSPublic extends JsWTS {
-	public ArrayList<JsWTSPublic.Service> services = new ArrayList<>();
 	public ArrayList<Vars> servicesVars = new ArrayList<>();
 	
 	public JsWTSPublic() {
@@ -58,20 +57,19 @@ public class JsWTSPublic extends JsWTS {
 		}
 	}
 	
-	public static class Service {
-		public int index;
-		public String id;
-		public String xid;
-		public String ns;
-		public String path;
-		public String localeClassName;
-		public String serviceClassName;
-		public String serviceVarsClassName;
-		public String name;
-		public String description;
-		public String company;
-		public boolean maintenance;
+	@Override
+	public Manifest createManifestInstance() {
+		return new PublicManifest();
 	}
+	
+	@Override
+	public Service createServiceInstance() {
+		return new PublicService();
+	}
+	
+	public static class PublicManifest extends Manifest {}
+	
+	public static class PublicService extends Service {}
 	
 	public static class Vars extends HashMap<String, Object> {
 		public Vars() {

@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2018 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,77 +29,38 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.app.DescriptorPublic', {
-	alternateClassName: 'WTA.DescriptorPublic',
-	requires: [
-		'Sonicle.webtop.core.sdk.PublicService'
-	],
+Ext.define('Sonicle.webtop.core.admin.view.Options', {
+	extend: 'Sonicle.webtop.core.view.Options',
 	
-	config: {
-		index: null,
-		maintenance: null,
-		id: null,
-		xid: null,
-		ns: null,
-		path: null,
-		version: null,
-		serviceClassName: null,
-		serviceVarsClassName: null,
-		name: null,
-		desription: null,
-		company: null
-	},
-	
-	instance: null,
-	inited: false,
-	
-	constructor: function(cfg) {
+	profileDisplayName: null,
+		
+	initComponent: function() {
 		var me = this;
-		me.initConfig(cfg);
 		me.callParent(arguments);
 	},
 	
-	getInstance: function() {
+	initTabs: function() {
 		var me = this;
-		if(!me.instance) {
-			var cn = me.getServiceClassName();
-			if(!Ext.isString(cn)) return null;
-			try {
-				me.instance = Ext.create(cn, {
-					ID: me.getId(),
-					XID: me.getXid(),
-					serviceVarsClassName: me.getServiceVarsClassName(),
-					varsData: WTS.servicesVars[me.getIndex()]
-				});
-			} catch(e) {
-				WTA.Log.error('Unable to instantiate service class [{0}]', cn);
-				WTA.Log.exception(e);
-			}
-		}
-		return me.instance;
-	},
-	
-	initService: function() {
-		var me = this;
-		WTA.Log.debug('Initializing service [{0}]', me.getId());
-		var svc = me.getInstance();
-		if(svc === null) return false;
 		
-		// Calls initialization method
-		try {
-			svc.init.call(svc);
-			me.inited = true;
-			return true;
-		} catch(e) {
-			WTA.Log.error('Error while calling init() method');
-			WTA.Log.exception(e);
-			return false;
-		}
+		me.on('afterrender', function() {
+			me.wait();
+			WT.ajaxReq(me.mys.ID, 'GetUserOptionServices', {
+				params: {pid: me.profileId},
+				callback: function(success, json) {
+					if (success) me.addServiceTabs(json.data);
+					me.unwait();
+				}
+			});
+		}, me, {single: true});
 	},
 	
-	isInited: function() {
-		return this.inited;
+	onViewClose: function() {
+		// TODO: eventually display a message!
+	},
+	
+	resTitle: function() {
+		return this.callParent() + ' [' + this.profileDisplayName + ']';
 	}
 });

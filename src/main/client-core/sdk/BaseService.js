@@ -182,18 +182,16 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	/**
 	 * Returns the localized string associated to the key.
 	 * Values arguments will be used to replace tokens in source string.
-	 * @param {String} key The key.
+	 * @param {String} key The resource key.
 	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @return {String} The translated (optionally formatted) string, or undefined if not found.
+	 * @return {String} The localized (optionally formatted) resource value or '${key}' if not found.
 	 */
 	res: function(key) {
-		var me = this,
-				ExArr = Ext.Array;
+		var me = this;
 		if(arguments.length === 1) {
 			return WT.res(me.ID, key);
 		} else {
-			var args = ExArr.slice(arguments, 1);
-			return WT.res.apply(me, [me.ID, key].concat(args));
+			return WT.res.apply(me, [me.ID, key].concat(Ext.Array.slice(arguments, 1)));
 		}
 	},
 	

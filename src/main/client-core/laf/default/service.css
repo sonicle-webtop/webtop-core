@@ -117,12 +117,16 @@
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
 .wt-icon-file-upload-xs { background-image: url('file-upload_16.png') !important; }
 .wt-icon-file-download-xs { background-image: url('file-download_16.png') !important; }
-.wt-icon-permission-allowed-xs { background-image: url('permission-allowed_16.png') !important; }
-.wt-icon-permission-denied-xs { background-image: url('permission-denied_16.png') !important; }
+.wt-icon-permission-denied { background-image: url('permission-denied_16.svg') !important; background-size: cover; }
+.wt-icon-permission-allowed { background-image: url('permission-allowed_16.svg') !important; background-size: cover; }
+.wt-icon-permission-denied-gray { background-image: url('permission-denied-gray_16.svg') !important; background-size: cover; }
+.wt-icon-permission-allowed-gray { background-image: url('permission-allowed-gray_16.svg') !important; background-size: cover; }
+.wt-icon-permission-locked-gray { background-image: url('padlock-close-gray_32.svg') !important; background-size: cover; }
+.wt-icon-permission-unlocked-gray { background-image: url('padlock-open-gray_32.svg') !important; background-size: cover; }
 .wt-icon-traffic-light-green-xs { background-image: url('traffic-light-green_16.png') !important; }
 .wt-icon-traffic-light-orange-xs { background-image: url('traffic-light-orange_16.png') !important; }
 .wt-icon-traffic-light-red-xs { background-image: url('traffic-light-red_16.png') !important; }
-.wt-icon-notification-authorize-xs { background-image: url('notification-authorize_16.png') !important; }
+.wt-icon-browser-authorize { background-image: url('browser-authorize_16.svg') !important; background-size: cover; }
 
 /* Formatting buttons */
 .wt-icon-format-bold-xs { background-image: url('format-bold_16.png') !important; }

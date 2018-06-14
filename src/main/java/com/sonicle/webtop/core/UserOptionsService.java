@@ -86,10 +86,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 			
 			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
-				boolean iAmSysAdmin = RunContext.isSysAdmin();
-				jso.canManagePassword = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
-				jso.canManageUpi = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
-				jso.canSyncDevices = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.permPasswordManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
+				jso.permUpiManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
+				jso.permSyncDevicesAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.permWebchatAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "WEBCHAT");
 				
 				// main
 				jso.displayName = user.getDisplayName();
@@ -198,7 +198,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
 				
 				// User personal info
-				if (RunContext.isImpersonated() || RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
+				if (RunContext.isWebTopAdmin() || RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
 					upCacheNeedsUpdate = true;
 					if (pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
 					if (pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);
