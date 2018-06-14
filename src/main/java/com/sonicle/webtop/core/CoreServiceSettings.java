@@ -103,6 +103,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getString(XMPP_MUC_SUBDOMAIN, "conference");
     }
 	
+	public String getXMPPBoshUrl() {
+        return getString(XMPP_BOSH_URL, null);
+    }
+	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
 	}

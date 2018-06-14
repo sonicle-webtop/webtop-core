@@ -1,5 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
+ * webtop-mail is a WebTop Service developed by Sonicle S.r.l.
  * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -27,31 +27,25 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
- * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
+ * feasible for technical reasons, the Appropriate Legal Notices must display
+ * the words "Powered by Sonicle WebTop".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.msg;
 
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.webtop.core.xmpp.PresenceStatus;
+import com.sonicle.webtop.core.bol.js.JsAuthMessage;
+import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
- * @author malbinola
+ * @author gbulfon
  */
-public class JsIMInit {
-	public String presenceStatus;
-	public String statusMessage;
-	public String userId;
-	public String password;
+public class AuthMessage extends ServiceMessage {
 	
-	public JsIMInit() {}
+	public static final String ACTION_AUTH="auth";
 	
-	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, char password[]) {
-		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
-		this.statusMessage = statusMessage;
-		this.userId = userId;
-		this.password = new String(password);
+	public AuthMessage(String serviceId, String userId, char password[]) {
+		super(serviceId,ACTION_AUTH,new JsAuthMessage(userId,new String(password)));
 	}
+	
 }

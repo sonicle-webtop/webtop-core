@@ -104,6 +104,7 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.msg.AuthMessage;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -208,7 +209,13 @@ public class Service extends BaseService {
 			final String nickname = profile.getDisplayName();
 			xmppCli = new XMPPClient(builder, ss.getXMPPMucSubdomain(), nickname, new XMPPServiceListenerImpl(), history);
 		}
+		
+		//sendAuthMessage(principal.getUserId(),principal.getPassword());
 	}
+	
+	//private void sendAuthMessage(String userId, char password[]) {
+	//	getEnv().notify(new AuthMessage(SERVICE_ID,userId,password));		
+	//}
 	
 	private CoreManager getCoreManager() {
 		return (CoreManager)WT.getServiceManager(SERVICE_ID);
@@ -259,6 +266,9 @@ public class Service extends BaseService {
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
 		co.put("userDisplayName", profile.getDisplayName());
+		
+		String boshUrl=ss.getXMPPBoshUrl();
+		if (boshUrl!=null) co.put("boshUrl", boshUrl);
 		
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
@@ -1423,7 +1433,8 @@ public class Service extends BaseService {
 						if (!xmppCli.isAuthenticated()) throw new WTException(ex1, lookupResource(CoreLocaleKey.XMPP_ERROR_AUTHENTICATION));
 						throw ex1;
 					}
-					new JsonResult(new JsIMInit(ps, statusMessage)).printTo(out);
+					Principal p = getEnv().getProfile().getPrincipal();
+					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+p.getAuthenticationDomain().getInternetName(), p.getPassword())).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");
