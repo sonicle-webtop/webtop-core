@@ -79,10 +79,15 @@ JingleSession.prototype.initiate = function (peerjid, isInitiator) {
     this.peerconnection.onicecandidate = function (event) {
         self.sendIceCandidate(event.candidate);
     };
-    this.peerconnection.onaddstream = function (event) {
-        self.remoteStream = event.stream;
-        self.remoteStreams.push(event.stream);
-        $(document).trigger('remotestreamadded.jingle', [event, self.sid]);
+    //this.peerconnection.onaddstream = function (event) {
+    //    self.remoteStream = event.stream;
+    //    self.remoteStreams.push(event.stream);
+    //    $(document).trigger('remotestreamadded.jingle', [event, self.sid]);
+    //};
+    this.peerconnection.ontrack = function (event) {
+        self.remoteStream = event.streams[0];
+        self.remoteStreams.push(event.streams[0]);
+        $(document).trigger('remotetrackadded.jingle', [event, self.sid]);
     };
     this.peerconnection.onremovestream = function (event) {
         self.remoteStream = null;

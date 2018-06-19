@@ -980,7 +980,7 @@ public class WebTopSession {
 		js.appManifest.addJs(LIBS_PATH + "screenfull/3.3.2/" + "screenfull.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.15/" + "strophe.min.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.min.js");
 		
 		//minified
@@ -989,11 +989,13 @@ public class WebTopSession {
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.min.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.min.js");
 		//full
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
-		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
+		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
 		
+		//jsxc version
+		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.15/" + "webtop.dep.js");
 		
 		
 		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");

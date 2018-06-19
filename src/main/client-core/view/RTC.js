@@ -54,5 +54,9 @@ Ext.define('Sonicle.webtop.core.view.RTC', {
    region: 'center',
    xtype: 'sortc'
   });
+ },
+ 
+ getRTCComponent: function() {
+	 return this.getComponent(0);
  }
 });

@@ -684,7 +684,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} config The Ext.toast() config object.
 	 */
 	toast: function(config) {
-		Ext.toast(config);
+		return Ext.toast(config);
 	},
 	
 	/**

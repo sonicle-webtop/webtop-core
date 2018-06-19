@@ -464,6 +464,17 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 		}
 	},
 	
+	lookupFriendByChatId: function(chatId) {
+		var me=this,
+			sto=me.gpFriends().getStore(),
+			rec=sto.findRecord('dChatId',chatId);
+		
+		if (rec && rec.get('presenceStatus')==='online')
+			return rec.get('id');
+		
+		return null;
+	},
+	
 	toggleCollapse: function() {
 		this.floatCollapsedPanel();
 	},

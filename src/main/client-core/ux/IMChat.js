@@ -104,6 +104,22 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			});
 		}
 		tbarItms.push('->', {
+			xtype: 'button',
+			tooltip: WT.res('wtimchat.audiocall.tit'),
+			iconCls: 'wt-icon-audio-call',
+			disabled: !me.hasFriendId(),
+			handler: function() {
+				WTA.RTCManager.startCall(me.getFriendId()+'/rtc');
+			}
+		},{
+			xtype: 'button',
+			tooltip: WT.res('wtimchat.videocall.tit'),
+			iconCls: 'wt-icon-video-call',
+			disabled: !me.hasFriendId(),
+			handler: function() {
+				WTA.RTCManager.startCall(me.getFriendId()+'/rtc',true);
+			}
+		},'-',{
 			xtype: 'souploadbutton',
 			tooltip: WT.res('wtimchat.btn-attach.tip'),
 			iconCls: 'wt-icon-attach-xs',
@@ -434,6 +450,16 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			me.scrollTask.cancel();
 			me.scrollTask = null;
 		}
+	},
+	
+	getFriendId: function() {
+		return WT.getApp().getService(WT.ID)
+				.getVPController().getIMPanel()
+				.lookupFriendByChatId(this.chatId);
+	},
+	
+	hasFriendId: function() {
+		return this.getFriendId()!=null;
 	},
 	
 	getChatId: function() {
