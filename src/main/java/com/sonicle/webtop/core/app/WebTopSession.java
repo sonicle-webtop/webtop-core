@@ -947,6 +947,8 @@ public class WebTopSession {
 		js.appManifest.framework = "ext";
 		js.appManifest.toolkit = "classic";
 		
+		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
+		
 		// Include external libraries references
 		// Do not replace 0.0.0 with the real version, it limits server traffic.
 		final String VENDOR_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/vendor";
@@ -958,29 +960,19 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify-string.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
-		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.5/" + "atmosphere.min.js");
-		
-		//jsxc version
-		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		
-		
+		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.full.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		
-// Uncomment these lines to load debug versions of the libraries ----->
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
-		////js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
+		// Uncomment these lines to load debug versions of the libraries ----->
+		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
 		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
-		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
