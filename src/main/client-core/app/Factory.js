@@ -417,8 +417,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				action: 'Upload',
 				context: context
 			},
-			flashSwfUrl: 'resources/js/plupload/Moxie.swf',
-			silverlightXapUrl: 'resources/js/plupload/Moxie.xap'
+			flashSwfUrl: 'resources/com.sonicle.webtop.core/0.0.0/resources/vendor/plupload/2.1.8/Moxie.swf',
+			silverlightXapUrl: 'resources/com.sonicle.webtop.core/0.0.0/resources/vendor/plupload/2.1.8/Moxie.xap'
 		}, opts);
 	},
 	

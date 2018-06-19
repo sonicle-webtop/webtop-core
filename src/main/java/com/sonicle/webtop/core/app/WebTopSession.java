@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.servlet.BeforeStart;
 import com.sonicle.webtop.core.msg.AutosaveMessage;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -417,6 +418,9 @@ public class WebTopSession {
 		
 		// Defines useful instances (NB: keep code assignment order!!!)
 		profile = new UserProfile(core, principal);
+		
+		boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId, principal.getPassword());
+		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, BeforeStart.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
 		if (!otpEnabled || principal.isImpersonated()) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
@@ -945,16 +949,17 @@ public class WebTopSession {
 		
 		// Include external libraries references
 		// Do not replace 0.0.0 with the real version, it limits server traffic.
+		final String VENDOR_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/vendor";
 		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
-		js.appManifest.addJs(LIBS_PATH + "jquery-3.0.0.min.js");
-		js.appManifest.addJs(LIBS_PATH + "spark-md5.min.js");
-		js.appManifest.addJs(LIBS_PATH + "emoji.min.js");
-		js.appManifest.addJs(LIBS_PATH + "ion.sound.min.js");
-		js.appManifest.addJs(LIBS_PATH + "linkify.min.js");
-		js.appManifest.addJs(LIBS_PATH + "linkify-string.min.js");
-		js.appManifest.addJs(LIBS_PATH + "screenfull/3.3.2/" + "screenfull.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/jquery/3.3.1/" + "jquery.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/spark-md5/3.0.0/" + "spark-md5.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/js-emoji/3.4.1/" + "emoji.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/ion.sound/3.0.7/" + "ion.sound.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify-string.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
-		js.appManifest.addJs(LIBS_PATH + "atmosphere/2.3.5/" + "atmosphere.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.5/" + "atmosphere.min.js");
 		js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.min.js");
 		
@@ -971,8 +976,8 @@ public class WebTopSession {
 		
 		
 		
-		js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.min.js");
-		js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.full.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.full.min.js");
 		
 // Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
@@ -981,12 +986,12 @@ public class WebTopSession {
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
 		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
-		//js.appManifest.addJs(LIBS_PATH + "tinymce/" + "tinymce.js");
-		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "moxie.js");
-		//js.appManifest.addJs(LIBS_PATH + "plupload/" + "plupload.dev.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "moxie.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
 		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
-		js.appManifest.addJs(LIBS_PATH + "rrule/2.1.0/" + "rrule.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";

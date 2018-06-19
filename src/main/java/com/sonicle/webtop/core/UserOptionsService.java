@@ -96,6 +96,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.theme = us.getTheme();
 				jso.layout = us.getLayout();
 				jso.laf = us.getLookAndFeel();
+				jso.passwordForceChange = us.getPasswordForceChange();
 				jso.startupService = sanitizeStartupService(core, us.getStartupService());
 				jso.desktopNotification = us.getDesktopNotification();
 				
@@ -179,6 +180,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
 				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
 				if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if (pl.map.has("passwordForceChange")) us.setPasswordForceChange(pl.data.passwordForceChange);
 				if (pl.map.has("startupService")) us.setStartupService(pl.data.startupService);
 				if (pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
 				

@@ -390,7 +390,7 @@ public class CoreManager extends BaseManager {
 			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
 		} else {
 			//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
-			ensureUser();
+			ensureProfile();
 			return wtmgr.updateUserPersonalInfo(getTargetProfileId(), userPersonalInfo);
 		}
 	}
@@ -399,11 +399,11 @@ public class CoreManager extends BaseManager {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		try {
-			ensureUser();
+			ensureProfile();
 			if (oldPassword == null) throw new WTException("Old password must be provided");
 			wtmgr.updateUserPassword(getTargetProfileId(), oldPassword, newPassword);
-		} catch(Exception ex) {
-			throw new WTException(ex, "Unable to change user password [{0}]", getTargetProfileId().toString());
+		} catch(Throwable t) {
+			throw new WTException(t, "Unable to change user password [{0}]", getTargetProfileId().toString());
 		}
 	}
 	

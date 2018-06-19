@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.sdk;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.time.DateTimeUtils;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -97,6 +98,25 @@ public abstract class BaseSettings {
 		DateTimeFormatter dtf = DateTimeFormat.forPattern(pattern).withZone(DateTimeZone.getDefault());
 		String value = getString(key, null);
 		return (value == null) ? defaultValue : LocalDate.parse(value, dtf);
+	}
+	
+	public DateTime getDateTime(String key, DateTime defaultValue) {
+		return getDateTime(key, defaultValue, DateTimeZone.UTC);
+	}
+	
+	public DateTime getDateTime(String key, DateTime defaultValue, DateTimeZone dtz) {
+		DateTimeFormatter dtf = DateTimeUtils.createYmdHmsFormatter(dtz);
+		String value = getString(key, null);
+		return (value == null) ? defaultValue : DateTime.parse(value, dtf);
+	}
+	
+	public boolean setDateTime(String key, DateTime value) {
+		return setDateTime(key, value, DateTimeZone.UTC);
+	}
+	
+	public boolean setDateTime(String key, DateTime value, DateTimeZone dtz) {
+		DateTimeFormatter dtf = DateTimeUtils.createYmdHmsFormatter(dtz);
+		return setString(key, (value == null) ? null : dtf.print(value));
 	}
 	
 	public <E extends Enum<E>> E getEnum(String key, E defaultValue, Class<E> enumClass) {

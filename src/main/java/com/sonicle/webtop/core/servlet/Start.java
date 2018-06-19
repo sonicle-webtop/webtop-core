@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.servlet.BeforeStart;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
@@ -77,16 +78,6 @@ public class Start extends AbstractServlet {
 		
 		try {
 			logger.trace("Servlet: start [{}]", ServletHelper.getSessionID(request));
-			
-			// Checks maintenance mode
-			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
-			if (maintenance && false) throw new MaintenanceException();
-			
-			wts.initPrivate(request);
-			
-			// Checks if otp page needs to be displayed
-			boolean isOtpVerified = wts.hasProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED);
-			if (!isOtpVerified) throw new OtpException();
 			
 			wts.initPrivateEnvironment(request);
 			Locale locale = wts.getLocale();
@@ -120,28 +111,10 @@ public class Start extends AbstractServlet {
 			Template tpl = WT.loadTemplate(CoreManifest.ID, "tpl/page/private.html");
 			tpl.process(vars, response.getWriter());
 			
-		} catch(MaintenanceException ex) {
-			SecurityUtils.getSubject().logout();
-			request.setAttribute(Login.ATTRIBUTE_LOGINFAILURE, Login.LOGINFAILURE_MAINTENANCE);
-			ServletUtils.forwardRequest(request, response, "login");
-			
-		} catch(OtpException ex) {
-			ServletUtils.forwardRequest(request, response, "otp");
-			
 		} catch(Exception ex) {
 			logger.error("Error", ex);
 		}
 	}
 	
-	private static class MaintenanceException extends Exception {
-		public MaintenanceException() {
-			super();
-		}
-	}
-	
-	private static class OtpException extends Exception {
-		public OtpException() {
-			super();
-		}
-	}
+	private static class MaintenanceException extends Exception {}
 }

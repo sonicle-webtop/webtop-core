@@ -1,0 +1,83 @@
+body {
+	display: table;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+.jumbotron {
+	/* https://stackoverflow.com/questions/22196587/how-to-center-align-vertically-the-container-in-bootstrap */
+	display: table-cell;
+	vertical-align: middle;
+	background: #f8f8f8;
+	padding: 0px;
+}
+.jumbotron p {
+	font-size: inherit; /* Remove the default font-size of .jumbotron */
+}
+div#main .box {
+	padding: 2em 3em;
+}
+div#main img {
+	margin: 0 auto 1em;
+}
+div#main .logo-image {
+	max-height: 250px;
+}
+div#main .otp-delivery-image {
+	height: 100px;
+	width: 125px;
+}
+div#main .alert {
+	padding: 5px;
+	margin-bottom: 0px;
+}
+div#main .form-group {
+	margin-bottom: 5px;
+}
+div#main .help-block {
+	font-size: small;
+}
+div#main .form-actions {
+	margin: 0;
+	text-align: center;
+}
+div#main .powered {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+div#main .serverinfo {
+	font-family: Verdana,Helvetica,Arial,sans-serif;
+}
+div#main .submit {
+	width: 100%;
+}
+/*
+.login .btn {
+	background: #eee;
+	-webkit-transition: all 0.2s ease-in-out;
+	-moz-transition: all 0.2s ease-in-out;
+	-o-transition: all 0.2s ease-in-out;
+	-ms-transition: all 0.2s ease-in-out;
+	transition: all 0.2s ease-in-out;
+}
+.login .btn:hover {
+	background: #156A8B;
+	color: #fff;
+}
+*/
+.spinner {
+	display: inline-block;
+	opacity: 0;
+	max-width: 0;
+	-webkit-transition: opacity 0.25s, max-width 0.45s; 
+	-moz-transition: opacity 0.25s, max-width 0.45s;
+	-o-transition: opacity 0.25s, max-width 0.45s;
+	transition: opacity 0.25s, max-width 0.45s; /* Duration fixed since we animate additional hidden width */
+}
+.has-spinner.active {
+	cursor: progress;
+}
+.has-spinner.active .spinner {
+	opacity: 1;
+	max-width: 50px; /* More than it will ever come, notice that this affects on animation duration */
+}

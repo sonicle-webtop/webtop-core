@@ -38,10 +38,12 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.security.PasswordUtils;
+import com.sonicle.security.Principal;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.EntryException;
@@ -327,6 +329,22 @@ public final class WebTopManager {
 		try {
 			con = wta.getConnectionManager().getConnection();
 			return getDomain(con, domainId);
+			
+		} catch(SQLException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Boolean getDomainDirPasswordPolicy(String domainId) throws WTException {
+		DomainDAO dao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			if (domainId.equals("*")) return false;
+			con = wta.getConnectionManager().getConnection();
+			return dao.selectDirPasswordPolicyById(con, domainId);
 			
 		} catch(SQLException ex) {
 			throw new WTException(ex, "DB error");
@@ -655,14 +673,14 @@ public final class WebTopManager {
 			con = wta.getConnectionManager().getConnection(false);
 			
 			ODomain domain = getDomain(user.getDomainId());
-			if(domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
+			if (domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
 			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			
 			user.ensureCoherence();
 			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_USERS));
 			
 			OUser ouser = null;
-			if(updateDirectory) {
+			if (updateDirectory) {
 				AbstractDirectory authDir = getAuthDirectory(ad.getDirUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
@@ -676,7 +694,7 @@ public final class WebTopManager {
 						password = authDir.generatePassword(opts, domain.getDirPasswordPolicy());
 					} else {
 						if (domain.getDirPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
-							throw new WTException("Password does not satisfy directory requirements [{0}]", ad.getDirUri().getScheme());
+							throw new WTException("Password does not satisfy directory password policy [{0}]", ad.getDirUri().getScheme());
 						}
 					}
 				}
@@ -684,7 +702,7 @@ public final class WebTopManager {
 				ouser = doUserInsert(con, domain, user);
 				
 				// Insert user in directory (if necessary)
-				if(authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
+				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					logger.debug("Adding user into directory");
 					try {
 						authDir.addUser(opts, domain.getDomainId(), createAuthUser(user));
@@ -692,9 +710,11 @@ public final class WebTopManager {
 						logger.debug("Skipped: already exists!");
 					}
 				}
-				if(updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					logger.debug("Updating its password");
 					authDir.updateUserPassword(opts, domain.getDomainId(), user.getUserId(), password);
+					UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
+					new CoreUserSettings(pid).setPasswordLastChange(DateTimeUtils.now());
 				}
 				
 			} else {
@@ -818,35 +838,68 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void updateUserPassword(UserProfileId pid, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
-				
+	private AuthenticationDomain createAuthenticationDomain(UserProfileId profileId) throws WTException {
 		try {
-			AuthenticationDomain ad = null;
-			if (pid.getDomainId().equals("*")) {
-				ad = createSysAdminAuthenticationDomain();
+			if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) {
+				return createSysAdminAuthenticationDomain();
+
 			} else {
-				ODomain domain = getDomain(pid.getDomainId());
-				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
-				
-				ad = createAuthenticationDomain(domain);
+				ODomain odom = getDomain(profileId.getDomainId());
+				if (odom == null) throw new WTException("Domain not found [{0}]", profileId.getDomainId());
+				return createAuthenticationDomain(odom);
 			}
-			
+		} catch(URISyntaxException ex) {
+			throw new WTException(ex, "Invalid URI");
+		}
+	}
+	
+	public void updateUserPassword(UserProfileId profileId, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
+		AuthenticationDomain ad = createAuthenticationDomain(profileId);
+		
+		try {
 			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 			DirectoryOptions opts = wta.createDirectoryOptions(ad);
 			
-			if (directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
-				if (oldPassword != null) {
-					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), oldPassword, newPassword);
-				} else {
-					directory.updateUserPassword(opts, pid.getDomainId(), pid.getUserId(), newPassword);
-				}
+			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+				throw new WTException("Directory has no write capability");
 			}
+			Boolean passwordPolicy = getDomainDirPasswordPolicy(profileId.getDomainId());
+			if (passwordPolicy && !directory.validatePasswordPolicy(opts, newPassword)) {
+				throw new WTException("Provided password does not satisfy directory password policy");
+			}
+			if (oldPassword != null) {
+				directory.updateUserPassword(opts, profileId.getDomainId(), profileId.getUserId(), oldPassword, newPassword);
+			} else {
+				directory.updateUserPassword(opts, profileId.getDomainId(), profileId.getUserId(), newPassword);
+			}
+
+			CoreUserSettings cus = new CoreUserSettings(profileId);
+			cus.setPasswordLastChange(DateTimeUtils.now());
+			cus.setPasswordForceChange(false);
 			
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid URI");
 		} catch(DirectoryException ex) {
 			throw new WTException(ex, "Directory error");
 		}
+	}
+	
+	public boolean isUserPasswordChangeNeeded(UserProfileId profileId, char[] password) throws WTException {
+		if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) return false;
+		
+		AuthenticationDomain ad = createAuthenticationDomain(profileId);
+		AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
+		if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) return false;
+		
+		Boolean passwordPolicy = getDomainDirPasswordPolicy(profileId.getDomainId());
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
+		if (passwordPolicy && css.getPasswordForceChangeIfPolicyUnmet()) {
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			if (!directory.validatePasswordPolicy(opts, password)) return true;
+		}
+		
+		CoreUserSettings cus = new CoreUserSettings(profileId);
+		if (cus.getPasswordForceChange()) return true;
+		
+		return false;
 	}
 	
 	public void deleteUser(UserProfileId pid, boolean cleanupDirectory) throws WTException {

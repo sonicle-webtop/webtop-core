@@ -350,6 +350,19 @@ div.wt-wnlist {
     user-select: text;
 }
 
+.wt-no-opacity {
+	opacity: 1 !important;
+}
+.wt-color-success {
+	color: #3f9c35 !important;
+}
+.wt-color-warn {
+	color: #ec7a08 !important;
+}
+.wt-color-alert {
+	color: #c00 !important;
+}
+
 /* TinyMCE */
 .mce-tinymce.mce-container {
 	border-width: 0px !important;

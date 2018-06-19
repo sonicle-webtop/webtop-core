@@ -401,6 +401,28 @@ public class CoreSettings {
 	public static final String RTL = "rtl";
 	
 	/**
+	 * [system+domain]
+	 * [boolean]
+	 * Forces the user to change the password upon first login.
+	 */
+	public static final String PASSWORD_FORCECHANGE_IFPOLICYUNMET = "password.forcechangeifpolicyunmet";
+	
+	/**
+	 * [user]
+	 * [boolean]
+	 * Forces the user to change the password upon first login.
+	 */
+	public static final String PASSWORD_FORCECHANGE = "password.forcechange";
+	//User must change password at next logon
+	
+	/**
+	 * [user]
+	 * [string]
+	 * ISO date string that point to the last change instant.
+	 */
+	public static final String PASSWORD_LAST_CHANGE = "password.lastchange";
+	
+	/**
 	 * [user][default]
 	 * [string]
 	 * Preferred service ID to set after sign-in
