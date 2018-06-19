@@ -90,9 +90,16 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.conn.connect(jid,pass,callback);
 	},
 	
-	startView: function() {
+	startView: function(video) {
 		var me=this,
-			vct=WT.createView(WT.ID, 'view.RTC');
+			vct=WT.createView(WT.ID, 'view.RTC', {
+				viewCfg: {
+					dockableConfig: {
+						title: video?'{videocall.tit}':'{audiocall.tit}',
+						iconCls: video?'wt-icon-video-call':'wt-icon-audio-call'
+					}
+				}
+			});
 		
 		me.vctList.push(vct);
 		
@@ -112,7 +119,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	startCall: function(jid,video) {
 		
 		var me=this,
-			vct=me.startView();
+			vct=me.startView(video);
 	
 		vct.show(false,function() {
 			var rtc=vct.getView().getComponent(0),
@@ -147,15 +154,44 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		
 		session.ring();
 		me.startAudioRing();
-		
-		var toast=WT.toast({
+
+		var toast=WT.toast(
+				WT.res('call.incoming.tit')+": "+WT.res('call.incoming.text',session.peer.bare),
+				{
+					buttons: [
+						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success',
+							handler: function() {
+								toast.close();
+								me.acceptIncomingCall(session);
+							}
+						}, 
+						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success',
+							handler: function() {
+								toast.close();
+								me.acceptIncomingCall(session,true);
+							}
+						}, 
+						{ glyph: 'xf095@FontAwesome', iconCls: 'fa-rotate-90 wt-color-alert',
+								handler: function() {
+									//me.conn.jingle.terminate(null, "Closed by local user", "Closed by user");
+									me.stopAudioRing();
+									session.decline();
+									toast.close();
+								}
+						}
+					], 
+					autoClose: false
+				}
+		);
+
+		/*var toast=WT.toast({
 			 html: WT.res('call.incoming.tit')+":<BR>"+WT.res('call.incoming.text',session.peerID),
 			 header: false,
 			 //title: WT.res('call.incoming.tit'),
 			 width: 300,
 			 align: 'br',
 			 autoClose: false,
-			 /*buttons: [
+			 buttons: [
 				{ 
 					text: 'Audio', 
 					handler: function() {
@@ -177,8 +213,8 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 						toast.close();
 					}
 				}
-			 ]*/
-		});
+			 ]
+		});*/
 		session.toast=toast;
 		
 		
@@ -187,7 +223,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	acceptIncomingCall: function(session,video) {
 		var me=this,
-			vct=me.startView();
+			vct=me.startView(video);
 	
 		me.stopAudioRing();
 		vct.show(false,function() {

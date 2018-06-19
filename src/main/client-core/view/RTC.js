@@ -38,8 +38,8 @@ Ext.define('Sonicle.webtop.core.view.RTC', {
  ],
  
  dockableConfig: {
-  title: '{opts.tit}',
-  iconCls: 'wt-icon-options-xs',
+  title: '{audiocall.tit}',
+  iconCls: 'wt-icon-audiocall-xs',
   width: 650,
   height: 500
  },

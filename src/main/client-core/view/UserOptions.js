@@ -43,24 +43,11 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		'WTA.store.DateFmtShort',
 		'WTA.store.DateFmtLong',
 		'WTA.store.TimeFmtShort',
-		'WTA.store.TimeFmtLong',
-		'Sonicle.form.field.Bytes',
-		'Sonicle.form.field.Icon',
-		'Sonicle.plugin.FieldTooltip',
-		'Sonicle.webtop.core.ux.PermStatusField'
+		'WTA.store.TimeFmtLong'
 	],
 	
 	viewModel: {
 		formulas: {
-			foCanManagePassword: function(get) {
-				//TODO: following check does not work in case of editing logged as sysadmin, cap is related to admin domain!!!
-				if (!WT.getVar('domainDirCapPasswordWrite')) return false;
- 				return get('record.canManagePassword');
- 			},
-			foCanManageUpi: function(get) {
-				if (WT.isProfileActingAsAdmin()) return true;
-				return get('record.canManageUpi');
-			},
 			isOTPActive: WTF.foIsEmpty('record', 'otpDelivery', true),
 			syncAlertEnabled: WTF.checkboxBind('record', 'syncAlertEnabled'),
 			imSoundOnFriendConnect: WTF.checkboxBind('record', 'imSoundOnFriendConnect'),
@@ -79,7 +66,20 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		vm = me.getViewModel();
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, {
 			foIsMyProfile: function() {
-				return WT.getVar('profileId') === me.profileId;
+				return me.isProfileSelf();
+			},
+			foCanManagePassword: function(get) {
+				if (me.isAdminOnBehalf()) return false;
+				if (WT.isAdmin()) return true;
+				// Directory CAP is always related to the logged user and not 
+				// to the loaded profile. (keep attention to admin, its 
+				// directory has always write CAP)
+				if (!WT.getVar('domainDirCapPasswordWrite')) return false;
+ 				return get('record.permPasswordManage');
+ 			},
+			foCanManageUpi: function(get) {
+				if (WT.isAdmin() || me.isAdminOnBehalf()) return true;
+				return get('record.permUpiManage');
 			}
 		}));
 		
@@ -216,7 +216,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					}), {
 						xtype: 'button',
 						tooltip: WT.res('opts.main.btn-notificationAuthorize.tip'),
-						iconCls: 'wt-icon-notification-authorize-xs',
+						iconCls: 'wt-icon-browser-authorize',
 						handler: function() {
 							NtfMgr.ensureAuthorization();
 						}
@@ -238,6 +238,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					bind: {
 						disabled: '{!foCanManagePassword}'
 					},
+					disabled: true,
+					hidden: !me.isProfileSelf(),
 					text: WT.res('opts.main.btn-changePassword.lbl'),
 					width: 250,
 					handler: function() {
@@ -362,14 +364,16 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.upi.tit'),
+			bind: {
+				permStatus: '{record.permUpiManage}'
+			},
+			plugins: [{
+				ptype: 'wttabpermstatus',
+				enabled: !me.isProfileSysAdmin(),
+				isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
+				info: 'USER_PROFILE_INFO:MANAGE'
+			}],
 			items: [{
-				xtype: 'wtpermstatusfield',
-				bind: '{record.canManageUpi}',
-				fieldLabel: WT.res('opts.upi.canwrite'),
-				userText: me.profileId
-			}, {
-				xtype: 'sospacer'
-			}, {
 				xtype: 'textfield',
 				bind: {
 					value: '{record.upiTitle}',
@@ -591,7 +595,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-company.lbl'),
-				width: 300,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -605,7 +609,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-function.lbl'),
-				width: 300,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -619,7 +623,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom1.lbl'),
-				width: 300,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -633,7 +637,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom2.lbl'),
-				width: 300,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -647,7 +651,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					disabled: '{!foCanManageUpi}'
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom3.lbl'),
-				width: 300,
+				width: 400,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -809,6 +813,17 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.sync.tit'),
+			hidden: me.isProfileSysAdmin(),
+			bind: {
+				permStatus: '{record.permSyncDevicesAccess}'
+			},
+			plugins: [{
+				ptype: 'wttabpermstatus',
+				//enabled: !WT.isSysAdmin() || me.isAdminOnBehalf(),
+				enabled: !me.isProfileSysAdmin(),
+				isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
+				info: 'DEVICES_SYNC:ACCESS'
+			}],
 			layout: 'fit',
 			items: [{
 				xtype: 'wtpanel',
@@ -817,13 +832,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					region: 'north',
 					xtype: 'wtfieldspanel',
 					bodyPadding: 0,
-					height: 60,
+					height: 40,
 					items: [{
-						xtype: 'wtpermstatusfield',
-						bind: '{record.canSyncDevices}',
-						fieldLabel: WT.res('opts.sync.cansyncdevices'),
-						userText: me.profileId
-					}, {
 						xtype: 'fieldcontainer',
 						layout: 'hbox',
 						defaults: {
@@ -950,12 +960,27 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.im.tit'),
+			hidden: me.isProfileSysAdmin(),
+			bind: {
+				permStatus: '{record.permWebchatAccess}'
+			},
+			plugins: [{
+				ptype: 'wttabpermstatus',
+				enabled: !me.isProfileSysAdmin(),
+				isAdmin: WT.isAdmin() || me.isAdminOnBehalf(),
+				info: 'WEBCHAT:ACCESS'
+			}],
 			items: [{
 				xtype: 'sobytesfield',
 				bind: '{record.imUploadMaxFileSize}',
-				disabled: !WT.isProfileActingAsAdmin(),
+				disabled: !(WT.isAdmin() || me.isAdminOnBehalf()),
 				fieldLabel: WT.res(me.ID, 'opts.im.fld-imUploadMaxFileSize.lbl'),
 				width: 280,
+				permStatus: false,
+				plugins: [{
+					ptype: 'wtadminfieldpermstatus',
+					isAdmin: WT.isAdmin() || me.isAdminOnBehalf()
+				}],
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -1037,8 +1062,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		}, {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.pbx.tit'),
-			items: [
-				{
+			hidden: me.isProfileSysAdmin(),
+			items: [{
 					xtype: 'soformseparator',
 					title: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
 				}, {
@@ -1056,7 +1081,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				}, {
 					xtype: 'sopasswordfield',
 					bind: {
-						value: '{record.pbxPassword}',
+						value: '{record.pbxPassword}'
 					},
 					disabled: !WT.getVar("pbxConfigured"),
 					plugins: 'sonoautocomplete',
@@ -1066,8 +1091,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					emptyText: WT.res('opts.pbx.fld-password-empty.lbl'),
 					submitEmptyText: false,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
-				}				
-			]
+			}]
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);

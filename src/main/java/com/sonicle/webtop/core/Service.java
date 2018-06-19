@@ -258,6 +258,7 @@ public class Service extends BaseService {
 		
 		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
+		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("domainPasswordPolicy", domainPasswordPolicy);
 		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);

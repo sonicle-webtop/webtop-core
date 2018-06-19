@@ -41,13 +41,14 @@ Ext.define('Sonicle.webtop.core.sdk.OptionTabSection', {
 	
 	tabConfig: {
 		textAlign: 'left',
-		minWidth: 150,
-		maxWidth: 150
+		minWidth: 180,
+		maxWidth: 210
 	},
 	
 	layout: 'anchor',
 	bodyPadding: 5,
 	scrollable: 'y',
+	iconAlign: 'right',
 	
 	defaults: {
 		labelAlign: 'right',

@@ -61,7 +61,7 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	 */
 	waitUpdate: function(msg) {
 		var me = this, cmp = me.ownerCt || me;
-		if(me._waitCount >= 1) {
+		if (me._waitCount >= 1) {
 			cmp.setLoading(msg || WT.res('waiting'));
 		}
 	},
@@ -74,7 +74,7 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	unwait: function(force) {
 		var me = this, cmp = me.ownerCt || me;
 		me._waitCount--;
-		if((me._waitCount === 0) || (force === true)) {
+		if ((me._waitCount === 0) || (force === true)) {
 			me._waitCount = 0;
 			cmp.setLoading(false);
 			//cmp.unmask();

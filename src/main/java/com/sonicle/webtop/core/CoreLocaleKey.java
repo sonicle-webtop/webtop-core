@@ -49,6 +49,18 @@ public class CoreLocaleKey {
 	public static final String TPL_LOGIN_MAINTENANCE = "tpl.login.maintenance";
 	public static final String TPL_LOGIN_ERROR_MAINTENANCE = "tpl.login.error.maintenance";
 	public static final String TPL_LOGIN_ERROR_FAILURE = "tpl.login.error.failure";
+	
+	public static final String TPL_PASSWORD_MAIN_TITLE = "tpl.password.main.title";
+	public static final String TPL_PASSWORD_MAIN_TEXT = "tpl.password.main.text";
+	public static final String TPL_PASSWORD_PASSWORD_LABEL = "tpl.password.password.label";
+	public static final String TPL_PASSWORD_PASSWORDCONFIRM_LABEL = "tpl.password.passwordConfirm.label";
+	public static final String TPL_PASSWORD_SUBMIT_LABEL = "tpl.password.submit.label";
+	public static final String TPL_PASSWORD_ERROR_EMPTYFIELD = "tpl.password.error.emptyfield";
+	public static final String TPL_PASSWORD_ERROR_POLICY = "tpl.password.error.policy";
+	public static final String TPL_PASSWORD_ERROR_CONFITMNOTMATCH = "tpl.password.error.confirmnotmatch";
+	public static final String TPL_PASSWORD_ERROR_MUSTBEDIFFERENT = "tpl.password.error.mustbedifferent";
+	public static final String TPL_PASSWORD_ERROR_UNEXPECTED = "tpl.password.error.unexpected";
+	
 	public static final String TPL_OTP_HELPTITLE = "tpl.otp.helptitle";
 	public static final String TPL_OTP_DELIVERY_TITLE = "tpl.otp.delivery.title";
 	public static final String TPL_OTP_DELIVERY_INFO = "tpl.otp.delivery.{0}.info";

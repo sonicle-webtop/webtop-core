@@ -131,6 +131,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(WHATSNEW_ENABLED, true);
 	}
 	
+	public boolean getPasswordForceChangeIfPolicyUnmet() {
+		return getBoolean(PASSWORD_FORCECHANGE_IFPOLICYUNMET, false);
+	}
+	
 	public long getOTPProviderSonicleAuthKVI() {
 		return getLong(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
 	}

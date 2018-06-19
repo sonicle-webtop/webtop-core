@@ -68,7 +68,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		'Sonicle.webtop.core.app.ThemeMgr',
 		
 		'Sonicle.webtop.core.app.WTPrivate',
-		'Sonicle.webtop.core.app.ServiceDescriptor',
+		'Sonicle.webtop.core.app.DescriptorPrivate',
 		'Sonicle.webtop.core.app.Atmosphere',
 		'Sonicle.webtop.core.sdk.Service'
 	
@@ -121,8 +121,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	
 	launch: function() {
 		var me = this,
-				SoSnd = Sonicle.Sound,
-				desc;
+				SoSnd = Sonicle.Sound;
 		
 		SoSnd.setPath('resources/com.sonicle.webtop.core/0.0.0/resources/sounds/');
 		SoSnd.add([
@@ -137,58 +136,48 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			me.roles[role] = true;
 		});
 		
-		// Loads service descriptors from startup object
-		Ext.each(WTS.services, function(obj) {
-			desc = Ext.create('WTA.ServiceDescriptor', {
-				index: obj.index,
-				maintenance: obj.maintenance,
-				id: obj.id,
-				xid: obj.xid,
-				ns: obj.ns,
-				path: obj.path,
-				version: obj.version,
-				build: obj.build,
-				serviceClassName: obj.serviceClassName,
-				serviceVarsClassName: obj.serviceVarsClassName,
-				localeClassName: obj.localeClassName,
-				userOptions: obj.userOptions,
-				portletClassNames: obj.portletClassNames,
-				name: obj.name,
-				description: obj.description,
-				company: obj.company
-			});
+		// Initialize services' descriptors
+		me.initDescriptors();
+		Ext.iterate(WTS.services, function(obj, idx) {
+			var desc = me.descriptors.get(obj.id);
+			if (!desc) Ext.raise('This should never happen (famous last words)');
 			
-			me.locales.add(obj.id, Ext.create(obj.localeClassName));
-			me.services.add(desc);
-		}, me);
+			desc.setOrder(idx);
+			desc.setMaintenance(obj.maintenance);
+			desc.setServiceClassName(obj.serviceCN);
+			desc.setServiceVarsClassName(obj.serviceVarsCN);
+			desc.setUserOptions(obj.userOptions);
+			desc.setPortletClassNames(obj.portletCNs);
+			
+			me.services.push(obj.id);
+		});
 		
 		//TODO: portare il metodo onRequiresLoaded direttamente qui!
 		me.onRequiresLoaded.call(me);
 	},
 	
-	
-	
 	onRequiresLoaded: function() {
 		var me = this,
+				sids = me.getServices(),
 				cdesc, vp, vpc;
 		
 		// Instantiates core service
-		cdesc = me.services.getAt(0);
+		cdesc = me.getDescriptor(sids[0]);
 		if (!cdesc.getInstance()) Ext.raise('Unable to instantiate core');
 		
 		// Creates main viewport
 		vp = me.viewport = me.getView(me.views[0]).create({
-			servicesCount: me.services.count()-1 //TODO: calcolare il numero di servizi visibili
+			servicesCount: sids.length-1 //TODO: calcolare il numero di servizi visibili
 		});
 		vpc = me.viewport.getController();
 		
-		// Instantiates other services
-		Ext.each(me.getDescriptors(), function(desc) {
-			desc.getInstance();
-		});
+		// Instantiates remaining services
+		for (var i=1; i<sids.length; i++) {
+			me.getDescriptor(sids[i]).getInstance();
+		}
 		
-		// Inits loaded services and activate the default one
-		Ext.each(me.getDescriptors(false), function(desc) {
+		Ext.iterate(sids, function(sid) {
+			var desc = me.getDescriptor(sid);
 			if (desc.initService()) {
 				var svc = desc.getInstance();
 				vpc.addServiceButton(desc);
@@ -245,8 +234,19 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		});
 		*/
 		Sonicle.PageActivityMonitor.start();
+		Sonicle.DesktopNotificationMgr.on('requestpermission', function() {
+			WT.msg(WT.res('info.browser.permission.notification'));
+		});
 		
 		me.hideLoadingLayer();
+	},
+	
+	createServiceDescriptor: function(cfg) {
+		return Ext.create('WTA.DescriptorPrivate', cfg);
+	},
+	
+	getViewportController: function() {
+		return this.viewport.getController();
 	},
 	
 	connWarnTask: function(stop) {
@@ -372,7 +372,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		for (var i=0; i<arr.length; i++) {
 			if (!Ext.isEmpty(arr[i])) {
 				desc = me.getDescriptor(arr[i]);
-				if (desc && desc.isInited()) return arr[i]; 
+				if (desc && desc.isServiceInited()) return arr[i]; 
 			}
 		}
 		return WT.ID;

@@ -41,7 +41,14 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 		'WTA.mixin.HasModel'
 	],
 	requires: [
-		'Sonicle.form.Spacer'
+		'Sonicle.form.Spacer',
+		'Sonicle.form.field.Bytes',
+		'Sonicle.form.field.Icon',
+		'Sonicle.plugin.FieldTooltip',
+		'Sonicle.webtop.core.ux.plugin.TabPermStatus',
+		'Sonicle.webtop.core.ux.plugin.FieldPermStatus',
+		'Sonicle.webtop.core.ux.plugin.AdminFieldPermStatus',
+		'Sonicle.webtop.core.ux.PermStatusField'
 	],
 	
 	referenceHolder: true,
@@ -103,6 +110,19 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 				}
 			});
 		}
+	},
+	
+	isProfileSelf: function() {
+		return WT.getVar('profileId') === this.profileId;
+	},
+	
+	isProfileSysAdmin: function() {
+		//TODO: improve this test! We should evaluate real profileId roles.
+		return WT.isSysAdmin() && !this.isAdminOnBehalf();
+	},
+	
+	isAdminOnBehalf: function() {
+		return WT.isAdmin() && !this.isProfileSelf();
 	},
 	
 	/**

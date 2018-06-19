@@ -52,8 +52,8 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	referenceHolder: true,
 	
 	/**
-	 * @property {WTA.sdk.Service} mys
-	 * Reference to service instance.
+	 * @property {String/WTA.sdk.Service} mys
+	 * Referenced service ID or direct service instance.
 	 */
 	mys: null,
 	
@@ -69,5 +69,21 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 		me.mixins.refholder.destroy.call(me);
 		me.mixins.wtactholder.destroy.call(me);
 		me.callParent();
+	},
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * Values arguments will be used to replace tokens in source string.
+	 * @param {String} key The resource key.
+	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
+	 * @return {String} The localized (optionally formatted) resource value or '${key}' if not found.
+	 */
+	res: function(key) {
+		var me = this;
+		if (Ext.isString(me.mys)) {
+			return WT.res.apply(me, [me.mys, key].concat(Ext.Array.slice(arguments, 1)));
+		} else {
+			return me.mys.apply(me, [key].concat(Ext.Array.slice(arguments, 1)));
+		}
 	}
 });

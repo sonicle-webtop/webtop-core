@@ -36,6 +36,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	requires: [
 		'Sonicle.webtop.core.admin.model.GridDomainUser'
 	],
+	uses: [
+		'Sonicle.webtop.core.admin.view.Options'
+	],
 	
 	domainId: null,
 	passwordPolicy: false,
@@ -61,6 +64,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
+		me.initActions();
+		me.initCxm();
 		
 		me.add({
 			region: 'center',
@@ -88,6 +93,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				getRowClass: function(rec) {
 					return rec.get('enabled') === false ? 'wtadm-gpusers-row-disabled' : '';
 				}
+			},
+			selModel: {
+				type: 'rowmodel',
+				mode : 'MULTI'
 			},
 			columns: [{
 				xtype: 'rownumberer'	
@@ -130,15 +139,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 								me.addUserUI(null);
 							}
 						}),
-						me.addAct('addImport', {
-							text: me.mys.res('domainUsers.act-addImport.lbl'),
-							tooltip: null,
-							disabled: true,
-							handler: function() {
-								var rec = me.getSelectedUser();
-								if(rec) me.addUserUI(rec);
-							}
-						})
+						me.getAct('addImport')
 					]
 				}),
 				me.addAct('remove', {
@@ -151,8 +152,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 							text: me.mys.res('domainUsers.act-removeClean.lbl'),
 							tooltip: null,
 							handler: function() {
-								var rec = me.getSelectedUser();
-								if(rec) me.deleteUserUI(false, rec);
+								var sel = me.getSelectedUsers();
+								if (sel.length > 0) me.deleteUserUI(false, sel[0]);
 							}
 						}),
 						me.addAct('removeDeep', {
@@ -160,22 +161,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 							tooltip: null,
 							disabled: !me.authCapUsersWrite,
 							handler: function() {
-								var rec = me.getSelectedUser();
-								if(rec) me.deleteUserUI(true, rec);
+								var sel = me.getSelectedUsers();
+								if (sel.length > 0) me.deleteUserUI(true, sel[0]);
 							}
 						})
 					]
 				}),
-				me.addAct('changePassword', {
-					text: WT.res('act-changePassword.lbl'),
-					tooltip: null,
-					iconCls: 'wt-icon-changePassword-xs',
-					disabled: true,
-					handler: function() {
-						var rec = me.getSelectedUser();
-						if(rec) me.changePasswordUI(rec);
-					}
-				}),
+				me.getAct('changePassword'),
 				'-',
 				me.addAct('enable', {
 					text: WT.res('act-enable.lbl'),
@@ -183,8 +175,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					iconCls: 'wt-icon-item-enable-xs',
 					disabled: true,
 					handler: function() {
-						var rec = me.getSelectedUser();
-						if(rec) me.updateUserStatusUI(rec, true);
+						var sel = me.getSelectedUsers();
+						if (sel.length > 0) me.updateUserStatusUI(sel[0], true);
 					}
 				}),
 				me.addAct('disable', {
@@ -193,8 +185,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 					iconCls: 'wt-icon-item-disable-xs',
 					disabled: true,
 					handler: function() {
-						var rec = me.getSelectedUser();
-						if(rec) me.updateUserStatusUI(rec, false);
+						var sel = me.getSelectedUsers();
+						if (sel.length > 0) me.updateUserStatusUI(sel[0], false);
 					}
 				}),
 				'->',
@@ -209,11 +201,27 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			],
 			listeners: {
 				rowdblclick: function(s, rec) {
-					if(rec.get('exist') === true) {
+					if (rec.get('exist') === true) {
 						me.editUserUI(rec);
 					} else {
 						me.addUserUI(rec);
 					}
+				},
+				rowcontextmenu: function(s, rec, itm, i, e) {
+					WT.showContextMenu(e, me.getRef('cxmUserRow'));
+					/*
+					var selection = s.getSelection();
+					me.getAct('sendContact').setDisabled(false)
+					Ext.each(selection,function(sel){
+						if(sel.get('isList')){
+							me.getAct('sendContact').setDisabled(true)
+						}
+					});
+					WT.showContextMenu(e, me.getRef('cxmGrid'), {
+						contact: rec,
+						contacts: s.getSelection()
+					});
+					*/
 				}
 			}
 		});
@@ -223,10 +231,78 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		}, function() {
 			me.updateDisabled('addImport');
 			me.updateDisabled('remove');
+			me.updateDisabled('edit');
 			me.updateDisabled('changePassword');
+			me.updateDisabled('editOptions');
+			me.updateDisabled('updateEmailDomain');
 			me.updateDisabled('enable');
 			me.updateDisabled('disable');
 		});
+	},
+	
+	initActions: function() {
+		var me = this;
+		me.addAct('addImport', {
+			text: me.mys.res('domainUsers.act-addImport.lbl'),
+			tooltip: null,
+			disabled: true,
+			handler: function() {
+				var sel = me.getSelectedUsers();
+				if (sel.length > 0) me.addUserUI(sel[0]);
+			}
+		});
+		me.addAct('edit', {
+			text: WT.res('act-edit.lbl'),
+			tooltip: null,
+			handler: function() {
+				var sel = me.getSelectedUsers();
+				if (sel.length > 0) me.editUserUI(sel[0]);
+			}
+		});
+		me.addAct('changePassword', {
+			text: WT.res('act-changePassword.lbl'),
+			tooltip: null,
+			iconCls: 'wt-icon-changePassword-xs',
+			disabled: true,
+			handler: function() {
+				var sel = me.getSelectedUsers();
+				if (sel.length > 0) me.changePasswordUI(sel[0]);
+			}
+		});
+		me.addAct('editOptions', {
+			text: WT.res('opts.tit'),
+			tooltip: null,
+			iconCls: 'wt-icon-options-xs',
+			disabled: true,
+			handler: function() {
+				var sel = me.getSelectedUsers();
+				if (sel.length > 0) me.editOptionsUI(sel[0]);
+			}
+		});
+		me.addAct('updateEmailDomain', {
+			text: me.mys.res('domainUsers.act-updateEmailDomain.lbl'),
+			tooltip: null,
+			handler: function() {
+				var sel = me.getSelectedUsers();
+				me.updateEmailDomainUI(sel);
+			}
+		});
+	},
+	
+	initCxm: function() {
+		var me = this;
+		me.addRef('cxmUserRow', Ext.create({
+			xtype: 'menu',
+			items: [
+				me.getAct('addImport'),
+				me.getAct('edit'),
+				'-',
+				me.getAct('changePassword'),
+				'-',
+				me.getAct('editOptions'),
+				me.getAct('updateEmailDomain')
+			]
+		}));
 	},
 	
 	addUserUI: function(rec) {
@@ -297,7 +373,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		doFn = function() {
 			me.mys.updateUsersStatus([rec.get('profileId')], enabled, {
 				callback: function(success) {
-					if(success) {
+					if (success) {
 						rec.set('enabled', enabled);
 						me.updateDisabled('enable');
 						me.updateDisabled('disable');
@@ -309,14 +385,46 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 			doFn();
 		} else {
 			WT.confirm(me.mys.res('domainUsers.confirm.disable'), function(bid) {
-				if(bid === 'yes') doFn();
+				if (bid === 'yes') doFn();
 			}, me);
 		}
 	},
 	
-	getSelectedUser: function() {
-		var sel = this.lref('gp').getSelection();
-		return sel.length === 1 ? sel[0] : null;
+	editOptionsUI: function(rec) {
+		var me = this,
+				vct = WT.createView(me.mys.ID, 'view.Options', {
+					viewCfg: {
+						profileId: rec.get('profileId'),
+						profileDisplayName: rec.get('displayName')
+					}
+				});
+		vct.show();
+	},
+	
+	updateEmailDomainUI: function(sel) {
+		var me = this;
+		WT.prompt(me.mys.res('domainUsers.prompt.updateEmailDomain'), {
+			title: me.mys.res('domainUsers.act-updateEmailDomain.lbl'),
+			fn: function(bid, value, cfg) {
+				if (bid === 'ok') {
+					if (Ext.isEmpty(value)) {
+						Ext.MessageBox.show(Ext.apply({}, {msg: cfg.msg}, cfg));
+					} else {
+						me.wait(WT.res('wait.changes'));
+						me.mys.updateUsersEmailDomain(me.selectionIds(sel), value, {
+							callback: function(success) {
+								me.unwait();
+								if (!success) WT.error(WT.res('error.unexpected'));
+							}
+						});
+					}
+				}
+			}
+		});
+	},
+	
+	getSelectedUsers: function() {
+		return this.lref('gp').getSelection();
 	},
 	
 	updateDisabled: function(action) {
@@ -332,41 +440,62 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 		var me = this, sel;
 		switch(action) {
 			case 'addImport':
-				sel = me.getSelectedUser();
-				if(sel) {
-					return sel.get('exist');
-				} else {
-					return true;
+				sel = me.getSelectedUsers();
+				if (sel.length === 1) {
+					return sel[0].get('exist');
 				}
+				return true;
 			case 'remove':
-				sel = me.getSelectedUser();
-				if(sel) {
-					return !sel.get('exist');
-				} else {
-					return true;
+			case 'edit':
+			case 'editOptions':
+				sel = me.getSelectedUsers();
+				if (sel.length === 1) {
+					return !sel[0].get('exist');
 				}
+				return true;
+			case 'updateEmailDomain':
+				sel = me.getSelectedUsers();
+				if (sel.length > 0) {
+					return me.countByExist(sel) !== sel.length;
+				}
+				return true;
 			case 'changePassword':
-				if(!me.authCapPasswordWrite) return true;
-				sel = me.getSelectedUser();
-				if(sel) {
-					return !sel.get('exist');
-				} else {
-					return true;
+				if (!me.authCapPasswordWrite) return true;
+				sel = me.getSelectedUsers();
+				if (sel.length === 1) {
+					return !sel[0].get('exist');
 				}
+				return true;
 			case 'enable':
-				sel = me.getSelectedUser();
-				if(sel) {
-					return !sel.get('exist') || sel.get('enabled') === true;
-				} else {
-					return true;
+				sel = me.getSelectedUsers();
+				if (sel.length === 1) {
+					return !sel[0].get('exist') || sel[0].get('enabled') === true;
 				}
+				return true;
 			case 'disable':
-				sel = me.getSelectedUser();
-				if(sel) {
-					return !sel.get('exist') || !(sel.get('enabled') === true);
-				} else {
-					return true;
+				sel = me.getSelectedUsers();
+				if (sel.length === 1) {
+					return !sel[0].get('exist') || !(sel[0].get('enabled') === true);
 				}
+				return true;
+		}
+	},
+	
+	privates: {
+		selectionIds: function(sel) {
+			var ids = [];
+			Ext.iterate(sel, function(rec) {
+				ids.push(rec.getId());
+			});
+			return ids;
+		},
+		
+		countByExist: function(recs) {
+			var i = 0;
+			Ext.iterate(recs, function(rec) {
+				if (rec.get('exist')) i++;
+			});
+			return i;
 		}
 	}
 });

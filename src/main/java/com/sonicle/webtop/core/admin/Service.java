@@ -83,6 +83,7 @@ import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
+import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -95,6 +96,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -140,6 +142,22 @@ public class Service extends BaseService {
 		node.put("_type", type);
 		node.setIconClass(iconClass);
 		return node;
+	}
+	
+	public void processGetUserOptionServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String pid = ServletUtils.getStringParameter(request, "pid", true);
+			
+			UserProfileId targetPid = new UserProfileId(pid);
+			CoreManager xcore = WT.getCoreManager(true, targetPid);
+			List<UserOptionsServiceData> items = xcore.getAllowedUserOptionServices();
+			new JsonResult(items).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in GetUserOptionServices", ex);
+			new JsonResult(false, "Unable to get option services").printTo(out);
+		}
 	}
 	
 	public void processLookupDomainGroups(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -532,6 +550,15 @@ public class Service extends BaseService {
 				
 				UserProfileId pid = new UserProfileId(profileIds.get(0));
 				coreadm.updateUser(pid, crud.equals("enable"));
+				
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("updateEmailDomain")) {
+				ServletUtils.StringArray profileIds = ServletUtils.getObjectParameter(request, "profileIds", ServletUtils.StringArray.class, true);
+				String domainPart = ServletUtils.getStringParameter(request, "domainPart", true);
+				
+				List<UserProfileId> pids = profileIds.stream().map(spid -> new UserProfileId(spid)).collect(Collectors.toList());
+				coreadm.updateUserEmailDomain(pids, domainPart);
 				
 				new JsonResult().printTo(out);
 			}

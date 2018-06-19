@@ -195,15 +195,7 @@ public class Otp extends AbstractServlet {
 		tpl.process(tplMap, response.getWriter());
 	}
 	
-	private static class NoMoreTriesException extends Exception {
-		public NoMoreTriesException() {
-			super();
-		}
-	}
+	private static class NoMoreTriesException extends Exception {}
 
-	private static class SkipException extends Exception {
-		public SkipException() {
-			super();
-		}
-	}
+	private static class SkipException extends Exception {}
 }

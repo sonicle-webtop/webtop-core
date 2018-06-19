@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseUserSettings;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
+import org.joda.time.DateTime;
 
 /**
  *
@@ -61,7 +62,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public String getTheme() {
 		String value = getString(THEME, null);
-		if(value != null) return value;
+		if (value != null) return value;
 		return ss.getDefaultTheme();
 	}
 	
@@ -71,7 +72,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public String getLayout() {
 		String value = getString(LAYOUT, null);
-		if(value != null) return value;
+		if (value != null) return value;
 		return ss.getDefaultLayout();
 	}
 	
@@ -81,7 +82,7 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public String getLookAndFeel() {
 		String value = getString(LAF, null);
-		if(value != null) return value;
+		if (value != null) return value;
 		return ss.getDefaultLaf();
 	}
 	
@@ -91,8 +92,28 @@ public class CoreUserSettings extends BaseUserSettings {
 	
 	public boolean getRightToLeft() {
 		Boolean value = getBoolean(RTL, null);
-		if(value != null) return value;
+		if (value != null) return value;
 		return ss.getDefaultRtl();
+	}
+	
+	public boolean getPasswordForceChange() {
+		return getBoolean(PASSWORD_FORCECHANGE, false);
+	}
+	
+	public boolean setPasswordForceChange(boolean value) {
+		if (value) {
+			return setBoolean(PASSWORD_FORCECHANGE, true);
+		} else {
+			return clear(PASSWORD_FORCECHANGE);
+		}
+	}
+	
+	public DateTime getPasswordLastChange() {
+		return getDateTime(PASSWORD_LAST_CHANGE, null);
+	}
+	
+	public boolean setPasswordLastChange(DateTime value) {
+		return setDateTime(PASSWORD_LAST_CHANGE, value);
 	}
 	
 	public String getStartupService() {

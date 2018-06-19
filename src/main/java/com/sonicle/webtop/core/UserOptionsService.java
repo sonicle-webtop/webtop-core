@@ -86,16 +86,17 @@ public class UserOptionsService extends BaseUserOptionsService {
 			
 			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
-				boolean iAmSysAdmin = RunContext.isSysAdmin();
-				jso.canManagePassword = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
-				jso.canManageUpi = iAmSysAdmin ? true : RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
-				jso.canSyncDevices = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.permPasswordManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "PASSWORD", "MANAGE");
+				jso.permUpiManage = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", "MANAGE");
+				jso.permSyncDevicesAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
+				jso.permWebchatAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "WEBCHAT");
 				
 				// main
 				jso.displayName = user.getDisplayName();
 				jso.theme = us.getTheme();
 				jso.layout = us.getLayout();
 				jso.laf = us.getLookAndFeel();
+				jso.passwordForceChange = us.getPasswordForceChange();
 				jso.startupService = sanitizeStartupService(core, us.getStartupService());
 				jso.desktopNotification = us.getDesktopNotification();
 				
@@ -179,6 +180,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
 				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
 				if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if (pl.map.has("passwordForceChange")) us.setPasswordForceChange(pl.data.passwordForceChange);
 				if (pl.map.has("startupService")) us.setStartupService(pl.data.startupService);
 				if (pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);
 				
@@ -198,7 +200,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("longTimeFormat")) us.setLongTimeFormat(pl.data.longTimeFormat);
 				
 				// User personal info
-				if (RunContext.isImpersonated() || RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
+				if (RunContext.isWebTopAdmin() || RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "USER_PROFILE_INFO", ServicePermission.ACTION_MANAGE)) {
 					upCacheNeedsUpdate = true;
 					if (pl.map.has("upiTitle")) upi.setTitle(pl.data.upiTitle);
 					if (pl.map.has("upiFirstName")) upi.setFirstName(pl.data.upiFirstName);

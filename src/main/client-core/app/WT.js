@@ -286,14 +286,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Returns a string resource.
+	 * Returns the localized string associated to the key.
 	 * If id and key are both filled, any other arguments will be used in
 	 * conjunction with {@link Ext.String#format} method in order to replace
 	 * tokens defined in resource string.
 	 * @param {String} [id] The service ID.
 	 * @param {String} key The resource key.
 	 * @param {Mixed...} [values] The values to use within {@link Ext.String#format} method.
-	 * @returns {String} The (optionally formatted) resource value or '${key}' if not found.
+	 * @returns {String} The localized (optionally formatted) resource value or '${key}' if not found.
 	 */
 	res: function(id, key) {
 		if(arguments.length === 1) {
@@ -680,11 +680,92 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Wrapper for Ext.toast()
-	 * @param {String} config The Ext.toast() config object.
+	 * Shows a pop-up notification (aka toast).
+	 * @param {String} text Text.
+	 * @param {Object} [opts] An object containing message configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {Boolean/Number} [opts.autoClose=true] The number of milliseconds before autoclose or `true` to autoclose toast after 3 sec.
+	 * @param {Number/String} [opts.width] The width of this component. A numeric value will be interpreted as the number of pixels; a string value will be treated as a CSS value with units.
+	 * @param {Boolean} [opts.closable=false] True to display the 'close' tool button and allow the user to close the window.
+	 * @params {Object[]} [buttons] Convenience config. Short for 'Bottom Bar'. Button xtype and flex will be applied automatically.
+	 * @returns {Ext.window.Toast}
 	 */
-	toast: function(config) {
-		return Ext.toast(config);
+	toast: function(text, opts) {
+		opts = opts || {};
+		
+		// Old style call...gbulfon update your code and remove it when done!
+		if (arguments.length === 1 && Ext.isObject(text)) {
+			return Ext.toast(text);
+		}
+		// ------------------------------------------------------------------
+		
+		var cfg = {
+			header: false,
+			layout: 'fit',
+			bodyPadding: 10,
+			align: 't',
+			autoClose: true,
+			autoCloseDelay: 3000,
+			minWidth: 200
+		};
+		
+		if (Ext.isString(text)) {
+			Ext.apply(cfg, {
+				items: [{
+					xtype: 'label',
+					text: text
+				}]
+			});
+		}
+		if (opts.width) {
+			Ext.apply(cfg, {
+				width: opts.width
+			});
+		}
+		if (opts.autoClose === false) {
+			Ext.apply(cfg, {
+				autoClose: false
+			});
+		} else if (Ext.isNumber(opts.autoClose) && (opts.autoClose > 0)) {
+			Ext.apply(cfg, {
+				autoClose: true,
+				autoCloseDelay: opts.autoClose
+			});
+		}
+		if (opts.closable) {
+			Ext.apply(cfg, {
+				tbar: ['->', {
+					xtype: 'tool',
+					type: 'close',
+					handler: function() {
+						this.findParentByType('toast').close();
+					}
+				}]
+			});
+		}
+		if (Ext.isArray(opts.buttons)) {
+			var items = [];
+			Ext.iterate(opts.buttons, function(bcfg) {
+				if (bcfg.glyph) {
+					if (Ext.isString(bcfg.iconCls)) {
+						bcfg.iconCls += ' wt-no-opacity';
+					} else {
+						bcfg.iconCls = 'wt-no-opacity';
+					}
+				}
+				items.push(Ext.apply({}, bcfg, {
+					xtype: 'button',
+					flex: 1
+				}));
+			});
+			items.push(' ');
+			Ext.apply(cfg, {
+				bbar: items
+			});
+		}
+		return Ext.toast(cfg);
 	},
 	
 	/**

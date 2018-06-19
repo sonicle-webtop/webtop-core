@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2018 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,7 +29,7 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Options', {
 	alternateClassName: 'WTA.view.Options',
@@ -37,7 +37,6 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	requires: [
 		'WTA.model.Simple',
 		'WTA.sdk.UserOptionsView',
-		'WTA.sdk.UserOptionsController',
 		'WTA.sdk.OptionTabSection'
 	],
 	
@@ -63,11 +62,11 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 			listeners: {
 				tabchange: {
 					fn: function(s,tab) {
-						if(!tab.loaded) {
-							tab.loaded = true;
+						if (!tab.loaded) {
 							tab.loadModel({
 								data: {id: me.profileId}
 							});
+							tab.loaded = true;
 						}
 					}
 				}
@@ -78,77 +77,71 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	},
 	
 	onViewClose: function() {
-		var me = this,
-				tabs = me.lref('svctabs'),
-				needLogin = false,
-				needReload = false;
+		var needs = this.computeNeeds();
 		
-		// Checks if there is at least one panel that needs...
-		tabs.items.each(function(tab) {
-			if(tab.needLogin) {
-				needLogin = true;
-				return false;
-			}
-		});
-		tabs.items.each(function(tab) {
-			if(tab.needReload) {
-				needReload = true;
-				return false;
-			}
-		});
-		
-		if(needLogin) {
+		if (needs.login) {
 			WT.confirm(WT.res('opts.confirm.needLogin'), function(bid) {
-				if(bid === 'yes') WT.logout();
+				if (bid === 'yes') WT.logout();
 			});
-		} else if(needReload) {
+		} else if(needs.reload) {
 			WT.confirm(WT.res('opts.confirm.needReload'), function(bid) {
-				if(bid === 'yes') WT.reload();
+				if (bid === 'yes') WT.reload();
 			});
 		}
+	},
+	
+	computeNeeds: function() {
+		var me = this,
+				tabs = me.lref('svctabs'),
+				needs = {
+					login: false,
+					reload: false
+				};
+		
+		tabs.items.each(function(tab) {
+			if (tab.needLogin) {
+				needs.login = true;
+				return false;
+			}
+		});
+		tabs.items.each(function(tab) {
+			if (tab.needReload) {
+				needs.reload = true;
+				return false;
+			}
+		});
+		
+		return needs;
 	},
 	
 	initTabs: function() {
 		var me = this,
 				data = [], uo = null;
 		
-		if(WT.getVar('profileId') === me.profileId) {
-			Ext.each(WT.getApp().getDescriptors(false), function(desc) {
-				uo = desc.getUserOptions();
-				if(uo) {
-					Ext.Array.push(data, Ext.apply(uo, {
-						id: desc.getId(),
-						xid: desc.getXid(),
-						name: desc.getName()
-					}));
-				}
-			});
-			me.createTabs(data);
-		} else {
-			me.on('afterrender', function() {
-				me.wait();
-				WT.ajaxReq(WT.ID, 'GetOptionsServices', {
-					params: {id: me.profileId},
-					callback: function(success, json) {
-						if(success) me.createTabs(json.data);
-						me.unwait();
-					}
-				});
-			}, me, {single: true});
-		}
+		Ext.each(WT.getApp().getDescriptors(false), function(desc) {
+			uo = desc.getUserOptions();
+			if (uo) {
+				Ext.Array.push(data, Ext.apply(uo, {
+					id: desc.getId(),
+					xid: desc.getXid(),
+					name: desc.getName()
+				}));
+			}
+		});
+		me.addServiceTabs(data);
 	},
 	
-	createTabs: function(data) {
-		var me = this;
-		// Defines dependencies to load (viewClass and model)
-		var dep = [];
+	addServiceTabs: function(data) {
+		var me = this,
+				tabs = me.lref('svctabs'),
+				dep = [], tab;
+		
 		Ext.each(data, function(itm) {
 			dep.push(itm.viewClassName);
 			dep.push(itm.modelClassName);
 		});
 		
 		Ext.require(dep, function() {
-			var tabs = me.lref('svctabs'), tab;
 			tabs.removeAll(true);
 			Ext.each(data, function(itm) {
 				tab = Ext.create(itm.viewClassName, {

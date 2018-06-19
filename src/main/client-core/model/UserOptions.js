@@ -36,9 +36,10 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 	
 	proxy: WT.optionsProxy(WT.ID),
 	fields: [
-		WTF.roField('canManagePassword', 'boolean'),
-		WTF.roField('canManageUpi', 'boolean'),
-		WTF.roField('canSyncDevices', 'boolean'),
+		WTF.roField('permPasswordManage', 'boolean'),
+		WTF.roField('permUpiManage', 'boolean'),
+		WTF.roField('permSyncDevicesAccess', 'boolean'),
+		WTF.roField('permWebchatAccess', 'boolean'),
 		WTF.field('displayName', 'string', false),
 		WTF.field('theme', 'string', false),
 		WTF.field('layout', 'string', false),

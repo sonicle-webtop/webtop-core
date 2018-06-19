@@ -323,21 +323,23 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if (svc) svc.notificationCallback('badge', rec.getId(), Ext.JSON.decode(rec.get('data'), true));
 	},
 	
-	createServiceView: function(svc, viewName, opts) {
+	createServiceView: function(desc, viewName, opts) {
 		opts = opts || {};
 		var me = this,
+				svcId = desc.getId(),
+				svcInst = desc.getInstance(false),
 				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
 				view, dockCfg, utag, win;
 		
 		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
-			mys: svc,
+			mys: svcInst ? svcInst : svcId,
 			tag: tag
 		});
-		view = Ext.create(svc.preNs(viewName), opts.viewCfg);
+		view = Ext.create(desc.preNs(viewName), opts.viewCfg);
 		//dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
 		//view.setDockableConfig(dockCfg);
 		dockCfg = view.getDockableConfig();
-		utag = me.generateUTag(svc.ID, tag);
+		utag = me.generateUTag(svcId, tag);
 		
 		win = Ext.create(Ext.apply({
 			xtype: 'wtviewwindow',
@@ -358,15 +360,15 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		return win;
 	},
 	
-	hasServiceView: function(svc, tag) {
+	hasServiceView: function(desc, tag) {
 		var map = this.viewCtsByUTag,
-				utag = this.generateUTag(svc.ID, tag);
+				utag = this.generateUTag(desc.getId(), tag);
 		return map.hasOwnProperty(utag) && map[utag] !== undefined;
 	},
 	
-	getServiceView: function(svc, tag) {
+	getServiceView: function(desc, tag) {
 		var map = this.viewCtsByUTag,
-				utag = this.generateUTag(svc.ID, tag);
+				utag = this.generateUTag(desc.getId(), tag);
 		return map.hasOwnProperty(utag) ? map[utag] : undefined;
 	},
 	
@@ -387,10 +389,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	showOptions: function() {
-		var me = this,
-				mys = WT.getApp().getService(WT.ID);
-		
-		me.createServiceView(mys, 'view.Options', {
+		this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.Options', {
 			viewCfg: {
 				profileId: WT.getVar('profileId')
 			}
@@ -398,17 +397,11 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	showAddons: function() {
-		var me = this,
-				mys = WT.getApp().getService(WT.ID);
-		
-		me.createServiceView(mys, 'view.Addons').show();
+		this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.Addons').show();
 	},
 	
 	showWhatsnew: function(full) {
-		var me = this,
-				mys = WT.getApp().getService(WT.ID);
-		
-		me.createServiceView(mys, 'view.Whatsnew', {
+		this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.Whatsnew', {
 			viewCfg: {
 				full: full
 			}
@@ -416,13 +409,9 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	showFeedback: function() {
-		var me = this,
-				mys = WT.getApp().getService(WT.ID),
-				vct;
-		
-		vct = me.createServiceView(mys, 'view.Feedback');
+		var vct = this.createServiceView(WT.getApp().getDescriptor(WT.ID), 'view.Feedback');
 		vct.show(false, function() {
-			vct.getComponent(0).beginNew();
+			vct.getView().beginNew();
 		});
 	},
 	
