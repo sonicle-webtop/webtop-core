@@ -47,6 +47,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -67,7 +68,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class Otp extends AbstractServlet {
-	public static final String URL = "otp"; // This must reflect web.xml!
+	public static final String URL = "otp"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(Otp.class);
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
@@ -127,10 +128,10 @@ public class Otp extends AbstractServlet {
 			
 		} catch(NoMoreTriesException ex) {
 			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
-			ServletUtils.forwardRequest(request, response, "logout");
+			ServletUtils.forwardRequest(request, response, Logout.URL);
 		} catch(SkipException ex) {
 			if (wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
-			ServletUtils.forwardRequest(request, response, "start");
+			ServletUtils.forwardRequest(request, response, UIPrivate.URL);
 		} catch(Exception ex) {
 			logger.error("Error", ex);
 			//TODO: pagina di errore

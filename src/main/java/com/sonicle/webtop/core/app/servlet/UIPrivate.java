@@ -34,12 +34,14 @@
 package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.CoreManifest;
+import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SettingsManager;
@@ -47,12 +49,13 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.Login;
 import com.sonicle.webtop.core.servlet.Otp;
 import com.sonicle.webtop.core.servlet.ServletHelper;
-import com.sonicle.webtop.core.servlet.Start;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -71,9 +74,9 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class BeforeStart extends AbstractServlet {
-	public static final String URL = "beforestart"; // This must reflect web.xml!
-	private static final Logger logger = WT.getLogger(BeforeStart.class);
+public class UIPrivate extends AbstractServlet {
+	public static final String URL = "ui-private"; // Shiro.ini must reflect this URI!
+	private static final Logger logger = WT.getLogger(UIPrivate.class);
 	public static final String WTSPROP_PASSWORD_CHANGEUPONLOGIN = "PASSWORD_CHANGEUPONLOGIN";
 
 	@Override
@@ -84,7 +87,7 @@ public class BeforeStart extends AbstractServlet {
 		WebTopSession wts = SessionContext.getCurrent(false);
 		
 		try {
-			logger.trace("Servlet: before-start [{}]", ServletHelper.getSessionID(request));
+			logger.trace("Servlet: ui [{}]", ServletHelper.getSessionID(request));
 			
 			boolean maintenance = LangUtils.value(setm.getServiceSetting(CoreManifest.ID, CoreSettings.MAINTENANCE), false);
 			if (maintenance && false) throw new MaintenanceException();
@@ -92,7 +95,7 @@ public class BeforeStart extends AbstractServlet {
 			wts.initPrivate(request);
 			UserProfileId pid = wts.getUserProfile().getId();
 			
-			if (wts.hasProperty(CoreManifest.ID, BeforeStart.WTSPROP_PASSWORD_CHANGEUPONLOGIN)) {
+			if (wts.hasProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN)) {
 				String password = ServletUtils.getStringParameter(request, "password", null);
 				
 				boolean writePage = true;
@@ -105,12 +108,13 @@ public class BeforeStart extends AbstractServlet {
 						}
 						wta.getWebTopManager().updateUserPassword(pid, null, password.toCharArray());
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
-						wts.clearProperty(CoreManifest.ID, BeforeStart.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
+						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
 						writePage = false;
 					}
 				} catch (PasswordMustBeDifferent ex) {
 					logger.error("Provided password matches the current one");
 					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_MUSTBEDIFFERENT, true);
+					
 				} catch(WTException | EntryException ex) {
 					//TODO: display a centralized error page (like Throwable catch below)
 					logger.error("Unable to update password", ex);
@@ -122,17 +126,18 @@ public class BeforeStart extends AbstractServlet {
 					boolean passwordPolicyEnabled = odom.getDirPasswordPolicy();
 					writePasswordChangePage(wta, wts.getLocale(), passwordPolicyEnabled, failureMessage, response);
 				} else {
-					ServletUtils.forwardRequest(request, response, BeforeStart.URL);
+					ServletUtils.forwardRequest(request, response, UIPrivate.URL);
 				}	
 				
+			} else if (!wts.hasProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED)) {
+				//TODO: move OTP management here...
+				ServletUtils.forwardRequest(request, response, Otp.URL);
+				
 			} else {
-				if (!wts.hasProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED)) {
-					//TODO: move OTP management here...
-					ServletUtils.forwardRequest(request, response, Otp.URL);
-					
-				} else {
-					ServletUtils.forwardRequest(request, response, Start.URL);
-				}
+				//ServletUtils.forwardRequest(request, response, Start.URL);
+				
+				wts.initPrivateEnvironment(request);
+				writePrivatePage(wta, wts, ServletHelper.getBaseUrl(request), response);
 			}
 			
 		} catch(MaintenanceException ex) {
@@ -170,6 +175,34 @@ public class BeforeStart extends AbstractServlet {
 		ServletUtils.setCacheControlPrivate(response);
 		
 		WT.loadTemplate(CoreManifest.ID, "tpl/page/password.html").process(tplMap, response.getWriter());
+	}
+	
+	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletResponse response)  throws IOException, TemplateException {
+		String userTitle = null;
+		if (wts.getProfileId() != null) {
+			UserProfile.Data ud = WT.getUserData(wts.getProfileId());
+			if (ud != null) {
+				userTitle = ud.getDisplayName();
+			}
+		}
+		
+		Map tplMap = new HashMap();
+		AbstractServlet.fillPageVars(tplMap, wts.getLocale(), userTitle, null);
+		tplMap.put("loadingMessage", wta.lookupResource(wts.getLocale(), "tpl.start.loading"));
+		
+		// Startup variables
+		JsWTSPrivate jswts = new JsWTSPrivate();
+		jswts.sessionId = wts.getId();
+		jswts.securityToken = wts.getCSRFToken();
+		jswts.contextPath = baseUrl;
+		jswts.pushUrl = PathUtils.concatPaths(wts.getClientUrl(), PushEndpoint.URL);
+		wts.fillStartup(jswts);
+		tplMap.put("WTS", LangUtils.unescapeUnicodeBackslashes(jswts.toJson()));
+		
+		ServletUtils.setHtmlContentType(response);
+		ServletUtils.setCacheControlPrivateNoCache(response);
+		
+		WT.loadTemplate(CoreManifest.ID, "tpl/page/private.html").process(tplMap, response.getWriter());
 	}
 	
 	private static class MaintenanceException extends Exception {}

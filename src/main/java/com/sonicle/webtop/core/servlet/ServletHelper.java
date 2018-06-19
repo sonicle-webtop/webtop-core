@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.servlet;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.servlet.BeforeStart;
+import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
@@ -119,9 +119,8 @@ public class ServletHelper {
 	public static String sanitizeBaseUrl(String url) {
 		url = StringUtils.substringBefore(url, "/"+Login.URL);
 		url = StringUtils.substringBefore(url, "/"+Logout.URL);
+		url = StringUtils.substringBefore(url, "/"+UIPrivate.URL);
 		url = StringUtils.substringBefore(url, "/"+Otp.URL);
-		url = StringUtils.substringBefore(url, "/"+BeforeStart.URL);
-		url = StringUtils.substringBefore(url, "/"+Start.URL);
 		url = StringUtils.substringBefore(url, "/"+ResourceRequest.URL);
 		url = StringUtils.substringBefore(url, "/"+PrivateRequest.URL);
 		url = StringUtils.substringBefore(url, "/"+PublicRequest.URL);

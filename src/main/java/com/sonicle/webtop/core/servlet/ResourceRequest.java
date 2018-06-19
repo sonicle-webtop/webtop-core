@@ -72,7 +72,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ResourceRequest extends HttpServlet {
-	public static final String URL = "resources"; // This must reflect web.xml!
+	public static final String URL = "resources"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int BUFFER_SIZE = 4*1024;
 	private static final Pattern PATTERN_VIRTUAL_URL = Pattern.compile("^"

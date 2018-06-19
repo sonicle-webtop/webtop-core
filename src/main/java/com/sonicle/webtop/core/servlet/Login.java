@@ -65,7 +65,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class Login extends AbstractServlet {
-	public static final String URL = "login"; // This must reflect web.xml!
+	public static final String URL = "login"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(Login.class);
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";

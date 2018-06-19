@@ -41,7 +41,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
  * @author malbinola
  */
 public class RestApi extends ServletContainer {
-	public static final String URL = "api"; // This must reflect web.xml!
+	public static final String URL = "api"; // Shiro.ini must reflect this URI!
 	public static final String INIT_PARAM_WEBTOP_SERVICE_ID = "webtop.serviceId";
 	
 	public RestApi() {

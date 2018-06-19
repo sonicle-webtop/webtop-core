@@ -59,7 +59,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PrivateRequest extends BaseRequest {
-	public static final String URL = "service-request"; // This must reflect web.xml!
+	public static final String URL = "service-request"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(PrivateRequest.class);
 	
 	@Override

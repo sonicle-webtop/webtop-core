@@ -41,7 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
-import com.sonicle.webtop.core.app.servlet.BeforeStart;
+import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import com.sonicle.webtop.core.msg.AutosaveMessage;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
@@ -420,7 +420,7 @@ public class WebTopSession {
 		profile = new UserProfile(core, principal);
 		
 		boolean passwordChangeNeeded = wta.getWebTopManager().isUserPasswordChangeNeeded(profileId, principal.getPassword());
-		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, BeforeStart.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
+		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
 		if (!otpEnabled || principal.isImpersonated()) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);

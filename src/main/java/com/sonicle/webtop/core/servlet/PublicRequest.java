@@ -62,7 +62,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PublicRequest extends BaseRequest {
-	public static final String URL = "public"; // This must reflect web.xml!
+	public static final String URL = "public"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(PublicRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	

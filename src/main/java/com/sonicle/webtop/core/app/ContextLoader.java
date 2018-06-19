@@ -69,21 +69,48 @@ public class ContextLoader {
 			wta.boot();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, wta);
 			
-			// TODO: Add atmosphere servlet dynamically (like below)
-			/*
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereFramework.analytics", "false");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterCacheClass", "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterLifeCyclePolicy", "BroadcasterLifeCyclePolicy.EMPTY");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JSR356AsyncSupport");
+			//atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.Tomcat7CometSupport");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionSupport", "true");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionCreate", "false");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.shareableThreadPool", "true");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereInterceptor", "org.atmosphere.interceptor.ShiroInterceptor");
 			atmosphereServlet.setLoadOnStartup(1);
 			atmosphereServlet.setAsyncSupported(true);
-			atmosphereServlet.addMapping("/push/*");
-			*/
+			atmosphereServlet.addMapping("/" + com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.URL + "/*");
+			
+			Dynamic loginServlet = servletContext.addServlet("LoginServlet", com.sonicle.webtop.core.servlet.Login.class);
+			loginServlet.setLoadOnStartup(1);
+			loginServlet.addMapping("/" + com.sonicle.webtop.core.servlet.Login.URL + "/*");
+			
+			Dynamic logoutServlet = servletContext.addServlet("LogoutServlet", com.sonicle.webtop.core.servlet.Logout.class);
+			logoutServlet.setLoadOnStartup(1);
+			logoutServlet.addMapping("/" + com.sonicle.webtop.core.servlet.Logout.URL + "/*");
+			
+			Dynamic otpServlet = servletContext.addServlet("OtpServlet", com.sonicle.webtop.core.servlet.Otp.class);
+			otpServlet.setLoadOnStartup(1);
+			otpServlet.addMapping("/" + com.sonicle.webtop.core.servlet.Otp.URL + "/*");
+			
+			Dynamic uiPrivateServlet = servletContext.addServlet("UIPrivateServlet", com.sonicle.webtop.core.app.servlet.UIPrivate.class);
+			uiPrivateServlet.setLoadOnStartup(1);
+			uiPrivateServlet.addMapping("/" + com.sonicle.webtop.core.app.servlet.UIPrivate.URL + "/*");
+			
+			Dynamic resourcesServlet = servletContext.addServlet("ResourcesServlet", com.sonicle.webtop.core.servlet.ResourceRequest.class);
+			resourcesServlet.setLoadOnStartup(1);
+			resourcesServlet.addMapping("/" + com.sonicle.webtop.core.servlet.ResourceRequest.URL + "/*");
+			
+			Dynamic privateRequestServlet = servletContext.addServlet("PrivateRequestServlet", com.sonicle.webtop.core.servlet.PrivateRequest.class);
+			privateRequestServlet.setLoadOnStartup(1);
+			privateRequestServlet.addMapping("/" + com.sonicle.webtop.core.servlet.PrivateRequest.URL + "/*");
+			privateRequestServlet.addMapping("/ServiceRequest");
+			
+			Dynamic publicRequestServlet = servletContext.addServlet("PublicRequestServlet", com.sonicle.webtop.core.servlet.PublicRequest.class);
+			publicRequestServlet.setLoadOnStartup(1);
+			publicRequestServlet.addMapping("/" + com.sonicle.webtop.core.servlet.PublicRequest.URL + "/*");
 			
 			// Adds RestApiServlets dynamically
 			ServiceManager svcMgr = wta.getServiceManager();
