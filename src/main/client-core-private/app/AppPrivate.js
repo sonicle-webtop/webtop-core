@@ -128,7 +128,8 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			{alias: 'wt-im-connect', name: 'im-connect'},
 			{alias: 'wt-im-disconnect', name: 'im-disconnect'},
 			{alias: 'wt-im-receive', name: 'im-receive'},
-			{alias: 'wt-im-send', name: 'im-send'}
+			{alias: 'wt-im-send', name: 'im-send'},
+			{alias: 'wt-call-ringing', name: 'call-ringing'}
 		]);
 		
 		Ext.iterate(WTS.roles, function(role) {

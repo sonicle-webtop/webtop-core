@@ -50,7 +50,10 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	conn: null,
 	RTC: null,
-	ice_config: {iceServers: [{url: 'stun:stun.l.google.com:19302'}]},
+	iceServers: [{url: 'stun:stun.l.google.com:19302'}],
+	
+	
+	vctList: [],
 	
 	constructor: function(config) {
 		var me = this;
@@ -60,32 +63,26 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	initConnection: function() {
 		var me=this;
-		RTC=setupRTC();
-		if (RTC) {
-			me.conn=new Strophe.Connection(me.getBoshUrl());
-			me.conn.jingle.ice_config = me.ice_config;
-			me.conn.jingle.pc_constraints = RTC.pc_constraints;
-			RTCPeerconnection = RTC.peerconnection;
-			if (RTC.browser == 'firefox') {
-				me.conn.jingle.media_constraints.mandatory.MozDontOfferDataChannel = true;
+		me.conn=new Strophe.Connection(me.getBoshUrl());
+		me.conn.jingle.setICEServers(me.iceServers);
+		
+		var manager=me.conn.jingle.manager;
+		
+		manager.on('incoming',function(session) {
+			var type = (session.constructor) ? session.constructor.name : null;
+			if (type === 'MediaSession') {
+				me.incomingCall(session);
 			}
-			/*$(document).bind('mediaready.jingle', function(event,stream) {				
-				console.log("local media ready");
-				var lvel=$("#"+me.lvid);
-				lvel.muted=true;
-				lvel.volume=0;
-				me.conn.jingle.localStream = stream;
-				//RTC.attachMediaStream(lvel, stream);				
-			});*/
-			$(document).bind('remotestreamadded.jingle', function(event, data, sid) {
-				console.log("remote stream added");
-				RTC.attachMediaStream($("#"+me.rvid), data.stream)
-			});
-			$(document).bind('callincoming.jingle', function(event, sid) {
-				console.log("incoming call - sid="+sid);
-				me.answerCall(sid);
-			});
-		}
+		});
+		manager.on('terminated',function(session) {
+			me.terminatedCall(session);
+		});
+		manager.on('ringing',function(session) {
+			me.ringing(session);
+		});
+		manager.on('peerStreamAdded',function(session,stream) {
+			me.remoteStreamAdded(session,stream);
+		});
 	},
 	
 	connect: function(jid,pass,callback) {
@@ -93,67 +90,238 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.conn.connect(jid,pass,callback);
 	},
 	
-	startCall: function(jid) {
+	startView: function(video) {
+		var me=this,
+			vct=WT.createView(WT.ID, 'view.RTC', {
+				viewCfg: {
+					dockableConfig: {
+						title: video?'{videocall.tit}':'{audiocall.tit}',
+						iconCls: video?'wt-icon-video-call':'wt-icon-audio-call'
+					}
+				}
+			});
+		
+		me.vctList.push(vct);
+		
+		vct.getView().on('viewclose', function() {
+			me.conn.jingle.terminate(vct.session.peerID, "Closed by local user", "Closed by user");
+			Ext.Array.remove(me.vctList,vct);
+			if (vct.session) me.stopStream(vct.session.localStream);
+		});
+		vct.getView().getRTCComponent().on('controlbuttonclick',function(rtc,action,s) {
+			if (action==='hangup') {
+				vct.close();
+			}
+		});
+		return vct;
+	},
+	
+	startCall: function(jid,video) {
+		
+		var me=this,
+			vct=me.startView(video);
+	
+		vct.show(false,function() {
+			var rtc=vct.getView().getComponent(0),
+				constraints=video?me.getUserMediaConstraints(['audio','video']):me.getUserMediaConstraints(['audio']);
+	
+			try {
+				me.conn.jingle.getUserMedia(constraints, function(err,stream) {
+					if (!err) {
+						me.conn.jingle.localStream = stream;
+						me.attachMediaStream($("#"+rtc.getLocalVideoId()),stream);
+						
+						var session = me.conn.jingle.initiate(jid);
+						session.call = true;
+						session.on('change:connectionState', function(sess,state) {
+							me.iceConnectionStateChanged(sess,state);
+						});
+						vct.session=session;
+						session.vct=vct;
+						session.localStream = stream;
+					} else {
+						console.log("error getting user media, err="+err);
+					}
+				});
+			} catch (e) {
+				console.log("Error getting user media!");
+			}
+		});
+	},
+	
+	incomingCall: function(session) {
 		var me=this;
 		
-		me.vct=WT.createView(WT.ID, 'view.RTC');
-		me.vct.show(false,function() {
-			var rtc=me.vct.getView().getComponent(0);
-			me.lvid=rtc.getLocalVideoId(),
-			me.rvid=rtc.getRemoteVideoId();
-					
-			var constraints=me.getUserMediaConstraints(['audio','video'])
-			
-			try {
-				RTC.getUserMedia(constraints,function(stream) {
-					console.log("local media ready");
-					me.conn.jingle.localStream = stream;
-					RTC.attachMediaStream($("#"+me.lvid), stream);
-				
-					me.conn.jingle.initiate(jid,me.conn.jid);
-				},function(error) {
-					console.error('GUM failed: ', e);
-					
-				});
-			} catch (e) {
-				console.error('GUM failed: ', e);
-			}
-			
-		});
+		session.ring();
+		me.startAudioRing();
+
+		var toast=WT.toast(
+				WT.res('call.incoming.tit')+": "+WT.res('call.incoming.text',session.peer.bare),
+				{
+					buttons: [
+						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success',
+							handler: function() {
+								toast.close();
+								me.acceptIncomingCall(session);
+							}
+						}, 
+						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success',
+							handler: function() {
+								toast.close();
+								me.acceptIncomingCall(session,true);
+							}
+						}, 
+						{ glyph: 'xf095@FontAwesome', iconCls: 'fa-rotate-90 wt-color-alert',
+								handler: function() {
+									//me.conn.jingle.terminate(null, "Closed by local user", "Closed by user");
+									me.stopAudioRing();
+									session.decline();
+									toast.close();
+								}
+						}
+					], 
+					autoClose: false
+				}
+		);
+
+		/*var toast=WT.toast({
+			 html: WT.res('call.incoming.tit')+":<BR>"+WT.res('call.incoming.text',session.peerID),
+			 header: false,
+			 //title: WT.res('call.incoming.tit'),
+			 width: 300,
+			 align: 'br',
+			 autoClose: false,
+			 buttons: [
+				{ 
+					text: 'Audio', 
+					handler: function() {
+						toast.close();
+						me.acceptIncomingCall(session);
+					}
+				},{ 
+					text: 'Video', 
+					handler: function() {
+						toast.close();
+						me.acceptIncomingCall(session,true);
+					}
+				},{ 
+					text: 'Fuck you',
+					handler: function() {
+						//me.conn.jingle.terminate(null, "Closed by local user", "Closed by user");
+						me.stopAudioRing();
+						session.decline();
+						toast.close();
+					}
+				}
+			 ]
+		});*/
+		session.toast=toast;
 		
+		
+		//session.on('change:connectionState', function() {});
 	},
 	
-	answerCall: function(sid) {
-		var me=this;	
-		
-		me.vct=WT.createView(WT.ID, 'view.RTC');
-		me.vct.show(false,function() {
-			var rtc=me.vct.getView().getComponent(0);
-			me.lvid=rtc.getLocalVideoId(),
-			me.rvid=rtc.getRemoteVideoId();
-					
-			var constraints=me.getUserMediaConstraints(['audio','video'])
+	acceptIncomingCall: function(session,video) {
+		var me=this,
+			vct=me.startView(video);
+	
+		me.stopAudioRing();
+		vct.show(false,function() {
+			var rtc=vct.getView().getComponent(0),
+				constraints=video?me.getUserMediaConstraints(['audio','video']):me.getUserMediaConstraints(['audio']);
+	
 			try {
-				RTC.getUserMedia(constraints,function(stream) {
-					console.log("local media ready");
-					me.conn.jingle.localStream = stream;
-					RTC.attachMediaStream($("#"+me.lvid), stream);
-				
-					var sess = me.conn.jingle.sessions[sid];
-					sess.sendAnswer();
-					sess.accept();
-				},function(error) {
-					console.error('GUM failed: ', e);
-					
+				me.conn.jingle.getUserMedia(constraints, function(err,stream) {
+					if (!err) {
+						me.conn.jingle.localStream = stream;
+						me.attachMediaStream($("#"+rtc.getLocalVideoId()),stream);
+						me.attachMediaStream($("#"+rtc.getRemoteVideoId()), session.remoteStream);
+
+						session.addStream(stream);
+						session.accept();
+						
+						session.on('change:connectionState', function(sess,state) {
+							me.iceConnectionStateChanged(sess,state);
+						});
+						vct.session=session;
+						session.vct=vct;
+						session.localStream = stream;
+						
+					} else {
+						session.decline();
+						console.log("error getting user media, err="+err);
+					}
 				});
 			} catch (e) {
-				console.error('GUM failed: ', e);
+				console.log("Error getting user media!");
 			}
 		});
-		
 	},
 	
+	terminatedCall: function(session) {
+		var me=this;
+		console.log("terminated session "+session);
+		if (session.vct) session.vct.close();
+		if (session.toast) session.toast.close();
+		me.stopAudioRing();
+	},	
 	
+	ringing: function(session) {
+		var me=this;
+		console.log("ringing session "+session);
+		me.startAudioRing();
+	},
+	
+	startAudioRing: function() {
+		Sonicle.Sound.play('wt-call-ringing', { loop: true });
+	},
+	
+	stopAudioRing: function() {
+		Sonicle.Sound.stop('wt-call-ringing');
+	},
+	
+	remoteStreamAdded: function(session,stream) {
+		var me=this;
+		
+		session.remoteStream=stream;
+		if (session.vct) {
+			me.stopAudioRing();
+			var rtc=session.vct.getView().getComponent(0);
+			me.attachMediaStream($("#"+rtc.getRemoteVideoId()), stream);
+		}
+			
+	},
+	
+	iceConnectionStateChanged: function(session,state) {
+		console.log("ice connection state change: "+state);
+		if (state==='interrupted') {
+			if (session.vct) session.vct.close();
+			if (session.toast) session.toast.close();
+		}
+	},
+	
+	/*stopLocalStream: function() {
+		var me=this;
+		
+		if (me.conn.jingle.localStream) me.stopStream(me.conn.jingle.localStream);
+	},*/
+	
+	stopStream: function(stream) {
+		stream.getAudioTracks().forEach(function(track) {
+			track.stop();
+		});
+		stream.getVideoTracks().forEach(function(track) {
+			track.stop();
+		});
+	},
+	
+	attachMediaStream: function(element, stream) {
+		var el = (element instanceof jQuery) ? element.get(0) : element;
+		el.srcObject = stream;
+
+		$(element).show();
+	},
+   
 	getUserMediaConstraints: function(um, resolution, bandwidth, fps) {
 		var constraints = {audio: false, video: false};
 
@@ -235,5 +403,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		return constraints;
 
 	}
+	
+	
 	
 });

@@ -500,9 +500,15 @@ Ext.define('Sonicle.webtop.core.Service', {
 	},
 	
 	initRTCManager: function(boshUrl,jid,pass) {
+		var me=this;
 		WTA.RTCManager.setBoshUrl(boshUrl);
 		WTA.RTCManager.initConnection();
-		WTA.RTCManager.connect(jid+"/rtc",pass,function(status, condition) {
+		me.doRTCConnect(jid+"/rtc",pass);
+	},
+	
+	doRTCConnect: function(fulljid,pass) {
+		var me=this;
+		WTA.RTCManager.connect(fulljid,pass,function(status, condition) {
 			switch (status) {
 				case Strophe.Status.CONNECTING:
 				   console.log("connecting");
@@ -515,6 +521,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 				   break;
 				case Strophe.Status.DISCONNECTED:
 				   console.log("disconnected");
+				   Ext.defer(function() {
+						me.doRTCConnect(fulljid,pass);
+				   },2000);
 				   break;
 				case Strophe.Status.CONNFAIL:
 				   console.log("connfail");

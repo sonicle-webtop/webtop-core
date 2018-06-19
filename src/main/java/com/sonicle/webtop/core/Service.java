@@ -1566,6 +1566,7 @@ public class Service extends BaseService {
 					
 					String presenceStatus = null;
 					FriendPresence presence = xmppCli.getChatPresence(chatId);
+					
 					if (presence == null) {
 						presenceStatus = EnumUtils.toSerializedName(PresenceStatus.OFFLINE);
 					} else {

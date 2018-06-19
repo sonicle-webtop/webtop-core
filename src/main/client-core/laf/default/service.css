@@ -52,6 +52,8 @@
 .wt-icon-im-pstatus-away-xs { background-image: url('im-pstatus-away_16.png') !important; }
 .wt-icon-im-pstatus-dnd-xs { background-image: url('im-pstatus-dnd_16.png') !important; }
 .wt-icon-im-pstatus-offline-xs { background-image: url('im-pstatus-offline_16.png') !important; }
+.wt-icon-audio-call { background-image: url('audio-call_16.svg') !important; background-size: cover; }
+.wt-icon-video-call { background-image: url('video-call_16.svg') !important; background-size: cover; }
 
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;
