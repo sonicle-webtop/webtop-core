@@ -949,10 +949,11 @@ public class WebTopSession {
 		
 		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		
-		// Include external libraries references
 		// Do not replace 0.0.0 with the real version, it limits server traffic.
 		final String VENDOR_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/vendor";
-		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
+		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs";
+		
+		// Include external libraries references
 		js.appManifest.addJs(VENDOR_PATH + "/jquery/3.3.1/" + "jquery.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/spark-md5/3.0.0/" + "spark-md5.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/js-emoji/3.4.1/" + "emoji.min.js");
@@ -972,7 +973,7 @@ public class WebTopSession {
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
-		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/ckeditor/" + "ckeditor.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
@@ -1005,7 +1006,7 @@ public class WebTopSession {
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
 		if (wta.getStartupProperties().getExtJsDebug())
-			js.appManifest.addJs(LIBS_PATH + "ext-override-errors.js");
+			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
 	}
 	
 	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {
