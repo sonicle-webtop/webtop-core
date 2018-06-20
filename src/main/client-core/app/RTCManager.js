@@ -86,8 +86,8 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		});
 	},
 	
-	initialized: function() {
-		return this.conn!=null;
+	connected: function() {
+		return this.conn!=null && this.conn.connected;
 	},
 	
 	connect: function(jid,pass,callback) {

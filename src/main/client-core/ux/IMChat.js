@@ -88,7 +88,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		var me = this,
 				gptodayId = Ext.id(null, 'gridpanel'),
 				tbarItms = [],
-				haveRTC=WTA.RTCManager.initialized();
+				haveRTC=WTA.RTCManager.connected();
 		
 		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
 		me.setHotMarker(me.hotMarker);
