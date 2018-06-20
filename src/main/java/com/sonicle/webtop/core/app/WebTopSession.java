@@ -947,10 +947,13 @@ public class WebTopSession {
 		js.appManifest.framework = "ext";
 		js.appManifest.toolkit = "classic";
 		
-		// Include external libraries references
+		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
+		
 		// Do not replace 0.0.0 with the real version, it limits server traffic.
 		final String VENDOR_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/vendor";
-		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs/";
+		final String LIBS_PATH = "resources/com.sonicle.webtop.core/0.0.0/resources/libs";
+		
+		// Include external libraries references
 		js.appManifest.addJs(VENDOR_PATH + "/jquery/3.3.1/" + "jquery.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/spark-md5/3.0.0/" + "spark-md5.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/js-emoji/3.4.1/" + "emoji.min.js");
@@ -958,29 +961,19 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/linkify/2.1.6/" + "linkify-string.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
-		//TODO: rendere dinamico il caricamento delle librerie, permettendo ai servizi di aggiungere le loro
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.5/" + "atmosphere.min.js");
-		
-		//jsxc version
-		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		
-		
+		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.full.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		
-// Uncomment these lines to load debug versions of the libraries ----->
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.min.js");
-		////js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.disco.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.session.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.sdp.js");
-		//js.appManifest.addJs(LIBS_PATH + "strophe/1.2.14/" + "strophe.jingle.adapter.js");
+		// Uncomment these lines to load debug versions of the libraries ----->
+		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.1.8/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
-		//js.appManifest.addJs(LIBS_PATH + "ckeditor/" + "ckeditor.js");
-		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/ckeditor/" + "ckeditor.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
@@ -1013,7 +1006,7 @@ public class WebTopSession {
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
 		if (wta.getStartupProperties().getExtJsDebug())
-			js.appManifest.addJs(LIBS_PATH + "ext-override-errors.js");
+			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
 	}
 	
 	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {
