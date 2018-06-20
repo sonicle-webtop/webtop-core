@@ -75,6 +75,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 			}
 		});
 		manager.on('terminated',function(session) {
+			console.log("terminated");
 			me.terminatedCall(session);
 		});
 		manager.on('ringing',function(session) {
@@ -85,17 +86,21 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		});
 	},
 	
+	connected: function() {
+		return this.conn!=null && this.conn.connected;
+	},
+	
 	connect: function(jid,pass,callback) {
 		var me=this;
 		me.conn.connect(jid,pass,callback);
 	},
 	
-	startView: function(video) {
+	startView: function(jidbase, video) {
 		var me=this,
 			vct=WT.createView(WT.ID, 'view.RTC', {
 				viewCfg: {
 					dockableConfig: {
-						title: video?'{videocall.tit}':'{audiocall.tit}',
+						title: WT.res(WT.ID, "rtc.call.tit", (video?WT.res("rtc.video"):WT.res("rtc.audio")), jidbase ),
 						iconCls: video?'wt-icon-video-call':'wt-icon-audio-call'
 					}
 				}
@@ -103,10 +108,15 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		
 		me.vctList.push(vct);
 		
-		vct.getView().on('viewclose', function() {
-			me.conn.jingle.terminate(vct.session.peerID, "Closed by local user", "Closed by user");
+		vct.getView().on('viewclose', function(s) {
+			if (s.rtcclosing) return;
+			
+			s.rtcclosing=true;
+			//me.conn.jingle.terminate(vct.session.peerID, "Closed by local user", "Closed by user");
+			vct.session.end();
 			Ext.Array.remove(me.vctList,vct);
 			if (vct.session) me.stopStream(vct.session.localStream);
+			me.playEnding();
 		});
 		vct.getView().getRTCComponent().on('controlbuttonclick',function(rtc,action,s) {
 			if (action==='hangup') {
@@ -116,10 +126,11 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		return vct;
 	},
 	
-	startCall: function(jid,video) {
+	startCall: function(jidbase,video) {
 		
 		var me=this,
-			vct=me.startView(video);
+			vct=me.startView(jidbase,video),
+			jid=jidbase+'/rtc';
 	
 		vct.show(false,function() {
 			var rtc=vct.getView().getComponent(0),
@@ -130,7 +141,8 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 					if (!err) {
 						me.conn.jingle.localStream = stream;
 						me.attachMediaStream($("#"+rtc.getLocalVideoId()),stream);
-						
+	
+						me.playDialing();
 						var session = me.conn.jingle.initiate(jid);
 						session.call = true;
 						session.on('change:connectionState', function(sess,state) {
@@ -156,7 +168,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.startAudioRing();
 
 		var toast=WT.toast(
-				WT.res('call.incoming.tit')+": "+WT.res('call.incoming.text',session.peer.bare),
+				WT.res('call.incoming.tit')+": "+WT.res(WT.ID, 'call.incoming.text',session.peer.bare),
 				{
 					buttons: [
 						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success',
@@ -173,57 +185,28 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 						}, 
 						{ glyph: 'xf095@FontAwesome', iconCls: 'fa-rotate-90 wt-color-alert',
 								handler: function() {
-									//me.conn.jingle.terminate(null, "Closed by local user", "Closed by user");
 									me.stopAudioRing();
 									session.decline();
 									toast.close();
 								}
 						}
-					], 
+					],
 					autoClose: false
 				}
 		);
+		toast.on('close',function() {
+			me.stopAudioRing();
+			me.playEnding();
+		});
 
-		/*var toast=WT.toast({
-			 html: WT.res('call.incoming.tit')+":<BR>"+WT.res('call.incoming.text',session.peerID),
-			 header: false,
-			 //title: WT.res('call.incoming.tit'),
-			 width: 300,
-			 align: 'br',
-			 autoClose: false,
-			 buttons: [
-				{ 
-					text: 'Audio', 
-					handler: function() {
-						toast.close();
-						me.acceptIncomingCall(session);
-					}
-				},{ 
-					text: 'Video', 
-					handler: function() {
-						toast.close();
-						me.acceptIncomingCall(session,true);
-					}
-				},{ 
-					text: 'Fuck you',
-					handler: function() {
-						//me.conn.jingle.terminate(null, "Closed by local user", "Closed by user");
-						me.stopAudioRing();
-						session.decline();
-						toast.close();
-					}
-				}
-			 ]
-		});*/
 		session.toast=toast;
 		
 		
-		//session.on('change:connectionState', function() {});
 	},
 	
 	acceptIncomingCall: function(session,video) {
 		var me=this,
-			vct=me.startView(video);
+			vct=me.startView(session.peer.bare,video);
 	
 		me.stopAudioRing();
 		vct.show(false,function() {
@@ -268,7 +251,6 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	ringing: function(session) {
 		var me=this;
-		console.log("ringing session "+session);
 		me.startAudioRing();
 	},
 	
@@ -278,6 +260,14 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	stopAudioRing: function() {
 		Sonicle.Sound.stop('wt-call-ringing');
+	},
+	
+	playDialing: function() {
+		Sonicle.Sound.play('wt-call-dialing');
+	},
+	
+	playEnding: function() {
+		Sonicle.Sound.play('wt-call-ending');
 	},
 	
 	remoteStreamAdded: function(session,stream) {

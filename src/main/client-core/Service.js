@@ -503,34 +503,45 @@ Ext.define('Sonicle.webtop.core.Service', {
 		var me=this;
 		WTA.RTCManager.setBoshUrl(boshUrl);
 		WTA.RTCManager.initConnection();
-		me.doRTCConnect(jid+"/rtc",pass);
+		me.doRTCConnect(jid,pass);
 	},
 	
-	doRTCConnect: function(fulljid,pass) {
-		var me=this;
+	doRTCConnect: function(jid,pass) {
+		var me=this,
+			fulljid=jid+"/rtc";
+	
 		WTA.RTCManager.connect(fulljid,pass,function(status, condition) {
+			console.log(" connect callback, condition="+condition);
 			switch (status) {
 				case Strophe.Status.CONNECTING:
-				   console.log("connecting");
-				   break;
+					console.log("connecting");
+					break;
 				case Strophe.Status.CONNECTED:
-				   console.log("connected");
-				   break;
+					console.log("connected");
+					break;
 				case Strophe.Status.ATTACHED:
-				   console.log("attached");
-				   break;
+					console.log("attached");
+					break;
 				case Strophe.Status.DISCONNECTED:
-				   console.log("disconnected");
-				   Ext.defer(function() {
-						me.doRTCConnect(fulljid,pass);
-				   },2000);
-				   break;
+					console.log("disconnected");
+					if (condition==="conflict") {
+						WT.showBadgeNotification(WT.ID,{
+							tag: 'rtc-conflict',
+							title: 'RTC conflict',
+							body: jid+' logged in from a different device. RTC audio/video calls disabled from this device'
+						});
+					} else {
+						Ext.defer(function() {
+							 me.doRTCConnect(fulljid,pass);
+						},2000);
+					}
+					break;
 				case Strophe.Status.CONNFAIL:
-				   console.log("connfail");
-				   break;
+					console.log("connfail");
+					break;
 				case Strophe.Status.AUTHFAIL:
-				   console.log("authfail");
-				   break;
+					console.log("authfail");
+					break;
 			}
 		});
 	},
