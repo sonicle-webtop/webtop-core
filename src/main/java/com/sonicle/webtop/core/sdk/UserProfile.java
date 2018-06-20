@@ -178,18 +178,28 @@ public final class UserProfile {
 		private Locale locale;
 		private String timezoneId;
 		private DateTimeZone timezone;
+		private int startDay;
+		private String shortDateFormat;
+		private String longDateFormat;
+		private String shortTimeFormat;
+		private String longTimeFormat;
 		private InternetAddress profileEmail;
 		private InternetAddress personalEmail;
 		
 		public Data() {}
 		
-		public Data(DomainAccount internetAccount, String displayName, String languageTag, String timezone, InternetAddress profileEmail, InternetAddress personalEmail) {
+		public Data(DomainAccount internetAccount, String displayName, String languageTag, String timezone, int startDay, String shortDateFormat, String longDateFormat, String shortTimeFormat, String longTimeFormat, InternetAddress profileEmail, InternetAddress personalEmail) {
 			this.internetAccount = internetAccount;
 			this.displayName = displayName;
 			this.languageTag = languageTag;
 			this.locale = LangUtils.languageTagToLocale(languageTag);
 			this.timezoneId = timezone;
 			this.timezone = DateTimeZone.forID(timezone);
+			this.startDay = startDay;
+			this.shortDateFormat = shortDateFormat;
+			this.longDateFormat = longDateFormat;
+			this.shortTimeFormat = shortTimeFormat;
+			this.longTimeFormat = longTimeFormat;
 			this.profileEmail = profileEmail;
 			this.personalEmail = personalEmail;
 		}
@@ -216,6 +226,26 @@ public final class UserProfile {
 		
 		public DateTimeZone getTimeZone() {
 			return timezone;
+		}
+		
+		public int getStartDay() {
+			return startDay;
+		}
+		
+		public String getShortDateFormat() {
+			return shortDateFormat;
+		}
+		
+		public String getLongDateFormat() {
+			return longDateFormat;
+		}
+		
+		public String getShortTimeFormat() {
+			return shortTimeFormat;
+		}
+		
+		public String getLongTimeFormat() {
+			return longTimeFormat;
 		}
 		
 		public InternetAddress getProfileEmail() {
