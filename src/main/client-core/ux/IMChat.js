@@ -87,7 +87,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	initComponent: function() {
 		var me = this,
 				gptodayId = Ext.id(null, 'gridpanel'),
-				tbarItms = [];
+				tbarItms = [],
+				haveRTC=WTA.RTCManager.initialized();
 		
 		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
 		me.setHotMarker(me.hotMarker);
@@ -105,19 +106,19 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		}
 		tbarItms.push('->', {
 			xtype: 'button',
-			tooltip: WT.res('wtimchat.audiocall.tit'),
+			tooltip: haveRTC?WT.res('wtimchat.audiocall.tit'):WT.res('rtc.unconfigured'),
 			iconCls: 'wt-icon-audio-call',
-			disabled: !me.hasFriendId(),
+			disabled: !haveRTC || !me.hasFriendId(),
 			handler: function() {
-				WTA.RTCManager.startCall(me.getFriendId()+'/rtc');
+				WTA.RTCManager.startCall(me.getFriendId());
 			}
 		},{
 			xtype: 'button',
-			tooltip: WT.res('wtimchat.videocall.tit'),
+			tooltip: haveRTC?WT.res('wtimchat.videocall.tit'):WT.res('rtc.unconfigured'),
 			iconCls: 'wt-icon-video-call',
-			disabled: !me.hasFriendId(),
+			disabled: !haveRTC || !me.hasFriendId(),
 			handler: function() {
-				WTA.RTCManager.startCall(me.getFriendId()+'/rtc',true);
+				WTA.RTCManager.startCall(me.getFriendId(),true);
 			}
 		},'-',{
 			xtype: 'souploadbutton',
