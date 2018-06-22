@@ -683,6 +683,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * Shows a pop-up notification (aka toast).
 	 * @param {String} text Text.
 	 * @param {Object} [opts] An object containing message configuration.
+	 * @param {Object} [toastCfg] Custom toast config.
 	 * 
 	 * This object may contain any of the following properties:
 	 * 
@@ -692,7 +693,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @params {Object[]} [buttons] Convenience config. Short for 'Bottom Bar'. Button xtype and flex will be applied automatically.
 	 * @returns {Ext.window.Toast}
 	 */
-	toast: function(text, opts) {
+	toast: function(text, opts, toastCfg) {
 		opts = opts || {};
 		
 		// Old style call...gbulfon update your code and remove it when done!
@@ -764,6 +765,9 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			Ext.apply(cfg, {
 				bbar: items
 			});
+		}
+		if (toastCfg) {
+			Ext.apply(cfg, toastCfg);
 		}
 		return Ext.toast(cfg);
 	},

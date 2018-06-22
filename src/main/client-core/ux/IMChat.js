@@ -104,23 +104,27 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				disabled: true
 			});
 		}
-		tbarItms.push('->', {
-			xtype: 'button',
-			tooltip: haveRTC?WT.res('wtimchat.audiocall.tit'):WT.res('rtc.unconfigured'),
-			iconCls: 'wt-icon-audio-call',
-			disabled: !haveRTC || !me.hasFriendId(),
-			handler: function() {
-				WTA.RTCManager.startCall(me.getFriendId());
-			}
-		},{
-			xtype: 'button',
-			tooltip: haveRTC?WT.res('wtimchat.videocall.tit'):WT.res('rtc.unconfigured'),
-			iconCls: 'wt-icon-video-call',
-			disabled: !haveRTC || !me.hasFriendId(),
-			handler: function() {
-				WTA.RTCManager.startCall(me.getFriendId(),true);
-			}
-		},'-',{
+		tbarItms.push('->');
+		if (!me.groupChat) {
+			tbarItms.push({
+				xtype: 'button',
+				tooltip: haveRTC?WT.res('wtimchat.audiocall.tit'):WT.res('rtc.unconfigured'),
+				iconCls: 'wt-icon-audio-call',
+				disabled: !haveRTC || !me.hasFriendId(),
+				handler: function() {
+					WTA.RTCManager.startCall(me.getFriendId());
+				}
+			},{
+				xtype: 'button',
+				tooltip: haveRTC?WT.res('wtimchat.videocall.tit'):WT.res('rtc.unconfigured'),
+				iconCls: 'wt-icon-video-call',
+				disabled: !haveRTC || !me.hasFriendId(),
+				handler: function() {
+					WTA.RTCManager.startCall(me.getFriendId(),true);
+				}
+			},'-');
+		}
+		tbarItms.push({
 			xtype: 'souploadbutton',
 			tooltip: WT.res('wtimchat.btn-attach.tip'),
 			iconCls: 'wt-icon-attach-xs',

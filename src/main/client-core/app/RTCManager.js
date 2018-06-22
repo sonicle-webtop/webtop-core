@@ -122,6 +122,9 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 			if (action==='hangup') {
 				vct.close();
 			}
+			else if (action==='screenshare') {
+				me.startScreenSharing();
+			}
 		});
 		return vct;
 	},
@@ -162,22 +165,28 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	},
 	
 	incomingCall: function(session) {
-		var me=this;
+		var me=this,
+			video=false;
 		
+		Ext.each(session.pc.remoteDescription.contents,function(content) {
+			if (content.senders==='both' && content.name==='video') video=true;
+		});
+
 		session.ring();
 		me.startAudioRing();
-
+		me.notifyIncomingSession(session,video);
+		
 		var toast=WT.toast(
-				WT.res('call.incoming.tit')+": "+WT.res(WT.ID, 'call.incoming.text',session.peer.bare),
+				(video?WT.res('rtc.videocall.incoming.tit'):WT.res('rtc.audiocall.incoming.tit'))+": "+WT.res(WT.ID, 'rtc.call.incoming.text',session.peer.bare),
 				{
 					buttons: [
-						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success',
+						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success', action: 'audio', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session);
 							}
 						}, 
-						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success',
+						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success', action: 'video', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session,true);
@@ -192,12 +201,19 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 						}
 					],
 					autoClose: false
+				},{
+					listeners: {
+						close: function() {
+							me.stopAudioRing();
+							me.playEnding();
+						},
+						afterrender: function(t) {
+							if (video) t.down('button[action=video]').focus(false, 100);
+							else t.down('button[action=audio]').focus(false, 100);
+						}
+					}					
 				}
 		);
-		toast.on('close',function() {
-			me.stopAudioRing();
-			me.playEnding();
-		});
 
 		session.toast=toast;
 		
@@ -252,6 +268,13 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	ringing: function(session) {
 		var me=this;
 		me.startAudioRing();
+	},
+	
+	notifyIncomingSession: function(session,video) {
+		WT.showDesktopNotification(WT.ID,{
+			title: (video?WT.res('rtc.videocall.incoming.tit'):WT.res('rtc.audiocall.incoming.tit')),
+			body: WT.res(WT.ID, 'rtc.call.incoming.text',session.peer.bare)
+		});
 	},
 	
 	startAudioRing: function() {
