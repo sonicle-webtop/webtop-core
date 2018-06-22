@@ -2009,7 +2009,9 @@ public final class WebTopManager {
 			personalIa = profileIa;
 			logger.warn("User does not have a valid email in personal info. Check it! [{}]", pid.toString());
 		}
-		return new UserProfile.Data(internetAccount, ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), profileIa, personalIa);
+		return new UserProfile.Data(internetAccount, ouser.getDisplayName(), cus.getLanguageTag(), cus.getTimezone(), 
+				cus.getStartDay(), cus.getShortDateFormat(), cus.getLongDateFormat(), cus.getShortTimeFormat(), cus.getLongTimeFormat(), 
+				profileIa, personalIa);
 	}
 	
 	private OUserInfo createUserInfo(UserProfile.PersonalInfo upi) {
