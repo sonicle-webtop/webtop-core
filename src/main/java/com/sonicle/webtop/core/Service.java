@@ -83,6 +83,7 @@ import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
 import com.sonicle.webtop.core.bol.js.JsGridIMChatSearch;
 import com.sonicle.webtop.core.bol.js.JsGroupChat;
 import com.sonicle.webtop.core.bol.js.JsIMInit;
+import com.sonicle.webtop.core.bol.js.JsIMPresenceStatus;
 import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
@@ -1435,7 +1436,7 @@ public class Service extends BaseService {
 						throw ex1;
 					}
 					Principal p = getEnv().getProfile().getPrincipal();
-					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+p.getAuthenticationDomain().getInternetName(), p.getPassword())).printTo(out);
+					new JsonResult(new JsIMInit(ps, statusMessage, p.getUserId()+"@"+p.getAuthenticationDomain().getInternetName(), xmppCli.getUserJid().toString(), p.getPassword())).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");
@@ -1566,6 +1567,7 @@ public class Service extends BaseService {
 					
 					String presenceStatus = null;
 					FriendPresence presence = xmppCli.getChatPresence(chatId);
+					presence.getInstantChatJid();
 					
 					if (presence == null) {
 						presenceStatus = EnumUtils.toSerializedName(PresenceStatus.OFFLINE);
@@ -1573,7 +1575,9 @@ public class Service extends BaseService {
 						presenceStatus = EnumUtils.toSerializedName(presence.getPresenceStatus());
 					}
 					
-					new JsonResult(presenceStatus).printTo(out);
+					String friendJid=presence.getRawPresence().getFrom().toString();
+					
+					new JsonResult(new JsIMPresenceStatus(presenceStatus,friendJid)).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");

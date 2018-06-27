@@ -129,11 +129,10 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		return vct;
 	},
 	
-	startCall: function(jidbase,video) {
+	startCall: function(jidbase,jid,video) {
 		
 		var me=this,
-			vct=me.startView(jidbase,video),
-			jid=jidbase+'/rtc';
+			vct=me.startView(jidbase,video);
 	
 		vct.show(false,function() {
 			var rtc=vct.getView().getComponent(0),

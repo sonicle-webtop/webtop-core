@@ -59,6 +59,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 	groupChat: false,
 	dateFormat: null,
 	timeFormat: null,
+	RTCJid: null,
 	
 	layout: 'border',
 	referenceHolder: true,
@@ -112,7 +113,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				iconCls: 'wt-icon-audio-call',
 				disabled: !haveRTC || !me.hasFriendId(),
 				handler: function() {
-					WTA.RTCManager.startCall(me.getFriendId());
+					WTA.RTCManager.startCall(me.getFriendId(),me.RTCJid);
 				}
 			},{
 				xtype: 'button',
@@ -120,7 +121,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				iconCls: 'wt-icon-video-call',
 				disabled: !haveRTC || !me.hasFriendId(),
 				handler: function() {
-					WTA.RTCManager.startCall(me.getFriendId(),true);
+					WTA.RTCManager.startCall(me.getFriendId(),me.RTCJid,true);
 				}
 			},'-');
 		}
@@ -550,6 +551,10 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		}
 	},
 	
+	setRTCJid: function(jid) {
+		this.RTCJid=jid;
+	},
+	
 	refreshFriendPresence: function() {
 		var me = this;
 		WT.ajaxReq(WT.ID, 'ManageIMChat', {
@@ -559,7 +564,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			},
 			callback: function(success, json) {
 				if (success) {
-					me.setFriendPresence(json.data);
+					me.setFriendPresence(json.data.presenceStatus);
+					me.setRTCJid(json.data.userJid+"RTC");
 				}
 			}
 		});
