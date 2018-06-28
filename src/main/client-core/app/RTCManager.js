@@ -264,6 +264,54 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.stopAudioRing();
 	},	
 	
+	startScreenSharing: function(jidbase,jid,vct) {
+		
+		var me=this,
+			constraints=me.getUserMediaConstraints(['screen']);
+	
+		try {
+			me.conn.jingle.getUserMedia(constraints, function(err,stream) {
+				if (!err) {
+					me.conn.jingle.localStream = stream;
+					
+					var browser = me.conn.jingle.RTC.browserDetails.browser;
+					var browserVersion = me.conn.jingle.RTC.browserDetails.version;
+					var constraints;
+
+					if ((browserVersion < 33 && browser === 'firefox') || browser === 'chrome') {
+					   constraints = {
+						  mandatory: {
+							 'OfferToReceiveAudio': false,
+							 'OfferToReceiveVideo': false
+						  }
+					   };
+					} else {
+					   constraints = {
+						  'offerToReceiveAudio': false,
+						  'offerToReceiveVideo': false
+					   };
+					}
+
+					var session = me.conn.jingle.initiate(jid, undefined, constraints);
+					session.call = false;
+
+					session.on('change:connectionState', function(sess,state) {
+						me.iceConnectionStateChanged(sess,state);
+					});
+					if (vct) {
+						vct.screenSession=session;
+						session.vct=vct;
+					}
+					session.localStream = stream;
+				} else {
+					console.log("error getting user media, err="+err);
+				}
+			});
+		} catch (e) {
+			console.log("Error getting user media!");
+		}
+	},
+	
 	ringing: function(session) {
 		var me=this;
 		me.startAudioRing();
