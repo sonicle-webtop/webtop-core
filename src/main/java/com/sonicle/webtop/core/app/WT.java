@@ -48,6 +48,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.servlet.PublicRequest;
 import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.File;
@@ -534,6 +535,42 @@ public class WT {
 	
 	public static void sendEmail(Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
 		getWTA().sendEmail(session, from, to, cc, bcc, subject, part);
+	}
+	
+	public static RRuleStringify.Strings getRRuleStringifyStrings(Locale locale) {
+		RRuleStringify.Strings strings = new RRuleStringify.Strings(locale);
+		strings.freqSecondly = WT.lookupCoreResource(locale, "rr.stringify.freq.secondly");
+		strings.freqHourly = WT.lookupCoreResource(locale, "rr.stringify.freq.hourly");
+		strings.freqDaily = WT.lookupCoreResource(locale, "rr.stringify.freq.daily");
+		strings.freqWeekly = WT.lookupCoreResource(locale, "rr.stringify.freq.weekly");
+		strings.freqMonthly = WT.lookupCoreResource(locale, "rr.stringify.freq.monthly");
+		strings.freqYearly = WT.lookupCoreResource(locale, "rr.stringify.freq.yearly");
+		strings.onEvery = WT.lookupCoreResource(locale, "rr.stringify.onEvery");
+		strings.day = WT.lookupCoreResource(locale, "rr.stringify.day");
+		strings.days = WT.lookupCoreResource(locale, "rr.stringify.days");
+		strings.weekday = WT.lookupCoreResource(locale, "rr.stringify.weekday");
+		strings.weekdays = WT.lookupCoreResource(locale, "rr.stringify.weekdays");
+		strings.weekend = WT.lookupCoreResource(locale, "rr.stringify.weekend");
+		strings.week = WT.lookupCoreResource(locale, "rr.stringify.week");
+		strings.weeks = WT.lookupCoreResource(locale, "rr.stringify.weeks");
+		strings.month = WT.lookupCoreResource(locale, "rr.stringify.month");
+		strings.months = WT.lookupCoreResource(locale, "rr.stringify.months");
+		strings.year = WT.lookupCoreResource(locale, "rr.stringify.year");
+		strings.years = WT.lookupCoreResource(locale, "rr.stringify.years");
+		strings.and = WT.lookupCoreResource(locale, "rr.stringify.and");
+		strings.on = WT.lookupCoreResource(locale, "rr.stringify.on");
+		strings.of = WT.lookupCoreResource(locale, "rr.stringify.of");
+		strings.onThe = WT.lookupCoreResource(locale, "rr.stringify.onThe");
+		strings.onTheLast = WT.lookupCoreResource(locale, "rr.stringify.onTheLast");
+		strings.onThe2ndLast = WT.lookupCoreResource(locale, "rr.stringify.onThe2ndLast");
+		strings.time = WT.lookupCoreResource(locale, "rr.stringify.time");
+		strings.times = WT.lookupCoreResource(locale, "rr.stringify.times");
+		strings.endsBy = WT.lookupCoreResource(locale, "rr.stringify.endsBy");
+		strings.nth1st = WT.lookupCoreResource(locale, "rr.stringify.nth.1st");
+		strings.nth2nd = WT.lookupCoreResource(locale, "rr.stringify.nth.2nd");
+		strings.nth3rd = WT.lookupCoreResource(locale, "rr.stringify.nth.3rd");
+		strings.nth4th = WT.lookupCoreResource(locale, "rr.stringify.nth.4th");
+		return strings;
 	}
 		
 	/**
