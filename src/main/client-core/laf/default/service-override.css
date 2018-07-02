@@ -37,16 +37,16 @@
 
 .so-rtc-controlbar > div {
 	display: inline-block;
-	padding: 0 5px;
+	padding: 4px 15px;
 	background-color: rgba(0, 0, 0, 0.5);
-	border-radius: 22px;
+	border-radius: 30px;
 	height: 44px;
 }
 
 .so-rtc-controlbar .so-rtc-controlbar-button {
 	display: inline-block;
-	width: 44px;
-	height: 44px;
+	width: 35px;
+	height: 35px;
 	background-position: center;
 	background-repeat: no-repeat;
 	background-size: 90%;
@@ -60,11 +60,15 @@
 }
 
 .so-rtc-controlbar .so-rtc-button-hangup {
-	background-image: url('rtc-hangup.svg');
+	background-image: url('rtc-hangup_16.svg');
+}
+
+.so-rtc-controlbar .so-rtc-button-screenshare {
+	background-image: url('rtc-screenshare_16.svg');
 }
 
 .so-rtc-controlbar .so-rtc-button-fullscreen {
-	background-image: url('rtc-fullscreen.svg');
+	background-image: url('rtc-fullscreen_16.svg');
 }
 
 .so-rtc-rvideo {

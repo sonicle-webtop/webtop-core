@@ -95,7 +95,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.conn.connect(jid,pass,callback);
 	},
 	
-	startView: function(jidbase, video) {
+	startView: function(jidbase, jid, video) {
 		var me=this,
 			vct=WT.createView(WT.ID, 'view.RTC', {
 				viewCfg: {
@@ -122,15 +122,17 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 			if (action==='hangup') {
 				vct.close();
 			}
+			/*else if (action==='screenshare') {
+				me.startScreenSharing(jidbase,jid,vct);
+			}*/
 		});
 		return vct;
 	},
 	
-	startCall: function(jidbase,video) {
+	startCall: function(jidbase,jid,video) {
 		
 		var me=this,
-			vct=me.startView(jidbase,video),
-			jid=jidbase+'/rtc';
+			vct=me.startView(jidbase,jid,video);
 	
 		vct.show(false,function() {
 			var rtc=vct.getView().getComponent(0),
@@ -162,22 +164,28 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	},
 	
 	incomingCall: function(session) {
-		var me=this;
+		var me=this,
+			video=false;
 		
+		Ext.each(session.pc.remoteDescription.contents,function(content) {
+			if (content.senders==='both' && content.name==='video') video=true;
+		});
+
 		session.ring();
 		me.startAudioRing();
-
+		me.notifyIncomingSession(session,video);
+		
 		var toast=WT.toast(
-				WT.res('call.incoming.tit')+": "+WT.res(WT.ID, 'call.incoming.text',session.peer.bare),
+				(video?WT.res('rtc.videocall.incoming.tit'):WT.res('rtc.audiocall.incoming.tit'))+": "+WT.res(WT.ID, 'rtc.call.incoming.text',session.peer.bare),
 				{
 					buttons: [
-						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success',
+						{ glyph: 'xf095@FontAwesome', iconCls: 'wt-color-success', action: 'audio', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session);
 							}
 						}, 
-						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success',
+						{ glyph: 'xf03d@FontAwesome', iconCls: 'wt-color-success', action: 'video', 
 							handler: function() {
 								toast.close();
 								me.acceptIncomingCall(session,true);
@@ -192,12 +200,19 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 						}
 					],
 					autoClose: false
+				},{
+					listeners: {
+						close: function() {
+							me.stopAudioRing();
+							me.playEnding();
+						},
+						afterrender: function(t) {
+							if (video) t.down('button[action=video]').focus(false, 100);
+							else t.down('button[action=audio]').focus(false, 100);
+						}
+					}					
 				}
 		);
-		toast.on('close',function() {
-			me.stopAudioRing();
-			me.playEnding();
-		});
 
 		session.toast=toast;
 		
@@ -206,7 +221,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	acceptIncomingCall: function(session,video) {
 		var me=this,
-			vct=me.startView(session.peer.bare,video);
+			vct=me.startView(session.peer.bare,session.peer.full,video);
 	
 		me.stopAudioRing();
 		vct.show(false,function() {
@@ -249,9 +264,63 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.stopAudioRing();
 	},	
 	
+	startScreenSharing: function(jidbase,jid,vct) {
+		
+		var me=this;
+	
+		try {
+			me.conn.jingle.getScreenMedia(function(err,stream) {
+				if (!err) {
+					me.conn.jingle.localStream = stream;
+					
+					var browser = me.conn.jingle.RTC.browserDetails.browser;
+					var browserVersion = me.conn.jingle.RTC.browserDetails.version;
+					var constraints;
+
+					if ((browserVersion < 33 && browser === 'firefox') || browser === 'chrome') {
+					   constraints = {
+						  mandatory: {
+							 'OfferToReceiveAudio': false,
+							 'OfferToReceiveVideo': false
+						  }
+					   };
+					} else {
+					   constraints = {
+						  'offerToReceiveAudio': false,
+						  'offerToReceiveVideo': false
+					   };
+					}
+
+					var session = me.conn.jingle.initiate(jid, undefined, constraints);
+					session.call = false;
+
+					session.on('change:connectionState', function(sess,state) {
+						me.iceConnectionStateChanged(sess,state);
+					});
+					if (vct) {
+						vct.screenSession=session;
+						session.vct=vct;
+					}
+					session.localStream = stream;
+				} else {
+					console.log("error getting user media, err="+err);
+				}
+			});
+		} catch (e) {
+			console.log("Error getting user media!");
+		}
+	},
+	
 	ringing: function(session) {
 		var me=this;
 		me.startAudioRing();
+	},
+	
+	notifyIncomingSession: function(session,video) {
+		WT.showDesktopNotification(WT.ID,{
+			title: (video?WT.res('rtc.videocall.incoming.tit'):WT.res('rtc.audiocall.incoming.tit')),
+			body: WT.res(WT.ID, 'rtc.call.incoming.text',session.peer.bare)
+		});
 	},
 	
 	startAudioRing: function() {

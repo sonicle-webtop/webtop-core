@@ -175,7 +175,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 							//if BOSH url configured, intialize RTC
 							var boshUrl=WT.getVar('boshUrl');
 							if (boshUrl) {
-								me.initRTCManager(boshUrl,json.data.userId,json.data.password);
+								me.initRTCManager(boshUrl,json.data.userId,json.data.password, json.data.userJid+"RTC");
 							}
 							
 						} else {
@@ -499,18 +499,17 @@ Ext.define('Sonicle.webtop.core.Service', {
 		
 	},
 	
-	initRTCManager: function(boshUrl,jid,pass) {
+	initRTCManager: function(boshUrl,jid,pass,fullJid) {
 		var me=this;
 		WTA.RTCManager.setBoshUrl(boshUrl);
 		WTA.RTCManager.initConnection();
-		me.doRTCConnect(jid,pass);
+		me.doRTCConnect(jid,pass,fullJid);
 	},
 	
-	doRTCConnect: function(jid,pass) {
-		var me=this,
-			fulljid=jid+"/rtc";
+	doRTCConnect: function(jid,pass,fullJid) {
+		var me=this;
 	
-		WTA.RTCManager.connect(fulljid,pass,function(status, condition) {
+		WTA.RTCManager.connect(fullJid,pass,function(status, condition) {
 			console.log(" connect callback, condition="+condition);
 			switch (status) {
 				case Strophe.Status.CONNECTING:
@@ -532,7 +531,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 						});
 					} else {
 						Ext.defer(function() {
-							 me.doRTCConnect(fulljid,pass);
+							 me.doRTCConnect(jid,pass,fullJid);
 						},2000);
 					}
 					break;

@@ -535,7 +535,8 @@ Ext.override(Ext.grid.plugin.BufferedRenderer,{
         // If there are columns to trigger rendering, and the rendered block os not either the view size
         // or, if store count less than view size, the store count, then there's a bug.
         if (view.getVisibleColumnManager().getColumns().length && rows.getCount() !== Math.min(me.store.getCount(), me.viewSize)) {
-            Ext.raise('rendered block refreshed at ' + rows.getCount() + ' rows while BufferedRenderer view size is ' + me.viewSize);
+			//switch raise to console log to avoid complete interface break
+            console.log('rendered block refreshed at ' + rows.getCount() + ' rows while BufferedRenderer view size is ' + me.viewSize);
         }
         return newRows;
     }

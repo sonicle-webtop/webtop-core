@@ -40,20 +40,14 @@ import com.sonicle.webtop.core.xmpp.PresenceStatus;
  *
  * @author malbinola
  */
-public class JsIMInit {
+public class JsIMPresenceStatus {
 	public String presenceStatus;
-	public String statusMessage;
-	public String userId;
 	public String userJid;
-	public String password;
 	
-	public JsIMInit() {}
+	public JsIMPresenceStatus() {}
 	
-	public JsIMInit(PresenceStatus presenceStatus, String statusMessage, String userId, String userJid, char password[]) {
-		this.presenceStatus = EnumUtils.toSerializedName(presenceStatus);
-		this.statusMessage = statusMessage;
-		this.userId = userId;
+	public JsIMPresenceStatus(String presenceStatus, String userJid) {
+		this.presenceStatus = presenceStatus;
 		this.userJid = userJid;
-		this.password = new String(password);
 	}
 }
