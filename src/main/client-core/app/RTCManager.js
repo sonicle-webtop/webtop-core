@@ -95,7 +95,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.conn.connect(jid,pass,callback);
 	},
 	
-	startView: function(jidbase, video) {
+	startView: function(jidbase, jid, video) {
 		var me=this,
 			vct=WT.createView(WT.ID, 'view.RTC', {
 				viewCfg: {
@@ -122,9 +122,9 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 			if (action==='hangup') {
 				vct.close();
 			}
-			else if (action==='screenshare') {
-				me.startScreenSharing();
-			}
+			/*else if (action==='screenshare') {
+				me.startScreenSharing(jidbase,jid,vct);
+			}*/
 		});
 		return vct;
 	},
@@ -132,7 +132,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	startCall: function(jidbase,jid,video) {
 		
 		var me=this,
-			vct=me.startView(jidbase,video);
+			vct=me.startView(jidbase,jid,video);
 	
 		vct.show(false,function() {
 			var rtc=vct.getView().getComponent(0),
@@ -221,7 +221,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	acceptIncomingCall: function(session,video) {
 		var me=this,
-			vct=me.startView(session.peer.bare,video);
+			vct=me.startView(session.peer.bare,session.peer.full,video);
 	
 		me.stopAudioRing();
 		vct.show(false,function() {
@@ -266,11 +266,10 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 	
 	startScreenSharing: function(jidbase,jid,vct) {
 		
-		var me=this,
-			constraints=me.getUserMediaConstraints(['screen']);
+		var me=this;
 	
 		try {
-			me.conn.jingle.getUserMedia(constraints, function(err,stream) {
+			me.conn.jingle.getScreenMedia(function(err,stream) {
 				if (!err) {
 					me.conn.jingle.localStream = stream;
 					

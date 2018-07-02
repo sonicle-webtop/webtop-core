@@ -19,7 +19,7 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 	remoteVideoCls: 'so-'+'rtc-rvideo',
 	controlBarCls: 'so-'+'rtc-controlbar',
 	hangUpButtonCls: 'so-'+'rtc-button-hangup',
-	screenShareButtonCls: 'so-'+'rtc-button-screenshare',
+	//screenShareButtonCls: 'so-'+'rtc-button-screenshare',
 	fullscreenButtonCls: 'so-'+'rtc-button-fullscreen',
 	
 	renderTpl: [
@@ -29,7 +29,7 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 			'<div id="{id}-controlBar" data-ref="controlBar" class="{controlBarCls}">',
 				'<div>',
 					'<div class="{controlBarCls}-button {hangUpButtonCls}"></div>',
-					'<div class="{controlBarCls}-button {screenShareButtonCls}"></div>',
+					//'<div class="{controlBarCls}-button {screenShareButtonCls}"></div>',
 					'<div class="{controlBarCls}-button {fullscreenButtonCls}"></div>',
 				'</div>',
 			'</div>',
@@ -72,8 +72,8 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 		if (me.controlBar) {
 			bEl = me.controlBar.down('.'+me.hangUpButtonCls);
 			if (bEl) bEl.on('click', me.onHangUpClick, me);
-			bEl = me.controlBar.down('.'+me.screenShareButtonCls);
-			if (bEl) bEl.on('click', me.onScreenShareClick, me);
+			//bEl = me.controlBar.down('.'+me.screenShareButtonCls);
+			//if (bEl) bEl.on('click', me.onScreenShareClick, me);
 			bEl = me.controlBar.down('.'+me.fullscreenButtonCls);
 			if (bEl) bEl.on('click', me.onFullscreenClick, me);
 		}
@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 			lvideoCls: me.localVideoCls,
 			controlBarCls: me.controlBarCls,
 			hangUpButtonCls: me.hangUpButtonCls,
-			screenShareButtonCls: me.screenShareButtonCls,
+			//screenShareButtonCls: me.screenShareButtonCls,
 			fullscreenButtonCls: me.fullscreenButtonCls,
 			notSupportedText: me.notSupportedText
 		});
@@ -129,9 +129,9 @@ Ext.define('Sonicle.webtop.core.ux.RTC', {
 		this.fireEvent('controlbuttonclick', this, 'hangup', s);
 	},
 	
-	onScreenShareClick: function(s) {
-		this.fireEvent('controlbuttonclick', this, 'screenshare', s);
-	},
+	//onScreenShareClick: function(s) {
+	//	this.fireEvent('controlbuttonclick', this, 'screenshare', s);
+	//},
 	
 	onFullscreenClick: function(s) {
 		var me = this;
