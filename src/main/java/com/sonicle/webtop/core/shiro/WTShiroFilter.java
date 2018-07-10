@@ -50,7 +50,7 @@ import org.apache.shiro.mgt.SecurityManager;
  * @author malbinola
  */
 public class WTShiroFilter extends ShiroFilter {
-
+/*
 	@Override
 	protected WebSubject createSubject(ServletRequest request, ServletResponse response) {
 		String servletPath = ((HttpServletRequest)request).getServletPath();
@@ -65,4 +65,5 @@ public class WTShiroFilter extends ShiroFilter {
 		UserProfileId profileId = new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
 		return RunContext.buildWebSubject(securityManager, request, response, profileId);
 	}
+*/
 }

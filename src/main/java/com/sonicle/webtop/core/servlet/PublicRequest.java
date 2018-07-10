@@ -55,6 +55,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.subject.support.SubjectThreadState;
+import org.apache.shiro.util.ThreadState;
 import org.slf4j.Logger;
 
 /**
@@ -145,8 +147,13 @@ public class PublicRequest extends BaseRequest {
 
 				// Gets method and invokes it...
 				MethodInfo meinfo = getMethod(instance.getClass(), serviceId, action, nowriter);
-				invokeMethod(instance, meinfo, serviceId, request, response);
-			}
+				ThreadState threadState = new SubjectThreadState(wta.getAdminSubject());
+				threadState.bind();
+				try {
+					invokeMethod(instance, meinfo, serviceId, request, response);
+				} finally {
+					threadState.clear();
+				}			}
 			
 		} catch(Exception ex) {
 			logger.warn("Error processing publicService request", ex);
