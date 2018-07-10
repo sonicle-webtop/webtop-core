@@ -57,13 +57,20 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	 * Array of active service IDs. The order in the collection infers
 	 * the appearance order of services in the UI. 
 	 */
-	services2: null,
+	services: null,
 	
 	/**
 	 * @property {Objects} roles
 	 * A map of assigned roles.
 	 */
 	roles: null,
+	
+	
+	/**
+	 * @private
+	 * @property {Number} maskCount
+	 */
+	maskCount: 0,
 	
 	constructor: function() {
 		var me = this;
@@ -102,6 +109,33 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	createServiceDescriptor: function(cfg) {
 		Ext.raise('If you see this there is something wrong. This method must be overridden!');
 	},
+	
+	mask: function(msg, update) {
+		var me = this;
+		me.maskCount++;
+		if ((me.maskCount === 1) || ((me.maskCount > 1) && (update === true))) {
+			me.viewport.mask(msg);
+		}
+	},
+	
+	unmask: function(force) {
+		var me = this;
+		me.maskCount--;
+		if ((me.maskCount === 0) || (force === true)) {
+			me.maskCount = 0;
+			me.viewport.unmask();
+		}
+	},
+	
+	/*
+	alert: function(text) {
+		var me = this;
+		me.maskCount++;
+		if (me.maskCount === 1) me.viewport.mask();
+		alert(text);
+		if (me.maskCount === 0) me.viewport.mask();
+	},
+	*/
 	
 	/**
 	 * Returns desired locale instance.

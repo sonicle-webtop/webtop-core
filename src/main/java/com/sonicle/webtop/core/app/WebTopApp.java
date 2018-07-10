@@ -248,7 +248,7 @@ public final class WebTopApp {
 		logger.info("webtop.soExtDevMode = {}", startupProps.getSonicleExtJsExtensionsDevMode());
 		logger.info("webtop.devMode = {}", startupProps.getDevMode());
 		logger.info("webtop.debugMode = {}", startupProps.getDebugMode());
-		logger.info("webtop.schedulerSisabled = {}", startupProps.getSchedulerDisabled());
+		logger.info("webtop.schedulerDisabled = {}", startupProps.getSchedulerDisabled());
 		logger.info("webtop.webappsConfigPath = {}", startupProps.getWebappsConfigPath());
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
@@ -326,6 +326,7 @@ public final class WebTopApp {
 	
 	private void internalInit() {
 		this.webappIsTheLatest = false;
+		logger.info("WTA initialization started [{}]", webappName);
 		
 		HttpClient httpcli = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -339,9 +340,7 @@ public final class WebTopApp {
 		}
 		
 		//configure accept all for ssl on Unirest
-		Unirest.setHttpClient(
-				HttpClientUtils.configureSSLAcceptAll().build()
-		);
+		Unirest.setHttpClient(HttpClientUtils.configureSSLAcceptAll().build());
 		
 		try {
 			initVFSManager();
@@ -349,7 +348,6 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error initializing VFS");
 		}
 		
-		logger.info("WTA initialization started [{}]", webappName);
 		this.conMgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager
 		this.setMgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesMgr = SessionManager.initialize(this); // Session Manager

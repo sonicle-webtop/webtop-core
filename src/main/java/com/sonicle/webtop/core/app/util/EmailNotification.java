@@ -119,9 +119,25 @@ public class EmailNotification {
 	public static class NoReplyBuilder extends AbstractBuilder<NoReplyBuilder> {
 		
 		public EmailNotification build(Locale locale, String source) {
-			footerHeader(MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_HEADER), source));
-			footerMessage(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE));
+			if (!StringUtils.isBlank(customFooterHeaderPattern)) {
+				footerHeader(MessageFormat.format(customFooterHeaderPattern, source));
+			} else {
+				footerHeader(MessageFormat.format(getDefaultFooterHeaderPattern(locale), source));
+			}
+			if (!StringUtils.isBlank(customFooterMessagePattern)) {
+				footerMessage(customFooterMessagePattern);
+			} else {
+				footerMessage(getDefaultFooterMessagePattern(locale));
+			}
 			return build();
+		}
+		
+		public String getDefaultFooterHeaderPattern(Locale locale) {
+			return WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_HEADER);
+		}
+		
+		public String getDefaultFooterMessagePattern(Locale locale) {
+			return WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_NOREPLY_FOOTER_MESSAGE);
 		}
 	}
 	
@@ -135,15 +151,33 @@ public class EmailNotification {
 		
 		public EmailNotification build(Locale locale, String source, String becauseString, String recipientEmail) {
 			recipientEmail(StringUtils.defaultString(recipientEmail));
-			footerHeader(MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_HEADER), source));
-			footerMessage(MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_MESSAGE), recipientEmail, becauseString));
+			if (!StringUtils.isBlank(customFooterHeaderPattern)) {
+				footerHeader(MessageFormat.format(customFooterHeaderPattern, source));
+			} else {
+				footerHeader(MessageFormat.format(getDefaultFooterHeaderPattern(locale), source));
+			}
+			if (!StringUtils.isBlank(customFooterMessagePattern)) {
+				footerMessage(MessageFormat.format(customFooterMessagePattern, recipientEmail, becauseString));
+			} else {
+				footerMessage(MessageFormat.format(getDefaultFooterMessagePattern(locale), recipientEmail, becauseString));
+			}
 			return build();
+		}
+		
+		public String getDefaultFooterHeaderPattern(Locale locale) {
+			return WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_HEADER);
+		}
+		
+		public String getDefaultFooterMessagePattern(Locale locale) {
+			return WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_NOTIFICATION_FOOTER_MESSAGE);
 		}
 	}
 	
 	public static class DefaultBuilder extends AbstractBuilder<DefaultBuilder> {}
 	
 	public static abstract class AbstractBuilder<T extends AbstractBuilder> {
+		protected String customFooterHeaderPattern;
+		protected String customFooterMessagePattern;
 		private String greyMessage;
 		private String greenMessage;
 		private String yellowMessage;
@@ -153,6 +187,16 @@ public class EmailNotification {
 		private String bodyRaw;
 		private String footerHeader;
 		private String footerMessage;
+		
+		public T customFooterHeaderPattern(String customFooterHeaderPattern) {
+			this.customFooterHeaderPattern = customFooterHeaderPattern;
+			return (T)this;
+		}
+		
+		public T customFooterMessagePattern(String customFooterMessagePattern) {
+			this.customFooterMessagePattern = customFooterMessagePattern;
+			return (T)this;
+		}
 		
 		public T greyMessage(String greyMessage) {
 			this.greyMessage = greyMessage;
