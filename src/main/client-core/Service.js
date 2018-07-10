@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.app.RTCManager'
 	],
 	uses: [
+		'Sonicle.webtop.core.view.IMQuickChat',
 		'Sonicle.webtop.core.view.IMChats',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals'
@@ -135,8 +136,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 			me.onMessage('imFriendPresenceUpdated', function(msg) {
 				var pl = msg.payload;
+				console.log('friendFullId: ' + pl.friendFullId);
 				me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
-				me.setChatRoomFriendPresenceUI(pl.chatId, pl.presenceStatus);
+				me.setChatRoomFriendPresenceUI(pl.chatId, pl.friendFullId, pl.presenceStatus);
 			});
 			me.onMessage('imChatRoomAdded', function(msg) {
 				var pl = msg.payload;
@@ -383,11 +385,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
-	setChatRoomFriendPresenceUI: function(chatId, status) {
-		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChats());
-		if (vct) vct.getView().setChatFriendPresence(chatId, status);
-	},
-	
 	clearIMNewMsgNotification: function(chatId) {
 		var me = this;
 		me.getVPController().getIMPanel().updateChatHotMarker(chatId, false);
@@ -447,7 +444,49 @@ Ext.define('Sonicle.webtop.core.Service', {
 		}
 	},
 	
-	openChatRoomUI: function(chatId, chatName) {
+	openChatRoomUI: function(chatId, chatName, extended) {
+		var me = this, vw;
+		me.clearIMNewMsgNotification(chatId);
+		me.clearIMChatNotification(chatId);
+		
+		if (extended === true) {
+			if (vw = WT.getView(me.ID, me.self.vwTagIMChats())) {
+				vw.openChat(chatId, chatName);
+				vw.showView();
+			} else {
+				me.createIMChatsView().showView(function() {
+					this.openChat(chatId, chatName);
+				});
+			}
+		} else if ((vw = WT.getView(me.ID, me.self.vwTagIMChats())) && vw.hasChat(chatId)) {
+			vw.openChat(chatId, chatName);
+			vw.showView();
+		} else if (vw = WT.getView(me.ID, me.self.vwTagIMChat(chatId))) {
+			vw.showView();
+		} else {
+			me.createIMQuickChatView(chatId, chatName).showView();
+			//me.createIMQuickChatView(chatId, chatName).showView();
+		}
+		
+		
+		/*
+		if (vw = WT.getView(me.ID, me.self.vwTagIMChat(chatId))) {
+			vw.showView();
+		} else {
+			if (vw = WT.getView(me.ID, me.self.vwTagIMChats())) {
+				vw.openChat(chatId, chatName);
+				vw.showView();
+			} else {
+				me.createIMChatsView().showView(function() {
+					this.openChat(chatId, chatName);
+				});
+			}
+		}
+		*/
+		
+		//me.createIMQuickChatView(chatId, chatName).showView();
+		
+		/*
 		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChats());
 		me.clearIMNewMsgNotification(chatId);
 		me.clearIMChatNotification(chatId);
@@ -460,9 +499,54 @@ Ext.define('Sonicle.webtop.core.Service', {
 			vct.getView().openChat(chatId, chatName);
 			vct.show();
 		}
+		*/
+	},
+	
+	setChatRoomFriendPresenceUI: function(chatId, friendFullId, status) {
+		var me = this, vw;
+		if (vw = WT.getView(me.ID, me.self.vwTagIMChat(chatId))) {
+			vw.setFriendPresence(friendFullId, status);
+		} else if (vw = WT.getView(me.ID, me.self.vwTagIMChats())) {
+			vw.setChatFriendPresence(chatId, friendFullId, status);
+		}
+		/*
+		var me = this, vct = WT.getView(me.ID, me.self.vwTagIMChats());
+		if (vct) vct.getView().setChatFriendPresence(chatId, status);
+		*/
 	},
 	
 	newChatRoomMessageUI: function(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data) {
+		var me = this,
+			status = WT.getVar('imPresenceStatus'),
+			isGroup = WTA.ux.IMPanel.isGroupChat(chatId),
+			noBody = isGroup ? (fromNick + ': ' + text) : text,
+			noData = {chatId: chatId, chatName: chatName},
+			vw;
+		
+		if (vw = WT.getView(me.ID, me.self.vwTagIMChat(chatId))) { // Target quick-chat is open
+			vw.newMessage(uid, fromId, fromNick, timestamp, action, text, data);
+			me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, sound: true});
+			
+		} else if (vw = WT.getView(me.ID, me.self.vwTagIMChats())) { // Chats window is open...
+			vw.newChatMessage(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data);
+			if (vw.isChatActive(chatId)) { // ...and target chat tab is already active
+				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, sound: true});
+				
+			} else { // ...and target chat tab is NOT active
+				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, badge: true, sound: true});
+			}
+		} else { // No chat windows are open
+			if (WTA.ux.IMPanel.isStatusOnline(status, true)) {
+				me.createIMQuickChatView(chatId, chatName, true).showView();
+				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, sound: true});
+				
+			} else {
+				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, badge: true});
+			}
+		}
+		
+		
+		/*
 		var me = this,
 				vct = WT.getView(me.ID, me.self.vwTagIMChats()),
 				isGroup = WTA.ux.IMPanel.isGroupChat(chatId),
@@ -483,6 +567,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		} else {
 			me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {hotMarker: true, badge: true, desktop: true, sound: true});
 		}
+		*/
 	},
 	
 	initIM: function(opts) {
@@ -633,8 +718,34 @@ Ext.define('Sonicle.webtop.core.Service', {
 	privates: {
 		createIMChatsView: function() {
 			return WT.createView(this.ID, 'view.IMChats', {
-				tag: this.self.vwTagIMChats()
+				tag: this.self.vwTagIMChats(),
+				swapReturn: true
 			});
+		},
+		
+		createIMQuickChatView: function(chatId, chatName, hotMarker) {
+			var me = this;
+			var vw = WT.createView(me.ID, 'view.IMQuickChat', {
+				tag: me.self.vwTagIMChat(chatId),
+				floating: true,
+				viewCfg: {
+					dockableConfig: {
+						title: chatName
+					},
+					chatId: chatId,
+					chatName: chatName,
+					hotMarker: Ext.isDefined(hotMarker) ? hotMarker : false
+				}
+			});
+			
+			vw.on('unpinchat', function(s, chatId, chatName) {
+				s.on('viewclose', function() {
+					me.openChatRoomUI(chatId, chatName, true);
+					//Ext.defer(me.openChatRoomUI, 100, me, [chatId, chatName, true]);
+				}, {single: true});
+			}, {single: true});
+			
+			return vw;
 		},
 		
 		createIMChatView: function(chatId, chatName) {

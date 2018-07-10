@@ -461,8 +461,9 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		
 		return constraints;
 
+	},
+	
+	buildRtcJid: function(friendFullJid) {
+		return friendFullJid + 'RTC';
 	}
-	
-	
-	
 });

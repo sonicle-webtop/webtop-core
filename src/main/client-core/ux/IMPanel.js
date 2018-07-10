@@ -270,7 +270,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					menuDisabled: true,
 					stopSelection: true,
 					getIconCls: function (v, rec) {
-						return WTF.cssIconCls(WT.XID, 'im-pstatus-'+v, 'xs');
+						return WTF.cssIconCls(WT.XID, 'im-pstatus-'+v);
 					},
 					getTip: function(v, rec) {
 						return WT.res('im.pstatus.'+v);
@@ -545,8 +545,17 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	},
 	
 	statics: {
-		isOnline: function(presenceStatus) {
-			return presenceStatus !== 'offline';
+		isStatusOnline: function(pstatus, strict) {
+			if (strict === undefined) strict = false;
+			return strict ? (pstatus === 'online') : (pstatus !== 'offline');
+		},
+		
+		isStatusDnD: function(pstatus) {
+			return pstatus === 'dnd';
+		},
+		
+		isOnline: function(status) {
+			return status !== 'offline';
 		},
 
 		isGroupChat: function(chatId) {

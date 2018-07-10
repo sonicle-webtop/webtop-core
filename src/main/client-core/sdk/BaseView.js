@@ -83,7 +83,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 		if (Ext.isString(me.mys)) {
 			return WT.res.apply(me, [me.mys, key].concat(Ext.Array.slice(arguments, 1)));
 		} else {
-			return me.mys.res.apply(me, [key].concat(Ext.Array.slice(arguments, 1)));
+			return me.mys.res.apply(me.mys, [key].concat(Ext.Array.slice(arguments, 1)));
 		}
 	}
 });

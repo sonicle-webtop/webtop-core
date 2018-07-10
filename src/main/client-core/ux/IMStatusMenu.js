@@ -104,7 +104,7 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 		},
 		
 		statusIconCls: function(status) {
-			return WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs');
+			return WTF.cssIconCls(WT.XID, 'im-pstatus-'+status);
 		}
 	}
 });

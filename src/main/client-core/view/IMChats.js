@@ -33,8 +33,8 @@
  */
 Ext.define('Sonicle.webtop.core.view.IMChats', {
 	extend: 'WTA.sdk.DockableView',
-	requires: [
-		'Sonicle.webtop.core.ux.IMChat'
+	uses: [
+		'WTA.ux.IMBigChat'
 	],
 	
 	dockableConfig: {
@@ -59,6 +59,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 			region: 'center',
 			xtype: 'tabpanel',
 			reference: 'tabchats',
+			border: false,
 			items: [],
 			listeners: {
 				remove: me.onTabChatsRemove,
@@ -66,6 +67,11 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 				scope: me
 			}
 		});
+	},
+	
+	hasChat: function(chatId) {
+		var map = this.chatMap;
+		return map.hasOwnProperty(chatId) && map[chatId] !== undefined;
 	},
 	
 	isChatActive: function(chatId) {
@@ -80,27 +86,27 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		me.tabChats().setActiveTab(pnl);
 	},
 	
+	/*
 	newChat: function(chatId, chatName) {
 		this.addChat(chatId, chatName, false);
 	},
+	*/
 	
 	newChatMessage: function(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data) {
 		var me = this,
-				map = me.chatMap,
-				pnl = map[chatId];
+				pnl = me.chatMap[chatId];
 		if (!pnl) {
 			me.addChat(chatId, chatName, true);
 		} else {
 			pnl.newMessage(uid, fromId, fromNick, timestamp, action, text, data);
-			if (!me.isChatActive(chatId)) pnl.setHotMarker(true);
+			pnl.setHotMarker(true);
 		}
 	},
 	
-	setChatFriendPresence: function(chatId, status) {
+	setChatFriendPresence: function(chatId, friendFullId, status) {
 		var me = this,
-				map = me.chatMap,
-				pnl = map[chatId];
-		if (pnl) pnl.setFriendPresence(status);
+				pnl = me.chatMap[chatId];
+		if (pnl) pnl.setFriendPresence(friendFullId, status);
 	},
 	
 	privates: {
@@ -128,7 +134,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 					map = me.chatMap;
 			if (!map[chatId]) {
 				map[chatId] = tab.add({
-					xtype: 'wtimchat',
+					xtype: 'wtimbigchat',
 					closable: true,
 					chatId: chatId,
 					chatName: chatName,

@@ -99,6 +99,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
+ * https://github.com/igniterealtime/jxmpp/tree/master/jxmpp-jid/src/main/java/org/jxmpp/jid
+ * 
+ * EntityBareJid -> user@xmpp.org
+ * EntityFullJid -> user@xmpp.org/resource
+ * DomainBareJid -> xmpp.org
+ * DomainFullJid -> xmpp.org/resource
+ * FullJid -> localpart@domain.part/resourcepart
+ * 
  * @author malbinola
  */
 public class XMPPClient {
@@ -227,7 +235,7 @@ public class XMPPClient {
 			ArrayList<Friend> friends = new ArrayList<>();
 			for(RosterEntry entry : roster.getEntries()) {
 				final EntityBareJid friendJid = entry.getJid().asEntityBareJidOrThrow();
-				final String instantChat = generateChatJid(friendJid).toString();
+				final String instantChat = generateChatBareJid(friendJid).toString();
 				cacheInstantChatToFriend.putIfAbsent(instantChat, friendJid);
 				FriendPresence presence = getFriendPresence(friendJid);
 				friends.add(new Friend(entry, presence, instantChat));
@@ -248,7 +256,7 @@ public class XMPPClient {
 		
 		Roster roster = Roster.getInstanceFor(con);
 		Presence presence = roster.getPresence(friend.asBareJid());
-		return (presence != null) ? new FriendPresence(presence, generateChatJid(friend).toString()) : null;
+		return (presence != null) ? new FriendPresence(presence, generateChatBareJid(friend).toString()) : null;
 	}
 	
 	public String getFriendNickname(EntityBareJid friend) throws XMPPClientException {
@@ -274,11 +282,11 @@ public class XMPPClient {
 		}
 	}
 	
-	public EntityBareJid generateChatJid(String withUserBareJid) {
+	public EntityBareJid generateChatBareJid(String withUserBareJid) {
 		return createInstantChatJid(withUserBareJid);
 	}
 	
-	public EntityBareJid generateChatJid(EntityBareJid withUser) {
+	public EntityBareJid generateChatBareJid(EntityBareJid withUser) {
 		return createInstantChatJid(withUser);
 	}
 	
@@ -1055,8 +1063,8 @@ public class XMPPClient {
 		public void presenceChanged(Presence prsnc) {
 			if (isDisconnecting.get()) return;
 			final EntityBareJid friendJid = prsnc.getFrom().asEntityBareJidIfPossible();
-			final FriendPresence presence = new FriendPresence(prsnc, generateChatJid(friendJid).toString());
-			logger.debug("Presence changed [{}, {}]", EnumUtils.toSerializedName(presence.getPresenceStatus()), prsnc.getFrom().toString());
+			final FriendPresence presence = new FriendPresence(prsnc, generateChatBareJid(friendJid).toString());
+			logger.debug("Presence changed [{}, {}]", EnumUtils.toSerializedName(presence.getPresenceStatus()), presence.getFriendFullJid());
 			try {
 				listener.onFriendPresenceChanged(prsnc.getFrom(), presence, getFriendPresence(friendJid));
 			} catch(Throwable t) {

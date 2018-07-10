@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.xmpp;
 
 import org.jivesoftware.smack.packet.Presence;
+import org.jxmpp.jid.FullJid;
 
 /**
  *
@@ -41,15 +42,20 @@ import org.jivesoftware.smack.packet.Presence;
  */
 public class FriendPresence {
 	private final Presence presence;
-	private final String instantChatJid;
+	private final String instantChatBareJid;
 	
-	public FriendPresence(Presence presence, String instantChatJid) {
+	public FriendPresence(Presence presence, String instantChatBareJid) {
 		this.presence = presence;
-		this.instantChatJid = instantChatJid;
+		this.instantChatBareJid = instantChatBareJid;
 	}
 	
 	public Presence getRawPresence() {
 		return presence;
+	}
+	
+	public String getFriendFullJid() {
+		FullJid jid = presence.getFrom().asFullJidIfPossible();
+		return (jid != null) ? jid.toString() : null;
 	}
 	
 	public String getStatusMessage() {
@@ -60,7 +66,7 @@ public class FriendPresence {
 		return PresenceStatus.presenceStatus(presence);
 	}
 	
-	public String getInstantChatJid() {
-		return instantChatJid;
+	public String getInstantChatBareJid() {
+		return instantChatBareJid;
 	}
 }

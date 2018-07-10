@@ -458,7 +458,9 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Set<String> listAllowedServices() {
-		ensureProfile(false); // In other cases result may be inconsistent!
+		// This method can be called when runningProfile matched the target one.
+		// It's not able to check permissions on behalf of a user.
+		ensureProfile(false);
 		
 		LinkedHashSet<String> ids = new LinkedHashSet<>();
 		if (RunContext.isSysAdmin()) {

@@ -38,8 +38,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	svctbmap: null,
 	toolmap: null,
 	mainmap: null,
-	viewCtsById: null,
-	viewCtsByUTag: null,
+	//viewCtsById: null,
+	//viewCtsByUTag: null,
+	
+	viewsMap: null,
+	viewsByCt: null,
+	viewsByTag: null,
+	floatingWins: null,
+	floatingWinsMap: null,
 	
 	/**
 	 * @property {Boolean} isActivating
@@ -58,8 +64,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = {};
 		me.toolmap = {};
 		me.mainmap = {};
-		me.viewCtsById = {};
-		me.viewCtsByUTag = {};
+		//me.viewCtsById = {};
+		//me.viewCtsByUTag = {};
+		
+		me.viewsMap = {};
+		me.viewsByCt = {};
+		me.viewsByTag = {};
+		me.floatingWins = [];
+		me.floatingWinsMap = {};
 		me.callParent(arguments);
 	},
 	
@@ -69,8 +81,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = null;
 		me.toolmap = null;
 		me.mainmap = null;
-		me.viewCtsById = null;
-		me.viewCtsByUTag = null;
+		//me.viewCtsById = null;
+		//me.viewCtsByUTag = null;
+		
+		me.viewsMap = null;
+		me.viewsByCt = null;
+		me.viewsByTag = null;
+		me.floatingWins = null;
+		me.floatingWinsMap = null;
 	},
 	
 	getIMButton: function() {
@@ -238,6 +256,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		mys.updateIMPresenceStatus(status, {
 			callback: function(success) {
 				if (success) {
+					WT.setVar('imPresenceStatus', status);
 					s.setPresenceStatus(status);
 					me.getIMButton().setPresenceStatus(status);
 				} else {
@@ -329,6 +348,74 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				svcId = desc.getId(),
 				svcInst = desc.getInstance(false),
 				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
+				floating = (opts.floating === true),
+				swapReturn = (opts.swapReturn === true),
+				utag = me.generateUTag(svcId, tag),
+				view, win;
+		
+		if (!swapReturn && !floating) {
+			Ext.log.warn("[WT.core] You are creating view '" + viewName + "' using a deprecated way. Consider adding 'swapReturn: true' in passed opts for returning the view instead of the container. Then call showView() on it.");
+		}
+		
+		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
+			mys: svcInst ? svcInst : svcId,
+			tag: tag
+		});
+		
+		var view = Ext.create(desc.preNs(viewName), opts.viewCfg),
+				dockCfg = view.getDockableConfig();
+		
+		win = Ext.create(Ext.apply({
+			xtype: 'wtviewwindow',
+			layout: 'fit',
+			utag: utag,
+			constrain: true,
+			width: dockCfg.width,
+			height: dockCfg.height,
+			modal: dockCfg.modal,
+			minimizable: floating ? false : dockCfg.minimizable,
+			maximizable: floating ? false : dockCfg.maximizable,
+			resizable: floating ? false : true,
+			draggable: floating ? false : true,
+			defaultAlign: floating ? 'br-br' : 'c-c',
+			tools: dockCfg.tools || [],
+			items: [view]
+		}));
+		
+		me.viewsMap[view.getId()] = true;
+		me.viewsByCt[win.getId()] = view.getId();
+		if (utag) me.viewsByTag[utag] = view.getId();
+		me.toggleWinListeners(win, 'on');
+		if (floating) {
+			me.floatingWins.push(win.getId());
+			me.floatingWinsMap[win.getId()] = true;
+		} else {
+			me.getView().getTaskBar().addButton(win);
+		}
+		return (swapReturn || floating) ? view : win;
+	},
+	
+	hasServiceView: function(desc, tag) {
+		var map = this.viewsByTag,
+				utag = this.generateUTag(desc.getId(), tag);
+		return map.hasOwnProperty(utag) && map[utag] !== undefined;
+	},
+	
+	getServiceView: function(desc, tag) {
+		var map = this.viewsByTag,
+				utag = this.generateUTag(desc.getId(), tag);
+		if (map.hasOwnProperty(utag)) {
+			return Ext.getCmp(map[utag]);
+		}
+	},
+	
+	/*
+	createServiceView_OLD: function(desc, viewName, opts) {
+		opts = opts || {};
+		var me = this,
+				svcId = desc.getId(),
+				svcInst = desc.getInstance(false),
+				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
 				view, dockCfg, utag, win;
 		
 		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
@@ -355,22 +442,23 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}));
 		me.viewCtsById[win.getId()] = win;
 		if (utag) me.viewCtsByUTag[utag] = win;
-		me.toggleWinListeners(win, 'on');
-		me.getView().getTaskBar().addButton(win);
+			me.toggleWinListeners(win, 'on');
+			me.getView().getTaskBar().addButton(win);
 		return win;
 	},
 	
-	hasServiceView: function(desc, tag) {
+	hasServiceView_OLD: function(desc, tag) {
 		var map = this.viewCtsByUTag,
 				utag = this.generateUTag(desc.getId(), tag);
 		return map.hasOwnProperty(utag) && map[utag] !== undefined;
 	},
 	
-	getServiceView: function(desc, tag) {
+	getServiceView_OLD: function(desc, tag) {
 		var map = this.viewCtsByUTag,
 				utag = this.generateUTag(desc.getId(), tag);
 		return map.hasOwnProperty(utag) ? map[utag] : undefined;
 	},
+	*/
 	
 	showBadgeNotification: function(svc, notification) {
 		var sto = this.getStore('notifications'),
@@ -481,31 +569,119 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		
 		toggleWinListeners: function(win, fn) {
 			var me = this;
+			win[fn]('show',  me.onWinShow, me, {single: true});
 			win[fn]('activate',  me.onWinActivate, me);
 			win[fn]('hide',  me.onWinHide, me);
 			win[fn]('destroy',  me.onWinDestroy, me);
 			win[fn]('titlechange',  me.onWinTitleChange, me);
 		},
 		
+		onWinShow: function(s) {
+			var me = this;
+			if (me.floatingWinsMap[s.getId()] === true) {
+				me.arrangeFloatingWins();
+			}
+		},
+		
 		onWinActivate: function(s) {
-			this.getView().getTaskBar().toggleButton(s, true);
+			var me = this;
+			if (me.floatingWinsMap[s.getId()] !== true) {
+				me.getView().getTaskBar().toggleButton(s, true);
+			}
 		},
 
 		onWinHide: function(s) {
-			this.getView().getTaskBar().toggleButton(s, false);
+			var me = this;
+			if (me.floatingWinsMap[s.getId()] !== true) {
+				me.getView().getTaskBar().toggleButton(s, false);
+			}
 		},
 
 		onWinTitleChange: function(s) {
-			this.getView().getTaskBar().updateButtonTitle(s);
+			var me = this;
+			if (me.floatingWinsMap[s.getId()] !== true) {
+				me.getView().getTaskBar().updateButtonTitle(s);
+			}
 		},
 
 		onWinDestroy: function(s) {
+			var me = this,
+				winId = s.getId(),
+				viewId = me.viewsByCt[winId],
+				utag = s.getUTag(),
+				floating = me.floatingWinsMap[winId] === true;
+			
+			if (!viewId) Ext.Error.raise('View not found by Ct ['+winId+']');
+			if (!floating) {
+				me.getView().getTaskBar().removeButton(s);
+			}
+			me.toggleWinListeners(s, 'un');
+			
+			Ext.Array.remove(me.floatingWins, winId);
+			delete me.floatingWinsMap[winId];
+			delete me.viewsByTag[utag];
+			delete me.viewsByCt[winId];
+			delete me.viewsMap[viewId];
+			if (floating) {
+				me.arrangeFloatingWins();
+			}
+		},
+		
+		arrangeFloatingWins: function() {
+			var me = this,
+					targetEl = Ext.getBody(),
+					availWidth = targetEl.getWidth(true),
+					arr = me.floatingWins,
+					taskbarHeight = me.getView().getTaskBar().getHeight(),
+					padding = {x: 10, y: taskbarHeight || 20},
+					xspacing = 10, lineoff = 20,
+					xoff = padding.x, yoff = padding.y,
+					win;
+			
+			for (var i=0; i<arr.length; i++) {
+				win = Ext.getCmp(arr[i]);
+				if (!win) Ext.Error.raise('Window not found ['+arr[i]+']');
+				if (win.getWidth() > availWidth) Ext.Error.raise('Window is too big ['+arr[i]+']');
+				
+				if ((xoff + win.getWidth() + xspacing) > availWidth) {
+					xoff = padding.x;
+					yoff += lineoff;
+					
+				}
+				win.alignTo(targetEl, 'br-br', [-xoff, -yoff]);
+				xoff += (win.getWidth() + xspacing);
+			}
+		},
+		
+		/*
+		toggleWinListeners_OLD: function(win, fn) {
+			var me = this;
+			win[fn]('activate',  me.onWinActivate, me);
+			win[fn]('hide',  me.onWinHide, me);
+			win[fn]('destroy',  me.onWinDestroy, me);
+			win[fn]('titlechange',  me.onWinTitleChange, me);
+		},
+		
+		onWinActivate_OLD: function(s) {
+			this.getView().getTaskBar().toggleButton(s, true);
+		},
+
+		onWinHide_OLD: function(s) {
+			this.getView().getTaskBar().toggleButton(s, false);
+		},
+
+		onWinTitleChange_OLD: function(s) {
+			this.getView().getTaskBar().updateButtonTitle(s);
+		},
+
+		onWinDestroy_OLD: function(s) {
 			var me = this, utag = s.getUTag();
 			me.getView().getTaskBar().removeButton(s);
 			me.toggleWinListeners(s, 'un');
 			delete me.viewCtsByUTag[utag];
 			delete me.viewCtsById[s.getId()];
 		},
+		*/
 		
 		generateUTag: function(sid, tag) {
 			return tag ? Sonicle.Crypto.md5(tag + '@' + sid) : null;

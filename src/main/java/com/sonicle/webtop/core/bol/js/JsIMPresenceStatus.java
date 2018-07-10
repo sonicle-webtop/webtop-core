@@ -33,21 +33,18 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.webtop.core.xmpp.PresenceStatus;
-
 /**
  *
  * @author malbinola
  */
 public class JsIMPresenceStatus {
+	public String friendFullId;
 	public String presenceStatus;
-	public String userJid;
 	
 	public JsIMPresenceStatus() {}
 	
-	public JsIMPresenceStatus(String presenceStatus, String userJid) {
+	public JsIMPresenceStatus(String friendFullId, String presenceStatus) {
+		this.friendFullId = friendFullId;
 		this.presenceStatus = presenceStatus;
-		this.userJid = userJid;
 	}
 }

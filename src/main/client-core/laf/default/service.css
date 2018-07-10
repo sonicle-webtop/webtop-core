@@ -37,6 +37,7 @@
 .wt-icon-sharing-xs { background-image: url('sharing_16.png') !important; }
 .wt-icon-notification-xs { background-image: url('notification_16.png') !important; }
 .wt-icon-notification-remove-xs { background-image: url('notification-remove_16.png') !important; }
+.wt-icon-im-chat-hot { background-image: url('im-chat-hot_16.svg') !important; background-size: cover; }
 .wt-icon-im-chat-xs { background-image: url('im-chat_16.png') !important; }
 .wt-icon-im-chat-m { background-image: url('im-chat_32.png') !important; }
 .wt-icon-im-chat-hot-xs { background-image: url('im-chat-hot_16.png') !important; }
@@ -48,10 +49,10 @@
 .wt-icon-im-status-away-xs { background-image: url('im-status-away_16.png') !important; }
 .wt-icon-im-status-dnd-xs { background-image: url('im-status-dnd_16.png') !important; }
 .wt-icon-im-status-offline-xs { background-image: url('im-status-offline_16.png') !important; }
-.wt-icon-im-pstatus-online-xs { background-image: url('im-pstatus-online_16.png') !important; }
-.wt-icon-im-pstatus-away-xs { background-image: url('im-pstatus-away_16.png') !important; }
-.wt-icon-im-pstatus-dnd-xs { background-image: url('im-pstatus-dnd_16.png') !important; }
-.wt-icon-im-pstatus-offline-xs { background-image: url('im-pstatus-offline_16.png') !important; }
+.wt-icon-im-pstatus-online { background-image: url('im-pstatus-online_16.svg') !important; background-size: cover; }
+.wt-icon-im-pstatus-away { background-image: url('im-pstatus-away_16.svg') !important; background-size: cover; }
+.wt-icon-im-pstatus-dnd { background-image: url('im-pstatus-dnd_16.svg') !important; background-size: cover; }
+.wt-icon-im-pstatus-offline { background-image: url('im-pstatus-offline_16.svg') !important; background-size: cover; }
 .wt-icon-audio-call { background-image: url('audio-call_16.svg') !important; background-size: cover; }
 .wt-icon-video-call { background-image: url('video-call_16.svg') !important; background-size: cover; }
 

@@ -31,10 +31,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.IMChat', {
-	alternateClassName: 'WTA.ux.IMChat',
+Ext.define('Sonicle.webtop.core.ux.IMChatXX', {
+	alternateClassName: 'WTA.ux.IMChatXX',
 	extend: 'Ext.panel.Panel',
-	alias: ['widget.wtimchat'],
+	alias: ['widget.wtimchatxx'],
 	requires: [
 		'Sonicle.picker.Emoji',
 		'Sonicle.picker.RemoteDate',
@@ -109,7 +109,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 		if (!me.groupChat) {
 			tbarItms.push({
 				xtype: 'button',
-				tooltip: haveRTC?WT.res('wtimchat.audiocall.tit'):WT.res('rtc.unconfigured'),
+				tooltip: haveRTC?WT.res('wtimchat.btn-audiocall.tip'):WT.res('rtc.unconfigured'),
 				iconCls: 'wt-icon-audio-call',
 				disabled: !haveRTC || !me.hasFriendId(),
 				handler: function() {
@@ -117,7 +117,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				}
 			},{
 				xtype: 'button',
-				tooltip: haveRTC?WT.res('wtimchat.videocall.tit'):WT.res('rtc.unconfigured'),
+				tooltip: haveRTC?WT.res('wtimchat.btn-videocall.tip'):WT.res('rtc.unconfigured'),
 				iconCls: 'wt-icon-video-call',
 				disabled: !haveRTC || !me.hasFriendId(),
 				handler: function() {
@@ -547,7 +547,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 				btn = me.lref('itmpresence');
 		if (btn) {
 			btn.setText(WT.res('im.pstatus.'+status));
-			btn.setIconCls(WTF.cssIconCls(WT.XID, 'im-pstatus-'+status, 'xs'));
+			btn.setIconCls(WTF.cssIconCls(WT.XID, 'im-pstatus-'+status));
 		}
 	},
 	
@@ -565,7 +565,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChat', {
 			callback: function(success, json) {
 				if (success) {
 					me.setFriendPresence(json.data.presenceStatus);
-					me.setRTCJid(json.data.userJid+"RTC");
+					me.setRTCJid(json.data.friendFullId+"RTC");
 				}
 			}
 		});

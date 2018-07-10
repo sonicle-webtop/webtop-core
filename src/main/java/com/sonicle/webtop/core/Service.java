@@ -1565,19 +1565,16 @@ public class Service extends BaseService {
 				if (xmppCli != null) {
 					if (!XMPPClient.isInstantChat(chatId)) throw new WTException("Presence feature non available for a grupchat");
 					
+					String friendFullId = null;
 					String presenceStatus = null;
 					FriendPresence presence = xmppCli.getChatPresence(chatId);
-					presence.getInstantChatJid();
-					
 					if (presence == null) {
 						presenceStatus = EnumUtils.toSerializedName(PresenceStatus.OFFLINE);
 					} else {
+						friendFullId = presence.getFriendFullJid();
 						presenceStatus = EnumUtils.toSerializedName(presence.getPresenceStatus());
 					}
-					
-					String friendJid=presence.getRawPresence().getFrom().toString();
-					
-					new JsonResult(new JsIMPresenceStatus(presenceStatus,friendJid)).printTo(out);
+					new JsonResult(new JsIMPresenceStatus(friendFullId, presenceStatus)).printTo(out);
 					
 				} else {
 					throw new WTException("XMPPClient not available");
@@ -1858,9 +1855,9 @@ public class Service extends BaseService {
 		@Override
 		public void onFriendPresenceChanged(Jid jid, FriendPresence presence, FriendPresence bestPresence) {
 			logger.debug("presenceChanged {}", jid.toString());
-			final EntityBareJid targetJid = jid.asEntityBareJidIfPossible();
+			final EntityBareJid targetBareJid = jid.asEntityBareJidIfPossible();
 			final String presenceStatus = EnumUtils.toSerializedName(bestPresence.getPresenceStatus());
-			getWts().notify(new IMFriendPresenceUpdated(targetJid.toString(), bestPresence.getInstantChatJid(), presenceStatus, bestPresence.getStatusMessage()));
+			getWts().notify(new IMFriendPresenceUpdated(targetBareJid.toString(), bestPresence.getFriendFullJid(), bestPresence.getInstantChatBareJid(), presenceStatus, bestPresence.getStatusMessage()));
 		}
 		
 		@Override
