@@ -306,7 +306,7 @@ public final class WebTopApp {
 		}
 	}
 	
-	Subject getAdminSubject() {
+	public Subject getAdminSubject() {
 		return adminSubject;
 	}
 	
