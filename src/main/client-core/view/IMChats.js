@@ -69,6 +69,22 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		});
 	},
 	
+	initCt: function(ct) {
+		var me = this;
+		me.callParent(arguments);
+		if (ct.isXType('window')) {
+			ct.on('focus', me.onCtFocus, me);
+		}
+	},
+	
+	cleanupCt: function(ct) {
+		var me = this;
+		if (ct.isXType('window')) {
+			ct.un('focus', me.onCtFocus, me);
+		}
+		me.callParent(arguments);
+	},
+	
 	hasChat: function(chatId) {
 		var map = this.chatMap;
 		return map.hasOwnProperty(chatId) && map[chatId] !== undefined;
@@ -110,22 +126,39 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 	},
 	
 	privates: {
-		tabChats: function() {
-			return this.lookupReference('tabchats');
+		onCtFocus: function() {
+			var me = this,
+					tab = me.tabChats().getActiveTab();
+			// When Chats view is already open and a new chat is pinned into,
+			// this foucus event steal focus from messageField.
+			// We need to force focus again!
+			if (tab) tab.messageFld().focus(true, 200);
 		},
 		
 		onTabChatsRemove: function(s, tab) {
-			var me = this;
+			var me = this, ntab;
 			delete me.chatMap[tab.getChatId()];
-			if (me.tabChats().items.getCount() === 0) {
+			if (s.items.getCount() === 0) {
 				me.closeView(false);
+			} else {
+				// Also in this case focus is stolen, remove event is fired after
+				// the change one and seems that this behaviour causes focus loss.
+				// We need to force focus again!
+				ntab = s.getActiveTab();
+				if (ntab) ntab.messageFld().focus(true, 200);
 			}
 		},
 
 		onTabChatsTabChange: function(s, ntab) {
 			var me = this;
 			me.setViewTitle(ntab.getTitle());
+			ntab.setHotMarker(false);
+			ntab.messageFld().focus(true, 200);
 			me.mys.clearIMNewMsgNotification(ntab.getChatId());
+		},
+		
+		tabChats: function() {
+			return this.lookupReference('tabchats');
 		},
 		
 		addChat: function(chatId, chatName, hotMarker) {
@@ -143,5 +176,13 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 			}
 			return map[chatId];
 		}
+		
+		/*
+		activateChatTab: function(tab) {
+			tab.setHotMarker(false);
+			tab.messageFld().focus(true, 200);
+			this.mys.clearIMNewMsgNotification(tab.getChatId());
+		}
+		*/
 	}
 });

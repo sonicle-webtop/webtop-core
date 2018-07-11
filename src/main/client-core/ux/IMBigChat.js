@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 	extend: 'Sonicle.webtop.core.ux.IMBaseChat',
 	alias: 'widget.wtimbigchat',
 	requires: [
+		'Sonicle.Date',
 		'Sonicle.picker.RemoteDate',
 		'Sonicle.webtop.core.model.IMMessageGrid',
 		'Sonicle.webtop.core.model.IMChatSearchGrid'
@@ -219,7 +220,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 		}]);
 		
 		me.on('afterrender', me.onAfterrender, me, {single: true});
-		me.on('activate', me.onActivate);
+		//me.on('activate', me.onActivate);
 	},
 	
 	createTBar: function() {
@@ -338,11 +339,47 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 		me.callParent(arguments);
 	},
 	
+	showDate: function(date, messageId) {
+		var me = this,
+				lay = me.lref('card').getLayout(),
+				focusMessage = function(grid, id) {
+					var rec = grid.getStore().getById(id);
+					if (rec) {
+						grid.getView().focusRow(rec);
+						grid.setSelection(rec);
+					}
+				},
+				gp;
+		
+		me.getVM().set('chatDate', date);
+		if (Sonicle.Date.isToday(date)) {
+			gp = me.todayCmp();
+			lay.setActiveItem(gp);
+			if (messageId) focusMessage(gp, messageId);
+		} else {
+			gp = me.lref('gphistory');
+			lay.setActiveItem(gp);
+			gp.getStore().load({
+				callback: function(recs, op, success) {
+					if (success && messageId) focusMessage(gp, messageId);
+				}
+			});
+		}
+	},
+	
+	searchChat: function(query) {
+		var me = this,
+				gp = me.lref('gpchatsearch');
+		WTU.loadWithExtraParams(gp.getStore(), {query: query});
+	},
+	
 	privates: {
+		
 		onAfterrender: function(s) {
+			// We need this otherwise in case of first chat field won't focus!
 			s.messageFld().focus(true, true);
-		},
-
+		}
+		/*
 		onActivate: function(s) {
 			if (s.scrollOnActivate) {
 				s.scrollOnActivate = false;
@@ -351,5 +388,6 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 			s.setHotMarker(false);
 			s.messageFld().focus(true, true);
 		}
+		*/
 	}
 });

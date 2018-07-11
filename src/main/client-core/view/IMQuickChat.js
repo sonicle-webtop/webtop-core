@@ -57,7 +57,6 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	 */
 	
 	dockableConfig: {
-		iconCls: '',
 		width: 250,
 		height: 300
 	},
@@ -95,6 +94,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 		me.callParent(arguments);
 		if (ct.isXType('window')) {
 			ct.on('focus', me.onCtFocus, me);
+			ct.on('activate', me.onCtActivate, me);
 		}
 	},
 	
@@ -102,6 +102,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 		var me = this;
 		if (ct.isXType('window')) {
 			ct.un('focus', me.onCtFocus, me);
+			ct.un('activate', me.onCtActivate, me);
 		}
 		me.callParent(arguments);
 	},
@@ -113,24 +114,30 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	
 	setHotMarker: function(hot) {
 		var cmp = this.getComponent(0);
-		if (cmp) cmp.setHotMarker(hot);
-		this.setIconCls(WTF.cssIconCls(WT.XID, hot ? 'im-chat-hot' : 'im-chat-nohot')); // Class '-nohot' is intentionally not existing 
+		if (cmp) this.applyHotMarker(cmp, hot);
 	},
 	
 	newMessage: function(uid, fromId, fromNick, timestamp, action, text, data) {
 		var cmp = this.getComponent(0);
 		if (cmp) {
 			cmp.newMessage(uid, fromId, fromNick, timestamp, action, text, data);
-			cmp.setHotMarker(true);
+			this.applyHotMarker(cmp, true);
 		}
-		this.setIconCls(WTF.cssIconCls(WT.XID, 'im-chat-hot'));
 	},
 	
 	privates: {
 		onCtFocus: function() {
 			var cmp = this.getComponent(0);
-			if (cmp) cmp.messageFld().focus(true);
+			if (cmp) cmp.messageFld().focus(true, true);
+		},
+		
+		onCtActivate: function() {
 			this.setHotMarker(false);
+		},
+		
+		applyHotMarker: function(cmp, hot) {
+			cmp.setHotMarker(hot);
+			this.setIconCls(hot ? WTF.cssIconCls(WT.XID, 'im-chat-hot') : null);
 		}
 	}
 });

@@ -48,7 +48,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	layout: 'border',
 	referenceHolder: true,
 	border: false,
-	defaultFocus: 'fldmessage',
+	//defaultFocus: 'fldmessage',
 	
 	config: {
 		hotMarker: false
@@ -335,13 +335,6 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	addUploadMessage: function(data) {
 		this.addMessage(data);
 	},
-	
-	/*
-	updateHotMarker: function(nv) {
-		var me = this;
-		me.setIconCls(WTA.ux.IMBaseChat.buildIconCls(me.isGroupChat, nv));
-	},
-	*/
 	
 	setFriendPresence: function(friendFullId, status) {
 		var me = this,
