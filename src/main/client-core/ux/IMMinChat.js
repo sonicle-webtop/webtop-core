@@ -123,7 +123,7 @@ Ext.define('Sonicle.webtop.core.ux.IMMinChat', {
 				{
 					xtype: 'button',
 					ui: 'default-toolbar',
-					iconCls: 'wt-icon-format-emoticon-xs',
+					iconCls: 'wt-icon-emoji',
 					tooltip: WT.res('wtimchat.btn-emoji.tip'),
 					arrowVisible: false,
 					menu: {

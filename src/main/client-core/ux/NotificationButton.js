@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.ux.NotificationButton', {
 	],
 	
 	arrowVisible: false,
-	iconCls: 'wt-icon-notification-xs',
+	iconCls: 'wt-icon-notification',
 	
 	grid: null,
 	

@@ -102,12 +102,6 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		me.tabChats().setActiveTab(pnl);
 	},
 	
-	/*
-	newChat: function(chatId, chatName) {
-		this.addChat(chatId, chatName, false);
-	},
-	*/
-	
 	newChatMessage: function(chatId, chatName, fromId, fromNick, timestamp, uid, action, text, data) {
 		var me = this,
 				pnl = me.chatMap[chatId];
@@ -176,13 +170,5 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 			}
 			return map[chatId];
 		}
-		
-		/*
-		activateChatTab: function(tab) {
-			tab.setHotMarker(false);
-			tab.messageFld().focus(true, 200);
-			this.mys.clearIMNewMsgNotification(tab.getChatId());
-		}
-		*/
 	}
 });

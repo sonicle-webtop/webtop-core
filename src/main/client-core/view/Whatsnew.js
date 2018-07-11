@@ -37,7 +37,7 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 	
 	dockableConfig: {
 		title: '{whatsnew.tit}',
-		iconCls: 'wt-icon-whatsnew-xs',
+		iconCls: 'wt-icon-whatsnew',
 		width: 600,
 		height: 500
 	},

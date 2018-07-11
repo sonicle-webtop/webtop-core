@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.view.Addons', {
 	
 	dockableConfig: {
 		title: '{addons.tit}',
-		iconCls: 'wt-icon-addons-xs',
+		iconCls: 'wt-icon-addons',
 		width: 600,
 		height: 180
 	},
@@ -69,7 +69,7 @@ Ext.define('Sonicle.webtop.core.view.Addons', {
 			}, {
 				xtype: 'button',
 				ui: 'default-toolbar',
-				iconCls: 'wt-icon-platform-win-xs',
+				iconCls: 'wt-icon-platform-win',
 				text: me.mys.res('addons.btn-download.lbl'),
 				disabled: !Ext.isWindows || (me.mys.getVar('wtAddonNotifier') === 'false'),
 				handler: function() {

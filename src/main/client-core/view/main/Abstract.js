@@ -242,10 +242,15 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						handler: 'onMenuButtonClick'
 					},
 					items: [{
-						itemId: 'feedback',
-						tooltip: WT.res('menu.feedback.tip'),
-						disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
-						iconCls: 'wt-menu-feedback',
+						itemId: 'options',
+						tooltip: WT.res('menu.options.tip'),
+						iconCls: 'wt-menu-options',
+						width: '4em',
+						height: '4em'
+					}, {
+						itemId: 'addons',
+						tooltip: WT.res('menu.addons.tip'),
+						iconCls: 'wt-menu-addons',
 						width: '4em',
 						height: '4em'
 					}, {
@@ -256,15 +261,10 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 						width: '4em',
 						height: '4em'
 					}, {
-						itemId: 'options',
-						tooltip: WT.res('menu.options.tip'),
-						iconCls: 'wt-menu-options',
-						width: '4em',
-						height: '4em'
-					}, {
-						itemId: 'addons',
-						tooltip: WT.res('menu.addons.tip'),
-						iconCls: 'wt-menu-addons',
+						itemId: 'feedback',
+						tooltip: WT.res('menu.feedback.tip'),
+						disabled: !WT.isPermitted('FEEDBACK', 'MANAGE'),
+						iconCls: 'wt-menu-feedback',
 						width: '4em',
 						height: '4em'
 					}/*, {

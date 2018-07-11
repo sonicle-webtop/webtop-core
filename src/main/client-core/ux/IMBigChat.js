@@ -377,7 +377,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 		
 		onAfterrender: function(s) {
 			// We need this otherwise in case of first chat field won't focus!
-			s.messageFld().focus(true, true);
+			s.messageFld().focus(true, 200);
 		}
 		/*
 		onActivate: function(s) {

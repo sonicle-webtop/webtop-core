@@ -128,7 +128,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	privates: {
 		onCtFocus: function() {
 			var cmp = this.getComponent(0);
-			if (cmp) cmp.messageFld().focus(true, true);
+			if (cmp) cmp.messageFld().focus(true, 200);
 		},
 		
 		onCtActivate: function() {

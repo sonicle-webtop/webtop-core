@@ -48,7 +48,6 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	layout: 'border',
 	referenceHolder: true,
 	border: false,
-	//defaultFocus: 'fldmessage',
 	
 	config: {
 		hotMarker: false
@@ -224,7 +223,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 		var me = this;
 		return {
 			xtype: 'souploadbutton',
-			iconCls: 'wt-icon-attach-xs',
+			iconCls: 'wt-icon-attach',
 			tooltip: WT.res('wtimchat.btn-attach.tip'),
 			uploaderConfig: WTF.uploader(WT.ID, 'UploadWebChatFile', {
 				extraParams: {

@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.view.Options', {
 	
 	dockableConfig: {
 		title: '{opts.tit}',
-		iconCls: 'wt-icon-options-xs',
+		iconCls: 'wt-icon-options',
 		width: 650,
 		height: 500
 	},
