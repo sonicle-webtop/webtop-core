@@ -61,6 +61,11 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		me.mixins.observable.constructor.call(me, config);
 	},
 	
+	setICEServers: function(iceServers) {
+		if (iceServers)
+			this.iceServers=iceServers;
+	},
+	
 	initConnection: function() {
 		var me=this;
 		me.conn=new Strophe.Connection(me.getBoshUrl());

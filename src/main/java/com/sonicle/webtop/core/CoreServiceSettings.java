@@ -91,6 +91,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getInteger(SMTP_PORT, 25);
     }
 	
+	public ICEServersList getWebRTC_ICEServers() {
+		ICEServersList value = getObject(WEBRTC_ICE_SERVERS, null, ICEServersList.class);
+        return value;
+    }
+    
 	public String getXMPPHost() {
         return getString(XMPP_HOST, "localhost");
     }
@@ -351,5 +356,21 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		public static String toJson(ServicesOrder value) {
 			return JsonResult.gson.toJson(value, ServicesOrder.class);
 		}
+	}
+	
+	public static class ICEServer {
+		public String url;
+		public String username;
+		public String credential;
+	}
+	
+	public static class ICEServersList extends ArrayList<ICEServer> {
+		public static ICEServersList fromJson(String value) {
+			return JsonResult.gson.fromJson(value, ICEServersList.class);
+		}
+		
+		public static String toJson(ICEServersList value) {
+			return JsonResult.gson.toJson(value, ICEServersList.class);
+		}		
 	}
 }

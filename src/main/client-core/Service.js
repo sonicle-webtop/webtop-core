@@ -176,8 +176,9 @@ Ext.define('Sonicle.webtop.core.Service', {
 							
 							//if BOSH url configured, intialize RTC
 							var boshUrl=WT.getVar('boshUrl');
+							var iceServers=WT.getVar('iceServers');
 							if (boshUrl) {
-								me.initRTCManager(boshUrl,json.data.userId,json.data.password, json.data.userJid+"RTC");
+								me.initRTCManager(boshUrl,iceServers,json.data.userId,json.data.password, json.data.userJid+"RTC");
 							}
 							
 						} else {
@@ -584,9 +585,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 		
 	},
 	
-	initRTCManager: function(boshUrl,jid,pass,fullJid) {
+	initRTCManager: function(boshUrl,iceServers,jid,pass,fullJid) {
 		var me=this;
 		WTA.RTCManager.setBoshUrl(boshUrl);
+		WTA.RTCManager.setICEServers(iceServers);
 		WTA.RTCManager.initConnection();
 		me.doRTCConnect(jid,pass,fullJid);
 	},

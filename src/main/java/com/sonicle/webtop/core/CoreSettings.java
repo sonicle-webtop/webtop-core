@@ -134,6 +134,21 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [object[]]
+	 * Defines WebRTC ICE servers as a json array
+	 * [
+	 *   {url: 'stun:stun.l.google.com:19302'},
+	 *   {
+	 *     'username': 'turn_username',
+     *     'credential': 'turn_password',
+     *     'url: 'turn:myturnserver.com:80?transport=tcp'
+     *   }
+	 * ]
+	 */
+	public static final String WEBRTC_ICE_SERVERS = "webrtc.ice.servers";
+	
+	/**
+	 * [domain+system]
 	 * [string]
 	 * Defines XMPP server host
 	 */
@@ -290,7 +305,7 @@ public class CoreSettings {
 	/**
 	 * [system][*]
 	 * [boolean]
-	 * Indicates whether DevMode is active for a service.
+	 * Indicates whether DevMode is active for a 3.
 	 */
 	public static final String DEV_MODE = "devmode";
 	
