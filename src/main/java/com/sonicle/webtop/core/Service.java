@@ -271,6 +271,8 @@ public class Service extends BaseService {
 		
 		String boshUrl=ss.getXMPPBoshUrl();
 		if (boshUrl!=null) co.put("boshUrl", boshUrl);
+		CoreServiceSettings.ICEServersList iceServers=ss.getWebRTC_ICEServers();
+		if (iceServers!=null) co.put("iceServers", iceServers);
 		
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
