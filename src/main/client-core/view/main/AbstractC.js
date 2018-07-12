@@ -373,6 +373,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			width: dockCfg.width,
 			height: dockCfg.height,
 			modal: dockCfg.modal,
+			focusOnToFront: (dockCfg.focusOnShow === undefined) ? (floating ? false : true) : dockCfg.focusOnShow,
 			minimizable: floating ? false : dockCfg.minimizable,
 			maximizable: floating ? false : dockCfg.maximizable,
 			resizable: floating ? false : true,
