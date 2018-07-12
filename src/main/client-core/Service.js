@@ -136,7 +136,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 			me.onMessage('imFriendPresenceUpdated', function(msg) {
 				var pl = msg.payload;
-				console.log('friendFullId: ' + pl.friendFullId);
 				me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 				me.setChatRoomFriendPresenceUI(pl.chatId, pl.friendFullId, pl.presenceStatus);
 			});
@@ -733,7 +732,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 				floating: true,
 				viewCfg: {
 					dockableConfig: {
-						title: chatName,
+						//title: chatName,
 						focusOnShow: focusOnShow
 					},
 					chatId: chatId,

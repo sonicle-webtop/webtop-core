@@ -114,7 +114,7 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	
 	viewModel: {
 		data: {
-			_viewTitle: ''
+			_viewTitle: null
 		}
 	},
 	
@@ -129,9 +129,7 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 		var vm = me.getVM(),
 				dcfg = me.getDockableConfig();
 		if (!cfg.title) {
-			me.setBind({
-				title: '{_viewTitle}'
-			});
+			me.setBind({title: '{_viewTitle}'});
 			vm.set('_viewTitle', me.resTitle(dcfg.title) || '');
 		}
 		if (!cfg.iconCls && dcfg.iconCls) {

@@ -409,57 +409,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
-	/*
-	createServiceView_OLD: function(desc, viewName, opts) {
-		opts = opts || {};
-		var me = this,
-				svcId = desc.getId(),
-				svcInst = desc.getInstance(false),
-				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
-				view, dockCfg, utag, win;
-		
-		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
-			mys: svcInst ? svcInst : svcId,
-			tag: tag
-		});
-		view = Ext.create(desc.preNs(viewName), opts.viewCfg);
-		//dockCfg = Ext.merge(view.getDockableConfig(), opts.dockCfg || {});
-		//view.setDockableConfig(dockCfg);
-		dockCfg = view.getDockableConfig();
-		utag = me.generateUTag(svcId, tag);
-		
-		win = Ext.create(Ext.apply({
-			xtype: 'wtviewwindow',
-			layout: 'fit',
-			utag: utag,
-			constrain: true,
-			width: dockCfg.width,
-			height: dockCfg.height,
-			modal: dockCfg.modal,
-			minimizable: dockCfg.minimizable,
-			maximizable: dockCfg.maximizable,
-			items: [view]
-		}));
-		me.viewCtsById[win.getId()] = win;
-		if (utag) me.viewCtsByUTag[utag] = win;
-			me.toggleWinListeners(win, 'on');
-			me.getView().getTaskBar().addButton(win);
-		return win;
-	},
-	
-	hasServiceView_OLD: function(desc, tag) {
-		var map = this.viewCtsByUTag,
-				utag = this.generateUTag(desc.getId(), tag);
-		return map.hasOwnProperty(utag) && map[utag] !== undefined;
-	},
-	
-	getServiceView_OLD: function(desc, tag) {
-		var map = this.viewCtsByUTag,
-				utag = this.generateUTag(desc.getId(), tag);
-		return map.hasOwnProperty(utag) ? map[utag] : undefined;
-	},
-	*/
-	
 	showBadgeNotification: function(svc, notification) {
 		var sto = this.getStore('notifications'),
 				rec = sto.getById(notification.id);
@@ -652,36 +601,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				xoff += (win.getWidth() + xspacing);
 			}
 		},
-		
-		/*
-		toggleWinListeners_OLD: function(win, fn) {
-			var me = this;
-			win[fn]('activate',  me.onWinActivate, me);
-			win[fn]('hide',  me.onWinHide, me);
-			win[fn]('destroy',  me.onWinDestroy, me);
-			win[fn]('titlechange',  me.onWinTitleChange, me);
-		},
-		
-		onWinActivate_OLD: function(s) {
-			this.getView().getTaskBar().toggleButton(s, true);
-		},
-
-		onWinHide_OLD: function(s) {
-			this.getView().getTaskBar().toggleButton(s, false);
-		},
-
-		onWinTitleChange_OLD: function(s) {
-			this.getView().getTaskBar().updateButtonTitle(s);
-		},
-
-		onWinDestroy_OLD: function(s) {
-			var me = this, utag = s.getUTag();
-			me.getView().getTaskBar().removeButton(s);
-			me.toggleWinListeners(s, 'un');
-			delete me.viewCtsByUTag[utag];
-			delete me.viewCtsById[s.getId()];
-		},
-		*/
 		
 		generateUTag: function(sid, tag) {
 			return tag ? Sonicle.Crypto.md5(tag + '@' + sid) : null;

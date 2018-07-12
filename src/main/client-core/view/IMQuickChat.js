@@ -63,6 +63,11 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		Ext.merge(cfg, {
+			dockableConfig: {
+				title: cfg.chatName
+			}
+		});
 		me.callParent([cfg]);
 		me.config.dockableConfig = Ext.apply(me.config.dockableConfig, {
 			tools: [{
@@ -89,6 +94,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 			hotMarker: me.hotMarker,
 			listeners: {
 				send: me.onResetHotMarker,
+				updatefriendpresence: me.onUpdateFriendPresence,
 				scope: me
 			}
 		});
@@ -136,6 +142,14 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 		
 		onResetHotMarker: function(s) {
 			this.applyHotMarker(s, false);
+		},
+		
+		onUpdateFriendPresence: function(s, fri, pstatus) {
+			if (!s.isGroupChat) {
+				Ext.defer(function() {
+					this.setTitle(Ext.String.format('{0} ({1})', this.chatName, WTA.ux.IMStatusMenu.statusText(pstatus)));
+				}, 200, this);
+			}
 		},
 		
 		applyHotMarker: function(cmp, hot) {

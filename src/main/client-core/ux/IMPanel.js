@@ -425,10 +425,11 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 				presenceStatus: status,
 				statusMessage: message
 			});
-			if (changed) {
-				if (WT.getVar('imSoundOnFriendConnect') && me.self.isOnline(status)) {
+			
+			if (changed && !me.self.isStatusDnD(me.btnStatus().menu.getPresenceStatus())) {
+				if (WT.getVar('imSoundOnFriendConnect') && me.self.isStatusOnline(status, true)) {
 					Sonicle.Sound.play('wt-im-connect');
-				} else if (WT.getVar('imSoundOnFriendDisconnect') && !me.self.isOnline(status)) {
+				} else if (WT.getVar('imSoundOnFriendDisconnect') && !me.self.isStatusOffline(status)) {
 					Sonicle.Sound.play('wt-im-disconnect');
 				}
 			}
@@ -554,8 +555,8 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			return pstatus === 'dnd';
 		},
 		
-		isOnline: function(status) {
-			return status !== 'offline';
+		isStatusOffline: function(pstatus) {
+			return pstatus === 'offline';
 		},
 
 		isGroupChat: function(chatId) {
