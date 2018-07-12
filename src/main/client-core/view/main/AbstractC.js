@@ -256,7 +256,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		mys.updateIMPresenceStatus(status, {
 			callback: function(success) {
 				if (success) {
-					WT.setVar('imPresenceStatus', status);
 					s.setPresenceStatus(status);
 					me.getIMButton().setPresenceStatus(status);
 				} else {

@@ -464,7 +464,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		} else if (vw = WT.getView(me.ID, me.self.vwTagIMChat(chatId))) {
 			vw.showView();
 		} else {
-			me.createIMQuickChatView(chatId, chatName).showView();
+			me.createIMQuickChatView(true, chatId, chatName).showView();
 			//me.createIMQuickChatView(chatId, chatName).showView();
 		}
 		
@@ -537,7 +537,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}
 		} else { // No chat windows are open
 			if (WTA.ux.IMPanel.isStatusOnline(status, true)) {
-				me.createIMQuickChatView(chatId, chatName, true).showView();
+				me.createIMQuickChatView(false, chatId, chatName, true).showView();
 				me.showIMNewMsgNotification(chatId, chatName, noBody, noData, {desktop: true, sound: true});
 				
 			} else {
@@ -651,6 +651,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 				presenceStatus: status
 			},
 			callback: function(success, json) {
+				if (success) WT.setVar('imPresenceStatus', status);
 				Ext.callback(opts.callback, opts.scope || me, [success, json]);
 			}
 		});
@@ -723,7 +724,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 		},
 		
-		createIMQuickChatView: function(chatId, chatName, hotMarker) {
+		createIMQuickChatView: function(focusOnShow, chatId, chatName, hotMarker) {
 			var me = this;
 			var vw = WT.createView(me.ID, 'view.IMQuickChat', {
 				tag: me.self.vwTagIMChat(chatId),
@@ -731,7 +732,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 				viewCfg: {
 					dockableConfig: {
 						title: chatName,
-						focusOnShow: false
+						focusOnShow: focusOnShow
 					},
 					chatId: chatId,
 					chatName: chatName,

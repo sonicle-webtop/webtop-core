@@ -79,13 +79,18 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	initComponent: function() {
 		var me = this;
 		me.callParent(arguments);
+		me.applyHotMarker(null, me.hotMarker);
 		
 		me.add({
 			region: 'center',
 			xtype: 'wtimminchat',
 			chatId: me.chatId,
 			chatName: me.chatName,
-			hotMarker: me.hotMarker
+			hotMarker: me.hotMarker,
+			listeners: {
+				send: me.onResetHotMarker,
+				scope: me
+			}
 		});
 	},
 	
@@ -93,16 +98,14 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 		var me = this;
 		me.callParent(arguments);
 		if (ct.isXType('window')) {
-			ct.on('focus', me.onCtFocus, me);
-			ct.on('activate', me.onCtActivate, me);
+			ct.on('focusenter', me.onCtFocusEnter, me);
 		}
 	},
 	
 	cleanupCt: function(ct) {
 		var me = this;
 		if (ct.isXType('window')) {
-			ct.un('focus', me.onCtFocus, me);
-			ct.un('activate', me.onCtActivate, me);
+			ct.un('focusenter', me.onCtFocusEnter, me);
 		}
 		me.callParent(arguments);
 	},
@@ -113,8 +116,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	},
 	
 	setHotMarker: function(hot) {
-		var cmp = this.getComponent(0);
-		if (cmp) this.applyHotMarker(cmp, hot);
+		this.applyHotMarker(this.getComponent(0), hot);
 	},
 	
 	newMessage: function(uid, fromId, fromNick, timestamp, action, text, data) {
@@ -126,18 +128,21 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 	},
 	
 	privates: {
-		onCtFocus: function() {
+		onCtFocusEnter: function() {
 			var cmp = this.getComponent(0);
 			if (cmp) cmp.messageFld().focus(true, 200);
+			this.applyHotMarker(cmp, false);
 		},
 		
-		onCtActivate: function() {
-			this.setHotMarker(false);
+		onResetHotMarker: function(s) {
+			this.applyHotMarker(s, false);
 		},
 		
 		applyHotMarker: function(cmp, hot) {
-			cmp.setHotMarker(hot);
-			this.setIconCls(hot ? WTF.cssIconCls(WT.XID, 'im-chat-hot') : null);
+			var me = this;
+			if (cmp) cmp.setHotMarker(hot);
+			me.setIconCls(hot ? WTF.cssIconCls(WT.XID, 'im-chat-hot') : null);
+			if (!hot) me.mys.clearIMNewMsgNotification(me.chatId);
 		}
 	}
 });

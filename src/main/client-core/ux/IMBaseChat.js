@@ -308,9 +308,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 						me.addMessage(item);
 					});
 					fld.focus(true, 100);
-					if (WT.getVar('imSoundOnMessageSent')) {
-						Sonicle.Sound.play('wt-im-sent');
-					}
+					me.fireSend();
 				} else {
 					fld.setValue(text);
 				}
@@ -333,6 +331,15 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	
 	addUploadMessage: function(data) {
 		this.addMessage(data);
+		this.fireSend();
+	},
+	
+	fireSend: function() {
+		var me = this;
+		me.fireEvent('send', me);
+		if (WT.getVar('imSoundOnMessageSent')) {
+			Sonicle.Sound.play('wt-im-sent');
+		}
 	},
 	
 	setFriendPresence: function(friendFullId, status) {

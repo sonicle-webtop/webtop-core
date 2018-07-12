@@ -73,14 +73,14 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		var me = this;
 		me.callParent(arguments);
 		if (ct.isXType('window')) {
-			ct.on('focus', me.onCtFocus, me);
+			ct.on('focusenter', me.onCtFocusEnter, me);
 		}
 	},
 	
 	cleanupCt: function(ct) {
 		var me = this;
 		if (ct.isXType('window')) {
-			ct.un('focus', me.onCtFocus, me);
+			ct.un('focusenter', me.onCtFocusEnter, me);
 		}
 		me.callParent(arguments);
 	},
@@ -109,7 +109,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 			me.addChat(chatId, chatName, true);
 		} else {
 			pnl.newMessage(uid, fromId, fromNick, timestamp, action, text, data);
-			pnl.setHotMarker(true);
+			me.applyChatHotMarker(pnl, true);
 		}
 	},
 	
@@ -120,11 +120,11 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 	},
 	
 	privates: {
-		onCtFocus: function() {
+		onCtFocusEnter: function() {
 			var me = this,
 					tab = me.tabChats().getActiveTab();
 			// When Chats view is already open and a new chat is pinned into,
-			// this foucus event steal focus from messageField.
+			// focus event steal focus from messageField.
 			// We need to force focus again!
 			if (tab) tab.messageFld().focus(true, 200);
 		},
@@ -146,9 +146,7 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 		onTabChatsTabChange: function(s, ntab) {
 			var me = this;
 			me.setViewTitle(ntab.getTitle());
-			ntab.setHotMarker(false);
 			ntab.messageFld().focus(true, 200);
-			me.mys.clearIMNewMsgNotification(ntab.getChatId());
 		},
 		
 		tabChats: function() {
@@ -165,10 +163,24 @@ Ext.define('Sonicle.webtop.core.view.IMChats', {
 					closable: true,
 					chatId: chatId,
 					chatName: chatName,
-					hotMarker: hotMarker
+					hotMarker: hotMarker,
+					listeners: {
+						focusenter: me.onChatResetHotMarker,
+						send: me.onChatResetHotMarker,
+						scope: me
+					}
 				});
 			}
 			return map[chatId];
+		},
+		
+		onChatResetHotMarker: function(s) {
+			this.applyChatHotMarker(s, false);
+		},
+		
+		applyChatHotMarker: function(cmp, hot) {
+			if (cmp) cmp.setHotMarker(hot);
+			if (!hot) this.mys.clearIMNewMsgNotification(cmp.getChatId());
 		}
 	}
 });
