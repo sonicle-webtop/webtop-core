@@ -253,7 +253,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 				cbFn = null,
 				svc, callbk;
 		
-		if (dn === 'always' || (dn === 'auto' && !PMgr.isHidden())) {
+		if (dn === 'always' || (dn === 'auto' && PMgr.isHidden())) {
 			if (Ext.isEmpty(notification.title)) Ext.Error.raise('Title is mandatory');
 			svc = this.getApp().getService(sid);
 			if (!svc) Ext.Error.raise('Service not found ['+sid+']');

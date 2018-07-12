@@ -252,7 +252,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	setVar: function(id, key, value) {
 		if(arguments.length === 2) {
-			opts = id;
+			value = key;
+			key = id;
 			id = WT.ID;
 		}
 		var svc = this.getApp().getService(id);
