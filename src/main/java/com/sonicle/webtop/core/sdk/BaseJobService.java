@@ -66,10 +66,10 @@ public abstract class BaseJobService extends AbstractCommonService {
 	public abstract List<TaskDefinition> returnTasks();
 	
 	public static class TaskDefinition {
-		public Class clazz;
-		public JobDataMap data;
-		public Trigger trigger;
-		public String description;
+		public final Class clazz;
+		public final JobDataMap data;
+		public final Trigger trigger;
+		public final String description;
 		
 		public TaskDefinition(Class clazz, Trigger trigger) {
 			this(clazz, null, trigger, null);

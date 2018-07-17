@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -41,7 +41,7 @@ import java.util.HashMap;
  * @param <K>
  * @param <V>
  */
-public class AsyncActionCollection<K, V extends BaseServiceAsyncAction> extends HashMap<K, V> {
+public class AsyncActionCollection<K, V extends BaseServiceAsyncAction> extends ConcurrentHashMap<K, V> {
 
 	@Override
 	public void clear() {

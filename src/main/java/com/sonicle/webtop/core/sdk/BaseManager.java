@@ -247,6 +247,14 @@ public abstract class BaseManager {
 		if (!runPid.hasDomain(domainId)) throw new AuthException("Running profile's domain [{0}] does not match with passed one [{1}]", runPid.getDomainId(), domainId);
 	}
 	
+	/**
+	 * Checks if the running profile (see runContext) is SysAdmin.
+	 * Code must be running as administrator.
+	 */
+	public void ensureSysAdmin() {
+		if (!RunContext.isSysAdmin()) throw new AuthException("Running profile must be SysAdmin [{0}]", RunContext.getRunProfileId());
+	}
+	
 	public final void writeLog(String action, String data) {
 		WT.writeLog(action, softwareName, data);
 	}

@@ -49,8 +49,15 @@ import org.quartz.JobExecutionException;
 public abstract class BaseJobServiceTask implements Job {
 	private JobExecutionContext jec;
 	
+	public abstract void setJobService(BaseJobService jobService);
+	public abstract void executeWork();
+	
 	public JobDataMap getData() {
 		return jec.getMergedJobDataMap();
+	}
+	
+	public final boolean shouldStop() {
+		return WebTopApp.isShuttingDown();
 	}
 	
 	@Override
@@ -60,7 +67,7 @@ public abstract class BaseJobServiceTask implements Job {
 			if (WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
 				Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
 				ThreadState threadState = new SubjectThreadState(subject);
-
+				
 				try {
 					threadState.bind();
 					executeWork();
@@ -70,11 +77,4 @@ public abstract class BaseJobServiceTask implements Job {
 			}
 		}
 	}
-	
-	public abstract void setJobService(BaseJobService jobService);
-	
-	/**
-	 * Method that defines job work.
-	 */
-	public abstract void executeWork();
 }

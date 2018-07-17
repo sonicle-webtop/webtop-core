@@ -732,7 +732,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 				floating: true,
 				viewCfg: {
 					dockableConfig: {
-						//title: chatName,
 						focusOnShow: focusOnShow
 					},
 					chatId: chatId,
