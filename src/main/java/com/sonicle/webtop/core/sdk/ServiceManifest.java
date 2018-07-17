@@ -124,9 +124,9 @@ public class ServiceManifest {
 		if (!hconf.isEmpty()) {
 			if (hconf.size() != 1) throw new Exception(invalidCardinalityEx("controller", "1"));
 			
-			final String name = hconf.get(0).getString("[@name]");
-			if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("controller", "name"));
-			controllerClassName = buildJavaClassName(javaPackage, name);
+			final String cn = hconf.get(0).getString("[@className]");
+			if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("controller", "className"));
+			controllerClassName = buildJavaClassName(javaPackage, cn);
 			
 		} else { // Old-style configuration
 			if (!svcEl.containsKey("controllerClassName")) throw new Exception(invalidValueEx("controllerClassName"));
@@ -138,9 +138,9 @@ public class ServiceManifest {
 			if (!hconf.isEmpty()) {
 				if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("manager", "*1"));
 
-				final String name = hconf.get(0).getString("[@name]");
-				if (StringUtils.isBlank(name)) throw new Exception(invalidAttributeValueEx("manager", "name"));
-				managerClassName = buildJavaClassName(javaPackage, name);
+				final String cn = hconf.get(0).getString("[@className]");
+				if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("manager", "className"));
+				managerClassName = buildJavaClassName(javaPackage, cn);
 			}
 			
 		} else { // Old-style configuration
@@ -148,7 +148,7 @@ public class ServiceManifest {
 				managerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("managerClassName"), "Manager"));
 			}
 		}
-		
+
 		
 		
 		/*
@@ -191,8 +191,18 @@ public class ServiceManifest {
 			publicServiceVarsModelJsClassName = StringUtils.defaultIfEmpty(svcEl.getString("publicServiceVarsModelJsClassName"), "model.PublicServiceVars");
 		}
 		
-		if(svcEl.containsKey("jobServiceClassName")) {
-			jobServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("jobServiceClassName"), "JobService"));
+		hconf = svcEl.configurationsAt("jobService");
+		if (!hconf.isEmpty()) {
+			if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("jobService", "*1"));
+			
+			final String cn = hconf.get(0).getString("[@className]");
+			if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("jobService", "className"));
+			jobServiceClassName = LangUtils.buildClassName(javaPackage, cn);
+			
+		} else { // Old-style configuration
+			if (svcEl.containsKey("jobServiceClassName")) {
+				jobServiceClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("jobServiceClassName"), "JobService"));
+			}
 		}
 		
 		if(!svcEl.configurationsAt("userOptions").isEmpty()) {
