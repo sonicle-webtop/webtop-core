@@ -41,7 +41,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.view.IMQuickChat',
 		'Sonicle.webtop.core.view.IMChats',
 		'Sonicle.webtop.core.view.Activities',
-		'Sonicle.webtop.core.view.Causals'
+		'Sonicle.webtop.core.view.Causals',
+		'Sonicle.webtop.core.view.SMS'
 	],
 	
 	vwrem: null,
@@ -629,6 +630,60 @@ Ext.define('Sonicle.webtop.core.Service', {
 					break;
 			}
 		});
+	},
+	
+	handlePbxCall: function(number) {
+		var me=this;
+		if (WT.getVar("pbxConfigured")) {
+			WT.toast({
+				 html: number,
+				 title: WT.res('pbx.call.toast.lbl'),
+				 width: 300,
+				 align: 'br',
+				 timeout: 10000
+			});
+			WT.ajaxReq(WT.ID, 'PbxCall', {
+				params: {
+					number: number
+				},
+				callback: function(success, json) {
+					if(success) {
+					} else {
+						WT.error(json.message);
+					}
+				}
+			});
+		} else {
+			WT.toast({
+				 html: WT.res('opts.pbx.unconfigured.tit'),
+				 title: WT.res('error'),
+				 width: 300,
+				 align: 'br',
+				 timeout: 10000
+			});
+		}
+	},
+	
+	handleSendSMS: function(name,number,text) {
+		var me=this;
+		if (WT.getVar("smsConfigured")) {
+			var v=WT.createView(me.ID,'view.SMS',{
+				viewCfg: {
+					name: name,
+					number: number,
+					text: text
+				}
+			});
+			v.show();
+		} else {
+			WT.toast({
+				 html: WT.res('opts.sms.unconfigured.tit'),
+				 title: WT.res('error'),
+				 width: 300,
+				 align: 'br',
+				 timeout: 10000
+			});
+		}
 	},
 	
 	updatePortalContent: function(content, opts) {

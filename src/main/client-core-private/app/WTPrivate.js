@@ -443,6 +443,52 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		return WT.getVar('use24HourTime');
 	},
 	
+	/**
+	 * Convenience function to run a default action on an email.
+	 * At the moment, WT will search for the mail service and start a new email.
+	 * @param {String} address The email address.
+	 * @param {String} subject The optional subject.
+	 * @param {String} body The optional body.
+	 */
+	handleMailAddress: function(address,subject,body) {
+		var mys=WT.getApp().getService("com.sonicle.webtop.mail");
+		if (mys) {
+			var opts={
+				recipients: [{rtype: 'to', email: address}],
+				format: mys.getVar("format")
+			};
+			if (subject) opts.subject=subject;
+			if (body) {
+				opts.content=body;
+				opts.contentAfter=false;
+			}
+			mys.startNewMessage(mys.currentFolder,opts);
+		}
+	},
+	
+	/**
+	 * Convenience function to run a phone call through the configured pbx.
+	 * @param {String} number The number to call.
+	 */
+	handlePbxCall: function(number) {
+		var mys=WT.getApp().getService("com.sonicle.webtop.core");
+		if (mys) {
+			mys.handlePbxCall(number);
+		}
+	},
+	
+	/**
+	 * Convenience function to send an SMS through the configured SMS provider.
+	 * @param {String} number The destination number.
+	 * @param {String} text The SMS text.
+	 */
+	handleSendSMS: function(name,number,text) {
+		var mys=WT.getApp().getService("com.sonicle.webtop.core");
+		if (mys) {
+			mys.handleSendSMS(name,number,text);
+		}
+	},
+	
 	print: function(html) {
 		Sonicle.PrintMgr.print(html);
 	},
@@ -466,6 +512,8 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 			contentType: 'html',
 			loadMask: true
 		};
-	}
+	},
+	
+	
 
 });

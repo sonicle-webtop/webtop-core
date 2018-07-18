@@ -587,6 +587,27 @@ public class CoreSettings {
 	public static final String PBX_PROVIDER_NETHVOICE_WEBREST_URL = "pbx.provider.nethvoice.webrest.url";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS provider webrest URL, if available. 
+	 */
+	public static final String SMS_PROVIDER_WEBREST_URL = "sms.provider.webrest.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS provider webrest user. 
+	 */
+	public static final String SMS_PROVIDER_WEBREST_USER = "sms.provider.webrest.user";
+
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS provider webrest password. 
+	 */
+	public static final String SMS_PROVIDER_WEBREST_PASSWORD = "sms.provider.webrest.password";
+	
+	/**
 	 * [user]
 	 * [string]
 	 * Specifies the PBX username, when different from WebTop username. 
@@ -599,6 +620,13 @@ public class CoreSettings {
 	 * Specifies the PBX password, when different from WebTop password. 
 	 */
 	public static final String PBX_PASSWORD = "pbx.password";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS provider, if available. 
+	 */
+	public static final String SMS_PROVIDER = "sms.provider";
 	
 	/**
 	 * [user]
