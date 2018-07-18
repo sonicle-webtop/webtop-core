@@ -215,6 +215,10 @@ public class SessionManager {
 		return onlineSessions.containsKey(sessionId);
 	}
 	
+	public boolean isOnline(UserProfileId profileId) {
+		return profileSidsCache.containsKey(profileId);
+	}
+	
 	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
 		return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
 	}

@@ -88,7 +88,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 			foIsRtcEnabled: {
 				bind: {bindTo: '{friendStatus}'},
 				get: function(val) {
-					if (!WTA.ux.IMPanel.isOnline(val)) return false;
+					if (WTA.ux.IMPanel.isStatusOffline(val)) return false;
 					if (!WTA.RTCManager.connected()) return false;
 					if (Ext.isEmpty(this.get('friendFullId'))) return false;
 					return true;
@@ -100,7 +100,6 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	initComponent: function() {
 		var me = this;
 		me.scrollTask = new Ext.util.DelayedTask(me.onScrollTask, me);
-		//me.setHotMarker(me.hotMarker);
 		
 		Ext.apply(me, {
 			tbar: me.createTBar(),
@@ -347,6 +346,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 				vm = me.getViewModel();
 		vm.set('friendFullId', friendFullId);
 		vm.set('friendStatus', status);
+		me.fireEvent('updatefriendpresence', me, friendFullId, status);
 	},
 	
 	setHotMarker: function(hot) {

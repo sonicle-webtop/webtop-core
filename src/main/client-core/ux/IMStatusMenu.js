@@ -99,12 +99,12 @@ Ext.define('Sonicle.webtop.core.ux.IMStatusMenu', {
 	},
 	
 	statics: {
-		statusText: function(status) {
-			return WT.res('im.pstatus.'+status);
+		statusText: function(pstatus) {
+			return WT.res('im.pstatus.'+pstatus);
 		},
 		
-		statusIconCls: function(status) {
-			return WTF.cssIconCls(WT.XID, 'im-pstatus-'+status);
+		statusIconCls: function(pstatus) {
+			return WTF.cssIconCls(WT.XID, 'im-pstatus-'+pstatus);
 		}
 	}
 });
