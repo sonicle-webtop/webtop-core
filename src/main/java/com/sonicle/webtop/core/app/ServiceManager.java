@@ -723,20 +723,13 @@ public class ServiceManager {
 	}
 	
 	private boolean createController(String serviceId) {
+		ServiceDescriptor descriptor = getDescriptor(serviceId);
+		if (!descriptor.hasController()) return false;
 		synchronized(controllers) {
-			if(controllers.containsKey(serviceId)) throw new RuntimeException("Cannot add controller twice");
-			BaseController inst = instantiateController(serviceId);
-			if(inst != null) {
+			if (controllers.containsKey(serviceId)) throw new RuntimeException("Cannot add controller twice");
+			BaseController inst = instantiateController(descriptor);
+			if (inst != null) {
 				controllers.put(serviceId, inst);
-				/*
-				for(Class<?> clazz : ((AbstractController)inst).getRegisteredClasses()) {
-					try {
-						wta.getComponentsManager().register(serviceId, clazz);
-					} catch(Throwable t) {
-						logger.error("Unable to instantiate component class [{}]", clazz.getCanonicalName());
-					}
-				}
-				*/
 				return true;
 			} else {
 				return false;
@@ -744,13 +737,11 @@ public class ServiceManager {
 		}
 	}
 	
-	private BaseController instantiateController(String serviceId) {
-		ServiceDescriptor descr = getDescriptor(serviceId);
-		
+	private BaseController instantiateController(ServiceDescriptor descriptor) {
 		try {
-			return (BaseController)descr.getControllerClass().newInstance();
+			return (BaseController)descriptor.getControllerClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("Controller: instantiation failure [{}]", descr.getManifest().getControllerClassName(), t);
+			logger.error("Controller: instantiation failure [{}]", descriptor.getManifest().getControllerClassName(), t);
 			return null;
 		}
 	}
@@ -1017,7 +1008,7 @@ public class ServiceManager {
 				manifests.add(manifest);
 				
 			} catch(Exception ex) {
-				logger.warn("Service descriptor  for '{}' version {} skipped. Cause: {}", elService.getString("shortName"), elService.getString("version"), ex.getMessage());
+				logger.warn("Service descriptor for '{}' version {} skipped. Cause: {}", elService.getString("shortName"), elService.getString("version"), ex.getMessage());
 			}
 		}
 		return manifests;
