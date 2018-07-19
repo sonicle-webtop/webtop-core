@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.util.Locale;
 
 /**
  *
@@ -52,20 +53,44 @@ public abstract class SmsProvider {
 		@SerializedName("twilio") TWILIO
 	}
 	
-	public static final SmsProvider getInstance(String providerName, UserProfileId pid) {
+	public static final int FROM_NAME_MAX_LENGTH = 11;
+	public static final int FROM_NUMBER_MAX_LENGTH = 16;
+	
+	protected String webrestURL;
+	protected Locale locale;
+	
+	public SmsProvider(Locale locale, String webrestURL) {
+		if (webrestURL.endsWith("/")) webrestURL=webrestURL.substring(0,webrestURL.length()-1);
+		this.webrestURL=webrestURL;
+		this.locale=locale;
+	}
+	
+	public static final SmsProvider getInstance(Locale locale, String providerName, UserProfileId pid) {
 		SmsProvider provider=null;
 		if (SmsProviderName.SMSHOSTING.equals(EnumUtils.forSerializedName(providerName, SmsProviderName.class))) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
-			provider=new SmsHosting(css.getSmsWebrestURL());
+			provider=new SmsHosting(locale, css.getSmsWebrestURL());
 		}
 		else if (SmsProviderName.TWILIO.equals(EnumUtils.forSerializedName(providerName, SmsProviderName.class))) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
-			provider=new SmsHosting(css.getSmsWebrestURL());
+			provider=new SmsHosting(locale, css.getSmsWebrestURL());
 			
 		}
 		return provider;
 	}
 	
-	public abstract boolean send(String number, String text, String username, char password[]) throws WTException;
+	public static String sanitizeFromName(String fromName) {
+		if (fromName!=null && fromName.length()>FROM_NAME_MAX_LENGTH)
+			fromName=fromName.substring(0,FROM_NAME_MAX_LENGTH);
+		return fromName;
+	}
+	
+	public static String sanitizeFromNumber(String fromNumber) {
+		if (fromNumber!=null && fromNumber.length()>FROM_NUMBER_MAX_LENGTH)
+			fromNumber=fromNumber.substring(0,FROM_NUMBER_MAX_LENGTH);
+		return fromNumber;
+	}
+	
+	public abstract boolean send(String fromName, String fromNumber, String number, String text, String username, char password[]) throws WTException;
 	
 }

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app.sms;
 
 import com.sonicle.webtop.core.sdk.WTException;
+import java.util.Locale;
 
 /**
  *
@@ -41,14 +42,12 @@ import com.sonicle.webtop.core.sdk.WTException;
  */
 public class Twillio extends SmsProvider {
 	
-	private String webrestURL;
-	
-	public Twillio(String webrestURL) {
-		this.webrestURL=webrestURL;
+	public Twillio(Locale locale, String webrestURL) {
+		super(locale,webrestURL);
 	}
 
 	@Override
-	public boolean send(String number, String text, String username, char[] password) throws WTException {
+	public boolean send(String fromName, String fromNumber, String number, String text, String username, char[] password) throws WTException {
 		boolean success=false;
 		return success;
 	}

@@ -33,7 +33,14 @@
  */
 package com.sonicle.webtop.core.app.sms;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.sonicle.webtop.core.CoreLocaleKey;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.util.Locale;
 
 /**
  *
@@ -41,15 +48,48 @@ import com.sonicle.webtop.core.sdk.WTException;
  */
 public class SmsHosting extends SmsProvider {
 	
-	private String webrestURL;
+	private static final String WEBREST_SEND = "/sms/send";
 	
-	public SmsHosting(String webrestURL) {
-		this.webrestURL=webrestURL;
+	public SmsHosting(Locale locale, String webrestURL) {
+		super(locale,webrestURL);
 	}
 
 	@Override
-	public boolean send(String number, String text, String username, char[] password) throws WTException {
+	public boolean send(String fromName, String fromNumber, String number, String text, String username, char[] password) throws WTException {
 		boolean success=false;
+		try {
+			fromName=sanitizeFromName(fromName);
+			fromNumber=sanitizeFromNumber(fromNumber);
+			
+			HttpResponse<JsonNode> resp=Unirest.post(webrestURL+WEBREST_SEND)
+				.basicAuth(username, new String(password))
+				.field("from",(fromNumber!=null && fromNumber.length()>0)?fromNumber:fromName)
+				.field("to",number)
+				.field("text",text)
+				.asJson();
+			switch(resp.getStatus()) {
+				case 200:
+					success=true;
+					break;
+					
+				case 400:
+					String errorMsg=resp.getBody().getObject().getString("errorMsg");
+					String excMsg=errorMsg;
+					if (errorMsg.equals("BAD_TEXT")) excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_TEXT);
+					else if (errorMsg.equals("BAD_FROM")) excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_FROM);
+					else if (errorMsg.equals("BAD_CREDIT")) excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_CREDIT);
+					else if (errorMsg.equals("NO_VALID_RECIPIENT")) excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_INVALID_RECIPIENT);
+					throw new WTException(excMsg);
+					
+				case 401:
+					throw new WTException("Invalid credentials");
+					
+				case 500:
+					throw new WTException("Generic error");
+			}
+		} catch(UnirestException exc) {
+			throw new WTException(exc.getMessage());
+		}
 		return success;
 	}
 	
