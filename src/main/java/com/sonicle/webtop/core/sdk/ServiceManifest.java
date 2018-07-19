@@ -122,15 +122,17 @@ public class ServiceManifest {
 		
 		hconf = svcEl.configurationsAt("controller");
 		if (!hconf.isEmpty()) {
-			if (hconf.size() != 1) throw new Exception(invalidCardinalityEx("controller", "1"));
+			//if (hconf.size() != 1) throw new Exception(invalidCardinalityEx("controller", "1"));
+			if (hconf.size() > 1) throw new Exception(invalidCardinalityEx("controller", "*1"));
 			
 			final String cn = hconf.get(0).getString("[@className]");
 			if (StringUtils.isBlank(cn)) throw new Exception(invalidAttributeValueEx("controller", "className"));
 			controllerClassName = buildJavaClassName(javaPackage, cn);
 			
 		} else { // Old-style configuration
-			if (!svcEl.containsKey("controllerClassName")) throw new Exception(invalidValueEx("controllerClassName"));
-			controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+			if (svcEl.containsKey("controllerClassName")) {
+				controllerClassName = LangUtils.buildClassName(javaPackage, StringUtils.defaultIfEmpty(svcEl.getString("controllerClassName"), "Controller"));
+			}
 		}
 		
 		hconf = svcEl.configurationsAt("manager");

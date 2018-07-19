@@ -111,11 +111,16 @@ class ServiceDescriptor {
 		return manifest;
 	}
 	
+	public boolean hasController() {
+		return (controllerClass != null);
+	}
+	
 	public Class getControllerClass() {
 		return controllerClass;
 	}
 	
 	public boolean doesControllerImplements(Class clazz) {
+		if (!hasController()) return false;
 		return ClassHelper.isImplementingInterface(controllerClass, clazz);
 	}
 	
