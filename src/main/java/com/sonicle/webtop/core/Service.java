@@ -296,6 +296,7 @@ public class Service extends BaseService {
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
 		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
 		co.put("pbxConfigured",coreMgr.pbxConfigured());
+		co.put("smsConfigured",coreMgr.smsConfigured());
 		
 		return co;
 	}
@@ -1377,6 +1378,18 @@ public class Service extends BaseService {
 			new JsonResult(false, "Error in processRestoreAutosave").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void processSendSMS(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String number=ServletUtils.getStringParameter(request, "number", true);
+			String text=ServletUtils.getStringParameter(request, "text", true);
+			coreMgr.smsSend(number,text);
+			new JsonResult().printTo(out);
+		} catch (Exception ex) {
+			logger.error("Error in processSendSMS", ex);
+			new JsonResult(false, "Error in processSendSMS").printTo(out);
 		}
 	}
 	

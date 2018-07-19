@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
 import com.sonicle.webtop.core.app.pbx.NethVoice;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
+import com.sonicle.webtop.core.app.sms.SmsProvider;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAutosave;
@@ -144,6 +145,7 @@ public class CoreManager extends BaseManager {
 	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
 	
 	private PbxProvider pbx=null;
+	private SmsProvider sms=null;
 	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
@@ -170,6 +172,17 @@ public class CoreManager extends BaseManager {
 			String provider=css.getPbxProvider();
 			if (provider!=null) {
 				pbx=PbxProvider.getInstance(provider, pid);
+			}
+		}
+	}
+
+	private void initSms() {
+		if (sms==null) {
+			UserProfileId pid=getTargetProfileId();
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
+			String provider=css.getSmsProvider();
+			if (provider!=null) {
+				sms=SmsProvider.getInstance(provider, pid);
 			}
 		}
 	}
@@ -1240,6 +1253,45 @@ public class CoreManager extends BaseManager {
 	}
 	
 	/**
+	 * Check if an SMS provider has been configured.
+	 * @return true if the SMS instance has been configured, false otherwise
+	 */
+	
+	public boolean smsConfigured() {
+		initSms();
+		return sms!=null;
+	}
+	
+	public SmsProvider smsGetProvider() {
+		initSms();
+		return sms;
+	}
+	
+	/**
+	 * Send SMS through the configured SMS provider.
+	 * @param number The destination number
+	 * @param text The SMS text
+	 * @return true if the SMS was accpeted by the provider, false otherwise
+	 */
+	
+	public void smsSend(String number, String text) throws WTException {
+		initSms();
+		if (sms==null) {
+			throw new WTException("SMS not initialized");
+		}
+		UserProfileId targetPid = getTargetProfileId();
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());		
+		
+		//use webtop username/password or from user settings
+		String username=css.getSmsWebrestUser();
+		if (username==null) username=targetPid.getUserId();
+		String spassword=css.getSmsWebrestPassword();
+		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
+		
+		sms.send(number, text, username, password);
+	}
+	
+	/**
 	 * Check if a PBX has been configured.
 	 * @return true if the PBX instance has been configured, false otherwise
 	 */
@@ -1254,7 +1306,7 @@ public class CoreManager extends BaseManager {
 	 * @return The PBX provider instance
 	 */
 	
-	public PbxProvider pbxGetProvider(String number) {
+	public PbxProvider pbxGetProvider() {
 		initPbx();
 		return pbx;
 	}

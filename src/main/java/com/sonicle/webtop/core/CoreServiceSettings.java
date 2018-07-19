@@ -196,6 +196,22 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(PBX_PROVIDER_NETHVOICE_WEBREST_URL,null);
 	}
 	
+	public String getSmsProvider() {
+		return getString(SMS_PROVIDER,null);
+	}
+	
+	public String getSmsWebrestURL() {
+		return getString(SMS_PROVIDER_WEBREST_URL,null);
+	}
+	
+	public String getSmsWebrestUser() {
+		return getString(SMS_PROVIDER_WEBREST_USER,null);
+	}
+	
+	public String getSmsWebrestPassword() {
+		return getString(SMS_PROVIDER_WEBREST_PASSWORD,null);
+	}
+	
 	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
 		if (fallbackOnDefault && (value == null)) {

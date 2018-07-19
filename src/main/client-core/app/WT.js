@@ -666,21 +666,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Convenience function to run a default action on an email.
-	 * At the moment, WT will search for the mail service and start a new email.
-	 * @param {String} address The email address.
-	 */
-	handleMailAddress: function(address) {
-		var mys=WT.getApp().getService("com.sonicle.webtop.mail");
-		if (mys) {
-			mys.startNewMessage(mys.currentFolder,{
-				recipients: [{rtype: 'to', email: address}],
-				format: mys.getVar("format")
-			});
-		}
-	},
-	
-	/**
 	 * Shows a pop-up notification (aka toast).
 	 * @param {String} text Text.
 	 * @param {Object} [opts] An object containing message configuration.
@@ -771,41 +756,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			Ext.apply(cfg, toastCfg);
 		}
 		return Ext.toast(cfg);
-	},
-	
-	/**
-	 * Convenience function to run a phone call through the configured pbx.
-	 * @param {String} number The number to call.
-	 */
-	handlePbxCall: function(number) {
-		if (WT.getVar("pbxConfigured")) {
-			WT.toast({
-				 html: number,
-				 title: WT.res('pbx.call.toast.lbl'),
-				 width: 300,
-				 align: 'br',
-				 timeout: 10000
-			});
-			WT.ajaxReq(WT.ID, 'PbxCall', {
-				params: {
-					number: number
-				},
-				callback: function(success, json) {
-					if(success) {
-					} else {
-						WT.error(json.message);
-					}
-				}
-			});
-		} else {
-			WT.toast({
-				 html: WT.res('opts.pbx.unconfigured.tit'),
-				 title: WT.res('error'),
-				 width: 300,
-				 align: 'br',
-				 timeout: 10000
-			});
-		}
 	},
 	
 	reload: function() {
