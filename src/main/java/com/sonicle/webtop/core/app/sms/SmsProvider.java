@@ -73,7 +73,7 @@ public abstract class SmsProvider {
 		}
 		else if (SmsProviderName.TWILIO.equals(EnumUtils.forSerializedName(providerName, SmsProviderName.class))) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
-			provider=new SmsHosting(locale, css.getSmsWebrestURL());
+			provider=new Twilio(locale, css.getSmsWebrestURL());
 			
 		}
 		return provider;
