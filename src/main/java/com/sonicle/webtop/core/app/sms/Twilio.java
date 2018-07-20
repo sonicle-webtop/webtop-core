@@ -33,13 +33,8 @@
  */
 package com.sonicle.webtop.core.app.sms;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.WT;
-import static com.sonicle.webtop.core.app.sms.SmsProvider.sanitizeFromName;
 import static com.sonicle.webtop.core.app.sms.SmsProvider.sanitizeFromNumber;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.twilio.rest.api.v2010.account.Message;
