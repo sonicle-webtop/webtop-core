@@ -217,8 +217,9 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			reference: 'toolboxbtn',
 			iconCls: 'wt-menu-tools',
 			tooltip: WT.res('menu.tools.lbl'),
-			menu: toolMnuItms
-		}, '-');
+			menu: toolMnuItms,
+			hidden: toolsCount===0
+		}/*, '-'*/);
 		if (WT.getVar('imEnabled') === true) {
 			menuTbItms.push({
 				xtype: 'wtimbutton',
@@ -409,6 +410,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			xtype: 'container',
 			referenceHolder: true,
 			layout: 'border',
+			height: 48,
 			items: [{
 				xtype: 'toolbar',
 				region: 'west',
@@ -416,6 +418,9 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				referenceHolder: true,
 				cls: 'wt-vieport-dock',
 				border: false,
+				defaults: {
+					scale: 'medium'
+				},			
 				style: {
 					paddingTop: 0,
 					paddingBottom: 0
@@ -443,13 +448,15 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				reference: 'menutb',
 				cls: 'wt-vieport-dock',
 				border: false,
+				defaults: {
+					scale: 'medium'
+				},			
 				style: {
 					paddingTop: 0,
 					paddingBottom: 0
 				},
 				items: menuTbItms
-			}],
-			height: 35
+			}]
 		};
 	},
 	

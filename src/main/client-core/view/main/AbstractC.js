@@ -472,6 +472,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				Ext.iterate(acts, function(act) {
 					menu.add(act);
 				});
+				toolboxbtn.setHidden(acts.length===0);
 			}
 		},
 		
