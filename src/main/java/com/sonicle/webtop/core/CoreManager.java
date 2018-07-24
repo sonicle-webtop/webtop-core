@@ -182,7 +182,7 @@ public class CoreManager extends BaseManager {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
 			String provider=css.getSmsProvider();
 			if (provider!=null) {
-				sms=SmsProvider.getInstance(provider, pid);
+				sms=SmsProvider.getInstance(getLocale(), provider, pid);
 			}
 		}
 	}
@@ -1281,13 +1281,14 @@ public class CoreManager extends BaseManager {
 		UserProfileId targetPid = getTargetProfileId();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());		
 		
-		//use webtop username/password or from user settings
+		//use common service settings or webtop username/password
 		String username=css.getSmsWebrestUser();
 		if (username==null) username=targetPid.getUserId();
 		String spassword=css.getSmsWebrestPassword();
 		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
-		
-		sms.send(number, text, username, password);
+		String fromMobile=WT.getUserPersonalInfo(targetPid).getMobile();
+		String fromName=WT.getUserData(targetPid).getDisplayName();
+		sms.send(fromName, fromMobile, number, text, username, password);
 	}
 	
 	/**

@@ -152,7 +152,7 @@ Ext.define('Sonicle.webtop.core.sdk.Sharing', {
 					me.addAct('deleteRights', {
 						text: WT.res('act-delete.lbl'),
 						tooltip: null,
-						iconCls: 'wt-icon-delete-xs',
+						iconCls: 'wt-icon-delete',
 						handler: function() {
 							var sm = me.lref('gprights').getSelectionModel();
 							me.deleteRights(sm.getSelection());

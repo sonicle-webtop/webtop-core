@@ -33,23 +33,70 @@
  */
 package com.sonicle.webtop.core.app.sms;
 
+import com.sonicle.webtop.core.CoreLocaleKey;
+import com.sonicle.webtop.core.app.WT;
+import static com.sonicle.webtop.core.app.sms.SmsProvider.sanitizeFromNumber;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.twilio.rest.api.v2010.account.Message;
+import com.twilio.type.PhoneNumber;
+import java.util.Locale;
 
 /**
  *
  * @author gabriele.bulfon
  */
-public class Twillio extends SmsProvider {
+public class Twilio extends SmsProvider {
 	
-	private String webrestURL;
+	private static final String WEBREST_SEND = "/Messages.json";
 	
-	public Twillio(String webrestURL) {
-		this.webrestURL=webrestURL;
+	public Twilio(Locale locale, String webrestURL) {
+		super(locale,webrestURL);
 	}
 
 	@Override
-	public boolean send(String number, String text, String username, char[] password) throws WTException {
+	public boolean send(String fromName, String fromNumber, String number, String text, String username, char[] password) throws WTException {
 		boolean success=false;
+		try {
+			com.twilio.Twilio.init(username, new String(password));
+			//fromName=sanitizeFromName(fromName);
+			fromNumber=sanitizeFromNumber(fromNumber);
+			if (fromNumber==null)
+				throw new WTException(WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_FROM));
+			
+			PhoneNumber pnTo=new PhoneNumber(number);
+			PhoneNumber pnFrom=new PhoneNumber(fromNumber);
+			Message sms=Message.creator(pnTo, pnFrom, text).create();
+			Message.Status status=sms.getStatus();
+			if (status==status.FAILED || status==status.UNDELIVERED) {
+				int err=sms.getErrorCode();
+				String excMsg=sms.getErrorMessage();
+				switch(err) {
+					case 63001:
+						excMsg="Invalid credentials";
+						break;
+					
+					case 63002:
+					case 63007:
+						excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_FROM);
+						break;
+						
+					case 63003:
+						excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_INVALID_RECIPIENT);
+						break;
+						
+					case 63005:
+					case 63006:
+						excMsg=WT.lookupCoreResource(locale, CoreLocaleKey.SMS_ERROR_BAD_TEXT);
+						break;
+						
+					
+				}
+			} else {
+				success=true;
+			}
+		} catch(Exception exc) {
+			throw new WTException(exc.getMessage());
+		}
 		return success;
 	}
 	

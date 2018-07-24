@@ -73,7 +73,7 @@ Ext.define('Sonicle.webtop.core.ux.IMButton', {
 		},
 		
 		statusIconCls: function(status) {
-			return WTF.cssIconCls(WT.XID, 'im-status-'+status, 'xs');
+			return WTF.cssIconCls(WT.XID, 'im-status-'+status, 's');
 		}
 	}
 });

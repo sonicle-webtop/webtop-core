@@ -1389,7 +1389,7 @@ public class Service extends BaseService {
 			new JsonResult().printTo(out);
 		} catch (Exception ex) {
 			logger.error("Error in processSendSMS", ex);
-			new JsonResult(false, "Error in processSendSMS").printTo(out);
+			new JsonResult(false, ex.getMessage()).printTo(out);
 		}
 	}
 	

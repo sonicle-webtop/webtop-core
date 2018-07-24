@@ -143,7 +143,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					me.addAct('refreshFetchers', {
 						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
-						iconCls: 'wt-icon-refresh-xs',
+						iconCls: 'wt-icon-refresh',
 						handler: function() {
 							me.lref('gpfetchers').getStore().load();
 						}
@@ -219,7 +219,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridge', {
 					me.addAct('refreshRelays', {
 						text: null,
 						tooltip: WT.res('act-refresh.lbl'),
-						iconCls: 'wt-icon-refresh-xs',
+						iconCls: 'wt-icon-refresh',
 						handler: function() {
 							me.lref('gprelays').getStore().load();
 						}

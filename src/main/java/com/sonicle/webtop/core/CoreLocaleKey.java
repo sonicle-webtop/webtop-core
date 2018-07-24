@@ -78,7 +78,12 @@ public class CoreLocaleKey {
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_HEADER = "tpl.email.devicesSyncCheck.body.header";
 	public static final String TPL_EMAIL_DEVICESYNCCHECK_BODY_MESSAGE = "tpl.email.devicesSyncCheck.body.message";
 	
-	//public static final String OTP_SETUP_ERROR_CODE = "otp.setup.error.code";
+	public static final String SMS_ERROR_BAD_TEXT = "sms.error.bad.text";
+	public static final String SMS_ERROR_BAD_FROM = "sms.error.bad.from";
+	public static final String SMS_ERROR_BAD_CREDIT = "sms.error.bad.credit";
+	public static final String SMS_ERROR_INVALID_RECIPIENT = "sms.error.invalid.recipient";
+	
+//public static final String OTP_SETUP_ERROR_CODE = "otp.setup.error.code";
 	
 	public static final String XMPP_ERROR_CONNECTION = "xmpp.error.connection";
 	public static final String XMPP_ERROR_AUTHENTICATION = "xmpp.error.authentication";
