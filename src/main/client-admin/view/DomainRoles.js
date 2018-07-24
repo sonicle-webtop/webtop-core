@@ -122,7 +122,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainRoles', {
 				me.addAct('refresh', {
 					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
-					iconCls: 'wt-icon-refresh-xs',
+					iconCls: 'wt-icon-refresh',
 					handler: function() {
 						me.lref('gp').getStore().load();
 					}
