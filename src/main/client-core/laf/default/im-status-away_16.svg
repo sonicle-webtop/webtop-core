@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="-289 412.9 16 16" style="enable-background:new -289 412.9 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{clip-path:url(#SVGID_2_);}
+	.st1{fill:#FFFFFF;stroke:#3E79B4;stroke-linejoin:round;stroke-miterlimit:1;}
+	.st2{fill:#FFFFFF;}
+	.st3{fill:none;stroke:#A7A9AC;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1;}
+	.st4{fill:#3E79B4;}
+	.st5{fill:#E9B665;}
+</style>
+<g id="main">
+	<g>
+		<defs>
+			<path id="SVGID_1_" d="M-283,424.4c0-3,2.5-5.5,5.5-5.5c1.9,0,3.5,0.9,4.5,2.3v-8.3h-16v16h8.3C-282.1,427.9-283,426.2-283,424.4
+				z"/>
+		</defs>
+		<clipPath id="SVGID_2_">
+			<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+		</clipPath>
+		<g id="icon" class="st0">
+			<path class="st1" d="M-278.2,421.4h-4.3l-3.6,2.6v-2.6h-1.7c-0.4,0-0.7-0.3-0.7-0.7v-6.5c0-0.4,0.3-0.7,0.7-0.7h9.5
+				c0.4,0,0.7,0.3,0.7,0.7v6.5C-277.5,421.1-277.8,421.4-278.2,421.4z"/>
+			<path class="st2" d="M-275.5,415.6h-0.4v5.6c0,1-0.9,1.7-1.8,1.7h-4.4l-1.7,1.2c-0.1,0.1-0.1,0.3,0.1,0.3h2.3l4,2.5v-2.5h1.9
+				c0.6,0,1-0.5,1-1v-6.7C-274.5,416.1-275,415.6-275.5,415.6z"/>
+			<path class="st3" d="M-283.6,424.4h2.1l4,2.5v-2.5h2c0.6,0,1-0.5,1-1.1v-6.7c0-0.6-0.5-1-1-1h-0.4"/>
+			<path class="st4" d="M-285.2,417.8c0,0.4-0.3,0.8-0.8,0.8c-0.4,0-0.8-0.4-0.8-0.8s0.4-0.8,0.8-0.8S-285.2,417.3-285.2,417.8z
+				 M-283.2,416.9c-0.4,0-0.8,0.4-0.8,0.8s0.4,0.8,0.8,0.8c0.6,0,0.8-0.4,0.8-0.8S-282.7,416.9-283.2,416.9z M-280.3,416.9
+				c-0.4,0-0.8,0.4-0.8,0.8s0.4,0.8,0.8,0.8c0.6,0,0.8-0.4,0.8-0.8S-279.9,416.9-280.3,416.9z"/>
+		</g>
+	</g>
+	<g id="overlay">
+		<polygon class="st2" points="-276.9,423.7 -276.9,420.4 -278.2,420.4 -278.2,425.1 -276.9,425.1 -274.6,425.1 -274.6,423.7 		"/>
+		<path class="st5" d="M-277.5,419.9c-2.5,0-4.5,2-4.5,4.5c0,2.5,2,4.5,4.5,4.5s4.5-2,4.5-4.5C-273,421.9-275,419.9-277.5,419.9z
+			 M-274.7,424.7c0,0.1-0.1,0.2-0.2,0.2h-2h-1.1v-1.1v-1.2v-0.8v-1.1c0-0.1,0.1-0.2,0.2-0.2h0.7c0.1,0,0.2,0.1,0.2,0.2v1.1v0.8v1.2
+			h2c0.1,0,0.2,0.1,0.2,0.2V424.7z"/>
+	</g>
+</g>
+</svg>

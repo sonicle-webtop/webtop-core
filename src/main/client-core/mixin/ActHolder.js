@@ -65,7 +65,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 		*/
 		var txt = Ext.isDefined(cfg.text) ? cfg.text : me._buildText(null, name),
 				tip = Ext.isDefined(cfg.tooltip) ? cfg.tooltip : me._buildTip(null, name),
-				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name),
+				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name, cfg.useSvg),
 				cb = cfg.handler,
 				sco = cfg.scope || this;
 
@@ -125,8 +125,8 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	 * @private
 	 * Builds icon class
 	 */
-	_buildIconCls: function(name) {
-		return WTF.cssIconCls(this._guessSvcXId(), name, 'xs');
+	_buildIconCls: function(name, useSvg) {
+		return (useSvg === true) ? WTF.cssIconCls(this._guessSvcXId(), name) : WTF.cssIconCls(this._guessSvcXId(), name, 'xs');
 	},
 	
 	/**

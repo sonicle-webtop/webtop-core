@@ -105,7 +105,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				columns: [{
 					xtype: 'soiconcolumn',
 					getIconCls: function(v,rec) {
-						return WTF.cssIconCls(WT.findXid(rec.get('serviceId')), rec.get('type'), 'xs');
+						return WTF.cssIconCls(WT.findXid(rec.get('serviceId')), 'reminder-'+rec.get('type'));
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					width: 40
