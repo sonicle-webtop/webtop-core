@@ -924,7 +924,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						me.addAct('deleteSyncDevice', {
 							text: WT.res('act-delete.lbl'),
 							tooltip: null,
-							iconCls: 'wt-icon-delete-xs',
+							iconCls: 'wt-icon-delete',
 							handler: function() {
 								var sm = me.lref('gpsync').getSelectionModel();
 								me.deleteSyncDevice(sm.getSelection());
@@ -935,7 +935,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						me.addAct('refreshSyncDevices', {
 							text: null,
 							tooltip: WT.res('act-refresh.lbl'),
-							iconCls: 'wt-icon-refresh-xs',
+							iconCls: 'wt-icon-refresh',
 							handler: function() {
 								me.refreshSyncDevices();
 							}

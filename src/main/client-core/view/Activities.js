@@ -123,7 +123,7 @@ Ext.define('Sonicle.webtop.core.view.Activities', {
 				me.addAct('refresh', {
 					text: '',
 					tooltip: WT.res('act-refresh.lbl'),
-					iconCls: 'wt-icon-refresh-xs',
+					iconCls: 'wt-icon-refresh',
 					handler: function() {
 						me.lref('gp').getStore().load();
 					}
