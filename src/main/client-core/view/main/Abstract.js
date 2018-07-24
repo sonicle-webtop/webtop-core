@@ -54,7 +54,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	],
 	controller: Ext.create('WTA.view.main.AbstractC'),
 	
-	layout: 'border',
+	layout: 'fit',
 	referenceHolder: true,
 	
 	viewModel: {
@@ -71,14 +71,6 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	fixedToolsCount: 0,
 	
-	getPortalButton: Ext.emptyFn,
-	getCollapsible: Ext.emptyFn,
-	getToolsCard: Ext.emptyFn,
-	getMainCard: Ext.emptyFn,
-	addServiceButton: Ext.emptyFn,
-	createWestCmp: Ext.emptyFn,
-	createCenterCmp: Ext.emptyFn,
-	
 	constructor: function(cfg) {
 		var me = this;
 		me.mixins.refholder.constructor.call(me, cfg);
@@ -93,7 +85,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	initComponent: function() {
-		var me = this, cmp;
+		var me = this;
 		
 		me.addRef('cxmTaskBar', Ext.create({
 			xtype: 'menu',
@@ -129,31 +121,83 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		
 		me.callParent(arguments);
 		
-		me.addToRegion('north', me.createNorthCmp());
-		me.addToRegion('south', me.createSouthCmp());
-		if (WT.getVar('imEnabled') === true) {
-			me.addToRegion('east', me.createEastCmp());
-		}
+		var ldock = me.createLeftDockCmp(),
+			rdock = me.createRightDockCmp(),
+			bstyle = {
+				borderTopWidth: '1px !important',
+				borderBottomWidth: '1px !important'
+			},
+			cmp0;
 		
-		cmp = me.createWestCmp();
-		if (cmp) me.addToRegion('west', cmp);
-		cmp = me.createCenterCmp();
-		if (cmp) me.addToRegion('center', cmp);
+		if (ldock) {
+			bstyle = Ext.apply(bstyle, {
+				borderLeftWidth: '1px !important'
+			});
+		}
+		if (rdock) {
+			bstyle = Ext.apply(bstyle, {
+				borderRightWidth: '1px !important'
+			});
+		}
+		cmp0 = me.add({
+			xtype: 'panel',
+			border: false,
+			bodyStyle: bstyle,
+			bodyCls: 'wt-viewport-body',
+			layout: 'border'
+		});
+		
+		me.addAsDocked(cmp0, me.createTopDockCmp(), 'top', 'tdock');
+		me.addAsDocked(cmp0, me.createBottomDockCmp(), 'bottom', 'bdock');
+		me.addAsDocked(cmp0, ldock, 'left', 'ldock');
+		me.addAsDocked(cmp0, rdock, 'right', 'rdock');
+		if (WT.getVar('imEnabled') === true) {
+			me.addAsRegion(cmp0, me.createEastCmp(), 'east');
+		}
+		me.addAsRegion(cmp0, me.createCenterCmp(), 'center');
 	},
 	
-	getWest: function() {
-		return this.lookupReference('west');
+	getCollapsible: function() {
+		return this.getToolsCard();
 	},
 	
-	getCenter: function() {
-		return this.lookupReference('center');
+	getToolsCard: function() {
+		return this.centerCmp().lookupReference('tool');
+	},
+	
+	getMainsCard: function() {
+		return this.centerCmp().lookupReference('main');
 	},
 	
 	getTaskBar: function() {
-		return this.lookupReference('south');
+		return this.bottomDockCmp().getComponent(0);
 	},
 	
-	createNorthCmp: function() {
+	getPortalButton: Ext.emptyFn,
+	
+	addServiceButton: Ext.emptyFn,
+	
+	topDockCmp: function() {
+		return this.lookupReference('tdock');
+	},
+	
+	bottomDockCmp: function() {
+		return this.lookupReference('bdock');
+	},
+	
+	leftDockCmp: function() {
+		return this.lookupReference('ldock');
+	},
+	
+	rightDockCmp: function() {
+		return this.lookupReference('rdock');
+	},
+	
+	centerCmp: function() {
+		return this.lookupReference('center');
+	},
+	
+	createTopDockCmp: function() {
 		var me = this,
 				acts = WT.getApp().getService(WT.ID).getToolboxActions(),
 				toolsCount = acts.length,
@@ -365,13 +409,12 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			xtype: 'container',
 			referenceHolder: true,
 			layout: 'border',
-			height: 35,
 			items: [{
 				xtype: 'toolbar',
 				region: 'west',
 				reference: 'newtb',
 				referenceHolder: true,
-				cls: 'wt-header',
+				cls: 'wt-vieport-dock',
 				border: false,
 				style: {
 					paddingTop: 0,
@@ -390,7 +433,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				reference: 'servicetb',
 				layout: 'card',
 				defaults: {
-					cls: 'wt-header',
+					cls: 'wt-vieport-dock',
 					border: false,
 					padding: 0
 				}
@@ -398,23 +441,38 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				xtype: 'toolbar',
 				region: 'east',
 				reference: 'menutb',
-				cls: 'wt-header',
+				cls: 'wt-vieport-dock',
 				border: false,
 				style: {
 					paddingTop: 0,
 					paddingBottom: 0
 				},
 				items: menuTbItms
-			}]
+			}],
+			height: 35
 		};
 	},
 	
-	createSouthCmp: function() {
-		return this.createTaskBar({
-			border: '1 0 0 0',
-			height: 35
-		});
+	createBottomDockCmp: function() {
+		return {
+			xtype: 'container',
+			layout: 'hbox',
+			items: [
+				this.createTaskBar({
+					region: 'center',
+					border: false,
+					cls: 'wt-vieport-dock',
+					height: '100%',
+					flex: 1
+				})
+			],
+			minHeight: 35
+		};
 	},
+	
+	createLeftDockCmp: Ext.emptyFn,
+	
+	createRightDockCmp: Ext.emptyFn,
 	
 	createEastCmp: function() {
 		return {
@@ -428,6 +486,34 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				chatdblclick: 'onIMPanelChatDblClick',
 				addgroupchatclick: 'onIMPanelAddGroupChatClick'
 			}
+		};
+	},
+	
+	createCenterCmp: function() {
+		return {
+			xtype: 'container',
+			layout: 'border',
+			items: [{
+				region: 'west',
+				xtype: 'panel',
+				reference: 'tool',
+				split: true,
+				collapsible: true,
+				border: false,
+				width: 200,
+				minWidth: 100,
+				layout: 'card',
+				items: [],
+				listeners: {
+					resize: 'onToolResize'
+				}
+			}, {
+				region: 'center',
+				xtype: 'container',
+				reference: 'main',
+				layout: 'card',
+				items: []
+			}]
 		};
 	},
 	
@@ -456,8 +542,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	 */
 	addNewActions: function(acts) {
 		var me = this,
-				north = me.lookupReference('north'),
-				newtb = north.lookupReference('newtb'),
+				tdock = me.topDockCmp(),
+				newtb = tdock.lookupReference('newtb'),
 				newbtn = newtb.lookupReference('newbtn');
 		
 		var menu = newbtn.getMenu();
@@ -486,6 +572,38 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				});
 			}
 			me.add(cmp);
+		}
+	},
+	
+	addAsRegion: function(parent, cmp, region) {
+		if (cmp) {
+			if (cmp.isComponent) {
+				cmp.setRegion(region);
+				cmp.setReference(region);
+			} else {
+				Ext.apply(cmp, {
+					region: region,
+					reference: region,
+					referenceHolder: true
+				});
+			}
+			parent.add(cmp);
+		}
+	},
+	
+	addAsDocked: function(parent, cmp, dock, reference) {
+		if (cmp) {
+			if (cmp.isComponent) {
+				cmp.setDock(dock);
+				cmp.setReference(reference);
+			} else {
+				Ext.apply(cmp, {
+					dock: dock,
+					reference: reference,
+					referenceHolder: true
+				});
+			}
+			parent.addDocked(cmp);
 		}
 	}
 });

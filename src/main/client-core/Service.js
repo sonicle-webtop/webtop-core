@@ -70,7 +70,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		me.setMainComponent(Ext.create({
 			xtype: 'dashboard',
 			stateful: false,
-			bodyCls: 'wt-portal',
+			border: false,
+			bodyCls: 'wt-portal-body',
 			columnWidths: [
 				0.25,0.25,0.25,0.25
 			],

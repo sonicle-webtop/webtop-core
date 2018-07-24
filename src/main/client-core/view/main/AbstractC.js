@@ -38,8 +38,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	svctbmap: null,
 	toolmap: null,
 	mainmap: null,
-	//viewCtsById: null,
-	//viewCtsByUTag: null,
 	
 	viewsMap: null,
 	viewsByCt: null,
@@ -64,9 +62,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = {};
 		me.toolmap = {};
 		me.mainmap = {};
-		//me.viewCtsById = {};
-		//me.viewCtsByUTag = {};
-		
 		me.viewsMap = {};
 		me.viewsByCt = {};
 		me.viewsByTag = {};
@@ -81,9 +76,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		me.svctbmap = null;
 		me.toolmap = null;
 		me.mainmap = null;
-		//me.viewCtsById = null;
-		//me.viewCtsByUTag = null;
-		
 		me.viewsMap = null;
 		me.viewsByCt = null;
 		me.viewsByTag = null;
@@ -92,8 +84,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	},
 	
 	getIMButton: function() {
-		var north = this.lookupReference('north');
-		return north.lookupReference('imbtn');
+		var tdock = this.getView().topDockCmp();
+		return tdock.lookupReference('imbtn');
 	},
 	
 	getIMPanel: function() {
@@ -106,11 +98,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	 */
 	addService: function(svc) {
 		var me = this,
-				north = null,
+				tdock = me.getView().topDockCmp(),
 				tb = null, tool = null, main = null;
 		
 		if (me.svctbmap[svc.ID]) return; // Checks if service has been already added
-		north = me.lookupReference('north');
 		
 		// Retrieves toolbar component
 		if (Ext.isFunction(svc.getToolbar)) tb = svc.getToolbar.call(svc);
@@ -118,7 +109,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			tb = Ext.create({xtype: 'toolbar'});
 		}
 		me.svctbmap[svc.ID] = tb.getId();
-		north.lookupReference('servicetb').add(tb);
+		tdock.lookupReference('servicetb').add(tb);
 		
 		// Retrieves tool/main component
 		if (Ext.isFunction(svc.getToolComponent)) tool = svc.getToolComponent.call(svc);
@@ -130,18 +121,15 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		var me = this,
 				vw = me.getView(),
 				tools = vw.getToolsCard(),
-				mains = vw.getMainCard();
+				mains = vw.getMainsCard();
 		
-		if (!tool || !tool.isPanel) {
-			tool = Ext.create({xtype: 'wtpanel', header: false});
-		} else {
+		if (Ext.isDefined(tool) && tool.isXType('container')) {
 			WTU.removeHeader(tool);
+			me.toolmap[svc.ID] = tool.getId();
+			tools.add(tool);
 		}
-		me.toolmap[svc.ID] = tool.getId();
-		tools.add(tool);
-		
-		if (!main || !main.isXType('container')) {
-			main = Ext.create({xtype: 'wtpanel'});
+		if (!Ext.isDefined(main) || !main.isXType('container')) {
+			main = Ext.create(me.createDummyMain());
 		}
 		me.mainmap[svc.ID] = main.getId();
 		mains.add(main);
@@ -455,8 +443,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 	privates: {
 		setActiveNewActions: function(svc) {
 			var me = this,
-					north = me.lookupReference('north'),
-					newtb = north.lookupReference('newtb'),
+					tdock = me.getView().topDockCmp(),
+					newtb = tdock.lookupReference('newtb'),
 					newbtn = newtb.lookupReference('newbtn'),
 					first;
 
@@ -470,9 +458,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		
 		setActiveToolboxAction: function(svc) {
 			var me = this,
-					toolsCount = me.getView().fixedToolsCount,
-					north = me.lookupReference('north'),
-					toolboxbtn = north.lookupReference('toolboxbtn'),
+					view = me.getView(),
+					toolsCount = view.fixedToolsCount,
+					tdock = view.topDockCmp(),
+					toolboxbtn = tdock.lookupReference('toolboxbtn'),
 					menu = toolboxbtn ? toolboxbtn.menu : null,
 					sidx = (toolsCount === 0) ? 0 : toolsCount+1,
 					acts;
@@ -488,8 +477,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		
 		setActiveToolbar: function(svc) {
 			var me = this,
-					north = me.lookupReference('north'),
-					svctb = north.lookupReference('servicetb');
+					tdock = me.getView().topDockCmp(),
+					svctb = tdock.lookupReference('servicetb');
 
 			svctb.getLayout().setActiveItem(me.svctbmap[svc.ID]);
 		},
@@ -497,15 +486,20 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		setActiveComponents: function(svc) {
 			var me = this,
 					vw = me.getView(),
-					side = vw.getCollapsible(),
+					clps = vw.getCollapsible(),
 					tools = vw.getToolsCard(),
-					mains = vw.getMainCard(),
-					active;
+					mains = vw.getMainsCard(),
+					cmp;
 			
-			tools.getLayout().setActiveItem(me.toolmap[svc.ID]);
-			active = tools.getLayout().getActiveItem();
-			if (active) side.setTitle(active.getTitle());
-			side.setWidth(svc.getVar('viewportToolWidth') || 200);
+			cmp = tools.getComponent(me.toolmap[svc.ID]);
+			if (cmp) {
+				tools.setVisible(true);
+				tools.getLayout().setActiveItem(cmp);
+				clps.setTitle(cmp.getTitle());
+				clps.setWidth(svc.getVar('viewportToolWidth') || 200);
+			} else {
+				tools.setVisible(false);
+			}
 			mains.getLayout().setActiveItem(me.mainmap[svc.ID]);
 		},
 		
@@ -600,6 +594,19 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 				win.alignTo(targetEl, 'br-br', [-xoff, -yoff]);
 				xoff += (win.getWidth() + xspacing);
 			}
+		},
+		
+		createDummyMain: function() {
+			return {
+				xtype: 'wtpanel',
+				layout: 'center',
+				bodyStyle: 'text-align:center;',
+				items: [{
+					xtype: 'wtpanel',
+					html: 'This is your Main area, you should put some content here.<br>' +
+							'Call <i>setMainComponent()</i> method in your service <i>init()</i> callback to achieve this.'
+				}]
+			};
 		},
 		
 		generateUTag: function(sid, tag) {

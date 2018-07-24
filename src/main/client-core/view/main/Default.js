@@ -36,23 +36,11 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	extend: 'WTA.view.main.Abstract',
 	
 	getPortalButton: function() {
-		return this.getWest().getComponent(WT.ID);
-	},
-	
-	getCollapsible: function() {
-		return this.getToolsCard();
-	},
-	
-	getToolsCard: function() {
-		return this.getCenter().lookupReference('tool');
-	},
-	
-	getMainCard: function() {
-		return this.getCenter().lookupReference('main');
+		return this.leftDockCmp().getComponent(WT.ID);
 	},
 	
 	addServiceButton: function(desc) {
-		this.getWest().add({
+		this.leftDockCmp().add({
 			xclass: 'WTA.ux.ServiceButton',
 			sid: desc.getId(),
 			scale: 'large',
@@ -60,6 +48,21 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		});
 	},
 	
+	createLeftDockCmp: function() {
+		return {
+			xtype: 'toolbar',
+			vertical: true,
+			border: false,
+			cls: 'wwt-vieport-dock',
+			enableOverflow: true,
+			overflowHandler: 'scroller',
+			items: [
+				this.createPortalButton({scale: 'large'})
+			]
+		};
+	}
+	
+	/*
 	createWestCmp: function() {
 		return {
 			xtype: 'toolbar',
@@ -71,33 +74,6 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 				this.createPortalButton({scale: 'large'})
 			]
 		};
-	},
-	
-	createCenterCmp: function() {
-		return {
-			xtype: 'container',
-			layout: 'border',
-			items: [{
-				region: 'west',
-				xtype: 'panel',
-				reference: 'tool',
-				split: true,
-				collapsible: true,
-				border: false,
-				width: 200,
-				minWidth: 100,
-				layout: 'card',
-				items: [],
-				listeners: {
-					resize: 'onToolResize'
-				}
-			}, {
-				region: 'center',
-				xtype: 'container',
-				reference: 'main',
-				layout: 'card',
-				items: []
-			}]
-		};
 	}
+	*/
 });

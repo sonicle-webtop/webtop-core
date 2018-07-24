@@ -213,11 +213,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<JsSimple> listLayouts() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		items.add(new JsSimple("default", WT.getPlatformName()));
-		items.add(new JsSimple("stacked", "Outlook 2007/2003"));
-		items.add(new JsSimple("queued", "Mozilla"));
-		return items;
+		return Arrays.asList(
+			new JsSimple("default", lookupResource(getLocale(), "layout.default")),
+			new JsSimple("compact", lookupResource(getLocale(), "layout.compact"))
+		);
 	}
 	
 	public List<JsSimple> listLAFs() throws WTException {

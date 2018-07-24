@@ -1,16 +1,10 @@
 
-.wt-header {
-	background-color: #fafafa;
-}
-.wt-launcher {
-	background-color: #fafafa;
-}
-.wt-portal {
-	background-color: #e0ebf3;
-}
+.wt-viewport-body { border-color: #3892d4; }
+.wt-vieport-dock { background-color: #dfeaf2; }
+.wt-portal-body { background-color: #fafafa; }
 
 /*
- * Background: 1:light, 2:medium-dark, 3:dark/alternative
+ * Background: 1:light, 2:medium/less-light, 3:dark/alternative
  * Generally light to not provide excessive contrast
  */
 .wt-theme-bg-1 { background-color: #ffffff; }
@@ -18,7 +12,7 @@
 .wt-theme-bg-3 { background-color: #3892d3; }
 
 /*
- * Header colors: 1:light, 2:medium-dark, 3:dark
+ * Header colors: 1:light, 2:medium, 3:dark
  */
 .wt-theme-hd-1 { background-color: #dfeaf2; }
 .wt-theme-hd-2 { background-color: #5fa7db; }
