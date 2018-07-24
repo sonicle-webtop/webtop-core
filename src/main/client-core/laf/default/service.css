@@ -46,6 +46,8 @@
 .wt-icon-im-gchat-xs { background-image: url('im-gchat_16.png') !important; }
 .wt-icon-im-gchat-hot-xs { background-image: url('im-gchat-hot_16.png') !important; }
 .wt-icon-im-status-online-xs { background-image: url('im-status-online_16.png') !important; }
+.wt-icon-im-status-online-s { background-image: url('im-status-online_24.png') !important; }
+.wt-icon-im-status-online-m { background-image: url('im-status-online_32.png') !important; }
 .wt-icon-im-status-away-xs { background-image: url('im-status-away_16.png') !important; }
 .wt-icon-im-status-dnd-xs { background-image: url('im-status-dnd_16.png') !important; }
 .wt-icon-im-status-offline-xs { background-image: url('im-status-offline_16.png') !important; }
@@ -89,14 +91,14 @@
 .wt-icon-add-xs { background-image: url('add_16.png') !important; }
 .wt-icon-edit-xs { background-image: url('edit_16.png') !important; }
 .wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
-.wt-icon-delete-xs { background-image: url('remove_16.png') !important; }
+.wt-icon-delete { background-image: url('delete_16.svg') !important; background-size: cover; }
 .wt-icon-restore-xs { background-image: url('restore_16.png') !important; }
 .wt-icon-block-xs { background-image: url('block_16.png') !important; }
 .wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
 .wt-icon-search-xs { background-image: url('search_16.png') !important; }
-.wt-icon-search-adv-xs { background-image: url('search-adv_16.gif') !important; }
-.wt-icon-search-multi-xs { background-image: url('search-multi_16.gif') !important; }
+.wt-icon-search-adv { background-image: url('search-adv_32.svg') !important; background-size: cover; }
+.wt-icon-search-multi { background-image: url('search-multi_16.svg') !important; background-size: cover; }
 .wt-icon-history-xs { background-image: url('history_16.png') !important; }
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }
 .wt-icon-snooze-xs { background-image: url('snooze_16.png') !important; }
@@ -106,10 +108,10 @@
 .wt-icon-panel-left-xs { background-image: url('panel-left_16.png') !important; }
 .wt-icon-panel-right-xs { background-image: url('panel-right_16.png') !important; }
 .wt-icon-panel-top-xs { background-image: url('panel-top_16.png') !important; }
-.wt-icon-print-xs { background-image: url('print_16.png') !important; }
+.wt-icon-print { background-image: url('print_16.svg') !important; background-size: cover; }
 .wt-icon-call-xs { background-image: url('call_16.png') !important; }
 .wt-icon-sms-xs { background-image: url('sms_16.svg') !important; }
-.wt-icon-refresh-xs { background-image: url('refresh_16.png') !important; }
+.wt-icon-refresh { background-image: url('refresh_16.svg') !important; background-size: cover; }
 .wt-icon-save-xs { background-image: url('save_16.png') !important; }
 .wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
 .wt-icon-save-all-xs { background-image: url('save_all_16.png') !important; }
