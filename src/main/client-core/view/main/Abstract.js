@@ -410,7 +410,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			xtype: 'container',
 			referenceHolder: true,
 			layout: 'border',
-			height: 48,
+			height: WT.serviceToolbarHeight,
 			items: [{
 				xtype: 'toolbar',
 				region: 'west',
@@ -419,7 +419,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				cls: 'wt-vieport-dock',
 				border: false,
 				defaults: {
-					scale: 'medium'
+					scale: WT.serviceToolbarScale
 				},			
 				style: {
 					paddingTop: 0,
@@ -449,7 +449,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				cls: 'wt-vieport-dock',
 				border: false,
 				defaults: {
-					scale: 'medium'
+					scale: WT.serviceToolbarScale
 				},			
 				style: {
 					paddingTop: 0,

@@ -57,6 +57,12 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	
 	loadedCss: null,
 	
+	/**
+	 * Service Toolbar constants.
+	 */
+	serviceToolbarScale: 'medium',
+	serviceToolbarHeight: 48,
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.loadedCss = {};
