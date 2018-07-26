@@ -40,6 +40,26 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	},
 	
 	/**
+	 * Gets an action and wraps it into the specified component.
+	 * Group can be specified setting name as: 'name@group'.
+	 * If not provided, 'default' group is used.
+	 * @param {String} name The action name.
+	 * @param {button|menuitem} xtype The component XType.
+	 * @param {Object} cfg An optional config to be applied to the component.
+	 * @return {Ext.Component} The component.
+	 */
+	getActAs: function(name, xtype, cfg) {
+		var act = this.getAct(name), obj;
+		if (act) {
+			obj = Ext.create('widget.'+xtype, act);
+			if (cfg) obj.setConfig(cfg);
+			return obj;
+		} else {
+			return null;
+		}
+	},
+	
+	/**
 	 * Creates an Action instance.
 	 * @param {String} group The action group.
 	 * @param {String} name The action name.
@@ -65,7 +85,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 		*/
 		var txt = Ext.isDefined(cfg.text) ? cfg.text : me._buildText(null, name),
 				tip = Ext.isDefined(cfg.tooltip) ? cfg.tooltip : me._buildTip(null, name),
-				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name, cfg.useSvg),
+				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name, cfg.ignoreSize),
 				cb = cfg.handler,
 				sco = cfg.scope || this;
 
@@ -125,8 +145,8 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	 * @private
 	 * Builds icon class
 	 */
-	_buildIconCls: function(name, useSvg) {
-		return (useSvg === true) ? WTF.cssIconCls(this._guessSvcXId(), name) : WTF.cssIconCls(this._guessSvcXId(), name, 'xs');
+	_buildIconCls: function(name, ignoreSize) {
+		return (ignoreSize === true) ? WTF.cssIconCls(this._guessSvcXId(), name) : WTF.cssIconCls(this._guessSvcXId(), name, 'xs');
 	},
 	
 	/**
