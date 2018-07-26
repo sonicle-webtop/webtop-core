@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  *
  * @author malbinola
@@ -397,23 +399,30 @@ public class CoreSettings {
 	/**
 	 * [user][default]
 	 * [string]
-	 * Layout
+	 * Sets the UI's layout.
 	 */
 	public static final String LAYOUT = "layout";
 	
 	/**
 	 * [user][default]
 	 * [string]
-	 * Look and feel
+	 * Sets the UI's look&feel.
 	 */
 	public static final String LAF = "laf";
 	
 	/**
 	 * [user][default]
 	 * [boolean]
-	 * Right-to-left mode
+	 * Sets Right-to-left mode. (not yet used)
 	 */
 	public static final String RTL = "rtl";
+	
+	/**
+	 * [user][default]
+	 * [enum] (small|medium|large)
+	 * Sets the size of the viewport's header.
+	 */
+	public static final String VIEWPORT_HEADER_SCALE = "viewport.header.scale";
 	
 	/**
 	 * [system+domain]
@@ -446,13 +455,10 @@ public class CoreSettings {
 	
 	/**
 	 * [user][default]
-	 * [string]
-	 * Desktop notification
+	 * [enum] (never|always|auto)
+	 * Desktop notification display mode.
 	 */
 	public static final String DESKTOP_NOTIFICATION = "notifications.desktop";
-	public static final String DESKTOP_NOTIFICATION_NEVER = "never";
-	public static final String DESKTOP_NOTIFICATION_ALWAYS = "always";
-	public static final String DESKTOP_NOTIFICATION_AUTO = "auto";
 	
 	/**
 	 * [user][default]
@@ -469,9 +475,9 @@ public class CoreSettings {
 	public static final String TIMEZONE = "i18n.timezone";
 	
 	/**
-	 * [user][user][default]
-	 * [int]
-	 * Week start day (0:sunday, 1:monday)
+	 * [user][default]
+	 * [int] (0:sunday, 1:monday)
+	 * Sets the week start day.
 	 */
 	public static final String START_DAY = "i18n.startDay";
 	public static final int START_DAY_SUNDAY = 0;
@@ -535,12 +541,10 @@ public class CoreSettings {
 	
 	/**
 	 * [user]
-	 * [string]
-	 * Specifies delivery method. One of: email, googleauth.
+	 * [enum] (email|googleauth)
+	 * Specifies delivery method.
 	 */
 	public static final String OTP_DELIVERY = "otp.delivery";
-	public static final String OTP_DELIVERY_EMAIL = "email";
-	public static final String OTP_DELIVERY_GOOGLEAUTH = "googleauth";
 	
 	/**
 	 * [user]
@@ -677,4 +681,20 @@ public class CoreSettings {
 	 */
 	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
 	
+	public static enum ViewportHeaderScale {
+		@SerializedName("small") SMALL,
+		@SerializedName("medium") MEDIUM,
+		@SerializedName("large") LARGE;
+	}
+	
+	public static enum DesktopNotificationMode {
+		@SerializedName("never") NEVER,
+		@SerializedName("always") ALWAYS,
+		@SerializedName("auto") AUTO;
+	}
+	
+	public static enum OtpDeliveryMode {
+		@SerializedName("email") EMAIL,
+		@SerializedName("googleauth") GOOGLEAUTH;
+	}
 }

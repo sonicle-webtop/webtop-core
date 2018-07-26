@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.URIUtils;
@@ -49,6 +50,7 @@ import com.sonicle.security.otp.provider.SonicleAuth;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -74,7 +76,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.glxn.qrgen.javase.QRCode;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -120,10 +121,11 @@ public class OTPManager {
 	
 	public boolean isEnabled(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
-		return StringUtils.isBlank(cus.getOTPDelivery()) ? false : cus.getOTPEnabled();
+		return (cus.getOTPDelivery() == null) ? false : cus.getOTPEnabled();
+		//return StringUtils.isBlank(cus.getOTPDelivery()) ? false : cus.getOTPEnabled();
 	}
 	
-	public String getDeliveryMode(UserProfileId pid) {
+	public OtpDeliveryMode getDeliveryMode(UserProfileId pid) {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		return cus.getOTPDelivery();
 	}
@@ -175,7 +177,7 @@ public class OTPManager {
 			
 			if(te.check(code, config.otp.getVerificationCode(), Long.valueOf(config.otp.getKey()), interval)) {
 				cus.setOTPEmailAddress(((EmailConfig)config).emailAddress);
-				cus.setOTPDelivery(CoreSettings.OTP_DELIVERY_EMAIL);
+				cus.setOTPDelivery(OtpDeliveryMode.EMAIL);
 				cus.setOTPEnabled(true);
 				return true;
 			} else {
@@ -186,7 +188,7 @@ public class OTPManager {
 			
 			if(ga.check(code, config.otp.getKey())) {
 				cus.setOTPSecret(config.otp.getKey());
-				cus.setOTPDelivery(CoreSettings.OTP_DELIVERY_GOOGLEAUTH);
+				cus.setOTPDelivery(OtpDeliveryMode.GOOGLEAUTH);
 				cus.setOTPEnabled(true);
 				return true;
 			} else {
@@ -210,8 +212,8 @@ public class OTPManager {
 	}
 	
 	public Config prepareCheckCode(UserProfileId pid) throws WTException {
-		String deliveryMode = getDeliveryMode(pid);
-		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
+		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
+		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			UserProfile.Data ud = wta.getWebTopManager().userData(pid);
 			
@@ -221,15 +223,15 @@ public class OTPManager {
 			OTPKey otp = te.generateCredentials(ud.getEmail().getAddress());
 			sendCodeEmail(pid, ud.getLocale(), to, otp.getVerificationCode());
 			
-			return new Config(CoreSettings.OTP_DELIVERY_EMAIL, otp);
+			return new Config(EnumUtils.toSerializedName(OtpDeliveryMode.EMAIL), otp);
 		} else {
-			return new Config(CoreSettings.OTP_DELIVERY_GOOGLEAUTH, null);
+			return new Config(EnumUtils.toSerializedName(OtpDeliveryMode.GOOGLEAUTH), null);
 		}
 	}
 	
 	public boolean checkCode(UserProfileId pid, Config data, int code) {
-		String deliveryMode = getDeliveryMode(pid);
-		if(deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
+		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
+		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			long interval = css.getOTPProviderSonicleAuthKVI();
@@ -366,7 +368,7 @@ public class OTPManager {
 		public String emailAddress;
 		
 		private EmailConfig(OTPKey otp, String emailAddress) {
-			super(CoreSettings.OTP_DELIVERY_EMAIL, otp);
+			super(EnumUtils.toSerializedName(OtpDeliveryMode.EMAIL), otp);
 			this.emailAddress = emailAddress;
 		}
 	}
@@ -375,7 +377,7 @@ public class OTPManager {
 		public byte[] qrcode;
 		
 		private GoogleAuthConfig(OTPKey otp, byte[] qrcode) {
-			super(CoreSettings.OTP_DELIVERY_GOOGLEAUTH, otp);
+			super(EnumUtils.toSerializedName(OtpDeliveryMode.GOOGLEAUTH), otp);
 			this.qrcode = qrcode;
 		}
 	}

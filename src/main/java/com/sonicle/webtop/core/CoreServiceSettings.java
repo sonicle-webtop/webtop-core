@@ -316,12 +316,16 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(DEFAULT_PREFIX + RTL, false);
 	}
 	
+	public ViewportHeaderScale getDefaultViewportHeaderScale() {
+		return getEnum(DEFAULT_PREFIX + VIEWPORT_HEADER_SCALE, ViewportHeaderScale.SMALL, ViewportHeaderScale.class);
+	}
+	
 	public String getDefaultStartupService() {
 		return getString(DEFAULT_PREFIX + STARTUP_SERVICE, null);
 	}
 	
-	public String getDefaultDesktopNotification() {
-		return getString(DEFAULT_PREFIX + DESKTOP_NOTIFICATION, DESKTOP_NOTIFICATION_NEVER);
+	public DesktopNotificationMode getDefaultDesktopNotification() {
+		return getEnum(DEFAULT_PREFIX + DESKTOP_NOTIFICATION, DesktopNotificationMode.AUTO, DesktopNotificationMode.class);
 	}
 	
 	public String getDefaultLanguageTag() {

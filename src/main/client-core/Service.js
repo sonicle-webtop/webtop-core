@@ -81,10 +81,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		
 		me.setToolbar(Ext.create({
 			xtype: 'toolbar',
-			referenceHolder: true,
-			defaults: {
-				scale: WT.serviceToolbarScale
-			},			
+			referenceHolder: true,		
 			layout: {
 				pack: 'center'
 			},

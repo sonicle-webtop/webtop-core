@@ -40,7 +40,6 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
-import com.sonicle.commons.web.DispositionType;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -50,6 +49,7 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
+import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -105,7 +105,6 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.RecipientFieldType;
-import com.sonicle.webtop.core.msg.AuthMessage;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -277,6 +276,7 @@ public class Service extends BaseService {
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());
+		co.put("viewportHeaderScale", EnumUtils.toSerializedName(us.getViewportHeaderScale()));
 		co.put("startupService", us.getStartupService());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
@@ -1094,8 +1094,8 @@ public class Service extends BaseService {
 				corem = (targetPid.equals(coreMgr.getTargetProfileId())) ? coreMgr : WT.getCoreManager(targetPid);
 				
 				if (operation.equals("configure")) {
-					String deliveryMode = ServletUtils.getStringParameter(request, "delivery", true);
-					if (deliveryMode.equals(CoreSettings.OTP_DELIVERY_EMAIL)) {
+					OtpDeliveryMode deliveryMode = ServletUtils.getEnumParameter(request, "delivery", true, OtpDeliveryMode.class);
+					if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 						String address = ServletUtils.getStringParameter(request, "address", true);
 						InternetAddress ia = InternetAddressUtils.toInternetAddress(address, null);
 						if (!InternetAddressUtils.isAddressValid(ia)) throw new WTException("Email address not valid"); //TODO: messaggio in lingua
@@ -1103,7 +1103,7 @@ public class Service extends BaseService {
 						OTPManager.EmailConfig config = corem.otpConfigureUsingEmail(address);
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 
-					} else if (deliveryMode.equals(CoreSettings.OTP_DELIVERY_GOOGLEAUTH)) {
+					} else if (OtpDeliveryMode.GOOGLEAUTH.equals(deliveryMode)) {
 						OTPManager.GoogleAuthConfig config = corem.otpConfigureUsingGoogleAuth(200);
 						wts.setProperty(SERVICE_ID, WTSPROP_OTP_SETUP, config);
 					}

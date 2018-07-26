@@ -96,6 +96,20 @@ public class CoreUserSettings extends BaseUserSettings {
 		return ss.getDefaultRtl();
 	}
 	
+	public ViewportHeaderScale getViewportHeaderScale() {
+		ViewportHeaderScale value = getEnum(VIEWPORT_HEADER_SCALE, null, ViewportHeaderScale.class);
+		if (value != null) return value;
+		return ss.getDefaultViewportHeaderScale();
+	}
+	
+	public boolean setViewportHeaderScale(ViewportHeaderScale value) {
+		return setEnum(VIEWPORT_HEADER_SCALE, value);
+	}
+	
+	public boolean setViewportHeaderScale(String value) {
+		return setViewportHeaderScale(EnumUtils.forSerializedName(value, ViewportHeaderScale.class));
+	}
+	
 	public boolean getPasswordForceChange() {
 		return getBoolean(PASSWORD_FORCECHANGE, false);
 	}
@@ -125,14 +139,18 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(STARTUP_SERVICE, value);
 	}
 	
-	public String getDesktopNotification() {
-		String value = getString(DESKTOP_NOTIFICATION, null);
-		if(value != null) return value;
+	public DesktopNotificationMode getDesktopNotification() {
+		DesktopNotificationMode value = getEnum(DESKTOP_NOTIFICATION, null, DesktopNotificationMode.class);
+		if (value != null) return value;
 		return ss.getDefaultDesktopNotification();
 	}
 	
+	public boolean setDesktopNotification(DesktopNotificationMode value) {
+		return setEnum(DESKTOP_NOTIFICATION, value);
+	}
+	
 	public boolean setDesktopNotification(String value) {
-		return setString(DESKTOP_NOTIFICATION, value);
+		return setDesktopNotification(EnumUtils.forSerializedName(value, DesktopNotificationMode.class));
 	}
 	
 	public String getLanguageTag() {
@@ -225,12 +243,16 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setBoolean(OTP_ENABLED, value);
 	}
 	
-	public String getOTPDelivery() {
-		return getString(OTP_DELIVERY, null);
+	public OtpDeliveryMode getOTPDelivery() {
+		return getEnum(OTP_DELIVERY, null, OtpDeliveryMode.class);
+	}
+	
+	public boolean setOTPDelivery(OtpDeliveryMode value) {
+		return setEnum(OTP_DELIVERY, value);
 	}
 	
 	public boolean setOTPDelivery(String value) {
-		return setString(OTP_DELIVERY, value);
+		return setOTPDelivery(EnumUtils.forSerializedName(value, OtpDeliveryMode.class));
 	}
 	
 	public String getOTPSecret() {

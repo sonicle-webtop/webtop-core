@@ -200,6 +200,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	createTopDockCmp: function() {
 		var me = this,
 				acts = WT.getApp().getService(WT.ID).getToolboxActions(),
+				scale = WT.getHeaderScale(),
 				toolsCount = acts.length,
 				toolMnuItms = [],
 				menuTbItms = [];
@@ -410,7 +411,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			xtype: 'container',
 			referenceHolder: true,
 			layout: 'border',
-			height: WT.serviceToolbarHeight,
+			height: me.getToolbarHeight(scale),
 			items: [{
 				xtype: 'toolbar',
 				region: 'west',
@@ -419,7 +420,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				cls: 'wt-vieport-dock',
 				border: false,
 				defaults: {
-					scale: WT.serviceToolbarScale
+					scale: scale
 				},			
 				style: {
 					paddingTop: 0,
@@ -449,7 +450,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				cls: 'wt-vieport-dock',
 				border: false,
 				defaults: {
-					scale: WT.serviceToolbarScale
+					scale: scale
 				},			
 				style: {
 					paddingTop: 0,
@@ -559,58 +560,70 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		});
 	},
 	
-	/*
-	 * @private
-	 * Adds passet config to chosen layout region.
-	 * @param {String} region Border layout region
-	 * @param {Ext.Component} cmp The component to add
-	 */
-	addToRegion: function(region, cmp) {
-		var me = this;
-		if (cmp) {
-			if (cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
+	privates: {
+		getToolbarHeight: function(scale) {
+			switch(scale) {
+				case 'large':
+					return 48;
+				case 'medium':
+					return 40;
+				default:
+					return 35;
 			}
-			me.add(cmp);
-		}
-	},
-	
-	addAsRegion: function(parent, cmp, region) {
-		if (cmp) {
-			if (cmp.isComponent) {
-				cmp.setRegion(region);
-				cmp.setReference(region);
-			} else {
-				Ext.apply(cmp, {
-					region: region,
-					reference: region,
-					referenceHolder: true
-				});
+		},
+		
+		/*
+		 * Adds passet config to chosen layout region.
+		 * @param {String} region Border layout region
+		 * @param {Ext.Component} cmp The component to add
+		 */
+		addToRegion: function(region, cmp) {
+			var me = this;
+			if (cmp) {
+				if (cmp.isComponent) {
+					cmp.setRegion(region);
+					cmp.setReference(region);
+				} else {
+					Ext.apply(cmp, {
+						region: region,
+						reference: region,
+						referenceHolder: true
+					});
+				}
+				me.add(cmp);
 			}
-			parent.add(cmp);
-		}
-	},
-	
-	addAsDocked: function(parent, cmp, dock, reference) {
-		if (cmp) {
-			if (cmp.isComponent) {
-				cmp.setDock(dock);
-				cmp.setReference(reference);
-			} else {
-				Ext.apply(cmp, {
-					dock: dock,
-					reference: reference,
-					referenceHolder: true
-				});
+		},
+		
+		addAsRegion: function(parent, cmp, region) {
+			if (cmp) {
+				if (cmp.isComponent) {
+					cmp.setRegion(region);
+					cmp.setReference(region);
+				} else {
+					Ext.apply(cmp, {
+						region: region,
+						reference: region,
+						referenceHolder: true
+					});
+				}
+				parent.add(cmp);
 			}
-			parent.addDocked(cmp);
+		},
+		
+		addAsDocked: function(parent, cmp, dock, reference) {
+			if (cmp) {
+				if (cmp.isComponent) {
+					cmp.setDock(dock);
+					cmp.setReference(reference);
+				} else {
+					Ext.apply(cmp, {
+						dock: dock,
+						reference: reference,
+						referenceHolder: true
+					});
+				}
+				parent.addDocked(cmp);
+			}
 		}
 	}
 });
