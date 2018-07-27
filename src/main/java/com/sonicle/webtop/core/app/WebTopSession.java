@@ -644,7 +644,7 @@ public class WebTopSession {
 						@Override
 						protected PasswordAuthentication getPasswordAuthentication() {
 							Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();							
-							String login=principal.getUserId()+"@"+principal.getAuthenticationDomain().getInternetName();
+							String login=principal.getFullInternetName();
 							String password=new String(principal.getPassword());
 							//logger.info("getPasswordAuthentication: "+login+" / *****");
 							return new PasswordAuthentication(login,password);
