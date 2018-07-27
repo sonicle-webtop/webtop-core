@@ -91,6 +91,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getInteger(SMTP_PORT, 25);
     }
 	
+	public boolean isSMTPStartTLS() {
+		return getBoolean(SMTP_STARTTLS, false);
+	}
+	
+	public boolean isSMTPAuthentication() {
+		return getBoolean(SMTP_AUTH, false);
+	}
+	
 	public ICEServersList getWebRTC_ICEServers() {
 		ICEServersList value = getObject(WEBRTC_ICE_SERVERS, null, ICEServersList.class);
         return value;

@@ -136,6 +136,20 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [boolean]
+	 * Use STARTTLS on SMTP server
+	 */
+	public static final String SMTP_STARTTLS = "smtp.starttls";
+	
+	/**
+	 * [domain+system]
+	 * [boolean]
+	 * Use authentication on SMTP server
+	 */
+	public static final String SMTP_AUTH = "smtp.auth";
+
+	/**
+	 * [domain+system]
 	 * [object[]]
 	 * Defines WebRTC ICE servers as a json array
 	 * [
