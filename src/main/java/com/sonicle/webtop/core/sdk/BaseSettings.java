@@ -124,9 +124,14 @@ public abstract class BaseSettings {
 		return (e != null) ? e : defaultValue;
 	}
 	
+	public <E extends Enum<E>> boolean setEnum(String key, E en) {
+		return setString(key, EnumUtils.toSerializedName(en));
+	}
+	
 	/**
 	 * @deprecated Use getEnum(String key, E defaultValue, Class<E> enumClass) instead!
 	 */
+	@Deprecated
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, String key, E defaultValue) {
 		E e = EnumUtils.forValue(enumClass, getString(key, null));
 		return (e != null) ? e : defaultValue;

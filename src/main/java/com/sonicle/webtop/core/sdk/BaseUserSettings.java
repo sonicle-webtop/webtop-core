@@ -73,24 +73,6 @@ public abstract class BaseUserSettings extends BaseSettings {
 		return profiles;
 	}
 	
-	public boolean isFolderHidden(String folderId) {
-		return getHiddenFolders().contains(folderId);
-	}
-	
-	public boolean setFolderHidden(String folderId, boolean hidden) {
-		HiddenFolders hf=getHiddenFolders();
-		if (hidden) hf.add(folderId);
-		else hf.remove(folderId);
-		setHiddenFolders(hf);
-		return true;
-	}
-	
-	public HiddenFolders getHiddenFolders() {
-		if (hiddenFolders==null)
-			hiddenFolders=getObject(HIDDEN_FOLDERS, new HiddenFolders(), HiddenFolders.class);
-		return hiddenFolders;
-	}
-	
 	@Override
 	public String getSetting(String key) {
 		return setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);
@@ -159,6 +141,26 @@ public abstract class BaseUserSettings extends BaseSettings {
 		int ix=likeKey.length();
 		for(OUserSetting el: list) integers.put(el.getKey().substring(ix), Integer.valueOf(el.getValue()));
 		return integers;
+	}
+	
+	
+	
+	public boolean isFolderHidden(String folderId) {
+		return getHiddenFolders().contains(folderId);
+	}
+	
+	public boolean setFolderHidden(String folderId, boolean hidden) {
+		HiddenFolders hf=getHiddenFolders();
+		if (hidden) hf.add(folderId);
+		else hf.remove(folderId);
+		setHiddenFolders(hf);
+		return true;
+	}
+	
+	public HiddenFolders getHiddenFolders() {
+		if (hiddenFolders==null)
+			hiddenFolders=getObject(HIDDEN_FOLDERS, new HiddenFolders(), HiddenFolders.class);
+		return hiddenFolders;
 	}
 	
 	private boolean setHiddenFolders(HiddenFolders value) {

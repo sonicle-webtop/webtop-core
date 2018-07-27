@@ -33,10 +33,12 @@
  */
 package com.sonicle.webtop.core.servlet;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -89,7 +91,7 @@ public class Otp extends AbstractServlet {
 			if (skip) throw new SkipException();
 			
 			OTPManager otpm = wta.getOTPManager();
-			String deliveryMode = otpm.getDeliveryMode(pid);
+			String deliveryMode = EnumUtils.toSerializedName(otpm.getDeliveryMode(pid));
 			OTPManager.Config config = null;
 			if (!wts.hasProperty(CoreManifest.ID, WTSPROP_OTP_CONFIG)) {
 				config = otpm.prepareCheckCode(pid);

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
@@ -96,9 +97,10 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.theme = us.getTheme();
 				jso.layout = us.getLayout();
 				jso.laf = us.getLookAndFeel();
+				jso.headerScale = EnumUtils.toSerializedName(us.getViewportHeaderScale());
 				jso.passwordForceChange = us.getPasswordForceChange();
 				jso.startupService = sanitizeStartupService(core, us.getStartupService());
-				jso.desktopNotification = us.getDesktopNotification();
+				jso.desktopNotification = EnumUtils.toSerializedName(us.getDesktopNotification());
 				
 				// i18n
 				jso.language = us.getLanguageTag();
@@ -134,7 +136,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// OTP
 				OTPManager otpm = core.getOTPManager();
 				jso.otpEnabled = otpm.isEnabled(getTargetProfileId());
-				jso.otpDelivery = otpm.getDeliveryMode(getTargetProfileId());
+				jso.otpDelivery = EnumUtils.toSerializedName(otpm.getDeliveryMode(getTargetProfileId()));
 				jso.otpEmailAddress = otpm.getEmailAddress(getTargetProfileId());
 				
 				boolean isTrusted = false;
@@ -180,6 +182,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
 				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
 				if (pl.map.has("laf")) us.setLookAndFeel(pl.data.laf);
+				if (pl.map.has("headerScale")) us.setViewportHeaderScale(pl.data.headerScale);
 				if (pl.map.has("passwordForceChange")) us.setPasswordForceChange(pl.data.passwordForceChange);
 				if (pl.map.has("startupService")) us.setStartupService(pl.data.startupService);
 				if (pl.map.has("desktopNotification")) us.setDesktopNotification(pl.data.desktopNotification);

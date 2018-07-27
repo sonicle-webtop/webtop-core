@@ -340,6 +340,15 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
+	 * Returns the scale in use, or 'small' if missing.
+	 * Value is taken from core variable 'viewportHeaderScale'.
+	 * @returns {String} The scale value (small, medium, large).
+	 */
+	getHeaderScale: function() {
+		return WT.getVar('viewportHeaderScale') || 'small';
+	},
+	
+	/**
 	 * Return the language in use.
 	 * @returns {String} The language.
 	 */

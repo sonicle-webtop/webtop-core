@@ -49,6 +49,7 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String theme;
 	public String layout;
 	public String laf;
+	public String headerScale;
 	public Boolean passwordForceChange;
 	public String startupService;
 	public String desktopNotification;

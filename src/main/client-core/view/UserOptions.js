@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	extend: 'WTA.sdk.UserOptionsView',
 	requires: [
 		'WTA.model.Simple',
+		'WTA.store.HeaderScale',
 		'WTA.store.DesktopNotification',
 		'WTA.store.OTPDelivery',
 		'WTA.store.Timezone',
@@ -116,7 +117,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupThemes', 'themes')
 				},
 				fieldLabel: WT.res('opts.main.fld-theme.lbl'),
-				width: 300,
+				width: 140+150,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -133,7 +134,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLayouts', 'layouts')
 				},
 				fieldLabel: WT.res('opts.main.fld-layout.lbl'),
-				width: 330,
+				width: 140+150,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -150,7 +151,22 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					proxy: WTF.proxy(me.ID, 'LookupLAFs', 'lafs')
 				},
 				fieldLabel: WT.res('opts.main.fld-laf.lbl'),
-				width: 330,
+				width: 140+150,
+				listeners: {
+					blur: {
+						fn: me.onBlurAutoSave,
+						scope: me
+					}
+				},
+				needReload: true
+			}),
+			WTF.lookupCombo('id', 'desc', {
+				bind: '{record.headerScale}',
+				store: Ext.create('WTA.store.HeaderScale', {
+					autoLoad: true
+				}),
+				fieldLabel: WT.res('opts.main.fld-headerScale.lbl'),
+				width: 140+150,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,

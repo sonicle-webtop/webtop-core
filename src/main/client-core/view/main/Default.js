@@ -53,7 +53,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 			xtype: 'toolbar',
 			vertical: true,
 			border: false,
-			cls: 'wwt-vieport-dock',
+			cls: 'wt-vieport-dock',
 			enableOverflow: true,
 			overflowHandler: 'scroller',
 			items: [
