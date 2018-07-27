@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.security.DomainAccount;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -73,6 +74,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import javax.mail.Authenticator;
+import javax.mail.PasswordAuthentication;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableUserAgent;
@@ -622,16 +625,34 @@ public class WebTopSession {
 				CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 				String smtphost=css.getSMTPHost();
 				int smtpport=css.getSMTPPort();
+				boolean starttls=css.isSMTPStartTLS();
+				boolean auth=css.isSMTPAuthentication();
 				Properties props = new Properties(System.getProperties());
 				//props.setProperty("mail.socket.debug", "true");
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
 				props.setProperty("mail.smtp.port", ""+smtpport);
+				if (starttls) props.put("mail.smtp.starttls.enable","true");
 				props.setProperty("mail.imaps.ssl.trust", "*");
 				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
 				props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
 				props.setProperty("mail.imap.enableimapevents", "true"); // Support idle events
-				mailSession = javax.mail.Session.getInstance(props, null);
+				Authenticator authenticator=null;
+				if (auth) {
+					props.setProperty("mail.smtp.auth", "true");
+					authenticator=new Authenticator() {
+						@Override
+						protected PasswordAuthentication getPasswordAuthentication() {
+							Principal principal = (Principal)SecurityUtils.getSubject().getPrincipal();							
+							String login=principal.getUserId()+"@"+principal.getAuthenticationDomain().getInternetName();
+							String password=new String(principal.getPassword());
+							//logger.info("getPasswordAuthentication: "+login+" / *****");
+							return new PasswordAuthentication(login,password);
+						}
+
+					};
+				}
+				mailSession = javax.mail.Session.getInstance(props, authenticator);
 			}
 		}
 		return mailSession;
