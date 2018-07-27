@@ -363,7 +363,7 @@ public final class WebTopApp {
 		
 		// Locale Manager
 		//TODO: caricare dinamicamente le lingue installate nel sistema
-		String[] tags = new String[]{"it_IT", "en_EN", "es_ES", "de_DE"};
+		String[] tags = new String[]{"it_IT", "en_EN", "es_ES", "de_DE", "hr_HR"};
 		this.i18nMgr = I18nManager.initialize(this, tags);
 		
 		// Template Engine
