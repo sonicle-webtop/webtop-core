@@ -1,0 +1,22 @@
+$	5.3.0
+	%	Versione 5.3.0
+	*	<h1>Chiamate audio/video</h1>
+		<p>Dalle finestre di chat è ora possibile iniziare una chiamta audio o video
+		con un altro utente WebTop del proprio dominio: sarà necessario fornire
+		le necessarie autorizzazioni richieste dal browser per l'accesso a microfono
+		e telecamera.</p>
+		<img src="5.3.0_webrtc.png"/>
+	*	<h1>Finestre chat migliorate</h1>
+		<p>Le finestre di chat ora appaiono come popup facilmente visibili in basso
+		a destra e, nel caso di più sessioni contemporanee, queste saranno automaticamente
+		affiancate.</p>
+		<img src="5.3.0_chat-ui.png"/>
+	*	<h1>Layout compatto</h1>
+		<p>E' ora possibile scegliere tra il layout standard, con i servizi in 
+		verticale a sinistra, ed il nuovo layout "compatto", che dispone i servizi 
+		in orizzontale in basso a sinistra, lasciando più spazio al centro.</p>
+		<img src="5.3.0_compact.png"/>
+	*	<h1>Layout e dimensione barra superiore</h1>
+		<p>Il layout dei bottoni e della ricerca è stato ottimizzato, ed è ora possibile 
+		scegliere la dimensione della barra superiore tra piccola,media e grande.</p>
+		<img src="5.3.0_newtbar.png"/>

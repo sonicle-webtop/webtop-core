@@ -1,6 +1,0 @@
-$	5.1.7
-	%	Version 5.2.0
-	*	<h1>Integrazione centralino telefonico NethVoice</h1>
-		<p>Il sistema è ora configurabile per integrarsi ai centralini NethVoice,
-		consentendo l'implementazione di chiamate dirette da WebTop. E' già possibile
-		utilizzare questa funzionalità dai contatti.</p>

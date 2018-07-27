@@ -1,0 +1,21 @@
+$	5.3.0
+	%	Versione 5.3.0
+	*	<h1>Audio/Video calls</h1>
+		<p>From the chat windows you can now initiate an audio or video call
+		with another WebTop user of your domain: you will need to agree
+		the necessary authorization requested by your browser to access your microphone
+		and webcam.</p>
+		<img src="5.3.0_webrtc.png"/>
+	*	<h1>New popup chat window</h1>
+		<p>The chat windows now appear as bottom right popups, stacking them
+		automatically during multiple sessions.</p>
+		<img src="5.3.0_chat-ui.png"/>
+	*	<h1>Compact layout</h1>
+		<p>You can choose between the standard layout, with services vertically on left,
+		and the new "compact" layout, with services horizontally on bottom left, leaving
+		more space in the main center area.</p>
+		<img src="5.3.0_compact.png"/>
+	*	<h1>Layout and top bar scale</h1>
+		<p>The buttons and search layout has been optimized, and it's now possible
+		to choose the scale of the top bar from small, medium and large.</p>
+		<img src="5.3.0_newtbar.png"/>
