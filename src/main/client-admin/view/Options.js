@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Options', {
 		// TODO: eventually display a message!
 	},
 	
-	resTitle: function() {
-		return this.callParent() + ' [' + this.profileDisplayName + ']';
+	buildViewTitle: function(dockTitle) {
+		return this.callParent(arguments) + ' [' + this.profileDisplayName + ']';
 	}
 });

@@ -90,9 +90,11 @@ Ext.define('Sonicle.webtop.core.app.DescriptorBase', {
 		return this.maintenance;
 	},
 	
+	/*
 	setMaintenance: function(value) {
 		this.maintenance = value;
 	},
+	*/
 	
 	getOrder: function() {
 		return this.order;

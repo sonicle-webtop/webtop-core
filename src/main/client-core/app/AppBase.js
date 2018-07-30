@@ -98,8 +98,9 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 				path: obj.path,
 				name: obj.name,
 				description: obj.description,
-				company: obj.company,
 				version: obj.version,
+				maintenance: obj.maintenance,
+				company: obj.company,
 				build: obj.build
 			});
 			me.descriptors.add(sid, desc);
