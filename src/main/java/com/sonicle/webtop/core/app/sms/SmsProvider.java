@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2018 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,11 +29,10 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app.sms;
 
-import com.sonicle.webtop.core.app.pbx.*;
 import com.google.gson.annotations.SerializedName;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
@@ -56,25 +55,23 @@ public abstract class SmsProvider {
 	public static final int FROM_NAME_MAX_LENGTH = 11;
 	public static final int FROM_NUMBER_MAX_LENGTH = 16;
 	
-	protected String webrestURL;
 	protected Locale locale;
+	protected String baseUrl;
 	
-	public SmsProvider(Locale locale, String webrestURL) {
-		if (webrestURL.endsWith("/")) webrestURL=webrestURL.substring(0,webrestURL.length()-1);
-		this.webrestURL=webrestURL;
-		this.locale=locale;
+	public SmsProvider(Locale locale, String baseUrl) {
+		if (baseUrl.endsWith("/")) baseUrl = baseUrl.substring(0, baseUrl.length()-1);
+		this.baseUrl = baseUrl;
+		this.locale = locale;
 	}
 	
 	public static final SmsProvider getInstance(Locale locale, String providerName, UserProfileId pid) {
-		SmsProvider provider=null;
-		if (SmsProviderName.SMSHOSTING.equals(EnumUtils.forSerializedName(providerName, SmsProviderName.class))) {
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
-			provider=new SmsHosting(locale, css.getSmsWebrestURL());
-		}
-		else if (SmsProviderName.TWILIO.equals(EnumUtils.forSerializedName(providerName, SmsProviderName.class))) {
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());		
-			provider=new Twilio(locale, css.getSmsWebrestURL());
-			
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
+		SmsProviderName pname = EnumUtils.forSerializedName(providerName, SmsProviderName.class);
+		SmsProvider provider = null;
+		if (SmsProviderName.SMSHOSTING.equals(pname)) {
+			provider = new SmsHosting(locale, css.getSmsWebrestURL());
+		} else if (SmsProviderName.TWILIO.equals(pname)) {	
+			provider = new Twilio(locale, css.getSmsWebrestURL());
 		}
 		return provider;
 	}
@@ -92,5 +89,4 @@ public abstract class SmsProvider {
 	}
 	
 	public abstract boolean send(String fromName, String fromNumber, String number, String text, String username, char password[]) throws WTException;
-	
 }

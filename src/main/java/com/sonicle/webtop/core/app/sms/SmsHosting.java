@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2018 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,7 +29,7 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app.sms;
 
@@ -41,17 +41,18 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.WTException;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author gabriele.bulfon
  */
 public class SmsHosting extends SmsProvider {
-	
+	private static final String BASE_URL = "https://api.smshosting.it/rest/api";
 	private static final String WEBREST_SEND = "/sms/send";
 	
-	public SmsHosting(Locale locale, String webrestURL) {
-		super(locale,webrestURL);
+	public SmsHosting(Locale locale, String baseUrl) {
+		super(locale, StringUtils.defaultIfBlank(baseUrl, BASE_URL));
 	}
 
 	@Override
@@ -61,7 +62,7 @@ public class SmsHosting extends SmsProvider {
 			fromName=sanitizeFromName(fromName);
 			fromNumber=sanitizeFromNumber(fromNumber);
 			
-			HttpResponse<JsonNode> resp=Unirest.post(webrestURL+WEBREST_SEND)
+			HttpResponse<JsonNode> resp=Unirest.post(baseUrl+WEBREST_SEND)
 				.basicAuth(username, new String(password))
 				.field("from",(fromNumber!=null && fromNumber.length()>0)?fromNumber:fromName)
 				.field("to",number)
@@ -92,6 +93,4 @@ public class SmsHosting extends SmsProvider {
 		}
 		return success;
 	}
-	
-	
 }
