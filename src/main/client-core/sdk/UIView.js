@@ -130,7 +130,7 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 				dcfg = me.getDockableConfig();
 		if (!cfg.title) {
 			me.setBind({title: '{_viewTitle}'});
-			vm.set('_viewTitle', me.resTitle(dcfg.title) || '');
+			vm.set('_viewTitle', me.buildViewTitle(dcfg.title) || '');
 		}
 		if (!cfg.iconCls && dcfg.iconCls) {
 			me.iconCls = dcfg.iconCls;
@@ -397,6 +397,10 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 				return ct.isVisible() ? ct.focus() : ct.show(null, cb, scope || me);
 			}
 		}
+	},
+	
+	buildViewTitle: function(dockTitle) {
+		return this.resTitle(dockTitle);
 	},
 	
 	privates: {

@@ -108,7 +108,7 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 			if (!desc) Ext.raise('This should never happen (famous last words)');
 			
 			desc.setOrder(idx);
-			desc.setMaintenance(obj.maintenance);
+			//desc.setMaintenance(obj.maintenance);
 			desc.setServiceClassName(obj.serviceCN);
 			desc.setServiceVarsClassName(obj.serviceVarsCN);
 			

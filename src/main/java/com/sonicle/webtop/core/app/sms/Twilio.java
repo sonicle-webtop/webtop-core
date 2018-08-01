@@ -1,6 +1,6 @@
 /*
  * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2018 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -29,7 +29,7 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app.sms;
 
@@ -40,17 +40,18 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import java.util.Locale;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author gabriele.bulfon
  */
 public class Twilio extends SmsProvider {
+	// Base URL is not useful here, using Twilio java api seems that treat endpoint URL updates automatically!
+	private static final String BASE_URL = "https://api.twilio.com/2010-04-01/Account";
 	
-	private static final String WEBREST_SEND = "/Messages.json";
-	
-	public Twilio(Locale locale, String webrestURL) {
-		super(locale,webrestURL);
+	public Twilio(Locale locale, String baseUrl) {
+		super(locale, StringUtils.defaultIfBlank(baseUrl, BASE_URL));
 	}
 
 	@Override
