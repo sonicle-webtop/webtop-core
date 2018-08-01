@@ -635,6 +635,7 @@ public class WebTopSession {
 				if (starttls) {
 					props.put("mail.smtp.starttls.enable","true");
 					props.put("mail.smtp.ssl.trust","*");
+					props.put("mail.smtp.ssl.checkserveridentity", "false");
 				}
 				props.setProperty("mail.imaps.ssl.trust", "*");
 				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
