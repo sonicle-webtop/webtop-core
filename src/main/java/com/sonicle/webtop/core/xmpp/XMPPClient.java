@@ -187,6 +187,7 @@ public class XMPPClient {
 	
 	public void disconnect() throws XMPPClientException {
 		synchronized(con) {
+			if (!isConnected() && (loginCount == 0)) return;
 			checkConnection();
 			try {
 				isDisconnecting.set(true);
