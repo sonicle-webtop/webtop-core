@@ -296,7 +296,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				DateTimeFormatter fmt = JsGridSync.createFormatter(coreMgr.getUserData().getTimeZone());
 				List<SyncDevice> devices = coreMgr.listZPushDevices();
 				ArrayList<JsGridSync> items = new ArrayList<>();
-				for(SyncDevice device : devices) {
+				for (SyncDevice device : devices) {
 					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
 				}
 				new JsonResult(items).printTo(out);
@@ -312,7 +312,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				String scid = ServletUtils.getStringParameter(request, "cid", true);
 				CompositeId cid = new CompositeId().parse(scid);
 				
-				String info = coreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
+				String info = coreMgr.getZPushDetailedInfo(cid.getToken(0), "</br>");
 				new JsonResult(info).printTo(out);
 			}
 			

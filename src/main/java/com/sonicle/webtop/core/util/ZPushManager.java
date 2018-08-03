@@ -181,13 +181,13 @@ public class ZPushManager {
 		ArrayList<ListRecord> items = new ArrayList<>();
 		
 		int lineNo = 0;
-		for(String line : lines) {
+		for (String line : lines) {
 			lineNo++;
 			// Keep only useful lines (skip blank, separator and title lines)
-			if((lineNo >= 6) && (lineNo < lines.size())) {
-				String[] tokens = StringUtils.split(line, " ", 2);
-				String[] users = StringUtils.split(tokens[1], ",");
-				items.add(new ListRecord(tokens[0], users));
+			if ((lineNo >= 6) && (lineNo < lines.size())) {
+				String device = StringUtils.trim(StringUtils.substring(line, 0, 36));
+				String users = StringUtils.trim(StringUtils.substring(line, 37));
+				items.add(new ListRecord(device, StringUtils.split(users, ",")));
 			}
 		}
 		return items;
@@ -196,7 +196,7 @@ public class ZPushManager {
 	private String parseListUsersOfDeviceOutput(List<String> lines, String lineSeparator) {
 		StringBuilder sb = new StringBuilder();
 		
-		for(String line : lines) {
+		for (String line : lines) {
 			sb.append(line);
 			sb.append(lineSeparator);
 		}
@@ -206,7 +206,7 @@ public class ZPushManager {
 	private String parseListDevicesOfUserOutput(List<String> lines, String lineSeparator) {
 		StringBuilder sb = new StringBuilder();
 		
-		for(String line : lines) {
+		for (String line : lines) {
 			sb.append(line);
 			sb.append(lineSeparator);
 		}
@@ -217,37 +217,39 @@ public class ZPushManager {
 		ArrayList<LastsyncRecord> items = new ArrayList<>();
 		
 		int lineNo = 0;
-		for(String line : lines) {
+		for (String line : lines) {
 			lineNo++;
 			// Keep only useful lines (skip blank, separator and title lines)
-			if((lineNo >= 6) && (lineNo < lines.size())) {
-				String[] tokens = StringUtils.split(line, " ", 3);
-				items.add(new LastsyncRecord(tokens[0], tokens[1], tokens[2]));
+			if ((lineNo >= 6) && (lineNo < lines.size())) {
+				String device = StringUtils.trim(StringUtils.substring(line, 0, 36));
+				String user = StringUtils.trim(StringUtils.substring(line, 36, 67));
+				String lastSync = StringUtils.trim(StringUtils.substring(line, 67, 87));
+				items.add(new LastsyncRecord(device, user, lastSync));
 			}
 		}
 		return items;
 	}
 	
 	public static class ListRecord {
-		public String device;
-		public String[] syncronizedUsers;
+		public final String device;
+		public final String[] synchronizedUsers;
 		
-		public ListRecord(String device, String[] syncronizedUsers) {
+		public ListRecord(String device, String[] synchronizedUsers) {
 			this.device = device;
-			this.syncronizedUsers = syncronizedUsers;
+			this.synchronizedUsers = synchronizedUsers;
 		}
 	}
 	
 	public static class LastsyncRecord {
 		public static final String LASTSYNCTIME_NEVER = "never";
-		public String device;
-		public String syncronizedUser;
-		public String lastSyncTime;
+		public final String device;
+		public final String synchronizedUser;
+		public final String lastSyncTime;
 		
-		public LastsyncRecord(String device, String syncronizedUser, String lastSyncTime) {
-			this.device = StringUtils.trim(device);
-			this.syncronizedUser = StringUtils.trim(syncronizedUser);
-			this.lastSyncTime = StringUtils.trim(lastSyncTime);
+		public LastsyncRecord(String device, String synchronizedUser, String lastSyncTime) {
+			this.device = device;
+			this.synchronizedUser = synchronizedUser;
+			this.lastSyncTime = lastSyncTime;
 		}
 	}
 }

@@ -2254,8 +2254,8 @@ public class CoreManager extends BaseManager {
 			ArrayList<SyncDevice> devices = new ArrayList<>();
 			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
 			for (ZPushManager.LastsyncRecord rec : recs) {
-				if (noFilter || StringUtils.equalsIgnoreCase(rec.syncronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.syncronizedUser, match))) {
-					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
+				if (noFilter || StringUtils.equalsIgnoreCase(rec.synchronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.synchronizedUser, match))) {
+					devices.add(new SyncDevice(rec.device, rec.synchronizedUser, rec.lastSyncTime));
 				}
 			}
 			
@@ -2268,7 +2268,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteZPushDevice(String deviceId) throws WTException {
-		UserProfileId targetPid = getTargetProfileId();		
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
 			if (RunContext.isSysAdmin()) {
@@ -2286,10 +2286,13 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public String getZPushDetailedInfo(String device, String user, String lineSep) throws WTException {
+	public String getZPushDetailedInfo(String deviceId, String lineSep) throws WTException {
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
-			return zpush.getDetailedInfo(device, user, lineSep);
+			ensureProfile(true);
+			return zpush.getDetailedInfo(deviceId, getInternetUserId(targetPid), lineSep);
+			
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}	
