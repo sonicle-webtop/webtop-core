@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -442,6 +443,21 @@ public class WebTopSession {
 		privateEnv = null;
 	}
 	
+	private Set<String> listAllowedPrivateServices(ServiceManager svcm) {
+		LinkedHashSet<String> ids = new LinkedHashSet<>();
+		if (RunContext.isSysAdmin()) {
+			ids.add(CoreManifest.ID);
+			ids.add(CoreAdminManifest.ID);
+			ids.add("com.sonicle.webtop.vfs");
+			
+		} else {
+			for (String id : svcm.listRegisteredServices()) {
+				if (RunContext.isPermitted(true, CoreManifest.ID, "SERVICE", "ACCESS", id)) ids.add(id);
+			}
+		}
+		return ids;
+	}
+	
 	private void internalInitPrivateEnvironment(HttpServletRequest request) throws WTException {
 		// Synchronization on caller method!
 		ServiceManager svcm = wta.getServiceManager();
@@ -453,7 +469,7 @@ public class WebTopSession {
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(this);
-		allowedServices = core.listAllowedServices();
+		allowedServices = listAllowedPrivateServices(svcm);
 		
 		BaseManager managerInst = null;
 		for(String serviceId : allowedServices) {
