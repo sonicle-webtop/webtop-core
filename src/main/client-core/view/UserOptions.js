@@ -1070,7 +1070,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.pbx.tit'),
 			hidden: me.isProfileSysAdmin(),
-			items: [{
+			items: [
+				{
 					xtype: 'soformseparator',
 					title: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
 				}, {
@@ -1098,7 +1099,42 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					emptyText: WT.res('opts.pbx.fld-password-empty.lbl'),
 					submitEmptyText: false,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
-			}]
+				}, {
+					xtype: 'sospacer',
+					mult: 2
+				}, {
+					xtype: 'soformseparator',
+					title: WT.getVar("smsConfigured")?WT.res('opts.sms.'+WT.getVar("smsProvider")+'.tit'):WT.res('opts.sms.unconfigured.tit')
+				}, {
+					xtype: 'textfield',
+					bind: {
+						value: '{record.smsSender}'
+					},
+					disabled: !WT.getVar("smsConfigured"),
+					plugins: 'sonoautocomplete',
+					fieldLabel: WT.res('opts.sms.fld-sender.lbl'),
+					tooltip: WT.res('opts.sms.fld-sender.tip'),
+					width: 440,
+					emptyText: WT.res('opts.sms.fld-sender-empty.lbl'),
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
+					xtype: 'fieldcontainer',
+					fieldLabel: '',
+					hideEmptyLabel: false,
+					layout: 'hbox',
+					defaults: {
+						margin: '0 0 0 0'
+					},
+					items: [
+						{
+							xtype: 'label',
+							disabled: !WT.getVar("smsConfigured"),
+							html: WT.res('opts.sms.fld-sender.html')
+						}
+					]
+				}
+			]
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);

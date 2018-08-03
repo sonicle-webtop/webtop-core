@@ -166,6 +166,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.pbxUsername = us.getPbxUsername();
 				jso.pbxPassword = us.getPbxPassword();
 				
+				//SMS
+				jso.smsSender = us.getSmsSender();
+				
 				// WebChat
 				jso.imUploadMaxFileSize = us.getIMUploadMaxFileSize(true);
 				jso.imSoundOnFriendConnect = us.getIMSoundOnFriendConnect();
@@ -240,6 +243,9 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// PBX
 				if (pl.map.has("pbxUsername")) us.setPbxUsername(pl.data.pbxUsername);
 				if (pl.map.has("pbxPassword")) us.setPbxPassword(pl.data.pbxPassword);
+				
+				// SMS
+				if (pl.map.has("smsSender")) us.setSmsSender(pl.data.smsSender);
 				
 				// WebChat
 				if (pl.map.has("imUploadMaxFileSize")) us.setIMUploadMaxFileSize(pl.data.imUploadMaxFileSize);

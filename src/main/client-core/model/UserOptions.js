@@ -76,6 +76,7 @@ Ext.define('Sonicle.webtop.core.model.UserOptions', {
 		WTF.field('upiCustom3', 'string', true),
 		WTF.field('pbxUsername', 'string', true),
 		WTF.field('pbxPassword', 'string', true),
+		WTF.field('smsSender', 'string', true),
 		WTF.field('syncAlertEnabled', 'boolean', false),
 		WTF.field('syncAlertTolerance', 'int', false),
 		WTF.roField('otpDelivery', 'string'),

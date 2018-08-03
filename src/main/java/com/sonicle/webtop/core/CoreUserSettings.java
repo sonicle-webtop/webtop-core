@@ -304,6 +304,14 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setString(PBX_PASSWORD, value);
 	}
 	
+	public String getSmsSender() {
+		return getString(SMS_SENDER, null);
+	}
+	
+	public boolean setSmsSender(String value) {
+		return setString(SMS_SENDER, value);
+	}
+	
 	public String getIMStatusMessage() {
 		return getString(IM_STATUS_MESSAGE, null);
 	}

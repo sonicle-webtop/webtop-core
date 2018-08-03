@@ -648,7 +648,11 @@ public class WebTopSession {
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
 				props.setProperty("mail.smtp.port", ""+smtpport);
-				if (starttls) props.put("mail.smtp.starttls.enable","true");
+				if (starttls) {
+					props.put("mail.smtp.starttls.enable","true");
+					props.put("mail.smtp.ssl.trust","*");
+					props.put("mail.smtp.ssl.checkserveridentity", "false");
+				}
 				props.setProperty("mail.imaps.ssl.trust", "*");
 				props.setProperty("mail.imap.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");
 				props.setProperty("mail.imaps.folder.class", "com.sonicle.mail.imap.SonicleIMAPFolder");

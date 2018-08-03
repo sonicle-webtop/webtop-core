@@ -296,7 +296,10 @@ public class Service extends BaseService {
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
 		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
 		co.put("pbxConfigured",coreMgr.pbxConfigured());
-		co.put("smsConfigured",coreMgr.smsConfigured());
+		if (coreMgr.smsConfigured()) {
+			co.put("smsConfigured",true);
+			co.put("smsProvider",coreMgr.smsGetProvider().getName());
+		}
 		
 		return co;
 	}

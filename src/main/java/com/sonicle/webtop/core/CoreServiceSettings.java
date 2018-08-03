@@ -220,6 +220,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(SMS_PROVIDER_WEBREST_PASSWORD,null);
 	}
 	
+	public String getSmsSender() {
+		return getString(SMS_SENDER,null);
+	}
+	
 	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
 		if (fallbackOnDefault && (value == null)) {
