@@ -1280,14 +1280,23 @@ public class CoreManager extends BaseManager {
 		}
 		UserProfileId targetPid = getTargetProfileId();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());		
+		CoreUserSettings us = new CoreUserSettings(targetPid);
 		
 		//use common service settings or webtop username/password
 		String username=css.getSmsWebrestUser();
 		if (username==null) username=targetPid.getUserId();
 		String spassword=css.getSmsWebrestPassword();
 		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
-		String fromMobile=WT.getUserPersonalInfo(targetPid).getMobile();
-		String fromName=WT.getUserData(targetPid).getDisplayName();
+		
+		String sender=css.getSmsSender();
+		String userSender=us.getSmsSender();
+		if (userSender!=null && userSender.trim().length()>0) sender=userSender;
+		
+		if (sender==null) sender=wta.getPlatformName();
+		
+		boolean isAlpha=StringUtils.isAlpha(sender);
+		String fromMobile=isAlpha?null:sender;
+		String fromName=isAlpha?sender:null;
 		sms.send(fromName, fromMobile, number, text, username, password);
 	}
 	

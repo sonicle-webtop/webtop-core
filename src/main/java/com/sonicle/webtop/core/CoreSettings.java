@@ -626,6 +626,13 @@ public class CoreSettings {
 	public static final String SMS_PROVIDER_WEBREST_PASSWORD = "sms.provider.webrest.password";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS sender. 
+	 */
+
+	public static final String SMS_SENDER = "sms.sender";
+	/**
 	 * [user]
 	 * [string]
 	 * Specifies the PBX username, when different from WebTop username. 
