@@ -2154,33 +2154,37 @@ public class CoreManager extends BaseManager {
 		for(String soId : sourceIds) {
 			List<Recipient> recipients = null;
 			if (StringUtils.equals(soId, RECIPIENT_PROVIDER_AUTO_SOURCE_ID)) {
-				recipients = new ArrayList<>();
-				//TODO: Find a way to handle other RecipientFieldTypes
-				if (fieldType.equals(RecipientFieldType.EMAIL)) {
-					final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
-					for(OServiceStoreEntry entry: entries) {
-						final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
-						if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+				if (!fieldType.equals(RecipientFieldType.LIST)) {
+					recipients = new ArrayList<>();
+					//TODO: Find a way to handle other RecipientFieldTypes
+					if (fieldType.equals(RecipientFieldType.EMAIL)) {
+						final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+						for(OServiceStoreEntry entry: entries) {
+							final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
+							if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+						}
 					}
-				}
+				}					
 			} else if (StringUtils.equals(soId, RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID)) {
-				recipients = new ArrayList<>();
-				//TODO: Find a way to handle other RecipientFieldTypes
-				if (fieldType.equals(RecipientFieldType.EMAIL)) {
-					List<OUser> users=listUsers(true);
-					for(OUser user: users) {
-						UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
-						if (userData!=null) {
-							if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
-								recipients.add(
-									new Recipient(
-											RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
-											lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
-											RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
-											user.getDisplayName(), 
-											userData.getPersonalEmailAddress()
-									)
-								);
+				if (!fieldType.equals(RecipientFieldType.LIST)) {
+					recipients = new ArrayList<>();
+					//TODO: Find a way to handle other RecipientFieldTypes
+					if (fieldType.equals(RecipientFieldType.EMAIL)) {
+						List<OUser> users=listUsers(true);
+						for(OUser user: users) {
+							UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
+							if (userData!=null) {
+								if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
+									recipients.add(
+										new Recipient(
+												RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
+												lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
+												RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+												user.getDisplayName(), 
+												userData.getPersonalEmailAddress()
+										)
+									);
+							}
 						}
 					}
 				}
@@ -2196,12 +2200,13 @@ public class CoreManager extends BaseManager {
 				if (recipients == null) continue;
 			}
 			
-			for(Recipient recipient : recipients) {
-				remaining--;
-				if (remaining < 0) break; 
-				recipient.setSource(soId); // Force composed id!
-				items.add(recipient);
-			}
+			if (recipients!=null)
+				for(Recipient recipient : recipients) {
+					remaining--;
+					if (remaining < 0) break; 
+					recipient.setSource(soId); // Force composed id!
+					items.add(recipient);
+				}
 			if (remaining <= 0) break;
 		}
 		return items;
