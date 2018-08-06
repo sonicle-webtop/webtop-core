@@ -38,6 +38,7 @@ import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.app.RunContext;
@@ -45,10 +46,12 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsUserOptions;
 import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
+import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
@@ -57,10 +60,12 @@ import com.sonicle.webtop.core.sdk.WTException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 
 /**
@@ -78,7 +83,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
 			CoreManager core = WT.getCoreManager(getTargetProfileId());
-			CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
+			//CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
 			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
 			OUser user = core.getUser();
@@ -254,8 +259,6 @@ public class UserOptionsService extends BaseUserOptionsService {
 				new JsonResult().printTo(out);
 			}
 			
-			
-			
 		} catch (Exception ex) {
 			logger.error("Error executing action UserOptions", ex);
 			new JsonResult(false, "Error").printTo(out);
@@ -284,6 +287,44 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
+	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
+		CoreManager coreMgr = WT.getCoreManager(true, getTargetProfileId());
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				DateTimeFormatter fmt = JsGridSync.createFormatter(coreMgr.getUserData().getTimeZone());
+				List<SyncDevice> devices = coreMgr.listZPushDevices();
+				ArrayList<JsGridSync> items = new ArrayList<>();
+				for (SyncDevice device : devices) {
+					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
+				}
+				new JsonResult(items).printTo(out);
+				
+			} else if (crud.equals(Crud.DELETE)) {
+				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
+				CompositeId cid = new CompositeId().parse(pl.data.id);
+				
+				coreMgr.deleteZPushDevice(cid.getToken(0));
+				new JsonResult().printTo(out);
+				
+			} else if (crud.equals("info")) {
+				String scid = ServletUtils.getStringParameter(request, "cid", true);
+				CompositeId cid = new CompositeId().parse(scid);
+				
+				String info = coreMgr.getZPushDetailedInfo(cid.getToken(0), "</br>");
+				new JsonResult(info).printTo(out);
+			}
+			
+		} catch (Throwable t) {
+			logger.error("Error in ManageSyncDevices", t);
+			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
+		}
+	}
+	
+	/**
+	 * Ensures that startup service refers to an allowed service
+	 */
 	private String sanitizeStartupService(CoreManager coreMgr, String startupService) {
 		if (StringUtils.isBlank(startupService)) {
 			return null;

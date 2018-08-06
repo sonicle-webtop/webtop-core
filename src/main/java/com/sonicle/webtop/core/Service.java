@@ -1219,42 +1219,6 @@ public class Service extends BaseService {
 			logger.error("Error in GetOTPGoogleAuthQRCode", ex);
 		}
 	}
-	
-	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		CoreManager pidCoreMgr = WT.getCoreManager(getWts().getProfileId());
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				DateTimeFormatter fmt = JsGridSync.createFormatter(pidCoreMgr.getUserData().getTimeZone());
-				List<SyncDevice> devices = coreMgr.listZPushDevices();
-				ArrayList<JsGridSync> items = new ArrayList<>();
-				for(SyncDevice device : devices) {
-					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
-				}
-				new JsonResult(items).printTo(out);
-				
-			} else if(crud.equals(Crud.DELETE)) {
-				//PayloadAsList<JsGridSyncList> pl = ServletUtils.getPayloadAsList(request, JsGridSyncList.class);
-				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
-				CompositeId cid = new CompositeId().parse(pl.data.id);
-				
-				pidCoreMgr.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals("info")) {
-				String id = ServletUtils.getStringParameter(request, "id", true);
-				CompositeId cid = new CompositeId().parse(id);
-				
-				String info = pidCoreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
-				new JsonResult(info).printTo(out);
-			}
-			
-		} catch (Exception ex) {
-			logger.error("Error in ManageSyncDevices", ex);
-			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
-		}
-	}
 		
 	public void processListInternetRecipientsSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsSimple> items = new ArrayList<>();

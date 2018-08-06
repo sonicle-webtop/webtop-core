@@ -101,6 +101,7 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -438,6 +439,38 @@ public class CoreManager extends BaseManager {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	public List<String> listWTInstalledServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.listRegisteredServices();
+	}
+	
+	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceManifest manifest = svcm.getManifest(serviceId);
+		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
+		return manifest.getDeclaredPermissions();
+	}
+	
+	public Set<String> listAllowedServices() {
+		LinkedHashSet<String> ids = new LinkedHashSet<>();
+		
+		UserProfileId targetPid = getTargetProfileId();
+		ServiceManager svcm = wta.getServiceManager();
+		for (String id : svcm.listRegisteredServices()) {
+			if (RunContext.isPermitted(true, targetPid, SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+		}
+		return ids;
+	}
+	
 	/**
 	 * Returns UserOption services data for current target user.
 	 */
@@ -455,45 +488,6 @@ public class CoreManager extends BaseManager {
 		}
 		
 		return items;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	public List<String> listWTInstalledServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		return svcm.listRegisteredServices();
-	}
-	
-	public Set<String> listAllowedServices() {
-		// This method can be called when runningProfile matched the target one.
-		// It's not able to check permissions on behalf of a user.
-		ensureProfile(false);
-		
-		LinkedHashSet<String> ids = new LinkedHashSet<>();
-		if (RunContext.isSysAdmin()) {
-			ids.add(CoreManifest.ID);
-			ids.add(CoreAdminManifest.ID);
-			ids.add("com.sonicle.webtop.vfs");
-			
-		} else {
-			ServiceManager svcm = wta.getServiceManager();
-			for (String id : svcm.listRegisteredServices()) {
-				if (RunContext.isPermitted(true, SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
-			}
-		}
-		return ids;
-	}
-	
-	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceManifest manifest = svcm.getManifest(serviceId);
-		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
-		return manifest.getDeclaredPermissions();
 	}
 	
 	
@@ -2250,37 +2244,26 @@ public class CoreManager extends BaseManager {
 			
 			boolean noFilter = false, domainMatch = false;
 			String match = null;
-			if (RunContext.isImpersonated() || !RunContext.isWebTopAdmin()) {
-				match = getInternetUserId(getTargetProfileId());
-			} else {
-				if (RunContext.isSysAdmin()) {
-					noFilter = true;
-				} else {
+			UserProfileId targetPid = getTargetProfileId();
+			if (RunContext.isSysAdmin()) {
+				if (UserProfileId.isWildcardUser(targetPid)) {
 					domainMatch = true;
-					match = "@" + wta.getWebTopManager().getDomainInternetName(getTargetProfileId().getDomainId());
+					match = "@" + wta.getWebTopManager().getDomainInternetName(targetPid.getDomainId());
+				} else {
+					match = getInternetUserId(targetPid);
 				}
+			} else {
+				match = getInternetUserId(targetPid);
 			}
 			
 			ArrayList<SyncDevice> devices = new ArrayList<>();
 			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
 			for (ZPushManager.LastsyncRecord rec : recs) {
-				if (noFilter || StringUtils.equalsIgnoreCase(rec.syncronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.syncronizedUser, match))) {
-					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
+				if (noFilter || StringUtils.equalsIgnoreCase(rec.synchronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.synchronizedUser, match))) {
+					devices.add(new SyncDevice(rec.device, rec.synchronizedUser, rec.lastSyncTime));
 				}
 			}
 			
-			/*
-			boolean sysadmin = RunContext.isSysAdmin();
-			String internetId = (sysadmin) ? null : getInternetUserId(getTargetProfileId());
-
-			ArrayList<SyncDevice> devices = new ArrayList<>();
-			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
-			for(ZPushManager.LastsyncRecord rec : recs) {
-				if(sysadmin || StringUtils.equalsIgnoreCase(rec.syncronizedUser, internetId)) {
-					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
-				}
-			}
-			*/
 			return devices;
 			
 		} catch(Exception ex) {
@@ -2289,19 +2272,32 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteZPushDevice(String device, String user) throws WTException {
+	public void deleteZPushDevice(String deviceId) throws WTException {
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
-			zpush.removeUserDevice(user, device);
+			if (RunContext.isSysAdmin()) {
+				if (UserProfileId.isWildcardUser(targetPid)) {
+					zpush.removeDevice(deviceId);
+				} else {
+					zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+				}
+			} else {
+				zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+			}
+			
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}
 	}
 	
-	public String getZPushDetailedInfo(String device, String user, String lineSep) throws WTException {
+	public String getZPushDetailedInfo(String deviceId, String lineSep) throws WTException {
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
-			return zpush.getDetailedInfo(device, user, lineSep);
+			ensureProfile(true);
+			return zpush.getDetailedInfo(deviceId, getInternetUserId(targetPid), lineSep);
+			
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}	

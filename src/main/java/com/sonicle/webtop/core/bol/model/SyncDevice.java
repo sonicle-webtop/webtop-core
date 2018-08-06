@@ -38,7 +38,6 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.ZPushManager.LastsyncRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 
 /**
@@ -55,7 +54,7 @@ public class SyncDevice {
 	public SyncDevice(String device, String user, String lastSync) {
 		this.device = device;
 		this.user = user;
-		if(StringUtils.equals(lastSync, LastsyncRecord.LASTSYNCTIME_NEVER)) {
+		if (StringUtils.equals(lastSync, LastsyncRecord.LASTSYNCTIME_NEVER)) {
 			this.lastSync = null;
 		} else {
 			try {

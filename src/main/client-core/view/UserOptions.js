@@ -899,32 +899,23 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					store: {
 						autoSync: true,
 						model: 'WTA.ux.data.EmptyModel',
-						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices'),
-						groupField: 'user'
+						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices', 'data', {
+							extraParams: {
+								options: true,
+								id: me.profileId
+							}
+						})
 					},
 					columns: [{
 						dataIndex: 'device',
 						header: WT.res('opts.sync.gp-sync.device.lbl'),
-						groupable: false,
-						flex: 1
-					}, {
-						dataIndex: 'user',
-						header: WT.res('opts.sync.gp-sync.user.lbl'),
-						groupable: true,
 						flex: 1
 					}, {
 						dataIndex: 'lastSync',
 						xtype: 'datecolumn',
 						format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
 						header: WT.res('opts.sync.gp-sync.lastSync.lbl'),
-						groupable: false,
 						flex: 1
-					}],
-					features: [{
-						id: 'grouping',
-						ftype: 'grouping',
-						groupHeaderTpl: '{columnName}: {name} ({children.length})',
-						hideGroupedHeader: true
 					}],
 					tbar: [
 						me.addAct('showSyncDeviceInfo', {
@@ -1245,11 +1236,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		WT.ajaxReq(WT.ID, 'ManageSyncDevices', {
 			params: {
 				crud: 'info',
-				id: rec.getId()
+				options: true,
+				id: me.profileId,
+				cid: rec.getId()
 			},
 			callback: function(success, obj) {
 				me.unwait();
-				if(success) {
+				if (success) {
 					WT.msg(obj.data, {
 						title: WT.res('opts.sync.details.tit')
 					});
@@ -1264,7 +1257,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				sto = grid.getStore();
 		
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
+			if (bid === 'yes') {
 				sto.remove(recs[0]);
 			}
 		}, me);
