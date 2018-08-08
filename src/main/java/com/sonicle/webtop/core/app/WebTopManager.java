@@ -2281,7 +2281,7 @@ public final class WebTopManager {
 	protected WTException wrapThrowable(Throwable t) {
 		if (t instanceof WTException) {
 			return (WTException)t;
-		} else if ((t instanceof WTException) || (t instanceof WTException)) {
+		} else if ((t instanceof SQLException) || (t instanceof DAOException)) {
 			return new WTException(t, "DB error");
 		} else {
 			return new WTException(t);
