@@ -375,6 +375,10 @@ div.wt-wnlist {
 	color: #c00 !important;
 }
 
+.wt-doced-switch-btn .x-btn-inner {
+	color: #e60000 !important;
+}
+
 /* TinyMCE */
 .mce-tinymce.mce-container {
 	border-width: 0px !important;

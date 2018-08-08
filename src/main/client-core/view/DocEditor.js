@@ -46,6 +46,16 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		maximized: true
 	},
 	
+	/**
+	 * @private
+	 * @property {DocsAPI.DocEditor} docEditor
+	 */
+	
+	/**
+	 * @private
+	 * @property {Object} lastEdConfig
+	 */
+	
 	initComponent: function() {
 		var me = this,
 				divId = me.buildDocEditorPlaceholderId();
@@ -56,14 +66,6 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 			style: {
 				marginTop: '-16px'
 			},
-			tbar: [
-				'->',
-				{
-					xtype: 'button',
-					text: 'Switch to edit mode'
-				},
-				'->'
-			],
 			*/
 			items: [{
 				xtype: 'box',
@@ -78,8 +80,20 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		me.callParent(arguments);
 	},
 	
+	destroy: function() {
+		var me = this;
+		if (me.docEditor) me.docEditor.destroyEditor();
+		me.callParent();
+	},
+	
 	beginView: function(opts) {
-		this.configureEditor(Ext.apply(opts || {}, {
+		var me = this;
+		if (opts.editable === true) {
+			me.addDocked(Ext.apply(me.createSwitchTb(), {
+				dock: 'top'
+			}));
+		}
+		me.configureEditor(Ext.apply(opts || {}, {
 			editorMode: 'view'
 		}));
 	},
@@ -110,7 +124,6 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 */
 	configureEditor: function(opts) {
 		var me = this,
-				elId = me.buildDocEditorPlaceholderId(),
 				cfg = {
 					width: '100%',
 					height: '100%',
@@ -154,8 +167,45 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		});
 		
 		me.loadApi(function() {
-			new DocsAPI.DocEditor(elId, cfg);
+			me.initDocEditor(cfg);
 		}, me);
+	},
+	
+	initDocEditor: function(cfg) {
+		var me = this;
+		me.lastEdConfig = cfg;
+		if (me.docEditor) me.docEditor.destroyEditor();
+		me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), cfg);
+	},
+	
+	createSwitchTb: function() {
+		var me = this;
+		return {
+			xtype: 'toolbar',
+			items: [{
+				xtype: 'tbtext',
+				html: WTF.headerWithGlyphIcon('fa fa-eye') + '&nbsp;' + WT.res('docEditor.tbi-viewMode.lbl')
+			}, '->', {
+				xtype: 'button',
+				text: 'Switch to edit mode',
+				cls: 'wt-doced-switch-btn',
+				handler: function(s) {
+					me.removeDocked(s.up('toolbar', 1));
+					me.initDocEditor(Ext.merge(me.lastEdConfig, {
+						editorConfig: {
+							mode: 'edit'
+						}
+					}));
+				}
+			}, '->', {
+				xtype: 'button',
+				tooltip: WT.res('act-close.lbl'),
+				glyph: 'xf00d@FontAwesome',
+				handler: function(s) {
+					me.removeDocked(s.up('toolbar', 1));
+				}
+			}, ' ']
+		};
 	},
 	
 	loadApi: function(callback, scope) {
