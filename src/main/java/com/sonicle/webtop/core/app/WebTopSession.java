@@ -1275,6 +1275,14 @@ public class WebTopSession {
 		}
 	}
 	
+	public DocEditorManager.DocumentConfig prepareDocumentEditing(String filename, String uniqueId, long lastModifiedTime, IDocEditorDocumentHandler docHandler) throws WTException {
+		return wta.getDocEditorManager().addDocumentHandler(filename, uniqueId, lastModifiedTime, docHandler);
+	}
+	
+	public void endDocumentEditing(String editingId) {
+		wta.getDocEditorManager().removeDocumentHandler(editingId);
+	}
+	
 	public static class UploadedFile {
 		private final boolean virtual;
 		private final String serviceId;

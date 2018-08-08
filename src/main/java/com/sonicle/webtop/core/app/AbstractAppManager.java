@@ -32,15 +32,14 @@
  */
 package com.sonicle.webtop.core.app;
 
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.sonicle.commons.concurrent.ReentrantPriorityLock;
 
 /**
  *
  * @author malbinola
  */
 public abstract class AbstractAppManager {
-	protected ReadWriteLock lock = new ReentrantReadWriteLock();
+	protected ReentrantPriorityLock lock = new ReentrantPriorityLock();
 	protected boolean ready = true;
 	protected WebTopApp wta;
 	
@@ -49,12 +48,12 @@ public abstract class AbstractAppManager {
 	}
 	
 	void cleanup() {
-		lock.writeLock().lock();
+		lock.lock(ReentrantPriorityLock.Priority.HIGH);
 		try {
 			this.ready = false;
 			internalCleanup();
 		} finally {
-			lock.writeLock().unlock();
+			lock.unlock();
 		}
 	}
 	

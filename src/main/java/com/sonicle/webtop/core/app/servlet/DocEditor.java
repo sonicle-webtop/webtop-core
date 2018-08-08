@@ -68,6 +68,7 @@ public class DocEditor extends AbstractServlet {
 	public static final String URL = "/doc-editor"; // Shiro.ini must reflect this URI!
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
+	public static final String EDITING_ID_PARAM = "eid";
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -88,9 +89,9 @@ public class DocEditor extends AbstractServlet {
 		
 		String path = URIUtils.removeTrailingSeparator(request.getPathInfo());
 		if (StringUtils.equalsIgnoreCase(path, DOWNLOAD_PATH)) {
-			String docId = ServletUtils.getStringParameter(request, "docId", true);
+			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			
-			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(docId);
+			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
 			if (docHandler == null) throw new RuntimeException();
 			
 			ServletUtils.setContentTypeHeader(response, "application/octet-stream");
@@ -98,10 +99,10 @@ public class DocEditor extends AbstractServlet {
 			
 		} else if (StringUtils.equalsIgnoreCase(path, TRACK_PATH)) {
 			logger.debug("TRACK_PATH");
-			String docId = ServletUtils.getStringParameter(request, "docId", true);
+			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
-			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(docId);
+			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
 			if (docHandler == null) throw new RuntimeException();
 			
 			if (payload.data.status == 1) { // document is being edited
@@ -126,14 +127,14 @@ public class DocEditor extends AbstractServlet {
 				}
 				
 				//UserProfileId profileId = new UserProfileId(payload.data.users.get(0));
-				docEdMgr.removeDocumentHandler(docId);
+				docEdMgr.removeDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if (payload.data.status == 3) { // document saving error has occurred
-				docEdMgr.removeDocumentHandler(docId);
+				docEdMgr.removeDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			} else if (payload.data.status == 4) { // document is closed with no changes
-				docEdMgr.removeDocumentHandler(docId);
+				docEdMgr.removeDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			}
 		}

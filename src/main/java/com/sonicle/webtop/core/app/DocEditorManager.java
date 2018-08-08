@@ -84,50 +84,46 @@ public class DocEditorManager extends AbstractAppManager {
 		handlers.clear();
 	}
 	
-	public DocumentConfig prepareEditing(String filename, String uniqueIdentifier, long lastModifiedTime, IDocEditorDocumentHandler docHandler) throws WTException {
-		return addDocumentHandler(filename, uniqueIdentifier, lastModifiedTime, docHandler);
-	}
-	
 	public DocumentConfig addDocumentHandler(String filename, String uniqueId, long lastModifiedTime, IDocEditorDocumentHandler docHandler) throws WTException {
-		lock.readLock().lock();
+		lock.lock();
 		try {
 			String documentType = getDocumentType(filename);
 			if (documentType == null) throw new WTException("Provided file is not editable [{}]", filename);
 			String ext = FilenameUtils.getExtension(filename);
 			
-			String docId = buildDocId(IdentifierUtils.getUUIDTimeBased(true), RunContext.getRunProfileId());
-			handlers.put(docId, docHandler);
+			String editingId = buildEditingId(RunContext.getRunProfileId());
+			handlers.put(editingId, docHandler);
 			String key = buildKey(filename, uniqueId, lastModifiedTime);
 			String baseUrl = wta.getInternalBaseUrl();
-			String url = buildUrl(baseUrl, docId).toString();
-			String callbackUrl = buildCallbackUrl(baseUrl, docId).toString();
-			return new DocumentConfig(docId, documentType, ext, key, url, callbackUrl);
+			String url = buildUrl(baseUrl, editingId).toString();
+			String callbackUrl = buildCallbackUrl(baseUrl, editingId).toString();
+			return new DocumentConfig(editingId, documentType, ext, key, url, callbackUrl);
 		
 		} catch(URISyntaxException ex) {
 			logger.error("Unable to build URL", ex);
 			return null;
 		} finally {
-			lock.readLock().unlock();
+			lock.unlock();
 		}
 	}
 	
 	public IDocEditorDocumentHandler getDocumentHandler(String docId) {
-		lock.readLock().lock();
+		lock.lock();
 		try {
 			return handlers.get(docId);
 			
 		} finally {
-			lock.readLock().unlock();
+			lock.unlock();
 		}
 	}
 	
 	public void removeDocumentHandler(String docId) {
-		lock.readLock().lock();
+		lock.lock();
 		try {
 			handlers.remove(docId);
 			
 		} finally {
-			lock.readLock().unlock();
+			lock.unlock();
 		}
 	}
 	
@@ -137,9 +133,9 @@ public class DocEditorManager extends AbstractAppManager {
 		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
 	}
 	
-	private String buildDocId(String docHandlerId, UserProfileId profileId) {
+	private String buildEditingId(UserProfileId profileId) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(docHandlerId);
+		sb.append(IdentifierUtils.getUUIDTimeBased(true));
 		if (profileId != null) {
 			sb.append("-");
 			sb.append(profileId.toString());
@@ -147,17 +143,17 @@ public class DocEditorManager extends AbstractAppManager {
 		return DigestUtils.md5Hex(sb.toString());
 	}
 	
-	private URI buildUrl(String baseUrl, String docId) throws URISyntaxException {
+	private URI buildUrl(String baseUrl, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(baseUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.DOWNLOAD_PATH));
-		builder.addParameter("docId", docId);
+		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}
 	
-	private URI buildCallbackUrl(String baseUrl, String docId) throws URISyntaxException {
+	private URI buildCallbackUrl(String baseUrl, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(baseUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.TRACK_PATH));
-		builder.addParameter("docId", docId);
+		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}
 	
@@ -174,15 +170,15 @@ public class DocEditorManager extends AbstractAppManager {
 	}
 	
 	public static class DocumentConfig {
-		public final String docId;
+		public final String editingId;
 		public final String docType;
 		public final String docExtension;
 		public final String docKey;
 		public final String docUrl;
 		public final String callbackUrl;
 		
-		public DocumentConfig(String docId, String docType, String docExtension, String docKey, String docUrl, String callbackUrl) {
-			this.docId = docId;
+		public DocumentConfig(String editingId, String docType, String docExtension, String docKey, String docUrl, String callbackUrl) {
+			this.editingId = editingId;
 			this.docType = docType;
 			this.docExtension = docExtension;
 			this.docKey = docKey;
