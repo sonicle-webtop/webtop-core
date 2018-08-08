@@ -97,7 +97,7 @@ public class DocEditorManager extends AbstractAppManager {
 			String baseUrl = wta.getInternalBaseUrl();
 			String url = buildUrl(baseUrl, editingId).toString();
 			String callbackUrl = buildCallbackUrl(baseUrl, editingId).toString();
-			return new DocumentConfig(editingId, documentType, ext, key, url, callbackUrl);
+			return new DocumentConfig(editingId, docHandler.isWriteSupported(), documentType, ext, key, url, callbackUrl);
 		
 		} catch(URISyntaxException ex) {
 			logger.error("Unable to build URL", ex);
@@ -171,14 +171,16 @@ public class DocEditorManager extends AbstractAppManager {
 	
 	public static class DocumentConfig {
 		public final String editingId;
+		public final boolean writeSupport;
 		public final String docType;
 		public final String docExtension;
 		public final String docKey;
 		public final String docUrl;
 		public final String callbackUrl;
 		
-		public DocumentConfig(String editingId, String docType, String docExtension, String docKey, String docUrl, String callbackUrl) {
+		public DocumentConfig(String editingId, boolean writeSupport, String docType, String docExtension, String docKey, String docUrl, String callbackUrl) {
 			this.editingId = editingId;
+			this.writeSupport = writeSupport;
 			this.docType = docType;
 			this.docExtension = docExtension;
 			this.docKey = docKey;

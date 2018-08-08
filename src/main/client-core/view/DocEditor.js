@@ -52,9 +52,19 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		
 		Ext.apply(me, {
 			layout: 'auto',
+			/*
 			style: {
 				marginTop: '-16px'
 			},
+			tbar: [
+				'->',
+				{
+					xtype: 'button',
+					text: 'Switch to edit mode'
+				},
+				'->'
+			],
+			*/
 			items: [{
 				xtype: 'box',
 				style: {
