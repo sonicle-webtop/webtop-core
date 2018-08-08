@@ -217,7 +217,7 @@ public final class WebTopApp {
 	private SessionManager sesMgr = null;
 	private OTPManager otpMgr = null;
 	private ReportManager rptMgr = null;
-	//private DocEditorManager docEditorMgr = null;
+	private DocEditorManager docEditorMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
@@ -381,7 +381,7 @@ public final class WebTopApp {
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this); // OTP Manager
 		this.rptMgr = ReportManager.initialize(this); // Report Manager
-		//this.docEditorMgr = new DocEditorManager(this);
+		this.docEditorMgr = new DocEditorManager(this);
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
@@ -799,9 +799,9 @@ public final class WebTopApp {
 	 * Returns the DocEditorManager.
 	 * @return DocEditorManager instance.
 	 */
-	//public DocEditorManager getDocEditorManager() {
-	//	return docEditorMgr;
-	//}
+	public DocEditorManager getDocEditorManager() {
+		return docEditorMgr;
+	}
 	
 	/**
 	 * Returns the SessionManager.
