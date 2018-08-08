@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PropertiesEx;
@@ -72,7 +72,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ResourceRequest extends HttpServlet {
-	public static final String URL = "resources"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/resources"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(ResourceRequest.class);
 	protected static final int BUFFER_SIZE = 4*1024;
 	private static final Pattern PATTERN_VIRTUAL_URL = Pattern.compile("^"

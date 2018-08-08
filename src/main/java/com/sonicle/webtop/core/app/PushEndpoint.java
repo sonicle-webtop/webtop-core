@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 @ManagedService(
-		path = "/"+PushEndpoint.URL+"/{sessionId}",
+		path = PushEndpoint.URL + "/{sessionId}",
 		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
 			com.sonicle.webtop.core.app.atmosphere.ContentTypeInterceptor.class,
@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
 )
 public class PushEndpoint {
 	private static final Logger logger = LoggerFactory.getLogger(PushEndpoint.class);
-	public static final String URL = "push"; // This must reflect web.xml!
+	public static final String URL = "/push"; // This must reflect web.xml!
 	
 	@PathParam("sessionId")
 	private String sessionId;

@@ -47,6 +47,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return PathUtils.ensureTrailingSeparator(getString(HOME_PATH, null));
 	}
 	
+	public String getInternalBaseUrl() {
+		return getString(INTERNAL_BASE_URL, null);
+	}
+	
 	public String getPublicBaseUrl() {
 		return getString(PUBLIC_BASE_URL, null);
 	}

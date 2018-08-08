@@ -42,7 +42,7 @@ import com.sonicle.webtop.core.app.PublicEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.bol.js.JsWTSPublic;
-import com.sonicle.webtop.core.servlet.PublicRequest;
+import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;

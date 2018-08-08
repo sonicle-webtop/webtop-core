@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.DigestUtils;
+import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
@@ -260,7 +260,7 @@ public final class WebTopManager {
 	}
 	
 	public String domainIdToPublicName(String domainId) {
-		return DigestUtils.adler32Hex(domainId);
+		return AlgoUtils.adler32Hex(domainId);
 	}
 	
 	public String publicNameToDomainId(String domainPublicName) {

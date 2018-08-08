@@ -31,39 +31,39 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.shiro.filter;
 
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopManager;
-import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.app.servlet.PublicRequest;
+import com.sonicle.webtop.core.app.SessionContext;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WebTopSession;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang.StringUtils;
-import org.apache.shiro.web.servlet.ShiroFilter;
-import org.apache.shiro.web.subject.WebSubject;
-import org.apache.shiro.mgt.SecurityManager;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.apache.shiro.web.util.WebUtils;
 
 /**
  *
  * @author malbinola
  */
-public class WTShiroFilter extends ShiroFilter {
-/*
+public class CSRFCheck extends PathMatchingFilter {
+
 	@Override
-	protected WebSubject createSubject(ServletRequest request, ServletResponse response) {
-		String servletPath = ((HttpServletRequest)request).getServletPath();
-		if (StringUtils.equals(servletPath, "/"+PublicRequest.URL)) {
-			return createAdminSubject(getSecurityManager(), request, response);
+	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
+		HttpServletRequest httpRequest = (HttpServletRequest)request;
+		HttpSession session = httpRequest.getSession(false);
+		if (session == null) return true;
+		
+		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
+		if (webtopSession == null) return true;
+		
+		if (webtopSession.getCSRFToken().equals(request.getParameter("csrf"))) {
+			return true;
 		} else {
-			return super.createSubject(request, response);
+			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
+			return false;
 		}
 	}
-	
-	private WebSubject createAdminSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response) {
-		UserProfileId profileId = new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
-		return RunContext.buildWebSubject(securityManager, request, response, profileId);
-	}
-*/
 }

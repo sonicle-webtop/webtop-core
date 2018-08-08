@@ -53,9 +53,6 @@ import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.servlet.Login;
-import com.sonicle.webtop.core.servlet.Otp;
-import com.sonicle.webtop.core.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -75,7 +72,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class UIPrivate extends AbstractServlet {
-	public static final String URL = "ui-private"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/ui-private"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(UIPrivate.class);
 	public static final String WTSPROP_PASSWORD_CHANGEUPONLOGIN = "PASSWORD_CHANGEUPONLOGIN";
 

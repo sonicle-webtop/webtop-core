@@ -31,12 +31,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
@@ -117,18 +116,18 @@ public class ServletHelper {
 	}
 	
 	public static String sanitizeBaseUrl(String url) {
-		url = StringUtils.substringBefore(url, "/"+Login.URL);
-		url = StringUtils.substringBefore(url, "/"+Logout.URL);
-		url = StringUtils.substringBefore(url, "/"+UIPrivate.URL);
-		url = StringUtils.substringBefore(url, "/"+Otp.URL);
-		url = StringUtils.substringBefore(url, "/"+ResourceRequest.URL);
-		url = StringUtils.substringBefore(url, "/"+PrivateRequest.URL);
-		url = StringUtils.substringBefore(url, "/"+PublicRequest.URL);
-		url = StringUtils.substringBefore(url, "/"+RestApi.URL);
+		url = StringUtils.substringBefore(url, Login.URL);
+		url = StringUtils.substringBefore(url, Logout.URL);
+		url = StringUtils.substringBefore(url, UIPrivate.URL);
+		url = StringUtils.substringBefore(url, Otp.URL);
+		url = StringUtils.substringBefore(url, ResourceRequest.URL);
+		url = StringUtils.substringBefore(url, PrivateRequest.URL);
+		url = StringUtils.substringBefore(url, PublicRequest.URL);
+		url = StringUtils.substringBefore(url, RestApi.URL);
 		return PathUtils.ensureTrailingSeparator(url);
 	}
 	
 	public static boolean isPublic(HttpServletRequest request) {
-		return request.getServletPath().equals("/public");
+		return request.getServletPath().equals(PublicRequest.URL);
 	}
 }

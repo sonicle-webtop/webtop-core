@@ -31,39 +31,24 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro.filter;
+package com.sonicle.webtop.core.app.servlet;
 
-import com.sonicle.webtop.core.app.SessionContext;
-import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.app.WebTopSession;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import org.apache.shiro.web.filter.PathMatchingFilter;
-import org.apache.shiro.web.util.WebUtils;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 /**
  *
  * @author malbinola
  */
-public class CSRFCheck extends PathMatchingFilter {
-
-	@Override
-	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-		HttpServletRequest httpRequest = (HttpServletRequest)request;
-		HttpSession session = httpRequest.getSession(false);
-		if (session == null) return true;
-		
-		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
-		if (webtopSession == null) return true;
-		
-		if (webtopSession.getCSRFToken().equals(request.getParameter("csrf"))) {
-			return true;
-		} else {
-			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF security token not valid");
-			return false;
-		}
+public class RestApi extends ServletContainer {
+	public static final String URL = "/api"; // Shiro.ini must reflect this URI!
+	public static final String INIT_PARAM_WEBTOP_SERVICE_ID = "webtop.serviceId";
+	
+	public RestApi() {
+		super();
+	}
+	
+	public RestApi(ResourceConfig resourceConfig) {
+		super(resourceConfig);
 	}
 }

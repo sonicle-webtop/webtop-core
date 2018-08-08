@@ -217,6 +217,7 @@ public final class WebTopApp {
 	private SessionManager sesMgr = null;
 	private OTPManager otpMgr = null;
 	private ReportManager rptMgr = null;
+	//private DocEditorManager docEditorMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
@@ -333,7 +334,7 @@ public final class WebTopApp {
 		try {
 			URI uri = new URI("http://www.sonicle.com/images/empty.png");
 			httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
-			HttpClientUtils.get(httpcli, uri, baos);
+			HttpClientUtils.writeContent(httpcli, uri, baos);
 		} catch(Throwable t) {
 		} finally {
 			HttpClientUtils.closeQuietly(httpcli);
@@ -380,6 +381,7 @@ public final class WebTopApp {
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this); // OTP Manager
 		this.rptMgr = ReportManager.initialize(this); // Report Manager
+		//this.docEditorMgr = new DocEditorManager(this);
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
@@ -425,6 +427,8 @@ public final class WebTopApp {
 		} catch(SchedulerException ex) {
 			logger.error("Error shutting-down scheduler", ex);
 		}
+		//docEditorMgr.cleanup();
+		//docEditorMgr = null;
 		// Report Manager
 		rptMgr.cleanup();
 		rptMgr = null;
@@ -792,6 +796,14 @@ public final class WebTopApp {
 	}
 	
 	/**
+	 * Returns the DocEditorManager.
+	 * @return DocEditorManager instance.
+	 */
+	//public DocEditorManager getDocEditorManager() {
+	//	return docEditorMgr;
+	//}
+	
+	/**
 	 * Returns the SessionManager.
 	 * @return SessionManager instance.
 	 */
@@ -980,6 +992,10 @@ public final class WebTopApp {
 		
 		File file = new File(jarFileName);
 		return new JarFileResource(new JarFile(file), jarEntryName);
+	}
+	
+	public String getInternalBaseUrl() {
+		return new CoreServiceSettings(CoreManifest.ID, "*").getInternalBaseUrl();
 	}
 	
 	public String getPublicBaseUrl(String domainId) {

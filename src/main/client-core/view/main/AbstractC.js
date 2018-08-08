@@ -611,7 +611,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		},
 		
 		generateUTag: function(sid, tag) {
-			return tag ? Sonicle.Crypto.md5(tag + '@' + sid) : null;
+			return tag ? Sonicle.Crypto.md5Hex(tag + '@' + sid) : null;
 		}
 	}
 });

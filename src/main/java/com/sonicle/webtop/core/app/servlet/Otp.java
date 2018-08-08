@@ -31,14 +31,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -49,7 +48,6 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.servlet.UIPrivate;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -62,7 +60,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.SecurityUtils;
 import org.slf4j.Logger;
 
 /**
@@ -70,7 +67,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class Otp extends AbstractServlet {
-	public static final String URL = "otp"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/otp"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(Otp.class);
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";

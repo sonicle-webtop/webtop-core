@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -65,7 +65,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class Login extends AbstractServlet {
-	public static final String URL = "login"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/login"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(Login.class);
 	public static final String ATTRIBUTE_LOGINFAILURE = "loginFailure";
 	public static final String LOGINFAILURE_INVALID = "invalid";
@@ -85,17 +85,17 @@ public class Login extends AbstractServlet {
 		
 		if (ServletUtils.isForwarded(request)) {
 			String forwardServletPath = getRequestForwardServletPath(request);
-			if (StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Login.URL)
-					|| StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+Logout.URL)) {
+			if (StringUtils.startsWithIgnoreCase(forwardServletPath, Login.URL)
+					|| StringUtils.startsWithIgnoreCase(forwardServletPath, Logout.URL)) {
 				redirect = true;
 			}
-			if (StringUtils.startsWithIgnoreCase(forwardServletPath, "/"+PushEndpoint.URL)) {
+			if (StringUtils.startsWithIgnoreCase(forwardServletPath, PushEndpoint.URL)) {
 				WebUtils.getAndClearSavedRequest(request);
 				redirect = true;
 			}
 		} else {
 			String requestUrl = request.getRequestURL().toString();
-			if (StringUtils.endsWithIgnoreCase(requestUrl, "/"+URL)) {
+			if (StringUtils.endsWithIgnoreCase(requestUrl, Login.URL)) {
 				redirect = true;
 			}
 		}

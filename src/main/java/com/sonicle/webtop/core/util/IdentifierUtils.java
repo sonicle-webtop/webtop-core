@@ -46,6 +46,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
+@Deprecated
 public class IdentifierUtils {
 	private static final char[] VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
 	
@@ -59,29 +60,35 @@ public class IdentifierUtils {
 	 * @param noDashes
 	 * @return 
 	 */
+	@Deprecated
 	public static synchronized String getUUID(boolean noDashes) {
 		String uuid = UUID.randomUUID().toString();
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	@Deprecated
 	public static synchronized String getUUIDTimeBased() {
 		return getUUIDTimeBased(false);
 	}
 	
+	@Deprecated
 	public static synchronized String getUUIDTimeBased(boolean noDashes) {
 		final String uuid = Generators.timeBasedGenerator().generate().toString();
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	@Deprecated
 	public static synchronized String getUUIDRandom() {
 		return getUUIDRandom(false);
 	}
 	
+	@Deprecated
 	public static synchronized String getUUIDRandom(boolean noDashes) {
 		final String uuid = Generators.randomBasedGenerator().generate().toString();
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	@Deprecated
 	public static synchronized String getCRSFToken() {
 		try {
 			byte[] buffer = new byte[80/8];
@@ -95,6 +102,7 @@ public class IdentifierUtils {
 		}
 	}
 	
+	@Deprecated
 	public static synchronized String generateSecretKey() {
 		try {
 			byte[] buffer = new byte[80/8];
@@ -108,6 +116,7 @@ public class IdentifierUtils {
 		}
 	}
 	
+	@Deprecated
 	public static synchronized String getRandomAlphaNumericString(int length) {
 		try {
 			SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");

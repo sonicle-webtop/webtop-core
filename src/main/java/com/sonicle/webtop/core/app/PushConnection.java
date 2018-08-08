@@ -54,14 +54,14 @@ public class PushConnection {
 	
 	public PushConnection(String sessionId, Collection<ServiceMessage> initialMessages) {
 		this.sessionId = sessionId;
-		this.broadcasterPath = "/" + PushEndpoint.URL + "/" + sessionId;
+		this.broadcasterPath = PushEndpoint.URL + "/" + sessionId;
 		if (!initialMessages.isEmpty()) {
 			writeOnBroadcast(initialMessages);
 		}
 	}
 	
 	public boolean flush() {
-		return send(new ArrayList<ServiceMessage>(0));
+		return send(new ArrayList<>(0));
 	}
 	
 	public boolean send(Collection<ServiceMessage> messages) {

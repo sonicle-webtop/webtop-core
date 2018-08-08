@@ -31,7 +31,7 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
@@ -64,7 +64,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PublicRequest extends BaseRequest {
-	public static final String URL = "public"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/public"; // Shiro.ini must reflect this URI!
 	private static final Logger logger = WT.getLogger(PublicRequest.class);
 	public static final String PUBLIC_RESOURCES = "publicresources";
 	
@@ -153,7 +153,8 @@ public class PublicRequest extends BaseRequest {
 					invokeMethod(instance, meinfo, serviceId, request, response);
 				} finally {
 					threadState.clear();
-				}			}
+				}
+			}
 			
 		} catch(Exception ex) {
 			logger.warn("Error processing publicService request", ex);

@@ -63,6 +63,13 @@ public class CoreSettings {
 	public static final String HOME_PATH = "home.path";
 	
 	/**
+	 * [system]
+	 * [string]
+	 * Defines how the webapp is reachable internally (suitable server-to-server connectivity)
+	 */
+	public static final String INTERNAL_BASE_URL = "internal.url";
+	
+	/**
 	 * [domain+system]
 	 * [string]
 	 * Defines how the webapp is reachable from outside

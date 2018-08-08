@@ -31,8 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.servlet;
+package com.sonicle.webtop.core.app.servlet;
 
+import com.sonicle.webtop.core.app.servlet.BaseRequest;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
@@ -59,7 +60,8 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class PrivateRequest extends BaseRequest {
-	public static final String URL = "service-request"; // Shiro.ini must reflect this URI!
+	public static final String URL = "/service-request"; // Shiro.ini must reflect this URI!
+	public static final String URL_LEGACY = "/ServiceRequest";
 	private static final Logger logger = WT.getLogger(PrivateRequest.class);
 	
 	@Override
