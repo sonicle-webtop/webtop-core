@@ -177,5 +177,18 @@ Ext.define('Sonicle.webtop.core.ux.grid.plugin.RecipientCellEditing', {
 		// Keep upward pointer correct for each use - editors are shared between locking sides
 		editor.editingPlugin = me;
 		return editor;
-	}
+	},
+	
+    fireCompleteEditEvent: function(rec) {
+        var me=this;
+	
+		if (rec) me.fireEvent('completeEdit',rec);
+    },
+	
+    fireStartEditEvent: function(rec) {
+        var me=this;
+	
+		if (rec) me.fireEvent('startEdit',rec);
+    }	
+	
 });

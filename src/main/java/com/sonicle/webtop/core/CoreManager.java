@@ -2124,11 +2124,17 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max) throws WTException {
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean autoLast) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
-		ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-		ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		if (!autoLast) {
+			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		}
 		ids.addAll(listRecipientProviderSourceIds());
+		if (autoLast) {
+			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		}
 		return listProviderRecipients(fieldType, ids, queryText, max);
 	}
 	

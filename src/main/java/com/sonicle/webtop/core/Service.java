@@ -1243,13 +1243,14 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
+			boolean autoLast = ServletUtils.getBooleanParameter(request, "autoLast", false);
 			RecipientFieldType rft = ServletUtils.getEnumParameter(request, "rftype", RecipientFieldType.EMAIL, RecipientFieldType.class);
 			if (crud.equals(Crud.READ)) {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(rft, query, limit);
+					items = coreMgr.listProviderRecipients(rft, query, limit, autoLast);
 				} else {
 					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
 				}

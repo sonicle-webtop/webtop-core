@@ -70,5 +70,22 @@ Ext.define('Sonicle.webtop.core.ux.grid.RecipientCellEditor', {
 				}
 			}
 		}
+	},
+	
+	completeEdit: function(remainVisible) {	
+		var me=this,
+			rec=me.editingPlugin.getActiveRecord(),
+			ce=me.callParent(arguments);
+		if (!me.context.cancel) {
+			me.editingPlugin.fireCompleteEditEvent(rec);
+		}
+		return ce;
+	},
+	
+	startEdit: function(boundEl, value, doFocus) {
+		var me=this,
+			rec=me.editingPlugin.context.record;
+		me.callParent(arguments);
+		me.editingPlugin.fireStartEditEvent(rec);
 	}
 });
