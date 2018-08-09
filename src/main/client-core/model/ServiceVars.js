@@ -35,6 +35,9 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 	extend: 'Ext.data.Model',
 	
 	fields: [
+		WTF.roField('docServerPublicUrl', 'string'),
+		WTF.roField('boshUrl', 'string'),
+		WTF.roField('iceServers', 'string'),
 		WTF.field('wtAddonNotifier', 'string'),
 		WTF.field('wtWhatsnewEnabled', 'boolean'),
 		WTF.field('wtOtpEnabled', 'boolean'),

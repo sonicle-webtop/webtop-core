@@ -63,13 +63,6 @@ public class CoreSettings {
 	public static final String HOME_PATH = "home.path";
 	
 	/**
-	 * [system]
-	 * [string]
-	 * Defines how the webapp is reachable internally (suitable server-to-server connectivity)
-	 */
-	public static final String INTERNAL_BASE_URL = "internal.url";
-	
-	/**
 	 * [domain+system]
 	 * [string]
 	 * Defines how the webapp is reachable from outside
@@ -82,6 +75,34 @@ public class CoreSettings {
 	 * Defines how the dav-server is reachable from outside
 	 */
 	public static final String DAVSERVER_BASE_URL = "davserver.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specified how the DocumentServer is reachable externally
+	 */
+	public static final String DOCUMENT_SERVER_PUBLIC_URL = "documentserver.public.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specified how the DocumentServer is reachable internally (server-to-server connectivity) ????????????
+	 */
+	public static final String DOCUMENT_SERVER_LOCAL_URL = "documentserver.local.url";
+	
+	/**
+	 * [system]
+	 * [string]
+	 * Specified how the WebTop webapp is reachable internally (server-to-server connectivity: docserver -> webtop)
+	 */
+	public static final String DOCUMENT_SERVER_LOOPBACK_URL = "documentserver.loopback.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specified the secret shared key to use when communicating with the DocumentServer.
+	 */
+	public static final String DOCUMENT_SERVER_SECRET = "documentserver.secret";
 	
 	/**
 	 * [domain+system]

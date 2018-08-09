@@ -34,17 +34,15 @@ package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.http.HttpClientUtils;
-import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.DocEditorManager;
-import com.sonicle.webtop.core.app.IDocEditorDocumentHandler;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackPayload;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackResponse;
-import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -68,6 +66,7 @@ public class DocEditor extends AbstractServlet {
 	public static final String URL = "/doc-editor"; // Shiro.ini must reflect this URI!
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
+	public static final String DOMAIN_PARAM = "dom";
 	public static final String EDITING_ID_PARAM = "eid";
 	
 	@Override
@@ -91,7 +90,7 @@ public class DocEditor extends AbstractServlet {
 		if (StringUtils.equalsIgnoreCase(path, DOWNLOAD_PATH)) {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			
-			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
+			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
 			if (docHandler == null) throw new RuntimeException();
 			
 			ServletUtils.setContentTypeHeader(response, "application/octet-stream");
@@ -102,7 +101,7 @@ public class DocEditor extends AbstractServlet {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
-			IDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
+			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
 			if (docHandler == null) throw new RuntimeException();
 			
 			if (payload.data.status == 1) { // document is being edited

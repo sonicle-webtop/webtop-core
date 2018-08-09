@@ -46,14 +46,38 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		maximized: true
 	},
 	
+	config: {
+		/**
+		 * @cfg {Boolean} enableSwitchBanner
+		 * If document is opened in view mode and document is editable, 
+		 * a switch banner will be displayed. Set to `false` to disable display.
+		 */
+		enableSwitchBanner: true
+	},
+	
 	/**
-	 * @private
-	 * @property {DocsAPI.DocEditor} docEditor
+	 * @cfg {Object} editorConfig
+	 * Set of configuration properties that will be used to set-up DocEditor
+	 * component. This object may contain any of the following properties:
+	 * 
+	 * @param {text|spreadsheet|presentation} opts.docType The document type.
+	 * @param {String} opts.docExtension The document file extension.
+	 * @param {String} opts.docTitle The document tile.
+	 * @param {String} opts.docUrl The absolute URL where the source viewed or edited document is stored.
+	 * @param {String} [opts.docKey] The unique document identifier used for document recognition; if known the document will be taken from the cache.
+	 * @param {Boolean} [opts.editable] If `true` the Edit button will be enabled, defaults to `false`.
+	 * @param {Boolean} [opts.downloadable] If `true` the Download button will be enabled, defaults to `true`.
+	 * @param {Boolean} [opts.printable] If `true` the Print button will be enabled, defaults to `true`.
+	 * @param {Boolean} [opts.commentable] If `true` the Comments menu will be enabled, defaults to `false`.
+	 * @param {Boolean} [opts.reviewable] If `true` the Review menu will be enabled, defaults to `false`.
+	 * @param {String} opts.callbackUrl The absolute callback URL to track editor actions.
 	 */
+	editorConfig: null,
 	
 	/**
 	 * @private
-	 * @property {Object} lastEdConfig
+	 * @property {DocsAPI.DocEditor} docEditor
+	 * The DocEditor object instance when initialized.
 	 */
 	
 	initComponent: function() {
@@ -86,131 +110,66 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		me.callParent();
 	},
 	
-	beginView: function(opts) {
-		var me = this;
-		if (opts.editable === true) {
+	/**
+	 * Opens the configured document in specified mode.
+	 * @param {view|edit} mode The opening mode.
+	 */
+	begin: function(mode) {
+		if (mode === 'edit') {
+			this.beginEdit();
+		} else {
+			this.beginView();
+		}
+	},
+	
+	/**
+	 * Opens the configured document in view mode.
+	 * If not disabled, a 'Switch mode' banner will be dispayed above the editor.
+	 */
+	beginView: function() {
+		var me = this,
+				cfg = me.editorConfig;
+		
+		me.setViewTitle(cfg.docTitle);
+		if ((cfg.editable === true) && me.getEnableSwitchBanner()) {
 			me.addDocked(Ext.apply(me.createSwitchTb(), {
 				dock: 'top'
 			}));
 		}
-		me.configureEditor(Ext.apply(opts || {}, {
+		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
 			editorMode: 'view'
-		}));
-	},
-	
-	beginEdit: function(opts) {
-		this.configureEditor(Ext.apply(opts || {}, {
-			editorMode: 'edit'
-		}));
+		})));
 	},
 	
 	/**
-	 * Configures document editor.
-	 * @param {Object} [opts] An object containing Editor configuration.
-	 * 
-	 * This object may contain any of the following properties:
-	 * 
-	 * @param {text|spreadsheet|presentation} opts.docType The document type.
-	 * @param {String} opts.docExtension The document file extension.
-	 * @param {String} opts.docTitle The document tile.
-	 * @param {String} opts.docUrl The absolute URL where the source viewed or edited document is stored.
-	 * @param {String} [opts.docKey] The unique document identifier used for document recognition; if known the document will be taken from the cache.
-	 * @param {Boolean} [opts.editable] If `true` the Edit button will be enabled, defaults to `false`.
-	 * @param {Boolean} [opts.downloadable] If `true` the Download button will be enabled, defaults to `true`.
-	 * @param {Boolean} [opts.printable] If `true` the Print button will be enabled, defaults to `true`.
-	 * @param {Boolean} [opts.commentable] If `true` the Comments menu will be enabled, defaults to `false`.
-	 * @param {Boolean} [opts.reviewable] If `true` the Review menu will be enabled, defaults to `false`.
-	 * @param {String} opts.callbackUrl The absolute callback URL to track editor actions.
+	 * Opens the configured document in edit mode.
 	 */
-	configureEditor: function(opts) {
+	beginEdit: function() {
 		var me = this,
-				cfg = {
-					width: '100%',
-					height: '100%',
-					type: 'desktop',
-					documentType: opts.docType
-				};
+				cfg = me.editorConfig;
 		
-		me.setViewTitle(opts.docTitle);
-		
-		cfg = Ext.apply(cfg, {
-			document: {
-				key: Ext.isString(opts.docKey) ? opts.docKey : me.buildDocKey(opts.docTitle),
-				fileType: opts.docExtension,
-				title: opts.docTitle,
-				url: opts.docUrl,
-				permissions: {
-					edit: (opts.editable === true) ? true : false,
-					download: (opts.downloadable === false) ? false : true,
-					print: (opts.printable === false) ? false : true,
-					comment: (opts.commentable === true) ? true : false,
-					review: (opts.reviewable === true) ? true : false
-				}
-			}
-		});
-		cfg = Ext.apply(cfg, {
-			editorConfig: {
-				mode: (opts.editorMode === 'edit') ? 'edit' : 'view',
-				lang: WT.getVar('language'),
-				user: {
-					id: WT.getVar('profileId'),
-					name: WT.getVar('userDisplayName')
-				},
-				callbackUrl: Ext.isString(opts.callbackUrl) ? opts.callbackUrl : null,
-				customization: {
-					about: true,
-					feedback: false,
-					chat: false,
-					goback: false
-				}
-			}
-		});
-		
-		me.loadApi(function() {
-			me.initDocEditor(cfg);
-		}, me);
+		me.setViewTitle(cfg.docTitle);
+		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
+			editorMode: 'edit'
+		})));
 	},
 	
-	initDocEditor: function(cfg) {
+	initDocEditor: function(edCfg) {
 		var me = this;
-		me.lastEdConfig = cfg;
-		if (me.docEditor) me.docEditor.destroyEditor();
-		me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), cfg);
-	},
-	
-	createSwitchTb: function() {
-		var me = this;
-		return {
-			xtype: 'toolbar',
-			items: [{
-				xtype: 'tbtext',
-				html: WTF.headerWithGlyphIcon('fa fa-eye') + '&nbsp;' + WT.res('docEditor.tbi-viewMode.lbl')
-			}, '->', {
-				xtype: 'button',
-				text: 'Switch to edit mode',
-				cls: 'wt-doced-switch-btn',
-				handler: function(s) {
-					me.removeDocked(s.up('toolbar', 1));
-					me.initDocEditor(Ext.merge(me.lastEdConfig, {
-						editorConfig: {
-							mode: 'edit'
-						}
-					}));
-				}
-			}, '->', {
-				xtype: 'button',
-				tooltip: WT.res('act-close.lbl'),
-				glyph: 'xf00d@FontAwesome',
-				handler: function(s) {
-					me.removeDocked(s.up('toolbar', 1));
-				}
-			}, ' ']
-		};
+		if (me.docEditor) {
+			me.docEditor.destroyEditor();
+			me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), edCfg);
+		} else {
+			me.loadApi(function() {
+				me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), edCfg);
+			}, me);
+		}
 	},
 	
 	loadApi: function(callback, scope) {
+		var baseUrl = WT.getVar('docServerPublicUrl');
 		Ext.Loader.loadScript({
-			url: 'http:/'+'/192.168.111.192/web-apps/apps/api/documents/api.js',
+			url: Sonicle.String.urlAppendPath(baseUrl, '/web-apps/apps/api/documents/api.js'),
 			onLoad: function() {
 				Ext.callback(callback, scope || this);
 			},
@@ -225,6 +184,76 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		
 		buildDocKey: function(docTitle) {
 			return Sonicle.String.left(Sonicle.Crypto.md5Hex(docTitle + new Date().getTime().toString()), 20);
+		},
+		
+		createDocEditorCfg: function(cfg) {
+			var me = this,
+					edCfg = {
+						width: '100%',
+						height: '100%',
+						type: 'desktop',
+						documentType: cfg.docType
+					};
+
+			edCfg = Ext.apply(edCfg, {
+				document: {
+					key: Ext.isString(cfg.docKey) ? cfg.docKey : me.buildDocKey(cfg.docTitle),
+					fileType: cfg.docExtension,
+					title: cfg.docTitle,
+					url: cfg.docUrl,
+					permissions: {
+						edit: (cfg.editable === true) ? true : false,
+						download: (cfg.downloadable === false) ? false : true,
+						print: (cfg.printable === false) ? false : true,
+						comment: (cfg.commentable === true) ? true : false,
+						review: (cfg.reviewable === true) ? true : false
+					}
+				}
+			});
+			edCfg = Ext.apply(edCfg, {
+				editorConfig: {
+					mode: (cfg.editorMode === 'edit') ? 'edit' : 'view',
+					lang: WT.getVar('language'),
+					user: {
+						id: WT.getVar('profileId'),
+						name: WT.getVar('userDisplayName')
+					},
+					callbackUrl: Ext.isString(cfg.callbackUrl) ? cfg.callbackUrl : null,
+					customization: {
+						about: true,
+						feedback: false,
+						chat: false,
+						goback: false
+					}
+				}
+			});
+			return edCfg;
+		},
+		
+		createSwitchTb: function() {
+			var me = this;
+			return {
+				xtype: 'toolbar',
+				items: [{
+					xtype: 'tbtext',
+					html: WTF.headerWithGlyphIcon('fa fa-eye') + '&nbsp;' + WT.res('docEditor.tbi-viewMode.lbl')
+				}, '->', {
+					xtype: 'button',
+					text: 'Switch to edit mode',
+					cls: 'wt-doced-switch-btn',
+					handler: function(s) {
+						me.removeDocked(s.up('toolbar', 1));
+						me.beginEdit();
+					}
+				}, '->', {
+					xtype: 'button',
+					tooltip: WT.res('act-close.lbl'),
+					glyph: 'xf00d@FontAwesome',
+					handler: function(s) {
+						me.removeDocked(s.up('toolbar', 1));
+					}
+				}, ' ']
+			};
 		}
 	}
 });

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -1275,7 +1276,7 @@ public class WebTopSession {
 		}
 	}
 	
-	public DocEditorManager.DocumentConfig prepareDocumentEditing(String filename, String uniqueId, long lastModifiedTime, IDocEditorDocumentHandler docHandler) throws WTException {
+	public DocEditorManager.DocumentConfig prepareDocumentEditing(String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
 		return wta.getDocEditorManager().addDocumentHandler(filename, uniqueId, lastModifiedTime, docHandler);
 	}
 	

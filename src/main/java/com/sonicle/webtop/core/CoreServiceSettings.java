@@ -47,16 +47,24 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return PathUtils.ensureTrailingSeparator(getString(HOME_PATH, null));
 	}
 	
-	public String getInternalBaseUrl() {
-		return getString(INTERNAL_BASE_URL, null);
-	}
-	
 	public String getPublicBaseUrl() {
 		return getString(PUBLIC_BASE_URL, null);
 	}
 	
 	public String getDavServerBaseUrl() {
 		return getString(DAVSERVER_BASE_URL, null);
+	}
+	
+	public String getDocumentServerPublicUrl() {
+		return getString(DOCUMENT_SERVER_PUBLIC_URL, null);
+	}
+	
+	public String getDocumentServerLoopbackUrl() {
+		return getString(DOCUMENT_SERVER_LOOPBACK_URL, null);
+	}
+	
+	public String getDocumentServerSecret() {
+		return getString(DOCUMENT_SERVER_SECRET, null);
 	}
 	
 	public Boolean getHasPecBridgeManagement() {

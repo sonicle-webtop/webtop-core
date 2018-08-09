@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.URIUtils;
@@ -73,7 +74,7 @@ public class DocEditorManager extends AbstractAppManager {
 		"fodp", "odp", "otp", "pot", "potm", "potx", "pps", "ppsm", "ppsx", "ppt", "pptm", "pptx"
 	)));
 	
-	private final Map<String, IDocEditorDocumentHandler> handlers = new HashMap<>();
+	private final Map<String, BaseDocEditorDocumentHandler> handlers = new HashMap<>();
 	
 	DocEditorManager(WebTopApp wta) {
 		super(wta);
@@ -84,7 +85,7 @@ public class DocEditorManager extends AbstractAppManager {
 		handlers.clear();
 	}
 	
-	public DocumentConfig addDocumentHandler(String filename, String uniqueId, long lastModifiedTime, IDocEditorDocumentHandler docHandler) throws WTException {
+	public DocumentConfig addDocumentHandler(String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
 		lock.lock();
 		try {
 			String documentType = getDocumentType(filename);
@@ -93,10 +94,12 @@ public class DocEditorManager extends AbstractAppManager {
 			
 			String editingId = buildEditingId(RunContext.getRunProfileId());
 			handlers.put(editingId, docHandler);
+			
+			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String key = buildKey(filename, uniqueId, lastModifiedTime);
-			String baseUrl = wta.getInternalBaseUrl();
-			String url = buildUrl(baseUrl, editingId).toString();
-			String callbackUrl = buildCallbackUrl(baseUrl, editingId).toString();
+			String baseUrl = wta.getDocumentServerLoopbackUrl();
+			String url = generateUrl(baseUrl, domainPublicName, editingId).toString();
+			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, editingId).toString();
 			return new DocumentConfig(editingId, docHandler.isWriteSupported(), documentType, ext, key, url, callbackUrl);
 		
 		} catch(URISyntaxException ex) {
@@ -107,7 +110,7 @@ public class DocEditorManager extends AbstractAppManager {
 		}
 	}
 	
-	public IDocEditorDocumentHandler getDocumentHandler(String docId) {
+	public BaseDocEditorDocumentHandler getDocumentHandler(String docId) {
 		lock.lock();
 		try {
 			return handlers.get(docId);
@@ -143,16 +146,18 @@ public class DocEditorManager extends AbstractAppManager {
 		return DigestUtils.md5Hex(sb.toString());
 	}
 	
-	private URI buildUrl(String baseUrl, String editingId) throws URISyntaxException {
-		URIBuilder builder = new URIBuilder(baseUrl);
+	private URI generateUrl(String loopbackUrl, String domainPubName, String editingId) throws URISyntaxException {
+		URIBuilder builder = new URIBuilder(loopbackUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.DOWNLOAD_PATH));
+		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}
 	
-	private URI buildCallbackUrl(String baseUrl, String editingId) throws URISyntaxException {
-		URIBuilder builder = new URIBuilder(baseUrl);
+	private URI buildCallbackUrl(String loopbackUrl, String domainPubName, String editingId) throws URISyntaxException {
+		URIBuilder builder = new URIBuilder(loopbackUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.TRACK_PATH));
+		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}
