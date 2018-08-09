@@ -348,13 +348,17 @@
 		<dependency>
 			<groupId>com.twilio.sdk</groupId>
 			<artifactId>twilio</artifactId>
-			<version>7.22.0</version>
-		 <exclusions>
-		  <exclusion>
-		   <groupId>com.google.guava</groupId>
-		   <artifactId>guava</artifactId>
-		  </exclusion>
-		 </exclusions>
+			<version>7.22.2</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>io.jsonwebtoken</groupId>
+					<artifactId>jjwt</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>			
 		<!-- WebTop libraries -->
 		<dependency>
