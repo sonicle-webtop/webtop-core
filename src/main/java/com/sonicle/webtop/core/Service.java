@@ -256,6 +256,19 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
+		String docServerPubUrl = ss.getDocumentServerPublicUrl();
+		if (!StringUtils.isBlank(docServerPubUrl)) {
+			co.put("docServerPublicUrl", docServerPubUrl);
+		}
+		String boshUrl = ss.getXMPPBoshUrl();
+		if (!StringUtils.isBlank(docServerPubUrl)) {
+			co.put("boshUrl", boshUrl);
+		}
+		CoreServiceSettings.ICEServersList iceServers = ss.getWebRTC_ICEServers();
+		if (iceServers != null) {
+			co.put("iceServers", iceServers);
+		}
+		
 		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
@@ -267,12 +280,6 @@ public class Service extends BaseService {
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
 		co.put("userDisplayName", profile.getDisplayName());
-		
-		String boshUrl=ss.getXMPPBoshUrl();
-		if (boshUrl!=null) co.put("boshUrl", boshUrl);
-		CoreServiceSettings.ICEServersList iceServers=ss.getWebRTC_ICEServers();
-		if (iceServers!=null) co.put("iceServers", iceServers);
-		
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());

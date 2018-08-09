@@ -30,8 +30,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.app.sdk;
 
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -39,9 +40,23 @@ import java.io.InputStream;
  *
  * @author malbinola
  */
-public interface IDocEditorDocumentHandler {
+public abstract class BaseDocEditorDocumentHandler {
+	protected final UserProfileId targetProfileId;
+	protected final boolean writeCapability;
 	
-	public boolean isWriteSupported();
-	public InputStream readDocument() throws IOException;
-	public void writeDocument(InputStream is) throws IOException;
+	public BaseDocEditorDocumentHandler(boolean writeCapability, UserProfileId targetProfileId) {
+		this.writeCapability = writeCapability;
+		this.targetProfileId = targetProfileId;
+	}
+	
+	public UserProfileId getTargetProfileId() {
+		return targetProfileId;
+	}
+	
+	public boolean isWriteSupported() {
+		return writeCapability;
+	}
+	
+	public abstract InputStream readDocument() throws IOException;
+	public abstract void writeDocument(InputStream is) throws IOException;
 }

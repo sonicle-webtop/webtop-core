@@ -994,16 +994,24 @@ public final class WebTopApp {
 		return new JarFileResource(new JarFile(file), jarEntryName);
 	}
 	
-	public String getInternalBaseUrl() {
-		return new CoreServiceSettings(CoreManifest.ID, "*").getInternalBaseUrl();
-	}
-	
 	public String getPublicBaseUrl(String domainId) {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getPublicBaseUrl();
 	}
 	
 	public String getDavServerBaseUrl(String domainId) {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getDavServerBaseUrl();
+	}
+	
+	public String getDocumentServerPublicUrl(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerPublicUrl();
+	}
+	
+	public String getDocumentServerLoopbackUrl() {
+		return new CoreServiceSettings(CoreManifest.ID, "*").getDocumentServerLoopbackUrl();
+	}
+	
+	public String getDocumentServerSecret(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerSecret();
 	}
 	
 	/**
