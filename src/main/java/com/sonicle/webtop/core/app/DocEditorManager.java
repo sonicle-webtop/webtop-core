@@ -40,14 +40,21 @@ import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.app.servlet.DocEditor;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
+import groovy.json.internal.Charsets;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.Key;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -89,18 +96,20 @@ public class DocEditorManager extends AbstractAppManager {
 		lock.lock();
 		try {
 			String documentType = getDocumentType(filename);
-			if (documentType == null) throw new WTException("Provided file is not editable [{}]", filename);
+			if (documentType == null) throw new WTException("File is not editable [{}]", filename);
 			String ext = FilenameUtils.getExtension(filename);
 			
 			String editingId = buildEditingId(RunContext.getRunProfileId());
 			handlers.put(editingId, docHandler);
 			
+			String secret = wta.getDocumentServerSecret(docHandler.getTargetProfileId().getDomainId());
+			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(Charsets.UTF_8), SignatureAlgorithm.HS256);
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String key = buildKey(filename, uniqueId, lastModifiedTime);
 			String baseUrl = wta.getDocumentServerLoopbackUrl();
 			String url = generateUrl(baseUrl, domainPublicName, editingId).toString();
 			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, editingId).toString();
-			return new DocumentConfig(editingId, docHandler.isWriteSupported(), documentType, ext, key, url, callbackUrl);
+			return new DocumentConfig(editingId, token, documentType, ext, key, url, callbackUrl, docHandler.isWriteSupported());
 		
 		} catch(URISyntaxException ex) {
 			logger.error("Unable to build URL", ex);
@@ -146,6 +155,14 @@ public class DocEditorManager extends AbstractAppManager {
 		return DigestUtils.md5Hex(sb.toString());
 	}
 	
+	private String generateToken(byte[] key, SignatureAlgorithm keyAlgorithm) {
+		SecretKey signingKey = new SecretKeySpec(key, keyAlgorithm.getJcaName());
+		return Jwts.builder()
+				.setPayload("{}")
+				.signWith(signingKey, keyAlgorithm)
+				.compact();
+	}
+	
 	private URI generateUrl(String loopbackUrl, String domainPubName, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(loopbackUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.DOWNLOAD_PATH));
@@ -176,21 +193,23 @@ public class DocEditorManager extends AbstractAppManager {
 	
 	public static class DocumentConfig {
 		public final String editingId;
-		public final boolean writeSupport;
+		public final String token;
 		public final String docType;
 		public final String docExtension;
 		public final String docKey;
 		public final String docUrl;
 		public final String callbackUrl;
+		public final boolean writeSupported;
 		
-		public DocumentConfig(String editingId, boolean writeSupport, String docType, String docExtension, String docKey, String docUrl, String callbackUrl) {
+		public DocumentConfig(String editingId, String token, String docType, String docExtension, String docKey, String docUrl, String callbackUrl, boolean writeSupported) {
 			this.editingId = editingId;
-			this.writeSupport = writeSupport;
+			this.token = token;
 			this.docType = docType;
 			this.docExtension = docExtension;
 			this.docKey = docKey;
 			this.docUrl = docUrl;
 			this.callbackUrl = callbackUrl;
+			this.writeSupported = writeSupported;
 		}
 	}
 }

@@ -66,7 +66,7 @@ public class DocEditor extends AbstractServlet {
 	public static final String URL = "/doc-editor"; // Shiro.ini must reflect this URI!
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
-	public static final String DOMAIN_PARAM = "dom";
+	public static final String DOMAIN_PARAM = "do";
 	public static final String EDITING_ID_PARAM = "eid";
 	
 	@Override

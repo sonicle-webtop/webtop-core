@@ -194,7 +194,8 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 						type: 'desktop',
 						documentType: cfg.docType
 					};
-
+			
+			if (!Ext.isEmpty(cfg.token)) edCfg = Ext.apply(edCfg, {token: cfg.token});
 			edCfg = Ext.apply(edCfg, {
 				document: {
 					key: Ext.isString(cfg.docKey) ? cfg.docKey : me.buildDocKey(cfg.docTitle),
