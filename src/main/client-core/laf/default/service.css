@@ -185,6 +185,30 @@
 .wt-palette-C2C2C2 { background-image: url('palette/C2C2C2.png') !important; }
 .wt-palette-FFFFFF { background-image: url('palette/FFFFFF.png') !important; }
 
+.wt-ftype-application { background-image: url('ftypes/application_16.svg') !important; background-size: contain; }
+.wt-ftype-application-script { background-image: url('ftypes/application-script_16.svg') !important; background-size: contain; }
+.wt-ftype-archive { background-image: url('ftypes/archive_16.svg') !important; background-size: contain; }
+.wt-ftype-audio { background-image: url('ftypes/audio_16.svg') !important; background-size: contain; }
+.wt-ftype-calendar { background-image: url('ftypes/calendar_16.svg') !important; background-size: contain; }
+.wt-ftype-card { background-image: url('ftypes/card_16.svg') !important; background-size: contain; }
+.wt-ftype-document { background-image: url('ftypes/document_16.svg') !important; background-size: contain; }
+.wt-ftype-document-pdf { background-image: url('ftypes/document-pdf_16.svg') !important; background-size: contain; }
+.wt-ftype-document-presentation { background-image: url('ftypes/document-presentation_16.svg') !important; background-size: contain; }
+.wt-ftype-document-spreadsheet { background-image: url('ftypes/document-spreadsheet_16.svg') !important; background-size: contain; }
+.wt-ftype-document-text { background-image: url('ftypes/document-text_16.svg') !important; background-size: contain; }
+.wt-ftype-ebook { background-image: url('ftypes/ebook_16.svg') !important; background-size: contain; }
+.wt-ftype-file { background-image: url('ftypes/file_16.svg') !important; background-size: contain; }
+.wt-ftype-folder { background-image: url('ftypes/folder_16.svg') !important; background-size: contain; }
+.wt-ftype-font { background-image: url('ftypes/font_16.svg') !important; background-size: contain; }
+.wt-ftype-image { background-image: url('ftypes/image_16.svg') !important; background-size: contain; }
+.wt-ftype-message { background-image: url('ftypes/message_16.svg') !important; background-size: contain; }
+.wt-ftype-script { background-image: url('ftypes/script_16.svg') !important; background-size: contain; }
+.wt-ftype-source { background-image: url('ftypes/source_16.svg') !important; background-size: contain; }
+.wt-ftype-text { background-image: url('ftypes/text_16.svg') !important; background-size: contain; }
+.wt-ftype-text-html { background-image: url('ftypes/text-html_16.svg') !important; background-size: contain; }
+.wt-ftype-text-xml { background-image: url('ftypes/text-xml_16.svg') !important; background-size: contain; }
+.wt-ftype-video { background-image: url('ftypes/video_16.svg') !important; background-size: contain; }
+				  
 .wt-ftype-archive-xs { background-image: url('ftypes/archive_16.png') }
 .wt-ftype-archive-s { background-image: url('ftypes/archive_24.png') }
 .wt-ftype-archive-m { background-image: url('ftypes/archive_32.png') }

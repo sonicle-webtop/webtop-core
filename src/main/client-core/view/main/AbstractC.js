@@ -365,6 +365,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			maximizable: floating ? false : dockCfg.maximizable,
 			resizable: floating ? false : true,
 			draggable: floating ? false : true,
+			maximized: floating ? false : dockCfg.maximized,
+			minimized: floating ? false : dockCfg.minimized,
 			defaultAlign: floating ? 'br-br' : 'c-c',
 			tools: dockCfg.tools || [],
 			items: [view]

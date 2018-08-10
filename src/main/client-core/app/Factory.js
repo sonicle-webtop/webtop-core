@@ -202,16 +202,20 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @return {String} The concatenated CSS class name.
 	 */
 	cssIconCls: function(xid, name, size) {
-		if(size === undefined) {
-			return xid+'-icon-'+name;
-		} else {
-			return xid+'-icon-'+name+'-'+size;
+		var sz = '';
+		if (Ext.isString(size)) {
+			sz = '-' + size;
 		}
+		return xid + '-icon-' + name + sz;
 	},
 	
 	fileTypeCssIconCls: function(ext, size) {
-		var ftype = WTA.FileTypes.getFileType(ext);
-		return WT.XID+'-ftype-'+ftype+'-'+size;
+		var ftype = WTA.FileTypes.getFileType(ext),
+				sz = '';
+		if (Ext.isString(size)) {
+			sz = '-' + size;
+		}
+		return WT.XID + '-ftype-' + ftype + sz;
 	},
 	
 	headerWithGlyphIcon: function(iconCls) {
