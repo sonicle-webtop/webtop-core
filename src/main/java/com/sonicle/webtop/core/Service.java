@@ -40,6 +40,7 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
+import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -1164,6 +1165,19 @@ public class Service extends BaseService {
 		} catch (Exception ex) {
 			logger.error("Error in ManageOTP", ex);
 			new JsonResult(false, "Error in ManageOTP").printTo(out);
+		}
+	}
+	
+	public void processCleanupDocManagerEditing(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String editingId = ServletUtils.getStringParameter(request, "editingId", true);
+			getWts().finalizeDocumentEditing(editingId);
+			new JsonResult().printTo(out);
+			
+		} catch(ParameterException ex) {
+			logger.error("Error in CleanupDocManagerEditing", ex);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	

@@ -169,9 +169,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>${commons-collections.version}</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>${commons-collections4.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>

@@ -43,19 +43,21 @@ import com.sonicle.webtop.core.sdk.WTException;
 import groovy.json.internal.Charsets;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.Key;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -81,34 +83,54 @@ public class DocEditorManager extends AbstractAppManager {
 		"fodp", "odp", "otp", "pot", "potm", "potx", "pps", "ppsm", "ppsx", "ppt", "pptm", "pptx"
 	)));
 	
+	private final MultiValuedMap<String, String> editingIdsBySessionId = new ArrayListValuedHashMap<>();
+	private final Map<String, String> sessionIdByEditingId = new HashMap<>();
 	private final Map<String, BaseDocEditorDocumentHandler> handlers = new HashMap<>();
+	private final long timeToLiveMillis;
+	private final Map<String, Long> expirationCandidates = new HashMap();
 	
-	DocEditorManager(WebTopApp wta) {
+	DocEditorManager(WebTopApp wta, final long timeToLiveMillis) {
 		super(wta);
+		this.timeToLiveMillis = timeToLiveMillis;
+		logger.info("Initialized");
+		logger.debug("timeToLive: {}", timeToLiveMillis);
 	}
 	
 	@Override
-	protected void internalCleanup() {
+	protected void internalAppManagerCleanup() {
 		handlers.clear();
+		sessionIdByEditingId.clear();
+		editingIdsBySessionId.clear();
+		expirationCandidates.clear();
+		logger.info("Cleaned up");
 	}
 	
-	public DocumentConfig addDocumentHandler(String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
+	public DocumentConfig registerDocumentHandler(String sessionId, String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
 		lock.lock();
 		try {
+			internalCleanupExpired(System.currentTimeMillis());
 			String documentType = getDocumentType(filename);
-			if (documentType == null) throw new WTException("File is not editable [{}]", filename);
+			if (documentType == null) throw new WTException("File is not supported by DocumentEditor [{}]", filename);
 			String ext = FilenameUtils.getExtension(filename);
 			
 			String editingId = buildEditingId(RunContext.getRunProfileId());
-			handlers.put(editingId, docHandler);
-			
 			String secret = wta.getDocumentServerSecret(docHandler.getTargetProfileId().getDomainId());
 			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(Charsets.UTF_8), SignatureAlgorithm.HS256);
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String key = buildKey(filename, uniqueId, lastModifiedTime);
 			String baseUrl = wta.getDocumentServerLoopbackUrl();
-			String url = generateUrl(baseUrl, domainPublicName, editingId).toString();
-			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, editingId).toString();
+			String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
+			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
+			
+			logger.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), sessionId, uniqueId, filename);
+			sessionIdByEditingId.put(editingId, sessionId);
+			editingIdsBySessionId.put(sessionId, editingId);
+			handlers.put(editingId, docHandler);
+			
+			logger.debug("Document URL: {}", url);
+			logger.debug("Document callback URL: {}", callbackUrl);
+			logger.debug("JWT: {}", token);
+			
 			return new DocumentConfig(editingId, token, documentType, ext, key, url, callbackUrl, docHandler.isWriteSupported());
 		
 		} catch(URISyntaxException ex) {
@@ -119,23 +141,59 @@ public class DocEditorManager extends AbstractAppManager {
 		}
 	}
 	
-	public BaseDocEditorDocumentHandler getDocumentHandler(String docId) {
+	public void unregisterDocumentHandler(String editingId) {
 		lock.lock();
 		try {
-			return handlers.get(docId);
-			
+			logger.debug("Unregistering DocumentHandler [{}]", editingId);
+			String sessionId = sessionIdByEditingId.remove(editingId);
+			editingIdsBySessionId.remove(sessionId);
+			handlers.remove(editingId);
 		} finally {
 			lock.unlock();
 		}
 	}
 	
-	public void removeDocumentHandler(String docId) {
+	public BaseDocEditorDocumentHandler getDocumentHandler(String editingId) {
 		lock.lock();
 		try {
-			handlers.remove(docId);
-			
+			return handlers.get(editingId);
 		} finally {
 			lock.unlock();
+		}
+	}
+	
+	void cleanupOnSessionDestroy(String sessionId) {
+		lock.lock();
+		try {
+			if (editingIdsBySessionId.containsKey(sessionId)) {
+				expirationCandidates.put(sessionId, System.currentTimeMillis());
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	private void internalCleanupExpired(final long now) {
+		final Iterator<Map.Entry<String, Long>> it = expirationCandidates.entrySet().iterator();
+		while (it.hasNext()) {
+			final Map.Entry<String, Long> entry = it.next();
+			if (now >= (entry.getValue() + timeToLiveMillis)) {
+				final String sessionId = entry.getKey();
+				if (editingIdsBySessionId.containsKey(sessionId)) {
+					logger.debug("Expiring entries for session {}", sessionId);
+					internalRemoveBySession(sessionId);
+				}
+			}
+			it.remove();
+		}
+	}
+	
+	private void internalRemoveBySession(String sessionId) {
+		Collection<String> editingIds = editingIdsBySessionId.remove(sessionId);
+		for (String editingId : editingIds) {
+			logger.debug("Cleaning DocumentHandler [{}]", editingId);
+			sessionIdByEditingId.remove(editingId);
+			handlers.remove(editingId);
 		}
 	}
 	
@@ -163,18 +221,20 @@ public class DocEditorManager extends AbstractAppManager {
 				.compact();
 	}
 	
-	private URI generateUrl(String loopbackUrl, String domainPubName, String editingId) throws URISyntaxException {
+	private URI generateUrl(String loopbackUrl, String domainPubName, String sessionId, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(loopbackUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.DOWNLOAD_PATH));
 		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
+		if (!StringUtils.isBlank(sessionId)) builder.addParameter(DocEditor.SESSION_ID_PARAM, sessionId);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}
 	
-	private URI buildCallbackUrl(String loopbackUrl, String domainPubName, String editingId) throws URISyntaxException {
+	private URI buildCallbackUrl(String loopbackUrl, String domainPubName, String sessionId, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(loopbackUrl);
 		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.TRACK_PATH));
 		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
+		if (!StringUtils.isBlank(sessionId)) builder.addParameter(DocEditor.SESSION_ID_PARAM, sessionId);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
 	}

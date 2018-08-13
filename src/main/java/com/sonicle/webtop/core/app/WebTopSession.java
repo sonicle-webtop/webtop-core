@@ -145,6 +145,9 @@ public class WebTopSession {
 				uploads.clear();
 			}
 		}
+		
+		DocEditorManager docEdMgr = wta.getDocEditorManager();
+		if (docEdMgr != null) docEdMgr.cleanupOnSessionDestroy(session.getId());
 	}
 	
 	// TODO: rimuovere metodi deprecati
@@ -1277,11 +1280,11 @@ public class WebTopSession {
 	}
 	
 	public DocEditorManager.DocumentConfig prepareDocumentEditing(String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
-		return wta.getDocEditorManager().addDocumentHandler(filename, uniqueId, lastModifiedTime, docHandler);
+		return wta.getDocEditorManager().registerDocumentHandler(getId(), filename, uniqueId, lastModifiedTime, docHandler);
 	}
 	
-	public void endDocumentEditing(String editingId) {
-		wta.getDocEditorManager().removeDocumentHandler(editingId);
+	public void finalizeDocumentEditing(String editingId) {
+		wta.getDocEditorManager().unregisterDocumentHandler(editingId);
 	}
 	
 	public static class UploadedFile {

@@ -30,32 +30,35 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.app;
+package com.sonicle.webtop.core.app.sdk;
 
-import com.sonicle.commons.concurrent.ReentrantPriorityLock;
+import com.sonicle.commons.LangUtils;
+import javax.servlet.ServletException;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  *
  * @author malbinola
  */
-public abstract class AbstractAppManager {
-	protected ReentrantPriorityLock lock = new ReentrantPriorityLock();
-	protected boolean ready = true;
-	protected WebTopApp wta;
+public class WTServletException extends ServletException {
 	
-	AbstractAppManager(WebTopApp wta) {
-		this.wta = wta;
+	public WTServletException() {
+		super();
 	}
 	
-	void cleanup() {
-		lock.lock(ReentrantPriorityLock.Priority.HIGH);
-		try {
-			this.ready = false;
-			internalAppManagerCleanup();
-		} finally {
-			lock.unlock();
-		}
+	public WTServletException(Throwable cause) {
+		super(cause);
 	}
 	
-	protected abstract void internalAppManagerCleanup();
+	public WTServletException(String message, Object... arguments) {
+		super(LangUtils.escapeSingleQuote(formatMessage(message, arguments)));
+	}
+	
+	public WTServletException(Throwable cause, String message, Object... arguments) {
+		super(LangUtils.escapeSingleQuote(formatMessage(message, arguments)), cause);
+	}
+	
+	private static String formatMessage(String message, Object... arguments) {
+		return MessageFormatter.arrayFormat(message, arguments).getMessage();
+	}
 }

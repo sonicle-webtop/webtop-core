@@ -150,7 +150,8 @@ public class SessionManager {
 					
 					webtopSession.cleanup();
 					if (profileId != null) {
-						wta.getLogManager().write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
+						LogManager logMgr = wta.getLogManager();
+						if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
 					}
 					
 					logger.trace("Session unregistered [{}, {}]", sessionId, profileId);

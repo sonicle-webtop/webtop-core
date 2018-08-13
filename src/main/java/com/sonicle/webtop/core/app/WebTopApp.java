@@ -381,7 +381,7 @@ public final class WebTopApp {
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this); // OTP Manager
 		this.rptMgr = ReportManager.initialize(this); // Report Manager
-		this.docEditorMgr = new DocEditorManager(this);
+		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {

@@ -53,6 +53,11 @@ public class SessionContext {
 		return getWebTopSession(session);
 	}
 	
+	public static String getCurrentId() {
+		Session session = getShiroSession(RunContext.getSubject(), false);
+		return (session != null) ? session.getId().toString() : null;
+	}
+	
 	public static Session getShiroSession() {
 		return getShiroSession(false);
 	}

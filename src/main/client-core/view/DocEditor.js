@@ -56,6 +56,12 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	},
 	
 	/**
+	 * @cfg {String} editingId
+	 * The editing session identifier.
+	 */
+	editingId: null,
+	
+	/**
 	 * @cfg {Object} editorConfig
 	 * Set of configuration properties that will be used to set-up DocEditor
 	 * component. This object may contain any of the following properties:
@@ -79,6 +85,17 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 * @property {DocsAPI.DocEditor} docEditor
 	 * The DocEditor object instance when initialized.
 	 */
+	
+	/**
+	 * @private
+	 * @property {Boolean} isEdit
+	 */
+	
+	constructor: function(cfg) {
+		var me = this;
+		if (Ext.isEmpty(cfg.editingId)) Ext.raise('`editingId` is mandatory');
+		me.callParent([cfg]);
+	},
 	
 	initComponent: function() {
 		var me = this,
@@ -110,6 +127,18 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		me.callParent();
 	},
 	
+	onCtClose: function() {
+		var me = this;
+		if (me.isEdit === false) {
+			WT.ajaxReq(me.mys.ID, 'CleanupDocManagerEditing', {
+				params: {
+					editingId: me.editingId
+				}
+			});
+		}
+		me.callParent(arguments);
+	},
+	
 	/**
 	 * Opens the configured document in specified mode.
 	 * @param {view|edit} mode The opening mode.
@@ -130,6 +159,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		var me = this,
 				cfg = me.editorConfig;
 		
+		me.isEdit = false;
 		me.setViewTitle(cfg.docTitle);
 		if ((cfg.editable === true) && me.getEnableSwitchBanner()) {
 			me.addDocked(Ext.apply(me.createSwitchTb(), {
@@ -148,6 +178,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		var me = this,
 				cfg = me.editorConfig;
 		
+		me.isEdit = true;
 		me.setViewTitle(cfg.docTitle);
 		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
 			editorMode: 'edit'

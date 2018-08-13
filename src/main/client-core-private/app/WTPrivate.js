@@ -403,17 +403,6 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	
 	/**
 	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
-	 * representing a long date. Remember that original option value follows 
-	 * Java style patterns. Value is taken from core variable 'longDateFormat'.
-	 * @returns {String} ExtJs format string.
-	 */
-	getLongDateFmt: function() {
-		var fmt = WT.getVar('longDateFormat');
-		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
-	},
-	
-	/**
-	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
 	 * representing a short time. Remember that original option value follows 
 	 * Java style patterns. Value is taken from core variable 'shortTimeFormat'.
 	 * @returns {String} ExtJs format string.
@@ -422,6 +411,27 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		//g:i A', e.g., '3:15 PM'. For 24-hour time format try 'H:i'
 		var fmt = WT.getVar('shortTimeFormat');
 		return (Ext.isEmpty(fmt)) ? 'H:i' : Sonicle.Date.toExtFormat(fmt);
+	},
+	
+	/**
+	 * Returns the date format string (in ExtJs {@link Ext.Date} style) 
+	 * representing a date + time in short form. Value is taken from core 
+	 * variable 'shortDateFormat' and 'shortTimeFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
+	getShortDateTimeFmt: function() {
+		return this.getShortDateFmt() + ' ' + this.getShortTimeFmt();
+	},
+	
+	/**
+	 * Returns the date format string (already in ExtJs {@link Ext.Date} style) 
+	 * representing a long date. Remember that original option value follows 
+	 * Java style patterns. Value is taken from core variable 'longDateFormat'.
+	 * @returns {String} ExtJs format string.
+	 */
+	getLongDateFmt: function() {
+		var fmt = WT.getVar('longDateFormat');
+		return (Ext.isEmpty(fmt)) ? 'd/m/Y' : Sonicle.Date.toExtFormat(fmt);
 	},
 	
 	/**

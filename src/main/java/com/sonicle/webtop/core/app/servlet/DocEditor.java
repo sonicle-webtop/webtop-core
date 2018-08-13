@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.DocEditorManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.sdk.WTServletException;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackPayload;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackResponse;
 import java.io.IOException;
@@ -67,6 +68,7 @@ public class DocEditor extends AbstractServlet {
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
 	public static final String DOMAIN_PARAM = "do";
+	public static final String SESSION_ID_PARAM = "sid";
 	public static final String EDITING_ID_PARAM = "eid";
 	
 	@Override
@@ -77,6 +79,9 @@ public class DocEditor extends AbstractServlet {
 		threadState.bind();
 		try {
 			processRequestAsAdmin(request, response);
+		} catch(Throwable t) {
+			logger.error("Error fulfilling request", t);
+			throw t;
 		} finally {
 			threadState.clear();
 		}
@@ -91,27 +96,28 @@ public class DocEditor extends AbstractServlet {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			
 			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new RuntimeException();
+			if (docHandler == null) throw new WTServletException("DocumentHandler not found [{}]", editingId);
 			
 			ServletUtils.setContentTypeHeader(response, "application/octet-stream");
 			IOUtils.copy(docHandler.readDocument(), response.getOutputStream());
 			
 		} else if (StringUtils.equalsIgnoreCase(path, TRACK_PATH)) {
-			logger.debug("TRACK_PATH");
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
 			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new RuntimeException();
+			if (docHandler == null) throw new WTServletException("DocumentHandler not found [{}]", editingId);
 			
-			if (payload.data.status == 1) { // document is being edited
+			if (payload.data.status == 1) {
+				logger.debug("Document is being edited [{}]", editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
-			} else if (payload.data.status == 2) { // document is ready for saving
-				if (!docHandler.isWriteSupported()) throw new RuntimeException();
+			} else if (payload.data.status == 2) {
+				logger.debug("Document is ready for saving [{}]", editingId);
+				if (!docHandler.isWriteSupported()) throw new WTServletException("Write is not supported here [{}]", editingId);
 				
 				URI url = URIUtils.createURIQuietly(payload.data.url);
-				if (url == null) throw new RuntimeException();
+				if (url == null) throw new WTServletException("Invalid URL [{}]", payload.data.url);
 				
 				InputStream is = null;
 				try {
@@ -119,21 +125,22 @@ public class DocEditor extends AbstractServlet {
 					is = HttpClientUtils.getContent(httpCli, url);
 					docHandler.writeDocument(is);
 				} catch(IOException ex) {
-					logger.error("Unable to save edited content", ex);
-					throw new RuntimeException(ex);
+					throw new WTServletException("Unable to save edited content [{}]", editingId, ex);
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
 				
 				//UserProfileId profileId = new UserProfileId(payload.data.users.get(0));
-				docEdMgr.removeDocumentHandler(editingId);
+				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
-			} else if (payload.data.status == 3) { // document saving error has occurred
-				docEdMgr.removeDocumentHandler(editingId);
+			} else if (payload.data.status == 3) {
+				logger.debug("Document saving error has occurred [{}]", editingId);
+				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
-			} else if (payload.data.status == 4) { // document is closed with no changes
-				docEdMgr.removeDocumentHandler(editingId);
+			} else if (payload.data.status == 4) {
+				logger.debug("Document is closed with no changes [{}]", editingId);
+				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			}
 		}
