@@ -131,7 +131,7 @@ public class DocEditorManager extends AbstractAppManager {
 			logger.debug("Document callback URL: {}", callbackUrl);
 			logger.debug("JWT: {}", token);
 			
-			return new DocumentConfig(editingId, token, documentType, ext, key, url, callbackUrl, docHandler.isWriteSupported());
+			return new DocumentConfig(editingId, token, documentType, filename, ext, key, url, callbackUrl, docHandler.isWriteSupported());
 		
 		} catch(URISyntaxException ex) {
 			logger.error("Unable to build URL", ex);
@@ -255,16 +255,18 @@ public class DocEditorManager extends AbstractAppManager {
 		public final String editingId;
 		public final String token;
 		public final String docType;
+		public final String docName;
 		public final String docExtension;
 		public final String docKey;
 		public final String docUrl;
 		public final String callbackUrl;
 		public final boolean writeSupported;
 		
-		public DocumentConfig(String editingId, String token, String docType, String docExtension, String docKey, String docUrl, String callbackUrl, boolean writeSupported) {
+		public DocumentConfig(String editingId, String token, String docType, String docName, String docExtension, String docKey, String docUrl, String callbackUrl, boolean writeSupported) {
 			this.editingId = editingId;
 			this.token = token;
 			this.docType = docType;
+			this.docName = docName;
 			this.docExtension = docExtension;
 			this.docKey = docKey;
 			this.docUrl = docUrl;

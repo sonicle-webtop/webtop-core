@@ -161,6 +161,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		
 		me.isEdit = false;
 		me.setViewTitle(cfg.docTitle);
+		me.setViewIconCls(WTF.fileTypeCssIconCls(cfg.docExtension));
 		if ((cfg.editable === true) && me.getEnableSwitchBanner()) {
 			me.addDocked(Ext.apply(me.createSwitchTb(), {
 				dock: 'top'
@@ -180,6 +181,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		
 		me.isEdit = true;
 		me.setViewTitle(cfg.docTitle);
+		me.setViewIconCls(WTF.fileTypeCssIconCls(cfg.docExtension));
 		me.initDocEditor(me.createDocEditorCfg(Ext.apply(cfg, {
 			editorMode: 'edit'
 		})));

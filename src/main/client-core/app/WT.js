@@ -319,6 +319,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Checks if passes string has format of a i18n resource template string.
+	 * @param {String} str The string to check.
+	 * @returns {Boolean} `True` if string follows the template pattern, `false` otherwise.
+	 */
+	isResTpl: function(str) {
+		return Ext.isString(str) && Ext.String.startsWith(str, '{') && Ext.String.endsWith(str, '}');
+	},
+	
+	/**
 	 * Utility function to return a resource string or string itself.
 	 * If passed string is a valid resource template (see below), 
 	 * passed value will be evaluated and {@link #res} return value 
@@ -335,7 +344,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			tpl = id;
 			id = WT.ID;
 		}
-		if (Ext.isString(tpl) && Ext.String.startsWith(tpl, '{') && Ext.String.endsWith(tpl, '}')) {
+		if (this.isResTpl(tpl)) {
 			var s = tpl.substr(1, tpl.length-2),
 					tokens = s.split('@');
 			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
@@ -461,14 +470,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
-	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
+	 * @param {Boolean} [opts.expandTpl] `False` to disable message template expansion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
+		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg;
 		return Ext.Msg.show(Ext.apply({
 			title: opts.title || WT.res('error'),
-			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
+			message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.ERROR
 		}, opts.config || {}));
