@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import ch.qos.logback.classic.LoggerContext;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
+import com.sonicle.webtop.core.app.shiro.filter.JWTVerify;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration.Dynamic;
@@ -68,6 +69,7 @@ public class ContextLoader {
 			WebTopApp wta = new WebTopApp(servletContext);
 			wta.boot();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, wta);
+			servletContext.setAttribute(JWTVerify.SECRET_CONTEXT_ATTRIBUTE, wta.getDocumentServerSecretIn());
 			
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereFramework.analytics", "false");

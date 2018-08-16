@@ -100,9 +100,16 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
-	 * Specified the secret shared key to use when communicating with the DocumentServer.
+	 * Specified the secret shared key to use for outgoing communications to the DocumentServer (WebTop -> DocServer).
 	 */
-	public static final String DOCUMENT_SERVER_SECRET = "documentserver.secret";
+	public static final String DOCUMENT_SERVER_SECRET_OUT = "documentserver.secret.out";
+	
+	/**
+	 * [system]
+	 * [string]
+	 * Specified the secret shared key to use for incoming communications from the DocumentServer (WebTop <- DocServer).
+	 */
+	public static final String DOCUMENT_SERVER_SECRET_IN = "documentserver.secret.in";
 	
 	/**
 	 * [domain+system]

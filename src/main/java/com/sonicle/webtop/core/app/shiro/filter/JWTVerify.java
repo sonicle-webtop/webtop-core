@@ -32,8 +32,12 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
+import groovy.json.internal.Charsets;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -50,16 +54,16 @@ import org.slf4j.LoggerFactory;
  */
 public class JWTVerify extends PathMatchingFilter {
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(JWTVerify.class);
-	protected static final String SIGNING_KEY_CONTEXT_ATTRIBUTE = "jwtverifyfilter.signingkey";
+	public static final String SECRET_CONTEXT_ATTRIBUTE = "jwtverifyfilter.secret";
 	protected static final String AUTHORIZATION_HEADER = "Authorization";
 	protected static final String AUTHORIZATION_SCHEME_BEARER = "Bearer ";
 
 	@Override
 	protected boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
 		// Retrieve signing key
-		String signingKey = getSigningKey(request);
-		if (StringUtils.isBlank(signingKey)) {
-			logger.warn("Missing JWT signing key. Please check '{}' context attribute.", SIGNING_KEY_CONTEXT_ATTRIBUTE);
+		SecretKey signingKey = getSigningKey(request);
+		if (signingKey == null) {
+			logger.warn("Missing JWT secret. Please check '{}' context attribute.", SECRET_CONTEXT_ATTRIBUTE);
 			return true;
 		}
 		
@@ -69,7 +73,7 @@ public class JWTVerify extends PathMatchingFilter {
 			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Authorization header is missing or malformed");
 			return false;
 		}
-		String jwts = authz.substring(authz.indexOf(" "));
+		String jwts = authz.substring(authz.indexOf(" ")+1).trim();
 		
 		try {
 			Jwts.parser()
@@ -84,8 +88,10 @@ public class JWTVerify extends PathMatchingFilter {
 		}
 	}
 	
-	protected String getSigningKey(ServletRequest request) {
-		return String.valueOf(request.getServletContext().getAttribute(SIGNING_KEY_CONTEXT_ATTRIBUTE));
+	protected SecretKey getSigningKey(ServletRequest request) {
+		SignatureAlgorithm keyAlgorithm = SignatureAlgorithm.HS256;
+		String secret = String.valueOf(request.getServletContext().getAttribute(SECRET_CONTEXT_ATTRIBUTE));
+		return StringUtils.isBlank(secret) ? null : new SecretKeySpec(secret.getBytes(Charsets.UTF_8), keyAlgorithm.getJcaName());
 	}
 	
 	protected String getAuthzHeader(ServletRequest request) {

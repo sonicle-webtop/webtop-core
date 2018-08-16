@@ -63,8 +63,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(DOCUMENT_SERVER_LOOPBACK_URL, null);
 	}
 	
-	public String getDocumentServerSecret() {
-		return getString(DOCUMENT_SERVER_SECRET, null);
+	public String getDocumentServerSecretOut() {
+		return getString(DOCUMENT_SERVER_SECRET_OUT, null);
+	}
+	
+	public String getDocumentServerSecretIn() {
+		return getString(DOCUMENT_SERVER_SECRET_IN, null);
 	}
 	
 	public Boolean getHasPecBridgeManagement() {

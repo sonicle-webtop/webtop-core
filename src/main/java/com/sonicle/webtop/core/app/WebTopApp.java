@@ -1010,8 +1010,12 @@ public final class WebTopApp {
 		return new CoreServiceSettings(CoreManifest.ID, "*").getDocumentServerLoopbackUrl();
 	}
 	
-	public String getDocumentServerSecret(String domainId) {
-		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerSecret();
+	public String getDocumentServerSecretOut(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerSecretOut();
+	}
+	
+	public String getDocumentServerSecretIn() {
+		return new CoreServiceSettings(CoreManifest.ID, "*").getDocumentServerSecretIn();
 	}
 	
 	/**
