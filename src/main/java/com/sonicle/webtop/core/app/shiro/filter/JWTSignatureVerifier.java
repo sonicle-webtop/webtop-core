@@ -52,9 +52,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author malbinola
  */
-public class JWTVerify extends PathMatchingFilter {
-	private final static Logger logger = (Logger)LoggerFactory.getLogger(JWTVerify.class);
-	public static final String SECRET_CONTEXT_ATTRIBUTE = "jwtverifyfilter.secret";
+public class JWTSignatureVerifier extends PathMatchingFilter {
+	private final static Logger logger = (Logger)LoggerFactory.getLogger(JWTSignatureVerifier.class);
+	public static final String SECRET_CONTEXT_ATTRIBUTE = "jwtsignatureverifierfilter.secret";
 	protected static final String AUTHORIZATION_HEADER = "Authorization";
 	protected static final String AUTHORIZATION_SCHEME_BEARER = "Bearer ";
 
