@@ -542,4 +542,135 @@ Ext.override(Ext.grid.plugin.BufferedRenderer,{
         return newRows;
     }
 });
+Ext.override(Ext.Date, {
+	
+	/**
+	 * Backported from ExtJs 6.6.0
+	 */
+	add: function(date, interval, value, preventDstAdjust) {
+		var XDate = Ext.Date,
+				d = XDate.clone(date),
+				base = 0,
+				day, decimalValue;
+		
+		decimalValue = value - parseInt(value, 10);
+		value = parseInt(value, 10);
+
+		if (value) {
+			switch (interval.toLowerCase()) {
+				// See EXTJSIV-7418. We use setTime() here to deal with issues related to 
+				// the switchover that occurs when changing to daylight savings and vice 
+				// versa. setTime() handles this correctly where setHour/Minute/Second/Millisecond 
+				// do not. Let's assume the DST change occurs at 2am and we're incrementing using add 
+				// for 15 minutes at time. When entering DST, we should see: 
+				// 01:30am 
+				// 01:45am 
+				// 03:00am // skip 2am because the hour does not exist 
+				// ... 
+				// Similarly, leaving DST, we should see: 
+				// 01:30am 
+				// 01:45am 
+				// 01:00am // repeat 1am because that's the change over 
+				// 01:30am 
+				// 01:45am 
+				// 02:00am 
+				// .... 
+				//  
+				case XDate.MILLI:
+					if (preventDstAdjust) {
+						d.setMilliseconds(d.getMilliseconds() + value);
+					} else {
+						d.setTime(d.getTime() + value);
+					}
+					break;
+				case XDate.SECOND:
+					if (preventDstAdjust) {
+						d.setSeconds(d.getSeconds() + value);
+					} else {
+						d.setTime(d.getTime() + value * 1000);
+					}
+					break;
+				case XDate.MINUTE:
+					if (preventDstAdjust) {
+						d.setMinutes(d.getMinutes() + value);
+					} else {
+						d.setTime(d.getTime() + value * 60 * 1000);
+					}
+					break;
+				case XDate.HOUR:
+					if (preventDstAdjust) {
+						d.setHours(d.getHours() + value);
+					} else {
+						d.setTime(d.getTime() + value * 60 * 60 * 1000);
+					}
+					break;
+				case XDate.DAY:
+					if (preventDstAdjust) {
+						d.setDate(d.getDate() + value);
+					} else {
+						d.setTime(d.getTime() + value * 24 * 60 * 60 * 1000);
+					}
+					break;
+				case XDate.MONTH:
+					day = date.getDate();
+					if (day > 28) {
+						day = Math.min(day, XDate.getLastDateOfMonth(XDate.add(XDate.getFirstDateOfMonth(date), XDate.MONTH, value)).getDate());
+					}
+					d.setDate(day);
+					d.setMonth(date.getMonth() + value);
+					break;
+				case XDate.YEAR:
+					day = date.getDate();
+					if (day > 28) {
+						day = Math.min(day, XDate.getLastDateOfMonth(XDate.add(XDate.getFirstDateOfMonth(date), XDate.YEAR, value)).getDate());
+					}
+					d.setDate(day);
+					d.setFullYear(date.getFullYear() + value);
+					break;
+			}
+		}
+
+		if (decimalValue) {
+			switch (interval.toLowerCase()) {
+				case XDate.MILLI:
+					base = 1;
+					break;
+				case XDate.SECOND:
+					base = 1000;
+					break;
+				case XDate.MINUTE:
+					base = 1000 * 60;
+					break;
+				case XDate.HOUR:
+					base = 1000 * 60 * 60;
+					break;
+				case XDate.DAY:
+					base = 1000 * 60 * 60 * 24;
+					break;
+
+				case XDate.MONTH:
+					day = XDate.getDaysInMonth(d);
+					base = 1000 * 60 * 60 * 24 * day;
+					break;
+
+				case XDate.YEAR:
+					day = (XDate.isLeapYear(d) ? 366 : 365);
+					base = 1000 * 60 * 60 * 24 * day;
+					break;
+			}
+			if (base) {
+				d.setTime(d.getTime() + base * decimalValue);
+			}
+		}
+
+		return d;	
+	},
+	
+	/**
+	 * Backported from ExtJs 6.6.0
+	 */
+	subtract: function(date, interval, value, preventDstAdjust) {
+		return Ext.Date.add(date, interval, -value, preventDstAdjust);
+	}
+});
 
