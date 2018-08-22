@@ -45,6 +45,8 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		maximizable: true,
 		maximized: true
 	},
+	promptConfirm: true,
+	confirm: 'yn',
 	
 	config: {
 		/**
@@ -76,6 +78,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 * @param {Boolean} [opts.printable] If `true` the Print button will be enabled, defaults to `true`.
 	 * @param {Boolean} [opts.commentable] If `true` the Comments menu will be enabled, defaults to `false`.
 	 * @param {Boolean} [opts.reviewable] If `true` the Review menu will be enabled, defaults to `false`.
+	 * @param {Boolean} [opts.autosave] Defines if the Autosave feature is enabled or disabled. Defaults to `true`.
 	 * @param {String} opts.callbackUrl The absolute callback URL to track editor actions.
 	 */
 	editorConfig: null,
@@ -91,9 +94,17 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 	 * @property {Boolean} isEdit
 	 */
 	
+	/**
+	 * @private
+	 * @property {Boolean} isDirty
+	 */
+	
 	constructor: function(cfg) {
 		var me = this;
 		if (Ext.isEmpty(cfg.editingId)) Ext.raise('`editingId` is mandatory');
+		Ext.apply(cfg, {
+			confirmMsg: WT.res('docEditor.confirm.close')
+		});
 		me.callParent([cfg]);
 	},
 	
@@ -125,6 +136,10 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		var me = this;
 		if (me.docEditor) me.docEditor.destroyEditor();
 		me.callParent();
+	},
+	
+	canCloseView: function() {
+		return !(this.isDirty === true);
 	},
 	
 	onCtClose: function() {
@@ -215,12 +230,13 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 			return this.getId() + '-deplaceholder';
 		},
 		
-		buildDocKey: function(docTitle) {
+		buildFakeDocKey: function(docTitle) {
 			return Sonicle.String.left(Sonicle.Crypto.md5Hex(docTitle + new Date().getTime().toString()), 20);
 		},
 		
 		createDocEditorCfg: function(cfg) {
 			var me = this,
+					autosave = !(cfg.autosave === false),
 					edCfg = {
 						width: '100%',
 						height: '100%',
@@ -231,7 +247,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 			if (!Ext.isEmpty(cfg.token)) edCfg = Ext.apply(edCfg, {token: cfg.token});
 			edCfg = Ext.apply(edCfg, {
 				document: {
-					key: Ext.isString(cfg.docKey) ? cfg.docKey : me.buildDocKey(cfg.docTitle),
+					key: Ext.isString(cfg.docKey) ? cfg.docKey : me.buildFakeDocKey(cfg.docTitle),
 					fileType: cfg.docExtension,
 					title: cfg.docTitle,
 					url: cfg.docUrl,
@@ -254,14 +270,29 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 					},
 					callbackUrl: Ext.isString(cfg.callbackUrl) ? cfg.callbackUrl : null,
 					customization: {
-						about: true,
-						feedback: false,
+						autosave: autosave,
 						chat: false,
+						compactToolbar: false,
+						feedback: false,
+						forcesave: !autosave,
 						goback: false
 					}
+				},
+				events: {
+					onDocumentReady: Ext.bind(me.onEdDocumentReady, me),
+					onDocumentStateChange: Ext.bind(me.onEdDocumentStateChange, me)
 				}
 			});
 			return edCfg;
+		},
+		
+		onEdDocumentStateChange: function(e) {
+			var me = this,
+					nv = (e.data === true);
+			if (me.isDirty !== nv) {
+				me.setViewTitle(me.editorConfig.docTitle + (nv ? '*' : ''));
+			}
+			me.isDirty = nv;
 		},
 		
 		createSwitchTb: function() {

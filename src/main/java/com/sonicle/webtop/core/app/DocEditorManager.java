@@ -105,7 +105,7 @@ public class DocEditorManager extends AbstractAppManager {
 		logger.info("Cleaned up");
 	}
 	
-	public DocumentConfig registerDocumentHandler(String sessionId, String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
+	public DocumentConfig registerDocumentHandler(String sessionId, BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException {
 		lock.lock();
 		try {
 			internalCleanupExpired(System.currentTimeMillis());
@@ -117,14 +117,14 @@ public class DocEditorManager extends AbstractAppManager {
 			String secret = wta.getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
 			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(Charsets.UTF_8), SignatureAlgorithm.HS256);
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
-			String key = buildKey(filename, uniqueId, lastModifiedTime);
+			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
 			String baseUrl = wta.getDocumentServerLoopbackUrl();
 			String url = generateUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
 			String callbackUrl = buildCallbackUrl(baseUrl, domainPublicName, sessionId, editingId).toString();
 			
-			logger.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), sessionId, uniqueId, filename);
-			sessionIdByEditingId.put(editingId, sessionId);
+			logger.debug("Registering DocumentHandler [{}, {}, {}, {} -> {}]", editingId, docHandler.getTargetProfileId().getDomainId(), sessionId, docHandler.getDocumentUniqueId(), filename);
 			editingIdsBySessionId.put(sessionId, editingId);
+			sessionIdByEditingId.put(editingId, sessionId);
 			handlers.put(editingId, docHandler);
 			
 			logger.debug("Document URL: {}", url);
@@ -162,6 +162,11 @@ public class DocEditorManager extends AbstractAppManager {
 		}
 	}
 	
+	public String buildDocumentKey(String documentUniqueId, long lastModifiedTime) {
+		String s = documentUniqueId + String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : DateTimeUtils.now().getMillis());
+		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
+	}
+	
 	void cleanupOnSessionDestroy(String sessionId) {
 		lock.lock();
 		try {
@@ -195,12 +200,6 @@ public class DocEditorManager extends AbstractAppManager {
 			sessionIdByEditingId.remove(editingId);
 			handlers.remove(editingId);
 		}
-	}
-	
-	private String buildKey(String fileName, String uniqueId, long lastModifiedTime) {
-		String s = StringUtils.defaultIfBlank(uniqueId, fileName);
-		s += String.valueOf((lastModifiedTime > -1) ? lastModifiedTime : DateTimeUtils.now().getMillis());
-		return StringUtils.left(AlgoUtils.md5Hex(s), 20);
 	}
 	
 	private String buildEditingId(UserProfileId profileId) {

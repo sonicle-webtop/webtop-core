@@ -109,15 +109,32 @@ public class DocEditor extends AbstractServlet {
 			if (docHandler == null) throw new WTServletException("DocumentHandler not found [{}]", editingId);
 			
 			if (payload.data.status == 1) {
-				logger.debug("Document is being edited [{}]", editingId);
+				logger.debug("Document is being edited [{}, {}]", editingId, payload.data.key);
+				
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
-			} else if (payload.data.status == 2) {
-				logger.debug("Document is ready for saving [{}]", editingId);
+			} else if ((payload.data.status == 2) || (payload.data.status == 6)) {
+				if (payload.data.status == 2) {
+					logger.debug("Document is ready for saving [{}, {}]", editingId, payload.data.key);
+				} else if (payload.data.status == 6) {
+					logger.debug("Document is being edited, but the current document state is saved [{}, {}]", editingId, payload.data.key);
+				}
 				if (!docHandler.isWriteSupported()) throw new WTServletException("Write is not supported here [{}]", editingId);
 				
 				URI url = URIUtils.createURIQuietly(payload.data.url);
 				if (url == null) throw new WTServletException("Invalid URL [{}]", payload.data.url);
+				
+				/*
+				if (true) {
+					long lastModified = docHandler.getLastModifiedTime();
+					if (lastModified != -1) {
+						String key = docEdMgr.buildDocumentKey(docHandler.getDocumentUniqueId(), lastModified);
+						if (!StringUtils.equals(payload.data.key, key)) {
+							throw new WTServletException("Original file was modified outside this session [{}]", editingId);
+						}
+					}
+				}
+				*/
 				
 				InputStream is = null;
 				try {
@@ -131,20 +148,25 @@ public class DocEditor extends AbstractServlet {
 				}
 				
 				//UserProfileId profileId = new UserProfileId(payload.data.users.get(0));
+				if (payload.data.status == 2) {
+					docEdMgr.unregisterDocumentHandler(editingId);
+				}
+				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
+				
+			} else if ((payload.data.status == 3) || (payload.data.status == 7)) {
+				if (payload.data.status == 3) {
+					logger.debug("Document saving error has occurred [{}, {}]", payload.data.key);
+				} else if (payload.data.status == 7) {
+					logger.debug("Error has occurred while force saving the document [{}, {}]", payload.data.key);
+				}
 				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
-			} else if (payload.data.status == 3) {
-				logger.debug("Document saving error has occurred [{}]", editingId);
-				docEdMgr.unregisterDocumentHandler(editingId);
-				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			} else if (payload.data.status == 4) {
-				logger.debug("Document is closed with no changes [{}]", editingId);
+				logger.debug("Document is closed with no changes [{}, {}]", editingId, payload.data.key);
 				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 			}
 		}
 	}
-	
-	
 }

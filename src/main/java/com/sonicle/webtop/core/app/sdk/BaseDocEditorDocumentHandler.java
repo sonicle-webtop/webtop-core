@@ -43,10 +43,12 @@ import java.io.InputStream;
 public abstract class BaseDocEditorDocumentHandler {
 	protected final UserProfileId targetProfileId;
 	protected final boolean writeCapability;
+	protected final String documentUniqueId;
 	
-	public BaseDocEditorDocumentHandler(boolean writeCapability, UserProfileId targetProfileId) {
+	public BaseDocEditorDocumentHandler(boolean writeCapability, UserProfileId targetProfileId, String documentUniqueId) {
 		this.writeCapability = writeCapability;
 		this.targetProfileId = targetProfileId;
+		this.documentUniqueId = documentUniqueId;
 	}
 	
 	public UserProfileId getTargetProfileId() {
@@ -57,6 +59,11 @@ public abstract class BaseDocEditorDocumentHandler {
 		return writeCapability;
 	}
 	
+	public String getDocumentUniqueId() {
+		return documentUniqueId;
+	}
+	
+	public abstract long getLastModifiedTime() throws IOException;
 	public abstract InputStream readDocument() throws IOException;
 	public abstract void writeDocument(InputStream is) throws IOException;
 }

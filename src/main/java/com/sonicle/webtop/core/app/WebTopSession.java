@@ -1279,8 +1279,8 @@ public class WebTopSession {
 		}
 	}
 	
-	public DocEditorManager.DocumentConfig prepareDocumentEditing(String filename, String uniqueId, long lastModifiedTime, BaseDocEditorDocumentHandler docHandler) throws WTException {
-		return wta.getDocEditorManager().registerDocumentHandler(getId(), filename, uniqueId, lastModifiedTime, docHandler);
+	public DocEditorManager.DocumentConfig prepareDocumentEditing(BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException {
+		return wta.getDocEditorManager().registerDocumentHandler(getId(), docHandler, filename, lastModifiedTime);
 	}
 	
 	public void finalizeDocumentEditing(String editingId) {

@@ -3,13 +3,14 @@
 -- ----------------------------
 -- Fix file types
 -- ----------------------------
-DELETE FROM "core"."file_types" WHERE ("extension"='doc') AND ("type"='document') AND ("subtype"='word');
-DELETE FROM "core"."file_types" WHERE ("extension"='docx') AND ("type"='document') AND ("subtype"='word');
-DELETE FROM "core"."file_types" WHERE ("extension"='xls') AND ("type"='document') AND ("subtype"='excel');
-DELETE FROM "core"."file_types" WHERE ("extension"='xlsx') AND ("type"='document') AND ("subtype"='excel');
-DELETE FROM "core"."file_types" WHERE ("extension"='xml') AND ("type"='text') AND ("subtype"='');
-DELETE FROM "core"."file_types" WHERE ("extension"='rtf') AND ("type"='text') AND ("subtype"='');
-DELETE FROM "core"."file_types" WHERE ("extension"='waw') AND ("type"='audio') AND ("subtype"='');
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('wav', 'm4a', 'flac', 'amr'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('ical', 'ifb', 'icalendar'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('vcf', 'vcard'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('epub'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('rtf', 'xps', 'doc', 'docm', 'docx', 'dot', 'dotm', 'dotx', 'fodt', 'odt', 'ott', 'djvu'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('csv', 'fods', 'ods', 'ots', 'xls', 'xlsm', 'xlsx', 'xlt', 'xltm', 'xltx'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('fodp', 'odp', 'otp', 'pot', 'potm', 'potx', 'pps', 'ppsm', 'ppsx', 'ppt', 'pptm', 'pptx'));
+DELETE FROM "core"."file_types" WHERE ("extension" IN ('mht', 'xml'));
 
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('wav', 'audio', '');
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('m4a', 'audio', '');
