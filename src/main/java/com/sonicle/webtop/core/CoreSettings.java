@@ -79,6 +79,13 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [string]
+	 * Specified if the DocumentServer is installed
+	 */
+	public static final String DOCUMENT_SERVER_ENABLED = "documentserver.enabled";
+	
+	/**
+	 * [domain+system]
+	 * [string]
 	 * Specified how the DocumentServer is reachable externally
 	 */
 	public static final String DOCUMENT_SERVER_PUBLIC_URL = "documentserver.public.url";

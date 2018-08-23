@@ -40,10 +40,12 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.webtop.core.app.AbstractServlet;
 import com.sonicle.webtop.core.app.DocEditorManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.sdk.WTServletException;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackPayload;
 import com.sonicle.webtop.core.app.servlet.js.DocEditorCallbackResponse;
+import com.sonicle.webtop.core.sdk.DomainURIPath;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -67,7 +69,6 @@ public class DocEditor extends AbstractServlet {
 	public static final String URL = "/doc-editor"; // Shiro.ini must reflect this URI!
 	public static final String DOWNLOAD_PATH = "/oo/download";
 	public static final String TRACK_PATH = "/oo/track";
-	public static final String DOMAIN_PARAM = "do";
 	public static final String SESSION_ID_PARAM = "sid";
 	public static final String EDITING_ID_PARAM = "eid";
 	
@@ -88,25 +89,30 @@ public class DocEditor extends AbstractServlet {
 	}
 	
 	protected void processRequestAsAdmin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		DomainURIPath path = new DomainURIPath(URIUtils.removeTrailingSeparator(request.getPathInfo()));
 		WebTopApp wta = WebTopApp.get(request);
 		DocEditorManager docEdMgr = wta.getDocEditorManager();
 		
-		String path = URIUtils.removeTrailingSeparator(request.getPathInfo());
-		if (StringUtils.equalsIgnoreCase(path, DOWNLOAD_PATH)) {
+		String domainId = WT.findDomainIdByPublicName(path.getDomainPublicName());
+		if (domainId == null) throw new WTServletException("Invalid domain public name [{0}]", path.getDomainPublicName());
+		if (!wta.getDocumentServerEnabled(domainId)) throw new WTServletException("DocumentServer not enabled for domain [{}]", domainId);
+		
+		String remainingPath = path.getRemainingPath();
+		if (StringUtils.equalsIgnoreCase(remainingPath, DOWNLOAD_PATH)) {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			
 			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new WTServletException("DocumentHandler not found [{}]", editingId);
+			if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
 			
 			ServletUtils.setContentTypeHeader(response, "application/octet-stream");
 			IOUtils.copy(docHandler.readDocument(), response.getOutputStream());
 			
-		} else if (StringUtils.equalsIgnoreCase(path, TRACK_PATH)) {
+		} else if (StringUtils.equalsIgnoreCase(remainingPath, TRACK_PATH)) {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
 			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new WTServletException("DocumentHandler not found [{}]", editingId);
+			if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
 			
 			if (payload.data.status == 1) {
 				logger.debug("Document is being edited [{}, {}]", editingId, payload.data.key);

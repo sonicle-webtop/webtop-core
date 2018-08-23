@@ -120,7 +120,22 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 			group = Sonicle.mixin.ActHolder.DEFAULT_GROUP;
 		}
 		act = me.getAct(group, name);
-		if(act) act.setDisabled(disabled);
+		if (act) act.setDisabled(disabled);
+	},
+	
+	/**
+	 * Sets action visibility according to its disabled state.
+	 * @param {String} [group] The action group.
+	 * @param {String} name The action name.
+	 */
+	setActHiddenIfDisabled: function(group, name) {
+		var me = this, act;
+		if(arguments.length === 1) {
+			name = group;
+			group = Sonicle.mixin.ActHolder.DEFAULT_GROUP;
+		}
+		act = me.getAct(group, name);
+		if (act) act.setHidden(act.isDisabled());
 	},
 	
 	/**

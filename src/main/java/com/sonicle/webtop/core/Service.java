@@ -257,12 +257,13 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
-		String docServerPubUrl = ss.getDocumentServerPublicUrl();
-		if (!StringUtils.isBlank(docServerPubUrl)) {
-			co.put("docServerPublicUrl", docServerPubUrl);
+		boolean docServerEnabled = ss.getDocumentServerEnabled();
+		co.put("docServerEnabled", docServerEnabled);
+		if (docServerEnabled) {
+			co.put("docServerPublicUrl", ss.getDocumentServerPublicUrl());
 		}
 		String boshUrl = ss.getXMPPBoshUrl();
-		if (!StringUtils.isBlank(docServerPubUrl)) {
+		if (!StringUtils.isBlank(boshUrl)) {
 			co.put("boshUrl", boshUrl);
 		}
 		CoreServiceSettings.ICEServersList iceServers = ss.getWebRTC_ICEServers();

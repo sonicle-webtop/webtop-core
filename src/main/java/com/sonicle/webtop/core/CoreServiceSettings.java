@@ -55,6 +55,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(DAVSERVER_BASE_URL, null);
 	}
 	
+	public Boolean getDocumentServerEnabled() {
+		return getBoolean(DOCUMENT_SERVER_ENABLED, false);
+	}	
+	
 	public String getDocumentServerPublicUrl() {
 		return getString(DOCUMENT_SERVER_PUBLIC_URL, null);
 	}

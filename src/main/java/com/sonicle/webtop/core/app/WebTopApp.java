@@ -1002,6 +1002,10 @@ public final class WebTopApp {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getDavServerBaseUrl();
 	}
 	
+	public boolean getDocumentServerEnabled(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerEnabled();
+	}
+	
 	public String getDocumentServerPublicUrl(String domainId) {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerPublicUrl();
 	}

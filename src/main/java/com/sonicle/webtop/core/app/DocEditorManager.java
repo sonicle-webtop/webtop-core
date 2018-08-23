@@ -222,8 +222,7 @@ public class DocEditorManager extends AbstractAppManager {
 	
 	private URI generateUrl(String loopbackUrl, String domainPubName, String sessionId, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(loopbackUrl);
-		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.DOWNLOAD_PATH));
-		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
+		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, domainPubName, DocEditor.DOWNLOAD_PATH));
 		if (!StringUtils.isBlank(sessionId)) builder.addParameter(DocEditor.SESSION_ID_PARAM, sessionId);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
@@ -231,8 +230,7 @@ public class DocEditorManager extends AbstractAppManager {
 	
 	private URI buildCallbackUrl(String loopbackUrl, String domainPubName, String sessionId, String editingId) throws URISyntaxException {
 		URIBuilder builder = new URIBuilder(loopbackUrl);
-		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, DocEditor.TRACK_PATH));
-		builder.addParameter(DocEditor.DOMAIN_PARAM, domainPubName);
+		URIUtils.appendPath(builder, URIUtils.concatPaths(DocEditor.URL, domainPubName, DocEditor.TRACK_PATH));
 		if (!StringUtils.isBlank(sessionId)) builder.addParameter(DocEditor.SESSION_ID_PARAM, sessionId);
 		builder.addParameter(DocEditor.EDITING_ID_PARAM, editingId);
 		return builder.build();
