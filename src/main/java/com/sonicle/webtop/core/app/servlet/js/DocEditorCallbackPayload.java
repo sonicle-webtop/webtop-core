@@ -42,6 +42,7 @@ public class DocEditorCallbackPayload {
 	public String key;
 	public Integer status;
 	public String url;
+	public String changesurl;
 	public ArrayList<String> users;
 	public ArrayList<Action> actions;
 	

@@ -111,15 +111,15 @@ public class DocEditor extends AbstractServlet {
 			String editingId = ServletUtils.getStringParameter(request, EDITING_ID_PARAM, true);
 			Payload<MapItem, DocEditorCallbackPayload> payload = ServletUtils.getPayload(request, DocEditorCallbackPayload.class);
 			
-			BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
-			if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
-			
 			if (payload.data.status == 1) {
 				logger.debug("Document is being edited [{}, {}]", editingId, payload.data.key);
 				
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
 				
 			} else if ((payload.data.status == 2) || (payload.data.status == 6)) {
+				BaseDocEditorDocumentHandler docHandler = docEdMgr.getDocumentHandler(editingId);
+				if (docHandler == null) throw new WTServletException("Missing DocumentHandler [{}]", editingId);
+				
 				if (payload.data.status == 2) {
 					logger.debug("Document is ready for saving [{}, {}]", editingId, payload.data.key);
 				} else if (payload.data.status == 6) {
@@ -161,9 +161,11 @@ public class DocEditor extends AbstractServlet {
 				
 			} else if ((payload.data.status == 3) || (payload.data.status == 7)) {
 				if (payload.data.status == 3) {
-					logger.debug("Document saving error has occurred [{}, {}]", payload.data.key);
+					logger.error("Document saving error has occurred [{}, {}]", editingId, payload.data.key);
+					logger.error("Changes URL: {}", payload.data.changesurl);
+					
 				} else if (payload.data.status == 7) {
-					logger.debug("Error has occurred while force saving the document [{}, {}]", payload.data.key);
+					logger.error("Error has occurred while force saving the document [{}, {}]", editingId, payload.data.key);
 				}
 				docEdMgr.unregisterDocumentHandler(editingId);
 				ServletUtils.writeJsonResponse(response, new DocEditorCallbackResponse(0));
