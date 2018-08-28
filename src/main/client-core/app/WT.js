@@ -362,11 +362,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	msg: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK
@@ -385,10 +389,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.scope=window] The scope (this reference) in which the callback is executed.
 	 * @param {Boolean/Number} [opts.multiline=false] The scope (this reference) in which the callback is executed.
 	 * @param {String} [opts.value=''] Default value of the text input element
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	prompt: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.prompt(
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.prompt(
 			opts.title || WT.res('prompt'),
 			msg,
 			opts.fn,
@@ -427,11 +434,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -448,12 +459,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('warning'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -472,12 +487,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
 	 * @param {Boolean} [opts.expandTpl] `False` to disable message template expansion.
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
-		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg;
-		return Ext.Msg.show(Ext.apply({
+		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
+				mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('error'),
 			message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -498,11 +517,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('confirm'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.Msg.YESNO,
@@ -526,7 +549,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
 		return this.confirm(msg, cb, scope, Ext.apply({
