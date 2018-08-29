@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.sdk.UploadException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
@@ -57,6 +58,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -69,15 +71,23 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	private E env;
 	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
 	private final HashMap<String, IServiceUploadStreamListener> uploadStreamListeners = new HashMap<>();
+	private boolean documentServerEnabled;
 	
 	public final void configure(E env) {
 		if(configured) return;
 		configured = true;
 		this.env = env;
+		
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, env.getSession().getProfileDomainId());
+		documentServerEnabled=css.getDocumentServerEnabled();
 	}
 	
 	public E getEnv() {
 		return env;
+	}
+	
+	public boolean getDocumentServerEnabled() {
+		return documentServerEnabled;
 	}
 	
 	public final void registerUploadListener(String context, IServiceUploadListener listener) {
@@ -139,7 +149,6 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 					// Defines the upload object
 					upload = new ServletFileUpload();
 					FileItemIterator it = upload.getItemIterator(request);
-					
 					while(it.hasNext()) {
 						FileItemStream fis = it.next();
 						
@@ -160,6 +169,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
+							data.add("editable", getDocumentServerEnabled()&&isFileEditableInDocEditor(fis.getName()));
 
 							// Handle listener, its implementation can stop
 							// file upload throwing a UploadException.
@@ -224,6 +234,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
 							data.add("uploadId", uploadedFile.getUploadId());
+							data.add("editable", getDocumentServerEnabled()&&isFileEditableInDocEditor(fi.getName()));
 
 							// Handle listener (if present), its implementation can stop
 							// file upload throwing a UploadException.
@@ -249,6 +260,12 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 			new JsonResult(false, ex.getMessage()).printTo(out);
 		}
 	}
+	
+	protected boolean isFileEditableInDocEditor(String fileName) {
+		if ("pdf".equalsIgnoreCase(FilenameUtils.getExtension(fileName))) return false;
+		return DocEditorManager.isEditable(fileName);
+	}
+	
 	
 	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
