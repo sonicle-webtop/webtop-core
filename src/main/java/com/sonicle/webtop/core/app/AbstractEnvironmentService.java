@@ -263,9 +263,8 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	
 	protected boolean isFileEditableInDocEditor(String fileName) {
 		if ("pdf".equalsIgnoreCase(FilenameUtils.getExtension(fileName))) return false;
-		return DocEditorManager.isEditable(fileName);
+		return documentServerEnabled && DocEditorManager.isEditable(fileName);
 	}
-	
 	
 	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
