@@ -144,7 +144,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.column.ChatMessage', {
 					text: htmlText,
 					url: data.url ? data.url : '#',
 					size: Sonicle.Bytes.format(data.size),
-					fileIconCls: WTF.fileTypeCssIconCls(data ? data.ext : '', 'm'),
+					fileIconCls: WTF.fileTypeCssIconCls(data ? data.ext : ''),
 					fileClipText: me.buildFileClipText(data.url, data.mime, data.size)
 				};
 			}
