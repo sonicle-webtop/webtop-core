@@ -169,7 +169,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
-							data.add("editable", getDocumentServerEnabled()&&isFileEditableInDocEditor(fis.getName()));
+							data.add("editable", isFileEditableInDocEditor(fis.getName()));
 
 							// Handle listener, its implementation can stop
 							// file upload throwing a UploadException.
@@ -234,7 +234,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
 							data.add("uploadId", uploadedFile.getUploadId());
-							data.add("editable", getDocumentServerEnabled()&&isFileEditableInDocEditor(fi.getName()));
+							data.add("editable", isFileEditableInDocEditor(fi.getName()));
 
 							// Handle listener (if present), its implementation can stop
 							// file upload throwing a UploadException.
