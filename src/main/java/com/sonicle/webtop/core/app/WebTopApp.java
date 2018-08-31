@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.mashape.unirest.http.Unirest;
+import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.webtop.core.app.util.OSInfo;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.http.HttpClientUtils;
@@ -73,7 +74,6 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.shiro.WTRealm;
 import com.sonicle.webtop.core.util.ICalendarUtils;
-import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -943,8 +943,8 @@ public final class WebTopApp {
 		return createTempFile(domainId, null, null);
 	}
 	
-	public File createTempFile(String domainId, String prefix, String suffix) throws WTException {
-		return new File(getTempFolder(domainId), buildTempFilename(prefix, suffix));
+	public File createTempFile(String domainId, String prefix, String extension) throws WTException {
+		return new File(getTempFolder(domainId), buildTempFilename(prefix, extension));
 	}
 	
 	public boolean deleteTempFile(String domainId, String filename) throws WTException {
@@ -956,13 +956,12 @@ public final class WebTopApp {
 		return buildTempFilename(null, null);
 	}
 	
-	public String buildTempFilename(String prefix, String suffix) {
-		String uuid = IdentifierUtils.getUUID();
-		if(StringUtils.isBlank(suffix)) {
-			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
-		} else {
-			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
+	public String buildTempFilename(String prefix, String extension) {
+		String name = StringUtils.defaultString(prefix) + IdentifierUtils.getUUIDTimeBased(true);
+		if (!StringUtils.isBlank(extension)) {
+			name += ("." + extension);
 		}
+		return name;
 	}
 	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {

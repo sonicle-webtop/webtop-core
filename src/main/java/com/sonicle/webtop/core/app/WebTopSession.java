@@ -1200,14 +1200,14 @@ public class WebTopSession {
 	}
 	
 	public void addUploadedFile(UploadedFile uploadedFile) {
-		if(!isReady()) return;
+		if (!isReady()) return;
 		synchronized(uploads) {
 			uploads.put(uploadedFile.getUploadId(), uploadedFile);
 		}
 	}
 	
 	public UploadedFile getUploadedFile(String uploadId) {
-		if(!isReady()) return null;
+		if (!isReady()) return null;
 		synchronized(uploads) {
 			return uploads.get(uploadId);
 		}

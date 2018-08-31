@@ -67,6 +67,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> extends AbstractCommonService {
+	public static final String UPLOAD_TEMPFILE_PREFIX = "upload-";
 	private boolean configured = false;
 	private E env;
 	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
@@ -139,21 +140,19 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String cntx = ServletUtils.getStringParameter(request, "context", true);
 			String tag = ServletUtils.getStringParameter(request, "tag", null);
-			if(!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
+			if (!ServletFileUpload.isMultipartContent(request)) throw new Exception("No upload request");
 			
 			IServiceUploadStreamListener istream = getUploadStreamListener(cntx);
-			if(istream != null) {
+			if (istream != null) {
 				try {
 					MapItem data = new MapItem(); // Empty response data
 					
 					// Defines the upload object
 					upload = new ServletFileUpload();
 					FileItemIterator it = upload.getItemIterator(request);
-					while(it.hasNext()) {
+					while (it.hasNext()) {
 						FileItemStream fis = it.next();
-						
-						if(fis.isFormField()) {
-							// Read multipart form params
+						if (fis.isFormField()) {
 							InputStream is = null;
 							try {
 								is = fis.openStream();
@@ -208,11 +207,9 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 					// Plupload component (client-side) will upload multiple file 
 					// each in its own request. So we can skip loop on files.
 					Iterator it = files.iterator();
-					while(it.hasNext()) {
+					while (it.hasNext()) {
 						FileItem fi = (FileItem)it.next();
-						
-						if(fi.isFormField()) {
-							// Read multipart form params
+						if (fi.isFormField()) {
 							InputStream is = null;
 							try {
 								is = fi.getInputStream();
@@ -224,7 +221,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 							}
 						} else {
 							// Writes content into a temp file
-							File file = WT.createTempFile();
+							File file = WT.createTempFile(UPLOAD_TEMPFILE_PREFIX);
 							fi.write(file);
 
 							// Creates uploaded object
@@ -238,7 +235,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 
 							// Handle listener (if present), its implementation can stop
 							// file upload throwing a UploadException.
-							if(iupload != null) {
+							if (iupload != null) {
 								try {
 									iupload.onUpload(cntx, request, multipartParams, uploadedFile, data);
 								} catch(UploadException ex2) {
@@ -251,19 +248,14 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 					new JsonResult(data).printTo(out);
 					
 				} catch(UploadException ex1) {
-					new JsonResult(false, ex1.getMessage()).printTo(out);
+					new JsonResult(ex1).printTo(out);
 				}
 			}
 			
 		} catch (Exception ex) {
 			WebTopApp.logger.error("Error uploading", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out);
+			new JsonResult(ex).printTo(out);
 		}
-	}
-	
-	protected boolean isFileEditableInDocEditor(String fileName) {
-		if ("pdf".equalsIgnoreCase(FilenameUtils.getExtension(fileName))) return false;
-		return documentServerEnabled && DocEditorManager.isEditable(fileName);
 	}
 	
 	public void processCleanupUploadedFiles(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -274,7 +266,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 			
 		} catch(Exception ex) {
 			WebTopApp.logger.error("Error in CleanupUploadedFiles", ex);
-			new JsonResult(false, ex.getMessage()).printTo(out);
+			new JsonResult(ex).printTo(out);
 		}
 	}
 	
@@ -284,7 +276,7 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	
 	public WebTopSession.UploadedFile addAsUploadedFile(String serviceId, String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
 		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
-		File file = WT.createTempFile();
+		File file = WT.createTempFile(UPLOAD_TEMPFILE_PREFIX);
 		FileOutputStream fos = null;
 		long size = -1;
 		try {
@@ -296,6 +288,11 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 		WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, serviceId, file.getName(), tag, filename, size, mtype);
 		getEnv().getSession().addUploadedFile(uploadedFile);
 		return uploadedFile;
+	}
+	
+	protected boolean isFileEditableInDocEditor(String fileName) {
+		if ("pdf".equalsIgnoreCase(FilenameUtils.getExtension(fileName))) return false;
+		return documentServerEnabled && DocEditorManager.isEditable(fileName);
 	}
 	
 	private String findMediaType(FileItemStream fileItem) {
