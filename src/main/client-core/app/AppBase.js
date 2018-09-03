@@ -33,9 +33,39 @@
  */
 Ext.define('Sonicle.webtop.core.app.AppBase', {
 	extend: 'Ext.app.Application',
+	requires: [
+		'Sonicle.String',
+		'Sonicle.Date',
+		'Sonicle.PageMgr',
+		'Sonicle.URLMgr',
+		'Sonicle.PrintMgr',
+		'Sonicle.upload.Uploader',
+		'Sonicle.data.proxy.Ajax',
+		'Sonicle.data.identifier.NegativeString',
+		'Sonicle.form.field.VTypes',
+		
+		'Sonicle.plugin.EnterKeyPlugin',
+		'Sonicle.plugin.FieldTooltip',
+		
+		'Sonicle.webtop.core.ux.data.BaseModel',
+		'Sonicle.webtop.core.ux.data.EmptyModel',
+		'Sonicle.webtop.core.ux.data.SimpleModel',
+		'Sonicle.webtop.core.ux.data.ArrayStore',
+		'Sonicle.webtop.core.ux.panel.Panel',
+		'Sonicle.webtop.core.ux.panel.Fields',
+		'Sonicle.webtop.core.ux.panel.Form',
+		'Sonicle.webtop.core.ux.panel.Tab',
+		
+		'Sonicle.webtop.core.app.WT',
+		'Sonicle.webtop.core.app.FileTypes',
+		'Sonicle.webtop.core.app.Factory',
+		'Sonicle.webtop.core.app.Util',
+		'Sonicle.webtop.core.app.Log',
+		'Sonicle.webtop.core.app.ThemeMgr'
+	],
 	
+	uiid: null,
 	platformName: null,
-	
 	contextPath: null,
 	baseUrl: null,
 	pushUrl: null,
@@ -65,7 +95,6 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	 */
 	roles: null,
 	
-	
 	/**
 	 * @private
 	 * @property {Number} maskCount
@@ -75,6 +104,7 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	constructor: function() {
 		var me = this;
 		WT.app = me;
+		me.uiid = Sonicle.Crypto.randomString(10);
 		me.platformName = WTS.platformName;
 		me.contextPath = WTS.contextPath;
 		me.baseUrl = window.location.origin + me.contextPath;
@@ -84,6 +114,33 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		me.services = [];
 		me.roles = {};
 		me.callParent(arguments);
+	},
+	
+	init: function() {
+		WTA.Log.debug('application:init');
+		
+		Ext.tip.QuickTipManager.init();
+		Ext.setGlyphFontFamily('FontAwesome');
+		Ext.themeName = WTS.servicesVars[0].theme;
+		
+		Ext.getDoc().on('contextmenu', function(e) {
+			console.log(e.getTarget().tagName);
+		});
+		
+		if (Ext.os.deviceType !== 'Desktop') {
+			Ext.dd.DragDropManager.lock();
+		}
+		
+		// Inits state provider
+		if(Ext.util.LocalStorage.supported) {
+			Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider());
+		} else {
+			Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
+				expires: new Date(Ext.Date.now() + (1000*60*60*24*90)) // 90 days
+			}));
+		}
+		
+		WTA.FileTypes.init(WTS.fileTypes);
 	},
 	
 	initDescriptors: function() {

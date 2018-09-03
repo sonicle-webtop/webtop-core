@@ -123,6 +123,12 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 		return getEnv().getSession().getUploadedFile(uploadId);
 	}
 	
+	public final WebTopSession.UploadedFile getUploadedFileOrThrow(String uploadId) throws WTException {
+		WebTopSession.UploadedFile upFile = getUploadedFile(uploadId);
+		if (upFile == null) throw new WTException("Uploaded file not found [{}]", uploadId);
+		return upFile;
+	}
+	
 	public final void removeUploadedFile(String uploadId) {
 		getEnv().getSession().removeUploadedFile(uploadId, true);
 	}
@@ -223,11 +229,11 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 							// Writes content into a temp file
 							File file = WT.createTempFile(UPLOAD_TEMPFILE_PREFIX);
 							fi.write(file);
-
+							
 							// Creates uploaded object
 							uploadedFile = new WebTopSession.UploadedFile(false, service, file.getName(), tag, fi.getName(), fi.getSize(), findMediaType(fi));
 							getEnv().getSession().addUploadedFile(uploadedFile);
-
+							
 							// Fill response data
 							data.add("virtual", uploadedFile.isVirtual());
 							data.add("uploadId", uploadedFile.getUploadId());

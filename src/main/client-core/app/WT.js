@@ -73,6 +73,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		//return Sonicle.webtop.core.getApplication();
 	},
 	
+	uiid: function(suffix) {
+		return this.getApp().uiid + '-' + suffix;
+	},
+	
 	/**
 	 * Returns the plaftorm name (according to re-branding options).
 	 * @returns {String}

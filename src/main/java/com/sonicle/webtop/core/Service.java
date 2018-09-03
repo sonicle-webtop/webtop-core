@@ -257,7 +257,7 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
-		boolean docServerEnabled = ss.getDocumentServerEnabled();
+		boolean docServerEnabled = getDocumentServerEnabled();
 		co.put("docServerEnabled", docServerEnabled);
 		if (docServerEnabled) {
 			co.put("docServerPublicUrl", ss.getDocumentServerPublicUrl());
