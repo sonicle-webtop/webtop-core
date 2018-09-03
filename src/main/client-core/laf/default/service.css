@@ -351,16 +351,6 @@ div.wt-wnlist {
 	margin: .2em 0;
 }
 
-.x-toolbar .x-toolbar-item {
-    margin-right: 2px;
-}
-
-.x-toolbar .x-toolbar-separator-horizontal {
-	margin-left: 2px !important;
-    margin-right: 4px !important;
-	padding-right: 2px !important;
-}
-
 /* NotificationButton */
 .wt-notifbtn-grid-rowbody {
 	color: gray;

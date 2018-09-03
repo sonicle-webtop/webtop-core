@@ -32,31 +32,30 @@
  * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.RTC', {
- extend: 'WTA.sdk.DockableView',
- requires: [
-  'Sonicle.webtop.core.ux.RTC'
- ],
- 
- dockableConfig: {
-  title: '{audiocall.tit}',
-  iconCls: 'wt-icon-audiocall-xs',
-  width: 650,
-  height: 500
- },
- promptConfirm: false,
- 
- profileId: null,
- 
- initComponent: function() {
-  var me = this;
-  me.callParent(arguments);
-  me.add({
-   region: 'center',
-   xtype: 'sortc'
-  });
- },
- 
- getRTCComponent: function() {
-	 return this.getComponent(0);
- }
+	extend: 'WTA.sdk.DockableView',
+	requires: [
+		'Sonicle.rtc.Panel'
+	],
+	
+	dockableConfig: {
+		title: '{audiocall.tit}',
+		iconCls: 'wt-icon-audiocall-xs',
+		width: 650,
+		height: 500
+	},
+	promptConfirm: false,
+	profileId: null,
+	
+	initComponent: function() {
+		var me = this;
+		me.callParent(arguments);
+		me.add({
+			region: 'center',
+			xtype: 'sortcpanel'
+		});
+	},
+	
+	getRTCComponent: function() {
+		return this.getComponent(0);
+	}
 });
