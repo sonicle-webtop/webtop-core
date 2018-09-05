@@ -99,6 +99,14 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 	 */
 	
 	/**
+	 * @event attachmentdownloadclick
+	 * Fired when delete button is clicked.
+	 * @param {Ext.grid.Panel} this
+	 * @param {Ext.data.Model} record
+	 * @param {Number} rowIndex 
+	 */
+	
+	/**
 	 * @event attachmentdeleteclick
 	 * Fired when delete button is clicked.
 	 * @param {Ext.grid.Panel} this
@@ -175,7 +183,14 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			align: 'center',
 			width: 50,
 			items: [{
-				iconCls: 'fa fa-minus-circle',
+				iconCls: 'fa fa-cloud-download',
+				tooltip: WT.res('act-download.lbl'),
+				handler: function(g, ridx) {
+					var rec = g.getStore().getAt(ridx);
+					me.fireEvent('attachmentdownloadclick', me, rec, ridx);
+				}
+			}, {
+				iconCls: 'fa fa-trash',
 				tooltip: WT.res('act-remove.lbl'),
 				handler: function(g, ridx) {
 					var rec = g.getStore().getAt(ridx);
