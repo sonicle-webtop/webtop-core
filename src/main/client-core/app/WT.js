@@ -827,5 +827,29 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getLaf: function() {
 		return WT.getVar('laf');
+	},
+	
+	/**
+	 * Returns if device is a Phone.
+	 * @returns {Boolean}
+	 */
+	isDevicePhone: function() {
+		return (Ext.os.deviceType==='Phone');
+	},
+	
+	/**
+	 * Returns if device is a Tablet.
+	 * @returns {Boolean}
+	 */
+	isDeviceTablet: function() {
+		return (Ext.os.deviceType==='Tablet');
+	},
+	
+	/**
+	 * Returns if device is a Desktop.
+	 * @returns {Boolean}
+	 */
+	isDeviceDesktop: function() {
+		return (Ext.os.deviceType==='Desktop');
 	}
 });

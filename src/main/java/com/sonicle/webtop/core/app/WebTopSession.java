@@ -80,6 +80,7 @@ import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import net.sf.uadetector.ReadableDeviceCategory;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -798,10 +799,11 @@ public class WebTopSession {
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
 		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
-		//ReadableDeviceCategory.Category deviceCategory = getUserAgent().getDeviceCategory().getCategory();
-		//if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
-		//	theme += "-touch";
-		//}
+		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+			if (theme.equals("crisp")||theme.equals("neptune")) theme += "-touch";
+			else theme = "crisp-touch";
+		}
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);
@@ -926,13 +928,20 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
-		fillAppReferences(js, locale, "crisp", false);
+
+		String theme="crisp";
+		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+			theme += "-touch";
+		}
+
+		fillAppReferences(js, locale, theme, false);
 		
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
 		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-public");
-		fillServiceCssReferences(js, coreManifest, "crisp", "default");
+		fillServiceCssReferences(js, coreManifest, theme, "default");
 		
 		fillStartupForPublicService(js, CoreManifest.ID, locale);
 		fillStartupForPublicService(js, publicServiceId, locale);
