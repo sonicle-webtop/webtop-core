@@ -240,7 +240,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 					edCfg = {
 						width: '100%',
 						height: '100%',
-						type: 'desktop',
+						type: WT.isDeviceDesktop()?'desktop':'mobile',
 						documentType: cfg.docType
 					};
 			
