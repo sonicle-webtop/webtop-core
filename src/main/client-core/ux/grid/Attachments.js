@@ -61,6 +61,17 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 	uploadTag: null,
 	
 	/**
+	 * Specify the element ID on which allow D&D. Defaults to this element.
+	 */
+	dropElementId: null,
+	
+	/**
+	 * @cfg {Boolean} highlightDrop
+	 * Set to `true` to show the 'drop here' overlay. Defaults to `false`.
+	 */
+	highlightDrop: false,
+	
+	/**
 	 * @cfg {String} typeField
 	 * The underlying {@link Ext.data.Field#name data field name} that targets attachment type.
 	 */
@@ -135,11 +146,13 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 		me.sizeText = me.sizeText || WT.res('wtattachmentsgrid.size.lbl');
 		me.fileDropText = me.fileDropText || WT.res('sofiledrop.text');
 		
-		me.plugins = me.plugins || [];
-		me.plugins.push({
-			ptype: 'sofiledrop',
-			text: me.fileDropText
-		});
+		if (me.highlightDrop === true) {
+			me.plugins = me.plugins || [];
+			me.plugins.push({
+				ptype: 'sofiledrop',
+				text: me.fileDropText
+			});
+		}
 		me.columns = me.createColumns();
 		me.bbar = me.createBBar();
 		
@@ -207,7 +220,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			sid: me.sid,
 			uploadContext: me.uploadContext,
 			uploadTag: me.uploadTag,
-			dropElement: me.getId(),
+			dropElement: me.dropElementId ? me.dropElementId : me.getId(),
 			listeners: {
 				fileuploaded: function(s, file, json) {
 					me.fireEvent('attachmentuploaded', me, json.data.uploadId, file);

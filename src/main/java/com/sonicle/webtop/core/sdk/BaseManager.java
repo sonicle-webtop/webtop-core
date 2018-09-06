@@ -72,6 +72,17 @@ public abstract class BaseManager {
 		return WT.LOCALE_ENGLISH;
 	}
 	
+	protected WTException wrapException(Exception ex) {
+		if (ex instanceof WTException) {
+			return (WTException)ex;
+		} else if ((ex instanceof SQLException) || (ex instanceof DAOException)) {
+			return new WTException(ex, "DB error");
+		} else {
+			return new WTException(ex);
+		}
+	}
+	
+	@Deprecated
 	protected WTException wrapThrowable(Throwable t) {
 		if (t instanceof WTException) {
 			return (WTException)t;
