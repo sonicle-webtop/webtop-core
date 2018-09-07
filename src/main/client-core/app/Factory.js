@@ -521,7 +521,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			name: field,
 			//associationKey: field,
 			model: model,
-			foreignKey: '_fk'
+			foreignKey: '_fk' // Deprecated from ExtJs 6.2.0
 		};
 	},
 	
