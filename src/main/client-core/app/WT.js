@@ -830,26 +830,34 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Returns if device is a Phone.
-	 * @returns {Boolean}
-	 */
-	isDevicePhone: function() {
-		return (Ext.os.deviceType==='Phone');
-	},
-	
-	/**
-	 * Returns if device is a Tablet.
-	 * @returns {Boolean}
-	 */
-	isDeviceTablet: function() {
-		return (Ext.os.deviceType==='Tablet');
-	},
-	
-	/**
-	 * Returns if device is a Desktop.
+	 * Returns if browsing device is a Desktop.
 	 * @returns {Boolean}
 	 */
 	isDeviceDesktop: function() {
-		return (Ext.os.deviceType==='Desktop');
+		return Ext.os.deviceType === 'Desktop';
+	},
+	
+	/**
+	 * Returns if browsing device is a Phone.
+	 * @returns {Boolean}
+	 */
+	isDevicePhone: function() {
+		return Ext.os.deviceType === 'Phone';
+	},
+	
+	/**
+	 * Returns if browsing device is a Tablet.
+	 * @returns {Boolean}
+	 */
+	isDeviceTablet: function() {
+		return Ext.os.deviceType === 'Tablet';
+	},
+	
+	/**
+	 * Returns if browsing device is a mobile device (Phone or Tablet).
+	 * @returns {Boolean}
+	 */
+	isDeviceMobile: function() {
+		return WT.isDevicePhone() || WT.isDeviceTablet();
 	}
 });
