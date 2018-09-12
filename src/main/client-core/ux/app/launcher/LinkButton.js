@@ -30,65 +30,10 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2018 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.view.main.Compact', {
-	alternateClassName: 'WTA.view.main.Compact',
-	extend: 'WTA.view.main.Abstract',
+Ext.define('Sonicle.webtop.core.ux.app.launcher.LinkButton', {
+	alternateClassName: 'WTA.ux.app.launcher.LinkButton',
+	extend: 'Ext.button.Button',
 	
-	getTaskBar: function() {
-		return this.bottomDockCmp().getComponent(1);
-	},
-	
-	getPortalButton: function() {
-		return this.launcherCmp().getComponent(WT.ID);
-	},
-	
-	addServiceButton: function(desc) {
-		this.launcherCmp().add({
-			xclass: 'WTA.ux.ServiceButton',
-			sid: desc.getId(),
-			scale: 'medium',
-			ui: 'default-toolbar',
-			handler: 'onLauncherButtonClick'
-		});
-	},
-	
-	addLinkButton: function(link) {
-		this.launcherCmp().add({
-			xclass: 'WTA.ux.app.launcher.LinkButton',
-			scale: 'medium',
-			icon: link.icon,
-			tooltip: link.text,
-			href: link.href
-		});
-	},
-	
-	launcherCmp: function() {
-		return this.bottomDockCmp().getComponent(0);
-	},
-	
-	createBottomDockCmp: function() {
-		return {
-			xtype: 'container',
-			layout: 'hbox',
-			items: [{
-					xtype: 'toolbar',
-					region: 'west',
-					border: false,
-					cls: 'wt-vieport-dock',
-					defaultButtonUI: 'default-toolbar',
-					items: [
-						this.createPortalButton({scale: 'medium'})
-					]
-				},
-				this.createTaskBar({
-					region: 'center',
-					border: false,
-					cls: 'wt-vieport-dock',
-					height: '100%',
-					flex: 1
-				})
-			],
-			minHeight: 35
-		};
-	}
+	textAlign: 'left',
+	hrefTarget: '_blank'
 });

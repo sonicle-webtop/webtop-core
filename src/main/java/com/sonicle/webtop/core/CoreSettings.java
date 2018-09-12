@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.google.gson.annotations.SerializedName;
+import com.sonicle.commons.web.json.JsonResult;
+import java.util.ArrayList;
 
 /**
  *
@@ -394,7 +396,24 @@ public class CoreSettings {
 	
 	
 	
-	
+	/**
+	 * [domain+system]
+	 * [object[]]
+	 * Defines launcher link buttons
+	 * [
+	 *   {
+	 *     'href': 'https://www.google.it/',
+	 *     'text': 'Google',
+	 *     'icon': 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg'
+	 *   },
+	 *   {
+	 *     'href': 'https://the/url/to/open',
+     *     'text': 'The link text',
+     *     'icon: 'https://the/icon/url'
+     *   }
+	 * ]
+	 */
+	public static final String LAUNCHER_LINKS = "launcher.links";
 	
 	/**
 	 * [domain+system+user][default]
@@ -717,5 +736,21 @@ public class CoreSettings {
 	public static enum OtpDeliveryMode {
 		@SerializedName("email") EMAIL,
 		@SerializedName("googleauth") GOOGLEAUTH;
+	}
+	
+	public static class LauncherLink {
+		public String href;
+		public String text;
+		public String icon;
+		
+		public static class List extends ArrayList<LauncherLink> {
+			public static LauncherLink.List fromJson(String value) {
+				return JsonResult.gson.fromJson(value, LauncherLink.List.class);
+			}
+
+			public static String toJson(LauncherLink.List value) {
+				return JsonResult.gson.toJson(value, LauncherLink.List.class);
+			}
+		}
 	}
 }

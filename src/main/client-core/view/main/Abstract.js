@@ -43,6 +43,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.ux.ViewWindow',
 		'WTA.ux.IMButton',
 		'WTA.ux.IMPanel',
+		'WTA.ux.app.launcher.LinkButton',
 		'WTA.ux.data.BadgeNotificationStore',
 		'Sonicle.webtop.core.model.IMFriendGrid'
 	],
@@ -176,6 +177,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	getPortalButton: Ext.emptyFn,
 	
 	addServiceButton: Ext.emptyFn,
+	
+	addLinkButton: Ext.emptyFn,
 	
 	topDockCmp: function() {
 		return this.lookupReference('tdock');

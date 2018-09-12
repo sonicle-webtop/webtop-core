@@ -16,6 +16,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import org.joda.time.LocalTime;
 
@@ -231,6 +232,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		} else {
 			return value;
 		}
+	}
+	
+	public List<LauncherLink> getLauncherLinks() {
+		return getObject(LAUNCHER_LINKS, null, LauncherLink.List.class);
+	}
+	
+	public String getLauncherLinksAsString() {
+		return getString(LAUNCHER_LINKS, "[]");
 	}
 	
 	public ServicesOrder getServicesOrder() {

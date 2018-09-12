@@ -48,6 +48,16 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 		});
 	},
 	
+	addLinkButton: function(link) {
+		this.leftDockCmp().add({
+			xclass: 'WTA.ux.app.launcher.LinkButton',
+			scale: 'large',
+			icon: link.icon,
+			tooltip: link.text,
+			href: link.href
+		});
+	},
+	
 	createLeftDockCmp: function() {
 		return {
 			xtype: 'toolbar',
