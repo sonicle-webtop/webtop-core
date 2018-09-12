@@ -132,6 +132,15 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			}
 		});
 		
+		var llinks = Ext.JSON.decode(WT.getVar('wtLauncherLinks'), true);
+		if (Ext.isArray(llinks)) {
+			Ext.iterate(llinks, function(link) {
+				if (!Ext.isObject(link)) return;
+				if (!link.hasOwnProperty('href') || !link.hasOwnProperty('icon')) return;
+				vpc.addLinkButton(link);
+			});
+		}
+		
 		// Sets startup service
 		var deflt = me.findDefaultService();
 		me.activateService(deflt);

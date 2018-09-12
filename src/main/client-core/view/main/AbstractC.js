@@ -141,6 +141,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	addLinkButton: function(link) {
+		this.getView().addLinkButton(link);
+	},
+	
 	addNewActions: function(acts) {
 		this.getView().addNewActions(acts);
 	},
