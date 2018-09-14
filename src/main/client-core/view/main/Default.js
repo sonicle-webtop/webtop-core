@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	
 	addServiceButton: function(desc) {
 		this.leftDockCmp().add({
-			xclass: 'WTA.ux.ServiceButton',
+			xclass: 'WTA.ux.app.launcher.ServiceButton',
 			sid: desc.getId(),
 			scale: 'large',
 			handler: 'onLauncherButtonClick'

@@ -80,43 +80,44 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
-	 * [string]
-	 * Specified if the DocumentServer is installed
+	 * [boolean]
+	 * Specifies if the DocumentServer integration is enabled
 	 */
 	public static final String DOCUMENT_SERVER_ENABLED = "documentserver.enabled";
 	
 	/**
 	 * [domain+system]
 	 * [string]
-	 * Specified how the DocumentServer is reachable externally
+	 * Specifies how the DocumentServer is reachable externally.
+	 * This is required for loading client API in remote browser.
 	 */
 	public static final String DOCUMENT_SERVER_PUBLIC_URL = "documentserver.public.url";
 	
 	/**
 	 * [domain+system]
 	 * [string]
-	 * Specified how the DocumentServer is reachable internally (server-to-server connectivity) ????????????
+	 * Specifies how the DocumentServer is reachable internally (server-to-server connectivity) ????????????
 	 */
 	public static final String DOCUMENT_SERVER_LOCAL_URL = "documentserver.local.url";
 	
 	/**
 	 * [system]
 	 * [string]
-	 * Specified how the WebTop webapp is reachable internally (server-to-server connectivity: docserver -> webtop)
+	 * Specifies how the WebTop webapp is reachable internally (server-to-server connectivity: docserver -> webtop)
 	 */
 	public static final String DOCUMENT_SERVER_LOOPBACK_URL = "documentserver.loopback.url";
 	
 	/**
 	 * [domain+system]
 	 * [string]
-	 * Specified the secret shared key to use for outgoing communications to the DocumentServer (WebTop -> DocServer).
+	 * Specifies the secret shared key to use for outgoing communications to the DocumentServer (WebTop -> DocServer).
 	 */
 	public static final String DOCUMENT_SERVER_SECRET_OUT = "documentserver.secret.out";
 	
 	/**
 	 * [system]
 	 * [string]
-	 * Specified the secret shared key to use for incoming communications from the DocumentServer (WebTop <- DocServer).
+	 * Specifies the secret shared key to use for incoming communications from the DocumentServer (WebTop <- DocServer).
 	 */
 	public static final String DOCUMENT_SERVER_SECRET_IN = "documentserver.secret.in";
 	

@@ -208,8 +208,12 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 			me.docEditor.destroyEditor();
 			me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), edCfg);
 		} else {
-			me.loadApi(function() {
-				me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), edCfg);
+			me.loadApi(function(success) {
+				if (success) {
+					me.docEditor = new DocsAPI.DocEditor(me.buildDocEditorPlaceholderId(), edCfg);
+				} else {
+					WT.error(WT.res('docEditor.error.loading'));
+				}
 			}, me);
 		}
 	},
@@ -219,7 +223,10 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 		Ext.Loader.loadScript({
 			url: Sonicle.String.urlAppendPath(baseUrl, '/web-apps/apps/api/documents/api.js'),
 			onLoad: function() {
-				Ext.callback(callback, scope || this);
+				Ext.callback(callback, scope || this, [true]);
+			},
+			onError: function() {
+				Ext.callback(callback, scope || this, [false]);
 			},
 			scope: this
 		});
@@ -240,7 +247,7 @@ Ext.define('Sonicle.webtop.core.view.DocEditor', {
 					edCfg = {
 						width: '100%',
 						height: '100%',
-						type: WT.isDeviceDesktop() ? 'desktop' : 'mobile',
+						type: WT.plTags.desktop ? 'desktop' : 'mobile',
 						documentType: cfg.docType
 					};
 			

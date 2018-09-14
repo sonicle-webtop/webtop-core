@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.view.main.Compact', {
 	
 	addServiceButton: function(desc) {
 		this.launcherCmp().add({
-			xclass: 'WTA.ux.ServiceButton',
+			xclass: 'WTA.ux.app.launcher.ServiceButton',
 			sid: desc.getId(),
 			scale: 'medium',
 			ui: 'default-toolbar',

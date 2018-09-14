@@ -9,12 +9,14 @@
 
 /* ActionColumn: adds some extra spacing between action column icons */
 .x-action-col-icon {
+	margin-left: 4px;
 	margin-right: 4px;
+	color: #a9a9a9;
 }
 
 /* ActionColumn: adds hover color */
 .x-action-col-icon:hover {
-	color: #a9a9a9;
+	color: #666;
 }
 
 .x-toolbar .x-toolbar-item {

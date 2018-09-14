@@ -194,14 +194,15 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			hideable: false,
 			groupable: false,
 			align: 'center',
-			width: 50,
+			width: 80,
 			items: [{
 				iconCls: 'fa fa-cloud-download',
 				tooltip: WT.res('act-download.lbl'),
 				handler: function(g, ridx) {
 					var rec = g.getStore().getAt(ridx);
 					me.fireEvent('attachmentdownloadclick', me, rec, ridx);
-				}
+				},
+				hidden: WT.plTags.mobile
 			}, {
 				iconCls: 'fa fa-trash',
 				tooltip: WT.res('act-remove.lbl'),

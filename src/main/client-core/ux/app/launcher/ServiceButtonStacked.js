@@ -31,69 +31,15 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.ux.ServiceButton', {
-	alternateClassName: 'WTA.ux.ServiceButton',
-	extend: 'Ext.button.Button',
-	/*
-	requires: [
-		'Sonicle.plugin.BadgeText'
-	],
-	plugins: [{
-		ptype: 'sobadgetext',
-		align: 'bl'
-	}],
-	*/
+Ext.define('Sonicle.webtop.core.ux.app.launcher.ServiceButtonStacked', {
+	alternateClassName: 'WTA.ux.app.launcher.ServiceButtonStacked',
+	extend: 'WTA.ux.app.launcher.ServiceButton',
 	
-	textAlign: 'left',
-	
-	config: {
-		iconName: 'service'
-	},
-	
-	/**
-	 * @cfg {String} sid
-	 * WebTop service ID.
-	 */
-	
-	constructor: function(cfg) {
-		var me = this, desc;
-		if (Ext.isEmpty(cfg.sid)) Ext.raise('`sid` is mandatory');
-		desc = WT.getApp().getDescriptor(cfg.sid);
-		Ext.apply(cfg, me.buildButtonCfg(cfg, desc));
-		me.callParent([cfg]);
-	},
+	scale: 'medium',
 	
 	buildButtonCfg: function(cfg, desc) {
-		var me = this,
-				iconName = me.getInitialConfig('iconName'),
-				scale = cfg.scale || me.scale;
-		return {
-			itemId: desc.getId(),
-			overflowText: desc.getName(),
-			tooltip: me.buildTooltip(desc),
-			iconCls: WTF.cssIconCls(desc.getXid(), iconName, me.getIconSize(scale))
-		};
-	},
-	
-	buildTooltip: function(desc) {
-		var text, build;
-		if (WT.isWTAdmin()) {
-			build = desc.getBuild();
-			text = Ext.String.format('v.{0}{1} - {2}', desc.getVersion(), Ext.isEmpty(build) ? '' : '('+build+')', desc.getCompany());
-		} else {
-			text = Ext.String.format('v.{0} - {1}', desc.getVersion(), desc.getCompany());
-		}
-		return {
-			title: desc.getName(),
-			text: text
-		};
-	},
-	
-	privates: {
-		getIconSize: function(scale) {
-			if (scale === 'large') return 'm';
-			if (scale === 'medium') return 's';
-			return 'xs';
-		}
+		return Ext.apply(this.callParent(arguments), {
+			text: desc.getName()
+		});
 	}
 });

@@ -801,8 +801,11 @@ public class WebTopSession {
 		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
 		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
 		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
-			if (theme.equals("crisp")||theme.equals("neptune")) theme += "-touch";
-			else theme = "crisp-touch";
+			if (theme.equals("crisp") || theme.equals("neptune")) {
+				theme += "-touch";
+			} else {
+				theme = "crisp-touch";
+			}
 		}
 		Locale locale = getLocale();
 		
@@ -929,7 +932,7 @@ public class WebTopSession {
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 
-		String theme="crisp";
+		String theme = "crisp";
 		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
 		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
 			theme += "-touch";
@@ -991,6 +994,7 @@ public class WebTopSession {
 	}
 	
 	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+		js.themeName = theme;
 		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
 		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";

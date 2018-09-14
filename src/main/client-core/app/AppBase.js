@@ -103,7 +103,10 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 	
 	constructor: function() {
 		var me = this;
+		Ext.themeName = WTS.themeName;
 		WT.app = me;
+		WT.plTags = Ext.platformTags;
+		me.initPlatformTags();
 		me.uiid = Sonicle.Crypto.randomString(10);
 		me.platformName = WTS.platformName;
 		me.contextPath = WTS.contextPath;
@@ -121,18 +124,15 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
-		Ext.themeName = WTS.servicesVars[0].theme;
-		
 		Ext.getDoc().on('contextmenu', function(e) {
 			console.log(e.getTarget().tagName);
 		});
-		
-		if (Ext.os.deviceType !== 'Desktop') {
+		if (!WT.plTags.desktop) {
 			Ext.dd.DragDropManager.lock();
 		}
 		
 		// Inits state provider
-		if(Ext.util.LocalStorage.supported) {
+		if (Ext.util.LocalStorage.supported) {
 			Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider());
 		} else {
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
@@ -141,6 +141,12 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		}
 		
 		WTA.FileTypes.init(WTS.fileTypes);
+	},
+	
+	initPlatformTags: function() {
+		var XpT = Ext.platformTags;
+		XpT.mobile = XpT.tablet || XpT.phone;
+		XpT.touchtheme = Ext.themeName.indexOf('touch') !== -1;
 	},
 	
 	initDescriptors: function() {

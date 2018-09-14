@@ -36,24 +36,29 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	singleton: true,
 	
 	/**
-	 * @property
 	 * Core service ID.
+	 * @property {String} ID 
 	 */
 	ID: 'com.sonicle.webtop.core',
 	
 	/**
-	 * @property
 	 * Core service short ID.
+	 * @property {String} XID 
 	 */
 	XID: 'wt',
 	
 	/**
-	 * @property
 	 * Core service namespace.
+	 * @property {String} NS 
 	 */
 	NS: 'Sonicle.webtop.core',
 	
 	app: null,
+	
+	/**
+	 * This object is an alias of {@link Ext#platformTags platformTags} properties that describe the current device or platform.
+	 * @property {Object} plTags 
+	 */
 	
 	loadedCss: null,
 	
@@ -827,37 +832,5 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getLaf: function() {
 		return WT.getVar('laf');
-	},
-	
-	/**
-	 * Returns if browsing device is a Desktop.
-	 * @returns {Boolean}
-	 */
-	isDeviceDesktop: function() {
-		return Ext.os.deviceType === 'Desktop';
-	},
-	
-	/**
-	 * Returns if browsing device is a Phone.
-	 * @returns {Boolean}
-	 */
-	isDevicePhone: function() {
-		return Ext.os.deviceType === 'Phone';
-	},
-	
-	/**
-	 * Returns if browsing device is a Tablet.
-	 * @returns {Boolean}
-	 */
-	isDeviceTablet: function() {
-		return Ext.os.deviceType === 'Tablet';
-	},
-	
-	/**
-	 * Returns if browsing device is a mobile device (Phone or Tablet).
-	 * @returns {Boolean}
-	 */
-	isDeviceMobile: function() {
-		return WT.isDevicePhone() || WT.isDeviceTablet();
 	}
 });
