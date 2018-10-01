@@ -37,6 +37,7 @@ import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
@@ -104,6 +105,7 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -561,6 +563,19 @@ public final class WebTopManager {
 		}
 
 		//TODO: chiamare controller per eliminare dominio per i servizi
+	}
+	
+	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
+		String path = WT.getDomainImagesPath(domainId);
+		String baseUrl = WT.getPublicImagesUrl(domainId);
+		File dir = new File(path);
+		ArrayList<PublicImage> items = new ArrayList<>();
+		for(File file : dir.listFiles()) {
+			String name = file.getName();
+			String url = PathUtils.concatPathParts(baseUrl, name);
+			items.add(new PublicImage(name, url));
+		}
+		return items;
 	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {

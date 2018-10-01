@@ -39,5 +39,16 @@ Ext.define('Sonicle.webtop.core.store.PublicImages', {
 	],
 	
 	model: 'WTA.model.PublicImage',
-	proxy: WTF.proxy(WT.ID, 'ListDomainPublicImages', 'images')
+	
+	constructor: function(cfg) {
+		var me = this;
+		if (!cfg.domainId) Ext.raise('You must specify a valid value for `domainId`');
+		me.config.proxy = WTF.proxy(WT.ID, 'ListDomainPublicImages', 'images', {
+			extraParams: {
+				domainId: cfg.domainId
+			}
+		});
+		delete cfg.domainId;
+		me.callParent([cfg]);
+	}
 });

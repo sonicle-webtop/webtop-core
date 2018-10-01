@@ -392,13 +392,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	
 	editOptionsUI: function(rec) {
 		var me = this,
-				vct = WT.createView(me.mys.ID, 'view.Options', {
+				vw = WT.createView(me.mys.ID, 'view.Options', {
+					swapReturn: true,
 					viewCfg: {
 						profileId: rec.get('profileId'),
 						profileDisplayName: rec.get('displayName')
 					}
 				});
-		vct.show();
+		vw.showView();
 	},
 	
 	updateEmailDomainUI: function(sel) {
