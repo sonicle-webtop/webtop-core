@@ -80,6 +80,13 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [int]
+	 * Defines a special milliseconds timout for selected ajax calls which may be longer than default 30 seconds
+	 */
+	public static final String AJAX_SPECIALTIMEOUT = "ajax.specialtimeout";
+	
+	/**
+	 * [domain+system]
 	 * [boolean]
 	 * Specifies if the DocumentServer integration is enabled
 	 */
