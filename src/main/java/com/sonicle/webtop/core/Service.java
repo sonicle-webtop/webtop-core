@@ -105,6 +105,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -1323,23 +1324,31 @@ public class Service extends BaseService {
 		return faxPattern.replace("{username}", username).replace("{number}", newfax.toString());
 	}
 	
-	
 	public void processListDomainPublicImages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
-			String domainId=getWts().getProfileId().getDomainId();
-			String path=WT.getDomainImagesPath(domainId);
-			ArrayList<JsPublicImage> items=new ArrayList<>();
-			File dir=new File(path);
-			int id=0;
-			for(File file: dir.listFiles()) {
-				String name=file.getName();
-				String url=PathUtils.concatPathParts(WT.getPublicImagesUrl(domainId),name);
-				items.add(new JsPublicImage("img"+(++id),name,url));
+			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
+			
+			List<PublicImage> images;
+			if (RunContext.isSysAdmin()) {
+				if (StringUtils.isBlank(domainId)) throw new WTException();
+				CoreAdminManager coreAdmMgr = getCoreAdminManager();
+				images = coreAdmMgr.listDomainPublicImages(domainId);
+				
+			} else { // Domain users can only use images belonging to their own domain
+				images = coreMgr.listDomainPublicImages();
+			}
+			
+			ArrayList<JsPublicImage> items = new ArrayList<>(images.size());
+			int i = 0;
+			for (PublicImage image : images) {
+				items.add(new JsPublicImage("img" + i, image));
+				i++;
 			}
 			new JsonResult("images", items, items.size()).printTo(out);
+			
 		} catch (Exception ex) {
-			logger.error("Error in processListDomainPublicImages", ex);
-			new JsonResult(false, "Error in processListDomainPublicImages").printTo(out);
+			logger.error("Error in ListDomainPublicImages", ex);
+			new JsonResult(false, "Error in ListDomainPublicImages").printTo(out);
 		}
 	}
 	

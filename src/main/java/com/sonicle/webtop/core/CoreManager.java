@@ -100,6 +100,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
@@ -266,6 +267,17 @@ public class CoreManager extends BaseManager {
 		} else {
 			ensureUserDomain(domainId);
 			return wtmgr.getDomain(domainId);
+		}
+	}
+	
+	public List<PublicImage> listDomainPublicImages() throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		try {
+			return wtmgr.listDomainPublicImages(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list domain's public images [{0}]", domainId);
 		}
 	}
 	
