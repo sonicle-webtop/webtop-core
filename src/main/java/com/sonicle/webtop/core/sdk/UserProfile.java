@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.dal.UserDAO;
+import com.sonicle.webtop.core.model.ProfileI18n;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.Connection;
@@ -270,6 +271,18 @@ public final class UserProfile {
 		
 		public String getPersonalFullEmailAddress() {
 			return InternetAddressUtils.toFullAddress(personalEmail);
+		}
+		
+		public ProfileI18n toProfileI18n() {
+			return toProfileI18n(false);
+		}
+		
+		public ProfileI18n toProfileI18n(boolean longDateTimeFormat) {
+			if (longDateTimeFormat) {
+				return new ProfileI18n(this.getLocale(), this.getTimeZone(), this.getLongDateFormat(), this.getLongTimeFormat());
+			} else {
+				return new ProfileI18n(this.getLocale(), this.getTimeZone(), this.getShortDateFormat(), this.getShortTimeFormat());
+			}
 		}
 		
 		/**

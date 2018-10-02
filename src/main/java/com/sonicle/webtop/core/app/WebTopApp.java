@@ -235,6 +235,7 @@ public final class WebTopApp {
 		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 		
 		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
+		//System.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
 		System.setProperty("mail.mime.decodetext.strict", "false");
 		System.setProperty("mail.mime.decodefilename", "true");
 		
