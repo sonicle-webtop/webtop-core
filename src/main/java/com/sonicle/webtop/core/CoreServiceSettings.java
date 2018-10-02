@@ -56,6 +56,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(DAVSERVER_BASE_URL, null);
 	}
 	
+    public int getAjaxSpecialTimeout() {
+        return getInteger(AJAX_SPECIALTIMEOUT, 30000);
+    }
+	
 	public Boolean getDocumentServerEnabled() {
 		return getBoolean(DOCUMENT_SERVER_ENABLED, false);
 	}	

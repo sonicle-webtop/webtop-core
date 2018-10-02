@@ -291,6 +291,7 @@ public class Service extends BaseService {
 		co.put("startupService", us.getStartupService());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
+		co.put("ajaxSpecialTimeout", ss.getAjaxSpecialTimeout());
 		co.put("language", us.getLanguageTag());
 		co.put("timezone", us.getTimezone());
 		co.put("startDay", us.getStartDay());
