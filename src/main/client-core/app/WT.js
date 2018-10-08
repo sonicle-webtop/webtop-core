@@ -525,22 +525,25 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
-	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
 	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
 	 * 
 	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
-		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		var xclass = Ext.isString(opts.instClass) ? opts.instClass : 'Ext.window.MessageBox',
+				mbox = Ext.create(xclass, Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		
 		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('confirm'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.Msg.YESNO,
 			icon: Ext.Msg.QUESTION,
-			fn: function(bid) {
-				Ext.callback(cb, scope, [bid]);
+			fn: function(bid, value, cfg) {
+				Ext.callback(cb, scope, [bid, value, cfg]);
 			}
 		}, opts.config || {}));
 	},
