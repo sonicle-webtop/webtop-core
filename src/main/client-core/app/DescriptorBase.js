@@ -53,7 +53,7 @@ Ext.define('Sonicle.webtop.core.app.DescriptorBase', {
 		if (!Ext.isDefined(cfg.ns)) Ext.raise('Missing config [ns]');
 		if (!Ext.isDefined(cfg.path)) Ext.raise('Missing config [path]');
 		if (!Ext.isDefined(cfg.path)) Ext.warn('Missing config [name]');
-		if (!Ext.isDefined(cfg.version)) Ext.raise('Missing config [version]');
+		//if (!Ext.isDefined(cfg.version)) Ext.raise('Missing config [version]');
 		me.initConfig(cfg);
 		me.callParent([cfg]);
 	},
