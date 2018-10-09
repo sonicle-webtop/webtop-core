@@ -57,15 +57,15 @@ public class ContextLoader {
 	}
 	
 	protected void initApp(ServletContext servletContext) throws IllegalStateException {
+		final String appname = ContextUtils.getWebappName(servletContext);
+		LoggerUtils.initDC(appname);
+		
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
 			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");
 		}
-		
-		final String appname = ContextUtils.getWebappName(servletContext);
 		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, appname);
 		
 		try {
-			LoggerUtils.initDC(appname);
 			WebTopApp wta = new WebTopApp(servletContext);
 			wta.boot();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, wta);

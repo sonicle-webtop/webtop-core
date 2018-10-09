@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.util;
 
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
@@ -48,6 +49,7 @@ public class LoggerUtils {
 	private static final String VAR_USER_SERVICE = "user-service";
 	private static final String VAR_AUTO = "auto";
 	private static final String VAR_CUSTOM = "custom";
+	private static final String DEFAULT_APPNAME = "noapp";
 	private static final String DEFAULT_SERVICE = "core";
 	private static final String DEFAULT_USER = "system";
 	
@@ -71,12 +73,16 @@ public class LoggerUtils {
 		return StringUtils.defaultIfBlank(MDC.get(VAR_CUSTOM), null);
 	}
 	
+	public synchronized static void initDC() {
+		initDC(StringUtils.defaultIfBlank(WebTopApp.getWebappName(), DEFAULT_APPNAME));
+	}
+	
 	/**
 	 * Initialize diagnostic context (MDC object) with default variables:
 	 * - service = core
 	 * - user = system
 	 * It also update values related to automatic variables.
-	 * @param appName The application name.
+	 * @param skipResetToDefaults
 	 */
 	public synchronized static void initDC(String appName) {
 		MDC.put(VAR_APPNAME, appName);

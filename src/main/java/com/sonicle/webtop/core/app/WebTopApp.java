@@ -142,6 +142,7 @@ import org.slf4j.Logger;
 public final class WebTopApp {
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static WebTopApp instance = null;
+	private static String webappName = null;
 	private static boolean isStartingUp = false;
 	private static boolean isShuttingDown = false;
 	
@@ -175,6 +176,10 @@ public final class WebTopApp {
 		return instance;
 	}
 	
+	public static String getWebappName() {
+		return webappName;
+	}
+	
 	public static boolean isStartingUp() {
 		return isStartingUp;
 	}
@@ -192,7 +197,6 @@ public final class WebTopApp {
 	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
 	private final ServletContext servletContext;
-	private final String webappName;
 	private final String osInfo;
 	private final Charset systemCharset;
 	private final DateTimeZone systemTimeZone;
@@ -223,11 +227,12 @@ public final class WebTopApp {
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
 	WebTopApp(ServletContext servletContext) {
-		this.servletContext = servletContext;
 		webappName = ContextUtils.getWebappName(servletContext);
-		osInfo = OSInfo.build();
-		systemCharset = Charset.forName("UTF-8");
-		systemTimeZone = DateTimeZone.getDefault();
+		this.servletContext = servletContext;
+		
+		this.osInfo = OSInfo.build();
+		this.systemCharset = Charset.forName("UTF-8");
+		this.systemTimeZone = DateTimeZone.getDefault();
 		
 		// Ignore SSL checks for old commons-http components.
 		// This is required in order to avoid error when accessing WebDAV 
@@ -673,14 +678,6 @@ public final class WebTopApp {
 		//context.getInitParameter
 		
 		return new StartupProperties(props);
-	}
-	
-	/**
-	 * Returns webapp's name as configured in the application server.
-	 * @return Webapp's name
-	 */
-	public String getWebappName() {
-		return webappName;
 	}
 	
 	public String getAppServerInfo() {

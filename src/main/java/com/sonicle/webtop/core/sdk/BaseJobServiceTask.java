@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.util.LoggerUtils;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.support.SubjectThreadState;
 import org.apache.shiro.util.ThreadState;
@@ -63,18 +64,23 @@ public abstract class BaseJobServiceTask implements Job {
 	@Override
 	public final void execute(JobExecutionContext jec) throws JobExecutionException {
 		this.jec = jec;
-		if (!WebTopApp.isShuttingDown()) {
-			if (WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
-				Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
-				ThreadState threadState = new SubjectThreadState(subject);
-				
-				try {
-					threadState.bind();
-					executeWork();
-				} finally {
-					threadState.clear();
+		try {
+			LoggerUtils.initDC();
+			if (!WebTopApp.isShuttingDown()) {
+				if (WebTopApp.getInstance().getServiceManager().canExecuteTaskWork(jec.getJobDetail().getKey())) {
+					Subject subject = ((BaseJobService)getData().get("jobService")).getSubject();
+					ThreadState threadState = new SubjectThreadState(subject);
+
+					try {
+						threadState.bind();
+						executeWork();
+					} finally {
+						threadState.clear();
+					}
 				}
 			}
+		} finally {
+			LoggerUtils.clearDC();
 		}
 	}
 }
