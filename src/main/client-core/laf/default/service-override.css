@@ -19,6 +19,11 @@
 	color: #666;
 }
 
+/* Fix disabled style for fieldsets */
+.x-fieldset.x-item-disabled {
+	opacity: 0.3
+}
+
 .x-toolbar .x-toolbar-item {
     margin-right: 2px;
 }
