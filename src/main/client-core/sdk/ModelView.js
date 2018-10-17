@@ -303,7 +303,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	saveView: function(closeAfter) {
-		var me = this, ok, mo;
+		var me = this,
+				mo = me.getModel(), ok;
 		if (!me.fireEvent('beforeviewsave', me, mo) !== false) {
 			me.wait();
 			ok = me.saveModel({
@@ -313,7 +314,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			});
 			if (!ok) {
 				me.unwait();
-				mo = me.getModel();
 				if (mo) me.fireEvent('viewinvalid', me, mo, mo.getValidation().getErrors());
 			}
 		}
