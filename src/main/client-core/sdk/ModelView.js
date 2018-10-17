@@ -305,7 +305,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	saveView: function(closeAfter) {
 		var me = this,
 				mo = me.getModel(), ok;
-		if (!me.fireEvent('beforeviewsave', me, mo) !== false) {
+		if (me.fireEvent('beforeviewsave', me, mo) !== false) {
 			me.wait();
 			ok = me.saveModel({
 				pass: {
