@@ -270,6 +270,7 @@ public class Service extends BaseService {
 		
 		String boshUrl=ss.getXMPPBoshUrl();
 		if (boshUrl!=null) co.put("boshUrl", boshUrl);
+		co.put("editorFonts", ss.getEditorFonts());
 		CoreServiceSettings.ICEServersList iceServers=ss.getWebRTC_ICEServers();
 		if (iceServers!=null) co.put("iceServers", iceServers);
 		

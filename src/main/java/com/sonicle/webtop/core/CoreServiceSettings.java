@@ -372,6 +372,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getLong(DEFAULT_PREFIX + IM_UPLOAD_MAXFILESIZE, (long)10485760); // 10MB
 	}
 	
+	public String getEditorFonts() {
+		return getString(EDITOR_FONTS,"Arial, Font, Comic Sans MS, Courier New, Helvetica, Tahoma, Times New Roman, Verdana");
+	}
+	
 	public static class ServicesOrder extends ArrayList<String> {
 		public ServicesOrder() {
 			super();
