@@ -36,7 +36,7 @@ package com.sonicle.webtop.core.shiro;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.servlet.PublicRequest;
+import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;

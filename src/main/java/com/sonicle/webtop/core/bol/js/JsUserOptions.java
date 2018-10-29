@@ -85,6 +85,8 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public String pbxUsername;
 	public String pbxPassword;
 	
+	public String smsSender;
+	
 	public Boolean syncAlertEnabled;
 	public Integer syncAlertTolerance;
 	

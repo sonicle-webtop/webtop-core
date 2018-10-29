@@ -38,11 +38,13 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 		'WTA.view.main.AbstractC',
 		'WTA.ux.NotificationButton',
 		'WTA.ux.TaskBar',
-		'WTA.ux.ServiceButton',
-		'WTA.ux.ServiceButtonPortal',
 		'WTA.ux.ViewWindow',
 		'WTA.ux.IMButton',
 		'WTA.ux.IMPanel',
+		'WTA.ux.app.ServicesTools',
+		'WTA.ux.app.launcher.LinkButton',
+		'WTA.ux.app.launcher.PortalButton',
+		'WTA.ux.app.launcher.ServiceButton',
 		'WTA.ux.data.BadgeNotificationStore',
 		'Sonicle.webtop.core.model.IMFriendGrid'
 	],
@@ -176,6 +178,8 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	getPortalButton: Ext.emptyFn,
 	
 	addServiceButton: Ext.emptyFn,
+	
+	addLinkButton: Ext.emptyFn,
 	
 	topDockCmp: function() {
 		return this.lookupReference('tdock');
@@ -429,7 +433,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 				items: [{
 					xtype: 'splitbutton',
 					reference: 'newbtn',
-					text: WT.res('new.btn-new.lbl'),
+					text: WT.plTags.desktop ? WT.res('new.btn-new.lbl') : null,
 					menu: [],
 					handler: 'onNewActionButtonClick'
 				}]
@@ -498,23 +502,24 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	},
 	
 	createCenterCmp: function() {
+		var sz = WTA.ux.app.ServicesTools.calcToolSize();
 		return {
 			xtype: 'container',
 			layout: 'border',
 			items: [{
 				region: 'west',
-				xtype: 'panel',
+				xclass: 'WTA.ux.app.ServicesTools',
 				reference: 'tool',
+				stateful: true,
+				stateId: WT.buildStateId('pnltool'),
+				border: false,
 				split: true,
 				collapsible: true,
-				border: false,
-				width: 200,
-				minWidth: 100,
+				collapsed: WT.plTags.desktop ? false : true,
 				layout: 'card',
 				items: [],
-				listeners: {
-					resize: 'onToolResize'
-				}
+				width: sz.width,
+				minWidth: sz.minWidth
 			}, {
 				region: 'center',
 				xtype: 'container',
@@ -527,7 +532,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 	
 	createPortalButton: function(cfg) {
 		return Ext.apply({
-			xclass: 'WTA.ux.ServiceButtonPortal',
+			xclass: 'WTA.ux.app.launcher.PortalButton',
 			sid: WT.ID,
 			handler: 'onPortalButtonClick'
 		}, cfg || {});

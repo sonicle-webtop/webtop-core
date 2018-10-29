@@ -129,6 +129,12 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	
 	/*
+	 * @event beforeviewsave
+	 * @param {WTA.sdk.ModelView} this
+	 * @param {Ext.data.Model} model The saved model.
+	 */
+	
+	/*
 	 * @event viewsave
 	 * @param {WTA.sdk.ModelView} this
 	 * @param {Boolean} success Whether the operation was successful or not.
@@ -297,17 +303,19 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	saveView: function(closeAfter) {
-		var me = this, valid, mo;
-		me.wait();
-		valid = me.saveModel({
-			pass: {
-				closeAfter: closeAfter
+		var me = this,
+				mo = me.getModel(), ok;
+		if (me.fireEvent('beforeviewsave', me, mo) !== false) {
+			me.wait();
+			ok = me.saveModel({
+				pass: {
+					closeAfter: closeAfter
+				}
+			});
+			if (!ok) {
+				me.unwait();
+				if (mo) me.fireEvent('viewinvalid', me, mo, mo.getValidation().getErrors());
 			}
-		});
-		if (!valid) {
-			me.unwait();
-			mo = me.getModel();
-			if (mo) me.fireEvent('viewinvalid', me, mo, mo.getValidation().getErrors());
 		}
 	},
 	

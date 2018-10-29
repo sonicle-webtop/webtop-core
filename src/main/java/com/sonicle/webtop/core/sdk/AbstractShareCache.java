@@ -39,7 +39,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import org.apache.commons.collections.map.MultiValueMap;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
 /**
  *
@@ -52,7 +53,7 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 	protected final ArrayList<R> shareRoots = new ArrayList<>();
 	protected final HashMap<UserProfileId, R> ownerToShareRoot = new HashMap<>(); // <ownerPid, shareRoot>
 	protected final HashMap<UserProfileId, String> ownerToWildcardShareFolder = new HashMap<>();  // <ownerPid, wildcardShareFolderId>
-	protected final MultiValueMap rootShareToFolderShare = MultiValueMap.decorate(new HashMap<String, T>()); // <shareRootId, folderId>
+	protected final MultiValuedMap<String, T> rootShareToFolderShare = new ArrayListValuedHashMap<>(); // <shareRootId, folderId>
 	protected final ArrayList<T> folderTo = new ArrayList<>();
 	protected final HashMap<T, String> folderToShareFolder = new HashMap<>(); // <folderId, shareFolderId>
 	protected final HashMap<T, String> folderToWildcardShareFolder = new HashMap<>(); // <folderId, wildcardShareFolderId>
@@ -130,14 +131,14 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 	public final synchronized List<T> getFolderIdsByShareRoot(String shareRootId) {
 		if (!ready) internalInitCache();
 		final List<T> ids = new ArrayList<>();
-		if (rootShareToFolderShare.containsKey(shareRootId)) ids.addAll(rootShareToFolderShare.getCollection(shareRootId));
+		if (rootShareToFolderShare.containsKey(shareRootId)) ids.addAll(rootShareToFolderShare.get(shareRootId));
 		return Collections.unmodifiableList(ids);
 	}
 	
 	public final synchronized String getShareRootIdByFolderId(T folderId) {
 		if (!ready) internalInitCache();
 		for (R root : shareRoots) {
-			Collection<T> folderIds = rootShareToFolderShare.getCollection(root.getShareId());
+			Collection<T> folderIds = rootShareToFolderShare.get(root.getShareId());
 			if (folderIds.contains(folderId)) return root.getShareId();
 		}
 		return null;

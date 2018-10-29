@@ -899,32 +899,23 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					store: {
 						autoSync: true,
 						model: 'WTA.ux.data.EmptyModel',
-						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices'),
-						groupField: 'user'
+						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices', 'data', {
+							extraParams: {
+								options: true,
+								id: me.profileId
+							}
+						})
 					},
 					columns: [{
 						dataIndex: 'device',
 						header: WT.res('opts.sync.gp-sync.device.lbl'),
-						groupable: false,
-						flex: 1
-					}, {
-						dataIndex: 'user',
-						header: WT.res('opts.sync.gp-sync.user.lbl'),
-						groupable: true,
 						flex: 1
 					}, {
 						dataIndex: 'lastSync',
 						xtype: 'datecolumn',
 						format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
 						header: WT.res('opts.sync.gp-sync.lastSync.lbl'),
-						groupable: false,
 						flex: 1
-					}],
-					features: [{
-						id: 'grouping',
-						ftype: 'grouping',
-						groupHeaderTpl: '{columnName}: {name} ({children.length})',
-						hideGroupedHeader: true
 					}],
 					tbar: [
 						me.addAct('showSyncDeviceInfo', {
@@ -1079,7 +1070,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			xtype: 'wtopttabsection',
 			title: WT.res('opts.pbx.tit'),
 			hidden: me.isProfileSysAdmin(),
-			items: [{
+			items: [
+				{
 					xtype: 'soformseparator',
 					title: WT.getVar("pbxConfigured")?WT.res('opts.pbx.nethvoice.tit'):WT.res('opts.pbx.unconfigured.tit')
 				}, {
@@ -1107,7 +1099,42 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					emptyText: WT.res('opts.pbx.fld-password-empty.lbl'),
 					submitEmptyText: false,
 					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
-			}]
+				}, {
+					xtype: 'sospacer',
+					mult: 2
+				}, {
+					xtype: 'soformseparator',
+					title: WT.getVar("smsConfigured")?WT.res('opts.sms.'+WT.getVar("smsProvider")+'.tit'):WT.res('opts.sms.unconfigured.tit')
+				}, {
+					xtype: 'textfield',
+					bind: {
+						value: '{record.smsSender}'
+					},
+					disabled: !WT.getVar("smsConfigured"),
+					plugins: 'sonoautocomplete',
+					fieldLabel: WT.res('opts.sms.fld-sender.lbl'),
+					tooltip: WT.res('opts.sms.fld-sender.tip'),
+					width: 440,
+					emptyText: WT.res('opts.sms.fld-sender-empty.lbl'),
+					submitEmptyText: false,
+					listeners: { blur: { fn: me.onBlurAutoSave, scope: me } }
+				}, {
+					xtype: 'fieldcontainer',
+					fieldLabel: '',
+					hideEmptyLabel: false,
+					layout: 'hbox',
+					defaults: {
+						margin: '0 0 0 0'
+					},
+					items: [
+						{
+							xtype: 'label',
+							disabled: !WT.getVar("smsConfigured"),
+							html: WT.res('opts.sms.fld-sender.html')
+						}
+					]
+				}
+			]
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);
@@ -1209,11 +1236,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		WT.ajaxReq(WT.ID, 'ManageSyncDevices', {
 			params: {
 				crud: 'info',
-				id: rec.getId()
+				options: true,
+				id: me.profileId,
+				cid: rec.getId()
 			},
 			callback: function(success, obj) {
 				me.unwait();
-				if(success) {
+				if (success) {
 					WT.msg(obj.data, {
 						title: WT.res('opts.sync.details.tit')
 					});
@@ -1228,7 +1257,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				sto = grid.getStore();
 		
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
+			if (bid === 'yes') {
 				sto.remove(recs[0]);
 			}
 		}, me);

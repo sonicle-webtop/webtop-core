@@ -41,9 +41,9 @@ import com.sonicle.webtop.core.app.SessionManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.servlet.Login;
-import com.sonicle.webtop.core.servlet.PrivateRequest;
-import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.app.servlet.Login;
+import com.sonicle.webtop.core.app.servlet.PrivateRequest;
+import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -104,9 +104,9 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 	@Override
 	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
 		String ctxRequestUrl = ServletUtils.getContextRequestURI((HttpServletRequest)request);
-		if (StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/" + PrivateRequest.URL)
-				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/ServiceRequest") // for compatibility purpose only!
-				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, "/" + PushEndpoint.URL)) {
+		if (StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL)
+				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL_LEGACY) // for compatibility purpose only!
+				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, PushEndpoint.URL)) {
 			ServletUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
 			return false;
 		} else {

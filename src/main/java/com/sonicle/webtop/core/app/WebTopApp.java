@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.mashape.unirest.http.Unirest;
+import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.webtop.core.app.util.OSInfo;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.http.HttpClientUtils;
@@ -73,7 +74,6 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.shiro.WTRealm;
 import com.sonicle.webtop.core.util.ICalendarUtils;
-import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -142,6 +142,7 @@ import org.slf4j.Logger;
 public final class WebTopApp {
 	public static final Logger logger = WT.getLogger(WebTopApp.class);
 	private static WebTopApp instance = null;
+	private static String webappName = null;
 	private static boolean isStartingUp = false;
 	private static boolean isShuttingDown = false;
 	
@@ -175,6 +176,10 @@ public final class WebTopApp {
 		return instance;
 	}
 	
+	public static String getWebappName() {
+		return webappName;
+	}
+	
 	public static boolean isStartingUp() {
 		return isStartingUp;
 	}
@@ -192,7 +197,6 @@ public final class WebTopApp {
 	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
 	private final ServletContext servletContext;
-	private final String webappName;
 	private final String osInfo;
 	private final Charset systemCharset;
 	private final DateTimeZone systemTimeZone;
@@ -217,16 +221,18 @@ public final class WebTopApp {
 	private SessionManager sesMgr = null;
 	private OTPManager otpMgr = null;
 	private ReportManager rptMgr = null;
+	private DocEditorManager docEditorMgr = null;
 	private Scheduler scheduler = null;
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
 	WebTopApp(ServletContext servletContext) {
-		this.servletContext = servletContext;
 		webappName = ContextUtils.getWebappName(servletContext);
-		osInfo = OSInfo.build();
-		systemCharset = Charset.forName("UTF-8");
-		systemTimeZone = DateTimeZone.getDefault();
+		this.servletContext = servletContext;
+		
+		this.osInfo = OSInfo.build();
+		this.systemCharset = Charset.forName("UTF-8");
+		this.systemTimeZone = DateTimeZone.getDefault();
 		
 		// Ignore SSL checks for old commons-http components.
 		// This is required in order to avoid error when accessing WebDAV 
@@ -234,6 +240,7 @@ public final class WebTopApp {
 		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 		
 		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
+		//System.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
 		System.setProperty("mail.mime.decodetext.strict", "false");
 		System.setProperty("mail.mime.decodefilename", "true");
 		
@@ -333,7 +340,7 @@ public final class WebTopApp {
 		try {
 			URI uri = new URI("http://www.sonicle.com/images/empty.png");
 			httpcli = HttpClientUtils.createBasicHttpClient(HttpClientUtils.configureSSLAcceptAll(), uri);
-			HttpClientUtils.get(httpcli, uri, baos);
+			HttpClientUtils.writeContent(httpcli, uri, baos);
 		} catch(Throwable t) {
 		} finally {
 			HttpClientUtils.closeQuietly(httpcli);
@@ -380,6 +387,7 @@ public final class WebTopApp {
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
 		this.otpMgr = OTPManager.initialize(this); // OTP Manager
 		this.rptMgr = ReportManager.initialize(this); // Report Manager
+		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
@@ -425,6 +433,8 @@ public final class WebTopApp {
 		} catch(SchedulerException ex) {
 			logger.error("Error shutting-down scheduler", ex);
 		}
+		//docEditorMgr.cleanup();
+		//docEditorMgr = null;
 		// Report Manager
 		rptMgr.cleanup();
 		rptMgr = null;
@@ -670,14 +680,6 @@ public final class WebTopApp {
 		return new StartupProperties(props);
 	}
 	
-	/**
-	 * Returns webapp's name as configured in the application server.
-	 * @return Webapp's name
-	 */
-	public String getWebappName() {
-		return webappName;
-	}
-	
 	public String getAppServerInfo() {
 		return servletContext.getServerInfo();
 	}
@@ -789,6 +791,14 @@ public final class WebTopApp {
 	 */
 	public ReportManager getReportManager() {
 		return rptMgr;
+	}
+	
+	/**
+	 * Returns the DocEditorManager.
+	 * @return DocEditorManager instance.
+	 */
+	public DocEditorManager getDocEditorManager() {
+		return docEditorMgr;
 	}
 	
 	/**
@@ -931,8 +941,8 @@ public final class WebTopApp {
 		return createTempFile(domainId, null, null);
 	}
 	
-	public File createTempFile(String domainId, String prefix, String suffix) throws WTException {
-		return new File(getTempFolder(domainId), buildTempFilename(prefix, suffix));
+	public File createTempFile(String domainId, String prefix, String extension) throws WTException {
+		return new File(getTempFolder(domainId), buildTempFilename(prefix, extension));
 	}
 	
 	public boolean deleteTempFile(String domainId, String filename) throws WTException {
@@ -944,13 +954,12 @@ public final class WebTopApp {
 		return buildTempFilename(null, null);
 	}
 	
-	public String buildTempFilename(String prefix, String suffix) {
-		String uuid = IdentifierUtils.getUUID();
-		if(StringUtils.isBlank(suffix)) {
-			return MessageFormat.format("{0}{1}", StringUtils.defaultString(prefix), uuid);
-		} else {
-			return MessageFormat.format("{0}{1}.{2}", StringUtils.defaultString(prefix), uuid, suffix);
+	public String buildTempFilename(String prefix, String extension) {
+		String name = StringUtils.defaultString(prefix) + IdentifierUtils.getUUIDTimeBased(true);
+		if (!StringUtils.isBlank(extension)) {
+			name += ("." + extension);
 		}
+		return name;
 	}
 	
 	public FileResource getFileResource(URL url) throws URISyntaxException, MalformedURLException {
@@ -988,6 +997,26 @@ public final class WebTopApp {
 	
 	public String getDavServerBaseUrl(String domainId) {
 		return new CoreServiceSettings(CoreManifest.ID, domainId).getDavServerBaseUrl();
+	}
+	
+	public boolean getDocumentServerEnabled(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerEnabled();
+	}
+	
+	public String getDocumentServerPublicUrl(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerPublicUrl();
+	}
+	
+	public String getDocumentServerLoopbackUrl() {
+		return new CoreServiceSettings(CoreManifest.ID, "*").getDocumentServerLoopbackUrl();
+	}
+	
+	public String getDocumentServerSecretOut(String domainId) {
+		return new CoreServiceSettings(CoreManifest.ID, domainId).getDocumentServerSecretOut();
+	}
+	
+	public String getDocumentServerSecretIn() {
+		return new CoreServiceSettings(CoreManifest.ID, "*").getDocumentServerSecretIn();
 	}
 	
 	/**

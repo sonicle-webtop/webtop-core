@@ -34,6 +34,8 @@
 package com.sonicle.webtop.core;
 
 import com.google.gson.annotations.SerializedName;
+import com.sonicle.commons.web.json.JsonResult;
+import java.util.ArrayList;
 
 /**
  *
@@ -75,6 +77,56 @@ public class CoreSettings {
 	 * Defines how the dav-server is reachable from outside
 	 */
 	public static final String DAVSERVER_BASE_URL = "davserver.url";
+	
+	/**
+	 * [domain+system]
+	 * [int]
+	 * Defines a special milliseconds timout for selected ajax calls which may be longer than default 30 seconds
+	 */
+	public static final String AJAX_SPECIALTIMEOUT = "ajax.specialtimeout";
+	
+	/**
+	 * [domain+system]
+	 * [boolean]
+	 * Specifies if the DocumentServer integration is enabled
+	 */
+	public static final String DOCUMENT_SERVER_ENABLED = "documentserver.enabled";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies how the DocumentServer is reachable externally.
+	 * This is required for loading client API in remote browser.
+	 */
+	public static final String DOCUMENT_SERVER_PUBLIC_URL = "documentserver.public.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies how the DocumentServer is reachable internally (server-to-server connectivity) ????????????
+	 */
+	public static final String DOCUMENT_SERVER_LOCAL_URL = "documentserver.local.url";
+	
+	/**
+	 * [system]
+	 * [string]
+	 * Specifies how the WebTop webapp is reachable internally (server-to-server connectivity: docserver -> webtop)
+	 */
+	public static final String DOCUMENT_SERVER_LOOPBACK_URL = "documentserver.loopback.url";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the secret shared key to use for outgoing communications to the DocumentServer (WebTop -> DocServer).
+	 */
+	public static final String DOCUMENT_SERVER_SECRET_OUT = "documentserver.secret.out";
+	
+	/**
+	 * [system]
+	 * [string]
+	 * Specifies the secret shared key to use for incoming communications from the DocumentServer (WebTop <- DocServer).
+	 */
+	public static final String DOCUMENT_SERVER_SECRET_IN = "documentserver.secret.in";
 	
 	/**
 	 * [domain+system]
@@ -394,7 +446,24 @@ public class CoreSettings {
 	
 	
 	
-	
+	/**
+	 * [domain+system]
+	 * [object[]]
+	 * Defines launcher link buttons
+	 * [
+	 *   {
+	 *     'href': 'https://www.google.it/',
+	 *     'text': 'Google',
+	 *     'icon': 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg'
+	 *   },
+	 *   {
+	 *     'href': 'https://the/url/to/open',
+     *     'text': 'The link text',
+     *     'icon: 'https://the/icon/url'
+     *   }
+	 * ]
+	 */
+	public static final String LAUNCHER_LINKS = "launcher.links";
 	
 	/**
 	 * [domain+system+user][default]
@@ -626,6 +695,13 @@ public class CoreSettings {
 	public static final String SMS_PROVIDER_WEBREST_PASSWORD = "sms.provider.webrest.password";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies the SMS sender. 
+	 */
+
+	public static final String SMS_SENDER = "sms.sender";
+	/**
 	 * [user]
 	 * [string]
 	 * Specifies the PBX username, when different from WebTop username. 
@@ -712,5 +788,21 @@ public class CoreSettings {
 	public static enum OtpDeliveryMode {
 		@SerializedName("email") EMAIL,
 		@SerializedName("googleauth") GOOGLEAUTH;
+	}
+	
+	public static class LauncherLink {
+		public String href;
+		public String text;
+		public String icon;
+		
+		public static class List extends ArrayList<LauncherLink> {
+			public static LauncherLink.List fromJson(String value) {
+				return JsonResult.gson.fromJson(value, LauncherLink.List.class);
+			}
+
+			public static String toJson(LauncherLink.List value) {
+				return JsonResult.gson.toJson(value, LauncherLink.List.class);
+			}
+		}
 	}
 }

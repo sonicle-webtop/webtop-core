@@ -37,6 +37,8 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.dal.DAOException;
+import java.sql.SQLException;
 import java.util.Locale;
 import javax.mail.Session;
 import org.apache.commons.lang3.StringUtils;
@@ -70,10 +72,21 @@ public abstract class BaseManager {
 		return WT.LOCALE_ENGLISH;
 	}
 	
+	protected WTException wrapException(Exception ex) {
+		if (ex instanceof WTException) {
+			return (WTException)ex;
+		} else if ((ex instanceof SQLException) || (ex instanceof DAOException)) {
+			return new WTException(ex, "DB error");
+		} else {
+			return new WTException(ex);
+		}
+	}
+	
+	@Deprecated
 	protected WTException wrapThrowable(Throwable t) {
 		if (t instanceof WTException) {
 			return (WTException)t;
-		} else if ((t instanceof WTException) || (t instanceof WTException)) {
+		} else if ((t instanceof SQLException) || (t instanceof DAOException)) {
 			return new WTException(t, "DB error");
 		} else {
 			return new WTException(t);

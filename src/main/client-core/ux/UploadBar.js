@@ -56,9 +56,15 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	
 	/**
 	 * @cfg {String} uploadContext
-	 * The upload context.
+	 * The upload context name.
 	 */
 	uploadContext: null,
+	
+	/**
+	 * @cfg {String} uploadTag
+	 * The upload tag to group files.
+	 */
+	uploadTag: null,
 	
 	/**
 	 * @cfg {String} buttonIconCls
@@ -95,6 +101,9 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 			tooltip: WT.res('wtuploadbar.btn-upload.tip'),
 			iconCls: me.buttonIconCls,
 			uploaderConfig: WTF.uploader(me.sid, me.uploadContext, {
+				extraParams: {
+					tag: me.uploadTag
+				},
 				maxFileSize: mfs,
 				dropElement: de ? de : undefined,
 				fileExtraParams: function() {
@@ -126,7 +135,7 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 					}
 				}
 			})
-		}, {
+		}, ' ', {
 			xtype: 'progressbar',
 			itemId: 'progress',
 			hidden: true,
@@ -151,7 +160,7 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 					
 			}],
 			flex: 1
-		}]);
+		}, ' ']);
 	},
 	
 	getUploadButton: function() {

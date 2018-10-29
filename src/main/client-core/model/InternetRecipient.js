@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.model.InternetRecipient', {
 		'type',
 		'personal',
 		'address',
+		'recipientId',
 		WTF.calcField('description', 'string', ['personal', 'address'], function(v, rec) {
 			var p = rec.get("personal"),
 					a = rec.get("address");

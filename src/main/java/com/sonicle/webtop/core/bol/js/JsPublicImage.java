@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import java.text.MessageFormat;
+import com.sonicle.webtop.core.model.PublicImage;
 
 /**
  *
@@ -45,6 +45,10 @@ public class JsPublicImage {
 	public String url;
 	
 	public JsPublicImage() {}
+	
+	public JsPublicImage(Object id, PublicImage pubImage) {
+		this(id, pubImage.getName(), pubImage.getUrl());
+	}
 	
 	public JsPublicImage(Object id, String description, String url) {
 		this.id = id;

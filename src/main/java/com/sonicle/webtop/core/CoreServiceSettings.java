@@ -16,6 +16,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import org.joda.time.LocalTime;
 
@@ -53,6 +54,30 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getDavServerBaseUrl() {
 		return getString(DAVSERVER_BASE_URL, null);
+	}
+	
+    public int getAjaxSpecialTimeout() {
+        return getInteger(AJAX_SPECIALTIMEOUT, 30000);
+    }
+	
+	public Boolean getDocumentServerEnabled() {
+		return getBoolean(DOCUMENT_SERVER_ENABLED, false);
+	}	
+	
+	public String getDocumentServerPublicUrl() {
+		return getString(DOCUMENT_SERVER_PUBLIC_URL, null);
+	}
+	
+	public String getDocumentServerLoopbackUrl() {
+		return getString(DOCUMENT_SERVER_LOOPBACK_URL, null);
+	}
+	
+	public String getDocumentServerSecretOut() {
+		return getString(DOCUMENT_SERVER_SECRET_OUT, null);
+	}
+	
+	public String getDocumentServerSecretIn() {
+		return getString(DOCUMENT_SERVER_SECRET_IN, null);
 	}
 	
 	public Boolean getHasPecBridgeManagement() {
@@ -220,6 +245,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(SMS_PROVIDER_WEBREST_PASSWORD,null);
 	}
 	
+	public String getSmsSender() {
+		return getString(SMS_SENDER,null);
+	}
+	
 	public Long getIMUploadMaxFileSize(boolean fallbackOnDefault) {
 		final Long value = getLong(IM_UPLOAD_MAXFILESIZE, null);
 		if (fallbackOnDefault && (value == null)) {
@@ -227,6 +256,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		} else {
 			return value;
 		}
+	}
+	
+	public List<LauncherLink> getLauncherLinks() {
+		return getObject(LAUNCHER_LINKS, null, LauncherLink.List.class);
+	}
+	
+	public String getLauncherLinksAsString() {
+		return getString(LAUNCHER_LINKS, "[]");
 	}
 	
 	public ServicesOrder getServicesOrder() {

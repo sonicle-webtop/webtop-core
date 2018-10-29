@@ -47,6 +47,7 @@ import java.util.Map;
 public abstract class JsWTS {
 	public Ext6Manifest appManifest = new Ext6Manifest();
 	public String appType;
+	public String themeName;
 	public String platformName;
 	public String contextPath;
 	public String fileTypes;

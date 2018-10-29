@@ -38,7 +38,7 @@ package com.sonicle.webtop.core.app.atmosphere;
  * @author malbinola
  */
 public class AtmosphereServlet extends org.atmosphere.cpr.AtmosphereServlet {
-	public static final String URL = "push";
+	public static final String URL = "/push";
 	
 	/*
 	private static final Logger logger = LoggerFactory.getLogger(AtmosphereServlet.class);

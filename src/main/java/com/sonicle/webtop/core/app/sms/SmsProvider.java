@@ -55,6 +55,7 @@ public abstract class SmsProvider {
 	public static final int FROM_NAME_MAX_LENGTH = 11;
 	public static final int FROM_NUMBER_MAX_LENGTH = 16;
 	
+	protected String name;
 	protected Locale locale;
 	protected String baseUrl;
 	
@@ -73,7 +74,12 @@ public abstract class SmsProvider {
 		} else if (SmsProviderName.TWILIO.equals(pname)) {	
 			provider = new Twilio(locale, css.getSmsWebrestURL());
 		}
+		provider.name=pname.toString().toLowerCase();
 		return provider;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public static String sanitizeFromName(String fromName) {

@@ -270,16 +270,17 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		
 		if (model) {
 			me.fireEvent('beforemodelvalidate', me, model, opts.pass);
-			if(model.isValid()) {
-				me.fireEvent('beforemodelsave', me, model, opts.pass);
-				model.save({
-					callback: function(rec, op, success) {
-						me.onModelSave(success, model, op, opts.pass);
-						Ext.callback(opts.callback, opts.scope || me, [success, model]);
-					},
-					scope: me
-				});
-				return true;
+			if (model.isValid()) {
+				if (me.fireEvent('beforemodelsave', me, model, opts.pass) !== false) {
+					model.save({
+						callback: function(rec, op, success) {
+							me.onModelSave(success, model, op, opts.pass);
+							Ext.callback(opts.callback, opts.scope || me, [success, model]);
+						},
+						scope: me
+					});
+					return true;
+				}	
 			}
 		}
 		return false;

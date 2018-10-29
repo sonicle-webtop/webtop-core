@@ -34,38 +34,11 @@
 Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.String',
-		'Sonicle.Date',
-		'Sonicle.PageMgr',
-		'Sonicle.URLMgr',
-		'Sonicle.PrintMgr',
-		'Sonicle.PageActivityMonitor',
 		'Sonicle.DesktopNotificationMgr',
-		'Sonicle.WebSocketManager',
-		'Sonicle.WebSocket',
+		'Sonicle.PageActivityMonitor',
+		//'Sonicle.WebSocketManager',
+		//'Sonicle.WebSocket',
 		'Sonicle.Sound',
-		'Sonicle.upload.Uploader',
-		'Sonicle.data.proxy.Ajax',
-		'Sonicle.data.identifier.NegativeString',
-		'Sonicle.form.field.VTypes',
-		'Sonicle.plugin.EnterKeyPlugin',
-		'Sonicle.plugin.FieldTooltip',
-		
-		'Sonicle.webtop.core.ux.data.BaseModel',
-		'Sonicle.webtop.core.ux.data.EmptyModel',
-		'Sonicle.webtop.core.ux.data.SimpleModel',
-		'Sonicle.webtop.core.ux.data.ArrayStore',
-		'Sonicle.webtop.core.ux.panel.Panel',
-		'Sonicle.webtop.core.ux.panel.Fields',
-		'Sonicle.webtop.core.ux.panel.Form',
-		'Sonicle.webtop.core.ux.panel.Tab',
-		
-		'Sonicle.webtop.core.app.WT',
-		'Sonicle.webtop.core.app.FileTypes',
-		'Sonicle.webtop.core.app.Factory',
-		'Sonicle.webtop.core.app.Util',
-		'Sonicle.webtop.core.app.Log',
-		'Sonicle.webtop.core.app.ThemeMgr',
 		
 		'Sonicle.webtop.core.app.WTPrivate',
 		'Sonicle.webtop.core.app.DescriptorPrivate',
@@ -89,34 +62,6 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		var me = this;
 		WT.app = me;
 		me.callParent(arguments);
-	},
-	
-	init: function() {
-		WTA.Log.debug('application:init');
-		Ext.tip.QuickTipManager.init();
-		Ext.setGlyphFontFamily('FontAwesome');
-		Ext.themeName = WTS.servicesVars[0].theme;
-		// TODO: Disable DD for mobile devices
-		//if (Ext.os.deviceType !== 'Desktop') {
-		//	Ext.dd.DragDropManager.lock();
-		//}
-		Ext.getDoc().on('contextmenu', function(e) {
-			var t=e.getTarget();
-			if (t.tagName==="TEXTAREA"||(t.tagName==="INPUT" && t.type==='text')) {
-				
-			}
-			else e.preventDefault(); // Disable browser context if not a text or text area field
-		});
-		
-		// Inits state provider
-		if(Ext.util.LocalStorage.supported) {
-			Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider());
-		} else {
-			Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
-				expires: new Date(Ext.Date.now() + (1000*60*60*24*90)) // 90 days
-			}));
-		}
-		WTA.FileTypes.init(WTS.fileTypes);
 	},
 	
 	launch: function() {
@@ -186,6 +131,15 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
 			}
 		});
+		
+		var llinks = Ext.JSON.decode(WT.getVar('wtLauncherLinks'), true);
+		if (Ext.isArray(llinks)) {
+			Ext.iterate(llinks, function(link) {
+				if (!Ext.isObject(link)) return;
+				if (!link.hasOwnProperty('href') || !link.hasOwnProperty('icon')) return;
+				vpc.addLinkButton(link);
+			});
+		}
 		
 		// Sets startup service
 		var deflt = me.findDefaultService();

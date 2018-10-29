@@ -67,6 +67,18 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	 */
 	fields: { recipientType: 'recipientType', email: 'email' },
 	
+	/**
+	 * @autoLast {Boolean} automatic contacts suggested last in list
+	 */
+	autoLast: false,
+	
+	
+	/**
+	 * showContactLink {Boolean} show contact link column
+	 */
+	showContactLink: false,
+
+	
 	rcb: null,
 
 	
@@ -91,7 +103,15 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 				ptype: 'wtrcptcellediting',
 				pluginId: 'wtrcptcellediting',
 				clicksToEdit: 1,
-				autoEncode: true
+				autoEncode: true,
+				listeners: {
+					completeEdit: function(rec) {
+						rec.set("recipientContactId",me.rcb.getSelectedId());
+					},
+					startEdit: function(rec) {
+						me.rcb.setSelectedData(rec.get("recipientContactId"),rec.get("recipient"));
+					}
+				}
 			},
 			columns: [{
 					width: 50, 
@@ -117,9 +137,19 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 					//editor: 'textfield'
 					editor: me.rcb=Ext.create({
 						xtype: 'wtrcptsuggestcombo',
-						rftype: me.rftype
+						rftype: me.rftype,
+						autoLast: me.autoLast
 					}),
 					renderer: Ext.util.Format.htmlEncode
+				}, {
+					hidden: !me.showContactLink,
+					menuDisabled: true,
+					stopSelection: true,
+					width: 40,
+					dataIndex: 'recipientContactId', 
+					renderer: function(value, md, record, ri, ci, s, view) {
+						return (value && value>0?WTF.headerWithGlyphIcon('fa fa-link'):"");
+					}
 				}
 			]
 		});
@@ -144,8 +174,10 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	},
 	
 	startEditAt: function(row) {
-		var rowIdx = this.getStore().getAt(row);
-		this.getPlugin('wtrcptcellediting').startEditByPosition({row: rowIdx, column: 1});
+		if (this.getStore()) {
+			var rowIdx = this.getStore().getAt(row);
+			this.getPlugin('wtrcptcellediting').startEditByPosition({row: rowIdx, column: 1});
+		}
 	},
 	
 	completeEdit: function() {

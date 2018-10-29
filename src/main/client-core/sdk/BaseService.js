@@ -122,12 +122,29 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	},
 	
 	/**
-	 * Builds a state ID useful for saving data into local storage.
+	 * Builds a namespaced {@link Ext.state.Stateful#stateId state ID} for state management purposes.
 	 * @param {String} name The component or unique reference name.
-	 * @return {String} The generated ID
+	 * @return {String} The state ID
 	 */
 	buildStateId: function(name) {
 		return WT.buildStateId(this.XID, name);
+	},
+	
+	/**
+	 * Clears (if possible) all saved state data related to this service.
+	 */
+	clearState: function() {
+		var XSM = Ext.state.Manager,
+				prov = XSM.getProvider(),
+				prefix = this.XID + '-';
+		
+		if (prov.store) {
+			Ext.iterate(prov.store.getKeys(), function(key) {
+				if (Ext.String.startsWith(key, prefix)) XSM.clear(key);
+			});
+		} else {
+			Ext.warn('Clearing is not supported on current state provider');
+		}
 	},
 	
 	/**
@@ -235,7 +252,6 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	resourceUrl: function(relPath) {
 		return WTF.resourceUrl(this.ID, relPath);
 	},
-	
 	
 	//private
 	privateInit: function() {

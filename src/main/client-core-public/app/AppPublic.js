@@ -34,34 +34,7 @@
 Ext.define('Sonicle.webtop.core.app.AppPublic', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.String',
-		'Sonicle.Date',
-		'Sonicle.PageMgr',
-		'Sonicle.URLMgr',
-		'Sonicle.PrintMgr',
 		'Sonicle.DesktopNotificationMgr',
-		'Sonicle.upload.Uploader',
-		'Sonicle.data.proxy.Ajax',
-		'Sonicle.data.identifier.NegativeString',
-		'Sonicle.form.field.VTypes',
-		'Sonicle.plugin.EnterKeyPlugin',
-		'Sonicle.plugin.FieldTooltip',
-		
-		'Sonicle.webtop.core.ux.data.BaseModel',
-		'Sonicle.webtop.core.ux.data.EmptyModel',
-		'Sonicle.webtop.core.ux.data.SimpleModel',
-		'Sonicle.webtop.core.ux.data.ArrayStore',
-		'Sonicle.webtop.core.ux.panel.Panel',
-		'Sonicle.webtop.core.ux.panel.Fields',
-		'Sonicle.webtop.core.ux.panel.Form',
-		'Sonicle.webtop.core.ux.panel.Tab',
-		
-		'Sonicle.webtop.core.app.WT',
-		'Sonicle.webtop.core.app.FileTypes',
-		'Sonicle.webtop.core.app.Factory',
-		'Sonicle.webtop.core.app.Util',
-		'Sonicle.webtop.core.app.Log',
-		'Sonicle.webtop.core.app.ThemeMgr',
 		
 		'Sonicle.webtop.core.app.WTPublic',
 		'Sonicle.webtop.core.app.DescriptorPublic'
@@ -76,26 +49,6 @@ Ext.define('Sonicle.webtop.core.app.AppPublic', {
 	
 	constructor: function() {
 		this.callParent(arguments);
-	},
-	
-	init: function() {
-		WTA.Log.debug('application:init');
-		Ext.tip.QuickTipManager.init();
-		Ext.setGlyphFontFamily('FontAwesome');
-		Ext.themeName = WTS.servicesVars[0].theme;
-		Ext.getDoc().on('contextmenu', function(e) {
-			e.preventDefault(); // Disable browser context if no context menu is defined
-		});
-		
-		// Inits state provider
-		if(Ext.util.LocalStorage.supported) {
-			Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider());
-		} else {
-			Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
-				expires: new Date(Ext.Date.now() + (1000*60*60*24*90)) // 90 days
-			}));
-		}
-		WTA.FileTypes.init(WTS.fileTypes);
 	},
 	
 	launch: function() {

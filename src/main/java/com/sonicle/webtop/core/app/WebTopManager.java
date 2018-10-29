@@ -33,10 +33,11 @@
  */
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.DigestUtils;
+import com.sonicle.commons.AlgoUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.security.AuthenticationDomain;
@@ -104,6 +105,7 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -260,7 +262,7 @@ public final class WebTopManager {
 	}
 	
 	public String domainIdToPublicName(String domainId) {
-		return DigestUtils.adler32Hex(domainId);
+		return AlgoUtils.adler32Hex(domainId);
 	}
 	
 	public String publicNameToDomainId(String domainPublicName) {
@@ -561,6 +563,19 @@ public final class WebTopManager {
 		}
 
 		//TODO: chiamare controller per eliminare dominio per i servizi
+	}
+	
+	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
+		String path = WT.getDomainImagesPath(domainId);
+		String baseUrl = WT.getPublicImagesUrl(domainId);
+		File dir = new File(path);
+		ArrayList<PublicImage> items = new ArrayList<>();
+		for(File file : dir.listFiles()) {
+			String name = file.getName();
+			String url = PathUtils.concatPathParts(baseUrl, name);
+			items.add(new PublicImage(name, url));
+		}
+		return items;
 	}
 	
 	public List<OUser> listUsers(String domainId, boolean enabledOnly) throws WTException {
@@ -2281,7 +2296,7 @@ public final class WebTopManager {
 	protected WTException wrapThrowable(Throwable t) {
 		if (t instanceof WTException) {
 			return (WTException)t;
-		} else if ((t instanceof WTException) || (t instanceof WTException)) {
+		} else if ((t instanceof SQLException) || (t instanceof DAOException)) {
 			return new WTException(t, "DB error");
 		} else {
 			return new WTException(t);

@@ -285,6 +285,10 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 		}
 	},
 	
+	setViewIconCls: function(iconCls) {
+		this.setIconCls(iconCls);
+	},
+	
 	getViewTitle: function() {
 		return this.getVM().get('_viewTitle');
 	},

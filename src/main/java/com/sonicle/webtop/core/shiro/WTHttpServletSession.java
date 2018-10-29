@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.SessionManager;
-import com.sonicle.webtop.core.servlet.ServletHelper;
+import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.web.session.HttpServletSession;

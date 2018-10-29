@@ -63,6 +63,10 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	public ServiceVars returnServiceVars() {
 		return null;
 	}
+	
+	public final String clientResTplString(String key) {
+		return "{" + key + "@" + SERVICE_ID + "}";
+	}
     
 	/**
 	 * Returns the localized string associated to the key.

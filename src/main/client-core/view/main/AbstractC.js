@@ -141,6 +141,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	addLinkButton: function(link) {
+		this.getView().addLinkButton(link);
+	},
+	
 	addNewActions: function(acts) {
 		this.getView().addNewActions(acts);
 	},
@@ -350,9 +354,34 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		});
 		
 		var view = Ext.create(desc.preNs(viewName), opts.viewCfg),
-				dockCfg = view.getDockableConfig();
+				dockCfg = view.getDockableConfig(),
+				ctCfg = {};
 		
-		win = Ext.create(Ext.apply({
+		if (WT.plTags.desktop) {
+			ctCfg = Ext.apply(ctCfg, {
+				focusOnToFront: (dockCfg.focusOnShow === undefined) ? (floating ? false : true) : dockCfg.focusOnShow,
+				minimizable: floating ? false : dockCfg.minimizable,
+				maximizable: floating ? false : dockCfg.maximizable,
+				resizable: floating ? false : true,
+				draggable: floating ? false : true,
+				maximized: floating ? false : dockCfg.maximized,
+				minimized: floating ? false : dockCfg.minimized,
+				defaultAlign: floating ? 'br-br' : 'c-c'
+			});
+		} else {
+			ctCfg = Ext.apply(ctCfg, {
+				focusOnToFront: dockCfg.focusOnShow,
+				minimizable: dockCfg.minimizable,
+				maximizable: false,
+				resizable: false,
+				draggable: false,
+				maximized: true,
+				minimized: false,
+				defaultAlign: 'c-c'
+			});
+		}
+		
+		win = Ext.create(Ext.apply(ctCfg, {
 			xtype: 'wtviewwindow',
 			layout: 'fit',
 			utag: utag,
@@ -360,12 +389,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			width: dockCfg.width,
 			height: dockCfg.height,
 			modal: dockCfg.modal,
-			focusOnToFront: (dockCfg.focusOnShow === undefined) ? (floating ? false : true) : dockCfg.focusOnShow,
-			minimizable: floating ? false : dockCfg.minimizable,
-			maximizable: floating ? false : dockCfg.maximizable,
-			resizable: floating ? false : true,
-			draggable: floating ? false : true,
-			defaultAlign: floating ? 'br-br' : 'c-c',
 			tools: dockCfg.tools || [],
 			items: [view]
 		}));
@@ -487,20 +510,12 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		setActiveComponents: function(svc) {
 			var me = this,
 					vw = me.getView(),
-					clps = vw.getCollapsible(),
 					tools = vw.getToolsCard(),
 					mains = vw.getMainsCard(),
 					cmp;
 			
 			cmp = tools.getComponent(me.toolmap[svc.ID]);
-			if (cmp) {
-				tools.setVisible(true);
-				tools.getLayout().setActiveItem(cmp);
-				clps.setTitle(cmp.getTitle());
-				clps.setWidth(svc.getVar('viewportToolWidth') || 200);
-			} else {
-				tools.setVisible(false);
-			}
+			tools.setActiveTool(svc, cmp);
 			mains.getLayout().setActiveItem(me.mainmap[svc.ID]);
 		},
 		
@@ -611,7 +626,7 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		},
 		
 		generateUTag: function(sid, tag) {
-			return tag ? Sonicle.Crypto.md5(tag + '@' + sid) : null;
+			return tag ? Sonicle.Crypto.md5Hex(tag + '@' + sid) : null;
 		}
 	}
 });

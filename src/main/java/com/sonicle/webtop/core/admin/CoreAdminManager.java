@@ -61,6 +61,7 @@ import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -251,6 +252,19 @@ public class CoreAdminManager extends BaseManager {
 		
 		SettingsManager setm = wta.getSettingsManager();
 		return setm.deleteServiceSetting(domainId, serviceId, key);
+	}
+	
+	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			return wtmgr.listDomainPublicImages(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list domain's public images [{0}]", domainId);
+		}
 	}
 	
 	public List<OGroup> listGroups(String domainId) throws WTException {

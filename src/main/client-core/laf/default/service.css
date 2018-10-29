@@ -140,6 +140,14 @@
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
 
+.wt-icon-priority3-low { background-image: url('priority3-low_16.svg') !important; background-size: contain; }
+.wt-icon-priority3-normal { background-image: url('priority3-normal_16.svg') !important; background-size: contain; }
+.wt-icon-priority3-high { background-image: url('priority3-high_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-low { background-image: url('priority4-low_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-medium { background-image: url('priority4-medium_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-high { background-image: url('priority4-high_16.svg') !important; background-size: contain; }
+.wt-icon-priority4-critical { background-image: url('priority4-critical_16.svg') !important; background-size: contain; }
+
 /* Formatting buttons */
 .wt-icon-format-bold-xs { background-image: url('format-bold_16.png') !important; }
 .wt-icon-format-italic-xs { background-image: url('format-italic_16.png') !important; }
@@ -185,6 +193,30 @@
 .wt-palette-C2C2C2 { background-image: url('palette/C2C2C2.png') !important; }
 .wt-palette-FFFFFF { background-image: url('palette/FFFFFF.png') !important; }
 
+.wt-ftype-application { background-image: url('ftypes/application_16.svg') !important; background-size: contain; }
+.wt-ftype-application-script { background-image: url('ftypes/application-script_16.svg') !important; background-size: contain; }
+.wt-ftype-archive { background-image: url('ftypes/archive_16.svg') !important; background-size: contain; }
+.wt-ftype-audio { background-image: url('ftypes/audio_16.svg') !important; background-size: contain; }
+.wt-ftype-calendar { background-image: url('ftypes/calendar_16.svg') !important; background-size: contain; }
+.wt-ftype-card { background-image: url('ftypes/card_16.svg') !important; background-size: contain; }
+.wt-ftype-document { background-image: url('ftypes/document_16.svg') !important; background-size: contain; }
+.wt-ftype-document-pdf { background-image: url('ftypes/document-pdf_16.svg') !important; background-size: contain; }
+.wt-ftype-document-presentation { background-image: url('ftypes/document-presentation_16.svg') !important; background-size: contain; }
+.wt-ftype-document-spreadsheet { background-image: url('ftypes/document-spreadsheet_16.svg') !important; background-size: contain; }
+.wt-ftype-document-text { background-image: url('ftypes/document-text_16.svg') !important; background-size: contain; }
+.wt-ftype-ebook { background-image: url('ftypes/ebook_16.svg') !important; background-size: contain; }
+.wt-ftype-file { background-image: url('ftypes/file_16.svg') !important; background-size: contain; }
+.wt-ftype-folder { background-image: url('ftypes/folder_16.svg') !important; background-size: contain; }
+.wt-ftype-font { background-image: url('ftypes/font_16.svg') !important; background-size: contain; }
+.wt-ftype-image { background-image: url('ftypes/image_16.svg') !important; background-size: contain; }
+.wt-ftype-message { background-image: url('ftypes/message_16.svg') !important; background-size: contain; }
+.wt-ftype-script { background-image: url('ftypes/script_16.svg') !important; background-size: contain; }
+.wt-ftype-source { background-image: url('ftypes/source_16.svg') !important; background-size: contain; }
+.wt-ftype-text { background-image: url('ftypes/text_16.svg') !important; background-size: contain; }
+.wt-ftype-text-html { background-image: url('ftypes/text-html_16.svg') !important; background-size: contain; }
+.wt-ftype-text-xml { background-image: url('ftypes/text-xml_16.svg') !important; background-size: contain; }
+.wt-ftype-video { background-image: url('ftypes/video_16.svg') !important; background-size: contain; }
+				  
 .wt-ftype-archive-xs { background-image: url('ftypes/archive_16.png') }
 .wt-ftype-archive-s { background-image: url('ftypes/archive_24.png') }
 .wt-ftype-archive-m { background-image: url('ftypes/archive_32.png') }
@@ -327,16 +359,6 @@ div.wt-wnlist {
 	margin: .2em 0;
 }
 
-.x-toolbar .x-toolbar-item {
-    margin-right: 2px;
-}
-
-.x-toolbar .x-toolbar-separator-horizontal {
-	margin-left: 2px !important;
-    margin-right: 4px !important;
-	padding-right: 2px !important;
-}
-
 /* NotificationButton */
 .wt-notifbtn-grid-rowbody {
 	color: gray;
@@ -373,6 +395,10 @@ div.wt-wnlist {
 }
 .wt-color-alert {
 	color: #c00 !important;
+}
+
+.wt-doced-switch-btn .x-btn-inner {
+	color: #e60000 !important;
 }
 
 /* TinyMCE */

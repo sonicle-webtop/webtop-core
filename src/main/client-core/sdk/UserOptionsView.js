@@ -75,7 +75,18 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 	 */
 	XID: null,
 	
+	/**
+	 * @property {String} profileId
+	 * The target profile's ID.
+	 */
 	profileId: null,
+	
+	/**
+	 * @property {String} profileDisplayName
+	 * The target profile's displayName.
+	 */
+	profileDisplayName: null,
+	
 	needLogin: false,
 	needReload: false,
 	

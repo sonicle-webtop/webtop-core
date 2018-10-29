@@ -40,6 +40,7 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
+import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -104,6 +105,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -256,10 +258,25 @@ public class Service extends BaseService {
 			}
 		} catch(WTException ex) {}
 		
+		boolean docServerEnabled = getDocumentServerEnabled();
+		co.put("docServerEnabled", docServerEnabled);
+		if (docServerEnabled) {
+			co.put("docServerPublicUrl", ss.getDocumentServerPublicUrl());
+		}
+		String boshUrl = ss.getXMPPBoshUrl();
+		if (!StringUtils.isBlank(boshUrl)) {
+			co.put("boshUrl", boshUrl);
+		}
+		CoreServiceSettings.ICEServersList iceServers = ss.getWebRTC_ICEServers();
+		if (iceServers != null) {
+			co.put("iceServers", iceServers);
+		}
+		
 		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
+		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
 		co.put("domainPasswordPolicy", domainPasswordPolicy);
 		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
 		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
@@ -267,13 +284,6 @@ public class Service extends BaseService {
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
 		co.put("userDisplayName", profile.getDisplayName());
-		
-		String boshUrl=ss.getXMPPBoshUrl();
-		if (boshUrl!=null) co.put("boshUrl", boshUrl);
-		co.put("editorFonts", ss.getEditorFonts());
-		CoreServiceSettings.ICEServersList iceServers=ss.getWebRTC_ICEServers();
-		if (iceServers!=null) co.put("iceServers", iceServers);
-		
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());
@@ -281,6 +291,7 @@ public class Service extends BaseService {
 		co.put("startupService", us.getStartupService());
 		co.put("desktopNotification", us.getDesktopNotification());
 		
+		co.put("ajaxSpecialTimeout", ss.getAjaxSpecialTimeout());
 		co.put("language", us.getLanguageTag());
 		co.put("timezone", us.getTimezone());
 		co.put("startDay", us.getStartDay());
@@ -297,7 +308,10 @@ public class Service extends BaseService {
 		co.put("imSoundOnMessageReceived", us.getIMSoundOnMessageReceived());
 		co.put("imSoundOnMessageSent", us.getIMSoundOnMessageSent());
 		co.put("pbxConfigured",coreMgr.pbxConfigured());
-		co.put("smsConfigured",coreMgr.smsConfigured());
+		if (coreMgr.smsConfigured()) {
+			co.put("smsConfigured",true);
+			co.put("smsProvider",coreMgr.smsGetProvider().getName());
+		}
 		
 		return co;
 	}
@@ -1158,6 +1172,19 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processCleanupDocManagerEditing(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String editingId = ServletUtils.getStringParameter(request, "editingId", true);
+			getWts().finalizeDocumentEditing(editingId);
+			new JsonResult().printTo(out);
+			
+		} catch(ParameterException ex) {
+			logger.error("Error in CleanupDocManagerEditing", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	/*
 	private void sendOtpCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String verificationCode) {
 		try {
@@ -1217,42 +1244,6 @@ public class Service extends BaseService {
 			logger.error("Error in GetOTPGoogleAuthQRCode", ex);
 		}
 	}
-	
-	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		CoreManager pidCoreMgr = WT.getCoreManager(getWts().getProfileId());
-		
-		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
-				DateTimeFormatter fmt = JsGridSync.createFormatter(pidCoreMgr.getUserData().getTimeZone());
-				List<SyncDevice> devices = coreMgr.listZPushDevices();
-				ArrayList<JsGridSync> items = new ArrayList<>();
-				for(SyncDevice device : devices) {
-					items.add(new JsGridSync(device.device, device.user, device.lastSync, fmt));
-				}
-				new JsonResult(items).printTo(out);
-				
-			} else if(crud.equals(Crud.DELETE)) {
-				//PayloadAsList<JsGridSyncList> pl = ServletUtils.getPayloadAsList(request, JsGridSyncList.class);
-				Payload<MapItem, JsGridSync> pl = ServletUtils.getPayload(request, JsGridSync.class);
-				CompositeId cid = new CompositeId().parse(pl.data.id);
-				
-				pidCoreMgr.deleteZPushDevice(cid.getToken(0), cid.getToken(1));
-				new JsonResult().printTo(out);
-				
-			} else if(crud.equals("info")) {
-				String id = ServletUtils.getStringParameter(request, "id", true);
-				CompositeId cid = new CompositeId().parse(id);
-				
-				String info = pidCoreMgr.getZPushDetailedInfo(cid.getToken(0), cid.getToken(1), "</br>");
-				new JsonResult(info).printTo(out);
-			}
-			
-		} catch (Exception ex) {
-			logger.error("Error in ManageSyncDevices", ex);
-			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
-		}
-	}
 		
 	public void processListInternetRecipientsSources(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -1277,13 +1268,14 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
+			boolean autoLast = ServletUtils.getBooleanParameter(request, "autoLast", false);
 			RecipientFieldType rft = ServletUtils.getEnumParameter(request, "rftype", RecipientFieldType.EMAIL, RecipientFieldType.class);
 			if (crud.equals(Crud.READ)) {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(rft, query, limit);
+					items = coreMgr.listProviderRecipients(rft, query, limit, autoLast);
 				} else {
 					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
 				}
@@ -1332,23 +1324,31 @@ public class Service extends BaseService {
 		return faxPattern.replace("{username}", username).replace("{number}", newfax.toString());
 	}
 	
-	
 	public void processListDomainPublicImages(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try {
-			String domainId=getWts().getProfileId().getDomainId();
-			String path=WT.getDomainImagesPath(domainId);
-			ArrayList<JsPublicImage> items=new ArrayList<>();
-			File dir=new File(path);
-			int id=0;
-			for(File file: dir.listFiles()) {
-				String name=file.getName();
-				String url=PathUtils.concatPathParts(WT.getPublicImagesUrl(domainId),name);
-				items.add(new JsPublicImage("img"+(++id),name,url));
+			String domainId = ServletUtils.getStringParameter(request, "domainId", null);
+			
+			List<PublicImage> images;
+			if (RunContext.isSysAdmin()) {
+				if (StringUtils.isBlank(domainId)) throw new WTException();
+				CoreAdminManager coreAdmMgr = getCoreAdminManager();
+				images = coreAdmMgr.listDomainPublicImages(domainId);
+				
+			} else { // Domain users can only use images belonging to their own domain
+				images = coreMgr.listDomainPublicImages();
+			}
+			
+			ArrayList<JsPublicImage> items = new ArrayList<>(images.size());
+			int i = 0;
+			for (PublicImage image : images) {
+				items.add(new JsPublicImage("img" + i, image));
+				i++;
 			}
 			new JsonResult("images", items, items.size()).printTo(out);
+			
 		} catch (Exception ex) {
-			logger.error("Error in processListDomainPublicImages", ex);
-			new JsonResult(false, "Error in processListDomainPublicImages").printTo(out);
+			logger.error("Error in ListDomainPublicImages", ex);
+			new JsonResult(false, "Error in ListDomainPublicImages").printTo(out);
 		}
 	}
 	

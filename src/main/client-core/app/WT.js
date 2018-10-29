@@ -36,24 +36,29 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	singleton: true,
 	
 	/**
-	 * @property
 	 * Core service ID.
+	 * @property {String} ID 
 	 */
 	ID: 'com.sonicle.webtop.core',
 	
 	/**
-	 * @property
 	 * Core service short ID.
+	 * @property {String} XID 
 	 */
 	XID: 'wt',
 	
 	/**
-	 * @property
 	 * Core service namespace.
+	 * @property {String} NS 
 	 */
 	NS: 'Sonicle.webtop.core',
 	
 	app: null,
+	
+	/**
+	 * This object is an alias of {@link Ext#platformTags platformTags} properties that describe the current device or platform.
+	 * @property {Object} plTags 
+	 */
 	
 	loadedCss: null,
 	
@@ -71,6 +76,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	getApp: function() {
 		return this.app;
 		//return Sonicle.webtop.core.getApplication();
+	},
+	
+	uiid: function(suffix) {
+		return this.getApp().uiid + '-' + suffix;
 	},
 	
 	/**
@@ -319,6 +328,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Checks if passes string has format of a i18n resource template string.
+	 * @param {String} str The string to check.
+	 * @returns {Boolean} `True` if string follows the template pattern, `false` otherwise.
+	 */
+	isResTpl: function(str) {
+		return Ext.isString(str) && Ext.String.startsWith(str, '{') && Ext.String.endsWith(str, '}');
+	},
+	
+	/**
 	 * Utility function to return a resource string or string itself.
 	 * If passed string is a valid resource template (see below), 
 	 * passed value will be evaluated and {@link #res} return value 
@@ -335,7 +353,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			tpl = id;
 			id = WT.ID;
 		}
-		if (Ext.isString(tpl) && Ext.String.startsWith(tpl, '{') && Ext.String.endsWith(tpl, '}')) {
+		if (this.isResTpl(tpl)) {
 			var s = tpl.substr(1, tpl.length-2),
 					tokens = s.split('@');
 			return WT.res((tokens.length === 2) ? tokens[1] : id, tokens[0]);
@@ -353,11 +371,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	msg: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: msg,
 			buttons: opts.buttons || Ext.MessageBox.OK
@@ -376,10 +398,13 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.scope=window] The scope (this reference) in which the callback is executed.
 	 * @param {Boolean/Number} [opts.multiline=false] The scope (this reference) in which the callback is executed.
 	 * @param {String} [opts.value=''] Default value of the text input element
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	prompt: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.prompt(
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.prompt(
 			opts.title || WT.res('prompt'),
 			msg,
 			opts.fn,
@@ -418,11 +443,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	info: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('info'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -439,12 +468,16 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} opts.title A custom title.
 	 * @param {Number} opts.buttons A custom bitwise button specifier.
-	 * @param {Object} opts.config A custom {@link Ext.MessageBox} config to be applied directly.
 	 * @param {Boolean} opts.keepLineBreaks True to disable line-breaks to HTML conversion
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	warn: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('warning'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.MessageBox.OK,
@@ -461,14 +494,20 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
-	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
+	 * @param {Boolean} [opts.expandTpl] `False` to disable message template expansion.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	error: function(msg, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var txt = (!(opts.expandTpl === false) && WT.isResTpl(msg)) ? WT.resTpl(msg) : msg,
+				mbox = Ext.create('Ext.window.MessageBox', Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('error'),
-			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
+			message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
 			buttons: opts.buttons || Ext.MessageBox.OK,
 			icon: Ext.MessageBox.ERROR
 		}, opts.config || {}));
@@ -486,18 +525,25 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
-	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirm: function(msg, cb, scope, opts) {
 		opts = opts || {};
-		return Ext.Msg.show(Ext.apply({
+		var xclass = Ext.isString(opts.instClass) ? opts.instClass : 'Ext.window.MessageBox',
+				mbox = Ext.create(xclass, Ext.apply({closeAction: 'destroy'}, opts.instConfig || {}));
+		
+		return mbox.show(Ext.apply({
 			title: opts.title || WT.res('confirm'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.Msg.YESNO,
 			icon: Ext.Msg.QUESTION,
-			fn: function(bid) {
-				Ext.callback(cb, scope, [bid]);
+			fn: function(bid, value, cfg) {
+				Ext.callback(cb, scope, [bid, value, cfg]);
 			}
 		}, opts.config || {}));
 	},
@@ -515,7 +561,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {String} [opts.title] A custom title.
 	 * @param {Number} [opts.buttons] A custom bitwise button specifier.
 	 * @param {Boolean} [opts.keepLineBreaks] True to disable line-breaks to HTML conversion
-	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox} config to be applied directly.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
 	confirmYNC: function(msg, cb, scope, opts) {
 		return this.confirm(msg, cb, scope, Ext.apply({

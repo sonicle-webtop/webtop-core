@@ -100,7 +100,9 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -265,6 +267,17 @@ public class CoreManager extends BaseManager {
 		} else {
 			ensureUserDomain(domainId);
 			return wtmgr.getDomain(domainId);
+		}
+	}
+	
+	public List<PublicImage> listDomainPublicImages() throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		String domainId = getTargetProfileId().getDomainId();
+		
+		try {
+			return wtmgr.listDomainPublicImages(domainId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list domain's public images [{0}]", domainId);
 		}
 	}
 	
@@ -438,6 +451,38 @@ public class CoreManager extends BaseManager {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	public List<String> listWTInstalledServices() {
+		ServiceManager svcm = wta.getServiceManager();
+		return svcm.listRegisteredServices();
+	}
+	
+	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
+		ServiceManager svcm = wta.getServiceManager();
+		ServiceManifest manifest = svcm.getManifest(serviceId);
+		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
+		return manifest.getDeclaredPermissions();
+	}
+	
+	public Set<String> listAllowedServices() {
+		LinkedHashSet<String> ids = new LinkedHashSet<>();
+		
+		UserProfileId targetPid = getTargetProfileId();
+		ServiceManager svcm = wta.getServiceManager();
+		for (String id : svcm.listRegisteredServices()) {
+			if (RunContext.isPermitted(true, targetPid, SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
+		}
+		return ids;
+	}
+	
 	/**
 	 * Returns UserOption services data for current target user.
 	 */
@@ -455,45 +500,6 @@ public class CoreManager extends BaseManager {
 		}
 		
 		return items;
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	public List<String> listWTInstalledServices() {
-		ServiceManager svcm = wta.getServiceManager();
-		return svcm.listRegisteredServices();
-	}
-	
-	public Set<String> listAllowedServices() {
-		// This method can be called when runningProfile matched the target one.
-		// It's not able to check permissions on behalf of a user.
-		ensureProfile(false);
-		
-		LinkedHashSet<String> ids = new LinkedHashSet<>();
-		if (RunContext.isSysAdmin()) {
-			ids.add(CoreManifest.ID);
-			ids.add(CoreAdminManifest.ID);
-			ids.add("com.sonicle.webtop.vfs");
-			
-		} else {
-			ServiceManager svcm = wta.getServiceManager();
-			for (String id : svcm.listRegisteredServices()) {
-				if (RunContext.isPermitted(true, SERVICE_ID, "SERVICE", "ACCESS", id)) ids.add(id);
-			}
-		}
-		return ids;
-	}
-	
-	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
-		ServiceManager svcm = wta.getServiceManager();
-		ServiceManifest manifest = svcm.getManifest(serviceId);
-		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
-		return manifest.getDeclaredPermissions();
 	}
 	
 	
@@ -1280,14 +1286,23 @@ public class CoreManager extends BaseManager {
 		}
 		UserProfileId targetPid = getTargetProfileId();
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());		
+		CoreUserSettings us = new CoreUserSettings(targetPid);
 		
 		//use common service settings or webtop username/password
 		String username=css.getSmsWebrestUser();
 		if (username==null) username=targetPid.getUserId();
 		String spassword=css.getSmsWebrestPassword();
 		char[] password=spassword!=null?spassword.toCharArray():RunContext.getPrincipal().getPassword();
-		String fromMobile=WT.getUserPersonalInfo(targetPid).getMobile();
-		String fromName=WT.getUserData(targetPid).getDisplayName();
+		
+		String sender=css.getSmsSender();
+		String userSender=us.getSmsSender();
+		if (userSender!=null && userSender.trim().length()>0) sender=userSender;
+		
+		if (sender==null) sender=wta.getPlatformName();
+		
+		boolean isAlpha=StringUtils.isAlpha(sender);
+		String fromMobile=isAlpha?null:sender;
+		String fromName=isAlpha?sender:null;
 		sms.send(fromName, fromMobile, number, text, username, password);
 	}
 	
@@ -1813,73 +1828,65 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public List<OServiceStoreEntry> listServiceStoreEntriesByQuery(String serviceId, String context, String query, int max) {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			if(query == null) {
-				return sedao.selectKeyValueByLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, max);
+			if (StringUtils.isBlank(query)) {
+				return sseDao.selectKeyValueByLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, max);
 			} else {
-				return sedao.selectKeyValueByLikeKeyLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, "%"+query+"%", max);
+				String newQuery = StringUtils.upperCase(StringUtils.trim(query));
+				return sseDao.selectKeyValueByLikeKeyLimit(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, "%"+newQuery+"%", max);
 			}
 		
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, query, ex);
 			return new ArrayList<>();
-			
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
 	public void addServiceStoreEntry(String serviceId, String context, String key, String value) {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
+		OServiceStoreEntry osse = null;
 		Connection con = null;
 		
 		try {
 			if (StringUtils.isBlank(value)) return;
-			
 			con = WT.getCoreConnection();
-			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			OServiceStoreEntry entry = sedao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
-			
-			DateTime now = DateTime.now(DateTimeZone.UTC);
-			if(entry != null) {
-				entry.setValue(value);
-				entry.setFrequency(entry.getFrequency()+1);
-				entry.setLastUpdate(now);
-				sedao.update(con, entry);
+			osse = sseDao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			if (osse != null) {
+				sseDao.update(con, osse.getDomainId(), osse.getUserId(), osse.getServiceId(), osse.getContext(), key, value);
 			} else {
-				entry = new OServiceStoreEntry();
-				entry.setDomainId(targetPid.getDomainId());
-				entry.setUserId(targetPid.getUserId());
-				entry.setServiceId(serviceId);
-				entry.setContext(context);
-				entry.setKey(StringUtils.upperCase(key));
-				entry.setValue(value);
-				entry.setFrequency(1);
-				entry.setLastUpdate(now);
-				sedao.insert(con, entry);
+				osse = new OServiceStoreEntry();
+				osse.setDomainId(targetPid.getDomainId());
+				osse.setUserId(targetPid.getUserId());
+				osse.setServiceId(serviceId);
+				osse.setContext(context);
+				osse.setKey(key);
+				osse.setValue(value);
+				osse.setFrequency(1);
+				sseDao.insert(con, osse);
 			}
-			
 		} catch(SQLException | DAOException ex) {
-			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
-			
+			logger.error("Error adding servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, OServiceStoreEntry.sanitizeKey(key), ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
 	public void deleteServiceStoreEntry() {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.deleteByDomainUser(con, targetPid.getDomainId(), targetPid.getUserId());
+			sseDao.deleteByDomainUser(con, targetPid.getDomainId(), targetPid.getUserId());
 			
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting servicestore entry [{}]", targetPid, ex);
@@ -1889,13 +1896,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteServiceStoreEntry(String serviceId) {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.deleteByDomainUserService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
+			sseDao.deleteByDomainUserService(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId);
 			
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting servicestore entry [{}, {}]", targetPid, serviceId, ex);
@@ -1905,13 +1912,13 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteServiceStoreEntry(String serviceId, String context, String key) {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ServiceStoreEntryDAO sedao = ServiceStoreEntryDAO.getInstance();
-			sedao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+			sseDao.delete(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
 			
 		} catch(SQLException | DAOException ex) {
 			logger.error("Error deleting servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
@@ -2121,11 +2128,17 @@ public class CoreManager extends BaseManager {
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max) throws WTException {
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean autoLast) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
-		ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-		ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		if (!autoLast) {
+			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		}
 		ids.addAll(listRecipientProviderSourceIds());
+		if (autoLast) {
+			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+		}
 		return listProviderRecipients(fieldType, ids, queryText, max);
 	}
 	
@@ -2145,33 +2158,37 @@ public class CoreManager extends BaseManager {
 		for(String soId : sourceIds) {
 			List<Recipient> recipients = null;
 			if (StringUtils.equals(soId, RECIPIENT_PROVIDER_AUTO_SOURCE_ID)) {
-				recipients = new ArrayList<>();
-				//TODO: Find a way to handle other RecipientFieldTypes
-				if (fieldType.equals(RecipientFieldType.EMAIL)) {
-					final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
-					for(OServiceStoreEntry entry: entries) {
-						final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
-						if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+				if (!fieldType.equals(RecipientFieldType.LIST)) {
+					recipients = new ArrayList<>();
+					//TODO: Find a way to handle other RecipientFieldTypes
+					if (fieldType.equals(RecipientFieldType.EMAIL)) {
+						final List<OServiceStoreEntry> entries = listServiceStoreEntriesByQuery(SERVICE_ID, "recipients", queryText, remaining);
+						for(OServiceStoreEntry entry: entries) {
+							final InternetAddress ia = InternetAddressUtils.toInternetAddress(entry.getValue());
+							if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
+						}
 					}
-				}
+				}					
 			} else if (StringUtils.equals(soId, RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID)) {
-				recipients = new ArrayList<>();
-				//TODO: Find a way to handle other RecipientFieldTypes
-				if (fieldType.equals(RecipientFieldType.EMAIL)) {
-					List<OUser> users=listUsers(true);
-					for(OUser user: users) {
-						UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
-						if (userData!=null) {
-							if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
-								recipients.add(
-									new Recipient(
-											RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
-											lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
-											RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
-											user.getDisplayName(), 
-											userData.getPersonalEmailAddress()
-									)
-								);
+				if (!fieldType.equals(RecipientFieldType.LIST)) {
+					recipients = new ArrayList<>();
+					//TODO: Find a way to handle other RecipientFieldTypes
+					if (fieldType.equals(RecipientFieldType.EMAIL)) {
+						List<OUser> users=listUsers(true);
+						for(OUser user: users) {
+							UserProfile.Data userData=WT.getUserData(new UserProfileId(user.getDomainId(),user.getUserId()));
+							if (userData!=null) {
+								if (StringUtils.containsIgnoreCase(user.getDisplayName(),queryText) || StringUtils.containsIgnoreCase(userData.getPersonalEmailAddress(),queryText))
+									recipients.add(
+										new Recipient(
+												RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID, 
+												lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_WEBTOP), 
+												RECIPIENT_PROVIDER_AUTO_SOURCE_ID, 
+												user.getDisplayName(), 
+												userData.getPersonalEmailAddress()
+										)
+									);
+							}
 						}
 					}
 				}
@@ -2187,12 +2204,13 @@ public class CoreManager extends BaseManager {
 				if (recipients == null) continue;
 			}
 			
-			for(Recipient recipient : recipients) {
-				remaining--;
-				if (remaining < 0) break; 
-				recipient.setSource(soId); // Force composed id!
-				items.add(recipient);
-			}
+			if (recipients!=null)
+				for(Recipient recipient : recipients) {
+					remaining--;
+					if (remaining < 0) break; 
+					recipient.setSource(soId); // Force composed id!
+					items.add(recipient);
+				}
 			if (remaining <= 0) break;
 		}
 		return items;
@@ -2236,37 +2254,26 @@ public class CoreManager extends BaseManager {
 			
 			boolean noFilter = false, domainMatch = false;
 			String match = null;
-			if (RunContext.isImpersonated() || !RunContext.isWebTopAdmin()) {
-				match = getInternetUserId(getTargetProfileId());
-			} else {
-				if (RunContext.isSysAdmin()) {
-					noFilter = true;
-				} else {
+			UserProfileId targetPid = getTargetProfileId();
+			if (RunContext.isSysAdmin()) {
+				if (UserProfileId.isWildcardUser(targetPid)) {
 					domainMatch = true;
-					match = "@" + wta.getWebTopManager().getDomainInternetName(getTargetProfileId().getDomainId());
+					match = "@" + wta.getWebTopManager().getDomainInternetName(targetPid.getDomainId());
+				} else {
+					match = getInternetUserId(targetPid);
 				}
+			} else {
+				match = getInternetUserId(targetPid);
 			}
 			
 			ArrayList<SyncDevice> devices = new ArrayList<>();
 			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
 			for (ZPushManager.LastsyncRecord rec : recs) {
-				if (noFilter || StringUtils.equalsIgnoreCase(rec.syncronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.syncronizedUser, match))) {
-					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
+				if (noFilter || StringUtils.equalsIgnoreCase(rec.synchronizedUser, match) || (domainMatch && StringUtils.endsWithIgnoreCase(rec.synchronizedUser, match))) {
+					devices.add(new SyncDevice(rec.device, rec.synchronizedUser, rec.lastSyncTime));
 				}
 			}
 			
-			/*
-			boolean sysadmin = RunContext.isSysAdmin();
-			String internetId = (sysadmin) ? null : getInternetUserId(getTargetProfileId());
-
-			ArrayList<SyncDevice> devices = new ArrayList<>();
-			List<ZPushManager.LastsyncRecord> recs = zpush.listDevices();
-			for(ZPushManager.LastsyncRecord rec : recs) {
-				if(sysadmin || StringUtils.equalsIgnoreCase(rec.syncronizedUser, internetId)) {
-					devices.add(new SyncDevice(rec.device, rec.syncronizedUser, rec.lastSyncTime));
-				}
-			}
-			*/
 			return devices;
 			
 		} catch(Exception ex) {
@@ -2275,19 +2282,32 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteZPushDevice(String device, String user) throws WTException {
+	public void deleteZPushDevice(String deviceId) throws WTException {
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
-			zpush.removeUserDevice(user, device);
+			if (RunContext.isSysAdmin()) {
+				if (UserProfileId.isWildcardUser(targetPid)) {
+					zpush.removeDevice(deviceId);
+				} else {
+					zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+				}
+			} else {
+				zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+			}
+			
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}
 	}
 	
-	public String getZPushDetailedInfo(String device, String user, String lineSep) throws WTException {
+	public String getZPushDetailedInfo(String deviceId, String lineSep) throws WTException {
+		UserProfileId targetPid = getTargetProfileId();
 		try {
 			ZPushManager zpush = createZPushManager();
-			return zpush.getDetailedInfo(device, user, lineSep);
+			ensureProfile(true);
+			return zpush.getDetailedInfo(deviceId, getInternetUserId(targetPid), lineSep);
+			
 		} catch(Exception ex) {
 			throw new WTException(ex);
 		}	

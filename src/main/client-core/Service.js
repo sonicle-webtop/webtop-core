@@ -40,6 +40,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	uses: [
 		'Sonicle.webtop.core.view.IMQuickChat',
 		'Sonicle.webtop.core.view.IMChats',
+		'Sonicle.webtop.core.view.DocEditor',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals',
 		'Sonicle.webtop.core.view.SMS'

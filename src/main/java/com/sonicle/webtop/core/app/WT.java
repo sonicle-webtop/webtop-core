@@ -46,7 +46,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.servlet.PublicRequest;
+import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.template.Template;
@@ -356,9 +356,13 @@ public class WT {
 		return createTempFile(null, null);
 	}
 	
-	public static File createTempFile(String prefix, String suffix) throws WTException {
+	public static File createTempFile(String prefix) throws WTException {
+		return createTempFile(prefix, null);
+	}
+	
+	public static File createTempFile(String prefix, String extension) throws WTException {
 		UserProfileId runPid = RunContext.getRunProfileId();
-		return getWTA().createTempFile(runPid.getDomain(), prefix, suffix);
+		return getWTA().createTempFile(runPid.getDomain(), prefix, extension);
 	}
 	
 	public static boolean deleteTempFile(File file) throws WTException {

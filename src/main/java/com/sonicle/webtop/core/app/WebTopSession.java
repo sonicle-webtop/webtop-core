@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.security.DomainAccount;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -58,7 +59,7 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.servlet.Otp;
+import com.sonicle.webtop.core.app.servlet.Otp;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
@@ -69,6 +70,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -78,6 +80,7 @@ import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import net.sf.uadetector.ReadableDeviceCategory;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -143,6 +146,9 @@ public class WebTopSession {
 				uploads.clear();
 			}
 		}
+		
+		DocEditorManager docEdMgr = wta.getDocEditorManager();
+		if (docEdMgr != null) docEdMgr.cleanupOnSessionDestroy(session.getId());
 	}
 	
 	// TODO: rimuovere metodi deprecati
@@ -442,6 +448,21 @@ public class WebTopSession {
 		privateEnv = null;
 	}
 	
+	private Set<String> listAllowedPrivateServices(ServiceManager svcm) {
+		LinkedHashSet<String> ids = new LinkedHashSet<>();
+		if (RunContext.isSysAdmin()) {
+			ids.add(CoreManifest.ID);
+			ids.add(CoreAdminManifest.ID);
+			ids.add("com.sonicle.webtop.vfs");
+			
+		} else {
+			for (String id : svcm.listRegisteredServices()) {
+				if (RunContext.isPermitted(true, CoreManifest.ID, "SERVICE", "ACCESS", id)) ids.add(id);
+			}
+		}
+		return ids;
+	}
+	
 	private void internalInitPrivateEnvironment(HttpServletRequest request) throws WTException {
 		// Synchronization on caller method!
 		ServiceManager svcm = wta.getServiceManager();
@@ -453,7 +474,7 @@ public class WebTopSession {
 		
 		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
 		sesm.registerWebTopSession(this);
-		allowedServices = core.listAllowedServices();
+		allowedServices = listAllowedPrivateServices(svcm);
 		
 		BaseManager managerInst = null;
 		for(String serviceId : allowedServices) {
@@ -778,10 +799,14 @@ public class WebTopSession {
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
 		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
-		//ReadableDeviceCategory.Category deviceCategory = getUserAgent().getDeviceCategory().getCategory();
-		//if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
-		//	theme += "-touch";
-		//}
+		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+			if (theme.equals("crisp") || theme.equals("neptune")) {
+				theme += "-touch";
+			} else {
+				theme = "crisp-touch";
+			}
+		}
 		Locale locale = getLocale();
 		
 		fillAppReferences(js, locale, theme, false);
@@ -906,13 +931,20 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
-		fillAppReferences(js, locale, "crisp", false);
+
+		String theme = "crisp";
+		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
+			theme += "-touch";
+		}
+
+		fillAppReferences(js, locale, theme, false);
 		
 		// Include Core references
 		js.appManifest.name = coreManifest.getJsPackageName();
 		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
 		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-public");
-		fillServiceCssReferences(js, coreManifest, "crisp", "default");
+		fillServiceCssReferences(js, coreManifest, theme, "default");
 		
 		fillStartupForPublicService(js, CoreManifest.ID, locale);
 		fillStartupForPublicService(js, publicServiceId, locale);
@@ -962,6 +994,7 @@ public class WebTopSession {
 	}
 	
 	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+		js.themeName = theme;
 		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
 		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
@@ -1180,14 +1213,14 @@ public class WebTopSession {
 	}
 	
 	public void addUploadedFile(UploadedFile uploadedFile) {
-		if(!isReady()) return;
+		if (!isReady()) return;
 		synchronized(uploads) {
 			uploads.put(uploadedFile.getUploadId(), uploadedFile);
 		}
 	}
 	
 	public UploadedFile getUploadedFile(String uploadId) {
-		if(!isReady()) return null;
+		if (!isReady()) return null;
 		synchronized(uploads) {
 			return uploads.get(uploadId);
 		}
@@ -1257,6 +1290,14 @@ public class WebTopSession {
 				}
 			}
 		}
+	}
+	
+	public DocEditorManager.DocumentConfig prepareDocumentEditing(BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException {
+		return wta.getDocEditorManager().registerDocumentHandler(getId(), docHandler, filename, lastModifiedTime);
+	}
+	
+	public void finalizeDocumentEditing(String editingId) {
+		wta.getDocEditorManager().unregisterDocumentHandler(editingId);
 	}
 	
 	public static class UploadedFile {
