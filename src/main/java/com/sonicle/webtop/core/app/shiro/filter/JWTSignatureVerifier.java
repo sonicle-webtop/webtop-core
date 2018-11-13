@@ -70,6 +70,10 @@ public class JWTSignatureVerifier extends PathMatchingFilter {
 		// Extracts the JWT string
 		String authz = getAuthzHeader(request);
 		if (!StringUtils.startsWith(authz, AUTHORIZATION_SCHEME_BEARER)) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("Authorization header is missing or malformed");
+				logger.trace("{}: {}", AUTHORIZATION_HEADER, authz);
+			}
 			WebUtils.toHttp(response).sendError(HttpServletResponse.SC_FORBIDDEN, "Authorization header is missing or malformed");
 			return false;
 		}
