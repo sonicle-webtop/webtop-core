@@ -111,7 +111,7 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupGoogleAuth', {
 				items: [{
 					xtype: 'sodisplayimagefield',
 					bind: '{image}',
-					imageUrl: WTF.processBinUrl(WT.ID, 'GetOTPGoogleAuthQRCode'),
+					baseImageUrl: WTF.processBinUrl(WT.ID, 'GetOTPGoogleAuthQRCode'),
 					imageWidth: 200,
 					imageHeight: 200
 				}]
