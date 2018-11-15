@@ -82,7 +82,6 @@ public class LoggerUtils {
 	 * - service = core
 	 * - user = system
 	 * It also update values related to automatic variables.
-	 * @param skipResetToDefaults
 	 */
 	public synchronized static void initDC(String appName) {
 		MDC.put(VAR_APPNAME, appName);

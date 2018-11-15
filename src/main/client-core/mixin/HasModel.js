@@ -37,14 +37,14 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	mixinConfig: {
 		id: 'hasmodel',
 		on: {
-			initComponent: 'initComponent'
+			initComponent: 'onInitComponent'
 		}
 	},
 	
 	config: {
 		/**
 		 * @cfg {String} modelProperty
-		 * Name of viewModel's property in which {@link WTA.sdk.ModelView#model attached model} 
+		 * Name of viewModel's property in which {@link #modelName attached model} 
 		 * data will be stored. Defaults to 'record'. (See {@link Ext.app.ViewModel#links})
 		 */
 		modelProperty: 'record',
@@ -53,9 +53,13 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		 * @cfg {String} modelName
 		 * Name of the {@link Ext.data.Model Model} associated with this view.
 		 */
-		modelName: null,
+		modelName: undefined,
 		
-		modelIdProperty: null
+		/**
+		 * @cfg {String} modelIdFieldName
+		 * Name of the ID field of the {@link #modelName underlyining model}.
+		 */
+		modelIdFieldName: undefined
 	},
 	
 	/**
@@ -95,25 +99,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * @param {Ext.data.operation.Operation} op The operation performed.
 	 * @param {Object} pass Custom parameters to pass back.
 	 */
-	
-	initComponent: function() {
-		var me = this,
-				vm = me.getViewModel();
-		
-		if(!vm) Ext.Error.raise('ViewModel need to be defined');
-		if(!Ext.isString(me.getModelProperty())) Ext.Error.raise('Specify a valid model property');
-		if(!me.getModelName()) Ext.Error.raise('Specify a valid model name');
-		
-		// Pushes some built-in formulas
-		//vm.setFormulas(Ext.apply(vm.getFormulas() || {}, me._builtInFormulas(me.getModelProperty())));
-		
-		// If necessary, guess model id property name
-		if(!Ext.isString(me.getModelIdProperty())) {
-			var model = Ext.create(me.getModelName());
-			me.setModelIdProperty(model.getIdProperty());
-			model.destroy();
-		}
-	},
 	
 	/**
 	 * @private
@@ -163,11 +148,19 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	 * @returns {Ext.data.Model}
 	 */
 	getModel: function() {
-		return this.getVMData()[this.getModelProperty()];
+		return this.getViewModel().get(this.getModelProperty());
 	},
 	
 	getModelStatus: function() {
-		return this.getVMData().status;
+		return this.getViewModel().get('status');
+		//return this.getVMData().status;
+	},
+	
+	clearModel: function() {
+		var me = this,
+				mo = me.getModel();
+		if (mo) mo.destroy();
+		me.getViewModel().set(me.getModelProperty(), undefined);
 	},
 	
 	/**
@@ -184,9 +177,9 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		var me = this,
 				model = me.getModel(),
 				dirty = Ext.isBoolean(opts.dirty) ? opts.dirty : false,
-				data, vm, linkName, idProp, id;
+				data, vm, linkName, idFieldName, id;
 		
-		if(model) { // Model already linked
+		if (model) { // Model already linked
 			me.fireEvent('beforemodelload', me, opts.pass);
 			model.load({
 				callback: function(rec, op, success) {
@@ -200,8 +193,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			data = opts.data || {};
 			vm = me.getViewModel();
 			linkName = me.getModelProperty();
-			idProp = me.getModelIdProperty();
-			id = data[idProp];
+			idFieldName = me.getModelIdFieldName();
+			id = data[idFieldName];
 			
 			// Due to there is no callback on linkTo method, we need to register a
 			// binding handler that will be called (once) when the viewmodel will
@@ -210,6 +203,28 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				bindTo: '{'+linkName+'}',
 				single: true
 			}, function() {
+				var mo1 = me.getModel(),
+						proxy, reader, success;
+				
+				// Be aware that model can be null! For example in situations
+				// where model is quickly loaded/destroyed this call can arrive 
+				// later after the model has been already dropped.
+				if (mo1) {
+					proxy = mo1.getProxy();
+					reader = proxy.getReader();
+					success = (mo1.phantom) ? true : reader.getSuccess(reader.rawData || {});
+					
+					if (success) {
+						if (proxy.type === 'memory') {
+							mo1.set(opts.data || {}, {dirty: dirty});
+						} else {
+							if (dirty) mo1.dirty = true;
+						}
+					}
+					me.onModelLoad(success, mo1, undefined, opts.pass);
+					Ext.callback(opts.callback, opts.scope || me, [success, mo1]);
+				}
+				/*
 				var mdl = me.getModel(),
 						prx = mdl.getProxy(),
 						reader = prx.getReader(),
@@ -224,6 +239,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				}
 				me.onModelLoad(success, mdl, undefined, opts.pass);
 				Ext.callback(opts.callback, opts.scope || me, [success, mdl]);
+				*/
 			});
 			
 			// Apply linking...
@@ -242,7 +258,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				model.setAssociated(data); // Using our custom Sonicle.data.Model!
 				
 			} else { // Load an instance (an id is required)
-				if(!id) Ext.Error.raise('A value for idProperty ['+idProp+'] needs to be defined in passed data');
+				if(!id) Ext.Error.raise('A value for modelIdFieldName ['+idFieldName+'] needs to be defined in passed data');
 				vm.linkTo(linkName, {
 					type: me.getModelName(),
 					id: id
@@ -309,6 +325,57 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 					}
 				}
 			};
+		},
+		
+		onInitComponent: function() {
+			var me = this,
+					vm = me.getViewModel();
+
+			if (!vm) Ext.Error.raise('ViewModel need to be defined. Please add it in your class body!');
+			if (!Ext.isString(me.getModelProperty())) Ext.Error.raise('Missing value [modelProperty]');
+			if (!me.getModelName()) Ext.Error.raise('Missing value [modelName]');
+
+			// Pushes some built-in formulas
+			//vm.setFormulas(Ext.apply(vm.getFormulas() || {}, me._builtInFormulas(me.getModelProperty())));
+
+			// If necessary, guess model id property name
+			if (!Ext.isString(me.getModelIdFieldName())) {
+				var model = Ext.create(me.getModelName());
+				me.setModelIdFieldName(model.getIdProperty());
+				model.destroy();
+			}
+		},
+		
+		/**
+		 * This class system hook method is called at the tail end of the mixin process.
+		 * We need to see if the `targetClass` has already got some specific configs and
+		 * if so, we must add its value to the real config.
+		 * @param {Ext.Class} targetClass
+		 * @private
+		 */
+		afterClassMixedIn: function(targetClass) {
+			var proto = targetClass.prototype,
+					modelProperty = proto.modelProperty,
+					modelName = proto.modelName,
+					modelIdFieldName = proto.modelIdFieldName,
+					config;
+			
+			if (modelProperty || modelName || modelIdFieldName) {
+				config = {};
+				if (modelProperty) {
+					delete proto.modelProperty;
+					config.modelProperty = modelProperty;
+				}
+				if (modelName) {
+					delete proto.modelName;
+					config.modelName = modelName;
+				}
+				if (modelIdFieldName) {
+					delete proto.modelIdFieldName;
+					config.modelIdFieldName = modelIdFieldName;
+				}
+				targetClass.getConfigurator().add(config);
+			}
 		}
 	}
 });

@@ -446,11 +446,13 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
-	 * Returns the date+time format representing a short date+time.
+	 * Returns the date format string (in ExtJs {@link Ext.Date} style) 
+	 * representing a date + time in long form. Value is taken from core 
+	 * variable 'longDateFormat' and 'longTimeFormat'.
 	 * @returns {String} ExtJs format string.
 	 */
-	getShortDateTimeFmt: function() {
-		return WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(); 
+	getLongDateTimeFmt: function() {
+		return WT.getLongDateFmt() + ' ' + WT.getLongTimeFmt(); 
 	},
 	
 	/**
@@ -463,26 +465,39 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
-	 * Convenience function to run a default action on an email.
+	 * Convenience function to start a new message using mail service, if present.
 	 * At the moment, WT will search for the mail service and start a new email.
-	 * @param {String} address The email address.
-	 * @param {String} subject The optional subject.
-	 * @param {String} body The optional body.
+	 * @param {String/String[]} recipients A single or a list of recipients.
+	 * @param {String} subject The message subject.
+	 * @param {String} [body] The message body. Optional.
+	 */
+	handleNewMailMessage: function(recipients, subject, body) {
+		var svc = WT.getApp().getService('com.sonicle.webtop.mail');
+		if (!svc) return;
+		
+		var arr = Ext.isArray(recipients) ? recipients : [recipients],
+				opts = {format: svc.getVar('format')},
+				rcpts = [];
+		Ext.iterate(arr, function(rcpt) {
+			if (!Ext.isEmpty(rcpt)) {
+				rcpts.push({rtype: 'to', email: rcpt});
+			}
+		});
+		opts.recipients = rcpts;
+		if (!Ext.isEmpty(subject)) opts.subject = subject;
+		if (!Ext.isEmpty(body)) {
+			opts.content = body;
+			opts.contentAfter = false;
+		}
+		svc.startNewMessage(svc.currentFolder, opts);
+	},
+	
+	/**
+	 * @deprecated Use {@link #handleNewMailMessage} instead.
 	 */
 	handleMailAddress: function(address,subject,body) {
-		var mys=WT.getApp().getService("com.sonicle.webtop.mail");
-		if (mys) {
-			var opts={
-				recipients: [{rtype: 'to', email: address}],
-				format: mys.getVar("format")
-			};
-			if (subject) opts.subject=subject;
-			if (body) {
-				opts.content=body;
-				opts.contentAfter=false;
-			}
-			mys.startNewMessage(mys.currentFolder,opts);
-		}
+		Ext.log.warn("[WT.core] WT.handleMailAddress is deprecated, please use WT.handleNewMailMessage instead.");
+		this.handleNewMailMessage(arguments);
 	},
 	
 	/**
@@ -490,10 +505,9 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @param {String} number The number to call.
 	 */
 	handlePbxCall: function(number) {
-		var mys=WT.getApp().getService("com.sonicle.webtop.core");
-		if (mys) {
-			mys.handlePbxCall(number);
-		}
+		var svc = WT.getApp().getService('com.sonicle.webtop.core');
+		if (!svc) return;
+		svc.handlePbxCall(number);
 	},
 	
 	/**
@@ -501,11 +515,10 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * @param {String} number The destination number.
 	 * @param {String} text The SMS text.
 	 */
-	handleSendSMS: function(name,number,text) {
-		var mys=WT.getApp().getService("com.sonicle.webtop.core");
-		if (mys) {
-			mys.handleSendSMS(name,number,text);
-		}
+	handleSendSMS: function(name, number, text) {
+		var svc = WT.getApp().getService('com.sonicle.webtop.core');
+		if (!svc) return;
+		svc.handleSendSMS(name, number, text);
 	},
 	
 	print: function(html) {

@@ -867,26 +867,6 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		};
 	},
 	
-	foCompare: function(modelProp, fieldName, compareFn) {
-		if (!Ext.isFunction(compareFn)) compareFn = function() {return true;};
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				return compareFn(val);
-			}
-		};
-	},
-	
-	foGetFn: function(modelProp, fieldName, getFn) {
-		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
-		return {
-			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
-			get: function(val) {
-				return getFn(val);
-			}
-		};
-	},
-	
 	/**
 	 * Defines a{@link Ext.app.bind.Formula} that checks the equality between 
 	 * a model field's value and passed value.
@@ -897,7 +877,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @returns {Object} Formula configuration object
 	 */
 	foIsEqual: function(modelProp, fieldName, equalsTo, not) {
-		if(arguments.length === 3) not = false;
+		if (arguments.length === 3) not = false;
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
@@ -915,7 +895,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @returns {Object} Formula configuration object
 	 */
 	foIsEmpty: function(modelProp, fieldName, not) {
-		if(arguments.length === 2) not = false;
+		if (arguments.length === 2) not = false;
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
@@ -939,6 +919,47 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				return Ext.isEmpty(val) ? defaultValue : val;
 			}
 		};
+	},
+	
+	/**
+	 * Defines a{@link Ext.app.bind.Formula} that returns a value computed by
+	 * a customized function passed as parameter.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {Function} getFn A function to produce the desired value.
+	 * @returns {Mixed} A value computed by the function.
+	 */
+	foGetFn: function(modelProp, fieldName, getFn) {
+		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				return getFn(val);
+			}
+		};
+	},
+	
+	/**
+	 * Defines a{@link Ext.app.bind.Formula} that returns a string by formatting
+	 * the specified resource Key using the underlyning value.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * @param {String} fieldName Model's field name.
+	 * @param {String} sid The service ID.
+	 * @param {String} key The resource key.
+	 * @returns {String} A localized and formatted resource string.
+	 */
+	foResFormat: function(modelProp, fieldName, sid, key) {
+		return this.foGetFn(modelProp, fieldName, function(val) {
+			return !Ext.isEmpty(val) ? WT.res(sid, key, val) : null;
+		});
+	},
+	
+	/**
+	 * @deprecated Use {@link #foGetFn} instead.
+	 */
+	foCompare: function(modelProp, fieldName, compareFn) {
+		Ext.log.warn("[WT.core] WTF.foCompare is deprecated, please use WTF.foGetFn instead.");
+		return this.foGetFn(modelProp, fieldName, compareFn);
 	}
 	
 	/*

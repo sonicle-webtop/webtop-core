@@ -93,6 +93,7 @@ public class JWTSignatureVerifier extends PathMatchingFilter {
 	}
 	
 	protected SecretKey getSigningKey(ServletRequest request) {
+		//TODO: read the algo from a dedicated setting
 		SignatureAlgorithm keyAlgorithm = SignatureAlgorithm.HS256;
 		String secret = String.valueOf(request.getServletContext().getAttribute(SECRET_CONTEXT_ATTRIBUTE));
 		return StringUtils.isBlank(secret) ? null : new SecretKeySpec(secret.getBytes(Charsets.UTF_8), keyAlgorithm.getJcaName());

@@ -56,14 +56,11 @@ public class ContextLoader {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
 	}
 	
-	protected void initApp(ServletContext servletContext) throws IllegalStateException {
-		final String appname = ContextUtils.getWebappName(servletContext);
-		LoggerUtils.initDC(appname);
-		
+	protected void initApp(String webappName, ServletContext servletContext) throws IllegalStateException {
+		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, webappName);
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
 			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");
 		}
-		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, appname);
 		
 		try {
 			WebTopApp wta = new WebTopApp(servletContext);
@@ -130,7 +127,7 @@ public class ContextLoader {
 			
 		} catch(Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
-			logger.error("Error initializing WTA [{}]", appname, t);
+			logger.error("Error initializing WTA [{}]", webappName, t);
 		}
 	}
 	
@@ -152,7 +149,6 @@ public class ContextLoader {
 	protected void destroyApp(ServletContext servletContext) {
 		final String appname = getWabappName(servletContext);
 		try {
-			LoggerUtils.initDC(appname);
 			WebTopApp.get(servletContext).shutdown();
 			
 		} catch(Throwable t) {
@@ -160,8 +156,5 @@ public class ContextLoader {
 		} finally {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
-		
-		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
-		loggerContext.stop();
 	}
 }

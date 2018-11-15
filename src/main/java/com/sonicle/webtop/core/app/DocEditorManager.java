@@ -115,6 +115,7 @@ public class DocEditorManager extends AbstractAppManager {
 			
 			String editingId = buildEditingId(RunContext.getRunProfileId());
 			String secret = wta.getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
+			//TODO: read the algo from a dedicated setting
 			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(Charsets.UTF_8), SignatureAlgorithm.HS256);
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
