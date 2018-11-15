@@ -39,6 +39,7 @@
 .wt-icon-notification { background-image: url('notification_16.svg') !important; background-size: contain; }
 .wt-icon-notification-remove-xs { background-image: url('notification-remove_16.png') !important; }
 .wt-icon-im-chat-hot { background-image: url('im-chat-hot_16.svg') !important; background-size: contain; }
+.wt-icon-im-chat { background-image: url('im-chat_16.svg') !important; background-size: contain; }
 .wt-icon-im-chat-xs { background-image: url('im-chat_16.png') !important; }
 .wt-icon-im-chat-m { background-image: url('im-chat_32.png') !important; }
 .wt-icon-im-chat-hot-xs { background-image: url('im-chat-hot_16.png') !important; }
@@ -108,7 +109,9 @@
 .wt-icon-panel-right-xs { background-image: url('panel-right_16.png') !important; }
 .wt-icon-panel-top-xs { background-image: url('panel-top_16.png') !important; }
 .wt-icon-print { background-image: url('print_16.svg') !important; background-size: contain; }
+.wt-icon-call { background-image: url('call_16.svg') !important; background-size: contain; }
 .wt-icon-call-xs { background-image: url('call_16.png') !important; }
+.wt-icon-sms { background-image: url('sms_16.svg') !important; background-size: contain; }
 .wt-icon-sms-xs { background-image: url('sms_16.svg') !important; }
 .wt-icon-refresh { background-image: url('refresh_16.svg') !important; background-size: contain; }
 .wt-icon-save-xs { background-image: url('save_16.png') !important; }
@@ -406,6 +409,20 @@ div.wt-wnlist {
 	border-width: 0px !important;
 }
 
+/* --- UX grid.TileList --- */
+.wt-tilelist .x-grid-cell-first {
+	cursor: pointer;
+	padding: 5px 0 5px 0px;
+}
+.wt-tilelist .x-grid-cell-last {
+	vertical-align: middle;
+}
+.wt-tilelist .wt-cell-caption {
+	font-size: 0.9em;
+}
+/* ------------------------ */
+
+/* UX grid.column.ChatMessage */
 .wt-chatmsgcol-sysmsg {
 	position: relative;
 	line-height: 15px;
@@ -420,19 +437,15 @@ div.wt-wnlist {
 	word-wrap: break-word;
 	text-align: center;
 }
-
 .wt-chatmsgcol-sysmsg.wt-chatmsgcol-sysmsg-info {
 	background-color: rgba(225,245,254,0.92);
 }
-
 .wt-chatmsgcol-sysmsg.wt-chatmsgcol-sysmsg-warn {
 	background-color: rgba(255,245,196,0.95);
 }
-
 .wt-chatmsgcol-sysmsg > span:before {
 	content: attr(data-content);
 }
-
 .wt-chatmsgcol-hidmeta {
 	position: absolute;
     width: 0.1px;
@@ -440,7 +453,6 @@ div.wt-wnlist {
     opacity: 0;
     overflow: hidden;
 }
-
 .wt-chatmsgcol-msg {
 	position: relative;
 	line-height: 15px;
@@ -451,7 +463,6 @@ div.wt-wnlist {
 	white-space: pre-wrap;
 	word-wrap: break-word;
 }
-
 .wt-chatmsgcol-msg:after {
 	position: absolute;
 	border-style: solid;
@@ -459,21 +470,18 @@ div.wt-wnlist {
 	height: 0;
 	content: "";
 }
-
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-received {
 	float: left;
 	margin-left: 10px;
 	border-radius: 0px 5px 5px 5px;
 	background-color: #fafafa;
 }
-
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-received:after {
 	top: 0;
 	left: -10px;
 	border-width: 0px 10px 10px 0;
 	border-color: transparent #fafafa transparent transparent;
 }
-
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent {
 	float: right;
 	margin-right: 10px;
@@ -482,7 +490,6 @@ div.wt-wnlist {
 	/*background-color: #f1e7c2;*/
 	/*background: #e1ffc7;*//*WhatsApp color*/
 }
-
 .wt-chatmsgcol-msg.wt-chatmsgcol-msg-sent:after {
 	top: 0;
 	right: -10px;
@@ -491,12 +498,10 @@ div.wt-wnlist {
 	/*border-color: transparent transparent transparent #f1e7c2;*/
 	/*border-color: transparent transparent transparent #e1ffc7;*//*WhatsApp color*/
 }
-
 .wt-chatmsgcol-msg-text a {
 	text-decoration: underline;
 	color: #039be5;
 }
-
 .wt-chatmsgcol-sender {
 	display: inline-block;
 	position: relative;
@@ -505,11 +510,9 @@ div.wt-wnlist {
 	font-size:0.9em;
 	color: grey;
 }
-
 .wt-chatmsgcol-sender:before {
 	content: attr(data-content);
 }
-
 .wt-chatmsgcol-msgmeta {
 	display: inline-block;
 	position: relative;
@@ -519,11 +522,9 @@ div.wt-wnlist {
 	font-size:0.8em;
 	color: grey;
 }
-
 .wt-chatmsgcol-msgmeta > span:before {
 	content: attr(data-content);
 }
-
 .wt-chatmsgcol-filemeta {
 	display: inline-block;
 	position: relative;
@@ -533,11 +534,9 @@ div.wt-wnlist {
 	font-size:0.8em;
 	color: grey;
 }
-
 .wt-chatmsgcol-filemeta:before {
 	content: attr(data-content);
 }
-
 .wt-chatmsgcol-filewrap {
 	display: block;
     display: -webkit-flex;
@@ -553,7 +552,6 @@ div.wt-wnlist {
 	text-decoration: none;
 	color: #262626;
 }
-
 .wt-chatmsgcol-filebody {
 	-webkit-flex: 0 0 auto;
     flex: 0 0 auto;
@@ -574,17 +572,14 @@ div.wt-wnlist {
     text-decoration: none;
     cursor: pointer;
 }
-
 .wt-chatmsgcol-filebody .wt-chatmsgcol-filebody-icon {
 	float: left;
 	width: 32px;
 	height: 32px;
 }
-
 .wt-chatmsgcol-filebody .wt-chatmsgcol-filebody-text {
 	margin-left: 5px;
 }
-
 .wt-chatmsgcol-imgfilebody {
 	display: -webkit-flex;
 	display: flex;
@@ -596,11 +591,10 @@ div.wt-wnlist {
     justify-content: center;
 	max-height: 250px;
 }
-
 .wt-chatmsgcol-imgfilebody img {
 	max-width: 250px;
 }
-
+/* -------------------------- */
 
 .so-rtc-lvideo {
 	position: absolute;

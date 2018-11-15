@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
+  <g id="icon">
+    <path d="M24.5125,20.3H14.5l-7.8,4.6v-4.6H3.5c-0.9831,0,-1.7875,-0.8044,-1.7875,-1.7875V5.4875C1.7125,4.5044,2.5169,3.7,3.5,3.7h21.0125C25.4956,3.7,26.3,4.5044,26.3,5.4875v13.025C26.3,19.4956,25.4956,20.3,24.5125,20.3z" fill-rule="evenodd" fill="#FFFFFF" stroke="#3E79B4" stroke-width="1.4" stroke-miterlimit="1" stroke-linejoin="round"/>
+    <path d="M9,12c0,1.1046,-0.6288,2,-2,2c-1.1046,0,-2,-0.8954,-2,-2s0.8954,-2,2,-2S9,10.8954,9,12zM14,10c-1.1046,0,-2,0.8954,-2,2s0.8954,2,2,2c1.3712,0,2,-0.8954,2,-2S15.1046,10,14,10zM21,10c-1.1046,0,-2,0.8954,-2,2s0.8954,2,2,2c1.3712,0,2,-0.8954,2,-2S22.1046,10,21,10z" fill-rule="evenodd" fill="#3E79B4"/>
+    <path d="M28.5125,7.7H28v11.2667C28,20.6419,26.6419,22,24.9667,22h-10.451l-3.4061,1.821c-0.2298,0.1288,-0.1384,0.479,0.1251,0.479H17.7l7.6,4.4l0,-4.4h3.2c0.99,0,1.8,-0.81,1.8,-1.8V9.4875C30.3,8.5044,29.4956,7.7,28.5125,7.7z" fill-rule="evenodd" fill="#FFFFFF"/>
+    <path d="M11.1,24.3h6.6l7.6,4.4l0,-4.4h3.2125c0.9831,0,1.7875,-0.8169,1.7875,-1.8V9.4875C30.3,8.5044,29.4956,7.7,28.5125,7.7H28" fill-rule="evenodd" fill="none" stroke="#A7A9AC" stroke-width="1.4" stroke-linecap="round" stroke-miterlimit="1" stroke-linejoin="round"/>
+  </g>
+</svg>

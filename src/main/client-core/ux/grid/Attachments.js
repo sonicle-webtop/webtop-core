@@ -42,6 +42,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 		'Sonicle.grid.column.Link'
 	],
 	
+	cls: 'wt-attachmentsgrid',
+	
 	/**
 	 * @cfg {String} sid
 	 * WebTop service ID.
@@ -194,7 +196,6 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			hideable: false,
 			groupable: false,
 			align: 'center',
-			width: 80,
 			items: [{
 				iconCls: 'fa fa-cloud-download',
 				tooltip: WT.res('act-download.lbl'),
@@ -210,7 +211,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 					var rec = g.getStore().getAt(ridx);
 					me.fireEvent('attachmentdeleteclick', me, rec, ridx);
 				}
-			}]
+			}],
+			width: 80
 		}];
 	},
 	

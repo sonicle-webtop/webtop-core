@@ -4,6 +4,38 @@
 .wt-portal-body { background-color: #e0ebf3; }
 
 /*
+ * Background color for body (regular, lighten/darken, alternative)
+ */
+.wt-theme-bg { background-color: #fff; }
+.wt-theme-bg-more { background-color: #fafafa; }
+.wt-theme-bg-alt { background-color: #fafafa; } /*???????????*/
+
+/*
+ * Text color for body (regular, title/header)
+ */
+.wt-theme-text { color: #000; }
+.wt-theme-text-tit { color: #157fcc; }
+.wt-theme-text-sub { color: #888; }
+.wt-theme-text-lnk { color: #0078d7; }
+
+/*
+ * Background color for header (regular, lighten/darken, alternative)
+ */
+.wt-theme-header-bg { background-color: #fafafa; }
+.wt-theme-header-bg-more { background-color: #e6e6e6; }
+.wt-theme-header-bg-alt { background-color: #3892d4; }
+
+/*
+ * Text color for header (regular, alternative)
+ */
+.wt-theme-header-text { color: #157fcc; } /* regular */
+.wt-theme-header-text-alt { color: #fff; } /* contrast */
+
+
+
+
+
+/*
  * Background: 1:light, 2:medium/less-light, 3:dark/alternative
  * Generally light to not provide excessive contrast
  */
