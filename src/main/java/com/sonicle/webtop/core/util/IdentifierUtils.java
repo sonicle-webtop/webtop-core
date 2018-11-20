@@ -50,14 +50,16 @@ import org.apache.commons.lang3.StringUtils;
 public class IdentifierUtils {
 	private static final char[] VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUID instead
+	 * @return 
+	 */
 	public static synchronized String getUUID() {
 		return getUUID(false);
 	}
 	
 	/**
-	 * Generates a characters UUID.
-	 * With noHiphens at False, resulting string will be 36 characters length; 32 otherwise.
-	 * @param noDashes
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUID instead
 	 * @return 
 	 */
 	@Deprecated
@@ -66,28 +68,48 @@ public class IdentifierUtils {
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUIDTimeBased instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getUUIDTimeBased() {
 		return getUUIDTimeBased(false);
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUIDTimeBased instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getUUIDTimeBased(boolean noDashes) {
 		final String uuid = Generators.timeBasedGenerator().generate().toString();
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUIDRandom instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getUUIDRandom() {
 		return getUUIDRandom(false);
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getUUIDRandom instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getUUIDRandom(boolean noDashes) {
 		final String uuid = Generators.randomBasedGenerator().generate().toString();
 		return (noDashes) ? StringUtils.replace(uuid, "-", "") : uuid;
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getCRSFToken instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getCRSFToken() {
 		try {
@@ -102,6 +124,10 @@ public class IdentifierUtils {
 		}
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.generateSecretKey instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String generateSecretKey() {
 		try {
@@ -116,6 +142,10 @@ public class IdentifierUtils {
 		}
 	}
 	
+	/**
+	 * @deprecated use com.sonicle.commons.IdentifierUtils.getRandomAlphaNumericString instead
+	 * @return
+	 */
 	@Deprecated
 	public static synchronized String getRandomAlphaNumericString(int length) {
 		try {
