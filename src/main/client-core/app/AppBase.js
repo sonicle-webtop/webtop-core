@@ -736,4 +736,33 @@ Ext.override(Ext.Date, {
 		return Ext.Date.add(date, interval, -value, preventDstAdjust);
 	}
 });
-
+Ext.override(Ext.ux.colorpick.Field, {
+	/**
+	 * Overrides default implementation of {@link Ext.ux.colorpick.Field#afterRender}.
+	 */
+	afterRender: function() {
+		var me = this;
+		me.callParent(arguments);
+		me._applyInputColor(me.getValue());
+	},
+	
+	/**
+	 * Overrides default implementation of {@link Ext.ux.colorpick.Field#onChange}.
+	 */
+	onChange: function(newVal, oldVal) {
+		var me = this;
+		me.callParent(arguments);
+		me._applyInputColor(newVal);
+	},
+	
+	_applyInputColor: function(color) {
+		var me = this,
+				co = Ext.isEmpty(color) ? 'ffffff' : color;
+		if (me.inputEl) {
+			me.inputEl.applyStyles({
+				backgroundColor: '#'+co,
+				color: '#'+co
+			});
+		}
+	}
+});
