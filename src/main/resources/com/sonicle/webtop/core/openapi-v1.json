@@ -49,6 +49,34 @@
           "x-example": "john.doe@sonicle.com"
         }
       ]
+    },
+    "/users": {
+      "get": {
+        "summary": "List all enabled users",
+        "operationId": "getUsers",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "targetProfileId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "securityDefinitions": {
@@ -57,7 +85,7 @@
     }
   },
   "definitions": {
-    "Error": {
+    "ApiError": {
       "type": "object",
       "required": [
         "code"
@@ -71,14 +99,10 @@
         "description": {
           "type": "string",
           "example": "Bad query parameter [$size]: Invalid integer value [abc]"
-        },
-        "reason": {
-          "type": "string",
-          "example": "Bad Request"
         }
       },
       "description": "This general detailed error structure is used throughout this API.",
-      "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\",\n  \"reasonPhrase\": \"Bad Request\"\n}"
+      "example": "{\n  \"code\": 400,\n  \"description\": \"Bad query parameter [$size]: Invalid integer value [abc]\"\n}"
     },
     "PrincipalInfo": {
       "type": "object",
@@ -99,6 +123,29 @@
           "type": "string"
         },
         "languageTag": {
+          "type": "string"
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "required": [
+        "displayName",
+        "enabled",
+        "id",
+        "uid"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "displayName": {
           "type": "string"
         }
       }

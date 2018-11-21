@@ -34,8 +34,12 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.subject.Subject;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  *
@@ -55,39 +59,84 @@ public abstract class BaseRestApiResource extends AbstractService {
 		return WT.getManifest(SERVICE_ID);
 	}
 	
-	public Response respOk() {
-		return Response.ok().build();
+	
+	public UserProfileId getTargetProfileId(String targetProfileId) {
+		Subject subject = RunContext.getSubject();
+		if (RunContext.isSysAdmin(subject)) {
+			return StringUtils.isBlank(targetProfileId) ? null : new UserProfileId(targetProfileId);
+		} else {
+			return StringUtils.isBlank(targetProfileId) ? RunContext.getRunProfileId(subject) : new UserProfileId(targetProfileId);
+		}
 	}
 	
-	public Response respOk(Object entity) {
-		return Response.ok(entity).build();
+	protected abstract Object createErrorEntity(Response.Status status, String message);
+	
+	public Response respOkNoContent() {
+		return respOk(Response.Status.NO_CONTENT);
 	}
 	
 	public Response respOkCreated() {
-		return Response.status(Response.Status.CREATED).build();
+		return respOkCreated(null);
 	}
 	
 	public Response respOkCreated(Object entity) {
-		return Response.ok(entity).status(Response.Status.CREATED).build();
+		return respOk(Response.Status.CREATED, entity);
 	}
 	
-	public Response respOkNoContent() {
-		return Response.status(Response.Status.NO_CONTENT).build();
+	public Response respOk() {
+		return respOk(null, null);
+	}
+	
+	public Response respOk(Object entity) {
+		return respOk(null, entity);
+	}
+	
+	public Response respOk(Response.Status status, Object entity) {
+		final Response.ResponseBuilder resp = (status != null) ? Response.status(status) : Response.ok();
+		if (entity != null) resp.entity(entity);
+		return resp.build();
 	}
 	
 	public Response respErrorBadRequest() {
-		return Response.status(Response.Status.BAD_REQUEST).build();
+		return respErrorBadRequest(null);
 	}
 	
-	public Response respError(WTException ex) {
-		return Response.serverError().build();
+	public Response respErrorBadRequest(String message, Object... arguments) {
+		return respError(Response.Status.BAD_REQUEST, message, arguments);
 	}
 	
 	public Response respErrorNotFound() {
-		return Response.status(Response.Status.NOT_FOUND).build();
+		return respErrorNotFound(null);
+	}
+	
+	public Response respErrorNotFound(String message, Object... arguments) {
+		return respError(Response.Status.NOT_FOUND, message, arguments);
 	}
 	
 	public Response respErrorNotAllowed() {
-		return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+		return respErrorNotAllowed(null);
+	}
+	
+	public Response respErrorNotAllowed(String message, Object... arguments) {
+		return respError(Response.Status.METHOD_NOT_ALLOWED, message, arguments);
+	}
+	
+	public Response respError(Throwable t) {
+		return respError(null, t.getMessage());
+	}
+	
+	public Response respError(Response.Status status, String message, Object... arguments) {
+		final Response.Status respStatus = (status != null) ? status : Response.Status.INTERNAL_SERVER_ERROR;
+		final Response.ResponseBuilder resp = Response.status(respStatus);
+		if (!StringUtils.isBlank(message)) {
+			if ((arguments != null) && (arguments.length > 0)) {
+				resp.entity(createErrorEntity(respStatus, MessageFormatter.arrayFormat(message, arguments).getMessage()));
+				//resp.entity(MessageFormatter.arrayFormat(message, arguments).getMessage());
+			} else {
+				resp.entity(createErrorEntity(respStatus, message));
+				//resp.entity(message);
+			}
+		}
+		return resp.build();
 	}
 }

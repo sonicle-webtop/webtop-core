@@ -14,8 +14,8 @@ import javax.validation.Valid;
 
 @Path("/dav")
 @Api(description = "the dav API")
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2018-04-30T17:51:45.325+02:00")
-public class DavApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
+@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2018-11-21T12:32:46.096+01:00")
+public abstract class DavApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @GET
     @Path("/principals/{profileUsername}")

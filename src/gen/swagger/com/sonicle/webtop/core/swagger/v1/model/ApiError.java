@@ -13,17 +13,16 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 @ApiModel(description = "This general detailed error structure is used throughout this API.")
 
-public class Error   {
+public class ApiError   {
   
   private @Valid Integer code = null;
   private @Valid String description = null;
-  private @Valid String reason = null;
 
   /**
    * minimum: 400
    * maximum: 599
    **/
-  public Error code(Integer code) {
+  public ApiError code(Integer code) {
     this.code = code;
     return this;
   }
@@ -41,7 +40,7 @@ public class Error   {
 
   /**
    **/
-  public Error description(String description) {
+  public ApiError description(String description) {
     this.description = description;
     return this;
   }
@@ -56,23 +55,6 @@ public class Error   {
     this.description = description;
   }
 
-  /**
-   **/
-  public Error reason(String reason) {
-    this.reason = reason;
-    return this;
-  }
-
-  
-  @ApiModelProperty(example = "Bad Request", value = "")
-  @JsonProperty("reason")
-  public String getReason() {
-    return reason;
-  }
-  public void setReason(String reason) {
-    this.reason = reason;
-  }
-
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -82,25 +64,23 @@ public class Error   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Error error = (Error) o;
-    return Objects.equals(code, error.code) &&
-        Objects.equals(description, error.description) &&
-        Objects.equals(reason, error.reason);
+    ApiError apiError = (ApiError) o;
+    return Objects.equals(code, apiError.code) &&
+        Objects.equals(description, apiError.description);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(code, description, reason);
+    return Objects.hash(code, description);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Error {\n");
+    sb.append("class ApiError {\n");
     
     sb.append("    code: ").append(toIndentedString(code)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    reason: ").append(toIndentedString(reason)).append("\n");
     sb.append("}");
     return sb.toString();
   }
