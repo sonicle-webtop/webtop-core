@@ -771,6 +771,8 @@ public class CoreSettings {
 	 */
 	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
 	
+	public static final String EDITOR_FONTS = "editor.fonts";
+	
 	public static enum ViewportHeaderScale {
 		@SerializedName("small") SMALL,
 		@SerializedName("medium") MEDIUM,

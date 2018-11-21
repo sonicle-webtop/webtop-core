@@ -37,11 +37,13 @@ Ext.define('Sonicle.webtop.core.store.TxtFont', {
 	
 	model: 'WTA.model.Simple',
 	data: [
-		['Arial', 'Arial'],
-		['Comic Sans MS', 'Comic Sans MS'],
-		['Courier New', 'Courier New'],
-		['Tahoma', 'Tahoma'],
-		['Times New Roman', 'Times New Roman'],
-		['Verdana', 'Verdana']
-	]
+	],
+	
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(WT.getVar("editorFonts").split(","), function(element) {
+			me.config.data[me.config.data.length]= [ element, element ];
+		});
+		me.callParent([cfg]);
+	}	
 });
