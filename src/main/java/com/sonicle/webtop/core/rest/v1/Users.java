@@ -64,9 +64,9 @@ public class Users extends UsersApi {
 			UserProfileId targetPid = getTargetProfileId(targetProfileId);
 			if (targetPid == null) return respErrorBadRequest("Missing parameter [targetProfileId]");
 			
-			CoreManager manager = WT.getCoreManager(targetPid);
+			CoreManager coreMgr = WT.getCoreManager(targetPid);
 			List<User> items = new ArrayList<>();
-			for (OUser ouser : manager.listUsers(true)) {
+			for (OUser ouser : coreMgr.listUsers(true)) {
 				if (OUser.TYPE_USER.equals(ouser.getType())) {
 					items.add(createUser(ouser));
 				}
