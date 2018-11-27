@@ -179,6 +179,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			dataIndex: me.filenameField,
 			hideable: false,
 			header: me.filenameText,
+			cls: 'wt-theme-text-lnk',
 			flex: 3,
 			listeners: {
 				linkclick: function(s, ridx, rec) {
