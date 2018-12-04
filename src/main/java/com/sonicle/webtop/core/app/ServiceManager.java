@@ -389,7 +389,7 @@ public class ServiceManager {
 	
 	public boolean isInDevMode(String serviceId) {
 		Boolean bool = LangUtils.value(wta.getSettingsManager().getServiceSetting(serviceId, CoreSettings.DEV_MODE), (Boolean)null);
-		return (bool == null) ? wta.getStartupProperties().getDevMode() : bool;
+		return (bool == null) ? WebTopProps.getDevMode() : bool;
 	}
 	
 	public void setMaintenance(String serviceId, boolean maintenance) {

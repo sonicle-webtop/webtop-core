@@ -33,7 +33,6 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
-import com.sonicle.webtop.core.app.ContextLoader;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -47,7 +46,8 @@ public class LoggerDC extends PathMatchingFilter {
 
 	@Override
 	protected boolean preHandle(ServletRequest request, ServletResponse response) throws Exception {
-		LoggerUtils.initDC(ContextLoader.getWabappName(request.getServletContext()));
+		//LoggerUtils.initDC(ContextLoader.getWabappName(request.getServletContext()));
+		LoggerUtils.initDC();
 		return true;
 	}
 }

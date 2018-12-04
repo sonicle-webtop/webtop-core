@@ -201,7 +201,6 @@ public final class WebTopApp {
 	private final Charset systemCharset;
 	private final DateTimeZone systemTimeZone;
 	private Locale systemLocale;
-	private StartupProperties startupProps;
 	private final String webappConfigPath;
 	private DefaultSecurityManager shiroSecurityManager;
 	private Subject adminSubject;
@@ -227,7 +226,7 @@ public final class WebTopApp {
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
 	WebTopApp(ServletContext servletContext) {
-		webappName = ContextUtils.getWebappName(servletContext);
+		WebTopApp.webappName = ContextUtils.getWebappFullName(servletContext, false);
 		this.servletContext = servletContext;
 		
 		this.osInfo = OSInfo.build();
@@ -250,22 +249,18 @@ public final class WebTopApp {
 		ICalendarUtils.setCompatibilityOutlook(true);
 		ICalendarUtils.setCompatibilityNotes(true);
 		
-		startupProps = createStartupProperties();
-		logger.info("webtop.extJsDebug = {}", startupProps.getExtJsDebug());
-		logger.info("webtop.soExtDevMode = {}", startupProps.getSonicleExtJsExtensionsDevMode());
-		logger.info("webtop.devMode = {}", startupProps.getDevMode());
-		logger.info("webtop.debugMode = {}", startupProps.getDebugMode());
-		logger.info("webtop.schedulerDisabled = {}", startupProps.getSchedulerDisabled());
-		logger.info("webtop.webappsConfigPath = {}", startupProps.getWebappsConfigPath());
+		Properties systemProps = System.getProperties();
+		WebTopProps.checkOldPropsUsage(systemProps);
+		WebTopProps.print(systemProps);
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		if (StringUtils.isBlank(startupProps.getWebappsConfigPath())) {
+		if (StringUtils.isBlank(WebTopProps.getWebappsConfigDir(systemProps))) {
 			webappConfigPath = null;
 		} else {
-			webappConfigPath = PathUtils.concatPaths(startupProps.getWebappsConfigPath(), ContextUtils.getWebappName(servletContext, true));
+			webappConfigPath = PathUtils.concatPaths(WebTopProps.getWebappsConfigDir(systemProps), ContextUtils.getWebappName(servletContext, true));
 		}
 		shiroSecurityManager = buildSecurityManager();
 		adminSubject = buildSysAdminSubject(shiroSecurityManager);
@@ -288,7 +283,7 @@ public final class WebTopApp {
 			public void run() {
 				ThreadState threadState = new SubjectThreadState(adminSubject);
 				try {
-					LoggerUtils.initDC(webappName);
+					LoggerUtils.initDC();
 					threadState.bind();
 					onAppReady();
 				} catch(InterruptedException ex) {
@@ -400,7 +395,7 @@ public final class WebTopApp {
 			quartzProps.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
 			
 			this.scheduler = new StdSchedulerFactory(quartzProps).getScheduler();
-			if (startupProps.getSchedulerDisabled()) {
+			if (WebTopProps.getSchedulerDisabled()) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
 				this.scheduler.start();
@@ -647,39 +642,6 @@ public final class WebTopApp {
 		return new CoreServiceSettings(setMgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
 	}
 	
-	private StartupProperties createStartupProperties() {
-		final String PREFIX = "com.sonicle.webtop.";
-		Properties props = new Properties();
-		String prop = null;
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_EXTJS_DEBUG, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_EXTJS_DEBUG.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_EXTJS_DEBUG, prop);
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_SO_EXT_DEV_MODE, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_SO_EXT_DEV_MODE.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_SO_EXT_DEV_MODE, prop);
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_DEV_MODE, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_DEV_MODE.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_DEV_MODE, prop);
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_DEBUG_MODE, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_DEBUG_MODE.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_DEBUG_MODE, prop);
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_SCHEDULER_DISABLED, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_SCHEDULER_DISABLED.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_SCHEDULER_DISABLED, prop);
-		
-		prop = System.getProperty(PREFIX + StartupProperties.PROP_WEBAPPS_CONFIG_PATH, null);
-		if (prop == null) prop = System.getProperty(PREFIX + StartupProperties.PROP_WEBAPPS_CONFIG_PATH.toLowerCase(), null);
-		if (prop != null) props.setProperty(StartupProperties.PROP_WEBAPPS_CONFIG_PATH, prop);
-		//context.getInitParameter
-		
-		return new StartupProperties(props);
-	}
-	
 	public String getAppServerInfo() {
 		return servletContext.getServerInfo();
 	}
@@ -698,10 +660,6 @@ public final class WebTopApp {
 	
 	public Locale getSystemLocale() {
 		return systemLocale;
-	}
-	
-	public StartupProperties getStartupProperties() {
-		return startupProps;
 	}
 	
 	public String getWebappConfigPath() {

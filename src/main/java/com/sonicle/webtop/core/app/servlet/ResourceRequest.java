@@ -226,13 +226,13 @@ public class ResourceRequest extends HttpServlet {
 						return lookupJs(req, targetUrl, false);
 
 					} else if (StringUtils.startsWith(path, "boot/")) {
-						return lookupJs(req, targetUrl, isDebug(wta, sessionId));
+						return lookupJs(req, targetUrl, isJsDebug(wta, sessionId));
 
 					} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
 						return lookupLocaleJs(req, targetUrl, subject);
 
 					} else {
-						return lookupJs(req, targetUrl, isDebug(wta, sessionId));
+						return lookupJs(req, targetUrl, isJsDebug(wta, sessionId));
 					}
 
 				} else if (StringUtils.startsWith(path, "laf")) {
@@ -248,14 +248,12 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private boolean isDebug(WebTopApp wta, String sessionId) {
-		if(StringUtils.isBlank(sessionId)) return false;
-		WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
-		if(wts == null) {
-			return wta.getStartupProperties().getDebugMode();
-		} else {
-			return wts.getDebugMode();
+	private boolean isJsDebug(WebTopApp wta, String sessionId) {		
+		if (!StringUtils.isBlank(sessionId)) {
+			WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
+			if (wts != null) wts.isJsDebugEnabled();
 		}
+		return false;
 	}
 	
 	private URL getResURL(String name) {

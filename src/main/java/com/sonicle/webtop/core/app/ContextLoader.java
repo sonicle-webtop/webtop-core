@@ -34,12 +34,19 @@
 package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.joran.spi.JoranException;
+import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
 import com.sonicle.webtop.core.app.shiro.filter.JWTSignatureVerifier;
-import com.sonicle.webtop.core.util.LoggerUtils;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.io.File;
+import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration.Dynamic;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +63,65 @@ public class ContextLoader {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
 	}
 	
-	protected void initApp(String webappName, ServletContext servletContext) throws IllegalStateException {
+	public void initLogging(ServletContext servletContext) {
+		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
+		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Like <context-name>##<context-version>
+		Properties systemProps = System.getProperties();
+		
+		// Updates some (logging related) system props before resetting loggerContext configuration
+		if (PropUtils.isDefined(systemProps, WebTopProps.LOG_DIR)) {
+			WebTopProps.setLogDir(systemProps, expandLogDirVariables(WebTopProps.getLogDir(systemProps), webappFullName));
+		}
+		String logFileBasename = WebTopProps.getLogFileBasename(systemProps);
+		WebTopProps.setLogFileBasename(systemProps, !StringUtils.isBlank(logFileBasename) ? logFileBasename : webappFullName);
+		
+		// Resets current configuration
+		loggerContext.reset();
+		
+		// If defined, set the custom file as main configuration source
+		String customConfPath = findCustomLogbackConfPathname(systemProps, webappFullName);
+		if (customConfPath != null) {
+			System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, customConfPath);	
+		}
+		
+		// Re-inits logger configuration...
+		try {
+			// https://stackoverflow.com/questions/24235296/how-to-define-logback-variables-properties-before-logback-auto-load-logback-xml
+			ContextInitializer ci = new ContextInitializer(loggerContext);
+			ci.autoConfig();
+			
+		} catch(JoranException ex) {
+			throw new WTRuntimeException(ex, "Error configuring loggerContext");
+		}
+	}
+	
+	private String findCustomLogbackConfPathname(Properties props, String webappFullName) {
+		final String FILENAME = "logback.xml";
+		File file = null;
+		
+		String webappsConfigDir = WebTopProps.getWebappsConfigDir(props);
+		if (!StringUtils.isBlank(webappsConfigDir)) {
+			// Try to get file under: "/path/to/webappsConfig/myAppName/logback.xml"
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, webappFullName, FILENAME));
+			if (file.exists() && file.canRead()) return file.getPath();
+			
+			// Try to get file under: "/path/to/webappsConfig/logback.xml"
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, FILENAME));
+			if (file.exists() && file.canRead()) return file.getPath();
+		}
+		
+		return null;
+	}
+	
+	private String expandLogDirVariables(String logDir, String webappFullName) {
+		if (logDir == null) return logDir;
+		String s = StringUtils.replace(logDir, "${WEBAPP_FULLNAME}", webappFullName);
+		s = StringUtils.replace(s, "${WEBAPP_NAME}", ContextUtils.stripWebappVersion(webappFullName));
+		return s;
+	}
+	
+	public void initApp(ServletContext servletContext) throws IllegalStateException {
+		String webappName = ContextUtils.getWebappFullName(servletContext, false);
 		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, webappName);
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
 			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");

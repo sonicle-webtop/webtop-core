@@ -34,8 +34,6 @@
 package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
-import com.sonicle.commons.web.ContextUtils;
-import com.sonicle.webtop.core.util.LoggerUtils;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -49,24 +47,15 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
-		try {
-			ServletContext servletContext = sce.getServletContext();
-			String webappName = ContextUtils.getWebappName(servletContext);
-			LoggerUtils.initDC(webappName);
-			initApp(webappName, servletContext);
-		} finally {
-			LoggerUtils.clearDC();
-		}
+		ServletContext servletContext = sce.getServletContext();
+		WebTopProps.initOldPropsCompatibility();
+		initLogging(servletContext);
+		initApp(servletContext);
 	}
 
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {
-		try {
-			LoggerUtils.initDC();
-			destroyApp(sce.getServletContext());
-		} finally {
-			LoggerUtils.clearDC();
-		}
+		destroyApp(sce.getServletContext());
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
 		loggerContext.stop();
 	}

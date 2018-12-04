@@ -101,7 +101,7 @@ public class WebTopSession {
 	private final WebTopApp wta;
 	private HttpSession session;
 	private final String csrfToken;
-	private Boolean debugMode;
+	private Boolean jsDebugEnabled;
 	
 	private final Object lock0 = new Object();
 	private ReadableUserAgent readableUserAgent = null;
@@ -127,6 +127,7 @@ public class WebTopSession {
 		this.wta = wta;
 		this.session = session;
 		this.csrfToken = IdentifierUtils.getCRSFToken();
+		this.jsDebugEnabled = WebTopProps.getJsDebug();
 	}
 	
 	synchronized void cleanup() throws Exception {
@@ -254,11 +255,11 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Returns the configuration for debug mode.
+	 * Returns current configuration for js debug.
 	 * @return 
 	 */
-	public boolean getDebugMode() {
-		return debugMode == null ? wta.getStartupProperties().getDebugMode() : debugMode;
+	public boolean isJsDebugEnabled() {
+		return jsDebugEnabled;
 	}
 	
 	/**
@@ -1036,7 +1037,7 @@ public class WebTopSession {
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
 		String extRtl = rtl ? "-rtl" : "";
-		String extDebug = wta.getStartupProperties().getExtJsDebug() ? "-debug" : "";
+		String extDebug = WebTopProps.getExtJsDebug() ? "-debug" : "";
 		String extTheme = theme;
 		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
 		String extLang = "-" + locale.getLanguage();
@@ -1054,7 +1055,7 @@ public class WebTopSession {
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
 		
 		// Include Sonicle ExtJs Extensions references
-		if (wta.getStartupProperties().getSonicleExtJsExtensionsDevMode()) {
+		if (WebTopProps.getSoExtJsExtensionsDevMode()) {
 			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
@@ -1063,7 +1064,7 @@ public class WebTopSession {
 		
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
-		if (wta.getStartupProperties().getExtJsDebug())
+		if (WebTopProps.getExtJsDebug())
 			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
 	}
 	

@@ -43,7 +43,7 @@ import org.slf4j.MDC;
  * @author malbinola
  */
 public class LoggerUtils {
-	private static final String VAR_APPNAME = "appname";
+	//private static final String VAR_APPNAME = "appname";
 	private static final String VAR_SERVICE = "service";
 	private static final String VAR_USER = "user";
 	private static final String VAR_USER_SERVICE = "user-service";
@@ -53,9 +53,11 @@ public class LoggerUtils {
 	private static final String DEFAULT_SERVICE = "core";
 	private static final String DEFAULT_USER = "system";
 	
+	/*
 	public synchronized static String getAppNameVariable() {
 		return StringUtils.defaultString(MDC.get(VAR_APPNAME));
 	}
+	*/
 	
 	public synchronized static String getServiceVariable() {
 		return StringUtils.defaultIfBlank(MDC.get(VAR_SERVICE), DEFAULT_SERVICE);
@@ -74,19 +76,16 @@ public class LoggerUtils {
 	}
 	
 	public synchronized static void initDC() {
-		initDC(StringUtils.defaultIfBlank(WebTopApp.getWebappName(), DEFAULT_APPNAME));
+		clearDC();
+		//initDC(StringUtils.defaultIfBlank(WebTopApp.getWebappName(), DEFAULT_APPNAME));
 	}
 	
-	/**
-	 * Initialize diagnostic context (MDC object) with default variables:
-	 * - service = core
-	 * - user = system
-	 * It also update values related to automatic variables.
-	 */
+	/*
 	public synchronized static void initDC(String appName) {
 		MDC.put(VAR_APPNAME, appName);
 		clearDC();
 	}
+	*/
 	
 	public synchronized static void clearDC() {
 		MDC.put(VAR_USER, DEFAULT_USER);
