@@ -43,6 +43,7 @@ import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
@@ -155,12 +156,12 @@ public class WTRealm extends AuthorizingRealm {
 				ODomain domain = null;
 				if (!StringUtils.isBlank(internetDomain)) {
 					List<ODomain> domains = wtMgr.listByInternetDomain(internetDomain);
-					if (domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{0}]", internetDomain);
-					if (domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{0}]", internetDomain);
+					if (domains.isEmpty()) throw new WTException("No enabled domains match specified internet domain [{}]", internetDomain);
+					if (domains.size() != 1) throw new WTException("Multiple domains match specified internet domain [{}]", internetDomain);
 					domain = domains.get(0);
 				} else {
 					domain = wtMgr.getDomain(domainId);
-					if ((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{0}]", domainId);
+					if ((domain == null) || !domain.getEnabled()) throw new WTException("Domain not found [{}]", domainId);
 				}
 				
 				if (isSysAdminImpersonate(username)) {
@@ -179,7 +180,7 @@ public class WTRealm extends AuthorizingRealm {
 			
 			DirectoryOptions opts = wta.createDirectoryOptions(authAd);
 			AbstractDirectory directory = dirManager.getDirectory(authAd.getDirUri().getScheme());
-			if (directory == null) throw new WTException("Directory not supported [{0}]", authAd.getDirUri().getScheme());
+			if (directory == null) throw new WTException("Directory not supported [{}]", authAd.getDirUri().getScheme());
 			
 			// Prepare principal for authentication
 			String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
@@ -196,7 +197,7 @@ public class WTRealm extends AuthorizingRealm {
 				UserProfileId pid = new UserProfileId(principal.getDomainId(), principal.getUserId());
 				OUser ouser = wta.getWebTopManager().getUser(pid);
 				// We cannot continue if the user is not present, impersonation needs it!
-				if (ouser == null) throw new WTException("User not found [{0}]", pid.toString());
+				if (ouser == null) throw new WTException("User not found [{}]", pid.toString());
 				principal.setDisplayName(ouser.getDisplayName());
 				
 			} else {
@@ -209,11 +210,16 @@ public class WTRealm extends AuthorizingRealm {
 				WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
 				if (autoCreate && !chk.exist) {
 					logger.debug("Creating user [{}]", principal.getSubjectId());
-					wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
+					try {
+						wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
+					} catch(WTMultiCauseWarnException ex1) {
+						// This kind of exception collects errors from inner service handlers
+						logger.warn("User configuration may not have been fully completed. Please check log details above. [{}]", principal.getSubjectId(), ex1);
+					}
 				} else if (!chk.exist) {
-					throw new WTException("User does not exist [{0}]", principal.getSubjectId());
+					throw new WTException("User does not exist [{}]", principal.getSubjectId());
 				} else if (chk.exist && !chk.enabled) {
-					throw new WTException("User is disabled [{0}]", principal.getSubjectId());
+					throw new WTException("User is disabled [{}]", principal.getSubjectId());
 				}
 			}
 			

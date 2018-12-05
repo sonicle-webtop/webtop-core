@@ -62,6 +62,7 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
+import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
 import com.sonicle.webtop.core.bol.AssignedGroup;
 import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.AssignedUser;
@@ -689,7 +690,7 @@ public final class WebTopManager {
 			con = wta.getConnectionManager().getConnection(false);
 			
 			ODomain domain = getDomain(user.getDomainId());
-			if (domain == null) throw new WTException("Domain not found [{0}]", user.getDomainId());
+			if (domain == null) throw new WTException("Domain not found [{}]", user.getDomainId());
 			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			
 			user.ensureCoherence();
@@ -702,7 +703,7 @@ public final class WebTopManager {
 				
 				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					if (!authDir.validateUsername(opts, user.getUserId())) {
-						throw new WTException("Username does not satisfy directory requirements [{0}]", ad.getDirUri().getScheme());
+						throw new WTException("Username does not satisfy directory requirements [{}]", ad.getDirUri().getScheme());
 					}
 				}
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
@@ -710,7 +711,7 @@ public final class WebTopManager {
 						password = authDir.generatePassword(opts, domain.getDirPasswordPolicy());
 					} else {
 						if (domain.getDirPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
-							throw new WTException("Password does not satisfy directory password policy [{0}]", ad.getDirUri().getScheme());
+							throw new WTException("Password does not satisfy directory password policy [{}]", ad.getDirUri().getScheme());
 						}
 					}
 				}
@@ -762,7 +763,8 @@ public final class WebTopManager {
 		
 		// Performs some actions after the add operation
 		if (addedPid != null) {
-			wta.getServiceManager().invokeOnUserAdded(addedPid);
+			List<Throwable> errors = wta.getServiceManager().invokeOnUserAdded(addedPid);
+			if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
 		}		
 	}
 	
@@ -972,8 +974,10 @@ public final class WebTopManager {
 		}
 		
 		// Performs some actions after the remove operation
-		wta.getServiceManager().invokeOnUserRemoved(pid);
+		List<Throwable> errors = wta.getServiceManager().invokeOnUserRemoved(pid);
 		wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
+		
+		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(ODomain domain) throws WTException {

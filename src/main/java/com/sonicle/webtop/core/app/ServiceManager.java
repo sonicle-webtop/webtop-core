@@ -615,13 +615,16 @@ public class ServiceManager {
 		return new ProfileVersionEvaluationResult(manifestVer, userVer, upgraded);
 	}
 	
-	public void invokeOnUserAdded(UserProfileId profileId) {
+	public List<Throwable> invokeOnUserAdded(UserProfileId profileId) {
+		ArrayList<Throwable> errors = new ArrayList<>(0);
 		for (String serviceId : listRegisteredServices()) {
-			invokeOnUserAdded(serviceId, profileId);
+			Throwable t = invokeOnUserAdded(serviceId, profileId);
+			if (t != null) errors.add(t);
 		}
+		return errors;
 	}
 	
-	public void invokeOnUserAdded(String serviceId, UserProfileId profileId) {
+	public Throwable invokeOnUserAdded(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
 			BaseController instance = getController(serviceId);
@@ -634,19 +637,24 @@ public class ServiceManager {
 				
 			} catch(Throwable t) {
 				logger.error("onUserAdded() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+				return t;
 			} finally {
 				LoggerUtils.clearContextServiceDC();
 			}
 		}
+		return null;
 	}
 	
-	public void invokeOnUserRemoved(UserProfileId profileId) {
+	public List<Throwable> invokeOnUserRemoved(UserProfileId profileId) {
+		ArrayList<Throwable> errors = new ArrayList<>(0);
 		for (String serviceId : listRegisteredServices()) {
-			invokeOnUserRemoved(serviceId, profileId);
+			Throwable t = invokeOnUserRemoved(serviceId, profileId);
+			if (t != null) errors.add(t);
 		}
+		return errors;
 	}
 	
-	public void invokeOnUserRemoved(String serviceId, UserProfileId profileId) {
+	public Throwable invokeOnUserRemoved(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
 			BaseController instance = getController(serviceId);
@@ -659,10 +667,12 @@ public class ServiceManager {
 				
 			} catch(Throwable t) {
 				logger.error("onUserRemoved() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+				return t;
 			} finally {
 				LoggerUtils.clearContextServiceDC();
 			}
 		}
+		return null;
 	}
 	
 	/**

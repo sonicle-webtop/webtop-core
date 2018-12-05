@@ -399,8 +399,6 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.addUser(true, user, updatePassord, password);
-		} catch(WTCyrusException ex) {
-			throw ex;
 		} catch(WTException ex) {
 			throw new WTException(ex, "Unable to add user [{0}]", user.getProfileId().toString());
 		}
