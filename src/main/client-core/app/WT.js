@@ -815,7 +815,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		//https://blog.merlinox.com/google-maps-url-parameters/
 		//https://developers.google.com/maps/documentation/urls/guide
 		var params = {api: 1};
-		if (Ext.isEmpty(opts.query)) params.query = opts.query;
+		if (!Ext.isEmpty(opts.query)) params.query = opts.query;
 		Sonicle.URLMgr.open(Ext.String.urlAppend('https://www.google.com/maps/search/', Ext.Object.toQueryString(params)), true);
 	},
 	
