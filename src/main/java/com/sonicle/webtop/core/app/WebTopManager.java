@@ -682,6 +682,7 @@ public final class WebTopManager {
 	}
 	
 	public void addUser(boolean updateDirectory, UserEntity user, boolean updatePassword, char[] password) throws WTException {
+		UserProfileId addedPid = null;
 		Connection con = null;
 		
 		try {
@@ -715,6 +716,7 @@ public final class WebTopManager {
 				}
 				
 				ouser = doUserInsert(con, domain, user);
+				addedPid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
 				
 				// Insert user in directory (if necessary)
 				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
@@ -727,35 +729,25 @@ public final class WebTopManager {
 				}
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					logger.debug("Updating its password");
-					authDir.updateUserPassword(opts, domain.getDomainId(), user.getUserId(), password);
-					UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
-					new CoreUserSettings(pid).setPasswordLastChange(DateTimeUtils.now());
+					authDir.updateUserPassword(opts, addedPid.getDomainId(), addedPid.getUserId(), password);
+					new CoreUserSettings(addedPid).setPasswordLastChange(DateTimeUtils.now());
 				}
 				
 			} else {
 				ouser = doUserInsert(con, domain, user);
+				addedPid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
 			}
 			
 			DbUtils.commitQuietly(con);
 			
 			// Update cache
-			addToUserUidCache(new UserUid(ouser.getDomainId(), user.getUserId(), ouser.getUserUid()));
+			addToUserUidCache(new UserUid(addedPid.getDomainId(), addedPid.getUserId(), ouser.getUserUid()));
 
 			// Explicitly sets some important (locale & timezone) user settings to their defaults
-			UserProfileId pid = new UserProfileId(ouser.getDomainId(), ouser.getUserId());
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, ouser.getDomainId());
-			CoreUserSettings cus = new CoreUserSettings(pid);
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, addedPid.getDomainId());
+			CoreUserSettings cus = new CoreUserSettings(addedPid);
 			cus.setLanguageTag(css.getDefaultLanguageTag());
 			cus.setTimezone(css.getDefaultTimezone());
-			
-			//create Cyrus user on webtop and ldapWebtop schemes
-			String scheme=ad.getDirUri().getScheme();
-			if (scheme.equals(LdapWebTopDirectory.SCHEME) || scheme.equals(WebTopDirectory.SCHEME)) {
-				String mailbox=ouser.getUserId();
-				if (scheme.equals(LdapWebTopDirectory.SCHEME)) mailbox+="@"+domain.getInternetName();
-				createCyrusUser(mailbox,domain.getDomainId());
-			}
-			
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
@@ -767,6 +759,11 @@ public final class WebTopManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		// Performs some actions after the add operation
+		if (addedPid != null) {
+			wta.getServiceManager().invokeOnUserAdded(addedPid);
+		}		
 	}
 	
 	public CheckUserResult checkUser(UserProfileId pid) throws WTException {
@@ -929,28 +926,28 @@ public final class WebTopManager {
 			con = WT.getConnection(CoreManifest.ID, false);
 			
 			OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			if(user == null) throw new WTException("User not found [{0}]", pid.toString());
+			if (user == null) throw new WTException("User not found [{0}]", pid.toString());
 			
-			logger.debug("Deleting permissions");
+			logger.debug("Deleting permissions [{}]", user.getUserUid());
 			rpdao.deleteByRole(con, user.getUserUid());
-			logger.debug("Deleting groups associations");
+			logger.debug("Deleting groups associations [{}]", user.getUserUid());
 			uadao.deleteByUser(con, user.getUserUid());
-			logger.debug("Deleting roles associations");
+			logger.debug("Deleting roles associations [{}]", user.getUserUid());
 			rolassdao.deleteByUser(con, user.getUserUid());
-			logger.debug("Deleting userInfo");
+			logger.debug("Deleting userInfo [{}]", pid.toString());
 			uidao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			logger.debug("Deleting user");
+			logger.debug("Deleting user [{}]", pid.toString());
 			udao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			
-			if(cleanupDirectory) {
+			if (cleanupDirectory) {
 				ODomain domain = getDomain(pid.getDomainId());
-				if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+				if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
 				
 				AuthenticationDomain ad = createAuthenticationDomain(domain);
 				AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 				DirectoryOptions opts = wta.createDirectoryOptions(ad);
 				
-				if(directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
+				if (directory.hasCapability(DirectoryCapability.USERS_WRITE)) {
 					directory.deleteUser(opts, pid.getDomainId(), pid.getUserId());
 				}
 			}
@@ -960,11 +957,6 @@ public final class WebTopManager {
 			// Update cache
 			removeFromUserUidCache(pid);
 			removeFromUserCache(pid);
-			
-			// Cleanup all user settings ?????????????????????????????????????????????????
-			//wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
-			
-			// TODO: chiamare controller per gestire pulizia utente sui servizi
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
@@ -978,6 +970,10 @@ public final class WebTopManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+		
+		// Performs some actions after the remove operation
+		wta.getServiceManager().invokeOnUserRemoved(pid);
+		wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(ODomain domain) throws WTException {

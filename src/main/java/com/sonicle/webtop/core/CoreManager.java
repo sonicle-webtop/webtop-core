@@ -228,6 +228,23 @@ public class CoreManager extends BaseManager {
 		return items;
 	}
 	
+	/**
+	 * Returns target domain's authentication Directory.
+	 * @return The authentication Directory
+	 * @throws WTException 
+	 */
+	public AbstractDirectory getAuthDirectory() throws WTException {
+		// We can skip right check, an error will be returned here in getDomain()
+		ODomain domain = getDomain();
+		return (domain != null) ? wta.getWebTopManager().getAuthDirectory(domain.getDirUri()) : null;
+	}
+	
+	public String getAuthDirectoryScheme() throws WTException {
+		AbstractDirectory dir = getAuthDirectory();
+		return (dir != null) ? dir.getScheme() : null;
+	}
+	
+	@Deprecated
 	public AbstractDirectory getAuthDirectory(String domainId) throws WTException {
 		ODomain domain = getDomain(domainId);
 		if(domain == null) throw new WTException("Domain not found [{0}]", domainId);
@@ -235,6 +252,7 @@ public class CoreManager extends BaseManager {
 		return getAuthDirectory(domain);
 	}
 	
+	@Deprecated
 	public AbstractDirectory getAuthDirectory(ODomain domain) throws WTException {
 		if (RunContext.isSysAdmin()) {
 			return wta.getWebTopManager().getAuthDirectory(domain.getDirUri());

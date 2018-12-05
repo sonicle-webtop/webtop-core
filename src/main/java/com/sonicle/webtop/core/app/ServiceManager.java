@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
@@ -599,7 +600,7 @@ public class ServiceManager {
 			}
 			return value;
 		}
-	}	
+	}
 	
 	public ProfileVersionEvaluationResult evaluateProfileVersion(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor desc = getDescriptor(serviceId);
@@ -612,6 +613,56 @@ public class ServiceManager {
 		ServiceVersion userVer = new ServiceVersion(CoreUserSettings.getWhatsnewVersion(setm, profileId, manifest.getId()));
 		boolean upgraded = (manifestVer.compareTo(userVer) > 0);
 		return new ProfileVersionEvaluationResult(manifestVer, userVer, upgraded);
+	}
+	
+	public void invokeOnUserAdded(UserProfileId profileId) {
+		for (String serviceId : listRegisteredServices()) {
+			invokeOnUserAdded(serviceId, profileId);
+		}
+	}
+	
+	public void invokeOnUserAdded(String serviceId, UserProfileId profileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
+			BaseController instance = getController(serviceId);
+			IControllerUserEvents iface = (IControllerUserEvents)instance;
+			
+			logger.debug("Calling onUserAdded [{}, {}]", serviceId, profileId.toString());
+			try {
+				LoggerUtils.setContextDC(instance.SERVICE_ID);
+				iface.onUserAdded(profileId);
+				
+			} catch(Throwable t) {
+				logger.error("onUserAdded() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+			} finally {
+				LoggerUtils.clearContextServiceDC();
+			}
+		}
+	}
+	
+	public void invokeOnUserRemoved(UserProfileId profileId) {
+		for (String serviceId : listRegisteredServices()) {
+			invokeOnUserRemoved(serviceId, profileId);
+		}
+	}
+	
+	public void invokeOnUserRemoved(String serviceId, UserProfileId profileId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if (descr.doesControllerImplements(IControllerUserEvents.class)) {
+			BaseController instance = getController(serviceId);
+			IControllerUserEvents iface = (IControllerUserEvents)instance;
+			
+			logger.debug("Calling onUserRemoved() [{}, {}]", serviceId, profileId.toString());
+			try {
+				LoggerUtils.setContextDC(instance.SERVICE_ID);
+				iface.onUserRemoved(profileId);
+				
+			} catch(Throwable t) {
+				logger.error("onUserRemoved() throws errors [{}, {}]", serviceId, profileId.toString(), t);
+			} finally {
+				LoggerUtils.clearContextServiceDC();
+			}
+		}
 	}
 	
 	/**
