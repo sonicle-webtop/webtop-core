@@ -87,6 +87,10 @@ public abstract class BaseRestApiResource extends AbstractService {
 		return respOk(null, null);
 	}
 	
+	public Response respOk(Response.Status status) {
+		return respOk(status, null);
+	}
+	
 	public Response respOk(Object entity) {
 		return respOk(null, entity);
 	}
