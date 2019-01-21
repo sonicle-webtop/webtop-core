@@ -43,7 +43,6 @@ import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
@@ -79,7 +78,6 @@ import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
 import com.sonicle.webtop.core.bol.js.JsGridIMChat;
 import com.sonicle.webtop.core.bol.js.JsGridIMFriend;
-import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsGridIMMessage;
 import com.sonicle.webtop.core.bol.js.JsGridIMChatSearch;
 import com.sonicle.webtop.core.bol.js.JsGroupChat;
@@ -98,7 +96,6 @@ import com.sonicle.webtop.core.model.Recipient;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServicePermission;
-import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
@@ -126,7 +123,6 @@ import com.sonicle.webtop.core.xmpp.GroupChatRoom;
 import com.sonicle.webtop.core.xmpp.PresenceStatus;
 import com.sonicle.webtop.core.xmpp.XMPPClient;
 import com.sonicle.webtop.core.xmpp.XMPPClientException;
-import java.io.File;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -1269,14 +1265,14 @@ public class Service extends BaseService {
 			ArrayList<String> sources = ServletUtils.getStringParameters(request, "sources");
 			String crud = ServletUtils.getStringParameter(request, "crud", Crud.READ);
 			String query = ServletUtils.getStringParameter(request, "query", "");
-			boolean autoLast = ServletUtils.getBooleanParameter(request, "autoLast", false);
+			boolean builtInAtTheEnd = ServletUtils.getBooleanParameter(request, "autoLast", false);
 			RecipientFieldType rft = ServletUtils.getEnumParameter(request, "rftype", RecipientFieldType.EMAIL, RecipientFieldType.class);
 			if (crud.equals(Crud.READ)) {
 				int limit = ServletUtils.getIntParameter(request, "limit", 100);
 				if (limit==0) limit=Integer.MAX_VALUE;
 
 				if (sources.isEmpty()) {
-					items = coreMgr.listProviderRecipients(rft, query, limit, autoLast);
+					items = coreMgr.listProviderRecipients(rft, query, limit, builtInAtTheEnd);
 				} else {
 					items = coreMgr.listProviderRecipients(rft, sources, query, limit);
 				}
