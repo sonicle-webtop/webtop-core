@@ -260,7 +260,7 @@ public final class WebTopApp {
 		if (StringUtils.isBlank(WebTopProps.getWebappsConfigDir(systemProps))) {
 			webappConfigPath = null;
 		} else {
-			webappConfigPath = PathUtils.concatPaths(WebTopProps.getWebappsConfigDir(systemProps), ContextUtils.getWebappName(servletContext, true));
+			webappConfigPath = PathUtils.concatPaths(WebTopProps.getWebappsConfigDir(systemProps), ContextUtils.getWebappFullName(servletContext, true));
 		}
 		shiroSecurityManager = buildSecurityManager();
 		adminSubject = buildSysAdminSubject(shiroSecurityManager);
