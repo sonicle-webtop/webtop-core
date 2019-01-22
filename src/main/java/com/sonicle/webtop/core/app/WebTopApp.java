@@ -251,7 +251,7 @@ public final class WebTopApp {
 		
 		Properties systemProps = System.getProperties();
 		WebTopProps.checkOldPropsUsage(systemProps);
-		WebTopProps.print(systemProps, WebTopApp.webappName);
+		WebTopProps.print(systemProps);
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
 		//logger.info("getServletContextName: {}", context.getServletContextName());
