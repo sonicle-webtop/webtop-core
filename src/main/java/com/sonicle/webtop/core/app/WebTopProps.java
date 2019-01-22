@@ -34,6 +34,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.PropUtils;
 import java.util.Properties;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -60,9 +61,9 @@ public class WebTopProps {
 		copyOldProp(systemProps, "com.sonicle.webtop.schedulerDisabled", SCHEDULER_DISABLED);
 	}
 	
-	public static void print(Properties props) {
+	public static void print(Properties props, String webappName) {
 		WebTopApp.logger.info("{} = {}", LOG_DIR, getLogDir(props));
-		WebTopApp.logger.info("{} = {}", LOG_FILE_BASENAME, getLogFileBasename(props));
+		WebTopApp.logger.info("{} = {}", LOG_FILE_BASENAME, getLogFileBasename(props, webappName));
 		WebTopApp.logger.info("{} = {}", LOG_APPENDER, getLogAppender(props));
 		WebTopApp.logger.info("{} = {}", WEBAPPSCONFIG_DIR, getWebappsConfigDir(props));
 		WebTopApp.logger.info("{} = {}", EXTJS_DEBUG, getExtJsDebug(props));
@@ -93,12 +94,12 @@ public class WebTopProps {
 		props.setProperty(LOG_DIR, value);
 	}
 	
-	public static String getLogFileBasename() {
-		return getLogFileBasename(System.getProperties());
+	public static String getLogFileBasename(String defaultValue) {
+		return getLogFileBasename(System.getProperties(), defaultValue);
 	}
 	
-	public static String getLogFileBasename(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_FILE_BASENAME, "webtop");
+	public static String getLogFileBasename(Properties props, String defaultValue) {
+		return PropUtils.getStringProperty(props, LOG_FILE_BASENAME, StringUtils.defaultIfBlank(defaultValue, "webtop"));
 	}
 	
 	public static void setLogFileBasename(Properties props, String value) {

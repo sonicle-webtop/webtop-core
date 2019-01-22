@@ -72,7 +72,7 @@ public class ContextLoader {
 		if (PropUtils.isDefined(systemProps, WebTopProps.LOG_DIR)) {
 			WebTopProps.setLogDir(systemProps, expandLogDirVariables(WebTopProps.getLogDir(systemProps), webappFullName));
 		}
-		String logFileBasename = WebTopProps.getLogFileBasename(systemProps);
+		String logFileBasename = WebTopProps.getLogFileBasename(systemProps, webappFullName);
 		WebTopProps.setLogFileBasename(systemProps, !StringUtils.isBlank(logFileBasename) ? logFileBasename : webappFullName);
 		
 		// Resets current configuration

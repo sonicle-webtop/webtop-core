@@ -251,19 +251,20 @@ public final class WebTopApp {
 		
 		Properties systemProps = System.getProperties();
 		WebTopProps.checkOldPropsUsage(systemProps);
-		WebTopProps.print(systemProps);
+		WebTopProps.print(systemProps, WebTopApp.webappName);
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		if (StringUtils.isBlank(WebTopProps.getWebappsConfigDir(systemProps))) {
-			webappConfigPath = null;
+		String configDir = WebTopProps.getWebappsConfigDir(systemProps);
+		if (StringUtils.isBlank(configDir)) {
+			this.webappConfigPath = null;
 		} else {
-			webappConfigPath = PathUtils.concatPaths(WebTopProps.getWebappsConfigDir(systemProps), ContextUtils.getWebappFullName(servletContext, true));
+			this.webappConfigPath = PathUtils.concatPaths(configDir, ContextUtils.getWebappFullName(servletContext, true));
 		}
-		shiroSecurityManager = buildSecurityManager();
-		adminSubject = buildSysAdminSubject(shiroSecurityManager);
+		this.shiroSecurityManager = buildSecurityManager();
+		this.adminSubject = buildSysAdminSubject(shiroSecurityManager);
 	}
 	
 	void boot() {
