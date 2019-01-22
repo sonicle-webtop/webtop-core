@@ -497,7 +497,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 */
 	handleMailAddress: function(address,subject,body) {
 		Ext.log.warn("[WT.core] WT.handleMailAddress is deprecated, please use WT.handleNewMailMessage instead.");
-		this.handleNewMailMessage(arguments);
+		this.handleNewMailMessage.apply(this, arguments);
 	},
 	
 	/**
