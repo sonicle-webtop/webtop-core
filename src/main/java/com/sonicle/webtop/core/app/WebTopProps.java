@@ -89,20 +89,12 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, LOG_DIR, "/var/log");
 	}
 	
-	public static void setLogDir(Properties props, String value) {
-		props.setProperty(LOG_DIR, value);
-	}
-	
 	public static String getLogFileBasename() {
 		return getLogFileBasename(System.getProperties());
 	}
 	
 	public static String getLogFileBasename(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_FILE_BASENAME, "webtop");
-	}
-	
-	public static void setLogFileBasename(Properties props, String value) {
-		props.setProperty(LOG_FILE_BASENAME, value);
+		return PropUtils.getStringProperty(props, LOG_FILE_BASENAME, null);
 	}
 	
 	public static String getLogAppender() {
@@ -110,7 +102,7 @@ public class WebTopProps {
 	}
 	
 	public static String getLogAppender(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_APPENDER, "wt-rollingfile");
+		return PropUtils.getStringProperty(props, LOG_APPENDER, "wt-file");
 	}
 	
 	public static String getWebappsConfigDir() {

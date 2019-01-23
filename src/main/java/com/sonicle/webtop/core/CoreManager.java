@@ -1303,7 +1303,7 @@ public class CoreManager extends BaseManager {
 			throw new WTException("SMS not initialized");
 		}
 		UserProfileId targetPid = getTargetProfileId();
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());		
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetPid.getDomainId());	
 		CoreUserSettings us = new CoreUserSettings(targetPid);
 		
 		//use common service settings or webtop username/password
@@ -2143,17 +2143,18 @@ public class CoreManager extends BaseManager {
 	 * @param fieldType The desired recipient type.
 	 * @param queryText A text to filter out returned results.
 	 * @param max Max number of results.
+	 * @param builtInProvidersAtTheEnd True add built-in providers (AUTO and WEBTOP) results at the end, false otherwise.
 	 * @return
 	 * @throws WTException 
 	 */
-	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean autoLast) throws WTException {
+	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean builtInProvidersAtTheEnd) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
-		if (!autoLast) {
+		if (!builtInProvidersAtTheEnd) {
 			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
 			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
 		ids.addAll(listRecipientProviderSourceIds());
-		if (autoLast) {
+		if (builtInProvidersAtTheEnd) {
 			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
 			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
@@ -2170,12 +2171,15 @@ public class CoreManager extends BaseManager {
 	 * @throws WTException 
 	 */
 	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, Collection<String> sourceIds, String queryText, int max) throws WTException {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
 		ArrayList<Recipient> items = new ArrayList<>();
+		boolean autoProviderEnabled = css.getRecipientAutoProviderEnabled();
 		
 		int remaining = max;
-		for(String soId : sourceIds) {
+		for (String soId : sourceIds) {
 			List<Recipient> recipients = null;
 			if (StringUtils.equals(soId, RECIPIENT_PROVIDER_AUTO_SOURCE_ID)) {
+				if (!autoProviderEnabled) continue;
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					recipients = new ArrayList<>();
 					//TODO: Find a way to handle other RecipientFieldTypes
@@ -2186,7 +2190,7 @@ public class CoreManager extends BaseManager {
 							if (ia!=null) recipients.add(new Recipient(RECIPIENT_PROVIDER_AUTO_SOURCE_ID, lookupResource(getLocale(), CoreLocaleKey.INTERNETRECIPIENT_AUTO), RECIPIENT_PROVIDER_AUTO_SOURCE_ID, ia.getPersonal(), ia.getAddress()));
 						}
 					}
-				}					
+				}
 			} else if (StringUtils.equals(soId, RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID)) {
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					recipients = new ArrayList<>();

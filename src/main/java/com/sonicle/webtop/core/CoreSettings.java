@@ -401,6 +401,13 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [boolean]
+	 * Specifies whether to include auto-recipients in recipients lookups.
+	 */
+	public static final String RECIPIENT_AUTO_PROVIDER_ENABLED = "recipient.provider.auto.enabled";
+	
+	/**
+	 * [domain+system]
 	 * [string]
 	 */
 	public static final String FAX_FILETYPES = "fax.filetypes";

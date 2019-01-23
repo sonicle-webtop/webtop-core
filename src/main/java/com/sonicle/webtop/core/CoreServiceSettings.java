@@ -189,6 +189,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getInteger(OTP_TRUST_DEVICE_DURATION, 0);
 	}
 	
+	public boolean getRecipientAutoProviderEnabled() {
+		return getBoolean(RECIPIENT_AUTO_PROVIDER_ENABLED, true);
+	}
+	
 	public String getFaxFileTypes() {
 		return getString(FAX_FILETYPES, "pdf,txt");
 	}

@@ -34,21 +34,28 @@
 package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.Loader;
+import ch.qos.logback.core.util.StatusPrinter;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
 import com.sonicle.webtop.core.app.shiro.filter.JWTSignatureVerifier;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration.Dynamic;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  *
@@ -68,48 +75,65 @@ public class ContextLoader {
 		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Like <context-name>##<context-version>
 		Properties systemProps = System.getProperties();
 		
-		// Updates some (logging related) system props before resetting loggerContext configuration
-		if (PropUtils.isDefined(systemProps, WebTopProps.LOG_DIR)) {
-			WebTopProps.setLogDir(systemProps, expandLogDirVariables(WebTopProps.getLogDir(systemProps), webappFullName));
-		}
-		String logFileBasename = WebTopProps.getLogFileBasename(systemProps);
-		WebTopProps.setLogFileBasename(systemProps, !StringUtils.isBlank(logFileBasename) ? logFileBasename : webappFullName);
-		
-		// Resets current configuration
-		loggerContext.reset();
-		
-		// If defined, set the custom file as main configuration source
-		String customConfPath = findCustomLogbackConfPathname(systemProps, webappFullName);
-		if (customConfPath != null) {
-			System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, customConfPath);	
+		// Locates logback configuration file: try custom (webappConfig) first, then standard ones
+		URL fileUrl = findURLOfCustomConfigurationFile(WebTopProps.getWebappsConfigDir(systemProps), webappFullName);
+		if (fileUrl == null) {
+			ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
+			fileUrl = LogbackHelper.findURLOfDefaultConfigurationFile(classLoader);
 		}
 		
 		// Re-inits logger configuration...
 		try {
 			// https://stackoverflow.com/questions/24235296/how-to-define-logback-variables-properties-before-logback-auto-load-logback-xml
-			ContextInitializer ci = new ContextInitializer(loggerContext);
-			ci.autoConfig();
+			// Resets current configuration
+			JoranConfigurator jc = new JoranConfigurator();
+			jc.setContext(loggerContext);
+			loggerContext.reset();
+			
+			String logDir = WebTopProps.getLogDir(systemProps);
+			logDir = expandLogDirVariables(logDir, webappFullName);
+			String logFileBasename = PropUtils.isDefined(systemProps, WebTopProps.LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename() : null;
+			if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
+			String logFileAppender = WebTopProps.getLogAppender(systemProps);
+			
+			loggerContext.putProperty("logback.webtop.log.dir", logDir);
+			loggerContext.putProperty("logback.webtop.log.file.basename", logFileBasename);
+			loggerContext.putProperty("logback.webtop.log.appender", logFileAppender);
+			printToSystemOut("[{}] Using {} = {}", webappFullName, "logback.webtop.log.dir", logDir);
+			printToSystemOut("[{}] Using {} = {}", webappFullName, "logback.webtop.log.file.basename", logFileBasename);
+			printToSystemOut("[{}] Using {} = {}", webappFullName, "logback.webtop.log.appender", logFileAppender);
+			
+			jc.doConfigure(fileUrl);
 			
 		} catch(JoranException ex) {
+			StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
 			throw new WTRuntimeException(ex, "Error configuring loggerContext");
 		}
 	}
 	
-	private String findCustomLogbackConfPathname(Properties props, String webappFullName) {
-		final String FILENAME = "logback.xml";
+	private void printToSystemOut(String message, Object... arguments) {
+		System.out.println(MessageFormatter.arrayFormat(message, arguments).getMessage());
+	}
+	
+	private URL findURLOfCustomConfigurationFile(String webappsConfigDir, String webappFullName) {
 		File file = null;
-		
-		String webappsConfigDir = WebTopProps.getWebappsConfigDir(props);
 		if (!StringUtils.isBlank(webappsConfigDir)) {
 			// Try to get file under: "/path/to/webappsConfig/myAppName/logback.xml"
-			file = new File(PathUtils.concatPathParts(webappsConfigDir, webappFullName, FILENAME));
-			if (file.exists() && file.canRead()) return file.getPath();
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, webappFullName, ContextInitializer.AUTOCONFIG_FILE));
+			if (file.exists() && file.isFile()) {
+				try {
+					return file.toURI().toURL();
+				} catch (MalformedURLException e1) {}
+			}
 			
 			// Try to get file under: "/path/to/webappsConfig/logback.xml"
-			file = new File(PathUtils.concatPathParts(webappsConfigDir, FILENAME));
-			if (file.exists() && file.canRead()) return file.getPath();
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, ContextInitializer.AUTOCONFIG_FILE));
+			if (file.exists() && file.isFile()) {
+				try {
+					return file.toURI().toURL();
+				} catch (MalformedURLException e1) {}
+			}
 		}
-		
 		return null;
 	}
 	
