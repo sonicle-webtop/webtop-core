@@ -784,4 +784,4 @@ ALTER TABLE "core"."users_info" ADD PRIMARY KEY ("domain_id", "user_id");
 -- Align service version
 -- ----------------------------
 DELETE FROM "core"."settings" WHERE ("settings"."service_id" = 'com.sonicle.webtop.core') AND ("settings"."key" = 'manifest.version');
-INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.0.19');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'manifest.version', '5.5.2');
