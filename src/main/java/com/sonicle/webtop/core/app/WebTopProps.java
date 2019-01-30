@@ -102,7 +102,7 @@ public class WebTopProps {
 	}
 	
 	public static String getLogAppender(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_APPENDER, "rollingfile");
+		return PropUtils.getStringProperty(props, LOG_APPENDER, "stdout");
 	}
 	
 	public static String getWebappsConfigDir() {
