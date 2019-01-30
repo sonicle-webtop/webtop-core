@@ -32,18 +32,82 @@
  */
 package com.sonicle.webtop.core.app.util;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
+import com.sonicle.commons.PathUtils;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Properties;
+import org.apache.commons.lang3.StringUtils;
+import org.atmosphere.util.IOUtils;
 
 /**
  *
  * @author malbinola
  */
 public class LogbackHelper {
+	public static final String LOGBACK_PROPERTIES_FILE = "logback.properties";
+	public static final String PROP_APPENDER = "logback.webtop.log.appender";
+	public static final String PROP_LOG_DIR = "logback.webtop.log.dir";
+	public static final String PROP_LOG_FILE_BASENAME = "logback.webtop.log.file.basename";
+	
+	public static void reloadConfiguration(LoggerContext loggerContext) throws JoranException {
+		ContextInitializer ci = new ContextInitializer(loggerContext);
+		loggerContext.reset();
+		ci.configureByResource(ci.findURLOfDefaultConfigurationFile(true));
+	}
+	
+	public static void loadConfiguration(LoggerContext loggerContext, URL url) throws JoranException {
+		// https://stackoverflow.com/questions/24235296/how-to-define-logback-variables-properties-before-logback-auto-load-logback-xml
+		JoranConfigurator jc = new JoranConfigurator();
+		jc.setContext(loggerContext);
+		loggerContext.reset();
+		jc.doConfigure(url);
+		
+		//ContextInitializer ci = new ContextInitializer(loggerContext);
+		//loggerContext.reset();
+		//ci.configureByResource(url);
+	}
+	
+	public static void writeProperties(ClassLoader classLoader, Properties properties) throws IOException, URISyntaxException {
+		FileOutputStream out = null;
+		try {
+			out = new FileOutputStream(new File(classLoader.getResource(LOGBACK_PROPERTIES_FILE).toURI()));
+			properties.store(out, "");
+		} finally {
+			IOUtils.close(out);
+		}
+	}
+	
+	public static URL findURLOfCustomConfigurationFile(String webappsConfigDir, String webappFullName) {
+		File file = null;
+		if (!StringUtils.isBlank(webappsConfigDir)) {
+			// Try to get file under: "/path/to/webappsConfig/myAppName/logback.xml"
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, webappFullName, ContextInitializer.AUTOCONFIG_FILE));
+			if (file.exists() && file.isFile()) {
+				try {
+					return file.toURI().toURL();
+				} catch (MalformedURLException e1) {}
+			}
+			
+			// Try to get file under: "/path/to/webappsConfig/logback.xml"
+			file = new File(PathUtils.concatPathParts(webappsConfigDir, ContextInitializer.AUTOCONFIG_FILE));
+			if (file.exists() && file.isFile()) {
+				try {
+					return file.toURI().toURL();
+				} catch (MalformedURLException e1) {}
+			}
+		}
+		return null;
+	}
 	
 	public static URL findURLOfDefaultConfigurationFile(ClassLoader classLoader) {
 		URL url = findConfigFileURLFromSystemProperties(classLoader);
