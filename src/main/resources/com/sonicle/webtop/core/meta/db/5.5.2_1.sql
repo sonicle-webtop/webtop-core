@@ -58,4 +58,4 @@ INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('pptm',
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('pptx', 'document', 'presentation');
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('mht', 'text', 'html');
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('xml', 'text', 'xml');
-INSERT INTO "file_types" ("extension", "type", "subtype") VALUES ('msg', 'message', '');
+INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('msg', 'message', '');
