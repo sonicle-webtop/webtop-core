@@ -19,6 +19,7 @@ public class PrincipalInfo   {
   private @Valid String languageTag = null;
 
   /**
+   * Internal profile ID (user@wtdomain)
    **/
   public PrincipalInfo profileId(String profileId) {
     this.profileId = profileId;
@@ -26,8 +27,9 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "Internal profile ID (user@wtdomain)")
   @JsonProperty("profileId")
+  @NotNull
   public String getProfileId() {
     return profileId;
   }
@@ -36,6 +38,7 @@ public class PrincipalInfo   {
   }
 
   /**
+   * Full profile username (user@domain.tld)
    **/
   public PrincipalInfo profileUsername(String profileUsername) {
     this.profileUsername = profileUsername;
@@ -43,8 +46,9 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "Full profile username (user@domain.tld)")
   @JsonProperty("profileUsername")
+  @NotNull
   public String getProfileUsername() {
     return profileUsername;
   }
@@ -53,6 +57,7 @@ public class PrincipalInfo   {
   }
 
   /**
+   * Associated display name
    **/
   public PrincipalInfo displayName(String displayName) {
     this.displayName = displayName;
@@ -60,8 +65,9 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(required = true, value = "Associated display name")
   @JsonProperty("displayName")
+  @NotNull
   public String getDisplayName() {
     return displayName;
   }
@@ -70,6 +76,7 @@ public class PrincipalInfo   {
   }
 
   /**
+   * Associated email address
    **/
   public PrincipalInfo emailAddress(String emailAddress) {
     this.emailAddress = emailAddress;
@@ -77,7 +84,7 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(value = "Associated email address")
   @JsonProperty("emailAddress")
   public String getEmailAddress() {
     return emailAddress;
@@ -87,6 +94,7 @@ public class PrincipalInfo   {
   }
 
   /**
+   * Timezone ID
    **/
   public PrincipalInfo timezoneId(String timezoneId) {
     this.timezoneId = timezoneId;
@@ -94,8 +102,9 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(example = "Europe/Rome", required = true, value = "Timezone ID")
   @JsonProperty("timezoneId")
+  @NotNull
   public String getTimezoneId() {
     return timezoneId;
   }
@@ -104,6 +113,7 @@ public class PrincipalInfo   {
   }
 
   /**
+   * Language identifier (language_country)
    **/
   public PrincipalInfo languageTag(String languageTag) {
     this.languageTag = languageTag;
@@ -111,8 +121,9 @@ public class PrincipalInfo   {
   }
 
   
-  @ApiModelProperty(value = "")
+  @ApiModelProperty(example = "en_EN", required = true, value = "Language identifier (language_country)")
   @JsonProperty("languageTag")
+  @NotNull
   public String getLanguageTag() {
     return languageTag;
   }

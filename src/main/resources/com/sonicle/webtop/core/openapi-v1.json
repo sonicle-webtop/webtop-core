@@ -50,6 +50,46 @@
         }
       ]
     },
+    "/principals/{profileUsername}": {
+      "get": {
+        "tags": [
+          "principals"
+        ],
+        "summary": "Returns principal info",
+        "operationId": "getPrincipalInfo",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PrincipalInfo"
+            }
+          },
+          "400": {
+            "description": "Invalid parameter"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "404": {
+            "description": "Principal not found"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "profileUsername",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Full profile username (user@domain.tld)",
+          "x-example": "john.doe@sonicle.com"
+        }
+      ]
+    },
     "/users": {
       "get": {
         "summary": "List all enabled users",
@@ -106,24 +146,39 @@
     },
     "PrincipalInfo": {
       "type": "object",
+      "required": [
+        "displayName",
+        "languageTag",
+        "profileId",
+        "profileUsername",
+        "timezoneId"
+      ],
       "properties": {
         "profileId": {
-          "type": "string"
+          "type": "string",
+          "description": "Internal profile ID (user@wtdomain)"
         },
         "profileUsername": {
-          "type": "string"
+          "type": "string",
+          "description": "Full profile username (user@domain.tld)"
         },
         "displayName": {
-          "type": "string"
+          "type": "string",
+          "description": "Associated display name"
         },
         "emailAddress": {
-          "type": "string"
+          "type": "string",
+          "description": "Associated email address"
         },
         "timezoneId": {
-          "type": "string"
+          "type": "string",
+          "description": "Timezone ID",
+          "example": "Europe/Rome"
         },
         "languageTag": {
-          "type": "string"
+          "type": "string",
+          "description": "Language identifier (language_country)",
+          "example": "en_EN"
         }
       }
     },
