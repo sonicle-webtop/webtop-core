@@ -138,6 +138,10 @@ public class WT {
 		return getWTA().getI18nManager().getTimezones();
 	}
 	
+	public static boolean isInMaintenance() {
+		return getWTA().isInMaintenance();
+	}
+	
 	public static InternetAddress buildDomainInternetAddress(String domainId, String local, String personal) {
 		String internetName = WT.getDomainInternetName(domainId);
 		return InternetAddressUtils.toInternetAddress(local, internetName, personal);

@@ -688,6 +688,10 @@ public final class WebTopApp {
 		return fileTypes;
 	}
 	
+	public boolean isInMaintenance() {
+		return (svcMgr != null) ? svcMgr.isInMaintenance(CoreManifest.ID) : true;
+	}
+	
 	/**
 	 * Returns the I18nManager.
 	 * @return I18nManager instance.

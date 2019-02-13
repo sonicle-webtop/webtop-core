@@ -32,12 +32,15 @@
  */
 package com.sonicle.webtop.core.rest.v1;
 
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.swagger.v1.api.PrincipalsApi;
 import com.sonicle.webtop.core.swagger.v1.model.ApiError;
 import com.sonicle.webtop.core.swagger.v1.model.PrincipalInfo;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,24 +49,33 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class Principals extends PrincipalsApi {
-	
+
 	@Override
-	public Response getPrincipalInfo(String profileUsername) {
+	public Response getPrincipalInfo(String profileUsername, List<String> permRefs) {
 		UserProfileId pid = WT.guessUserProfileIdProfileUsername(profileUsername);
 		if (pid == null) return respErrorNotFound();
 		UserProfile.Data ud = WT.getUserData(pid);
 		if (ud == null) return respErrorNotFound();
-		return respOk(createPrincipal(pid, profileUsername, ud));
+		
+		ArrayList<Boolean> evalPermRefs = null;
+		if (permRefs != null) {
+			evalPermRefs = new ArrayList<>(permRefs.size());
+			for (String permRef : permRefs) {
+				evalPermRefs.add(RunContext.isPermitted(true, permRef));
+			}
+		}
+		return respOk(createPrincipal(pid, profileUsername, ud, evalPermRefs));
 	}
 	
-	private PrincipalInfo createPrincipal(UserProfileId profileId, String profileUsername, UserProfile.Data data) {
+	private PrincipalInfo createPrincipal(UserProfileId profileId, String profileUsername, UserProfile.Data data, ArrayList<Boolean> evalPermRefs) {
 		return new PrincipalInfo()
 				.profileId(profileId.toString())
 				.profileUsername(profileUsername)
 				.displayName(StringUtils.defaultIfBlank(data.getDisplayName(), profileId.getUserId()))
 				.emailAddress(data.getPersonalEmailAddress())
 				.timezoneId(data.getTimeZoneId())
-				.languageTag(data.getLanguageTag());
+				.languageTag(data.getLanguageTag())
+				.evalPermRefs(evalPermRefs);
 	}
 
 	@Override

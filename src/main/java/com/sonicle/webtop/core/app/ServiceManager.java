@@ -45,6 +45,7 @@ import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
+import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.BaseController;
 import com.sonicle.webtop.core.sdk.BaseJobService;
 import com.sonicle.webtop.core.sdk.BaseJobService.TaskDefinition;
@@ -93,7 +94,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.Duration;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -405,8 +405,12 @@ public class ServiceManager {
 	 */
 	public ServiceManifest getManifest(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(descr == null) return null;
-		return descr.getManifest();
+		return (descr == null) ? null : descr.getManifest();
+	}
+	
+	public List<ServicePermission> getDeclaredPermissions(String serviceId) {
+		ServiceManifest manifest = getManifest(serviceId);
+		return (manifest == null) ? null : manifest.getDeclaredPermissions();
 	}
 	
 	/**

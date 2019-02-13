@@ -485,9 +485,9 @@ public class CoreManager extends BaseManager {
 	
 	public List<ServicePermission> listServicePermissions(String serviceId) throws WTException {
 		ServiceManager svcm = wta.getServiceManager();
-		ServiceManifest manifest = svcm.getManifest(serviceId);
-		if(manifest == null) throw new WTException("Service not found [{0}]", serviceId);
-		return manifest.getDeclaredPermissions();
+		List<ServicePermission> perms = svcm.getDeclaredPermissions(serviceId);
+		if (perms == null) throw new WTException("Service not found [{0}]", serviceId);
+		return perms;
 	}
 	
 	public Set<String> listAllowedServices() {

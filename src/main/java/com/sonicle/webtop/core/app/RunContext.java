@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
@@ -161,6 +162,16 @@ public class RunContext {
 	
 	public static boolean hasAllRoles(Subject subject, Collection<String> roles) {
 		return hasAllRoles(subject.getPrincipals(), roles);
+	}
+	
+	public static boolean isPermitted(boolean strict, String ref) {
+		String[] tokens = StringUtils.split(ref, "/", 3);
+		if (tokens.length < 2) return false;
+		if (tokens.length == 2) {
+			return isPermitted(strict, tokens[0], tokens[1]);
+		} else {
+			return isPermitted(strict, tokens[0], tokens[1], tokens[2]);
+		}
 	}
 	
 	public static boolean isPermitted(boolean strict, String serviceId, String key) {

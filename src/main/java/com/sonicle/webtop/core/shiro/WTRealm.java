@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
+import com.sonicle.webtop.core.app.shiro.MaintenanceException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
@@ -152,7 +153,7 @@ public class WTRealm extends AuthorizingRealm {
 				authAd = priAd = wtMgr.createSysAdminAuthenticationDomain();
 				
 			} else {
-				if (wta.getServiceManager().isInMaintenance(CoreManifest.ID)) throw new WTException("Maintenance is active. Only sys-admin can login.");
+				if (wta.isInMaintenance()) throw new MaintenanceException("Maintenance is active. Only sys-admin can login.");
 				ODomain domain = null;
 				if (!StringUtils.isBlank(internetDomain)) {
 					List<ODomain> domains = wtMgr.listByInternetDomain(internetDomain);

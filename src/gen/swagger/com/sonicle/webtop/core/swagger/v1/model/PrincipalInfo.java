@@ -1,5 +1,7 @@
 package com.sonicle.webtop.core.swagger.v1.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.*;
 import javax.validation.Valid;
 
@@ -17,6 +19,7 @@ public class PrincipalInfo   {
   private @Valid String emailAddress = null;
   private @Valid String timezoneId = null;
   private @Valid String languageTag = null;
+  private @Valid List<Boolean> evalPermRefs = new ArrayList<Boolean>();
 
   /**
    * Internal profile ID (user@wtdomain)
@@ -131,6 +134,23 @@ public class PrincipalInfo   {
     this.languageTag = languageTag;
   }
 
+  /**
+   **/
+  public PrincipalInfo evalPermRefs(List<Boolean> evalPermRefs) {
+    this.evalPermRefs = evalPermRefs;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "")
+  @JsonProperty("evalPermRefs")
+  public List<Boolean> getEvalPermRefs() {
+    return evalPermRefs;
+  }
+  public void setEvalPermRefs(List<Boolean> evalPermRefs) {
+    this.evalPermRefs = evalPermRefs;
+  }
+
 
   @Override
   public boolean equals(java.lang.Object o) {
@@ -146,12 +166,13 @@ public class PrincipalInfo   {
         Objects.equals(displayName, principalInfo.displayName) &&
         Objects.equals(emailAddress, principalInfo.emailAddress) &&
         Objects.equals(timezoneId, principalInfo.timezoneId) &&
-        Objects.equals(languageTag, principalInfo.languageTag);
+        Objects.equals(languageTag, principalInfo.languageTag) &&
+        Objects.equals(evalPermRefs, principalInfo.evalPermRefs);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(profileId, profileUsername, displayName, emailAddress, timezoneId, languageTag);
+    return Objects.hash(profileId, profileUsername, displayName, emailAddress, timezoneId, languageTag, evalPermRefs);
   }
 
   @Override
@@ -165,6 +186,7 @@ public class PrincipalInfo   {
     sb.append("    emailAddress: ").append(toIndentedString(emailAddress)).append("\n");
     sb.append("    timezoneId: ").append(toIndentedString(timezoneId)).append("\n");
     sb.append("    languageTag: ").append(toIndentedString(languageTag)).append("\n");
+    sb.append("    evalPermRefs: ").append(toIndentedString(evalPermRefs)).append("\n");
     sb.append("}");
     return sb.toString();
   }

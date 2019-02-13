@@ -60,7 +60,18 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "permRefs",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "description": "Permissions to evaluate",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success",
@@ -179,6 +190,12 @@
           "type": "string",
           "description": "Language identifier (language_country)",
           "example": "en_EN"
+        },
+        "evalPermRefs": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
         }
       }
     },

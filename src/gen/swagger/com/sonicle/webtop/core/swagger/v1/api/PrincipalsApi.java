@@ -14,7 +14,7 @@ import javax.validation.Valid;
 
 @Path("/principals")
 @Api(description = "the principals API")
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2019-01-30T14:32:26.335+01:00")
+@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2019-02-13T11:59:17.339+01:00")
 public abstract class PrincipalsApi extends com.sonicle.webtop.core.sdk.BaseRestApiResource {
 
     @GET
@@ -26,8 +26,9 @@ public abstract class PrincipalsApi extends com.sonicle.webtop.core.sdk.BaseRest
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "Success", response = PrincipalInfo.class),
         @ApiResponse(code = 400, message = "Invalid parameter", response = Void.class),
+        @ApiResponse(code = 401, message = "Invalid credentials", response = Void.class),
         @ApiResponse(code = 404, message = "Principal not found", response = Void.class) })
-    public Response getPrincipalInfo(@PathParam("profileUsername") @ApiParam("Full profile username (user@domain.tld)") String profileUsername) {
+    public Response getPrincipalInfo(@PathParam("profileUsername") @ApiParam("Full profile username (user@domain.tld)") String profileUsername,@QueryParam("permRefs")   @ApiParam("Permissions to evaluate")  List<String> permRefs) {
         return Response.ok().entity("magic!").build();
     }
 }
