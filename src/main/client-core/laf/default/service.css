@@ -611,3 +611,7 @@ div.wt-wnlist {
 	right: 0;
 	bottom: 0;
 }
+
+.left-dock-icons {    
+	background-size: contain;
+}

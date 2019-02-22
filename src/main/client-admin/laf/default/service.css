@@ -20,6 +20,7 @@
 .wtadm-icon-user-xs { background-image: url('user_16.png') !important; }
 .wtadm-icon-roles-xs { background-image: url('role_16.png') !important; }
 .wtadm-icon-role-xs { background-image: url('role_16.png') !important; }
+.wtadm-icon-launcherLink { background-image: url('launcherLink.svg') !important; background-size: contain; }
 .wtadm-icon-service-module-xs { background-image: url('service-module_16.png') !important; }
 .wtadm-icon-permission-xs { background-image: url('permission_16.png') !important; }
 .wtadm-icon-virtualDomain-xs { background-image: url('virtualDomain_16.png') !important; }

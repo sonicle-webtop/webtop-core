@@ -48,6 +48,8 @@ import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
@@ -93,6 +95,7 @@ import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -236,6 +239,7 @@ public class Service extends BaseService {
 	private static final String NTYPE_GROUPS = "groups";
 	private static final String NTYPE_USERS = "users";
 	private static final String NTYPE_ROLES = "roles";
+	private static final String NTYPE_LAUNCHERLINKS = "launcherlinks";
 	private static final String NTYPE_PECBRIDGE = "pecbridge";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
 	
@@ -268,17 +272,17 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
-				if(nodeId.equals("root")) { // Admin roots...
-					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, lookupResource(CoreAdminLocale.TREE_ADMIN_SETTINGS), true, "wtadm-icon-settings-xs"));
-					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAINS), false, "wtadm-icon-domains-xs"));
-					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, lookupResource(CoreAdminLocale.TREE_ADMIN_DBUPGRADER), true, "wtadm-icon-dbUpgrader-xs"));
+				if (nodeId.equals("root")) { // Admin roots...
+					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, null, true, "wtadm-icon-settings-xs"));
+					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, null, false, "wtadm-icon-domains-xs"));
+					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, null, true, "wtadm-icon-dbUpgrader-xs"));
 				} else {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
-					if(cid.getToken(0).equals("domains")) {
-						if(cid.hasToken(1)) {
+					if (cid.getToken(0).equals("domains")) {
+						if (cid.hasToken(1)) {
 							String domainId = cid.getToken(1);
 							ODomain domain = core.getDomain(domainId);
 							AbstractDirectory dir = core.getAuthDirectory(domain);
@@ -286,14 +290,15 @@ public class Service extends BaseService {
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_SETTINGS), "wtadm-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_GROUPS), "wtadm-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_USERS), "wtadm-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_ROLES), "wtadm-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-launcherLink", NTYPE_LAUNCHERLINKS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, lookupResource(CoreAdminLocale.TREE_ADMIN_DOMAIN_PECBRIDGE), "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainChildNode(nodeId, null, "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 							
 						} else { // Available webtop domains
@@ -671,6 +676,69 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageRoles", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainLauncherLinks(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+			if (crud.equals(Crud.READ)) {
+				ArrayList<JsDomainLauncherLink> items = new ArrayList<>();
+				List<LauncherLink> links = css.getLauncherLinks();
+				for (int i=0 ; i<links.size(); i++) {
+					items.add(new JsDomainLauncherLink((short)i, links.get(i)));
+				}
+				Collections.sort(items, (JsDomainLauncherLink js1, JsDomainLauncherLink js2) -> js1.order.compareTo(js2.order));
+				
+				new JsonResult(items, items.size()).printTo(out);
+			
+			} else if (crud.equals(Crud.CREATE)) {
+				PayloadAsList<JsDomainLauncherLink.List> pl = ServletUtils.getPayloadAsList(request, JsDomainLauncherLink.List.class);
+				
+				ArrayList<JsDomainLauncherLink> items = new ArrayList<>();
+				List<LauncherLink> links = css.getLauncherLinks();
+				for (JsDomainLauncherLink jsLink : pl.data) {
+					LauncherLink ll = new LauncherLink();
+					ll.text = jsLink.text;
+					ll.href = jsLink.href;
+					ll.icon = jsLink.icon;
+					ll.order = jsLink.order;
+					links.add(ll);
+					items.add(new JsDomainLauncherLink((short)links.indexOf(ll), ll));
+				}
+				css.setLauncherLinks(links);
+				new JsonResult(items).printTo(out);
+				
+			} else if (crud.equals(Crud.UPDATE)) {
+				PayloadAsList<JsDomainLauncherLink.List> pl = ServletUtils.getPayloadAsList(request, JsDomainLauncherLink.List.class);
+				
+				List<LauncherLink> links = css.getLauncherLinks();
+				for (JsDomainLauncherLink jsLink : pl.data) {
+					LauncherLink ll = links.get(jsLink.id);
+					ll.text = jsLink.text;
+					ll.href = jsLink.href;
+					ll.icon = jsLink.icon;
+					ll.order = jsLink.order;
+				}
+				css.setLauncherLinks(links);
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				PayloadAsList<JsDomainLauncherLink.List> pl = ServletUtils.getPayloadAsList(request, JsDomainLauncherLink.List.class);
+				JsDomainLauncherLink jsLink = pl.data.get(0);
+				
+				List<LauncherLink> links = css.getLauncherLinks();
+				links.remove((int)jsLink.id);
+				css.setLauncherLinks(links);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomainLauncherLinks", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}

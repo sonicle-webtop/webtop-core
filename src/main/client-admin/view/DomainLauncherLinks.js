@@ -31,27 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
+Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'Sonicle.menu.StoreMenu',
-		'WTA.ux.grid.Setting',
-		'Sonicle.webtop.core.model.ServiceLkp',
-		'Sonicle.webtop.core.admin.model.DomainSetting'
+		'Sonicle.grid.plugin.DDOrdering',
+		'Sonicle.webtop.core.admin.model.GridDomainLauncherLink',
+		'WTA.ux.grid.column.Action'
 	],
 	
 	domainId: null,
 	
 	dockableConfig: {
-		title: '{domainSettings.tit}',
-		iconCls: 'wtadm-icon-settings-xs'
+		title: '{domainLauncherLinks.tit}',
+		iconCls: 'wtadm-icon-launcherLink'
 	},
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent([cfg]);
 		
-		if(!cfg.title) {
+		if (!cfg.title) {
 			me.setBind({
 				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
 			});
@@ -64,58 +63,88 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 		
 		me.add({
 			region: 'center',
-			xtype: 'wtsettinggrid',
+			xtype: 'grid',
 			reference: 'gp',
 			store: {
 				autoLoad: true,
 				autoSync: true,
-				model: 'Sonicle.webtop.core.admin.model.DomainSetting',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainSettings', null, {
+				model: 'Sonicle.webtop.core.admin.model.GridDomainLauncherLink',
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainLauncherLinks', null, {
 					extraParams: {
 						domainId: me.domainId
 					},
 					writer: {
-						allowSingle: false // Always wraps records into an array
+						allowSingle: false
 					}
-				}),
-				groupField: 'serviceId',
-				listeners: {
-					remove: function(s, recs) {
-						// Fix for updating selection
-						me.lref('gp').getSelectionModel().deselect(recs);
-					}
-				}
+				})
 			},
-			tbar: [{
-					xtype: 'splitbutton',
-					text: me.mys.res('domainSettings.act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
-					handler: function(s) {
-						s.maybeShowMenu();
-					},
-					menu: {
-						xtype: 'sostoremenu',
-						store: {
-							autoLoad: true,
-							model: 'Sonicle.webtop.core.model.ServiceLkp',
-							proxy: WTF.proxy(WT.ID, 'LookupServices')
-						},
-						textField: 'label',
-						listeners: {
-							click: function(s,itm) {
-								me.addSettingUI(me.domainId, itm.getItemId());
-							}
+			viewConfig: {
+				deferEmptyText: false,
+				plugins: [{
+					ptype: 'sogridviewddordering',
+					orderField: 'order'
+				}]
+			},
+			selModel: 'cellmodel',
+			plugins: {
+				ptype: 'cellediting',
+				clicksToEdit: 2,
+				autoEncode: true
+			},
+			columns: [{
+					xtype: 'rownumberer'	
+				}, {
+					dataIndex: 'text',
+					header: me.mys.res('domainLauncherLinks.gp.name.lbl'),
+					flex: 1,
+					editor: {
+						field: {
+							xtype: 'textfield',
+							allowBlank: false
 						}
 					}
-				},
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
+				}, {
+					dataIndex: 'href',
+					header: me.mys.res('domainLauncherLinks.gp.href.lbl'),
+					flex: 2,
+					editor: {
+						field: {
+							xtype: 'textfield',
+							allowBlank: false
+						}
+					}
+				}, {
+					dataIndex: 'icon',
+					header: me.mys.res('domainLauncherLinks.gp.icon.lbl'),
+					flex: 2,
+					renderer: function(value) {
+						return Ext.isEmpty(value) ? '' : '<img src="' + value + '" style="width:24px; height:24px"/>';
+					},
+					editor: {
+						field: {
+							xtype: 'textfield',
+							allowBlank: false
+						}
+					}
+				}, {
+					xtype: 'wtactioncolumn',
+					items: [{
+						iconCls: 'fa fa-trash',
+						tooltip: WT.res('act-remove.lbl'),
+						handler: function(g, ridx) {
+							var rec = g.getStore().getAt(ridx);
+							me.deleteLauncherLinkUI(rec);
+						}
+					}],
+					width: 50
+			}],
+			tbar: [
+				me.addAct('add', {
+					text: WT.res('act-add.lbl'),
 					tooltip: null,
-					iconCls: 'wt-icon-remove-xs',
-					disabled: true,
+					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteSettingUI(rec);
+						me.addLauncherLinkUI();
 					}
 				}),
 				'->',
@@ -129,33 +158,20 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 				})
 			]
 		});
-		
-		me.getViewModel().bind({
-			bindTo: '{gp.selection}'
-		}, function(sel) {
-			me.getAct('remove').setDisabled((sel) ? false : true);
-		});
 	},
 	
-	addSettingUI: function(domainId, serviceId) {
+	addLauncherLinkUI: function() {
 		var gp = this.lref('gp'),
-				ce = gp.findPlugin('cellediting'),
+				ed = gp.findPlugin('cellediting'),
 				sto = gp.getStore(),
-				indx, rec;
+				newIdx = sto.getCount();
 		
-		indx = sto.findExact('serviceId', serviceId);
-		ce.cancelEdit();
-		rec = sto.createModel({
-			domainId: domainId,
-			serviceId: serviceId,
-			key: null,
-			value: null
-		});
-		sto.insert(indx, rec);
-		ce.startEdit(rec, gp.keyColumn);
+		ed.cancelEdit();
+		sto.add(sto.createModel({order: newIdx+1}));
+		ed.startEditByPosition({row: newIdx, column: 1});
 	},
 	
-	deleteSettingUI: function(rec) {
+	deleteLauncherLinkUI: function(rec) {
 		var me = this,
 				sto = me.lref('gp').getStore();
 		

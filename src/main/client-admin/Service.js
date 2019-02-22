@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainGroups',
 		'Sonicle.webtop.core.admin.view.DomainUsers',
 		'Sonicle.webtop.core.admin.view.DomainRoles',
+		'Sonicle.webtop.core.admin.view.DomainLauncherLinks',
 		'Sonicle.webtop.core.admin.view.PecBridge',
 		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
 		'Sonicle.webtop.core.admin.view.DbUpgrader'
@@ -103,12 +104,27 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 					}
 				},
 				hideHeaders: true,
+				columns: [{
+					xtype: 'treecolumn',
+					dataIndex: '_type',
+					flex: 1,
+					renderer: function(val, meta, rec) {
+						if (val === 'domain') {
+							return rec.get('text');
+						} else {
+							var s = val;
+							if (val === 'settings' && !Ext.isEmpty(rec.get('_domainId'))) {
+								s += '.domain';
+							}
+							return me.res('node.type.'+s);
+						}
+					}
+				}],
 				listeners: {
 					itemclick: function(s, rec, itm, i, e) {
-						var type = rec.get('_type'), domainId;
+						var type = rec.get('_type');
 						if (type === 'settings') {
-							domainId = rec.get('_domainId');
-							if (domainId) {
+							if (!Ext.isEmpty(rec.get('_domainId'))) {
 								me.showDomainSettingsUI(rec);
 							} else {
 								me.showSettingsUI(rec);
@@ -119,6 +135,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainUsersUI(rec);
 						} else if (type === 'roles') {
 							me.showDomainRolesUI(rec);
+						} else if (type === 'launcherlinks') {
+							me.showDomainLauncherLinksUI(rec);
 						} else if (type === 'pecbridge') {
 							me.showPecBridgeUI(rec);
 						} else if (type === 'dbupgrader') {
@@ -310,6 +328,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainRoles', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showDomainLauncherLinksUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),

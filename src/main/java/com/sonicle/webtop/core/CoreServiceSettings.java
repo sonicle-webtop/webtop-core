@@ -12,10 +12,12 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
+import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.joda.time.LocalTime;
@@ -263,11 +265,17 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public List<LauncherLink> getLauncherLinks() {
-		return getObject(LAUNCHER_LINKS, null, LauncherLink.List.class);
+		return getObject(LAUNCHER_LINKS, new LauncherLink.List(), LauncherLink.List.class);
+	}
+	
+	public boolean setLauncherLinks(List<LauncherLink> value) {
+		return setObject(LAUNCHER_LINKS, (LauncherLink.List)value, LauncherLink.List.class);
 	}
 	
 	public String getLauncherLinksAsString() {
-		return getString(LAUNCHER_LINKS, "[]");
+		LauncherLink.List links = getObject(LAUNCHER_LINKS, new LauncherLink.List(), LauncherLink.List.class);
+		Collections.sort(links, (LauncherLink ll1, LauncherLink ll2) -> ll1.order.compareTo(ll2.order));
+		return LauncherLink.List.toJson(links);
 	}
 	
 	public ServicesOrder getServicesOrder() {

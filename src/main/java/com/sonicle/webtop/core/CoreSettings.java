@@ -801,6 +801,7 @@ public class CoreSettings {
 		public String href;
 		public String text;
 		public String icon;
+		public Short order;
 		
 		public static class List extends ArrayList<LauncherLink> {
 			public static LauncherLink.List fromJson(String value) {

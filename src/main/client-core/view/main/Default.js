@@ -49,9 +49,11 @@ Ext.define('Sonicle.webtop.core.view.main.Default', {
 	},
 	
 	addLinkButton: function(link) {
+
 		this.leftDockCmp().add({
 			xclass: 'WTA.ux.app.launcher.LinkButton',
 			scale: 'large',
+			iconCls: 'left-dock-icons',
 			icon: link.icon,
 			tooltip: link.text,
 			href: link.href
