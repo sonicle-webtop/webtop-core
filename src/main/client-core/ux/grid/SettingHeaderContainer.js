@@ -69,6 +69,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.SettingHeaderContainer', {
 				header: gp.valueText,
 				dataIndex: gp.valueField,
 				renderer: me.cellRenderer,
+				editor: {
+					xtype: 'textfield',
+					selectOnFocus: true
+				},
 				getEditor: me.getCellEditor.bind(me),
 				scope: me,
 				menuDisabled: true,

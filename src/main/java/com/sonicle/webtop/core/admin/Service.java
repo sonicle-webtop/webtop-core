@@ -420,21 +420,21 @@ public class Service extends BaseService {
 		try {
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				List<DomainSetting> items = coreadm.listDomainSettings(domainId, false);
 				new JsonResult(items, items.size()).printTo(out);
 				
-			} else if(crud.equals(Crud.CREATE)) {
+			} else if (crud.equals(Crud.CREATE)) {
 				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
 				DomainSetting setting = pl.data.get(0);
 				
-				if(!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
+				if (!coreadm.updateDomainSetting(domainId, setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
 				}
 				setting = new DomainSetting(setting.domainId, setting.serviceId, setting.key, setting.value, null, null);
 				new JsonResult(setting).printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+			} else if (crud.equals(Crud.UPDATE)) {
 				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
 				DomainSetting setting = pl.data.get(0);
 				
@@ -442,16 +442,16 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
+				if (!coreadm.updateDomainSetting(domainId, sid, setting.key, setting.value)) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
 				}
-				if(!StringUtils.equals(key, setting.key)) {
-					coreadm.deleteSystemSetting(sid, key);
+				if (!StringUtils.equals(key, setting.key)) {
+					coreadm.deleteDomainSetting(domainId, sid, key);
 				}
 					
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.DELETE)) {
+			} else if (crud.equals(Crud.DELETE)) {
 				PayloadAsList<DomainSetting.List> pl = ServletUtils.getPayloadAsList(request, DomainSetting.List.class);
 				DomainSetting setting = pl.data.get(0);
 				
@@ -459,7 +459,7 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!coreadm.deleteSystemSetting(sid, key)) {
+				if (!coreadm.deleteDomainSetting(domainId, sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
 				}
 				

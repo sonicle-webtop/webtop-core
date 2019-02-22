@@ -123,19 +123,18 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 	
 	addSettingUI: function(serviceId) {
 		var gp = this.lref('gp'),
-				ce = gp.findPlugin('cellediting'),
+				ed = gp.findPlugin('cellediting'),
 				sto = gp.getStore(),
-				indx, rec;
-		
-		indx = sto.findExact('serviceId', serviceId);
-		ce.cancelEdit();
-		rec = sto.createModel({
+				indx = sto.findExact('serviceId', serviceId),
+				rec;
+		if (indx < 0) indx = 0;
+		ed.cancelEdit();
+		rec = sto.insert(indx, sto.createModel({
 			serviceId: serviceId,
 			key: null,
 			value: null
-		});
-		sto.insert(indx, rec);
-		ce.startEdit(rec, gp.keyColumn);
+		}))[0];
+		ed.startEditByPosition({row: sto.indexOf(rec), column: gp.keyColumn.getIndex()});
 	},
 	
 	deleteSettingUI: function(rec) {
@@ -143,9 +142,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 				sto = me.lref('gp').getStore();
 		
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
-			if(bid === 'yes') {
-				sto.remove(rec);
-			}
+			if (bid === 'yes') sto.remove(rec);
 		}, me);
 	}
 });

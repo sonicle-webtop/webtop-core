@@ -613,7 +613,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	}
 	
 	private String valueToString(Object value) {
-		return String.valueOf(value);
+		return (value == null) ? null : String.valueOf(value);
 	}
 	
 	public static String[] asArray(String value) {

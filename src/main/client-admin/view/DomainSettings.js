@@ -139,20 +139,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 	
 	addSettingUI: function(domainId, serviceId) {
 		var gp = this.lref('gp'),
-				ce = gp.findPlugin('cellediting'),
+				ed = gp.findPlugin('cellediting'),
 				sto = gp.getStore(),
-				indx, rec;
-		
-		indx = sto.findExact('serviceId', serviceId);
-		ce.cancelEdit();
-		rec = sto.createModel({
+				indx = sto.findExact('serviceId', serviceId),
+				rec;
+		if (indx < 0) indx = 0;
+		ed.cancelEdit();
+		rec = sto.insert(indx, sto.createModel({
 			domainId: domainId,
 			serviceId: serviceId,
 			key: null,
 			value: null
-		});
-		sto.insert(indx, rec);
-		ce.startEdit(rec, gp.keyColumn);
+		}))[0];
+		ed.startEditByPosition({row: sto.indexOf(rec), column: gp.keyColumn.getIndex()});
 	},
 	
 	deleteSettingUI: function(rec) {

@@ -163,12 +163,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 	addLauncherLinkUI: function() {
 		var gp = this.lref('gp'),
 				ed = gp.findPlugin('cellediting'),
+				col = gp.getColumnManager().getHeaderByDataIndex('text').getIndex(),
 				sto = gp.getStore(),
-				newIdx = sto.getCount();
-		
+				rec;
 		ed.cancelEdit();
-		sto.add(sto.createModel({order: newIdx+1}));
-		ed.startEditByPosition({row: newIdx, column: 1});
+		rec = sto.add(sto.createModel({order: sto.getCount()+1}))[0];
+		ed.startEditByPosition({row: sto.indexOf(rec), column: col});
 	},
 	
 	deleteLauncherLinkUI: function(rec) {
