@@ -39,7 +39,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 		'Sonicle.plugin.FileDrop',
 		'Sonicle.grid.column.Bytes',
 		'Sonicle.grid.column.Icon',
-		'Sonicle.grid.column.Link'
+		'Sonicle.grid.column.Link',
+		'WTA.ux.grid.column.Action'
 	],
 	
 	cls: 'wt-attachmentsgrid',
@@ -192,11 +193,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.Attachments', {
 			header: me.sizeText,
 			flex: 1
 		}, {
-			xtype: 'actioncolumn',
-			draggable: false,
-			hideable: false,
-			groupable: false,
-			align: 'center',
+			xtype: 'wtactioncolumn',
 			items: [{
 				iconCls: 'fa fa-cloud-download',
 				tooltip: WT.res('act-download.lbl'),
