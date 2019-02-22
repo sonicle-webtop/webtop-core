@@ -1289,9 +1289,9 @@ public class Service extends BaseService {
 			} else if (crud.equals(Crud.DELETE)) {
 				Payload<MapItem, JsInternetAddress> pl = ServletUtils.getPayload(request, JsInternetAddress.class);
 				if (CoreManager.RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(pl.data.source)) {
-					final InternetAddress ia = InternetAddressUtils.toInternetAddress(pl.data.address, pl.data.personal);
-					if (ia != null) {
-						coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", ia.toString().toUpperCase());
+					String fullAddress = InternetAddressUtils.toFullAddress(pl.data.address, pl.data.personal);
+					if (fullAddress != null) {
+						coreMgr.deleteServiceStoreEntry(SERVICE_ID, "recipients", fullAddress.toUpperCase());
 					}
 					new JsonResult().printTo(out);
 					
