@@ -164,16 +164,17 @@ public final class WebTopManager {
 	
 	private WebTopApp wta = null;
 	public static final String INTERNETNAME_LOCAL = "local";
-	public static final String ROLE_SYSADMIN = "SYSADMIN";
-	public static final String ROLE_WTADMIN = "WTADMIN";
-	public static final String ROLE_IMPERSONATED_USER = "IMPERSONATED_USER";
+	public static final String ROLEUID_SYSADMIN = "SYSADMIN";
+	public static final String ROLEUID_WTADMIN = "WTADMIN";
+	public static final String ROLEUID_IMPERSONATED_USER = "IMPERSONATED_USER";
 	//public static final String SYSADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), "ACCESS", "*");
 	//public static final String WTADMIN_PSTRING = ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), "ACCESS", "*");
 	public static final String SYSADMIN_DOMAINID = "*";
 	public static final String SYSADMIN_USERID = "admin";
 	public static final String DOMAINADMIN_USERID = "admin";
-	public static final String USERID_ADMINS = "admins";
-	public static final String USERID_USERS = "users";
+	public static final String GROUPID_ADMINS = "admins";
+	public static final String GROUPID_USERS = "users";
+	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
 	
 	private final Object lock0 = new Object();
 	private final HashMap<String, String> cachePublicNameToDomain = new HashMap<>();
@@ -381,42 +382,43 @@ public final class WebTopManager {
 	}
 	
 	public void initDomainWithDefaults(String domainId) throws WTException {
-		ODomain odomain = getDomain(domainId);
-		if(odomain == null) throw new WTException("Domain not found [{0}]", domainId);
+		ODomain odom = getDomain(domainId);
+		if (odom == null) throw new WTException("Domain not found [{}]", domainId);
 		
-		initDomainWithDefaults(odomain);
-	}
-	
-	private void initDomainWithDefaults(ODomain domain) throws WTException {
 		Connection con = null;
-		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			
-			logger.debug("Inserting default groups");
-			OGroup ogroup1 = doGroupInsert(con, domain.getDomainId(), USERID_ADMINS, "Admins");
-			OGroup ogroup2 = doGroupInsert(con, domain.getDomainId(), USERID_USERS, "Users");
-			
-			// Update cache
-			addToGroupUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
-			addToGroupUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
-			
-			logger.debug("Inserting domain admin");
-			UserEntity ue = new UserEntity();
-			ue.setDomainId(domain.getDomainId());
-			ue.setUserId(DOMAINADMIN_USERID);
-			ue.setEnabled(true);
-			ue.setFirstName("DomainAdmin");
-			ue.setLastName(domain.getDescription());
-			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
-			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_ADMINS));
-			addUser(true, ue, null);
+			doInitDomainWithDefaults(con, odom);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	private void doInitDomainWithDefaults(Connection con, ODomain domain) throws WTException {
+		// Prepare built-in groups
+		logger.debug("Inserting built-in groups...");
+		OGroup ogroup1 = doGroupInsert(con, domain.getDomainId(), GROUPID_ADMINS, "Admins");
+		OGroup ogroup2 = doGroupInsert(con, domain.getDomainId(), GROUPID_USERS, "Users");
+		OGroup ogroup3 = doGroupInsert(con, domain.getDomainId(), GROUPID_PEC_ACCOUNTS, "PEC Accounts");
+
+		// Update cache
+		addToGroupUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
+		addToGroupUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
+		addToGroupUidCache(new GroupUid(ogroup3.getDomainId(), ogroup3.getUserId(), ogroup3.getUserUid()));
+
+		logger.debug("Inserting domain admin...");
+		UserEntity ue = new UserEntity();
+		ue.setDomainId(domain.getDomainId());
+		ue.setUserId(DOMAINADMIN_USERID);
+		ue.setEnabled(true);
+		ue.setFirstName("DomainAdmin");
+		ue.setLastName(domain.getDescription());
+		ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
+		ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_ADMINS));
+		addUser(true, ue, null);
 	}
 	
 	public void initDomainHomeFolder(String domainId) throws SecurityException {
@@ -694,7 +696,7 @@ public final class WebTopManager {
 			AuthenticationDomain ad = createAuthenticationDomain(domain);
 			
 			user.ensureCoherence();
-			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.USERID_USERS));
+			user.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_USERS));
 			
 			OUser ouser = null;
 			if (updateDirectory) {
@@ -978,6 +980,39 @@ public final class WebTopManager {
 		wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
 		
 		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
+	}
+	
+	/**
+	 * Returns the internal UID associated to specified group; 
+	 * usually applied to defaults/built-in groups.
+	 * @param domainId The domain ID.
+	 * @param groupId The group ID.
+	 * @return The group's UID if found; null otherwise
+	 */
+	public String getGroupUid(String domainId, String groupId) {
+		UserProfileId pid = new UserProfileId(domainId, groupId);
+		try {
+			return groupToUid(pid);
+		} catch(WTRuntimeException ex) {
+			logger.error("Unable to get group's UID [{}]", pid.toString(), ex);
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the internal UID associated to specified user.
+	 * @param domainId The domain ID.
+	 * @param userId The user ID.
+	 * @return The user's UID if found; null otherwise
+	 */
+	public String getUserUid(String domainId, String userId) {
+		UserProfileId pid = new UserProfileId(domainId, userId);
+		try {
+			return userToUid(pid);
+		} catch(WTRuntimeException ex) {
+			logger.error("Unable to get user's UID [{}]", pid.toString(), ex);
+			return null;
+		}
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(ODomain domain) throws WTException {

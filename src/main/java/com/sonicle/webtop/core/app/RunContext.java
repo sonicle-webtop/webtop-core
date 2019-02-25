@@ -37,6 +37,7 @@ import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import java.util.Arrays;
 import java.util.Collection;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -54,36 +55,70 @@ import org.apache.shiro.web.subject.WebSubject;
  */
 public class RunContext {
 	
+	static PrincipalCollection buildPrincipalCollection(UserProfileId profileId) {
+		Subject subject = getSubject();
+		if ((subject != null) && profileId.equals(getRunProfileId(subject))) {
+			return subject.getPrincipals();
+		} else {
+			return buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId());
+		}
+	}
+	
+	static SimplePrincipalCollection buildPrincipalCollection(String domainId, String userId) {
+		Principal principal = new Principal(domainId, userId);
+		return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+	}
+	
 	public static Subject buildSubject(SecurityManager securityManager, UserProfileId profileId) {
-		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
 		return new Subject.Builder(securityManager)
-				.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"))
+				.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()))
 				.buildSubject();
 	}
 	
 	public static WebSubject buildWebSubject(SecurityManager securityManager, ServletRequest request, ServletResponse response, UserProfileId profileId) {
-		Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
 		WebSubject.Builder builder = new WebSubject.Builder(securityManager, request, response);
-		builder.principals(new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm"));
+		builder.principals(buildPrincipalCollection(profileId.getDomainId(), profileId.getUserId()));
 		return builder.buildWebSubject();
 	}
 	
+	/**
+	 * Gets the currently executing Subject.
+	 * @return The Subject
+	 */
 	public static Subject getSubject() {
 		return SecurityUtils.getSubject();
 	}
 	
+	/**
+	 * Gets the currently executing Principal.
+	 * @return The Principal
+	 */
 	public static Principal getPrincipal() {
 		return getPrincipal(getSubject());
 	}
 	
+	/**
+	 * Extracts the Principal from the specified Subject.
+	 * @param subject The Subject to work on it.
+	 * @return Subject's Principal
+	 */
 	public static Principal getPrincipal(Subject subject) {
 		return (subject == null) ? null : (Principal)subject.getPrincipal();
 	}
 	
+	/**
+	 * Checks if the currently executing Subject has been impersonated.
+	 * @return True if impersonated, false otherwise
+	 */
 	public static boolean isImpersonated() {
 		return isImpersonated(getSubject());
 	}
 	
+	/**
+	 * Checks if the specified Subject has been been impersonated.
+	 * @param subject The Subject to work on it.
+	 * @return True if impersonated, false otherwise
+	 */
 	public static boolean isImpersonated(Subject subject) {
 		if (subject == null) return false;
 		Principal principal = (Principal)subject.getPrincipal();
@@ -91,13 +126,82 @@ public class RunContext {
 		return principal.isImpersonated();
 	}
 	
+	/**
+	 * Gets the profile ID of the currently executing Subject.
+	 * @return Subject's profile ID
+	 */
 	public static UserProfileId getRunProfileId() {
 		return getRunProfileId(getSubject());
 	}
 	
+	/**
+	 * Gets the profile ID of the specified Subject.
+	 * @param subject The Subject to work on it.
+	 * @return Subject's profile ID
+	 */
 	public static UserProfileId getRunProfileId(Subject subject) {
 		Principal principal = getPrincipal(subject);
 		return (principal == null) ? null : new UserProfileId(principal.getName());
+	}
+	
+	/**
+	 * Checks if the currently executing Subject has the specified role.
+	 * @param role Role UID to check.
+	 * @return True if role is satisfied, false otherwise
+	 */
+	public static boolean hasRole(String role) {
+		Subject subject = getSubject();
+		return (subject != null) ? hasRole(subject.getPrincipals(), role) : false;
+	}
+	
+	/**
+	 * Checks if the currently executing Subject has all the specified roles.
+	 * @param roles Role UIDs to check at same time.
+	 * @return True if all role are satisfied, false otherwise
+	 */
+	public static boolean hasAllRoles(Collection<String> roles) {
+		Subject subject = getSubject();
+		return (subject != null) ? hasAllRoles(subject.getPrincipals(), roles) : false;
+	}
+	
+	/**
+	 * Checks if the passed Subject has the specified role.
+	 * @param subject The Subject to check.
+	 * @param role Role UID to check.
+	 * @return True if role is satisfied, false otherwise
+	 */
+	public static boolean hasRole(Subject subject, String role) {
+		return hasRole(subject.getPrincipals(), role);
+	}
+	
+	/**
+	 * Checks if the passed Subject has all the specified roles.
+	 * @param subject The Subject to check.
+	 * @param roles Role UIDs to check at same time.
+	 * @return True if all role are satisfied, false otherwise
+	 */
+	public static boolean hasAllRoles(Subject subject, Collection<String> roles) {
+		return hasAllRoles(subject.getPrincipals(), roles);
+	}
+	
+	/**
+	 * Checks if the passed profile ID has the specified role.
+	 * @param profileId The profile ID to check.
+	 * @param role Role UID to check.
+	 * @return True if role is satisfied, false otherwise
+	 */
+	public static boolean hasRole(UserProfileId profileId, String role) {
+		return hasRole(buildPrincipalCollection(profileId), role);
+	}
+	
+	/**
+	 * Checks if the passed profile ID has all the specified roles.
+	 * @param profileId The profile ID to check.
+	 * @param roles Role UIDs to check at same time.
+	 * @return True if all role are satisfied, false otherwise
+	 */
+	public static boolean hasAllRoles(UserProfileId profileId, Collection<String> roles) {
+		return hasAllRoles(buildPrincipalCollection(profileId), roles);
 	}
 	
 	public static void ensureIsWebTopAdmin() throws AuthException {
@@ -146,22 +250,6 @@ public class RunContext {
 	
 	public static boolean isSysAdmin(UserProfileId profileId) {
 		return isSysAdmin(buildPrincipalCollection(profileId));
-	}
-	
-	public static boolean hasRole(String role) {
-		return hasRole(getSubject(), role);
-	}
-	
-	public static boolean hasRole(Subject subject, String role) {
-		return hasRole(subject.getPrincipals(), role);
-	}
-	
-	public static boolean hasAllRoles(Collection<String> roles) {
-		return hasAllRoles(getSubject(), roles);
-	}
-	
-	public static boolean hasAllRoles(Subject subject, Collection<String> roles) {
-		return hasAllRoles(subject.getPrincipals(), roles);
 	}
 	
 	public static boolean isPermitted(boolean strict, String ref) {
@@ -251,7 +339,7 @@ public class RunContext {
 	}
 	
 	private static boolean isWebTopAdmin(PrincipalCollection principals) {
-		return hasRole(principals, WebTopManager.ROLE_WTADMIN);
+		return hasRole(principals, WebTopManager.ROLEUID_WTADMIN);
 		/*
 		if (principals.isEmpty()) return false;
 		SecurityManager manager = SecurityUtils.getSecurityManager();
@@ -264,7 +352,7 @@ public class RunContext {
 	}
 	
 	private static boolean isSysAdmin(PrincipalCollection principals) {
-		return hasRole(principals, WebTopManager.ROLE_SYSADMIN);
+		return hasRole(principals, WebTopManager.ROLEUID_SYSADMIN);
 		/*
 		if (principals.isEmpty()) return false;
 		SecurityManager manager = SecurityUtils.getSecurityManager();
@@ -314,15 +402,5 @@ public class RunContext {
 		if (!strict && isWebTopAdmin(principals)) return true;
 		//if (manager.isPermitted(principals, WebTopManager.WTADMIN_PSTRING)) return true;
 		return manager.isPermitted(principals, ServicePermission.permissionString(ServicePermission.namespacedName(serviceId, key), action, instance));
-	}
-	
-	static PrincipalCollection buildPrincipalCollection(UserProfileId profileId) {
-		Subject subject = getSubject();
-		if ((subject != null) && profileId.equals(getRunProfileId(subject))) {
-			return subject.getPrincipals();
-		} else {
-			Principal principal = new Principal(profileId.getDomainId(), profileId.getUserId());
-			return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
-		}
 	}
 }

@@ -220,6 +220,14 @@ public class WT {
 		return getWTA().getWebTopManager().internetNameToDomain(internetName);
 	}
 	
+	public static String getGroupUidForUsers(String domainId) {
+		return getWTA().getWebTopManager().getGroupUid(domainId, WebTopManager.GROUPID_USERS);
+	}
+	
+	public static String getGroupUidForPecAccounts(String domainId) {
+		return getWTA().getWebTopManager().getGroupUid(domainId, WebTopManager.GROUPID_PEC_ACCOUNTS);
+	}
+	
 	public static CoreManager getCoreManager() {
 		WebTopSession wts = SessionContext.getCurrent(false);
 		CoreManager manager = null;

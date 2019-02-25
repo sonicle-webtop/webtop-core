@@ -241,12 +241,12 @@ public class WTRealm extends AuthorizingRealm {
 		HashSet<String> perms = new HashSet<>();
 		
 		if (Principal.xisAdmin(pid.toString())) {
-			roles.add(WebTopManager.ROLE_SYSADMIN);
-			roles.add(WebTopManager.ROLE_WTADMIN);
+			roles.add(WebTopManager.ROLEUID_SYSADMIN);
+			roles.add(WebTopManager.ROLEUID_WTADMIN);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "SYSADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		} else if (principal.isImpersonated()) {
-			roles.add(WebTopManager.ROLE_IMPERSONATED_USER);
+			roles.add(WebTopManager.ROLEUID_IMPERSONATED_USER);
 			//perms.add(ServicePermission.permissionString(ServicePermission.namespacedName(CoreManifest.ID, "WTADMIN"), ServicePermission.ACTION_ACCESS, "*"));
 		}
 		

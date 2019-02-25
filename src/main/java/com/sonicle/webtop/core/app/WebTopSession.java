@@ -848,9 +848,9 @@ public class WebTopSession {
 	
 	private void fillRolesMap(HashSet<String> roles) {
 		Subject subject = RunContext.getSubject();
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_SYSADMIN);
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_WTADMIN);
-		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLE_IMPERSONATED_USER);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_SYSADMIN);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_WTADMIN);
+		pushIfSubjectHasRole(roles, subject, WebTopManager.ROLEUID_IMPERSONATED_USER);
 	}
 	
 	private void fillServiceReferences(ServiceManager svcm, JsWTS js, ServiceDescriptor descriptor, Locale locale, String theme, String lookAndFeel) {
