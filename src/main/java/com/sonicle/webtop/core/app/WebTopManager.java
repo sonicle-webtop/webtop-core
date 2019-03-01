@@ -994,7 +994,7 @@ public final class WebTopManager {
 		try {
 			return groupToUid(pid);
 		} catch(WTRuntimeException ex) {
-			logger.error("Unable to get group's UID [{}]", pid.toString(), ex);
+			logger.debug("Unable to get group's UID [{}]", pid.toString(), ex);
 			return null;
 		}
 	}
@@ -1010,7 +1010,7 @@ public final class WebTopManager {
 		try {
 			return userToUid(pid);
 		} catch(WTRuntimeException ex) {
-			logger.error("Unable to get user's UID [{}]", pid.toString(), ex);
+			logger.debug("Unable to get user's UID [{}]", pid.toString(), ex);
 			return null;
 		}
 	}
