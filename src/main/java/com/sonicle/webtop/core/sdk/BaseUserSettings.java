@@ -48,7 +48,6 @@ import java.util.List;
  * @author malbinola
  */
 public abstract class BaseUserSettings extends BaseSettings {
-	
 	public static final String HIDDEN_FOLDERS = "folders.hidden";
 	
 	private SettingsManager setm;
@@ -57,10 +56,12 @@ public abstract class BaseUserSettings extends BaseSettings {
 	
 	private HiddenFolders hiddenFolders=null;
 
-	//private BaseUserSettings() {}
-	
 	public BaseUserSettings(String serviceId, UserProfileId profileId) {
-		this.setm = WebTopApp.getInstance().getSettingsManager();
+		this(WebTopApp.getInstance().getSettingsManager(), serviceId, profileId);
+	}
+	
+	public BaseUserSettings(SettingsManager settingsMgr, String serviceId, UserProfileId profileId) {
+		this.setm = settingsMgr;
 		this.serviceId = serviceId;
 		this.profileId = profileId;
 	}

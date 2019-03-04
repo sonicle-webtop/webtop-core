@@ -49,7 +49,6 @@ import com.sonicle.webtop.core.sdk.ServiceMessage;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesReminders;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.mail.internet.InternetAddress;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
 
 /**
  *
@@ -96,7 +96,7 @@ public class ReminderJob extends BaseJobServiceTask {
 			ServiceManager svcMgr = jobService.getCoreManager().getServiceManager();
 			for (String sid : jobService.getServiceIdsHandlingReminders()) {
 				final BaseController instance = svcMgr.getController(sid);
-				final IControllerHandlesReminders controller = (IControllerHandlesReminders)instance;
+				final IControllerRemindersHooks controller = (IControllerRemindersHooks)instance;
 				final List<BaseReminder> svcAlerts = controller.returnReminders(now);
 				logger.debug("{} -> {}", sid, svcAlerts.size());
 				alerts.addAll(svcAlerts);

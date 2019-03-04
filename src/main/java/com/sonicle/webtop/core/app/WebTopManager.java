@@ -124,6 +124,7 @@ import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -199,8 +200,9 @@ public final class WebTopManager {
 	private WebTopManager(WebTopApp wta) {
 		this.wta = wta;
 		initDomainCache();
-		initUserUidCache();
 		initGroupUidCache();
+		initUserUidCache();
+		checkDomains();
 	}
 	
 	/**
@@ -290,6 +292,33 @@ public final class WebTopManager {
 				return null;
 			}
 			//return cacheInternetNameToDomain.get(internetName);
+		}
+	}
+	
+	private void checkDomains() {
+		DomainDAO dao = DomainDAO.getInstance();
+		Connection con = null;
+		boolean needsCacheReload = false;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			for (ODomain odomain : dao.selectAll(con)) {
+				try {
+					if (doPrepareDomain(con, odomain)) needsCacheReload = true;
+				} catch(WTException ex1) {
+					logger.error("Unable to verify domain [{}]", odomain.getDomainId(), ex1);
+				}
+			}
+			
+		} catch(SQLException ex) {
+			throw new WTRuntimeException(ex, "Unable to verify domains");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+		
+		if (needsCacheReload) {
+			initGroupUidCache();
+			initUserUidCache();
 		}
 	}
 	
@@ -388,7 +417,7 @@ public final class WebTopManager {
 		Connection con = null;
 		try {
 			con = wta.getConnectionManager().getConnection();
-			doInitDomainWithDefaults(con, odom);
+			doPrepareDomain(con, odom);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -397,28 +426,47 @@ public final class WebTopManager {
 		}
 	}
 	
-	private void doInitDomainWithDefaults(Connection con, ODomain domain) throws WTException {
+	private boolean doPrepareDomain(Connection con, ODomain domain) throws WTException {
+		GroupDAO grpDao = GroupDAO.getInstance();
+		UserDAO usrDao = UserDAO.getInstance();
+		boolean changed = false;
+		
+		final List<String> BUILT_IN_GROUPS = Arrays.asList(GROUPID_ADMINS, GROUPID_USERS, GROUPID_PEC_ACCOUNTS);
+		Map<String, OGroup> groups = grpDao.selectByDomainIn(con, domain.getDomainId(), BUILT_IN_GROUPS);
+		
 		// Prepare built-in groups
-		logger.debug("Inserting built-in groups...");
-		OGroup ogroup1 = doGroupInsert(con, domain.getDomainId(), GROUPID_ADMINS, "Admins");
-		OGroup ogroup2 = doGroupInsert(con, domain.getDomainId(), GROUPID_USERS, "Users");
-		OGroup ogroup3 = doGroupInsert(con, domain.getDomainId(), GROUPID_PEC_ACCOUNTS, "PEC Accounts");
-
-		// Update cache
-		addToGroupUidCache(new GroupUid(ogroup1.getDomainId(), ogroup1.getUserId(), ogroup1.getUserUid()));
-		addToGroupUidCache(new GroupUid(ogroup2.getDomainId(), ogroup2.getUserId(), ogroup2.getUserUid()));
-		addToGroupUidCache(new GroupUid(ogroup3.getDomainId(), ogroup3.getUserId(), ogroup3.getUserUid()));
-
-		logger.debug("Inserting domain admin...");
-		UserEntity ue = new UserEntity();
-		ue.setDomainId(domain.getDomainId());
-		ue.setUserId(DOMAINADMIN_USERID);
-		ue.setEnabled(true);
-		ue.setFirstName("DomainAdmin");
-		ue.setLastName(domain.getDescription());
-		ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
-		ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_ADMINS));
-		addUser(true, ue, null);
+		logger.debug("Checking built-in groups... [{}]", domain.getDomainId());
+		if (!groups.containsKey(GROUPID_ADMINS)) {
+			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_ADMINS, "Admins");
+			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
+			changed = true;
+		}
+		if (!groups.containsKey(GROUPID_USERS)) {
+			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_USERS, "Users");
+			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
+			changed = true;
+		}
+		if (!groups.containsKey(GROUPID_PEC_ACCOUNTS)) {
+			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_PEC_ACCOUNTS, "PEC Accounts");
+			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
+			changed = true;
+		}
+		
+		// Prepare built-in admin(for domain) user
+		logger.debug("Checking built-in domain admin... [{}]", domain.getDomainId());
+		if (!usrDao.existByDomainUser(con, domain.getDomainId(), DOMAINADMIN_USERID)) {
+			UserEntity ue = new UserEntity();
+			ue.setDomainId(domain.getDomainId());
+			ue.setUserId(DOMAINADMIN_USERID);
+			ue.setEnabled(true);
+			ue.setFirstName("DomainAdmin");
+			ue.setLastName(domain.getDescription());
+			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
+			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_ADMINS));
+			addUser(true, ue, null);
+			changed = true;
+		}
+		return changed;
 	}
 	
 	public void initDomainHomeFolder(String domainId) throws SecurityException {
@@ -733,7 +781,7 @@ public final class WebTopManager {
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 					logger.debug("Updating its password");
 					authDir.updateUserPassword(opts, addedPid.getDomainId(), addedPid.getUserId(), password);
-					new CoreUserSettings(addedPid).setPasswordLastChange(DateTimeUtils.now());
+					new CoreUserSettings(wta.getSettingsManager(), addedPid).setPasswordLastChange(DateTimeUtils.now());
 				}
 				
 			} else {
@@ -747,8 +795,8 @@ public final class WebTopManager {
 			addToUserUidCache(new UserUid(addedPid.getDomainId(), addedPid.getUserId(), ouser.getUserUid()));
 
 			// Explicitly sets some important (locale & timezone) user settings to their defaults
-			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, addedPid.getDomainId());
-			CoreUserSettings cus = new CoreUserSettings(addedPid);
+			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, addedPid.getDomainId());
+			CoreUserSettings cus = new CoreUserSettings(wta.getSettingsManager(), addedPid);
 			cus.setLanguageTag(css.getDefaultLanguageTag());
 			cus.setTimezone(css.getDefaultTimezone());
 			
@@ -1722,7 +1770,7 @@ public final class WebTopManager {
 		GroupDAO dao = GroupDAO.getInstance();
 		
 		// Insert Group record
-		logger.debug("Inserting group [{}]", group.getGroupId());
+		logger.debug("Inserting group... [{}]", group.getGroupId());
 		OGroup ogroup = new OGroup();
 		ogroup.setDomainId(domainId);
 		ogroup.setGroupId(group.getGroupId());
@@ -1732,9 +1780,9 @@ public final class WebTopManager {
 		ogroup.setSecret(null);
 		dao.insert(con, ogroup);
 		
-		logger.debug("Inserting users associations");
+		logger.debug("Inserting users associations...");
 		HashSet<String> usedUserUids = new HashSet<>();
-		for(AssignedUser assiUser : group.getAssignedUsers()) {
+		for (AssignedUser assiUser : group.getAssignedUsers()) {
 			final String userUid = userToUid(new UserProfileId(group.getDomainId(), assiUser.getUserId()));
 			if (!usedUserUids.contains(userUid)) { // Avoid userUid duplicates
 				doInsertUserAssociation(con, userUid, ogroup.getGroupUid());

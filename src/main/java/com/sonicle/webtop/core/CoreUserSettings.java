@@ -54,6 +54,11 @@ public class CoreUserSettings extends BaseUserSettings {
 		super(CoreManifest.ID, profileId);
 		ss = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
 	}
+	
+	public CoreUserSettings(SettingsManager settingsMgr, UserProfileId profileId) {
+		super(settingsMgr, CoreManifest.ID, profileId);
+		ss = new CoreServiceSettings(settingsMgr, CoreManifest.ID, profileId.getDomainId());
+	}
 
 	public CoreUserSettings(String serviceId, UserProfileId profileId) {
 		super(serviceId, profileId);

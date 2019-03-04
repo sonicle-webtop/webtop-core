@@ -38,7 +38,6 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.job.DevicesSyncCheckJob;
 import com.sonicle.webtop.core.job.ReminderJob;
 import com.sonicle.webtop.core.sdk.BaseJobService;
-import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesReminders;
 import java.util.ArrayList;
 import java.util.List;
 import org.joda.time.LocalTime;
@@ -46,6 +45,7 @@ import org.quartz.CronScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;
 
 /**
  *
@@ -59,7 +59,7 @@ public class JobService extends BaseJobService {
 	@Override
 	public void initialize() throws Exception {
 		core = WT.getCoreManager();
-		sidHandlingReminders = core.getServiceManager().listServicesWhichControllerImplements(IControllerHandlesReminders.class);
+		sidHandlingReminders = core.getServiceManager().listServicesWhichControllerImplements(IControllerRemindersHooks.class);
 	}
 
 	@Override

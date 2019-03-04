@@ -59,7 +59,6 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.sdk.interfaces.IControllerHandlesProfiles;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.versioning.AnnotationLine;
 import com.sonicle.webtop.core.versioning.BaseScriptLine;
@@ -104,6 +103,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
 
 /**
  *
@@ -530,32 +530,31 @@ public class ServiceManager {
 	public void prepareProfile(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
-		if (descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
+		if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
 			BaseController instance = getController(serviceId);
-			IControllerHandlesProfiles controller = (IControllerHandlesProfiles)instance;
+			IControllerServiceHooks controller = (IControllerServiceHooks)instance;
 			
 			if (!checkAndSetProfileInitialization(serviceId, profileId)) {
 				logger.debug("Initializing profile for service [{}]", serviceId);
 				try {
 					LoggerUtils.setContextDC(instance.SERVICE_ID);
-					controller.addProfile(profileId);
+					controller.initProfile(descr.getManifest().getVersion(), profileId);
 				} catch(Throwable t) {
 					//TODO: valutare se ritornare un booleano per verifica
-					logger.error("Controller: addProfile() throws errors", t);
+					logger.error("Controller: initProfile() throws errors", t);
 				} finally {
 					LoggerUtils.clearContextServiceDC();
 				}
-				
 			} else {
 				ProfileVersionEvaluationResult res = evaluateProfileVersion(descr.getManifest(), profileId);
 				if (res.upgraded) {
 					logger.debug("Upgrading profile for service [{}]", serviceId);
 					try {
 						LoggerUtils.setContextDC(instance.SERVICE_ID);
-						controller.upgradeProfile(profileId, res.currentVersion, res.lastSeenVersion);
+						controller.upgradeProfile(res.currentVersion, profileId, res.lastSeenVersion);
 					} catch(Throwable t) {
 						//TODO: valutare se ritornare un booleano per verifica
-						logger.error("Controller: addProfile() throws errors", t);
+						logger.error("Controller: upgradeProfile() throws errors", t);
 					} finally {
 						LoggerUtils.clearContextServiceDC();
 					}
@@ -570,6 +569,7 @@ public class ServiceManager {
 	 * @param serviceId The service ID.
 	 * @param profileId The user profile ID.
 	 */
+	/*
 	public void cleanupProfile(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if(descr.doesControllerImplements(IControllerHandlesProfiles.class)) {
@@ -587,6 +587,7 @@ public class ServiceManager {
 			}
 		}
 	}
+	*/
 	
 	/**
 	 * Returns current initialization user-setting for a specific user.

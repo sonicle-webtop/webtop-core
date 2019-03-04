@@ -49,8 +49,8 @@ public abstract class BaseServiceSettings extends BaseSettings {
 	protected String serviceId;
 	protected String domainId;
 
-	public BaseServiceSettings(SettingsManager setMgr, String serviceId, String domainId) {
-		this.setMgr = setMgr;
+	public BaseServiceSettings(SettingsManager settingsMgr, String serviceId, String domainId) {
+		this.setMgr = settingsMgr;
 		this.serviceId = serviceId;
 		this.domainId = domainId;
 	}

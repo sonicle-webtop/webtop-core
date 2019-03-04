@@ -12,7 +12,6 @@ import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
-import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
