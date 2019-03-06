@@ -357,8 +357,10 @@ public final class WebTopApp {
 		
 		// Checks home directory
 		logger.info("Checking home structure...");
-		File homeDir = new File(getHomePath());
-		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{0}]", homeDir.toString());
+		String homePath = getHomePath();
+		if (StringUtils.isBlank(homePath)) throw new WTRuntimeException("Missing home directory configuration [{}]", CoreSettings.HOME_PATH);
+		File homeDir = new File(homePath);
+		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{}]", homeDir.toString());
 		checkHomeStructure();
 		
 		this.mediaTypes = MediaTypes.init(conMgr);
