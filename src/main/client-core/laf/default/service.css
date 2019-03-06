@@ -371,6 +371,34 @@ div.wt-wnlist {
 	display: none;
 }
 
+/* TreePanel colored checkbox */
+.wt-tree-colored-checkbox {
+	border: 2px solid;
+	border-radius: 2px;
+	background-image: none;
+	background-color: #FFFFFF;
+	color: #FFFFFF;
+	cursor: pointer;
+}
+.wt-tree-colored-checkbox.wt-tree-colored-checkbox-white {
+	border: 1px solid #A8A8A8;
+	color: #A8A8A8;
+}
+.wt-tree-colored-checkbox.x-tree-checkbox-checked {
+	position: relative;
+}
+.wt-tree-colored-checkbox.x-tree-checkbox-checked:before {
+	position: absolute;
+	top: -2px;
+	left: -1px;
+	font-family: 'FontAwesome';
+	content: "\f00c";
+}
+.wt-tree-colored-checkbox-white.x-tree-checkbox-checked:before {
+	top: -1px;
+	left: 0px;
+}
+
 /* ExtJs */
 .wt-v-middle {
 	vertical-align: middle;

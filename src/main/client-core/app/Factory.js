@@ -760,6 +760,39 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		*/
 	},
 	
+	coloredTreeCheckboxRenderer: function(cfg) {
+		cfg = cfg || {};
+		var evalValueFn = function(getFn, field, value, rec, fallback) {
+			if (Ext.isFunction(getFn)) {
+				return getFn(value, rec);
+			} else if(rec && !Ext.isEmpty(field)) {
+				return rec.get(field);
+			} else {
+				return (fallback === undefined) ? value : fallback;
+			}
+		};
+		
+		return function(value, meta, rec) {
+			var cbxCls, cbxStyle;
+			if (evalValueFn(cfg.shouldProcess, null, value, rec, false) === true) {
+				var co = evalValueFn(cfg.getColor, cfg.colorField, value, rec, null),
+						obj = {};
+				
+				cbxCls = 'wt-tree-colored-checkbox';
+				if (co === '#FFFFFF') {
+					cbxCls += ' wt-tree-colored-checkbox-white';
+				} else {
+					obj = {	borderColor: co	};
+				}
+				if (rec.get('checked')) obj.backgroundColor = co;
+				cbxStyle = Ext.DomHelper.generateStyles(obj);
+			}
+			meta.customCheckboxCls = cbxCls;
+			meta.checkboxStyle = cbxStyle;
+			return value;
+		};
+	},
+	
 	/**
 	 *
 	 * @param {Integer} size The icon size in pixels.
