@@ -118,6 +118,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1253,19 +1254,20 @@ public class CoreManager extends BaseManager {
 			List<String> permissionKeys = Arrays.asList(rootPermissionKey, folderPermissionKey, elementsPermissionKey);
 			List<String> originUids = shadao.viewOriginByRoleServiceKey(con, roleUids, serviceId, folderKey, permissionKeys);
 			ArrayList<IncomingShareRoot> roots = new ArrayList<>();
-			for(String uid : originUids) {
-				if(uid.equals(profileUid)) continue; // Skip self role
+			for (String uid : originUids) {
+				if (uid.equals(profileUid)) continue; // Skip self role
 				
 				// Foreach incoming uid we have to find the root share and then
 				// test if READ right is allowed
 				
 				OShare root = shadao.selectByUserServiceKeyInstance(con, uid, serviceId, rootKey, OShare.INSTANCE_ROOT);
-				if(root == null) continue;
+				if (root == null) continue;
 				OUser user = usedao.selectByUid(con, uid);
-				if(user == null) continue;
+				if (user == null) continue;
 				
 				roots.add(new IncomingShareRoot(root.getShareId().toString(), wtmgr.uidToUser(root.getUserUid()), user.getDisplayName()));
 			}
+			Collections.sort(roots, (IncomingShareRoot ish1, IncomingShareRoot ish2) -> ish1.getDescription().compareTo(ish2.getDescription()));
 			return roots;
 			
 		} catch(SQLException | DAOException ex) {
