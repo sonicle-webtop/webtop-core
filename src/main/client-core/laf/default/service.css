@@ -297,11 +297,91 @@
 	height: 48px;
 }
 
+/*Deprecated*/
 .wt-tree-node-bold {
 	font-weight: bold;
 }
+/*Deprecated*/
 .wt-tree-node-grey {
 	color: grey;
+}
+
+/* ----- Some useful classes ----- */
+.wt-hidden {
+	display: none;
+}
+.wt-v-middle {
+	vertical-align: middle;
+}
+.wt-centered {
+	text-align: center;
+}
+.wt-bold {
+	font-weight: bold;
+}
+.wt-italic {
+	font-style: italic;
+}
+.wt-underlined {
+	text-decoration: underline;
+}
+.wt-striked {
+	text-decoration: line-through;
+}
+.wt-selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+.wt-no-opacity {
+	opacity: 1 !important;
+}
+.wt-color-success {
+	color: #3f9c35 !important;
+}
+.wt-color-warn {
+	color: #ec7a08 !important;
+}
+.wt-color-alert {
+	color: #c00 !important;
+}
+
+/* ----- ExtJs: treecolumn checkbox icon ----- */
+.wt-tree-toggle-off {
+	background-image: url('toggle-off.svg') !important;
+	background-size: contain;
+	cursor: pointer;
+}
+.wt-tree-toggle-on {
+	background-image: url('toggle-on.svg') !important;
+	background-size: contain;
+	cursor: pointer;
+}
+
+/* ----- ExtJs: treecolumn renderer ----- */
+.wt-grid-cell-treecolumn-colored .x-tree-checkbox {
+	border: 2px solid;
+	border-radius: 2px;
+	background-image: none !important;
+	background-repeat: no-repeat;
+	background-size: 11px auto;
+	background-position: center;
+	background-color: #FFFFFF;
+	color: #FFFFFF;
+	cursor: pointer;
+}
+.wt-grid-cell-treecolumn-colored .x-tree-icon {
+	cursor: default;
+}
+.wt-grid-cell-treecolumn-colored .x-tree-checkbox-checked {
+	background-image: url('checkmark-light.svg') !important;
+}
+.wt-grid-cell-treecolumn-colored .wt-tree-checkbox-white {
+	border: 1px solid #A8A8A8;
+}
+.wt-grid-cell-treecolumn-colored .wt-tree-checkbox-white.x-tree-checkbox-checked {
+	background-image: url('checkmark-dark.svg') !important;
 }
 
 .wt-header { /* Override this in service-{theme}.css file */ }
@@ -371,62 +451,6 @@ div.wt-wnlist {
 	display: none;
 }
 
-/* TreePanel colored checkbox */
-.wt-tree-colored-checkbox {
-	border: 2px solid;
-	border-radius: 2px;
-	background-image: none;
-	background-color: #FFFFFF;
-	color: #FFFFFF;
-	cursor: pointer;
-}
-.wt-tree-colored-checkbox.wt-tree-colored-checkbox-white {
-	border: 1px solid #A8A8A8;
-	color: #A8A8A8;
-}
-.wt-tree-colored-checkbox.x-tree-checkbox-checked {
-	position: relative;
-}
-.wt-tree-colored-checkbox.x-tree-checkbox-checked:before {
-	position: absolute;
-	top: -2px;
-	left: -1px;
-	font-family: 'FontAwesome';
-	content: "\f00c";
-}
-.wt-tree-colored-checkbox-white.x-tree-checkbox-checked:before {
-	top: -1px;
-	left: 0px;
-}
-
-/* ExtJs */
-.wt-v-middle {
-	vertical-align: middle;
-}
-
-.wt-bold {
-	font-weight: bold;
-}
-
-.wt-selectable {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-}
-
-.wt-no-opacity {
-	opacity: 1 !important;
-}
-.wt-color-success {
-	color: #3f9c35 !important;
-}
-.wt-color-warn {
-	color: #ec7a08 !important;
-}
-.wt-color-alert {
-	color: #c00 !important;
-}
 
 .wt-doced-switch-btn .x-btn-inner {
 	color: #e60000 !important;

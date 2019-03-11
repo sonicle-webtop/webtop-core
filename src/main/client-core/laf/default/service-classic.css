@@ -14,6 +14,7 @@
  * Text color for body (regular, title/header)
  */
 .wt-theme-text { color: #000; }
+.wt-theme-text-greyed { color: #808080; }
 .wt-theme-text-tit { color: #04468c; }
 .wt-theme-text-sub { color: #888; }
 .wt-theme-text-lnk { color: #0078d7; }

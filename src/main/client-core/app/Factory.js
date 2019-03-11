@@ -760,7 +760,16 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		*/
 	},
 	
-	coloredTreeCheckboxRenderer: function(cfg) {
+	/**
+	 * Configures a tree renderer for displaying a colored box suitable for root > folder hierarchy.
+	 * @param {Object} cfg Custom configuration object.
+	 * @param {Function} [cfg.shouldCustomize] A function which returns `true` in correspondence of nodes that needs the colored box.
+	 * @param {String} [cfg.colorField] Specifies the field from which getting color value.
+	 * @param {Function} [cfg.getColor] A function which returns a calculated color.
+	 * @param {Function} [cfg.renderer] Specifies a function in order to chain into the rendering process.
+	 * @returns {Function} The renderer function
+	 */
+	coloredBoxTreeRenderer: function(cfg) {
 		cfg = cfg || {};
 		var evalValueFn = function(getFn, field, value, rec, fallback) {
 			if (Ext.isFunction(getFn)) {
@@ -772,24 +781,75 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			}
 		};
 		
-		return function(value, meta, rec) {
-			var cbxCls, cbxStyle;
-			if (evalValueFn(cfg.shouldProcess, null, value, rec, false) === true) {
-				var co = evalValueFn(cfg.getColor, cfg.colorField, value, rec, null),
+		return function(val, meta, rec, ridx, cidx, sto, view) {
+			var iconStyle;
+			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
+				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
 						obj = {};
-				
-				cbxCls = 'wt-tree-colored-checkbox';
+				meta.iconCls = 'x-tree-checkbox';
 				if (co === '#FFFFFF') {
-					cbxCls += ' wt-tree-colored-checkbox-white';
+					meta.iconCls += ' wt-tree-checkbox-white';
+				} else {
+					obj = {
+						borderColor: co,
+						backgroundColor: co
+					};
+				}
+				iconStyle = Ext.DomHelper.generateStyles(obj);
+				meta.tdCls = 'wt-grid-cell-treecolumn-colored';
+			}
+			meta.iconStyle = iconStyle;
+			if (Ext.isFunction(cfg.renderer)) {
+				return cfg.renderer(val, meta, rec, ridx, cidx, sto, view);
+			} else {
+				return val;
+			}
+		};
+	},
+	
+	/**
+	 * Configures a tree renderer for displaying a colored checkbox suitable for root > folder hierarchy.
+	 * @param {Object} cfg Custom configuration object.
+	 * @param {Function} [cfg.shouldCustomize] A function which returns `true` in correspondence of nodes that needs the colored box.
+	 * @param {String} [cfg.colorField] Specifies the field from which getting color value.
+	 * @param {Function} [cfg.getColor] A function which returns a calculated color.
+	 * @param {Function} [cfg.renderer] Specifies a function in order to chain into the rendering process.
+	 * @returns {Function} The renderer function
+	 */
+	coloredCheckboxTreeRenderer: function(cfg) {
+		cfg = cfg || {};
+		var evalValueFn = function(getFn, field, value, rec, fallback) {
+			if (Ext.isFunction(getFn)) {
+				return getFn(value, rec);
+			} else if(rec && !Ext.isEmpty(field)) {
+				return rec.get(field);
+			} else {
+				return (fallback === undefined) ? value : fallback;
+			}
+		};
+		
+		return function(val, meta, rec, ridx, cidx, sto, view) {
+			var cbxCls, cbxStyle;
+			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
+				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
+						obj = {};
+				if (co === '#FFFFFF') {
+					cbxCls = 'wt-tree-checkbox-white';
 				} else {
 					obj = {	borderColor: co	};
 				}
 				if (rec.get('checked')) obj.backgroundColor = co;
 				cbxStyle = Ext.DomHelper.generateStyles(obj);
+				meta.iconCls = 'wt-hidden';
+				meta.tdCls = 'wt-grid-cell-treecolumn-colored';
 			}
 			meta.customCheckboxCls = cbxCls;
 			meta.checkboxStyle = cbxStyle;
-			return value;
+			if (Ext.isFunction(cfg.renderer)) {
+				return cfg.renderer(val, meta, rec, ridx, cidx, sto, view);
+			} else {
+				return val;
+			}
 		};
 	},
 	
