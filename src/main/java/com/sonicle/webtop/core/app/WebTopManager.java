@@ -202,7 +202,6 @@ public final class WebTopManager {
 		initDomainCache();
 		initGroupUidCache();
 		initUserUidCache();
-		checkDomains();
 	}
 	
 	/**
@@ -295,7 +294,7 @@ public final class WebTopManager {
 		}
 	}
 	
-	private void checkDomains() {
+	public void checkDomains() {
 		DomainDAO dao = DomainDAO.getInstance();
 		Connection con = null;
 		boolean needsCacheReload = false;
@@ -463,7 +462,7 @@ public final class WebTopManager {
 			ue.setLastName(domain.getDescription());
 			ue.setDisplayName(ue.getFirstName() + " [" + domain.getDescription() + "]");
 			ue.getAssignedGroups().add(new AssignedGroup(WebTopManager.GROUPID_ADMINS));
-			addUser(true, ue, null);
+			addUser(true, ue, true, null);
 			changed = true;
 		}
 		return changed;
@@ -771,11 +770,11 @@ public final class WebTopManager {
 				
 				// Insert user in directory (if necessary)
 				if (authDir.hasCapability(DirectoryCapability.USERS_WRITE)) {
-					logger.debug("Adding user into directory");
+					logger.debug("Adding user into directory...");
 					try {
 						authDir.addUser(opts, domain.getDomainId(), createAuthUser(user));
 					} catch(EntryException ex1) {
-						logger.debug("Skipped: already exists!");
+						logger.warn("Insertion skipped: user already exists [{}]", user.getUserId());
 					}
 				}
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {

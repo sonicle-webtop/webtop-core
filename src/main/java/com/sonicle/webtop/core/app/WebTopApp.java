@@ -408,6 +408,7 @@ public final class WebTopApp {
 		}
 		
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
+		wtMgr.checkDomains(); // Keep after svcMgr initialization!!!
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
