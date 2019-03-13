@@ -1,8 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
-  <g id="icon">
-    <path d="M16,7.4804C16,5.006,13.994,3,11.5196,3H4.4804C2.006,3,0,5.006,0,7.4804v0.0392C0,9.994,2.006,12,4.4804,12h7.0392C13.994,12,16,9.994,16,7.5196V7.4804zM1.4538,7.5043c0,-1.6796,1.3616,-3.0411,3.0411,-3.0411c1.6796,0,3.0411,1.3616,3.0411,3.0411c0,1.6796,-1.3616,3.0411,-3.0411,3.0411C2.8153,10.5454,1.4538,9.1839,1.4538,7.5043z" fill="#B4B4B5"/>
-    <circle cx="4.4949" cy="7.5043" r="3.0411" fill="#FFFFFF"/>
-  </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#B4B4B5;}
+	.st1{fill:#FFFFFF;}
+</style>
+<g id="icon">
+	<path id="_x3C_Tracciato_x3E__1_" class="st0" d="M10.5,13h-5C2.5,13,0,10.5,0,7.5v0C0,4.5,2.5,2,5.5,2h5c3,0,5.5,2.5,5.5,5.5v0
+		C16,10.5,13.5,13,10.5,13z"/>
+	<circle id="_x3C_Tracciato_x3E_" class="st1" cx="5.5" cy="7.5" r="4"/>
+</g>
 </svg>
