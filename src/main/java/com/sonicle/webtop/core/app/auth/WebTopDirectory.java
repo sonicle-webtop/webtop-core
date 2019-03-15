@@ -45,6 +45,7 @@ import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.OLocalVaultEntry;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.LocalVaultDAO;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.net.URI;
@@ -184,6 +185,8 @@ public class WebTopDirectory extends AbstractDirectory {
 			olve.setPasswordType(CredentialAlgorithm.PLAIN.name());
 			lvdao.insert(con, olve);
 			
+		} catch(DAOIntegrityViolationException ex) { 
+			throw new EntryException(ex);
 		} catch(SQLException | DAOException ex) {
 			throw new DirectoryException(ex, "DB error");
 		} finally {

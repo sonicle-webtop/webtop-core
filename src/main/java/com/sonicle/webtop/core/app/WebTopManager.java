@@ -300,6 +300,7 @@ public final class WebTopManager {
 		boolean needsCacheReload = false;
 		
 		try {
+			logger.debug("Checking domains...");
 			con = wta.getConnectionManager().getConnection();
 			for (ODomain odomain : dao.selectAll(con)) {
 				try {

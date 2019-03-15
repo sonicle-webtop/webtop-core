@@ -408,7 +408,6 @@ public final class WebTopApp {
 		}
 		
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
-		wtMgr.checkDomains(); // Keep after svcMgr initialization!!!
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
@@ -469,6 +468,7 @@ public final class WebTopApp {
 	private void onAppReady() throws InterruptedException {
 		logger.debug("onAppReady...");
 		try {
+			wtMgr.checkDomains();
 			logger.info("Checking domains homes structure...");
 			try {
 				checkDomainsHomesStructure();
