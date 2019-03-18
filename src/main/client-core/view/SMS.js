@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.view.SMS', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
-		'WTA.ux.panel.Form',
+		'WTA.ux.panel.Form'
 	],
 	
 	dockableConfig: {

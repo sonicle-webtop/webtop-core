@@ -544,8 +544,5 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 			contentType: 'html',
 			loadMask: true
 		};
-	},
-	
-	
-
+	}
 });

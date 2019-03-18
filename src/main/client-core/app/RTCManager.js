@@ -44,8 +44,7 @@ Ext.define('Sonicle.webtop.core.app.RTCManager', {
 		 * @cfg {String} boshUrl
 		 * Url of BOSH enabled jabber instance.
 		 */
-		boshUrl: window.location.origin+"/http-bind/",
-		
+		boshUrl: window.location.origin+"/http-bind/"
 	},
 	
 	conn: null,
