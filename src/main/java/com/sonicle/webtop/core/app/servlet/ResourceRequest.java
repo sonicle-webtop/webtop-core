@@ -39,6 +39,7 @@ import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.ServiceManager;
+import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopManager;
@@ -221,18 +222,18 @@ public class ResourceRequest extends HttpServlet {
 			} else {
 				if (StringUtils.endsWith(targetPath, ".js")) {
 					String sessionId = ServletHelper.getSessionID(req);
-					if (StringUtils.startsWith(path, "resources/libs")) {
+					if (StringUtils.startsWith(path, "resources/vendor") || StringUtils.startsWith(path, "resources/libs")) {
 						// If targets lib folder, simply return requested file without handling debug versions
 						return lookupJs(req, targetUrl, false);
 
 					} else if (StringUtils.startsWith(path, "boot/")) {
-						return lookupJs(req, targetUrl, isJsDebug(wta, sessionId));
+						return lookupJs(req, targetUrl, isJsDebug());
 
 					} else if (StringUtils.startsWith(FilenameUtils.getBaseName(path), "Locale")) {
 						return lookupLocaleJs(req, targetUrl, subject);
 
 					} else {
-						return lookupJs(req, targetUrl, isJsDebug(wta, sessionId));
+						return lookupJs(req, targetUrl, isJsDebug());
 					}
 
 				} else if (StringUtils.startsWith(path, "laf")) {
@@ -248,12 +249,9 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private boolean isJsDebug(WebTopApp wta, String sessionId) {		
-		if (!StringUtils.isBlank(sessionId)) {
-			WebTopSession wts = wta.getSessionManager().getWebTopSession(sessionId);
-			if (wts != null) wts.isJsDebugEnabled();
-		}
-		return false;
+	private boolean isJsDebug() {
+		WebTopSession wts = SessionContext.getCurrent();
+		return (wts != null) ? wts.isJsDebugEnabled() : false;
 	}
 	
 	private URL getResURL(String name) {
