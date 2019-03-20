@@ -33,6 +33,10 @@
  */
 Ext.define('Sonicle.webtop.core.app.AppBase', {
 	extend: 'Ext.app.Application',
+	appProperty: 'instance',
+	namespaces: [
+		'Sonicle.webtop.core.app'
+	],
 	requires: [
 		'Sonicle.String',
 		'Sonicle.Date',

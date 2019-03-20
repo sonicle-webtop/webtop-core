@@ -816,9 +816,9 @@ public class WebTopSession {
 		List<String> privateSids = getPrivateServices(true);
 				
 		// Include Core references
-		js.appManifest.name = coreManifest.getJsPackageName();
+		//js.appManifest.name = coreManifest.getJsPackageName();
 		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
-		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-private");
+		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), "private", js, coreManifest, locale);
 		fillServiceCssReferences(js, coreManifest, theme, lookAndFeel);
 		
 		// Include other services references
@@ -942,9 +942,9 @@ public class WebTopSession {
 		fillAppReferences(js, locale, theme, false);
 		
 		// Include Core references
-		js.appManifest.name = coreManifest.getJsPackageName();
+		//js.appManifest.name = coreManifest.getJsPackageName();
 		fillServiceManifest(js, coreManifest, locale, svcm.isInMaintenance(coreManifest.getId()));
-		fillCoreServiceJsReferences(svcm.isInDevMode(CoreManifest.ID), js, coreManifest, locale, "-public");
+		fillCoreServiceJsReferences(true/*svcm.isInDevMode(CoreManifest.ID)*/, "public", js, coreManifest, locale);
 		fillServiceCssReferences(js, coreManifest, theme, "default");
 		
 		fillStartupForPublicService(js, CoreManifest.ID, locale);
@@ -960,7 +960,7 @@ public class WebTopSession {
 		if (!serviceId.equals(CoreManifest.ID)) {
 			fillServiceManifest(js, manifest, locale, svcm.isInMaintenance(serviceId));
 			// Includes service references
-			fillServiceJsReferences(svcm.isInDevMode(serviceId), js, manifest, locale);
+			fillServiceJsReferences(true/*svcm.isInDevMode(serviceId)*/, js, manifest, locale);
 			// Includes service stylesheet references
 			fillServiceCssReferences(js, manifest, "crisp", "default");
 		}
@@ -995,10 +995,12 @@ public class WebTopSession {
 	}
 	
 	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+		js.appManifest.name = "Sonicle.webtop.core.app.App";
+		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
+		js.appManifest.theme = theme;
 		js.themeName = theme;
 		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
-		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
 		fillExtJsReferences(js, locale, theme, rtl);
 	}
 	
@@ -1068,20 +1070,20 @@ public class WebTopSession {
 			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
 	}
 	
-	private void fillCoreServiceJsReferences(boolean devMode, JsWTS js, ServiceManifest manifest, Locale locale, String suffix) {
-		
+	private void fillCoreServiceJsReferences(boolean devMode, String target, JsWTS js, ServiceManifest manifest, Locale locale) {
+		String targetSuffix = "-" + target;
 		if (devMode) {
 			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Factory.js");
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Util.js");
-			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/src/app" + suffix+ ".js"); // App file (private or public)
-			
-			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
-			js.appManifest.paths.put("WTA", manifest.getPackageSrcUrl()); // Short namespace (WTA) -> url path mapping
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/src/app" + targetSuffix + ".js"); // App file (private or public)
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/" + jsFileName); // Service js class
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
+			js.appManifest.paths.put(manifest.getJsPackageName(), manifest.getPackageSrcUrl()); // Namespace -> url path mapping
+			js.appManifest.paths.put("WTA", manifest.getPackageSrcUrl()); // Short namespace (WTA) -> url path mapping
+			
 		} else {
-			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getId() + suffix + ".js"); // Service concatenated js
+			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getId() + targetSuffix + ".js"); // Service concatenated js
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/" + manifest.getLocaleJsFileName(locale)); // Service's locale js class
 		}
 		js.locales.add(new JsWTS.XLocale(manifest.getId(), manifest.getLocaleJsClassName(locale, true)));

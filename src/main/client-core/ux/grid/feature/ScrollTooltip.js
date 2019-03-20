@@ -1,37 +1,19 @@
-/* 
- * Copyright (C) 2018 Sonicle S.r.l.
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Affero General Public License version 3 as published by
- * the Free Software Foundation with the addition of the following permission
- * added to Section 15 as permitted in Section 7(a): FOR ANY PART OF THE COVERED
- * WORK IN WHICH THE COPYRIGHT IS OWNED BY SONICLE, SONICLE DISCLAIMS THE
- * WARRANTY OF NON INFRINGEMENT OF THIRD PARTY RIGHTS.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program; if not, see http://www.gnu.org/licenses or write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301 USA.
- *
- * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
- *
- * The interactive user interfaces in modified source and object code versions
- * of this program must display Appropriate Legal Notices, as required under
- * Section 5 of the GNU Affero General Public License version 3.
- *
- * In accordance with Section 7(b) of the GNU Affero General Public License
- * version 3, these Appropriate Legal Notices must retain the display of the
- * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
- * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2018 Sonicle S.r.l.".
+/*
+ * Sonicle ExtJs UX
+ * Copyright (C) 2015 Sonicle S.r.l.
+ * sonicle@sonicle.com
+ * http://www.sonicle.com
+ * Inspired by:
+ * 
+ * 
+ * http://craigsworks.com/projects/forums/showthread.php?tid=1986
+ * http://iamceege.github.io/tooltipster/
+ * http://jsfiddle.net/shmshd12/kv4f2bf0/
+ * https://stackoverflow.com/questions/33593539/how-to-make-a-tooltip-for-scrollbar
+ * 
  */
-Ext.define('Sonicle.webtop.core.ux.grid.feature.ScrollTooltip', {
-	alternateClassName: 'WTA.ux.grid.feature.ScrollTooltip',
+Ext.define('Sonicle.webtop.contacts.ux.ScrollTooltip', {
+	//alternateClassName: 'WTA.ux.grid.feature.ScrollTooltip',
 	extend: 'Ext.grid.feature.Feature',
 	alias: 'feature.wtscrolltooltip',
 	requires: [
@@ -46,9 +28,25 @@ Ext.define('Sonicle.webtop.core.ux.grid.feature.ScrollTooltip', {
 		if (scrlbl) {
 			scrlbl.on('scroll', me.onScroll, me);
 		}
+		view.on('refresh', me.onViewRefresh);
+	},
+	
+	onViewRefresh: function(view) {
+		console.log(view.all);
+		
+		
 	},
 	
 	onScroll: function(s, x, y, eo) {
 		console.log('scroll x:'+x+' y:'+y);
+		
+		var view = this.view,
+				buffRender = view.bufferedRenderer,
+				rows = view.all,
+				storeCount = buffRender.store.getCount(),
+				viewSize = buffRender.viewSize
+				;
+		
+		console.log(Math.max(0, Math.min(rows.startIndex, storeCount - viewSize)));
 	}
 });

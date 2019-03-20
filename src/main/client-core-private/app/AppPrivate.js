@@ -34,24 +34,23 @@
 Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
+		'Sonicle.webtop.core.app.WTPrivate'
+	].concat(WTS.appRequires || []),
+	uses: [
 		'Sonicle.DesktopNotificationMgr',
 		'Sonicle.PageActivityMonitor',
-		//'Sonicle.WebSocketManager',
-		//'Sonicle.WebSocket',
 		'Sonicle.Sound',
-		
-		'Sonicle.webtop.core.app.WTPrivate',
 		'Sonicle.webtop.core.app.DescriptorPrivate',
 		'Sonicle.webtop.core.app.Atmosphere',
 		'Sonicle.webtop.core.sdk.Service'
-	
-	].concat(WTS.appRequires || []),
+	],
 	views: [
 		Ext.String.format('WTA.view.main.{0}', WTS.layoutClassName)
 	],
 	refs: {
 		viewport: 'viewport'
 	},
+	autoCreateViewport: false,
 	
 	currentService: null,
 	
@@ -355,51 +354,5 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				message: msg
 			}
 		});
-	}
-});
-
-Ext.override(Ext.data.proxy.Server, {
-	constructor: function(cfg) {
-		this.callOverridden([cfg]);
-		this.addListener('exception', function(s,resp,op) {
-			if(resp.status === 401) WT.reload();
-		});
-	}
-});
-
-Ext.override(Ext.toolbar.Toolbar, {
-	lookupComponent: function(comp) {
-		var me = this,
-				defls = me.defaults || {},
-				isAct = comp.isAction,
-				comp = me.callParent(arguments);
-		if (isAct) {
-			if (defls.hasOwnProperty('text')) comp.text = defls.text;
-			if (defls.hasOwnProperty('tooltip')) comp.tooltip = defls.tooltip;
-		}
-		return comp;
-	}
-});
-
-Ext.override(Ext.menu.Menu, {
-	/**
-	 * @cfg {Boolean} disableActionTooltips
-	 * `false` to enable tooltip display for {@link Ext.Action actions}.
-	 */
-	disableActionTooltips: true,
-	
-	lookupItemFromObject: function(cmp) {
-		var me = this,
-				isAct = cmp.isAction,
-				cmp = me.callParent(arguments);
-		if (isAct && me.disableActionTooltips) cmp.tooltip = null;
-		return cmp;
-	}
-});
-
-Ext.override(Ext.menu.Item, {
-	onClick: function(e) {
-		e.menuData = WT.getContextMenuData();
-		return this.callParent([e]);
 	}
 });

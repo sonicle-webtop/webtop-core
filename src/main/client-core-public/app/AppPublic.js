@@ -34,18 +34,19 @@
 Ext.define('Sonicle.webtop.core.app.AppPublic', {
 	extend: 'Sonicle.webtop.core.app.AppBase',
 	requires: [
-		'Sonicle.DesktopNotificationMgr',
-		
-		'Sonicle.webtop.core.app.WTPublic',
-		'Sonicle.webtop.core.app.DescriptorPublic'
-		
+		'Sonicle.webtop.core.app.WTPublic'
 	].concat(WTS.appRequires || []),
+	uses: [
+		'Sonicle.DesktopNotificationMgr',
+		'Sonicle.webtop.core.app.DescriptorPublic'
+	],
 	views: [
 		'WTA.view.pub.Viewport'
 	],
 	refs: {
 		viewport: 'viewport'
 	},
+	autoCreateViewport: false,
 	
 	constructor: function() {
 		this.callParent(arguments);

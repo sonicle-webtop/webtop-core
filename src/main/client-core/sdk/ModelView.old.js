@@ -31,8 +31,8 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.sdk.ModelView', {
-	alternateClassName: 'WTA.sdk.ModelView',
+Ext.define('Sonicle.webtop.core.sdk.OldModelView', {
+	//alternateClassName: 'WTA.sdk.OldModelView',
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.form.Panel'

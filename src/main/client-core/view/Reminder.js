@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.view.Reminder', {
-	alternateClassName: 'WTA.view.Whatsnew',
+	alternateClassName: 'WTA.view.Reminder',
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.webtop.core.model.ReminderAlert',
