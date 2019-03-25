@@ -76,7 +76,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 	public static final Logger logger = WT.getLogger(UserOptionsService.class);
 	
 	@Override
-	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
+	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		Connection con = null;
 		
 		try {
@@ -179,7 +179,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				new JsonResult(jso).printTo(out);
 				
 			} else if (crud.equals(Crud.UPDATE)) {
-				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(payload, JsUserOptions.class);
+				Payload<MapItem, JsUserOptions> pl = ServletUtils.getPayload(request, JsUserOptions.class);
 				boolean upCacheNeedsUpdate = false;
 				
 				// main
@@ -267,7 +267,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
-	public void processLookupStartupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
+	public void processLookupStartupServices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		CoreManager core = WT.getCoreManager(getTargetProfileId());
 		Locale locale = WT.getUserData(getTargetProfileId()).getLocale();
 		ArrayList<JsSimple> items = new ArrayList<>();
@@ -287,7 +287,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 		}
 	}
 	
-	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload) {
+	public void processManageSyncDevices(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		CoreManager coreMgr = WT.getCoreManager(true, getTargetProfileId());
 		
 		try {

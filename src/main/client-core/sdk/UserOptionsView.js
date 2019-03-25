@@ -94,6 +94,12 @@ Ext.define('Sonicle.webtop.core.sdk.UserOptionsView', {
 		var me = this;
 		me.mixins.wtactholder.constructor.call(me, cfg);
 		me.callParent([cfg]);
+		
+		me.getViewModel().onCreateWithId = function(record, id) {
+			WTU.applyExtraParams(record.getProxy(), {
+				optionsProfile: me.profileId
+			});
+		};
 	},
 	
 	destroy: function() {

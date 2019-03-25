@@ -526,11 +526,7 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	optionsProxy: function(svc) {
-		return WTF.apiProxy(svc, 'UserOptions', 'data', {
-			extraParams: {
-				options: true
-			}
-		});
+		return WTF.apiProxy(svc, 'UserOptions', 'data');
 	},
 	
 	componentLoader: function(svc, act, opts) {

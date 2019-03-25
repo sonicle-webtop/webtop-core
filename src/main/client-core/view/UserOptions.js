@@ -182,8 +182,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					model: 'WTA.model.Simple',
 					proxy: WTF.proxy(me.ID, 'LookupStartupServices', null, {
 						extraParams: {
-							options: true,
-							id: me.profileId
+							optionsProfile: me.profileId
 						}
 					})
 				},
@@ -901,8 +900,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						model: 'WTA.ux.data.EmptyModel',
 						proxy: WTF.apiProxy(me.ID, 'ManageSyncDevices', 'data', {
 							extraParams: {
-								options: true,
-								id: me.profileId
+								optionsProfile: me.profileId
 							}
 						})
 					},
@@ -1236,8 +1234,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 		WT.ajaxReq(WT.ID, 'ManageSyncDevices', {
 			params: {
 				crud: 'info',
-				options: true,
-				id: me.profileId,
+				optionsProfile: me.profileId,
 				cid: rec.getId()
 			},
 			callback: function(success, obj) {

@@ -74,9 +74,9 @@ public class PrivateRequest extends BaseRequest {
 			String service = ServletUtils.getStringParameter(request, "service", true);
 			String action = ServletUtils.getStringParameter(request, "action", true);
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
-			Boolean options = ServletUtils.getBooleanParameter(request, "options", false);
+			String optionsProfile = ServletUtils.getStringParameter(request, "optionsProfile", false);
 			
-			if(!options) {
+			if (StringUtils.isBlank(optionsProfile)) {
 				// Retrieves instantiated service
 				BaseService instance = wts.getPrivateServiceById(service);
 				
@@ -86,23 +86,14 @@ public class PrivateRequest extends BaseRequest {
 				
 			} else {
 				ServiceManager svcm = wta.getServiceManager();
-				String id = ServletUtils.getStringParameter(request, "id", null);
-				String payload = null;
-				
-				if(StringUtils.isBlank(id)) {
-					payload = ServletUtils.getPayload(request);
-					Payload<MapItem, JsUserOptionsBase> pl = ServletUtils.getPayload(payload, JsUserOptionsBase.class);
-					if(pl.map.has("id")) id = pl.data.id;
-				}
-				if(StringUtils.isBlank(id)) throw new Exception("No id specified");
 				
 				// Retrieves instantiated userOptions service (session context away)
-				UserProfileId pid = new UserProfileId(id);
+				UserProfileId pid = new UserProfileId(optionsProfile);
 				BaseUserOptionsService instance = svcm.instantiateUserOptionsService(wts.getUserProfile(), wts.getId(), service, pid);
 				
 				// Gets method and invokes it...
-				MethodInfo meinfo = getMethod(instance.getClass(), service, action, nowriter, String.class);
-				invokeMethod(instance, meinfo, service, request, response, payload);
+				MethodInfo meinfo = getMethod(instance.getClass(), service, action, nowriter);
+				invokeMethod(instance, meinfo, service, request, response);
 			}
 			
 		} catch(Exception ex) {

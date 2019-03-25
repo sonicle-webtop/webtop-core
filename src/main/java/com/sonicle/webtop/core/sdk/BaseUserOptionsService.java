@@ -74,5 +74,5 @@ public abstract class BaseUserOptionsService extends AbstractService {
 		return targetProfileId.getUserId();
 	}
 	
-	public abstract void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out, String payload);
+	public abstract void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out);
 }
