@@ -17,6 +17,7 @@ import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import org.joda.time.LocalTime;
@@ -273,7 +274,15 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getLauncherLinksAsString() {
 		LauncherLink.List links = getObject(LAUNCHER_LINKS, new LauncherLink.List(), LauncherLink.List.class);
-		Collections.sort(links, (LauncherLink ll1, LauncherLink ll2) -> ll1.order.compareTo(ll2.order));
+		Collections.sort(links, new Comparator<LauncherLink>() {
+			@Override
+			public int compare(final LauncherLink ll1, final LauncherLink ll2) {
+				// Attention! Order field can be null due to old implementations. Make sure to have a valid value!
+				short o1 = (ll1.order != null) ? ll1.order : (short)links.indexOf(ll1);
+				short o2 = (ll2.order != null) ? ll2.order : (short)links.indexOf(ll2);
+				return Short.compare(o1, o2);
+			}
+		});
 		return LauncherLink.List.toJson(links);
 	}
 	
