@@ -51,6 +51,8 @@ import org.apache.commons.lang3.StringUtils;
  * @author malbinola
  */
 public class ServiceManifest {
+	public static final String BUILD_TYPE_DEV = "dev";
+	public static final String BUILD_TYPE_PROD = "prod";
 	private static final String JAVAPKG_REST = "rest";
 	
 	protected String id;
@@ -60,6 +62,7 @@ public class ServiceManifest {
 	protected ServiceVersion version;
 	protected ServiceVersion oldVersion;
 	protected String buildDate;
+	protected String buildType;
 	protected String company;
 	protected String companyEmail;
 	protected String companyWebSite;
@@ -81,7 +84,6 @@ public class ServiceManifest {
 	protected Map<String, RestApi> restApis = new LinkedHashMap<>();
 	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
 	protected ArrayList<Portlet> portlets = new ArrayList<>();
-	
 	
 	public ServiceManifest() {
 		version = new ServiceVersion();
@@ -113,6 +115,7 @@ public class ServiceManifest {
 		version = ver;
 		
 		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
+		buildType = StringUtils.defaultIfBlank(svcEl.getString("buildType"), BUILD_TYPE_DEV);
 		company = StringUtils.defaultIfBlank(svcEl.getString("company"), null);
 		companyEmail = StringUtils.defaultIfBlank(svcEl.getString("companyEmail"), null);
 		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
@@ -367,6 +370,14 @@ public class ServiceManifest {
 	 */
 	public String getBuildDate() {
 		return buildDate;
+	}
+	
+	/**
+	 * Gets the specified build type.
+	 * @return The build type (as declared in manifest)
+	 */
+	public String getBuildType() {
+		return buildType;
 	}
 	
 	/**

@@ -79,8 +79,6 @@ import java.sql.Statement;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -104,6 +102,9 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -201,10 +202,20 @@ public class ServiceManager {
 	}
 	
 	private void init() {
+		// Loads services' manifest files from classpath
+		logger.debug("Starting services discovery...");
+		Map<String, ServiceManifest> manifests = null;
+		try {
+			manifests = discoverServices();
+		} catch (IOException ex) {
+			throw new RuntimeException("Error during services discovery", ex);
+		}
+		
+		if (!manifests.containsKey(CoreManifest.ID)) throw new RuntimeException("Missing Core manifest");
 		
 		// Programmatically register Core's manifest
 		// This call must be the first because it performs main dataSource registration
-		ServiceDescriptor coreDesc = registerService(new CoreManifest());
+		ServiceDescriptor coreDesc = registerService(manifests.get(CoreManifest.ID));
 		
 		boolean dbInitEnabled = isDbInitEnabled();
 		boolean dbAutoUpgrade = isDbAutoUpgrade();
@@ -230,29 +241,11 @@ public class ServiceManager {
 		if (coreDesc.isUpgraded()) {
 			requireAdmin = requireAdmin | upgradeServiceDb(coreDesc, upgradeTag, dbAutoUpgrade);
 		}
-		
-		// Programmatically register the core admin's manifest
-		registerService(new CoreAdminManifest());
-		
-		// Loads services' manifest files from classpath
-		logger.debug("Starting services discovery...");
-		ArrayList<ServiceManifest> manifests = null;
-		try {
-			manifests = discoverServices();
-			Collections.sort(manifests, new Comparator<ServiceManifest>() {
-				@Override
-				public int compare(ServiceManifest o1, ServiceManifest o2) {
-					return o1.getId().compareTo(o2.getId()); // a->z
-					//return o2.getId().compareTo(o1.getId()); // z->a
-				}
-			});
-		} catch (IOException ex) {
-			throw new RuntimeException("Error during services discovery", ex);
-		}
 
 		// Register discovered services
-		for(ServiceManifest manifest : manifests) {
+		for (ServiceManifest manifest : manifests.values()) {
 			String sid = manifest.getId();
+			if (CoreManifest.ID.equals(sid)) continue;
 			ServiceDescriptor desc = registerService(manifest);
 			
 			// Init database
@@ -1037,7 +1030,7 @@ public class ServiceManager {
 		}
 	}
 	
-	private ArrayList<ServiceManifest> discoverServices() throws IOException {
+	private Map<String, ServiceManifest> discoverServices() throws IOException {
 		ClassLoader cl = LangUtils.findClassLoader(getClass());
 		
 		// Scans classpath looking for service descriptor files
@@ -1049,18 +1042,43 @@ public class ServiceManager {
 		}
 		
 		// Parses and splits descriptor files into a single manifest file for each service
-		ArrayList<ServiceManifest> manifests = new ArrayList();
-		while(enumResources.hasMoreElements()) {
+		HashMap<String, ServiceManifest> manifests = new HashMap();
+		while (enumResources.hasMoreElements()) {
 			URL url = enumResources.nextElement();
 			try {
-				manifests.addAll(parseDescriptor(url));
+				Collection<ServiceManifest> parsed = parseDescriptor(url);
+				for (ServiceManifest manifest : parsed) {
+					String key = manifest.getId();
+					if (!manifests.containsKey(key)) {
+						manifests.put(manifest.getId(), manifest);
+						
+					} else if (manifest.getVersion().compareTo(manifests.get(key).getVersion()) > 0) {
+						logger.warn("[{}] Version {} replaced by {}", manifest.getId(), manifests.get(key).getVersion(), manifest.getVersion());
+						manifests.put(manifest.getId(), manifest);
+					}
+				}
 			} catch(ConfigurationException ex) {
 				logger.error("Error while reading descriptor [{}]", url.toString(), ex);
 			}
 		}
-		return manifests;
+		
+		List<String> orderdKeys = manifests.keySet().stream()
+				.sorted((s1, s2) -> {
+					if (StringUtils.startsWith(s1, CoreManifest.ID)) {
+						return -1;
+					} else {
+						return s1.compareTo(s2);
+					}
+				})
+				.collect(Collectors.toList());
+		
+		LinkedHashMap<String, ServiceManifest> map = new LinkedHashMap<>(orderdKeys.size());
+		for (String key : orderdKeys) {
+			map.put(key, manifests.get(key));
+		}
+		return map;
 	}
-	
+		
 	private ArrayList<ServiceManifest> parseDescriptor(final URL descriptorUri) throws ConfigurationException {
 		ArrayList<ServiceManifest> manifests = new ArrayList();
 		ServiceManifest manifest = null;

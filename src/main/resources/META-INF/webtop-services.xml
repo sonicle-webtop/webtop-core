@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services>
+	<service>
+		<package>com.sonicle.webtop.core</package>
+		<jsPackage>Sonicle.webtop.core</jsPackage>
+		<shortName>wt</shortName>
+		<version>@@webtop.service.version@@</version>
+		<buildDate>@@webtop.service.buildDate@@</buildDate>
+		<buildType>@@webtop.service.buildType@@</buildType>
+		
+		<company>Sonicle S.r.l.</company>
+		<companyEmail>sonicle@sonicle.com</companyEmail>
+		<companyWebSite>http://www.sonicle.com</companyWebSite>
+		<supportEmail>sonicle@sonicle.com</supportEmail>
+		
+		<controller className=".CoreController" />
+		<manager className=".CoreManager" />
+		<serviceClassName>Service</serviceClassName>
+		<publicServiceClassName>PublicService</publicServiceClassName>
+		<userOptions>
+			<serviceClassName>UserOptionsService</serviceClassName>
+			<viewJsClassName>view.UserOptions</viewJsClassName>
+			<modelJsClassName>model.UserOptions</modelJsClassName>
+		</userOptions>
+		<jobService className=".JobService" />
+		
+		<restApiEndpoint name=".RestApiEndpoint" />
+		<restApis>
+			<restApi oasFile="openapi-v1.json" />
+		</restApis>
+		
+		<permissions>
+			<!--
+			SYSADMIN (internal) - Marks sysadmin
+			- ACCESS: can manage system
+			
+			WTADMIN (internal) - Mark WebTop admins (users that can act as admins)
+			- ACCESS: can manage webtop palform
+			
+			SERVICE (internal)
+			- ACCESS
+			- CONFIGURE
+			-->
+			
+			<!--
+			PASSWORD - password management
+			- MANAGE: allow the user to change its password (auth-directory must support it)
+			-->
+			<permission group="PASSWORD" actions="MANAGE" />
+			<!--
+			FEEDBACK - feedback form
+			- MANAGE: allow access to the form allowing submission
+			-->
+			<permission group="FEEDBACK" actions="MANAGE" />
+			<!--
+			ACTIVITIES - activities management
+			- MANAGE: allow access to the form
+			-->
+			<permission group="ACTIVITIES" actions="MANAGE" />
+			<!--
+			CAUSALS - causals management
+			- MANAGE: allow access to the form
+			-->
+			<permission group="CAUSALS" actions="MANAGE" />
+			<!--
+			USER_PROFILE_INFO - user profile tab in user options
+			- MANAGE: allow user to update/change its data
+			-->
+			<permission group="USER_PROFILE_INFO" actions="MANAGE" />
+			<!--
+			DEVICES_SYNC - device synchronization
+			- ACCESS ability to sync data with devices
+			-->
+			<permission group="DEVICES_SYNC" actions="ACCESS" />
+			<!--
+			WEBCHAT - webchat panel
+			- ACCESS ability to use chat functionalities
+			-->
+			<permission group="WEBCHAT" actions="ACCESS" />
+		</permissions>
+	</service>
+	<service>
+		<package>com.sonicle.webtop.core.admin</package>
+		<jsPackage>Sonicle.webtop.core.admin</jsPackage>
+		<shortName>wtadm</shortName>
+		<version>@@webtop.service.version@@</version>
+		<buildDate>@@webtop.service.buildDate@@</buildDate>
+		<buildType>@@webtop.service.buildType@@</buildType>
+		
+		<company>Sonicle S.r.l.</company>
+		<companyEmail>sonicle@sonicle.com</companyEmail>
+		<companyWebSite>http://www.sonicle.com</companyWebSite>
+		<supportEmail>sonicle@sonicle.com</supportEmail>
+		
+		<controller className=".CoreAdminController" />
+		<manager className=".CoreAdminManager" />
+		<serviceClassName>Service</serviceClassName>
+	</service>
+</services>

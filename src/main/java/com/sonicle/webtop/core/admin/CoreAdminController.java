@@ -41,10 +41,10 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class Controller extends BaseController {
-	public static final Logger logger = WT.getLogger(Controller.class);
+public class CoreAdminController extends BaseController {
+	public static final Logger logger = WT.getLogger(CoreAdminController.class);
 	
-	public Controller() {
+	public CoreAdminController() {
 		super();
 	}
 }

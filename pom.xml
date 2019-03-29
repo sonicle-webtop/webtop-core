@@ -452,124 +452,6 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>com.sonicle.maven</groupId>
-				<artifactId>minify-maven-plugin</artifactId>
-				<version>${minify-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>client-copy-boot</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<jsEngine>YUI</jsEngine>
-							<nosuffix>true</nosuffix>
-							<skipMerge>true</skipMerge>
-							<jsSourceDir>client-boot</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}/boot</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>client-copy-core-src</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<jsEngine>CLEANER</jsEngine>
-							<cleanerRemoveSingleLineComments>false</cleanerRemoveSingleLineComments>
-							<skipMerge>true</skipMerge>
-							<nosuffix>true</nosuffix>
-							<jsSourceDir>client-core</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>client-copy-core-private-src</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<jsEngine>CLEANER</jsEngine>
-							<skipMerge>true</skipMerge>
-							<nosuffix>true</nosuffix>
-							<jsSourceDir>client-core-private</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>client-copy-core-public-src</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<jsEngine>CLEANER</jsEngine>
-							<skipMerge>true</skipMerge>
-							<nosuffix>true</nosuffix>
-							<jsSourceDir>client-core-public</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>client-copy-admin-src</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<jsEngine>CLEANER</jsEngine>
-							<skipMerge>true</skipMerge>
-							<nosuffix>true</nosuffix>
-							<jsSourceDir>client-admin</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}.admin/src</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<!--
-			<plugin>
-				<groupId>com.samaxes.maven</groupId>
-				<artifactId>minify-maven-plugin</artifactId>
-				<version>${minify-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>client-copy-boot</id>
-						<phase>none</phase>
-						<goals>
-							<goal>minify</goal>
-						</goals>
-						<configuration>
-							<nosuffix>true</nosuffix>
-							<skipMerge>true</skipMerge>
-							<jsSourceDir>client-boot</jsSourceDir>
-							<jsTargetDir>client/${webtop.service.package}/boot</jsTargetDir>
-							<jsSourceIncludes>
-								<jsSourceInclude>**/*.js</jsSourceInclude>
-							</jsSourceIncludes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			-->
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>${maven-resources-plugin.version}</version>
@@ -703,6 +585,124 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.sonicle.maven</groupId>
+				<artifactId>minify-maven-plugin</artifactId>
+				<version>${minify-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>client-minify-boot</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>YUI</jsEngine>
+							<nosuffix>true</nosuffix>
+							<skipMerge>true</skipMerge>
+							<jsSourceDir>client-boot</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}/boot</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-core-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>CLEANER</jsEngine>
+							<cleanerRemoveSingleLineComments>false</cleanerRemoveSingleLineComments>
+							<skipMerge>true</skipMerge>
+							<nosuffix>true</nosuffix>
+							<jsSourceDir>client-core</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-core-private-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>CLEANER</jsEngine>
+							<skipMerge>true</skipMerge>
+							<nosuffix>true</nosuffix>
+							<jsSourceDir>client-core-private</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-core-public-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>CLEANER</jsEngine>
+							<skipMerge>true</skipMerge>
+							<nosuffix>true</nosuffix>
+							<jsSourceDir>client-core-public</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}/src</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>client-copy-admin-src</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<jsEngine>CLEANER</jsEngine>
+							<skipMerge>true</skipMerge>
+							<nosuffix>true</nosuffix>
+							<jsSourceDir>client-admin</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}.admin/src</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!--
+			<plugin>
+				<groupId>com.samaxes.maven</groupId>
+				<artifactId>minify-maven-plugin</artifactId>
+				<version>${minify-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>client-copy-boot</id>
+						<phase>none</phase>
+						<goals>
+							<goal>minify</goal>
+						</goals>
+						<configuration>
+							<nosuffix>true</nosuffix>
+							<skipMerge>true</skipMerge>
+							<jsSourceDir>client-boot</jsSourceDir>
+							<jsTargetDir>client/${webtop.service.package}/boot</jsTargetDir>
+							<jsSourceIncludes>
+								<jsSourceInclude>**/*.js</jsSourceInclude>
+							</jsSourceIncludes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			-->
 		</plugins>
 	</build>
 	
@@ -756,6 +756,9 @@
 			<activation>
 				<activeByDefault>false</activeByDefault>
 			</activation>
+			<properties>
+				<webtop.service.buildType>dev</webtop.service.buildType>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -778,48 +781,12 @@
 								<id>client-copy-boot</id>
 								<phase>process-resources</phase>
 							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>com.sonicle.maven</groupId>
-						<artifactId>minify-maven-plugin</artifactId>
-						<version>${minify-maven-plugin.version}</version>
-						<executions>
 							<execution>
-								<id>client-copy-boot</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-core-src</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-core-private-src</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-core-public-src</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-admin-src</id>
-								<phase>process-resources</phase>
+								<id>replace-manifest-variables</id>
+								<phase>prepare-package</phase>
 							</execution>
 						</executions>
 					</plugin>
-					<!--
-					<plugin>
-						<groupId>com.samaxes.maven</groupId>
-						<artifactId>minify-maven-plugin</artifactId>
-						<version>${minify-maven-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>client-copy-boot</id>
-								<phase>process-resources</phase>
-							</execution>
-						</executions>
-					</plugin>
-					-->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-resources-plugin</artifactId>
@@ -859,6 +826,46 @@
 							</execution>
 						</executions>
 					</plugin>
+					<plugin>
+						<groupId>com.sonicle.maven</groupId>
+						<artifactId>minify-maven-plugin</artifactId>
+						<version>${minify-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>client-minify-boot</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-private-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-public-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-admin-src</id>
+								<phase>process-resources</phase>
+							</execution>
+						</executions>
+					</plugin>
+					<!--
+					<plugin>
+						<groupId>com.samaxes.maven</groupId>
+						<artifactId>minify-maven-plugin</artifactId>
+						<version>${minify-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>client-copy-boot</id>
+								<phase>process-resources</phase>
+							</execution>
+						</executions>
+					</plugin>
+					-->
 				</plugins>
 			</build>
 		</profile>
@@ -869,7 +876,7 @@
 				<activeByDefault>false</activeByDefault>
 			</activation>
 			<properties>
-				
+				<webtop.service.buildType>prod</webtop.service.buildType>
 			</properties>
 			<build>
 				<plugins>
@@ -897,22 +904,58 @@
 								<id>client-copy-boot</id>
 								<phase>process-resources</phase>
 							</execution>
+							<execution>
+								<id>replace-manifest-variables</id>
+								<phase>prepare-package</phase>
+							</execution>
 						</executions>
 					</plugin>
-					<!--
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<version>${maven-resources-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>client-copy-core-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-laf</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-locale</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-admin-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-admin-laf</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-admin-locale</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-resources</id>
+								<phase>process-resources</phase>
+							</execution>
+						</executions>
+					</plugin>
 					<plugin>
 						<groupId>com.sonicle.maven</groupId>
 						<artifactId>minify-maven-plugin</artifactId>
 						<version>${minify-maven-plugin.version}</version>
 						<executions>
 							<execution>
-								<id>client-copy-boot</id>
+								<id>client-minify-boot</id>
 								<phase>process-resources</phase>
 							</execution>
-							
 						</executions>
 					</plugin>
-					-->
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
@@ -1055,41 +1098,6 @@
 										<argument>--output-file=${project.build.outputDirectory}/client/${webtop.service.package}.admin/${webtop.service.package}.admin-debug.js</argument>
 									</arguments>
 								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-resources-plugin</artifactId>
-						<version>${maven-resources-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>client-copy-core-src</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-core-laf</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-core-locale</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-admin-src</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-admin-laf</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-admin-locale</id>
-								<phase>process-resources</phase>
-							</execution>
-							<execution>
-								<id>client-copy-resources</id>
-								<phase>process-resources</phase>
 							</execution>
 						</executions>
 					</plugin>

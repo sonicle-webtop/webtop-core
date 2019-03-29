@@ -47,9 +47,7 @@ public class ServiceVersion implements Comparable<ServiceVersion> {
 	private static final Pattern PATTERN_VERSION = Pattern.compile("^" + RegexUtils.MATCH_SW_VERSION + "$");
 	private String version = null;
 	
-	public ServiceVersion() {
-		
-	}
+	public ServiceVersion() {}
 	
 	public ServiceVersion(String version) {
 		if(StringUtils.isEmpty(version)) return;
