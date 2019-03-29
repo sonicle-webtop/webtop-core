@@ -404,6 +404,10 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		}, obj);
 	},
 	
+	optionsProxy: function(svc, opts) {
+		return WTF.apiProxy(svc, 'UserOptions', 'data', opts);
+	},
+	
 	/**
 	 * Helper method for building a config object for the uploader.
 	 * @param {String} sid The service ID

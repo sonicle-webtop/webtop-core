@@ -34,7 +34,7 @@
 Ext.define('Sonicle.webtop.core.model.UserOptions', {
 	extend: 'WTA.sdk.model.UserOptions',
 	
-	proxy: WT.optionsProxy(WT.ID),
+	proxy: WTF.optionsProxy('com.sonicle.webtop.core'),
 	fields: [
 		WTF.roField('permPasswordManage', 'boolean'),
 		WTF.roField('permUpiManage', 'boolean'),

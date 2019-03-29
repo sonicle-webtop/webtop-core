@@ -382,8 +382,12 @@ public class ServiceManager {
 	}
 	
 	public boolean isInDevMode(String serviceId) {
-		Boolean bool = LangUtils.value(wta.getSettingsManager().getServiceSetting(serviceId, CoreSettings.DEV_MODE), (Boolean)null);
-		return (bool == null) ? WebTopProps.getDevMode() : bool;
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		if (ServiceManifest.BUILD_TYPE_PROD.equals(descr.getManifest().getBuildType())) {
+			return WebTopProps.getDevMode();
+		} else {
+			return true;
+		}
 	}
 	
 	public void setMaintenance(String serviceId, boolean maintenance) {

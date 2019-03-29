@@ -525,10 +525,6 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		Sonicle.PrintMgr.print(html);
 	},
 	
-	optionsProxy: function(svc) {
-		return WTF.apiProxy(svc, 'UserOptions', 'data');
-	},
-	
 	componentLoader: function(svc, act, opts) {
 		if(!opts) opts = {};
 		return {

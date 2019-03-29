@@ -373,13 +373,6 @@ public class CoreSettings {
 	/**
 	 * [system][*]
 	 * [boolean]
-	 * Indicates whether DevMode is active for a 3.
-	 */
-	public static final String DEV_MODE = "devmode";
-	
-	/**
-	 * [system][*]
-	 * [boolean]
 	 * Indicates whether a service is in maintenance or not.
 	 */
 	public static final String MAINTENANCE = "maintenance";

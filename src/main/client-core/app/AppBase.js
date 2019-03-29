@@ -43,13 +43,19 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		'Sonicle.PageMgr',
 		'Sonicle.URLMgr',
 		'Sonicle.PrintMgr',
-		'Sonicle.upload.Uploader',
 		'Sonicle.data.proxy.Ajax',
 		'Sonicle.data.identifier.NegativeString',
 		'Sonicle.form.field.VTypes',
-		
 		'Sonicle.plugin.EnterKeyPlugin',
 		'Sonicle.plugin.FieldTooltip',
+		'Sonicle.upload.Uploader',
+		
+		'Sonicle.webtop.core.app.WT',
+		'Sonicle.webtop.core.app.Factory',
+		'Sonicle.webtop.core.app.Util',
+		'Sonicle.webtop.core.app.FileTypes',
+		'Sonicle.webtop.core.app.Log',
+		'Sonicle.webtop.core.app.ThemeMgr',
 		
 		'Sonicle.webtop.core.ux.data.BaseModel',
 		'Sonicle.webtop.core.ux.data.EmptyModel',
@@ -58,14 +64,7 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		'Sonicle.webtop.core.ux.panel.Panel',
 		'Sonicle.webtop.core.ux.panel.Fields',
 		'Sonicle.webtop.core.ux.panel.Form',
-		'Sonicle.webtop.core.ux.panel.Tab',
-		
-		'Sonicle.webtop.core.app.WT',
-		'Sonicle.webtop.core.app.FileTypes',
-		'Sonicle.webtop.core.app.Factory',
-		'Sonicle.webtop.core.app.Util',
-		'Sonicle.webtop.core.app.Log',
-		'Sonicle.webtop.core.app.ThemeMgr'
+		'Sonicle.webtop.core.ux.panel.Tab'
 	],
 	
 	uiid: null,

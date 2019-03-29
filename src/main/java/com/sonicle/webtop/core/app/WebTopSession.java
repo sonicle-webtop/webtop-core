@@ -1074,6 +1074,7 @@ public class WebTopSession {
 		String targetSuffix = "-" + target;
 		if (devMode) {
 			String jsFileName = (js instanceof JsWTSPublic) ? manifest.getPrivateServiceJsFileName() : manifest.getPrivateServiceJsFileName();
+			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/WT.js");
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Factory.js");
 			js.appManifest.addJs(manifest.getPackageSrcUrl() + "/app/Util.js");
 			js.appManifest.addJs(manifest.getPackageBaseUrl() + "/src/app" + targetSuffix + ".js"); // App file (private or public)
