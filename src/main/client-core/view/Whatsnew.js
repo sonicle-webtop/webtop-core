@@ -57,11 +57,6 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 					xtype: 'button',
 					text: WT.res('act-close.lbl'),
 					handler: function() {
-						//var tb = me.getDockedItems('toolbar[dock="bottom"]')[0];
-						//if(tb.getComponent('hide').getValue()) me.turnOff();
-						if(me.getRef('hide').getValue()) {
-							me.turnOff();
-						}
 						me.closeView();
 					}
 			}]
@@ -88,6 +83,11 @@ Ext.define('Sonicle.webtop.core.view.Whatsnew', {
 		me.on('afterrender', function() {
 			me.loadTabs();
 		}, me, {single: true});
+		me.on('viewclose', function() {
+			if(me.getRef('hide').getValue()) {
+				me.turnOff();
+			}
+		});
 	},
 	
 	loadTabs: function() {
