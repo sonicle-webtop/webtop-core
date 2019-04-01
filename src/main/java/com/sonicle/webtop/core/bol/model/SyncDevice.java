@@ -54,7 +54,7 @@ public class SyncDevice {
 	public SyncDevice(String device, String user, String lastSync) {
 		this.device = device;
 		this.user = user;
-		if (StringUtils.equals(lastSync, LastsyncRecord.LASTSYNCTIME_NEVER)) {
+		if (StringUtils.isBlank(lastSync)) {
 			this.lastSync = null;
 		} else {
 			try {

@@ -47,7 +47,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class ZPushManager {
-	public static final Logger logger = WT.getLogger(ZPushManager.class);
+	private static final Logger logger = WT.getLogger(ZPushManager.class);
 	private final String phpPath;
 	private final String zpushPath;
 	private final URI uri;
@@ -65,7 +65,6 @@ public class ZPushManager {
 		try {
 			String cmd = "list";
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			return parseListOutput(lines);
 			
@@ -81,7 +80,6 @@ public class ZPushManager {
 		try {
 			String cmd = "lastsync";
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			return parseLastsyncOutput(lines);
 			
@@ -97,7 +95,6 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("list -u {0}", user);
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			return parseListDevicesOfUserOutput(lines, lineSep);
 			
@@ -113,9 +110,8 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("list -d {0} -u {1}", device, user);
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
-			return parseListUsersOfDeviceOutput(lines, lineSep);
+			return parseListDevicesOfUserOutput(lines, lineSep);
 			
 		} finally {
 			if (shell != null) shell.close();
@@ -129,7 +125,6 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -u {0}", user);
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
@@ -144,7 +139,6 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -d {0}", device);
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
@@ -159,7 +153,6 @@ public class ZPushManager {
 		try {
 			String cmd = MessageFormat.format("remove -u {0} -d {1}", user, device);
 			shell = new Shell(uri);
-			logger.debug("ZPush CMD: {}", cmd);
 			lines = runAdminCommand(shell, cmd);
 			
 		} finally {
@@ -169,7 +162,7 @@ public class ZPushManager {
 	
 	private List<String> runAdminCommand(Shell shell, String cmd) throws Exception {
 		String shellCmd = buildShellCommand(cmd);
-		logger.trace("Shell CMD: {}", shellCmd);
+		logger.debug("Executing command [{}]", shellCmd);
 		return shell.execute(shellCmd);
 	}
 	
@@ -180,35 +173,34 @@ public class ZPushManager {
 	private List<ListRecord> parseListOutput(List<String> lines) {
 		ArrayList<ListRecord> items = new ArrayList<>();
 		
-		int lineNo = 0;
+		int lineNo = 0, dataLine = -1;
 		for (String line : lines) {
 			lineNo++;
-			// Keep only useful lines (skip blank, separator and title lines)
-			if ((lineNo >= 6) && (lineNo < lines.size())) {
-				String device = StringUtils.trim(StringUtils.substring(line, 0, 36));
-				String users = StringUtils.trim(StringUtils.substring(line, 37));
+			if (StringUtils.containsIgnoreCase(line, "All synchronized devices")) {
+				dataLine = lineNo +4;
+			}
+			if ((dataLine != -1) && (lineNo >= dataLine) && !StringUtils.isBlank(StringUtils.trim(line))) {
+				String[] tokens = StringUtils.split(line, " ", 2);
+				String device = StringUtils.trim(tokens[0]);
+				String users = StringUtils.trim(tokens[1]);
 				items.add(new ListRecord(device, StringUtils.split(users, ",")));
 			}
 		}
 		return items;
 	}
 	
-	private String parseListUsersOfDeviceOutput(List<String> lines, String lineSeparator) {
-		StringBuilder sb = new StringBuilder();
-		
-		for (String line : lines) {
-			sb.append(line);
-			sb.append(lineSeparator);
-		}
-		return sb.toString();
-	}
-	
 	private String parseListDevicesOfUserOutput(List<String> lines, String lineSeparator) {
 		StringBuilder sb = new StringBuilder();
-		
+		int lineNo = 0, dataLine = -1;
 		for (String line : lines) {
-			sb.append(line);
-			sb.append(lineSeparator);
+			lineNo++;
+			if (StringUtils.containsIgnoreCase(line, "Synchronized by user")) {
+				dataLine = lineNo;
+			}
+			if ((dataLine != -1) && (lineNo >= dataLine)) {
+				sb.append(line);
+				sb.append(lineSeparator);
+			}	
 		}
 		return sb.toString();
 	}
@@ -216,15 +208,20 @@ public class ZPushManager {
 	private List<LastsyncRecord> parseLastsyncOutput(List<String> lines) {
 		ArrayList<LastsyncRecord> items = new ArrayList<>();
 		
-		int lineNo = 0;
+		int lineNo = 0, dataLine = -1;
 		for (String line : lines) {
 			lineNo++;
-			// Keep only useful lines (skip blank, separator and title lines)
-			if ((lineNo >= 6) && (lineNo < lines.size())) {
-				String device = StringUtils.trim(StringUtils.substring(line, 0, 36));
-				String user = StringUtils.trim(StringUtils.substring(line, 36, 67));
-				String lastSync = StringUtils.trim(StringUtils.substring(line, 67, 87));
-				items.add(new LastsyncRecord(device, user, lastSync));
+			if (StringUtils.containsIgnoreCase(line, "Device id")
+					&& StringUtils.containsIgnoreCase(line, "Synchronized user")
+					&& StringUtils.containsIgnoreCase(line, "Last sync time")) {
+				dataLine = lineNo +2;
+			}
+			if ((dataLine != -1) && (lineNo >= dataLine) && !StringUtils.isBlank(StringUtils.trim(line))) {
+				String[] tokens = StringUtils.split(line, " ", 3);
+				String device = StringUtils.trim(tokens[0]);
+				String user = StringUtils.trim(tokens[1]);
+				String lastSync = StringUtils.trim(StringUtils.left(tokens[2], 16));
+				items.add(new LastsyncRecord(device, user, "never".equalsIgnoreCase(lastSync) ? null : lastSync));
 			}
 		}
 		return items;
@@ -241,7 +238,6 @@ public class ZPushManager {
 	}
 	
 	public static class LastsyncRecord {
-		public static final String LASTSYNCTIME_NEVER = "never";
 		public final String device;
 		public final String synchronizedUser;
 		public final String lastSyncTime;
