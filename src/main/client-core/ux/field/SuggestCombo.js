@@ -53,6 +53,7 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 		suggestionContext: ''
 	},
 	
+	valuePublishEvent: ['change', 'blur'], // add blur event to avoid loosing value changes when blurring field before server query
 	preventEnterFiringOnPickerExpanded: true,
 	
 	typeAhead: false,
@@ -102,13 +103,6 @@ Ext.define('Sonicle.webtop.core.ux.field.SuggestCombo', {
 				context: nv
 			});
 		}
-	},
-	
-	onBlur: function(e) {
-		var me = this;
-		me.callParent(arguments);
-		// force binding update on field blur
-		me.checkChange();
 	},
 	
 	/*
