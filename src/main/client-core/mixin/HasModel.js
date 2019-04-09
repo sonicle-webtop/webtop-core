@@ -212,34 +212,18 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				if (mo1) {
 					proxy = mo1.getProxy();
 					reader = proxy.getReader();
-					success = (mo1.phantom) ? true : reader.getSuccess(reader.rawData || {});
-					
-					if (success) {
-						if (proxy.type === 'memory') {
-							mo1.set(opts.data || {}, {dirty: dirty});
-						} else {
+					if (proxy.type === 'memory') {
+						success = true;
+						mo1.set(opts.data || {}, {dirty: dirty});
+					} else {
+						success = (mo1.phantom) ? true : reader.getSuccess(reader.rawData || {});
+						if (success) {
 							if (dirty) mo1.dirty = true;
 						}
 					}
 					me.onModelLoad(success, mo1, undefined, opts.pass);
 					Ext.callback(opts.callback, opts.scope || me, [success, mo1]);
 				}
-				/*
-				var mdl = me.getModel(),
-						prx = mdl.getProxy(),
-						reader = prx.getReader(),
-						success = (mdl.phantom) ? true : reader.getSuccess(reader.rawData || {});
-				
-				if (success) {
-					if (mdl.getProxy().type === 'memory') {
-						mdl.set(opts.data || {}, {dirty: dirty});
-					} else {
-						if (dirty) mdl.dirty = true;
-					}
-				}
-				me.onModelLoad(success, mdl, undefined, opts.pass);
-				Ext.callback(opts.callback, opts.scope || me, [success, mdl]);
-				*/
 			});
 			
 			// Apply linking...
