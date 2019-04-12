@@ -35,7 +35,6 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
-import com.sonicle.security.DomainAccount;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -85,7 +84,6 @@ import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -1027,6 +1025,8 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
 		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/search-string/3.1.0/" + "search-string.min.js");
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
