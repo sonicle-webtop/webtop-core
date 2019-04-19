@@ -263,7 +263,7 @@ public class Service extends BaseService {
 		if (!StringUtils.isBlank(boshUrl)) {
 			co.put("boshUrl", boshUrl);
 		}
-		CoreServiceSettings.ICEServersList iceServers = ss.getWebRTC_ICEServers();
+		String iceServers = ss.getWebRTC_ICEServers();
 		if (iceServers != null) {
 			co.put("iceServers", iceServers);
 		}

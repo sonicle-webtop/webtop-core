@@ -126,8 +126,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(SMTP_AUTH, false);
 	}
 	
-	public ICEServersList getWebRTC_ICEServers() {
-		ICEServersList value = getObject(WEBRTC_ICE_SERVERS, null, ICEServersList.class);
+	public String getWebRTC_ICEServers() {
+		String value = getString(WEBRTC_ICE_SERVERS, null);
         return value;
     }
     
@@ -447,13 +447,13 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		}
 	}
 	
-	public static class ICEServer {
+/*	public static class ICEServer {
 		public String url;
 		public String username;
 		public String credential;
-	}
+	}*/
 	
-	public static class ICEServersList extends ArrayList<ICEServer> {
+/*	public static class ICEServersList extends ArrayList<ICEServer> {
 		public static ICEServersList fromJson(String value) {
 			return JsonResult.gson.fromJson(value, ICEServersList.class);
 		}
@@ -461,5 +461,5 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		public static String toJson(ICEServersList value) {
 			return JsonResult.gson.toJson(value, ICEServersList.class);
 		}		
-	}
+	}*/
 }
