@@ -178,7 +178,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 							
 							//if BOSH url configured, intialize RTC
 							var boshUrl=WT.getVar('boshUrl');
-							var iceServers=WT.getVar('iceServers');
+							var iceServers=WT.getVarAsObject('iceServers');
 							if (boshUrl) {
 								me.initRTCManager(boshUrl,iceServers,json.data.userId,json.data.password, json.data.userJid+"RTC");
 							}
