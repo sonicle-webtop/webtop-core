@@ -32,72 +32,30 @@
  */
 Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	alternateClassName: 'WTA.ux.field.Search',
-	extend: 'Ext.form.field.Text',
+	extend: 'Sonicle.form.field.search.Field',
 	alias: ['widget.wtsearchfield'],
-	requires: [
-		'Sonicle.form.trigger.Clear',
-		'Sonicle.plugin.FieldTooltip'
-	],
 	
-	plugins: ['sofieldtooltip'],
-	selectOnFocus: true,
 	width: 250,
 	
 	/**
      * @event query
 	 * Fires when the user presses the ENTER key or clicks on the search icon.
 	 * @param {Ext.form.field.Text} this
-	 * @param {String} value
+	 * @param {String} value Human-readable query text
+	 * @param {Object} queryObject queryObject Query exploded into components
      */
 	
 	constructor: function(cfg) {
 		var me = this;
-		
 		if (Ext.isEmpty(cfg.emptyText)) {
 			cfg.emptyText = WT.res('textfield.search.emp');
 		}
-		cfg.triggers = Ext.apply(cfg.triggers || {}, {
-			clear: {
-				type: 'soclear',
-				weight: -1,
-				hideWhenEmpty: true,
-				hideWhenMouseOut: true
-			},
-			search: {
-				cls: Ext.baseCSSPrefix + 'form-search-trigger',
-				handler: function(s) {
-					me.fireQuery(s.getValue());
-				}
-			}
-		});
-		me.callParent([cfg]);
-	},
-	
-	initComponent: function() {
-		var me = this;
-		me.callParent(arguments);
-		me.on('clear', me.onClear, me);
-		me.on('specialkey', me.onSpecialKey, me);
-	},
-	
-	destroy: function() {
-		var me = this;
-		me.un('clear', me.onClear);
-		me.un('specialkey', me.onSpecialKey);
-		me.callParent();
-	},
-	
-	privates: {
-		onClear: function(s) {
-			this.fireQuery(null);
-		},
-		
-		onSpecialKey: function(s, e) {
-			if (e.getKey() === e.ENTER) this.fireQuery(s.getValue());
-		},
-
-		fireQuery: function(value) {
-			this.fireEvent('query', this, value);
+		if (Ext.isEmpty(cfg.searchText)) {
+			cfg.searchText = WT.res('wtsearchfield.search');
 		}
+		if (Ext.isEmpty(cfg.clearText)) {
+			cfg.clearText = WT.res('wtsearchfield.clear');
+		}
+		me.callParent([cfg]);
 	}
 });
