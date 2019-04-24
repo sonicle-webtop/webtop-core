@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.app.shiro.WTRealm;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -66,7 +67,8 @@ public class RunContext {
 	
 	static SimplePrincipalCollection buildPrincipalCollection(String domainId, String userId) {
 		Principal principal = new Principal(domainId, userId);
-		return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
+		return new SimplePrincipalCollection(principal, WTRealm.NAME);
+		//return new SimplePrincipalCollection(principal, "com.sonicle.webtop.core.shiro.WTRealm");
 	}
 	
 	public static Subject buildSubject(SecurityManager securityManager, UserProfileId profileId) {
