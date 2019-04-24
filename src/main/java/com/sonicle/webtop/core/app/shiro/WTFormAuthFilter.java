@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,11 +28,12 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.PushEndpoint;
 import com.sonicle.webtop.core.app.SessionContext;
@@ -44,6 +44,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.servlet.Login;
 import com.sonicle.webtop.core.app.servlet.PrivateRequest;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -57,7 +58,6 @@ import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UnknownAccountException;
-import org.apache.shiro.authz.UnauthenticatedException;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author gbulfon
+ * @author malbinola
  */
 public class WTFormAuthFilter extends FormAuthenticationFilter {
 	private static final Logger logger = (Logger) LoggerFactory.getLogger(WTFormAuthFilter.class);
@@ -91,6 +91,19 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 				logger.trace("[{}] Location: {}", webtopSession.getId(), url);
 			}
 		}
+		
+		WTRealm wtRealm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
+		if (wtRealm != null) {
+			try {
+				wtRealm.checkUser((Principal)subject.getPrincipal());
+			} catch(WTException ex) {
+				logger.error("User check error", ex);
+				writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_FAILURE");
+				setFailureAttribute(request, new AuthenticationException(ex));
+				return true;
+			}
+		}
+		
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");
 		return super.onLoginSuccess(token, subject, request, response);
 	}

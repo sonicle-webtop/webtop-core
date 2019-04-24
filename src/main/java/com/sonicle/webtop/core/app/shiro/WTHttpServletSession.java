@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,29 +28,30 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.shiro;
 
-import org.apache.shiro.authc.UsernamePasswordToken;
+import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import org.apache.shiro.web.session.HttpServletSession;
 
 /**
  *
  * @author malbinola
  */
-public class UsernamePasswordDomainToken extends UsernamePasswordToken {
-	private String domain;
+public class WTHttpServletSession extends HttpServletSession {
 	
-	public UsernamePasswordDomainToken(String username, String password, String domain, boolean rememberMe, String host) {
-		super(username, password, rememberMe, host);
-		this.domain = domain;
-	}
-	
-	public String getDomain() {
-		return this.domain;
-	}
-	
-	public void setDomain(String value) {
-		this.domain = value;
+	public WTHttpServletSession(HttpSession httpSession, HttpServletRequest request, String host) {
+		super(httpSession, host);
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_REQUEST_DUMPED, "true");
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_REFERER_URI, ServletUtils.getReferer(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_LOCALE, ServletHelper.homogenizeLocale(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_CLIENT_USERAGENT, ServletUtils.getUserAgent(request));
+		httpSession.setAttribute(SessionManager.ATTRIBUTE_GUESSING_LOCALE, request.getLocale());
 	}
 }

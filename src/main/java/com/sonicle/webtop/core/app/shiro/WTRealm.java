@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,9 +28,9 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.shiro;
+package com.sonicle.webtop.core.app.shiro;
 
 import com.sonicle.security.Principal;
 import com.sonicle.security.AuthenticationDomain;
@@ -44,7 +43,6 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
-import com.sonicle.webtop.core.app.shiro.MaintenanceException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OUser;
@@ -74,6 +72,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class WTRealm extends AuthorizingRealm {
+	public static final String NAME = "wtrealm";
 	private final static Logger logger = (Logger)LoggerFactory.getLogger(WTRealm.class);
 	private final Object lock1 = new Object();
 	
@@ -122,10 +121,10 @@ public class WTRealm extends AuthorizingRealm {
 		}
 	}
 	
-	@Override
 	/*
 	 * Protect caching of impersonated authorization from original user authorization cache
 	 */
+	@Override
     protected Object getAuthorizationCacheKey(PrincipalCollection principals) {
 		if (principals.getPrimaryPrincipal() instanceof com.sonicle.security.Principal) {
 			com.sonicle.security.Principal sprincipal=(com.sonicle.security.Principal)principals.getPrimaryPrincipal();
@@ -206,10 +205,25 @@ public class WTRealm extends AuthorizingRealm {
 				principal = new Principal(priAd, impersonate, priAd.getDomainId(), userEntry.userId, password);
 				principal.setDisplayName(StringUtils.defaultIfBlank(userEntry.displayName, userEntry.userId));
 			}
-
-			synchronized (lock1) {
-				WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
-				if (autoCreate && !chk.exist) {
+			
+			if (autoCreate) principal.pushDirectoryEntry(userEntry);
+			return principal;
+			
+		} catch(URISyntaxException | WTException | DirectoryException ex) {
+			logger.error("Authentication error", ex);
+			throw new AuthenticationException(ex);
+		}	
+	}
+	
+	public void checkUser(Principal principal) throws WTException {
+		WebTopApp wta = WebTopApp.getInstance();
+		WebTopManager wtMgr = wta.getWebTopManager();
+		AuthUser userEntry = principal.popDirectoryEntry();
+		
+		synchronized (lock1) {
+			WebTopManager.CheckUserResult chk = wtMgr.checkUser(principal.getDomainId(), principal.getUserId());
+			if (!chk.exist) {
+				if (userEntry != null) {
 					logger.debug("Creating user [{}]", principal.getSubjectId());
 					try {
 						wtMgr.addUser(false, createUserEntity(principal.getDomainId(), userEntry), false, null);
@@ -217,19 +231,15 @@ public class WTRealm extends AuthorizingRealm {
 						// This kind of exception collects errors from inner service handlers
 						logger.warn("User configuration may not have been fully completed. Please check log details above. [{}]", principal.getSubjectId(), ex1);
 					}
-				} else if (!chk.exist) {
+					
+				} else {
 					throw new WTException("User does not exist [{}]", principal.getSubjectId());
-				} else if (chk.exist && !chk.enabled) {
-					throw new WTException("User is disabled [{}]", principal.getSubjectId());
 				}
+				
+			} else if (chk.exist && !chk.enabled) {
+				throw new WTException("User is disabled [{}]", principal.getSubjectId());
 			}
-			
-			return principal;
-			
-		} catch(URISyntaxException | WTException | DirectoryException ex) {
-			logger.error("Authentication error", ex);
-			throw new AuthenticationException(ex);
-		}	
+		}
 	}
 	
 	private WTAuthorizationInfo loadAuthorizationInfo(Principal principal) throws Exception {

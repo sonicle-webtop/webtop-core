@@ -1006,10 +1006,6 @@ public final class WebTopManager {
 			
 			DbUtils.commitQuietly(con);
 			
-			// Update cache
-			removeFromUserUidCache(pid);
-			removeFromUserCache(pid);
-			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
 			throw new WTException(ex, "DB error");
@@ -1026,6 +1022,10 @@ public final class WebTopManager {
 		// Performs some actions after the remove operation
 		List<Throwable> errors = wta.getServiceManager().invokeOnUserRemoved(pid);
 		wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
+		
+		// Update cache
+		removeFromUserUidCache(pid);
+		removeFromUserCache(pid);
 		
 		if (!errors.isEmpty()) throw new WTMultiCauseWarnException(errors, "Errors in user related listeners");
 	}
