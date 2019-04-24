@@ -71,9 +71,5 @@ public class JsWTSPublic extends JsWTS {
 	
 	public static class PublicService extends Service {}
 	
-	public static class Vars extends HashMap<String, Object> {
-		public Vars() {
-			super();
-		}
-	}
+	public static class Vars extends HashMap<String, Object> {}
 }
