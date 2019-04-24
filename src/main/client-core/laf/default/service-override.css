@@ -33,3 +33,7 @@
     margin-right: 4px !important;
 	padding-right: 2px !important;
 }
+
+.x-grid-empty {
+	text-align: center;
+}
