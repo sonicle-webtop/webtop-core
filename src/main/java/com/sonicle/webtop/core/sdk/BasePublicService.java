@@ -66,7 +66,15 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 		return null;
 	}
 	
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public void writePage(HttpServletResponse response, WebTopSession wts, JsWTSPublic.Vars serviceVars, String contextPath) throws IOException, TemplateException {
+		writePage(response, wts, contextPath, serviceVars);
+	}
+	
+	public void writePage(HttpServletResponse response, WebTopSession wts, String contextPath, JsWTSPublic.Vars serviceVars) throws IOException, TemplateException {
 		Map vars = new HashMap();
 		JsWTSPublic jswts = new JsWTSPublic();
 		jswts.contextPath = contextPath;
