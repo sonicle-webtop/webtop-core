@@ -35,7 +35,8 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	extend: 'Sonicle.form.field.search.Field',
 	alias: ['widget.wtsearchfield'],
 	
-	width: 250,
+	width: 400,
+	matchFieldWidth: true,
 	
 	/**
      * @event query
