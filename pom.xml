@@ -456,6 +456,8 @@
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>${maven-resources-plugin.version}</version>
 				<executions>
+					<!-- Done using minify-maven-plugin -->
+					<!--
 					<execution>
 						<id>client-copy-core-src</id>
 						<phase>none</phase>
@@ -481,6 +483,7 @@
 							</resources>
 						</configuration>
 					</execution>
+					-->
 					<execution>
 						<id>client-copy-core-laf</id>
 						<phase>none</phase>
@@ -514,6 +517,7 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- Done using minify-maven-plugin -->
 					<!--
 					<execution>
 						<id>client-copy-admin-src</id>
@@ -915,10 +919,13 @@
 						<artifactId>maven-resources-plugin</artifactId>
 						<version>${maven-resources-plugin.version}</version>
 						<executions>
+							<!-- Done using minify-maven-plugin -->
+							<!--
 							<execution>
 								<id>client-copy-core-src</id>
 								<phase>process-resources</phase>
 							</execution>
+							-->
 							<execution>
 								<id>client-copy-core-laf</id>
 								<phase>process-resources</phase>
@@ -927,10 +934,13 @@
 								<id>client-copy-core-locale</id>
 								<phase>process-resources</phase>
 							</execution>
+							<!-- Done using minify-maven-plugin -->
+							<!--
 							<execution>
 								<id>client-copy-admin-src</id>
 								<phase>process-resources</phase>
 							</execution>
+							-->
 							<execution>
 								<id>client-copy-admin-laf</id>
 								<phase>process-resources</phase>
@@ -952,6 +962,22 @@
 						<executions>
 							<execution>
 								<id>client-minify-boot</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-private-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-core-public-src</id>
+								<phase>process-resources</phase>
+							</execution>
+							<execution>
+								<id>client-copy-admin-src</id>
 								<phase>process-resources</phase>
 							</execution>
 						</executions>
