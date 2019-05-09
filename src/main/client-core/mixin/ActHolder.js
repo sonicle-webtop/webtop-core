@@ -85,20 +85,23 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 		*/
 		var txt = Ext.isDefined(cfg.text) ? cfg.text : me._buildText(null, name),
 				tip = Ext.isDefined(cfg.tooltip) ? cfg.tooltip : me._buildTip(null, name),
-				cls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name, cfg.ignoreSize),
+				icoCls = Ext.isDefined(cfg.iconCls) ? cfg.iconCls : me._buildIconCls(name, cfg.ignoreSize),
+				glyph = Ext.isDefined(cfg.glyph) ? cfg.glyph : null,
 				cb = cfg.handler,
 				sco = cfg.scope || this;
 
 		delete cfg.text;
 		delete cfg.tooltip;
 		delete cfg.iconCls;
+		delete cfg.glyph;
 		delete cfg.handler;
 		delete cfg.scope;
 
 		return Ext.create('WTA.ux.Action', Ext.apply({
 			text: txt,
 			tooltip: tip,
-			iconCls: cls,
+			iconCls: icoCls,
+			glyph: glyph,
 			handler: cb,
 			scope: sco || this
 		}, cfg));
