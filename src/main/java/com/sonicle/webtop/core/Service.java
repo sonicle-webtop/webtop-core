@@ -650,7 +650,7 @@ public class Service extends BaseService {
 				EnumUtils.toSerializedName(MasterData.Type.CUSTOMER),
 				EnumUtils.toSerializedName(MasterData.Type.SUPPLIER)
 			);
-			for(MasterData entry : coreMgr.listMasterData(types, "%" + query + "%")) {
+			for(MasterData entry : coreMgr.listMasterData(types, "%" + query + "%").values()) {
 				items.add(new JsCustomerSupplierLkp(entry));
 			}
 			

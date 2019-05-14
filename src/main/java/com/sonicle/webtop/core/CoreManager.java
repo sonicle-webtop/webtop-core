@@ -100,6 +100,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.sdk.AuthException;
@@ -123,6 +124,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
@@ -859,15 +861,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterDataIn(Collection<String> masterDataIds) throws WTException {
+	public Map<String, MasterDataLookup> lookupMasterData(Collection<String> masterDataIds) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ArrayList<MasterData> items = new ArrayList<>();
-			for(OMasterData omas : masDao.viewByIdsDomain(con, masterDataIds, getTargetProfileId().getDomainId())) {
-				items.add(createMasterData(omas));
+			LinkedHashMap<String, MasterDataLookup> items = new LinkedHashMap<>();
+			for (OMasterData omd : masDao.viewByDomainIn(con, getTargetProfileId().getDomainId(), masterDataIds)) {
+				items.put(omd.getMasterDataId(), ManagerUtils.createMasterDataLookup(omd));
 			}
 			return items;
 			
@@ -878,19 +880,38 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listMasterData(Collection<String> masterDataTypes) throws WTException {
+	public Map<String, MasterData> listMasterDataIn(Collection<String> masterDataIds) throws WTException {
+		MasterDataDAO masDao = MasterDataDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			LinkedHashMap<String, MasterData> items = new LinkedHashMap<>();
+			for (OMasterData omd : masDao.viewByIdsDomain(con, masterDataIds, getTargetProfileId().getDomainId())) {
+				items.put(omd.getMasterDataId(), ManagerUtils.createMasterData(omd));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, MasterData> listMasterData(Collection<String> masterDataTypes) throws WTException {
 		return listMasterData(masterDataTypes, null);
 	}
 	
-	public List<MasterData> listMasterData(Collection<String> masterDataTypes, String pattern) throws WTException {
+	public Map<String, MasterData> listMasterData(Collection<String> masterDataTypes, String pattern) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ArrayList<MasterData> items = new ArrayList<>();
-			for (OMasterData omas : masDao.viewParentsByDomainTypePattern(con, getTargetProfileId().getDomainId(), masterDataTypes, pattern)) {
-				items.add(createMasterData(omas));
+			LinkedHashMap<String, MasterData> items = new LinkedHashMap<>();
+			for (OMasterData omd : masDao.viewParentsByDomainTypePattern(con, getTargetProfileId().getDomainId(), masterDataTypes, pattern)) {
+				items.put(omd.getMasterDataId(), ManagerUtils.createMasterData(omd));
 			}
 			return items;
 			
@@ -901,15 +922,15 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public List<MasterData> listChildrenMasterData(Collection<String> masterDataTypes) throws WTException {
+	public Map<String, MasterData> listChildrenMasterData(Collection<String> masterDataTypes) throws WTException {
 		MasterDataDAO masDao = MasterDataDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			ArrayList<MasterData> items = new ArrayList<>();
-			for (OMasterData omas : masDao.viewChildrenByDomainType(con, getTargetProfileId().getDomainId(), masterDataTypes)) {
-				items.add(createMasterData(omas));
+			LinkedHashMap<String, MasterData> items = new LinkedHashMap<>();
+			for (OMasterData omd : masDao.viewChildrenByDomainType(con, getTargetProfileId().getDomainId(), masterDataTypes)) {
+				items.put(omd.getMasterDataId(), ManagerUtils.createMasterData(omd));
 			}
 			return items;
 			
@@ -932,7 +953,7 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			ArrayList<MasterData> items = new ArrayList<>();
 			for (OMasterData omas : masDao.viewChildrenByDomainParentTypePattern(con, getTargetProfileId().getDomainId(), parentId, masterDataTypes, pattern)) {
-				items.add(createMasterData(omas));
+				items.add(ManagerUtils.createMasterData(omas));
 			}
 			return items;
 			
@@ -950,7 +971,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			OMasterData omas = masDao.selectByDomainId(con, getTargetProfileId().getDomainId(), masterDataId);
-			return createMasterData(omas);
+			return ManagerUtils.createMasterData(omas);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -2448,31 +2469,6 @@ public class CoreManager extends BaseManager {
 		cau.setExternalId(vcau.getExternalId());
 		cau.setMasterDataDescription(vcau.getMasterDataDescription());
 		return cau;
-	}
-	
-	private MasterData createMasterData(OMasterData omd) {
-		if (omd == null) return null;
-		MasterData md = new MasterData();
-		md.setMasterDataId(omd.getMasterDataId());
-		md.setParentMasterDataId(omd.getParentMasterDataId());
-		md.setExternalId(omd.getExternalId());
-		md.setType(omd.getType());
-		md.setRevisionStatus(EnumUtils.forSerializedName(omd.getRevisionStatus(), MasterData.RevisionStatus.class));
-		md.setRevisionTimestamp(omd.getRevisionTimestamp());
-		md.setRevisionSequence(omd.getRevisionSequence());
-		md.setLockStatus(EnumUtils.forSerializedName(omd.getLockStatus(), MasterData.LoskStatus.class));
-		md.setDescription(omd.getDescription());
-		md.setAddress(omd.getAddress());
-		md.setCity(omd.getCity());
-		md.setPostalCode(omd.getPostalCode());
-		md.setState(omd.getState());
-		md.setCountry(omd.getCountry());
-		md.setTelephone(omd.getTelephone());
-		md.setFax(omd.getFax());
-		md.setMobile(omd.getMobile());
-		md.setEmail(omd.getEmail());
-		md.setNotes(omd.getNotes());
-		return md;
 	}
 	
 	private OIMChat createOIMChat(IMChat cha) {
