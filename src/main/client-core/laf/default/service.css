@@ -348,6 +348,10 @@
 	color: #c00 !important;
 }
 
+/* ----- ExtJs: toggle button icon ----- */
+.wt-toggle-on { background-image: url('toggle-on.svg') !important; background-size: contain; }
+.wt-toggle-off { background-image: url('toggle-off.svg') !important; background-size: contain; }
+
 /* ----- ExtJs: treecolumn checkbox icon ----- */
 .wt-tree-toggle-off {
 	background-image: url('toggle-off.svg') !important;
