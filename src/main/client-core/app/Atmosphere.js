@@ -156,19 +156,19 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 			//transport: me.self.T_LP,
 			fallbackTransport: me.self.T_LP
 		});
-		me.initTransportParams(req, req.transport, 'before');
+		me.initTransportParams(req, req.transport, 'reset');
 		return req;
 	},
 	
 	initTransportParams: function(req, transport, event) {
 		if (transport === this.self.T_WS) {
-			if (event === 'before') {
+			if (event === 'reset') {
 				// The amount of time in order to switch to fallback transport
 				req.connectTimeout = 30*1000;
 				// The amount of time between each reconnect tries
-				reconnectInterval: 0;
+				req.reconnectInterval = 0;
 				// Max unsuccesful retries
-				maxReconnectOnClose: Number.MAX_VALUE;
+				req.maxReconnectOnClose = Number.MAX_VALUE;
 			} else {
 				// The amount of time in order to switch to fallback transport
 				req.connectTimeout = -1;
@@ -178,7 +178,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 				req.maxReconnectOnClose = 2*120;
 			}
 		} else if (transport === this.self.T_LP) {
-			if (event === 'before') {
+			if (event === 'reset') {
 				req.connectTimeout = -1; // No timeout, we want an immediate reconnect after failure
 				req.reconnectInterval = 0;
 				req.maxReconnectOnClose = Number.MAX_VALUE;
@@ -303,10 +303,12 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 					}
 					
 				} else if (me.isLP(resp.transport)) {
-					if (resp.status === 500) {
-						me.initTransportParams(req, me.self.T_LP, 'error');
+					if (resp.status === 401) {
+						//TODO: maybe add a such sort of notification in order to redirect to login
+						me.disconnect();
 						me.updateSrvUnreachable();
-					} else if (resp.status === 204) {
+					} else if (resp.status >= 300 && resp.status < 600) {
+						me.initTransportParams(req, me.self.T_LP, 'error');
 						me.updateSrvUnreachable();
 					}
 				}
@@ -323,7 +325,7 @@ Ext.define('Sonicle.webtop.core.app.Atmosphere', {
 					me.fireEventArgs('subsocketevent', [me, 'transportFailure', req.transport, '', '']);
 				}
 				if (req.transport === me.self.T_WS) {
-					me.initTransportParams(req, me.self.T_LP, 'before');
+					me.initTransportParams(req, me.self.T_LP, 'reset');
 				}
 			},
 			onMessage: function(resp) {
