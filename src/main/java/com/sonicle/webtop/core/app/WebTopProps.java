@@ -53,11 +53,11 @@ public class WebTopProps {
 	public static void initOldPropsCompatibility() {
 		Properties systemProps = System.getProperties();
 		copyOldProp(systemProps, "com.sonicle.webtop.webappsConfigPath", WEBAPPSCONFIG_DIR);
-		copyOldProp(systemProps, "com.sonicle.webtop.extJsDebug", EXTJS_DEBUG);
-		copyOldProp(systemProps, "com.sonicle.webtop.debugMode", JS_DEBUG);
-		copyOldProp(systemProps, "com.sonicle.webtop.soExtDevMode", SOEXT_DEV_MODE);
-		copyOldProp(systemProps, "com.sonicle.webtop.devMode", DEV_MODE);
-		copyOldProp(systemProps, "com.sonicle.webtop.schedulerDisabled", SCHEDULER_DISABLED);
+		//copyOldProp(systemProps, "com.sonicle.webtop.extJsDebug", EXTJS_DEBUG);
+		//copyOldProp(systemProps, "com.sonicle.webtop.debugMode", JS_DEBUG);
+		//copyOldProp(systemProps, "com.sonicle.webtop.soExtDevMode", SOEXT_DEV_MODE);
+		//copyOldProp(systemProps, "com.sonicle.webtop.devMode", DEV_MODE);
+		//copyOldProp(systemProps, "com.sonicle.webtop.schedulerDisabled", SCHEDULER_DISABLED);
 	}
 	
 	public static void print(Properties props) {
