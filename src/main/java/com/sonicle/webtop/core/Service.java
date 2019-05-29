@@ -323,6 +323,17 @@ public class Service extends BaseService {
 		return getEnv().getSession();
 	}
 	
+	public void processActivateDebug(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			getWts().setJsDebugEnabled(true);
+			new JsonResult().printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in ActivateDebug", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
 	public void processLogMessage(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {

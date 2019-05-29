@@ -261,6 +261,14 @@ public class WebTopSession {
 	}
 	
 	/**
+	 * Updates value for js debug mode.
+	 * @param jsDebugEnabled 
+	 */
+	public void setJsDebugEnabled(boolean jsDebugEnabled) {
+		this.jsDebugEnabled = jsDebugEnabled;
+	}
+	
+	/**
 	 * Return current locale.
 	 * It can be the UserProfile's locale or the locale specified during
 	 * the initial HTTP request to the server.

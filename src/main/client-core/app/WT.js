@@ -631,6 +631,18 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Activates debug mode.
+	 */
+	debug: function() {
+		var me = this;
+		me.ajaxReq(me.ID, 'ActivateDebug', {
+			callback: function(success, json) {
+				if (success) me.info('Debug mode is on. Please press F5 in order to reload files.');
+			}
+		});
+	},
+	
+	/**
 	 * Makes an Ajax request to server.
 	 * @param {String} svc The service ID.
 	 * @param {String} act The service action to call.
