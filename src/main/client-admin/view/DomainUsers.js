@@ -42,8 +42,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	
 	domainId: null,
 	passwordPolicy: false,
-	authCapPasswordWrite: false,
-	authCapUsersWrite: false,
+	dirScheme: null,
+	dirCapPasswordWrite: false,
+	dirCapUsersWrite: false,
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
@@ -134,7 +135,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						me.addAct('addEmpty', {
 							text: me.mys.res('domainUsers.act-addEmpty.lbl'),
 							tooltip: null,
-							disabled: !me.authCapUsersWrite,
+							disabled: !me.dirCapUsersWrite,
 							handler: function() {
 								me.addUserUI(null);
 							}
@@ -159,7 +160,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 						me.addAct('removeDeep', {
 							text: me.mys.res('domainUsers.act-removeDeep.lbl'),
 							tooltip: null,
-							disabled: !me.authCapUsersWrite,
+							disabled: !me.dirCapUsersWrite,
 							handler: function() {
 								var sel = me.getSelectedUsers();
 								if (sel.length > 0) me.deleteUserUI(true, sel[0]);
@@ -461,10 +462,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				}
 				return true;
 			case 'changePassword':
-				if (!me.authCapPasswordWrite) return true;
+				if (!me.dirCapPasswordWrite) return true;
 				sel = me.getSelectedUsers();
 				if (sel.length === 1) {
-					return !sel[0].get('exist');
+					return (me.dirScheme === 'webtop') && !sel[0].get('exist');
+					//return !sel[0].get('exist');
 				}
 				return true;
 			case 'enable':

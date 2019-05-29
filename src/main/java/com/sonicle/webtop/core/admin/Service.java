@@ -243,27 +243,29 @@ public class Service extends BaseService {
 	private static final String NTYPE_PECBRIDGE = "pecbridge";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
 	
-	private ExtTreeNode createDomainNode(String parentId, ODomain domain) {
+	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain-xs" : "wtadm-icon-domain-disabled-xs");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		//node.put("_internetDomain", domain.getInternetName());
-		//node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
-		//node.put("_dirCapUsersWrite", dirCapUsersWrite);
+		node.put("_dirScheme", dirScheme);
+		node.put("_passwordPolicy", passwordPolicy);
+		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
+		node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean passwordPolicy, boolean authCapPasswordWrite, boolean authCapUsersWrite) {
+	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean dirPasswordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, type);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), text, true);
 		node.setIconClass(iconClass);
 		node.put("_type", type);
 		node.put("_domainId", domainId);
-		node.put("_passwordPolicy", passwordPolicy);
-		node.put("_authCapPasswordWrite", authCapPasswordWrite);
-		node.put("_authCapUsersWrite", authCapUsersWrite);
+		node.put("_passwordPolicy", dirPasswordPolicy);
+		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
+		node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
 	}
 	
@@ -302,8 +304,13 @@ public class Service extends BaseService {
 							}
 							
 						} else { // Available webtop domains
-							for(ODomain domain : core.listDomains(false)) {
-								children.add(createDomainNode(nodeId, domain));
+							for (ODomain domain : core.listDomains(false)) {
+								AbstractDirectory dir = core.getAuthDirectory(domain);
+								String dirScheme = dir.getScheme();
+								boolean passwordPolicy = domain.getDirPasswordPolicy();
+								boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
+								boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
+								children.add(createDomainNode(nodeId, domain, dirScheme, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 						}
 					}

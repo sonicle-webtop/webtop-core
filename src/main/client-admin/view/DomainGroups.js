@@ -38,9 +38,6 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 	],
 	
 	domainId: null,
-	passwordPolicy: false,
-	authCapPasswordWrite: false,
-	authCapUsersWrite: false,
 	
 	dockableConfig: {
 		title: '{domainGroups.tit}',

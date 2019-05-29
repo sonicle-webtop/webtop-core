@@ -125,20 +125,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						var type = rec.get('_type');
 						if (type === 'settings') {
 							if (!Ext.isEmpty(rec.get('_domainId'))) {
-								me.showDomainSettingsUI(rec);
+								me.showDomainSettingsUI(rec.parentNode, rec);
 							} else {
 								me.showSettingsUI(rec);
 							}
 						} else if (type === 'groups') {
-							me.showDomainGroupsUI(rec);
+							me.showDomainGroupsUI(rec.parentNode, rec);
 						} else if (type === 'users') {
-							me.showDomainUsersUI(rec);
+							me.showDomainUsersUI(rec.parentNode, rec);
 						} else if (type === 'roles') {
-							me.showDomainRolesUI(rec);
+							me.showDomainRolesUI(rec.parentNode, rec);
 						} else if (type === 'launcherlinks') {
-							me.showDomainLauncherLinksUI(rec);
+							me.showDomainLauncherLinksUI(rec.parentNode, rec);
 						} else if (type === 'pecbridge') {
-							me.showPecBridgeUI(rec);
+							me.showPecBridgeUI(rec.parentNode, rec);
 						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
 						}
@@ -277,7 +277,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainSettingsUI: function(node) {
+	showDomainSettingsUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -291,7 +291,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainGroupsUI: function(node) {
+	showDomainGroupsUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -305,7 +305,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainUsersUI: function(node) {
+	showDomainUsersUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -314,15 +314,16 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
-				passwordPolicy: node.get('_passwordPolicy'),
-				authCapPasswordWrite: node.get('_authCapPasswordWrite'),
-				authCapUsersWrite: node.get('_authCapUsersWrite'),
+				passwordPolicy: domNode.get('_passwordPolicy'),
+				dirScheme: domNode.get('_dirScheme'),
+				dirCapPasswordWrite: domNode.get('_dirCapPasswordWrite'),
+				dirCapUsersWrite: domNode.get('_dirCapUsersWrite'),
 				closable: true
 			});
 		});
 	},
 	
-	showDomainRolesUI: function(node) {
+	showDomainRolesUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -336,7 +337,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showDomainLauncherLinksUI: function(node) {
+	showDomainLauncherLinksUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
@@ -350,7 +351,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	showPecBridgeUI: function(node) {
+	showPecBridgeUI: function(domNode, node) {
 		var me = this,
 				itemId = WTU.forItemId(node.getId());
 		
