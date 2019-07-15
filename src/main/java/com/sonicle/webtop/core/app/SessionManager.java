@@ -50,6 +50,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.StampedLock;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.Subject;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -94,7 +95,7 @@ public class SessionManager {
 	public static final String ATTRIBUTE_GUESSING_USERNAME = "UserName";
 	
 	private WebTopApp wta = null;
-	private final Object lock = new Object();
+	private final StampedLock lock = new StampedLock();
 	private final LinkedHashMap<String, WebTopSession> onlineSessions = new LinkedHashMap<>();
 	private final HashSet<String> onlineClienTrackingIds = new HashSet<>();
 	private final HashMap<UserProfileId, ProfileSids> profileSidsCache = new HashMap<>();
@@ -130,41 +131,43 @@ public class SessionManager {
 	public void onContainerSessionDestroyed(HttpSession session) {
 		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
 		if (webtopSession != null) {
-			synchronized(lock) {
-				try {
-					String sessionId = webtopSession.getId();
-					String clientTrackingId = webtopSession.getClientTrackingID();
-					UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
-					
-					onlineSessions.remove(sessionId);
-					pushConnections.remove(sessionId);
-					if (profileId != null) {
-						if (profileSidsCache.containsKey(profileId)) {
-							// List at key may have not been prepared. Incase of 
-							// active OPT configuration session is effectively 
-							// only after code validation.
-							profileSidsCache.get(profileId).remove(sessionId);
-						}
-						onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
+			long stamp = lock.writeLock();
+			try {
+				String sessionId = webtopSession.getId();
+				String clientTrackingId = webtopSession.getClientTrackingID();
+				UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
+
+				onlineSessions.remove(sessionId);
+				pushConnections.remove(sessionId);
+				if (profileId != null) {
+					if (profileSidsCache.containsKey(profileId)) {
+						// List at key may have not been prepared. Incase of 
+						// active OPT configuration session is effectively 
+						// only after code validation.
+						profileSidsCache.get(profileId).remove(sessionId);
 					}
-					
-					webtopSession.cleanup();
-					if (profileId != null) {
-						LogManager logMgr = wta.getLogManager();
-						if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
-					}
-					
-					logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
-					
-				} catch(Throwable t) {
-					logger.error("Error destroying session", t);
+					onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
 				}
+
+				webtopSession.cleanup();
+				if (profileId != null) {
+					LogManager logMgr = wta.getLogManager();
+					if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
+				}
+
+				logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
+				
+			} catch(Throwable t) {
+				logger.error("Error destroying session", t);
+			} finally {
+				lock.unlockWrite(stamp);
 			}
 		}
 	}
 	
 	public void onPushResourceHeartbeat(String sessionId, AtmosphereResource resource) {
-		synchronized(lock) {
+		long stamp = lock.readLock();
+		try {
 			if (onlineSessions.containsKey(sessionId)) {
 				Subject subject = (Subject)resource.getRequest().getAttribute(FrameworkConfig.SECURITY_SUBJECT);
 				if ((subject != null) && subject.isAuthenticated()) {
@@ -175,14 +178,17 @@ public class SessionManager {
 					}
 				}
 			}
-		} 	
+			
+		} finally {
+			lock.unlockRead(stamp);
+		}
 	}
 	
 	void registerWebTopSession(WebTopSession webtopSession) throws WTException {
 		String sessionId = webtopSession.getId();
-		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) throw new WTException("Session [{0}] is already registered", sessionId);
-			
+		
+		long stamp = lock.writeLock();
+		try {
 			UserProfileId profileId = webtopSession.getProfileId();
 			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
 
@@ -193,75 +199,65 @@ public class SessionManager {
 			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
 			
 			logger.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
+			
+		} finally {
+			lock.unlockWrite(stamp);
 		}
 	}
 	
 	public WebTopSession getWebTopSession(String sessionId) {
-		return onlineSessions.get(sessionId);
+		long stamp = lock.readLock();
+		try {
+			return onlineSessions.get(sessionId);
+			
+		} finally {
+			lock.unlockRead(stamp);
+		}
 	}
 	
 	public List<WebTopSession> getWebTopSessions(UserProfileId profileId) {
 		List<WebTopSession> list = new ArrayList<>();
-		synchronized(lock) {
-			if(profileSidsCache.get(profileId) != null) {
-				for(String sid : profileSidsCache.get(profileId)) {
+		
+		long stamp = lock.readLock();
+		try {
+			if (profileSidsCache.get(profileId) != null) {
+				for (String sid : profileSidsCache.get(profileId)) {
 					list.add(onlineSessions.get(sid));
 				}
 			}
+			
+		} finally {
+			lock.unlockRead(stamp);
 		}
 		return list;
 	}
 	
 	public boolean isOnline(String sessionId) {
-		return onlineSessions.containsKey(sessionId);
+		long stamp = lock.readLock();
+		try {
+			return onlineSessions.containsKey(sessionId);
+		} finally {
+			lock.unlockRead(stamp);
+		}
 	}
 	
 	public boolean isOnline(UserProfileId profileId) {
-		return profileSidsCache.containsKey(profileId);
+		long stamp = lock.readLock();
+		try {
+			return profileSidsCache.containsKey(profileId);
+		} finally {
+			lock.unlockRead(stamp);
+		}
 	}
 	
 	public boolean isOnline(UserProfileId profileId, String webtopClientId) {
-		return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
-	}
-	
-	/*
-	public void push(String sessionId, ServiceMessage message) {
-		push(sessionId, Arrays.asList(message));
-	}
-	
-	public boolean push(String sessionId, Collection<ServiceMessage> messages) {
-		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) {
-				PushConnection pushCon = pushConnections.get(sessionId);
-				if (pushCon != null) {
-					return pushCon.send(messages);
-				} else {
-					logger.error("PushConnection not available [{}]", sessionId);
-				}
-			}
-			return false;
+		long stamp = lock.readLock();
+		try {
+			return onlineClienTrackingIds.contains(profileId.toString() + "|" + webtopClientId);
+		} finally {
+			lock.unlockRead(stamp);
 		}
 	}
-	
-	public void push(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
-		push(profileId, Arrays.asList(message), enqueueIfOffline);
-	}
-	
-	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
-		synchronized(lock) {
-			ProfileSids sessionIds = profileSidsCache.get(profileId);
-			if ((sessionIds != null) && !sessionIds.isEmpty()) {
-				for(String sessionId : profileSidsCache.get(profileId)) {
-					push(sessionId, messages);
-				}
-			} else {
-				if (enqueueIfOffline) {
-					enqueueMessages(profileId, messages);
-				}
-			}
-		}
-	}
-	*/
 	
 	public void push(String sessionId, ServiceMessage message) {
 		push(sessionId, Arrays.asList(message));
@@ -275,7 +271,12 @@ public class SessionManager {
 		Thread t = new Thread() {
 			@Override
 			public void run() {
-				internalPush(sessionId, messages);
+				long stamp = lock.readLock();
+				try {
+					internalPush(sessionId, messages);
+				} finally {
+					lock.unlockRead(stamp);
+				}
 			}
 		};
 		t.start();
@@ -285,36 +286,37 @@ public class SessionManager {
 		Thread t = new Thread() {
 			@Override
 			public void run() {
-				internalPush(profileId, messages, enqueueIfOffline);
+				long stamp = lock.readLock();
+				try {
+					internalPush(profileId, messages, enqueueIfOffline);
+				} finally {
+					lock.unlockRead(stamp);
+				}
 			}
 		};
 		t.start();
 	}
 	
 	private void internalPush(String sessionId, Collection<ServiceMessage> messages) {
-		synchronized(lock) {
-			if (onlineSessions.containsKey(sessionId)) {
-				PushConnection pushCon = pushConnections.get(sessionId);
-				if (pushCon != null) {
-					pushCon.send(messages);
-				} else {
-					logger.error("PushConnection not available [{}]", sessionId);
-				}
+		if (onlineSessions.containsKey(sessionId)) {
+			PushConnection pushCon = pushConnections.get(sessionId);
+			if (pushCon != null) {
+				pushCon.send(messages);
+			} else {
+				logger.error("PushConnection not available [{}]", sessionId);
 			}
 		}
 	}
 	
 	private void internalPush(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
-		synchronized(lock) {
-			ProfileSids sessionIds = profileSidsCache.get(profileId);
-			if ((sessionIds != null) && !sessionIds.isEmpty()) {
-				for(String sessionId : profileSidsCache.get(profileId)) {
-					internalPush(sessionId, messages);
-				}
-			} else {
-				if (enqueueIfOffline) {
-					enqueueMessages(profileId, messages);
-				}
+		ProfileSids sessionIds = profileSidsCache.get(profileId);
+		if ((sessionIds != null) && !sessionIds.isEmpty()) {
+			for (String sessionId : profileSidsCache.get(profileId)) {
+				internalPush(sessionId, messages);
+			}
+		} else {
+			if (enqueueIfOffline) {
+				enqueueMessages(profileId, messages);
 			}
 		}
 	}
@@ -358,7 +360,7 @@ public class SessionManager {
 		try {
 			con = WT.getCoreConnection(false);
 			OMessageQueue queued = null;
-			for(ServiceMessage message : messages) {
+			for (ServiceMessage message : messages) {
 				queued = new OMessageQueue();
 				queued.setQueueId(mqDao.getSequence(con).intValue());
 				queued.setDomainId(profileId.getDomainId());
