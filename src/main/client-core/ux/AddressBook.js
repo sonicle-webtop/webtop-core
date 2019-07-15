@@ -222,7 +222,7 @@ Ext.define('Sonicle.webtop.core.ux.AddressBook', {
 	},
 	
 	_buildEmail: function(addr,pers) {
-		return pers?pers+" <"+addr+">":addr;
+		return (pers && pers.trim().length !== 0) ? pers+" <"+addr+">" : addr;
 	},
 	
     _createRecipientsPanel: function btn(ref,text,addHandler,delHandler) {
