@@ -541,7 +541,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			title: opts.title || WT.res('confirm'),
 			message: (opts.keepLineBreaks === true) ? msg : Sonicle.String.htmlLineBreaks(msg),
 			buttons: opts.buttons || Ext.Msg.YESNO,
-			icon: Ext.Msg.QUESTION,
+			icon: opts.icon || Ext.Msg.QUESTION,
 			fn: function(bid, value, cfg) {
 				Ext.callback(cb, scope, [bid, value, cfg]);
 			}

@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.app;
 import java.io.IOException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
-import org.atmosphere.client.TrackMessageSizeInterceptor;
 import org.atmosphere.config.service.Disconnect;
 import org.atmosphere.config.service.ManagedService;
 import org.atmosphere.config.service.PathParam;
@@ -45,12 +44,6 @@ import org.atmosphere.config.service.Ready;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
-import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
-import org.atmosphere.interceptor.HeartbeatInterceptor;
-import org.atmosphere.interceptor.IdleResourceInterceptor;
-import org.atmosphere.interceptor.JavaScriptProtocol;
-import org.atmosphere.interceptor.ShiroInterceptor;
-import org.atmosphere.interceptor.SuspendTrackerInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,14 +55,16 @@ import org.slf4j.LoggerFactory;
 		path = PushEndpoint.URL + "/{sessionId}",
 		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
-			com.sonicle.webtop.core.app.atmosphere.ContentTypeInterceptor.class,
-			AtmosphereResourceLifecycleInterceptor.class,
-			TrackMessageSizeInterceptor.class,
-			IdleResourceInterceptor.class,
-			SuspendTrackerInterceptor.class,
-			JavaScriptProtocol.class,
-			HeartbeatInterceptor.class,
-			ShiroInterceptor.class
+			// See defaults at: https://github.com/Atmosphere/atmosphere/blob/atmosphere-project-2.4.20/modules/cpr/src/main/java/org/atmosphere/annotation/AnnotationUtil.java
+			org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor.class, // Default for @ManagedService
+			org.atmosphere.client.TrackMessageSizeInterceptor.class, // Default for @ManagedService
+			org.atmosphere.interceptor.SuspendTrackerInterceptor.class, // Default for @ManagedService
+			org.atmosphere.config.managed.ManagedServiceInterceptor.class, // Default for @ManagedService
+			//org.atmosphere.interceptor.IdleResourceInterceptor.class,
+			org.atmosphere.interceptor.HeartbeatInterceptor.class,
+			org.atmosphere.interceptor.JavaScriptProtocol.class,
+			org.atmosphere.interceptor.ShiroInterceptor.class,
+			com.sonicle.webtop.core.app.atmosphere.ContentTypeInterceptor.class
 		}
 )
 public class PushEndpoint {

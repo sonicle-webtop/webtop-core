@@ -49,6 +49,7 @@ import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration.Dynamic;
 import org.apache.commons.lang3.StringUtils;
+import org.atmosphere.cpr.ApplicationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -125,15 +126,17 @@ public class ContextLoader {
 			servletContext.setAttribute(JWTSignatureVerifier.SECRET_CONTEXT_ATTRIBUTE, wta.getDocumentServerSecretIn());
 			
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereFramework.analytics", "false");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterCacheClass", "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterLifeCyclePolicy", "BroadcasterLifeCyclePolicy.EMPTY");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JSR356AsyncSupport");
-			//atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.Tomcat7CometSupport");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionSupport", "true");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionCreate", "false");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.shareableThreadPool", "true");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereInterceptor", "org.atmosphere.interceptor.ShiroInterceptor");
+			atmosphereServlet.setInitParameter(ApplicationConfig.ANALYTICS, "false");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_CACHE, "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "BroadcasterLifeCyclePolicy.EMPTY");
+			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.JSR356AsyncSupport");
+			//atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.Tomcat7CometSupport");
+			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_SESSION_SUPPORT, "true");
+			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_SESSION_CREATE, "false");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
+			atmosphereServlet.setInitParameter(ApplicationConfig.HEARTBEAT_INTERVAL_IN_SECONDS, "10");
+			atmosphereServlet.setInitParameter(ApplicationConfig.HEARTBEAT_PADDING_CHAR, "X");
+			
 			atmosphereServlet.setLoadOnStartup(1);
 			atmosphereServlet.setAsyncSupported(true);
 			atmosphereServlet.addMapping(com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.URL + "/*");

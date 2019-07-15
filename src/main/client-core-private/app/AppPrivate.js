@@ -150,7 +150,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		}
 		
 		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
-		WTA.Atmosphere.setEventsDebug(true);
+		//WTA.Atmosphere.setEventsDebug(true);
 		WTA.Atmosphere.on({
 			receive: function(s,messages) {
 				Ext.each(messages, function(msg) {
@@ -160,26 +160,48 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 					}
 				});
 			},
-			connect: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> connect', WT.getSessionId()), 'debug');
+			connectionlost: function() {
+				WT.showBadgeNotification(WT.ID, {
+					tag: 'connlost',
+					title: WT.res('not.conn.lost.tit'),
+					body: WT.res('not.conn.lost.body')
+				});
 			},
-			disconnect: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> disconnect', WT.getSessionId()), 'debug');
+			connectionrestored: function() {
+				WT.showBadgeNotification(WT.ID, {
+					tag: 'connrestored',
+					title: WT.res('not.conn.restored.tit'),
+					body: WT.res('not.conn.restored.body')
+				});
 			},
-			beforeautoreset: function(s) {
-				me.log(Ext.String.format('[{0}] Atmosphere -> beforeautoreset', WT.getSessionId()), 'debug');
-			},
-			serverunreachable: function(s) {
-				me.connWarnTask();
-				me.log(Ext.String.format('[{0}] Atmosphere -> serverunreachable', WT.getSessionId()), 'debug');
-			},
-			serveronline: function(s) {
-				me.connWarnTask(true);
-				me.log(Ext.String.format('[{0}] Atmosphere -> serveronline', WT.getSessionId()), 'debug');
-			},
-			subsocketevent: function(s, evt, transp, status, state) {
-				if (transp === 'long-polling' && ['reopen', 'reconnect'].indexOf(evt) !== -1) return;
-				me.log(Ext.String.format('[{0}] Atmosphere -> subsocket [{1}, {2}, {3}, {4}]', WT.getSessionId(), transp, evt, status, state), 'debug');
+			servererror: function(s, status) {
+				if (status === 401) {
+					WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
+						if (bid === 'ok') WT.logout();
+					}, me, {
+						title: WT.res('warning'),
+						icon: Ext.Msg.WARNING,
+						buttons: Ext.Msg.OK,
+						config: {
+							buttonText: {
+								ok: WT.res('word.continue')
+							}
+						}
+					});
+				} else if (status >= 500) {
+					WT.confirm(WT.res('warn.conn.error', status), function(bid) {
+						if (bid === 'ok') WTA.Atmosphere.connect();
+					}, me, {
+						title: WT.res('warning'),
+						icon: Ext.Msg.WARNING,
+						buttons: Ext.Msg.OK,
+						config: {
+							buttonText: {
+								ok: WT.res('word.reconnect')
+							}
+						}
+					});
+				}
 			}
 		});
 		WTA.Atmosphere.connect();
@@ -226,11 +248,6 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 							title: WT.res('not.conn.lost.tit'),
 							body: WT.res('not.conn.lost.body')
 						});
-						/*
-						if (count === 1) {
-							WT.warn(WT.res('warn.connectionlost'));
-						}
-						*/
 					},
 					interval: 10*1000,
 					fireOnStart: false
