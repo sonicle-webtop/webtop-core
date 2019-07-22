@@ -126,13 +126,16 @@ public class ContextLoader {
 			
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereFramework.analytics", "false");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.shareableThreadPool", "true");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.maxSchedulerThread", "10");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.maxProcessingThreads", "10");
+			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.maxAsyncWriteThreads", "10");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterCacheClass", "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcasterLifeCyclePolicy", "BroadcasterLifeCyclePolicy.EMPTY");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.JSR356AsyncSupport");
 			//atmosphereServlet.setInitParameter("org.atmosphere.cpr.asyncSupport", "org.atmosphere.container.Tomcat7CometSupport");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionSupport", "true");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.sessionCreate", "false");
-			atmosphereServlet.setInitParameter("org.atmosphere.cpr.broadcaster.shareableThreadPool", "true");
 			atmosphereServlet.setInitParameter("org.atmosphere.cpr.AtmosphereInterceptor", "org.atmosphere.interceptor.ShiroInterceptor");
 			atmosphereServlet.setLoadOnStartup(1);
 			atmosphereServlet.setAsyncSupported(true);
