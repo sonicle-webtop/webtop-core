@@ -127,13 +127,16 @@ public class ContextLoader {
 			
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
 			atmosphereServlet.setInitParameter(ApplicationConfig.ANALYTICS, "false");
+			atmosphereServlet.setInitParameter(ApplicationConfig.SCHEDULER_THREADPOOL_MAXSIZE, "10");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, "10");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, "10");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_CACHE, "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "BroadcasterLifeCyclePolicy.EMPTY");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.JSR356AsyncSupport");
 			//atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.Tomcat7CometSupport");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_SESSION_SUPPORT, "true");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_SESSION_CREATE, "false");
-			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
 			atmosphereServlet.setInitParameter(ApplicationConfig.HEARTBEAT_INTERVAL_IN_SECONDS, "10");
 			atmosphereServlet.setInitParameter(ApplicationConfig.HEARTBEAT_PADDING_CHAR, "X");
 			
