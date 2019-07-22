@@ -80,7 +80,7 @@ public abstract class ResultServiceMessage extends ServiceMessage {
 	public final ResultServiceMessage setThrowable(Throwable throwable, boolean deepest) {
 		setSuccess(false);
 		if (deepest) {
-			setMessage(LangUtils.getThrowableDeepestMessage(throwable));
+			setMessage(LangUtils.getDeepestCauseMessage(throwable));
 		} else {
 			setMessage(throwable.getMessage());
 		}

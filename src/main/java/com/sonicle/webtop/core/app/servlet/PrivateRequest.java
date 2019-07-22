@@ -33,17 +33,14 @@
  */
 package com.sonicle.webtop.core.app.servlet;
 
-import com.sonicle.webtop.core.app.servlet.BaseRequest;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.web.ServletUtils;
-import com.sonicle.commons.web.json.MapItem;
-import com.sonicle.commons.web.json.Payload;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.BaseUserOptionsService;
 import com.sonicle.webtop.core.sdk.BaseService;
-import com.sonicle.webtop.core.sdk.bol.js.JsUserOptionsBase;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
@@ -96,9 +93,9 @@ public class PrivateRequest extends BaseRequest {
 				invokeMethod(instance, meinfo, service, request, response);
 			}
 			
-		} catch(Exception ex) {
-			logger.warn("Error in serviceRequest servlet", ex);
-			throw new ServletException(ex.getMessage());
+		} catch(Throwable t) {
+			logger.warn("Error in serviceRequest servlet", t);
+			throw new ServletException(LangUtils.getDeepestCause(t));
 		}
 	}
 
