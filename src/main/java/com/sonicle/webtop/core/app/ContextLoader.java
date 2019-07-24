@@ -67,24 +67,23 @@ public class ContextLoader {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
 	}
 	
-	public void initLogging(ServletContext servletContext) {
+	public void initLogging(ServletContext servletContext, Properties properties) {
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
 		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Like <context-name>##<context-version>
 		ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
-		Properties systemProps = System.getProperties();
 		
 		// Locates logback configuration file: try custom (webappConfig) first, then standard ones
-		URL logbackFileUrl = LogbackHelper.findURLOfCustomConfigurationFile(WebTopProps.getWebappsConfigDir(systemProps), webappFullName);
+		URL logbackFileUrl = LogbackHelper.findURLOfCustomConfigurationFile(WebTopProps.getWebappsConfigDir(properties), webappFullName);
 		if (logbackFileUrl == null) {
 			logbackFileUrl = LogbackHelper.findURLOfDefaultConfigurationFile(classLoader);
 		}
 		
 		// Preparing logback props
-		String logDir = WebTopProps.getLogDir(systemProps);
+		String logDir = WebTopProps.getLogDir(properties);
 		logDir = expandLogDirVariables(logDir, webappFullName);
-		String logFileBasename = PropUtils.isDefined(systemProps, WebTopProps.LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename() : null;
+		String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
 		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
-		String logAppender = WebTopProps.getLogAppender(systemProps);
+		String logAppender = WebTopProps.getLogAppender(properties);
 		
 		try {
 			// https://stackoverflow.com/questions/32595740/how-to-specify-file-path-dynamically-in-logback-xml
@@ -112,7 +111,7 @@ public class ContextLoader {
 		StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
 	}
 	
-	public void initApp(ServletContext servletContext) throws IllegalStateException {
+	public void initApp(ServletContext servletContext, Properties properties) throws IllegalStateException {
 		String webappName = ContextUtils.getWebappFullName(servletContext, false);
 		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, webappName);
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
@@ -120,17 +119,17 @@ public class ContextLoader {
 		}
 		
 		try {
-			WebTopApp wta = new WebTopApp(servletContext);
+			WebTopApp wta = new WebTopApp(servletContext, properties);
 			wta.boot();
 			servletContext.setAttribute(WEBTOPAPP_ATTRIBUTE_KEY, wta);
 			servletContext.setAttribute(JWTSignatureVerifier.SECRET_CONTEXT_ATTRIBUTE, wta.getDocumentServerSecretIn());
 			
 			Dynamic atmosphereServlet = servletContext.addServlet("AtmosphereServlet", com.sonicle.webtop.core.app.atmosphere.AtmosphereServlet.class);
 			atmosphereServlet.setInitParameter(ApplicationConfig.ANALYTICS, "false");
-			atmosphereServlet.setInitParameter(ApplicationConfig.SCHEDULER_THREADPOOL_MAXSIZE, "10");
+			atmosphereServlet.setInitParameter(ApplicationConfig.SCHEDULER_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxSchedulerThreads(properties)));
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
-			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, "10");
-			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, "10");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxProcessingThreads(properties)));
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxWriteThreads(properties)));
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_CACHE, "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "BroadcasterLifeCyclePolicy.EMPTY");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.JSR356AsyncSupport");

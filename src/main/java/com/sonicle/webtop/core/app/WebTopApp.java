@@ -197,6 +197,7 @@ public final class WebTopApp {
 	public static final String SYSADMIN_DOMAIN_FOLDER = "_";
 	
 	private final ServletContext servletContext;
+	private final Properties properties;
 	private final String osInfo;
 	private final Charset systemCharset;
 	private final DateTimeZone systemTimeZone;
@@ -225,9 +226,10 @@ public final class WebTopApp {
 	private final HashMap<String, Session> cacheMailSessionByDomain = new HashMap<>();
 	private static final HashMap<String, ReadableUserAgent> cacheUserAgents =  new HashMap<>(); //TODO: decidere politica conservazion
 	
-	WebTopApp(ServletContext servletContext) {
+	WebTopApp(ServletContext servletContext, Properties properties) {
 		WebTopApp.webappName = ContextUtils.getWebappFullName(servletContext, false);
 		this.servletContext = servletContext;
+		this.properties = properties;
 		
 		this.osInfo = OSInfo.build();
 		this.systemCharset = Charset.forName("UTF-8");
@@ -238,26 +240,14 @@ public final class WebTopApp {
 		// secured servers throught vfs2.
 		Protocol.registerProtocol("https", new Protocol("https", new EasySSLProtocolSocketFactory(), 443));
 		
-		System.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
-		//System.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
-		System.setProperty("mail.mime.decodetext.strict", "false");
-		System.setProperty("mail.mime.decodefilename", "true");
-		
-		ICalendarUtils.setUnfoldingRelaxed(true);
-		ICalendarUtils.setParsingRelaxed(true);
-		ICalendarUtils.setValidationRelaxed(true);
-		ICalendarUtils.setCompatibilityOutlook(true);
-		ICalendarUtils.setCompatibilityNotes(true);
-		
-		Properties systemProps = System.getProperties();
-		WebTopProps.checkOldPropsUsage(systemProps);
-		WebTopProps.print(systemProps);
+		WebTopProps.checkOldPropsUsage(properties);
+		WebTopProps.print(properties);
 		
 		//logger.info("getContextPath: {}", context.getContextPath());
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		String configDir = WebTopProps.getWebappsConfigDir(systemProps);
+		String configDir = WebTopProps.getWebappsConfigDir(properties);
 		if (StringUtils.isBlank(configDir)) {
 			this.webappConfigPath = null;
 		} else {
@@ -389,16 +379,17 @@ public final class WebTopApp {
 		
 		// Scheduler (services manager requires this component for jobs)
 		try {
-			//TODO: gestire le opzioni di configurazione dello scheduler
 			Properties quartzProps = new Properties();
-			quartzProps.put("org.quartz.scheduler.skipUpdateCheck", true);
+			quartzProps.put("org.quartz.scheduler.instanceName", webappName);
+			quartzProps.put("org.quartz.scheduler.skipUpdateCheck", "true");
 			quartzProps.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-			quartzProps.put("org.quartz.threadPool.threadCount", "10");
+			quartzProps.put("org.quartz.threadPool.threadCount", String.valueOf(WebTopProps.getQuartzMaxThreads(this.properties)));
 			quartzProps.put("org.quartz.threadPool.threadPriority", "5");
 			quartzProps.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
 			
+			// NB: System props will be added to the properties above internally in the factory!
 			this.scheduler = new StdSchedulerFactory(quartzProps).getScheduler();
-			if (WebTopProps.getSchedulerDisabled()) {
+			if (WebTopProps.getSchedulerDisabled(properties)) {
 				logger.warn("Scheduler startup forcibly disabled");
 			} else {
 				this.scheduler.start();
@@ -648,6 +639,10 @@ public final class WebTopApp {
 	
 	public String getAppServerInfo() {
 		return servletContext.getServerInfo();
+	}
+	
+	public Properties getProperties() {
+		return properties;
 	}
 	
 	public String getOSInfo() {
@@ -1075,7 +1070,7 @@ public final class WebTopApp {
 			String key=smtphost+":"+smtpport;
 			session=cacheMailSessionByDomain.get(key);
 			if (session==null) {
-				Properties props = new Properties(System.getProperties());
+				Properties props = new Properties(properties);
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
 				props.setProperty("mail.smtp.port", ""+smtpport);

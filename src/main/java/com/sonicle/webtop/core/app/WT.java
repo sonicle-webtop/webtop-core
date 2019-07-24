@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.mail.MessagingException;
@@ -113,6 +114,10 @@ public class WT {
 	
 	private static WebTopApp getWTA() {
 		return WebTopApp.getInstance();
+	}
+	
+	public static Properties getProperties() {
+		return getWTA().getProperties();
 	}
 	
 	public static boolean isLatestWebApp() {

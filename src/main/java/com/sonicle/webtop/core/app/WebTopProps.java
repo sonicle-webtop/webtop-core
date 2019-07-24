@@ -32,125 +32,174 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
+import com.sonicle.commons.web.ContextUtils;
+import com.sonicle.webtop.core.util.ICalendarUtils;
+import java.io.File;
 import java.util.Properties;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
 public class WebTopProps {
-	public static final String LOG_DIR = "webtop.log.dir";
-	public static final String LOG_FILE_BASENAME = "webtop.log.file.basename";
-	public static final String LOG_APPENDER = "webtop.log.appender";
-	public static final String WEBAPPSCONFIG_DIR = "webtop.webappsconfig.dir";
-	public static final String EXTJS_DEBUG = "webtop.extjs.debug";
-	public static final String JS_DEBUG = "webtop.js.debug";
-	public static final String SOEXT_DEV_MODE = "webtop.soext.devmode";
-	public static final String DEV_MODE = "webtop.devmode";
-	public static final String SCHEDULER_DISABLED = "webtop.scheduler.disabled";	
+	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
+	public static final String PROP_LOG_DIR = "webtop.log.dir";
+	public static final String PROP_LOG_FILE_BASENAME = "webtop.log.file.basename";
+	public static final String PROP_LOG_APPENDER = "webtop.log.appender";
+	public static final String PROP_WEBAPPSCONFIG_DIR = "webtop.webappsconfig.dir";
+	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
+	public static final String PROP_JS_DEBUG = "webtop.js.debug";
+	public static final String PROP_SOEXT_DEV_MODE = "webtop.soext.devmode";
+	public static final String PROP_DEV_MODE = "webtop.devmode";
+	public static final String PROP_SCHEDULER_DISABLED = "webtop.scheduler.disabled";
+	public static final String PROP_QUARTZ_MAXTHREADS = "webtop.quartz.maxthreads";
+	public static final String PROP_ATMO_MAXSCHEDULERTHREADS = "webtop.atmosphere.maxschedulerthreads";
+	public static final String PROP_ATMO_MAXPROCESSINGTHREADS = "webtop.atmosphere.maxprocessingthreads";
+	public static final String PROP_ATMO_MAXWRITETHREADS = "webtop.atmosphere.maxwritethreads";
 	
-	public static void initOldPropsCompatibility() {
+	public static void init() {
 		Properties systemProps = System.getProperties();
-		copyOldProp(systemProps, "com.sonicle.webtop.webappsConfigPath", WEBAPPSCONFIG_DIR);
-		//copyOldProp(systemProps, "com.sonicle.webtop.extJsDebug", EXTJS_DEBUG);
-		//copyOldProp(systemProps, "com.sonicle.webtop.debugMode", JS_DEBUG);
-		//copyOldProp(systemProps, "com.sonicle.webtop.soExtDevMode", SOEXT_DEV_MODE);
-		//copyOldProp(systemProps, "com.sonicle.webtop.devMode", DEV_MODE);
-		//copyOldProp(systemProps, "com.sonicle.webtop.schedulerDisabled", SCHEDULER_DISABLED);
+		
+		copyOldProp(systemProps, "com.sonicle.webtop.webappsConfigPath", PROP_WEBAPPSCONFIG_DIR);
+		systemProps.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
+		//systemProps.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
+		systemProps.setProperty("mail.mime.decodetext.strict", "false");
+		systemProps.setProperty("mail.mime.decodefilename", "true");
+		
+		ICalendarUtils.setUnfoldingRelaxed(systemProps, true);
+		ICalendarUtils.setParsingRelaxed(systemProps, true);
+		ICalendarUtils.setValidationRelaxed(systemProps, true);
+		ICalendarUtils.setCompatibilityOutlook(systemProps, true);
+		ICalendarUtils.setCompatibilityNotes(systemProps, true);
 	}
 	
-	public static void print(Properties props) {
-		WebTopApp.logger.info("{} = {}", LOG_DIR, getLogDir(props));
-		WebTopApp.logger.info("{} = {}", LOG_FILE_BASENAME, getLogFileBasename(props));
-		WebTopApp.logger.info("{} = {}", LOG_APPENDER, getLogAppender(props));
-		WebTopApp.logger.info("{} = {}", WEBAPPSCONFIG_DIR, getWebappsConfigDir(props));
-		WebTopApp.logger.info("{} = {}", EXTJS_DEBUG, getExtJsDebug(props));
-		WebTopApp.logger.info("{} = {}", JS_DEBUG, getJsDebug(props));
-		WebTopApp.logger.info("{} = {}", SOEXT_DEV_MODE, getSoExtJsExtensionsDevMode(props));
-		WebTopApp.logger.info("{} = {}", DEV_MODE, getDevMode(props));
-		WebTopApp.logger.info("{} = {}", SCHEDULER_DISABLED, getSchedulerDisabled(props));
+	public static void load(Properties properties, String webappFullName) {
+		String configsDir = System.getProperty(PROP_WEBAPPSCONFIG_DIR);
+		if (!StringUtils.isBlank(configsDir)) {
+			File propFile1 = new File(PathUtils.concatPaths(configsDir, "/"), WEBTOP_PROPERTIES_FILE);
+			PropUtils.loadFromFile(properties, propFile1);
+			File propFile2 = new File(PathUtils.concatPaths(configsDir, ContextUtils.stripWebappVersion(webappFullName) + "/"), WEBTOP_PROPERTIES_FILE);
+			PropUtils.loadFromFile(properties, propFile2);
+		}
 	}
 	
-	public static void checkOldPropsUsage(Properties props) {
-		testAndWarnPropUsage(props, "com.sonicle.webtop.webappsConfigPath", WEBAPPSCONFIG_DIR);
-		testAndWarnPropUsage(props, "com.sonicle.webtop.extJsDebug", EXTJS_DEBUG);
-		testAndWarnPropUsage(props, "com.sonicle.webtop.debugMode", JS_DEBUG);
-		testAndWarnPropUsage(props, "com.sonicle.webtop.soExtDevMode", SOEXT_DEV_MODE);
-		testAndWarnPropUsage(props, "com.sonicle.webtop.devMode", DEV_MODE);
-		testAndWarnPropUsage(props, "com.sonicle.webtop.schedulerDisabled", SCHEDULER_DISABLED);
+	public static void print(Properties properties) {
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_APPENDER, properties.getProperty(PROP_LOG_APPENDER), getLogAppender(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_WEBAPPSCONFIG_DIR, properties.getProperty(PROP_WEBAPPSCONFIG_DIR), getWebappsConfigDir(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_DEV_MODE, properties.getProperty(PROP_DEV_MODE), getDevMode(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_SCHEDULER_DISABLED, properties.getProperty(PROP_SCHEDULER_DISABLED), getSchedulerDisabled(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_QUARTZ_MAXTHREADS, properties.getProperty(PROP_QUARTZ_MAXTHREADS), getSchedulerDisabled(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getSchedulerDisabled(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getSchedulerDisabled(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getSchedulerDisabled(properties));
 	}
 	
+	public static void checkOldPropsUsage(Properties properties) {
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.webappsConfigPath", PROP_WEBAPPSCONFIG_DIR);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.extJsDebug", PROP_EXTJS_DEBUG);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.debugMode", PROP_JS_DEBUG);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.soExtDevMode", PROP_SOEXT_DEV_MODE);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.devMode", PROP_DEV_MODE);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.schedulerDisabled", PROP_SCHEDULER_DISABLED);
+	}
+	
+	/*
 	public static String getLogDir() {
 		return getLogDir(System.getProperties());
-	}
-	
-	public static String getLogDir(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_DIR, "/var/log");
 	}
 	
 	public static String getLogFileBasename() {
 		return getLogFileBasename(System.getProperties());
 	}
 	
-	public static String getLogFileBasename(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_FILE_BASENAME, null);
-	}
-	
 	public static String getLogAppender() {
 		return getLogAppender(System.getProperties());
-	}
-	
-	public static String getLogAppender(Properties props) {
-		return PropUtils.getStringProperty(props, LOG_APPENDER, "stdout");
 	}
 	
 	public static String getWebappsConfigDir() {
 		return getWebappsConfigDir(System.getProperties());
 	}
 	
-	public static String getWebappsConfigDir(Properties props) {
-		return PropUtils.getStringProperty(props, WEBAPPSCONFIG_DIR, null);
-	}
-	
 	public static boolean getExtJsDebug() {
 		return getExtJsDebug(System.getProperties());
-	}
-	
-	public static boolean getExtJsDebug(Properties props) {
-		return PropUtils.getBooleanProperty(props, EXTJS_DEBUG, false);
 	}
 	
 	public static boolean getJsDebug() {
 		return getJsDebug(System.getProperties());
 	}
 	
-	public static boolean getJsDebug(Properties props) {
-		return PropUtils.getBooleanProperty(props, JS_DEBUG, false);
-	}
-	
 	public static boolean getSoExtJsExtensionsDevMode() {
 		return getSoExtJsExtensionsDevMode(System.getProperties());
-	}
-	
-	public static boolean getSoExtJsExtensionsDevMode(Properties props) {
-		return PropUtils.getBooleanProperty(props, SOEXT_DEV_MODE, false);
 	}
 	
 	public static boolean getDevMode() {
 		return getDevMode(System.getProperties());
 	}
-
-	public static boolean getDevMode(Properties props) {
-		return PropUtils.getBooleanProperty(props, DEV_MODE, false);
-	}
 	
 	public static boolean getSchedulerDisabled() {
 		return getSchedulerDisabled(System.getProperties());
 	}
+	*/
+	
+	
+	public static String getLogDir(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_DIR, "/var/log");
+	}
+	
+	public static String getLogFileBasename(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_FILE_BASENAME, null);
+	}
+	
+	public static String getLogAppender(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_APPENDER, "stdout");
+	}
+	
+	public static String getWebappsConfigDir(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_WEBAPPSCONFIG_DIR, null);
+	}
+	
+	public static boolean getExtJsDebug(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_EXTJS_DEBUG, false);
+	}
+	
+	public static boolean getJsDebug(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_JS_DEBUG, false);
+	}
+	
+	public static boolean getSoExtJsExtensionsDevMode(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_SOEXT_DEV_MODE, false);
+	}
+	
+	public static boolean getDevMode(Properties props) {
+		return PropUtils.getBooleanProperty(props, PROP_DEV_MODE, false);
+	}
 	
 	public static boolean getSchedulerDisabled(Properties props) {
-		return PropUtils.getBooleanProperty(props, SCHEDULER_DISABLED, false);
+		return PropUtils.getBooleanProperty(props, PROP_SCHEDULER_DISABLED, false);
+	}
+	
+	public static int getQuartzMaxThreads(Properties props) {
+		return Math.max(5, PropUtils.getIntProperty(props, PROP_QUARTZ_MAXTHREADS, 10));
+	}
+	
+	public static int getAtmosphereMaxSchedulerThreads(Properties props) {
+		return Math.max(5, PropUtils.getIntProperty(props, PROP_ATMO_MAXSCHEDULERTHREADS, 10));
+	}
+	
+	public static int getAtmosphereMaxProcessingThreads(Properties props) {
+		return Math.max(5, PropUtils.getIntProperty(props, PROP_ATMO_MAXPROCESSINGTHREADS, 10));
+	}
+	
+	public static int getAtmosphereMaxWriteThreads(Properties props) {
+		return Math.max(5, PropUtils.getIntProperty(props, PROP_ATMO_MAXWRITETHREADS, 10));
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {

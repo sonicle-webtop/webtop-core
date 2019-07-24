@@ -125,7 +125,7 @@ public class WebTopSession {
 		this.wta = wta;
 		this.session = session;
 		this.csrfToken = IdentifierUtils.getCRSFToken();
-		this.jsDebugEnabled = WebTopProps.getJsDebug();
+		this.jsDebugEnabled = WebTopProps.getJsDebug(wta.getProperties());
 	}
 	
 	synchronized void cleanup() throws Exception {
@@ -655,7 +655,7 @@ public class WebTopSession {
 				int smtpport=css.getSMTPPort();
 				boolean starttls=css.isSMTPStartTLS();
 				boolean auth=css.isSMTPAuthentication();
-				Properties props = new Properties(System.getProperties());
+				Properties props = new Properties(wta.getProperties());
 				//props.setProperty("mail.socket.debug", "true");
 				//props.setProperty("mail.imap.parse.debug", "true");
 				props.setProperty("mail.smtp.host", smtphost);
@@ -1047,7 +1047,7 @@ public class WebTopSession {
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
 		String extRtl = rtl ? "-rtl" : "";
-		String extDebug = WebTopProps.getExtJsDebug() ? "-debug" : "";
+		String extDebug = WebTopProps.getExtJsDebug(wta.getProperties()) ? "-debug" : "";
 		String extTheme = theme;
 		String extBaseTheme = StringUtils.removeEnd(theme, "-touch");
 		String extLang = "-" + locale.getLanguage();
@@ -1065,7 +1065,7 @@ public class WebTopSession {
 		js.appManifest.addCss(EXTJS_PATH + "packages/ux/" + js.appManifest.toolkit + "/" + extBaseTheme + "/resources/" + "ux-all" + extRtl + extDebug + ".css");
 		
 		// Include Sonicle ExtJs Extensions references
-		if (WebTopProps.getSoExtJsExtensionsDevMode()) {
+		if (WebTopProps.getSoExtJsExtensionsDevMode(wta.getProperties())) {
 			js.appManifest.addPath("Sonicle", EXTJS_PATH + "packages/sonicle-extensions/src");
 		} else {
 			js.appManifest.addJs(EXTJS_PATH + "packages/sonicle-extensions/" + "sonicle-extensions" + extDebug + ".js");
@@ -1074,7 +1074,7 @@ public class WebTopSession {
 		
 		// Override default Ext error handling in order to avoid application hang.
 		// NB: This is only necessary when using ExtJs debug file!
-		if (WebTopProps.getExtJsDebug())
+		if (WebTopProps.getExtJsDebug(wta.getProperties()))
 			js.appManifest.addJs(LIBS_PATH + "/" + "ext-override-errors.js");
 	}
 	

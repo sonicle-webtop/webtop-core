@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
+import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -47,10 +48,12 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
+		WebTopProps.init();
+		Properties properties = new Properties(System.getProperties());
+		WebTopProps.load(properties, WEBAPPNAME_ATTRIBUTE_KEY);
 		ServletContext servletContext = sce.getServletContext();
-		WebTopProps.initOldPropsCompatibility();
-		initLogging(servletContext);
-		initApp(servletContext);
+		initLogging(servletContext, properties);
+		initApp(servletContext, properties);
 	}
 
 	@Override

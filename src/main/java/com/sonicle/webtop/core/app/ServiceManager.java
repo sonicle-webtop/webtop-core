@@ -384,7 +384,7 @@ public class ServiceManager {
 	public boolean isInDevMode(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		if (ServiceManifest.BUILD_TYPE_PROD.equals(descr.getManifest().getBuildType())) {
-			return WebTopProps.getDevMode();
+			return WebTopProps.getDevMode(wta.getProperties());
 		} else {
 			return true;
 		}

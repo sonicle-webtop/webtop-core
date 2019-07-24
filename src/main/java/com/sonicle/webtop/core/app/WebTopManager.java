@@ -2307,7 +2307,7 @@ public final class WebTopManager {
     }
     
     private Store getCyrusStore(String host,int port,String protocol,String user,String psw) throws WTCyrusException {
-        Properties props = new Properties(System.getProperties());
+        Properties props = new Properties(wta.getProperties());
 		props.setProperty("mail.store.protocol", protocol);
 		props.setProperty("mail.store.port", ""+port);
         Session session = Session.getInstance(props, null);
