@@ -96,10 +96,10 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_DEV_MODE, properties.getProperty(PROP_DEV_MODE), getDevMode(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SCHEDULER_DISABLED, properties.getProperty(PROP_SCHEDULER_DISABLED), getSchedulerDisabled(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_QUARTZ_MAXTHREADS, properties.getProperty(PROP_QUARTZ_MAXTHREADS), getSchedulerDisabled(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getSchedulerDisabled(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getSchedulerDisabled(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getSchedulerDisabled(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_QUARTZ_MAXTHREADS, properties.getProperty(PROP_QUARTZ_MAXTHREADS), getQuartzMaxThreads(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getAtmosphereMaxSchedulerThreads(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getAtmosphereMaxProcessingThreads(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getAtmosphereMaxWriteThreads(properties));
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
