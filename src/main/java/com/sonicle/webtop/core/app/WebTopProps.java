@@ -80,9 +80,13 @@ public class WebTopProps {
 		String configsDir = System.getProperty(PROP_WEBAPPSCONFIG_DIR);
 		if (!StringUtils.isBlank(configsDir)) {
 			File propFile1 = new File(PathUtils.concatPaths(configsDir, "/"), WEBTOP_PROPERTIES_FILE);
-			PropUtils.loadFromFile(properties, propFile1);
+			if (PropUtils.loadFromFile(properties, propFile1)) {
+				WebTopApp.logger.info("Using properties file at '{}'", propFile1.toString());
+			}
 			File propFile2 = new File(PathUtils.concatPaths(configsDir, ContextUtils.stripWebappVersion(webappFullName) + "/"), WEBTOP_PROPERTIES_FILE);
-			PropUtils.loadFromFile(properties, propFile2);
+			if (PropUtils.loadFromFile(properties, propFile2)) {
+				WebTopApp.logger.info("Using properties file at '{}'", propFile2.toString());
+			}
 		}
 	}
 	
