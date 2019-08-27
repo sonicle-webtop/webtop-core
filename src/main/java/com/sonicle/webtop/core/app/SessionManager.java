@@ -131,12 +131,12 @@ public class SessionManager {
 	public void onContainerSessionDestroyed(HttpSession session) {
 		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
 		if (webtopSession != null) {
+			String sessionId = webtopSession.getId();
+			String clientTrackingId = webtopSession.getClientTrackingID();
+			UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
+			
 			long stamp = lock.writeLock();
 			try {
-				String sessionId = webtopSession.getId();
-				String clientTrackingId = webtopSession.getClientTrackingID();
-				UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
-
 				onlineSessions.remove(sessionId);
 				pushConnections.remove(sessionId);
 				if (profileId != null) {
@@ -148,19 +148,22 @@ public class SessionManager {
 					}
 					onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
 				}
-
-				webtopSession.cleanup();
-				if (profileId != null) {
-					LogManager logMgr = wta.getLogManager();
-					if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
-				}
-
+				
 				logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
 				
-			} catch(Throwable t) {
-				logger.error("Error destroying session", t);
 			} finally {
 				lock.unlockWrite(stamp);
+			}
+			
+			try {
+				webtopSession.cleanup();
+			} catch(Throwable t) {
+				logger.error("Error destroying session", t);
+			}
+			
+			if (profileId != null) {
+				LogManager logMgr = wta.getLogManager();
+				if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
 			}
 		}
 	}
