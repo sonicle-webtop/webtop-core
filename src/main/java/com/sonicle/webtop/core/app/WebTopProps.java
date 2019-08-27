@@ -46,9 +46,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class WebTopProps {
 	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
+	public static final String PROP_LOG_TARGET = "webtop.log.target";
 	public static final String PROP_LOG_DIR = "webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "webtop.log.file.basename";
-	public static final String PROP_LOG_APPENDER = "webtop.log.appender";
+	public static final String PROP_LOG_FILE_POLICY = "webtop.log.file.policy";
 	public static final String PROP_WEBAPPSCONFIG_DIR = "webtop.webappsconfig.dir";
 	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
 	public static final String PROP_JS_DEBUG = "webtop.js.debug";
@@ -91,9 +92,10 @@ public class WebTopProps {
 	}
 	
 	public static void print(Properties properties) {
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_TARGET, properties.getProperty(PROP_LOG_TARGET), getLogTarget(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_APPENDER, properties.getProperty(PROP_LOG_APPENDER), getLogAppender(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_POLICY, properties.getProperty(PROP_LOG_FILE_POLICY), getLogFilePolicy(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_WEBAPPSCONFIG_DIR, properties.getProperty(PROP_WEBAPPSCONFIG_DIR), getWebappsConfigDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
@@ -153,17 +155,20 @@ public class WebTopProps {
 	}
 	*/
 	
+	public static String getLogTarget(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_TARGET, "console");
+	}
 	
 	public static String getLogDir(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_LOG_DIR, "/var/log");
 	}
 	
 	public static String getLogFileBasename(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_LOG_FILE_BASENAME, null);
+		return PropUtils.getStringProperty(props, PROP_LOG_FILE_BASENAME, "webtop");
 	}
 	
-	public static String getLogAppender(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_LOG_APPENDER, "stdout");
+	public static String getLogFilePolicy(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_FILE_POLICY, "rolling");
 	}
 	
 	public static String getWebappsConfigDir(Properties props) {

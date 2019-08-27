@@ -42,8 +42,6 @@ import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
 import com.sonicle.webtop.core.app.shiro.filter.JWTSignatureVerifier;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 import javax.servlet.ServletContext;
@@ -69,42 +67,45 @@ public class ContextLoader {
 	
 	public void initLogging(ServletContext servletContext, Properties properties) {
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
-		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Like <context-name>##<context-version>
+		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Gets name like: <context-name>##<context-version>
 		ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
 		
-		// Locates logback configuration file: try custom (webappConfig) first, then standard ones
+		// Preparing logback props
+		String logTarget = WebTopProps.getLogTarget(properties);
+		String logDir = WebTopProps.getLogDir(properties);
+		logDir = expandLogDirVariables(logDir, webappFullName);
+		String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
+		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
+		String logFilePolicy = WebTopProps.getLogFilePolicy(properties);
+		
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_TARGET, logTarget);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_DIR, logDir);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, logFileBasename);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, logFilePolicy);
+		
+		// Dump PropertyDefiner props
+		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_TARGET));
+		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_DIR));
+		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME));
+		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_POLICY));
+		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_OVERRIDE_DIR));
+		
+		// Locate logback configuration file:
+		// 1 - look into custom webappsConfig directory (see findURLOfCustomConfigurationFile)
+		//		1.1 look for '/path/to/webappsConfig/myWebappFullName/logback.xml'
+		//		1.2 look for '/path/to/webappsConfig/logback.xml'
+		// 2 - fallback on default methods (see findURLOfDefaultConfigurationFile)
+		//		2.1 look for 'logback.configurationFile' system property
+		//		2.2 look for 'logback.xml' in classpath
 		URL logbackFileUrl = LogbackHelper.findURLOfCustomConfigurationFile(WebTopProps.getWebappsConfigDir(properties), webappFullName);
 		if (logbackFileUrl == null) {
 			logbackFileUrl = LogbackHelper.findURLOfDefaultConfigurationFile(classLoader);
 		}
 		
-		// Preparing logback props
-		String logDir = WebTopProps.getLogDir(properties);
-		logDir = expandLogDirVariables(logDir, webappFullName);
-		String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
-		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
-		String logAppender = WebTopProps.getLogAppender(properties);
-		
+		// Reload logback configuration
 		try {
-			// https://stackoverflow.com/questions/32595740/how-to-specify-file-path-dynamically-in-logback-xml
-			// Fill props and write to logback file
-			Properties logbackProps = new Properties();
-			logbackProps.setProperty(LogbackHelper.PROP_APPENDER, logAppender);
-			logbackProps.setProperty(LogbackHelper.PROP_LOG_DIR, logDir);
-			logbackProps.setProperty(LogbackHelper.PROP_LOG_FILE_BASENAME, logFileBasename);
-			LogbackHelper.writeProperties(Loader.getClassLoaderOfObject(this), logbackProps);
-			
-			printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackHelper.PROP_APPENDER, logbackProps.getProperty(LogbackHelper.PROP_APPENDER));
-			printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackHelper.PROP_LOG_DIR, logbackProps.getProperty(LogbackHelper.PROP_LOG_DIR));
-			printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackHelper.PROP_LOG_FILE_BASENAME, logbackProps.getProperty(LogbackHelper.PROP_LOG_FILE_BASENAME));
-			
-			// Reload configuration
 			LogbackHelper.loadConfiguration(loggerContext, logbackFileUrl);
 			printToSystemOut("[{}] Logback: using configuration file at '{}'", webappFullName, logbackFileUrl.toString());
-			
-		} catch(IOException | URISyntaxException ex) {
-			printToSystemOut("[{}] Unable to write logback properties file", webappFullName);
-			printToSystemOut("{}", ex);
 		} catch(JoranException ex) {
 			printToSystemOut("[{}] Unable to reload logback configuration", webappFullName);
 		}

@@ -90,7 +90,7 @@ public class LogbackHelper {
 	public static URL findURLOfCustomConfigurationFile(String webappsConfigDir, String webappFullName) {
 		File file = null;
 		if (!StringUtils.isBlank(webappsConfigDir)) {
-			// Try to get file under: "/path/to/webappsConfig/myAppName/logback.xml"
+			// Try to get file under: "/path/to/webappsConfig/myWebappFullName/logback.xml"
 			file = new File(PathUtils.concatPathParts(webappsConfigDir, webappFullName, ContextInitializer.AUTOCONFIG_FILE));
 			if (file.exists() && file.isFile()) {
 				try {
