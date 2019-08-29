@@ -73,10 +73,7 @@ public class LogbackPropertyDefiner extends PropertyDefinerBase {
 	@Override
 	public String getPropertyValue() {
 		if (key != null) {
-			String value = properties.getProperty(key, defaultValue);
-			printToSystemOut("Getting PropertyDefiner prop {} = {} [{}]", key, value, defaultValue);
-			return value;
-			//return properties.getProperty(key, defaultValue);
+			return properties.getProperty(key, defaultValue);
 		} else {
 			printToSystemOut("ERROR Missing <key> element, no property to lookup.");
 			return null;
