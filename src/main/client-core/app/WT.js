@@ -682,7 +682,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			},
 			failure: function(resp, opts) {
 				if(ffn) Ext.callback(ffn, scope || me, [resp, opts]);
-				Ext.callback(fn, scope || me, [false, null, null, opts]);
+				Ext.callback(fn, scope || me, [false, {}, null, opts]);
 			},
 			scope: me
 		};
