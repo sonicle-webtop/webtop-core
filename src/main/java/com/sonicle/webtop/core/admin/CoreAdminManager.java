@@ -412,6 +412,8 @@ public class CoreAdminManager extends BaseManager {
 		
 		try {
 			wtmgr.updateUser(user);
+			wtmgr.cleanUserProfileCache(user.getProfileId());
+			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to update user [{0}]", user.getProfileId().toString());
 		}
