@@ -254,6 +254,7 @@ public final class UserProfile {
 		}
 		
 		public String getProfileEmailAddress() {
+			if (profileEmail == null) return null;
 			return profileEmail.getAddress();
 		}
 		
@@ -266,6 +267,7 @@ public final class UserProfile {
 		}
 		
 		public String getPersonalEmailAddress() {
+			if (personalEmail == null) return null;
 			return personalEmail.getAddress();
 		}
 		
