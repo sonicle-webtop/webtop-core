@@ -39,6 +39,7 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,6 +49,8 @@ import java.net.URL;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.util.IOUtils;
+import org.joda.time.DateTimeZone;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
  *
@@ -58,6 +61,11 @@ public class LogbackHelper {
 	public static final String PROP_APPENDER = "logback.webtop.log.appender";
 	public static final String PROP_LOG_DIR = "logback.webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "logback.webtop.log.file.basename";
+	
+	public static void printToSystemOut(String message, Object... arguments) {
+		String date = DateTimeUtils.createYmdHmsFormatter(DateTimeZone.getDefault()).print(DateTimeUtils.now());
+		System.out.println(date + " " + MessageFormatter.arrayFormat(message, arguments).getMessage());
+	}
 	
 	public static void reloadConfiguration(LoggerContext loggerContext) throws JoranException {
 		ContextInitializer ci = new ContextInitializer(loggerContext);

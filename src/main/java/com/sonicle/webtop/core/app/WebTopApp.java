@@ -202,7 +202,7 @@ public final class WebTopApp {
 	private final Charset systemCharset;
 	private final DateTimeZone systemTimeZone;
 	private Locale systemLocale;
-	private final String webappConfigPath;
+	private final String etcPath;
 	private DefaultSecurityManager shiroSecurityManager;
 	private Subject adminSubject;
 	private TomcatManager tomcat = null;
@@ -247,11 +247,11 @@ public final class WebTopApp {
 		//logger.info("getServletContextName: {}", context.getServletContextName());
 		//logger.info("getVirtualServerName: {}", context.getVirtualServerName());
 		
-		String configDir = WebTopProps.getWebappsConfigDir(properties);
-		if (StringUtils.isBlank(configDir)) {
-			this.webappConfigPath = null;
+		String etcDir = WebTopProps.getEtcDir(properties);
+		if (StringUtils.isBlank(etcDir)) {
+			this.etcPath = null;
 		} else {
-			this.webappConfigPath = PathUtils.concatPaths(configDir, ContextUtils.getWebappFullName(servletContext, true));
+			this.etcPath = PathUtils.concatPaths(etcDir, ContextUtils.getWebappFullName(servletContext, true));
 		}
 		this.shiroSecurityManager = buildSecurityManager();
 		this.adminSubject = buildSysAdminSubject(shiroSecurityManager);
@@ -341,7 +341,7 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Error initializing VFS");
 		}
 		
-		this.conMgr = ConnectionManager.initialize(this, webappConfigPath); // Connection Manager
+		this.conMgr = ConnectionManager.initialize(this, etcPath); // Connection Manager
 		this.setMgr = SettingsManager.initialize(this); // Settings Manager
 		this.sesMgr = SessionManager.initialize(this); // Session Manager
 		
@@ -661,8 +661,8 @@ public final class WebTopApp {
 		return systemLocale;
 	}
 	
-	public String getWebappConfigPath() {
-		return webappConfigPath;
+	public String getEtcPath() {
+		return etcPath;
 	}
 	
 	/**

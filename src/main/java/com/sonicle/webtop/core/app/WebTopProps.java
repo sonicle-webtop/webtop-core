@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.util.ICalendarUtils;
 import java.io.File;
 import java.util.Properties;
@@ -46,11 +47,11 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class WebTopProps {
 	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
+	public static final String PROP_ETC_DIR = "webtop.etc.dir";
 	public static final String PROP_LOG_TARGET = "webtop.log.target";
 	public static final String PROP_LOG_DIR = "webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "webtop.log.file.basename";
 	public static final String PROP_LOG_FILE_POLICY = "webtop.log.file.policy";
-	public static final String PROP_WEBAPPSCONFIG_DIR = "webtop.webappsconfig.dir";
 	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
 	public static final String PROP_JS_DEBUG = "webtop.js.debug";
 	public static final String PROP_SOEXT_DEV_MODE = "webtop.soext.devmode";
@@ -64,7 +65,7 @@ public class WebTopProps {
 	public static void init() {
 		Properties systemProps = System.getProperties();
 		
-		copyOldProp(systemProps, "com.sonicle.webtop.webappsConfigPath", PROP_WEBAPPSCONFIG_DIR);
+		copyOldProp(systemProps, "com.sonicle.webtop.webappsConfigPath", PROP_ETC_DIR);
 		systemProps.setProperty("net.fortuna.ical4j.timezone.update.enabled", "false");
 		//systemProps.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
 		systemProps.setProperty("mail.mime.decodetext.strict", "false");
@@ -78,25 +79,29 @@ public class WebTopProps {
 	}
 	
 	public static void load(Properties properties, String webappFullName) {
-		String configsDir = System.getProperty(PROP_WEBAPPSCONFIG_DIR);
+		String configsDir = System.getProperty(PROP_ETC_DIR);
 		if (!StringUtils.isBlank(configsDir)) {
 			File propFile1 = new File(PathUtils.concatPaths(configsDir, "/"), WEBTOP_PROPERTIES_FILE);
+			if (WebTopApp.logger.isDebugEnabled()) LogbackHelper.printToSystemOut("[{}] Looking for properties at '{}'", webappFullName, propFile1.toString());
 			if (PropUtils.loadFromFile(properties, propFile1)) {
-				WebTopApp.logger.info("Using properties file at '{}'", propFile1.toString());
+				LogbackHelper.printToSystemOut("[{}] Using properties file at '{}'", webappFullName, propFile1.toString());
 			}
 			File propFile2 = new File(PathUtils.concatPaths(configsDir, ContextUtils.stripWebappVersion(webappFullName) + "/"), WEBTOP_PROPERTIES_FILE);
+			if (WebTopApp.logger.isDebugEnabled()) LogbackHelper.printToSystemOut("[{}] Looking for properties at '{}'", webappFullName, propFile2.toString());
 			if (PropUtils.loadFromFile(properties, propFile2)) {
-				WebTopApp.logger.info("Using properties file at '{}'", propFile2.toString());
+				LogbackHelper.printToSystemOut("[{}] Using properties file at '{}'", webappFullName, propFile2.toString());
 			}
+		} else {
+			if (WebTopApp.logger.isDebugEnabled()) LogbackHelper.printToSystemOut("[{}] System property '{}' is missing: custom {} file ignored", webappFullName, PROP_ETC_DIR, WEBTOP_PROPERTIES_FILE);
 		}
 	}
 	
 	public static void print(Properties properties) {
+		WebTopApp.logger.info("{} = {} [{}]", PROP_ETC_DIR, properties.getProperty(PROP_ETC_DIR), getEtcDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_TARGET, properties.getProperty(PROP_LOG_TARGET), getLogTarget(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_POLICY, properties.getProperty(PROP_LOG_FILE_POLICY), getLogFilePolicy(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_WEBAPPSCONFIG_DIR, properties.getProperty(PROP_WEBAPPSCONFIG_DIR), getWebappsConfigDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
@@ -109,7 +114,7 @@ public class WebTopProps {
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
-		testAndWarnPropUsage(properties, "com.sonicle.webtop.webappsConfigPath", PROP_WEBAPPSCONFIG_DIR);
+		testAndWarnPropUsage(properties, "com.sonicle.webtop.webappsConfigPath", PROP_ETC_DIR);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.extJsDebug", PROP_EXTJS_DEBUG);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.debugMode", PROP_JS_DEBUG);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.soExtDevMode", PROP_SOEXT_DEV_MODE);
@@ -171,8 +176,8 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, PROP_LOG_FILE_POLICY, "rolling");
 	}
 	
-	public static String getWebappsConfigDir(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_WEBAPPSCONFIG_DIR, null);
+	public static String getEtcDir(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_ETC_DIR, null);
 	}
 	
 	public static boolean getExtJsDebug(Properties props) {

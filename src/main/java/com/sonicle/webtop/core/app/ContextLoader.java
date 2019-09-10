@@ -50,7 +50,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.ApplicationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 
 /**
  *
@@ -83,11 +82,11 @@ public class ContextLoader {
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, logFilePolicy);
 		
 		// Dump PropertyDefiner props
-		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_TARGET));
-		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_DIR));
-		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME));
-		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_POLICY));
-		printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_OVERRIDE_DIR));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_TARGET));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_DIR));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_POLICY));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_OVERRIDE_DIR));
 		
 		// Locate logback configuration file:
 		// 1 - look into custom webappsConfig directory (see findURLOfCustomConfigurationFile)
@@ -96,7 +95,7 @@ public class ContextLoader {
 		// 2 - fallback on default methods (see findURLOfDefaultConfigurationFile)
 		//		2.1 look for 'logback.configurationFile' system property
 		//		2.2 look for 'logback.xml' in classpath
-		URL logbackFileUrl = LogbackHelper.findURLOfCustomConfigurationFile(WebTopProps.getWebappsConfigDir(properties), webappFullName);
+		URL logbackFileUrl = LogbackHelper.findURLOfCustomConfigurationFile(WebTopProps.getEtcDir(properties), webappFullName);
 		if (logbackFileUrl == null) {
 			logbackFileUrl = LogbackHelper.findURLOfDefaultConfigurationFile(classLoader);
 		}
@@ -104,9 +103,9 @@ public class ContextLoader {
 		// Reload logback configuration
 		try {
 			LogbackHelper.loadConfiguration(loggerContext, logbackFileUrl);
-			printToSystemOut("[{}] Logback: using configuration file at '{}'", webappFullName, logbackFileUrl.toString());
+			LogbackHelper.printToSystemOut("[{}] Logback: using configuration file at '{}'", webappFullName, logbackFileUrl.toString());
 		} catch(JoranException ex) {
-			printToSystemOut("[{}] Unable to reload logback configuration", webappFullName);
+			LogbackHelper.printToSystemOut("[{}] Unable to reload logback configuration", webappFullName);
 		}
 		StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
 	}
@@ -216,10 +215,6 @@ public class ContextLoader {
 		} finally {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 		}
-	}
-	
-	private void printToSystemOut(String message, Object... arguments) {
-		System.out.println(MessageFormatter.arrayFormat(message, arguments).getMessage());
 	}
 	
 	private String expandLogDirVariables(String logDir, String webappFullName) {
