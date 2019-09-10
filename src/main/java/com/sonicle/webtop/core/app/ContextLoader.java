@@ -65,9 +65,8 @@ public class ContextLoader {
 		return (String)servletContext.getAttribute(WEBAPPNAME_ATTRIBUTE_KEY);
 	}
 	
-	public void initLogging(ServletContext servletContext, Properties properties) {
+	public void initLogging(ServletContext servletContext, String webappFullName, Properties properties) {
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
-		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Gets name like: <context-name>##<context-version>
 		ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
 		
 		// Preparing logback props
@@ -112,9 +111,8 @@ public class ContextLoader {
 		StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
 	}
 	
-	public void initApp(ServletContext servletContext, Properties properties) throws IllegalStateException {
-		String webappName = ContextUtils.getWebappFullName(servletContext, false);
-		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, webappName);
+	public void initApp(ServletContext servletContext, String webappFullName, Properties properties) throws IllegalStateException {
+		servletContext.setAttribute(WEBAPPNAME_ATTRIBUTE_KEY, webappFullName);
 		if (servletContext.getAttribute(WEBTOPAPP_ATTRIBUTE_KEY) != null) {
 			throw new IllegalStateException("There is already a WebTop application associated with the current ServletContext.");
 		}
@@ -189,7 +187,7 @@ public class ContextLoader {
 			
 		} catch(Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
-			logger.error("Error initializing WTA [{}]", webappName, t);
+			logger.error("Error initializing WTA [{}]", webappFullName, t);
 		}
 	}
 	
