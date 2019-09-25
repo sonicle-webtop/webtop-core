@@ -599,19 +599,19 @@ Ext.define('Sonicle.webtop.core.Service', {
 		var me=this;
 	
 		WTA.RTCManager.connect(fullJid,pass,function(status, condition) {
-			console.log(" connect callback, condition="+condition);
+			//console.log(" connect callback, condition="+condition);
 			switch (status) {
 				case Strophe.Status.CONNECTING:
-					console.log("connecting");
+					//console.log("connecting");
 					break;
 				case Strophe.Status.CONNECTED:
-					console.log("connected");
+					//console.log("connected");
 					break;
 				case Strophe.Status.ATTACHED:
-					console.log("attached");
+					//console.log("attached");
 					break;
 				case Strophe.Status.DISCONNECTED:
-					console.log("disconnected");
+					//console.log("disconnected");
 					if (condition==="conflict") {
 						WT.showBadgeNotification(WT.ID,{
 							tag: 'rtc-conflict',
@@ -625,10 +625,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 					}
 					break;
 				case Strophe.Status.CONNFAIL:
-					console.log("connfail");
+					//console.log("connfail");
 					break;
 				case Strophe.Status.AUTHFAIL:
-					console.log("authfail");
+					//console.log("authfail");
 					break;
 			}
 		});

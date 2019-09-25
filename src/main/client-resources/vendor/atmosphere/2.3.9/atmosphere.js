@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Async-IO.org
+ * Copyright 2011-2019 Async-IO.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1543,7 +1543,7 @@
 
                     if (_abortingConnection) {
                         atmosphere.util.log(_request.logLevel, ["Websocket closed normally"]);
-                    } else if (!webSocketOpened && _request.fallbackTransport !== 'websocket') {
+                    } else if (!webSocketOpened && _response.transport === 'websocket' && _request.fallbackTransport !== 'websocket') {
                         _reconnectWithFallbackTransport("Websocket failed on first connection attempt. Downgrading to " + _request.fallbackTransport + " and resending");
 
                     } else if (_request.reconnect && _response.transport === 'websocket' ) {
@@ -3104,7 +3104,16 @@
 
             // encodeURI and decodeURI are needed to normalize URL between IE and non-IE,
             // since IE doesn't encode the href property value and return it - http://jsfiddle.net/Yq9M8/1/
-            return encodeURI(decodeURI(div.firstChild.href));
+
+            var ua = window.navigator.userAgent;
+            if(ua.indexOf('MSIE ')>0 || ua.indexOf('Trident/') > 0 || ua.indexOf('Edge/') > 0){
+                return atmosphere.util.fixedEncodeURI(decodeURI(div.firstChild.href));
+            }
+            return div.firstChild.href;
+        },
+		
+        fixedEncodeURI: function (str) {
+            return encodeURI(str).replace(/%5B/g, '[').replace(/%5D/g, ']');
         },
 
         prepareURL: function (url) {

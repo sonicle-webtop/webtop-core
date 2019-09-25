@@ -321,6 +321,7 @@ public final class WebTopApp {
 		this.webappIsTheLatest = false;
 		logger.info("WTA initialization started [{}]", webappName);
 		
+		/*
 		HttpClient httpcli = null;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
@@ -331,6 +332,7 @@ public final class WebTopApp {
 		} finally {
 			HttpClientUtils.closeQuietly(httpcli);
 		}
+		*/
 		
 		//configure accept all for ssl on Unirest
 		Unirest.setHttpClient(HttpClientUtils.configureSSLAcceptAll().build());

@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		'Sonicle.PageActivityMonitor',
 		'Sonicle.Sound',
 		'Sonicle.webtop.core.app.DescriptorPrivate',
-		'Sonicle.webtop.core.app.Atmosphere',
+		'Sonicle.webtop.core.app.PushManager',
 		'Sonicle.webtop.core.sdk.Service'
 	],
 	views: [
@@ -149,9 +149,9 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			vpc.showWhatsnew(false);
 		}
 		
-		WTA.Atmosphere.setUrl(me.pushUrl + '/' + WT.getSessionId());
-		//WTA.Atmosphere.setEventsDebug(true);
-		WTA.Atmosphere.on({
+		WTA.PushManager.setUrl(me.pushUrl + '/' + WT.getSessionId());
+		//WTA.PushManager.setEventsDebug(true);
+		WTA.PushManager.on({
 			receive: function(s,messages) {
 				Ext.each(messages, function(msg) {
 					if (msg && msg.service) {
@@ -179,6 +179,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 					WT.confirm(WT.res('warn.conn.forbidden'), function(bid) {
 						if (bid === 'ok') WT.logout();
 					}, me, {
+						itemId: 'pushservererror',
 						title: WT.res('warning'),
 						icon: Ext.Msg.WARNING,
 						buttons: Ext.Msg.OK,
@@ -190,8 +191,9 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 					});
 				} else if (status >= 500) {
 					WT.confirm(WT.res('warn.conn.error', status), function(bid) {
-						if (bid === 'ok') WTA.Atmosphere.connect();
+						if (bid === 'ok') WTA.PushManager.connect();
 					}, me, {
+						itemId: 'pushservererror',
 						title: WT.res('warning'),
 						icon: Ext.Msg.WARNING,
 						buttons: Ext.Msg.OK,
@@ -204,7 +206,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				}
 			}
 		});
-		WTA.Atmosphere.connect();
+		WTA.PushManager.connect();
 		/*
 		Sonicle.PageActivityMonitor.on('change', function(s, idle) {
 			console.log('ActivityMonitor: ' + (idle ? 'user is idle' : 'user is working'));
@@ -257,7 +259,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	},
 	
 	logout: function() {
-		WTA.Atmosphere.disconnect();
+		WTA.PushManager.disconnect();
 		WT.logout();
 	},
 	
