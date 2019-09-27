@@ -66,7 +66,7 @@ public class I18nManager {
 	}
 	
 	private WebTopApp wta = null;
-	private static final String VALID_TIMEZONES_RE = "^(Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
+	private static final String VALID_TIMEZONES_RE = "^(Etc|Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
 	private final List<TimeZone> timezones;
 	private final HashMap<String, AppLocale> locales = new HashMap<>();
 	

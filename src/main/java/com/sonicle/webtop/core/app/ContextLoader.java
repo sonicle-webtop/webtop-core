@@ -42,6 +42,7 @@ import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
 import com.sonicle.webtop.core.app.shiro.filter.JWTSignatureVerifier;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
+import io.airlift.jodabridge.JdkBasedZoneInfoProvider;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -67,6 +68,11 @@ public class ContextLoader {
 	}
 	
 	public void initLogging(ServletContext servletContext) {
+		// While waiting for the transition from the excellent JodaTime to 
+		// built-in Java Time api, it's better to bridge ZoneInfoProvider to 
+		// JVM in order to do not maintain multiple zone tables.
+		JdkBasedZoneInfoProvider.registerAsJodaZoneInfoProvider();
+		
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
 		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Like <context-name>##<context-version>
 		ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
