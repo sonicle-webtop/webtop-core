@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.sonicle.commons.web.ContextUtils;
+import io.airlift.jodabridge.JdkBasedZoneInfoProvider;
 import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -49,6 +50,11 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
+		// While waiting for the transition from the excellent JodaTime to 
+		// built-in Java Time api, it's better to bridge ZoneInfoProvider to 
+		// JVM in order to do not maintain multiple zone tables.
+		JdkBasedZoneInfoProvider.registerAsJodaZoneInfoProvider();
+		
 		ServletContext servletContext = sce.getServletContext();
 		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Gets name like: <context-name>##<context-version>
 		
