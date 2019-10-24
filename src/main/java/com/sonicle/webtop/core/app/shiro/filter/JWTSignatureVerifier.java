@@ -32,10 +32,10 @@
  */
 package com.sonicle.webtop.core.app.shiro.filter;
 
-import groovy.json.internal.Charsets;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletRequest;
@@ -96,7 +96,7 @@ public class JWTSignatureVerifier extends PathMatchingFilter {
 		//TODO: read the algo from a dedicated setting
 		SignatureAlgorithm keyAlgorithm = SignatureAlgorithm.HS256;
 		String secret = String.valueOf(request.getServletContext().getAttribute(SECRET_CONTEXT_ATTRIBUTE));
-		return StringUtils.isBlank(secret) ? null : new SecretKeySpec(secret.getBytes(Charsets.UTF_8), keyAlgorithm.getJcaName());
+		return StringUtils.isBlank(secret) ? null : new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), keyAlgorithm.getJcaName());
 	}
 	
 	protected String getAuthzHeader(ServletRequest request) {
