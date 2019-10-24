@@ -40,11 +40,11 @@ import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.app.servlet.DocEditor;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import groovy.json.internal.Charsets;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -116,7 +116,7 @@ public class DocEditorManager extends AbstractAppManager {
 			String editingId = buildEditingId(RunContext.getRunProfileId());
 			String secret = wta.getDocumentServerSecretOut(docHandler.getTargetProfileId().getDomainId());
 			//TODO: read the algo from a dedicated setting
-			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(Charsets.UTF_8), SignatureAlgorithm.HS256);
+			String token = StringUtils.isBlank(secret) ? null : generateToken(secret.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256);
 			String domainPublicName = WT.getDomainPublicName(docHandler.getTargetProfileId().getDomainId());
 			String key = buildDocumentKey(docHandler.getDocumentUniqueId(), lastModifiedTime);
 			String baseUrl = wta.getDocumentServerLoopbackUrl();
