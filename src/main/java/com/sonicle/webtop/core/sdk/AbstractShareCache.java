@@ -38,7 +38,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 
@@ -54,7 +57,7 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 	protected final HashMap<UserProfileId, R> ownerToShareRoot = new HashMap<>(); // <ownerPid, shareRoot>
 	protected final HashMap<UserProfileId, String> ownerToWildcardShareFolder = new HashMap<>();  // <ownerPid, wildcardShareFolderId>
 	protected final MultiValuedMap<String, T> rootShareToFolderShare = new ArrayListValuedHashMap<>(); // <shareRootId, folderId>
-	protected final ArrayList<T> folderTo = new ArrayList<>();
+	protected final HashSet<T> folderTo = new LinkedHashSet<>();
 	protected final HashMap<T, String> folderToShareFolder = new HashMap<>(); // <folderId, shareFolderId>
 	protected final HashMap<T, String> folderToWildcardShareFolder = new HashMap<>(); // <folderId, wildcardShareFolderId>
 	
@@ -123,9 +126,9 @@ public abstract class AbstractShareCache <T, R extends ShareRoot> {
 		return null;
 	}
 	
-	public final synchronized List<T> getFolderIds() {
+	public final synchronized Set<T> getFolderIds() {
 		if (!ready) internalInitCache();
-		return Collections.unmodifiableList(folderTo);
+		return Collections.unmodifiableSet(folderTo);
 	}
 	
 	public final synchronized List<T> getFolderIdsByShareRoot(String shareRootId) {
