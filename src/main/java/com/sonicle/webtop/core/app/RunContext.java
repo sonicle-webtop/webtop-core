@@ -83,6 +83,10 @@ public class RunContext {
 		return builder.buildWebSubject();
 	}
 	
+	public static UserProfileId getSysAdminProfileId() {
+		return new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
+	}
+	
 	/**
 	 * Gets the currently executing Subject.
 	 * @return The Subject

@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -247,6 +248,24 @@ public class WT {
 	 */
 	public static String getGroupUidForPecAccounts(String domainId) {
 		return getWTA().getWebTopManager().getGroupUid(domainId, WebTopManager.GROUPID_PEC_ACCOUNTS);
+	}
+	
+	/**
+	 * Executes passed runnable using SysAdmin subject.
+	 * @param runnable 
+	 */
+	public static void runPrivileged(Runnable runnable) {
+		getWTA().getAdminSubject().execute(runnable);
+	}
+	
+	/**
+	 * Executes passed callable using SysAdmin subject.
+	 * @param <V> The return type
+	 * @param callable The callable to run
+	 * @return Return object
+	 */
+	public static <V> V runPrivileged(Callable<V> callable) {
+		return getWTA().getAdminSubject().execute(callable);
 	}
 	
 	public static CoreManager getCoreManager() {
