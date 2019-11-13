@@ -484,9 +484,9 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 			}
 		});
 		opts.recipients = rcpts;
-		if (!Ext.isEmpty(subject)) opts.subject = subject;
+		if (!Ext.isEmpty(subject)) opts.subject = decodeURIComponent(subject);
 		if (!Ext.isEmpty(body)) {
-			opts.content = body;
+			opts.content = decodeURIComponent(body);
 			opts.contentAfter = false;
 		}
 		svc.startNewMessage(svc.currentFolder, opts);
