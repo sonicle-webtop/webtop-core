@@ -57,5 +57,39 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			cfg.clearText = WT.res('wtsearchfield.clear');
 		}
 		me.callParent([cfg]);
+	},
+	
+	mark: function(document, querySelector, value) {
+		var context = document.querySelector(querySelector),
+			instance = new Mark(context);
+			instance.mark(value);
+	},
+	
+	unMark: function(document, querySelector) {
+		var context = document.querySelector(querySelector),
+			instance = new Mark(context);
+			instance.unmark();
+	},
+	
+	markKeywords: function(document,querySelector) {
+		var me=this,
+			keywords = [],
+			searchedValues = me.getValue().split(" ");
+
+		searchedValues.forEach(function(element) {
+			if(element.includes('from') || element.includes('to') 
+					|| element.includes('subject') || element.includes('message')) {
+
+				keywords.push(element.substr(element.indexOf(':') + 1));
+			}
+			if(!element.includes(':')) {
+				keywords.push(element);
+			}
+		});
+
+		me.unMark(document, querySelector);
+		me.mark(document, querySelector, keywords);
+		
 	}
+	
 });
