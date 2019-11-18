@@ -114,6 +114,7 @@ public class WebTopProps {
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
+		testAndWarnPropUsage(properties, "webtop.webappsConfigPath", PROP_ETC_DIR);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.webappsConfigPath", PROP_ETC_DIR);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.extJsDebug", PROP_EXTJS_DEBUG);
 		testAndWarnPropUsage(properties, "com.sonicle.webtop.debugMode", PROP_JS_DEBUG);
