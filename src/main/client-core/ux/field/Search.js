@@ -71,7 +71,9 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			instance.unmark();
 	},
 	
-	markKeywords: function(document,querySelector) {
+	markKeywords: function(el,querySelector) {		
+		if (!el) return;
+		
 		var me=this,
 			keywords = [],
 			searchedValues = me.getValue().split(" ");
@@ -87,8 +89,8 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			}
 		});
 
-		me.unMark(document, querySelector);
-		me.mark(document, querySelector, keywords);
+		me.unMark(el.dom, querySelector);
+		me.mark(el.dom, querySelector, keywords);
 		
 	}
 	
