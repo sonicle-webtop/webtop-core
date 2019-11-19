@@ -155,6 +155,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.shiro.io.ResourceUtils;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -273,6 +274,14 @@ public class Service extends BaseService {
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
+		
+		
+		for(AppLocale apploc : WT.getInstalledLocales()) {
+			String patterns=lookupResource(apploc.getLocale(),CoreLocaleKey.DETECT_ATTACH_PATTERNS);
+			if (patterns!=null && !patterns.equals(CoreLocaleKey.DETECT_ATTACH_PATTERNS))
+				co.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
+		}
+		
 		co.put("domainPasswordPolicy", domainPasswordPolicy);
 		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
 		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));

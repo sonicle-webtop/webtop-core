@@ -108,4 +108,6 @@ public class CoreLocaleKey {
 	public static final String WORD_NO = "word.no";
 	public static final String INTERNETRECIPIENT_AUTO = "internetRecipient.auto";
 	public static final String INTERNETRECIPIENT_WEBTOP = "internetRecipient.webtop";
+	
+	public static final String DETECT_ATTACH_PATTERNS = "detect.attach.patterns";
 }
