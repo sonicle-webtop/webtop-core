@@ -86,9 +86,9 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private ConnectionManager(WebTopApp wta, String configPath) {
+	private ConnectionManager(WebTopApp wta, String appEtcPath) {
 		this.wta = wta;
-		init(configPath);
+		init(appEtcPath);
 	}
 	
 	/**
@@ -106,13 +106,13 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.info("Cleaned up");
 	}
 	
-	private void init(String webappsConfigPath) {
+	private void init(String appEtcPath) {
 		String path = null;
 		File file = null;
 		
 		// Loads dataSources configuration
-		if (!StringUtils.isBlank(webappsConfigPath)) {
-			path = PathUtils.concatPaths(webappsConfigPath, CONFIG_NAME);
+		if (!StringUtils.isBlank(appEtcPath)) {
+			path = PathUtils.concatPaths(appEtcPath, CONFIG_NAME);
 			file = new File(path);
 		}
 		if ((file == null) || !file.exists()) {
