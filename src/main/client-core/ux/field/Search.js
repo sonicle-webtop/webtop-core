@@ -60,15 +60,29 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	},
 	
 	mark: function(document, querySelector, value) {
-		var context = document.querySelector(querySelector),
-			instance = new Mark(context);
-			instance.mark(value);
+		if (document) {
+			var el = document.querySelector(querySelector),
+					mark;
+			if (el) {
+				mark = new Mark(el);
+				mark.mark(value);
+				return mark;
+			}
+		}
+		return null;
 	},
 	
 	unMark: function(document, querySelector) {
-		var context = document.querySelector(querySelector),
-			instance = new Mark(context);
-			instance.unmark();
+		if (document) {
+			var el = document.querySelector(querySelector),
+					mark;
+			if (el) {
+				mark = new Mark(el);
+				mark.unmark();
+				return mark;
+			}
+		}
+		return null;
 	},
 	
 	markKeywords: function(el,querySelector) {		
