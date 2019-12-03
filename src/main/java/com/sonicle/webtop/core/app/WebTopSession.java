@@ -1035,6 +1035,7 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/search-string/3.1.0/" + "search-string.min.js");
+		js.appManifest.addJs(VENDOR_PATH + "/jsdifflib/1.1.0/" + "jsdifflib.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "_languageData.js");
 		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "guessLanguage.js");
 		
