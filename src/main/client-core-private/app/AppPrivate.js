@@ -162,14 +162,14 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			},
 			connectionlost: function() {
 				WT.showBadgeNotification(WT.ID, {
-					tag: 'connlost',
+					tag: 'connlost-' + Date.now(),
 					title: WT.res('not.conn.lost.tit'),
 					body: WT.res('not.conn.lost.body')
 				});
 			},
 			connectionrestored: function() {
 				WT.showBadgeNotification(WT.ID, {
-					tag: 'connrestored',
+					tag: 'connrestored-' + Date.now(),
 					title: WT.res('not.conn.restored.tit'),
 					body: WT.res('not.conn.restored.body')
 				});
@@ -190,7 +190,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 						}
 					});
 				} else if (status >= 500) {
-					WT.confirm(WT.res('warn.conn.error', status), function(bid) {
+					WT.confirm(WT.res(WT.ID, 'warn.conn.error', status), function(bid) {
 						if (bid === 'ok') WTA.PushManager.connect();
 					}, me, {
 						itemId: 'pushservererror',

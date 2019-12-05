@@ -286,7 +286,6 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	 * 
 	 * @param {String} [notification.tag] ID string that allows to link 
 	 * notifications together in order to avoid flooding of similar entries.
-	 * If not specified, a unique ID will be generated.
 	 * @param {String} notification.title The title.
 	 * @param {String} [notification.body] The body.
 	 * @param {Mixed} [notification.data] Custom data passed back during callbacks.

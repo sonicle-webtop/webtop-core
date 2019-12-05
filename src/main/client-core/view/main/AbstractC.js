@@ -420,9 +420,15 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
+	/**
+	 * Adds a user notification. If a previous notification is found with 
+	 * same tag the notification will be updated.
+	 * @param {String} svc Service ID.
+	 * @param {Object} notification Notification object.
+	 */
 	showBadgeNotification: function(svc, notification) {
 		var sto = this.getStore('notifications'),
-				rec = sto.getById(notification.id);
+				rec = sto.getById(notification.tag);
 		if (rec === null) {
 			sto.add(sto.createModel(notification));
 		} else {
@@ -430,9 +436,14 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		}
 	},
 	
-	clearBadgeNotification: function(svc, notificationTag) {
+	/**
+	 * Removes a user notification.
+	 * @param {String} svc Service ID.
+	 * @param {String} tag Notification tag to clear.
+	 */
+	clearBadgeNotification: function(svc, tag) {
 		var sto = this.getStore('notifications'),
-				rec = sto.getById(notificationTag);
+				rec = sto.getById(tag);
 		if (rec !== null) sto.remove(rec);
 	},
 	
