@@ -50,6 +50,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.Subject;
@@ -271,14 +272,18 @@ public class SessionManager {
 	}
 	
 	public void push(String sessionId, Collection<ServiceMessage> messages) {
-		Thread t = new Thread() {
+		Thread t = new Thread("internalPush") {
 			@Override
 			public void run() {
-				long stamp = lock.readLock();
 				try {
-					internalPush(sessionId, messages);
-				} finally {
-					lock.unlockRead(stamp);
+					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
+					try {
+						internalPush(sessionId, messages);
+					} finally {
+						lock.unlockRead(stamp);
+					}
+				} catch(InterruptedException ex) {
+					logger.error("Unable to acquire readLock [{}]", ex, sessionId);
 				}
 			}
 		};
@@ -286,14 +291,22 @@ public class SessionManager {
 	}
 	
 	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
-		Thread t = new Thread() {
+		Thread t = new Thread("internalPush") {
 			@Override
 			public void run() {
-				long stamp = lock.readLock();
 				try {
-					internalPush(profileId, messages, enqueueIfOffline);
-				} finally {
-					lock.unlockRead(stamp);
+					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
+					try {
+						internalPush(profileId, messages, enqueueIfOffline);
+					} finally {
+						lock.unlockRead(stamp);
+					}
+				} catch(InterruptedException ex) {
+					logger.error("Unable to acquire readLock [{}]", ex, profileId);
+					if (enqueueIfOffline) {
+						logger.debug("Persisting {} undelivered push messages for {} on db...", messages.size(), profileId);
+						enqueueMessages(profileId, messages);
+					}
 				}
 			}
 		};
