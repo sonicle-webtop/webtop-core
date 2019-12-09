@@ -38,6 +38,19 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	width: 400,
 	
 	/**
+	 * @cfg {String[]} highlightKeywords
+	 * The keywords whose values are taken into account when highlighting.
+	 * All available keywords are used when set to undefined or null.
+	 */
+	highlightKeywords: null,
+	
+	/**
+	 * @cfg {Boolean} highlightAnyText
+	 * Set to `false` to not use query's any-text in highlighting.
+	 */
+	highlightAnyText: true,
+	
+	/**
      * @event query
 	 * Fires when the user presses the ENTER key or clicks on the search icon.
 	 * @param {Ext.form.field.Text} this
@@ -59,22 +72,74 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		me.callParent([cfg]);
 	},
 	
-	mark: function(document, querySelector, value) {
-		if (document) {
-			var el = document.querySelector(querySelector),
+	/**
+	 * Highlight search keywords into target DOM elements.
+	 * @param {Ext.dom.Element} el The parent DOM element in which apply marking.
+	 * @param {String} querySelector DOMString indicating elements to be candidates for selection.
+	 * @returns {Mark} Instance of Mark object
+	 */
+	highlight: function(el, querySelector) {
+		var me = this,
+				SoSS = Sonicle.SearchString,
+				keywords = [], queryObject;
+		
+		if (!Ext.isEmpty(me.getValue())) {
+			queryObject = SoSS.toResult(SoSS.parseHumanQuery(me.getValue()));
+			Ext.iterate(queryObject.conditionArray, function(item) {
+				if (me.highlightKeywords && me.highlightKeywords.indexOf(item.keyword) !== -1) return;
+				if (!item.negated) keywords.push(item.value);
+			});
+			if (me.highlightAnyText && !Ext.isEmpty(queryObject.anyText)) keywords.push(queryObject.anyText);
+		}
+		
+		me.clearHighlight(el, querySelector);
+		if (keywords.length > 0) me.marked = me.mark(el.dom, querySelector, keywords);
+		return me.marked;
+	},
+	
+	/**
+	 * Clear any previous highlight.
+	 * @param {Ext.dom.Element} el The parent DOM element in which apply marking.
+	 * @param {String} querySelector DOMString indicating elements to be candidates for selection.
+	 */
+	clearHighlight: function(el, querySelector) {
+		var me = this;
+		if (me.marked) {
+			me.marked.unmark();
+		} else if (el) {
+			me.unMark(el.dom, querySelector);
+		}
+		delete me.marked;
+	},
+	
+	/**
+	 * Apply marking on a specified DOM element.
+	 * @param {HTMLElement} dom The parent DOM element.
+	 * @param {String} querySelector DOMString indicating elements to be processed.
+	 * @param {String|String[]} keyword The keyword to be marked. Can also be an array with multiple keywords.
+	 * @returns {Mark}
+	 */
+	mark: function(dom, querySelector, keyword) {
+		if (dom) {
+			var el = dom.querySelector(querySelector),
 					mark;
 			if (el) {
 				mark = new Mark(el);
-				mark.mark(value);
+				mark.mark(keyword);
 				return mark;
 			}
 		}
 		return null;
 	},
 	
-	unMark: function(document, querySelector) {
-		if (document) {
-			var el = document.querySelector(querySelector),
+	/**
+	 * Clear marking on a specified DOM element.
+	 * @param {HTMLElement} dom The parent DOM element.
+	 * @param {String} querySelector DOMString indicating elements to be processed.
+	 */
+	unMark: function(dom, querySelector) {
+		if (dom) {
+			var el = dom.querySelector(querySelector),
 					mark;
 			if (el) {
 				mark = new Mark(el);
@@ -83,29 +148,5 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			}
 		}
 		return null;
-	},
-	
-	markKeywords: function(el,querySelector) {		
-		if (!el) return;
-		
-		var me=this,
-			keywords = [],
-			searchedValues = me.getValue().split(" ");
-
-		searchedValues.forEach(function(element) {
-			if(element.includes('from') || element.includes('to') 
-					|| element.includes('subject') || element.includes('message')) {
-
-				keywords.push(element.substr(element.indexOf(':') + 1));
-			}
-			if(!element.includes(':')) {
-				keywords.push(element);
-			}
-		});
-
-		me.unMark(el.dom, querySelector);
-		me.mark(el.dom, querySelector, keywords);
-		
 	}
-	
 });
