@@ -86,7 +86,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 		if (!Ext.isEmpty(me.getValue())) {
 			queryObject = SoSS.toResult(SoSS.parseHumanQuery(me.getValue()));
 			Ext.iterate(queryObject.conditionArray, function(item) {
-				if (me.highlightKeywords && me.highlightKeywords.indexOf(item.keyword) !== -1) return;
+				if (me.highlightKeywords && me.highlightKeywords.indexOf(item.keyword) === -1) return;
 				if (!item.negated) keywords.push(item.value);
 			});
 			if (me.highlightAnyText && !Ext.isEmpty(queryObject.anyText)) keywords.push(queryObject.anyText);
