@@ -243,6 +243,20 @@ public final class WebTopApp {
 		System.setProperty("mail.mime.decodetext.strict", "false");
 		System.setProperty("mail.mime.decodefilename", "true");
 		
+		System.setProperty("mail.imap.connectiontimeout", "60000");
+		System.setProperty("mail.imap.timeout", "60000");
+		System.setProperty("mail.imap.writetimeout", "60000");
+		System.setProperty("mail.imaps.connectiontimeout", "60000");
+		System.setProperty("mail.imaps.timeout", "60000");
+		System.setProperty("mail.imaps.writetimeout", "60000");
+		
+		System.setProperty("mail.smtp.connectiontimeout", "60000");
+		System.setProperty("mail.smtp.timeout", "60000");
+		System.setProperty("mail.smtp.writetimeout", "60000");
+		System.setProperty("mail.smtps.connectiontimeout", "60000");
+		System.setProperty("mail.smtps.timeout", "60000");
+		System.setProperty("mail.smtps.writetimeout", "60000");
+
 		ICalendarUtils.setUnfoldingRelaxed(true);
 		ICalendarUtils.setParsingRelaxed(true);
 		ICalendarUtils.setValidationRelaxed(true);
