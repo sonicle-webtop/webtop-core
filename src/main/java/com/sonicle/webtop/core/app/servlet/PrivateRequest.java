@@ -76,6 +76,10 @@ public class PrivateRequest extends BaseRequest {
 			Boolean nowriter = ServletUtils.getBooleanParameter(request, "nowriter", false);
 			String optionsProfile = ServletUtils.getStringParameter(request, "optionsProfile", false);
 			
+			if (logger.isTraceEnabled()) {
+				logger.trace("processRequest [{}, {}, {}, {}, {}, {}, {}]", request.getMethod(), wts.getId(), wts.getProfileId(), service, action, nowriter, optionsProfile);
+			}
+			
 			if (StringUtils.isBlank(optionsProfile)) {
 				// Retrieves instantiated service
 				BaseService instance = wts.getPrivateServiceById(service);
