@@ -70,20 +70,21 @@ public class WebTopProps {
 		//systemProps.setProperty("mail.mime.address.strict", "false"); // If necessary set using -D
 		systemProps.setProperty("mail.mime.decodetext.strict", "false");
 		systemProps.setProperty("mail.mime.decodefilename", "true");
-
+		
+		// In order to avoid connection stucks during reads, force a timeout.
+		// As reccomended by Bill Shannon, write timeouts should not be set.
 		systemProps.setProperty("mail.imap.connectiontimeout", "60000");
 		systemProps.setProperty("mail.imap.timeout", "60000");
-		systemProps.setProperty("mail.imap.writetimeout", "60000");
+		//systemProps.setProperty("mail.imap.writetimeout", "60000");
 		systemProps.setProperty("mail.imaps.connectiontimeout", "60000");
 		systemProps.setProperty("mail.imaps.timeout", "60000");
-		systemProps.setProperty("mail.imaps.writetimeout", "60000");
-		
+		//systemProps.setProperty("mail.imaps.writetimeout", "60000");
 		systemProps.setProperty("mail.smtp.connectiontimeout", "60000");
 		systemProps.setProperty("mail.smtp.timeout", "60000");
-		systemProps.setProperty("mail.smtp.writetimeout", "60000");
+		//systemProps.setProperty("mail.smtp.writetimeout", "60000");
 		systemProps.setProperty("mail.smtps.connectiontimeout", "60000");
 		systemProps.setProperty("mail.smtps.timeout", "60000");
-		systemProps.setProperty("mail.smtps.writetimeout", "60000");
+		//systemProps.setProperty("mail.smtps.writetimeout", "60000");
 		
 		ICalendarUtils.setUnfoldingRelaxed(systemProps, true);
 		ICalendarUtils.setParsingRelaxed(systemProps, true);
