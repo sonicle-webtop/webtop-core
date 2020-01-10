@@ -258,9 +258,46 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	 * @param {Boolean} [overwrite=false] 'true' to clear previous params, 'false' to merge them.
 	 */
 	loadWithExtraParams: function(store, params, overwrite) {
-		if(!store.isStore) return;
+		if (!store.isStore) return;
 		WTU.applyExtraParams(store, params, overwrite);
 		store.load();
+	},
+	
+	/**
+	 * Checks if a store needs a sync operation.
+	 * @param {Ext.data.Store} store The store.
+	 * @returns {Boolean}
+	 */
+	needsSync: function(store) {
+		var needsSync = false;
+		if (store.isStore) {
+			if (store.getNewRecords().length > 0) needsSync = true;
+			if (store.getUpdatedRecords().length > 0) needsSync = true;
+			if (store.getRemovedRecords().length > 0) needsSync = true;
+		}
+		return needsSync;
+	},
+	
+	/**
+	 * Collects underlying ID values of passed array of records.
+	 * @param {Ext.data.Model[]} recs An array of records to use as source.
+	 * @param {String} [idField] A custom ID field name to get, otherwise {@link Ext.data.Model#getId} will be used.
+	 * @param {Function} [filterFn] A custom filter function which is passed each item in the collection. Should return `true` to accept each item or `false` to reject it.
+	 * @returns {Mixed[]} An array of collected id values.
+	 */
+	collectIds: function(recs, idField, filterFn) {
+		if (arguments.length === 2) {
+			if (Ext.isFunction(idField)) {
+				filterFn = idField;
+				idField = undefined;
+			}
+		}
+		var ids = [];
+		if (!Ext.isFunction(filterFn)) filterFn = function() {return true;};
+		Ext.iterate(recs, function(rec) {
+			if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
+		});
+		return ids;
 	},
 	
 	/**
