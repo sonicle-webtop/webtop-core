@@ -357,11 +357,7 @@ public final class WebTopApp {
 		
 		this.mediaTypes = MediaTypes.init(conMgr);
 		this.fileTypes = FileTypes.init(conMgr);
-		
-		// Locale Manager
-		//TODO: caricare dinamicamente le lingue installate nel sistema
-		String[] tags = new String[]{"it_IT", "en_EN", "es_ES", "de_DE", "hr_HR"};
-		this.i18nMgr = I18nManager.initialize(this, tags);
+		this.i18nMgr = I18nManager.initialize(this);
 		
 		// Template Engine
 		logger.info("Initializing template engine");
@@ -371,12 +367,12 @@ public final class WebTopApp {
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.logMgr = LogManager.initialize(this); // Log Manager
-		this.wtMgr = WebTopManager.initialize(this); // WT Manager
+		this.logMgr = LogManager.initialize(this);
+		this.wtMgr = WebTopManager.initialize(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
-		this.otpMgr = OTPManager.initialize(this); // OTP Manager
-		this.rptMgr = ReportManager.initialize(this); // Report Manager
+		this.otpMgr = OTPManager.initialize(this);
+		this.rptMgr = ReportManager.initialize(this);
 		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		
 		// Scheduler (services manager requires this component for jobs)

@@ -33,7 +33,13 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.LanguageDAO;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.util.AppLocale;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,12 +60,11 @@ public class I18nManager {
 	 * Initialization method. This method should be called once.
 	 * 
 	 * @param wta WebTopApp instance.
-	 * @param languageTags
 	 * @return The instance.
 	 */
-	public static synchronized I18nManager initialize(WebTopApp wta, String[] languageTags) {
-		if(initialized) throw new RuntimeException("Initialization already done");
-		I18nManager locm = new I18nManager(wta, languageTags);
+	public static synchronized I18nManager initialize(WebTopApp wta) {
+		if (initialized) throw new RuntimeException("Initialization already done");
+		I18nManager locm = new I18nManager(wta);
 		initialized = true;
 		logger.info("Initialized");
 		return locm;
@@ -68,20 +73,18 @@ public class I18nManager {
 	private WebTopApp wta = null;
 	private static final String VALID_TIMEZONES_RE = "^(Etc|Africa|America|Asia|Atlantic|Australia|Europe|Indian|Pacific)/.*";
 	private final List<TimeZone> timezones;
-	private final HashMap<String, AppLocale> locales = new HashMap<>();
+	private final HashMap<String, AppLocale> locales;
 	
 	/**
 	 * Private constructor.
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private I18nManager(WebTopApp wta, String[] languageTags) {
+	private I18nManager(WebTopApp wta) {
 		this.wta = wta;
 		
-		timezones = getAvailableTimezones();
-		for(String tag : languageTags) {
-			locales.put(tag, new AppLocale(tag));
-		}
+		timezones = loadTimezones();
+		locales = loadLocales();
 	}
 	
 	/**
@@ -106,11 +109,11 @@ public class I18nManager {
 		return locales.get(languageTag);
 	}
 	
-	public static List<TimeZone> getAvailableTimezones() {
+	private List<TimeZone> loadTimezones() {
 		ArrayList<TimeZone> tzs = new ArrayList<>();
 		final String[] ids = TimeZone.getAvailableIDs();
-		for(final String id : ids) {
-			if(id.matches(VALID_TIMEZONES_RE)) tzs.add(TimeZone.getTimeZone(id));
+		for (final String id : ids) {
+			if (id.matches(VALID_TIMEZONES_RE)) tzs.add(TimeZone.getTimeZone(id));
 		}
 		Collections.sort(tzs, new Comparator<TimeZone>() {
 			@Override
@@ -119,5 +122,25 @@ public class I18nManager {
 			}
 		});
 		return tzs;
+	}
+	
+	private HashMap<String, AppLocale> loadLocales() {
+		LanguageDAO lanDao = LanguageDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			HashMap<String, AppLocale> locs = new HashMap<>();
+			for (String tag : lanDao.selectTags(con)) {
+				locs.put(tag, new AppLocale(tag));
+			}
+			return locs;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTRuntimeException(ex, "Unable to load languages");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
 	}
 }

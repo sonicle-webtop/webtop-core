@@ -220,6 +220,17 @@ WITH (OIDS=FALSE)
 ;
 
 -- ----------------------------
+-- Table structure for languages
+-- ----------------------------
+DROP TABLE IF EXISTS "core"."languages";
+CREATE TABLE "core"."languages" (
+"language_tag" varchar(5) NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+
+-- ----------------------------
 -- Table structure for local_vault
 -- ----------------------------
 DROP TABLE IF EXISTS "core"."local_vault";
@@ -632,6 +643,11 @@ CREATE INDEX "im_messages_ak3" ON "core"."im_messages" USING btree ("domain_id",
 -- Primary Key structure for table im_messages
 -- ----------------------------
 ALTER TABLE "core"."im_messages" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table languages
+-- ----------------------------
+ALTER TABLE "core"."languages" ADD PRIMARY KEY ("language_tag");
 
 -- ----------------------------
 -- Primary Key structure for table local_vault

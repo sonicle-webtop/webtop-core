@@ -90,6 +90,15 @@ INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('z', 'a
 INSERT INTO "core"."file_types" ("extension", "type", "subtype") VALUES ('zip', 'archive', '');
 
 -- ----------------------------
+-- Records of languages
+-- ----------------------------
+INSERT INTO "core"."languages" ("language_tag") VALUES ('en_EN');
+INSERT INTO "core"."languages" ("language_tag") VALUES ('it_IT');
+INSERT INTO "core"."languages" ("language_tag") VALUES ('es_ES');
+INSERT INTO "core"."languages" ("language_tag") VALUES ('de_DE');
+INSERT INTO "core"."languages" ("language_tag") VALUES ('hr_HR');
+
+-- ----------------------------
 -- Records of local_vault
 -- ----------------------------
 INSERT INTO "core"."local_vault" VALUES ('*', 'admin', 'PLAIN', '1234');
