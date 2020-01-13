@@ -355,10 +355,6 @@ public final class WebTopApp {
 		if (!homeDir.exists()) throw new WTRuntimeException("Configured home directory not found [{}]", homeDir.toString());
 		checkHomeStructure();
 		
-		this.mediaTypes = MediaTypes.init(conMgr);
-		this.fileTypes = FileTypes.init(conMgr);
-		this.i18nMgr = I18nManager.initialize(this);
-		
 		// Template Engine
 		logger.info("Initializing template engine");
 		this.freemarkerCfg = new Configuration();
@@ -397,6 +393,10 @@ public final class WebTopApp {
 		}
 		
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
+		
+		this.mediaTypes = MediaTypes.init(conMgr);
+		this.fileTypes = FileTypes.init(conMgr);
+		this.i18nMgr = I18nManager.initialize(this);
 		
 		logger.info("WTA initialization completed [{}]", webappName);
 	}
