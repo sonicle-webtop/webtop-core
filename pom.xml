@@ -378,11 +378,6 @@
 		<!-- WebTop libraries -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>webtop-core-db</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
 			<artifactId>webtop-core-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
