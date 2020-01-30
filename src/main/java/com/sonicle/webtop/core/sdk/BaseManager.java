@@ -277,8 +277,16 @@ public abstract class BaseManager {
 		if (!RunContext.isSysAdmin()) throw new AuthException("Running profile must be SysAdmin [{0}]", RunContext.getRunProfileId());
 	}
 	
+	/**
+	 * @deprecated use writeAuditLog instead
+	 */
+	@Deprecated
 	public final void writeLog(String action, String data) {
 		WT.writeLog(action, softwareName, data);
+	}
+	
+	public void writeAuditLog(String context, String action, String referenceId, String data) {
+		WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
 	}
 	
 	public Session getMailSession() {

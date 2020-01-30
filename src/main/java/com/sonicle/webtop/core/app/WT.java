@@ -541,7 +541,7 @@ public class WT {
 	//Support old api converting action into action and context, skip softwareName
 	//Refactor to new api after all old calls are converted.
 	public static boolean writeLog(String action, String softwareName, String data) {
-		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(2));
 		String context="";
 		if (action.indexOf("_")>0) {
 			String ss[]=action.split("_");
@@ -552,9 +552,8 @@ public class WT {
 	}
 	
 	//new simplified api
-	public static boolean writeAuditLog(String context, String action, String referenceId, String data) {
-		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), callerServiceId, context, action, referenceId, SessionContext.getCurrentId(), data);
+	public static boolean writeAuditLog(String serviceId, String context, String action, String referenceId, String data) {
+		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), serviceId, context, action, referenceId, SessionContext.getCurrentId(), data);
 	}
 	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {

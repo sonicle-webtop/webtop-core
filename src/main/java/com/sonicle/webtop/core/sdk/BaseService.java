@@ -162,4 +162,8 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 			super();
 		}
 	}
+	
+	public void writeAuditLog(String context, String action, String referenceId, String data) {
+		WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
+	}
 }
