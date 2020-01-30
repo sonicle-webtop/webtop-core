@@ -34,15 +34,12 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.bol.OSysLog;
-import com.sonicle.webtop.core.dal.SysLogDAO;
+import com.sonicle.webtop.core.bol.OAuditLog;
+import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -51,8 +48,8 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-public class LogManager {
-	private static final Logger logger = WT.getLogger(LogManager.class);
+public class AuditLogManager {
+	private static final Logger logger = WT.getLogger(AuditLogManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -60,9 +57,9 @@ public class LogManager {
 	 * @param wta WebTopApp instance.
 	 * @return The instance.
 	 */
-	public static synchronized LogManager initialize(WebTopApp wta) {
+	public static synchronized AuditLogManager initialize(WebTopApp wta) {
 		if (initialized) throw new RuntimeException("Initialization already done");
-		LogManager logm = new LogManager(wta);
+		AuditLogManager logm = new AuditLogManager(wta);
 		initialized = true;
 		logger.info("Initialized");
 		return logm;
@@ -75,7 +72,7 @@ public class LogManager {
 	 * Instances of this class must be created using static initialize method.
 	 * @param wta WebTopApp instance.
 	 */
-	private LogManager(WebTopApp wta) {
+	private AuditLogManager(WebTopApp wta) {
 		this.wta = wta;
 	}
 	
@@ -91,33 +88,26 @@ public class LogManager {
 		if (!initialized) return false;
 		CoreServiceSettings css = new CoreServiceSettings(serviceId, domainId);
 		//TODO: valutare se introdurre il caching
-		return css.getSysLogEnabled();
+		return css.isAuditEnabled();
 	}
 	
-	public boolean write(UserProfileId profileId, String serviceId, String action, String softwareName, HttpServletRequest request, String sessionId, String data) {
-		String remoteIp = ServletUtils.getClientIP(request);
-		String userAgent = ServletUtils.getUserAgent(request);
-		return write(profileId, serviceId, action, softwareName, remoteIp, userAgent, sessionId, data);
-	}
-	
-	public boolean write(UserProfileId profileId, String serviceId, String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
+	public boolean write(UserProfileId profileId, String serviceId, String context, String action, String referenceId, String sessionId, String data) {
 		Connection con = null;
 		if (!initialized) return false;
 		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
 		
 		try {
 			con = WT.getCoreConnection();
-			SysLogDAO dao = SysLogDAO.getInstance();
-			OSysLog item = new OSysLog();
-			item.setSyslogId(dao.getSequence(con));
+			AuditLogDAO dao = AuditLogDAO.getInstance();
+			OAuditLog item = new OAuditLog();
+			item.setAuditLogId(dao.getSequence(con));
 			item.setTimestamp(DateTime.now(DateTimeZone.UTC));
 			item.setDomainId(profileId.getDomain());
 			item.setUserId(profileId.getUserId());
 			item.setServiceId(serviceId);
+			item.setContext(context);
 			item.setAction(action);
-			item.setSwName(StringUtils.defaultIfBlank(softwareName, wta.getPlatformName()));
-			item.setIpAddress(remoteIp);
-			item.setUserAgent(userAgent);
+			item.setReferenceId(referenceId);
 			item.setSessionId(sessionId);
 			item.setData(data);
 			dao.insert(con, item);

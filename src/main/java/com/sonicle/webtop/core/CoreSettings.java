@@ -247,9 +247,9 @@ public class CoreSettings {
 	/**
 	 * [domain+system][*]
 	 * [string]
-	 * Activate syslog
+	 * Activate audit log
 	 */
-	public static final String SYSLOG_ENABLED = "syslog.enabled";
+	public static final String AUDIT_ENABLED = "audit.enabled";
 	
 	/**
 	 * [system]

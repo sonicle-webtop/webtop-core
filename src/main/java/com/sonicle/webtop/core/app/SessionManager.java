@@ -163,8 +163,8 @@ public class SessionManager {
 			}
 			
 			if (profileId != null) {
-				LogManager logMgr = wta.getLogManager();
-				if (logMgr != null) logMgr.write(profileId, CoreManifest.ID, "LOGOUT", null, SessionContext.getClientRemoteIP(session), SessionContext.getClientPlainUserAgent(session), sessionId, null);
+				AuditLogManager auditLogMgr = wta.getAuditLogManager();
+				if (auditLogMgr != null) auditLogMgr.write(profileId, CoreManifest.ID, "AUTH", "LOGOUT", null, sessionId, null);
 			}
 		}
 	}

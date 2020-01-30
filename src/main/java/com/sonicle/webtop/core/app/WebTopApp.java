@@ -214,7 +214,7 @@ public final class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nMgr = null;
 	private ConnectionManager conMgr = null;
-	private LogManager logMgr = null;
+	private AuditLogManager auditLogMgr = null;
 	private WebTopManager wtMgr = null;
 	private SettingsManager setMgr = null;
 	private ServiceManager svcMgr = null;
@@ -363,7 +363,7 @@ public final class WebTopApp {
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
 		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.logMgr = LogManager.initialize(this);
+		this.auditLogMgr = AuditLogManager.initialize(this);
 		this.wtMgr = WebTopManager.initialize(this);
 		
 		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
@@ -716,8 +716,8 @@ public final class WebTopApp {
 	 * Returns the LogManager.
 	 * @return UserManager instance.
 	 */
-	public LogManager getLogManager() {
-		return logMgr;
+	public AuditLogManager getAuditLogManager() {
+		return auditLogMgr;
 	}
 	
 	/**

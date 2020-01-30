@@ -35,6 +35,7 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -479,7 +480,9 @@ public class WebTopSession {
 		privateCoreEnv = new CorePrivateEnvironment(wta, this);
 		privateEnv = new PrivateEnvironment(this);
 		
-		wta.getLogManager().write(profile.getId(), CoreManifest.ID, "AUTHENTICATED", null, request, getId(), null);
+		HashMap<String,String> logoutData=new HashMap<String,String>();
+		logoutData.put("ip", SessionContext.getClientRemoteIP(session));
+		wta.getAuditLogManager().write(profile.getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, getId(), JsonResult.GSON.toJson(logoutData));
 		sesm.registerWebTopSession(this);
 		allowedServices = listAllowedPrivateServices(svcm);
 		

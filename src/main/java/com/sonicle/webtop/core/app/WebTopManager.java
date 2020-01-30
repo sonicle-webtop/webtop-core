@@ -101,7 +101,7 @@ import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
-import com.sonicle.webtop.core.dal.SysLogDAO;
+import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
@@ -563,7 +563,7 @@ public final class WebTopManager {
 			ServiceStoreEntryDAO.getInstance().deleteByDomain(con, domainId);
 			SnoozedReminderDAO.getInstance().deleteByDomain(con, domainId);
 			MessageQueueDAO.getInstance().deleteByDomain(con, domainId);
-			SysLogDAO.getInstance().deleteByDomain(con, domainId);
+			AuditLogDAO.getInstance().deleteByDomain(con, domainId);
 			
 			DomainSettingDAO.getInstance().deleteByDomain(con, domainId);
 			UserSettingDAO.getInstance().deleteByDomain(con, domainId);

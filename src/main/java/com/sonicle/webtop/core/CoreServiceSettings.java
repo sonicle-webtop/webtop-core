@@ -163,8 +163,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(LOGIN_HIDE_WEBAPPNAME, false);
 	}
 	
-	public boolean getSysLogEnabled() {
-		return getBoolean(SYSLOG_ENABLED, false);
+	public boolean isAuditEnabled() {
+		return getBoolean(AUDIT_ENABLED, false);
 	}
 	
 	public Boolean getWhatsnewEnabled() {

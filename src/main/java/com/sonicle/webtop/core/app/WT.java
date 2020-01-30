@@ -531,15 +531,30 @@ public class WT {
 	public static Session getGlobalMailSession(String domainId) {
 		return getWTA().getGlobalMailSession(domainId);
 	}
+
+// Re-enable after check no-usage, then refactor to new api
+//	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
+//		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+//		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
+//	}
 	
-	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
-		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
-	}
-	
+	//Support old api converting action into action and context, skip softwareName
+	//Refactor to new api after all old calls are converted.
 	public static boolean writeLog(String action, String softwareName, String data) {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, null, null, null, data);
+		String context="";
+		if (action.indexOf("_")>0) {
+			String ss[]=action.split("_");
+			action=ss[0];
+			context=ss[1];
+		}
+		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), callerServiceId, context, action, null, SessionContext.getCurrentId(), data);
+	}
+	
+	//new simplified api
+	public static boolean writeAuditLog(String context, String action, String referenceId, String data) {
+		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
+		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), callerServiceId, context, action, referenceId, SessionContext.getCurrentId(), data);
 	}
 	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {
