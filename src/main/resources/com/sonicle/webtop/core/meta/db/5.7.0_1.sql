@@ -1,9 +1,8 @@
 @DataSource[default@com.sonicle.webtop.core]
 
 -- ----------------------------
--- Table structure for languages
+-- New table: languages
 -- ----------------------------
-DROP TABLE IF EXISTS "core"."languages";
 CREATE TABLE "core"."languages" (
 "language_tag" varchar(5) NOT NULL
 )
@@ -11,9 +10,6 @@ WITH (OIDS=FALSE)
 
 ;
 
--- ----------------------------
--- Primary Key structure for table languages
--- ----------------------------
 ALTER TABLE "core"."languages" ADD PRIMARY KEY ("language_tag");
 
 -- ----------------------------
