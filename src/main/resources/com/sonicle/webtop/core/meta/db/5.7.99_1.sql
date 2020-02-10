@@ -14,7 +14,6 @@ CREATE TABLE "core"."audit_log" (
 "context" varchar(50) NOT NULL,
 "action" varchar(50) NOT NULL,
 "reference_id" varchar(255),
-"ip_address" varchar(39),
 "session_id" varchar(255),
 "data" text
 )
