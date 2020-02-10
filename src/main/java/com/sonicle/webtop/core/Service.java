@@ -319,6 +319,9 @@ public class Service extends BaseService {
 			co.put("smsProvider",coreMgr.smsGetProvider().getName());
 		}
 		
+		//TODO: manage licensing
+		co.put("hasAudit",true);
+		
 		return co;
 	}
 	
