@@ -63,6 +63,11 @@
 			-->
 			<permission group="CAUSALS" actions="MANAGE" />
 			<!--
+			TAGS - tags management
+			- MANAGE: allow access to the form
+			-->
+			<permission group="TAGS" actions="MANAGE" />
+			<!--
 			USER_PROFILE_INFO - user profile tab in user options
 			- MANAGE: allow user to update/change its data
 			-->

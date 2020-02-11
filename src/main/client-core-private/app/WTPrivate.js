@@ -520,6 +520,25 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		svc.handleSendSMS(name, number, text);
 	},
 	
+	/**
+	 * Returns a reference (chained) to Tags store.
+	 * @returns {Ext.data.Store}
+	 */
+	getTagsStore: function() {
+		var svc = WT.getApp().getService('com.sonicle.webtop.core');
+		return svc ? Ext.create('Ext.data.ChainedStore', {source: svc.tagsStore}) : undefined;
+	},
+	
+	/**
+	 * Display a confirmation box to select tags and operation to apply.
+	 * @param {Function} cb The callback to call.
+	 * @param {Object} scope The scope (this) for the supplied callbacks.
+	 */
+	confirmSelectTags: function(cb, scope) {
+		var svc = WT.getApp().getService('com.sonicle.webtop.core');
+		if (svc) svc.confirmSelectTags(cb, scope);
+	},
+	
 	print: function(html) {
 		Sonicle.PrintMgr.print(html);
 	},

@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.VirtualAddress;
@@ -53,6 +54,9 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
 import com.sonicle.webtop.core.app.pbx.NethVoice;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
+import com.sonicle.webtop.core.app.sdk.ChangedEvent;
+import com.sonicle.webtop.core.app.sdk.EventListener;
+import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.sms.SmsProvider;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
@@ -68,7 +72,9 @@ import com.sonicle.webtop.core.bol.ORolePermission;
 import com.sonicle.webtop.core.bol.OServiceStoreEntry;
 import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
+import com.sonicle.webtop.core.bol.OTag;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
@@ -93,6 +99,7 @@ import com.sonicle.webtop.core.dal.RolePermissionDAO;
 import com.sonicle.webtop.core.dal.ServiceStoreEntryDAO;
 import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
+import com.sonicle.webtop.core.dal.TagDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.Causal;
@@ -103,8 +110,10 @@ import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
+import com.sonicle.webtop.core.sdk.EventManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -139,12 +148,12 @@ import org.slf4j.Logger;
  */
 public class CoreManager extends BaseManager {
 	private static final Logger logger = WT.getLogger(CoreManager.class);
-	private WebTopApp wta = null;
 	
 	public static final String RECIPIENT_PROVIDER_AUTO_SOURCE_ID = "auto";
 	public static final String RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID = "webtop";
 
-	
+	private static final EventManager eventManager = new EventManager();
+	private WebTopApp wta = null;
 	private final HashSet<String> cacheReady = new HashSet<>();
 	private final ArrayList<String> cacheAllowedServices = new ArrayList<>();
 	private final LinkedHashMap<String, RecipientsProviderBase> cacheProfileRecipientsProvider = new LinkedHashMap<>();
@@ -159,6 +168,14 @@ public class CoreManager extends BaseManager {
 		if(!fastInit) {
 			//initAllowedServices();
 		}
+	}
+	
+	public void addListener(final EventListener listener) {
+		eventManager.addListener(listener);
+	}
+	
+	public void removeListener(final EventListener listener) {
+		eventManager.removeListener(listener);
 	}
 	
 	/*
@@ -972,6 +989,157 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			OMasterData omas = masDao.selectByDomainId(con, getTargetProfileId().getDomainId(), masterDataId);
 			return ManagerUtils.createMasterData(omas);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Set<String> listTagIds() throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			return tagDao.selectIdsByDomain(con, targetDomainId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, List<String>> listTagIdsByName() throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			return tagDao.groupIdsByDomain(con, targetDomainId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, Tag> listTags() throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			LinkedHashMap<String, Tag> items = new LinkedHashMap<>();
+			for (OTag otag : tagDao.selectByDomain(con, targetDomainId).values()) {
+				items.put(otag.getTagId(), ManagerUtils.createTag(otag));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Tag getTag(String tagId) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			OTag otag = tagDao.selectByDomainId(con, targetDomainId, tagId);
+			return ManagerUtils.createTag(otag);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Tag addTag(Tag tag) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (tag.getDomainId() != null) ensureTargetProfileDomain(tag.getDomainId());
+			tag.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(tag.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			
+			con = WT.getConnection(SERVICE_ID);
+			Tag ret = doTagUpdate(true, con, tag);
+			if (ret != null) {
+				eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.CREATE));
+				writeLog("TAG_INSERT", LangUtils.formatMessage("{} ({})", ret.getTagId(), ret.getName()));
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Tag updateTag(Tag tag) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (tag.getDomainId() != null) ensureTargetProfileDomain(tag.getDomainId());
+			tag.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(tag.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			
+			con = WT.getConnection(SERVICE_ID);
+			Tag ret = doTagUpdate(false, con, tag);
+			if (ret == null) throw new WTNotFoundException("Tag not found [{}]", tag.getTagId());
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.UPDATE));
+			writeLog("TAG_UPDATE", LangUtils.formatMessage("{} ({})", ret.getTagId(), ret.getName()));
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteTag(String tagId) throws WTException {
+		Connection con = null;
+		
+		try {	
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			
+			con = WT.getConnection(SERVICE_ID);
+			boolean ret = doTagDelete(con, targetDomainId, tagId);
+			if (!ret) throw new WTNotFoundException("Tag not found [{}]", tagId);
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
+			writeLog("TAG_DELETE", tagId);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -2400,6 +2568,28 @@ public class CoreManager extends BaseManager {
 		}
 		
 		return createCausal(ocau);
+	}
+	
+	private Tag doTagUpdate(boolean insert, Connection con, Tag tag) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		
+		OTag otag = ManagerUtils.createOTag(tag);
+		if (otag.getDomainId() == null) otag.setDomainId(getTargetProfileId().getDomainId());
+		
+		int ret = -1;
+		if (insert) {
+			otag.setTagId(IdentifierUtils.getTimeBasedShortID());
+			ret = tagDao.insert(con, otag);
+		} else {
+			ret = tagDao.update(con, otag);
+		}
+		
+		return (ret == 1) ? ManagerUtils.createTag(otag) : null;
+	}
+	
+	private boolean doTagDelete(Connection con, String domainId, String tagId) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		return tagDao.deleteByDomainId(con, domainId, tagId) == 1;
 	}
 	
 	private OActivity createOActivity(Activity cau) {

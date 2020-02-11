@@ -34,9 +34,11 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.webtop.core.bol.OMasterData;
+import com.sonicle.webtop.core.bol.OTag;
 import com.sonicle.webtop.core.model.BaseMasterData;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
+import com.sonicle.webtop.core.model.Tag;
 
 /**
  *
@@ -82,6 +84,38 @@ public class ManagerUtils {
 			tgt.setRevisionSequence(src.getRevisionSequence());
 			tgt.setLockStatus(EnumUtils.forSerializedName(src.getLockStatus(), BaseMasterData.LoskStatus.class));
 			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	static Tag createTag(OTag src) {
+		if (src == null) return null;
+		return fillTag(new Tag(), src);
+	}
+	
+	static <T extends Tag> T fillTag(T tgt, OTag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setTagId(src.getTagId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
+		}
+		return tgt;
+	}
+	
+	static OTag createOTag(Tag src) {
+		if (src == null) return null;
+		return fillOTag(new OTag(), src);
+	}
+	
+	static <T extends OTag> T fillOTag(T tgt, Tag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setTagId(src.getTagId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
 		}
 		return tgt;
 	}
