@@ -32,24 +32,35 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
-import com.sonicle.webtop.core.app.RunContext;
-import com.sonicle.webtop.core.app.WebTopManager;
-import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.app.servlet.PublicRequest;
+import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.lang.StringUtils;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.shiro.web.servlet.ShiroFilter;
-import org.apache.shiro.web.subject.WebSubject;
-import org.apache.shiro.mgt.SecurityManager;
 
 /**
  *
  * @author malbinola
  */
 public class WTShiroFilter extends ShiroFilter {
-/*
+
+	@Override
+	protected ServletResponse prepareServletResponse(ServletRequest request, ServletResponse response, FilterChain chain) { 
+		if (response instanceof HttpServletResponse) {
+			((HttpServletResponse)response).setHeader("X-Robots-Tag", "none"); // https://developers.google.com/webmasters/control-crawl-index/docs/robots_meta_tag
+			
+			// Some security-related headers... here only for reference: evaluate them before enabling!
+			//((HttpServletResponse)response).setHeader("Referrer-Policy", "no-referrer"); // https://www.w3.org/TR/referrer-policy/
+			//((HttpServletResponse)response).setHeader("X-Content-Type-Options", "nosniff"); // Disable sniffing the content type for IE
+			//((HttpServletResponse)response).setHeader("X-Download-Options", "noopen"); // https://msdn.microsoft.com/en-us/library/jj542450(v=vs.85).aspx
+			//((HttpServletResponse)response).setHeader("X-Frame-Options", "SAMEORIGIN"); // Disallow iFraming from other domains
+			//((HttpServletResponse)response).setHeader("X-Permitted-Cross-Domain-Policies", "none"); // https://www.adobe.com/devnet/adobe-media-server/articles/cross-domain-xml-for-streaming.html
+			//((HttpServletResponse)response).setHeader("X-XSS-Protection", "1; mode=block"); // Enforce browser based XSS filters
+		}
+		return super.prepareServletResponse(request, response, chain);
+	}
+	
+	/*
 	@Override
 	protected WebSubject createSubject(ServletRequest request, ServletResponse response) {
 		String servletPath = ((HttpServletRequest)request).getServletPath();
@@ -64,5 +75,5 @@ public class WTShiroFilter extends ShiroFilter {
 		UserProfileId profileId = new UserProfileId(WebTopManager.SYSADMIN_DOMAINID, WebTopManager.SYSADMIN_USERID);
 		return RunContext.buildWebSubject(securityManager, request, response, profileId);
 	}
-*/
+	*/
 }
