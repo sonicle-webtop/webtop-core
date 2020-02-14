@@ -56,6 +56,7 @@ import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sms.SmsProvider;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.ODomain;
@@ -82,6 +83,7 @@ import com.sonicle.webtop.core.model.SharePermsRoot;
 import com.sonicle.webtop.core.bol.model.SyncDevice;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.dal.ActivityDAO;
+import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -95,6 +97,7 @@ import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.model.Activity;
+import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
@@ -978,6 +981,42 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public List<AuditLog> listAuditLog(String domainId, String serviceId, String context, String action, String referenceId) throws WTException {
+		AuditLogDAO logDao = AuditLogDAO.getInstance();
+		ArrayList<AuditLog> items = new ArrayList<>();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			for(OAuditLog olog : logDao.selectByReferenceId(con, domainId, serviceId, context, action, referenceId)) {
+				items.add(createAuditLog(domainId, olog));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private AuditLog createAuditLog(String domainId, OAuditLog olog) {
+		AuditLog log=new AuditLog();
+		
+		log.setAuditLogId(olog.getAuditLogId());
+		log.setTimestamp(olog.getTimestamp());
+		log.setUserId(olog.getUserId());
+		log.setUserName(WT.getUserData(new UserProfileId(domainId,olog.getUserId())).getDisplayName());
+		log.setServiceId(olog.getServiceId());
+		log.setContext(olog.getContext());
+		log.setAction(olog.getAction());
+		log.setReferenceId(olog.getReferenceId());
+		log.setSessionId(olog.getSessionId());
+		log.setData(olog.getData());
+		
+		return log;
 	}
 	
 	public List<IMChat> listIMChats(boolean skipUnavailable) throws WTException {

@@ -97,6 +97,7 @@ import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.Activity;
+import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.IMChat;
@@ -721,6 +722,27 @@ public class Service extends BaseService {
 			
 		} catch (Exception ex) {
 			logger.error("Error in LookupStatisticCustomersSuppliers", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processLookupAudit(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try {
+			UserProfile profile = getEnv().getProfile();
+			String serviceId = ServletUtils.getStringParameter(request, "auditServiceId", true);
+			String context = ServletUtils.getStringParameter(request, "auditContext", true);
+			String action = ServletUtils.getStringParameter(request, "auditAction", true);
+			String referenceId = ServletUtils.getStringParameter(request, "auditReferenceId", true);
+			
+			List<AuditLog> items=new ArrayList<>();
+			for(AuditLog log: coreMgr.listAuditLog(profile.getDomainId(), serviceId, context, action, referenceId)) {
+				items.add(log);
+			}
+			
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Exception ex) {
+			logger.error("Error in LookupAudit", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
