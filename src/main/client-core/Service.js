@@ -68,6 +68,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 		//cont = Ext.JSON.decode(me.getVar('portalContent'), true) || [];
 		
+		var tagsData = Ext.JSON.decode(WT.getVar('wtTags'), true),
+				hasTagsData = Ext.isArray(tagsData);
+		
+		me.tagsStore = Ext.create('Ext.data.JsonStore', {
+			autoLoad: hasTagsData ? false : true,
+			model: 'Sonicle.webtop.core.model.Tag',
+			proxy: WTF.apiProxy(WT.ID, 'ManageTags')
+		});
+		if (hasTagsData) me.tagsStore.loadRawData(tagsData);
+		
 		me.setMainComponent(Ext.create({
 			xtype: 'dashboard',
 			stateful: false,
@@ -113,6 +123,11 @@ Ext.define('Sonicle.webtop.core.Service', {
 				width: '50%'
 			}]
 		}));
+		
+		me.onMessage('tagChanged', function(msg) {
+			//var pl = msg.payload;
+			me.tagsStore.reload();
+		});
 		
 		me.onMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
@@ -771,6 +786,29 @@ Ext.define('Sonicle.webtop.core.Service', {
 			vct.getView().begin('new', {
 				data: {}
 			});
+		});
+	},
+	
+	/**
+	 * Display a confirmation box to select tags and operation to apply.
+	 * @param {Function} cb The callback to call.
+	 * @param {Object} scope The scope (this) for the supplied callbacks.
+	 */
+	confirmSelectTags: function(cb, scope) {
+		WT.confirm(WT.res('selecttagsbox.msg'), cb, scope, {
+			buttons: Ext.Msg.YESNOCANCEL,
+			title: WT.res('selecttagsbox.tit'),
+			instClass: 'WTA.ux.SelectTagsBox',
+			instConfig: {
+				emptyText: WT.res('grid.emp')
+			},
+			config: {
+				buttonText: {
+					yes: WT.res('selecttagsbox.yes.lbl'),
+					no: WT.res('selecttagsbox.no.lbl')
+				}
+				//value: 'this'
+			}
 		});
 	},
 	

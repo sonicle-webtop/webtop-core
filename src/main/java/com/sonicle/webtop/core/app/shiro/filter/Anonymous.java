@@ -48,6 +48,7 @@ import org.apache.shiro.web.util.WebUtils;
 /**
  *
  * @author malbinola
+ * @deprecated File robots.txt is not seved anymore. Now meta tags and headers are used.
  */
 public class Anonymous extends AnonymousFilter {
 	public static final String ROBOTS_FILE = "robots.txt";

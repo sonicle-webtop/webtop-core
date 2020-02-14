@@ -58,6 +58,7 @@
 .wt-icon-audio-call { background-image: url('audio-call_16.svg') !important; background-size: contain; }
 .wt-icon-video-call { background-image: url('video-call_16.svg') !important; background-size: contain; }
 .wt-icon-sort { background-image: url('sort_16.svg') !important; background-size: contain; }
+.wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
 
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;

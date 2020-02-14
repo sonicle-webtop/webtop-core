@@ -33,16 +33,59 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.webtop.core.bol.OActivity;
+import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OMasterData;
+import com.sonicle.webtop.core.bol.OTag;
+import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.BaseMasterData;
+import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
+import com.sonicle.webtop.core.model.Tag;
 
 /**
  *
  * @author malbinola
  */
 public class ManagerUtils {
+	
+	static Activity createActivity(OActivity src) {
+		if (src == null) return null;
+		return fillActivity(new Activity(), src);
+	}
+	
+	static <T extends Activity> T fillActivity(T tgt, OActivity src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setActivityId(src.getActivityId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setUserId(src.getUserId());
+			tgt.setRevisionStatus(EnumUtils.forSerializedName(src.getRevisionStatus(), Activity.RevisionStatus.class));
+			tgt.setDescription(src.getDescription());
+			tgt.setReadOnly(src.getReadOnly());
+			tgt.setExternalId(src.getExternalId());
+		}
+		return tgt;
+	}
+	
+	static Causal createCausal(OCausal src) {
+		if (src == null) return null;
+		return fillCausal(new Causal(), src);
+	}
+	
+	static <T extends Causal> T fillCausal(T tgt, OCausal src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setCausalId(src.getCausalId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setUserId(src.getUserId());
+			tgt.setMasterDataId(src.getMasterDataId());
+			tgt.setRevisionStatus(EnumUtils.forSerializedName(src.getRevisionStatus(), Causal.RevisionStatus.class));
+			tgt.setDescription(src.getDescription());
+			tgt.setReadOnly(src.getReadOnly());
+			tgt.setExternalId(src.getExternalId());
+		}
+		return tgt;
+	}
 	
 	static MasterData createMasterData(OMasterData src) {
 		if (src == null) return null;
@@ -82,6 +125,38 @@ public class ManagerUtils {
 			tgt.setRevisionSequence(src.getRevisionSequence());
 			tgt.setLockStatus(EnumUtils.forSerializedName(src.getLockStatus(), BaseMasterData.LoskStatus.class));
 			tgt.setDescription(src.getDescription());
+		}
+		return tgt;
+	}
+	
+	static Tag createTag(OTag src) {
+		if (src == null) return null;
+		return fillTag(new Tag(), src);
+	}
+	
+	static <T extends Tag> T fillTag(T tgt, OTag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setTagId(src.getTagId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
+		}
+		return tgt;
+	}
+	
+	static OTag createOTag(Tag src) {
+		if (src == null) return null;
+		return fillOTag(new OTag(), src);
+	}
+	
+	static <T extends OTag> T fillOTag(T tgt, Tag src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setTagId(src.getTagId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setBuiltIn(src.getBuiltIn());
+			tgt.setName(src.getName());
+			tgt.setColor(src.getColor());
 		}
 		return tgt;
 	}

@@ -482,7 +482,7 @@ public class WebTopSession {
 		
 		HashMap<String,String> logoutData=new HashMap<String,String>();
 		logoutData.put("ip", SessionContext.getClientRemoteIP(session));
-		wta.getAuditLogManager().write(profile.getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, getId(), JsonResult.GSON.toJson(logoutData));
+		wta.getAuditLogManager().write(profile.getId(), getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(logoutData));
 		sesm.registerWebTopSession(this);
 		allowedServices = listAllowedPrivateServices(svcm);
 		

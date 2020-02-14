@@ -279,6 +279,26 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
+	 * Deep-clone a store.
+	 * @param {Ext.data.Store} store The store to be cloned.
+	 * @returns {Ext.data.Store} The new store
+	 */
+	deepClone: function(store) {
+		var source = Ext.isString(store) ? Ext.data.StoreManager.lookup(store) : store,
+				target;
+		
+		if (source && source.isStore) {
+			target = Ext.create(source.$className, {
+				model: source.model
+			});
+			target.add(Ext.Array.map(source.getRange(), function(rec) {
+				return rec.copy();
+			}));
+		}
+		return target;
+	},
+	
+	/**
 	 * Collects underlying ID values of passed array of records.
 	 * @param {Ext.data.Model[]} recs An array of records to use as source.
 	 * @param {String} [idField] A custom ID field name to get, otherwise {@link Ext.data.Model#getId} will be used.

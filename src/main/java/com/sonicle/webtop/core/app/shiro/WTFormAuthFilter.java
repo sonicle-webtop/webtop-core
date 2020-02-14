@@ -174,7 +174,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
 			String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
 			UserProfileId pid = new UserProfileId(domainId, userId);
-			wta.getAuditLogManager().write(pid, CoreManifest.ID, "AUTH", action, null, request.getRequestedSessionId(), null);
+			wta.getAuditLogManager().write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, null);
 		}
 	}
 	

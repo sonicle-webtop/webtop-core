@@ -60,6 +60,8 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
+import com.sonicle.webtop.core.app.sdk.BaseEvent;
+import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.msg.IMChatRoomRemoved;
@@ -70,6 +72,7 @@ import com.sonicle.webtop.core.msg.IMFriendsUpdated;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsActivityLkp;
 import com.sonicle.webtop.core.bol.js.JsAutosave;
 import com.sonicle.webtop.core.bol.js.JsCausalLkp;
@@ -88,6 +91,7 @@ import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
+import com.sonicle.webtop.core.bol.js.JsTagGrid;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
 import com.sonicle.webtop.core.bol.js.JsWhatsnewTab;
@@ -105,6 +109,8 @@ import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
+import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.msg.DataChangedMsg;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -166,7 +172,7 @@ import org.jxmpp.jid.EntityFullJid;
  *
  * @author malbinola
  */
-public class Service extends BaseService {
+public class Service extends BaseService implements EventListener {
 	private static final Logger logger = WT.getLogger(Service.class);
 	public static final String WTSPROP_OTP_SETUP = "OTPSETUP";
 	
@@ -210,6 +216,7 @@ public class Service extends BaseService {
 			xmppCli = new XMPPClient(builder, ss.getXMPPMucSubdomain(), nickname, new XMPPServiceListenerImpl(), history);
 		}
 		
+		coreMgr.addListener(this);
 		//sendAuthMessage(principal.getUserId(),principal.getPassword());
 	}
 	
@@ -231,6 +238,7 @@ public class Service extends BaseService {
 
 	@Override
 	public void cleanup() throws Exception {
+		coreMgr.removeListener(this);
 		if (xmppCli != null) {
 			xmppCli.disconnect();
 		}
@@ -276,6 +284,15 @@ public class Service extends BaseService {
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
 		
+		try {
+			JsTagGrid.List items = new JsTagGrid.List();
+			for (Tag tag : coreMgr.listTags().values()) {
+				items.add(new JsTagGrid(tag));
+			}
+			co.put("wtTags", JsTagGrid.List.toJson(items));
+		} catch (Throwable t) {
+			logger.error("Unable to prepare Tags data", t);
+		}
 		
 		for(AppLocale apploc : WT.getInstalledLocales()) {
 			String patterns=lookupResource(apploc.getLocale(),CoreLocaleKey.DETECT_ATTACH_PATTERNS);
@@ -324,6 +341,14 @@ public class Service extends BaseService {
 		co.put("hasAudit",true);
 		
 		return co;
+	}
+	
+	@Override
+	public void onEvent(BaseEvent event) {
+		if (event instanceof TagChangedEvent) {
+			//TagChangedEvent e = (TagChangedEvent)event;
+			getWts().notify(new DataChangedMsg("tag"));
+		}
 	}
 	
 	private String addonNotifier() {
@@ -866,6 +891,47 @@ public class Service extends BaseService {
 			
 		} catch(Exception ex) {
 			logger.error("Error in ManageCausal", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageTags(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsTagGrid> items = new ArrayList<>();
+				for (Tag tag : coreMgr.listTags().values()) {
+					items.add(new JsTagGrid(tag));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+			
+			} else if (crud.equals(Crud.CREATE)) {
+				PayloadAsList<JsTagGrid.List> pl = ServletUtils.getPayloadAsList(request, JsTagGrid.List.class);
+				List<JsTagGrid> items = new ArrayList<>();
+				for (JsTagGrid jstag : pl.data) {
+					Tag tag = coreMgr.addTag(jstag.toTag());
+					if (tag != null) items.add(new JsTagGrid(tag));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if (crud.equals(Crud.UPDATE)) {
+				PayloadAsList<JsTagGrid.List> pl = ServletUtils.getPayloadAsList(request, JsTagGrid.List.class);
+				for (JsTagGrid jstag : pl.data) {
+					coreMgr.updateTag(jstag.toTag());
+				}
+				new JsonResult().printTo(out);
+				
+			} else if (crud.equals(Crud.DELETE)) {
+				PayloadAsList<JsTagGrid.List> pl = ServletUtils.getPayloadAsList(request, JsTagGrid.List.class);
+				for (JsTagGrid jstag : pl.data) {
+					coreMgr.deleteTag(jstag.id);
+				}
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageTags", ex);
 			new JsonResult(ex).printTo(out);
 		}
 	}
