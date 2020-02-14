@@ -40,7 +40,8 @@ Ext.define('Sonicle.webtop.core.ux.AuditWindow', {
 			xtype: 'textareafield',
 			id: me.id + '-textareafield',
 			width: 500,
-			height: 300
+			height: 300,
+			editable: false
 		};
 	},
 	
