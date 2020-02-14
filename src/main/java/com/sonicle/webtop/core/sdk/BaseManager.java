@@ -33,12 +33,15 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
+import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.dal.DAOException;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Locale;
 import javax.mail.Session;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +57,7 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
+	private boolean auditEnabled;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
@@ -61,6 +65,7 @@ public abstract class BaseManager {
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		this.locale = guessLocale();
+		this.auditEnabled = new CoreServiceSettings(SERVICE_ID, targetProfileId.getDomainId()).isAuditEnabled();
 	}
 	
 	protected final Locale guessLocale() {
@@ -134,6 +139,22 @@ public abstract class BaseManager {
 	 */
 	public void setLocale(Locale locale) {
 		this.locale = locale;
+	}
+	
+	/**
+	 * Checks if audit-logs are enabled.
+	 * @return 
+	 */
+	public boolean isAuditEnabled() {
+		return auditEnabled;
+	}
+	
+	/**
+	 * Sets the current enable status of audit-logs.
+	 * @param auditEnabled 
+	 */
+	public void setAuditEnabled(boolean auditEnabled) {
+		this.auditEnabled = auditEnabled;
 	}
 	
 	public Locale getProfileOrTargetLocale(UserProfileId profile) {
@@ -285,8 +306,25 @@ public abstract class BaseManager {
 		WT.writeLog(action, softwareName, data);
 	}
 	
-	public void writeAuditLog(String context, String action, String referenceId, String data) {
-		WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
+	/**
+	 * Writes a new entry into audit-log in order to trace user activity.
+	 * @param context A string that identifies the context involved.
+	 * @param action A string that identifies the action performed.
+	 * @param reference An optional string that uniquely identifies the item (of context above) that suffered the action.
+	 * @param data An optional data (eg. JSON payload) to complete info about operation.
+	 */
+	public void writeAuditLog(final String context, final String action, final String reference, final String data) {
+		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, reference, data);
+	}
+	
+	/**
+	 * Writes new multiple entry into audit-log in order to trace user activity.
+	 * @param context A string that identifies the context involved.
+	 * @param action A string that identifies the action performed.
+	 * @param entries A collection of multiple reference/data objects.
+	 */
+	public void writeAuditLog(final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, entries);
 	}
 	
 	public Session getMailSession() {

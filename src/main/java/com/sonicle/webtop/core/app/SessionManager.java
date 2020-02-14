@@ -164,7 +164,7 @@ public class SessionManager {
 			
 			if (profileId != null) {
 				AuditLogManager auditLogMgr = wta.getAuditLogManager();
-				if (auditLogMgr != null) auditLogMgr.write(profileId, CoreManifest.ID, "AUTH", "LOGOUT", null, sessionId, null);
+				if (auditLogMgr != null) auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", "LOGOUT", null, null);
 			}
 		}
 	}

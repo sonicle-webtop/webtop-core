@@ -38,6 +38,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.util.AppLocale;
@@ -540,6 +541,14 @@ public class WT {
 	
 	//Support old api converting action into action and context, skip softwareName
 	//Refactor to new api after all old calls are converted.
+	/**
+	 * @deprecated 
+	 * @param action
+	 * @param softwareName
+	 * @param data
+	 * @return 
+	 */
+	@Deprecated
 	public static boolean writeLog(String action, String softwareName, String data) {
 		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(2));
 		String context="";
@@ -548,12 +557,19 @@ public class WT {
 			action=ss[0];
 			context=ss[1];
 		}
-		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), callerServiceId, context, action, null, SessionContext.getCurrentId(), data);
+		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), callerServiceId, context, action, null, data);
 	}
 	
-	//new simplified api
-	public static boolean writeAuditLog(String serviceId, String context, String action, String referenceId, String data) {
-		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), serviceId, context, action, referenceId, SessionContext.getCurrentId(), data);
+	public static boolean writeAuditLog(final String serviceId, final String context, final String action, final String reference, final String data) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return false;
+		return logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, reference, data);
+	}
+	
+	public static boolean writeAuditLog(final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+		AuditLogManager logMgr = getWTA().getAuditLogManager();
+		if (logMgr == null) return false;
+		return logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
 	}
 	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {

@@ -35,11 +35,16 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
+import com.sonicle.webtop.core.dal.BaseDAO;
+import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -87,21 +92,23 @@ public class AuditLogManager {
 	public boolean isEnabled(String domainId, String serviceId) {
 		if (!initialized) return false;
 		CoreServiceSettings css = new CoreServiceSettings(serviceId, domainId);
-		//TODO: valutare se introdurre il caching
 		return css.isAuditEnabled();
 	}
 	
-	public boolean write(UserProfileId profileId, String serviceId, String context, String action, String referenceId, String sessionId, String data) {
-		Connection con = null;
+	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
 		if (!initialized) return false;
-		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
+		//TODO: enable check is now in managers, this means that a call to this will generate a log entry!
+		//TODO: evaluate if all caching here and expose a test method to check enabling status.
+		//if (!isEnabled(profileId.getDomain(), serviceId)) return false;
+		
+		AuditLogDAO dao = AuditLogDAO.getInstance();
+		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			AuditLogDAO dao = AuditLogDAO.getInstance();
+			
 			OAuditLog item = new OAuditLog();
-			item.setAuditLogId(dao.getSequence(con));
-			item.setTimestamp(DateTime.now(DateTimeZone.UTC));
+			item.setTimestamp(BaseDAO.createRevisionTimestamp());
 			item.setDomainId(profileId.getDomain());
 			item.setUserId(profileId.getUserId());
 			item.setServiceId(serviceId);
@@ -110,10 +117,39 @@ public class AuditLogManager {
 			item.setReferenceId(referenceId);
 			item.setSessionId(sessionId);
 			item.setData(data);
-			dao.insert(con, item);
-			return true;
 			
-		} catch(SQLException ex) {
+			return dao.insert(con, item) == 1;
+			
+		} catch(SQLException | DAOException ex) {
+			logger.error("DB error", ex);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
+		if (!initialized) return false;
+		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
+		
+		AuditLogDAO dao = AuditLogDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			
+			OAuditLog baseItem = new OAuditLog();
+			baseItem.setTimestamp(BaseDAO.createRevisionTimestamp());
+			baseItem.setDomainId(profileId.getDomain());
+			baseItem.setUserId(profileId.getUserId());
+			baseItem.setServiceId(serviceId);
+			baseItem.setContext(context);
+			baseItem.setAction(action);
+			baseItem.setSessionId(sessionId);
+			
+			return dao.batchInsert(con, baseItem, entries).length == entries.size();
+			
+		} catch(SQLException | DAOException ex) {
 			logger.error("DB error", ex);
 			return false;
 		} finally {
