@@ -532,33 +532,6 @@ public class WT {
 	public static Session getGlobalMailSession(String domainId) {
 		return getWTA().getGlobalMailSession(domainId);
 	}
-
-// Re-enable after check no-usage, then refactor to new api
-//	public static boolean writeLog(String action, String softwareName, String remoteIp, String userAgent, String sessionId, String data) {
-//		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(3));
-//		return getWTA().getLogManager().write(RunContext.getRunProfileId(), callerServiceId, action, softwareName, remoteIp, userAgent, sessionId, data);
-//	}
-	
-	//Support old api converting action into action and context, skip softwareName
-	//Refactor to new api after all old calls are converted.
-	/**
-	 * @deprecated 
-	 * @param action
-	 * @param softwareName
-	 * @param data
-	 * @return 
-	 */
-	@Deprecated
-	public static boolean writeLog(String action, String softwareName, String data) {
-		String callerServiceId = WT.findServiceId(Reflection.getCallerClass(2));
-		String context="";
-		if (action.indexOf("_")>0) {
-			String ss[]=action.split("_");
-			action=ss[0];
-			context=ss[1];
-		}
-		return getWTA().getAuditLogManager().write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), callerServiceId, context, action, null, data);
-	}
 	
 	public static boolean writeAuditLog(final String serviceId, final String context, final String action, final String reference, final String data) {
 		AuditLogManager logMgr = getWTA().getAuditLogManager();

@@ -299,14 +299,6 @@ public abstract class BaseManager {
 	}
 	
 	/**
-	 * @deprecated use writeAuditLog instead
-	 */
-	@Deprecated
-	public final void writeLog(String action, String data) {
-		WT.writeLog(action, softwareName, data);
-	}
-	
-	/**
 	 * Writes a new entry into audit-log in order to trace user activity.
 	 * @param context A string that identifies the context involved.
 	 * @param action A string that identifies the action performed.

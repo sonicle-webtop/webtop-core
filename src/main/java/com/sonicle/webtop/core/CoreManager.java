@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
 import com.sonicle.webtop.core.app.pbx.NethVoice;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
+import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.ChangedEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
@@ -596,20 +597,6 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	/*
-	public boolean writeLog(String action, String remoteIp, String userAgent, String sessionId, String data) {
-		//TODO: trovare modo di completare serviceId (ora a "")
-		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), remoteIp, userAgent, sessionId, data);
-	}
-	
-	public boolean writeLog(String action, String data) {
-		//TODO: trovare modo di completare serviceId (ora a "")
-		return wta.getLogManager().write(RunContext.getProfileId(), "", action, getSoftwareName(), null, null, null, data);
-	}
-	*/
-	
-	
-	
 	
 	
 	
@@ -647,7 +634,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			for(OActivity oact : actDao.selectLiveByDomain(con, getTargetProfileId().getDomainId())) {
-				items.add(createActivity(oact));
+				items.add(ManagerUtils.createActivity(oact));
 			}
 			return items;
 			
@@ -666,7 +653,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			for(OActivity oact : actDao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId())) {
-				items.add(createActivity(oact));
+				items.add(ManagerUtils.createActivity(oact));
 			}
 			return items;
 			
@@ -684,7 +671,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			OActivity oact = dao.select(con, activityId);
-			return createActivity(oact);
+			return ManagerUtils.createActivity(oact);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -701,10 +688,13 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			activity = doActivityUpdate(true, con, activity);
-			writeLog("ACTIVITY_INSERT", String.valueOf(activity.getActivityId()));
+			Activity ret = doActivityUpdate(true, con, activity);
 			
-			return activity;
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.ACTIVITY, AuditAction.CREATE, ret.getActivityId(), null);
+			}
+			
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -721,10 +711,14 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			activity = doActivityUpdate(false, con, activity);
-			writeLog("ACTIVITY_UPDATE", String.valueOf(activity.getActivityId()));
+			Activity ret = doActivityUpdate(false, con, activity);
+			if (ret == null) throw new WTNotFoundException("Activity not found [{}]", activity.getActivityId());
 			
-			return activity;
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.ACTIVITY, AuditAction.UPDATE, ret.getActivityId(), null);
+			}
+			
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -733,19 +727,24 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public int deleteActivity(int activityId) throws WTException {
+	public boolean deleteActivity(int activityId) throws WTException {
 		ActivityDAO dao = ActivityDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			Activity act = getActivity(activityId);
-			if (act == null) return -1;
+			if (act == null) throw new WTNotFoundException("Activity not found [{}]", activityId);
 			ensureProfileDomain(act.getDomainId());
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "ACTIVITIES", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			int ret = dao.logicDelete(con, activityId);
-			writeLog("ACTIVITY_DELETE", String.valueOf(activityId));
+			boolean ret = dao.logicDelete(con, activityId) == 1;
+			if (!ret) throw new WTNotFoundException("Activity not found [{}]", activityId);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.ACTIVITY, AuditAction.DELETE, activityId, null);
+			}
+			
 			return ret;
 			
 		} catch(SQLException | DAOException ex) {
@@ -789,7 +788,7 @@ public class CoreManager extends BaseManager {
 				ocaus = dao.selectLiveByDomainUser(con, getTargetProfileId().getDomainId(), getTargetProfileId().getUserId());
 			}
 			for(OCausal ocau : ocaus) {
-				items.add(createCausal(ocau));
+				items.add(ManagerUtils.createCausal(ocau));
 			}
 			return items;
 			
@@ -807,7 +806,7 @@ public class CoreManager extends BaseManager {
 		try {
 			con = WT.getCoreConnection();
 			OCausal ocal = dao.select(con, causalId);
-			return createCausal(ocal);
+			return ManagerUtils.createCausal(ocal);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -824,13 +823,16 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			causal = doCausalUpdate(true, con, causal);
-			writeLog("CAUSAL_INSERT", String.valueOf(causal.getCausalId()));
+			Causal ret = doCausalUpdate(true, con, causal);
 			
-			return causal;
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.ACTIVITY, AuditAction.CREATE, ret.getCausalId(), null);
+			}
+			
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -844,35 +846,44 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			causal = doCausalUpdate(false, con, causal);
-			writeLog("CAUSAL_UPDATE", String.valueOf(causal.getCausalId()));
+			Causal ret = doCausalUpdate(false, con, causal);
+			if (ret == null) throw new WTNotFoundException("Causal not found [{}]", causal.getCausalId());
 			
-			return causal;
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CAUSAL, AuditAction.UPDATE, ret.getCausalId(), null);
+			}
+			
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public int deleteCausal(int causalId) throws WTException {
+	public boolean deleteCausal(int causalId) throws WTException {
 		CausalDAO dao = CausalDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			Causal cau = getCausal(causalId);
-			if (cau == null) return -1;
+			if (cau == null) throw new WTNotFoundException("Causal not found [{}]", causalId);
 			ensureProfileDomain(cau.getDomainId());
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CAUSALS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			int ret = dao.logicDelete(con, causalId);
-			writeLog("CAUSAL_DELETE", String.valueOf(causalId));
+			boolean ret = dao.logicDelete(con, causalId) == 1;
+			if (!ret) throw new WTNotFoundException("Causal not found [{}]", causalId);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CAUSAL, AuditAction.DELETE, causalId, null);
+			}
+			
 			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -891,7 +902,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -910,7 +921,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -933,7 +944,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -952,7 +963,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -975,7 +986,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -991,7 +1002,7 @@ public class CoreManager extends BaseManager {
 			return ManagerUtils.createMasterData(omas);
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1009,7 +1020,7 @@ public class CoreManager extends BaseManager {
 			return tagDao.selectIdsByDomain(con, targetDomainId);
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1027,7 +1038,7 @@ public class CoreManager extends BaseManager {
 			return tagDao.groupIdsByDomain(con, targetDomainId);
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1049,7 +1060,7 @@ public class CoreManager extends BaseManager {
 			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1068,7 +1079,7 @@ public class CoreManager extends BaseManager {
 			return ManagerUtils.createTag(otag);
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1087,15 +1098,16 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			Tag ret = doTagUpdate(true, con, tag);
-			if (ret != null) {
-				eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.CREATE));
-				writeLog("TAG_INSERT", LangUtils.formatMessage("{} ({})", ret.getTagId(), ret.getName()));
+			
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.CREATE));
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.TAG, AuditAction.CREATE, ret.getTagId(), ret.getName());
 			}
 			
 			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1115,13 +1127,16 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			Tag ret = doTagUpdate(false, con, tag);
 			if (ret == null) throw new WTNotFoundException("Tag not found [{}]", tag.getTagId());
+			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.UPDATE));
-			writeLog("TAG_UPDATE", LangUtils.formatMessage("{} ({})", ret.getTagId(), ret.getName()));
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.TAG, AuditAction.UPDATE, ret.getTagId(), null);
+			}
 			
 			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1138,11 +1153,14 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			boolean ret = doTagDelete(con, targetDomainId, tagId);
 			if (!ret) throw new WTNotFoundException("Tag not found [{}]", tagId);
+			
 			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
-			writeLog("TAG_DELETE", tagId);
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.TAG, AuditAction.DELETE, tagId, null);
+			}
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -2542,15 +2560,16 @@ public class CoreManager extends BaseManager {
 		OActivity oact = createOActivity(act);
 		if (oact.getDomainId() == null) oact.setDomainId(getTargetProfileId().getDomainId());
 		
+		int ret = -1;
 		if (insert) {
 			oact.setActivityId(dao.getSequence(con).intValue());
 			oact.setRevisionStatus(EnumUtils.toSerializedName(Activity.RevisionStatus.MODIFIED));
-			dao.insert(con, oact);
+			ret = dao.insert(con, oact);
 		} else {
-			dao.update(con, oact);
+			ret = dao.update(con, oact);
 		}
 		
-		return createActivity(oact);
+		return (ret == 1) ? ManagerUtils.createActivity(oact) : null;
 	}
 	
 	private Causal doCausalUpdate(boolean insert, Connection con, Causal cau) throws WTException {
@@ -2559,15 +2578,16 @@ public class CoreManager extends BaseManager {
 		OCausal ocau = createOCausal(cau);
 		if (ocau.getDomainId() == null) ocau.setDomainId(getTargetProfileId().getDomainId());
 		
+		int ret = -1;
 		if (insert) {
 			ocau.setCausalId(dao.getSequence(con).intValue());
-			ocau.setRevisionStatus(EnumUtils.toSerializedName(Causal.RevisionStatus.MODIFIED));
-			dao.insert(con, ocau);
+			ocau.setRevisionStatus(EnumUtils.toSerializedName(Activity.RevisionStatus.MODIFIED));
+			ret = dao.insert(con, ocau);
 		} else {
-			dao.update(con, ocau);
+			ret = dao.update(con, ocau);
 		}
 		
-		return createCausal(ocau);
+		return (ret == 1) ? ManagerUtils.createCausal(ocau) : null;
 	}
 	
 	private Tag doTagUpdate(boolean insert, Connection con, Tag tag) throws WTException {
@@ -2605,18 +2625,7 @@ public class CoreManager extends BaseManager {
 		return ocau;
 	}
 	
-	private Activity createActivity(OActivity oact) {
-		if (oact == null) return null;
-		Activity act = new Activity();
-		act.setActivityId(oact.getActivityId());
-		act.setDomainId(oact.getDomainId());
-		act.setUserId(oact.getUserId());
-		act.setRevisionStatus(EnumUtils.forSerializedName(oact.getRevisionStatus(), Activity.RevisionStatus.class));
-		act.setDescription(oact.getDescription());
-		act.setReadOnly(oact.getReadOnly());
-		act.setExternalId(oact.getExternalId());
-		return act;
-	}
+	
 	
 	private OCausal createOCausal(Causal cau) {
 		if (cau == null) return null;
@@ -2630,20 +2639,6 @@ public class CoreManager extends BaseManager {
 		ocau.setReadOnly(cau.getReadOnly());
 		ocau.setExternalId(cau.getExternalId());
 		return ocau;
-	}
-	
-	private Causal createCausal(OCausal ocau) {
-		if (ocau == null) return null;
-		Causal cau = new Causal();
-		cau.setCausalId(ocau.getCausalId());
-		cau.setDomainId(ocau.getDomainId());
-		cau.setUserId(ocau.getUserId());
-		cau.setMasterDataId(ocau.getMasterDataId());
-		cau.setRevisionStatus(EnumUtils.forSerializedName(ocau.getRevisionStatus(), Causal.RevisionStatus.class));
-		cau.setDescription(ocau.getDescription());
-		cau.setReadOnly(ocau.getReadOnly());
-		cau.setExternalId(ocau.getExternalId());
-		return cau;
 	}
 	
 	private CausalExt createCausalExt(VCausal vcau) {
@@ -2735,5 +2730,21 @@ public class CoreManager extends BaseManager {
 	
 	private DateTime createRevisionTimestamp() {
 		return DateTime.now(DateTimeZone.UTC);
+	}
+	
+	private enum AuditContext {
+		ACTIVITY, CAUSAL, TAG
+	}
+	
+	private enum AuditAction {
+		CREATE, UPDATE, DELETE, MOVE
+	}
+	
+	private void writeAuditLog(AuditContext context, AuditAction action, Object reference, Object data) {
+		writeAuditLog(EnumUtils.getName(context), EnumUtils.getName(action), (reference != null) ? String.valueOf(reference) : null, (data != null) ? String.valueOf(data) : null);
+	}
+	
+	private void writeAuditLog(AuditContext context, AuditAction action, Collection<AuditReferenceDataEntry> entries) {
+		writeAuditLog(EnumUtils.getName(context), EnumUtils.getName(action), entries);
 	}
 }
