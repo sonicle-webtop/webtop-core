@@ -338,7 +338,7 @@ public class Service extends BaseService implements EventListener {
 		}
 		
 		//TODO: manage licensing
-		co.put("hasAudit",true);
+		co.put("hasAudit",coreMgr.isAuditEnabled());
 		
 		return co;
 	}

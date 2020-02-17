@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
@@ -57,6 +58,7 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
+	private boolean auditSetup=false;
 	private boolean auditEnabled;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
@@ -65,7 +67,6 @@ public abstract class BaseManager {
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		this.locale = guessLocale();
-		this.auditEnabled = new CoreServiceSettings(SERVICE_ID, targetProfileId.getDomainId()).isAuditEnabled();
 	}
 	
 	protected final Locale guessLocale() {
@@ -146,15 +147,24 @@ public abstract class BaseManager {
 	 * @return 
 	 */
 	public boolean isAuditEnabled() {
+		if (!auditSetup) {
+			String domainId=targetProfile.getDomainId();
+			boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+			auditEnabled = coreAuditEnabled;
+			if (coreAuditEnabled) {
+				CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
+				//if we have an entry for this service, use this
+				if (scss.hasAuditEnabled())
+					auditEnabled = scss.isAuditEnabled();
+				else {
+					//user main core setup
+				}
+			}
+			
+			auditSetup=true;
+		}
+
 		return auditEnabled;
-	}
-	
-	/**
-	 * Sets the current enable status of audit-logs.
-	 * @param auditEnabled 
-	 */
-	public void setAuditEnabled(boolean auditEnabled) {
-		this.auditEnabled = auditEnabled;
 	}
 	
 	public Locale getProfileOrTargetLocale(UserProfileId profile) {

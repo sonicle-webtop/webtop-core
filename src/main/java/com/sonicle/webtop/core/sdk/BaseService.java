@@ -169,19 +169,27 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	}
 	
 	public void writeAuditLog(String context, String action, String referenceId, String data) {
+		if (isAuditEnabled()) WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
+	}
+	
+	public boolean isAuditEnabled() {
 		if (!auditSetup) {
 			String domainId=this.getEnv().getProfileId().getDomainId();
-			CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
-			//if we have an entry for this service, use this
-			if (scss.hasAuditEnabled())
-				auditEnabled = scss.isAuditEnabled();
-			else {
-				//user main core setup
-				auditEnabled = new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+			boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+			auditEnabled = coreAuditEnabled;
+			if (coreAuditEnabled) {
+				CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
+				//if we have an entry for this service, use this
+				if (scss.hasAuditEnabled())
+					auditEnabled = scss.isAuditEnabled();
+				else {
+					//user main core setup
+				}
 			}
+			
 			auditSetup=true;
 		}
-		
-		if (auditEnabled) WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
+
+		return auditEnabled;
 	}
 }
