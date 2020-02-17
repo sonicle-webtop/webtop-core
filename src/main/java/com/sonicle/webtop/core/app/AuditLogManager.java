@@ -96,7 +96,7 @@ public class AuditLogManager {
 	}
 	
 	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
-		if (!initialized) return false;
+		if (!initialized || RunContext.isImpersonated()) return false;
 		//TODO: enable check is now in managers, this means that a call to this will generate a log entry!
 		//TODO: evaluate if all caching here and expose a test method to check enabling status.
 		//if (!isEnabled(profileId.getDomain(), serviceId)) return false;
@@ -129,7 +129,7 @@ public class AuditLogManager {
 	}
 	
 	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
-		if (!initialized) return false;
+		if (!initialized || RunContext.isImpersonated()) return false;
 		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
 		
 		AuditLogDAO dao = AuditLogDAO.getInstance();

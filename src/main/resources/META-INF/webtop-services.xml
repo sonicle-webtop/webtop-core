@@ -82,6 +82,11 @@
 			- ACCESS ability to use chat functionalities
 			-->
 			<permission group="WEBCHAT" actions="ACCESS" />
+			<!--
+			AUDIT - show audit interface
+			- ACCESS ability to use audit interface
+			-->
+			<permission group="AUDIT" actions="ACCESS" />
 		</permissions>
 	</service>
 	<service>
