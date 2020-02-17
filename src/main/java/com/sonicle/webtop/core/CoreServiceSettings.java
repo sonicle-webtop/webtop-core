@@ -167,6 +167,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(AUDIT_ENABLED, false);
 	}
 	
+	public boolean hasAuditEnabled() {		
+		return getSetting(AUDIT_ENABLED)!=null;
+	}
+	
 	public Boolean getWhatsnewEnabled() {
 		return getBoolean(WHATSNEW_ENABLED, true);
 	}

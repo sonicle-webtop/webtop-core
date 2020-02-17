@@ -40,8 +40,10 @@ import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreManager;
+import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.AbstractEnvironmentService;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
@@ -59,6 +61,9 @@ import javax.servlet.http.HttpServletResponse;
  * @author malbinola
  */
 public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvironment> {
+	
+	private boolean auditSetup=false;
+	private boolean auditEnabled=false;
 	
 	public ServiceVars returnServiceVars() {
 		return null;
@@ -164,6 +169,19 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	}
 	
 	public void writeAuditLog(String context, String action, String referenceId, String data) {
-		WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
+		if (!auditSetup) {
+			String domainId=this.getEnv().getProfileId().getDomainId();
+			CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
+			//if we have an entry for this service, use this
+			if (scss.hasAuditEnabled())
+				auditEnabled = scss.isAuditEnabled();
+			else {
+				//user main core setup
+				auditEnabled = new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+			}
+			auditSetup=true;
+		}
+		
+		if (auditEnabled) WT.writeAuditLog(SERVICE_ID, context, action, referenceId, data);
 	}
 }
