@@ -58,7 +58,6 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
-	private boolean auditSetup=false;
 	private boolean auditEnabled;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
@@ -67,6 +66,19 @@ public abstract class BaseManager {
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		this.locale = guessLocale();
+		//audit
+		String domainId=targetProfile.getDomainId();
+		boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+		auditEnabled = coreAuditEnabled;
+		if (coreAuditEnabled) {
+			CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
+			//if we have an entry for this service, use this
+			if (scss.hasAuditEnabled())
+				auditEnabled = scss.isAuditEnabled();
+			else {
+				//user main core setup
+			}
+		}
 	}
 	
 	protected final Locale guessLocale() {
@@ -147,23 +159,6 @@ public abstract class BaseManager {
 	 * @return 
 	 */
 	public boolean isAuditEnabled() {
-		if (!auditSetup) {
-			String domainId=targetProfile.getDomainId();
-			boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
-			auditEnabled = coreAuditEnabled;
-			if (coreAuditEnabled) {
-				CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
-				//if we have an entry for this service, use this
-				if (scss.hasAuditEnabled())
-					auditEnabled = scss.isAuditEnabled();
-				else {
-					//user main core setup
-				}
-			}
-			
-			auditSetup=true;
-		}
-
 		return auditEnabled;
 	}
 	

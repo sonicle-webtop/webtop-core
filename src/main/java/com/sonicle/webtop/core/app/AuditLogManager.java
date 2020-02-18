@@ -89,17 +89,8 @@ public class AuditLogManager {
 		logger.info("Cleaned up");
 	}
 	
-	public boolean isEnabled(String domainId, String serviceId) {
-		if (!initialized) return false;
-		CoreServiceSettings css = new CoreServiceSettings(serviceId, domainId);
-		return css.isAuditEnabled();
-	}
-	
 	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
 		if (!initialized || RunContext.isImpersonated()) return false;
-		//TODO: enable check is now in managers, this means that a call to this will generate a log entry!
-		//TODO: evaluate if all caching here and expose a test method to check enabling status.
-		//if (!isEnabled(profileId.getDomain(), serviceId)) return false;
 		
 		AuditLogDAO dao = AuditLogDAO.getInstance();
 		Connection con = null;
@@ -130,7 +121,6 @@ public class AuditLogManager {
 	
 	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
 		if (!initialized || RunContext.isImpersonated()) return false;
-		if (!isEnabled(profileId.getDomain(), serviceId)) return false;
 		
 		AuditLogDAO dao = AuditLogDAO.getInstance();
 		Connection con = null;
