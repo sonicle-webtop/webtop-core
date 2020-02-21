@@ -240,6 +240,7 @@ public class Service extends BaseService {
 	private static final String NTYPE_USERS = "users";
 	private static final String NTYPE_ROLES = "roles";
 	private static final String NTYPE_LAUNCHERLINKS = "launcherlinks";
+	private static final String NTYPE_LICENSES = "licenses";
 	private static final String NTYPE_PECBRIDGE = "pecbridge";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
 	
@@ -302,6 +303,7 @@ public class Service extends BaseService {
 							if (css.getHasPecBridgeManagement()) {
 								children.add(createDomainChildNode(nodeId, null, "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-licenses", NTYPE_LICENSES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
 						} else { // Available webtop domains
 							for (ODomain domain : core.listDomains(false)) {

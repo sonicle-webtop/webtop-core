@@ -26,6 +26,7 @@
 .wtadm-icon-virtualDomain-xs { background-image: url('virtualDomain_16.png') !important; }
 .wtadm-icon-virtualEmail-xs { background-image: url('virtualEmail_16.png') !important; }
 .wtadm-icon-pecBridge-xs { background-image: url('pecBridge_16.png') !important; }
+.wtadm-icon-licenses { background-image: url('licenses.svg') !important; }
 .wtadm-icon-fetchmail-xs { background-image: url('pecBridge_16.png') !important; }
 .wtadm-icon-selectStmt-xs { background-image: url('fetchmail_16.png') !important; }
 .wtadm-icon-play1Stmt-xs { background-image: url('play1Stmt_16.png') !important; }

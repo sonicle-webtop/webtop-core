@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.webtop.core.products.AuditProduct;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.InternetAddressUtils;
@@ -41,7 +42,6 @@ import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.webtop.core.app.CoreAdminManifest;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
@@ -52,7 +52,6 @@ import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.pbx.PbxProvider;
-import com.sonicle.webtop.core.app.pbx.NethVoice;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.sdk.ChangedEvent;
@@ -115,11 +114,9 @@ import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
-import com.sonicle.webtop.core.sdk.AuthException;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.EventManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;

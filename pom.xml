@@ -29,6 +29,17 @@
 			<id>52north-releases</id>
 			<url>http://52north.org/maven/repo/releases/</url>
 		</repository>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</releases>
+			<id>license4j-runtime-library</id>
+			<name>License4J Runtime Library Maven Repository</name>
+			<url>http://www.license4j.com/maven/</url>
+			<layout>default</layout>
+		</repository>
 	</repositories>
 	
 	<dependencies>
@@ -375,6 +386,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>			
+		<dependency>
+			<groupId>com.license4j</groupId>
+			<artifactId>license4j-runtime-library</artifactId>
+			<version>4.7.3</version>
+		</dependency>
 		<!-- WebTop libraries -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>

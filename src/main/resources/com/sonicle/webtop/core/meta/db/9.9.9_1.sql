@@ -25,3 +25,13 @@ CREATE UNIQUE INDEX "tags_ak3" ON "core"."tags" USING btree ("domain_id", "name"
 -- Primary Key structure for table tags
 -- ----------------------------
 ALTER TABLE "core"."tags" ADD PRIMARY KEY ("tag_id");
+
+-- ----------------------------
+-- Table structure for licenses
+-- ----------------------------
+CREATE TABLE "core"."licenses" (
+"internet_domain" varchar(255) NOT NULL,
+"product_id" varchar(255) NOT NULL,
+"license" text,
+PRIMARY KEY ("internet_domain", "product_id")
+)

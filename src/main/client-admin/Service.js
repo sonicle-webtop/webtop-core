@@ -139,6 +139,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainLauncherLinksUI(rec.parentNode, rec);
 						} else if (type === 'pecbridge') {
 							me.showPecBridgeUI(rec.parentNode, rec);
+						} else if (type === 'licenses') {
+							me.showDomainLicensesUI(rec.parentNode, rec);
 						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
 						}

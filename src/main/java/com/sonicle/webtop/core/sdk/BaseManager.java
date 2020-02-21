@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.products.AuditProduct;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Locale;
@@ -58,7 +59,8 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
-	private boolean auditEnabled;
+	private AuditProduct auditProduct;
+	private boolean auditEnabled=false;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
@@ -67,16 +69,22 @@ public abstract class BaseManager {
 		this.softwareName = null;
 		this.locale = guessLocale();
 		//audit
-		String domainId=targetProfile.getDomainId();
-		boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
-		auditEnabled = coreAuditEnabled;
-		if (coreAuditEnabled) {
-			CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
-			//if we have an entry for this service, use this
-			if (scss.hasAuditEnabled())
-				auditEnabled = scss.isAuditEnabled();
-			else {
-				//user main core setup
+		String internetDomain=WT.getDomainInternetName(targetProfileId.getDomainId());
+		if (internetDomain!=null) {
+			this.auditProduct=new AuditProduct(internetDomain);
+			if (WT.isLicensed(auditProduct)) {
+				String domainId=targetProfile.getDomainId();
+				boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
+				auditEnabled = coreAuditEnabled;
+				if (coreAuditEnabled) {
+					CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
+					//if we have an entry for this service, use this
+					if (scss.hasAuditEnabled())
+						auditEnabled = scss.isAuditEnabled();
+					else {
+						//user main core setup
+					}
+				}
 			}
 		}
 	}

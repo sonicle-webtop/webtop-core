@@ -36,6 +36,8 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
@@ -49,6 +51,11 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
+import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.commons.l4j.DomainBasedProduct;
+import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
+import com.sonicle.webtop.core.bol.OLicense;
+import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.template.Template;
@@ -81,7 +88,6 @@ import net.sf.jasperreports.engine.JRException;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.Reflection;
 
 /**
  *
@@ -91,6 +97,7 @@ public class WT {
 	private static final Logger logger = getLogger(WT.class);
 	private static final Map<String, ServiceManifest> manifestCache = new TreeMap<>();
 	private static final Map<String, String> cnameToServiceIdCache = new HashMap<>();
+	private static final Map<AbstractProduct, ProductLicense> productCache = new HashMap<>();
 	
 	public static final Locale LOCALE_ENGLISH = new Locale("en", "EN");
 	
@@ -665,5 +672,42 @@ public class WT {
 	 */
 	public static void clearLoggerDC() {
 		LoggerUtils.clearCustomDC();
+	}
+	
+	/**
+	 * Check for product license validity
+	 */
+	public static boolean isLicensed(DomainBasedProduct product) {
+		ProductLicense pl;
+		boolean valid=false;
+		synchronized(productCache) {
+			Connection con=null;
+			try {
+				pl=productCache.get(product);
+				if (pl==null) {
+					con=getCoreConnection();
+					OLicense olicense=LicenseDAO.getInstance().select(con, product.getInternetDomain(), product.getProductId());
+					if (olicense!=null) {
+						pl = new ProductLicense(
+								ProductLicense.LicenseType.LICENSE_TEXT,
+								ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
+								product,
+								olicense.getLicense()
+						);
+						productCache.put(product,pl);
+						pl.validate();
+					}
+				}
+				if (pl!=null) {
+					LicenseObject lo=pl.getValidatedLicenseObject();
+					valid=(lo!=null && lo.isValid());				
+				}
+			} catch(SQLException exc) {
+				logger.error("Exception",exc);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+		return valid;
 	}
 }
