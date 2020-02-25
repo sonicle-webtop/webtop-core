@@ -34,4 +34,4 @@ CREATE TABLE "core"."licenses" (
 "product_id" varchar(255) NOT NULL,
 "license" text,
 PRIMARY KEY ("internet_domain", "product_id")
-)
+);

@@ -40,7 +40,7 @@ import com.sonicle.commons.l4j.DomainBasedProduct;
  */
 public class AuditProduct extends DomainBasedProduct {
 	
-	private static String PRODUCT_ID = "audit-id";
+	private static String PRODUCT_ID = "audit";
 		
 	static String PUBLIC_KEY=
 			"30819f300d06092a864886f70d010101050003818d003081893032301006\n"+
@@ -65,4 +65,5 @@ public class AuditProduct extends DomainBasedProduct {
 	public String getProductId() {
 		return PRODUCT_ID;
 	}
+
 }
