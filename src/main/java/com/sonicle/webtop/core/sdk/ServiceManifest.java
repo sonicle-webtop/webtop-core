@@ -84,6 +84,7 @@ public class ServiceManifest {
 	protected Map<String, RestApi> restApis = new LinkedHashMap<>();
 	protected ArrayList<ServicePermission> permissions = new ArrayList<>();
 	protected ArrayList<Portlet> portlets = new ArrayList<>();
+	protected Map<String, Product> products = new LinkedHashMap<>();
 	
 	public ServiceManifest() {
 		version = new ServiceVersion();
@@ -282,6 +283,20 @@ public class ServiceManifest {
 				}
 			}
 		}
+		
+		if (!svcEl.configurationsAt("products").isEmpty()) {
+			List<HierarchicalConfiguration> elProducts = svcEl.configurationsAt("products.product");
+			for(HierarchicalConfiguration el : elProducts) {
+				if (el.containsKey("[@id]") && el.containsKey("[@className]")) {
+					final String id = el.getString("[@id]");
+					final String className = el.getString("[@className]");
+					if (StringUtils.isBlank(id)) throw new Exception("Invalid value for attribute [product->id]");
+					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");
+					products.put(id,new Product(id,buildJavaClassName(javaPackage, className)));
+				}
+			}
+		}
+		
 	}
 	
 	private String oasFileToContext(String oasFile) {
@@ -562,6 +577,10 @@ public class ServiceManifest {
 		return portlets;
 	}
 	
+	public Product getProduct(String id) {
+		return products.get(id);
+	}
+	
 	private String buildJavaClassName(String javaPackage, String className) {
 		if (StringUtils.startsWith(className, ".")) {
 			return LangUtils.buildClassName(javaPackage, className);
@@ -619,4 +638,15 @@ public class ServiceManifest {
 			this.jsClassName = jsClassName;
 		}
 	}
+	
+	public static class Product {
+		public final String id;
+		public final String className;
+		
+		public Product(String id, String className) {
+			this.id = id;
+			this.className = className;
+		}
+	}
+	
 }

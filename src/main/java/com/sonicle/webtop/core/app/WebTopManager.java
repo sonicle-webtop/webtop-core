@@ -69,6 +69,7 @@ import com.sonicle.webtop.core.bol.AssignedUser;
 import com.sonicle.webtop.core.bol.GroupUid;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORoleAssociation;
 import com.sonicle.webtop.core.bol.ORolePermission;
@@ -102,6 +103,7 @@ import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
+import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
@@ -1277,6 +1279,72 @@ public final class WebTopManager {
 			
 		} catch(SQLException | DAOException ex) {
 			DbUtils.rollbackQuietly(con);
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public List<OLicense> listLicenses(String internetDomain) throws WTException {
+		LicenseDAO dao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return dao.select(con, internetDomain);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public OLicense getLicense(String internetDomain, String productId) throws WTException {
+		LicenseDAO dao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return dao.select(con, internetDomain, productId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw new WTException(ex, "DB error");
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void addLicense(String internetDomain, String productId, String license) throws WTException, SQLException {
+		LicenseDAO dao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			OLicense item=new OLicense();
+			item.setInternetDomain(internetDomain);
+			item.setProductId(productId);
+			item.setLicense(license);
+			dao.insert(con, item);
+			
+		} catch(SQLException | DAOException ex) {
+			//throw new WTException(ex, "DB error");
+			throw ex;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public void deleteLicense(String internetDomain, String productId) throws WTException {
+		LicenseDAO ldao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			ldao.delete(con, internetDomain, productId);
+			
+		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);

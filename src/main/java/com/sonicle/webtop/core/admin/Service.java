@@ -37,6 +37,7 @@ import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
@@ -54,8 +55,10 @@ import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
@@ -64,12 +67,14 @@ import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
+import com.sonicle.webtop.core.bol.js.JsGridDomainLicense;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
 import com.sonicle.webtop.core.bol.js.JsGroup;
+import com.sonicle.webtop.core.bol.js.JsLicense;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsRole;
@@ -103,6 +108,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.jivesoftware.smack.util.FileUtils;
 import org.slf4j.Logger;
 
 /**
@@ -536,6 +542,73 @@ public class Service extends BaseService {
 			new JsonResult(ex).printTo(out);
 		}
 	}
+	
+	public void processManageDomainLicenses(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String internetDomain = WT.getDomainInternetName(domainId);
+				
+			if(crud.equals(Crud.READ)) {
+				List<JsGridDomainLicense> items = new ArrayList<>();
+				for(OLicense license : coreadm.listLicenses(internetDomain)) {
+					items.add(new JsGridDomainLicense(license));
+				}
+				new JsonResult("licenses", items, items.size()).printTo(out);
+				
+			} else if(crud.equals(Crud.DELETE)) {
+				ServletUtils.StringArray productIds = ServletUtils.getObjectParameter(request, "productIds", ServletUtils.StringArray.class, true);
+				
+				coreadm.deleteLicense(internetDomain, productIds.get(0));
+				
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageDomainGroups", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageLicense(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			
+			if(crud.equals(Crud.READ)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String internetDomain = WT.getDomainInternetName(domainId);
+				String productId = ServletUtils.getStringParameter(request, "productId", null);
+				
+				OLicense license = coreadm.getLicense(internetDomain, productId);
+				new JsonResult(new JsLicense(domainId, license)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsLicense> pl = ServletUtils.getPayload(request, JsLicense.class);
+				String internetDomain = WT.getDomainInternetName(pl.data.domainId);
+				coreadm.addLicense(internetDomain, pl.data.productId, pl.data.license);
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Exception ex) {
+			logger.error("Error in ManageLicense", ex);
+			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processGetUploadedLicense (HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		try{
+			String uploadId=request.getParameter("uploadId");
+			
+			UploadedFile upfile=getUploadedFile(uploadId);
+			String fileContent=FileUtils.readFile(upfile.getFile());
+			out.print(JsonUtils.toJson("license",fileContent));
+		} catch(Exception exc) {
+			logger.debug("Cannot upload license",exc);
+			new JsonResult("Cannot upload license", exc).printTo(out);
+		}
+	}	
 	
 	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		

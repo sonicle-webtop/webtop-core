@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2020 Sonicle S.r.l.
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
+ * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -10,7 +11,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -18,7 +19,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
+ * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -28,41 +29,19 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2020 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.products;
-
-import com.sonicle.commons.l4j.DomainBasedProduct;
-
-/**
- *
- * @author gabriele.bulfon
- */
-public class AuditProduct extends DomainBasedProduct {
+Ext.define('Sonicle.webtop.core.admin.model.License', {
+	extend: 'WTA.ux.data.BaseModel',
 	
-	private static String PRODUCT_ID = "audit-id";
-		
-	static String PUBLIC_KEY=
-			"30819f300d06092a864886f70d010101050003818d003081893032301006\n"+
-			"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n"+
-			"0042d4fa0190ca06c8b6aac3b08d87b4bf375b4c91f8db40d7363628246G\n"+
-			"02818100815cde722fc927b64632d42af291d695b83ce11dcadae039b3a1\n"+
-			"20e03e3d2013b3d4ce990fb9384b8e09884704ec06b957dcf2654646074d\n"+
-			"04c15edd2f20a6fea9d576b80a16185b4caecc735bf02f730edaadef8e1c\n"+
-			"2341a6903b2a1d9f935d03RSA4102413SHA512withRSA9e223cfa0ece427\n"+
-			"ba122b2394500bd81fc1232954e8376d6a1473dc0819beaf50203010001";
+	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageLicense', 'data'),
 
-	public AuditProduct(String internetDomain) {
-		super(internetDomain);
-	}
-
-	@Override
-	public String getPublicKey() {
-		return PUBLIC_KEY;
-	}
-
-	@Override
-	public String getProductId() {
-		return PRODUCT_ID;
-	}
-}
+	identifier: 'negativestring',
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string', false),
+		WTF.field('domainId', 'string', false),
+		WTF.field('productId', 'string', false),
+		WTF.field('license', 'string', false)
+	]
+});

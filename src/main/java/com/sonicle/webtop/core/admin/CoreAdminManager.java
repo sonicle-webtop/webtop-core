@@ -43,6 +43,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
+import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.OSettingDb;
@@ -60,6 +61,7 @@ import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
+import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.BaseManager;
@@ -330,6 +332,61 @@ public class CoreAdminManager extends BaseManager {
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to delete group [{0}]", pid.toString());
+		}
+	}
+	
+	public List<OLicense> listLicenses(String internetDomain) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			return wtmgr.listLicenses(internetDomain);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to list licenses [{}]", internetDomain);
+		}
+	}
+	
+	public OLicense getLicense(String domainId, String productId) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			return wtmgr.getLicense(domainId, productId);
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to get license [{}]", productId);
+		}
+	}
+	
+	public void addLicense(String domainId, String productId, String license) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			wtmgr.addLicense(domainId, productId, license);
+		} catch(DAOIntegrityViolationException ex) {			
+			throw new WTException(ex, "Product license already present [{}]", productId);
+		} catch(Exception ex) {			
+			throw new WTException(ex, "Unable to add license [{}]", productId);
+		}
+	}
+	
+	public void deleteLicense(String domainId, String productId) throws WTException {
+		WebTopManager wtmgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			wtmgr.deleteLicense(domainId, productId);
+			
+		} catch(Exception ex) {
+			throw new WTException(ex, "Unable to delete license [{0}]", productId);
 		}
 	}
 	

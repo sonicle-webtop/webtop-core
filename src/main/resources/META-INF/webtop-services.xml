@@ -88,6 +88,10 @@
 			-->
 			<permission group="AUDIT" actions="ACCESS" />
 		</permissions>
+		
+		<products>
+			<product id="audit" className=".products.AuditProduct" />
+		</products>
 	</service>
 	<service>
 		<package>com.sonicle.webtop.core.admin</package>

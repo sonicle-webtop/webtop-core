@@ -44,6 +44,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainLauncherLinks',
 		'Sonicle.webtop.core.admin.view.PecBridge',
 		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
+		'Sonicle.webtop.core.admin.view.DomainLicenses',
 		'Sonicle.webtop.core.admin.view.DbUpgrader'
 	],
 	
@@ -367,6 +368,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
+	showDomainLicensesUI: function(domNode, node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainLicenses', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
 	addDomainUI: function() {
 		var me = this;
 		me.addDomain({
@@ -518,6 +533,42 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			params: {
 				crud: 'delete',
 				profileIds: WTU.arrayAsParam(profileIds)
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	addLicense: function(domainId, opts) {
+		opts = opts || {};
+		var me = this,
+				vct = WT.createView(me.ID, 'view.License', {
+					viewCfg: {
+						domainId: domainId
+					}
+				});
+		
+		vct.getView().on('viewsave', function(s, success, model) {
+			Ext.callback(opts.callback, opts.scope || me, [success, model]);
+		});
+		vct.show(false, function() {
+			vct.getView().begin('new', {
+				data: {
+					domainId: domainId
+				}
+			});
+		});
+	},
+	
+	deleteLicenses: function(domainId, productIds, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomainLicenses', {
+			params: {
+				crud: 'delete',
+				domainId: domainId,
+				productIds: WTU.arrayAsParam(productIds)
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
