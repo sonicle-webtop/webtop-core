@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -30,40 +30,13 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
-
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
-import java.util.ArrayList;
-
-/**
- *
- * @author malbinola
- */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
-	public Short order;
+Ext.define('Sonicle.webtop.core.model.I18nValue', {
+	extend: 'WTA.ux.data.BaseModel',
 	
-	public JsDomainLauncherLink() {}
-	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
-	}
-	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
-		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
-		}
-	}
-}
+	identifier: 'negativestring',
+	idProperty: 'tag',
+	fields: [
+		WTF.field('tag', 'string', false),
+		WTF.field('txt', 'string', false)
+	]
+});

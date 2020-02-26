@@ -167,7 +167,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				sto = gp.getStore(),
 				rec;
 		ed.cancelEdit();
-		rec = sto.add(sto.createModel({order: sto.getCount()+1}))[0];
+		rec = sto.add(sto.createModel({order: sto.getCount()}))[0];
 		ed.startEditByPosition({row: sto.indexOf(rec), column: col});
 	},
 	

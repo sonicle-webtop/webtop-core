@@ -68,6 +68,11 @@
 			-->
 			<permission group="TAGS" actions="MANAGE" />
 			<!--
+			CUSTOM_FIELDS - custom fields management
+			- MANAGE: allow access to the form
+			-->
+			<permission group="CUSTOM_FIELDS" actions="MANAGE" />
+			<!--
 			USER_PROFILE_INFO - user profile tab in user options
 			- MANAGE: allow user to update/change its data
 			-->

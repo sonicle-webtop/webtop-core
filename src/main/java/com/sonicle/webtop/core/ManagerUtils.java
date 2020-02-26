@@ -33,22 +33,33 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.RegexUtils;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
+import com.sonicle.webtop.core.bol.OCustomField;
+import com.sonicle.webtop.core.bol.OCustomPanel;
 import com.sonicle.webtop.core.bol.OMasterData;
 import com.sonicle.webtop.core.bol.OTag;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.BaseMasterData;
 import com.sonicle.webtop.core.model.Causal;
+import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.sdk.WTException;
+import java.util.Set;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
 public class ManagerUtils {
+	private static Pattern PATT_DBFIELD_NAME = RegexUtils.matchStartEnd(RegexUtils.MATCH_DBFIELD_NAME);
 	
 	static Activity createActivity(OActivity src) {
 		if (src == null) return null;
@@ -159,5 +170,92 @@ public class ManagerUtils {
 			tgt.setColor(src.getColor());
 		}
 		return tgt;
+	}
+	
+	static CustomPanel createCustomPanel(OCustomPanel src, Set<String> fields, Set<String> tags) {
+		if (src == null) return null;
+		CustomPanel tgt = fillCustomPanel(new CustomPanel(), src);
+		tgt.setFields(fields);
+		tgt.setTags(tags);
+		return tgt;
+	}
+	
+	static <T extends CustomPanel> T fillCustomPanel(T tgt, OCustomPanel src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setPanelId(src.getCustomPanelId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setServiceId(src.getServiceId());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setTitleI18n(LangUtils.deserialize(src.getTitleI18n(), new CustomPanel.TitleI18n(), CustomPanel.TitleI18n.class));
+		}
+		return tgt;
+	}
+	
+	static OCustomPanel createOCustomPanel(CustomPanel src) {
+		if (src == null) return null;
+		return fillOCustomPanel(new OCustomPanel(), src);
+	}
+	
+	static <T extends OCustomPanel> T fillOCustomPanel(T tgt, CustomPanel src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setCustomPanelId(src.getPanelId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setServiceId(src.getServiceId());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setTitleI18n(LangUtils.serialize(src.getTitleI18n(), CustomPanel.TitleI18n.class));
+		}
+		return tgt;
+	}
+	
+	static CustomField createCustomField(OCustomField src) {
+		if (src == null) return null;
+		return fillCustomField(new CustomField(), src);
+	}
+	
+	static <T extends CustomField> T fillCustomField(T tgt, OCustomField src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setFieldId(src.getCustomFieldId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setServiceId(src.getServiceId());
+			tgt.setRevisionStatus(EnumUtils.forSerializedName(src.getRevisionStatus(), CustomField.RevisionStatus.class));
+			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
+			tgt.setCreationTimestamp(src.getCreationTimestamp());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setType(EnumUtils.forSerializedName(src.getType(), CustomField.Type.class));
+			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomField.Props(), CustomField.Props.class));
+			tgt.setValues(LangUtils.deserialize(src.getValues(), new CustomField.Values(), CustomField.Values.class));
+			tgt.setLabelI18n(LangUtils.deserialize(src.getLabelI18n(), new CustomField.LabelI18n(), CustomField.LabelI18n.class));
+		}
+		return tgt;
+	}
+	
+	static OCustomField createOCustomField(CustomField src) {
+		if (src == null) return null;
+		return fillOCustomField(new OCustomField(), src);
+	}
+	
+	static <T extends OCustomField> T fillOCustomField(T tgt, CustomField src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setCustomFieldId(src.getFieldId());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setServiceId(src.getServiceId());
+			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
+			tgt.setName(src.getName());
+			tgt.setDescription(src.getDescription());
+			tgt.setType(EnumUtils.toSerializedName(src.getType()));
+			tgt.setProperties(LangUtils.serialize(src.getProps(), CustomField.Props.class));
+			tgt.setValues(LangUtils.serialize(src.getValues(), CustomField.Values.class));
+			tgt.setLabelI18n(LangUtils.serialize(src.getLabelI18n(), CustomField.LabelI18n.class));
+		}
+		return tgt;
+	}
+	
+	static <T extends OCustomField> boolean validate(T src) throws WTException {
+		if (StringUtils.isBlank(src.getName())) throw new WTException("'Name' is blank");
+		if (!PATT_DBFIELD_NAME.matcher(src.getName()).matches()) throw new WTException("Patter for 'Name' is not satisfied [{}]", RegexUtils.MATCH_DBFIELD_NAME);
+		return true;
 	}
 }

@@ -68,7 +68,7 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/*
-	 * Makes a string suitale for use as ID.
+	 * Makes a string suitable for use as ID.
 	 * Resulting string will be lowercase without any dots.
 	 * @param {String} s The source string
 	 * @returns {String} The resulting string
@@ -105,6 +105,27 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	 */
 	itselfOrFirst: function(obj) {
 		return Ext.isArray(obj) ? obj[0] : obj;
+	},
+	
+	/**
+	 * Copies the property from 'source' into the specified `object`.
+	 * @param {Object} object The receiver of the properties.
+	 * @param {Boolean} applyIfEmpty
+	 * @param {Object} source The source object in which look for values.
+	 * @param {String} name The property name to use in source object.
+	 * @param {String} [newName] The target property name, like the above if not specified.
+	 * @param {Function} [parseFn] Optional function used when reading source value.
+	 */
+	applyProp: function(object, applyIfEmpty, source, name, newName, parseFn) {
+		if (arguments.length === 4) {
+			newName = name;
+		} else if (arguments.length === 5 && Ext.isFunction(newName)) {
+			parseFn = newName;
+			newName = name;
+		}
+		if (Ext.isObject(object) && Ext.isObject(source) && Ext.isString(name) && (source[name] !== undefined) && (!applyIfEmpty && !Ext.isEmpty(source[name]))) {
+			object[newName] = parseFn ? parseFn(source[name]) : source[name];
+		}
 	},
 	
 	arrayAsParam: function(arr) {

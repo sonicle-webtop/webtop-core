@@ -1,4 +1,5 @@
 /*
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
  * Copyright (C) 2019 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -10,7 +11,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -18,7 +19,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
+ * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -30,40 +31,41 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
-
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
-import java.util.ArrayList;
-
-/**
- *
- * @author malbinola
- */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
-	public Short order;
-	
-	public JsDomainLauncherLink() {}
-	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
-	}
-	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
+Ext.define('Sonicle.webtop.core.model.CustomField', {
+	extend: 'WTA.model.Base',
+	requires: [
+		'Sonicle.data.writer.Json',
+		'Sonicle.webtop.core.model.CustomFieldProp',
+		'Sonicle.webtop.core.model.CustomFieldValue',
+		'Sonicle.webtop.core.model.I18nValue'
+	],
+	proxy: WTF.apiProxy(WT.ID, 'ManageCustomField', 'data', {
+		writer: {
+			type: 'sojson',
+			writeAssociations: true
+			//writeChanges: true
 		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
-		}
-	}
-}
+	}),
+	
+	identifier: 'negativestring',
+	idProperty: 'id',
+	fields: [
+		WTF.field('id', 'string'),
+		WTF.field('domainId', 'string', true),
+		WTF.field('serviceId', 'string', false),
+		WTF.field('fieldId', 'string', true),
+		WTF.field('name', 'string', false, {
+			validators: [{
+				type: 'format',
+				matcher: /^[_a-zA-Z0-9\-]+$/
+			}]
+		}),
+		WTF.field('description', 'string', true),
+		WTF.field('type', 'string', false)
+	],
+	hasMany: [
+		WTF.hasMany('props', 'Sonicle.webtop.core.model.CustomFieldProp'),
+		WTF.hasMany('values', 'Sonicle.webtop.core.model.CustomFieldValue'),
+		WTF.hasMany('labelI18n', 'Sonicle.webtop.core.model.I18nValue')
+	]
+});

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,42 +28,27 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
-import java.util.ArrayList;
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.webtop.core.model.CustomField;
 
 /**
  *
  * @author malbinola
  */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
-	public Short order;
+public class JsCustomFieldLkp {
+	public String id;
+	public String name;
+	public String type;
 	
-	public JsDomainLauncherLink() {}
-	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
-	}
-	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
-		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
-		}
+	public JsCustomFieldLkp(CustomField field) {
+		id = new CompositeId(field.getServiceId(), field.getFieldId()).toString();
+		id = field.getFieldId();
+		name = field.getName();
+		type = EnumUtils.toSerializedName(field.getType());
 	}
 }
