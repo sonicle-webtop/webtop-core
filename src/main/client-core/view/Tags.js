@@ -33,8 +33,8 @@
 Ext.define('Sonicle.webtop.core.view.Tags', {
 	extend: 'WTA.sdk.UIView',
 	requires: [
-		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.column.Action',
+		'Sonicle.grid.column.Icon',
 		'Sonicle.webtop.core.model.Tag'
 	],
 	uses: [

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,42 +28,38 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.webtop.core.model.CustomPanel;
 import java.util.ArrayList;
 
 /**
  *
  * @author malbinola
  */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
+public class JsCustomPanelGrid {
+	public String id;
+	public String panelId;
 	public Short order;
+	public String name;
+	public String description;
+	public String tags;
+	public Integer fieldsCount;
 	
-	public JsDomainLauncherLink() {}
-	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
+	public JsCustomPanelGrid(CustomPanel panel, short order) {
+		id = new CompositeId(panel.getServiceId(), panel.getPanelId()).toString();
+		panelId = panel.getPanelId();
+		this.order = order;
+		name = panel.getName();
+		description = panel.getDescription();
+		tags = new CompositeId(panel.getTags()).toString();
+		fieldsCount = panel.getFields().size();
 	}
 	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
-		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
-		}
+	public static class List extends ArrayList<JsCustomPanelGrid> {
+		
 	}
 }

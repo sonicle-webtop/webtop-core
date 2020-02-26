@@ -44,6 +44,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.UnavailableSecurityManagerException;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -117,7 +118,11 @@ public class RunContext {
 	 * @return True if impersonated, false otherwise
 	 */
 	public static boolean isImpersonated() {
-		return isImpersonated(getSubject());
+		try {
+			return isImpersonated(getSubject());
+		} catch (UnavailableSecurityManagerException ex) {
+			return false;
+		}
 	}
 	
 	/**

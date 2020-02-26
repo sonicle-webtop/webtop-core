@@ -63,6 +63,8 @@ import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.OCausal;
+import com.sonicle.webtop.core.bol.OCustomField;
+import com.sonicle.webtop.core.bol.OCustomPanel;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OIMChat;
@@ -75,6 +77,7 @@ import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OTag;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.VCustomPanel;
 import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.model.ServicePermission;
@@ -91,7 +94,12 @@ import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.dal.ActivityDAO;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.AutosaveDAO;
+import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.CausalDAO;
+import com.sonicle.webtop.core.dal.CustomFieldDAO;
+import com.sonicle.webtop.core.dal.CustomPanelDAO;
+import com.sonicle.webtop.core.dal.CustomPanelFieldDAO;
+import com.sonicle.webtop.core.dal.CustomPanelTagDAO;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.IMChatDAO;
 import com.sonicle.webtop.core.dal.IMMessageDAO;
@@ -107,6 +115,8 @@ import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
+import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
@@ -1066,7 +1076,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Tag getTag(String tagId) throws WTException {
+	public Tag getTag(final String tagId) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1075,7 +1085,7 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			OTag otag = tagDao.selectByDomainId(con, targetDomainId, tagId);
+			OTag otag = tagDao.selectByDomain(con, targetDomainId, tagId);
 			return ManagerUtils.createTag(otag);
 			
 		} catch(SQLException | DAOException ex) {
@@ -1085,7 +1095,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Tag addTag(Tag tag) throws WTException {
+	public Tag addTag(final Tag tag) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -1113,7 +1123,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Tag updateTag(Tag tag) throws WTException {
+	public Tag updateTag(final Tag tag) throws WTException {
 		Connection con = null;
 		
 		try {
@@ -1142,7 +1152,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public void deleteTag(String tagId) throws WTException {
+	public void deleteTag(final String tagId) throws WTException {
 		Connection con = null;
 		
 		try {	
@@ -1164,6 +1174,368 @@ public class CoreManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public Map<String, CustomPanel> listCustomPanels(final String serviceId) throws WTException {
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			LinkedHashMap<String, CustomPanel> items = new LinkedHashMap<>();
+			for (VCustomPanel vcpanel : cupDao.viewByDomainService(con, targetDomainId, serviceId).values()) {
+				Set<String> fields = new LinkedHashSet(new CompositeId().parse(vcpanel.getCustomFieldIds()).getTokens());
+				Set<String> tags = new LinkedHashSet(new CompositeId().parse(vcpanel.getTagIds()).getTokens());
+				items.put(vcpanel.getCustomPanelId(), ManagerUtils.createCustomPanel(vcpanel, fields, tags));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, CustomPanel> listCustomPanelsUsedBy(final String serviceId, final Collection<String> tagIds) throws WTException {
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			LinkedHashMap<String, CustomPanel> items = new LinkedHashMap<>();
+			for (VCustomPanel vcpanel : cupDao.viewUsedByDomainServiceTags(con, targetDomainId, serviceId, tagIds).values()) {
+				Set<String> fields = new LinkedHashSet(new CompositeId().parse(vcpanel.getCustomFieldIds()).getTokens());
+				Set<String> tags = new LinkedHashSet(new CompositeId().parse(vcpanel.getTagIds()).getTokens());
+				items.put(vcpanel.getCustomPanelId(), ManagerUtils.createCustomPanel(vcpanel, fields, tags));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomPanel getCustomPanel(final String serviceId, final String panelId) throws WTException {
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			return doCustomPanelGet(con, targetDomainId, serviceId, panelId);
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomPanel addCustomPanel(final CustomPanel customPanel) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (customPanel.getDomainId() != null) ensureTargetProfileDomain(customPanel.getDomainId());
+			customPanel.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(customPanel.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			CustomPanel ret = doCustomPanelUpdate(true, con, customPanel);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomPanel updateCustomPanel(final CustomPanel customPanel) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (customPanel.getDomainId() != null) ensureTargetProfileDomain(customPanel.getDomainId());
+			customPanel.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(customPanel.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			CustomPanel ret = doCustomPanelUpdate(false, con, customPanel);
+			if (ret == null) throw new WTNotFoundException("Custom-panel not found [{}, {}]", customPanel.getServiceId(), customPanel.getPanelId());
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getPanelId()).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean updateCustomPanelOrder(final String serviceId, final String panelId, final short order) throws WTException {
+		CustomPanelDAO cusDao = CustomPanelDAO.getInstance();
+		Connection con = null;
+		
+		try {	
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			boolean ret = cusDao.updateOrder(con, targetDomainId, serviceId, panelId, order) == 1;
+			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.UPDATE, new CompositeId(serviceId, panelId).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean deleteCustomPanel(final String serviceId, final String panelId) throws WTException {
+		CustomPanelDAO cusDao = CustomPanelDAO.getInstance();
+		Connection con = null;
+		
+		try {	
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			boolean ret = cusDao.deleteByDomainServicePanel(con, targetDomainId, serviceId, panelId) == 1;
+			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMPANEL, AuditAction.DELETE, new CompositeId(serviceId, panelId).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, CustomField> listCustomFields(final String serviceId) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			LinkedHashMap<String, CustomField> items = new LinkedHashMap<>();
+			for (OCustomField ocfield : cufDao.selectOnlineByDomainService(con, targetDomainId, serviceId).values()) {
+				items.put(ocfield.getCustomFieldId(), ManagerUtils.createCustomField(ocfield));
+			}
+			return items;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomField getCustomField(final String serviceId, final String fieldId) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			OCustomField ofield = cufDao.selectByDomainService(con, targetDomainId, serviceId, fieldId);
+			return ManagerUtils.createCustomField(ofield);
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomField addCustomField(final CustomField customField) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (customField.getDomainId() != null) ensureTargetProfileDomain(customField.getDomainId());
+			customField.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(customField.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			CustomField ret = doCustomFieldUpdate(true, con, customField);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.CREATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public CustomField updateCustomField(final CustomField customField) throws WTException {
+		Connection con = null;
+		
+		try {
+			// We just want to make sure alerting external code that domainId, if present, is consistent!
+			if (customField.getDomainId() != null) ensureTargetProfileDomain(customField.getDomainId());
+			customField.setDomainId(getTargetProfileId().getDomainId());
+			
+			ensureProfileDomain(customField.getDomainId());
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			CustomField ret = doCustomFieldUpdate(false, con, customField);
+			if (ret == null) throw new WTNotFoundException("Custom-field not found [{}, {}]", customField.getServiceId(), customField.getFieldId());
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.UPDATE, new CompositeId(ret.getServiceId(), ret.getFieldId()).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean deleteCustomField(final String serviceId, final String fieldId) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {	
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
+			
+			con = WT.getCoreConnection();
+			boolean ret = cufDao.logicDeleteByDomainServiceId(con, targetDomainId, serviceId, fieldId, BaseDAO.createRevisionTimestamp()) == 1;
+			if (!ret) throw new WTNotFoundException("Custom-field not found [{}, {}]", serviceId, fieldId);
+			
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.DELETE, new CompositeId(serviceId, fieldId).toString(), null);
+			}
+			
+			return ret;
+			
+		} catch(SQLException | DAOException ex) {
+			throw wrapException(ex);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	
+	
+	
+	private CustomPanel doCustomPanelGet(Connection con, String domainId, String serviceId, String customPanelId) {
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
+		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
+		CustomPanelTagDAO cuptDao = CustomPanelTagDAO.getInstance();
+		
+		OCustomPanel opanel = cupDao.selectByDomainService(con, domainId, serviceId, customPanelId);
+		if (opanel == null) return null;
+		Set<String> fieldIds = cupfDao.selectFieldsByPanel(con, customPanelId);
+		Set<String> tagIds = cuptDao.selectTagsByPanel(con, customPanelId);
+		
+		return ManagerUtils.createCustomPanel(opanel, fieldIds, tagIds);
+	}
+	
+	private CustomPanel doCustomPanelUpdate(boolean insert, Connection con, CustomPanel panel) throws WTException {
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
+		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
+		CustomPanelTagDAO cuptDao = CustomPanelTagDAO.getInstance();
+		
+		OCustomPanel opanel = ManagerUtils.createOCustomPanel(panel);
+		if (opanel.getDomainId() == null) opanel.setDomainId(getTargetProfileId().getDomainId());
+		
+		int ret = -1;
+		if (insert) {
+			opanel.setCustomPanelId(cupDao.generateCustomPanelId());
+			ret = cupDao.insert(con, opanel);
+			if (panel.getFields() != null) {
+				cupfDao.batchInsert(con, opanel.getCustomPanelId(), panel.getFields());
+			}
+			if (panel.getTags()!= null) {
+				cuptDao.batchInsert(con, opanel.getCustomPanelId(), panel.getTags());
+			}
+			
+		} else {
+			ret = cupDao.update(con, opanel);
+			cupfDao.deleteByPanel(con, opanel.getCustomPanelId());
+			if (panel.getFields() != null) {
+				cupfDao.batchInsert(con, opanel.getCustomPanelId(), panel.getFields());
+			}
+			cuptDao.deleteByPanel(con, opanel.getCustomPanelId());
+			if (panel.getTags()!= null) {
+				cuptDao.batchInsert(con, opanel.getCustomPanelId(), panel.getTags());
+			}
+		}
+		
+		return (ret == 1) ? ManagerUtils.createCustomPanel(opanel, panel.getFields(), panel.getTags()) : null;
+	}
+	
+	private CustomField doCustomFieldUpdate(boolean insert, Connection con, CustomField field) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		
+		OCustomField ofield = ManagerUtils.createOCustomField(field);
+		if (ofield.getDomainId() == null) ofield.setDomainId(getTargetProfileId().getDomainId());
+		ManagerUtils.validate(ofield);
+		
+		int ret = -1;
+		if (insert) {
+			ofield.setCustomFieldId(cufDao.generateCustomFieldId());
+			ret = cufDao.insert(con, ofield, BaseDAO.createRevisionTimestamp());
+		} else {
+			ret = cufDao.update(con, ofield, BaseDAO.createRevisionTimestamp());
+		}
+		
+		return (ret == 1) ? ManagerUtils.createCustomField(ofield) : null;
 	}
 	
 	public List<AuditLog> listAuditLog(String domainId, String serviceId, String context, String action, String referenceId) throws WTException {
@@ -2634,7 +3006,7 @@ public class CoreManager extends BaseManager {
 		
 		int ret = -1;
 		if (insert) {
-			otag.setTagId(IdentifierUtils.getTimeBasedShortID());
+			otag.setTagId(tagDao.generateTagId());
 			ret = tagDao.insert(con, otag);
 		} else {
 			ret = tagDao.update(con, otag);
@@ -2769,7 +3141,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private enum AuditContext {
-		ACTIVITY, CAUSAL, TAG
+		ACTIVITY, CAUSAL, TAG, CUSTOMPANEL, CUSTOMFIELD
 	}
 	
 	private enum AuditAction {

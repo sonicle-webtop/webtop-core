@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,42 +28,37 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
+package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomPanel;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import org.joda.time.DateTimeZone;
 
 /**
  *
  * @author malbinola
  */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
-	public Short order;
+public class JsCustomFieldDefsData {
+	public String cfdefs;
+	public ArrayList<JsCustomFieldValue> cvalues;
 	
-	public JsDomainLauncherLink() {}
-	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
-	}
-	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
+	public JsCustomFieldDefsData(Collection<CustomPanel> customPanels, Map<String, CustomField> customFields, String profileLanguageTag, DateTimeZone profileTz) {
+		cvalues = new ArrayList<>();
+		ArrayList<JsCustomFieldDefs.Panel> panels = new ArrayList<>();
+		for (CustomPanel panel : customPanels) {
+			panels.add(new JsCustomFieldDefs.Panel(panel, profileLanguageTag));
 		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
+		ArrayList<JsCustomFieldDefs.Field> fields = new ArrayList<>();
+		for (CustomField field : customFields.values()) {
+			cvalues.add(new JsCustomFieldValue(field.getType(), field.getFieldId()));
+			fields.add(new JsCustomFieldDefs.Field(field, profileLanguageTag));
 		}
+		cfdefs = LangUtils.serialize(new JsCustomFieldDefs(panels, fields), JsCustomFieldDefs.class);
 	}
 }

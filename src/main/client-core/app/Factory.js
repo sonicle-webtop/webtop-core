@@ -965,6 +965,58 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	},
 	
 	/**
+	 * Helper method for defining a {@link Ext.app.bind.Formula} that is able   
+	 * to perform a two-way binding between form-field and a model's field.
+	 * @param {String} modelProp ViewModel's property in which the model is stored.
+	 * Specify as empty string if you're working directly with viewModel.
+	 * @param {String} fieldName Model's field name.
+	 * @param {Function} getFn Function that calculate and return the value to get.
+	 * @param {Function} setFn Function that calculate and return the value to set.
+	 * @returns {Object} Formula configuration object
+	 */
+	foTwoWay: function(modelProp, fieldName, getFn, setFn) {
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				return Ext.callback(getFn, this, [val]);
+			},
+			set: function(val) {
+				var o = modelProp ? this.get(modelProp) : this;
+				if (val !== undefined) o.set(fieldName, Ext.callback(setFn, this, [val]));
+			}
+		};
+	},
+	
+	foRecordTwoWay: function(modelProp, fieldName, valueField, targetRecId) {
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(sto) {
+				if (!sto.isStore) Ext.raise('Store must be involved in binding');
+				var rec = sto.getById(targetRecId);
+				return rec ? rec.get(valueField) : undefined;
+			},
+			set: function(val) {
+				var sto = this.get(Sonicle.String.join('.', modelProp, fieldName)), rec;
+				if (!sto || !sto.isStore) Ext.raise('Store must be involved in binding');
+				rec = sto.getById(targetRecId);
+				if (rec) {
+					rec.set(valueField, val);
+				} else {
+					var id = sto.getModel().idProperty,
+							data = {};
+					if (id) {
+						data[id] = targetRecId;
+						data[valueField] = val;
+						sto.add(data);
+					} else {
+						Ext.raise('Unable to get model\'s idProperty');
+					}
+				}
+			}
+		};
+	},
+	
+	/**
 	 * Defines a{@link Ext.app.bind.Formula} that checks the equality between 
 	 * a model field's value and passed value.
 	 * @param {String} modelProp ViewModel's property in which the model is stored

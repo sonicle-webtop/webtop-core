@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
+ * Copyright (C) 2014 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -10,7 +11,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -18,7 +19,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
+ * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -28,42 +29,29 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.admin.bol.js;
-
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.webtop.core.CoreSettings.LauncherLink;
-import java.util.ArrayList;
-
-/**
- *
- * @author malbinola
- */
-public class JsDomainLauncherLink {
-	public Short id;
-	public String text;
-	public String href;
-	public String icon;
-	public Short order;
+Ext.define('Sonicle.webtop.core.store.CustomFieldType', {
+	extend: 'Ext.data.ArrayStore',
+	alias: 'store.wtcustomfieldtype',
 	
-	public JsDomainLauncherLink() {}
+	model: 'WTA.model.Simple',
+	data: [
+		['text',''],
+		['textarea',''],
+		['number',''],
+		['date',''],
+		['time',''],
+		//['datetime',''],
+		['combobox',''],
+		['checkbox','']
+	],
 	
-	public JsDomainLauncherLink(short index, LauncherLink ll) {
-		id = index;
-		text = ll.text;
-		href = ll.href;
-		icon = ll.icon;
-		order = (ll.order != null) ? ll.order : index;
+	constructor: function(cfg) {
+		var me = this;
+		Ext.each(me.config.data, function(row) {
+			row[1] = WT.res('com.sonicle.webtop.core', 'store.customFieldType.'+row[0]);
+		});
+		me.callParent([cfg]);
 	}
-	
-	public static class List extends ArrayList<JsDomainLauncherLink> {
-		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
-		}
-
-		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
-		}
-	}
-}
+});

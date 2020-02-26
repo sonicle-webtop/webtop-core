@@ -43,6 +43,7 @@ import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ParameterException;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.PayloadAsList;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
@@ -76,6 +77,11 @@ import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsActivityLkp;
 import com.sonicle.webtop.core.bol.js.JsAutosave;
 import com.sonicle.webtop.core.bol.js.JsCausalLkp;
+import com.sonicle.webtop.core.bol.js.JsCustomField;
+import com.sonicle.webtop.core.bol.js.JsCustomFieldGrid;
+import com.sonicle.webtop.core.bol.js.JsCustomFieldLkp;
+import com.sonicle.webtop.core.bol.js.JsCustomPanel;
+import com.sonicle.webtop.core.bol.js.JsCustomPanelGrid;
 import com.sonicle.webtop.core.bol.js.JsCustomerSupplierLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsFeedback;
@@ -104,6 +110,8 @@ import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
+import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.MasterData;
@@ -930,9 +938,139 @@ public class Service extends BaseService implements EventListener {
 				new JsonResult().printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageTags", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageTags", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageCustomPanels(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String targetServiceId = ServletUtils.getStringParameter(request, "targetServiceId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsCustomPanelGrid> items = new ArrayList<>();
+				for (CustomPanel panel : coreMgr.listCustomPanels(targetServiceId).values()) {
+					items.add(new JsCustomPanelGrid(panel, ((short)items.size())));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+			
+			} else if (crud.equals(Crud.UPDATE)) {
+				PayloadAsList<JsCustomPanelGrid.List> pl = ServletUtils.getPayloadAsList(request, JsCustomPanelGrid.List.class);
+				for (JsCustomPanelGrid data : pl.data) {
+					CompositeId cid = new CompositeId().parse(data.id);
+					coreMgr.updateCustomPanelOrder(cid.getToken(0), cid.getToken(1), data.order);
+				}
+				new JsonResult().printTo(out);
+				
+			} else if (crud.equals(Crud.DELETE)) {
+				Payload<MapItem, JsCustomPanelGrid> pl = ServletUtils.getPayload(request, JsCustomPanelGrid.class);
+				CompositeId cid = new CompositeId().parse(pl.data.id);
+				coreMgr.deleteCustomPanel(cid.getToken(0), cid.getToken(1));
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageCustomPanels", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageCustomPanel(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				CompositeId cid = new CompositeId().parse(id);
+				CustomPanel item = coreMgr.getCustomPanel(cid.getToken(0), cid.getToken(1));
+				if (item == null) throw new WTException();
+				new JsonResult(new JsCustomPanel(item)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsCustomPanel> pl = ServletUtils.getPayload(request, JsCustomPanel.class);
+				coreMgr.addCustomPanel(pl.data.toCustomPanel());
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsCustomPanel> pl = ServletUtils.getPayload(request, JsCustomPanel.class);
+				coreMgr.updateCustomPanel(pl.data.toCustomPanel());
+				new JsonResult().printTo(out);	
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageCustomPanel", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processLookupCustomFields(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+			List<JsCustomFieldLkp> items = new ArrayList<>();
+			for (CustomField field : coreMgr.listCustomFields(serviceId).values()) {
+				items.add(new JsCustomFieldLkp(field));
+			}
+			new JsonResult(items, items.size()).printTo(out);
+			
+		} catch (Throwable t) {
+			logger.error("Error in LookupCausals", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageCustomFields(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String targetServiceId = ServletUtils.getStringParameter(request, "targetServiceId", true);
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsCustomFieldGrid> items = new ArrayList<>();
+				for (CustomField field : coreMgr.listCustomFields(targetServiceId).values()) {
+					items.add(new JsCustomFieldGrid(field));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if (crud.equals(Crud.DELETE)) {
+				Payload<MapItem, JsCustomFieldGrid> pl = ServletUtils.getPayload(request, JsCustomFieldGrid.class);
+				CompositeId cid = new CompositeId().parse(pl.data.id);
+				coreMgr.deleteCustomField(cid.getToken(0), cid.getToken(1));
+				new JsonResult().printTo(out);
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageCustomFields", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageCustomField(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				String id = ServletUtils.getStringParameter(request, "id", true);
+				CompositeId cid = new CompositeId().parse(id);
+				CustomField item = coreMgr.getCustomField(cid.getToken(0), cid.getToken(1));
+				if (item == null) throw new WTException();
+				new JsonResult(new JsCustomField(item)).printTo(out);
+				
+			} else if(crud.equals(Crud.CREATE)) {
+				Payload<MapItem, JsCustomField> pl = ServletUtils.getPayload(request, JsCustomField.class);
+				coreMgr.addCustomField(pl.data.toCustomField());
+				new JsonResult().printTo(out);
+				
+			} else if(crud.equals(Crud.UPDATE)) {
+				Payload<MapItem, JsCustomField> pl = ServletUtils.getPayload(request, JsCustomField.class);
+				coreMgr.updateCustomField(pl.data.toCustomField());
+				new JsonResult().printTo(out);	
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageCustomField", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

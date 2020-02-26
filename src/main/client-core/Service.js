@@ -43,7 +43,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.view.DocEditor',
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals',
-		'Sonicle.webtop.core.view.SMS'
+		'Sonicle.webtop.core.view.SMS',
+		
+		'Sonicle.webtop.core.view.CustomPanels',
+		'Sonicle.webtop.core.view.CustomFields'
 	],
 	
 	vwrem: null,
@@ -248,6 +251,54 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 	initActions: function() {
 		var me = this;
+		
+		me.addAct('toolbox', 'newCustomField', {
+			text: 'newCustomField',
+			tooltip: null,
+			//iconCls: 'wt-icon-activity-xs',
+			handler: function() {
+				var me = this,
+					vw = WT.createView(me.ID, 'view.CustomField', {swapReturn: true});
+			
+				vw.showView(function(s) {
+				vw.begin('new', {
+					data: {
+						serviceId: 'com.sonicle.webtop.core'
+					}
+				});
+			});
+			}
+		});
+		me.addAct('toolbox', 'manageCustomPanels', {
+			text: 'manageCustomPanels',
+			tooltip: null,
+			//iconCls: 'wt-icon-activity-xs',
+			handler: function() {
+				WT.createView(this.ID, 'view.CustomPanels', {
+					swapReturn: true,
+					viewCfg: {
+						dockableConfig: {
+							title: '[' + 'Contatti' + '] ' + WT.res('customPanels.tit') 
+						},
+						serviceId: 'com.sonicle.webtop.contacts'
+					}
+				}).showView();
+			}
+		});
+		me.addAct('toolbox', 'manageCustomField', {
+			text: 'manageCustomField',
+			tooltip: null,
+			//iconCls: 'wt-icon-activity-xs',
+			handler: function() {
+				WT.createView(this.ID, 'view.CustomFields', {
+					swapReturn: true,
+					viewCfg: {
+						serviceId: 'com.sonicle.webtop.contacts'
+					}
+				}).showView();
+			}
+		});
+		
 		if (me.isPermitted('ACTIVITIES', 'MANAGE')) {
 			me.addAct('toolbox', 'manageActivities', {
 				text: WT.res('activities.tit'),
