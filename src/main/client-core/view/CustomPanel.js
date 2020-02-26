@@ -120,7 +120,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 						}, {
 							xtype: 'textfield',
 							bind: '{foMainTitle}',
-							fieldLabel: me.res('customPanel.fld-title.lbl'),
+							fieldLabel: me.res('customPanel.fld-title.lbl', WT.getLanguage()),
 							anchor: '100%'
 						}, {
 							xtype: 'sotagfield',

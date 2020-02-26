@@ -268,7 +268,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 						}, {
 							xtype: 'textfield',
 							bind: '{foMainLabel}',
-							fieldLabel: me.res('customField.fld-label.lbl'),
+							fieldLabel: me.res('customField.fld-label.lbl', WT.getLanguage()),
 							anchor: '100%'
 						}, 
 						WTF.lookupCombo('id', 'desc', {
