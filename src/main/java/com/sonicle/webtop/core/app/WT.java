@@ -683,10 +683,11 @@ public class WT {
 		synchronized(productCache) {
 			Connection con=null;
 			try {
+				String serviceId=WT.findServiceId(product.getClass());
 				pl=productCache.get(product);
 				if (pl==null) {
 					con=getCoreConnection();
-					OLicense olicense=LicenseDAO.getInstance().select(con, product.getInternetDomain(), product.getProductId());
+					OLicense olicense=LicenseDAO.getInstance().select(con, product.getInternetDomain(), serviceId+":"+product.getProductId());
 					if (olicense!=null) {
 						pl = new ProductLicense(
 								ProductLicense.LicenseType.LICENSE_TEXT,
