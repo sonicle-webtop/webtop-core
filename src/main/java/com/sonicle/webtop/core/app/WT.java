@@ -237,7 +237,7 @@ public class WT {
 	}
 	
 	public static String findDomainIdByInternetName(String internetName) {
-		return getWTA().getWebTopManager().internetNameToDomain(internetName);
+		return getWTA().getWebTopManager().internetNameToDomainId(internetName);
 	}
 	
 	/**

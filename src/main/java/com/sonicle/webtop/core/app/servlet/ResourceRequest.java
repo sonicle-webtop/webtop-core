@@ -198,7 +198,7 @@ public class ResourceRequest extends HttpServlet {
 					// We must support old-style URL using {domainInternetName}
 					// instead of {domainPublicName}
 					// Eg.	"/sonicle.com/images/login.png"
-					domainId = wtMgr.internetNameToDomain(subject);
+					domainId = wtMgr.internetNameToDomainId(subject);
 				}
 				if (StringUtils.isBlank(domainId)) {
 					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
@@ -332,7 +332,7 @@ public class ResourceRequest extends HttpServlet {
 			WebTopManager wtMgr = wta.getWebTopManager();
 			if (wtMgr != null) {
 				String internetName = ServletUtils.getInternetName(request);
-				String domainId = wtMgr.internetNameToDomain(internetName);
+				String domainId = wtMgr.internetNameToDomainId(internetName);
 				if (!StringUtils.isBlank(domainId)) {
 					String pathname = wta.getHomePath(domainId) + "license.html";
 					File file = new File(pathname);
