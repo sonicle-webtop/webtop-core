@@ -348,27 +348,27 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public OLicense getLicense(String domainId, String productId) throws WTException {
+	public OLicense getLicense(String serviceId, String productId, String internetDomain) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
 		try {
-			return wtmgr.getLicense(domainId, productId);
+			return wtmgr.getLicense(serviceId, productId, internetDomain);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to get license [{}]", productId);
 		}
 	}
 	
-	public void addLicense(String domainId, String productId, String license) throws WTException {
+	public void addLicense(String serviceId, String productId, String internetDomain, String license) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
 		try {
-			wtmgr.addLicense(domainId, productId, license);
+			wtmgr.addLicense(serviceId, productId, internetDomain, license);
 		} catch(DAOIntegrityViolationException ex) {			
 			throw new WTException(ex, "Product license already present [{}]", productId);
 		} catch(Exception ex) {			
@@ -376,14 +376,14 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
-	public void deleteLicense(String domainId, String productId) throws WTException {
+	public void deleteLicense(String serviceId, String productId, String internetDomain) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
 		try {
-			wtmgr.deleteLicense(domainId, productId);
+			wtmgr.deleteLicense(serviceId, productId, internetDomain);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex, "Unable to delete license [{0}]", productId);

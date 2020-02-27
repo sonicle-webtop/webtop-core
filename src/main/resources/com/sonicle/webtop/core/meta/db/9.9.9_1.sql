@@ -122,12 +122,13 @@ ALTER TABLE "core"."custom_panels_fields" ADD FOREIGN KEY ("tag_id") REFERENCES 
 -- New table: licenses
 -- ----------------------------
 CREATE TABLE "core"."licenses" (
-"internet_domain" varchar(255) NOT NULL,
+"service_id" varchar(255) NOT NULL,
 "product_id" varchar(255) NOT NULL,
+"internet_domain" varchar(255) NOT NULL,
 "license" text
 )
 WITH (OIDS=FALSE)
 
 ;
 
-ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("internet_domain", "product_id");
+ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("service_id", "product_id", "internet_domain");

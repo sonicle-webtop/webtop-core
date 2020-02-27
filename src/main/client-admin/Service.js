@@ -561,13 +561,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	deleteLicenses: function(domainId, productIds, opts) {
+	deleteLicenses: function(domainId, serviceIds, productIds, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageDomainLicenses', {
 			params: {
 				crud: 'delete',
 				domainId: domainId,
+				serviceIds: WTU.arrayAsParam(serviceIds),
 				productIds: WTU.arrayAsParam(productIds)
 			},
 			callback: function(success, json) {

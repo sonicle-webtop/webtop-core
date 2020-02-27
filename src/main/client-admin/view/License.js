@@ -34,6 +34,7 @@
 Ext.define('Sonicle.webtop.core.admin.view.License', {
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.webtop.core.admin.model.ProductLkp',
 		'Sonicle.form.Spacer'
 	],
 	
@@ -41,7 +42,7 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 		title: '{license.tit}',
 		iconCls: 'wtadm-icon-license',
 		width: 650,
-		height: 400
+		height: 450
 	},
 	fieldTitle: 'productId',
 	modelName: 'Sonicle.webtop.core.admin.model.License',
@@ -65,55 +66,91 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 			defaults: {
 				labelWidth: 120
 			},
-			items: [{
-				xtype: 'textfield',
-				reference: 'fldproductid',
-				bind: '{record.productId}',
-				fieldLabel: me.mys.res('license.fld-productId.lbl'),
-				width: 300
-			}, {
-				xtype: 'textarea',
-				reference: 'fldlicense',
-				bind: '{record.license}',
-				fieldLabel: me.mys.res('license.fld-license.lbl'),
-				width: 500,
-				height: 250
-			},
-			Ext.create({
-				xtype:'souploadbutton',
-				tooltip: null,
-				fieldLabel: ' ',
-				text: me.res('license.btn-upload.lbl'),
-				uploaderConfig: WTF.uploader(me.mys.ID,'UploadLicense',{
-					mimeTypes: [
-					 {title: "License", extensions: "lic"}
-					]
+			items: [
+				WTF.localCombo('id', 'label', {
+					reference: 'fldservice',
+					bind: '{record.serviceId}',
+					anyMatch: true,
+					store: {
+						autoLoad: true,
+						model: 'Sonicle.webtop.core.model.ServiceLkp',
+						proxy: WTF.proxy(WT.ID, 'LookupServices')
+					},
+					fieldLabel: me.mys.res('license.fld-serviceId.lbl'),
+					width: 400
 				}),
-				listeners: {
-					beforeupload: function(s,file) {
+				WTF.localCombo('productId', 'label', {
+					reference: 'fldproductid',
+					anyMatch: true,
+					store: {
+						autoLoad: true,
+						model: 'Sonicle.webtop.core.admin.model.ProductLkp',
+						proxy: WTF.proxy(me.mys.ID, 'LookupServicesProducts')
 					},
-					uploadcomplete: function(s,fok,ffailed) {
+					bind: {
+						value: '{record.productId}',
+						disabled: '{!record.serviceId}',
+						filters: [{
+							property: 'serviceId',
+							value: '{record.serviceId}'
+						}]
 					},
-					uploaderror: function(s, file, cause) {
+					disabled: true,
+					fieldLabel: me.mys.res('license.fld-productId.lbl'),
+					width: 400
+				}),
+				{
+					xtype: 'fieldcontainer',
+					fieldLabel: me.mys.res('license.fld-license.lbl'),
+					layout: {
+						type: 'vbox',
+						align: 'end'
 					},
-					uploadprogress: function(s,file) {
-					},
-					fileuploaded: function(s,file,resp) {
-						WT.ajaxReq(me.mys.ID, 'GetUploadedLicense', {
-							params: {
-								uploadId: resp.data.uploadId,
-							},
-							callback: function(success,json) {
-								if (json.license) {
-									me.lref('fldlicense').setValue(json.license);
-								} else {
-									WT.error(json.text);
+					items: [
+						{
+							xtype: 'textarea',
+							reference: 'fldlicense',
+							bind: '{record.license}',
+							width: "100%",
+							height: 250
+						},
+						Ext.create({
+							xtype:'souploadbutton',
+							tooltip: null,
+							text: me.res('license.btn-upload.lbl'),
+							uploaderConfig: WTF.uploader(me.mys.ID,'UploadLicense',{
+								mimeTypes: [
+								 {title: "License", extensions: "lic"}
+								]
+							}),
+							listeners: {
+								beforeupload: function(s,file) {
+								},
+								uploadcomplete: function(s,fok,ffailed) {
+								},
+								uploaderror: function(s, file, cause) {
+								},
+								uploadprogress: function(s,file) {
+								},
+								fileuploaded: function(s,file,resp) {
+									WT.ajaxReq(me.mys.ID, 'GetUploadedLicense', {
+										params: {
+											uploadId: resp.data.uploadId,
+										},
+										callback: function(success,json) {
+											if (json.license) {
+												me.lref('fldlicense').setValue(json.license);
+											} else {
+												WT.error(json.text);
+											}
+										}
+									});							
 								}
 							}
-						});							
-					}
+						})
+					]
 				}
-			})]
+			]
 		});
 		
 		me.on('viewload', me.onViewLoad);

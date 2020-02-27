@@ -1300,13 +1300,13 @@ public final class WebTopManager {
 		}
 	}
 	
-	public OLicense getLicense(String internetDomain, String productId) throws WTException {
+	public OLicense getLicense(String serviceId, String productId, String internetDomain) throws WTException {
 		LicenseDAO dao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			return dao.select(con, internetDomain, productId);
+			return dao.select(con, serviceId, productId, internetDomain);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -1315,13 +1315,14 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void addLicense(String internetDomain, String productId, String license) throws WTException, SQLException {
+	public void addLicense(String serviceId, String productId, String internetDomain, String license) throws WTException, SQLException {
 		LicenseDAO dao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
 			OLicense item=new OLicense();
+			item.setServiceId(serviceId);
 			item.setInternetDomain(internetDomain);
 			item.setProductId(productId);
 			item.setLicense(license);
@@ -1335,14 +1336,14 @@ public final class WebTopManager {
 		}
 	}
 	
-	public void deleteLicense(String internetDomain, String productId) throws WTException {
+	public void deleteLicense(String serviceId, String productId, String internetDomain) throws WTException {
 		LicenseDAO ldao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
 			
-			ldao.delete(con, internetDomain, productId);
+			ldao.delete(con, serviceId, productId, internetDomain);
 			
 		} catch(SQLException | DAOException ex) {
 			throw new WTException(ex, "DB error");

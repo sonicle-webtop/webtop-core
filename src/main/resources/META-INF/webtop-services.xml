@@ -95,7 +95,7 @@
 		</permissions>
 		
 		<products>
-			<product id="audit" className=".products.AuditProduct" />
+			<product className=".products.AuditProduct" />
 		</products>
 	</service>
 	<service>

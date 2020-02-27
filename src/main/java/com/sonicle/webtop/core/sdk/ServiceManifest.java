@@ -34,6 +34,9 @@
 package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.commons.l4j.DomainBasedProduct;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
 import java.util.ArrayList;
@@ -45,12 +48,15 @@ import java.util.Map;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
 public class ServiceManifest {
+	private static final Logger logger = WT.getLogger(ServiceManifest.class);
+	
 	public static final String BUILD_TYPE_DEV = "dev";
 	public static final String BUILD_TYPE_PROD = "prod";
 	private static final String JAVAPKG_REST = "rest";
@@ -287,12 +293,24 @@ public class ServiceManifest {
 		if (!svcEl.configurationsAt("products").isEmpty()) {
 			List<HierarchicalConfiguration> elProducts = svcEl.configurationsAt("products.product");
 			for(HierarchicalConfiguration el : elProducts) {
-				if (el.containsKey("[@id]") && el.containsKey("[@className]")) {
-					final String id = el.getString("[@id]");
+				if (el.containsKey("[@className]")) {
 					final String className = el.getString("[@className]");
-					if (StringUtils.isBlank(id)) throw new Exception("Invalid value for attribute [product->id]");
 					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");
-					products.put(id,new Product(id,buildJavaClassName(javaPackage, className)));
+					String fullClassName=buildJavaClassName(javaPackage, className);
+					Class clazz=Class.forName(fullClassName);
+					//create a temp instance to get product data
+					AbstractProduct product=null;
+					boolean perDomain=DomainBasedProduct.class.isAssignableFrom(clazz);
+					if (perDomain) {
+						product=(AbstractProduct)clazz.getDeclaredConstructor(String.class).newInstance("none");
+					} else {
+						product=(AbstractProduct)clazz.newInstance();
+					}
+					String id=product.getProductId();
+					String name=product.getProductName();
+					logger.info("Registering available product "+id+" - "+name+" - "+fullClassName);
+					Product manifestProduct=new Product(id,name,fullClassName);
+					products.put(id,manifestProduct);
 				}
 			}
 		}
@@ -581,6 +599,10 @@ public class ServiceManifest {
 		return products.get(id);
 	}
 	
+	public Collection<Product> getProducts() {
+		return products.values();
+	}
+	
 	private String buildJavaClassName(String javaPackage, String className) {
 		if (StringUtils.startsWith(className, ".")) {
 			return LangUtils.buildClassName(javaPackage, className);
@@ -641,10 +663,12 @@ public class ServiceManifest {
 	
 	public static class Product {
 		public final String id;
+		public final String name;
 		public final String className;
 		
-		public Product(String id, String className) {
+		public Product(String id, String name, String className) {
 			this.id = id;
+			this.name = name;
 			this.className = className;
 		}
 	}

@@ -54,6 +54,7 @@ import com.sonicle.webtop.core.app.servlet.ResourceRequest;
 import com.sonicle.commons.l4j.AbstractProduct;
 import com.sonicle.commons.l4j.DomainBasedProduct;
 import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
+import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.util.LoggerUtils;
@@ -97,7 +98,7 @@ public class WT {
 	private static final Logger logger = getLogger(WT.class);
 	private static final Map<String, ServiceManifest> manifestCache = new TreeMap<>();
 	private static final Map<String, String> cnameToServiceIdCache = new HashMap<>();
-	private static final Map<AbstractProduct, ProductLicense> productCache = new HashMap<>();
+	private static final Map<String, ProductLicense> productCache = new HashMap<>();
 	
 	public static final Locale LOCALE_ENGLISH = new Locale("en", "EN");
 	
@@ -684,10 +685,11 @@ public class WT {
 			Connection con=null;
 			try {
 				String serviceId=WT.findServiceId(product.getClass());
-				pl=productCache.get(product);
+				CompositeId pid=new CompositeId(serviceId,product.getProductId());
+				pl=productCache.get(pid.toString());
 				if (pl==null) {
 					con=getCoreConnection();
-					OLicense olicense=LicenseDAO.getInstance().select(con, product.getInternetDomain(), serviceId+":"+product.getProductId());
+					OLicense olicense=LicenseDAO.getInstance().select(con, serviceId, product.getProductId(), product.getInternetDomain());
 					if (olicense!=null) {
 						pl = new ProductLicense(
 								ProductLicense.LicenseType.LICENSE_TEXT,
@@ -695,7 +697,7 @@ public class WT {
 								product,
 								olicense.getLicense()
 						);
-						productCache.put(product,pl);
+						productCache.put(pid.toString(),pl);
 						pl.validate();
 					}
 				}

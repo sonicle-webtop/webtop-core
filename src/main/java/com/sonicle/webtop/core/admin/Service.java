@@ -79,6 +79,7 @@ import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsRole;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
+import com.sonicle.webtop.core.bol.js.JsServiceProductLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
@@ -92,6 +93,8 @@ import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
 import com.sonicle.webtop.core.sdk.BaseService;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import com.sonicle.webtop.core.sdk.ServiceManifest.Product;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTCyrusException;
@@ -543,6 +546,24 @@ public class Service extends BaseService {
 		}
 	}
 	
+	public void processLookupServicesProducts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsServiceProductLkp> items = new ArrayList<>();
+		
+		try {
+			for(String sid: core.listWTInstalledServices()) {
+				ServiceManifest mft=WT.getManifest(sid);
+				for(Product p: mft.getProducts()) {
+					items.add(new JsServiceProductLkp(sid, p.id, p.name));
+				}
+			}
+			new JsonResult(items).printTo(out);
+			
+		} catch(Exception ex) {
+			logger.error("Error in processLookupServicesProducts", ex);
+			new JsonResult(false, "Error").printTo(out);
+		}
+	}
+	
 	public void processManageDomainLicenses(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		
 		try {
@@ -558,9 +579,10 @@ public class Service extends BaseService {
 				new JsonResult("licenses", items, items.size()).printTo(out);
 				
 			} else if(crud.equals(Crud.DELETE)) {
+				ServletUtils.StringArray serviceIds = ServletUtils.getObjectParameter(request, "serviceIds", ServletUtils.StringArray.class, true);
 				ServletUtils.StringArray productIds = ServletUtils.getObjectParameter(request, "productIds", ServletUtils.StringArray.class, true);
 				
-				coreadm.deleteLicense(internetDomain, productIds.get(0));
+				coreadm.deleteLicense(serviceIds.get(0), productIds.get(0), internetDomain);
 				
 				new JsonResult().printTo(out);
 			}
@@ -577,17 +599,18 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
 			if(crud.equals(Crud.READ)) {
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				String internetDomain = WT.getDomainInternetName(domainId);
 				String productId = ServletUtils.getStringParameter(request, "productId", null);
 				
-				OLicense license = coreadm.getLicense(internetDomain, productId);
+				OLicense license = coreadm.getLicense(serviceId, productId, internetDomain);
 				new JsonResult(new JsLicense(domainId, license)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsLicense> pl = ServletUtils.getPayload(request, JsLicense.class);
 				String internetDomain = WT.getDomainInternetName(pl.data.domainId);
-				coreadm.addLicense(internetDomain, pl.data.productId, pl.data.license);
+				coreadm.addLicense(pl.data.serviceId, pl.data.productId, internetDomain, pl.data.license);
 				new JsonResult().printTo(out);
 			}
 			

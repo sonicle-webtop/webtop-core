@@ -40,18 +40,20 @@ import com.sonicle.webtop.core.bol.OLicense;
  * @author malbinola
  */
 public class JsLicense {
+	public String serviceId;
+	public String productId;
 	public String domainId;
 	public String internetDomain;
-	public String productId;
 	public String license;
 
 	public JsLicense() {}
 	
 	public JsLicense(String domainId, OLicense o) {
-		domainId = domainId;
-		internetDomain = o.getInternetDomain();
-		productId = o.getProductId();
-		license = o.getLicense();
+		this.serviceId = o.getServiceId();
+		this.productId = o.getProductId();
+		this.domainId = domainId;
+		this.internetDomain = o.getInternetDomain();
+		this.license = o.getLicense();
 	}
 	
 }

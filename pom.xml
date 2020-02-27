@@ -32,8 +32,8 @@
 		<repository>
 			<releases>
 				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
+				<updatePolicy>never</updatePolicy>
+				<checksumPolicy>ignore</checksumPolicy>
 			</releases>
 			<id>license4j-runtime-library</id>
 			<name>License4J Runtime Library Maven Repository</name>
