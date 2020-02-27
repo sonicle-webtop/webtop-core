@@ -115,8 +115,8 @@ WITH (OIDS=FALSE)
 ;
 
 ALTER TABLE "core"."custom_panels_tags" ADD PRIMARY KEY ("custom_panel_id", "tag_id");
-ALTER TABLE "core"."custom_panels_fields" ADD FOREIGN KEY ("custom_panel_id") REFERENCES "core"."custom_panels" ("custom_panel_id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "core"."custom_panels_fields" ADD FOREIGN KEY ("tag_id") REFERENCES "core"."tags" ("tag_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "core"."custom_panels_tags" ADD FOREIGN KEY ("custom_panel_id") REFERENCES "core"."custom_panels" ("custom_panel_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "core"."custom_panels_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "core"."tags" ("tag_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- ----------------------------
 -- New table: licenses
