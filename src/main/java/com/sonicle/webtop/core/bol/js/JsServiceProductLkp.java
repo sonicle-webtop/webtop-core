@@ -31,15 +31,26 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
-	extend: 'WTA.ux.data.BaseModel',
+package com.sonicle.webtop.core.bol.js;
+
+import com.sonicle.commons.web.json.CompositeId;
+
+/**
+ *
+ * @author gbulfon
+ */
+public class JsServiceProductLkp {
+	public String id;
+	public String serviceId;
+	public String productId;
+	public String productName;
 	
-	idProperty: 'productId',
-	fields: [
-		WTF.roField('serviceId', 'string'),
-		WTF.roField('productId', 'string'),
-		WTF.roField('productDetails', 'string'),
-		WTF.roField('license', 'string'),
-		WTF.roField('valid', 'boolean')
-	]
-});
+	public JsServiceProductLkp() {}
+	
+	public JsServiceProductLkp(String serviceId, String productId, String productName) {
+		this.id = new CompositeId(serviceId, productId).toString();
+		this.serviceId = serviceId;
+		this.productId = productId;
+		this.productName = productName;
+	}
+}

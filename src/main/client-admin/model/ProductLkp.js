@@ -31,15 +31,18 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
+Ext.define('Sonicle.webtop.core.admin.model.ProductLkp', {
 	extend: 'WTA.ux.data.BaseModel',
 	
-	idProperty: 'productId',
+	idProperty : 'id',
+	
 	fields: [
-		WTF.roField('serviceId', 'string'),
-		WTF.roField('productId', 'string'),
-		WTF.roField('productDetails', 'string'),
-		WTF.roField('license', 'string'),
-		WTF.roField('valid', 'boolean')
+		WTF.roField('id','string'),
+		WTF.roField('serviceId','string'),
+		WTF.roField('productId','string'),
+		WTF.roField('productName','string'),
+		WTF.calcField('label', 'string', ['productId', 'productName'], function(v, rec) {
+			return rec.get('productId') + ' (' + rec.get('productName') + ')';
+		})
 	]
 });

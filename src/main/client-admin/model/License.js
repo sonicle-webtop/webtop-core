@@ -41,6 +41,7 @@ Ext.define('Sonicle.webtop.core.admin.model.License', {
 	fields: [
 		WTF.field('id', 'string', false),
 		WTF.field('domainId', 'string', false),
+		WTF.field('serviceId', 'string', false),
 		WTF.field('productId', 'string', false),
 		WTF.field('license', 'string', false)
 	]

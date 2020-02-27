@@ -84,6 +84,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			columns: [{
 				xtype: 'rownumberer'	
 			}, {
+				dataIndex: 'serviceId',
+				header: me.mys.res('domainLicenses.gp.serviceId.lbl'),
+				flex: 1
+			}, {
 				dataIndex: 'productId',
 				header: me.mys.res('domainLicenses.gp.productId.lbl'),
 				flex: 1
@@ -163,7 +167,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		
 		WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {
 			if(bid === 'yes') {
-				me.mys.deleteLicenses(me.domainId, [rec.get('productId')], {
+				me.mys.deleteLicenses(me.domainId, [rec.get('serviceId')], [rec.get('productId')], {
 					callback: function(success) {
 						if(success) {
 							me.lref('gp').getStore().remove(rec);
