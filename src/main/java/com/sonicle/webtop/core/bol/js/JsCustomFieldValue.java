@@ -75,7 +75,7 @@ public class JsCustomFieldValue {
 			} else if (value instanceof LocalDate) {
 				da = DateTimeUtils.createYmdFormatter(DateTimeZone.UTC).print((LocalDate)value);
 			} else if (value instanceof LocalTime) {
-				ti = DateTimeUtils.createHmFormatter(DateTimeZone.UTC).print((LocalTime)value);
+				ti = DateTimeUtils.createHmsFormatter(DateTimeZone.UTC).print((LocalTime)value);
 			} else if (value instanceof DateTime) {
 				dt = DateTimeUtils.createYmdHmsFormatter(userTimezone).print((DateTime)value);
 			}
@@ -93,11 +93,11 @@ public class JsCustomFieldValue {
 			obj.setValue(type, nu);
 		} else if ("bo".equals(vtype)) {
 			obj.setValue(type, bo);
-		} else if ("da".equals(da)) {
+		} else if ("da".equals(vtype)) {
 			obj.setValue(type, DateTimeUtils.createYmdFormatter(DateTimeZone.UTC).parseLocalDate(da));
-		} else if ("ti".equals(ti)) {
-			obj.setValue(type, DateTimeUtils.createHmFormatter(DateTimeZone.UTC).parseLocalDate(ti));
-		} else if ("dt".equals(dt)) {
+		} else if ("ti".equals(vtype)) {
+			obj.setValue(type, DateTimeUtils.createHmsFormatter(DateTimeZone.UTC).parseLocalTime(ti));
+		} else if ("dt".equals(vtype)) {
 			obj.setValue(type, DateTimeUtils.createYmdHmsFormatter(userTimezone).parseLocalDate(dt));
 		}
 		
