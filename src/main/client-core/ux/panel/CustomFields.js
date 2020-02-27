@@ -113,6 +113,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFields', {
 			createEmpty = items.length === 0;
 		}
 		
+		Ext.suspendLayouts();
 		me.removeAll();
 		if (createEmpty) {
 			me.add(me.createEmptyItemCfg());
@@ -120,6 +121,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFields', {
 			me.getViewModel().setFormulas(formulas);
 			me.add(me.createFormPanelCfg(items));
 		}
+		Ext.resumeLayouts(true);
 	},
 	
 	isValid: function() {
