@@ -2498,6 +2498,22 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public OServiceStoreEntry getServiceStoreEntry(String serviceId, String context, String key) {
+		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
+		UserProfileId targetPid = getTargetProfileId();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			return sseDao.select(con, targetPid.getDomainId(), targetPid.getUserId(), serviceId, context, key);
+		} catch(SQLException | DAOException ex) {
+			logger.error("Error querying servicestore entry [{}, {}, {}, {}]", targetPid, serviceId, context, key, ex);
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public void addServiceStoreEntry(String serviceId, String context, String key, String value) {
 		ServiceStoreEntryDAO sseDao = ServiceStoreEntryDAO.getInstance();
 		UserProfileId targetPid = getTargetProfileId();
