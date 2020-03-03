@@ -96,6 +96,7 @@
 		
 		<products>
 			<product className=".products.AuditProduct" />
+			<product className=".products.CustomFieldsProduct" />
 		</products>
 	</service>
 	<service>

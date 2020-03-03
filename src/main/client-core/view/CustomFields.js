@@ -56,16 +56,50 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	},
 	promptConfirm: false,
 	
+	viewModel: {
+		data: {
+			gpstorecount: -1
+		}
+	},
+	
 	constructor: function(cfg) {
 		var me = this;
 		if (!cfg.serviceId) {
 			Ext.raise('serviceId is mandatory');
 		}
+		me.fieldsLimit = WT.getVar('customFieldsLimit') || 5;
 		me.callParent([cfg]);
+		
+		WTU.applyFormulas(me.getVM(), {
+			foAddEnabled: WTF.foGetFn('gpstorecount', null, function(v) {
+				return (me.fieldsLimit === -1) ? true : v < me.fieldsLimit;
+			})
+		});
 	},
 	
 	initComponent: function() {
 		var me = this;
+		
+		if (me.fieldsLimit !== -1) {
+			Ext.apply(me, {
+				bbar: {
+					xtype: 'statusbar',
+					items: [
+						{
+							xtype: 'tbtext',
+							html: me.res('customFields.free.txt', me.fieldsLimit)
+						}, {
+							xtype: 'button',
+							glyph: 'xf05a@FontAwesome',
+							handler: function() {
+								WT.info(me.res('customFields.info.free', me.fieldsLimit));
+							}
+						}
+					]
+				}
+			});
+		}
+		
 		me.callParent(arguments);
 		
 		me.add({
@@ -81,7 +115,15 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 					extraParams: {
 						targetServiceId: me.serviceId
 					}
-				})
+				}),
+				listeners: {
+					load: function(s) {
+						me.getVM().set('gpstorecount', s.getCount());
+					},
+					datachanged: function(s) {
+						me.getVM().set('gpstorecount', s.getCount());
+					}
+				}
 			},
 			viewConfig: {
 				deferEmptyText: false,
@@ -111,6 +153,15 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 					header: me.res('customFields.gp.description.lbl'),
 					flex: 2
 				}, {
+					dataIndex: 'panelsCount',
+					header: me.res('customFields.gp.usedby.lbl'),
+					renderer: function(val, meta, rec) {
+						var key = 'customFields.gp.usedby.';
+						return me.res(key + (val === 1 ? 'panel' : 'panels'), val);
+					},
+					align: 'left',
+					width: 80
+				}, {
 					xtype: 'soactioncolumn',
 					items: [
 						{
@@ -125,13 +176,17 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				}
 			],
 			tbar: [
-				me.addAct('add', {
+				{
+					xtype: 'button',
+					bind: {
+						disabled: '{!foAddEnabled}'
+					},
 					text: WT.res('act-add.lbl'),
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
 						me.addCustomFieldUI();
 					}
-				}),
+				},
 				'->',
 				me.addAct('refresh', {
 					text: '',

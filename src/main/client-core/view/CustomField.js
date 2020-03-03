@@ -47,19 +47,15 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 	},
 	modelName: 'Sonicle.webtop.core.model.CustomField',
 	fieldTitle: 'name',
-	viewModel: {
-		formulas: {
-			foEnableValues: WTF.foGetFn('record', 'type', function(v) {
-				return Ext.isEmpty(v) ? false : ['combobox', 'radios'].indexOf(v) !== -1;
-			})
-		}
-	},
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
+			foEnableValues: WTF.foGetFn('record', 'type', function(v) {
+				return Ext.isEmpty(v) ? false : ['combobox', 'radios'].indexOf(v) !== -1;
+			}),
 			foMainLabel: WTF.foRecordTwoWay('record', 'labelI18n', 'txt', WT.getLanguage())
 		});
 		

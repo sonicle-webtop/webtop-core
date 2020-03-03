@@ -60,18 +60,35 @@ public class ClassHelper {
 		String tdesc = StringUtils.defaultIfBlank(targetDescription, "Target");
 		
 		try {
-			Class clazz = Class.forName(className);
-			if (!requiredParentClass.isAssignableFrom(clazz)) throw new ClassCastException();
+			Class clazz = loadClass(className, targetDescription);
+			if ((clazz != null) && !isInheritingFromParent(clazz, requiredParentClass)) throw new ClassCastException();
 			return clazz;
 
-		} catch(ClassNotFoundException ex) {
-			LOGGER.debug("{} class not found [{}]", tdesc, className);
 		} catch(ClassCastException ex) {
 			LOGGER.warn("A valid {} class must extends '{}' class", tdesc, requiredParentClass.toString());
 		} catch(Throwable t) {
 			LOGGER.error("Unable to load class [{}]", className, t);
 		}
 		return null;
+	}
+	
+	public static Class loadClass(String className, String targetDescription) {
+		String tdesc = StringUtils.defaultIfBlank(targetDescription, "Target");
+		
+		try {
+			Class clazz = Class.forName(className);
+			return clazz;
+			
+		} catch(ClassNotFoundException ex) {
+			LOGGER.debug("{} class not found [{}]", tdesc, className);
+		}
+		return null;
+	}
+	
+	public static boolean isInheritingFromParent(Class clazz, Class parentClass) {
+		if (clazz == null) return false;
+		if (parentClass == null) return false;
+		return parentClass.isAssignableFrom(clazz);
 	}
 	
 	public static boolean isImplementingInterface(Class clazz, Class interfaceClass) {

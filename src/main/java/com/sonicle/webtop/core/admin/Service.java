@@ -56,6 +56,7 @@ import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
+import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
@@ -92,6 +93,7 @@ import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
+import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.ServiceManifest.Product;
@@ -569,11 +571,11 @@ public class Service extends BaseService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-			String internetDomain = WT.getDomainInternetName(domainId);
+			String internetName = WT.getDomainInternetName(domainId);
 				
 			if(crud.equals(Crud.READ)) {
 				List<JsGridDomainLicense> items = new ArrayList<>();
-				for(OLicense license : coreadm.listLicenses(internetDomain)) {
+				for(ServiceLicense license : coreadm.listServiceLicenses(internetName)) {
 					items.add(new JsGridDomainLicense(license));
 				}
 				new JsonResult("licenses", items, items.size()).printTo(out);
@@ -582,14 +584,14 @@ public class Service extends BaseService {
 				ServletUtils.StringArray serviceIds = ServletUtils.getObjectParameter(request, "serviceIds", ServletUtils.StringArray.class, true);
 				ServletUtils.StringArray productIds = ServletUtils.getObjectParameter(request, "productIds", ServletUtils.StringArray.class, true);
 				
-				coreadm.deleteLicense(serviceIds.get(0), productIds.get(0), internetDomain);
+				coreadm.deleteServiceLicense(serviceIds.get(0), productIds.get(0), internetName);
 				
 				new JsonResult().printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageDomainGroups", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageDomainLicenses", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
@@ -597,26 +599,29 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String internetDomain = WT.getDomainInternetName(domainId);
 				String productId = ServletUtils.getStringParameter(request, "productId", null);
 				
-				OLicense license = coreadm.getLicense(serviceId, productId, internetDomain);
+				String internetName = WT.getDomainInternetName(domainId);
+				ServiceLicense license = coreadm.getServiceLicense(serviceId, productId, internetName);
 				new JsonResult(new JsLicense(domainId, license)).printTo(out);
 				
 			} else if(crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsLicense> pl = ServletUtils.getPayload(request, JsLicense.class);
-				String internetDomain = WT.getDomainInternetName(pl.data.domainId);
-				coreadm.addLicense(pl.data.serviceId, pl.data.productId, internetDomain, pl.data.license);
+				
+				try {
+					coreadm.addServiceLicense(pl.data.toServiceLicense());
+				} catch(WTIntegrityException ex) {
+					throw new WTException(ex, "Product license already present [{}]", pl.data.productId);
+				}
 				new JsonResult().printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageLicense", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageLicense", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

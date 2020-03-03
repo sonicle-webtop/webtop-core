@@ -32,18 +32,16 @@
  */
 package com.sonicle.webtop.core.products;
 
-import com.sonicle.commons.l4j.DomainBasedProduct;
+import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
 
 /**
  *
- * @author gabriele.bulfon
+ * @author gbulfon
  */
-public class AuditProduct extends DomainBasedProduct {
-	
-	private static String PRODUCT_ID = "audit";
-	private static String PRODUCT_NAME = "Users Activity Audit";
-		
-	static String PUBLIC_KEY=
+public class AuditProduct extends BaseDomainServiceProduct {
+	public static final String PRODUCT_ID = "audit";
+	public static final String PRODUCT_NAME = "Users Activity Audit";
+	public static final String PUBLIC_KEY = 
 			"30819f300d06092a864886f70d010101050003818d003081893032301006\n"+
 			"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n"+
 			"0042d4fa0190ca06c8b6aac3b08d87b4bf375b4c91f8db40d7363628246G\n"+
@@ -52,16 +50,11 @@ public class AuditProduct extends DomainBasedProduct {
 			"04c15edd2f20a6fea9d576b80a16185b4caecc735bf02f730edaadef8e1c\n"+
 			"2341a6903b2a1d9f935d03RSA4102413SHA512withRSA9e223cfa0ece427\n"+
 			"ba122b2394500bd81fc1232954e8376d6a1473dc0819beaf50203010001";
-
-	public AuditProduct(String internetDomain) {
-		super(internetDomain);
+	
+	public AuditProduct(String domainInternetName) {
+		super(domainInternetName);
 	}
-
-	@Override
-	public String getPublicKey() {
-		return PUBLIC_KEY;
-	}
-
+	
 	@Override
 	public String getProductId() {
 		return PRODUCT_ID;
@@ -70,5 +63,10 @@ public class AuditProduct extends DomainBasedProduct {
 	@Override
 	public String getProductName() {
 		return PRODUCT_NAME;
+	}
+	
+	@Override
+	public String getPublicKey() {
+		return PUBLIC_KEY;
 	}
 }

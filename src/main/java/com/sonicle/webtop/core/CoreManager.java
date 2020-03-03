@@ -33,9 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
-import com.sonicle.webtop.core.products.AuditProduct;
 import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.IdentifierUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.VirtualAddress;
@@ -77,6 +75,7 @@ import com.sonicle.webtop.core.bol.OShare;
 import com.sonicle.webtop.core.bol.OShareData;
 import com.sonicle.webtop.core.bol.OTag;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.VCustomField;
 import com.sonicle.webtop.core.bol.VCustomPanel;
 import com.sonicle.webtop.core.bol.events.TagChangedEvent;
 import com.sonicle.webtop.core.bol.js.JsSimple;
@@ -116,6 +115,7 @@ import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
@@ -124,6 +124,7 @@ import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.products.CustomFieldsProduct;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.EventManager;
 import com.sonicle.webtop.core.sdk.ReminderInApp;
@@ -172,9 +173,17 @@ public class CoreManager extends BaseManager {
 	private PbxProvider pbx=null;
 	private SmsProvider sms=null;
 	
+	private final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
+	private final boolean cfieldsFree;
+	private static final int MAX_CFIELDS_FREE = 5;
+	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
+		
+		String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
+		CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(internetName);
+		cfieldsFree = !WT.isLicensed(CUSTOM_FIELD_PRODUCT);
 		
 		if(!fastInit) {
 			//initAllowedServices();
@@ -228,6 +237,10 @@ public class CoreManager extends BaseManager {
 	public OTPManager getOTPManager() {
 		ensureCallerService(SERVICE_ID, "getOTPManager");
 		return wta.getOTPManager();
+	}
+	
+	public final int getCustomFieldsMaxNo() {
+		return cfieldsFree ? MAX_CFIELDS_FREE : -1;
 	}
 	
 	public List<JsSimple> listThemes() throws WTException {
@@ -1210,7 +1223,7 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, CustomPanel> items = new LinkedHashMap<>();
-			for (VCustomPanel vcpanel : cupDao.viewUsedByDomainServiceTags(con, targetDomainId, serviceId, tagIds).values()) {
+			for (VCustomPanel vcpanel : cupDao.viewUsedByDomainServiceTags(con, targetDomainId, serviceId, tagIds, getCustomFieldsMaxNo()).values()) {
 				Set<String> fields = new LinkedHashSet(new CompositeId().parse(vcpanel.getCustomFieldIds()).getTokens());
 				Set<String> tags = new LinkedHashSet(new CompositeId().parse(vcpanel.getTagIds()).getTokens());
 				items.put(vcpanel.getCustomPanelId(), ManagerUtils.createCustomPanel(vcpanel, fields, tags));
@@ -1348,7 +1361,7 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Map<String, CustomField> listCustomFields(final String serviceId) throws WTException {
+	public Map<String, CustomFieldEx> listCustomFields(final String serviceId) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1357,9 +1370,10 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			LinkedHashMap<String, CustomField> items = new LinkedHashMap<>();
-			for (OCustomField ocfield : cufDao.selectOnlineByDomainService(con, targetDomainId, serviceId).values()) {
-				items.put(ocfield.getCustomFieldId(), ManagerUtils.createCustomField(ocfield));
+			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
+			for (VCustomField vcfield : cufDao.viewOnlineByDomainService(con, targetDomainId, serviceId, getCustomFieldsMaxNo()).values()) {
+				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
+				items.put(vcfield.getCustomFieldId(), ManagerUtils.fillCustomFieldEx(new CustomFieldEx(), vcfield));
 			}
 			return items;
 			
@@ -2897,7 +2911,7 @@ public class CoreManager extends BaseManager {
 			if (RunContext.isSysAdmin()) {
 				if (UserProfileId.isWildcardUser(targetPid)) {
 					domainMatch = true;
-					match = "@" + wta.getWebTopManager().getDomainInternetName(targetPid.getDomainId());
+					match = "@" + wta.getWebTopManager().domainIdToInternetName(targetPid.getDomainId());
 				} else {
 					match = getInternetUserId(targetPid);
 				}

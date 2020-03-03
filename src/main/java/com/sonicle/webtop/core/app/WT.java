@@ -36,7 +36,6 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
-import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
@@ -51,12 +50,8 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
-import com.sonicle.commons.l4j.AbstractProduct;
-import com.sonicle.commons.l4j.DomainBasedProduct;
 import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
-import com.sonicle.commons.web.json.CompositeId;
-import com.sonicle.webtop.core.bol.OLicense;
-import com.sonicle.webtop.core.dal.LicenseDAO;
+import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.template.Template;
@@ -466,9 +461,9 @@ public class WT {
 	
 	public static String getDomainInternetName(String domainId) {
 		try {
-			return getWTA().getWebTopManager().getDomainInternetName(domainId);
-		} catch(Exception ex) {
-			logger.warn("Unable to get DomainInternetName [{}]", domainId, ex);
+			return getWTA().getWebTopManager().domainIdToInternetName(domainId);
+		} catch(Throwable t) {
+			logger.warn("Unable to get internet-name for domain [{}]", t, domainId);
 			return null;
 		}
 	}
@@ -675,41 +670,21 @@ public class WT {
 		LoggerUtils.clearCustomDC();
 	}
 	
+	public static ProductLicense findProductLicense(BaseDomainServiceProduct product) {
+		return getWTA().getWebTopManager().getProductLicense(product);
+	}
+	
 	/**
-	 * Check for product license validity
+	 * Check if license for passed product is valid.
+	 * @param product The product to check.
+	 * @return 
 	 */
-	public static boolean isLicensed(DomainBasedProduct product) {
-		ProductLicense pl;
-		boolean valid=false;
-		synchronized(productCache) {
-			Connection con=null;
-			try {
-				String serviceId=WT.findServiceId(product.getClass());
-				CompositeId pid=new CompositeId(serviceId,product.getProductId());
-				pl=productCache.get(pid.toString());
-				if (pl==null) {
-					con=getCoreConnection();
-					OLicense olicense=LicenseDAO.getInstance().select(con, serviceId, product.getProductId(), product.getInternetDomain());
-					if (olicense!=null) {
-						pl = new ProductLicense(
-								ProductLicense.LicenseType.LICENSE_TEXT,
-								ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
-								product,
-								olicense.getLicense()
-						);
-						productCache.put(pid.toString(),pl);
-						pl.validate();
-					}
-				}
-				if (pl!=null) {
-					LicenseObject lo=pl.getValidatedLicenseObject();
-					valid=(lo!=null && lo.isValid());				
-				}
-			} catch(SQLException exc) {
-				logger.error("Exception",exc);
-			} finally {
-				DbUtils.closeQuietly(con);
-			}
+	public static boolean isLicensed(BaseDomainServiceProduct product) {
+		boolean valid = false;
+		ProductLicense plic = findProductLicense(product);
+		if (plic != null) {
+			LicenseObject lo = plic.getValidatedLicenseObject();
+			if (lo != null) valid = lo.isValid();
 		}
 		return valid;
 	}

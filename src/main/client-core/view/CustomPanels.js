@@ -120,8 +120,9 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						flex: 1
 					}, {
 						dataIndex: 'fieldsCount',
+						header: me.res('customPanels.gp.has.lbl'),
 						renderer: function(val, meta, rec) {
-							var key = 'customPanels.gp.fieldsCount.';
+							var key = 'customPanels.gp.has.';
 							return me.res(key + (val === 1 ? 'field' : 'fields'), val);
 						},
 						align: 'left',

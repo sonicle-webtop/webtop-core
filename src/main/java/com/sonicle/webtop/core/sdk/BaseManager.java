@@ -59,8 +59,10 @@ public abstract class BaseManager {
 	protected final boolean fastInit;
 	private String softwareName;
 	private Locale locale;
-	private AuditProduct auditProduct;
-	private boolean auditEnabled=false;
+	
+	private final AuditProduct AUDIT_PRODUCT;
+	private boolean auditEnabled = false;
+	//private AuditProduct auditProduct;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
@@ -68,6 +70,20 @@ public abstract class BaseManager {
 		this.targetProfile = targetProfileId;
 		this.softwareName = null;
 		this.locale = guessLocale();
+		
+		String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
+		AUDIT_PRODUCT = new AuditProduct(internetName);
+		if (WT.isLicensed(AUDIT_PRODUCT)) {
+			auditEnabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
+			if (auditEnabled) {
+				CoreServiceSettings scss = new CoreServiceSettings(SERVICE_ID, targetProfile.getDomainId());
+				if (scss.hasAuditEnabled()) {
+					auditEnabled = scss.isAuditEnabled();
+				}
+			}
+		}
+		
+		/*
 		//audit
 		String internetDomain=WT.getDomainInternetName(targetProfileId.getDomainId());
 		if (internetDomain!=null) {
@@ -87,6 +103,7 @@ public abstract class BaseManager {
 				}
 			}
 		}
+		*/
 	}
 	
 	protected final Locale guessLocale() {
@@ -105,17 +122,6 @@ public abstract class BaseManager {
 			return new WTException(ex, "DB error");
 		} else {
 			return new WTException(ex);
-		}
-	}
-	
-	@Deprecated
-	protected WTException wrapThrowable(Throwable t) {
-		if (t instanceof WTException) {
-			return (WTException)t;
-		} else if ((t instanceof SQLException) || (t instanceof DAOException)) {
-			return new WTException(t, "DB error");
-		} else {
-			return new WTException(t);
 		}
 	}
 	

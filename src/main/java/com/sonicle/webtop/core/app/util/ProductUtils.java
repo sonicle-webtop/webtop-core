@@ -1,6 +1,5 @@
 /*
- * WebTop Services is a Web Application framework developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -29,29 +28,42 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2014 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.app.util;
+
+import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.webtop.core.app.WebTopManager;
+import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  *
  * @author malbinola
  */
-public class WTNotFoundException extends WTException {
+public class ProductUtils {
 	
-	public WTNotFoundException() {
-		super();
+	public static AbstractProduct getProduct(String className) {
+		return getProduct(className, WebTopManager.INTERNETNAME_LOCAL);
 	}
 	
-	public WTNotFoundException(Throwable cause) {
-		super(cause);
-	}
-	
-	public WTNotFoundException(String message, Object... arguments) {
-		super(message, arguments);
-	}
-	
-	public WTNotFoundException(Throwable cause, String message, Object... arguments) {
-		super(cause, message, arguments);
+	public static AbstractProduct getProduct(String className, String internetName) {
+		Class clazz = ClassHelper.loadClass(className, null);
+		if (clazz == null) return null;
+		
+		try {
+			AbstractProduct product = null;
+			if (ClassHelper.isInheritingFromParent(clazz, BaseDomainServiceProduct.class)) {
+				product = (AbstractProduct)clazz.getDeclaredConstructor(String.class).newInstance(internetName);
+			} else if (ClassHelper.isInheritingFromParent(clazz, AbstractProduct.class)) {
+				product = (AbstractProduct)clazz.getDeclaredConstructor().newInstance();
+			} else {
+				return null;
+			}
+			return product;
+			
+		} catch(NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+			return null;
+		}
 	}
 }

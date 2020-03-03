@@ -35,21 +35,25 @@ package com.sonicle.webtop.core;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.RegexUtils;
+import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OCausal;
 import com.sonicle.webtop.core.bol.OCustomField;
 import com.sonicle.webtop.core.bol.OCustomPanel;
 import com.sonicle.webtop.core.bol.OMasterData;
 import com.sonicle.webtop.core.bol.OTag;
+import com.sonicle.webtop.core.bol.VCustomField;
 import com.sonicle.webtop.core.model.Activity;
 import com.sonicle.webtop.core.model.BaseMasterData;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -228,6 +232,14 @@ public class ManagerUtils {
 			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomField.Props(), CustomField.Props.class));
 			tgt.setValues(LangUtils.deserialize(src.getValues(), new CustomField.Values(), CustomField.Values.class));
 			tgt.setLabelI18n(LangUtils.deserialize(src.getLabelI18n(), new CustomField.LabelI18n(), CustomField.LabelI18n.class));
+		}
+		return tgt;
+	}
+	
+	static <T extends CustomFieldEx> T fillCustomFieldEx(T tgt, VCustomField src) {
+		fillCustomField(tgt, src);
+		if ((tgt != null) && (src != null)) {
+			tgt.setPanels(new LinkedHashSet(new CompositeId().parse(src.getCustomPanelIds()).getTokens()));
 		}
 		return tgt;
 	}

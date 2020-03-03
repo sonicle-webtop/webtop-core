@@ -38,10 +38,12 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
-import com.sonicle.commons.cache.AbstractCache;
-import com.sonicle.commons.cache.AbstractPassiveExpiringCache;
+import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.l4j.DummyProductLicense;
+import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DomainAccount;
@@ -110,14 +112,17 @@ import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
+import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.AuthException;
+import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import com.sonicle.webtop.core.util.ExceptionUtils;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sun.mail.imap.ACL;
 import com.sun.mail.imap.IMAPFolder;
@@ -129,7 +134,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -137,6 +141,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.mail.Folder;
 import javax.mail.Session;
@@ -182,6 +187,7 @@ public final class WebTopManager {
 	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
 	
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
+	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
 	
 	private final Object lock1 = new Object();
 	private final HashMap<UserProfileId, String> cacheUserToUserUid = new HashMap<>();
@@ -272,6 +278,14 @@ public final class WebTopManager {
 	
 	public String publicNameToDomainId(String domainPublicName) {
 		return domainCache.publicNameToDomainId(domainPublicName);
+	}
+	
+	public String domainIdToInternetName(String domainId) {
+		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
+			return INTERNETNAME_LOCAL;
+		} else {
+			return domainCache.domainIdToInternetName(domainId);
+		}
 	}
 	
 	public String internetNameToDomainId(String internetName) {
@@ -1296,68 +1310,109 @@ public final class WebTopManager {
 		}
 	}
 	
-	public List<OLicense> listLicenses(String internetDomain) throws WTException {
-		LicenseDAO dao = LicenseDAO.getInstance();
+	private boolean forgetProductLicense(String serviceId, String productId, String internetName) {
+		String key = new CompositeId(serviceId, productId, internetName).toString();
+		return productLicenseCache.remove(key) != null;
+	}
+	
+	public ProductLicense getProductLicense(BaseDomainServiceProduct product) {
+		if (product == null) return null;
+		String key = new CompositeId(product.SERVICE_ID, product.getProductId(), product.getInternetName()).toString();
+		ProductLicense plic = productLicenseCache.computeIfAbsent(key, value -> {
+			try {
+				ServiceLicense rlic = getServiceLicense(product.SERVICE_ID, product.getProductId(), product.getInternetName());
+				if (rlic != null) {
+					ProductLicense plicNew = new ProductLicense(
+						ProductLicense.LicenseType.LICENSE_TEXT,
+						ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
+						product,
+						rlic.getLicenseText()
+					);
+					plicNew.validate();
+					return plicNew;
+				} else {
+					logger.debug("License is missing, creating a dummy one! [{}]", key);
+					return new DummyProductLicense();
+					
+				}
+			} catch(Throwable t) {
+				logger.error("Error retrieving registered license [{}]", key, t);
+			}
+			return null;
+		});
+		return (plic instanceof DummyProductLicense) ? null : plic;
+	}
+	
+	public List<ServiceLicense> listServiceLicenses(String interneName) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			return dao.select(con, internetDomain);
+			
+			ArrayList<ServiceLicense> items = new ArrayList<>();
+			for (OLicense olic : licDao.selectByInternetName(con, interneName)) {
+				items.add(AppManagerUtils.createServiceLicense(olic));
+			}
+			return items;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw ExceptionUtils.wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public OLicense getLicense(String serviceId, String productId, String internetDomain) throws WTException {
-		LicenseDAO dao = LicenseDAO.getInstance();
+	public ServiceLicense getServiceLicense(String serviceId, String productId, String interneName) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			return dao.select(con, serviceId, productId, internetDomain);
+			return AppManagerUtils.createServiceLicense(licDao.select(con, serviceId, productId, interneName));
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw ExceptionUtils.wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void addLicense(String serviceId, String productId, String internetDomain, String license) throws WTException, SQLException {
-		LicenseDAO dao = LicenseDAO.getInstance();
+	public ServiceLicense addServiceLicense(ServiceLicense license) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
+			String domainId = domainCache.internetNameToDomainId(license.getInternetName());
+			if (domainId == null) throw new WTException("Unable to get domain associated to provided internet-name [{}]", license.getInternetName());
+			
 			con = wta.getConnectionManager().getConnection();
-			OLicense item=new OLicense();
-			item.setServiceId(serviceId);
-			item.setInternetDomain(internetDomain);
-			item.setProductId(productId);
-			item.setLicense(license);
-			dao.insert(con, item);
+			OLicense olic = AppManagerUtils.createOLicense(license);
+			boolean ret = licDao.insert(con, olic) == 1;
+			return ret ? license : null; // There are no modification, simply return provided object!
 			
 		} catch(SQLException | DAOException ex) {
-			//throw new WTException(ex, "DB error");
-			throw ex;
+			throw ExceptionUtils.wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	public void deleteLicense(String serviceId, String productId, String internetDomain) throws WTException {
-		LicenseDAO ldao = LicenseDAO.getInstance();
+	public boolean deleteServiceLicense(String serviceId, String productId, String interneName) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = wta.getConnectionManager().getConnection();
-			
-			ldao.delete(con, serviceId, productId, internetDomain);
+			boolean ret = licDao.delete(con, serviceId, productId, interneName) == 1;
+			if (ret) {
+				// Cleanup cached ProductLicense
+				forgetProductLicense(serviceId, productId, interneName);
+			}
+			return ret;
 			
 		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+			throw ExceptionUtils.wrapException(ex);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1825,18 +1880,8 @@ public final class WebTopManager {
 	}
 	
 	public String getInternetUserId(UserProfileId pid) throws WTException {
-		String internetName = getDomainInternetName(pid.getDomainId());
+		String internetName = domainIdToInternetName(pid.getDomainId());
 		return new UserProfileId(internetName, pid.getUserId()).toString();
-	}
-	
-	public String getDomainInternetName(String domainId) throws WTException {
-		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
-			return INTERNETNAME_LOCAL;
-		} else {
-			ODomain domain = getDomain(domainId);
-			if (domain == null) throw new WTException("Domain not found [{0}]", domainId);
-			return domain.getInternetName();
-		}
 	}
 	
 	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
@@ -2225,7 +2270,7 @@ public final class WebTopManager {
 		o.setDirPassword(PasswordUtils.encryptDES(password, new String(new char[]{'p','a','s','s','w','o','r','d'})));
 	}
 	
-	private class CacheDomainInfo extends AbstractCache {
+	private class CacheDomainInfo extends AbstractBulkCache {
 		private HashMap<String, String> publicNameToDomainId = new HashMap<>();
 		private HashMap<String, String> internetNameToDomainId = new HashMap<>();
 		private HashMap<String, String> domainIdToInternetName = new HashMap<>();

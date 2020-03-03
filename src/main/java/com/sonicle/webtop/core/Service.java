@@ -111,6 +111,7 @@ import com.sonicle.webtop.core.model.AuditLog;
 import com.sonicle.webtop.core.model.Causal;
 import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
@@ -169,6 +170,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.shiro.io.ResourceUtils;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
@@ -286,6 +288,7 @@ public class Service extends BaseService implements EventListener {
 			co.put("iceServers", iceServers);
 		}
 		
+		co.put("customFieldsLimit", coreMgr.getCustomFieldsMaxNo());
 		co.put("wtAddonNotifier", addonNotifier());
 		co.put("wtWhatsnewEnabled", ss.getWhatsnewEnabled());
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
@@ -1028,7 +1031,9 @@ public class Service extends BaseService implements EventListener {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
 				List<JsCustomFieldGrid> items = new ArrayList<>();
-				for (CustomField field : coreMgr.listCustomFields(targetServiceId).values()) {
+				
+				//Map<String, CustomPanel> panelsMap = coreMgr.listCustomPanels(targetServiceId);
+				for (CustomFieldEx field : coreMgr.listCustomFields(targetServiceId).values()) {
 					items.add(new JsCustomFieldGrid(field));
 				}
 				new JsonResult(items, items.size()).printTo(out);
@@ -2203,7 +2208,7 @@ public class Service extends BaseService implements EventListener {
 				coreMgr.updateIMChatLastSeenActivity(chatRoom.getChatJid().toString(), chatRoom.getLastSeenActivity());
 				
 			} catch(WTException ex) {
-				logger.error("Error saving chat message [{}, {}]", ex, chatRoom.getChatJid().toString(), message.getMessageUid());
+				logger.error("Error saving chat message [{}, {}]", chatRoom.getChatJid().toString(), message.getMessageUid(), ex);
 			}
 		}
 		

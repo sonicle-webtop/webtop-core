@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,34 +28,46 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.app;
 
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.web.json.CompositeId;
-import com.sonicle.webtop.core.model.CustomFieldEx;
-import com.sonicle.webtop.core.model.CustomPanel;
-import java.util.Map;
+import com.sonicle.webtop.core.bol.OLicense;
+import com.sonicle.webtop.core.model.ServiceLicense;
 
 /**
  *
  * @author malbinola
  */
-public class JsCustomFieldGrid {
-	public String id;
-	public String fieldId;
-	public String type;
-	public String name;
-	public String description;
-	public Integer panelsCount;
+public class AppManagerUtils {
 	
-	public JsCustomFieldGrid(CustomFieldEx field) {
-		id = new CompositeId(field.getServiceId(), field.getFieldId()).toString();
-		fieldId = field.getFieldId();
-		type = EnumUtils.toSerializedName(field.getType());
-		name = field.getName();
-		description = field.getDescription();
-		panelsCount = field.getPanels().size();
+	static ServiceLicense createServiceLicense(OLicense src) {
+		if (src == null) return null;
+		return fillServiceLicense(new ServiceLicense(), src);
+	}
+	
+	static <T extends ServiceLicense> T fillServiceLicense(T tgt, OLicense src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setServiceId(src.getServiceId());
+			tgt.setProductId(src.getProductId());
+			tgt.setInternetName(src.getInternetDomain());
+			tgt.setLicenseText(src.getLicense());
+		}
+		return tgt;
+	}
+	
+	static OLicense createOLicense(ServiceLicense src) {
+		if (src == null) return null;
+		return fillOLicense(new OLicense(), src);
+	}
+	
+	static <T extends OLicense> T fillOLicense(T tgt, ServiceLicense src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setServiceId(src.getServiceId());
+			tgt.setProductId(src.getProductId());
+			tgt.setInternetDomain(src.getInternetName());
+			tgt.setLicense(src.getLicenseText());
+		}
+		return tgt;
 	}
 }

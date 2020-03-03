@@ -35,8 +35,8 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.l4j.AbstractProduct;
-import com.sonicle.commons.l4j.DomainBasedProduct;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
 import java.util.ArrayList;
@@ -296,25 +296,16 @@ public class ServiceManifest {
 				if (el.containsKey("[@className]")) {
 					final String className = el.getString("[@className]");
 					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");
-					String fullClassName=buildJavaClassName(javaPackage, className);
-					Class clazz=Class.forName(fullClassName);
-					//create a temp instance to get product data
-					AbstractProduct product=null;
-					boolean perDomain=DomainBasedProduct.class.isAssignableFrom(clazz);
-					if (perDomain) {
-						product=(AbstractProduct)clazz.getDeclaredConstructor(String.class).newInstance("none");
-					} else {
-						product=(AbstractProduct)clazz.newInstance();
+					
+					String productClassName = buildJavaClassName(javaPackage, className);
+					AbstractProduct product = ProductUtils.getProduct(productClassName);
+					if (product != null) {
+						logger.info("Product found [{}, {}, {}]", product.getProductId(), product.getProductName(), productClassName);
+						products.put(product.getProductId(), new Product(productClassName, product));
 					}
-					String id=product.getProductId();
-					String name=product.getProductName();
-					logger.info("Registering available product "+id+" - "+name+" - "+fullClassName);
-					Product manifestProduct=new Product(id,name,fullClassName);
-					products.put(id,manifestProduct);
 				}
 			}
 		}
-		
 	}
 	
 	private String oasFileToContext(String oasFile) {
@@ -595,8 +586,8 @@ public class ServiceManifest {
 		return portlets;
 	}
 	
-	public Product getProduct(String id) {
-		return products.get(id);
+	public Product getProduct(String productId) {
+		return products.get(productId);
 	}
 	
 	public Collection<Product> getProducts() {
@@ -662,15 +653,18 @@ public class ServiceManifest {
 	}
 	
 	public static class Product {
+		public final String className;
 		public final String id;
 		public final String name;
-		public final String className;
 		
-		public Product(String id, String name, String className) {
+		public Product(String className, String id, String name) {
+			this.className = className;
 			this.id = id;
 			this.name = name;
-			this.className = className;
+		}
+		
+		public Product(String className, AbstractProduct product) {
+			this(className, product.getProductId(), product.getProductName());
 		}
 	}
-	
 }

@@ -35,13 +35,13 @@ package com.sonicle.webtop.core.bol.js;
 
 import com.license4j.LicenseText;
 import com.sonicle.commons.l4j.AbstractProduct;
-import com.sonicle.commons.l4j.DomainBasedProduct;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.bol.OLicense;
+import com.sonicle.webtop.core.app.util.ProductUtils;
+import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 /**
@@ -49,56 +49,51 @@ import java.util.HashMap;
  * @author malbinola
  */
 public class JsGridDomainLicense {
-	
 	public String serviceId;
 	public String productId;
 	public String productDetails;
 	public String license;
 	public boolean valid;
 	
-	public JsGridDomainLicense(OLicense o) {
-		serviceId = o.getServiceId();
-		productId = o.getProductId();
-		license = o.getLicense();
+	public JsGridDomainLicense(ServiceLicense license) {
+		serviceId = license.getServiceId();
+		productId = license.getProductId();
+		this.license = license.getLicenseText();
 		valid = false;
+		productDetails = buildDetails(license);
+	}
+	
+	private String buildDetails(ServiceLicense license) {
+		ServiceManifest manifest = WT.getManifest(license.getServiceId());
+		if (manifest == null) return "[ product not found ]";
+		ServiceManifest.Product manifestProduct = manifest.getProduct(license.getProductId());
+		if (manifestProduct == null) return "[ invalid product id ]";
+		AbstractProduct product = ProductUtils.getProduct(manifestProduct.className, license.getInternetName());
+		if (product == null) return "[ product not found ]";
 		
-		productDetails="[ invalid product id ]";
-		ServiceManifest mft=WT.getManifest(serviceId);
-		if (mft!=null) {
-			ServiceManifest.Product mftProduct=mft.getProduct(productId);
-			try {
-				Class clazz=Class.forName(mftProduct.className);
-				AbstractProduct product=null;
-				boolean perDomain=DomainBasedProduct.class.isAssignableFrom(clazz);
-				if (perDomain) {
-					product=(AbstractProduct)clazz.getDeclaredConstructor(String.class).newInstance(o.getInternetDomain());
-				} else {
-					product=(AbstractProduct)clazz.newInstance();
-				}
-				ProductLicense pl = new ProductLicense(
-						ProductLicense.LicenseType.LICENSE_TEXT,
-						ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
-						product,
-						license
-				);
-				LicenseObject lo=pl.validate();
-				valid=lo.isValid();
-				if (valid) {
-					LicenseText ltext=lo.getLicense().getLicenseText();
-					productDetails=product.getProductName();
-					HashMap<String,String> features=ltext.getCustomSignedFeatures();
-					for(String key: features.keySet()) {
-						String value=features.get(key);
-						productDetails+=" - "+key+": "+value;
-					}
-					if (perDomain) productDetails+=" - domain: "+o.getInternetDomain();
-					productDetails+=" - licensed to "+ltext.getUserRegisteredTo();
-				} else {
-					productDetails="[ invalid license ]";
-				}
-			} catch(ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException exc) {
-				productDetails="[ product not found ]";
+		boolean perDomain=(product instanceof BaseDomainServiceProduct);
+		ProductLicense pl = new ProductLicense(
+				ProductLicense.LicenseType.LICENSE_TEXT,
+				ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
+				product,
+				license.getLicenseText()
+		);
+		
+		LicenseObject lo=pl.validate();
+		valid=lo.isValid();
+		if (valid) {
+			LicenseText ltext=lo.getLicense().getLicenseText();
+			String s=product.getProductName();
+			HashMap<String,String> features=ltext.getCustomSignedFeatures();
+			for(String key: features.keySet()) {
+				String value=features.get(key);
+				s+=" - "+key+": "+value;
 			}
+			if (perDomain) s+=" - domain: "+license.getInternetName();
+			s+=" - licensed to "+ltext.getUserRegisteredTo();
+			return s;
+		} else {
+			return "[ invalid license ]";
 		}
-	}	
+	}
 }

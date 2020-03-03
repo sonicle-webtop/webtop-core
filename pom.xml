@@ -54,6 +54,14 @@
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
+		<!--
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		http://www.slf4j.org/legacy.html#jul-to-slf4j
+		-->
 		<dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>

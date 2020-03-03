@@ -350,6 +350,10 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		vm.setFormulas(Ext.apply(vm.getFormulas() || {}, formulas));
 	},
 	
+	applyStores: function(vm, stores) {
+		vm.setStores(Ext.apply(vm.getStores() || {}, stores));
+	},
+	
 	removeHeader: function(cmp) {
 		if(!cmp.isPanel) return;
 		if(cmp.header && cmp.header.isHeader) {
