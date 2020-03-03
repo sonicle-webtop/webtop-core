@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app;
 import com.sonicle.webtop.core.app.sdk.BaseDocEditorDocumentHandler;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreLocaleKey;
@@ -480,30 +481,33 @@ public class WebTopSession {
 		privateCoreEnv = new CorePrivateEnvironment(wta, this);
 		privateEnv = new PrivateEnvironment(this);
 		
-		HashMap<String,String> logoutData=new HashMap<String,String>();
-		logoutData.put("ip", SessionContext.getClientRemoteIP(session));
-		wta.getAuditLogManager().write(profile.getId(), getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(logoutData));
+		MapItem authData = new MapItem()
+				.add("ip", SessionContext.getClientRemoteIP(session));
+		wta.getAuditLogManager().write(profile.getId(), getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(authData));
 		sesm.registerWebTopSession(this);
 		allowedServices = listAllowedPrivateServices(svcm);
 		
+		// Create and cache managers
 		BaseManager managerInst = null;
-		for(String serviceId : allowedServices) {
+		for (String serviceId : allowedServices) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
+			if (descriptor == null) throw new WTRuntimeException("Descriptor not found for service [{}]", serviceId);
 			
 			// Manager
 			// Skip core service... its manager has already been instantiated above (see: internalInitPrivate)
-			if(!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
-				if(descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
+			if (!serviceId.equals(CoreManifest.ID) && !serviceId.equals(CoreAdminManifest.ID)) {
+				if (descriptor.hasManager() && !isServiceManagerCached(serviceId)) {
 					managerInst = svcm.instantiateServiceManager(serviceId, false, profile.getId());
-					if(managerInst != null) {
+					if (managerInst != null) {
 						cacheServiceManager(serviceId, managerInst);
 					}
 				}
 			}
 		}
 		
+		// Create private services
 		BaseService privateInst = null;
-		for(String serviceId : allowedServices) {
+		for (String serviceId : allowedServices) {
 			ServiceDescriptor descriptor = svcm.getDescriptor(serviceId);
 			
 			// Service initialization
