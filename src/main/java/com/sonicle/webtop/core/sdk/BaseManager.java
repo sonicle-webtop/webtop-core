@@ -62,7 +62,6 @@ public abstract class BaseManager {
 	
 	private final AuditProduct AUDIT_PRODUCT;
 	private boolean auditEnabled = false;
-	//private AuditProduct auditProduct;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
 		SERVICE_ID = WT.findServiceId(this.getClass());
@@ -82,28 +81,6 @@ public abstract class BaseManager {
 				}
 			}
 		}
-		
-		/*
-		//audit
-		String internetDomain=WT.getDomainInternetName(targetProfileId.getDomainId());
-		if (internetDomain!=null) {
-			this.auditProduct=new AuditProduct(internetDomain);
-			if (WT.isLicensed(auditProduct)) {
-				String domainId=targetProfile.getDomainId();
-				boolean coreAuditEnabled=new CoreServiceSettings(CoreManifest.ID, domainId).isAuditEnabled();
-				auditEnabled = coreAuditEnabled;
-				if (coreAuditEnabled) {
-					CoreServiceSettings scss=new CoreServiceSettings(SERVICE_ID, domainId);
-					//if we have an entry for this service, use this
-					if (scss.hasAuditEnabled())
-						auditEnabled = scss.isAuditEnabled();
-					else {
-						//user main core setup
-					}
-				}
-			}
-		}
-		*/
 	}
 	
 	protected final Locale guessLocale() {
@@ -115,6 +92,10 @@ public abstract class BaseManager {
 		return WT.LOCALE_ENGLISH;
 	}
 	
+	/**
+	 * @deprecated Use ExceptionUtils.wrapThrowable(t) instead
+	 */
+	@Deprecated
 	protected WTException wrapException(Exception ex) {
 		if (ex instanceof WTException) {
 			return (WTException)ex;

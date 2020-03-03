@@ -67,6 +67,7 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.AssignedGroup;
 import com.sonicle.webtop.core.bol.AssignedRole;
 import com.sonicle.webtop.core.bol.AssignedUser;
@@ -122,7 +123,6 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
-import com.sonicle.webtop.core.util.ExceptionUtils;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sun.mail.imap.ACL;
 import com.sun.mail.imap.IMAPFolder;
@@ -918,12 +918,9 @@ public final class WebTopManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw wrapThrowable(ex);
 		} catch(Throwable t) {
 			DbUtils.rollbackQuietly(con);
-			throw t;
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1356,8 +1353,8 @@ public final class WebTopManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw ExceptionUtils.wrapException(ex);
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1371,8 +1368,8 @@ public final class WebTopManager {
 			con = wta.getConnectionManager().getConnection();
 			return AppManagerUtils.createServiceLicense(licDao.select(con, serviceId, productId, interneName));
 			
-		} catch(SQLException | DAOException ex) {
-			throw ExceptionUtils.wrapException(ex);
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1391,8 +1388,8 @@ public final class WebTopManager {
 			boolean ret = licDao.insert(con, olic) == 1;
 			return ret ? license : null; // There are no modification, simply return provided object!
 			
-		} catch(SQLException | DAOException ex) {
-			throw ExceptionUtils.wrapException(ex);
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1411,8 +1408,8 @@ public final class WebTopManager {
 			}
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw ExceptionUtils.wrapException(ex);
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -2545,16 +2542,6 @@ public final class WebTopManager {
 		public EntityPermissions(ArrayList<ORolePermission> others, ArrayList<ORolePermission> services) {
 			this.others = others;
 			this.services = services;
-		}
-	}
-	
-	protected WTException wrapThrowable(Throwable t) {
-		if (t instanceof WTException) {
-			return (WTException)t;
-		} else if ((t instanceof SQLException) || (t instanceof DAOException)) {
-			return new WTException(t, "DB error");
-		} else {
-			return new WTException(t);
 		}
 	}
 }
