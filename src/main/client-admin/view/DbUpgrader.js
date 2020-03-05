@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 	
 	dockableConfig: {
 		title: '{dbUpgrader.tit}',
-		iconCls: 'wtadm-icon-dbUpgrader-xs'
+		iconCls: 'wtadm-icon-dbUpgrader'
 	},
 	
 	nextStmtId: null,
@@ -57,7 +57,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				me.addAct('select', {
 					text: null,
 					tooltip: me.mys.res('dbUpgrader.act-select.tip'),
-					iconCls: 'wtadm-icon-selectStmt-xs',
+					iconCls: 'wtadm-icon-selectStmt',
 					handler: function() {
 						me.selectStmt(me.nextStmtId);
 					}
@@ -66,7 +66,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				me.addAct('play1', {
 					text: me.mys.res('dbUpgrader.act-play1.lbl'),
 					tooltip: null,
-					iconCls: 'wtadm-icon-play1Stmt-xs',
+					iconCls: 'wtadm-icon-play1Stmt',
 					handler: function() {
 						me.executeStmt('play1');
 					}
@@ -74,7 +74,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				me.addAct('play', {
 					text: me.mys.res('dbUpgrader.act-play.lbl'),
 					tooltip: null,
-					iconCls: 'wtadm-icon-playStmt-xs',
+					iconCls: 'wtadm-icon-playStmt',
 					handler: function() {
 						me.executeStmt('play');
 					}
@@ -82,7 +82,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 				me.addAct('skip', {
 					text: me.mys.res('dbUpgrader.act-skip.lbl'),
 					tooltip: null,
-					iconCls: 'wtadm-icon-skipStmt-xs',
+					iconCls: 'wtadm-icon-skipStmt',
 					handler: function() {
 						me.executeStmt('skip');
 					}
@@ -180,7 +180,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DbUpgrader', {
 					dataIndex: 'runStatus',
 					hideText: false,
 					getIconCls: function(v) {
-						return Ext.isEmpty(v) ? '' : ('wtadm-icon-stmtStatus-' + v.toLowerCase() + '-xs');
+						return Ext.isEmpty(v) ? '' : ('wtadm-icon-stmtStatus-' + v.toLowerCase());
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					header: me.mys.res('dbUpgrader.gp.runStatus.lbl'),

@@ -258,7 +258,7 @@ public class Service extends BaseService {
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
-		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain-xs" : "wtadm-icon-domain-disabled-xs");
+		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
 		node.put("_type", NTYPE_DOMAIN);
 		node.put("_domainId", domain.getDomainId());
 		//node.put("_internetDomain", domain.getInternetName());
@@ -290,9 +290,9 @@ public class Service extends BaseService {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
 				if (nodeId.equals("root")) { // Admin roots...
-					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, null, true, "wtadm-icon-settings-xs"));
-					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, null, false, "wtadm-icon-domains-xs"));
-					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, null, true, "wtadm-icon-dbUpgrader-xs"));
+					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, null, true, "wtadm-icon-settings"));
+					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, null, false, "wtadm-icon-domains"));
+					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, null, true, "wtadm-icon-dbUpgrader"));
 				} else {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
 					if (cid.getToken(0).equals("domains")) {
@@ -304,17 +304,17 @@ public class Service extends BaseService {
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-settings-xs", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-groups-xs", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-users-xs", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-roles-xs", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-launcherLink", NTYPE_LAUNCHERLINKS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-settings", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-groups", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-users", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-roles", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-licenses", NTYPE_LICENSES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-launcherLinks", NTYPE_LAUNCHERLINKS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, null, "wtadm-icon-pecBridge-xs", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainChildNode(nodeId, null, "wtadm-icon-pecBridge", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-licenses", NTYPE_LICENSES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							
 						} else { // Available webtop domains
 							for (ODomain domain : core.listDomains(false)) {

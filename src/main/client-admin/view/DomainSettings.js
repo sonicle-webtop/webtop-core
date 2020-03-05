@@ -44,7 +44,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 	
 	dockableConfig: {
 		title: '{domainSettings.tit}',
-		iconCls: 'wtadm-icon-settings-xs'
+		iconCls: 'wtadm-icon-settings'
 	},
 	
 	constructor: function(cfg) {

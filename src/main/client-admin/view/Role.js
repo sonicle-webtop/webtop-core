@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 	
 	dockableConfig: {
 		title: '{role.tit}',
-		iconCls: 'wtadm-icon-role-xs',
+		iconCls: 'wtadm-icon-role',
 		width: 650,
 		height: 500
 	},
@@ -84,7 +84,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				items: [{
 					xtype: 'wtadmroleservicegrid',
 					title: me.mys.res('role.assignedServices.tit'),
-					iconCls: 'wtadm-icon-service-module-xs',
+					iconCls: 'wtadm-icon-service-module',
 					bind: {
 						store: '{record.assignedServices}'
 					},
@@ -100,7 +100,7 @@ Ext.define('Sonicle.webtop.core.admin.view.Role', {
 				}, {
 					xtype: 'wtadmrolepermissiongrid',
 					title: me.mys.res('role.permissions.tit'),
-					iconCls: 'wtadm-icon-permission-xs',
+					iconCls: 'wtadm-icon-permission',
 					bind: {
 						store: '{record.permissions}'
 					},

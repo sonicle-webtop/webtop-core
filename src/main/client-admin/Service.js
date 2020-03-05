@@ -65,14 +65,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				text: me.res(maint ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'),
 				enableToggle: true,
 				pressed: maint,
-				iconCls: maint ? 'wtadm-icon-maintenance-on-xs' : 'wtadm-icon-maintenance-off-xs',
+				iconCls: maint ? 'wtadm-icon-maintenance-on' : 'wtadm-icon-maintenance-off',
 				toggleHandler: function(s,state) {
 					me.setMaintenanceFlag(state);
 				},
 				listeners: {
 					toggle: function(s, pressed) {
 						s.setText(me.res(pressed ? 'btn-maintenance.on.lbl' : 'btn-maintenance.off.lbl'));
-						s.setIconCls(pressed ? 'wtadm-icon-maintenance-on-xs' : 'wtadm-icon-maintenance-off-xs');
+						s.setIconCls(pressed ? 'wtadm-icon-maintenance-on' : 'wtadm-icon-maintenance-off');
 					}
 				}
 			}]
@@ -180,12 +180,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 	initActions: function() {
 		var me = this;
 		me.addAct('addDomain', {
+			ignoreSize: true,
 			tooltip: null,
 			handler: function() {
 				me.addDomainUI();
 			}
 		});
 		me.addAct('editDomain', {
+			ignoreSize: true,
 			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();
@@ -193,6 +195,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 			}
 		});
 		me.addAct('deleteDomain', {
+			ignoreSize: true,
 			tooltip: null,
 			handler: function() {
 				var node = me.getCurrentDomainNode();

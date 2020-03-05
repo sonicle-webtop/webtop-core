@@ -48,7 +48,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
-		iconCls: 'wtadm-icon-users-xs'
+		iconCls: 'wtadm-icon-users'
 	},
 	
 	constructor: function(cfg) {

@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.admin.view.PecBridgeFetcher', {
 	
 	dockableConfig: {
 		title: '{pecBridgeFetcher.tit}',
-		iconCls: 'wtadm-icon-pecBridge-xs',
+		iconCls: 'wtadm-icon-pecBridge',
 		width: 400,
 		height: 300
 	},

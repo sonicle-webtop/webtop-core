@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainGroups', {
 	
 	dockableConfig: {
 		title: '{domainGroups.tit}',
-		iconCls: 'wtadm-icon-groups-xs'
+		iconCls: 'wtadm-icon-groups'
 	},
 	
 	constructor: function(cfg) {

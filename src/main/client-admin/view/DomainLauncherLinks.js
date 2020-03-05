@@ -34,16 +34,16 @@
 Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
+		'Sonicle.grid.column.Action',
 		'Sonicle.grid.plugin.DDOrdering',
-		'Sonicle.webtop.core.admin.model.GridDomainLauncherLink',
-		'WTA.ux.grid.column.Action'
+		'Sonicle.webtop.core.admin.model.GridDomainLauncherLink'
 	],
 	
 	domainId: null,
 	
 	dockableConfig: {
 		title: '{domainLauncherLinks.tit}',
-		iconCls: 'wtadm-icon-launcherLink'
+		iconCls: 'wtadm-icon-launcherLinks'
 	},
 	
 	constructor: function(cfg) {
@@ -91,7 +91,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 				clicksToEdit: 2,
 				autoEncode: true
 			},
-			columns: [{
+			columns: [
+				{
 					xtype: 'rownumberer'	
 				}, {
 					dataIndex: 'text',
@@ -127,17 +128,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 						}
 					}
 				}, {
-					xtype: 'wtactioncolumn',
-					items: [{
-						iconCls: 'fa fa-trash',
-						tooltip: WT.res('act-remove.lbl'),
-						handler: function(g, ridx) {
-							var rec = g.getStore().getAt(ridx);
-							me.deleteLauncherLinkUI(rec);
+					xtype: 'soactioncolumn',
+					items: [
+						{
+							iconCls: 'fa fa-trash',
+							tooltip: WT.res('act-remove.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.deleteLauncherLinkUI(rec);
+							}
 						}
-					}],
-					width: 50
-			}],
+					]
+				}
+			],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
