@@ -35,45 +35,77 @@ package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.Universe;
 import org.jooq.tools.StringUtils;
-import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class PushConnection {
-	private final static Logger logger = WT.getLogger(PushConnection.class);
+class PushConnection {
+	private final MessageStorage messageStorage;
 	private final String sessionId;
+	private final UserProfileId profileId;
 	private final String broadcasterPath;
+	private final Object readyLock = new Object();
+	private boolean hasBeenReady;
 	
-	public PushConnection(String sessionId, Collection<ServiceMessage> initialMessages) {
+	public PushConnection(MessageStorage messageStorage, String sessionId, UserProfileId profileId) {
+		this.messageStorage = messageStorage;
 		this.sessionId = sessionId;
+		this.profileId = profileId;
 		this.broadcasterPath = PushEndpoint.URL + "/" + sessionId;
-		if (!initialMessages.isEmpty()) {
-			writeOnBroadcast(initialMessages);
+		this.hasBeenReady = false;
+	}
+	
+	public void cleanup() {
+		Broadcaster bc = getBroadcaster(Universe.broadcasterFactory());
+		if (bc != null) bc.destroy();
+	}
+	
+	public void ready() {
+		synchronized (readyLock) {
+			if (!hasBeenReady) {
+				writeOnBroadcast(messageStorage.resumeMessages(profileId));
+				hasBeenReady = true;
+			}
 		}
 	}
 	
-	public boolean flush() {
-		return send(new ArrayList<>(0));
+	public boolean send(Collection<ServiceMessage> messages, boolean important) {
+		return send(messages, important, false);
 	}
 	
-	public boolean send(Collection<ServiceMessage> messages) {
-		return writeOnBroadcast(messages);
+	public boolean send(Collection<ServiceMessage> messages, boolean important, boolean skipStoring) {
+		// We persist messages only if flag is enabled and connection has never 
+		// been online yet. Messages will be cached in broadcaster cache until
+		// the connection will be available.
+		if (hasBeenReady || !important) {
+			writeOnBroadcast(messages);
+			return true;
+		} else {
+			synchronized (readyLock) {
+				// Check hasBeenReady again, it may be changed before entering synchronized section
+				if (hasBeenReady) {
+					writeOnBroadcast(messages);
+					return true;
+				} else {
+					if (!skipStoring) messageStorage.persistMessages(profileId, messages);
+					return false;
+				}
+			}
+		}
 	}
 	
-	private boolean writeOnBroadcast(Collection<ServiceMessage> messages) {
-		BroadcasterFactory factory = Universe.broadcasterFactory();
+	private void writeOnBroadcast(Collection<ServiceMessage> messages) {
 		if (!messages.isEmpty()) {
-			getBroadcaster(factory).broadcast(preparePayload(messages));
+			getBroadcaster(Universe.broadcasterFactory()).broadcast(preparePayload(messages));
 		}
-		return true;
 	}
 	
 	private String preparePayload(Collection<ServiceMessage> messages) {
@@ -82,5 +114,10 @@ public class PushConnection {
 	
 	private Broadcaster getBroadcaster(BroadcasterFactory factory) {
 		return factory.lookup(broadcasterPath, true);
+	}
+	
+	interface MessageStorage {
+		public ArrayList<ServiceMessage> resumeMessages(UserProfileId profileId);
+		public void persistMessages(UserProfileId profileId, Collection<ServiceMessage> messages);
 	}
 }

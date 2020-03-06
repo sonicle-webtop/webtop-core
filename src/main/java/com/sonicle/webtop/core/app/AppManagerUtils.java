@@ -33,13 +33,25 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.bol.OLicense;
+import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.sdk.UserProfileId;
 
 /**
  *
  * @author malbinola
  */
 public class AppManagerUtils {
+	
+	static <T extends OMessageQueue> T fillOMessageQueue(T tgt, UserProfileId profileId, String messageType, String messageData) {
+		if ((tgt != null)) {
+			tgt.setDomainId(profileId.getDomainId());
+			tgt.setUserId(profileId.getUserId());
+			tgt.setMessageType(messageType);
+			tgt.setMessageRaw(messageData);
+		}
+		return tgt;
+	}
 	
 	static ServiceLicense createServiceLicense(OLicense src) {
 		if (src == null) return null;

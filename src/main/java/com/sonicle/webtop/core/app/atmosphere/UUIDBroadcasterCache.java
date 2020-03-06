@@ -360,9 +360,10 @@ public class UUIDBroadcasterCache implements BroadcasterCache {
             messages.remove(clientId);
         }
 
-        for (String msg : messages().keySet()) {
-            if (!activeClients().containsKey(msg)) {
-                messages().remove(msg);
+        for (String clientId : messages().keySet()) {
+			if (!cacheForAllOnNull && NULL_ATR_ID.equals(clientId)) continue;
+            if (!activeClients().containsKey(clientId)) {
+                messages().remove(clientId);
             }
         }
     }

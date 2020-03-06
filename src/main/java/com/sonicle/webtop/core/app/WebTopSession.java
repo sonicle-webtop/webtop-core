@@ -1226,12 +1226,12 @@ public class WebTopSession {
 	
 	public void notify(ServiceMessage message) {
 		if (!isReady()) return;
-		wta.getSessionManager().push(getId(), message);
+		wta.getSessionManager().push(getId(), message, false);
 	}
 	
 	public void notify(List<ServiceMessage> messages) {
 		if (!isReady()) return;
-		wta.getSessionManager().push(getId(), messages);
+		wta.getSessionManager().push(getId(), messages, false);
 	}
 	
 	public void addUploadedFile(UploadedFile uploadedFile) {

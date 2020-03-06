@@ -33,6 +33,8 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.IdentifierUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
@@ -47,25 +49,24 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 import javax.servlet.http.HttpSession;
 import org.apache.shiro.subject.Subject;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.FrameworkConfig;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author malbinola
  */
-public class SessionManager {
-	private static final Logger logger = WT.getLogger(SessionManager.class);
+public class SessionManager implements PushConnection.MessageStorage {
+	private final static Logger LOGGER = LoggerFactory.getLogger(SessionManager.class);
 	private static boolean initialized = false;
 	
 	/**
@@ -78,7 +79,7 @@ public class SessionManager {
 		if (initialized) throw new RuntimeException("Initialization already done");
 		SessionManager sesm = new SessionManager(wta);
 		initialized = true;
-		logger.info("Initialized");
+		LOGGER.info("Initialized");
 		return sesm;
 	}
 	
@@ -122,7 +123,7 @@ public class SessionManager {
 		uuidToSessionId.clear();
 		pushConnections.clear();
 		wta = null;
-		logger.info("Cleaned up");
+		LOGGER.info("Cleaned up");
 	}
 	
 	public void onContainerSessionCreated(HttpSession session) {
@@ -132,14 +133,15 @@ public class SessionManager {
 	public void onContainerSessionDestroyed(HttpSession session) {
 		WebTopSession webtopSession = SessionContext.getWebTopSession(session);
 		if (webtopSession != null) {
-			String sessionId = webtopSession.getId();
+			String sessionId = session.getId(); // webtopSession.getId();
 			String clientTrackingId = webtopSession.getClientTrackingID();
 			UserProfileId profileId = webtopSession.getProfileId(); // Extract userProfile info before cleaning session!
 			
 			long stamp = lock.writeLock();
 			try {
 				onlineSessions.remove(sessionId);
-				pushConnections.remove(sessionId);
+				PushConnection pushCon = pushConnections.remove(sessionId);
+				if (pushCon != null) pushCon.ready();
 				if (profileId != null) {
 					if (profileSidsCache.containsKey(profileId)) {
 						// List at key may have not been prepared. Incase of 
@@ -149,8 +151,7 @@ public class SessionManager {
 					}
 					onlineClienTrackingIds.remove(profileId.toString() + "|" + clientTrackingId);
 				}
-				
-				logger.trace("Session unregistered [{}, {}]", sessionId, profileId);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Session unregistered [{}, {}]", sessionId, profileId);
 				
 			} finally {
 				lock.unlockWrite(stamp);
@@ -159,7 +160,7 @@ public class SessionManager {
 			try {
 				webtopSession.cleanup();
 			} catch(Throwable t) {
-				logger.error("Error destroying session", t);
+				LOGGER.error("Error destroying session", t);
 			}
 			
 			if (profileId != null) {
@@ -178,10 +179,21 @@ public class SessionManager {
 					HttpSession session = resource.session(false);
 					if (session != null) {
 						ServletUtils.touchSession(session);
-						logger.trace("Session touched [{}]", session.getId());
+						if (LOGGER.isTraceEnabled()) LOGGER.trace("Session touched [{}]", session.getId());
 					}
 				}
 			}
+			
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	public void onPushResourceReady(String sessionId, AtmosphereResource resource) {
+		long stamp = lock.readLock();
+		try {
+			PushConnection pushCon = pushConnections.get(sessionId);
+			if (pushCon != null) pushCon.ready();
 			
 		} finally {
 			lock.unlockRead(stamp);
@@ -194,15 +206,15 @@ public class SessionManager {
 		long stamp = lock.writeLock();
 		try {
 			UserProfileId profileId = webtopSession.getProfileId();
-			if (profileId == null) throw new WTException("Session [{0}] is not bound to a user", sessionId);
+			if (profileId == null) throw new WTException("Session is not bound to a user [{}]", sessionId);
 
 			onlineSessions.put(sessionId, webtopSession);
-			pushConnections.put(sessionId, new PushConnection(sessionId, listEnqueuedMessages(webtopSession.getProfileId())));
+			pushConnections.put(sessionId, new PushConnection(this, sessionId, profileId));
 			if (profileSidsCache.get(profileId) == null) profileSidsCache.put(profileId, new ProfileSids());
 			profileSidsCache.get(profileId).add(sessionId);
 			onlineClienTrackingIds.add(profileId.toString() + "|" + webtopSession.getClientTrackingID());
 			
-			logger.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Session registered [{}, {}]", sessionId, webtopSession.getProfileId());
 			
 		} finally {
 			lock.unlockWrite(stamp);
@@ -263,49 +275,29 @@ public class SessionManager {
 		}
 	}
 	
-	public void push(String sessionId, ServiceMessage message) {
-		push(sessionId, Arrays.asList(message));
+	public void push(String sessionId, ServiceMessage message, boolean important) {
+		push(sessionId, Arrays.asList(message), important);
 	}
 	
-	public void push(UserProfileId profileId, ServiceMessage message, boolean enqueueIfOffline) {
-		push(profileId, Arrays.asList(message), enqueueIfOffline);
+	public void push(UserProfileId profileId, ServiceMessage message, boolean important) {
+		push(profileId, Arrays.asList(message), important);
 	}
 	
-	public void push(String sessionId, Collection<ServiceMessage> messages) {
-		Thread t = new Thread("internalPush") {
+	public void push(String sessionId, Collection<ServiceMessage> messages, boolean important) {
+		Thread t = new Thread(LangUtils.formatMessage("internalPush-{}", sessionId)) {
 			@Override
 			public void run() {
 				try {
 					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
 					try {
-						internalPush(sessionId, messages);
+						internalPush(sessionId, messages, important);
 					} finally {
 						lock.unlockRead(stamp);
 					}
 				} catch(InterruptedException ex) {
-					logger.error("Unable to acquire readLock [{}]", ex, sessionId);
-				}
-			}
-		};
-		t.start();
-	}
-	
-	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
-		Thread t = new Thread("internalPush") {
-			@Override
-			public void run() {
-				try {
-					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
-					try {
-						internalPush(profileId, messages, enqueueIfOffline);
-					} finally {
-						lock.unlockRead(stamp);
-					}
-				} catch(InterruptedException ex) {
-					logger.error("Unable to acquire readLock [{}]", ex, profileId);
-					if (enqueueIfOffline) {
-						logger.debug("Persisting {} undelivered push messages for {} on db...", messages.size(), profileId);
-						enqueueMessages(profileId, messages);
+					LOGGER.error("Unable to acquire readLock [{}]", ex, sessionId);
+					if (important) {
+						LOGGER.warn("Cannot detect the user for session '{}', {} messages lost!", sessionId, messages.size());
 					}
 				}
 			}
@@ -313,84 +305,107 @@ public class SessionManager {
 		t.start();
 	}
 	
-	private void internalPush(String sessionId, Collection<ServiceMessage> messages) {
-		if (onlineSessions.containsKey(sessionId)) {
-			PushConnection pushCon = pushConnections.get(sessionId);
-			if (pushCon != null) {
-				pushCon.send(messages);
-			} else {
-				logger.error("PushConnection not available [{}]", sessionId);
+	public void push(UserProfileId profileId, Collection<ServiceMessage> messages, boolean important) {
+		Thread t = new Thread(LangUtils.formatMessage("internalPush-{}", profileId)) {
+			@Override
+			public void run() {
+				try {
+					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
+					try {
+						internalPush(profileId, messages, important);
+					} finally {
+						lock.unlockRead(stamp);
+					}
+				} catch (InterruptedException ex) {
+					LOGGER.error("Unable to acquire readLock [{}]", ex, profileId);
+					if (important) {
+						persistMessages(profileId, messages);
+					}
+				}
 			}
-		}
+		};
+		t.start();
 	}
 	
-	private void internalPush(UserProfileId profileId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
+	private void internalPush(UserProfileId profileId, Collection<ServiceMessage> messages, boolean important) {
 		ProfileSids sessionIds = profileSidsCache.get(profileId);
 		if ((sessionIds != null) && !sessionIds.isEmpty()) {
-			for (String sessionId : profileSidsCache.get(profileId)) {
-				internalPush(sessionId, messages);
+			// A user-profile can have multiple linked sessions, so send same 
+			// messages to each one available. Messages can be persisted only
+			// by the last in case we have no succesfull deliveries at evaluation
+			// time.
+			boolean sent = false;
+			Iterator it = profileSidsCache.get(profileId).iterator();
+			while (it.hasNext()) {
+				final String sessionId = (String)it.next();
+				PushConnection pushCon = pushConnections.get(sessionId);
+				if (pushCon != null) sent = sent || pushCon.send(messages, important, it.hasNext() ? true : sent);
 			}
+			
 		} else {
-			if (enqueueIfOffline) {
-				enqueueMessages(profileId, messages);
+			// No session found for user-profile, persist messages if necessary.
+			if (important) {
+				persistMessages(profileId, messages);
 			}
 		}
 	}
 	
-	private ArrayList<ServiceMessage> listEnqueuedMessages(UserProfileId profileId) {
+	private void internalPush(String sessionId, Collection<ServiceMessage> messages, boolean enqueueIfOffline) {
+		PushConnection pushCon = pushConnections.get(sessionId);
+		if (pushCon != null) pushCon.send(messages, enqueueIfOffline);
+	}
+	
+	@Override
+	public ArrayList<ServiceMessage> resumeMessages(UserProfileId profileId) {
 		ArrayList<ServiceMessage> messages = new ArrayList<>();
 		MessageQueueDAO mqDao = MessageQueueDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			con = WT.getCoreConnection();
-			// Mark user's messages as "under process" and gets them
-			String pid = UUID.randomUUID().toString();
-			mqDao.updatePidIfNullByDomainUser(con, profileId.getDomainId(), profileId.getUserId(), pid);
-			List<OMessageQueue> queued = mqDao.selectByPid(con, pid);
-			
-			if (!queued.isEmpty()) {
-				Class clazz = null;
-				for(OMessageQueue message : queued) {
-					try {
-						clazz = Class.forName(message.getMessageType());
-						messages.add((ServiceMessage)JsonResult.gson.fromJson(message.getMessageRaw(), clazz));
-					} catch(Exception ex1) {
-						logger.warn("Unable to unserialize message [{}] for [{}]", message.getMessageType(), profileId.toString(), ex1);
+			String processId = IdentifierUtils.getUUIDRandom(); // Mark user's messages as "under process" and gets them
+			int ret = mqDao.updatePidIfNullByDomainUser(con, profileId.getDomainId(), profileId.getUserId(), processId);
+			if (ret > 0) {
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Resuming {} messages for user '{}' [{}]", ret, profileId, processId);
+				List<OMessageQueue> queued = mqDao.selectByPid(con, processId);
+				if (!queued.isEmpty()) {
+					Class clazz = null;
+					for (OMessageQueue message : queued) {
+						try {
+							clazz = Class.forName(message.getMessageType());
+							messages.add((ServiceMessage)JsonResult.gson.fromJson(message.getMessageRaw(), clazz));
+						} catch(Throwable t1) {
+							LOGGER.warn("Unable to unserialize message '{}' for '{}'", message.getMessageType(), profileId, t1);
+						}
 					}
+					mqDao.deleteByPid(con, processId);
 				}
-				mqDao.deleteByPid(con, pid);
 			}
-		} catch(Exception ex) {
-			logger.error("Error adding offline messages", ex);
+			
+		} catch(Throwable t) {
+			LOGGER.error("Unable to resume messages for '{}'", profileId, t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 		return messages;
 	}
 	
-	private void enqueueMessages(UserProfileId profileId, Collection<ServiceMessage> messages) {
+	@Override
+	public void persistMessages(UserProfileId profileId, Collection<ServiceMessage> messages) {
 		MessageQueueDAO mqDao = MessageQueueDAO.getInstance();
 		Connection con = null;
 		
 		try {
-			con = WT.getCoreConnection(false);
-			OMessageQueue queued = null;
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Persisting {} messages for user '{}'", messages.size(), profileId.toString());
+			con = WT.getCoreConnection();
+			ArrayList<OMessageQueue> omqs = new ArrayList<>(messages.size());
 			for (ServiceMessage message : messages) {
-				queued = new OMessageQueue();
-				queued.setQueueId(mqDao.getSequence(con).intValue());
-				queued.setDomainId(profileId.getDomainId());
-				queued.setUserId(profileId.getUserId());
-				queued.setMessageType(message.getClass().getName());
-				queued.setMessageRaw(JsonResult.gson.toJson(message));
-				queued.setQueuedOn(DateTime.now(DateTimeZone.UTC));
-				mqDao.insert(con, queued);
+				omqs.add(AppManagerUtils.fillOMessageQueue(new OMessageQueue(), profileId, message.getClass().getName(), JsonResult.gson.toJson(message)));
 			}
-			DbUtils.commitQuietly(con);
+			mqDao.batchInsert(con, omqs);
 			
 		} catch(Throwable t) {
-			DbUtils.rollbackQuietly(con);
-			logger.error("Error enqueuing messages", t);
+			LOGGER.error("Unable to persist messages for '{}'", profileId, t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

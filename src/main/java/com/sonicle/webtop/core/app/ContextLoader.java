@@ -133,8 +133,6 @@ public class ContextLoader {
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxProcessingThreads(properties)));
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxWriteThreads(properties)));
-			//atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_CACHE, "com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache");
-			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_CACHE, "org.atmosphere.cache.UUIDBroadcasterCache");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "BroadcasterLifeCyclePolicy.EMPTY");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.JSR356AsyncSupport");
 			//atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.Tomcat7CometSupport");

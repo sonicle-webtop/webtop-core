@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  */
 @ManagedService(
 		path = PushEndpoint.URL + "/{sessionId}",
-		//broadcasterCache = org.atmosphere.cache.UUIDBroadcasterCache.class,
+		broadcasterCache = com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache.class,
 		interceptors = {
 			// See defaults at: https://github.com/Atmosphere/atmosphere/blob/atmosphere-project-2.4.20/modules/cpr/src/main/java/org/atmosphere/annotation/AnnotationUtil.java
 			org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor.class, // Default for @ManagedService
@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
 		}
 )
 public class PushEndpoint {
-	private static final Logger logger = LoggerFactory.getLogger(PushEndpoint.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(PushEndpoint.class);
 	public static final String URL = "/push"; // This must reflect web.xml!
 	
 	@PathParam("sessionId")
@@ -77,17 +77,24 @@ public class PushEndpoint {
 	
 	@Ready
 	public void onReady(final AtmosphereResource resource) {
-		if (logger.isTraceEnabled()) logger.trace("onReady [{}, {}]", sessionId, resource.uuid());
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("onReady [{}, {}]", sessionId, resource.uuid());
+		
+		String guessedSessionId = getSessionId(resource);
+		if (StringUtils.equals(guessedSessionId, sessionId)) {
+			invokeOnReady(sessionId, resource);
+		} else {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Session mismatch, ignoring request! [{} != {}]", sessionId, guessedSessionId);
+		}
 	}
 	
 	@Disconnect
 	public void onDisconnect(final AtmosphereResourceEvent event) {
-		if (logger.isTraceEnabled()) logger.trace("onDisconnect [{}, {}]", sessionId, event.getResource().uuid());
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("onDisconnect [{}, {}]", sessionId, event.getResource().uuid());
 	}
 	
 	@Post
 	public void onPost(final AtmosphereResource resource) {
-		if (logger.isTraceEnabled()) logger.trace("onPost [{}, {}]", sessionId, resource.uuid());
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("onPost [{}, {}]", sessionId, resource.uuid());
 		
 		String guessedSessionId = getSessionId(resource);
 		if (StringUtils.equals(guessedSessionId, sessionId)) {
@@ -98,22 +105,31 @@ public class PushEndpoint {
 					invokeOnHeartbeat(sessionId, resource);
 				}
 			} catch(IOException ex) {
-				logger.error("Error reading", ex);
+				LOGGER.error("Error reading", ex);
 			}
 		} else {
-			if (logger.isTraceEnabled()) logger.trace("Session mismatch, ignoring request! [{} != {}]", sessionId, guessedSessionId);
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Session mismatch, ignoring request! [{} != {}]", sessionId, guessedSessionId);
 		}
 	}
 	
 	@Heartbeat
 	public void onHeartbeat(final AtmosphereResourceEvent event) {
-		if (logger.isTraceEnabled()) logger.trace("onHeartbeat [{}, {}]", sessionId, event.getResource().uuid());
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("onHeartbeat [{}, {}]", sessionId, event.getResource().uuid());
 		
 		String guessedSessionId = getSessionId(event.getResource());
 		if (StringUtils.equals(guessedSessionId, sessionId)) {
 			invokeOnHeartbeat(sessionId, event.getResource());
 		} else {
-			if (logger.isTraceEnabled()) logger.trace("Session mismatch, ignoring heartbeat! [{} != {}]", sessionId, guessedSessionId);
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("Session mismatch, ignoring request! [{} != {}]", sessionId, guessedSessionId);
+		}
+	}
+	
+	protected void invokeOnReady(String sessionId, AtmosphereResource resource) {
+		SessionManager sessionManager = getSessionManager();
+		if (sessionManager != null) {
+			sessionManager.onPushResourceReady(sessionId, resource);
+		} else {
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("SessionManager is null");
 		}
 	}
 	
@@ -122,7 +138,7 @@ public class PushEndpoint {
 		if (sessionManager != null) {
 			sessionManager.onPushResourceHeartbeat(sessionId, resource);
 		} else {
-			logger.error("SessionManager is null");
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("SessionManager is null");
 		}
 	}
 	
@@ -133,8 +149,6 @@ public class PushEndpoint {
 	
 	private SessionManager getSessionManager() {
 		WebTopApp app = WebTopApp.getInstance();
-		if (app != null) return app.getSessionManager();
-		logger.warn("WebTopApp is null");
-		return null;
+		return (app != null) ? app.getSessionManager() : null;
 	}
 }
