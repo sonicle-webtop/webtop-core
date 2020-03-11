@@ -476,7 +476,9 @@ public final class WebTopApp {
 			// Check webapp version
 			logger.info("Checking webapp version...");
 			//String tomcatUri = "http://tomcat:tomcat@localhost:8084/manager/text";
-			String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setMgr);
+			String tomcatUri = WebTopProps.getTomcatManagerUri(properties);
+			if (StringUtils.isBlank(tomcatUri)) tomcatUri = CoreServiceSettings.getTomcatManagerUri(setMgr);
+			//String tomcatUri = CoreServiceSettings.getTomcatManagerUri(setMgr);
 			if (StringUtils.isBlank(tomcatUri)) {
 				logger.warn("No configuration found for TomcatManager [{}]", CoreSettings.TOMCAT_MANAGER_URI);
 				this.webappIsTheLatest = true;

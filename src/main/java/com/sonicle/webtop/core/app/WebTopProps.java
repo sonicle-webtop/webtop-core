@@ -61,6 +61,8 @@ public class WebTopProps {
 	public static final String PROP_ATMO_MAXSCHEDULERTHREADS = "webtop.atmosphere.maxschedulerthreads";
 	public static final String PROP_ATMO_MAXPROCESSINGTHREADS = "webtop.atmosphere.maxprocessingthreads";
 	public static final String PROP_ATMO_MAXWRITETHREADS = "webtop.atmosphere.maxwritethreads";
+	public static final String PROP_TOMCAT_MANAGER_URI = "webtop.tomcat.manager.uri";
+	
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -230,6 +232,10 @@ public class WebTopProps {
 	
 	public static int getAtmosphereMaxWriteThreads(Properties props) {
 		return Math.max(5, PropUtils.getIntProperty(props, PROP_ATMO_MAXWRITETHREADS, 10));
+	}
+	
+	public static String getTomcatManagerUri(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_TOMCAT_MANAGER_URI, null);
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {
