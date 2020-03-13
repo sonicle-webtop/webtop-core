@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 	extend: 'WTA.sdk.Service',
 	requires: [
 		'Sonicle.webtop.core.model.ServiceVars',
+		'Sonicle.webtop.core.model.Tag',
 		'Sonicle.webtop.core.app.RTCManager'
 	],
 	uses: [
@@ -44,7 +45,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.view.Activities',
 		'Sonicle.webtop.core.view.Causals',
 		'Sonicle.webtop.core.view.SMS',
-		
 		'Sonicle.webtop.core.view.CustomPanels',
 		'Sonicle.webtop.core.view.CustomFields'
 	],
