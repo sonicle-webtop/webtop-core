@@ -42,11 +42,13 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -58,6 +60,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -280,20 +283,39 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 		return addAsUploadedFile(SERVICE_ID, tag, filename, mediaType, is);
 	}
 	
+	public WebTopSession.UploadedFile addAsUploadedFile(String tag, String filename, String mediaType, UploadedFileStreamWriter writer) throws IOException, WTException {
+		return addAsUploadedFile(SERVICE_ID, tag, filename, mediaType, writer);
+	}
+	
 	public WebTopSession.UploadedFile addAsUploadedFile(String serviceId, String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {
+		return addAsUploadedFile(serviceId, tag, filename, mediaType, (out) -> {
+			return IOUtils.copy(is, out);
+		});
+	}
+	
+	public WebTopSession.UploadedFile addAsUploadedFile(String serviceId, String tag, String filename, String mediaType, UploadedFileStreamWriter writer) throws IOException, WTException {
 		String mtype = !StringUtils.isBlank(mediaType) ? mediaType : ServletHelper.guessMediaType(filename, true);
 		File file = WT.createTempFile(UPLOAD_TEMPFILE_PREFIX);
-		FileOutputStream fos = null;
-		long size = -1;
+		
 		try {
-			fos = new FileOutputStream(file);
-			size = IOUtils.copy(is, fos);
-		} finally {
-			IOUtils.closeQuietly(fos);
+			long size = -1;
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(file);
+				size = writer.write(fos);
+			} finally {
+				IOUtils.closeQuietly(fos);
+			}
+			
+			if (size == -1) size = file.length();
+			WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, serviceId, file.getName(), tag, filename, size, mtype);
+			getEnv().getSession().addUploadedFile(uploadedFile);
+			return uploadedFile;
+			
+		} catch (Throwable t) {
+			FileUtils.deleteQuietly(file);
+			throw t;
 		}
-		WebTopSession.UploadedFile uploadedFile = new WebTopSession.UploadedFile(false, serviceId, file.getName(), tag, filename, size, mtype);
-		getEnv().getSession().addUploadedFile(uploadedFile);
-		return uploadedFile;
 	}
 	
 	protected boolean isFileEditableInDocEditor(String fileName) {
@@ -315,5 +337,9 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 		mtype = fileItem.getContentType();
 		if(!StringUtils.isBlank(mtype)) return mtype;
 		return "application/octet-stream";
+	}
+	
+	public static interface UploadedFileStreamWriter {
+		public long write(OutputStream out) throws IOException;
 	}
 }
