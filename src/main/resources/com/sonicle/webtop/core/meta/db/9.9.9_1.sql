@@ -127,11 +127,11 @@ ALTER TABLE "core"."custom_panels_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "c
 CREATE TABLE "core"."licenses" (
 "service_id" varchar(255) NOT NULL,
 "product_id" varchar(255) NOT NULL,
-"internet_domain" varchar(255) NOT NULL,
+"internet_name" varchar(255) NOT NULL,
 "license" text
 )
 WITH (OIDS=FALSE)
 
 ;
 
-ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("service_id", "product_id", "internet_domain");
+ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("service_id", "product_id", "internet_name");
