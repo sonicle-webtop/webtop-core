@@ -62,7 +62,7 @@ public class AppManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setServiceId(src.getServiceId());
 			tgt.setProductId(src.getProductId());
-			tgt.setInternetName(src.getInternetDomain());
+			tgt.setInternetName(src.getInternetName());
 			tgt.setLicenseText(src.getLicense());
 		}
 		return tgt;
@@ -77,7 +77,7 @@ public class AppManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setServiceId(src.getServiceId());
 			tgt.setProductId(src.getProductId());
-			tgt.setInternetDomain(src.getInternetName());
+			tgt.setInternetName(src.getInternetName());
 			tgt.setLicense(src.getLicenseText());
 		}
 		return tgt;

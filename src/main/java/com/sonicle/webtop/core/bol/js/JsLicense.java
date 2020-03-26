@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.model.ServiceLicense;
 
 /**
@@ -68,13 +67,4 @@ public class JsLicense {
 		
 		return item;
 	}
-	
-	public JsLicense(String domainId, OLicense o) {
-		this.serviceId = o.getServiceId();
-		this.productId = o.getProductId();
-		this.domainId = domainId;
-		this.internetDomain = o.getInternetDomain();
-		this.license = o.getLicense();
-	}
-	
 }
