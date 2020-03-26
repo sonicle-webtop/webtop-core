@@ -2312,7 +2312,7 @@ public final class WebTopManager {
 		}
 		
 		public String publicNameToDomainId(String publicName) {
-			this.internalCheckDoNotLockThis();
+			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
 				return this.publicNameToDomainId.get(publicName);
@@ -2322,7 +2322,7 @@ public final class WebTopManager {
 		}
 		
 		public String internetNameToDomainId(String internetName) {
-			this.internalCheckDoNotLockThis();
+			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
 				return this.internetNameToDomainId.get(internetName);
@@ -2332,7 +2332,7 @@ public final class WebTopManager {
 		}
 		
 		public String domainIdToInternetName(String domainId) {
-			this.internalCheckDoNotLockThis();
+			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
 				return this.domainIdToInternetName.get(domainId);

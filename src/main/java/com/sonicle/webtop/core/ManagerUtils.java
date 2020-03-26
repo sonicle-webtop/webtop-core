@@ -229,6 +229,7 @@ public class ManagerUtils {
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
 			tgt.setType(EnumUtils.forSerializedName(src.getType(), CustomField.Type.class));
+			tgt.setSearchable(src.getSearchable());
 			tgt.setProps(LangUtils.deserialize(src.getProperties(), new CustomField.Props(), CustomField.Props.class));
 			tgt.setValues(LangUtils.deserialize(src.getValues(), new CustomField.Values(), CustomField.Values.class));
 			tgt.setLabelI18n(LangUtils.deserialize(src.getLabelI18n(), new CustomField.LabelI18n(), CustomField.LabelI18n.class));
@@ -258,6 +259,7 @@ public class ManagerUtils {
 			tgt.setName(src.getName());
 			tgt.setDescription(src.getDescription());
 			tgt.setType(EnumUtils.toSerializedName(src.getType()));
+			tgt.setSearchable(src.getSearchable());
 			tgt.setProperties(LangUtils.serialize(src.getProps(), CustomField.Props.class));
 			tgt.setValues(LangUtils.serialize(src.getValues(), CustomField.Values.class));
 			tgt.setLabelI18n(LangUtils.serialize(src.getLabelI18n(), CustomField.LabelI18n.class));

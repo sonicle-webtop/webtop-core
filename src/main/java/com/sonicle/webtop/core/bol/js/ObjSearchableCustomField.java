@@ -32,33 +32,19 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.LangUtils;
-import com.sonicle.webtop.core.model.CustomField;
-import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.commons.web.json.JsonResult;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import org.joda.time.DateTimeZone;
 
 /**
  *
  * @author malbinola
  */
-public class JsCustomFieldDefsData {
-	public String cfdefs;
-	public ArrayList<ObjCustomFieldValue> cvalues;
+public class ObjSearchableCustomField {
 	
-	public JsCustomFieldDefsData(Collection<CustomPanel> customPanels, Map<String, CustomField> customFields, String profileLanguageTag, DateTimeZone profileTz) {
-		cvalues = new ArrayList<>();
-		ArrayList<ObjCustomFieldDefs.Panel> panels = new ArrayList<>();
-		for (CustomPanel panel : customPanels) {
-			panels.add(new ObjCustomFieldDefs.Panel(panel, profileLanguageTag));
+	public static class List extends ArrayList<ObjCustomFieldDefs.Field> {
+
+		public static String toJson(ObjSearchableCustomField.List value) {
+			return JsonResult.GSON.toJson(value, ObjSearchableCustomField.List.class);
 		}
-		ArrayList<ObjCustomFieldDefs.Field> fields = new ArrayList<>();
-		for (CustomField field : customFields.values()) {
-			cvalues.add(new ObjCustomFieldValue(field.getType(), field.getFieldId()));
-			fields.add(new ObjCustomFieldDefs.Field(field, profileLanguageTag));
-		}
-		cfdefs = LangUtils.serialize(new ObjCustomFieldDefs(panels, fields), ObjCustomFieldDefs.class);
 	}
 }

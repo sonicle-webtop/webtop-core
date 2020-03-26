@@ -53,6 +53,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
+			searchable: WTF.checkboxBind('record', 'searchable'),
 			foEnableValues: WTF.foGetFn('record', 'type', function(v) {
 				return Ext.isEmpty(v) ? false : ['combobox', 'radios'].indexOf(v) !== -1;
 			}),
@@ -223,6 +224,21 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 	initComponent: function() {
 		var me = this,
 				vm = me.getViewModel();
+		
+		Ext.apply(me, {
+        	bbar: {
+        		xtype: 'statusbar',
+        		items: [
+                    {
+                    	xtype: 'tbtext',
+                    	bind: {
+                    		html: 'ID: {record.fieldId}'
+                    	}
+                    }
+        		]
+        	}
+        });
+		
 		me.callParent(arguments);
 		
 		me.add({
@@ -249,14 +265,6 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							emptyText: me.mys.res('customField.fld-name.emp'),
 							anchor: '100%'
 						}, {
-							xtype: 'textfield',
-							reference: 'fldid',
-							bind: '{record.fieldId}',
-							fieldLabel: me.mys.res('customField.fld-id.lbl'),
-							readOnly: true,
-							editable: false,
-							anchor: '100%'
-						}, {
 							xtype: 'textareafield',
 							bind: '{record.description}',
 							fieldLabel: me.mys.res('customField.fld-description.lbl'),
@@ -281,7 +289,13 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 
 								}
 							}
-						})
+						}),
+						{
+							xtype: 'checkbox',
+							bind: '{searchable}',
+							hideEmptyLabel: false,
+							boxLabel: me.mys.res('customField.fld-searchable.lbl')
+						}
 					]
 				}, {
 					xtype: 'wttabpanel',
@@ -415,15 +429,6 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		onViewLoad: function(s, success) {
 			var me = this,
 					mo = me.getModel();
-
-			if (me.isMode(me.MODE_NEW)) {	
-				me.lref('fldid').setReadOnly(false);
-			} else if(me.isMode(me.MODE_VIEW)) {
-				me.lref('fldid').setReadOnly(true);
-			} else if(me.isMode(me.MODE_EDIT)) {
-				me.lref('fldid').setReadOnly(true);
-			}
-
 			me.lref('fldname').focus(true);
 		},
 		

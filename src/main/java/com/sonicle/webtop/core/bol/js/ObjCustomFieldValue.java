@@ -45,7 +45,7 @@ import org.joda.time.LocalTime;
  *
  * @author malbinola
  */
-public class JsCustomFieldValue {
+public class ObjCustomFieldValue {
 	public String id;
 	public String ftype;
 	public String vtype;
@@ -56,13 +56,13 @@ public class JsCustomFieldValue {
 	public String ti;
 	public String dt;
 	
-	public JsCustomFieldValue(CustomField.Type fieldType, String fieldId) {
+	public ObjCustomFieldValue(CustomField.Type fieldType, String fieldId) {
 		id = fieldId;
 		ftype = EnumUtils.toSerializedName(fieldType);
-		vtype = JsCustomFieldValue.toVType(fieldType);
+		vtype = ObjCustomFieldValue.toVType(fieldType);
 	}
 	
-	public JsCustomFieldValue(CustomField.Type fieldType, CustomFieldValue fieldValue, DateTimeZone userTimezone) {
+	public ObjCustomFieldValue(CustomField.Type fieldType, CustomFieldValue fieldValue, DateTimeZone userTimezone) {
 		this(fieldType, fieldValue.getFieldId());
 		Object value = fieldValue.getValue(fieldType);
 		if (value != null) {
@@ -93,11 +93,11 @@ public class JsCustomFieldValue {
 			obj.setValue(type, nu);
 		} else if ("bo".equals(vtype)) {
 			obj.setValue(type, bo);
-		} else if ("da".equals(vtype)) {
+		} else if ("da".equals(vtype) && (da != null)) {
 			obj.setValue(type, DateTimeUtils.createYmdFormatter(DateTimeZone.UTC).parseLocalDate(da));
-		} else if ("ti".equals(vtype)) {
+		} else if ("ti".equals(vtype)&& (ti != null)) {
 			obj.setValue(type, DateTimeUtils.createHmsFormatter(DateTimeZone.UTC).parseLocalTime(ti));
-		} else if ("dt".equals(vtype)) {
+		} else if ("dt".equals(vtype)&& (dt != null)) {
 			obj.setValue(type, DateTimeUtils.createYmdHmsFormatter(userTimezone).parseLocalDate(dt));
 		}
 		

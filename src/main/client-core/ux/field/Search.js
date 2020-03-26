@@ -60,14 +60,24 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		
 		if (Ext.isEmpty(cfg.emptyText)) {
 			cfg.emptyText = WT.res('textfield.search.emp');
+		}
+		if (Ext.isEmpty(cfg.trueText)) {
+			cfg.trueText = WT.res('word.yes');
+		}
+		if (Ext.isEmpty(cfg.falseText)) {
+			cfg.falseText = WT.res('word.no');
 		}
 		if (Ext.isEmpty(cfg.searchText)) {
 			cfg.searchText = WT.res('wtsearchfield.search');
 		}
 		if (Ext.isEmpty(cfg.clearText)) {
 			cfg.clearText = WT.res('wtsearchfield.clear');
+		}
+		if (Ext.isEmpty(cfg.usageText)) {
+			cfg.usageText = WT.res('wtsearchfield.usage');
 		}
 		me.callParent([cfg]);
 	},
@@ -84,7 +94,7 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 				keywords = [], queryObject;
 		
 		if (!Ext.isEmpty(me.getValue())) {
-			queryObject = SoSS.toResult(SoSS.parseHumanQuery(me.getValue()));
+			queryObject = SoSS.toQueryObject(SoSS.parseHumanQuery(me.getValue()));
 			Ext.iterate(queryObject.conditionArray, function(item) {
 				if (me.highlightKeywords && me.highlightKeywords.indexOf(item.keyword) === -1) return;
 				if (!item.negated) keywords.push(item.value);
@@ -148,5 +158,79 @@ Ext.define('Sonicle.webtop.core.ux.field.Search', {
 			}
 		}
 		return null;
+	},
+	
+	statics: {
+		customFieldDefs2Fields: function(rawDefs) {
+			var defObj = Ext.JSON.decode(rawDefs, true),
+					fields = [], cfg;
+			
+			if (defObj) {
+				Ext.iterate(defObj, function(field, indx) {
+					cfg = WTA.ux.field.Search._customFieldCfg(field);
+					if (cfg) fields.push(cfg);
+				});
+			}
+			return fields;
+		},
+		
+		_customFieldCfg: function(field) {
+			var ftype = field.type,
+					cfg = {
+						name: 'cf_' + field.name,
+						mapping: 'cfield|' + field.id,
+						label: field.label
+					};
+			
+			if ('text' === ftype || 'textarea' === ftype) {
+				return Ext.apply(cfg, {type: 'string'});
+				
+			} else if ('number' === ftype) {
+				return Ext.apply(cfg, {type: 'number'});
+				
+			} else if ('date' === ftype) {
+				return Ext.apply(cfg, {
+					type: 'date',
+					//labelAlign: 'left',
+					customConfig: {
+						startDay: WT.getStartDay(),
+						format: WT.getShortDateFmt()
+					}
+				});
+				
+			} else if ('time' === ftype) {
+				return Ext.apply(cfg, {
+					type: 'time',
+					//labelAlign: 'left',
+					customConfig: {
+						format: WT.getShortTimeFmt()
+					}
+				});
+				
+			} else if ('datetime' === ftype) {
+				//TODO: Add support to this when customFields will be extendes.
+				return null;
+				
+			} else if ('combobox' === ftype) {
+				return Ext.apply(cfg, {
+					type: 'combo',
+					customConfig: {
+						store: field.values,
+						typeAhead: true,
+						queryMode: 'local',
+						forceSelection: true,
+						selectOnFocus: true,
+						triggerAction: 'all',
+						submitEmptyText: false
+					}
+				});
+				
+			} else if ('checkbox' === ftype) {
+				return Ext.apply(cfg, {type: 'boolean'});
+				
+			} else {
+				return null;
+			}
+		}
 	}
 });

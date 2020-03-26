@@ -48,19 +48,19 @@ import org.jooq.tools.StringUtils;
  *
  * @author malbinola
  */
-public class JsCustomFieldDefs {
+public class ObjCustomFieldDefs {
 	public Collection<Panel> panels;
 	public Map<String, Field> fields;
 	
-	public JsCustomFieldDefs(Collection<Panel> panels, Collection<Field> fields) {
+	public ObjCustomFieldDefs(Collection<Panel> panels, Collection<Field> fields) {
 		this.panels = panels;
 		this.fields = fields.stream()
 					.filter(item -> item.id != null)
 					.collect(Collectors.toMap(item -> item.id, item -> item, (ov, nv) -> nv, HashMap<String, Field>::new));
 	}
 	
-	public static String toJson(JsCustomFieldDefs value) {
-		return JsonResult.gson.toJson(value, JsCustomFieldDefs.class);
+	public static String toJson(ObjCustomFieldDefs value) {
+		return JsonResult.gson.toJson(value, ObjCustomFieldDefs.class);
 	}
 	
 	public static class Panel {
@@ -77,6 +77,7 @@ public class JsCustomFieldDefs {
 	
 	public static class Field {
 		public String id;
+		public String name;
 		public String label;
 		public String desc;
 		public String type;
@@ -86,6 +87,7 @@ public class JsCustomFieldDefs {
 		
 		public Field(CustomField field, String languageTag) {
 			id = field.getFieldId();
+			name = field.getName();
 			label = StringUtils.defaultIfBlank(field.getLabelI18n().get(languageTag), field.getName());
 			desc = field.getDescription();
 			type = EnumUtils.toSerializedName(field.getType());

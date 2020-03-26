@@ -63,6 +63,7 @@ import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
+import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.msg.IMChatRoomRemoved;
@@ -940,7 +941,10 @@ public class Service extends BaseService implements EventListener {
 				}
 				new JsonResult().printTo(out);
 			}
-			
+		
+		} catch(WTIntegrityException ex) {
+			logger.warn("Error in ManageTags", ex);
+			new JsonResult(false, "Tag already exists").printTo(out);
 		} catch(Throwable t) {
 			logger.error("Error in ManageTags", t);
 			new JsonResult(t).printTo(out);
@@ -1072,7 +1076,10 @@ public class Service extends BaseService implements EventListener {
 				coreMgr.updateCustomField(pl.data.toCustomField());
 				new JsonResult().printTo(out);	
 			}
-			
+		
+		} catch(WTIntegrityException ex) {
+			logger.warn("Error in ManageCustomField", ex);
+			new JsonResult(false, "Field already exists").printTo(out);
 		} catch(Throwable t) {
 			logger.error("Error in ManageCustomField", t);
 			new JsonResult(t).printTo(out);

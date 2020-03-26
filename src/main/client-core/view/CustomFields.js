@@ -134,6 +134,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				}, {
 					xtype: 'soiconcolumn',
 					dataIndex: 'type',
+					header: me.res('customFields.gp.type.lbl'),
 					hideText: false,
 					getText: function(v) {
 						return me.res('store.customFieldType.'+v);
@@ -142,7 +143,6 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						return me.mys.cssIconCls('customField-'+v);
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
-					header: me.res('customFields.gp.type.lbl'),
 					flex: 1
 				}, {
 					dataIndex: 'name',

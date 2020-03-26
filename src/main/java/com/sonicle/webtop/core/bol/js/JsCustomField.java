@@ -51,6 +51,7 @@ public class JsCustomField {
 	public String name;
 	public String description;
 	public String type;
+	public Boolean searchable;
 	public ArrayList<Prop> props;
 	public ArrayList<Value> values;
 	public ArrayList<I18nValue> labelI18n;
@@ -63,6 +64,7 @@ public class JsCustomField {
 		name = field.getName();
 		description = field.getDescription();
 		type = EnumUtils.toSerializedName(field.getType());
+		searchable = field.getSearchable();
 		props = new ArrayList<>(field.getProps().size());
 		for (Map.Entry<String, String> entry : field.getProps().entrySet()) {
 			props.add(new Prop(entry.getKey(), entry.getValue()));
@@ -86,6 +88,7 @@ public class JsCustomField {
 		field.setName(name);
 		field.setDescription(description);
 		field.setType(EnumUtils.forSerializedName(type, CustomField.Type.class));
+		field.setSearchable(searchable);
 		if ((props != null) && !props.isEmpty()) {
 			field.setProps(
 				props.stream()

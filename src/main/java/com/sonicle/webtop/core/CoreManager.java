@@ -56,6 +56,7 @@ import com.sonicle.webtop.core.app.sdk.ChangedEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTNotFoundException;
 import com.sonicle.webtop.core.app.sms.SmsProvider;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.VCausal;
 import com.sonicle.webtop.core.bol.OActivity;
 import com.sonicle.webtop.core.bol.OAuditLog;
@@ -661,8 +662,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -680,8 +681,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -696,8 +697,8 @@ public class CoreManager extends BaseManager {
 			OActivity oact = dao.select(con, activityId);
 			return ManagerUtils.createActivity(oact);
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -719,8 +720,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -743,8 +744,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -770,8 +771,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -790,8 +791,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -815,8 +816,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -831,8 +832,8 @@ public class CoreManager extends BaseManager {
 			OCausal ocal = dao.select(con, causalId);
 			return ManagerUtils.createCausal(ocal);
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -854,8 +855,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -878,8 +879,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -905,8 +906,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -924,8 +925,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -943,8 +944,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -966,8 +967,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -985,8 +986,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1008,8 +1009,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1024,8 +1025,8 @@ public class CoreManager extends BaseManager {
 			OMasterData omas = masDao.selectByDomainId(con, getTargetProfileId().getDomainId(), masterDataId);
 			return ManagerUtils.createMasterData(omas);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1042,8 +1043,8 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			return tagDao.selectIdsByDomain(con, targetDomainId);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1060,8 +1061,8 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			return tagDao.groupIdsByDomain(con, targetDomainId);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1082,8 +1083,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1101,8 +1102,8 @@ public class CoreManager extends BaseManager {
 			OTag otag = tagDao.selectByDomain(con, targetDomainId, tagId);
 			return ManagerUtils.createTag(otag);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1129,8 +1130,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1158,8 +1159,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1182,8 +1183,8 @@ public class CoreManager extends BaseManager {
 				writeAuditLog(AuditContext.TAG, AuditAction.DELETE, tagId, null);
 			}
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1206,8 +1207,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1230,8 +1231,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1247,8 +1248,8 @@ public class CoreManager extends BaseManager {
 			con = WT.getConnection(SERVICE_ID);
 			return doCustomPanelGet(con, targetDomainId, serviceId, panelId);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1274,8 +1275,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1302,8 +1303,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1328,8 +1329,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1354,14 +1355,45 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId) throws WTException {
+		return listCustomFieldTypesById(serviceId, null);
+	}
+	
+	public Map<String, CustomField.Type> listCustomFieldTypesById(final String serviceId, final Boolean searchable) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			LinkedHashMap<String, CustomField.Type> items = new LinkedHashMap<>();
+			for (Map.Entry<String, String> entry : cufDao.viewOnlineTypeByDomainServiceSearchable(con, targetDomainId, serviceId, searchable).entrySet()) {
+				CustomField.Type type = EnumUtils.forSerializedName(entry.getValue(), CustomField.Type.class);
+				if (type != null) items.put(entry.getKey(), type);
+			}
+			return items;
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
 	public Map<String, CustomFieldEx> listCustomFields(final String serviceId) throws WTException {
+		return listCustomFields(serviceId, null);
+	}
+	
+	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final Boolean searchable) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1371,14 +1403,14 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
-			for (VCustomField vcfield : cufDao.viewOnlineByDomainService(con, targetDomainId, serviceId, getCustomFieldsMaxNo()).values()) {
+			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchable(con, targetDomainId, serviceId, searchable, getCustomFieldsMaxNo()).values()) {
 				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
 				items.put(vcfield.getCustomFieldId(), ManagerUtils.fillCustomFieldEx(new CustomFieldEx(), vcfield));
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1396,8 +1428,8 @@ public class CoreManager extends BaseManager {
 			OCustomField ofield = cufDao.selectByDomainService(con, targetDomainId, serviceId, fieldId);
 			return ManagerUtils.createCustomField(ofield);
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1423,8 +1455,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1451,8 +1483,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1477,8 +1509,8 @@ public class CoreManager extends BaseManager {
 			
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
-			throw wrapException(ex);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1612,8 +1644,8 @@ public class CoreManager extends BaseManager {
 			}
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1629,8 +1661,8 @@ public class CoreManager extends BaseManager {
 			OIMChat ocha = dao.selectAliveByProfileChat(con, getTargetProfileId(), chatJid);
 			return (ocha != null) ? createIMChat(ocha) : null;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1651,8 +1683,8 @@ public class CoreManager extends BaseManager {
 			
 			return createIMChat(ocha);
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1670,8 +1702,8 @@ public class CoreManager extends BaseManager {
 			con = WT.getCoreConnection();
 			return dao.updateLastActivityByProfileChat(con, getTargetProfileId(), chatJid, lastSeenActivity, createRevisionTimestamp()) == 1;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1686,8 +1718,8 @@ public class CoreManager extends BaseManager {
 			IMChat.RevisionStatus revisionStatus = available ? IMChat.RevisionStatus.MODIFIED : IMChat.RevisionStatus.UNAVAILABLE;
 			return dao.updateRevisionStatusByProfileChat(con, getTargetProfileId(), chatJid, createRevisionTimestamp(), revisionStatus) == 1;
 			
-		} catch(SQLException | DAOException ex) {
-			throw new WTException(ex, "DB error");
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -1706,9 +1738,9 @@ public class CoreManager extends BaseManager {
 			DbUtils.commitQuietly(con);
 			return ret;
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Throwable t) {
 			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
@@ -2468,9 +2500,9 @@ public class CoreManager extends BaseManager {
 			DbUtils.commitQuietly(con);
 			return items;
 			
-		} catch(SQLException | DAOException ex) {
+		} catch (Throwable t) {
 			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB Error");
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
