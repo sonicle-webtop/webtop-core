@@ -160,7 +160,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						return me.res(key + (val === 1 ? 'panel' : 'panels'), val);
 					},
 					align: 'left',
-					width: 80
+					width: 100
 				}, {
 					xtype: 'soactioncolumn',
 					items: [

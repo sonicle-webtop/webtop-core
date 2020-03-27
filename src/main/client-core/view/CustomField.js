@@ -315,6 +315,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							nameColumnWidth: 150,
 							inferTypes: false,
 							sortableColumns: false,
+							border: false,
 							flex: 1
 						}, {
 							xtype: 'gridpanel',
@@ -362,17 +363,15 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							],
 							listeners: {
 								validateedit: function(ed, ctx) {
-									if (ctx.field === 'value') {
+									if (ctx.field === 'key') {
 										var aed = ed.activeEditor,
-												idx = ctx.grid.getStore().find('value', ctx.value);
+												idx = ctx.grid.getStore().find('key', ctx.value);
 										if ((idx !== -1) && (idx !== ctx.rowIdx)) {
-											/*
-											WT.warn(me.mys.res('customField.gp-values.warn.duplicate'), {
-												fn: function() {
-													if (aed) aed.field.focus();
-												}
-											});
-											*/
+											//WT.warn(me.mys.res('customField.gp-values.warn.duplicate'), {
+											//	fn: function() {
+											//		if (aed) aed.field.focus();
+											//	}
+											//});
 											return false;
 										}
 									}
@@ -387,7 +386,8 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 										me.addValueUI();
 									}
 								})
-							]
+							],
+							border: false
 						}
 					],
 					flex: 1
@@ -397,14 +397,8 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		me.on('viewload', me.onViewLoad);
 		
 		vm.bind('{record.type}', me.onTypeChange, me);
+		vm.bind('{record.searchable}', me.onSearchableChange, me);
 		vm.bind('{foEnableValues}', me.onEnableValuesChange, me);
-		/*vm.bind('{foEnableValues}', function(v1,v2) {
-			console.log('foEnableValues');
-		}, me);
-		vm.bind('{record.type}', function(v1,v2) {
-			console.log('record.type');
-		}, me);
-		*/
 	},
 	
 	addValueUI: function() {
@@ -475,6 +469,12 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 				if (['text', 'textarea'].indexOf(nv) !== -1 && ['text', 'textarea'].indexOf(ov) === -1) {
 					WT.warn(me.mys.res('customField.fld-type.confirm'));
 				}
+			}
+		},
+		
+		onSearchableChange: function(nv, ov) {
+			if (ov !== undefined && nv === true) {
+				WT.info(this.mys.res('customField.info.searchable'));
 			}
 		},
 
