@@ -1311,7 +1311,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public boolean updateCustomPanelOrder(final String serviceId, final String panelId, final short order) throws WTException {
-		CustomPanelDAO cusDao = CustomPanelDAO.getInstance();
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
 		try {	
@@ -1320,7 +1320,7 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			boolean ret = cusDao.updateOrder(con, targetDomainId, serviceId, panelId, order) == 1;
+			boolean ret = cupDao.updateOrder(con, targetDomainId, serviceId, panelId, order) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
@@ -1337,7 +1337,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public boolean deleteCustomPanel(final String serviceId, final String panelId) throws WTException {
-		CustomPanelDAO cusDao = CustomPanelDAO.getInstance();
+		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		Connection con = null;
 		
 		try {	
@@ -1346,7 +1346,7 @@ public class CoreManager extends BaseManager {
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
 			con = WT.getCoreConnection();
-			boolean ret = cusDao.deleteByDomainServicePanel(con, targetDomainId, serviceId, panelId) == 1;
+			boolean ret = cupDao.deleteByDomainServicePanel(con, targetDomainId, serviceId, panelId) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-panel not found [{}, {}]", serviceId, panelId);
 			
 			if (isAuditEnabled()) {
@@ -1492,6 +1492,7 @@ public class CoreManager extends BaseManager {
 	
 	public boolean deleteCustomField(final String serviceId, final String fieldId) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
 		Connection con = null;
 		
 		try {	
@@ -1499,24 +1500,26 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			RunContext.ensureIsPermitted(false, SERVICE_ID, "CUSTOM_FIELDS", "MANAGE");
 			
-			con = WT.getCoreConnection();
+			con = WT.getCoreConnection(false);
 			boolean ret = cufDao.logicDeleteByDomainServiceId(con, targetDomainId, serviceId, fieldId, BaseDAO.createRevisionTimestamp()) == 1;
 			if (!ret) throw new WTNotFoundException("Custom-field not found [{}, {}]", serviceId, fieldId);
+			cupfDao.deleteByField(con, fieldId);
 			
 			if (isAuditEnabled()) {
 				writeAuditLog(AuditContext.CUSTOMFIELD, AuditAction.DELETE, new CompositeId(serviceId, fieldId).toString(), null);
 			}
-			
+			DbUtils.commitQuietly(con);
 			return ret;
 			
 		} catch (Throwable t) {
+			DbUtils.rollbackQuietly(con);
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
 	}
 	
-	
+
 	
 	
 	private CustomPanel doCustomPanelGet(Connection con, String domainId, String serviceId, String customPanelId) {

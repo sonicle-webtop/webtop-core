@@ -105,6 +105,7 @@ ALTER TABLE "core"."custom_panels_fields" ADD PRIMARY KEY ("custom_panel_id", "c
 ALTER TABLE "core"."custom_panels_fields" ADD FOREIGN KEY ("custom_panel_id") REFERENCES "core"."custom_panels" ("custom_panel_id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "core"."custom_panels_fields" ADD FOREIGN KEY ("custom_field_id") REFERENCES "core"."custom_fields" ("custom_field_id") ON DELETE CASCADE ON UPDATE CASCADE;
 CREATE INDEX "custom_panels_fields_ak1" ON "core"."custom_panels_fields" USING btree ("custom_panel_id", "order");
+CREATE INDEX "custom_panels_fields_ak2" ON "core"."custom_panels_fields" USING btree ("custom_field_id");
 
 -- ----------------------------
 -- New table: custom_panels_tags
