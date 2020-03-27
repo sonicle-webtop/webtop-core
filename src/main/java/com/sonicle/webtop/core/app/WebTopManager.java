@@ -1386,7 +1386,13 @@ public final class WebTopManager {
 			con = wta.getConnectionManager().getConnection();
 			OLicense olic = AppManagerUtils.createOLicense(license);
 			boolean ret = licDao.insert(con, olic) == 1;
-			return ret ? license : null; // There are no modification, simply return provided object!
+			if (ret) {
+				// Cleanup cached dummy ProductLicense
+				forgetProductLicense(license.getServiceId(), license.getProductId(), license.getInternetName());
+				return license;
+			} else {
+				return null;
+			}
 			
 		} catch(Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
