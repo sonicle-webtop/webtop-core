@@ -171,7 +171,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									dataIndex: 'id',
 									hideText: false,
 									getText: function(val, rec) {
-										return rec.lookupRecord ? rec.lookupRecord.get('type') : val;
+										return rec.lookupRecord ? me.res('store.customFieldType.'+rec.lookupRecord.get('type')) : val;
 									},
 									getIconCls: function(val, rec) {
 										return rec.lookupRecord ? me.mys.cssIconCls('customField-'+rec.lookupRecord.get('type')) : val;
