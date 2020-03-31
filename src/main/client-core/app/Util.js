@@ -321,7 +321,7 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	
 	/**
 	 * Collects underlying ID values of passed array of records.
-	 * @param {Ext.data.Model[]} recs An array of records to use as source.
+	 * @param {Ext.data.Model[]|Ext.data.Store} recs An array of records to use as source.
 	 * @param {String} [idField] A custom ID field name to get, otherwise {@link Ext.data.Model#getId} will be used.
 	 * @param {Function} [filterFn] A custom filter function which is passed each item in the collection. Should return `true` to accept each item or `false` to reject it.
 	 * @returns {Mixed[]} An array of collected id values.
@@ -335,9 +335,16 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		}
 		var ids = [];
 		if (!Ext.isFunction(filterFn)) filterFn = function() {return true;};
-		Ext.iterate(recs, function(rec) {
-			if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
-		});
+		
+		if (Ext.isArray(recs)) {
+			Ext.iterate(recs, function(rec) {
+				if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
+			});
+		} else if (recs.isStore) {
+			recs.each(function(rec) {
+				if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
+			});
+		}
 		return ids;
 	},
 	

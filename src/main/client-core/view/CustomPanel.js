@@ -224,7 +224,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		onViewLoad: function(s, success) {
 			var me = this,
 					mo = me.getModel();
-
 			me.lref('fldname').focus(true);
 		},
 		
@@ -232,17 +231,21 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 			var me = this, 
 					fsto = me.getModel().assocFields();
 			
-			fsto.add({
-				id: vals[0],
-				order: fsto.getCount()
+			Ext.iterate(vals, function(val) {
+				fsto.add({
+					id: val,
+					order: fsto.getCount()
+				});
 			});
 			me.fieldPicker.close();
 			me.fieldPicker = null;
 		},
 		
 		showFieldPicker: function() {
-			var me = this;
+			var me = this,
+					usedFields = WTU.collectIds(me.getModel().assocFields());
 			me.fieldPicker = me.createFieldPicker();
+			me.fieldPicker.getComponent(0).setSkipValues(usedFields);
 			me.fieldPicker.show();
 		},
 		
@@ -260,8 +263,10 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					searchField: 'name',
 					emptyText: WT.res('grid.emp'),
 					searchText: WT.res('textfield.search.emp'),
+					selectedText: WT.res('grid.selected.lbl'),
 					okText: WT.res('act-ok.lbl'),
 					cancelText: WT.res('act-cancel.lbl'),
+					allowMultiSelection: true,
 					listeners: {
 						cancelclick: function() {
 							if (me.fieldPicker) me.fieldPicker.close();
