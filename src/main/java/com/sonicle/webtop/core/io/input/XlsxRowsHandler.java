@@ -46,26 +46,26 @@ public class XlsxRowsHandler extends XlsxColumnsHandler {
 	public RowValues rowValues;
 	
 	public XlsxRowsHandler(InputStream is, int headersRow, int firstDataRow, int lastDataRow, RowHandler rowHandler) {
-		super(is, headersRow, firstDataRow, lastDataRow);
+		super(is, headersRow, firstDataRow, lastDataRow, null);
 		this.rowHandler = rowHandler;
 	}
 	
 	@Override
 	public void startRow(int i) {
 		super.startRow(i);
-		if(isInRange) {
+		if (isInRange) {
 			rowValues = new RowValues();
 		} else {
-			if((lastDataRow != -1) && (row > lastDataRow)) close();
+			if ((lastDataRow != -1) && (row > lastDataRow)) close();
 		}
 	}
 
 	@Override
 	public void endRow(int i) {
-		if(isInRange) {
+		if (isInRange) {
 			try {
 				rowHandler.handle(row, rowValues);
-			} catch(Throwable t) {
+			} catch (Throwable t) {
 				close();
 			}
 		}

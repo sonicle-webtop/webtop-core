@@ -125,7 +125,7 @@ public class MemoryExcelFileReader extends FileRowsReader {
 				name = fmt.formatCellValue(cell);
 				if(StringUtils.isBlank(name)) name = "col_" + CellReference.convertNumToColString(cell.getColumnIndex());
 			}
-			hm.put(name.toLowerCase(), name);
+			hm.put(toColumnNameKey(name), name);
 		}
 		
 		return hm;

@@ -46,20 +46,22 @@ import org.apache.poi.xssf.usermodel.XSSFComment;
  * @author malbinola
  */
 public class XlsxColumnsHandler extends XlsxBaseHandler implements SheetContentsHandler {
+	protected ColumnMapper mapper;
 	protected boolean isInRange = false;
-	public LinkedHashMap<String, String> columnNames;
+	public LinkedHashMap<String, String> columnsMapping;
 	public HashMap<String, Integer> columnIndexes;
 
-	public XlsxColumnsHandler(InputStream is, int headersRow, int firstDataRow, int lastDataRow) {
+	public XlsxColumnsHandler(InputStream is, int headersRow, int firstDataRow, int lastDataRow, ColumnMapper mapper) {
 		super(is, headersRow, firstDataRow, lastDataRow);
+		this.mapper = mapper;
 	}
 
 	@Override
 	public void startRow(int i) {
 		row = i;
 		isHeader = (row == headersRow);
-		if(isHeader) {
-			columnNames = new LinkedHashMap<>();
+		if (isHeader) {
+			columnsMapping = new LinkedHashMap<>();
 			columnIndexes = new HashMap<>();
 		}
 		isInRange = ((row >= firstDataRow) && ((lastDataRow == -1) || (row <= lastDataRow)));
@@ -67,14 +69,14 @@ public class XlsxColumnsHandler extends XlsxBaseHandler implements SheetContents
 
 	@Override
 	public void endRow(int i) {
-		if(isHeader) close();
+		if (isHeader) close();
 	}
 
 	@Override
 	public void cell(String cellReference, String formattedValue, XSSFComment comment) {
-		if(isHeader) {
+		if (isHeader) {
 			String name = (headersRow == firstDataRow) ? cellReference : StringUtils.defaultIfBlank(formattedValue, cellReference);
-			columnNames.put(name.toLowerCase(), name);
+			if (mapper != null) columnsMapping.put(mapper.mapColumnName(name), name);
 			final int col = new CellReference(cellReference).getCol();
 			columnIndexes.put(name, col);
 
@@ -96,4 +98,8 @@ public class XlsxColumnsHandler extends XlsxBaseHandler implements SheetContents
 
 	@Override
 	public void headerFooter(String string, boolean bln, String string1) {}
+	
+	public static interface ColumnMapper {
+		public String mapColumnName(String columnName);
+	}
 }

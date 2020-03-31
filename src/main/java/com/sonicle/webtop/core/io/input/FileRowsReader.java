@@ -36,8 +36,8 @@ package com.sonicle.webtop.core.io.input;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -48,8 +48,9 @@ public abstract class FileRowsReader {
 	protected int headersRow = 1;
 	protected int firstDataRow = 2;
 	protected int lastDataRow = -1;
+	protected boolean columnStrictMapping = false;
 	
-	public abstract HashMap<String, String> listColumnNames(File file) throws IOException, FileReaderException;
+	public abstract Map<String, String> listColumnNames(File file) throws IOException, FileReaderException;
 	
 	public void setHeadersRow(int headersRow) {
 		if(headersRow < 0) {
@@ -78,26 +79,30 @@ public abstract class FileRowsReader {
 	}
 	
 	public List<FieldMapping> listFieldMappings(File file, String[] targetFields) throws IOException, FileReaderException {
-		return listFieldMappings(file, targetFields, false);
-	}
-	
-	public List<FieldMapping> listFieldMappings(File file, String[] targetFields, boolean strict) throws IOException, FileReaderException {
 		ArrayList<FieldMapping> mappings = new ArrayList<>();
-		HashMap<String, String> cols = listColumnNames(file);
+		Map<String, String> cols = listColumnNames(file);
 		
-		String lwr, source = null;
-		for(int i=0; i<targetFields.length; i++) {
-			source = null;
-			lwr = targetFields[i].toLowerCase();
-			if(cols.containsKey(lwr)) {
-				if(!strict || StringUtils.equals(targetFields[i], cols.get(lwr))) {
-					source = cols.get(lwr);
-				}
+		for (int i=0; i<targetFields.length; i++) {
+			String source = null;
+			String lower = columnStrictMapping ? targetFields[i] : targetFields[i].toLowerCase();
+			if (cols.containsKey(lower)) {
+				source = cols.get(lower);
 			}
 			mappings.add(new FieldMapping(targetFields[i], source));
 		}
 		
 		return mappings;
+	}
+	
+	protected String toColumnNameKey(String name) {
+		if (columnStrictMapping) {
+			return name;
+		} else {
+			String s = StringUtils.replace(name.toLowerCase(), " ", "");
+			s = StringUtils.replace(s, "_", "");
+			s = StringUtils.replace(s, "-", "");
+			return s;
+		}
 	}
 	
 	public static class FieldMapping {

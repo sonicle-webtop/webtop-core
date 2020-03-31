@@ -44,8 +44,8 @@ import org.apache.poi.hssf.record.Record;
  */
 public class XlsColumnsProcessor extends XlsRecordsProcessor implements HSSFListener {
 	
-	public XlsColumnsProcessor(InputStream is, int headersRow, int firstDataRow, int lastDataRow, String sheetName) {
-		super(is, headersRow, firstDataRow, lastDataRow, sheetName);
+	public XlsColumnsProcessor(InputStream is, int headersRow, int firstDataRow, int lastDataRow, String sheetName, ColumnMapper mapper) {
+		super(is, headersRow, firstDataRow, lastDataRow, sheetName, mapper);
 	}
 	
 	@Override
@@ -59,8 +59,8 @@ public class XlsColumnsProcessor extends XlsRecordsProcessor implements HSSFList
 	public void processRecord(Record record) {
 		super.processRecord(record);
 		
-		if(cellValue != null) {
-			if(row > headersRow) close();
+		if (cellValue != null) {
+			if (row > headersRow) close();
 		}
 	}
 }

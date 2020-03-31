@@ -84,7 +84,7 @@ public class ExcelFileReader extends FileRowsReader {
 	}
 	
 	public List<String> listSheets(File file) throws IOException, FileReaderException {
-		if(binary) {
+		if (binary) {
 			return listXlsSheets(file);
 		} else {
 			return listXlsxSheets(file);
@@ -99,7 +99,7 @@ public class ExcelFileReader extends FileRowsReader {
 			opc = OPCPackage.open(file, PackageAccess.READ);
 			XSSFReader reader = new XSSFReader(opc);
 			XSSFReader.SheetIterator sit = (XSSFReader.SheetIterator) reader.getSheetsData();
-			while(sit.hasNext()) {
+			while (sit.hasNext()) {
 				InputStream is = null;
 				try {
 					is = sit.next();
@@ -109,7 +109,7 @@ public class ExcelFileReader extends FileRowsReader {
 					IOUtils.closeQuietly(is);
 				}
 			}
-		} catch(OpenXML4JException ex) {
+		} catch (OpenXML4JException ex) {
 			throw new FileReaderException(ex, "Error opening file");
 		} finally {
 			IOUtils.closeQuietly(opc);
@@ -136,7 +136,7 @@ public class ExcelFileReader extends FileRowsReader {
 	
 	@Override
 	public HashMap<String, String> listColumnNames(File file) throws IOException, FileReaderException {
-		if(binary) {
+		if (binary) {
 			return listXlsColumnNames(file);
 		} else {
 			return listXlsxColumnNames(file);
@@ -154,29 +154,31 @@ public class ExcelFileReader extends FileRowsReader {
 			
 			XlsxColumnsHandler columnsHandler = null;
 			XSSFReader.SheetIterator sit = (XSSFReader.SheetIterator) reader.getSheetsData();
-			while(sit.hasNext()) {
+			while (sit.hasNext()) {
 				InputStream is = null;
 				try {
 					is = sit.next();
-					if(StringUtils.equals(sit.getSheetName(), sheet)) {
+					if (StringUtils.equals(sit.getSheetName(), sheet)) {
 						XMLReader xmlReader = SAXHelper.newXMLReader();
-						columnsHandler = new XlsxColumnsHandler(is, headersRow, firstDataRow, lastDataRow);
+						columnsHandler = new XlsxColumnsHandler(is, headersRow, firstDataRow, lastDataRow, (columnName) -> {
+							return toColumnNameKey(columnName);
+						});
 						ContentHandler handler = new XSSFSheetXMLHandler(styles, null, strings, columnsHandler, fmt, false);
 						xmlReader.setContentHandler(handler);
 						xmlReader.parse(new InputSource(is));
 					}
-				} catch(SAXException | ParserConfigurationException ex) {
+				} catch (SAXException | ParserConfigurationException ex) {
 					throw new FileReaderException(ex, "Error processing file content");
 				} catch(NullPointerException ex) {
 					// Thrown when stream is forcibly closed. Simply ignore this!
 				} finally {
 					IOUtils.closeQuietly(is);
 				}
-				if(columnsHandler != null) break;
+				if (columnsHandler != null) break;
 			}
-			return columnsHandler.columnNames;
+			return columnsHandler.columnsMapping;
 			
-		} catch(OpenXML4JException | SAXException ex) {
+		} catch (OpenXML4JException | SAXException ex) {
 			throw new FileReaderException(ex, "Error opening file");
 		} finally {
 			IOUtils.closeQuietly(opc);
@@ -190,9 +192,11 @@ public class ExcelFileReader extends FileRowsReader {
 		try {
 			pfs = new POIFSFileSystem(file);
 			is = pfs.createDocumentInputStream("Workbook");
-			XlsColumnsProcessor processor = new XlsColumnsProcessor(is, headersRow, firstDataRow, lastDataRow, sheet);
+			XlsColumnsProcessor processor = new XlsColumnsProcessor(is, headersRow, firstDataRow, lastDataRow, sheet, (columnName) -> {
+				return toColumnNameKey(columnName);
+			});
 			processor.process();
-			return processor.columnNames;
+			return processor.columnsMapping;
 			
 		} finally {
 			IOUtils.closeQuietly(is);
@@ -225,7 +229,7 @@ public class ExcelFileReader extends FileRowsReader {
 					is = sit.next();
 					if(StringUtils.equals(sit.getSheetName(), sheet)) {
 						XMLReader xmlReader = SAXHelper.newXMLReader();
-						columnsHandler = new XlsxColumnsHandler(is, headersRow, firstDataRow, lastDataRow);
+						columnsHandler = new XlsxColumnsHandler(is, headersRow, firstDataRow, lastDataRow, null);
 						ContentHandler handler = new XSSFSheetXMLHandler(styles, null, strings, columnsHandler, fmt, false);
 						xmlReader.setContentHandler(handler);
 						xmlReader.parse(new InputSource(is));
@@ -255,7 +259,7 @@ public class ExcelFileReader extends FileRowsReader {
 		try {
 			pfs = new POIFSFileSystem(file);
 			is = pfs.createDocumentInputStream("Workbook");
-			XlsColumnsProcessor processor = new XlsColumnsProcessor(is, headersRow, firstDataRow, lastDataRow, sheet);
+			XlsColumnsProcessor processor = new XlsColumnsProcessor(is, headersRow, firstDataRow, lastDataRow, sheet, null);
 			processor.process();
 			return processor.columnIndexes;
 			

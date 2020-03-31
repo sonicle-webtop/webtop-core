@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.supercsv.io.CsvListReader;
@@ -52,6 +53,7 @@ import org.supercsv.prefs.CsvPreference;
  * @author malbinola
  */
 public class TextFileReader extends FileRowsReader {
+	public static final String UNNAMED_COL_PREFIX = "COL-";
 	public static final String FIELD_DELIMITER_TAB = "tab";
 	public static final String FIELD_DELIMITER_COMMA = "comma";
 	public static final String FIELD_DELIMITER_SPACE = "space";
@@ -75,7 +77,7 @@ public class TextFileReader extends FileRowsReader {
 	}
 	
 	@Override
-	public HashMap<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException {
+	public Map<String, String> listColumnNames(File file) throws IOException, UnsupportedOperationException {
 		FileInputStream fis = null;
 		try {
 			fis = new FileInputStream(file);
@@ -85,22 +87,21 @@ public class TextFileReader extends FileRowsReader {
 		}
 	}
 	
-	public HashMap<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
+	public Map<String, String> listColumnNames(InputStream is) throws IOException, UnsupportedOperationException {
 		HashMap<String, String> hm = new LinkedHashMap<>();
 		CsvListReader lr = new CsvListReader(new InputStreamReader(is, charset), pref);
 		
 		String name = null;
 		List<String> line = null;
-		while((line = lr.read()) != null) {
-			if(lr.getLineNumber() == headersRow) {
-				for(int i=0; i<line.size(); i++) {
-					if(headersRow == firstDataRow) {
-						name = "COL-" + i+1;
+		while ((line = lr.read()) != null) {
+			if (lr.getLineNumber() == headersRow) {
+				for (int i=0; i<line.size(); i++) {
+					if (headersRow == firstDataRow) {
+						name = UNNAMED_COL_PREFIX + i+1;
 					} else {
-						name = line.get(i);
-						if(StringUtils.isBlank(name)) name = "COL-" + i+1;
+						name = StringUtils.defaultIfBlank(line.get(i), UNNAMED_COL_PREFIX + i+1);
 					}
-					hm.put(name.toLowerCase(), name);
+					hm.put(toColumnNameKey(name), name);
 				}
 				break;
 			}
@@ -125,14 +126,13 @@ public class TextFileReader extends FileRowsReader {
 		
 		String name = null;
 		List<String> line = null;
-		while((line = lr.read()) != null) {
-			if(lr.getLineNumber() == headersRow) {
-				for(int i=0; i<line.size(); i++) {
-					if(headersRow == firstDataRow) {
-						name = "COL-" + i+1;
+		while ((line = lr.read()) != null) {
+			if (lr.getLineNumber() == headersRow) {
+				for (int i=0; i<line.size(); i++) {
+					if (headersRow == firstDataRow) {
+						name = UNNAMED_COL_PREFIX + i+1;
 					} else {
-						name = line.get(i);
-						if(StringUtils.isBlank(name)) name = "COL-" + i+1;
+						name = StringUtils.defaultIfBlank(line.get(i), UNNAMED_COL_PREFIX + i+1);
 					}
 					hm.put(name, i);
 				}
@@ -152,33 +152,33 @@ public class TextFileReader extends FileRowsReader {
 		char quoteChar;
 		String endOfLineSymbols;
 		
-		if(fieldDelimiter.equals(FIELD_DELIMITER_TAB)) {
+		if (fieldDelimiter.equals(FIELD_DELIMITER_TAB)) {
 			delimiterChar = ((int)'\t');
-		} else if(fieldDelimiter.equals(FIELD_DELIMITER_COMMA)) {
+		} else if (fieldDelimiter.equals(FIELD_DELIMITER_COMMA)) {
 			delimiterChar = ((int)',');
-		} else if(fieldDelimiter.equals(FIELD_DELIMITER_SPACE)) {
+		} else if (fieldDelimiter.equals(FIELD_DELIMITER_SPACE)) {
 			delimiterChar = ((int)' ');
-		} else if(fieldDelimiter.equals(FIELD_DELIMITER_SEMICOLON)) {
+		} else if (fieldDelimiter.equals(FIELD_DELIMITER_SEMICOLON)) {
 			delimiterChar = ((int)';');
 		} else {
 			throw new UnsupportedOperationException("Field delimiter not supported [" + fieldDelimiter + "]");
 		}
 		
-		if(recordSeparator.equals(RECORD_SEPATATOR_CR)) {
+		if (recordSeparator.equals(RECORD_SEPATATOR_CR)) {
 			endOfLineSymbols = "\r";
-		} else if(recordSeparator.equals(RECORD_SEPATATOR_LF)) {
+		} else if (recordSeparator.equals(RECORD_SEPATATOR_LF)) {
 			endOfLineSymbols = "\n";
-		} else if(recordSeparator.equals(RECORD_SEPATATOR_CRLF)) {
+		} else if (recordSeparator.equals(RECORD_SEPATATOR_CRLF)) {
 			endOfLineSymbols = "\r\n";
 		} else {
 			throw new UnsupportedOperationException("Record separator not supported [" + recordSeparator + "]");
 		}
 		
-		if(textQualifier == null) {
+		if (textQualifier == null) {
 			quoteChar = ' ';
-		} else if(textQualifier.equals(TEXT_QUALIFIER_SINGLE_QUOTE)) {
+		} else if (textQualifier.equals(TEXT_QUALIFIER_SINGLE_QUOTE)) {
 			quoteChar = '\'';
-		} else if(textQualifier.equals(TEXT_QUALIFIER_DOUBLE_QUOTE)) {
+		} else if (textQualifier.equals(TEXT_QUALIFIER_DOUBLE_QUOTE)) {
 			quoteChar = '"';
 		} else {
 			throw new UnsupportedOperationException("Text qualifier not supported [" + textQualifier + "]");

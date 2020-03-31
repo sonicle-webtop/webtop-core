@@ -63,6 +63,7 @@ public abstract class XlsRecordsProcessor extends XlsBaseProcessor implements HS
 	protected final int firstDataRow;
 	protected final int lastDataRow;
 	protected final String sheetName;
+	protected ColumnMapper mapper;
 	protected boolean sheetFound = false;
 	private SSTRecord sstRecord = null;
 	protected int row = -1;
@@ -74,19 +75,20 @@ public abstract class XlsRecordsProcessor extends XlsBaseProcessor implements HS
 	private boolean findNextStringRecord = false;
 	protected int nextRow = -1;
 	protected int nextCol = -1;
-	public LinkedHashMap<String, String> columnNames;
+	public LinkedHashMap<String, String> columnsMapping;
 	public HashMap<String, Integer> columnIndexes;
 	
 	@Override
 	protected abstract HSSFRequest createRequest();
 	
-	public XlsRecordsProcessor(InputStream is, int headersRow, int firstDataRow, int lastDataRow, String sheetName) {
+	public XlsRecordsProcessor(InputStream is, int headersRow, int firstDataRow, int lastDataRow, String sheetName, ColumnMapper mapper) {
 		super(is);
 		// Converts to 0-based indexes
 		this.headersRow = headersRow-1;
 		this.firstDataRow = firstDataRow-1;
 		this.lastDataRow = (lastDataRow >= 0) ? lastDataRow-1 : lastDataRow;
 		this.sheetName = sheetName;
+		this.mapper = mapper;
 	}
 	
 	@Override
@@ -101,7 +103,7 @@ public abstract class XlsRecordsProcessor extends XlsBaseProcessor implements HS
 				if(!sheetFound) {
 					if(StringUtils.equals(bsr.getSheetname(), sheetName)) {
 						sheetFound = true;
-						columnNames = new LinkedHashMap<>();
+						columnsMapping = new LinkedHashMap<>();
 						columnIndexes = new HashMap<>();
 					}
 				} else {
@@ -222,8 +224,12 @@ public abstract class XlsRecordsProcessor extends XlsBaseProcessor implements HS
 		if(!isDummyEndRow && (row == headersRow)) {
 			String cellReference = CellReference.convertNumToColString(col);
 			String name = (headersRow == firstDataRow) ? cellReference : StringUtils.defaultIfBlank(cellValue, cellReference);
-			columnNames.put(name.toLowerCase(), name);
+			if (mapper != null) columnsMapping.put(mapper.mapColumnName(name), name);
 			columnIndexes.put(name, col);
 		}
+	}
+	
+	public static interface ColumnMapper {
+		public String mapColumnName(String columnName);
 	}
 }

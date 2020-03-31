@@ -52,6 +52,7 @@ public abstract class XlsBaseProcessor implements HSSFListener {
 	protected FormatTrackingHSSFListener formatTrackingListener;
 	
 	protected abstract HSSFRequest createRequest();
+	
 	@Override
 	public abstract void processRecord(Record record);
 	

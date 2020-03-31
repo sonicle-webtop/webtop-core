@@ -47,7 +47,7 @@ public class XlsRowsProcessor extends XlsRecordsProcessor implements HSSFListene
 	public RowValues rowValues;
 	
 	public XlsRowsProcessor(InputStream is, int headersRow, int firstDataRow, int lastDataRow, String sheetName, RowHandler rowHandler) {
-		super(is, headersRow, firstDataRow, lastDataRow, sheetName);
+		super(is, headersRow, firstDataRow, lastDataRow, sheetName, null);
 		this.rowHandler = rowHandler;
 	}
 	
@@ -62,12 +62,12 @@ public class XlsRowsProcessor extends XlsRecordsProcessor implements HSSFListene
 	public void processRecord(Record record) {
 		super.processRecord(record);
 		
-		if(isNewRow) rowValues = new RowValues();
-		if(isInRange) {
-			if(isDummyEndRow) {
+		if (isNewRow) rowValues = new RowValues();
+		if (isInRange) {
+			if (isDummyEndRow) {
 				try {
 					rowHandler.handle(row, rowValues);
-				} catch(Throwable t) {
+				} catch (Throwable t) {
 					close();
 				}
 			} else {
@@ -76,7 +76,7 @@ public class XlsRowsProcessor extends XlsRecordsProcessor implements HSSFListene
 				}
 			}
 		} else {
-			if((lastDataRow != -1) && (row > lastDataRow)) close();
+			if ((lastDataRow != -1) && (row > lastDataRow)) close();
 		}
 	}
 }
