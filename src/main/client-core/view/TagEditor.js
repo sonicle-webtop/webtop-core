@@ -104,12 +104,16 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 			bodyPadding: 10,
 			items: [{
 				xtype: 'fieldcontainer',
-				layout: 'hbox',
+				layout: {
+					type: 'hbox',
+					padding: '0 0 1 0' // fixes classic-theme bottom border issue
+				},
 				items: [{
 					xtype: 'sopalettefield',
 					bind: '{data.color}',
 					hideTrigger: true,
-					colors: WT.getColorPalette(),
+					colors: WT.getColorPalette('default'),
+					tilesPerRow: 11,
 					margin: '0 10 0 0',
 					width: 24
 				}, {

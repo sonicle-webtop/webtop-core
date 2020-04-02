@@ -833,15 +833,18 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		};
 		
 		return function(val, meta, rec, ridx, cidx, sto, view) {
-			var cbxCls, cbxStyle;
+			var cbxCls = '', cbxStyle;
 			if (evalValueFn(cfg.shouldCustomize, null, val, rec, false) === true) {
 				var co = evalValueFn(cfg.getColor, cfg.colorField, val, rec, null),
+						cofore = Sonicle.ColorUtils.bestForeColor(co, 0.64),
 						obj = {};
+				
 				if (co === '#FFFFFF') {
 					cbxCls = 'wt-tree-checkbox-white';
 				} else {
 					obj = {	borderColor: co	};
 				}
+				cbxCls += (cofore === '#000000' ? ' wt-tree-checkbox-darkmark' : ' wt-tree-checkbox-lightmark');
 				if (rec.get('checked')) obj.backgroundColor = co;
 				cbxStyle = Ext.DomHelper.generateStyles(obj);
 				meta.iconCls = 'wt-hidden';

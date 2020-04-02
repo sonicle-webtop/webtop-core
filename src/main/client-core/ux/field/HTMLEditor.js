@@ -43,7 +43,8 @@ Ext.define('Sonicle.webtop.core.ux.field.HTMLEditor', {
 			me.buttonTips[key].text = WT.res('editor.act-' + key + '.tip');
 		});
 		cfg.fontFamilies = cfg.fontFamilies || WT.getVar("editorFonts").split(',');
-		
+		cfg.colors = WT.getColorPalette('html');
+		cfg.tilesPerRow = 8;
 		me.callParent([cfg]);
 	},
 	

@@ -48,12 +48,6 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	enableSelection: true,
 	
 	/**
-	 * @cfg {String} [defaultColor]
-	 * Color to use as default for new or if color is missing.
-	 */
-	defaultColor: '#FFFFFF',
-	
-	/**
 	 * @cfg {Object} [data]
 	 * An object containing initial data values.
 	 * 
@@ -133,7 +127,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					dataIndex: 'name',
 					renderer: function(val, meta, rec) {
 						var SoS = Sonicle.String;
-						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + SoS.deflt(rec.get('color'), me.defaultColor) + '"></i>&nbsp;&nbsp;' + SoS.deflt(rec.get('name'), '');
+						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + SoS.deflt(rec.get('color'), '') + '"></i>&nbsp;&nbsp;' + SoS.deflt(rec.get('name'), '');
 					},
 					flex: 1
 				}, {
@@ -209,11 +203,12 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	
 	addTag: function(opts) {
 		var me = this,
+				pltt = WT.getColorPalette('default'),
 				vw = WT.createView(me.mys.ID, 'view.TagEditor', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
-							color: me.defaultColor
+							color: pltt[Math.floor(Math.random() * pltt.length)]
 						},
 						invalidNames: me.collectUsedNames()
 					}
