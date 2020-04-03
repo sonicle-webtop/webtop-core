@@ -80,13 +80,60 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	},
 	defaultButton: 'btnok',
 	
+	/**
+	 * @readonly
+	 * @property {Number} syncCount
+	 */
+	syncCount: 0,
+	
 	initComponent: function() {
 		var me = this,
 				ic = me.getInitialConfig(),
-				vm = me.getVM();
+				vm = me.getVM(),
+				butt, tbar;
 		
 		if (ic.data) vm.set('data', ic.data);
 		me.callParent(arguments);
+		
+		if (me.enableSelection) {
+			butt = [
+				{
+					reference: 'btnok',
+					formBind: true,
+					text: WT.res('act-apply.lbl'),
+					handler: function() {
+						me.okView();
+					}
+				}, {
+					text: WT.res('tags.new.lbl'),
+					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
+					handler: function() {
+						me.addTagUI();
+					}
+				}
+			];
+		} else {
+			tbar = [
+				me.addAct('add', {
+					text: WT.res('act-add.lbl'),
+					tooltip: null,
+					iconCls: 'wt-icon-add-xs',
+					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
+					handler: function() {
+						me.addTagUI();
+					}
+				}),
+				'->',
+				me.addAct('refresh', {
+					text: '',
+					tooltip: WT.res('act-refresh.lbl'),
+					iconCls: 'wt-icon-refresh',
+					handler: function() {
+						me.lref('gp').getStore().load();
+					}
+				})
+			];
+		}
 		
 		me.add({
 			region: 'center',
@@ -154,61 +201,29 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 						}
 					}]
 			}],
-			buttons: [{
-					reference: 'btnok',
-					formBind: true,
-					text: WT.res('act-apply.lbl'),
-					handler: function() {
-						me.okView();
-					}
-				}, {
-					text: WT.res('tags.new.lbl'),
-					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
-					handler: function() {
-						me.addTagUI();
-					}
-				}, {
-					text: WT.res('act-cancel.lbl'),
-					handler: function() {
-						me.closeView(false);
-					}
-			}]
+			tbar: tbar,
+			buttons: butt
 		});
 	},
 	
 	okView: function() {
 		var me = this,
-				vm = me.getVM(),
-				gp = me.lref('gp'),
-				sto = gp.getStore(),
-				doClose = function() {
-					if (me.enableSelection) vm.set('data.selection', WTU.collectIds(gp.getSelection()));
-					me.fireEvent('viewok', me, vm.get('data'));
-					me.closeView(false);
-				};
-		
-		if (WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE') && WTU.needsSync(sto)) {
-			sto.sync({
-				success: function() {
-					doClose();
-				},
-				failure: function() {
-					sto.reload();
-				}
-			});
-		} else {
-			doClose();
-		}
+			vm = me.getVM(),
+				gp = me.lref('gp');
+		if (me.enableSelection) vm.set('data.selection', WTU.collectIds(gp.getSelection()));
+		me.fireEvent('viewok', me, vm.get('data'));
+		me.closeView(false);
 	},
 	
 	addTag: function(opts) {
 		var me = this,
-				pltt = WT.getColorPalette('default'),
+				pal = WT.getColorPalette('default'),
+				rndColor = pal[Math.floor(Math.random() * pal.length)],
 				vw = WT.createView(me.mys.ID, 'view.TagEditor', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
-							color: pltt[Math.floor(Math.random() * pltt.length)]
+							color: Sonicle.String.prepend(rndColor, '#', true)
 						},
 						invalidNames: me.collectUsedNames()
 					}
@@ -242,6 +257,21 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	},
 	
 	privates: {
+		syncChanges: function() {
+			var me = this,
+					sto = me.lref('gp').getStore();
+			if (WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE') && WTU.needsSync(sto)) {
+				sto.sync({
+					success: function() {
+						me.syncCount++;
+					},
+					failure: function() {
+						sto.reload();
+					}
+				});
+			}
+		},
+		
 		collectUsedNames: function(skipName) {
 			var gp = this.lref('gp'),
 					sto = gp.getStore(),
@@ -259,11 +289,15 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 			var me = this;
 			me.addTag({
 				callback: function(data) {
-					var sto = me.lref('gp').getStore();
-					sto.add(sto.createModel({
+					var gp = me.lref('gp'),
+							sto = gp.getStore(),
+							added;
+					added = sto.add(sto.createModel({
 						name: data.name,
 						color: data.color
 					}));
+					if (me.enableSelection) gp.getSelectionModel().select(added, true);
+					me.syncChanges();
 				}
 			});
 		},
@@ -273,7 +307,10 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 			me.editTag(rec.getId(), rec.get('name'), rec.get('color'), {
 				callback: function(data) {
 					var rec = me.lref('gp').getStore().getById(data.id);
-					if (rec) rec.set({name: data.name, color: data.color});
+					if (rec) {
+						rec.set({name: data.name, color: data.color});
+						me.syncChanges();
+					}
 				}
 			});
 		},
@@ -283,7 +320,10 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					sto = me.lref('gp').getStore();
 
 			WT.confirm(me.mys.res('tags.confirm.delete'), function(bid) {
-				if (bid === 'yes') sto.remove(rec);
+				if (bid === 'yes') {
+					sto.remove(rec);
+					me.syncChanges();
+				}
 			}, me);
 		}
 	}

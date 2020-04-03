@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	},
 	modelName: 'Sonicle.webtop.core.model.CustomPanel',
 	fieldTitle: 'name',
+	autoToolbar: false,
 	
 	/**
 	 * @cfg {String} serviceId
@@ -78,6 +79,29 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	initComponent: function() {
 		var me = this,
 				vm = me.getViewModel();
+		
+		Ext.apply(me, {
+			tbar: [
+				me.addAct('saveClose', {
+					text: WT.res('act-saveClose.lbl'),
+					tooltip: null,
+					iconCls: 'wt-icon-saveClose-xs',
+					handler: function() {
+						me.saveView(true);
+					}
+				}),
+				'-',
+				me.addAct('tags', {
+					text: null,
+					tooltip: me.mys.res('act-manageTags.lbl'),
+					iconCls: 'wt-icon-tag',
+					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
+					handler: function() {
+						me.showManageTagsUI();
+					}
+				})
+			]
+		});
 		me.callParent(arguments);
 		
 		me.lookupStore = Ext.create('Ext.data.JsonStore', {
@@ -123,19 +147,39 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 							fieldLabel: me.res('customPanel.fld-title.lbl', WT.getLanguage()),
 							anchor: '100%'
 						}, {
-							xtype: 'sotagfield',
-							bind: '{foTags}',
-							store: WT.getTagsStore(),
-							valueField: 'id',
-							displayField: 'name',
-							colorField: 'color',
-							createNewOnEnter: false,
-							createNewOnBlur: false,
-							filterPickList: true,
-							forceSelection: true,
+							xtype: 'fieldcontainer',
+							layout: {
+								type: 'hbox',
+								padding: '0 0 1 0' // fixes classic-theme bottom border issue
+							},
+							items: [
+								{
+									xtype: 'sotagfield',
+									bind: '{foTags}',
+									store: WT.getTagsStore(),
+									valueField: 'id',
+									displayField: 'name',
+									colorField: 'color',
+									createNewOnEnter: false,
+									createNewOnBlur: false,
+									filterPickList: true,
+									forceSelection: true,
+									emptyText: me.res('customPanel.fld-tags.emp'),
+									margin: '0 5 0 0',
+									flex: 1
+								}, {
+									xtype: 'button',
+									ui: 'default-toolbar',
+									tooltip: me.mys.res('act-addTag.tip'),
+									iconCls: 'wt-icon-addTag',
+									disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
+									handler: function() {
+										me.addTagUI();
+									}
+								}
+							],
 							fieldLabel: me.res('customPanel.fld-tags.lbl'),
-							emptyText: me.res('customPanel.fld-tags.emp'),
-							anchor: '100%'
+						    anchor: '100%'
 						}
 					]
 				}, {
@@ -220,6 +264,25 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		me.on('viewload', me.onViewLoad);
 	},
 	
+	addTag: function(opts) {
+		var me = this,
+				pal = WT.getColorPalette('default'),
+				rndColor = pal[Math.floor(Math.random() * pal.length)],
+				vw = WT.createView(me.mys.ID, 'view.TagEditor', {
+					swapReturn: true,
+					viewCfg: {
+						data: {
+							color: Sonicle.String.prepend(rndColor, '#', true)
+						}
+					}
+				});
+		
+		vw.on('viewok', function(s, data) {
+			Ext.callback(opts.callback, opts.scope || me, [data]);
+		});
+		vw.showView();
+	},
+	
 	privates: {
 		onViewLoad: function(s, success) {
 			var me = this,
@@ -239,6 +302,32 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 			});
 			me.fieldPicker.close();
 			me.fieldPicker = null;
+		},
+		
+		addTagUI: function() {
+			var me = this;
+			me.addTag({
+				callback: function(data) {
+					WT.ajaxReq(me.mys.ID, 'ManageTags', {
+						params: {
+							crud: 'create'
+						},
+						jsonData: [{name: data.name, color: data.color}],
+						callback: function(success, json) {
+							if (!success) WT.error(me.mys.res('customPanel.error.newtag'));
+						}
+					});
+				}
+			});
+		},
+		
+		showManageTagsUI: function() {
+			WT.createView(this.mys.ID, 'view.Tags', {
+				swapReturn: true,
+				viewCfg: {
+					enableSelection: false
+				}
+			}).showView();
 		},
 		
 		showFieldPicker: function() {

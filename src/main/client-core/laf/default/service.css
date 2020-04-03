@@ -59,6 +59,7 @@
 .wt-icon-video-call { background-image: url('video-call_16.svg') !important; background-size: contain; }
 .wt-icon-sort { background-image: url('sort_16.svg') !important; background-size: contain; }
 .wt-icon-tag { background-image: url('tag_16.svg') !important; background-size: contain; }
+.wt-icon-addTag { background-image: url('tag-add_16.svg') !important; background-size: contain; }
 
 .wt-icon-customPanel { background-image: url('custompanel_16.svg') !important; background-size: contain; }
 .wt-icon-customField { background-image: url('customfield_16.svg') !important; background-size: contain; }

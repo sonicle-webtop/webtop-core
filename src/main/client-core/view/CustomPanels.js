@@ -40,6 +40,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		'Sonicle.webtop.core.model.CustomPanelGrid'
 	],
 	uses: [
+		'Sonicle.DataUtils',
 		'Sonicle.webtop.core.view.CustomPanel'
 	],
 	
@@ -131,6 +132,13 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						xtype: 'soactioncolumn',
 						items: [
 							{
+								iconCls: 'fa fa-clone',
+								tooltip: WT.res('act-clone.lbl'),
+								handler: function(g, ridx) {
+									var rec = g.getStore().getAt(ridx);
+									me.cloneCustomPanelUI(rec);
+								}
+							}, {
 								iconCls: 'fa fa-trash',
 								tooltip: WT.res('act-remove.lbl'),
 								handler: function(g, ridx) {
@@ -169,7 +177,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		});
 	},
 	
-	addCustomPanel: function(serviceId, opts) {
+	addCustomPanel: function(serviceId, data, opts) {
 		opts = opts || {};
 		var me = this,
 				vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
@@ -184,10 +192,11 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		});
 		vw.showView(function(s) {
 			vw.begin('new', {
-				data: {
-					serviceId: serviceId,
+				data: Ext.apply(data || {}, {
+					serviceId: serviceId
+				}, {
 					order: -1
-				}
+				})
 			});
 		});
 	},
@@ -217,7 +226,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	privates: {
 		addCustomPanelUI: function() {
 			var me = this;
-			me.addCustomPanel(me.serviceId, {
+			me.addCustomPanel(me.serviceId, null, {
 				callback: function() {
 					me.lref('gp').getStore().load();
 				}
@@ -229,6 +238,30 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 			me.editCustomPanel(rec.getId(), {
 				callback: function() {
 					me.lref('gp').getStore().load();
+				}
+			});
+		},
+		
+		cloneCustomPanelUI: function(rec) {
+			var me = this;
+			WT.ajaxReq(me.mys.ID, 'ManageCustomPanel', {
+				params: {
+					crud: 'read',
+					id: rec.getId()
+				},
+				callback: function(success, json) {
+					if (success) {
+						var data = Ext.apply(json.data, {
+							id: undefined,
+							fieldId: undefined,
+							name: Sonicle.DataUtils.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
+						});
+						me.addCustomPanel(me.serviceId,  Sonicle.Utils.applyIfDefined({}, data), {
+							callback: function() {
+								me.lref('gp').getStore().load();
+							}
+						});
+					}
 				}
 			});
 		},

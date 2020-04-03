@@ -252,53 +252,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 	initActions: function() {
 		var me = this;
 		
-		me.addAct('toolbox', 'newCustomField', {
-			text: 'newCustomField',
-			tooltip: null,
-			//iconCls: 'wt-icon-activity-xs',
-			handler: function() {
-				var me = this,
-					vw = WT.createView(me.ID, 'view.CustomField', {swapReturn: true});
-			
-				vw.showView(function(s) {
-				vw.begin('new', {
-					data: {
-						serviceId: 'com.sonicle.webtop.core'
-					}
-				});
-			});
-			}
-		});
-		me.addAct('toolbox', 'manageCustomPanels', {
-			text: 'manageCustomPanels',
-			tooltip: null,
-			//iconCls: 'wt-icon-activity-xs',
-			handler: function() {
-				WT.createView(this.ID, 'view.CustomPanels', {
-					swapReturn: true,
-					viewCfg: {
-						dockableConfig: {
-							title: '[' + 'Contatti' + '] ' + WT.res('customPanels.tit') 
-						},
-						serviceId: 'com.sonicle.webtop.contacts'
-					}
-				}).showView();
-			}
-		});
-		me.addAct('toolbox', 'manageCustomField', {
-			text: 'manageCustomField',
-			tooltip: null,
-			//iconCls: 'wt-icon-activity-xs',
-			handler: function() {
-				WT.createView(this.ID, 'view.CustomFields', {
-					swapReturn: true,
-					viewCfg: {
-						serviceId: 'com.sonicle.webtop.contacts'
-					}
-				}).showView();
-			}
-		});
-		
 		if (me.isPermitted('ACTIVITIES', 'MANAGE')) {
 			me.addAct('toolbox', 'manageActivities', {
 				text: WT.res('activities.tit'),
@@ -316,6 +269,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 				iconCls: 'wt-icon-causal-xs',
 				handler: function() {
 					me.showCausals();
+				}
+			});
+		}
+		if (WT.isPermitted(WT.ID, 'TAGS', 'MANAGE')) {
+			me.addAct('toolbox', 'manageTags', {
+				text: WT.res('act-manageTags.lbl'),
+				tooltip: WT.res('act-manageTags.tip'),
+				iconCls: 'wt-icon-tag',
+				handler: function() {
+					me.showManageTagsUI();
 				}
 			});
 		}
@@ -416,6 +379,15 @@ Ext.define('Sonicle.webtop.core.Service', {
 	
 	showCausals: function() {
 		WT.createView(this.ID, 'view.Causals').show();
+	},
+	
+	showManageTagsUI: function() {
+		WT.createView(this.ID, 'view.Tags', {
+			swapReturn: true,
+			viewCfg: {
+				enableSelection: false
+			}
+		}).showView();
 	},
 	
 	showReminder: function(data) {

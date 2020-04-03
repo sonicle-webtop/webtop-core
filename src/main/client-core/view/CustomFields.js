@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		'Sonicle.webtop.core.model.CustomFieldGrid'
 	],
 	uses: [
+		'Sonicle.DataUtils',
 		'Sonicle.webtop.core.view.CustomField'
 	],
 	
@@ -165,6 +166,13 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
+							iconCls: 'fa fa-clone',
+							tooltip: WT.res('act-clone.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.cloneCustomFieldUI(rec);
+							}
+						}, {
 							iconCls: 'fa fa-trash',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
@@ -205,19 +213,19 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		});
 	},
 	
-	addCustomField: function(serviceId, opts) {
+	addCustomField: function(serviceId, data, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomField', {swapReturn: true});
+				vw = WT.createView(me.mys.ID, 'view.CustomField', {swapReturn: true})
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
 		});
 		vw.showView(function(s) {
 			vw.begin('new', {
-				data: {
+				data: Ext.apply(data || {}, {
 					serviceId: serviceId
-				}
+				})
 			});
 		});
 	},
@@ -242,7 +250,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	privates: {
 		addCustomFieldUI: function() {
 			var me = this;
-			me.addCustomField(me.serviceId, {
+			me.addCustomField(me.serviceId, null, {
 				callback: function() {
 					me.lref('gp').getStore().load();
 				}
@@ -254,6 +262,30 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 			me.editCustomField(rec.getId(), {
 				callback: function() {
 					me.lref('gp').getStore().load();
+				}
+			});
+		},
+		
+		cloneCustomFieldUI: function(rec) {
+			var me = this;
+			WT.ajaxReq(me.mys.ID, 'ManageCustomField', {
+				params: {
+					crud: 'read',
+					id: rec.getId()
+				},
+				callback: function(success, json) {
+					if (success) {
+						var data = Ext.apply(json.data, {
+							id: undefined,
+							fieldId: undefined,
+							name: Sonicle.DataUtils.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
+						});
+						me.addCustomField(me.serviceId, Sonicle.Utils.applyIfDefined({}, data), {
+							callback: function() {
+								me.lref('gp').getStore().load();
+							}
+						});
+					}
 				}
 			});
 		},
