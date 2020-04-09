@@ -114,14 +114,16 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFields', {
 		}
 		
 		Ext.suspendLayouts();
-		me.removeAll();
-		if (createEmpty) {
-			me.add(me.createEmptyItemCfg());
-		} else {
-			me.getViewModel().setFormulas(formulas);
-			me.add(me.createFormPanelCfg(items));
-		}
-		Ext.resumeLayouts(true);
+        me.removeAll();
+		Ext.defer(function() { // Run async in order to avoid raise of "Cannot have multiple center regions..."
+			if (createEmpty) {
+				me.add(me.createEmptyItemCfg());
+			} else {
+				me.getViewModel().setFormulas(formulas);
+				me.add(me.createFormPanelCfg(items));
+			}
+			Ext.resumeLayouts(true);
+		}, 0);
 	},
 	
 	isValid: function() {

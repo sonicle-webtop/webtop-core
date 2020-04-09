@@ -34,6 +34,7 @@ package com.sonicle.webtop.core.bol.js;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.model.CustomField;
+import com.sonicle.webtop.core.model.CustomFieldValue;
 import com.sonicle.webtop.core.model.CustomPanel;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +49,7 @@ public class JsCustomFieldDefsData {
 	public String cfdefs;
 	public ArrayList<ObjCustomFieldValue> cvalues;
 	
-	public JsCustomFieldDefsData(Collection<CustomPanel> customPanels, Map<String, CustomField> customFields, String profileLanguageTag, DateTimeZone profileTz) {
+	public JsCustomFieldDefsData(Collection<CustomPanel> customPanels, Map<String, CustomField> customFields, Map<String, CustomFieldValue> customFieldValues, String profileLanguageTag, DateTimeZone profileTz) {
 		cvalues = new ArrayList<>();
 		ArrayList<ObjCustomFieldDefs.Panel> panels = new ArrayList<>();
 		for (CustomPanel panel : customPanels) {
@@ -56,7 +57,8 @@ public class JsCustomFieldDefsData {
 		}
 		ArrayList<ObjCustomFieldDefs.Field> fields = new ArrayList<>();
 		for (CustomField field : customFields.values()) {
-			cvalues.add(new ObjCustomFieldValue(field.getType(), field.getFieldId()));
+			CustomFieldValue cvalue = (customFieldValues != null) ? customFieldValues.get(field.getFieldId()) : null;
+			cvalues.add(cvalue != null ? new ObjCustomFieldValue(field.getType(), cvalue, profileTz) : new ObjCustomFieldValue(field.getType(), field.getFieldId()));
 			fields.add(new ObjCustomFieldDefs.Field(field, profileLanguageTag));
 		}
 		cfdefs = LangUtils.serialize(new ObjCustomFieldDefs(panels, fields), ObjCustomFieldDefs.class);
