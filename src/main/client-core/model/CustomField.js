@@ -62,7 +62,8 @@ Ext.define('Sonicle.webtop.core.model.CustomField', {
 		}),
 		WTF.field('description', 'string', true),
 		WTF.field('type', 'string', false),
-		WTF.field('searchable', 'boolean', false, {defaultValue: false})
+		WTF.field('searchable', 'boolean', false, {defaultValue: false}),
+		WTF.field('previewable', 'boolean', false, {defaultValue: false})
 	],
 	hasMany: [
 		WTF.hasMany('props', 'Sonicle.webtop.core.model.CustomFieldProp'),

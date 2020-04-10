@@ -1390,10 +1390,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Map<String, CustomFieldEx> listCustomFields(final String serviceId) throws WTException {
-		return listCustomFields(serviceId, null);
+		return listCustomFields(serviceId, null, null);
 	}
 	
-	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final Boolean searchable) throws WTException {
+	public Map<String, CustomFieldEx> listCustomFields(final String serviceId, final Boolean searchable, final Boolean previewable) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;
 		
@@ -1403,7 +1403,7 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, CustomFieldEx> items = new LinkedHashMap<>();
-			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchable(con, targetDomainId, serviceId, searchable, getCustomFieldsMaxNo()).values()) {
+			for (VCustomField vcfield : cufDao.viewOnlineByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo()).values()) {
 				//items.put(vcfield.getCustomFieldId(), ManagerUtils.createCustomField(vcfield));
 				items.put(vcfield.getCustomFieldId(), ManagerUtils.fillCustomFieldEx(new CustomFieldEx(), vcfield));
 			}

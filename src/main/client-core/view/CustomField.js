@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		
 		WTU.applyFormulas(me.getVM(), {
 			searchable: WTF.checkboxBind('record', 'searchable'),
+			previewable: WTF.checkboxBind('record', 'previewable'),
 			foEnableValues: WTF.foGetFn('record', 'type', function(v) {
 				return Ext.isEmpty(v) ? false : ['combobox', 'radios'].indexOf(v) !== -1;
 			}),
@@ -295,6 +296,11 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 							bind: '{searchable}',
 							hideEmptyLabel: false,
 							boxLabel: me.mys.res('customField.fld-searchable.lbl')
+						}, {
+							xtype: 'checkbox',
+							bind: '{previewable}',
+							hideEmptyLabel: false,
+							boxLabel: me.mys.res('customField.fld-previewable.lbl')
 						}
 					]
 				}, {
@@ -398,6 +404,7 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		
 		vm.bind('{record.type}', me.onTypeChange, me);
 		vm.bind('{record.searchable}', me.onSearchableChange, me);
+		vm.bind('{record.previewable}', me.onPreviewableChange, me);
 		vm.bind('{foEnableValues}', me.onEnableValuesChange, me);
 	},
 	
@@ -475,6 +482,12 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		onSearchableChange: function(nv, ov) {
 			if (ov !== undefined && nv === true) {
 				WT.info(this.mys.res('customField.info.searchable'));
+			}
+		},
+		
+		onPreviewableChange: function(nv, ov) {
+			if (ov !== undefined && nv === true) {
+				WT.info(this.mys.res('customField.info.previewable'));
 			}
 		},
 

@@ -101,4 +101,11 @@ public class ObjCustomFieldDefs {
 			}
 		}
 	}
+	
+	public static class FieldsList extends ArrayList<Field> {
+
+		public static String toJson(FieldsList value) {
+			return JsonResult.GSON.toJson(value, FieldsList.class);
+		}
+	}
 }

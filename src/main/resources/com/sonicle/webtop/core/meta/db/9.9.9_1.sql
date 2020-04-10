@@ -56,7 +56,8 @@ CREATE TABLE "core"."custom_fields" (
 "name" varchar(255) NOT NULL,
 "description" varchar(255),
 "type" varchar(20) NOT NULL,
-"searchable" bool NOT NULL,
+"searchable" bool DEFAULT false NOT NULL,
+"previewable" bool DEFAULT false NOT NULL,
 "properties" text,
 "values" text,
 "label_i18n" text
@@ -69,6 +70,7 @@ ALTER TABLE "core"."custom_fields" ADD PRIMARY KEY ("custom_field_id");
 CREATE INDEX "custom_fields_ak1" ON "core"."custom_fields" USING btree ("domain_id", "service_id", "revision_status", "name");
 CREATE UNIQUE INDEX "custom_fields_ak2" ON "core"."custom_fields" USING btree ("domain_id", "service_id", "name") WHERE revision_status::text <> 'D'::text;
 CREATE INDEX "custom_fields_ak3" ON "core"."custom_fields" USING btree ("domain_id", "service_id", "revision_status", "searchable");
+CREATE INDEX "custom_fields_ak4" ON "core"."custom_fields" USING btree ("domain_id", "service_id", "revision_status", "previewable");
 
 -- ----------------------------
 -- New table: custom_panels
