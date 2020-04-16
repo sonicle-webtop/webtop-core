@@ -182,9 +182,14 @@ public class CoreManager extends BaseManager {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
 		
-		String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
-		CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(internetName);
-		cfieldsFree = !WT.isLicensed(CUSTOM_FIELD_PRODUCT);
+		if (targetProfileId != null) {
+			String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
+			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(internetName);
+			cfieldsFree = !WT.isLicensed(CUSTOM_FIELD_PRODUCT);
+		} else {
+			CUSTOM_FIELD_PRODUCT = null;
+			cfieldsFree = true;
+		}
 		
 		if(!fastInit) {
 			//initAllowedServices();

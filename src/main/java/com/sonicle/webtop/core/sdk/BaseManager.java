@@ -70,16 +70,23 @@ public abstract class BaseManager {
 		this.softwareName = null;
 		this.locale = guessLocale();
 		
-		String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
-		AUDIT_PRODUCT = new AuditProduct(internetName);
-		if (WT.isLicensed(AUDIT_PRODUCT)) {
-			auditEnabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
-			if (auditEnabled) {
-				CoreServiceSettings scss = new CoreServiceSettings(SERVICE_ID, targetProfile.getDomainId());
-				if (scss.hasAuditEnabled()) {
-					auditEnabled = scss.isAuditEnabled();
+		// targetProfile can be null in case of public context where 
+		// we have no logged user. So check it!
+		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
+		if (targetProfileId != null) {
+			String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
+			AUDIT_PRODUCT = new AuditProduct(internetName);
+			if (WT.isLicensed(AUDIT_PRODUCT)) {
+				auditEnabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
+				if (auditEnabled) {
+					CoreServiceSettings scss = new CoreServiceSettings(SERVICE_ID, targetProfile.getDomainId());
+					if (scss.hasAuditEnabled()) {
+						auditEnabled = scss.isAuditEnabled();
+					}
 				}
 			}
+		} else {
+			AUDIT_PRODUCT = null;
 		}
 	}
 	
