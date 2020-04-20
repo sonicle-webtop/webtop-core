@@ -59,31 +59,33 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		var me = this;
 		
 		Ext.apply(me, {
-			fbar: [WTF.localCombo('id', 'desc', {
-				reference: 'cbosnooze',
-				store: Ext.create('Sonicle.webtop.core.store.Snooze', {
-					autoLoad: true
-				}),
-				fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
-				labelWidth: 70,
-				width: 190,
-				value: 5
-			}), ' ', {
-				xtype: 'button',
-				text: WT.res('reminder.btn-snooze.lbl'),
-				iconCls: 'wt-icon-snooze-xs',
-				handler: function() {
-					var sm = me.lref('gpreminders').getSelectionModel();
-					if(sm.hasSelection()) me.snoozeReminder(sm.getSelection());
+			fbar: [
+				WTF.localCombo('id', 'desc', {
+					reference: 'cbosnooze',
+					store: Ext.create('Sonicle.webtop.core.store.Snooze', {
+						autoLoad: true
+					}),
+					fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
+					labelWidth: 70,
+					width: 190,
+					value: 5
+				}), ' ', {
+					xtype: 'button',
+					text: WT.res('reminder.btn-snooze.lbl'),
+					iconCls: 'wt-icon-snooze-xs',
+					handler: function() {
+						var sm = me.lref('gpreminders').getSelectionModel();
+						if (sm.hasSelection()) me.snoozeReminder(sm.getSelection());
+					}
+				}, '->', {
+					xtype: 'button',
+					text: WT.res('reminder.btn-ignore.lbl'),
+					handler: function() {
+						var sm = me.lref('gpreminders').getSelectionModel();
+						if (sm.hasSelection()) me.deleteReminder(sm.getSelection());
+					}
 				}
-			}, '->', {
-				xtype: 'button',
-				text: WT.res('reminder.btn-ignore.lbl'),
-				handler: function() {
-					var sm = me.lref('gpreminders').getSelectionModel();
-					if(sm.hasSelection()) me.deleteReminder(sm.getSelection());
-				}
-			}]
+			]
 		});
 		me.callParent(arguments);
 		
@@ -91,46 +93,53 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 			region: 'center',
 			xtype: 'wtfieldspanel',
 			layout: 'fit',
-			items: [{
-				xtype: 'gridpanel',
-				reference: 'gpreminders',
-				bind: {
-					store: '{reminders}'
-				},
-				border: true,
-				selModel: {
-					type: 'checkboxmodel',
-					mode : 'MULTI'
-				},
-				columns: [{
-					xtype: 'soiconcolumn',
-					getIconCls: function(v,rec) {
-						return WTF.cssIconCls(WT.findXid(rec.get('serviceId')), 'reminder-'+rec.get('type'));
+			items: [
+				{
+					xtype: 'gridpanel',
+					reference: 'gpreminders',
+					bind: {
+						store: '{reminders}'
 					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					width: 40
-				}, {
-					dataIndex: 'title',
-					header: WT.res('reminder.gpreminders.title.lbl'),
-					flex: 1
-				}, {
-					dataIndex: 'date',
-					xtype: 'datecolumn',
-					format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
-					header: WT.res('reminder.gpreminders.date.lbl'),
-					flex: 1	
-				}]
-			}]
+					border: true,
+					selModel: {
+						type: 'checkboxmodel',
+						mode : 'MULTI'
+					},
+					columns: [
+						{
+							xtype: 'soiconcolumn',
+							getIconCls: function(v,rec) {
+								return WTF.cssIconCls(WT.findXid(rec.get('serviceId')), 'reminder-'+rec.get('type'));
+							},
+							iconSize: WTU.imgSizeToPx('xs'),
+							width: 40
+						}, {
+							dataIndex: 'title',
+							header: WT.res('reminder.gpreminders.title.lbl'),
+							flex: 1
+						}, {
+							dataIndex: 'date',
+							xtype: 'datecolumn',
+							format: WT.getShortDateFmt() + ' ' + WT.getShortTimeFmt(),
+							header: WT.res('reminder.gpreminders.date.lbl'),
+							flex: 1	
+						}
+					]
+				}
+			]
 		});
 	},
 	
 	addReminder: function(data) {
-		if(!Ext.isArray(data)) data = [data];
+		if (!Ext.isArray(data)) data = [data];
 		var me = this,
-				sto = me.getViewModel().getStore('reminders');
+				gp = me.lref('gpreminders'),
+				sto = me.getViewModel().getStore('reminders'),
+				rec;
 		
 		Ext.iterate(data, function(obj) {
-			sto.add(Ext.create('WTA.model.ReminderAlert', obj));
+			rec = sto.add(Ext.create('WTA.model.ReminderAlert', obj));
+			if (rec) gp.getSelectionModel().select(rec, false, false);
 		});
 	},
 	
@@ -140,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				sto = me.getViewModel().getStore('reminders'),
 				json = [];
 		
-		if(recs.length > 0) {
+		if (recs.length > 0) {
 			Ext.iterate(recs, function(rec) {
 				json.push(rec.getData({serialize: true}));
 			});
@@ -151,8 +160,8 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				},
 				jsonData: json,
 				callback: function(success) {
-					if(success) sto.remove(recs);
-					if(sto.getCount()===0) me.closeView();
+					if (success) sto.remove(recs);
+					if (sto.getCount()===0) me.closeView();
 				}
 			});
 		}
@@ -162,6 +171,6 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		var me = this,
 				sto = me.getViewModel().getStore('reminders');
 		sto.remove(rec);
-		if(sto.getCount()===0) me.closeView();
+		if (sto.getCount()===0) me.closeView();
 	}
 });
