@@ -54,7 +54,9 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 	emptyItemTitle: '',
 	emptyItemText: '',
 	
-	viewModel: {},
+	viewModel: {
+		values: {}
+	},
 	
 	createCustomFieldDef: Ext.emptyFn,
 	
@@ -66,31 +68,47 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		}
 	},
 	
+	buildShowsData: function(fieldsWithValue) {
+		var me = this, shows = {};
+		if (Ext.isArray(me.defFields)) {
+			Ext.iterate(me.defFields, function(fieldId) {
+				shows[fieldId] = fieldsWithValue.indexOf(fieldId) !== -1;
+			});
+		}
+		return shows;
+	},
+	
 	setStore: function(store) {
 		var me = this,
 				vm = me.getViewModel(),
-				stores = {};
+				stores = {}, fieldsWithValue = [], values = {};
 		if (vm) {
-			if (store) stores['values'] = {source: store, model: 'Sonicle.webtop.core.ux.data.CustomFieldValueModel'};
+			if (store) stores['cvalues'] = {source: store, model: 'Sonicle.webtop.core.ux.data.CustomFieldValueModel'};
 			vm.setStores(stores);
 			if (store) {
 				store.each(function(rec) {
-					vm.set(me.buildFieldValueName(rec.getId()), rec.getValue());
+					fieldsWithValue.push(rec.getId());
+					values[rec.getId()] = rec.getValue();
 				});
 			}
+			me.applyCValues(vm, fieldsWithValue, values);
 		}
+	},
+	
+	applyCValues: function(vm, fields, values) {
+		vm.set('values', values);
 	},
 	
 	getStore: function() {
 		var vm = this.getViewModel();
-		return vm ? vm.getStores('values') : null;
+		return vm ? vm.getStores('cvalues') : null;
 	},
 	
 	setFieldsDefs: function(rawDefs) {
 		var me = this,
 				defObj = Ext.JSON.decode(rawDefs, true),
 				createEmpty = true,
-				items = [], formulas = {};
+				items = [], formulas = {}, defFields = [];
 		
 		if (defObj) {
 			Ext.iterate(defObj.panels, function(panel, indx) {
@@ -105,6 +123,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 					if (ret) {
 						Ext.merge(formulas, ret.formulas);
 						pitems.push(ret.fieldCfg);
+						defFields.push(fieldId);
 					}
 				});
 				if (pitems.length > 1) Ext.Array.push(items, pitems);
@@ -112,6 +131,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 			createEmpty = items.length === 0;
 		}
 		
+		me.defFields = defFields;
 		Ext.suspendLayouts();
         me.removeAll();
 		Ext.defer(function() { // Run async in order to avoid raise of "Cannot have multiple center regions..."
@@ -155,23 +175,37 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		};
 	},
 	
-	createCustomFieldFormula: function(field) {
-		var valueName = this.buildFieldValueName(field.id);
+	createFieldValueFormula: function(field) {
+		var bind = this.buildValueBindName(field.id);
 		return {
-			bind: {bindTo: '{' + valueName + '}'},
+			bind: {bindTo: '{' + bind + '}'},
 			get: function(val) {
 				return val;
 			}
 		};
 	},
 	
+	createFieldHiddenFormula: function(field) {
+		var bind = this.buildShowBindName(field.id);
+		return {
+			bind: {bindTo: '{' + bind + '}'},
+			get: function(val) {
+				return val === true ? false : true;
+			}
+		};
+	},
+	
 	privates: {
-		buildFieldValueName: function(fieldId) {
-			return 'value-' + fieldId;
+		buildValueBindName: function(fieldId) {
+			return 'values.' + fieldId;
 		},
 		
-		buildFieldFormulaName: function(panelId, fieldId, ftype) {
-			return ftype + Ext.String.leftPad(panelId, 2, '0') + fieldId;
+		buildShowBindName: function(fieldId) {
+			return 'shows.' + fieldId;
+		},
+		
+		buildFieldFormulaName: function(prefix, panelId, fieldId, ftype) {
+			return 'fo-' + prefix + '-' + ftype + Ext.String.leftPad(panelId, 2, '0') + fieldId;
 		}
 	}
 });

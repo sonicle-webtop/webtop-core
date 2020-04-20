@@ -58,8 +58,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				fprops = field.props || {},
 				flabel = field.label,
 				//showTip = !Ext.isEmpty(field.desc),
-				foName = me.buildFieldFormulaName(panelId, field.id, ftype),
-				fo = me.createCustomFieldFormula(field),
+				valFoName = me.buildFieldFormulaName('val', panelId, field.id, ftype),
 				//parseWidth = function(s) { return Number.parseInt(s) + me.defaultLabelWidth; },
 				cfg;
 		
@@ -80,7 +79,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		if ('text' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'textfield',
-				bind: '{' + foName + '}'
+				bind: '{' + valFoName + '}'
 			});
 			SU.applyProp(cfg, false, fprops, 'minLength');
 			SU.applyProp(cfg, false, fprops, 'maxLength');
@@ -90,7 +89,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('textarea' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'textareafield',
-				bind: '{' + foName + '}'
+				bind: '{' + valFoName + '}'
 			});
 			SU.applyProp(cfg, false, fprops, 'minLength');
 			SU.applyProp(cfg, false, fprops, 'maxLength');
@@ -101,7 +100,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('number' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'numberfield',
-				bind: '{' + foName + '}'
+				bind: '{' + valFoName + '}'
 			});
 			SU.applyProp(cfg, false, fprops, 'minValue');
 			SU.applyProp(cfg, false, fprops, 'maxValue');
@@ -112,7 +111,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('date' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'datefield',
-				bind: '{' + foName + '}',
+				bind: '{' + valFoName + '}',
 				startDay: WT.getStartDay(),
 				format: WT.getShortDateFmt()
 			});
@@ -120,13 +119,13 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('time' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'timefield',
-				bind: '{' + foName + '}',
+				bind: '{' + valFoName + '}',
 				format: WT.getShortTimeFmt()
 			});
 			
 		} else if ('combobox' === ftype) {
 			Ext.apply(cfg, WTF[fprops['queryable'] === 'true' ? 'localCombo' : 'lookupCombo']('field1', 'field2', {
-				bind: '{' + foName + '}',
+				bind: '{' + valFoName + '}',
 				store: field.values
 			}));
 			if (cfg.allowBlank) {
@@ -142,24 +141,24 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 		} else if ('checkbox' === ftype) {
 			Ext.apply(cfg, {
 				xtype: 'checkbox',
-				bind: '{' + foName + '}',
+				bind: '{' + valFoName + '}',
 				hideEmptyLabel: true,
 				boxLabel: flabel
 			});
 		}
 		
 		return {
-			formulas: SU.setProp({}, foName, fo),
+			formulas: SU.setProp({}, valFoName, me.createFieldValueFormula(field)),
 			fieldCfg: cfg
 		};
 	},
 	
-	createCustomFieldFormula: function(field) {
-		var valueName = this.buildFieldValueName(field.id);
+	createFieldValueFormula: function(field) {
+		var bind = this.buildValueBindName(field.id);
 		return Ext.apply(this.callParent(arguments), {
 			set: function(val) {
-				this.set(valueName, val);
-				var sto = this.getStore('values'), rec;
+				this.set(bind, val);
+				var sto = this.getStore('cvalues'), rec;
 				if (sto) {
 					rec = sto.getById(field.id);
 					if (rec) rec.setValue(val);
@@ -214,7 +213,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 			appPro(cfg, false, fprops, 'width', Number.parseInt);
 			appPro(cfg, false, fprops, 'anchor');
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('textarea' === ftype) {
@@ -230,7 +229,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 			appPro(cfg, false, fprops, 'anchor');
 			appPro(cfg, false, fprops, 'autoGrow', 'grow');
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('number' === ftype) {
@@ -246,7 +245,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 			appPro(cfg, false, fprops, 'width', Number.parseInt);
 			appPro(cfg, false, fprops, 'anchor');
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('date' === ftype || 'datetime' === ftype) {
@@ -259,7 +258,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				format: WT.getShortDateFmt()
 			});
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('time' === ftype || 'datetime' === ftype) {
@@ -271,7 +270,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				format: WT.getShortTimeFmt()
 			});
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('datetime' === ftype) {
@@ -319,7 +318,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 			appPro(cfg, false, fprops, 'width', Number.parseInt);
 			appPro(cfg, false, fprops, 'anchor');
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 			
 		} else if ('checkbox' === ftype) {
@@ -332,7 +331,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsEditor', {
 				boxLabel: label
 			});
 			foObj[otype] = {};
-			foObj[otype][fo] = me.createCustomFieldFormula(field);
+			foObj[otype][fo] = me.createFieldValueFormula(field);
 			cfgObj[otype] = cfg;
 		}
 		
