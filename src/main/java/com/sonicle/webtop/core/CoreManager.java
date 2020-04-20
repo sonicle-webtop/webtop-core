@@ -1421,6 +1421,24 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public Set<String> listCustomFieldIds(final String serviceId, final Boolean searchable, final Boolean previewable) throws WTException {
+		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			return cufDao.viewOnlineIdsByDomainServiceSearchablePreviewable(con, targetDomainId, serviceId, searchable, previewable, getCustomFieldsMaxNo());
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	public CustomField getCustomField(final String serviceId, final String fieldId) throws WTException {
 		CustomFieldDAO cufDao = CustomFieldDAO.getInstance();
 		Connection con = null;

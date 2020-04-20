@@ -58,6 +58,11 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		values: {}
 	},
 	
+	/**
+	 * @property {String[]} defFields
+	 * @readonly
+	 */
+	
 	createCustomFieldDef: Ext.emptyFn,
 	
 	initComponent: function() {
@@ -66,16 +71,6 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		if (me.fieldDefs) {
 			me.setFieldsDefs(me.fieldDefs);
 		}
-	},
-	
-	buildShowsData: function(fieldsWithValue) {
-		var me = this, shows = {};
-		if (Ext.isArray(me.defFields)) {
-			Ext.iterate(me.defFields, function(fieldId) {
-				shows[fieldId] = fieldsWithValue.indexOf(fieldId) !== -1;
-			});
-		}
-		return shows;
 	},
 	
 	setStore: function(store) {
@@ -134,6 +129,15 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		me.defFields = defFields;
 		Ext.suspendLayouts();
         me.removeAll();
+		if (createEmpty) {
+			me.add(me.createEmptyItemCfg());
+		} else {
+			me.getViewModel().setFormulas(formulas);
+			me.add(me.createFormPanelCfg(items));
+		}
+		Ext.resumeLayouts(true);
+		
+		/*
 		Ext.defer(function() { // Run async in order to avoid raise of "Cannot have multiple center regions..."
 			if (createEmpty) {
 				me.add(me.createEmptyItemCfg());
@@ -143,6 +147,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 			}
 			Ext.resumeLayouts(true);
 		}, 0);
+		*/
 	},
 	
 	createEmptyItemCfg: function() {
@@ -207,5 +212,17 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsBase', {
 		buildFieldFormulaName: function(prefix, panelId, fieldId, ftype) {
 			return 'fo-' + prefix + '-' + ftype + Ext.String.leftPad(panelId, 2, '0') + fieldId;
 		}
+		
+		/*
+		buildShowsData: function(fieldsWithValue) {
+			var me = this, shows = {};
+			if (Ext.isArray(me.defFields)) {
+				Ext.iterate(me.defFields, function(fieldId) {
+					shows[fieldId] = fieldsWithValue.indexOf(fieldId) !== -1;
+				});
+			}
+			return shows;
+		}
+		*/
 	}
 });

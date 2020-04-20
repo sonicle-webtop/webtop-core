@@ -47,10 +47,12 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 		me.callParent([cfg]);
 	},
 	
+	/*
 	applyCValues: function(vm, fields, values) {
 		this.callParent(arguments);
 		vm.set('shows', this.buildShowsData(fields));
 	},
+	*/
 	
 	createCustomFieldDef: function(panelId, field) {
 		var me = this,
@@ -72,8 +74,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'textfield',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				fieldLabel: flabel
 			});
@@ -82,8 +84,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'textareafield',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				autoGrow: 'grow',
 				fieldLabel: flabel
@@ -93,8 +95,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'numberfield',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				fieldLabel: flabel
 			});
@@ -104,8 +106,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'datefield',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				startDay: WT.getStartDay(),
 				format: WT.getShortDateFmt(),
@@ -116,8 +118,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'timefield',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				format: WT.getShortTimeFmt(),
 				fieldLabel: flabel
@@ -126,8 +128,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 		} else if ('combobox' === ftype) {
 			Ext.apply(cfg, WTF.lookupCombo('field1', 'field2', {
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				store: field.values,
 				fieldLabel: flabel
@@ -137,8 +139,8 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 			Ext.apply(cfg, {
 				xtype: 'checkbox',
 				bind: {
-					value: '{' + valFoName + '}',
-					hidden: '{'+ hidFoName + '}'
+					value: '{' + valFoName + '}'
+					//hidden: '{'+ hidFoName + '}'
 				},
 				hideEmptyLabel: true,
 				boxLabel: flabel
@@ -146,7 +148,7 @@ Ext.define('Sonicle.webtop.core.ux.panel.CustomFieldsPreview', {
 		}
 		
 		SU.setProp(fos, valFoName, me.createFieldValueFormula(field));
-		SU.setProp(fos, hidFoName, me.createFieldHiddenFormula(field));
+		//SU.setProp(fos, hidFoName, me.createFieldHiddenFormula(field));
 		return {
 			formulas: fos,
 			fieldCfg: cfg
