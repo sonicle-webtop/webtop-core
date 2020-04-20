@@ -404,7 +404,6 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		
 		vm.bind('{record.type}', me.onTypeChange, me);
 		vm.bind('{record.searchable}', me.onSearchableChange, me);
-		vm.bind('{record.previewable}', me.onPreviewableChange, me);
 		vm.bind('{foEnableValues}', me.onEnableValuesChange, me);
 	},
 	
@@ -482,12 +481,6 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		onSearchableChange: function(nv, ov) {
 			if (ov !== undefined && nv === true) {
 				WT.info(this.mys.res('customField.info.searchable'));
-			}
-		},
-		
-		onPreviewableChange: function(nv, ov) {
-			if (ov !== undefined && nv === true) {
-				WT.info(this.mys.res('customField.info.previewable'));
 			}
 		},
 
