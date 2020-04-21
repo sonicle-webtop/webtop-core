@@ -35,8 +35,6 @@ package com.sonicle.webtop.core.bol.js;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.webtop.core.model.CustomFieldEx;
-import com.sonicle.webtop.core.model.CustomPanel;
-import java.util.Map;
 
 /**
  *
@@ -48,6 +46,8 @@ public class JsCustomFieldGrid {
 	public String type;
 	public String name;
 	public String description;
+	public Boolean searchable;
+	public Boolean previewable;
 	public Integer panelsCount;
 	
 	public JsCustomFieldGrid(CustomFieldEx field) {
@@ -56,6 +56,8 @@ public class JsCustomFieldGrid {
 		type = EnumUtils.toSerializedName(field.getType());
 		name = field.getName();
 		description = field.getDescription();
+		searchable = field.getSearchable();
+		previewable = field.getPreviewable();
 		panelsCount = field.getPanels().size();
 	}
 }

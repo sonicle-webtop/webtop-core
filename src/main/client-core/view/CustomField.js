@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -39,6 +39,18 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 		'Sonicle.webtop.core.store.CustomFieldType'
 	],
 	
+	/**
+	 * @cfg {String} serviceId
+	 * Target service ID for which managing fields.
+	 */
+	serviceId: null,
+	
+	/**
+	 * @cfg {String} serviceName
+	 * Target service display name for displaying in title.
+	 */
+	serviceName: null,
+	
 	dockableConfig: {
 		title: '{customField.tit}',
 		iconCls: 'wt-icon-customField',
@@ -50,6 +62,11 @@ Ext.define('Sonicle.webtop.core.view.CustomField', {
 	
 	constructor: function(cfg) {
 		var me = this;
+		Ext.merge(cfg, {
+			dockableConfig: {
+				title: '[' + Sonicle.String.deflt(cfg.serviceName, cfg.serviceId) + '] ' + WT.res('customField.tit')
+			}
+		});
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {

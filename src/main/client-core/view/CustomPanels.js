@@ -50,10 +50,16 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	 */
 	serviceId: null,
 	
+	/**
+	 * @cfg {String} serviceName
+	 * Target service display name for displaying in title.
+	 */
+	serviceName: null,
+	
 	dockableConfig: {
 		title: '{customPanels.tit}',
 		iconCls: 'wt-icon-customPanel',
-		width: 550,
+		width: 600,
 		height: 400
 		//modal: true
 	},
@@ -64,6 +70,11 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		if (!cfg.serviceId) {
 			Ext.raise('serviceId is mandatory');
 		}
+		Ext.merge(cfg, {
+			dockableConfig: {
+				title: '[' + Sonicle.String.deflt(cfg.serviceName, cfg.serviceId) + '] ' + WT.res('customPanels.tit')
+			}
+		});
 		me.callParent([cfg]);
 	},
 	
@@ -116,7 +127,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						dataIndex: 'tags',
 						header: me.res('customPanels.gp.tags.lbl'),
 						tagsStore: WT.getTagsStore(),
-						emptyText: me.res('customPanels.gp.tags.emp'),
+						emptyText: WT.res(me.serviceId, 'customPanels.gp.tags.emp'),
 						emptyCls: 'wt-theme-text-greyed',
 						flex: 1
 					}, {
@@ -183,7 +194,8 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
 					swapReturn: true,
 					viewCfg: {
-						serviceId: me.serviceId
+						serviceId: me.serviceId,
+						serviceName: me.serviceName
 					}
 				});
 		
@@ -207,7 +219,8 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				vw = WT.createView(me.mys.ID, 'view.CustomPanel', {
 					swapReturn: true,
 					viewCfg: {
-						serviceId: me.serviceId
+						serviceId: me.serviceId,
+						serviceName: me.serviceName
 					}
 				});
 		

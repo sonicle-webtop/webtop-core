@@ -127,9 +127,11 @@ Ext.define('Sonicle.webtop.core.app.AppBase', {
 		
 		Ext.tip.QuickTipManager.init();
 		Ext.setGlyphFontFamily('FontAwesome');
+		/*
 		Ext.getDoc().on('contextmenu', function(e) {
 			console.log(e.getTarget().tagName);
 		});
+		*/
 		if (!WT.plTags.desktop) {
 			Ext.dd.DragDropManager.lock();
 		}

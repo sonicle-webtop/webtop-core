@@ -40,7 +40,9 @@ Ext.define('Sonicle.webtop.core.model.CustomFieldGrid', {
 		WTF.roField('type', 'string'),
 		WTF.roField('name', 'string'),
 		WTF.roField('description', 'string'),
-		WTF.roField('panelsCount', 'int'),
-		WTF.roField('panelsData', 'string')
+		WTF.roField('searchable', 'boolean'),
+		WTF.roField('previewable', 'boolean'),
+		WTF.roField('panelsCount', 'int')
+		//WTF.roField('panelsData', 'string')
 	]
 });

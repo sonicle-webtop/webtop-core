@@ -41,10 +41,23 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		'Sonicle.grid.feature.RowLookup',
 		'Sonicle.grid.plugin.DDOrdering',
 		'Sonicle.picker.List',
+		'Sonicle.plugin.FieldTooltip',
 		'WTA.ux.PickerWindow',
 		'Sonicle.webtop.core.model.CustomFieldLkp',
 		'Sonicle.webtop.core.model.CustomPanel'
 	],
+	
+	/**
+	 * @cfg {String} serviceId
+	 * Target service ID for which managing fields.
+	 */
+	serviceId: null,
+	
+	/**
+	 * @cfg {String} serviceName
+	 * Target service display name for displaying in title.
+	 */
+	serviceName: null,
 	
 	dockableConfig: {
 		title: '{customPanel.tit}',
@@ -56,14 +69,13 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	fieldTitle: 'name',
 	autoToolbar: false,
 	
-	/**
-	 * @cfg {String} serviceId
-	 * Target service ID for which managing fields.
-	 */
-	serviceId: null,
-	
 	constructor: function(cfg) {
 		var me = this;
+		Ext.merge(cfg, {
+			dockableConfig: {
+				title: '[' + Sonicle.String.deflt(cfg.serviceName, cfg.serviceId) + '] ' + WT.res('customPanel.tit')
+			}
+		});
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
@@ -126,9 +138,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					xtype: 'wtfieldspanel',
 					reference: 'pnlmain',
 					modelValidation: true,
-					defaults: {
-						labelWidth: 120
-					},
 					items: [
 						{
 							xtype: 'textfield',
@@ -164,7 +173,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									createNewOnBlur: false,
 									filterPickList: true,
 									forceSelection: true,
-									emptyText: me.res('customPanel.fld-tags.emp'),
+									emptyText: WT.res(me.serviceId, 'customPanel.fld-tags.emp'),
 									margin: '0 5 0 0',
 									flex: 1
 								}, {
@@ -178,7 +187,9 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									}
 								}
 							],
+							plugins: [{ptype: 'sofieldtooltip', tooltipTarget: 'label'}],
 							fieldLabel: me.res('customPanel.fld-tags.lbl'),
+							tooltip: me.res('customPanel.fld-tags.tip'),
 						    anchor: '100%'
 						}
 					]

@@ -33,6 +33,7 @@
 Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
+		'Sonicle.String',
 		'Sonicle.grid.column.Action',
 		'Sonicle.grid.column.Icon',
 		'Sonicle.webtop.core.model.CustomFieldGrid'
@@ -48,10 +49,16 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	 */
 	serviceId: null,
 	
+	/**
+	 * @cfg {String} serviceName
+	 * Target service display name for displaying in title.
+	 */
+	serviceName: null,
+	
 	dockableConfig: {
 		title: '{customFields.tit}',
 		iconCls: 'wt-icon-customField',
-		width: 700,
+		width: 850,
 		height: 500
 		//modal: true
 	},
@@ -69,6 +76,11 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 			Ext.raise('serviceId is mandatory');
 		}
 		me.fieldsLimit = WT.getVar('customFieldsLimit') || 5;
+		Ext.merge(cfg, {
+			dockableConfig: {
+				title: '[' + Sonicle.String.deflt(cfg.serviceName, cfg.serviceId) + '] ' + WT.res('customFields.tit')
+			}
+		});
 		me.callParent([cfg]);
 		
 		WTU.applyFormulas(me.getVM(), {
@@ -154,6 +166,22 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 					header: me.res('customFields.gp.description.lbl'),
 					flex: 2
 				}, {
+					xtype: 'checkcolumn',
+					dataIndex: 'searchable',
+					header: WTF.headerWithGlyphIcon('fa fa-binoculars'),
+					tooltip: me.res('customFields.gp.searchable.lbl'),
+					disabled: true,
+					disabledCls : '',
+					width: 50
+				}, {
+					xtype: 'checkcolumn',
+					dataIndex: 'previewable',
+					header: WTF.headerWithGlyphIcon('fa fa-newspaper-o'),
+					tooltip: me.res('customFields.gp.previewable.lbl'),
+					disabled: true,
+					disabledCls : '',
+					width: 50
+				}, {
 					dataIndex: 'panelsCount',
 					header: me.res('customFields.gp.usedby.lbl'),
 					renderer: function(val, meta, rec) {
@@ -216,7 +244,13 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	addCustomField: function(serviceId, data, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomField', {swapReturn: true})
+				vw = WT.createView(me.mys.ID, 'view.CustomField', {
+					swapReturn: true,
+					viewCfg: {
+						serviceId: me.serviceId,
+						serviceName: me.serviceName
+					}
+				});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
@@ -233,7 +267,13 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 	editCustomField: function(cid, opts) {
 		opts = opts || {};
 		var me = this,
-				vw = WT.createView(me.mys.ID, 'view.CustomField', {swapReturn: true});
+				vw = WT.createView(me.mys.ID, 'view.CustomField', {
+					swapReturn: true,
+					viewCfg: {
+						serviceId: me.serviceId,
+						serviceName: me.serviceName
+					}
+				});
 		
 		vw.on('viewsave', function(s, success, model) {
 			Ext.callback(opts.callback, opts.scope || me, [success, model]);
