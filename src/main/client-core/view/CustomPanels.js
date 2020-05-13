@@ -40,7 +40,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 		'Sonicle.webtop.core.model.CustomPanelGrid'
 	],
 	uses: [
-		'Sonicle.DataUtils',
+		'Sonicle.Data',
 		'Sonicle.webtop.core.view.CustomPanel'
 	],
 	
@@ -126,7 +126,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						xtype: 'sotagcolumn',
 						dataIndex: 'tags',
 						header: me.res('customPanels.gp.tags.lbl'),
-						tagsStore: WT.getTagsStore(),
+						tagsStore: me.getTagsStore(),
 						emptyText: WT.res(me.serviceId, 'customPanels.gp.tags.emp'),
 						emptyCls: 'wt-theme-text-greyed',
 						flex: 1
@@ -237,6 +237,10 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	},
 	
 	privates: {
+		getTagsStore: function() {
+			return WT.getTagsStore({filters: [{id: 'personalFilter', property: 'personal', value: false}]});
+		},
+		
 		addCustomPanelUI: function() {
 			var me = this;
 			me.addCustomPanel(me.serviceId, null, {
@@ -267,7 +271,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 						var data = Ext.apply(json.data, {
 							id: undefined,
 							fieldId: undefined,
-							name: Sonicle.DataUtils.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
+							name: Sonicle.Data.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
 						});
 						me.addCustomPanel(me.serviceId,  Sonicle.Utils.applyIfDefined({}, data), {
 							callback: function() {

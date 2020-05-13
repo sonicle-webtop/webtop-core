@@ -34,6 +34,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	alternateClassName: 'WTA.view.CustomPanel',
 	extend: 'WTA.sdk.ModelView',
 	requires: [
+		'Sonicle.Data',
 		'Sonicle.String',
 		'Sonicle.form.field.Tag',
 		'Sonicle.grid.column.Action',
@@ -165,7 +166,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 								{
 									xtype: 'sotagfield',
 									bind: '{foTags}',
-									store: WT.getTagsStore(),
+									store: me.getTagsStore(),
 									valueField: 'id',
 									displayField: 'name',
 									colorField: 'color',
@@ -283,8 +284,10 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
+							personal: false,
 							color: Sonicle.String.prepend(rndColor, '#', true)
-						}
+						},
+						personalEditable: false
 					}
 				});
 		
@@ -295,6 +298,10 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	},
 	
 	privates: {
+		getTagsStore: function() {
+			return WT.getTagsStore({filters: [{id: 'personalFilter', property: 'personal', value: false}]});
+		},
+		
 		onViewLoad: function(s, success) {
 			var me = this,
 					mo = me.getModel();
@@ -343,7 +350,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 		
 		showFieldPicker: function() {
 			var me = this,
-					usedFields = WTU.collectIds(me.getModel().assocFields());
+					usedFields = Sonicle.Data.collectValues(me.getModel().assocFields());
 			me.fieldPicker = me.createFieldPicker();
 			me.fieldPicker.getComponent(0).setSkipValues(usedFields);
 			me.fieldPicker.show();

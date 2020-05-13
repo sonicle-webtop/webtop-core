@@ -42,12 +42,14 @@ import java.util.ArrayList;
  */
 public class JsTagGrid {
 	public String id;
+	public Boolean personal;
 	public Boolean builtIn;
 	public String name;
 	public String color;
 	
 	public JsTagGrid(Tag tag) {
 		id = tag.getTagId();
+		personal = tag.getPersonal();
 		builtIn = tag.getBuiltIn();
 		name = tag.getName();
 		color = tag.getColor();
@@ -57,6 +59,7 @@ public class JsTagGrid {
 		Tag item = new Tag();
 		
 		item.setTagId(id);
+		item.setPersonal(personal);
 		item.setBuiltIn(builtIn);
 		item.setName(name);
 		item.setColor(color);

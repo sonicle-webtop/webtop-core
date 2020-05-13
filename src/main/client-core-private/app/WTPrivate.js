@@ -610,11 +610,12 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	
 	/**
 	 * Returns a reference (chained) to Tags store.
+	 * @param {Object} cfg Custom config to apply to returned chained store.
 	 * @returns {Ext.data.Store}
 	 */
-	getTagsStore: function() {
+	getTagsStore: function(cfg) {
 		var svc = WT.getApp().getService('com.sonicle.webtop.core');
-		return svc ? Ext.create('Ext.data.ChainedStore', {source: svc.tagsStore}) : undefined;
+		return svc ? Ext.create('Ext.data.ChainedStore', Ext.apply(cfg || {}, {source: svc.tagsStore})) : undefined;
 	},
 	
 	/**

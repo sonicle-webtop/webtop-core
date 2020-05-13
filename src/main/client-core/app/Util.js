@@ -99,9 +99,9 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
-	 * Returns itself or the first element if obj is an Array.
-	 * @param {Mixed/Mixed[]} obj
-	 * @returns {Mixed}
+	 * Returns itself or the 1st element if the passed object is an Array.
+	 * @param {Mixed/Mixed[]} obj The object to inspect
+	 * @returns {Mixed} Object itself or the 1st element
 	 */
 	itselfOrFirst: function(obj) {
 		return Ext.isArray(obj) ? obj[0] : obj;
@@ -296,35 +296,6 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 			}));
 		}
 		return target;
-	},
-	
-	/**
-	 * Collects underlying ID values of passed array of records.
-	 * @param {Ext.data.Model[]|Ext.data.Store} recs An array of records to use as source.
-	 * @param {String} [idField] A custom ID field name to get, otherwise {@link Ext.data.Model#getId} will be used.
-	 * @param {Function} [filterFn] A custom filter function which is passed each item in the collection. Should return `true` to accept each item or `false` to reject it.
-	 * @returns {Mixed[]} An array of collected id values.
-	 */
-	collectIds: function(recs, idField, filterFn) {
-		if (arguments.length === 2) {
-			if (Ext.isFunction(idField)) {
-				filterFn = idField;
-				idField = undefined;
-			}
-		}
-		var ids = [];
-		if (!Ext.isFunction(filterFn)) filterFn = function() {return true;};
-		
-		if (Ext.isArray(recs)) {
-			Ext.iterate(recs, function(rec) {
-				if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
-			});
-		} else if (recs.isStore) {
-			recs.each(function(rec) {
-				if (filterFn(rec)) ids.push(Ext.isEmpty(idField) ? rec.getId() : rec.get(idField));
-			});
-		}
-		return ids;
 	},
 	
 	/**

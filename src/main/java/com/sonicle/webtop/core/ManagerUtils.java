@@ -153,6 +153,7 @@ public class ManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
 			tgt.setDomainId(src.getDomainId());
+			tgt.setPersonal(src.isPersonal());
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());
@@ -160,15 +161,16 @@ public class ManagerUtils {
 		return tgt;
 	}
 	
-	static OTag createOTag(Tag src) {
+	static OTag createOTag(Tag src, String ownerIdIfPersonal) {
 		if (src == null) return null;
-		return fillOTag(new OTag(), src);
+		return fillOTag(new OTag(), src, ownerIdIfPersonal);
 	}
 	
-	static <T extends OTag> T fillOTag(T tgt, Tag src) {
+	static <T extends OTag> T fillOTag(T tgt, Tag src, String ownerIdIfPersonal) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
 			tgt.setDomainId(src.getDomainId());
+			tgt.setUserId(src.getPersonal() ? ownerIdIfPersonal : OTag.OWNER_NONE);
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());

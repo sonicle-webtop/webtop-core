@@ -116,6 +116,7 @@ import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
+import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
@@ -170,6 +171,7 @@ import com.sonicle.webtop.vfs.model.SharingLink;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.vfs2.FileObject;
@@ -298,7 +300,7 @@ public class Service extends BaseService implements EventListener {
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
-			for (Tag tag : coreMgr.listTags().values()) {
+			for (Tag tag : coreMgr.listTags(ListTagsOpt.ALL).values()) {
 				items.add(new JsTagGrid(tag));
 			}
 			co.put("wtTags", JsTagGrid.List.toJson(items));
@@ -913,7 +915,7 @@ public class Service extends BaseService implements EventListener {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
 				List<JsTagGrid> items = new ArrayList<>();
-				for (Tag tag : coreMgr.listTags().values()) {
+				for (Tag tag : coreMgr.listTags(ListTagsOpt.ALL).values()) {
 					items.add(new JsTagGrid(tag));
 				}
 				new JsonResult(items, items.size()).printTo(out);

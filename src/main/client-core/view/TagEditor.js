@@ -43,6 +43,12 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	mode: 'new',
 	
 	/**
+	 * @cfg {Boolean} [personalEditable=false]
+	 * `true` to make editable/modifiable personal checkbox.
+	 */
+	personalEditable: false,
+	
+	/**
 	 * @cfg {String[]} invalidNames
 	 * List of names to use as invalid values in name field validation.
 	 */
@@ -54,6 +60,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	 * @cfg {String} [data.id] Value for `id` field.
 	 * @cfg {String} [data.name] Value for `name` field.
 	 * @cfg {String} [data.color] Value for `color` field.
+	 * @cfg {String} [data.personal] Value for `personal` field.
 	*/
 	
 	/**
@@ -65,11 +72,12 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	 * @param {String} data.id
 	 * @param {String} data.name
 	 * @param {String} data.color
+	 * @param {String} data.personal
 	 */
 	
 	dockableConfig: {
 		width: 280,
-		height: 130,
+		height: 150,
 		modal: true
 	},
 	
@@ -78,7 +86,8 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 			data: {
 				id: null,
 				name: null,
-				color: null
+				color: null,
+				personal: null
 			}
 		}
 	},
@@ -102,34 +111,45 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 			region: 'center',
 			xtype: 'wtform',
 			bodyPadding: 10,
-			items: [{
-				xtype: 'fieldcontainer',
-				layout: {
-					type: 'hbox',
-					padding: '0 0 1 0' // fixes classic-theme bottom border issue
-				},
-				items: [{
-					xtype: 'sopalettefield',
-					bind: '{data.color}',
-					hideTrigger: true,
-					colors: WT.getColorPalette('default'),
-					tilesPerRow: 11,
-					margin: '0 10 0 0',
-					width: 24
-				}, {
-					xtype: 'textfield',
-					reference: 'fldname',
-					bind: '{data.name}',
-					allowBlank: false,
-					validator: function(v) {
-						return Ext.isArray(me.invalidNames) ? me.invalidNames.indexOf(v) === -1 : true;
+			items: [
+				{
+					xtype: 'fieldcontainer',
+					layout: {
+						type: 'hbox',
+						padding: '0 0 1 0' // fixes classic-theme bottom border issue
 					},
-					maxLength: 50,
-					flex: 1
-				}],
-				hideLabel: true
-			}],
-			buttons: [{
+					items: [
+						{
+							xtype: 'sopalettefield',
+							bind: '{data.color}',
+							hideTrigger: true,
+							colors: WT.getColorPalette('default'),
+							tilesPerRow: 11,
+							margin: '0 10 0 0',
+							width: 24
+						}, {
+							xtype: 'textfield',
+							reference: 'fldname',
+							bind: '{data.name}',
+							allowBlank: false,
+							validator: function(v) {
+								return Ext.isArray(me.invalidNames) ? me.invalidNames.indexOf(v) === -1 : true;
+							},
+							maxLength: 50,
+							flex: 1
+						}
+					],
+					hideLabel: true
+				}, {
+					xtype: 'checkbox',
+					bind: '{data.personal}',
+					hideEmptyLabel: true,
+					boxLabel: WT.res('tagEditor.fld-personal.lbl'),
+					disabled: !me.personalEditable
+				}
+			],
+			buttons: [
+				{
 					reference: 'btnok',
 					formBind: true,
 					text: WT.res('act-ok.lbl'),
@@ -141,7 +161,8 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					handler: function() {
 						me.closeView(false);
 					}
-			}]
+				}
+			]
 		});
 		me.on('viewshow', me.onViewShow);
 	},

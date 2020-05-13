@@ -361,6 +361,10 @@
 .wt-color-alert {
 	color: #c00 !important;
 }
+.wt-source {
+	font-size: 0.8em;
+	opacity: 0.4;
+}
 
 /* ----- ExtJs: toggle button icon ----- */
 .wt-toggle-on { background-image: url('toggle-on.svg') !important; background-size: contain; }

@@ -120,6 +120,7 @@ import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
+import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.PublicImage;
@@ -142,6 +143,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1038,6 +1040,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Set<String> listTagIds() throws WTException {
+		return listTagIds(ListTagsOpt.ALL);
+	}
+	
+	public Set<String> listTagIds(final EnumSet<ListTagsOpt> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1046,7 +1052,7 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return tagDao.selectIdsByDomain(con, targetDomainId);
+			return tagDao.selectIdsByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1056,6 +1062,10 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Map<String, List<String>> listTagIdsByName() throws WTException {
+		return listTagIdsByName(ListTagsOpt.ALL);
+	}
+	
+	public Map<String, List<String>> listTagIdsByName(final EnumSet<ListTagsOpt> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1064,7 +1074,7 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			return tagDao.groupIdsByDomain(con, targetDomainId);
+			return tagDao.groupIdsByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
 			
 		} catch (Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -1073,7 +1083,22 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	private Collection<String> tagOptionsToUserIds(EnumSet<ListTagsOpt> options) {
+		ArrayList<String> owners = new ArrayList<>();
+		if (options.contains(ListTagsOpt.PUBLIC)) {
+			owners.add(OTag.OWNER_NONE);
+		}
+		if (options.contains(ListTagsOpt.PRIVATE)) {
+			owners.add(getTargetProfileId().getUserId());
+		}
+		return owners;
+	}
+	
 	public Map<String, Tag> listTags() throws WTException {
+		return listTags(ListTagsOpt.ALL);
+	}
+	
+	public Map<String, Tag> listTags(final EnumSet<ListTagsOpt> options) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
@@ -1083,7 +1108,7 @@ public class CoreManager extends BaseManager {
 			
 			con = WT.getConnection(SERVICE_ID);
 			LinkedHashMap<String, Tag> items = new LinkedHashMap<>();
-			for (OTag otag : tagDao.selectByDomain(con, targetDomainId).values()) {
+			for (OTag otag : tagDao.selectByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options)).values()) {
 				items.put(otag.getTagId(), ManagerUtils.createTag(otag));
 			}
 			return items;
@@ -1104,7 +1129,7 @@ public class CoreManager extends BaseManager {
 			ensureProfileDomain(targetDomainId);
 			
 			con = WT.getConnection(SERVICE_ID);
-			OTag otag = tagDao.selectByDomain(con, targetDomainId, tagId);
+			OTag otag = tagDao.selectByDomainTag(con, targetDomainId, tagId);
 			return ManagerUtils.createTag(otag);
 			
 		} catch (Throwable t) {
@@ -1123,7 +1148,9 @@ public class CoreManager extends BaseManager {
 			tag.setDomainId(getTargetProfileId().getDomainId());
 			
 			ensureProfileDomain(tag.getDomainId());
-			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			if (!tag.getPersonal()) {
+				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			}
 			
 			con = WT.getConnection(SERVICE_ID);
 			Tag ret = doTagUpdate(true, con, tag);
@@ -1143,6 +1170,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public Tag updateTag(final Tag tag) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
 		try {
@@ -1151,9 +1179,16 @@ public class CoreManager extends BaseManager {
 			tag.setDomainId(getTargetProfileId().getDomainId());
 			
 			ensureProfileDomain(tag.getDomainId());
-			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			
 			con = WT.getConnection(SERVICE_ID);
+			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, tag.getDomainId(), tag.getTagId());
+			if (OTag.isOwnerNone(oldOwnerId)) {
+				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			}
+			if (OTag.isOwnerNone(oldOwnerId) && tag.getPersonal()) {
+				throw new WTException("Global tag '{}' cannot become personal", tag.getTagId());
+			}
+			
 			Tag ret = doTagUpdate(false, con, tag);
 			if (ret == null) throw new WTNotFoundException("Tag not found [{}]", tag.getTagId());
 			
@@ -1172,14 +1207,19 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public void deleteTag(final String tagId) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
 		Connection con = null;
 		
 		try {	
 			String targetDomainId = getTargetProfileId().getDomainId();
 			ensureProfileDomain(targetDomainId);
-			RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			
 			con = WT.getConnection(SERVICE_ID);
+			String oldOwnerId = tagDao.selectOwnerByDomainTag(con, targetDomainId, tagId);
+			if (OTag.isOwnerNone(oldOwnerId)) {
+				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
+			}
+			
 			boolean ret = doTagDelete(con, targetDomainId, tagId);
 			if (!ret) throw new WTNotFoundException("Tag not found [{}]", tagId);
 			
@@ -1559,6 +1599,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	private CustomPanel doCustomPanelUpdate(boolean insert, Connection con, CustomPanel panel) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();
 		CustomPanelFieldDAO cupfDao = CustomPanelFieldDAO.getInstance();
 		CustomPanelTagDAO cuptDao = CustomPanelTagDAO.getInstance();
@@ -1573,7 +1614,11 @@ public class CoreManager extends BaseManager {
 			if (panel.getFields() != null) {
 				cupfDao.batchInsert(con, opanel.getCustomPanelId(), panel.getFields());
 			}
-			if (panel.getTags()!= null) {
+			if (panel.getTags() != null) {
+				Set<String> validTagIds = tagDao.selectIdsByDomainOwners(con, opanel.getDomainId(), Arrays.asList(OTag.OWNER_NONE));
+				for (String tagId : panel.getTags()) {
+					if (!validTagIds.contains(tagId)) throw new WTException("Tag '{}' is personal, therefore not usable within panels.", tagId);
+				}
 				cuptDao.batchInsert(con, opanel.getCustomPanelId(), panel.getTags());
 			}
 			
@@ -1584,7 +1629,11 @@ public class CoreManager extends BaseManager {
 				cupfDao.batchInsert(con, opanel.getCustomPanelId(), panel.getFields());
 			}
 			cuptDao.deleteByPanel(con, opanel.getCustomPanelId());
-			if (panel.getTags()!= null) {
+			if (panel.getTags() != null) {
+				Set<String> validTagIds = tagDao.selectIdsByDomainOwners(con, opanel.getDomainId(), Arrays.asList(OTag.OWNER_NONE));
+				for (String tagId : panel.getTags()) {
+					if (!validTagIds.contains(tagId)) throw new WTException("Tag '{}' is personal, therefore not usable within panels.", tagId);
+				}
 				cuptDao.batchInsert(con, opanel.getCustomPanelId(), panel.getTags());
 			}
 		}
@@ -3089,7 +3138,7 @@ public class CoreManager extends BaseManager {
 	private Tag doTagUpdate(boolean insert, Connection con, Tag tag) throws WTException {
 		TagDAO tagDao = TagDAO.getInstance();
 		
-		OTag otag = ManagerUtils.createOTag(tag);
+		OTag otag = ManagerUtils.createOTag(tag, getTargetProfileId().getUserId());
 		if (otag.getDomainId() == null) otag.setDomainId(getTargetProfileId().getDomainId());
 		
 		int ret = -1;

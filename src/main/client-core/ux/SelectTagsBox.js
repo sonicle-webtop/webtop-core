@@ -37,6 +37,7 @@ Ext.define('Sonicle.webtop.core.ux.SelectTagsBox', {
 		'Sonicle.webtop.core.model.Tag'
 	],
 	uses: [
+		'Sonicle.Data',
 		'Sonicle.String'
 	],
 	
@@ -111,6 +112,6 @@ Ext.define('Sonicle.webtop.core.ux.SelectTagsBox', {
 	},
 	
 	getCustomPromptValue: function() {
-		return WTU.collectIds(this.customPrompt.getSelection());
+		return Sonicle.Data.collectValues(this.customPrompt.getSelection());
 	}
 });

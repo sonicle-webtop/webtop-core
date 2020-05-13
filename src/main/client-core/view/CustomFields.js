@@ -39,7 +39,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 		'Sonicle.webtop.core.model.CustomFieldGrid'
 	],
 	uses: [
-		'Sonicle.DataUtils',
+		'Sonicle.Data',
 		'Sonicle.webtop.core.view.CustomField'
 	],
 	
@@ -318,7 +318,7 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 						var data = Ext.apply(json.data, {
 							id: undefined,
 							fieldId: undefined,
-							name: Sonicle.DataUtils.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
+							name: Sonicle.Data.getDuplValue(me.lref('gp').getStore(), 'name', json.data.name)
 						});
 						me.addCustomField(me.serviceId, Sonicle.Utils.applyIfDefined({}, data), {
 							callback: function() {

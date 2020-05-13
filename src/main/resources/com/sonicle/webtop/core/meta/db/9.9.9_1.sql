@@ -30,6 +30,7 @@ CREATE INDEX "audit_log_ak1" ON "core"."audit_log" ("domain_id", "service_id", "
 CREATE TABLE "core"."tags" (
 "tag_id" varchar(22) NOT NULL,
 "domain_id" varchar(20) NOT NULL,
+"user_id" varchar(255) NOT NULL,
 "built_in" bool NOT NULL,
 "name" varchar(50) NOT NULL,
 "color" varchar(20) NOT NULL
@@ -39,9 +40,8 @@ WITH (OIDS=FALSE)
 ;
 
 ALTER TABLE "core"."tags" ADD PRIMARY KEY ("tag_id");
-CREATE INDEX "tags_ak1" ON "core"."tags" USING btree ("domain_id");
+CREATE INDEX "tags_ak1" ON "core"."tags" USING btree ("domain_id", "user_id");
 CREATE INDEX "tags_ak2" ON "core"."tags" USING btree ("built_in", "name");
-CREATE UNIQUE INDEX "tags_ak3" ON "core"."tags" USING btree ("domain_id", "name");
 
 -- ----------------------------
 -- Table structure for custom_fields

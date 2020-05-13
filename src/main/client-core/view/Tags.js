@@ -38,6 +38,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 		'Sonicle.webtop.core.model.Tag'
 	],
 	uses: [
+		'Sonicle.Data',
 		'Sonicle.webtop.core.view.TagEditor'
 	],
 	
@@ -65,6 +66,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	
 	dockableConfig: {
 		title: '{tags.tit}',
+		iconCls: 'wt-icon-tag',
 		width: 320,
 		height: 350,
 		modal: true
@@ -118,7 +120,6 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add-xs',
-					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
 					handler: function() {
 						me.addTagUI();
 					}
@@ -148,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 						allowSingle: false
 					}
 				}),
-				sorters: [{property: 'builtIn', direction: 'DESC'}, 'name'],
+				sorters: [{property: 'personal', direction: 'DESC'}, {property: 'builtIn', direction: 'DESC'}, 'name'],
 				listeners: {
 					load: function(s, recs) {
 						if (s.loadCount === 1) {
@@ -173,8 +174,14 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 			columns: [{
 					dataIndex: 'name',
 					renderer: function(val, meta, rec) {
-						var SoS = Sonicle.String;
-						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + SoS.deflt(rec.get('color'), '') + '"></i>&nbsp;&nbsp;' + SoS.deflt(rec.get('name'), '');
+						var SoS = Sonicle.String,
+								color = SoS.deflt(rec.get('color'), ''),
+								name = SoS.deflt(rec.get('name'), ''),
+								pers = '';
+						if (rec.get('personal')) {
+							pers = '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.personal.true') + ')</span>';
+						}
+						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pers;
 					},
 					flex: 1
 				}, {
@@ -187,7 +194,11 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							me.editTagUI(rec);
 						},
 						isDisabled: function(s, ridx, cidx, itm, rec) {
-							return !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE') || rec.get('builtIn');
+							if (rec.get('personal') === true) {
+								return rec.get('builtIn');
+							} else {
+								return !me.hasManage() || rec.get('builtIn');
+							}
 						}
 					}, {
 						iconCls: 'fa fa-trash',
@@ -197,7 +208,11 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							me.deleteTagUI(rec);
 						},
 						isDisabled: function(s, ridx, cidx, itm, rec) {
-							return !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE') || rec.get('builtIn');
+							if (rec.get('personal') === true) {
+								return rec.get('builtIn');
+							} else {
+								return !me.hasManage() || rec.get('builtIn');
+							}
 						}
 					}]
 			}],
@@ -210,7 +225,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 		var me = this,
 			vm = me.getVM(),
 				gp = me.lref('gp');
-		if (me.enableSelection) vm.set('data.selection', WTU.collectIds(gp.getSelection()));
+		if (me.enableSelection) vm.set('data.selection', Sonicle.Data.collectValues(gp.getSelection()));
 		me.fireEvent('viewok', me, vm.get('data'));
 		me.closeView(false);
 	},
@@ -223,8 +238,10 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
-							color: Sonicle.String.prepend(rndColor, '#', true)
+							color: Sonicle.String.prepend(rndColor, '#', true),
+							personal: me.hasManage() ? false : true
 						},
+						personalEditable: me.hasManage(),
 						invalidNames: me.collectUsedNames()
 					}
 				});
@@ -235,7 +252,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 		vw.showView();
 	},
 	
-	editTag: function(id, name, color, opts) {
+	editTag: function(id, name, color, personal, opts) {
 		var me = this,
 				vw = WT.createView(me.mys.ID, 'view.TagEditor', {
 					swapReturn: true,
@@ -244,8 +261,10 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 						data: {
 							id: id,
 							name: name,
-							color: color
+							color: color,
+							personal: personal
 						},
+						personalEditable: false,
 						invalidNames: me.collectUsedNames(name)
 					}
 				});
@@ -257,10 +276,14 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 	},
 	
 	privates: {
+		hasManage: function() {
+			return WT.isPermitted(this.mys.ID, 'TAGS', 'MANAGE');
+		},
+		
 		syncChanges: function() {
 			var me = this,
 					sto = me.lref('gp').getStore();
-			if (WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE') && WTU.needsSync(sto)) {
+			if (WTU.needsSync(sto)) {
 				sto.sync({
 					success: function() {
 						me.syncCount++;
@@ -293,6 +316,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							sto = gp.getStore(),
 							added;
 					added = sto.add(sto.createModel({
+						personal: data.personal,
 						name: data.name,
 						color: data.color
 					}));
@@ -304,11 +328,11 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 
 		editTagUI: function(rec) {
 			var me = this;
-			me.editTag(rec.getId(), rec.get('name'), rec.get('color'), {
+			me.editTag(rec.getId(), rec.get('name'), rec.get('color'), rec.get('personal'), {
 				callback: function(data) {
 					var rec = me.lref('gp').getStore().getById(data.id);
 					if (rec) {
-						rec.set({name: data.name, color: data.color});
+						rec.set({personal: data.personal, name: data.name, color: data.color});
 						me.syncChanges();
 					}
 				}
