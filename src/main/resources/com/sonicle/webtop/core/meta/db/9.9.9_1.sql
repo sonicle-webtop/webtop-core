@@ -33,7 +33,8 @@ CREATE TABLE "core"."tags" (
 "user_id" varchar(255) NOT NULL,
 "built_in" bool NOT NULL,
 "name" varchar(50) NOT NULL,
-"color" varchar(20) NOT NULL
+"color" varchar(20) NOT NULL,
+"external_id" varchar(255)
 )
 WITH (OIDS=FALSE)
 

@@ -157,6 +157,7 @@ public class ManagerUtils {
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());
+			tgt.setExternalId(src.getExternalId());
 		}
 		return tgt;
 	}
@@ -174,6 +175,7 @@ public class ManagerUtils {
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());
+			tgt.setExternalId(src.getExternalId());
 		}
 		return tgt;
 	}
