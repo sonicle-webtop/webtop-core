@@ -40,6 +40,7 @@ import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import org.joda.time.DateTimeZone;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -53,7 +54,10 @@ public class ContextLoaderListener extends ContextLoader implements ServletConte
 		// While waiting for the transition from the excellent JodaTime to 
 		// built-in Java Time api, it's better to bridge ZoneInfoProvider to 
 		// JVM in order to do not maintain multiple zone tables.
-		JdkBasedZoneInfoProvider.registerAsJodaZoneInfoProvider();
+		// NB: DO NOT USE JdkBasedZoneInfoProvider.registerAsJodaZoneInfoProvider().
+		// It will set provider overriding System props that causes interferences 
+		// between different webapps in a multi-context environment.
+		DateTimeZone.setProvider(new JdkBasedZoneInfoProvider());
 		
 		ServletContext servletContext = sce.getServletContext();
 		String webappFullName = ContextUtils.getWebappFullName(servletContext, false); // Gets name like: <context-name>##<context-version>
