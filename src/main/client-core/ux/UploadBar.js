@@ -67,6 +67,12 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	uploadTag: null,
 	
 	/**
+	 * @cfg {Boolean} autoStart
+	 * `false` to control upload start manually on the uploader component.
+	 */
+	autoStart: true,
+	
+	/**
 	 * @cfg {String} buttonIconCls
 	 * Upload button icon class.
 	 */
@@ -101,6 +107,7 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 			tooltip: WT.res('wtuploadbar.btn-upload.tip'),
 			iconCls: me.buttonIconCls,
 			uploaderConfig: WTF.uploader(me.sid, me.uploadContext, {
+				autoStart: me.autoStart,
 				extraParams: {
 					tag: me.uploadTag
 				},
@@ -114,6 +121,9 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 					}
 				},
 				listeners: {
+					filesadded: function(s, files) {
+						me.fireEvent('filesadded', me, files);
+					},
 					uploaderror: function(s, file, cause) {
 						me.self.handleUploadError(s, file, cause);
 					},
@@ -173,6 +183,10 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	
 	geDropHere: function() {
 		return this.getComponent('drophere');
+	},
+	
+	getUploader: function() {
+		return this.getUploadButton().uploader;
 	},
 	
 	statics: {
