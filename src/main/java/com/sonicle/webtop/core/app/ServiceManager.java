@@ -241,6 +241,8 @@ public class ServiceManager {
 		if (coreDesc.isUpgraded()) {
 			requireAdmin = requireAdmin | upgradeServiceDb(coreDesc, upgradeTag, dbAutoUpgrade);
 		}
+		
+		createController(CoreManifest.ID);
 
 		// Register discovered services
 		for (ServiceManifest manifest : manifests.values()) {

@@ -34,17 +34,59 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
+import com.sonicle.webtop.core.model.Tag;
 import com.sonicle.webtop.core.sdk.BaseController;
+import com.sonicle.webtop.core.sdk.ServiceVersion;
+import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTException;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class CoreController extends BaseController {
+public class CoreController extends BaseController implements IControllerServiceHooks {
 	public static final Logger logger = WT.getLogger(CoreController.class);
 	
 	public CoreController() {
 		super();
 	}
+	
+	@Override
+	public void initProfile(ServiceVersion current, UserProfileId profileId) throws WTException {
+		addBuiltinThunderbirdTags(profileId);
+	}
+	
+	private static final String[][] BULTIN_THUNDERBIRD_TAGS = {
+		{"$label1","#E53935"},
+		{"$label2","#FF9800"},
+		{"$label3","#43A047"},
+		{"$label4","#3F51B5"},
+		{"$label5","#9C27B0"}
+	};
+	
+	private void addBuiltinThunderbirdTags(UserProfileId profileId) {
+		for(String[] builtinThunderbirdTag: BULTIN_THUNDERBIRD_TAGS) {
+			try {
+				String id=builtinThunderbirdTag[0];
+				String color=builtinThunderbirdTag[1];
+				Tag tag=new Tag();
+				tag.setBuiltIn(false);
+				tag.setColor(color);
+				tag.setDomainId(profileId.getDomainId());
+				tag.setExternalId(id);
+				tag.setName(WT.lookupResource(SERVICE_ID,WT.getUserData(profileId).getLocale(), CoreLocaleKey.TAGS_LABEL(id)));
+				tag.setPersonal(true);
+				WT.getCoreManager().addTag(tag);
+			} catch(Exception exc) {
+				logger.error("error creating builtin Thunderbird tags",exc);
+			}
+		}
+	}
+	
+	@Override
+	public void upgradeProfile(ServiceVersion current, UserProfileId profileId, ServiceVersion profileLastSeen) throws WTException {
+	}
+	
 }

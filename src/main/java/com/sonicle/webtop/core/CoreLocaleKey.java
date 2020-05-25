@@ -110,4 +110,10 @@ public class CoreLocaleKey {
 	public static final String INTERNETRECIPIENT_WEBTOP = "internetRecipient.webtop";
 	
 	public static final String DETECT_ATTACH_PATTERNS = "detect.attach.patterns";
+	
+	public static String TAGS_LABEL(String label) {
+		return "tags."+label;
+	} 
+	
+	
 }
