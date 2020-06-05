@@ -31,18 +31,16 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-Ext.define('Sonicle.webtop.core.admin.model.License', {
-	extend: 'WTA.ux.data.BaseModel',
-	
-	proxy: WTF.apiProxy('com.sonicle.webtop.core.admin', 'ManageLicense', 'data'),
+package com.sonicle.webtop.core.app;
 
-	identifier: 'negativestring',
-	idProperty: 'id',
-	fields: [
-		WTF.field('id', 'string', false),
-		WTF.field('domainId', 'string', false),
-		WTF.field('serviceId', 'string', false),
-		WTF.field('productId', 'string', false),
-		WTF.field('key', 'string', false)
-	]
-});
+/**
+ *
+ * @author malbinola
+ */
+public abstract class AbstractPlatformService {
+	public final String SERVICE_ID;
+	
+	public AbstractPlatformService() {
+		SERVICE_ID = WT.findServiceId(this.getClass());
+	}
+}

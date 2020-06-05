@@ -29,6 +29,8 @@
 .wtadm-icon-permission { background-image: url('permission_16.svg') !important; background-size: contain; }
 .wtadm-icon-licenses { background-image: url('license_16.svg') !important; background-size: contain; }
 .wtadm-icon-license { background-image: url('license_16.svg') !important; background-size: contain; }
+.wtadm-icon-licenseAutoLease-on { background-image: url('licenseAutoLease-on_16.svg') !important; background-size: contain; }
+.wtadm-icon-licenseAutoLease-off { background-image: url('licenseAutoLease-off_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualDomain { background-image: url('virtualDomain_16.svg') !important; background-size: contain; }
 .wtadm-icon-virtualEmail { background-image: url('virtualEmail_16.svg') !important; background-size: contain; }
 .wtadm-icon-pecBridge { background-image: url('pecBridge_16.svg') !important; background-size: contain; }

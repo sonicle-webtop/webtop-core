@@ -297,12 +297,18 @@ public class ServiceManifest {
 					final String className = el.getString("[@className]");
 					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");
 					
-					String productClassName = buildJavaClassName(javaPackage, className);
+					final String productClassName = buildJavaClassName(javaPackage, className);
+					AbstractProduct product = ProductUtils.getProduct(productClassName);
+					if (product == null) throw new WTException("Invalid value for attribute [product->className]. Product '{}' unloadable.", productClassName);
+					products.put(product.getProductCode(), new Product(productClassName, product));
+					
+					/*
 					AbstractProduct product = ProductUtils.getProduct(productClassName);
 					if (product != null) {
 						logger.info("Product found [{}, {}, {}]", product.getProductId(), product.getProductName(), productClassName);
 						products.put(product.getProductId(), new Product(productClassName, product));
 					}
+					*/
 				}
 			}
 		}
@@ -586,8 +592,8 @@ public class ServiceManifest {
 		return portlets;
 	}
 	
-	public Product getProduct(String productId) {
-		return products.get(productId);
+	public Product getProduct(String productCode) {
+		return products.get(productCode);
 	}
 	
 	public Collection<Product> getProducts() {
@@ -654,17 +660,17 @@ public class ServiceManifest {
 	
 	public static class Product {
 		public final String className;
-		public final String id;
+		public final String code;
 		public final String name;
 		
-		public Product(String className, String id, String name) {
+		public Product(String className, String code, String name) {
 			this.className = className;
-			this.id = id;
+			this.code = code;
 			this.name = name;
 		}
 		
 		public Product(String className, AbstractProduct product) {
-			this(className, product.getProductId(), product.getProductName());
+			this(className, product.getProductCode(), product.getProductName());
 		}
 	}
 }

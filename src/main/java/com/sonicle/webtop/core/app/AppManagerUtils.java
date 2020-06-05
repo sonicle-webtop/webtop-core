@@ -33,9 +33,15 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.webtop.core.bol.OLicense;
+import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.model.License;
+import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.model.ServiceLicenseLease;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -53,32 +59,64 @@ public class AppManagerUtils {
 		return tgt;
 	}
 	
+	
 	static ServiceLicense createServiceLicense(OLicense src) {
 		if (src == null) return null;
 		return fillServiceLicense(new ServiceLicense(), src);
 	}
 	
+	static ServiceLicense createServiceLicense(OLicense src, Set<String> leases) {
+		if (src == null) return null;
+		ServiceLicense tgt = fillServiceLicense(new ServiceLicense(), src);
+		tgt.setLeasedUsers(leases);
+		return tgt;
+	}
+	
 	static <T extends ServiceLicense> T fillServiceLicense(T tgt, OLicense src) {
 		if ((tgt != null) && (src != null)) {
-			tgt.setServiceId(src.getServiceId());
-			tgt.setProductId(src.getProductId());
-			tgt.setInternetName(src.getInternetName());
-			tgt.setLicenseText(src.getLicense());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setProductId(ProductId.build(src.getServiceId(), src.getProductCode()));
+			tgt.setString(src.getString());
+			tgt.setExpirationDate(src.getExpirationDate());
+			tgt.setLeaseAvail(src.getLeaseAvail());
+			tgt.setAutoLease(src.getAutoLease());
 		}
 		return tgt;
 	}
 	
-	static OLicense createOLicense(ServiceLicense src) {
+	static OLicense createOLicense(License src) {
 		if (src == null) return null;
 		return fillOLicense(new OLicense(), src);
 	}
 	
-	static <T extends OLicense> T fillOLicense(T tgt, ServiceLicense src) {
+	static <T extends OLicense, S extends License> T fillOLicense(T tgt, S src) {
 		if ((tgt != null) && (src != null)) {
-			tgt.setServiceId(src.getServiceId());
-			tgt.setProductId(src.getProductId());
-			tgt.setInternetName(src.getInternetName());
-			tgt.setLicense(src.getLicenseText());
+			tgt.setDomainId(src.getDomainId());
+			tgt.setServiceId(src.getProductId().getServiceId());
+			tgt.setProductCode(src.getProductId().getProductCode());
+			tgt.setString(src.getString());
+			tgt.setAutoLease(src.getAutoLease());
+		}
+		return tgt;
+	}
+	
+	static ServiceLicenseLease.Map createServiceLicenseLeaseMap(List<OLicenseLease> items) {
+		ServiceLicenseLease.Map map = new ServiceLicenseLease.Map(items.size());
+		for (OLicenseLease item : items) {
+			map.add(createServiceLicenseLease(item));
+		}
+		return map;
+	}
+	
+	static ServiceLicenseLease createServiceLicenseLease(OLicenseLease src) {
+		if (src == null) return null;
+		return fillServiceLicenseLease(new ServiceLicenseLease(), src);
+	}
+	
+	static <T extends ServiceLicenseLease> T fillServiceLicenseLease(T tgt, OLicenseLease src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setUserId(src.getUserId());
+			tgt.setActivationString(src.getActivationString());
 		}
 		return tgt;
 	}

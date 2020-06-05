@@ -30,27 +30,28 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.sdk;
+package com.sonicle.webtop.core.app.sdk;
 
-import com.sonicle.commons.l4j.AbstractProduct;
-import com.sonicle.webtop.core.app.WT;
-import org.apache.commons.lang3.StringUtils;
+import com.license4j.ActivationStatus;
+import com.sonicle.commons.l4j.ProductLicense;
 
 /**
  *
  * @author malbinola
  */
-public abstract class BaseDomainServiceProduct extends AbstractProduct {
-	public final String SERVICE_ID;
-	protected final String internetName;
+public class WTLicenseActivationException extends WTLicenseException {
+	private ActivationStatus activationStatus;
 	
-	public BaseDomainServiceProduct(String internetName) {
-		super(StringUtils.replace(internetName, ".", "-"));
-		SERVICE_ID = WT.findServiceId(this.getClass());
-		this.internetName = internetName;
+	public WTLicenseActivationException(ProductLicense.LicenseInfo info, ActivationStatus requiredActivationStatus) {
+		this(info.getProductCode(), info.getActivationStatus(), requiredActivationStatus);
 	}
 	
-	public String getInternetName() {
-		return internetName;
+	public WTLicenseActivationException(String productCode, ActivationStatus activationStatus, ActivationStatus requiredActivationStatus) {
+		super("Activation status for '{}' is not '{}'", productCode, requiredActivationStatus);
+		this.activationStatus = activationStatus;
+	}
+	
+	public ActivationStatus getActivationStatus() {
+		return activationStatus;
 	}
 }

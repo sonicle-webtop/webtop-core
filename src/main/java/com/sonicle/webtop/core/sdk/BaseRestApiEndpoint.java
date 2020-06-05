@@ -35,7 +35,7 @@ package com.sonicle.webtop.core.sdk;
 
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
-import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.AbstractPlatformService;
 import com.sonicle.webtop.core.app.WT;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,7 +45,7 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author malbinola
  */
-public abstract class BaseRestApiEndpoint extends AbstractService {
+public abstract class BaseRestApiEndpoint extends AbstractPlatformService {
 	
 	public BaseRestApiEndpoint() {
 		super();

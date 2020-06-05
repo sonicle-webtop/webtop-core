@@ -31,69 +31,81 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.bol.js;
+package com.sonicle.webtop.core.admin.bol.js;
 
-import com.license4j.LicenseText;
 import com.sonicle.commons.l4j.AbstractProduct;
 import com.sonicle.commons.l4j.ProductLicense;
-import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServiceLicense;
-import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
-import com.sonicle.webtop.core.sdk.ServiceManifest;
-import java.util.HashMap;
+import java.util.ArrayList;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 
 /**
  *
  * @author malbinola
  */
 public class JsGridDomainLicense {
+	public String id;
 	public String serviceId;
-	public String productId;
-	public String productDetails;
-	public String license;
+	public String productCode;
 	public boolean valid;
+	public boolean expired;
+	public String expiry;
+	public boolean expireSoon;
+	public Integer leaseAvail;
+	public String hwId;
+	public String regTo;
+	public Boolean autoLease;
+	public Integer leaseCount;
+	public ArrayList<Lease> leases;
 	
-	public JsGridDomainLicense(ServiceLicense license) {
-		serviceId = license.getServiceId();
-		productId = license.getProductId();
-		this.license = license.getLicenseText();
+	public JsGridDomainLicense(ServiceLicense license, DateTimeZone profileTz) {
+		id = license.getProductId().toString();
+		serviceId = license.getProductId().getServiceId();
+		productCode = license.getProductId().getProductCode();
+		
+		String internetName = WT.getDomainInternetName(license.getDomainId());
+		AbstractProduct prod = ProductUtils.getProduct(internetName, license.getProductId());
+		ProductLicense prodLic = prod != null ? new ProductLicense(prod) : null;
+		
 		valid = false;
-		productDetails = buildDetails(license);
+		expired = false;
+		expiry = null;
+		expireSoon = false;
+		leaseAvail = license.getLeaseAvail() == null ? -1 : license.getLeaseAvail();
+		if (prodLic != null) {
+			prodLic.setLicenseString(license.getString());
+			valid = prodLic.getLicenseInfo().isValid();
+			expired = prodLic.getLicenseInfo().isExpired();
+			if (valid || expired) {
+				LocalDate expiryDate = prodLic.getLicenseInfo().getExpirationDate();
+				if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
+				expireSoon = prodLic.getLicenseInfo().isExpiringSoon();
+				hwId = prodLic.getLicenseInfo().getHardwareID();
+				regTo = prodLic.getLicenseInfo().getUserRegisteredTo();
+			}
+		}
+		
+		autoLease = license.getAutoLease();
+		leaseCount = license.getLeasedUsers().size();
+		leases = new ArrayList<>();
+		for (String leasedUser : license.getLeasedUsers()) {
+			Lease jsl = new Lease();
+			jsl.userId = leasedUser;
+			leases.add(jsl);
+		}
 	}
 	
-	private String buildDetails(ServiceLicense license) {
-		ServiceManifest manifest = WT.getManifest(license.getServiceId());
-		if (manifest == null) return "[ product not found ]";
-		ServiceManifest.Product manifestProduct = manifest.getProduct(license.getProductId());
-		if (manifestProduct == null) return "[ invalid product id ]";
-		AbstractProduct product = ProductUtils.getProduct(manifestProduct.className, license.getInternetName());
-		if (product == null) return "[ product not found ]";
-		
-		boolean perDomain=(product instanceof BaseDomainServiceProduct);
-		ProductLicense pl = new ProductLicense(
-				ProductLicense.LicenseType.LICENSE_TEXT,
-				ProductLicense.ActivationLicenseType.OFF_NO_ACTIVATION,
-				product,
-				license.getLicenseText()
-		);
-		
-		LicenseObject lo=pl.validate();
-		valid=lo.isValid();
-		if (valid) {
-			LicenseText ltext=lo.getLicense().getLicenseText();
-			String s=product.getProductName();
-			HashMap<String,String> features=ltext.getCustomSignedFeatures();
-			for(String key: features.keySet()) {
-				String value=features.get(key);
-				s+=" - "+key+": "+value;
-			}
-			if (perDomain) s+=" - domain: "+license.getInternetName();
-			s+=" - licensed to "+ltext.getUserRegisteredTo();
-			return s;
-		} else {
-			return "[ invalid license ]";
+	public static class Lease {
+		public String userId;
+	}
+	
+	public static class List extends ArrayList<JsGridDomainLicense> {
+		public List() {
+			super();
 		}
 	}
 }

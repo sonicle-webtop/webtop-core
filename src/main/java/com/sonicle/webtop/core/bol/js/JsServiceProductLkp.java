@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.CId;
 
 /**
  *
@@ -42,15 +42,15 @@ import com.sonicle.commons.web.json.CompositeId;
 public class JsServiceProductLkp {
 	public String id;
 	public String serviceId;
-	public String productId;
+	public String productCode;
 	public String productName;
 	
 	public JsServiceProductLkp() {}
 	
-	public JsServiceProductLkp(String serviceId, String productId, String productName) {
-		this.id = new CompositeId(serviceId, productId).toString();
+	public JsServiceProductLkp(String serviceId, String productCode, String productName) {
+		this.id = CId.build(serviceId, productCode).toString();
 		this.serviceId = serviceId;
-		this.productId = productId;
+		this.productCode = productCode;
 		this.productName = productName;
 	}
 }

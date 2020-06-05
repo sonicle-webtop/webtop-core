@@ -105,6 +105,7 @@ import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.time.StopWatch;
 
 /**
  *
@@ -878,20 +879,44 @@ public class ServiceManager {
 		return instance;
 	}
 	
-	public void cleanupPrivateService(BaseService instance) {
-		long start = 0, end = 0;
-		logger.trace("PrivateService: calling cleanup() [{}]", instance.SERVICE_ID);
+	public void privateServiceCallReady(BaseService instance) {
+		logger.trace("PrivateService: calling ready() [{}]", instance.SERVICE_ID);
+		boolean success = false;
+		StopWatch stopWatch = new StopWatch();
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
-			start = System.nanoTime();
+			stopWatch.start();
+			instance.ready();
+			stopWatch.stop();
+			success = true;
+			
+		} catch (Throwable t) {
+			stopWatch.stop();
+			logger.error("PrivateService: ready() throws errors [{}]", t, instance.getClass().getCanonicalName());
+		} finally {
+			LoggerUtils.clearContextServiceDC();
+		}
+		if (success && logger.isTraceEnabled()) logger.trace("PrivateService: ready() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+	}
+	
+	public void privateServiceCallCleanup(BaseService instance) {
+		logger.trace("PrivateService: calling cleanup() [{}]", instance.SERVICE_ID);
+		boolean success = false;
+		StopWatch stopWatch = new StopWatch();
+		try {
+			LoggerUtils.setContextDC(instance.SERVICE_ID);
+			stopWatch.start();
 			instance.cleanup();
-			end = System.nanoTime();
-		} catch(Throwable t) {
+			stopWatch.stop();
+			success = true;
+			
+		} catch (Throwable t) {
+			stopWatch.stop();
 			logger.error("PrivateService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PrivateService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (success && logger.isTraceEnabled()) logger.trace("PrivateService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfileId targetProfileId) {

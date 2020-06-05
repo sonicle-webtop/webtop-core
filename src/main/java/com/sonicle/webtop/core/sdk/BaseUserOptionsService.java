@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.AbstractPlatformService;
 import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,7 +42,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author malbinola
  */
-public abstract class BaseUserOptionsService extends AbstractService {	
+public abstract class BaseUserOptionsService extends AbstractPlatformService {	
 	private boolean configured = false;
 	private UserProfile sessionProfile;
 	private UserProfileId targetProfileId;

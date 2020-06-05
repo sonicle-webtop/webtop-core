@@ -61,9 +61,11 @@ import javax.servlet.http.HttpServletResponse;
  * @author malbinola
  */
 public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvironment> {
-	
-	private boolean auditSetup=false;
-	private boolean auditEnabled=false;
+
+	@Override
+	public void ready() throws WTException {
+		// Implement in this dummy manner to not force subclasses changes!
+	}
 	
 	public ServiceVars returnServiceVars() {
 		return null;

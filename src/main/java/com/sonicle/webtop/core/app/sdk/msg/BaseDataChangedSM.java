@@ -30,23 +30,22 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.msg;
+package com.sonicle.webtop.core.app.sdk.msg;
 
-import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
 
 /**
  *
  * @author malbinola
  */
-public class DataChangedMsg extends ServiceMessage {
+public class BaseDataChangedSM extends ServiceMessage {
 	public static final String ACTION_SUFFIX = "Changed";
 	
-	public DataChangedMsg(String entity) {
-		super(CoreManifest.ID, entity + ACTION_SUFFIX);
+	public BaseDataChangedSM(String serviceId, String entity) {
+		super(serviceId, entity + ACTION_SUFFIX);
 	}
 	
-	public DataChangedMsg(String entity, Object payload) {
-		super(CoreManifest.ID, entity + ACTION_SUFFIX, payload);
+	public BaseDataChangedSM(String serviceId, String entity, Object payload) {
+		super(serviceId, entity + ACTION_SUFFIX, payload);
 	}
 }

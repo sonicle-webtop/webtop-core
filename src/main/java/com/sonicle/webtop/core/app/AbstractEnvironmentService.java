@@ -69,13 +69,15 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author malbinola
  */
-public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> extends AbstractCommonService {
+public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> extends AbstractService {
 	public static final String UPLOAD_TEMPFILE_PREFIX = "upload-";
 	private boolean configured = false;
 	private E env;
 	private final HashMap<String, IServiceUploadListener> uploadListeners = new HashMap<>();
 	private final HashMap<String, IServiceUploadStreamListener> uploadStreamListeners = new HashMap<>();
 	private boolean documentServerEnabled;
+	
+	public abstract void ready() throws WTException;
 	
 	public final void configure(E env) {
 		if(configured) return;

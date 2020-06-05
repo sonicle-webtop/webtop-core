@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.AbstractPlatformService;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import javax.ws.rs.core.Response;
@@ -45,7 +45,7 @@ import org.slf4j.helpers.MessageFormatter;
  *
  * @author malbinola
  */
-public abstract class BaseRestApiResource extends AbstractService {
+public abstract class BaseRestApiResource extends AbstractPlatformService {
 	
 	public BaseRestApiResource() {
 		super();

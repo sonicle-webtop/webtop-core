@@ -34,17 +34,29 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.sdk.BaseController;
+import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTException;
 import org.slf4j.Logger;
 
 /**
  *
  * @author malbinola
  */
-public class CoreController extends BaseController {
+public class CoreController extends BaseController implements IControllerUserEvents {
 	public static final Logger logger = WT.getLogger(CoreController.class);
 	
 	public CoreController() {
 		super();
+	}
+	
+	@Override
+	public void onUserAdded(UserProfileId profileId) throws WTException {}
+
+	@Override
+	public void onUserRemoved(UserProfileId profileId) throws WTException {
+		CoreManager manager = WT.getCoreManager(true, profileId);
+		manager.eraseData(true);
 	}
 }

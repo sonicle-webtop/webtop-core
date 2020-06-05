@@ -47,6 +47,10 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainLicenses',
 		'Sonicle.webtop.core.admin.view.DbUpgrader'
 	],
+	uses: [
+		'Sonicle.webtop.core.admin.view.License',
+		'Sonicle.webtop.core.admin.view.LicenseLease'
+	],
 	
 	init: function() {
 		var me = this,
@@ -543,36 +547,68 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addLicense: function(domainId, opts) {
+	addLicense: function(domainId, serviceId, productCode, string, opts) {
 		opts = opts || {};
-		var me = this,
-				vct = WT.createView(me.ID, 'view.License', {
-					viewCfg: {
-						domainId: domainId
-					}
-				});
-		
-		vct.getView().on('viewsave', function(s, success, model) {
-			Ext.callback(opts.callback, opts.scope || me, [success, model]);
-		});
-		vct.show(false, function() {
-			vct.getView().begin('new', {
-				data: {
-					domainId: domainId
-				}
-			});
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'create',
+				domainId: domainId,
+				serviceId: serviceId,
+				productCode: productCode,
+				string: string
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
 		});
 	},
 	
-	deleteLicenses: function(domainId, serviceIds, productIds, opts) {
+	deleteLicense: function(domainId, serviceId, productCode, opts) {
 		opts = opts || {};
 		var me = this;
-		WT.ajaxReq(me.ID, 'ManageDomainLicenses', {
+		WT.ajaxReq(me.ID, 'ManageLicense', {
 			params: {
 				crud: 'delete',
 				domainId: domainId,
-				serviceIds: WTU.arrayAsParam(serviceIds),
-				productIds: WTU.arrayAsParam(productIds)
+				serviceId: serviceId,
+				productCode: productCode
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	assignLicenseLease: function(domainId, serviceId, productCode, userId, astring, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'assignlease',
+				domainId: domainId,
+				serviceId: serviceId,
+				productCode: productCode,
+				userId: userId,
+				astring: astring
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	revokeLicenseLease: function(domainId, serviceId, productCode, userId, dstring, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'revokelease',
+				domainId: domainId,
+				serviceId: serviceId,
+				productCode: productCode,
+				userId: userId,
+				dstring: dstring
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);

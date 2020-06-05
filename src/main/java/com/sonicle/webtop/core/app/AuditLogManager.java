@@ -34,19 +34,15 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.sdk.WTException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**

@@ -34,7 +34,13 @@
 Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
+		'Sonicle.grid.column.Action',
+		'Sonicle.grid.column.Icon',
+		'Sonicle.webtop.core.admin.model.DomainUserLkp',
 		'Sonicle.webtop.core.admin.model.GridDomainLicenses'
+	],
+	uses: [
+		'Sonicle.String'
 	],
 	
 	domainId: null,
@@ -48,7 +54,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		var me = this;
 		me.callParent([cfg]);
 		
-		if(!cfg.title) {
+		if (!cfg.title) {
 			me.setBind({
 				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
 			});
@@ -59,72 +65,227 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		var me = this;
 		me.callParent(arguments);
 		
+		me.usersLkpStore = Ext.create('Ext.data.Store', {
+			autoLoad: true,
+			model: 'Sonicle.webtop.core.admin.model.DomainUserLkp',
+			proxy: WTF.proxy(me.mys.ID, 'LookupDomainUsers', 'users', {
+				extraParams: {domainId: me.domainId}
+			})
+		});
+		
 		me.add({
 			region: 'center',
 			xtype: 'grid',
 			reference: 'gp',
 			store: {
 				autoLoad: true,
+				autoSync: true,
 				model: 'Sonicle.webtop.core.admin.model.GridDomainLicenses',
-				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainLicenses', 'licenses', {
+				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainLicenses', null, {
 					extraParams: {
 						domainId: me.domainId
 					},
 					writer: {
 						allowSingle: false // Always wraps records into an array
 					}
-				}),
-				listeners: {
-					remove: function(s, recs) {
-						// Fix for updating selection
-						me.lref('gp').getSelectionModel().deselect(recs);
+				})
+			},
+			columns: [
+				{
+					xtype: 'rownumberer'	
+				}, {
+					xtype: 'solookupcolumn',
+					dataIndex: 'serviceId',
+					header: me.mys.res('domainLicenses.gp.serviceId.lbl'),
+					store: {
+						autoLoad: true,
+						model: 'Sonicle.webtop.core.model.ServiceLkp',
+						proxy: WTF.proxy(WT.ID, 'LookupServices')
+					},
+					displayField: 'desc',
+					tipField: 'id',
+					flex: 1
+				}, {
+					xtype: 'solookupcolumn',
+					dataIndex: 'id',
+					header: me.mys.res('domainLicenses.gp.productCode.lbl'),
+					store: {
+						autoLoad: true,
+						model: 'Sonicle.webtop.core.admin.model.ProductLkp',
+						proxy: WTF.proxy(me.mys.ID, 'LookupServicesProducts')					
+					},
+					displayField: 'productName',
+					tipField: 'productCode',
+					flex: 1
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'valid',
+					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					getIconCls: function(v, rec) {
+						var status = rec.getStatus();
+						switch(status) {
+							case 'valid':
+								return 'wt-icon-ok';
+							case 'warn':
+								return 'wt-icon-ok-warn';
+							default:
+								return 'wt-icon-critical';
+						}
+					},
+					getTip: function(v, rec) {
+						return me.mys.res('domainLicenses.gp.status.'+rec.getStatus()+'.tip');
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
+				}, {
+					xtype: 'datecolumn',
+					dataIndex: 'expiry',
+					format: WT.getShortDateFmt(),
+					header: me.mys.res('domainLicenses.gp.expiry.lbl'),
+					//emptyCellText: '\u221e',
+					width: 100
+				}, {
+					xtype: 'templatecolumn',
+					header: me.mys.res('domainLicenses.gp.lease.lbl'),
+					tpl: new Ext.XTemplate(
+						'<tpl if="leaseAvail &gt; -1">',
+							'{leaseCount} / {leaseAvail}',
+						'<tpl else>',
+							'<span style="font-size:larger;">&#8734;</span>',
+						'</tpl>'
+					),
+					align: 'center'
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'autoLease',
+					header: WTF.headerWithGlyphIcon('fa fa-cog'),
+					getIconCls: function(v, rec) {
+						if (rec.isLeaseUnbounded()) return 'wt-pointer-default';
+						return v ? 'wtadm-icon-licenseAutoLease-on' : 'wtadm-icon-licenseAutoLease-off';
+					},
+					getTip: function(v, rec) {
+						if (rec.isLeaseUnbounded()) return '';
+						return Sonicle.String.htmlEncodeLineBreaks(me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip'));
+					},
+					handler: function(w, ridx, cidx, e, rec) {
+						if (rec.isLeaseUnbounded()) return;
+						var rec = w.getStore().getAt(ridx),
+								prw = w.grid.findPlugin('rowwidget'),
+								isExp = prw.recordsExpanded[rec.internalId];
+
+						// Circumvent probable ExtJs bug, collapse rowwidget if it was expanded before operation...
+						if (isExp) prw.toggleRow(ridx, rec);
+
+						rec.set('autoLease', !rec.get('autoLease'));
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
+				}, {
+					xtype: 'templatecolumn',
+					header: me.mys.res('domainLicenses.gp.details.lbl'),
+					tpl: new Ext.XTemplate(
+						'{[this.buildDetails(values)]}',
+						{
+							buildDetails: function(values) {
+								var s = '';
+								if (!Ext.isEmpty(values['hwId'])) {
+									if (s.length !== 0) s += ' | ';
+									s += values['hwId'];
+								}
+								if (values['leaseAvail'] > -1) {
+									if (s.length !== 0) s += ' | ';
+									s += Ext.String.format(me.mys.res('domainLicenses.gp.details.users'), values['leaseAvail']);
+								}
+								if (!Ext.isEmpty(values['regTo'])) {
+									if (s.length !== 0) s += ' | ';
+									s += Ext.String.format(me.mys.res('domainLicenses.gp.details.regto'), values['regTo']);
+								}
+								return s;
+							}
+						}
+					),
+					flex: 3
+				}, {
+					xtype: 'soactioncolumn',
+					items: [
+						{
+							//iconCls: 'fa fa-link',
+							iconCls: 'fa fa-user-plus',
+							tooltip: me.mys.res('act-assignLicenseLease.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.assignLicenseLeaseUI(rec);
+							},
+							isDisabled: function(s, ridx, cidx, itm, rec) {
+								if (!rec.isLeaseUnbounded()) {
+									return rec.get('leaseCount') >= rec.get('leaseAvail');
+								}
+								return true;
+							}
+						}, {
+							iconCls: 'fa fa-globe',
+							tooltip: me.mys.res('act-updateLicenseOnlineInfo.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.updateOnlineInfoUI(rec);
+							}
+						}, {
+							iconCls: 'fa fa-trash',
+							tooltip: WT.res('act-remove.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.deleteLicenseUI(rec);
+							}
+						}
+					]
+				}
+			],
+			plugins: [
+				{
+					ptype: 'rowwidget',
+					widget: {
+						xtype: 'grid',
+						autoLoad: true,
+						title: me.mys.res('domainLicenses.gp.leases.tit'),
+						bind: {
+							store: '{record.leases}'
+							//title: 'Orders for {record.name}'
+						},
+						viewConfig: {
+							emptyText: me.mys.res('domainLicenses.gp.leases.emp')
+						},
+						columns: [
+							{
+								xtype: 'solookupcolumn',
+								dataIndex: 'userId',
+								store: me.usersLkpStore,
+								displayField: 'label',
+								flex: 1
+							}, {
+								xtype: 'soactioncolumn',
+								items: [
+									{
+										//iconCls: 'fa fa-chain-broken',
+										iconCls: 'fa fa-user-times',
+										tooltip: me.mys.res('act-revokeLicenseLease.lbl'),
+										handler: function(g, ridx) {
+											var rec = g.getStore().getAt(ridx);
+											me.revokeLicenseLeaseUI(rec);
+										}
+									}
+								]
+							}
+						]
 					}
 				}
-			},
-			columns: [{
-				xtype: 'rownumberer'	
-			}, {
-				dataIndex: 'serviceId',
-				header: me.mys.res('domainLicenses.gp.serviceId.lbl'),
-				flex: 1
-			}, {
-				dataIndex: 'productId',
-				header: me.mys.res('domainLicenses.gp.productId.lbl'),
-				flex: 1
-			}, {
-				xtype: 'soiconcolumn',
-				dataIndex: 'valid',
-				header: WTF.headerWithGlyphIcon('fa fa-id-card-o'),
-				getIconCls: function(v,rec) {
-					return v ? 'wt-icon-ok-xs' : '';
-				},
-				getTip: function(v) {
-					return v ? me.mys.res('domainLicenses.gp.valid.tip') : me.mys.res('domainLicenses.gp.invalid.tip');
-				},
-				iconSize: WTU.imgSizeToPx('xs'),
-				width: 40
-			}, {
-				dataIndex: 'productDetails',
-				header: me.mys.res('domainLicenses.gp.productDetails.lbl'),
-				flex: 3
-			}],
+			],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
 					tooltip: null,
 					iconCls: 'wt-icon-add-xs',
 					handler: function() {
-						me.addLicenseUI(null);
-					}
-				}),
-				me.addAct('remove', {
-					text: WT.res('act-remove.lbl'),
-					tooltip: null,
-					iconCls: 'wt-icon-remove-xs',
-					disabled: true,
-					handler: function() {
-						var rec = me.getSelectedLicense();
-						if(rec) me.deleteLicenseUI(rec);
+						me.addLicenseUI();
 					}
 				}),
 				'->',
@@ -136,46 +297,24 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						me.lref('gp').getStore().load();
 					}
 				})
-			],
-			listeners: {
-/*				rowdblclick: function(s, rec) {
-					me.editLicenseUI(rec);
-				}*/
-			}
-		});
-		
-		me.getViewModel().bind({
-			bindTo: '{gp.selection}'
-		}, function() {
-			me.updateDisabled('remove');
+			]
 		});
 	},
 	
-	addLicenseUI: function(rec) {
+	updateOnlineInfo: function(serviceId, productCode, opts) {
+		opts = opts || {};
 		var me = this;
-		me.mys.addLicense(me.domainId, {
-			callback: function(success) {
-				if(success) {
-					me.lref('gp').getStore().load();
-				}
+		WT.ajaxReq(me.mys.ID, 'ManageDomainLicenses', {
+			params: {
+				crud: 'pullinfo',
+				domainId: me.domainId,
+				serviceId: serviceId,
+				productCode: productCode
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
 		});
-	},
-	
-	deleteLicenseUI: function(rec) {
-		var me = this;
-		
-		WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {
-			if(bid === 'yes') {
-				me.mys.deleteLicenses(me.domainId, [rec.get('serviceId')], [rec.get('productId')], {
-					callback: function(success) {
-						if(success) {
-							me.lref('gp').getStore().remove(rec);
-						}
-					}
-				});
-			}
-		}, me);	
 	},
 	
 	getSelectedLicense: function() {
@@ -183,25 +322,194 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		return sel.length === 1 ? sel[0] : null;
 	},
 	
+	/*
 	updateDisabled: function(action) {
 		var me = this,
 				dis = me.isDisabled(action);
 		me.setActDisabled(action, dis);
 	},
+	*/
 	
-	/**
-	 * @private
-	 */
-	isDisabled: function(action) {
-		var me = this, sel;
-		switch(action) {
-			case 'remove':
-				sel = me.getSelectedLicense();
-				if(sel) {
-					return false;
-				} else {
-					return true;
+	privates: {
+		addLicenseUI: function() {
+			var me = this,
+					vw = WT.createView(me.mys.ID, 'view.License', {
+						swapReturn: true,
+						viewCfg: {
+							data: {
+								domainId: me.domainId
+							}
+						}
+					});
+
+			vw.on('viewok', function(s, data) {
+				me.lref('gp').getStore().load();
+			});
+			vw.showView();
+		},
+
+		deleteLicenseUI: function(rec) {
+			var me = this;
+			WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {
+				if (bid === 'yes') {
+					me.mys.deleteLicense(me.domainId, rec.get('serviceId'), rec.get('productCode'), {
+						callback: function(success, data, json) {
+							if (success) {
+								me.lref('gp').getStore().remove(rec);
+							} else {
+								WT.error(json.message);
+							}
+						}
+					});
 				}
+			}, me);	
+		},
+
+		updateOnlineInfoUI: function(rec) {
+			var me = this;
+			me.updateOnlineInfo(rec.get('serviceId'), rec.get('productCode'), {
+				callback: function(success, data, json) {
+					if (success) {
+						me.lref('gp').getStore().load();
+					} else {
+						WT.error(json.message);
+					}
+				}
+			});
+		},
+		
+		getRowIndexByRecord: function(grid, record) {
+			var view = grid.getView(),
+					node = view.getNodeByRecord(record);
+			return view.indexOf(node);
+		},
+
+		assignLicenseLeaseUI: function(rec) {
+			var me = this,
+					gp = me.lref('gp'),
+					prw = gp.findPlugin('rowwidget'),
+					wasExp = prw.recordsExpanded[rec.internalId],
+					vw = WT.createView(me.mys.ID, 'view.LicenseLease', {
+						swapReturn: true,
+						viewCfg: {
+							type: 'activation',
+							data: {
+								domainId: me.domainId,
+								serviceId: rec.get('serviceId'),
+								productCode: rec.get('productCode')
+							}
+						}
+					});
+
+			vw.on('viewok', function(s, userId) {
+				// Circumvent probable ExtJs bug, reopen rowwidget if it was expanded before operation...
+				gp.getStore().load({
+					callback: function() {
+						if (wasExp) {
+							// We must look for new record by id, reload alters previous passed instance!
+							var nrec = gp.getStore().getById(rec.getId());
+							if (nrec) prw.toggleRow(me.getRowIndexByRecord(gp, nrec), nrec);
+						}
+					}
+				});
+				/*
+				var sto = rec.leases();
+				sto.add(sto.createModel({
+					userId: userId,
+					serviceId: rec.get('serviceId'),
+					productCode: rec.get('productCode')
+				}));
+				rec.updateLeaseCount();
+				*/
+			});
+			vw.showView();
+		},
+
+		revokeLicenseLeaseUI: function(rec) {
+			var me = this,
+					gp = me.lref('gp'),
+					prw = gp.findPlugin('rowwidget'),
+					prec = rec.store.getAssociatedEntity(),
+					wasExp = prw.recordsExpanded[prec.internalId];
+
+			WT.confirm(me.mys.res('domainLicenses.confirm.revoke', rec.get('userId')), function(bid) {
+				if (bid === 'yes') {
+					me.wait();
+					me.mys.revokeLicenseLease(me.domainId, prec.get('serviceId'), prec.get('productCode'), rec.get('userId'), null, {
+						callback: function(success, data, json) {
+							me.unwait();
+							if (success) {
+								// Circumvent probable ExtJs bug, reopen rowwidget if it was expanded before operation...
+								gp.getStore().load({
+									callback: function() {
+										if (wasExp) {
+											// We must look for new record by id, reload alters previous passed instance!
+											var nrec = gp.getStore().getById(prec.getId());
+											if (nrec) prw.toggleRow(me.getRowIndexByRecord(gp, nrec), nrec);
+										}
+									}
+								});
+								//rec.store.remove(rec);
+								//prec.updateLeaseCount();
+							} else {
+								WT.error(json.message);
+							}
+						}
+					});
+				}
+			}, me);
+			
+			
+			/*
+			var me = this,
+					gp = me.lref('gp'),
+					prw = gp.findPlugin('rowwidget'),
+					prec = rec.store.getAssociatedEntity(),
+					wasExp = prw.recordsExpanded[prec.internalId],
+					vw = WT.createView(me.mys.ID, 'view.LicenseLease', {
+						swapReturn: true,
+						viewCfg: {
+							type: 'deactivation',
+							data: {
+								domainId: me.domainId,
+								serviceId: prec.get('serviceId'),
+								productCode: prec.get('productCode'),
+								userId: rec.get('userId')
+							}
+						}
+					});
+
+			vw.on('viewok', function(s, userId) {
+				// Circumvent probable ExtJs bug, reopen rowwidget if it was expanded before operation...
+				gp.getStore().load({
+					callback: function() {
+						if (wasExp) {
+							// We must look for new record by id, reload alters previous passed instance!
+							var nrec = gp.getStore().getById(prec.getId());
+							if (nrec) prw.toggleRow(me.getRowIndexByRecord(gp, nrec), nrec);
+						}
+					}
+				});
+				//rec.store.remove(rec);
+				//prec.updateLeaseCount();
+			});
+			vw.showView();
+			*/
 		}
+		
+		/*
+		isDisabled: function(action) {
+			var me = this, sel;
+			switch(action) {
+				case 'remove':
+					sel = me.getSelectedLicense();
+					if(sel) {
+						return false;
+					} else {
+						return true;
+					}
+			}
+		}
+		*/
 	}
 });

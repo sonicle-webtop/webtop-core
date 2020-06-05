@@ -59,7 +59,6 @@ import com.sonicle.webtop.core.app.WebTopSession.UploadedFile;
 import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
 import com.sonicle.webtop.core.config.bol.OPecBridgeRelay;
 import com.sonicle.webtop.core.bol.ORunnableUpgradeStatement;
@@ -68,14 +67,13 @@ import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
-import com.sonicle.webtop.core.bol.js.JsGridDomainLicense;
+import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsGridUpgradeRow;
 import com.sonicle.webtop.core.bol.js.JsGroup;
-import com.sonicle.webtop.core.bol.js.JsLicense;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeFetcher;
 import com.sonicle.webtop.core.bol.js.JsPecBridgeRelay;
 import com.sonicle.webtop.core.bol.js.JsRole;
@@ -93,6 +91,7 @@ import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
+import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.ServiceManifest;
@@ -555,7 +554,7 @@ public class Service extends BaseService {
 			for(String sid: core.listWTInstalledServices()) {
 				ServiceManifest mft=WT.getManifest(sid);
 				for(Product p: mft.getProducts()) {
-					items.add(new JsServiceProductLkp(sid, p.id, p.name));
+					items.add(new JsServiceProductLkp(sid, p.code, p.name));
 				}
 			}
 			new JsonResult(items).printTo(out);
@@ -567,25 +566,30 @@ public class Service extends BaseService {
 	}
 	
 	public void processManageDomainLicenses(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UserProfile up = getEnv().getProfile();
 		
 		try {
-			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-			String internetName = WT.getDomainInternetName(domainId);
-				
-			if(crud.equals(Crud.READ)) {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
 				List<JsGridDomainLicense> items = new ArrayList<>();
-				for(ServiceLicense license : coreadm.listServiceLicenses(internetName)) {
-					items.add(new JsGridDomainLicense(license));
+				for (ServiceLicense license : coreadm.listLicenses(domainId)) {
+					items.add(new JsGridDomainLicense(license, up.getTimeZone()));
 				}
-				new JsonResult("licenses", items, items.size()).printTo(out);
+				new JsonResult(items, items.size()).printTo(out);
 				
-			} else if(crud.equals(Crud.DELETE)) {
-				ServletUtils.StringArray serviceIds = ServletUtils.getObjectParameter(request, "serviceIds", ServletUtils.StringArray.class, true);
-				ServletUtils.StringArray productIds = ServletUtils.getObjectParameter(request, "productIds", ServletUtils.StringArray.class, true);
+			} else if (Crud.UPDATE.equals(crud)) {
+				PayloadAsList<JsGridDomainLicense.List> pl = ServletUtils.getPayloadAsList(request, JsGridDomainLicense.List.class);
 				
-				coreadm.deleteServiceLicense(serviceIds.get(0), productIds.get(0), internetName);
+				JsGridDomainLicense pl0 = pl.data.get(0);
+				coreadm.updateLicenseAutoLease(domainId, new ProductId(pl0.id), pl0.autoLease);
+				new JsonResult().printTo(out);
 				
+			} else if ("pullinfo".equals(crud)) {
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				
+				coreadm.updateLicenseOnlineInfo(domainId, ProductId.build(serviceId, productCode));			
 				new JsonResult().printTo(out);
 			}
 			
@@ -599,23 +603,53 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if (crud.equals(Crud.READ)) {
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+			if (crud.equals(Crud.CREATE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String productId = ServletUtils.getStringParameter(request, "productId", null);
-				
-				String internetName = WT.getDomainInternetName(domainId);
-				ServiceLicense license = coreadm.getServiceLicense(serviceId, productId, internetName);
-				new JsonResult(new JsLicense(domainId, license)).printTo(out);
-				
-			} else if(crud.equals(Crud.CREATE)) {
-				Payload<MapItem, JsLicense> pl = ServletUtils.getPayload(request, JsLicense.class);
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String string = ServletUtils.getStringParameter(request, "string", true);
 				
 				try {
-					coreadm.addServiceLicense(pl.data.toServiceLicense());
+					ServiceLicense sl = new ServiceLicense();
+					sl.setDomainId(domainId);
+					sl.setProductId(ProductId.build(serviceId, productCode));
+					sl.setString(string);
+					coreadm.addLicense(sl);
+					
 				} catch(WTIntegrityException ex) {
-					throw new WTException(ex, "Product license already present [{}]", pl.data.productId);
+					throw new WTException(ex, "Product license already present [{}]", productCode);
 				}
+				new JsonResult().printTo(out);
+				
+			} else if (crud.equals(Crud.DELETE)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				
+				coreadm.deleteLicense(domainId, ProductId.build(serviceId, productCode));				
+				new JsonResult().printTo(out);
+				
+			} else if ("assignlease".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String userId = ServletUtils.getStringParameter(request, "userId", true);
+				String activationString = ServletUtils.getStringParameter(request, "astring", false);
+				
+				try {
+					coreadm.assignLicenseLease(domainId, ProductId.build(serviceId, productCode), userId, activationString);
+				} catch(WTIntegrityException ex) {
+					throw new WTException(ex, "User has already an assigned lease	[{}]", productCode);
+				}
+				new JsonResult().printTo(out);
+				
+			}  else if ("revokelease".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
+				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String userId = ServletUtils.getStringParameter(request, "userId", true);
+				
+				coreadm.revokeLicenseLease(domainId, ProductId.build(serviceId, productCode), userId);
 				new JsonResult().printTo(out);
 			}
 			

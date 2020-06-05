@@ -34,7 +34,6 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.webtop.core.sdk.BasePublicService;
-import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

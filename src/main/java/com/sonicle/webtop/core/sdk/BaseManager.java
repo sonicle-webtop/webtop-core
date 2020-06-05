@@ -60,7 +60,7 @@ public abstract class BaseManager {
 	private String softwareName;
 	private Locale locale;
 	
-	private final AuditProduct AUDIT_PRODUCT;
+	public final AuditProduct AUDIT_PRODUCT;
 	private boolean auditEnabled = false;
 	
 	public BaseManager(boolean fastInit, UserProfileId targetProfileId) {
@@ -74,17 +74,19 @@ public abstract class BaseManager {
 		// we have no logged user. So check it!
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
 		if (targetProfileId != null) {
-			String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
-			AUDIT_PRODUCT = new AuditProduct(internetName);
+			AUDIT_PRODUCT = new AuditProduct(WT.getDomainInternetName(targetProfileId.getDomainId()));
+			boolean enabled = false;
 			if (WT.isLicensed(AUDIT_PRODUCT)) {
-				auditEnabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
-				if (auditEnabled) {
+				enabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
+				if (enabled) {
 					CoreServiceSettings scss = new CoreServiceSettings(SERVICE_ID, targetProfile.getDomainId());
 					if (scss.hasAuditEnabled()) {
-						auditEnabled = scss.isAuditEnabled();
+						enabled = scss.isAuditEnabled();
 					}
 				}
+				if (enabled) enabled = WT.isLicensed(AUDIT_PRODUCT, targetProfileId.getUserId()) == 1;
 			}
+			this.auditEnabled = enabled;
 		} else {
 			AUDIT_PRODUCT = null;
 		}

@@ -33,14 +33,89 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.sdk.ServiceManifest;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Locale;
+
 /**
  *
  * @author malbinola
  */
-public abstract class AbstractService {
-	public final String SERVICE_ID;
+public abstract class AbstractService extends AbstractPlatformService {
+	public static final String DEFAULTVAR_THEME = "crisp";
+	public static final String DEFAULTVAR_LAF = "default";
+	public static final String RESOURCE_SERVICE_NAME = "service.name";
+	public static final String RESOURCE_SERVICE_DESCRIPTION = "service.name";
+	
+	public abstract void initialize() throws Exception;
+	public abstract void cleanup() throws Exception;
 	
 	public AbstractService() {
-		SERVICE_ID = WT.findServiceId(this.getClass());
+		super();
+	}
+	
+	/**
+	 * Gets WebTop Service manifest class.
+	 * @return The manifest.
+	 */
+	public final ServiceManifest getManifest() {
+		return WT.getManifest(SERVICE_ID);
+	}
+	
+	/**
+	 * Gets WebTop Public Service public name (useful in URLs).
+	 * @return The public name or null if no public service is defined.
+	 */
+	public final String getPublicName() {
+		return WT.getServicePublicName(SERVICE_ID);
+	}
+	
+	/**
+	 * Gets WebTop Service's db connection.
+	 * @return The db connection.
+	 * @throws SQLException 
+	 */
+    public final Connection getConnection() throws SQLException {
+		return WT.getConnection(SERVICE_ID);
+    }
+	
+	/**
+	 * Returns the localized name.
+	 * @param locale The requested locale.
+	 * @return The localized string.
+	 */
+	public final String getName(Locale locale) {
+		return WT.lookupResource(SERVICE_ID, locale, RESOURCE_SERVICE_NAME);
+	}
+	
+	/**
+	 * Returns the localized description.
+	 * @param locale The requested locale.
+	 * @return The localized string.
+	 */
+	public final String getDescription(Locale locale) {
+		return WT.lookupResource(SERVICE_ID, locale, RESOURCE_SERVICE_DESCRIPTION);
+	}
+	
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key) {
+		return WT.lookupResource(SERVICE_ID, locale, key);
+	}
+    
+	/**
+	 * Returns the localized string associated to the key.
+	 * @param locale The requested locale.
+	 * @param key The resource key.
+	 * @param escapeHtml True to apply HTML escaping.
+	 * @return The translated string, or null if not found.
+	 */
+	public final String lookupResource(Locale locale, String key, boolean escapeHtml) {
+		return WT.lookupResource(SERVICE_ID, locale, key, escapeHtml);
 	}
 }

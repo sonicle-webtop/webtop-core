@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractService;
+import com.sonicle.webtop.core.app.AbstractPlatformService;
 import java.io.IOException;
 import java.util.List;
 import org.atmosphere.cpr.AtmosphereHandler;
@@ -48,7 +48,7 @@ import org.jooq.tools.StringUtils;
  *
  * @author malbinola
  */
-public abstract class BaseAsyncEndpoint extends AbstractService implements AtmosphereHandler {
+public abstract class BaseAsyncEndpoint extends AbstractPlatformService implements AtmosphereHandler {
 	
 	abstract protected void onOpen(AtmosphereResource resource) throws IOException;
 	abstract protected void onDisconnect(AtmosphereResourceEvent event, AtmosphereResponse response) throws IOException;

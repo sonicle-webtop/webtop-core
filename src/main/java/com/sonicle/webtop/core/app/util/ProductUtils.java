@@ -33,8 +33,12 @@
 package com.sonicle.webtop.core.app.util;
 
 import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopManager;
-import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
+import com.sonicle.webtop.core.model.ProductId;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -47,17 +51,17 @@ public class ProductUtils {
 		return getProduct(className, WebTopManager.INTERNETNAME_LOCAL);
 	}
 	
-	public static AbstractProduct getProduct(String className, String internetName) {
+	public static BaseServiceProduct getProduct(String className, String internetName) {
 		Class clazz = ClassHelper.loadClass(className, null);
 		if (clazz == null) return null;
 		
 		try {
-			AbstractProduct product = null;
-			if (ClassHelper.isInheritingFromParent(clazz, BaseDomainServiceProduct.class)) {
-				product = (AbstractProduct)clazz.getDeclaredConstructor(String.class).newInstance(internetName);
-			} else if (ClassHelper.isInheritingFromParent(clazz, AbstractProduct.class)) {
+			BaseServiceProduct product = null;
+			if (ClassHelper.isInheritingFromParent(clazz, BaseServiceProduct.class)) {
+				product = (BaseServiceProduct)clazz.getDeclaredConstructor(String.class).newInstance(internetName);
+			}/* else if (ClassHelper.isInheritingFromParent(clazz, AbstractProduct.class)) {
 				product = (AbstractProduct)clazz.getDeclaredConstructor().newInstance();
-			} else {
+			}*/ else {
 				return null;
 			}
 			return product;
@@ -65,5 +69,22 @@ public class ProductUtils {
 		} catch(NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
 			return null;
 		}
+	}
+	
+	public static BaseServiceProduct getProduct(String domainInternetName, ProductId productId) {
+		ServiceManifest.Product manifestProduct = WT.getManifestProduct(productId.getServiceId(), productId.getProductCode());
+		if (manifestProduct == null) return null;
+		return ProductUtils.getProduct(manifestProduct.className, domainInternetName);
+	}
+	
+	public static ProductLicense getProductLicense(String domainInternetName, ProductId productId, String licenseString) {
+		ServiceManifest.Product manifestProduct = WT.getManifestProduct(productId.getServiceId(), productId.getProductCode());
+		if (manifestProduct == null) return null;
+		BaseServiceProduct product = ProductUtils.getProduct(manifestProduct.className, domainInternetName);
+		if (product == null) return null;
+		
+		ProductLicense pl = new ProductLicense(product);
+		pl.setLicenseString(licenseString);
+		return pl;
 	}
 }

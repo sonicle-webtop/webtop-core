@@ -45,7 +45,6 @@ import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.servlet.UIPrivate;
-import com.sonicle.webtop.core.msg.AutosaveMessage;
 import com.sonicle.webtop.core.bol.OAutosave;
 import com.sonicle.webtop.core.bol.js.JsWTS;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
@@ -61,6 +60,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.servlet.Otp;
+import com.sonicle.webtop.core.msg.AutosaveSM;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.File;
@@ -111,7 +111,7 @@ public class WebTopSession {
 	private PrivateEnvironment privateEnv = null;
 	private CorePrivateEnvironment privateCoreEnv = null;
 	private PublicEnvironment publicEnv = null;
-	private final HashMap<String, BaseManager> managers = new HashMap<>();
+	private final LinkedHashMap<String, BaseManager> managers = new LinkedHashMap<>();
 	private Set<String> allowedServices = null;
 	private final LinkedHashMap<String, BaseService> privateServices = new LinkedHashMap<>();
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
@@ -529,39 +529,21 @@ public class WebTopSession {
 		
 		logger.debug("Instantiated {} managers", managers.size());
 		logger.debug("Instantiated {} private services", privateServices.size());
-		
-		/*
-		// Instantiates services
-		BaseService instance = null;
-		List<String> serviceIds = core.listPrivateServices();
-		int count = 0;
-		// TODO: ordinamento lista servizi (scelta dall'utente?)
-		for(String serviceId : serviceIds) {
-			// Creates new instance
-			if(svcm.hasFullRights(serviceId)) {
-				instance = svcm.instantiatePrivateService(serviceId, sessionId, new CoreEnvironment(wta, this));
-			} else {
-				instance = svcm.instantiatePrivateService(serviceId, sessionId, new Environment(this));
-			}
-			if(instance != null) {
-				registerPrivateService(instance);
-				count++;
-			}
-		}
-		
-		logger.debug("Instantiated {} services", count);
-		*/
-		
 		initLevel = 2;
-
-		String cid=getClientTrackingID();
-		boolean mine=core.hasMyAutosaveData(cid);
-		List<OAutosave> odata=core.listOfflineOthersAutosaveData(cid);
-		boolean others=(odata==null)?false:odata.size()>0;
-		if (mine || others) {
-			this.notify(new AutosaveMessage(core.SERVICE_ID,mine,others));
-		}
 		
+		// Retrieve and push any auto-save data
+		String cid = getClientTrackingID();
+		boolean mine = core.hasMyAutosaveData(cid);
+		List<OAutosave> odata = core.listOfflineOthersAutosaveData(cid);
+		boolean others = (odata == null) ? false : odata.size() > 0;
+		if (mine || others) this.notify(new AutosaveSM(mine,others));
+		
+		// Call ready() method for each instantiated service
+		synchronized (privateServices) {
+			for (BaseService instance : privateServices.values()) {
+				svcm.privateServiceCallReady(instance);
+			}
+		}
 	}
 	
 	public synchronized void initPublicEnvironment(HttpServletRequest request, String publicServiceId) throws WTException {
@@ -745,9 +727,9 @@ public class WebTopSession {
 	
 	private void emptyPrivateServices() {
 		ServiceManager svcm = wta.getServiceManager();
-		synchronized(privateServices) {
-			for(BaseService instance : privateServices.values()) {
-				svcm.cleanupPrivateService(instance);
+		synchronized (privateServices) {
+			for (BaseService instance : privateServices.values()) {
+				svcm.privateServiceCallCleanup(instance);
 			}
 			privateServices.clear();
 		}

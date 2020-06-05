@@ -32,13 +32,29 @@
  */
 package com.sonicle.webtop.core.products;
 
-import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
+import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 
 /**
  *
  * @author gbulfon
  */
-public class AuditProduct extends BaseDomainServiceProduct {
+public class AuditProduct extends BaseServiceProduct {
+	public static final String PRODUCT_ID = "SNCL-WTP-COR-AUDIT";
+	public static final String PRODUCT_NAME = "Audit";
+	public static final String PUBLIC_KEY = 
+			"30819f300d06092a864886f70d010101050003818d003081893032301006\n" +
+			"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n" +
+			"004d40494481762c4e9810f93837d3264f4c55426614aef41dd887b9ac7G\n" +
+			"02818100a40666a215deb320004cd687e300c92855d73155da5f2c7a1fb4\n" +
+			"ca9b9090dc37c2dd420be35762a43cdc0b046fa3cde5a068deaa8af01356\n" +
+			"1954d63b6531437cd5e4c0e7ca344df0e334572a861e11b0ff89aade050b\n" +
+			"60c071c53b5d6c546cfc03RSA4102413SHA512withRSA7132300d18fe9f8\n" +
+			"c74a1a5ec945999d64d8cf80fcf7047ce1117160c2e42dc090203010001";
+	
+	
+	
+	/*
 	public static final String PRODUCT_ID = "audit";
 	public static final String PRODUCT_NAME = "Users Activity Audit";
 	public static final String PUBLIC_KEY = 
@@ -50,13 +66,14 @@ public class AuditProduct extends BaseDomainServiceProduct {
 			"04c15edd2f20a6fea9d576b80a16185b4caecc735bf02f730edaadef8e1c\n"+
 			"2341a6903b2a1d9f935d03RSA4102413SHA512withRSA9e223cfa0ece427\n"+
 			"ba122b2394500bd81fc1232954e8376d6a1473dc0819beaf50203010001";
+	*/
 	
 	public AuditProduct(String domainInternetName) {
 		super(domainInternetName);
 	}
 	
 	@Override
-	public String getProductId() {
+	public String getProductCode() {
 		return PRODUCT_ID;
 	}
 	
@@ -67,6 +84,19 @@ public class AuditProduct extends BaseDomainServiceProduct {
 	
 	@Override
 	public String getPublicKey() {
-		return PUBLIC_KEY;
+		//return PUBLIC_KEY;
+		return "30819f300d06092a864886f70d010101050003818d003081893032301006\n" +
+			"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n" +
+			"004d40494481762c4e9810f93837d3264f4c55426614aef41dd887b9ac7G\n" +
+			"02818100a40666a215deb320004cd687e300c92855d73155da5f2c7a1fb4\n" +
+			"ca9b9090dc37c2dd420be35762a43cdc0b046fa3cde5a068deaa8af01356\n" +
+			"1954d63b6531437cd5e4c0e7ca344df0e334572a861e11b0ff89aade050b\n" +
+			"60c071c53b5d6c546cfc03RSA4102413SHA512withRSA7132300d18fe9f8\n" +
+			"c74a1a5ec945999d64d8cf80fcf7047ce1117160c2e42dc090203010001";
+	}
+	
+	@Override
+	public String getLicenseServer() {
+		return "http://localhost:28080/algas/";
 	}
 }

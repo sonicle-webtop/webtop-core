@@ -50,8 +50,8 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
-import com.sonicle.commons.l4j.ProductLicense.LicenseObject;
-import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
+import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
 import freemarker.template.Template;
@@ -64,6 +64,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -164,6 +165,11 @@ public class WT {
 	
 	public static InternetAddress getNotificationAddress(String domainId) {
 		return buildDomainInternetAddress(domainId, "webtop-notification", null);
+	}
+	
+	public static ServiceManifest.Product getManifestProduct(String serviceId, String productCode) {
+		ServiceManifest manifest = getManifest(serviceId);
+		return (manifest == null) ? null : manifest.getProduct(productCode);
 	}
 	
 	public static ServiceManifest getManifest(String serviceId) {
@@ -528,6 +534,10 @@ public class WT {
 		return getWTA().lookupResource(serviceId, locale, key, escapeHtml);
 	}
 	
+	public static String lookupFormattedResource(String serviceId, Locale locale, String key, Object... arguments) {
+		return MessageFormat.format(LangUtils.escapeMessageFormat(getWTA().lookupResource(serviceId, locale, key)), arguments);
+	}
+	
 	public static Session getGlobalMailSession(UserProfileId pid) {
 		return getGlobalMailSession(pid.getDomainId());
 	}
@@ -670,22 +680,34 @@ public class WT {
 		LoggerUtils.clearCustomDC();
 	}
 	
-	public static ProductLicense findProductLicense(BaseDomainServiceProduct product) {
-		return getWTA().getWebTopManager().getProductLicense(product);
+	public static ProductLicense findProductLicense(BaseServiceProduct product) {
+		return getWTA().getLicenseManager().getProductLicense(product);
 	}
 	
 	/**
-	 * Check if license for passed product is valid.
+	 * Checks if the specified product is licensed. 
+	 * License base validity will be verified.
 	 * @param product The product to check.
-	 * @return 
+	 * @return True if a license is installed and valid, false otherwise.
 	 */
-	public static boolean isLicensed(BaseDomainServiceProduct product) {
+	public static boolean isLicensed(BaseServiceProduct product) {
 		boolean valid = false;
 		ProductLicense plic = findProductLicense(product);
 		if (plic != null) {
-			LicenseObject lo = plic.getValidatedLicenseObject();
-			if (lo != null) valid = lo.isValid();
+			LicenseInfo li = plic.getLicenseInfo();
+			if (li != null) valid = li.isValid();
 		}
 		return valid;
+	}
+	
+	/**
+	 * Checks if the specified product is licensed and the user has an 
+	 * activation (if supported) that allows to use it.
+	 * @param product The product to check.
+	 * @param userId The user to check.
+	 * @return True if base license is valid and user has valid activation.
+	 */
+	public static int isLicensed(BaseServiceProduct product, String userId) {
+		return getWTA().getLicenseManager().checkLicenseLease(product, userId);
 	}
 }

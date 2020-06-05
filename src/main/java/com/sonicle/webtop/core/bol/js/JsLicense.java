@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.bol.js;
 
-import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 
 /**
@@ -41,29 +41,20 @@ import com.sonicle.webtop.core.model.ServiceLicense;
  * @author malbinola
  */
 public class JsLicense {
+	public String id;
 	public String domainId;
 	public String serviceId;
 	public String productId;
-	public String internetDomain;
-	public String license;
+	public String key;
 
 	public JsLicense() {}
-	
-	public JsLicense(String domainId, ServiceLicense license) {
-		this.domainId = domainId;
-		this.serviceId = license.getServiceId();
-		this.productId = license.getProductId();
-		this.internetDomain = license.getInternetName();
-		this.license = license.getLicenseText();
-	}
 	
 	public ServiceLicense toServiceLicense() {
 		ServiceLicense item = new ServiceLicense();
 		
-		item.setInternetName(WT.getDomainInternetName(domainId));
-		item.setServiceId(serviceId);
-		item.setProductId(productId);
-		item.setLicenseText(license);
+		item.setDomainId(domainId);
+		item.setProductId(ProductId.build(serviceId, productId));
+		item.setString(key);
 		
 		return item;
 	}

@@ -129,13 +129,32 @@ ALTER TABLE "core"."custom_panels_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "c
 -- New table: licenses
 -- ----------------------------
 CREATE TABLE "core"."licenses" (
+"domain_id" varchar(20) NOT NULL,
 "service_id" varchar(255) NOT NULL,
-"product_id" varchar(255) NOT NULL,
-"internet_name" varchar(255) NOT NULL,
-"license" text
+"product_code" varchar(255) NOT NULL,
+"string" text NOT NULL,
+"expiration_date" date,
+"lease_avail" int4,
+"auto_lease" bool NOT NULL
 )
 WITH (OIDS=FALSE)
-
 ;
 
-ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("service_id", "product_id", "internet_name");
+ALTER TABLE "core"."licenses" ADD PRIMARY KEY ("domain_id", "service_id", "product_code");
+
+-- ----------------------------
+-- New table: licenses_leases
+-- ----------------------------
+CREATE TABLE "core"."licenses_leases" (
+"domain_id" varchar(20) NOT NULL,
+"service_id" varchar(255) NOT NULL,
+"product_code" varchar(255) NOT NULL,
+"user_id" varchar(100) NOT NULL,
+"activation_string" text NOT NULL
+)
+WITH (OIDS=FALSE)
+;
+
+ALTER TABLE "core"."licenses_leases" ADD PRIMARY KEY ("domain_id", "service_id", "product_code", "user_id");
+ALTER TABLE "core"."licenses_leases" ADD FOREIGN KEY ("domain_id", "service_id", "product_code") REFERENCES "core"."licenses" ("domain_id", "service_id", "product_code") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX "licenses_leases_ak1" ON "core"."licenses_leases" USING btree ("domain_id", "user_id");

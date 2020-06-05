@@ -64,6 +64,9 @@ import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
 import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
+import com.sonicle.webtop.core.app.sdk.msg.BaseDataChangedSM;
+import com.sonicle.webtop.core.app.sdk.msg.LicenseUsageFailSM;
+import com.sonicle.webtop.core.app.sdk.msg.MessageBoxSM;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.msg.IMChatRoomRemoved;
@@ -121,7 +124,6 @@ import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
-import com.sonicle.webtop.core.msg.DataChangedMsg;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -171,11 +173,8 @@ import com.sonicle.webtop.vfs.model.SharingLink;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.shiro.io.ResourceUtils;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -233,6 +232,23 @@ public class Service extends BaseService implements EventListener {
 		//sendAuthMessage(principal.getUserId(),principal.getPassword());
 	}
 	
+	@Override
+	public void ready() throws WTException {
+		final UserProfile profile = getEnv().getProfile();
+		
+		if (!coreMgr.isAuditEnabled() && WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) < 0) {
+			getEnv().notify(new LicenseUsageFailSM(profile.getLocale(), coreMgr.AUDIT_PRODUCT));
+		}
+	}
+	
+	@Override
+	public void cleanup() throws Exception {
+		coreMgr.removeListener(this);
+		if (xmppCli != null) {
+			xmppCli.disconnect();
+		}
+	}
+	
 	//private void sendAuthMessage(String userId, char password[]) {
 	//	getEnv().notify(new AuthMessage(SERVICE_ID,userId,password));		
 	//}
@@ -247,14 +263,6 @@ public class Service extends BaseService implements EventListener {
 	
 	private IVfsManager getVfsManager() {
 		return (IVfsManager)WT.getServiceManager("com.sonicle.webtop.vfs");
-	}
-
-	@Override
-	public void cleanup() throws Exception {
-		coreMgr.removeListener(this);
-		if (xmppCli != null) {
-			xmppCli.disconnect();
-		}
 	}
 
 	@Override
@@ -361,7 +369,7 @@ public class Service extends BaseService implements EventListener {
 	public void onEvent(BaseEvent event) {
 		if (event instanceof TagChangedEvent) {
 			//TagChangedEvent e = (TagChangedEvent)event;
-			getWts().notify(new DataChangedMsg("tag"));
+			getWts().notify(new BaseDataChangedSM(SERVICE_ID, "tag"));
 		}
 	}
 	

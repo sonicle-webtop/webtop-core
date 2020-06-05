@@ -40,7 +40,6 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.l4j.DummyProductLicense;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -74,7 +73,6 @@ import com.sonicle.webtop.core.bol.AssignedUser;
 import com.sonicle.webtop.core.bol.GroupUid;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
-import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.ORole;
 import com.sonicle.webtop.core.bol.ORoleAssociation;
 import com.sonicle.webtop.core.bol.ORolePermission;
@@ -108,15 +106,13 @@ import com.sonicle.webtop.core.dal.ShareDAO;
 import com.sonicle.webtop.core.dal.ShareDataDAO;
 import com.sonicle.webtop.core.dal.SnoozedReminderDAO;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
-import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.UserAssociationDAO;
 import com.sonicle.webtop.core.dal.UserDAO;
 import com.sonicle.webtop.core.dal.UserInfoDAO;
 import com.sonicle.webtop.core.dal.UserSettingDAO;
-import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.sdk.AuthException;
-import com.sonicle.webtop.core.sdk.BaseDomainServiceProduct;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
@@ -998,21 +994,24 @@ public final class WebTopManager {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
+		OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
+		if (user == null) throw new WTException("User not found [{0}]", pid.toString());
+		
+		logger.debug("[{}] Clearing user licenses...", user.getUserUid());
+		wta.getLicenseManager().revokeLicenseLease(pid);
+		
 		try {
 			con = WT.getConnection(CoreManifest.ID, false);
 			
-			OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			if (user == null) throw new WTException("User not found [{0}]", pid.toString());
-			
-			logger.debug("Deleting permissions [{}]", user.getUserUid());
+			logger.debug("[{}] Clearing permissions...", user.getUserUid());
 			rpdao.deleteByRole(con, user.getUserUid());
-			logger.debug("Deleting groups associations [{}]", user.getUserUid());
+			logger.debug("[{}] Clearing groups associations...", user.getUserUid());
 			uadao.deleteByUser(con, user.getUserUid());
-			logger.debug("Deleting roles associations [{}]", user.getUserUid());
+			logger.debug("[{}] Clearing roles associations...", user.getUserUid());
 			rolassdao.deleteByUser(con, user.getUserUid());
-			logger.debug("Deleting userInfo [{}]", pid.toString());
+			logger.debug("[{}] Clearing userInfo...", pid.toString());
 			uidao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
-			logger.debug("Deleting user [{}]", pid.toString());
+			logger.debug("[{}] Clearing user...", pid.toString());
 			udao.deleteByDomainUser(con, pid.getDomainId(), pid.getUserId());
 			
 			if (cleanupDirectory) {
@@ -1312,8 +1311,9 @@ public final class WebTopManager {
 		return productLicenseCache.remove(key) != null;
 	}
 	
-	public ProductLicense getProductLicense(BaseDomainServiceProduct product) {
+	public ProductLicense getProductLicense(BaseServiceProduct product) {
 		if (product == null) return null;
+		/*
 		String key = new CompositeId(product.SERVICE_ID, product.getProductId(), product.getInternetName()).toString();
 		ProductLicense plic = productLicenseCache.computeIfAbsent(key, value -> {
 			try {
@@ -1338,8 +1338,210 @@ public final class WebTopManager {
 			return null;
 		});
 		return (plic instanceof DummyProductLicense) ? null : plic;
+		*/
+		return null;
 	}
 	
+	/*
+	public List<ServiceLicense2> listServiceLicenses(String domainId) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			
+			ArrayList<ServiceLicense2> items = new ArrayList<>();
+			for (VLicense vlic : licDao.viewByDomain(con, domainId)) {
+				Set<String> users = new LinkedHashSet(new CId(vlic.getUserIds()).getTokens());
+				items.add(AppManagerUtils.createServiceLicense(vlic, users));
+			}
+			return items;
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ServiceLicense2 getServiceLicense(String domainId, ProductId product) throws WTException {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return doServiceLicenseGet(con, domainId, product, true);
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private ServiceLicense2 doServiceLicenseGet(Connection con, String domainId, ProductId product, boolean processLeases) throws DAOException, WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
+		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
+		
+		OLicense2 olic = licDao.select(con, domainId, product.getServiceId(), product.getProductCode());
+		if (olic == null) return null;
+		
+		ServiceLicense2 lic = AppManagerUtils.createServiceLicense(olic);
+		if (processLeases) {
+			Set<String> userIds = lleaDao.selectUsersByDomainServiceProduct(con, domainId, product.getServiceId(), product.getProductCode());
+			lic.setLeasedUsers(userIds);
+		}
+		return lic;
+	}
+	
+	private <T extends OLicense2> T fillOLicenseWithDefaults(T tgt) {
+		if ((tgt != null)) {
+			if (tgt.getAutoLease() == null) tgt.setAutoLease(true);
+		}
+		return tgt;
+	}
+	*/
+
+	
+	/*
+	public boolean assignServiceLicenseLease(String domainId, ProductId product, String userId, String activationString) throws WTException {
+		ServiceLicense2 license = getServiceLicense(domainId, product);
+		if (license == null) throw new WTException("TODO exception");
+		
+		return internalAssignServiceLicense(domainId, license, userId, activationString);
+	}
+	
+	public boolean revokeServiceLicenseLease(String domainId, ProductId product, String userId) throws WTException {
+		ServiceLicense2 license = getServiceLicense(domainId, product);
+		if (license == null) throw new WTException("TODO exception");
+		
+		return internalRevokeServiceLicenseLease(domainId, license, userId);
+	}
+	
+	private boolean internalRevokeServiceLicenseLease(String domainId, ServiceLicense2 license, String userId) throws WTException {
+		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			ProductLicense prodLic = checkProductLicense(license);
+			//skip validity check???
+			
+			con = wta.getConnectionManager().getConnection();
+			String aString = lleaDao.selectActivationStringByDomainServiceProductUser(con, domainId, license.getProductId().getServiceId(), productCode, userId);
+			if (aString == null) throw new WTException("TODO exception");
+			
+			boolean ret = false;
+			try {
+				prodLic.setLicenseActivationString(aString);
+				prodLic.autoDeactivate();
+			} finally {
+				ret = lleaDao.delete(con, domainId, license.getProductId().getServiceId(), license.getProductId().getProductCode(), userId) == 1;
+			}
+			return ret;
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean internalAssignServiceLicense(String domainId, ServiceLicense2 license, String userId, String activationString) throws WTException {
+		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			ProductLicense prodLic = checkProductLicense(license);
+			
+			if (StringUtils.isBlank(activationString)) {
+				logger.debug("Activation string not provided. Trying automatic activation...");
+				prodLic.autoActivate();
+			} else {
+				prodLic.setLicenseActivationString(activationString);
+			}
+			if (!prodLic.getLicenseInfo().isActivated()) throw new WTException();
+			
+			OLicenseLease ollea = new OLicenseLease();
+			ollea.setDomainId(domainId);
+			ollea.setServiceId(license.getProductId().getServiceId());
+			ollea.setProductCode(license.getProductId().getProductCode());
+			ollea.setUserId(userId);
+			ollea.setActivationString(prodLic.getLicenseActivationString());
+			
+			con = wta.getConnectionManager().getConnection();
+			boolean ret = lleaDao.insert(con, ollea) == 1;
+			return ret;
+		
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private ProductLicense checkProductLicense(ServiceLicense2 license) throws WTException {
+		return checkProductLicense(license.getDomainId(), license.getProductId(), license.getString());
+	}
+	
+	private ProductLicense checkProductLicense(String domainId, ProductId productId, String licenseString) throws WTException {
+		String internetName = WT.getDomainInternetName(domainId);
+		ProductLicense prodLic = ProductUtils.getProductLicense(internetName, productId, licenseString);
+		if (prodLic == null) throw new WTException("Unknown product '{}'", productId.getProductCode());
+		if (!prodLic.getLicenseInfo().isValid()) throw new WTException("License provided for '{}' is not valid", productId.getProductCode());
+		return prodLic;
+	}
+	
+	public ServiceLicense2 addServiceLicense(ServiceLicense2 license) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			ProductLicense prodLic = checkProductLicense(license);
+			
+			con = wta.getConnectionManager().getConnection();
+			OLicense2 olic = AppManagerUtils.createOLicense(license);
+			fillOLicenseWithDefaults(olic);
+			boolean ret = licDao.insert(con, olic) == 1;
+			if (ret) {
+				// Cleanup cached dummy ProductLicense
+				//forgetProductLicense(license.getServiceId(), license.getProductId(), license.getInternetName());
+				return license;
+			} else {
+				return null;
+			}
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean deleteServiceLicense(String domainId, ProductId product) throws WTException {
+		LicenseDAO licDao = LicenseDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			boolean ret = licDao.delete(con, domainId, product.getServiceId(), product.getProductCode()) == 1;
+			//TODO delete lease
+			if (ret) {
+				// Cleanup cached ProductLicense
+				//forgetProductLicense(domainId, serviceId, productId);
+			}
+			return ret;
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	*/
+	
+	
+	
+	
+	/*
 	public List<ServiceLicense> listServiceLicenses(String interneName) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
@@ -1420,6 +1622,7 @@ public final class WebTopManager {
 			DbUtils.closeQuietly(con);
 		}
 	}
+	*/
 	
 	/**
 	 * Lists domain real roles (those defined as indipendent role).

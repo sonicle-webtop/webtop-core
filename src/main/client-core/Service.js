@@ -127,6 +127,17 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}]
 		}));
 		
+		me.onMessage('showMsg', function(msg) {
+			var pl = msg.payload;
+			if ('error' === pl.type) {
+				WT.error(pl.message, {title: pl.title});
+			} else if ('warn' === pl.type) {
+				WT.warn(pl.message, {title: pl.title});
+			} else {
+				WT.info(pl.message, {title: pl.title});
+			}
+		});
+		
 		me.onMessage('tagChanged', function(msg) {
 			//var pl = msg.payload;
 			me.tagsStore.reload();
@@ -141,12 +152,10 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 		
 		me.onMessage('autosaveNotify', function(msg) {
-			var me=this, pl = msg.payload;
-			
+			var me = this, pl = msg.payload;
 			if (pl.mine) {
 				me.notifyMyAutosave(pl);
-			}
-			else if (pl.others) {
+			} else if (pl.others) {
 				me.notifyOthersAutosave(pl);
 			}
 		});

@@ -1,6 +1,5 @@
-/*
- * webtop-mail is a WebTop Service developed by Sonicle S.r.l.
- * Copyright (C) 2014 Sonicle S.r.l.
+/* 
+ * Copyright (C) 2020 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -11,7 +10,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
  * details.
  *
  * You should have received a copy of the GNU Affero General Public License
@@ -19,7 +18,7 @@
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301 USA.
  *
- * You can contact Sonicle S.r.l. at email address sonicle@sonicle.com
+ * You can contact Sonicle S.r.l. at email address sonicle[at]sonicle[dot]com
  *
  * The interactive user interfaces in modified source and object code versions
  * of this program must display Appropriate Legal Notices, as required under
@@ -27,25 +26,33 @@
  *
  * In accordance with Section 7(b) of the GNU Affero General Public License
  * version 3, these Appropriate Legal Notices must retain the display of the
- * "Powered by Sonicle WebTop" logo. If the display of the logo is not reasonably
- * feasible for technical reasons, the Appropriate Legal Notices must display
- * the words "Powered by Sonicle WebTop".
+ * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
+ * reasonably feasible for technical reasons, the Appropriate Legal Notices must
+ * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-package com.sonicle.webtop.core.msg;
-
-import com.sonicle.webtop.core.bol.js.JsAutosaveMessage;
-import com.sonicle.webtop.core.sdk.ServiceMessage;
-
-/**
- *
- * @author gbulfon
- */
-public class AutosaveMessage extends ServiceMessage {
+Ext.define('Sonicle.webtop.core.sdk.OkView', {
+	alternateClassName: 'WTA.sdk.OkView',
+	extend: 'WTA.sdk.UIView',
 	
-	public static final String ACTION_NOTIFY="autosaveNotify";
+	viewModel: {
+		data: {
+			_return: 'cancel'
+		}
+	},
 	
-	public AutosaveMessage(String serviceId, boolean mine, boolean others) {
-		super(serviceId,ACTION_NOTIFY,new JsAutosaveMessage(mine,others));
+	getReturnCode: function() {
+		return this.getVM().get('_return');
+	},
+	
+	okView: function() {
+		var me = this,
+				vm = me.getVM();
+		vm.set('_return', 'ok');
+		me.fireEventArgs('viewok', Ext.Array.insert(me.viewokArgs(vm) || [], 0, [me]));
+		me.closeView(false);
+	},
+	
+	viewokArgs: function(vm) {
+		return [];
 	}
-	
-}
+});

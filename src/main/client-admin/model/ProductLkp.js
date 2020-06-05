@@ -39,10 +39,10 @@ Ext.define('Sonicle.webtop.core.admin.model.ProductLkp', {
 	fields: [
 		WTF.roField('id','string'),
 		WTF.roField('serviceId','string'),
-		WTF.roField('productId','string'),
+		WTF.roField('productCode','string'),
 		WTF.roField('productName','string'),
-		WTF.calcField('label', 'string', ['productId', 'productName'], function(v, rec) {
-			return rec.get('productId') + ' (' + rec.get('productName') + ')';
+		WTF.calcField('label', 'string', ['productCode', 'productName'], function(v, rec) {
+			return rec.get('productCode') + ' (' + rec.get('productName') + ')';
 		})
 	]
 });

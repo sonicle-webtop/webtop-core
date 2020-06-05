@@ -399,6 +399,12 @@
 			<artifactId>license4j-runtime-library</artifactId>
 			<version>${license4j.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>uk.com.robust-it</groupId>
+			<artifactId>cloning</artifactId>
+			<version>${cloning.version}</version>
+		</dependency>
+		
 		<!-- WebTop libraries -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>

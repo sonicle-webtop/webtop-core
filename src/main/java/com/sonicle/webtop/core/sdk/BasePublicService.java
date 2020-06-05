@@ -62,6 +62,12 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 	
 	public abstract void processDefaultAction(HttpServletRequest request, HttpServletResponse response) throws Exception;
 	
+	@Override
+	public void ready() throws WTException {
+		// Implement in this dummy manner to not force subclasses changes!
+		// Not used for public services!!!
+	}
+	
 	public ServiceVars returnServiceVars() {
 		return null;
 	}

@@ -3089,6 +3089,29 @@ public class CoreManager extends BaseManager {
 		}	
 	}
 	
+	public void eraseData(boolean deep) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		UserProfileId pid = getTargetProfileId();
+		//TODO: controllo permessi
+		
+		try {
+			con = WT.getConnection(SERVICE_ID);
+			tagDao.deleteByProfile(con, pid.getDomainId(), pid.getUserId());
+			
+			eventManager.fireEvent(new TagChangedEvent(this, ChangedEvent.Operation.DELETE));
+			if (isAuditEnabled()) {
+				writeAuditLog(AuditContext.TAG, AuditAction.DELETE, "*", pid);
+			}
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	private ZPushManager createZPushManager() throws WTException {
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, "*");
 		try {

@@ -214,6 +214,7 @@ public final class WebTopApp {
 	private Configuration freemarkerCfg = null;
 	private I18nManager i18nMgr = null;
 	private ConnectionManager conMgr = null;
+	private LicenseManager licMgr = null;
 	private AuditLogManager auditLogMgr = null;
 	private WebTopManager wtMgr = null;
 	private SettingsManager setMgr = null;
@@ -362,15 +363,6 @@ public final class WebTopApp {
 		this.freemarkerCfg.setObjectWrapper(new DefaultObjectWrapper());
 		this.freemarkerCfg.setDefaultEncoding(getSystemCharset().name());
 		
-		//comm = ComponentsManager.initialize(this); // Components Manager
-		this.auditLogMgr = AuditLogManager.initialize(this);
-		this.wtMgr = WebTopManager.initialize(this);
-		
-		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
-		this.otpMgr = OTPManager.initialize(this);
-		this.rptMgr = ReportManager.initialize(this);
-		this.docEditorMgr = new DocEditorManager(this, 30*1000);
-		
 		// Scheduler (services manager requires this component for jobs)
 		try {
 			Properties quartzProps = new Properties();
@@ -392,6 +384,15 @@ public final class WebTopApp {
 			throw new WTRuntimeException(ex, "Unable to start scheduler");
 		}
 		
+		//comm = ComponentsManager.initialize(this); // Components Manager
+		this.auditLogMgr = AuditLogManager.initialize(this);
+		this.licMgr = LicenseManager.initialize(this, this.scheduler);
+		this.wtMgr = WebTopManager.initialize(this);
+		
+		this.systemLocale = CoreServiceSettings.getSystemLocale(setMgr); // System locale
+		this.otpMgr = OTPManager.initialize(this);
+		this.rptMgr = ReportManager.initialize(this);
+		this.docEditorMgr = new DocEditorManager(this, 30*1000);
 		this.svcMgr = ServiceManager.initialize(this, this.scheduler); // Service Manager
 		
 		this.mediaTypes = MediaTypes.init(conMgr);
@@ -407,19 +408,19 @@ public final class WebTopApp {
 		clearWebappVersionCheckTask();
 		tomcat = null;
 		
+		// Scheduler
+		try {
+			scheduler.shutdown(true);
+		} catch (SchedulerException ex) {
+			logger.error("Error shutting-down scheduler", ex);
+		}
+		
 		// Service Manager
 		svcMgr.cleanup();
 		svcMgr = null;
 		// Session Manager
 		sesMgr.cleanup();
 		sesMgr = null;
-		// Scheduler
-		try {
-			scheduler.shutdown(true);
-			scheduler = null;
-		} catch(SchedulerException ex) {
-			logger.error("Error shutting-down scheduler", ex);
-		}
 		//docEditorMgr.cleanup();
 		//docEditorMgr = null;
 		// Report Manager
@@ -437,6 +438,8 @@ public final class WebTopApp {
 		// User Manager
 		wtMgr.cleanup();
 		wtMgr = null;
+		licMgr.cleanup();
+		licMgr = null;
 		// Connection Manager
 		conMgr.cleanup();
 		conMgr = null;
@@ -444,7 +447,9 @@ public final class WebTopApp {
 		i18nMgr.cleanup();
 		i18nMgr = null;
 		
-		//close all Unirest threads
+		scheduler = null;
+		
+		// Shutdown Unirest
 		try {
 			Unirest.shutdown();
 		} catch(IOException exc) {
@@ -715,8 +720,16 @@ public final class WebTopApp {
 	}
 	
 	/**
-	 * Returns the LogManager.
-	 * @return UserManager instance.
+	 * Returns the LicenseManager.
+	 * @return LicenseManager instance.
+	 */
+	public LicenseManager getLicenseManager() {
+		return licMgr;
+	}
+	
+	/**
+	 * Returns the AuditLogManager.
+	 * @return AuditLogManager instance.
 	 */
 	public AuditLogManager getAuditLogManager() {
 		return auditLogMgr;

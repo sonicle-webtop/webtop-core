@@ -33,7 +33,7 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import com.sonicle.webtop.core.app.AbstractCommonService;
+import com.sonicle.webtop.core.app.AbstractService;
 import java.util.List;
 import net.sf.qualitycheck.Check;
 import org.apache.shiro.subject.Subject;
@@ -44,7 +44,7 @@ import org.quartz.Trigger;
  *
  * @author malbinola
  */
-public abstract class BaseJobService extends AbstractCommonService {
+public abstract class BaseJobService extends AbstractService {
 	private boolean configured = false;
 	private Subject subject;
 	
