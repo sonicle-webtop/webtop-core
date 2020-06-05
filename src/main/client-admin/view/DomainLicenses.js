@@ -103,7 +103,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						proxy: WTF.proxy(WT.ID, 'LookupServices')
 					},
 					displayField: 'desc',
-					tipField: 'id',
+					tooltipField: 'id',
 					flex: 1
 				}, {
 					xtype: 'solookupcolumn',
@@ -115,7 +115,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						proxy: WTF.proxy(me.mys.ID, 'LookupServicesProducts')					
 					},
 					displayField: 'productName',
-					tipField: 'productCode',
+					tooltipField: 'productCode',
 					flex: 1
 				}, {
 					xtype: 'soiconcolumn',
