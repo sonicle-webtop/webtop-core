@@ -1148,7 +1148,7 @@ public class CoreManager extends BaseManager {
 			tag.setDomainId(getTargetProfileId().getDomainId());
 			
 			ensureProfileDomain(tag.getDomainId());
-			if (!tag.getPersonal()) {
+			if (!Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {
 				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			}
 			
@@ -1185,8 +1185,9 @@ public class CoreManager extends BaseManager {
 			if (OTag.isOwnerNone(oldOwnerId)) {
 				RunContext.ensureIsPermitted(false, SERVICE_ID, "TAGS", "MANAGE");
 			}
-			if (OTag.isOwnerNone(oldOwnerId) && tag.getPersonal()) {
-				throw new WTException("Global tag '{}' cannot become personal", tag.getTagId());
+			
+			if (OTag.isOwnerNone(oldOwnerId) && Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {
+				throw new WTException("Public tag '{}' cannot become private", tag.getTagId());
 			}
 			
 			Tag ret = doTagUpdate(false, con, tag);

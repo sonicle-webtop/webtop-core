@@ -70,8 +70,8 @@ Ext.define('Sonicle.webtop.core.ux.menu.TagMenu', {
 						color: rec.get('color'),
 						hideOnClick: true
 					};
-				if (rec.get('personal')) {
-					cfg.text = rec.get('name') + '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.personal.true') + ')</span>';
+				if ('public' === rec.get('visibility')) {
+					cfg.text = rec.get('name') + '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.visibility.public') + ')</span>';
 				}
 				return cfg;
 			};

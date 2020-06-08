@@ -87,7 +87,7 @@ public class CoreController extends BaseController implements IControllerService
 				tag.setDomainId(profileId.getDomainId());
 				tag.setExternalId(id);
 				tag.setName(WT.lookupResource(SERVICE_ID,WT.getUserData(profileId).getLocale(), CoreLocaleKey.TAGS_LABEL(id)));
-				tag.setPersonal(true);
+				tag.setVisibility(Tag.Visibility.PRIVATE);
 				WT.getCoreManager().addTag(tag);
 			} catch(Exception exc) {
 				logger.error("error creating builtin Thunderbird tags",exc);

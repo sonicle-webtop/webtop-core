@@ -108,7 +108,6 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					}
 				}, {
 					text: WT.res('tags.new.lbl'),
-					disabled: !WT.isPermitted(me.mys.ID, 'TAGS', 'MANAGE'),
 					handler: function() {
 						me.addTagUI();
 					}
@@ -149,7 +148,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 						allowSingle: false
 					}
 				}),
-				sorters: [{property: 'personal', direction: 'DESC'}, {property: 'builtIn', direction: 'DESC'}, 'name'],
+				sorters: [{property: 'visibility', direction: 'ASC'}, {property: 'builtIn', direction: 'DESC'}, 'name'],
 				listeners: {
 					load: function(s, recs) {
 						if (s.loadCount === 1) {
@@ -171,19 +170,33 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 			selModel: {
 				type: me.enableSelection ? 'checkboxmodel' : 'rowmodel'
 			},
-			columns: [{
+			columns: [
+				{
 					dataIndex: 'name',
 					renderer: function(val, meta, rec) {
 						var SoS = Sonicle.String,
 								color = SoS.deflt(rec.get('color'), ''),
 								name = SoS.deflt(rec.get('name'), ''),
 								pers = '';
-						if (rec.get('personal')) {
-							pers = '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.personal.true') + ')</span>';
+						/*
+						if ('public' === rec.get('visibility')) {
+							pers = '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.visibility.public') + ')</span>';
 						}
+						*/
 						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pers;
 					},
 					flex: 1
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'visibility',
+					getTip: function(v) {
+						return 'public' === v ? me.mys.res('tags.gp.visibility.public') : '';
+					},
+					getIconCls: function(v) {
+						return 'public' === v ? 'wt-icon-public' : '';
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
 				}, {
 					xtype: 'soactioncolumn',
 					items: [{
@@ -194,7 +207,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							me.editTagUI(rec);
 						},
 						isDisabled: function(s, ridx, cidx, itm, rec) {
-							if (rec.get('personal') === true) {
+							if ('private' === rec.get('visibility')) {
 								return rec.get('builtIn');
 							} else {
 								return !me.hasManage() || rec.get('builtIn');
@@ -208,7 +221,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							me.deleteTagUI(rec);
 						},
 						isDisabled: function(s, ridx, cidx, itm, rec) {
-							if (rec.get('personal') === true) {
+							if ('private' === rec.get('personal')) {
 								return rec.get('builtIn');
 							} else {
 								return !me.hasManage() || rec.get('builtIn');
@@ -239,9 +252,9 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					viewCfg: {
 						data: {
 							color: Sonicle.String.prepend(rndColor, '#', true),
-							personal: me.hasManage() ? false : true
+							visibility: me.hasManage() ? 'public' : 'private'
 						},
-						personalEditable: me.hasManage(),
+						visibilityEditable: me.hasManage(),
 						invalidNames: me.collectUsedNames()
 					}
 				});
@@ -252,7 +265,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 		vw.showView();
 	},
 	
-	editTag: function(id, name, color, personal, opts) {
+	editTag: function(id, name, color, visibility, opts) {
 		var me = this,
 				vw = WT.createView(me.mys.ID, 'view.TagEditor', {
 					swapReturn: true,
@@ -262,9 +275,9 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							id: id,
 							name: name,
 							color: color,
-							personal: personal
+							visibility: visibility
 						},
-						personalEditable: false,
+						visibilityEditable: false,
 						invalidNames: me.collectUsedNames(name)
 					}
 				});
@@ -316,7 +329,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 							sto = gp.getStore(),
 							added;
 					added = sto.add(sto.createModel({
-						personal: data.personal,
+						visibility: data.visibility,
 						name: data.name,
 						color: data.color
 					}));
@@ -328,11 +341,11 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 
 		editTagUI: function(rec) {
 			var me = this;
-			me.editTag(rec.getId(), rec.get('name'), rec.get('color'), rec.get('personal'), {
+			me.editTag(rec.getId(), rec.get('name'), rec.get('color'), rec.get('visibility'), {
 				callback: function(data) {
 					var rec = me.lref('gp').getStore().getById(data.id);
 					if (rec) {
-						rec.set({personal: data.personal, name: data.name, color: data.color});
+						rec.set({visibility: data.visibility, name: data.name, color: data.color});
 						me.syncChanges();
 					}
 				}

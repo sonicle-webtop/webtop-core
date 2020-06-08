@@ -43,10 +43,10 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	mode: 'new',
 	
 	/**
-	 * @cfg {Boolean} [personalEditable=false]
-	 * `true` to make editable/modifiable personal checkbox.
+	 * @cfg {Boolean} [visibilityEditable=false]
+	 * `true` to make editable/modifiable visibility options.
 	 */
-	personalEditable: false,
+	visibilityEditable: false,
 	
 	/**
 	 * @cfg {String[]} invalidNames
@@ -60,7 +60,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	 * @cfg {String} [data.id] Value for `id` field.
 	 * @cfg {String} [data.name] Value for `name` field.
 	 * @cfg {String} [data.color] Value for `color` field.
-	 * @cfg {String} [data.personal] Value for `personal` field.
+	 * @cfg {String} [data.visibility] Value for `visibility` field.
 	*/
 	
 	/**
@@ -72,7 +72,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 	 * @param {String} data.id
 	 * @param {String} data.name
 	 * @param {String} data.color
-	 * @param {String} data.personal
+	 * @param {String} data.visibility
 	 */
 	
 	dockableConfig: {
@@ -87,7 +87,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 				id: null,
 				name: null,
 				color: null,
-				personal: null
+				visibility: null
 			}
 		}
 	},
@@ -105,6 +105,9 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 				vm = me.getVM();
 		
 		if (ic.data) vm.set('data', ic.data);
+		WTU.applyFormulas(vm, {
+			foVisibility: WTF.radioGroupBind(null, 'data.visibility', me.getId()+'-visibility')
+		});
 		me.callParent(arguments);
 		
 		me.add({
@@ -141,12 +144,28 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					],
 					hideLabel: true
 				}, {
+					xtype: 'radiogroup',
+					bind: {
+						value: '{foVisibility}'
+					},
+					disabled: !me.visibilityEditable,
+					columns: 3,
+					defaults: {
+						name: me.getId()+'-visibility'
+					},
+					items: [
+						{inputValue: 'private', boxLabel: me.mys.res('tagEditor.fld-visibility.private')},
+						{inputValue: 'public', boxLabel: me.mys.res('tagEditor.fld-visibility.public')}
+					],
+					fieldLabel: me.mys.res('tagEditor.fld-visibility.lbl'),
+					labelWidth: 80
+				}/*, {
 					xtype: 'checkbox',
-					bind: '{data.personal}',
+					bind: '{data.isPrivate}',
 					hideEmptyLabel: true,
-					boxLabel: WT.res('tagEditor.fld-personal.lbl'),
-					disabled: !me.personalEditable
-				}
+					boxLabel: WT.res('tagEditor.fld-private.lbl'),
+					disabled: !me.visibilityEditable
+				}*/
 			],
 			buttons: [
 				{

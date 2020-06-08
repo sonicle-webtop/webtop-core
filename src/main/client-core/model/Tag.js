@@ -37,13 +37,13 @@ Ext.define('Sonicle.webtop.core.model.Tag', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
-		WTF.field('personal', 'boolean', false, {defaultValue: true}),
+		WTF.field('visibility', 'string', false, {defaultValue: 'private'}),
 		WTF.field('builtIn', 'boolean', false, {defaultValue: false}),
 		WTF.field('name', 'string', false),
 		WTF.field('color', 'string', false),
-		WTF.calcField('source', 'string', ['personal'], function(v, rec) {
+		WTF.calcField('source', 'string', ['visibility'], function(v, rec) {
 			// For displaying source value in combos
-			return rec.get('personal') === true ? WT.res('tags.gp.personal.true') : '';
+			return 'public' === rec.get('visibility') ? WT.res('tags.gp.visibility.public') : '';
 		})
 	]
 });

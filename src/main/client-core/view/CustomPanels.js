@@ -34,7 +34,6 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.grid.column.Action',
-		'Sonicle.grid.column.Icon',
 		'Sonicle.grid.plugin.DDOrdering',
 		'WTA.ux.grid.column.Action',
 		'Sonicle.webtop.core.model.CustomPanelGrid'
@@ -238,7 +237,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	
 	privates: {
 		getTagsStore: function() {
-			return WT.getTagsStore({filters: [{id: 'personalFilter', property: 'personal', value: false}]});
+			return WT.getTagsStore({filters: [{id: 'publicFilter', property: 'visibility', value: 'public'}]});
 		},
 		
 		addCustomPanelUI: function() {

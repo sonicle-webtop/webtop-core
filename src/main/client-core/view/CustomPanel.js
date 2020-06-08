@@ -284,10 +284,10 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
-							personal: false,
+							visibility: 'public',
 							color: Sonicle.String.prepend(rndColor, '#', true)
 						},
-						personalEditable: false
+						visibilityEditable: false
 					}
 				});
 		
@@ -299,7 +299,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	
 	privates: {
 		getTagsStore: function() {
-			return WT.getTagsStore({filters: [{id: 'personalFilter', property: 'personal', value: false}]});
+			return WT.getTagsStore({filters: [{id: 'publicFilter', property: 'visibility', value: 'public'}]});
 		},
 		
 		onViewLoad: function(s, success) {
