@@ -369,7 +369,7 @@ public class LicenseManager {
 			HashMap<String, String> imap = retrieveUpdatedTrackingInfo(tplProductLicense);
 			if (imap != null) {
 				Integer usersNo = LangUtils.value(imap.get(TI_USERSNO), (Integer)null);
-				if (usersNo != null) olic.setLeaseAvail(usersNo);
+				if (usersNo != null) olic.setUsersNo(usersNo);
 			}
 			
 			con = wta.getConnectionManager().getConnection();
@@ -640,7 +640,7 @@ public class LicenseManager {
 	private <T extends OLicense> T fillOLicenseWithDefaults(T tgt, LicenseInfo licInfo) {
 		if ((tgt != null)) {
 			tgt.setExpirationDate(licInfo.getExpirationDate());
-			tgt.setLeaseAvail(licInfo.getUsersNo());
+			tgt.setUsersNo(licInfo.getUsersNo());
 			if (tgt.getAutoLease() == null) tgt.setAutoLease(true);
 		}
 		return tgt;

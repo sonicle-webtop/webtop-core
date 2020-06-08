@@ -134,7 +134,7 @@ CREATE TABLE "core"."licenses" (
 "product_code" varchar(255) NOT NULL,
 "string" text NOT NULL,
 "expiration_date" date,
-"lease_avail" int4,
+"users_no" int4,
 "auto_lease" bool NOT NULL
 )
 WITH (OIDS=FALSE)

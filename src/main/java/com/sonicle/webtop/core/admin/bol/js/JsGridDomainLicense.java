@@ -75,7 +75,7 @@ public class JsGridDomainLicense {
 		expired = false;
 		expiry = null;
 		expireSoon = false;
-		leaseAvail = license.getLeaseAvail() == null ? -1 : license.getLeaseAvail();
+		leaseAvail = license.getUsersNo()== null ? -1 : license.getUsersNo();
 		if (prodLic != null) {
 			prodLic.setLicenseString(license.getString());
 			valid = prodLic.getLicenseInfo().isValid();

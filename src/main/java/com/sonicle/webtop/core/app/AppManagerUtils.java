@@ -78,7 +78,7 @@ public class AppManagerUtils {
 			tgt.setProductId(ProductId.build(src.getServiceId(), src.getProductCode()));
 			tgt.setString(src.getString());
 			tgt.setExpirationDate(src.getExpirationDate());
-			tgt.setLeaseAvail(src.getLeaseAvail());
+			tgt.setUsersNo(src.getUsersNo());
 			tgt.setAutoLease(src.getAutoLease());
 		}
 		return tgt;
