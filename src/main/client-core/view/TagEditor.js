@@ -149,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 						value: '{foVisibility}'
 					},
 					disabled: !me.visibilityEditable,
-					columns: 3,
+					columns: 2,
 					defaults: {
 						name: me.getId()+'-visibility'
 					},
@@ -159,13 +159,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					],
 					fieldLabel: me.mys.res('tagEditor.fld-visibility.lbl'),
 					labelWidth: 80
-				}/*, {
-					xtype: 'checkbox',
-					bind: '{data.isPrivate}',
-					hideEmptyLabel: true,
-					boxLabel: WT.res('tagEditor.fld-private.lbl'),
-					disabled: !me.visibilityEditable
-				}*/
+				}
 			],
 			buttons: [
 				{
