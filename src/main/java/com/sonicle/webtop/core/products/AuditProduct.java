@@ -97,6 +97,6 @@ public class AuditProduct extends BaseServiceProduct {
 	
 	@Override
 	public String getLicenseServer() {
-		return "http://localhost:28080/algas/";
+		return "http://localhost:18080/algas/";
 	}
 }
