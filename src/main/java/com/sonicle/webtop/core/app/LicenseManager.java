@@ -284,10 +284,10 @@ public class LicenseManager {
 			
 			} catch(WTLicenseException t) {
 				/* Do nothing... */
-				LOGGER.trace("License not activated [{}]", key, t);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("License not activated [{}]", t, key);
 				return -2;
 			} catch(Throwable t) {
-				LOGGER.error("Error retrieving registered license [{}]", key, t);
+				LOGGER.error("Error retrieving registered license [{}]", t, key);
 				return null;
 			}  finally {
 				DbUtils.closeQuietly(con);
