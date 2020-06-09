@@ -52,8 +52,7 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 		data: {
 			data: {
 				domainId: null,
-				serviceId: null,
-				productCode: null,
+				productId: null,
 				string: null
 			}
 		}
@@ -85,46 +84,26 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 				{
 					xtype: 'wtfieldspanel',
 					items: [
-						WTF.localCombo('id', 'desc', {
-							xtype: 'socombobox',
-							bind: '{data.serviceId}',
-							allowBlank: false,
-							anyMatch: true,
+						WTF.lookupCombo('id', 'productName', {
+							xtype: 'socombo',
+							bind: '{data.productId}',
 							store: {
 								autoLoad: true,
-								model: 'Sonicle.webtop.core.model.ServiceLkp',
-								proxy: WTF.proxy(WT.ID, 'LookupServices')
+								model: me.mys.preNs('model.ProductLkp'),
+								proxy: WTF.proxy(me.mys.ID, 'LookupServicesProducts'),
+								grouper: {
+									property: 'serviceId'
+								}
 							},
-							sourceField: 'id',
 							listConfig: {
+								displayField: 'productName',
+								groupCls: 'wt-theme-text-greyed',
 								sourceCls: 'wt-source'
-							},
-							fieldLabel: me.mys.res('license.fld-serviceId.lbl'),
-							anchor: '100%'
-						}),
-						WTF.localCombo('productCode', 'productName', {
-							xtype: 'socombobox',
-							bind: {
-								value: '{data.productCode}',
-								disabled: '{!data.serviceId}',
-								filters: [{
-									property: 'serviceId',
-									value: '{data.serviceId}'
-								}]
-							},
-							allowBlank: false,
-							anyMatch: true,
-							store: {
-								autoLoad: true,
-								model: 'Sonicle.webtop.core.admin.model.ProductLkp',
-								proxy: WTF.proxy(me.mys.ID, 'LookupServicesProducts')
 							},
 							sourceField: 'productCode',
-							listConfig: {
-								sourceCls: 'wt-source'
-							},
-							disabled: true,
-							fieldLabel: me.mys.res('license.fld-productCode.lbl'),
+							groupField: 'serviceName',
+							fieldLabel: me.mys.res('license.fld-product.lbl'),
+							emptyText: me.mys.res('license.fld-product.emp'),
 							anchor: '100%'
 						})
 					]
@@ -208,7 +187,7 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 			var me = this,
 					vm = me.getVM();
 			me.wait();
-			me.mys.addLicense(vm.get('data.domainId'), vm.get('data.serviceId'), vm.get('data.productCode'), vm.get('data.string'), {
+			me.mys.addLicense(vm.get('data.domainId'), vm.get('data.productId'), vm.get('data.string'), {
 				callback: function(success, data, json) {
 					me.unwait();
 					if (success) {

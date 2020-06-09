@@ -547,15 +547,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addLicense: function(domainId, serviceId, productCode, string, opts) {
+	addLicense: function(domainId, productId, string, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageLicense', {
 			params: {
 				crud: 'create',
 				domainId: domainId,
-				serviceId: serviceId,
-				productCode: productCode,
+				productId: productId,
 				string: string
 			},
 			callback: function(success, json) {
@@ -564,15 +563,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	deleteLicense: function(domainId, serviceId, productCode, opts) {
+	deleteLicense: function(domainId, productId, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageLicense', {
 			params: {
 				crud: 'delete',
 				domainId: domainId,
-				serviceId: serviceId,
-				productCode: productCode
+				productId: productId
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);

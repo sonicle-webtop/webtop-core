@@ -549,18 +549,19 @@ public class Service extends BaseService {
 	
 	public void processLookupServicesProducts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		ArrayList<JsServiceProductLkp> items = new ArrayList<>();
+		UserProfile up = getEnv().getProfile();
 		
 		try {
-			for(String sid: core.listWTInstalledServices()) {
-				ServiceManifest mft=WT.getManifest(sid);
-				for(Product p: mft.getProducts()) {
-					items.add(new JsServiceProductLkp(sid, p.code, p.name));
+			for (String sid: core.listWTInstalledServices()) {
+				ServiceManifest manifest = WT.getManifest(sid);
+				for (Product product : manifest.getProducts()) {
+					items.add(new JsServiceProductLkp(sid, WT.lookupResource(sid, up.getLocale(), BaseService.RESOURCE_SERVICE_NAME), product.code, product.name));
 				}
 			}
 			new JsonResult(items).printTo(out);
 			
-		} catch(Exception ex) {
-			logger.error("Error in processLookupServicesProducts", ex);
+		} catch(Throwable t) {
+			logger.error("Error in processLookupServicesProducts", t);
 			new JsonResult(false, "Error").printTo(out);
 		}
 	}
@@ -586,10 +587,10 @@ public class Service extends BaseService {
 				new JsonResult().printTo(out);
 				
 			} else if ("pullinfo".equals(crud)) {
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				ProductId prodId = new ProductId(productId);
 				
-				coreadm.updateLicenseOnlineInfo(domainId, ProductId.build(serviceId, productCode));			
+				coreadm.updateLicenseOnlineInfo(domainId, prodId);			
 				new JsonResult().printTo(out);
 			}
 			
@@ -605,51 +606,51 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.CREATE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String string = ServletUtils.getStringParameter(request, "string", true);
+				ProductId prodId = new ProductId(productId);
 				
 				try {
 					ServiceLicense sl = new ServiceLicense();
 					sl.setDomainId(domainId);
-					sl.setProductId(ProductId.build(serviceId, productCode));
+					sl.setProductId(prodId);
 					sl.setString(string);
 					coreadm.addLicense(sl);
 					
 				} catch(WTIntegrityException ex) {
-					throw new WTException(ex, "Product license already present [{}]", productCode);
+					throw new WTException(ex, "Product license already present [{}]", prodId.getProductCode());
 				}
 				new JsonResult().printTo(out);
 				
 			} else if (crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				ProductId prodId = new ProductId(productId);
 				
-				coreadm.deleteLicense(domainId, ProductId.build(serviceId, productCode));				
+				coreadm.deleteLicense(domainId, prodId);				
 				new JsonResult().printTo(out);
 				
 			} else if ("assignlease".equals(crud)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String userId = ServletUtils.getStringParameter(request, "userId", true);
 				String activationString = ServletUtils.getStringParameter(request, "astring", false);
+				ProductId prodId = new ProductId(productId);
 				
 				try {
-					coreadm.assignLicenseLease(domainId, ProductId.build(serviceId, productCode), userId, activationString);
+					coreadm.assignLicenseLease(domainId, prodId, userId, activationString);
 				} catch(WTIntegrityException ex) {
-					throw new WTException(ex, "User has already an assigned lease	[{}]", productCode);
+					throw new WTException(ex, "User has already an assigned lease	[{}]", prodId.getProductCode());
 				}
 				new JsonResult().printTo(out);
 				
 			}  else if ("revokelease".equals(crud)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
-				String serviceId = ServletUtils.getStringParameter(request, "serviceId", true);
-				String productCode = ServletUtils.getStringParameter(request, "productCode", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String userId = ServletUtils.getStringParameter(request, "userId", true);
+				ProductId prodId = new ProductId(productId);
 				
-				coreadm.revokeLicenseLease(domainId, ProductId.build(serviceId, productCode), userId);
+				coreadm.revokeLicenseLease(domainId, prodId, userId);
 				new JsonResult().printTo(out);
 			}
 			
@@ -659,7 +660,7 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processGetUploadedLicense (HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+	public void processGetUploadedLicense(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		try{
 			String uploadId=request.getParameter("uploadId");
 			

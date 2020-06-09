@@ -301,15 +301,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		});
 	},
 	
-	updateOnlineInfo: function(serviceId, productCode, opts) {
+	updateOnlineInfo: function(productId, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.mys.ID, 'ManageDomainLicenses', {
 			params: {
 				crud: 'pullinfo',
 				domainId: me.domainId,
-				serviceId: serviceId,
-				productCode: productCode
+				productId: productId
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
@@ -352,7 +351,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			var me = this;
 			WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {
 				if (bid === 'yes') {
-					me.mys.deleteLicense(me.domainId, rec.get('serviceId'), rec.get('productCode'), {
+					me.mys.deleteLicense(me.domainId, rec.get('id'), {
 						callback: function(success, data, json) {
 							if (success) {
 								me.lref('gp').getStore().remove(rec);
@@ -367,7 +366,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 
 		updateOnlineInfoUI: function(rec) {
 			var me = this;
-			me.updateOnlineInfo(rec.get('serviceId'), rec.get('productCode'), {
+			me.updateOnlineInfo(rec.get('id'), {
 				callback: function(success, data, json) {
 					if (success) {
 						me.lref('gp').getStore().load();
@@ -395,8 +394,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							type: 'activation',
 							data: {
 								domainId: me.domainId,
-								serviceId: rec.get('serviceId'),
-								productCode: rec.get('productCode')
+								productId: rec.get('id')
 							}
 						}
 					});
@@ -435,7 +433,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			WT.confirm(me.mys.res('domainLicenses.confirm.revoke', rec.get('userId')), function(bid) {
 				if (bid === 'yes') {
 					me.wait();
-					me.mys.revokeLicenseLease(me.domainId, prec.get('serviceId'), prec.get('productCode'), rec.get('userId'), null, {
+					me.mys.revokeLicenseLease(me.domainId, prec.get('id'), rec.get('userId'), null, {
 						callback: function(success, data, json) {
 							me.unwait();
 							if (success) {
@@ -472,8 +470,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							type: 'deactivation',
 							data: {
 								domainId: me.domainId,
-								serviceId: prec.get('serviceId'),
-								productCode: prec.get('productCode'),
+								productId: prec.get('id')
 								userId: rec.get('userId')
 							}
 						}

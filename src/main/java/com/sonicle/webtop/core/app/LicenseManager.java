@@ -410,17 +410,16 @@ public class LicenseManager {
 			String internetName = findInternetName(domainId);
 			ProductLicense tplProductLicense = findProductLicense(internetName, productId);
 			
-			int leaseAvail = tplProductLicense.getLicenseInfo().getUsersNo();
+			Integer usersNo = tplProductLicense.getLicenseInfo().getUsersNo();
 			
 			// Lookup online data taken from tracking-info
 			HashMap<String, String> imap = retrieveUpdatedTrackingInfo(tplProductLicense);
 			if (imap != null) {
-				Integer usersNo = LangUtils.value(imap.get(TI_USERSNO), (Integer)null);
-				if (usersNo != null) leaseAvail = usersNo;
+				usersNo = LangUtils.value(imap.get(TI_USERSNO), (Integer)null);
 			}
 			
 			con = wta.getConnectionManager().getConnection();
-			licDao.updateOnlineData(con, domainId, productId.getServiceId(), productId.getProductCode(), leaseAvail);
+			licDao.updateOnlineData(con, domainId, productId.getServiceId(), productId.getProductCode(), usersNo);
 			forgetProductLicense(internetName, productId);
 			
 		} catch(Throwable t) {

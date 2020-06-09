@@ -42,14 +42,16 @@ import com.sonicle.commons.web.json.CId;
 public class JsServiceProductLkp {
 	public String id;
 	public String serviceId;
+	public String serviceName;
 	public String productCode;
 	public String productName;
 	
 	public JsServiceProductLkp() {}
 	
-	public JsServiceProductLkp(String serviceId, String productCode, String productName) {
+	public JsServiceProductLkp(String serviceId, String serviceName, String productCode, String productName) {
 		this.id = CId.build(serviceId, productCode).toString();
 		this.serviceId = serviceId;
+		this.serviceName = serviceName;
 		this.productCode = productCode;
 		this.productName = productName;
 	}

@@ -48,9 +48,8 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseLease', {
 	viewModel: {
 		data: {
 			data: {
-				domainId: null,
-				serviceId: null,
-				productCode: null,
+				domainId: null,	
+				productId: null,
 				userId: null,
 				string: null
 			},
@@ -106,6 +105,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseLease', {
 							},
 							disabled: 'deactivation' === me.type,
 							fieldLabel: me.mys.res('licenseLease.fld-user.lbl'),
+							emptyText: me.mys.res('licenseLease.fld-user.'+me.type+'.emp'),
 							anchor: '100%'
 						}),
 						{
@@ -134,7 +134,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseLease', {
 					items: [
 						{
 							xtype: 'wtfieldspanel',
-							title: me.mys.res('licenseLease.'+me.type+'.tit'),
+							title: me.mys.res('licenseLease.response.'+me.type+'.tit'),
 							defaults: {
 								labelAlign: 'top'
 							},
@@ -254,7 +254,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseLease', {
 			var me = this,
 					vm = me.getVM();
 			me.wait();
-			me.mys.assignLicenseLease(vm.get('data.domainId'), vm.get('data.serviceId'), vm.get('data.productCode'), vm.get('data.userId'), vm.get('data.string'), {
+			me.mys.assignLicenseLease(vm.get('data.domainId'), vm.get('data.productId'), vm.get('data.userId'), vm.get('data.string'), {
 				callback: function(success, data, json) {
 					me.unwait();
 					if (success) {
@@ -270,7 +270,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseLease', {
 			var me = this,
 					vm = me.getVM();
 			me.wait();
-			me.mys.revokeLicenseLease(vm.get('data.domainId'), vm.get('data.serviceId'), vm.get('data.productCode'), vm.get('data.userId'), vm.get('data.string'), {
+			me.mys.revokeLicenseLease(vm.get('data.domainId'), vm.get('data.productId'), vm.get('data.userId'), vm.get('data.string'), {
 				callback: function(success, data, json) {
 					me.unwait();
 					if (success) {
