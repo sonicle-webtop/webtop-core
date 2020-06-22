@@ -32,9 +32,12 @@
  */
 Ext.define('Sonicle.webtop.core.admin.model.GridLicenseLease', {
 	extend: 'WTA.ux.data.BaseModel',
-	
+
+	identifier: 'negativestring',
 	idProperty: 'userId',
 	fields: [
-		WTF.roField('userId', 'string')
+		WTF.field('userId', 'string', false),
+		WTF.field('leasedOn', 'date', true, {dateFormat: 'Y-m-d H:i:s'}),
+		WTF.field('origin', 'string', true)
 	]
 });

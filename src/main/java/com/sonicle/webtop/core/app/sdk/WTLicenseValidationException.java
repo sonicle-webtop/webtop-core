@@ -42,12 +42,12 @@ import com.sonicle.commons.l4j.ProductLicense;
 public class WTLicenseValidationException extends WTLicenseException {
 	private ValidationStatus validationStatus;
 	
-	public WTLicenseValidationException(ProductLicense.LicenseInfo info, ValidationStatus requiredValidationStatus) {
-		this(info.getProductCode(), info.getValidationStatus(), requiredValidationStatus);
+	public WTLicenseValidationException(ProductLicense.LicenseInfo info) {
+		this(info.getProductCode(), info.getValidationStatus());
 	}
 	
-	public WTLicenseValidationException(String productCode, ValidationStatus validationStatus, ValidationStatus requiredValidationStatus) {
-		super("Validation status for '{}' is not '{}'", productCode, requiredValidationStatus);
+	public WTLicenseValidationException(String productCode, ValidationStatus validationStatus) {
+		super("Invalid validation status for '{}' [{}]", productCode, validationStatus);
 		this.validationStatus = validationStatus;
 	}
 	

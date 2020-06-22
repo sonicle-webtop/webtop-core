@@ -33,11 +33,12 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.license4j.ActivationStatus;
+import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.json.JsonUtils;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
@@ -68,6 +69,11 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
+import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
+import com.sonicle.webtop.core.app.sdk.WTLicenseException;
+import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
+import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
+import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
@@ -104,6 +110,7 @@ import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -586,11 +593,12 @@ public class Service extends BaseService {
 				coreadm.updateLicenseAutoLease(domainId, new ProductId(pl0.id), pl0.autoLease);
 				new JsonResult().printTo(out);
 				
-			} else if ("pullinfo".equals(crud)) {
-				String productId = ServletUtils.getStringParameter(request, "productId", true);
-				ProductId prodId = new ProductId(productId);
+			} else if ("cleanup".equals(crud)) {
+				coreadm.cleanupLicenseCache();
+				new JsonResult().printTo(out);
 				
-				coreadm.updateLicenseOnlineInfo(domainId, prodId);			
+			} else if ("check".equals(crud)) {
+				coreadm.checkOnlineAvailability();
 				new JsonResult().printTo(out);
 			}
 			
@@ -608,19 +616,37 @@ public class Service extends BaseService {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				String productId = ServletUtils.getStringParameter(request, "productId", true);
 				String string = ServletUtils.getStringParameter(request, "string", true);
+				Boolean activate = ServletUtils.getBooleanParameter(request, "activate", false);
 				ProductId prodId = new ProductId(productId);
 				
 				try {
 					ServiceLicense sl = new ServiceLicense();
 					sl.setDomainId(domainId);
 					sl.setProductId(prodId);
-					sl.setString(string);
-					coreadm.addLicense(sl);
+					sl.setLicenseString(string);
+					coreadm.addLicense(sl, activate);
+					new JsonResult().printTo(out);
 					
 				} catch(WTIntegrityException ex) {
 					throw new WTException(ex, "Product license already present [{}]", prodId.getProductCode());
+				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+					handleLicenseException(ex, true).printTo(out);
 				}
-				new JsonResult().printTo(out);
+				
+			} else if ("change".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				String newString = ServletUtils.getStringParameter(request, "nstring", true);
+				String activatedString = ServletUtils.getStringParameter(request, "astring", false);
+				ProductId prodId = new ProductId(productId);
+				
+				try {
+					coreadm.changeLicense(domainId, prodId, newString, activatedString);
+					new JsonResult().printTo(out);
+					
+				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+					handleLicenseException(ex, true).printTo(out);
+				}
 				
 			} else if (crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
@@ -630,27 +656,75 @@ public class Service extends BaseService {
 				coreadm.deleteLicense(domainId, prodId);				
 				new JsonResult().printTo(out);
 				
-			} else if ("assignlease".equals(crud)) {
+			} else if ("actreqinfo".equals(crud)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				String productId = ServletUtils.getStringParameter(request, "productId", true);
-				String userId = ServletUtils.getStringParameter(request, "userId", true);
-				String activationString = ServletUtils.getStringParameter(request, "astring", false);
+				String type = ServletUtils.getStringParameter(request, "type", true);
+				
+				ProductId prodId = new ProductId(productId);
+				String internetName = WT.getDomainInternetName(domainId);
+				ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(internetName, prodId));
+				if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
+				
+				if ("activation".equals(type)) {
+					new JsonResult(prodLic.getManualActivationRequestInfo()).printTo(out);
+					
+				} else if ("deactivation".equals(type)) {
+					new JsonResult(prodLic.getManualDeactivationRequestInfo()).printTo(out);
+					
+				} else {
+					throw new WTException("Unsupported type [{}]", type);
+				}
+				
+			} else if ("activate".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				String activatedString = ServletUtils.getStringParameter(request, "astring", false);
 				ProductId prodId = new ProductId(productId);
 				
 				try {
-					coreadm.assignLicenseLease(domainId, prodId, userId, activationString);
+					coreadm.activateLicense(domainId, prodId, activatedString);
+					new JsonResult().printTo(out);
+					
+				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+					handleLicenseException(ex, true).printTo(out);
+				}
+				
+			}  else if ("deactivate".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				String deactivatedString = ServletUtils.getStringParameter(request, "dstring", false);
+				ProductId prodId = new ProductId(productId);
+				
+				try {
+					coreadm.deactivateLicense(domainId, prodId, "dummyoffline".equals(deactivatedString));
+					new JsonResult().printTo(out);
+					
+				} catch(WTLicenseMismatchException | WTLicenseValidationException | WTLicenseActivationException ex) {
+					handleLicenseException(ex, false).printTo(out);
+				}
+				
+			} else if ("assignlease".equals(crud)) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				String productId = ServletUtils.getStringParameter(request, "productId", true);
+				ArrayList<String> userIds = ServletUtils.getStringParameters(request, "userIds");
+				
+				ProductId prodId = new ProductId(productId);
+				try {
+					coreadm.assignLicenseLease(domainId, prodId, userIds);
 				} catch(WTIntegrityException ex) {
-					throw new WTException(ex, "User has already an assigned lease	[{}]", prodId.getProductCode());
+					throw new WTException(ex, "User has already been assigned [{}]", prodId.getProductCode());
 				}
 				new JsonResult().printTo(out);
 				
 			}  else if ("revokelease".equals(crud)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				String productId = ServletUtils.getStringParameter(request, "productId", true);
-				String userId = ServletUtils.getStringParameter(request, "userId", true);
-				ProductId prodId = new ProductId(productId);
+				ArrayList<String> userIds = ServletUtils.getStringParameters(request, "userIds");
 				
-				coreadm.revokeLicenseLease(domainId, prodId, userId);
+				ProductId prodId = new ProductId(productId);
+				coreadm.revokeLicenseLease(domainId, prodId, userIds);
+				
 				new JsonResult().printTo(out);
 			}
 			
@@ -660,18 +734,76 @@ public class Service extends BaseService {
 		}
 	}
 	
-	public void processGetUploadedLicense(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		try{
-			String uploadId=request.getParameter("uploadId");
+	private JsonResult handleLicenseException(WTLicenseException cause, boolean activation) {
+		if (cause instanceof WTLicenseMismatchException) {
+			return new JsonResult(cause, Arrays.asList("{license.err.mismatch}"));
 			
-			UploadedFile upfile=getUploadedFile(uploadId);
-			String fileContent=FileUtils.readFile(upfile.getFile());
-			out.print(JsonUtils.toJson("license",fileContent));
-		} catch(Exception exc) {
-			logger.debug("Cannot upload license",exc);
-			new JsonResult("Cannot upload license", exc).printTo(out);
+		} else if (cause instanceof WTLicenseValidationException) {
+			return new JsonResult(cause, Arrays.asList("{license.err.validation}", ((WTLicenseValidationException)cause).getValidationStatus().name()));
+			
+		} else if (cause instanceof WTLicenseActivationException) {
+			if (ActivationStatus.ACTIVATION_SERVER_CONNECTION_ERROR.equals(((WTLicenseActivationException)cause).getActivationStatus())) {
+				return new JsonResult(cause, Arrays.asList("{license.err.serverunreachable}"));
+			
+			} else if (ActivationStatus.ACTIVATION_NOT_FOUND_ON_SERVER.equals(((WTLicenseActivationException)cause).getActivationStatus())) {
+				return new JsonResult(cause, Arrays.asList("{license.err.notfound.deactivation}"));
+				
+			} else {
+				return new JsonResult(cause, Arrays.asList(activation ? "{license.err.activation}" : "{license.err.deactivation}", ((WTLicenseActivationException)cause).getActivationStatus().name()));
+			}
+		} else {
+			throw new UnsupportedOperationException("Unsupported cause type");
 		}
-	}	
+	}
+	
+	public void processLicenseWizSaveToFile(HttpServletRequest request, HttpServletResponse response) {
+		
+		try {
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String productId = ServletUtils.getStringParameter(request, "productId", true);
+			String type = ServletUtils.getStringParameter(request, "type", true);
+
+			ProductId prodId = new ProductId(productId);
+			String internetName = WT.getDomainInternetName(domainId);
+			ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(internetName, prodId));
+			if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
+			
+			String s = null;
+			if ("activation".equals(type)) {
+				s = prodLic.getManualActivationRequestInfo().request;
+			} else if ("deactivation".equals(type)) {
+				s = prodLic.getManualDeactivationRequestInfo().request;
+			} else {
+				throw new WTException("Unsupported type [{}]", type);
+			}
+			
+			String filename = prodId.getProductCode() + "_" + type + "-req" + ".l4j";
+			ServletUtils.setFileStreamHeadersForceDownload(response, filename);
+			ServletUtils.writePlainResponse(response, s);
+			
+		} catch(Throwable t) {
+			logger.error("Error in ActivatorWizSaveToFile", t);
+			ServletUtils.writeErrorHandlingJs(response, t.getMessage());
+		}
+	}
+	
+	public void processLicenseWizLoadFromFile(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		UploadedFile upfile = null;
+		
+		try {
+			String uploadId = ServletUtils.getStringParameter(request, "uploadId", true);
+			
+			upfile = getUploadedFileOrThrow(uploadId);
+			if (upfile.getSize() > 1048576) throw new WTException("File is too large [{}]", upfile.getSize());
+			new JsonResult(FileUtils.readFile(upfile.getFile())).printTo(out);
+			
+		} catch(Throwable t) {
+			logger.error("Error in LicenseWizLoadFromFile", t);
+			new JsonResult(t).printTo(out);
+		} finally {
+			if (upfile != null) removeUploadedFile(upfile.getUploadId());
+		}
+	}
 	
 	public void processManageDomainUsers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
 		

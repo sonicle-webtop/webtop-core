@@ -337,6 +337,27 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Extracts a message
+	 * @param {String} sid The default service ID in which lookup strings.
+	 * @param {Mixed} data The JSON payload data response.
+	 * @returns {Object}
+	 */
+	extractMessage: function(sid, data) {
+		var msg, keyTpl;
+		if (Ext.isArray(data)) {
+			keyTpl = data[0];
+			msg = WT.resTpl(sid, keyTpl);
+			if (data.length > 1) {
+				msg = Ext.String.format.apply(this, [msg].concat(Ext.Array.slice(data, 1)));
+			}
+		}
+		return {
+			key: keyTpl,
+			message: WT.isUnmatchedResKey(msg) ? null : msg
+		};
+	},
+	
+	/**
 	 * Utility function to return a resource string or string itself.
 	 * If passed string is a valid resource template (see below), 
 	 * passed value will be evaluated and {@link #res} return value 

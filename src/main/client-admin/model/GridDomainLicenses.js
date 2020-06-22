@@ -42,31 +42,35 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		WTF.field('id', 'string', false),
 		WTF.roField('serviceId', 'string'),
 		WTF.roField('productCode', 'string'),
+		WTF.roField('productName', 'string'),
 		WTF.roField('valid', 'boolean'),
+		WTF.roField('activated', 'boolean'),
 		WTF.roField('expired', 'boolean'),
 		WTF.roField('expiry', 'date', false, {dateFormat: 'Y-m-d'}),
 		WTF.roField('expireSoon', 'boolean'),
-		WTF.roField('leaseAvail', 'int'),
+		WTF.roField('maxLease', 'int'),
 		WTF.roField('hwId', 'string'),
 		WTF.roField('regTo', 'string'),
 		WTF.field('autoLease', 'boolean', false),
-		WTF.field('leaseCount', 'int', false, {persist: false})
+		WTF.field('leasesCount', 'int', false, {persist: false})
 	],
 	
 	updateLeaseCount: function() {
-		this.set('leaseCount', this.leases().getCount());
+		this.set('leasesCount', this.leases().getCount());
 	},
 	
 	isLeaseUnbounded: function() {
-		return this.get('leaseAvail') === -1;
+		return this.get('maxLease') === -1;
 	},
 	
 	getStatus: function() {
 		var me = this;
-		if (!(me.get('valid') === true)) {
+		if (me.get('activated') !== true) {
+			return 'pending';
+		} else if (!(me.get('valid') === true)) {
 			return (me.get('expired') === true) ? 'expired' : 'invalid';
-		} else if ((me.get('expireSoon') === true) || (!me.isLeaseUnbounded() && (me.get('leaseCount') >= Math.ceil(me.get('leaseAvail') * 0.8)))) {
-			return 'warn';
+		} else if (me.get('expireSoon') === true) {
+			return 'valid-warn';
 		} else {
 			return 'valid';
 		}

@@ -105,61 +105,64 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 							fieldLabel: me.mys.res('license.fld-product.lbl'),
 							emptyText: me.mys.res('license.fld-product.emp'),
 							anchor: '100%'
-						})
+						}),
+						{
+							xtype: 'checkbox',
+							reference: 'fldactivatenow',
+							checked: true,
+							boxLabel: me.mys.res('license.fld-activateNow.lbl')
+						}
 					]
 				}, {
 					xtype: 'wtfieldspanel',
+					layout: {
+						type: 'vbox',
+						align: 'stretch'
+					},
 					defaults: {
 						labelAlign: 'top'
 					},
 					items: [
-					    {
-					    	xtype: 'fieldcontainer',
-					    	layout: {
-								type: 'hbox',
-								padding: '0 0 1 0' // fixes classic-theme bottom border issue
-							},
+						{
+							xtype: 'textarea',
+							bind: '{data.string}',
+							allowBlank: false,
+							selectOnFocus: true,
+							emptyText: me.mys.res('license.fld-string.emp'),
+							flex: 1
+						}, {
+							xtype: 'fieldcontainer',
+							layout: {type:'hbox', pack: 'end'},
 							items: [
-                                {
-                                    xtype: 'textarea',
-									reference: 'fldstring',
-									bind: '{data.string}',
-									allowBlank: false,
-									emptyText: me.mys.res('license.fld-string.emp'),
-									margin: '0 5 0 0',
-									flex: 1,
-									height: '100%'
-                                }, {
+								{
 									xtype: 'souploadbutton',
-									tooltip: me.mys.res('license.btn-upload.tip'),
+									tooltip: me.mys.res('license.btn-load.tip'),
 									ui: 'default-toolbar',
-                                	iconCls: 'fa fa-upload',
-									uploaderConfig: WTF.uploader(me.mys.ID, 'UploadLicense', {
+									iconCls: 'fa fa-upload',
+									uploaderConfig: WTF.uploader(me.mys.ID, 'LicenseWizUploadFile', {
 										mimeTypes: [
-											{title: 'License', extensions: 'lic'}
+											{title: 'License', extensions: 'lic,l4j'}
 										]
 									}),
 									listeners: {
-										fileuploaded: function(s,file,resp) {
-											WT.ajaxReq(me.mys.ID, 'GetUploadedLicense', {
+										fileuploaded: function(s, file, resp) {
+											WT.ajaxReq(me.mys.ID, 'LicenseWizLoadFromFile', {
 												params: {
 													uploadId: resp.data.uploadId
 												},
-												callback: function(success,json) {
-													if (json.license) {
-														me.lref('fldstring').setValue(json.license);
+												callback: function(success, json) {
+													if (success) {
+														me.getVM().set('data.string', json.data);
 													} else {
-														WT.error(json.text);
+														WT.error(json.message);
 													}
 												}
-											});							
+											});
 										}
 									}
-                                }
-							],
-							fieldLabel: me.mys.res('license.fld-string.lbl'),
-							anchor: '100% 100%'
-					    }
+								}
+							]
+						}
 					],
 					flex: 1
 				}
@@ -187,13 +190,23 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 			var me = this,
 					vm = me.getVM();
 			me.wait();
-			me.mys.addLicense(vm.get('data.domainId'), vm.get('data.productId'), vm.get('data.string'), {
+			me.mys.addLicense(vm.get('data.domainId'), vm.get('data.productId'), vm.get('data.string'), me.lref('fldactivatenow').getValue(), {
 				callback: function(success, data, json) {
 					me.unwait();
 					if (success) {
 						me.okView();
 					} else {
-						WT.error(json.message);
+						var SoS = Sonicle.String,
+								obj = WT.extractMessage(me.mys.ID, data);
+						if (obj.message && SoS.contains(obj.key, 'serverunreachable')) {
+							WT.error(obj.message + '\n' + me.mys.res('license.err.serverunreachable.activatenow'));
+							me.okView();
+						} else if (obj.message && SoS.contains(obj.key, 'activation')) {
+							WT.error(obj.message + '\n' + me.mys.res('license.err.activation.activatenow'));
+							me.okView();
+						} else {
+							WT.error(SoS.coalesce(obj.message, json.message));
+						}
 					}
 				}
 			});

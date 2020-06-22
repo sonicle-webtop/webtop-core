@@ -133,8 +133,12 @@ CREATE TABLE "core"."licenses" (
 "service_id" varchar(255) NOT NULL,
 "product_code" varchar(255) NOT NULL,
 "string" text NOT NULL,
+"revision_timestamp" timestamptz(6),
+"activated_string" text,
+"activation_timestamp" timestamptz(6),
+"activation_hw_id" varchar(255),
 "expiration_date" date,
-"users_no" int4,
+"quantity" int4,
 "auto_lease" bool NOT NULL
 )
 WITH (OIDS=FALSE)
@@ -150,7 +154,8 @@ CREATE TABLE "core"."licenses_leases" (
 "service_id" varchar(255) NOT NULL,
 "product_code" varchar(255) NOT NULL,
 "user_id" varchar(100) NOT NULL,
-"activation_string" text NOT NULL
+"lease_timestamp" timestamptz(6) NOT NULL,
+"lease_origin" varchar(10) NOT NULL
 )
 WITH (OIDS=FALSE)
 ;

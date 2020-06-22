@@ -42,12 +42,12 @@ import com.sonicle.commons.l4j.ProductLicense;
 public class WTLicenseActivationException extends WTLicenseException {
 	private ActivationStatus activationStatus;
 	
-	public WTLicenseActivationException(ProductLicense.LicenseInfo info, ActivationStatus requiredActivationStatus) {
-		this(info.getProductCode(), info.getActivationStatus(), requiredActivationStatus);
+	public WTLicenseActivationException(ProductLicense.LicenseInfo info) {
+		this(info.getProductCode(), info.getActivationStatus());
 	}
 	
-	public WTLicenseActivationException(String productCode, ActivationStatus activationStatus, ActivationStatus requiredActivationStatus) {
-		super("Activation status for '{}' is not '{}'", productCode, requiredActivationStatus);
+	public WTLicenseActivationException(String productCode, ActivationStatus activationStatus) {
+		super("Invalid activation status for '{}' [{}]", productCode, activationStatus);
 		this.activationStatus = activationStatus;
 	}
 	

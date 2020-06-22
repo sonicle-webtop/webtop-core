@@ -35,13 +35,16 @@ package com.sonicle.webtop.core.admin.bol.js;
 
 import com.sonicle.commons.l4j.AbstractProduct;
 import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServiceLicense;
+import com.sonicle.webtop.core.model.ServiceLicenseLease;
 import java.util.ArrayList;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -51,15 +54,17 @@ public class JsGridDomainLicense {
 	public String id;
 	public String serviceId;
 	public String productCode;
+	public String productName;
 	public boolean valid;
+	public boolean activated;
 	public boolean expired;
 	public String expiry;
 	public boolean expireSoon;
-	public Integer leaseAvail;
 	public String hwId;
 	public String regTo;
 	public Boolean autoLease;
-	public Integer leaseCount;
+	public Integer maxLease;
+	public Integer leasesCount;
 	public ArrayList<Lease> leases;
 	
 	public JsGridDomainLicense(ServiceLicense license, DateTimeZone profileTz) {
@@ -69,38 +74,53 @@ public class JsGridDomainLicense {
 		
 		String internetName = WT.getDomainInternetName(license.getDomainId());
 		AbstractProduct prod = ProductUtils.getProduct(internetName, license.getProductId());
+		if (prod != null) productName = prod.getProductName();
 		ProductLicense prodLic = prod != null ? new ProductLicense(prod) : null;
 		
 		valid = false;
+		activated = false;
 		expired = false;
 		expiry = null;
 		expireSoon = false;
-		leaseAvail = license.getUsersNo()== null ? -1 : license.getUsersNo();
+		maxLease = -1;
+		
 		if (prodLic != null) {
-			prodLic.setLicenseString(license.getString());
-			valid = prodLic.getLicenseInfo().isValid();
-			expired = prodLic.getLicenseInfo().isExpired();
+			prodLic.setLicenseString(license.getLicenseString());
+			prodLic.setActivatedLicenseString(license.getActivatedLicenseString());
+			
+			LicenseInfo li = prodLic.validate(true);
+			LicenseInfo ali = prodLic.validate(false);
+			
+			valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
+			activated = ali.isActivationCompleted();
+			expired = li.isExpired();
 			if (valid || expired) {
-				LocalDate expiryDate = prodLic.getLicenseInfo().getExpirationDate();
+				LocalDate expiryDate = li.getExpirationDate();
 				if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
-				expireSoon = prodLic.getLicenseInfo().isExpiringSoon();
-				hwId = prodLic.getLicenseInfo().getHardwareID();
-				regTo = prodLic.getLicenseInfo().getUserRegisteredTo();
+				expireSoon = li.isExpiringSoon();
+				hwId = li.getHardwareID();
+				regTo = li.getUserRegisteredTo();
 			}
+			if (li.getQuantity() != null) maxLease = li.getQuantity();
 		}
 		
 		autoLease = license.getAutoLease();
-		leaseCount = license.getLeasedUsers().size();
+		DateTimeFormatter dmyHmsFmt = DateTimeUtils.createYmdHmsFormatter(profileTz);
 		leases = new ArrayList<>();
-		for (String leasedUser : license.getLeasedUsers()) {
+		for (ServiceLicenseLease lease : license.getLeases().values()) {
 			Lease jsl = new Lease();
-			jsl.userId = leasedUser;
+			jsl.userId = lease.getUserId();
+			jsl.leasedOn = DateTimeUtils.print(dmyHmsFmt, lease.getLeaseTimestamp());
+			jsl.origin = lease.getLeaseOrigin();
 			leases.add(jsl);
 		}
+		leasesCount = leases.size();
 	}
 	
 	public static class Lease {
 		public String userId;
+		public String leasedOn;
+		public ServiceLicenseLease.LeaseOrigin origin;
 	}
 	
 	public static class List extends ArrayList<JsGridDomainLicense> {

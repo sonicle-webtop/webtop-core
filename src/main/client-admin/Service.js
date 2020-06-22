@@ -547,7 +547,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addLicense: function(domainId, productId, string, opts) {
+	addLicense: function(domainId, productId, string, activateNow, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageLicense', {
@@ -555,7 +555,25 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				crud: 'create',
 				domainId: domainId,
 				productId: productId,
-				string: string
+				string: string,
+				activate: activateNow
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	changeLicense: function(domainId, productId, nstring, astring, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'change',
+				domainId: domainId,
+				productId: productId,
+				nstring: nstring,
+				astring: astring
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
@@ -578,16 +596,62 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	assignLicenseLease: function(domainId, serviceId, productCode, userId, astring, opts) {
+	getLicenseModifyReqInfo: function(domainId, productId, modKey, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageLicense', {
 			params: {
-				crud: 'assignlease',
+				crud: 'modreqinfo',
 				domainId: domainId,
-				serviceId: serviceId,
-				productCode: productCode,
-				userId: userId,
+				productId: productId,
+				modKey: modKey
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope, [success, json.data, json]);
+			}
+		});
+	},
+	
+	getLicenseActivatorReqInfo: function(type, domainId, productId, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'actreqinfo',
+				domainId: domainId,
+				productId: productId,
+				type: type
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope, [success, json.data, json]);
+			}
+		});
+	},
+	
+	modifyLicense: function(domainId, productId, modKey, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'modify',
+				domainId: domainId,
+				productId: productId,
+				modKey: modKey
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	activateLicense: function(domainId, productId, astring, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'activate',
+				domainId: domainId,
+				productId: productId,
 				astring: astring
 			},
 			callback: function(success, json) {
@@ -596,17 +660,47 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	revokeLicenseLease: function(domainId, serviceId, productCode, userId, dstring, opts) {
+	deactivateLicense: function(domainId, productId, dstring, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'deactivate',
+				domainId: domainId,
+				productId: productId,
+				dstring: dstring
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	assignLicenseLease: function(domainId, productId, userIds, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageLicense', {
+			params: {
+				crud: 'assignlease',
+				domainId: domainId,
+				productId: productId,
+				userIds: userIds
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	revokeLicenseLease: function(domainId, productId, userIds, opts) {
 		opts = opts || {};
 		var me = this;
 		WT.ajaxReq(me.ID, 'ManageLicense', {
 			params: {
 				crud: 'revokelease',
 				domainId: domainId,
-				serviceId: serviceId,
-				productCode: productCode,
-				userId: userId,
-				dstring: dstring
+				productId: productId,
+				userIds: userIds
 			},
 			callback: function(success, json) {
 				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);

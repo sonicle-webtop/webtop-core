@@ -54,7 +54,7 @@ public class JsLicense {
 		
 		item.setDomainId(domainId);
 		item.setProductId(ProductId.build(serviceId, productId));
-		item.setString(key);
+		item.setLicenseString(key);
 		
 		return item;
 	}

@@ -75,6 +75,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
@@ -338,6 +339,24 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public void cleanupLicenseCache() throws WTException {
+		LicenseManager licMgr = wta.getLicenseManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		licMgr.cleanupLicenseCache();
+	}
+	
+	public void checkOnlineAvailability() throws WTException {
+		LicenseManager licMgr = wta.getLicenseManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		licMgr.checkOnlineAvailability();
+	}
+	
 	public List<ServiceLicense> listLicenses(String domainId) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
@@ -356,13 +375,31 @@ public class CoreAdminManager extends BaseManager {
 		return licMgr.getLicense(domainId, productId);
 	}
 	
-	public void addLicense(License license) throws WTException {
+	public void addLicense(License license, boolean autoActivate) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.addLicense(license);
+		licMgr.addLicense(license, autoActivate);
+	}
+	
+	public void changeLicense(String domainId, ProductId productId, String newString, String activatedString) throws WTException {
+		LicenseManager licMgr = wta.getLicenseManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		licMgr.changeLicense(domainId, productId, newString, activatedString, false);
+	}
+	
+	public void modifyLicense(String domainId, ProductId productId, String modificationKey, String modifiedString) throws WTException {
+		LicenseManager licMgr = wta.getLicenseManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		licMgr.modifyLicense(domainId, productId, modificationKey, modifiedString);
 	}
 	
 	public void updateLicenseAutoLease(String domainId, ProductId productId, boolean autoLease) throws WTException {
@@ -374,33 +411,43 @@ public class CoreAdminManager extends BaseManager {
 		licMgr.updateLicenseAutoLease(domainId, productId, autoLease);
 	}
 	
-	public void updateLicenseOnlineInfo(String domainId, ProductId productId) throws WTException {
+	public void deleteLicense(String domainId, ProductId productId) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.updateLicenseOnlineInfo(domainId, productId);
+		licMgr.deleteLicense(domainId, productId, false);
 	}
 	
-	public void deleteLicense(String domainId, ProductId product) throws WTException {
+	public void activateLicense(String domainId, ProductId productId, String activatedString) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.deleteLicense(domainId, product);
+		licMgr.activateLicense(domainId, productId, activatedString);
 	}
 	
-	public void assignLicenseLease(String domainId, ProductId productId, String userId, String activationString) throws WTException {
+	public void deactivateLicense(String domainId, ProductId productId, boolean offline) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.assignLicenseLease(domainId, productId, userId, activationString);
+		licMgr.deactivateLicense(domainId, productId, offline);
 	}
 	
+	public void assignLicenseLease(String domainId, ProductId productId, Collection<String> userIds) throws WTException {
+		LicenseManager licMgr = wta.getLicenseManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		licMgr.assignLicenseLease(domainId, productId, userIds);
+	}
+	
+	/*
 	public void autoAssignLicenseLease(String domainId, ProductId productId, String userId) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
@@ -409,14 +456,15 @@ public class CoreAdminManager extends BaseManager {
 		
 		licMgr.assignLicenseLease(domainId, productId, userId, null);
 	}
+	*/
 	
-	public void revokeLicenseLease(String domainId, ProductId productId, String userId) throws WTException {
+	public void revokeLicenseLease(String domainId, ProductId productId, Collection<String> userIds) throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		licMgr.revokeLicenseLease(domainId, productId, userId);
+		licMgr.revokeLicenseLease(domainId, productId, userIds);
 	}
 	
 	public List<DirectoryUser> listDirectoryUsers(String domainId) throws WTException {

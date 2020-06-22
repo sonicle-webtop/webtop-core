@@ -681,6 +681,7 @@ public class WT {
 	}
 	
 	public static ProductLicense findProductLicense(BaseServiceProduct product) {
+		if (product == null) return null;
 		return getWTA().getLicenseManager().getProductLicense(product);
 	}
 	
@@ -691,13 +692,7 @@ public class WT {
 	 * @return True if a license is installed and valid, false otherwise.
 	 */
 	public static boolean isLicensed(BaseServiceProduct product) {
-		boolean valid = false;
-		ProductLicense plic = findProductLicense(product);
-		if (plic != null) {
-			LicenseInfo li = plic.getLicenseInfo();
-			if (li != null) valid = li.isValid();
-		}
-		return valid;
+		return getWTA().getLicenseManager().checkLicense(product);
 	}
 	
 	/**

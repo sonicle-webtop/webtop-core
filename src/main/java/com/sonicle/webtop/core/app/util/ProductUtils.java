@@ -76,15 +76,4 @@ public class ProductUtils {
 		if (manifestProduct == null) return null;
 		return ProductUtils.getProduct(manifestProduct.className, domainInternetName);
 	}
-	
-	public static ProductLicense getProductLicense(String domainInternetName, ProductId productId, String licenseString) {
-		ServiceManifest.Product manifestProduct = WT.getManifestProduct(productId.getServiceId(), productId.getProductCode());
-		if (manifestProduct == null) return null;
-		BaseServiceProduct product = ProductUtils.getProduct(manifestProduct.className, domainInternetName);
-		if (product == null) return null;
-		
-		ProductLicense pl = new ProductLicense(product);
-		pl.setLicenseString(licenseString);
-		return pl;
-	}
 }

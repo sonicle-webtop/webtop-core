@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.OMessageQueue;
@@ -40,8 +41,11 @@ import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  *
@@ -65,10 +69,10 @@ public class AppManagerUtils {
 		return fillServiceLicense(new ServiceLicense(), src);
 	}
 	
-	static ServiceLicense createServiceLicense(OLicense src, Set<String> leases) {
+	static ServiceLicense createServiceLicense(OLicense src, Collection<OLicenseLease> oleases) {
 		if (src == null) return null;
 		ServiceLicense tgt = fillServiceLicense(new ServiceLicense(), src);
-		tgt.setLeasedUsers(leases);
+		tgt.setLeases(AppManagerUtils.createServiceLicenseLeaseList(oleases));
 		return tgt;
 	}
 	
@@ -76,12 +80,32 @@ public class AppManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setDomainId(src.getDomainId());
 			tgt.setProductId(ProductId.build(src.getServiceId(), src.getProductCode()));
-			tgt.setString(src.getString());
+			tgt.setLicenseString(src.getString());
+			tgt.setRevisionTimestamp(src.getRevisionTimestamp());
+			tgt.setActivatedLicenseString(src.getActivatedString());
+			tgt.setActivationTimestamp(src.getActivationTimestamp());
+			tgt.setActivationHwId(src.getActivationHwId());
 			tgt.setExpirationDate(src.getExpirationDate());
-			tgt.setUsersNo(src.getUsersNo());
+			tgt.setQuantity(src.getQuantity());
 			tgt.setAutoLease(src.getAutoLease());
 		}
 		return tgt;
+	}
+	
+	static Map<String, ServiceLicenseLease> createServiceLicenseLeaseMap(Collection<OLicenseLease> items) {
+		LinkedHashMap<String, ServiceLicenseLease> map = new LinkedHashMap<>(items.size());
+		for (OLicenseLease item : items) {
+			map.put(item.getUserId(), fillServiceLicenseLease(new ServiceLicenseLease(), item));
+		}
+		return map;
+	}
+	
+	static List<ServiceLicenseLease> createServiceLicenseLeaseList(Collection<OLicenseLease> items) {
+		ArrayList<ServiceLicenseLease> list = new ArrayList<>(items.size());
+		for (OLicenseLease item : items) {
+			list.add(fillServiceLicenseLease(new ServiceLicenseLease(), item));
+		}
+		return list;
 	}
 	
 	static OLicense createOLicense(License src) {
@@ -94,29 +118,18 @@ public class AppManagerUtils {
 			tgt.setDomainId(src.getDomainId());
 			tgt.setServiceId(src.getProductId().getServiceId());
 			tgt.setProductCode(src.getProductId().getProductCode());
-			tgt.setString(src.getString());
+			tgt.setString(src.getLicenseString());
+			tgt.setActivatedString(src.getActivatedLicenseString());
 			tgt.setAutoLease(src.getAutoLease());
 		}
 		return tgt;
 	}
 	
-	static ServiceLicenseLease.Map createServiceLicenseLeaseMap(List<OLicenseLease> items) {
-		ServiceLicenseLease.Map map = new ServiceLicenseLease.Map(items.size());
-		for (OLicenseLease item : items) {
-			map.add(createServiceLicenseLease(item));
-		}
-		return map;
-	}
-	
-	static ServiceLicenseLease createServiceLicenseLease(OLicenseLease src) {
-		if (src == null) return null;
-		return fillServiceLicenseLease(new ServiceLicenseLease(), src);
-	}
-	
 	static <T extends ServiceLicenseLease> T fillServiceLicenseLease(T tgt, OLicenseLease src) {
 		if ((tgt != null) && (src != null)) {
 			tgt.setUserId(src.getUserId());
-			tgt.setActivationString(src.getActivationString());
+			tgt.setLeaseTimestamp(src.getLeaseTimestamp());
+			tgt.setLeaseOrigin(EnumUtils.forSerializedName(src.getLeaseOrigin(), ServiceLicenseLease.LeaseOrigin.class));
 		}
 		return tgt;
 	}
