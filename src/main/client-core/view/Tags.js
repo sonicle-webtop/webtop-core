@@ -177,58 +177,49 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 						var SoS = Sonicle.String,
 								color = SoS.deflt(rec.get('color'), ''),
 								name = SoS.deflt(rec.get('name'), ''),
-								pers = '';
-						/*
-						if ('public' === rec.get('visibility')) {
-							pers = '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.visibility.public') + ')</span>';
+								pub = '';
+						
+						if ('shared' === rec.get('visibility')) {
+							pub = '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared')) + '"></i>';
 						}
-						*/
-						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pers;
+						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pub;
 					},
 					flex: 1
 				}, {
-					xtype: 'soiconcolumn',
-					dataIndex: 'visibility',
-					getTip: function(v) {
-						return 'public' === v ? me.mys.res('tags.gp.visibility.public') : '';
-					},
-					getIconCls: function(v) {
-						return 'public' === v ? 'wt-icon-public' : '';
-					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					width: 40
-				}, {
 					xtype: 'soactioncolumn',
-					items: [{
-						iconCls: 'fa fa-edit',
-						tooltip: WT.res('act-edit.lbl'),
-						handler: function(g, ridx) {
-							var rec = g.getStore().getAt(ridx);
-							me.editTagUI(rec);
-						},
-						isDisabled: function(s, ridx, cidx, itm, rec) {
-							if ('private' === rec.get('visibility')) {
-								return rec.get('builtIn');
-							} else {
-								return !me.hasManage() || rec.get('builtIn');
+					items: [
+						{
+							iconCls: 'fa fa-edit',
+							tooltip: WT.res('act-edit.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.editTagUI(rec);
+							},
+							isDisabled: function(s, ridx, cidx, itm, rec) {
+								if ('private' === rec.get('visibility')) {
+									return rec.get('builtIn');
+								} else {
+									return !me.hasManage() || rec.get('builtIn');
+								}
+							}
+						}, {
+							iconCls: 'fa fa-trash-o',
+							tooltip: WT.res('act-remove.lbl'),
+							handler: function(g, ridx) {
+								var rec = g.getStore().getAt(ridx);
+								me.deleteTagUI(rec);
+							},
+							isDisabled: function(s, ridx, cidx, itm, rec) {
+								if ('private' === rec.get('personal')) {
+									return rec.get('builtIn');
+								} else {
+									return !me.hasManage() || rec.get('builtIn');
+								}
 							}
 						}
-					}, {
-						iconCls: 'fa fa-trash',
-						tooltip: WT.res('act-remove.lbl'),
-						handler: function(g, ridx) {
-							var rec = g.getStore().getAt(ridx);
-							me.deleteTagUI(rec);
-						},
-						isDisabled: function(s, ridx, cidx, itm, rec) {
-							if ('private' === rec.get('personal')) {
-								return rec.get('builtIn');
-							} else {
-								return !me.hasManage() || rec.get('builtIn');
-							}
-						}
-					}]
-			}],
+					]
+				}
+			],
 			tbar: tbar,
 			buttons: butt
 		});
@@ -252,7 +243,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 					viewCfg: {
 						data: {
 							color: Sonicle.String.prepend(rndColor, '#', true),
-							visibility: me.hasManage() ? 'public' : 'private'
+							visibility: me.hasManage() ? 'shared' : 'private'
 						},
 						visibilityEditable: me.hasManage(),
 						invalidNames: me.collectUsedNames()

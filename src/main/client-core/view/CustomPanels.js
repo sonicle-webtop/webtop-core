@@ -149,7 +149,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 									me.cloneCustomPanelUI(rec);
 								}
 							}, {
-								iconCls: 'fa fa-trash',
+								iconCls: 'fa fa-trash-o',
 								tooltip: WT.res('act-remove.lbl'),
 								handler: function(g, ridx) {
 									var rec = g.getStore().getAt(ridx);
@@ -237,7 +237,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 	
 	privates: {
 		getTagsStore: function() {
-			return WT.getTagsStore({filters: [{id: 'publicFilter', property: 'visibility', value: 'public'}]});
+			return WT.getTagsStore({filters: [{id: 'sharedFilter', property: 'visibility', value: 'shared'}]});
 		},
 		
 		addCustomPanelUI: function() {

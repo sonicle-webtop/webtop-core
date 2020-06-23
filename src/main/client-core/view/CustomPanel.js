@@ -246,7 +246,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 									xtype: 'soactioncolumn',
 									items: [
 										{
-											iconCls: 'fa fa-trash',
+											iconCls: 'fa fa-trash-o',
 											tooltip: WT.res('act-remove.lbl'),
 											handler: function(g, ridx) {
 												var rec = g.getStore().getAt(ridx);
@@ -284,7 +284,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 					swapReturn: true,
 					viewCfg: {
 						data: {
-							visibility: 'public',
+							visibility: 'shared',
 							color: Sonicle.String.prepend(rndColor, '#', true)
 						},
 						visibilityEditable: false
@@ -299,7 +299,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 	
 	privates: {
 		getTagsStore: function() {
-			return WT.getTagsStore({filters: [{id: 'publicFilter', property: 'visibility', value: 'public'}]});
+			return WT.getTagsStore({filters: [{id: 'sharedFilter', property: 'visibility', value: 'shared'}]});
 		},
 		
 		onViewLoad: function(s, success) {

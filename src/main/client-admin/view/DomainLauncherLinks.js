@@ -131,7 +131,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLauncherLinks', {
 					xtype: 'soactioncolumn',
 					items: [
 						{
-							iconCls: 'fa fa-trash',
+							iconCls: 'fa fa-trash-o',
 							tooltip: WT.res('act-remove.lbl'),
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);

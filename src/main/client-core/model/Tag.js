@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.model.Tag', {
 		WTF.field('color', 'string', false),
 		WTF.calcField('source', 'string', ['visibility'], function(v, rec) {
 			// For displaying source value in combos
-			return 'public' === rec.get('visibility') ? WT.res('tags.gp.visibility.public') : '';
+			return 'shared' === rec.get('visibility') ? WT.res('tags.visibility.shared') : '';
 		})
 	]
 });

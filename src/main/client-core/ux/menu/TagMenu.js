@@ -70,8 +70,8 @@ Ext.define('Sonicle.webtop.core.ux.menu.TagMenu', {
 						color: rec.get('color'),
 						hideOnClick: true
 					};
-				if ('public' === rec.get('visibility')) {
-					cfg.text = rec.get('name') + '<span class="wt-source">&nbsp;(' + WT.res('tags.gp.visibility.public') + ')</span>';
+				if ('shared' === rec.get('visibility')) {
+					cfg.text = rec.get('name') + '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared')) + '"></i>';
 				}
 				return cfg;
 			};

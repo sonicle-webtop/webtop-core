@@ -1085,7 +1085,7 @@ public class CoreManager extends BaseManager {
 	
 	private Collection<String> tagOptionsToUserIds(EnumSet<ListTagsOpt> options) {
 		ArrayList<String> owners = new ArrayList<>();
-		if (options.contains(ListTagsOpt.PUBLIC)) {
+		if (options.contains(ListTagsOpt.SHARED)) {
 			owners.add(OTag.OWNER_NONE);
 		}
 		if (options.contains(ListTagsOpt.PRIVATE)) {

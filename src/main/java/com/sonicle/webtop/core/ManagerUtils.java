@@ -153,7 +153,7 @@ public class ManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
 			tgt.setDomainId(src.getDomainId());
-			tgt.setVisibility(src.isOwnerNone() ? Tag.Visibility.PUBLIC : Tag.Visibility.PRIVATE);
+			tgt.setVisibility(src.isOwnerNone() ? Tag.Visibility.SHARED : Tag.Visibility.PRIVATE);
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());
@@ -171,7 +171,7 @@ public class ManagerUtils {
 		if ((tgt != null) && (src != null)) {
 			tgt.setTagId(src.getTagId());
 			tgt.setDomainId(src.getDomainId());
-			tgt.setUserId(Tag.Visibility.PUBLIC.equals(src.getVisibility()) ? OTag.OWNER_NONE : ownerIdIfPrivate);
+			tgt.setUserId(Tag.Visibility.SHARED.equals(src.getVisibility()) ? OTag.OWNER_NONE : ownerIdIfPrivate);
 			tgt.setBuiltIn(src.getBuiltIn());
 			tgt.setName(src.getName());
 			tgt.setColor(src.getColor());

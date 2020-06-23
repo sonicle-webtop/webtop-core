@@ -155,7 +155,7 @@ Ext.define('Sonicle.webtop.core.view.TagEditor', {
 					},
 					items: [
 						{inputValue: 'private', boxLabel: me.mys.res('tagEditor.fld-visibility.private')},
-						{inputValue: 'public', boxLabel: me.mys.res('tagEditor.fld-visibility.public')}
+						{inputValue: 'shared', boxLabel: me.mys.res('tagEditor.fld-visibility.shared')}
 					],
 					fieldLabel: me.mys.res('tagEditor.fld-visibility.lbl'),
 					labelWidth: 80

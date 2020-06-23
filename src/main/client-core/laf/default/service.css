@@ -123,6 +123,7 @@
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }
 .wt-icon-snooze-xs { background-image: url('snooze_16.png') !important; }
 .wt-icon-public { background-image: url('public_16.svg') !important; background-size: contain; }
+.wt-icon-share { background-image: url('share_16.svg') !important; background-size: contain; }
 .wt-icon-attach { background-image: url('attach_16.svg') !important; background-size: contain; }
 .wt-icon-attach-xs { background-image: url('attach_16.png') !important; }
 .wt-icon-panel-bottom-xs { background-image: url('panel-bottom_16.png') !important; }
