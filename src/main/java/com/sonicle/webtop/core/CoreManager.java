@@ -1146,6 +1146,7 @@ public class CoreManager extends BaseManager {
 			// We just want to make sure alerting external code that domainId, if present, is consistent!
 			if (tag.getDomainId() != null) ensureTargetProfileDomain(tag.getDomainId());
 			tag.setDomainId(getTargetProfileId().getDomainId());
+			tag.setBuiltIn(false);
 			
 			ensureProfileDomain(tag.getDomainId());
 			if (!Tag.Visibility.PRIVATE.equals(tag.getVisibility())) {

@@ -330,7 +330,7 @@ Ext.define('Sonicle.webtop.core.view.CustomPanel', {
 						params: {
 							crud: 'create'
 						},
-						jsonData: [{name: data.name, color: data.color}],
+						jsonData: [{name: data.name, color: data.color, visibility: data.visibility}],
 						callback: function(success, json) {
 							if (!success) WT.error(me.mys.res('customPanel.error.newtag'));
 						}
