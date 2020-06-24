@@ -61,7 +61,6 @@ public class JsTagGrid {
 		
 		item.setTagId(id);
 		item.setVisibility(EnumUtils.forSerializedName(visibility,  Tag.Visibility.PRIVATE, Tag.Visibility.class));
-		item.setBuiltIn(builtIn);
 		item.setName(name);
 		item.setColor(color);
 		

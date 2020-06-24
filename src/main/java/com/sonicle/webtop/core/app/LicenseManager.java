@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.VLicense;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.LicenseDAO;
 import com.sonicle.webtop.core.dal.LicenseLeaseDAO;
 import com.sonicle.webtop.core.model.License;
@@ -220,7 +221,7 @@ public class LicenseManager {
 					return new ProductData(plicNew, olic.getAutoLease(), leasedUsers);
 					
 				} else {
-					LOGGER.debug("License is missing, creating a dummy one! [{}]", key);
+					if (LOGGER.isTraceEnabled()) LOGGER.trace("License missing, returning dummy! [{}]", key);
 					return new ProductData(null, false, null);
 				}
 
@@ -278,13 +279,14 @@ public class LicenseManager {
 				
 			} catch(WTLicenseException ex) {
 				// Do nothing... 
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("License not activated [{}]", ex, key);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("License unassignable [{}]", ex, key);
 				return -2;
 			} catch(Throwable t) {
 				LOGGER.error("Error retrieving registered license [{}]", t, key);
 				return null;
 			}
 		});
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("licenseLeaseCache : {} -> {}", key, result);
 		return result == null ? 0 : result;
 	}
 	
@@ -764,11 +766,22 @@ public class LicenseManager {
 		try {
 			LicenseInfo li = pData.license.validate(true);
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
-			if (li.getQuantity() == null) throw new WTException("Lease attribution is not supported");
+			if (li.getQuantity() == null) throw new WTException("Lease attribution is not supported for '{}'", productId.getProductCode());
 			
 			con = wta.getConnectionManager().getConnection();
-			return lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), userIds, DateTimeUtils.now(), origin).length == userIds.size();
+			if (userIds.size() == 1) {
+				return lleaDao.insert(con, domainId, productId.getServiceId(), productId.getProductCode(), userIds.iterator().next(), DateTimeUtils.now(), origin) == 1;
+			} else {
+				return lleaDao.batchInsert(con, domainId, productId.getServiceId(), productId.getProductCode(), userIds, DateTimeUtils.now(), origin).length == userIds.size();
+			}
 			
+		} catch(DAOIntegrityViolationException ex) {
+			// We rely on IntegrityException in order to determine if record is already present on db table.
+			if (userIds.size() == 1) {
+				return true;
+			} else {
+				throw ExceptionUtils.wrapThrowable(ex);
+			}
 		} catch(Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
