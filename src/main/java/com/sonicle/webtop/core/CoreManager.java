@@ -178,7 +178,7 @@ public class CoreManager extends BaseManager {
 	
 	private final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
 	private final boolean cfieldsFree;
-	private static final int MAX_CFIELDS_FREE = 3*4/6; // -> 2
+	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 2
 	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);

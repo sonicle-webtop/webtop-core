@@ -73,7 +73,7 @@ public abstract class BaseManager {
 		// targetProfile can be null in case of public context where 
 		// we have no logged user. So check it!
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
-		if (targetProfileId != null) {
+		if (!RunContext.isSysAdmin() && targetProfileId != null) {
 			AUDIT_PRODUCT = new AuditProduct(WT.getDomainInternetName(targetProfileId.getDomainId()));
 			boolean enabled = false;
 			if (WT.isLicensed(AUDIT_PRODUCT)) {
