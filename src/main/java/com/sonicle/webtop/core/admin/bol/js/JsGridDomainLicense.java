@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
+import org.jooq.tools.StringUtils;
 
 /**
  *
@@ -99,7 +100,7 @@ public class JsGridDomainLicense {
 				if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
 				expireSoon = li.isExpiringSoon();
 				hwId = li.getHardwareID();
-				regTo = li.getUserRegisteredTo();
+				regTo = buildRegTo(li);
 			}
 			if (li.getQuantity() != null) maxLease = li.getQuantity();
 		}
@@ -115,6 +116,14 @@ public class JsGridDomainLicense {
 			leases.add(jsl);
 		}
 		leasesCount = leases.size();
+	}
+	
+	private String buildRegTo(LicenseInfo li) {
+		String s = li.getUserRegisteredTo();
+		if (!StringUtils.isBlank(li.getUserCompany())) {
+			s += " (" + li.getUserCompany() + ")";
+		}
+		return s;
 	}
 	
 	public static class Lease {
