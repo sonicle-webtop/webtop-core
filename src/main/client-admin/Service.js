@@ -48,8 +48,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DbUpgrader'
 	],
 	uses: [
-		'Sonicle.webtop.core.admin.view.License',
-		'Sonicle.webtop.core.admin.view.LicenseLease'
+		'Sonicle.webtop.core.admin.view.License'
 	],
 	
 	init: function() {
