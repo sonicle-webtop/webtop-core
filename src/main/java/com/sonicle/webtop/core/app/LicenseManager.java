@@ -622,17 +622,20 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			LOGGER.debug("Changing license for '{}'", productId);
+			LOGGER.debug("[{}] Changing license...", productId);
 			LicenseInfo li = tplProductLicense.validate(true);
+			LOGGER.debug("[{}] {} (old) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
 				li = tplProductLicense.validate(false);
+				LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 				if (li.isActivationCompleted()) throw new WTException("License is activated, deactivate it before proceed.");
 			}
 			
 			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
 			plic.setLicenseString(newString);
 			li = tplProductLicense.validate(true);
+			LOGGER.debug("[{}] {} (new) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
 			LocalDate expDate = li.getExpirationDate();
@@ -645,6 +648,7 @@ public class LicenseManager {
 				LOGGER.debug("Activated string provided. Performing manual activation...");
 				li = checkCompat(li, plic.manualActivate(activatedString));
 			}
+			LOGGER.debug("[{}] {} (new) -> Validate Ac. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
@@ -697,6 +701,7 @@ public class LicenseManager {
 		try {
 			LOGGER.debug("Activating license for '{}'", productId);
 			LicenseInfo li = tplProductLicense.validate(true);
+			LOGGER.debug("[{}] {} -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
 			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
@@ -707,6 +712,7 @@ public class LicenseManager {
 				LOGGER.debug("Activated string provided. Performing manual activation...");
 				li = checkCompat(li, plic.manualActivate(activatedString));
 			}
+			LOGGER.debug("[{}] {} -> Validate Ac. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
@@ -726,7 +732,7 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			LOGGER.debug("Deactivating license for '{}'", productId);
+			LOGGER.debug("[{}] Deactivating license...", productId);
 			LicenseInfo li = null;
 			
 			WTException throwAfter = null;
@@ -734,6 +740,7 @@ public class LicenseManager {
 			if (!offline) {
 				LOGGER.debug("Performing automatic deactivation...");
 				li = plic.autoDeactivate();
+				LOGGER.debug("[{}] {} -> Validate De. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 				if (li.isActivationNotFound()) {
 					// If activation is not found on server, simply erase activation
 					// data for this license and only after throw the exception!
