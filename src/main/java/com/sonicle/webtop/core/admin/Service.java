@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.admin;
 
 import com.license4j.ActivationStatus;
+import com.license4j.ValidationStatus;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
@@ -739,7 +740,11 @@ public class Service extends BaseService {
 			return new JsonResult(cause, Arrays.asList("{license.err.mismatch}"));
 			
 		} else if (cause instanceof WTLicenseValidationException) {
-			return new JsonResult(cause, Arrays.asList("{license.err.validation}", ((WTLicenseValidationException)cause).getValidationStatus().name()));
+			if (!activation && ValidationStatus.MISMATCH_HARDWARE_ID.equals(((WTLicenseValidationException)cause).getValidationStatus())) {
+				return new JsonResult(cause, Arrays.asList("{license.err.mismatchhwid.deactivation}"));
+			} else {
+				return new JsonResult(cause, Arrays.asList("{license.err.validation}", ((WTLicenseValidationException)cause).getValidationStatus().name()));
+			}
 			
 		} else if (cause instanceof WTLicenseActivationException) {
 			if (ActivationStatus.ACTIVATION_SERVER_CONNECTION_ERROR.equals(((WTLicenseActivationException)cause).getActivationStatus())) {

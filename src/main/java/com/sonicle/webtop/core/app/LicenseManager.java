@@ -32,6 +32,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.license4j.ValidationStatus;
 import com.rits.cloning.Cloner;
 import com.sonicle.commons.Base58;
 import com.sonicle.commons.db.DbUtils;
@@ -617,24 +618,24 @@ public class LicenseManager {
 		return activated;
 	}
 	
-	private boolean internalChangeLicense(final String domainId, final ProductId productId, final ProductLicense tplProductLicense, final String newString, final String activatedString, final boolean force) throws WTException {
+	private boolean internalChangeLicense(final String domainId, final ProductId productId, final ProductLicense plicOrig, final String newString, final String activatedString, final boolean force) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		Connection con = null;
 		
 		try {
 			LOGGER.debug("[{}] Changing license...", productId);
-			LicenseInfo li = tplProductLicense.validate(true);
+			LicenseInfo li = plicOrig.validate(true);
 			LOGGER.debug("[{}] {} (old) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
-				li = tplProductLicense.validate(false);
+				li = plicOrig.validate(false);
 				LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 				if (li.isActivationCompleted()) throw new WTException("License is activated, deactivate it before proceed.");
 			}
 			
-			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
+			ProductLicense plic = Cloner.standard().deepClone(plicOrig);
 			plic.setLicenseString(newString);
-			li = tplProductLicense.validate(true);
+			li = plic.validate(true);
 			LOGGER.debug("[{}] {} (new) -> Validate Be. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
@@ -668,8 +669,9 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			LOGGER.debug("Modifying license for '{}'", productId);
+			LOGGER.debug("[{}] Modifying license...", productId);
 			LicenseInfo li = tplProductLicense.validate(false);
+			LOGGER.debug("[{}] {} (old) -> Validate Af. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			
 			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
@@ -680,6 +682,7 @@ public class LicenseManager {
 				LOGGER.debug("Activated string provided. Performing manual modification...");
 				li = checkCompat(li, plic.manualModify(activatedString));
 			}
+			LOGGER.debug("[{}] {} (new) -> Validate Mo. [{}, {}]", productId, li.getLicenseID(), li.getValidationStatus(), li.getActivationStatus());
 			if (!li.isValid()) throw new WTLicenseValidationException(li);
 			if (!li.isActivationCompleted()) throw new WTLicenseActivationException(li);
 			
@@ -735,7 +738,7 @@ public class LicenseManager {
 			LOGGER.debug("[{}] Deactivating license...", productId);
 			LicenseInfo li = null;
 			
-			WTException throwAfter = null;
+			WTException afterUpdateThrow = null;
 			ProductLicense plic = Cloner.standard().deepClone(tplProductLicense);
 			if (!offline) {
 				LOGGER.debug("Performing automatic deactivation...");
@@ -744,7 +747,14 @@ public class LicenseManager {
 				if (li.isActivationNotFound()) {
 					// If activation is not found on server, simply erase activation
 					// data for this license and only after throw the exception!
-					throwAfter = new WTLicenseActivationException(li);
+					afterUpdateThrow = new WTLicenseActivationException(li);
+					
+				} else if (ValidationStatus.MISMATCH_HARDWARE_ID.equals(li.getValidationStatus()) && li.isActivationCompleted()) {
+					// If internetName is changed we can have this situation, we
+					// can erase activation data locally for this license and 
+					// only after throw the exception!
+					afterUpdateThrow = new WTLicenseValidationException(li);
+					
 				} else if (!li.isDeactivationCompleted()) {
 					throw new WTLicenseActivationException(li);
 				}
@@ -756,7 +766,7 @@ public class LicenseManager {
 			
 			con = wta.getConnectionManager().getConnection();
 			boolean ret = licDao.updateActivation(con, domainId, productId.getServiceId(), productId.getProductCode(), null, DateTimeUtils.now(), null) == 1;
-			if (throwAfter != null) throw throwAfter;
+			if (afterUpdateThrow != null) throw afterUpdateThrow;
 			return ret;
 			
 		} catch(Throwable t) {

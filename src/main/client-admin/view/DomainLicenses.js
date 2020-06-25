@@ -171,6 +171,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					},
 					getTip: function(v, rec) {
 						if (rec.isLeaseUnbounded()) return '';
+						
+						return {title: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.tit'), text: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.txt')};
+						
 						return Sonicle.String.htmlEncodeLineBreaks(me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip'));
 					},
 					handler: function(w, ridx, cidx, e, rec) {
@@ -321,10 +324,15 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 				'->',
 				me.addAct('cleanup', {
 					text: null,
-					tooltip: me.mys.res('act-cleanupCache.lbl'),
+					tooltip: {title: me.mys.res('act-cleanupCache.lbl'), text: me.mys.res('domainLicenses.cleanupCache.tip')},
 					iconCls: 'wt-icon-cleanup',
 					handler: function() {
-						me.cleanupCache();
+						me.wait();
+						me.cleanupCache({
+							callback: function(success) {
+								me.unwait();
+							}
+						});
 					}
 				}),
 				me.addAct('refresh', {
