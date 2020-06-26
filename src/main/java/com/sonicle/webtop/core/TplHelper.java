@@ -33,12 +33,12 @@
  */
 package com.sonicle.webtop.core;
 
-import com.ibm.icu.text.MessageFormat;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Locale;
 
 /**

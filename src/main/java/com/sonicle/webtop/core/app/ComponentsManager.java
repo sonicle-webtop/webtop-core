@@ -43,7 +43,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import org.apache.commons.collections.map.MultiValueMap;
+import org.apache.commons.collections4.map.MultiValueMap;
 import org.slf4j.Logger;
 
 /**
@@ -87,7 +87,7 @@ public class ComponentsManager {
 	}
 	
 	private final HashSet<Class<?>> registeredClasses = new HashSet<>();
-	private static final MultiValueMap recipientsProviderClasses = MultiValueMap.decorate(new LinkedHashMap<String, Class<RecipientsProviderBase>>());
+	//private static final MultiValueMap recipientsProviderClasses = MultiValueMap.decorate(new LinkedHashMap<String, Class<RecipientsProviderBase>>());
 	
 	public static boolean canBeRegistered(final Class<?> clazz) {
 		if(isAssignableTo(clazz, RecipientsProviderBase.class)) return true;
@@ -99,6 +99,7 @@ public class ComponentsManager {
 		return baseClass.isAssignableFrom(clazz);
 	}
 	
+	/*
 	public void register(String providerId, Class clazz) {
 		String className = clazz.getCanonicalName();
 		synchronized(registeredClasses) {
@@ -126,6 +127,7 @@ public class ComponentsManager {
 			}
 		}
 	}
+	*/
 	
 	public RecipientsProviderBase instantiateRecipientsProvider(Class<RecipientsProviderBase> clazz) {
 		try {

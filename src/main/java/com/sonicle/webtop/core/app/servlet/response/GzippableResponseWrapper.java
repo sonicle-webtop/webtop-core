@@ -39,7 +39,7 @@ import java.io.PrintWriter;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
-import org.apache.lucene.util.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -61,8 +61,8 @@ public class GzippableResponseWrapper extends HttpServletResponseWrapper {
 	}
 	
 	public void finishResponse() throws IOException {
-		IOUtils.close(writer);
-		IOUtils.close(gzipOutputStream);
+		IOUtils.closeQuietly(writer);
+		IOUtils.closeQuietly(gzipOutputStream);
 	}
 	
 	protected ServletOutputStream createOutputStream() throws IOException {
