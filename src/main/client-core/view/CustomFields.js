@@ -339,5 +339,9 @@ Ext.define('Sonicle.webtop.core.view.CustomFields', {
 				if (bid === 'yes') sto.remove(rec);
 			}, me);
 		}
+	},
+	
+	statics: {
+		VIEW_TAG: 'cfields'
 	}
 });

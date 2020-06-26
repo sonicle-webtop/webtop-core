@@ -291,5 +291,9 @@ Ext.define('Sonicle.webtop.core.view.CustomPanels', {
 				if (bid === 'yes') sto.remove(rec);
 			}, me);
 		}
+	},
+	
+	statics: {
+		VIEW_TAG: 'cpanels'
 	}
 });

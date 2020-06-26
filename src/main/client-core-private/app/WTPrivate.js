@@ -238,27 +238,22 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	*/
 	
 	/**
-	 * Creates a displayable view.
+	 * Finds, if present, VIEW_TAG identifier defined statically in view Class.
 	 * @param {String} sid The service ID.
-	 * @param {String} name The class name or alias.
-	 * @param {Object} opts
-	 * @param {String} opts.tag
-	 * @param {Object} opts.viewCfg
-	 * @param {Object} opts.containerCfg
-	 * @returns {Ext.window.Window} The container containing WebTop view.
+	 * @param {String} name The view's name.
+	 * @returns {String} Unique Tag value, or undefined if not.
 	 */
-	createView: function(sid, name, opts) {
-		opts = opts || {};
+	findViewTag: function(sid, name) {
 		var app = this.getApp(),
 				desc = app.getDescriptor(sid);
 		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
-		return app.getViewportController().createServiceView(desc, name, opts);
+		return app.getViewportController().findServiceViewTag(desc.preNs(name));
 	},
 	
 	/**
-	 * 
+	 * Check if the displayable view is already registered.
 	 * @param {String} sid The service ID.
-	 * @param {String} tag
+	 * @param {String} tag The unique view Tag.
 	 * @returns {Boolean}
 	 */
 	hasView: function(sid, tag) {
@@ -269,10 +264,29 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
-	 * 
+	 * Creates a displayable view.
 	 * @param {String} sid The service ID.
-	 * @param {String} tag
-	 * @returns {Ext.window.Window} The container containing WebTop view.
+	 * @param {String} name The class name or alias.
+	 * @param {Object} opts
+	 * @param {String} opts.tag
+	 * @param {Object} opts.viewCfg
+	 * @param {Object} opts.containerCfg
+	 * @param {Object} opts.preventDuplicates
+	 * @returns {WTA.sdk.UIView|Ext.window.Window} The view or view's parent container.
+	 */
+	createView: function(sid, name, opts) {
+		opts = opts || {};
+		var app = this.getApp(),
+				desc = app.getDescriptor(sid);
+		if (!desc) Ext.Error.raise('Service descriptor not found ['+sid+']');
+		return app.getViewportController().createServiceView(desc, name, opts);
+	},
+	
+	/**
+	 * Gets, if present, the displayable view related to specified Tag.
+	 * @param {String} sid The service ID.
+	 * @param {String} tag The unique view Tag.
+	 * @returns {WTA.sdk.UIView} The displayable view.
 	 */
 	getView: function(sid, tag) {
 		var app = this.getApp(),

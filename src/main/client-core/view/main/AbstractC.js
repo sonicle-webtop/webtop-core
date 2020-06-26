@@ -333,19 +333,42 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if (svc) svc.notificationCallback('badge', rec.getId(), Ext.JSON.decode(rec.get('data'), true));
 	},
 	
+	findServiceViewTag: function(cname) {
+		var clazz = Ext.ClassManager.get(cname);
+		return clazz ? clazz.VIEW_TAG : undefined;
+	},
+	
+	hasServiceView: function(desc, tag) {
+		var map = this.viewsByTag,
+				utag = this.generateUTag(desc.getId(), tag);
+		return map.hasOwnProperty(utag) && map[utag] !== undefined;
+	},
+	
 	createServiceView: function(desc, viewName, opts) {
 		opts = opts || {};
 		var me = this,
 				svcId = desc.getId(),
 				svcInst = desc.getInstance(false),
-				tag = Ext.isEmpty(opts.tag) ? null : opts.tag,
+				cname = desc.preNs(viewName),
+				tag = !Ext.isEmpty(opts.tag) ? opts.tag : me.findServiceViewTag(cname),
+				preventDup = (opts.preventDuplicates === true),
 				floating = (opts.floating === true),
 				swapReturn = (opts.swapReturn === true),
 				utag = me.generateUTag(svcId, tag),
-				view, win;
+				ctCfg = {}, dockCfg, view, win;
 		
 		if (!swapReturn && !floating) {
 			Ext.log.warn("[WT.core] You are creating view '" + viewName + "' using a deprecated way. Consider adding 'swapReturn: true' in passed opts for returning the view instead of the container. Then call showView() on it.");
+		}
+		if (preventDup && !swapReturn) {
+			Ext.log.warn("[WT.core] 'preventDuplicates: true' is supported only using 'swapReturn: true', return value may be wrong.");
+		}
+		if (preventDup && Ext.isEmpty(tag)) {
+			Ext.log.warn("[WT.core] A value for 'tag' need to be specified using 'preventDuplicates: true'.");
+		}
+		
+		if (preventDup && (view = me.getServiceView(desc, tag))) {
+			return view;
 		}
 		
 		opts.viewCfg = Ext.merge(opts.viewCfg || {}, {
@@ -353,9 +376,8 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			tag: tag
 		});
 		
-		var view = Ext.create(desc.preNs(viewName), opts.viewCfg),
-				dockCfg = view.getDockableConfig(),
-				ctCfg = {};
+		view = Ext.create(cname, opts.viewCfg);
+		dockCfg = view.getDockableConfig();
 		
 		if (WT.plTags.desktop) {
 			ctCfg = Ext.apply(ctCfg, {
@@ -404,12 +426,6 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 			me.getView().getTaskBar().addButton(win);
 		}
 		return (swapReturn || floating) ? view : win;
-	},
-	
-	hasServiceView: function(desc, tag) {
-		var map = this.viewsByTag,
-				utag = this.generateUTag(desc.getId(), tag);
-		return map.hasOwnProperty(utag) && map[utag] !== undefined;
 	},
 	
 	getServiceView: function(desc, tag) {
