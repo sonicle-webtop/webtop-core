@@ -39,6 +39,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.app.RTCManager'
 	],
 	uses: [
+		'Sonicle.webtop.core.view.Reminder',
 		'Sonicle.webtop.core.view.IMQuickChat',
 		'Sonicle.webtop.core.view.IMChats',
 		'Sonicle.webtop.core.view.DocEditor',
@@ -400,6 +401,20 @@ Ext.define('Sonicle.webtop.core.Service', {
 	},
 	
 	showReminder: function(data) {
+		var me = this,
+				vw = WT.createView(me.ID, 'view.Reminder', {
+					swapReturn: true,
+					preventDuplicates: true
+				});
+		
+		vw.showView(function() {
+			Ext.defer(function() {
+				vw.addReminder(data);
+			}, 200);
+		});
+	},
+	
+	showReminderOLD: function(data) {
 		var me = this;
 		
 		if(me.vwrem) {

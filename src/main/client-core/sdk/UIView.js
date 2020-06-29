@@ -400,7 +400,13 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 				ct = me.ownerCt;
 		if (me.ctInited) {
 			if (ct.isXType('window')) {
-				return ct.isVisible() ? ct.focus() : ct.show(null, cb, scope || me);
+				if (ct.isVisible()) {
+					ct.focus();
+					Ext.callback(cb, scope || me);
+				} else {
+					ct.show(null, cb, scope || me);
+				}
+				return ct;
 			}
 		}
 	},

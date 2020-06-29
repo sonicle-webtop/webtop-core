@@ -140,7 +140,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					format: WT.getShortDateFmt(),
 					header: me.mys.res('domainLicenses.gp.expiry.lbl'),
 					//emptyCellText: '\u221e',
-					usingDefaultRenderer: true,
+					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
 						if (rec.get('expired')) meta.tdCls = 'wt-theme-text-error';
 						return Ext.isEmpty(v) ? '<span style="font-size:larger;">&#8734;</span>' : this.defaultRenderer(v);

@@ -29,7 +29,7 @@
 .wt-icon-addons { background-image: url('addons_16.svg') !important; background-size: contain; }
 .wt-icon-changePassword-xs { background-image: url('password_16.png') !important; }
 .wt-icon-options { background-image: url('options_16.svg') !important; background-size: contain; }
-.wt-icon-reminder-xs { background-image: url('reminder_16.png') !important; }
+.wt-icon-reminder { background-image: url('reminder_16.svg') !important; background-size: contain; }
 .wt-icon-activity-xs { background-image: url('activity_16.png') !important; }
 .wt-icon-activity-ro-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-causal-xs { background-image: url('causal_16.png') !important; }
@@ -121,7 +121,7 @@
 .wt-icon-search-multi { background-image: url('search-multi_16.svg') !important; background-size: contain; }
 .wt-icon-history-xs { background-image: url('history_16.png') !important; }
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }
-.wt-icon-snooze-xs { background-image: url('snooze_16.png') !important; }
+.wt-icon-snooze { background-image: url('snooze_16.svg') !important; background-size: contain; }
 .wt-icon-public { background-image: url('public_16.svg') !important; background-size: contain; }
 .wt-icon-share { background-image: url('share_16.svg') !important; background-size: contain; }
 .wt-icon-attach { background-image: url('attach_16.svg') !important; background-size: contain; }

@@ -41,7 +41,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 	
 	dockableConfig: {
 		title: '{reminder.tit}',
-		iconCls: 'wt-icon-reminder-xs',
+		iconCls: 'wt-icon-reminder',
 		width: 450,
 		height: 250
 	},
@@ -62,9 +62,10 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 			fbar: [
 				WTF.localCombo('id', 'desc', {
 					reference: 'cbosnooze',
-					store: Ext.create('Sonicle.webtop.core.store.Snooze', {
+					store: {
+						type: 'wtsnooze',
 						autoLoad: true
-					}),
+					},
 					fieldLabel: me.mys.res('reminder.cbo-snooze.lbl'),
 					labelWidth: 70,
 					width: 190,
@@ -72,7 +73,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				}), ' ', {
 					xtype: 'button',
 					text: WT.res('reminder.btn-snooze.lbl'),
-					iconCls: 'wt-icon-snooze-xs',
+					iconCls: 'wt-icon-snooze',
 					handler: function() {
 						var sm = me.lref('gpreminders').getSelectionModel();
 						if (sm.hasSelection()) me.snoozeReminder(sm.getSelection());
@@ -139,7 +140,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 		
 		Ext.iterate(data, function(obj) {
 			rec = sto.add(Ext.create('WTA.model.ReminderAlert', obj));
-			if (rec) gp.getSelectionModel().select(rec, false, false);
+			if (rec) gp.getSelectionModel().select(rec, true, false);
 		});
 	},
 	
@@ -172,5 +173,9 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				sto = me.getViewModel().getStore('reminders');
 		sto.remove(rec);
 		if (sto.getCount()===0) me.closeView();
+	},
+	
+	statics: {
+		VIEW_TAG: 'reminder'
 	}
 });

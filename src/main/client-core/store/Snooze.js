@@ -33,6 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.store.Snooze', {
 	extend: 'Ext.data.ArrayStore',
+	alias: 'store.wtsnooze',
 	
 	model: 'WTA.model.Simple',
 	data: [
