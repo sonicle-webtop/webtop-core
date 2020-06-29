@@ -414,24 +414,6 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 	},
 	
-	showReminderOLD: function(data) {
-		var me = this;
-		
-		if(me.vwrem) {
-			me.vwrem.getView().addReminder(data);
-		} else {
-			me.vwrem = WT.createView(me.ID, 'view.Reminder');
-			me.vwrem.on('close', function() {
-				me.vwrem = null;
-			}, {single: true});
-			me.vwrem.show(false, function() {
-				Ext.defer(function() {
-					me.vwrem.getView().addReminder(data);
-				}, 200);
-			});
-		}
-	},
-	
 	updateIMPresenceStatusUI: function(status) {
 		var me = this;
 		me.updateIMPresenceStatus(status, {
