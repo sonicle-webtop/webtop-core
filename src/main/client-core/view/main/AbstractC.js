@@ -333,6 +333,10 @@ Ext.define('Sonicle.webtop.core.view.main.AbstractC', {
 		if (svc) svc.notificationCallback('badge', rec.getId(), Ext.JSON.decode(rec.get('data'), true));
 	},
 	
+	countServiceViews: function() {
+		return Ext.Object.getSize(this.viewsMap);
+	},
+	
 	findServiceViewTag: function(cname) {
 		var clazz = Ext.ClassManager.get(cname);
 		return clazz ? clazz.VIEW_TAG : undefined;

@@ -107,6 +107,8 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				sids = me.getServices(),
 				cdesc, vp, vpc;
 		
+		Ext.getWin().on('beforeunload', me.onWinBeforeUnload, me);
+		
 		// Instantiates core service
 		cdesc = me.getDescriptor(sids[0]);
 		if (!cdesc.getInstance()) Ext.raise('Unable to instantiate core');
@@ -218,6 +220,22 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		});
 		
 		me.hideLoadingLayer();
+	},
+	
+	onWinBeforeUnload: function(e) {
+		var me = this,
+				msg = WT.res('confirm.browser.windowunload'),
+				//vpc = me.getViewportController(),
+				prompt = false;
+		
+		//TODO: evaluate if bounding this to platform' views instead
+		//if (vpc && vpc.countServiceViews() > 0) prompt = true;
+		if (Ext.ComponentQuery.query('wtviewwindow').length > 0) prompt = true;
+		if (prompt) {
+			if (e) e.returnValue = msg;
+			if (window.event) window.event.returnValue = msg;
+		}
+		return false;
 	},
 	
 	createServiceDescriptor: function(cfg) {
