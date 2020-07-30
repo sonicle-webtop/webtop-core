@@ -25,16 +25,10 @@
 			<id>jr-ce-releases</id>
 			<url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>
 		</repository>
-		<!--
-		<repository>
-			<id>jr-ce-releases</id>
-			<url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>
-		</repository>
 		<repository>
 			<id>jr-ce-3rd-party</id>
 			<url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/</url>
 		</repository>
-		-->
 		<repository>
 			<id>52north-releases</id>
 			<url>http://52north.org/maven/repo/releases/</url>
