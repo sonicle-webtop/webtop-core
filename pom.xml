@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.sonicle.webtop</groupId>
 	<artifactId>webtop-core</artifactId>
-	<version>5.8.1</version>
+	<version>5.8.2</version>
 	<packaging>jar</packaging>
 	<name>webtop-core</name>
 	
@@ -337,6 +337,8 @@
 			<artifactId>poi-scratchpad</artifactId>
 			<version>${poi.version}</version>
 		</dependency>
+		<!-- Old JasperReports 6.3 -->
+		<!--
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
@@ -352,8 +354,7 @@
 			<artifactId>jasperreports-functions</artifactId>
 			<version>6.3.0</version>
 		</dependency>
-		<!-- New JasperReports 6.13 -->
-		<!--
+		-->
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
@@ -380,7 +381,6 @@
 			<artifactId>jasperreports-functions</artifactId>
 			<version>6.13.0</version>
 		</dependency>
-		-->
 		<dependency>
 			<groupId>org.igniterealtime.smack</groupId>
 			<artifactId>smack-java7</artifactId>
