@@ -530,11 +530,13 @@ public class ServiceManager {
 	public void prepareProfile(String serviceId, UserProfileId profileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
 		
-		if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
-			BaseController instance = getController(serviceId);
-			IControllerServiceHooks controller = (IControllerServiceHooks)instance;
+		// Attention! Keep checkAndSetProfileInitialization here, it internally  
+		// updates important db-values and so it must absolutely be called!
+		if (!checkAndSetProfileInitialization(serviceId, profileId)) {
+			if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
+				BaseController instance = getController(serviceId);
+				IControllerServiceHooks controller = (IControllerServiceHooks)instance;
 			
-			if (!checkAndSetProfileInitialization(serviceId, profileId)) {
 				logger.debug("Initializing profile for service [{}]", serviceId);
 				try {
 					LoggerUtils.setContextDC(instance.SERVICE_ID);
@@ -545,7 +547,12 @@ public class ServiceManager {
 				} finally {
 					LoggerUtils.clearContextServiceDC();
 				}
-			} else {
+			}
+		} else {
+			if (descr.doesControllerImplements(IControllerServiceHooks.class)) {
+				BaseController instance = getController(serviceId);
+				IControllerServiceHooks controller = (IControllerServiceHooks)instance;
+				
 				ProfileVersionEvaluationResult res = evaluateProfileVersion(descr.getManifest(), profileId);
 				if (res.upgraded) {
 					logger.debug("Upgrading profile for service [{}]", serviceId);
