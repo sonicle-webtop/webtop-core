@@ -292,8 +292,7 @@ public class ResourceRequest extends HttpServlet {
 		
 		try {
 			WebTopApp wta = WebTopApp.get(request);
-			//String internetName = ServletUtils.getInternetName(request);
-			String internetName = ServletUtils.getHost(request);
+			String internetName = ServletUtils.getHostByHeaders(request);
 			String domainId = WT.findDomainIdByInternetName(internetName);
 			if (!StringUtils.isBlank(domainId)) {
 				String pathname = wta.getImagesPath(domainId) + "login.png";
@@ -331,7 +330,7 @@ public class ResourceRequest extends HttpServlet {
 			WebTopApp wta = WebTopApp.get(request);
 			WebTopManager wtMgr = wta.getWebTopManager();
 			if (wtMgr != null) {
-				String internetName = ServletUtils.getInternetName(request);
+				String internetName = ServletUtils.getHostByHeaders(request);
 				String domainId = wtMgr.internetNameToDomainId(internetName);
 				if (!StringUtils.isBlank(domainId)) {
 					String pathname = wta.getHomePath(domainId) + "license.html";
