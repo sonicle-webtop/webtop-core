@@ -180,7 +180,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 								pub = '';
 						
 						if ('shared' === rec.get('visibility')) {
-							pub = '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared')) + '"></i>';
+							pub = '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared.tip')) + '"></i>';
 						}
 						return '<i class="fa fa-tag" aria-hidden="true" style="font-size:1.2em;color:' + color + '"></i>&nbsp;&nbsp;' + name + pub;
 					},
@@ -210,7 +210,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 								me.deleteTagUI(rec);
 							},
 							isDisabled: function(s, ridx, cidx, itm, rec) {
-								if ('private' === rec.get('personal')) {
+								if ('private' === rec.get('visibility')) {
 									return rec.get('builtIn');
 								} else {
 									return !me.hasManage() || rec.get('builtIn');

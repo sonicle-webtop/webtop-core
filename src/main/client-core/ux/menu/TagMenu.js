@@ -71,7 +71,7 @@ Ext.define('Sonicle.webtop.core.ux.menu.TagMenu', {
 						hideOnClick: true
 					};
 				if ('shared' === rec.get('visibility')) {
-					cfg.text = rec.get('name') + '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared')) + '"></i>';
+					cfg.text = rec.get('name') + '&nbsp;<i class="fa fa-share-alt wt-source" aria-hidden="true" data-qtip="' + Ext.String.htmlEncode(WT.res('tags.visibility.shared.tip')) + '"></i>';
 				}
 				return cfg;
 			};
