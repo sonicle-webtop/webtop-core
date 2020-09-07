@@ -198,7 +198,7 @@ public class ResourceRequest extends HttpServlet {
 					// We must support old-style URL using {domainInternetName}
 					// instead of {domainPublicName}
 					// Eg.	"/sonicle.com/images/login.png"
-					domainId = wtMgr.internetNameToDomainId(subject);
+					domainId = wtMgr.legacyInternetNameToDomain(subject);
 				}
 				if (StringUtils.isBlank(domainId)) {
 					return new Error(HttpServletResponse.SC_BAD_REQUEST, "Bad Request");
@@ -210,12 +210,12 @@ public class ResourceRequest extends HttpServlet {
 				// Addresses login image
 				// URLs like "/{serviceId}/{serviceVersion}/resources/images/login.png"
 				// Eg.	"/com.sonicle.webtop.core/5.0.0/images/login.png"
-				return lookupLoginImage(req, targetUrl);
+				return lookupLoginImage(wta, req, targetUrl);
 
 			} else if (isVirtualUrl && subject.equals(CoreManifest.ID) && path.equals("resources/license.html")) {
 				// Addresses licence page
 				// URLs like "/{serviceId}/{serviceVersion}/resources/license.html"
-				return lookupLicense(req, targetUrl);
+				return lookupLicense(wta, req, targetUrl);
 
 			} else if (!isVirtualUrl && path.startsWith("whatsnew/")) {
 				return lookupWhatsnew(req, targetUrl, path, subject);
@@ -286,14 +286,15 @@ public class ResourceRequest extends HttpServlet {
 		}
 	}
 	
-	private LookupResult lookupLoginImage(HttpServletRequest request, URL targetUrl) {
+	private LookupResult lookupLoginImage(WebTopApp wta, HttpServletRequest request, URL targetUrl) {
 		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			WebTopApp wta = WebTopApp.get(request);
-			String internetName = ServletUtils.getHostByHeaders(request);
-			String domainId = WT.findDomainIdByInternetName(internetName);
+			WebTopManager wtMgr = wta.getWebTopManager();
+			String host = ServletUtils.getHostByHeaders(request);
+			String domainId = (wtMgr != null) ? wtMgr.publicInternetNameToDomainId(host, false) : null;
+			
 			if (!StringUtils.isBlank(domainId)) {
 				String pathname = wta.getImagesPath(domainId) + "login.png";
 				File file = new File(pathname);
@@ -317,21 +318,19 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-		} catch(ServletException ex) {
-			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	
-	private LookupResult lookupLicense(HttpServletRequest request, URL targetUrl) {
+	private LookupResult lookupLicense(WebTopApp wta, HttpServletRequest request, URL targetUrl) {
 		String targetPath = targetUrl.getPath();
 		URL fileUrl = null;
 		
 		try {
-			WebTopApp wta = WebTopApp.get(request);
 			WebTopManager wtMgr = wta.getWebTopManager();
 			if (wtMgr != null) {
-				String internetName = ServletUtils.getHostByHeaders(request);
-				String domainId = wtMgr.internetNameToDomainId(internetName);
+				String host = ServletUtils.getHostByHeaders(request);
+				String domainId = wtMgr.publicInternetNameToDomainId(host, false);
+				
 				if (!StringUtils.isBlank(domainId)) {
 					String pathname = wta.getHomePath(domainId) + "license.html";
 					File file = new File(pathname);
@@ -354,8 +353,6 @@ public class ResourceRequest extends HttpServlet {
 			return new Error(HttpServletResponse.SC_NOT_FOUND, "Not Found");
 		} catch(InternalServerException ex) {
 			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
-		} catch(ServletException ex) {
-			return new Error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
 		}
 	}
 	

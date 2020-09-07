@@ -354,8 +354,13 @@ public class Service extends BaseService {
 				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
 				SystemSetting setting = pl.data.get(0);
 				
-				if(!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
+				if (!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(setting.serviceId) && "public.url".equals(setting.key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				
 				OSettingDb info = coreadm.getSettingInfo(setting.serviceId, setting.key);
@@ -374,8 +379,13 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
+				if (!coreadm.updateSystemSetting(sid, setting.key, setting.value)) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				if(!StringUtils.equals(key, setting.key)) {
 					coreadm.deleteSystemSetting(sid, key);
@@ -391,8 +401,13 @@ public class Service extends BaseService {
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
 
-				if(!coreadm.deleteSystemSetting(sid, key)) {
+				if (!coreadm.deleteSystemSetting(sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				
 				new JsonResult().printTo(out);
@@ -457,6 +472,11 @@ public class Service extends BaseService {
 				
 				if (!coreadm.updateDomainSetting(domainId, setting.serviceId, setting.key, setting.value)) {
 					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(setting.serviceId) && "public.url".equals(setting.key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				setting = new DomainSetting(setting.domainId, setting.serviceId, setting.key, setting.value, null, null);
 				new JsonResult(setting).printTo(out);
@@ -471,6 +491,11 @@ public class Service extends BaseService {
 
 				if (!coreadm.updateDomainSetting(domainId, sid, setting.key, setting.value)) {
 					throw new WTException("Cannot update setting [{0}, {1}]", sid, key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				if (!StringUtils.equals(key, setting.key)) {
 					coreadm.deleteDomainSetting(domainId, sid, key);
@@ -488,6 +513,11 @@ public class Service extends BaseService {
 
 				if (!coreadm.deleteDomainSetting(domainId, sid, key)) {
 					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
+				} else {
+					//FIXME: Evaluate to create new field in Domain data for public.url
+					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
+						coreadm.refreshDomainCache();
+					}
 				}
 				
 				new JsonResult().printTo(out);

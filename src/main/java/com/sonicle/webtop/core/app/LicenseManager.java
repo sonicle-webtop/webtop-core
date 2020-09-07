@@ -898,7 +898,7 @@ public class LicenseManager {
 	
 	private String findDomainId(String internetName) throws WTException {
 		try {
-			return wta.getWebTopManager().internetNameToDomainId(internetName);
+			return wta.getWebTopManager().domainInternetNameToDomainId(internetName);
 		} catch(Throwable t) {
 			throw new WTException("Unable to lookup domainId for '{}'", internetName);
 		}
@@ -906,7 +906,7 @@ public class LicenseManager {
 	
 	private String findInternetName(String domainId) throws WTException {
 		try {
-			return wta.getWebTopManager().domainIdToInternetName(domainId);
+			return wta.getWebTopManager().domainIdToDomainInternetName(domainId);
 		} catch(Throwable t) {
 			throw new WTException("Unable to lookup internetName for '{}'", domainId);
 		}

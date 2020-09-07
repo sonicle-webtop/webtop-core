@@ -38,6 +38,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.l4j.ProductLicense;
@@ -220,6 +221,10 @@ public final class WebTopManager {
 		logger.info("Cleaned up");
 	}
 	
+	public void initDomainCache() {
+		domainCache.init();
+	}
+	
 	public void cleanUserProfileCache(UserProfileId pid) {
 		removeFromUserCache(pid);
 	}
@@ -276,46 +281,70 @@ public final class WebTopManager {
 		return domainCache.publicNameToDomainId(domainPublicName);
 	}
 	
-	public String domainIdToInternetName(String domainId) {
+	public UserProfileId authProfile(UserProfileId profile) throws WTException {
+		return new UserProfileId(domainIdToDomainInternetName(profile.getDomainId()), profile.getUserId());
+	}
+	
+	public String domainIdToDomainInternetName(String domainId) {
 		if (StringUtils.equals(domainId, SYSADMIN_DOMAINID)) {
 			return INTERNETNAME_LOCAL;
 		} else {
-			return domainCache.domainIdToInternetName(domainId);
+			return domainCache.domainIdToDomainInternetName(domainId);
 		}
 	}
 	
-	public String internetNameToDomainId(String internetName) {
-		//FIXME: understand if this is still valid (less -> most)
-		// This tries to check against cache substings of passed internetName,
-		// starting from the less specific throught the most. If we have for eg.
-		// a name like "dummy.sonicle.com", this checks "sonicle.com" 
-		// and then "dummy.sonicle.com".
-		// I think this is not completely right, this should do the opposite: 
-		// from the most specific to the less. Leave as is for now!
-		for (int i=2; i<255; i++) {
-			final int iOfNDot = StringUtils.lastOrdinalIndexOf(internetName, ".", i);
-			final String lessSpecificInternetName = StringUtils.substring(internetName, iOfNDot+1);
-			String domainId = domainCache.internetNameToDomainId(lessSpecificInternetName);
-			if (domainId != null) return domainId;
-			if (iOfNDot == -1) break; 
-		}
-		
-		/*
-		int lastDot = StringUtils.lastIndexOf(internetName, ".");
-		if (lastDot > 0) {
-			for(int nth=0; nth<255; nth++) {
-				final int iOfNDot = StringUtils.ordinalIndexOf(internetName, ".", nth);
-				if (iOfNDot >= lastDot) break;
-				final String mostSpecificInternetName = StringUtils.substring(internetName, iOfNDot+1, internetName.length());
-				String domainId = cacheDomain.internetNameToDomainId(mostSpecificInternetName);
+	public String domainInternetNameToDomainId(String domainInternetName) {
+		return domainCache.domainInternetNameToDomainId(domainInternetName);
+	}
+	
+	public String publicInternetNameToDomainId(String publicInternetName, boolean strict) {
+		if (strict) {
+			return domainCache.publicInternetNameToDomainId(publicInternetName);
+		} else {
+			for (int i=0; i<255; i++) {
+				String name = publicInternetName;
+				if (i > 0) {
+					final int iOfNDot = StringUtils.ordinalIndexOf(publicInternetName, ".", i);
+					if (iOfNDot == -1) break;
+					name = StringUtils.substring(publicInternetName, iOfNDot+1);
+				}
+				final String domainId = domainCache.publicInternetNameToDomainId(name);
 				if (domainId != null) return domainId;
+				/*
+				final int iOfNDot = StringUtils.ordinalIndexOf(publicInternetName, ".", i);
+				if (i > 0 && iOfNDot == -1) break;
+				final String domainId = domainCache.publicInternetNameToDomainId(StringUtils.substring(publicInternetName, iOfNDot+1));
+				if (domainId != null) return domainId;
+				*/
 			}
+			return null;
 		}
-		*/
-		
-		return null;
 	}
 	
+	/**
+	 * @deprecated
+	 * Left here to satisfy compatibility with images lookup in ResourceRequest servlet!
+	 * @param internetName
+	 * @return
+	 */
+	@Deprecated
+	public String legacyInternetNameToDomain(String internetName) {
+		if (domainCache.getSize() == 1) {
+			// If we have only one domain in cache, simply returns it...
+			Map.Entry<String, String> entry = domainCache.domainInternetNameToDomainId.entrySet().iterator().next();
+			return entry.getValue();
+			
+		} else {
+			for(int i=2; i<255; i++) {
+				final int iOfNDot = StringUtils.lastOrdinalIndexOf(internetName, ".", i);
+				final String key = StringUtils.substring(internetName, iOfNDot+1);
+				String domainId = domainCache.domainInternetNameToDomainId(key);
+				if (domainId != null) return domainId;
+				if (iOfNDot == -1) break; 
+			}
+			return null;
+		}
+	}
 	
 	public void checkDomains() {
 		DomainDAO dao = DomainDAO.getInstance();
@@ -1999,7 +2028,7 @@ public final class WebTopManager {
 			return null;
 		}
 		
-		String domainId = internetNameToDomainId(iaPid.getDomain());
+		String domainId = domainInternetNameToDomainId(iaPid.getDomain());
 		if (domainId == null) return null;
 		ensureProfileDomain(domainId);
 		return new UserProfileId(domainId, iaPid.getUser());
@@ -2083,11 +2112,6 @@ public final class WebTopManager {
 			if(!cacheGroupUidToGroup.containsKey(uid)) throw new WTRuntimeException("[uidToGroupCache] Cache miss on key {0}", uid);
 			return cacheGroupUidToGroup.get(uid);
 		}
-	}
-	
-	public String getInternetUserId(UserProfileId pid) throws WTException {
-		String internetName = domainIdToInternetName(pid.getDomainId());
-		return new UserProfileId(internetName, pid.getUserId()).toString();
 	}
 	
 	private OGroup doGroupInsert(Connection con, String domainId, String groupId, String displayName) throws DAOException, WTException {
@@ -2478,8 +2502,10 @@ public final class WebTopManager {
 	
 	private class CacheDomainInfo extends AbstractBulkCache {
 		private HashMap<String, String> publicNameToDomainId = new HashMap<>();
-		private HashMap<String, String> internetNameToDomainId = new HashMap<>();
-		private HashMap<String, String> domainIdToInternetName = new HashMap<>();
+		private HashMap<String, String> domainInternetNameToDomainId = new HashMap<>();
+		private HashMap<String, String> domainIdToDomainInternetName = new HashMap<>();
+		private HashMap<String, String> publicInternetNameToDomainId = new HashMap<>();
+		private HashMap<String, String> domainIdToPublicInternetName = new HashMap<>();
 		
 		@Override
 		protected void internalBuildCache() {
@@ -2489,18 +2515,49 @@ public final class WebTopManager {
 			try {
 				logger.debug("[DomainInfoCache] Building cache...");
 				con = wta.getConnectionManager().getConnection();
-				HashMap<String, String> newPublicNameToDomainId = new HashMap<>();
-				HashMap<String, String> newInternetNameToDomainId = new HashMap<>();
-				HashMap<String, String> newDomainIdToInternetName = new HashMap<>();
+				HashMap<String, String> hmPublicNameToDomainId = new HashMap<>();
+				HashMap<String, String> hmDomainInternetNameToDomainId = new HashMap<>();
+				HashMap<String, String> hmDomainIdToDomainInternetName = new HashMap<>();
+				HashMap<String, String> hmPublicInternetNameToDomainId = new HashMap<>();
+				HashMap<String, String> hmDomainIdToPublicInternetName = new HashMap<>();
 				for (ODomain odomain : domDao.selectEnabled(con)) {
-					newPublicNameToDomainId.put(domainIdToPublicName(odomain.getDomainId()), odomain.getDomainId());
-					newInternetNameToDomainId.put(odomain.getInternetName(), odomain.getDomainId());
-					newDomainIdToInternetName.put(odomain.getDomainId(), odomain.getInternetName());
+					final String domainId = odomain.getDomainId();
+					
+					logger.debug("[DomainInfoCache] Working on '{}'", domainId);
+					String pubName = domainIdToPublicName(domainId);
+					hmPublicNameToDomainId.put(pubName, domainId);
+					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", pubName, domainId);
+					
+					hmDomainInternetNameToDomainId.put(odomain.getInternetName(), domainId);
+					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", odomain.getInternetName(), domainId);
+					
+					hmDomainIdToDomainInternetName.put(domainId, odomain.getInternetName());
+					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", domainId, odomain.getInternetName());
+					
+					String pubInternetName = odomain.getInternetName();
+					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
+					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
+						pubInternetName = publicUri.getHost();
+					}
+					
+					String oldPubInternetName = hmPublicInternetNameToDomainId.put(pubInternetName, domainId);
+					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
+					
+					hmDomainIdToPublicInternetName.put(domainId, pubInternetName);
+					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
+					
+					if (oldPubInternetName != null) {
+						logger.warn("[DomainInfoCache] publicInternetName -> domainId : duplicated association for {}", pubInternetName);
+						logger.warn("[DomainInfoCache] [{} -> {}] overridden!", pubInternetName, oldPubInternetName);
+					}
 				}
-				this.publicNameToDomainId = newPublicNameToDomainId;
-				this.internetNameToDomainId = newInternetNameToDomainId;
-				this.domainIdToInternetName = newDomainIdToInternetName;
-				logger.debug("[DomainInfoCache] Cached {} domains", domainIdToInternetName.size());
+				this.publicNameToDomainId = hmPublicNameToDomainId;
+				this.domainInternetNameToDomainId = hmDomainInternetNameToDomainId;
+				this.domainIdToDomainInternetName = hmDomainIdToDomainInternetName;
+				this.publicInternetNameToDomainId = hmPublicInternetNameToDomainId;
+				this.domainIdToPublicInternetName = hmDomainIdToPublicInternetName;
+				logger.debug("[DomainInfoCache] Cached {} domains", publicNameToDomainId.size());
 				
 			} catch(Throwable t) {
 				DbUtils.closeQuietly(con);
@@ -2516,8 +2573,14 @@ public final class WebTopManager {
 		protected void internalCleanupCache() {
 			logger.debug("[DomainInfoCache] Cleaning-up cache...");
 			this.publicNameToDomainId = new HashMap<>();
-			this.internetNameToDomainId = new HashMap<>();
-			this.domainIdToInternetName = new HashMap<>();
+			this.domainInternetNameToDomainId = new HashMap<>();
+			this.domainIdToDomainInternetName = new HashMap<>();
+			this.publicInternetNameToDomainId = new HashMap<>();
+			this.domainIdToPublicInternetName = new HashMap<>();
+		}
+		
+		public int getSize() {
+			return publicNameToDomainId.size();
 		}
 		
 		public String publicNameToDomainId(String publicName) {
@@ -2530,21 +2593,41 @@ public final class WebTopManager {
 			}
 		}
 		
-		public String internetNameToDomainId(String internetName) {
+		public String domainInternetNameToDomainId(String domainInternetName) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
-				return this.internetNameToDomainId.get(internetName);
+				return this.domainInternetNameToDomainId.get(domainInternetName);
 			} finally {
 				this.unlockRead(stamp);
 			}
 		}
 		
-		public String domainIdToInternetName(String domainId) {
+		public String domainIdToDomainInternetName(String domainId) {
 			this.internalCheckBeforeGetDoNotLockThis();
 			long stamp = this.readLock();
 			try {
-				return this.domainIdToInternetName.get(domainId);
+				return this.domainIdToDomainInternetName.get(domainId);
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String publicInternetNameToDomainId(String publicInternetName) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return this.publicInternetNameToDomainId.get(publicInternetName);
+			} finally {
+				this.unlockRead(stamp);
+			}
+		}
+		
+		public String domainIdToPublicInternetName(String domainId) {
+			this.internalCheckBeforeGetDoNotLockThis();
+			long stamp = this.readLock();
+			try {
+				return this.domainIdToPublicInternetName.get(domainId);
 			} finally {
 				this.unlockRead(stamp);
 			}

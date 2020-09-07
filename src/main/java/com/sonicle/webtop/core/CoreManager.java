@@ -639,9 +639,7 @@ public class CoreManager extends BaseManager {
 	
 	
 	
-	public String getInternetUserId(UserProfileId pid) throws WTException {
-		return wta.getWebTopManager().getInternetUserId(pid);
-	}
+
 	
 	
 	/*
@@ -3028,6 +3026,7 @@ public class CoreManager extends BaseManager {
 	
 	public List<SyncDevice> listZPushDevices() throws WTException {
 		try {
+			WebTopManager wtMgr = wta.getWebTopManager();
 			ZPushManager zpush = createZPushManager();
 			
 			boolean noFilter = false, domainMatch = false;
@@ -3036,12 +3035,12 @@ public class CoreManager extends BaseManager {
 			if (RunContext.isSysAdmin()) {
 				if (UserProfileId.isWildcardUser(targetPid)) {
 					domainMatch = true;
-					match = "@" + wta.getWebTopManager().domainIdToInternetName(targetPid.getDomainId());
+					match = "@" + wtMgr.domainIdToDomainInternetName(targetPid.getDomainId());
 				} else {
-					match = getInternetUserId(targetPid);
+					match = wtMgr.authProfile(targetPid).toString();
 				}
 			} else {
-				match = getInternetUserId(targetPid);
+				match = wtMgr.authProfile(targetPid).toString();
 			}
 			
 			ArrayList<SyncDevice> devices = new ArrayList<>();
@@ -3062,16 +3061,18 @@ public class CoreManager extends BaseManager {
 	
 	public void deleteZPushDevice(String deviceId) throws WTException {
 		UserProfileId targetPid = getTargetProfileId();
+		
 		try {
+			WebTopManager wtMgr = wta.getWebTopManager();
 			ZPushManager zpush = createZPushManager();
 			if (RunContext.isSysAdmin()) {
 				if (UserProfileId.isWildcardUser(targetPid)) {
 					zpush.removeDevice(deviceId);
 				} else {
-					zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+					zpush.removeUserDevice(wtMgr.authProfile(targetPid).toString(), deviceId);
 				}
 			} else {
-				zpush.removeUserDevice(getInternetUserId(targetPid), deviceId);
+				zpush.removeUserDevice(wtMgr.authProfile(targetPid).toString(), deviceId);
 			}
 			
 		} catch(Exception ex) {
@@ -3081,10 +3082,12 @@ public class CoreManager extends BaseManager {
 	
 	public String getZPushDetailedInfo(String deviceId, String lineSep) throws WTException {
 		UserProfileId targetPid = getTargetProfileId();
+		
 		try {
+			WebTopManager wtMgr = wta.getWebTopManager();
 			ZPushManager zpush = createZPushManager();
 			ensureProfile(true);
-			return zpush.getDetailedInfo(deviceId, getInternetUserId(targetPid), lineSep);
+			return zpush.getDetailedInfo(deviceId, wtMgr.authProfile(targetPid).toString(), lineSep);
 			
 		} catch(Exception ex) {
 			throw new WTException(ex);

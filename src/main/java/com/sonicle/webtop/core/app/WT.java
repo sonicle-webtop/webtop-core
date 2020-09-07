@@ -238,8 +238,8 @@ public class WT {
 		return getWTA().getWebTopManager().publicNameToDomainId(domainPublicName);
 	}
 	
-	public static String findDomainIdByInternetName(String internetName) {
-		return getWTA().getWebTopManager().internetNameToDomainId(internetName);
+	public static String findDomainIdByDomainInternetName(String internetName) {
+		return getWTA().getWebTopManager().domainInternetNameToDomainId(internetName);
 	}
 	
 	/**
@@ -467,7 +467,7 @@ public class WT {
 	
 	public static String getDomainInternetName(String domainId) {
 		try {
-			return getWTA().getWebTopManager().domainIdToInternetName(domainId);
+			return getWTA().getWebTopManager().domainIdToDomainInternetName(domainId);
 		} catch(Throwable t) {
 			logger.warn("Unable to get internet-name for domain [{}]", t, domainId);
 			return null;

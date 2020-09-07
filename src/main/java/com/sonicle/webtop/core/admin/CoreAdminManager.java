@@ -339,6 +339,15 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public void refreshDomainCache() throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		wtMgr.initDomainCache();
+	}
+	
 	public void cleanupLicenseCache() throws WTException {
 		LicenseManager licMgr = wta.getLicenseManager();
 		
