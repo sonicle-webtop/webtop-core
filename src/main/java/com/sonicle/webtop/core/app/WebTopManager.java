@@ -1023,14 +1023,14 @@ public final class WebTopManager {
 		RolePermissionDAO rpdao = RolePermissionDAO.getInstance();
 		Connection con = null;
 		
-		OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
-		if (user == null) throw new WTException("User not found [{0}]", pid.toString());
-		
-		logger.debug("[{}] Clearing user licenses...", user.getUserUid());
-		wta.getLicenseManager().revokeLicenseLease(pid);
-		
 		try {
 			con = WT.getConnection(CoreManifest.ID, false);
+			
+			OUser user = udao.selectByDomainUser(con, pid.getDomainId(), pid.getUserId());
+			if (user == null) throw new WTException("User not found [{0}]", pid.toString());
+			
+			logger.debug("[{}] Clearing user licenses...", user.getUserUid());
+			wta.getLicenseManager().revokeLicenseLease(pid);
 			
 			logger.debug("[{}] Clearing permissions...", user.getUserUid());
 			rpdao.deleteByRole(con, user.getUserUid());
@@ -1058,15 +1058,15 @@ public final class WebTopManager {
 			
 			DbUtils.commitQuietly(con);
 			
-		} catch(SQLException | DAOException ex) {
-			DbUtils.rollbackQuietly(con);
-			throw new WTException(ex, "DB error");
 		} catch(URISyntaxException ex) {
 			DbUtils.rollbackQuietly(con);
 			throw new WTException(ex, "Invalid URI");
 		} catch(DirectoryException ex) {
 			DbUtils.rollbackQuietly(con);
 			throw new WTException(ex, "Directory error");
+		} catch(Throwable t) {
+			DbUtils.rollbackQuietly(con);
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
