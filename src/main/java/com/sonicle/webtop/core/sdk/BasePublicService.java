@@ -91,6 +91,10 @@ public abstract class BasePublicService extends AbstractEnvironmentService<Publi
 	}
 	
 	public void writePage(HttpServletResponse response, String contextPath, Map vars, Locale locale) throws IOException, TemplateException {
+		// <base> tag is needed for public services because otherwise resources
+		// are targeted using relative URLs starting from the Browser's URL, usually
+		// used in Service's public page. In this case passed base path must point
+		// to the path after the host (if present) on client side.
 		AbstractServlet.fillPageVars(vars, locale, contextPath);
 		
 		ServletUtils.setHtmlContentType(response);

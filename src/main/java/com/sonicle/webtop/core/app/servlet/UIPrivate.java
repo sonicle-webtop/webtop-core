@@ -134,7 +134,7 @@ public class UIPrivate extends AbstractServlet {
 				//ServletUtils.forwardRequest(request, response, Start.URL);
 				
 				wts.initPrivateEnvironment(request);
-				writePrivatePage(wta, wts, ServletHelper.getBaseUrl(request), response);
+				writePrivatePage(wta, wts, WT.getPublicContextPath(pid.getDomainId()), response);
 			}
 			
 		} catch(MaintenanceException ex) {

@@ -106,15 +106,6 @@ public class ServletHelper {
 		}
 	}
 	
-	public static String getBaseUrl(HttpServletRequest request) {
-		try {
-			String reqUrl = ServletUtils.getRequestURL(request);
-			return PathUtils.ensureTrailingSeparator(new URL(reqUrl).getPath());
-		} catch(MalformedURLException ex) {
-			return null;
-		}
-	}
-	
 	public static String sanitizeBaseUrl(String url) {
 		url = StringUtils.substringBefore(url, Login.URL);
 		url = StringUtils.substringBefore(url, Logout.URL);

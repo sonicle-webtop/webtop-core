@@ -61,6 +61,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -182,7 +184,17 @@ public class WT {
 	}
 	
 	public static String getPublicBaseUrl(String domainId) {
+		//TODO: evaluate to add such sort of caching of this lookup
 		return getWTA().getPublicBaseUrl(domainId);
+	}
+	
+	public static String getPublicContextPath(String domainId) {
+		try {
+			String baseUrl = getPublicBaseUrl(domainId);
+			return baseUrl != null ? PathUtils.ensureTrailingSeparator(new URL(baseUrl).getPath()) : null;
+		} catch(MalformedURLException ex) {
+			return null;
+		}
 	}
 	
 	public static String getDavServerBaseUrl(String domainId) {
