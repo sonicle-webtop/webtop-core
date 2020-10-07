@@ -176,21 +176,21 @@ public class CoreManager extends BaseManager {
 	private PbxProvider pbx=null;
 	private SmsProvider sms=null;
 	
-	private final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
-	private final boolean cfieldsFree;
-	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 2
+	public final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
+	private final boolean cfieldsLicensed;
+	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 3
 	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
 		this.wta = wta;
 		
-		if (targetProfileId != null) {
+		if (targetProfileId != null && !RunContext.isSysAdmin()) {
 			String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
 			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(internetName);
-			cfieldsFree = !WT.isLicensed(CUSTOM_FIELD_PRODUCT);
+			cfieldsLicensed = WT.isLicensed(CUSTOM_FIELD_PRODUCT, targetProfileId.getUserId()) > 0;
 		} else {
 			CUSTOM_FIELD_PRODUCT = null;
-			cfieldsFree = true;
+			cfieldsLicensed = false;
 		}
 		
 		if(!fastInit) {
@@ -248,7 +248,7 @@ public class CoreManager extends BaseManager {
 	}
 	
 	public final int getCustomFieldsMaxNo() {
-		return cfieldsFree ? MAX_CFIELDS_FREE : -1;
+		return cfieldsLicensed ? -1 : MAX_CFIELDS_FREE;
 	}
 	
 	public List<JsSimple> listThemes() throws WTException {

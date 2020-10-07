@@ -712,9 +712,23 @@ public class WT {
 	 * activation (if supported) that allows to use it.
 	 * @param product The product to check.
 	 * @param userId The user to check.
-	 * @return True if base license is valid and user has valid activation.
+	 * @return A number with following logic:
+	 *   2 success (lease limit exceeded)
+	 *   1 success
+	 *   0 not installed/missing license
+	 *  -1 validation issues (status not valid, missing activation, hwid mismatch)
+	 *  -2 lease assignment issues (no left or insert errors)
+	 *  -3 auto-lease deactivated
 	 */
 	public static int isLicensed(BaseServiceProduct product, String userId) {
 		return getWTA().getLicenseManager().checkLicenseLease(product, userId);
+	}
+	
+	public static boolean isLicenseUsageFail(BaseServiceProduct product, String userId) {
+		if (product != null) {
+			int ret = isLicensed(product, userId);
+			return (ret == 2) || (ret == -1) || (ret == -2);
+		}
+		return false;
 	}
 }

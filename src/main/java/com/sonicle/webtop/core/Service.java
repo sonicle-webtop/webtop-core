@@ -236,7 +236,10 @@ public class Service extends BaseService implements EventListener {
 	public void ready() throws WTException {
 		final UserProfile profile = getEnv().getProfile();
 		
-		if ((coreMgr.AUDIT_PRODUCT != null) && !coreMgr.isAuditEnabled() && WT.isLicensed(coreMgr.AUDIT_PRODUCT, profile.getUserId()) < 0) {
+		if (WT.isLicenseUsageFail(coreMgr.CUSTOM_FIELD_PRODUCT, profile.getUserId())) {
+			getEnv().notify(new LicenseUsageFailSM(profile.getLocale(), coreMgr.CUSTOM_FIELD_PRODUCT));
+		}
+		if (WT.isLicenseUsageFail(coreMgr.AUDIT_PRODUCT, profile.getUserId())) {
 			getEnv().notify(new LicenseUsageFailSM(profile.getLocale(), coreMgr.AUDIT_PRODUCT));
 		}
 	}

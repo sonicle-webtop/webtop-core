@@ -84,7 +84,7 @@ public abstract class BaseManager {
 						enabled = scss.isAuditEnabled();
 					}
 				}
-				if (enabled) enabled = WT.isLicensed(AUDIT_PRODUCT, targetProfileId.getUserId()) == 1;
+				if (enabled) enabled = WT.isLicensed(AUDIT_PRODUCT, targetProfileId.getUserId()) > 0;
 			}
 			this.auditEnabled = enabled;
 		} else {
