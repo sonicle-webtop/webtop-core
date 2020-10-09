@@ -45,7 +45,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -102,23 +103,23 @@ public class ServiceManifest {
 		supportEmail = "sonicle@sonicle.com";
 	}
 	
-	public ServiceManifest(HierarchicalConfiguration svcEl) throws Exception {
+	public ServiceManifest(HierarchicalConfiguration<ImmutableNode> svcEl) throws Exception {
 		
 		String pkg = svcEl.getString("package");
-		if(StringUtils.isEmpty(pkg)) throw new Exception("Invalid value for property [package]");
+		if (StringUtils.isEmpty(pkg)) throw new Exception("Invalid value for property [package]");
 		javaPackage = StringUtils.lowerCase(pkg);
 		id = javaPackage;
 		
 		String jspkg = svcEl.getString("jsPackage");
-		if(StringUtils.isEmpty(jspkg)) throw new Exception("Invalid value for property [jsPackage]");
+		if (StringUtils.isEmpty(jspkg)) throw new Exception("Invalid value for property [jsPackage]");
 		jsPackage = jspkg; // Lowercase allowed!
 		
 		String sname = svcEl.getString("shortName");
-		if(StringUtils.isEmpty(sname)) throw new Exception("Invalid value for property [shortName]");
+		if (StringUtils.isEmpty(sname)) throw new Exception("Invalid value for property [shortName]");
 		xid = sname;
 		
 		ServiceVersion ver = new ServiceVersion(svcEl.getString("version"));
-		if(ver.isUndefined()) throw new Exception("Invalid value for property [version]");
+		if (ver.isUndefined()) throw new Exception("Invalid value for property [version]");
 		version = ver;
 		
 		buildDate = StringUtils.defaultIfBlank(svcEl.getString("buildDate"), null);
@@ -128,7 +129,7 @@ public class ServiceManifest {
 		companyWebSite = StringUtils.defaultIfBlank(svcEl.getString("companyWebSite"), null);
 		supportEmail = StringUtils.defaultIfBlank(svcEl.getString("supportEmail"), null);
 		
-		List<HierarchicalConfiguration> hconf = null;
+		List<HierarchicalConfiguration<ImmutableNode>> hconf = null;
 		
 		hconf = svcEl.configurationsAt("controller");
 		if (!hconf.isEmpty()) {
@@ -238,8 +239,8 @@ public class ServiceManifest {
 		}
 		
 		if (!svcEl.configurationsAt("restApis").isEmpty()) {
-			List<HierarchicalConfiguration> restApiEls = svcEl.configurationsAt("restApis.restApi");
-			for (HierarchicalConfiguration el : restApiEls) {
+			List<HierarchicalConfiguration<ImmutableNode>> restApiEls = svcEl.configurationsAt("restApis.restApi");
+			for (HierarchicalConfiguration<ImmutableNode> el : restApiEls) {
 				final String oasFile = el.getString("[@oasFile]");
 				if (StringUtils.isBlank(oasFile)) throw new Exception(invalidAttributeValueEx("restApis.restApi", "oasFile"));
 				final String context = oasFileToContext(oasFile);
@@ -253,8 +254,8 @@ public class ServiceManifest {
 		}
 		
 		if (!svcEl.configurationsAt("permissions").isEmpty()) {
-			List<HierarchicalConfiguration> elPerms = svcEl.configurationsAt("permissions.permission");
-			for(HierarchicalConfiguration elPerm : elPerms) {
+			List<HierarchicalConfiguration<ImmutableNode>> elPerms = svcEl.configurationsAt("permissions.permission");
+			for (HierarchicalConfiguration<ImmutableNode> elPerm : elPerms) {
 				if (elPerm.containsKey("[@group]")) {
 					String groupName = elPerm.getString("[@group]");
 					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
@@ -269,8 +270,8 @@ public class ServiceManifest {
 				}
 			}
 			
-			List<HierarchicalConfiguration> elShPerms = svcEl.configurationsAt("permissions.sharePermission");
-			for(HierarchicalConfiguration elShPerm : elShPerms) {
+			List<HierarchicalConfiguration<ImmutableNode>> elShPerms = svcEl.configurationsAt("permissions.sharePermission");
+			for (HierarchicalConfiguration<ImmutableNode> elShPerm : elShPerms) {
 				if (elShPerm.containsKey("[@group]")) {
 					String groupName = elShPerm.getString("[@group]");
 					if (StringUtils.isEmpty(groupName)) throw new Exception("Permission must have a valid uppercase group name");
@@ -280,8 +281,8 @@ public class ServiceManifest {
 		}
 		
 		if (!svcEl.configurationsAt("portlets").isEmpty()) {
-			List<HierarchicalConfiguration> elPortlets = svcEl.configurationsAt("portlets.portlet");
-			for(HierarchicalConfiguration el : elPortlets) {
+			List<HierarchicalConfiguration<ImmutableNode>> elPortlets = svcEl.configurationsAt("portlets.portlet");
+			for (HierarchicalConfiguration<ImmutableNode> el : elPortlets) {
 				if (el.containsKey("[@jsClassName]")) {
 					final String jsClassName = el.getString("[@jsClassName]");
 					if (StringUtils.isBlank(jsClassName)) throw new Exception("Invalid value for attribute [portlet->jsClassName]");
@@ -291,8 +292,8 @@ public class ServiceManifest {
 		}
 		
 		if (!svcEl.configurationsAt("products").isEmpty()) {
-			List<HierarchicalConfiguration> elProducts = svcEl.configurationsAt("products.product");
-			for(HierarchicalConfiguration el : elProducts) {
+			List<HierarchicalConfiguration<ImmutableNode>> elProducts = svcEl.configurationsAt("products.product");
+			for (HierarchicalConfiguration<ImmutableNode> el : elProducts) {
 				if (el.containsKey("[@className]")) {
 					final String className = el.getString("[@className]");
 					if (StringUtils.isBlank(className)) throw new Exception("Invalid value for attribute [product->className]");

@@ -87,9 +87,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -102,9 +99,16 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.time.StopWatch;
 
 /**
@@ -1122,9 +1126,17 @@ public class ServiceManager {
 		ServiceManifest manifest = null;
 		
 		logger.trace("Parsing descriptor [{}]", descriptorUri.toString());
-		XMLConfiguration config = new XMLConfiguration(descriptorUri);
-		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
-		for(HierarchicalConfiguration elService : elServices) {
+		
+		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+			.configure(new Parameters()
+				.xml()
+				.setEncoding(StandardCharsets.UTF_8.name())
+				.setURL(descriptorUri)
+			);
+		XMLConfiguration config = builder.getConfiguration();
+		
+		List<HierarchicalConfiguration<ImmutableNode>> elServices = config.configurationsAt("service");
+		for (HierarchicalConfiguration<ImmutableNode> elService : elServices) {
 			try {
 				manifest = new ServiceManifest(elService);
 				manifests.add(manifest);

@@ -36,14 +36,16 @@ package com.sonicle.webtop.core.app;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.util.PropertyElf;
 import java.io.File;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.configuration.plist.ParseException;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -63,24 +65,31 @@ public class DataSourcesConfig {
 		HikariConfigMap sources = null;
 		String serviceId = null, sourceName = null;
 		
-		XMLConfiguration config = new XMLConfiguration(file);
-		List<HierarchicalConfiguration> elServices = config.configurationsAt("service");
-		for(HierarchicalConfiguration elService : elServices) {
+		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+			.configure(new Parameters()
+				.xml()
+				.setEncoding(StandardCharsets.UTF_8.name())
+				.setFile(file)
+			);
+		XMLConfiguration config = builder.getConfiguration();
+		
+		List<HierarchicalConfiguration<ImmutableNode>> elServices = config.configurationsAt("service");
+		for (HierarchicalConfiguration<ImmutableNode> elService : elServices) {
 			serviceId = elService.getString("[@id]", null);
-			if(serviceId == null) {
+			if (serviceId == null) {
 				logger.warn("Missing attribute [id] in [{}]", elService.toString());
 				continue;
 			}
 			
 			// Iterates over service' sources
 			sources = new HikariConfigMap();
-			List<HierarchicalConfiguration> elSources = elService.configurationsAt("dataSource");
-			for(HierarchicalConfiguration elSource : elSources) {
+			List<HierarchicalConfiguration<ImmutableNode>> elSources = elService.configurationsAt("dataSource");
+			for (HierarchicalConfiguration<ImmutableNode> elSource : elSources) {
 				sourceName = elSource.getString("[@name]", ConnectionManager.DEFAULT_DATASOURCE);
 				logger.trace("name: {}", sourceName);
 				try {
 					sources.put(sourceName, parseDataSource(elSource));
-				} catch(ParseException ex) {
+				} catch(ConfigurationException ex) {
 					logger.warn("Error parsing dataSource definition [{}]", ex, elSource.toString());
 				}
 			}
@@ -89,31 +98,31 @@ public class DataSourcesConfig {
 		}
 	}
 	
-	protected HikariConfig parseDataSource(HierarchicalConfiguration dsEl) throws ParseException {
+	protected HikariConfig parseDataSource(HierarchicalConfiguration<ImmutableNode> dsEl) throws ConfigurationException {
 		HikariConfig config = createHikariConfig();
 		
-		if(dsEl.containsKey("[@dataSourceClassName]")) { // Jdbc 4 configs
+		if (dsEl.containsKey("[@dataSourceClassName]")) { // Jdbc 4 configs
 			config.setDataSourceClassName(dsEl.getString("[@dataSourceClassName]"));
 			config.addDataSourceProperty("serverName", dsEl.getString("[@serverName]"));
-			if(dsEl.containsKey("[@port]")) config.addDataSourceProperty("port", dsEl.getInt("[@port]"));
+			if (dsEl.containsKey("[@port]")) config.addDataSourceProperty("port", dsEl.getInt("[@port]"));
 			config.addDataSourceProperty("databaseName", dsEl.getString("[@databaseName]"));
 			
-		} else if(dsEl.containsKey("[@driverClassName]")) { // Jdbc 3 configs
+		} else if (dsEl.containsKey("[@driverClassName]")) { // Jdbc 3 configs
 			config.setDriverClassName(dsEl.getString("[@driverClassName]"));
 			config.setJdbcUrl(dsEl.getString("[@jdbcUrl]"));
 		}
 		
-		if(dsEl.containsKey("[@username]")) config.setUsername(dsEl.getString("[@username]"));
-		if(dsEl.containsKey("[@password]")) config.setPassword(dsEl.getString("[@password]"));
+		if (dsEl.containsKey("[@username]")) config.setUsername(dsEl.getString("[@username]"));
+		if (dsEl.containsKey("[@password]")) config.setPassword(dsEl.getString("[@password]"));
 		
-		if(!dsEl.isEmpty()) {
-			List<HierarchicalConfiguration> elProps = dsEl.configurationsAt("property");
+		if (!dsEl.isEmpty()) {
+			List<HierarchicalConfiguration<ImmutableNode>> elProps = dsEl.configurationsAt("property");
 			Properties props = new Properties();
-			for(HierarchicalConfiguration elProp : elProps) {
-				if(elProp.containsKey("[@name]") && elProp.containsKey("[@value]")) {
+			for (HierarchicalConfiguration<ImmutableNode> elProp : elProps) {
+				if (elProp.containsKey("[@name]") && elProp.containsKey("[@value]")) {
 					final String name = elProp.getString("[@name]");
 					final String value = elProp.getString("[@value]");
-					if(!StringUtils.isBlank(name)) {
+					if (!StringUtils.isBlank(name)) {
 						props.setProperty(name, value);
 						logger.trace("property: {} -> {}", name, value);
 					}

@@ -190,9 +190,14 @@
 			<version>${commons-io.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.10</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>${commons-collections4.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-configuration2</artifactId>
+			<version>${commons-configuration2.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
@@ -201,15 +206,10 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<!-- Needed by above commons-configuration v.1.10 -->
-			<groupId>commons-collections</groupId>
-			<artifactId>commons-collections</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-collections4</artifactId>
-			<version>${commons-collections4.version}</version>
+			<!-- Optional for above commons-configuration2 -->
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>${commons-beanutils.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
