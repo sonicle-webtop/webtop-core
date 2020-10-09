@@ -35,7 +35,10 @@ package com.sonicle.webtop.core.admin;
 
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
+import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -70,6 +73,7 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
+import com.sonicle.webtop.core.admin.bol.js.JsGridLogger;
 import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
@@ -98,6 +102,7 @@ import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
+import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -116,6 +121,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -261,6 +267,7 @@ public class Service extends BaseService {
 	private static final String NTYPE_LICENSES = "licenses";
 	private static final String NTYPE_PECBRIDGE = "pecbridge";
 	private static final String NTYPE_DBUPGRADER = "dbupgrader";
+	private static final String NTYPE_LOGGERS = "loggers";
 	
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
@@ -300,6 +307,8 @@ public class Service extends BaseService {
 					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, null, true, "wtadm-icon-settings"));
 					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, null, false, "wtadm-icon-domains"));
 					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, null, true, "wtadm-icon-dbUpgrader"));
+					children.add(createTreeNode(NTYPE_LOGGERS, NTYPE_LOGGERS, null, true, "wtadm-icon-loggers"));
+					
 				} else {
 					CompositeId cid = new CompositeId(3).parse(nodeId, true);
 					if (cid.getToken(0).equals("domains")) {
@@ -1254,6 +1263,31 @@ public class Service extends BaseService {
 		} catch(Exception ex) {
 			logger.error("Error in ManageDbUpgrades", ex);
 			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageLoggers(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.READ)) {
+				List<JsGridLogger> items = new ArrayList<>();
+				for (LoggerEntry loggerEntry : coreadm.listLoggers().values()) {
+					items.add(new JsGridLogger(loggerEntry));
+				}
+				new JsonResult(items, items.size()).printTo(out);
+				
+			} else if (Crud.UPDATE.equals(crud)) {
+				String name = ServletUtils.getStringParameter(request, "name", true);
+				LoggerEntry.Level level = ServletUtils.getEnumParameter(request, "level", null, LoggerEntry.Level.class);
+				
+				LoggerEntry item = coreadm.updateLogger(name, level);
+				new JsonResult(item != null ? new JsGridLogger(item) : null).printTo(out);
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageLoggers", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

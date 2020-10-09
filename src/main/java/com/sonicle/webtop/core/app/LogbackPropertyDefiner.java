@@ -48,6 +48,7 @@ public class LogbackPropertyDefiner extends PropertyDefinerBase {
 	public static final String PROP_LOG_FILE_BASENAME = "log.file.basename";
 	public static final String PROP_LOG_FILE_POLICY = "log.file.policy";
 	public static final String PROP_OVERRIDE_DIR = "override.dir";
+	public static final String OVERRIDE_FILENAME = "logback-override.xml";
 	
 	public static void setPropertyValue(boolean doNotSetBlankValues, String key, String value) {
 		if (!doNotSetBlankValues || !StringUtils.isBlank(value)) {

@@ -33,15 +33,20 @@
  */
 package com.sonicle.webtop.core.admin;
 
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.LicenseManager;
+import com.sonicle.webtop.core.app.LogbackPropertyDefiner;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.ServiceManager;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
@@ -65,6 +70,7 @@ import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
 import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
 import com.sonicle.webtop.core.model.License;
+import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.ServiceLicense;
@@ -73,11 +79,19 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -1018,6 +1032,81 @@ public class CoreAdminManager extends BaseManager {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public Map<String, LoggerEntry> listLoggers() throws WTException {
+		RunContext.ensureIsSysAdmin();
+		
+		String etcPath = wta.getEtcPath();
+		File overrideFile = new File(etcPath, LogbackPropertyDefiner.OVERRIDE_FILENAME);
+		
+		try {
+			LinkedHashMap<String, LoggerEntry> items = new LinkedHashMap<>();
+			
+			Map<String, ch.qos.logback.classic.Logger> effectiveLoggers = LogbackHelper.getLoggers(true);
+			for (ch.qos.logback.classic.Logger effLogger : effectiveLoggers.values()) {
+				final LoggerEntry le = LogbackHelper.asLoggerEntry(effLogger);
+				items.put(le.getName(), le);
+			}
+			
+			Map<String, LogbackHelper.LoggerNode> includedLoggers = overrideFile.exists() ? LogbackHelper.readIncludedLoggers(overrideFile) : new LinkedHashMap<>();
+			for (LogbackHelper.LoggerNode inclLogger : includedLoggers.values()) {
+				if (items.containsKey(inclLogger.name)) {
+					items.get(inclLogger.name).setOverrideLevel(inclLogger.level);
+				} else {
+					items.put(inclLogger.name, new LoggerEntry(inclLogger.name, null, inclLogger.level));
+				}
+			}
+			
+			LinkedHashMap<String, LoggerEntry> sortedItems = items.entrySet().stream()
+					.sorted((o1, o2) -> {
+						return StringUtils.equalsIgnoreCase(o1.getKey(), "ROOT") ? 1 : o1.getKey().compareTo(o2.getKey());
+					})
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x,y) -> {throw new AssertionError();}, LinkedHashMap::new));
+			
+			return sortedItems;
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		}
+	}
+	
+	public LoggerEntry updateLogger(String name, LoggerEntry.Level level) throws WTException {
+		RunContext.ensureIsSysAdmin();
+		
+		if ("ROOT".equals(name)) throw new WTException("Root logger configuration cannot be modified");
+		
+		String etcPath = wta.getEtcPath();
+		if (etcPath == null) throw new WTException("Configuration directory ({}) not defined", WebTopProps.PROP_ETC_DIR);
+		File overrideFile = new File(etcPath, LogbackPropertyDefiner.OVERRIDE_FILENAME);
+		
+		try {
+			LoggerEntry ret = null;
+			boolean fileExists = overrideFile.exists();
+			Map<String, ch.qos.logback.classic.Logger> effectiveLoggers = LogbackHelper.getLoggers(true);
+			Map<String, LogbackHelper.LoggerNode> includedLoggers = fileExists ? LogbackHelper.readIncludedLoggers(overrideFile) : new LinkedHashMap<>();
+			
+			if (level == null) { // Null level means *remove* logger
+				includedLoggers.remove(name);
+				
+			} else {
+				includedLoggers.put(name, new LogbackHelper.LoggerNode(name, level));
+				if (effectiveLoggers.containsKey(name)) {
+					ret = LogbackHelper.asLoggerEntry(effectiveLoggers.get(name));
+					ret.setOverrideLevel(level);
+				} else {
+					ret = new LoggerEntry(name, null, level);
+				}
+			}
+			
+			LogbackHelper.writeIncludedLoggers(overrideFile, includedLoggers.values());
+			if (!fileExists) LogbackHelper.reloadConfiguration();
+			
+			return ret;
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		}
 	}
 	

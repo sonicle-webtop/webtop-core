@@ -32,24 +32,47 @@
  */
 package com.sonicle.webtop.core.app.util;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.ContextInitializer;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
+import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.webtop.core.model.LoggerEntry;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
+import net.sf.qualitycheck.Check;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.builder.fluent.XMLBuilderParameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.util.IOUtils;
 import org.joda.time.DateTimeZone;
+import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
 /**
@@ -61,28 +84,33 @@ public class LogbackHelper {
 	public static final String PROP_APPENDER = "logback.webtop.log.appender";
 	public static final String PROP_LOG_DIR = "logback.webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "logback.webtop.log.file.basename";
+	private static URL lastConfiguration = null;
 	
 	public static void printToSystemOut(String message, Object... arguments) {
 		String date = DateTimeUtils.createYmdHmsFormatter(DateTimeZone.getDefault()).print(DateTimeUtils.now());
 		System.out.println(date + " " + MessageFormatter.arrayFormat(message, arguments).getMessage());
 	}
 	
-	public static void reloadConfiguration(LoggerContext loggerContext) throws JoranException {
-		ContextInitializer ci = new ContextInitializer(loggerContext);
-		loggerContext.reset();
-		ci.configureByResource(ci.findURLOfDefaultConfigurationFile(true));
+	public static void reloadConfiguration() throws JoranException {
+		reloadConfiguration((LoggerContext)LoggerFactory.getILoggerFactory());
 	}
 	
-	public static void loadConfiguration(LoggerContext loggerContext, URL url) throws JoranException {
+	public static void reloadConfiguration(LoggerContext loggerContext) throws JoranException {
+		if (lastConfiguration != null) {
+			ContextInitializer ci = new ContextInitializer(loggerContext);
+			loggerContext.reset();
+			ci.configureByResource(lastConfiguration);
+		}
+	}
+	
+	public static void loadConfiguration(LoggerContext loggerContext, URL configurationUrl) throws JoranException {
 		// https://stackoverflow.com/questions/24235296/how-to-define-logback-variables-properties-before-logback-auto-load-logback-xml
+		// https://stackoverflow.com/questions/9320133/how-do-i-programmatically-tell-logback-to-reload-configuration
 		JoranConfigurator jc = new JoranConfigurator();
 		jc.setContext(loggerContext);
 		loggerContext.reset();
-		jc.doConfigure(url);
-		
-		//ContextInitializer ci = new ContextInitializer(loggerContext);
-		//loggerContext.reset();
-		//ci.configureByResource(url);
+		jc.doConfigure(configurationUrl);
+		lastConfiguration = configurationUrl;
 	}
 	
 	public static void writeProperties(ClassLoader classLoader, Properties properties) throws IOException, URISyntaxException {
@@ -147,4 +175,164 @@ public class LogbackHelper {
 		}
 		return null;
 	}
+	
+	public static LoggerEntry asLoggerEntry(ch.qos.logback.classic.Logger logger) {
+		if (logger == null) return null;
+		final LoggerEntry.Level effLevel = EnumUtils.forSerializedName(logger.getEffectiveLevel().levelStr, LoggerEntry.Level.class);
+		return new LoggerEntry(logger.getName(), effLevel, null);
+	}
+	
+	public static Map<String, Logger> getLoggers(boolean effective) {
+		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
+		
+		if (effective) {
+			return loggerContext.getLoggerList().stream()
+					.filter(item -> item.getLevel() != null)
+					.collect(Collectors.toMap(item -> item.getName(), item -> item, (ov, nv) -> nv, LinkedHashMap::new));
+		} else {
+			return loggerContext.getLoggerList().stream()
+					.collect(Collectors.toMap(item -> item.getName(), item -> item, (ov, nv) -> nv, LinkedHashMap::new));
+		}
+	}
+	
+	public static Map<String, Appender<ILoggingEvent>> getAppenders() {
+		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
+		
+		Map<String, Appender<ILoggingEvent>> appendersMap = new HashMap<>();
+		for (Logger logger : loggerContext.getLoggerList()) {
+			Iterator<Appender<ILoggingEvent>> it = logger.iteratorForAppenders();
+			while (it.hasNext()) {
+				Appender<ILoggingEvent> appender = it.next();
+				if (!appendersMap.containsKey(appender.getName())) {
+					appendersMap.put(appender.getName(), appender);
+				}
+			}
+		}
+		return appendersMap;
+	}
+	
+	public static Map<String, LoggerNode> readIncludedLoggers(File includedFile) throws IOException {
+		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+			.configure(
+				new Parameters()
+					.xml()
+					.setEncoding(StandardCharsets.UTF_8.name())
+					.setFile(includedFile)
+			);
+		
+		try {
+			XMLConfiguration config = builder.getConfiguration();
+			LinkedHashMap<String, LoggerNode> loggers = new LinkedHashMap<>();
+			
+			List<HierarchicalConfiguration<ImmutableNode>> loggerNodes = config.configurationsAt("logger");
+			for (HierarchicalConfiguration<ImmutableNode> loggerNode : loggerNodes) {
+				final String name = loggerNode.getString("[@name]");
+				final LoggerEntry.Level level = EnumUtils.forSerializedName(loggerNode.getString("[@level]"), LoggerEntry.Level.class);
+				loggers.put(name, new LoggerNode(name, level));
+			}
+			
+			return loggers;
+			
+		} catch(ConfigurationException ex) {
+			throw new IOException("Unable to read included file", ex);
+		}
+	}
+	
+	public static void writeIncludedLoggers(File includedFile, Collection<LoggerNode> loggers) throws IOException {
+		boolean fileExist = includedFile.exists();
+		
+		XMLBuilderParameters params = new Parameters().xml().setEncoding(StandardCharsets.UTF_8.name());
+		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+			.configure(fileExist ? params.setFile(includedFile) : params);
+		
+		try {
+			XMLConfiguration config = builder.getConfiguration();
+			
+			if (!StringUtils.equals(config.getRootElementName(), "included")) {
+				config.setRootElementName("included");
+			}
+			
+			if (fileExist) config.clearTree("logger");
+			for (LoggerNode newLogger : loggers) {
+				config.addProperty("logger(-1)[@name]", newLogger.name);
+				config.addProperty("logger[@level]", EnumUtils.toSerializedName(newLogger.level));
+			}
+			
+			if (fileExist) {
+				builder.save();
+			} else {
+				new FileHandler(config).save(includedFile);
+			}
+			
+		} catch(ConfigurationException ex) {
+			throw new IOException("Unable to write included file", ex);
+		}
+	}
+	
+	public static void writeIncludedFile2(File file, Collection<LoggerNode> loggers, boolean preserveLoggers) throws IOException {
+		boolean fileExist = file.exists();
+		
+		XMLBuilderParameters params = new Parameters().xml().setEncoding(StandardCharsets.UTF_8.name());
+		FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+			.configure(fileExist ? params.setFile(file) : params);
+		
+		try {
+			XMLConfiguration config = builder.getConfiguration();
+			
+			if (!StringUtils.equals(config.getRootElementName(), "included")) {
+				config.setRootElementName("included");
+			}
+			
+			// Process loggers already on file
+			LinkedHashMap<String, LoggerNode> origLoggers = new LinkedHashMap<>();
+			if (fileExist) {
+				// Read them...
+				List<HierarchicalConfiguration<ImmutableNode>> loggerNodes = config.configurationsAt("logger");
+				for (HierarchicalConfiguration<ImmutableNode> loggerNode : loggerNodes) {
+					final String name = loggerNode.getString("[@name]");
+					final LoggerEntry.Level level = EnumUtils.forSerializedName(loggerNode.getString("[@level]"), LoggerEntry.Level.class);
+					origLoggers.put(name, new LoggerNode(name, level));
+				}
+				
+				// Clear them (if necessary)...
+				if (!preserveLoggers) {
+					config.clearTree("logger");
+					for (LoggerNode origLogger : origLoggers.values()) {
+						config.addProperty("logger(-1)[@name]", origLogger.name);
+						config.addProperty("logger[@level]", EnumUtils.toSerializedName(origLogger.level));
+					}
+				}
+			}
+			
+			// Process brand-new loggers
+			for (LoggerNode newLogger : loggers) {
+				if (origLoggers.containsKey(newLogger.name)) continue;
+				config.addProperty("logger(-1)[@name]", newLogger.name);
+				config.addProperty("logger[@level]", EnumUtils.toSerializedName(newLogger.level));
+			}
+			
+			if (fileExist) {
+				builder.save();
+			} else {
+				new FileHandler(config).save(file);
+			}
+			
+		} catch(ConfigurationException ex) {
+			throw new IOException("Unable to write included file", ex);
+		}
+	}
+	
+	public static class LoggerNode {
+		public final String name;
+		public final LoggerEntry.Level level;
+		
+		public LoggerNode(String name, String level) {
+			this(name, EnumUtils.forSerializedName(level, LoggerEntry.Level.class));
+		}
+		
+		public LoggerNode(String name, LoggerEntry.Level level) {
+			this.name = Check.notNull(name, "name");
+			this.level = level != null ? level : LoggerEntry.Level.OFF;
+		}
+	}	
 }

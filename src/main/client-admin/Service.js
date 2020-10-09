@@ -45,7 +45,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.PecBridge',
 		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
 		'Sonicle.webtop.core.admin.view.DomainLicenses',
-		'Sonicle.webtop.core.admin.view.DbUpgrader'
+		'Sonicle.webtop.core.admin.view.DbUpgrader',
+		'Sonicle.webtop.core.admin.view.Loggers'
 	],
 	uses: [
 		'Sonicle.webtop.core.admin.view.License'
@@ -147,6 +148,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 							me.showDomainLicensesUI(rec.parentNode, rec);
 						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
+						} else if (type === 'loggers') {
+							me.showLoggersUI(rec);
 						}
 					},
 					itemdblclick: function(s, rec, itm, i, e) {
@@ -279,6 +282,19 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DbUpgrader', {
+				mys: me,
+				itemId: itemId,
+				closable: true
+			});
+		});
+	},
+	
+	showLoggersUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.Loggers', {
 				mys: me,
 				itemId: itemId,
 				closable: true

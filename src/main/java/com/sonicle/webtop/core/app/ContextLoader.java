@@ -76,15 +76,14 @@ public class ContextLoader {
 		String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
 		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
 		String logFilePolicy = WebTopProps.getLogFilePolicy(properties);
-		// Currently override does not work due to an error thrown in JoranConfiguration: see <included> in logback docs
-		//String etcDir = WebTopProps.getEtcDir(properties);
-		//String overrideDir = StringUtils.isBlank(etcDir) ? null : PathUtils.concatPaths(etcDir, ContextUtils.stripWebappVersion(webappFullName));
+		String etcDir = WebTopProps.getEtcDir(properties);
+		String overrideDir = StringUtils.isBlank(etcDir) ? null : PathUtils.concatPaths(etcDir, ContextUtils.stripWebappVersion(webappFullName));
 		
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_TARGET, logTarget);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_DIR, logDir);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, logFileBasename);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, logFilePolicy);
-		//LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, overrideDir);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, overrideDir);
 		
 		// Dump PropertyDefiner props
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_TARGET));
