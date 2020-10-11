@@ -452,12 +452,12 @@
 		<dependency>
 			<groupId>com.sonicle.extjs</groupId>
 			<artifactId>sonicle-extjs</artifactId>
-			<version>LATEST</version>
+			<version>6.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.extjs</groupId>
 			<artifactId>sonicle-extjs-extensions</artifactId>
-			<version>LATEST</version>
+			<version>[6.2.0,6.3.0)</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sonicle.libraries</groupId>
