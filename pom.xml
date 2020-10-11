@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>com.sonicle.webtop</groupId>
 		<artifactId>webtop-superpom-core</artifactId>
-		<version>3</version>
+		<version>4</version>
 	</parent>
 	
 	<properties>
@@ -1067,7 +1067,7 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.v6}/sencha</executable>
+									<executable>${sencha.cmd}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
 										<!--<argument>-debug</argument>-->
@@ -1113,7 +1113,7 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.v6}/sencha</executable>
+									<executable>${sencha.cmd}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
 										<!--<argument>-debug</argument>-->
@@ -1159,7 +1159,7 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd.v6}/sencha</executable>
+									<executable>${sencha.cmd}/sencha</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
 										<!--<argument>-debug</argument>-->
