@@ -33,83 +33,19 @@
  */
 package com.sonicle.webtop.core.sdk;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 /**
  *
  * @author malbinola
- * @param <K>
  * @param <V>
  */
-public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
-	protected final Map<K, V> map;
+public interface SetCache<K> {
 	
-	protected abstract void internalInitCache();
-	protected abstract void internalMissKey(K key);
-	
-	public AbstractMapCache() {
-		map = createCache();
-	}
-	
-	protected Map<K,V> createCache() {
-		return new HashMap<>();
-	}
-	
-	public final synchronized void init() {
-		clear();
-		internalInitCache();
-	}
-	
-	@Override
-	public synchronized void clear() {
-		map.clear();
-	}
-
-	@Override
-	public synchronized V get(K key) {
-		if (!map.containsKey(key)) {
-			internalMissKey(key);
-		}
-		return map.get(key);
-	}
-
-	@Override
-	public synchronized V put(K key, V value) {
-		map.put(key, value);
-		return value;
-	}
-
-	@Override
-	public synchronized V remove(K key) {
-		return map.remove(key);
-	}
-	
-	@Override
-	public int size() {
-		return map.size();
-	}
-	
-	@Override
-	public Set<K> keys() {
-		final Set<K> keys = map.keySet();
-		if (!keys.isEmpty()) {
-			return Collections.unmodifiableSet(keys);
-		} else {
-			return Collections.emptySet();
-		}
-	}
-	
-	@Override
-	public Collection<V> values() {
-		final Collection<V> values = map.values();
-		if (!map.isEmpty()) {
-			return Collections.unmodifiableCollection(values);
-		} else {
-			return Collections.emptySet();
-		}
-	}
+	public boolean contains(K key);
+	public boolean add(K key);
+	public boolean remove(K key);
+	public void clear();
+	public int size();
+	public Set<K> keys();
 }

@@ -42,7 +42,7 @@ import java.util.Set;
  * @param <K>
  * @param <V>
  */
-public interface Cache<K, V> {
+public interface MapCache<K, V> {
 	
 	public V get(K key);
 	public V put(K key, V value);
