@@ -44,7 +44,9 @@ import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -96,6 +98,12 @@ public class LogbackHelper {
 	public static void printToSystemOut(String message, Object... arguments) {
 		String date = DateTimeUtils.createYmdHmsFormatter(DateTimeZone.getDefault()).print(DateTimeUtils.now());
 		System.out.println(date + " " + MessageFormatter.arrayFormat(message, arguments).getMessage());
+	}
+	
+	public static String getLogFileBasename(Properties properties, String webappFullName) {
+		String basename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
+		if (StringUtils.isBlank(basename)) basename = webappFullName;
+		return basename;
 	}
 	
 	public static void reloadConfiguration() throws JoranException {

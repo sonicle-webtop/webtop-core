@@ -73,7 +73,8 @@ public class ContextLoader {
 		String logTarget = WebTopProps.getLogTarget(properties);
 		String logDir = WebTopProps.getLogDir(properties);
 		logDir = expandLogDirVariables(logDir, webappFullName);
-		String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
+		String logFileBasename = LogbackHelper.getLogFileBasename(properties, webappFullName);
+		//String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
 		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
 		String logFilePolicy = WebTopProps.getLogFilePolicy(properties);
 		String etcDir = WebTopProps.getEtcDir(properties);
