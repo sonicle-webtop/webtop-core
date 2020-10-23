@@ -138,7 +138,7 @@ Ext.define('Sonicle.webtop.core.admin.view.License', {
 									xtype: 'souploadbutton',
 									tooltip: me.mys.res('license.btn-load.tip'),
 									ui: 'default-toolbar',
-									iconCls: 'fa fa-upload',
+									iconCls: 'wt-icon-file-upload',
 									uploaderConfig: WTF.uploader(me.mys.ID, 'LicenseWizUploadFile', {
 										mimeTypes: [
 											{title: 'License', extensions: 'lic,l4j'}

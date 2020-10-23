@@ -35,12 +35,10 @@ package com.sonicle.webtop.core.admin;
 
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
-import com.sonicle.commons.EnumUtils;
-import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.l4j.ProductLicense;
-import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.CId;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
@@ -112,8 +110,10 @@ import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTCyrusException;
 import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.versioning.IgnoreErrorsAnnotationLine;
 import com.sonicle.webtop.core.versioning.RequireAdminAnnotationLine;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,10 +121,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.util.FileUtils;
 import org.slf4j.Logger;
@@ -257,23 +257,23 @@ public class Service extends BaseService {
 	
 	
 	
-	private static final String NTYPE_SETTINGS = "settings";
-	private static final String NTYPE_DOMAINS = "domains";
-	private static final String NTYPE_DOMAIN = "domain";
-	private static final String NTYPE_GROUPS = "groups";
-	private static final String NTYPE_USERS = "users";
-	private static final String NTYPE_ROLES = "roles";
-	private static final String NTYPE_LAUNCHERLINKS = "launcherlinks";
-	private static final String NTYPE_LICENSES = "licenses";
-	private static final String NTYPE_PECBRIDGE = "pecbridge";
-	private static final String NTYPE_DBUPGRADER = "dbupgrader";
-	private static final String NTYPE_LOGGERS = "loggers";
+	private static final String NID_SETTINGS = "settings";
+	private static final String NID_DOMAIN = "domain";
+	private static final String NID_GROUPS = "groups";
+	private static final String NID_USERS = "users";
+	private static final String NID_ROLES = "roles";
+	private static final String NID_LAUNCHERLINKS = "launcherlinks";
+	private static final String NID_LICENSES = "licenses";
+	private static final String NID_PECBRIDGE = "pecbridge";
+	private static final String NID_DBUPGRADER = "dbupgrader";
+	private static final String NID_LOGS = "logs";
+	private static final String NID_VIEWER = "viewer";
 	
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
-		node.put("_type", NTYPE_DOMAIN);
+		node.put("_type", "domain");
 		node.put("_domainId", domain.getDomainId());
 		//node.put("_internetDomain", domain.getInternetName());
 		node.put("_dirScheme", dirScheme);
@@ -283,9 +283,9 @@ public class Service extends BaseService {
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String text, String iconClass, String type, String domainId, boolean dirPasswordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
-		CompositeId cid = new CompositeId(parentId, type);
-		ExtTreeNode node = new ExtTreeNode(cid.toString(), text, true);
+	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, boolean dirPasswordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+		CompositeId cid = new CompositeId(parentId, id);
+		ExtTreeNode node = new ExtTreeNode(cid.toString(), null, true);
 		node.setIconClass(iconClass);
 		node.put("_type", type);
 		node.put("_domainId", domainId);
@@ -303,36 +303,16 @@ public class Service extends BaseService {
 			if (crud.equals(Crud.READ)) {
 				String nodeId = ServletUtils.getStringParameter(request, "node", true);
 				
-				if (nodeId.equals("root")) { // Admin roots...
-					children.add(createTreeNode(NTYPE_SETTINGS, NTYPE_SETTINGS, null, true, "wtadm-icon-settings"));
-					children.add(createTreeNode(NTYPE_DOMAINS, NTYPE_DOMAINS, null, false, "wtadm-icon-domains"));
-					children.add(createTreeNode(NTYPE_DBUPGRADER, NTYPE_DBUPGRADER, null, true, "wtadm-icon-dbUpgrader"));
-					children.add(createTreeNode(NTYPE_LOGGERS, NTYPE_LOGGERS, null, true, "wtadm-icon-loggers"));
+				if (nodeId.equals("root")) {
+					children.add(createTreeNode(NID_SETTINGS, "settings", null, true, "wtadm-icon-settings"));
+					children.add(createTreeNode(NID_DOMAIN, "domains", null, false, "wtadm-icon-domains"));
+					children.add(createTreeNode(NID_DBUPGRADER, "dbupgrader", null, true, "wtadm-icon-dbUpgrader"));
+					children.add(createTreeNode(NID_LOGS, "logging", null, false, "wtadm-icon-logging"));
 					
 				} else {
-					CompositeId cid = new CompositeId(3).parse(nodeId, true);
-					if (cid.getToken(0).equals("domains")) {
-						if (cid.hasToken(1)) {
-							String domainId = cid.getToken(1);
-							ODomain domain = core.getDomain(domainId);
-							AbstractDirectory dir = core.getAuthDirectory(domain);
-							boolean passwordPolicy = domain.getDirPasswordPolicy();
-							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
-							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
-							
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-settings", NTYPE_SETTINGS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-groups", NTYPE_GROUPS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-users", NTYPE_USERS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-roles", NTYPE_ROLES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-licenses", NTYPE_LICENSES, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, null, "wtadm-icon-launcherLinks", NTYPE_LAUNCHERLINKS, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							
-							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
-							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, null, "wtadm-icon-pecBridge", NTYPE_PECBRIDGE, domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							}
-							
-						} else { // Available webtop domains
+					CId cid = new CId(nodeId);
+					if (cid.getToken(0).equals(NID_DOMAIN)) {
+						if (!cid.hasToken(1)) { // Domain nodes
 							for (ODomain domain : core.listDomains(false)) {
 								AbstractDirectory dir = core.getAuthDirectory(domain);
 								String dirScheme = dir.getScheme();
@@ -341,6 +321,31 @@ public class Service extends BaseService {
 								boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 								children.add(createDomainNode(nodeId, domain, dirScheme, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
+							
+						} else { // Single Domain node
+							String domainId = cid.getToken(1);
+							ODomain domain = core.getDomain(domainId);
+							AbstractDirectory dir = core.getAuthDirectory(domain);
+							boolean passwordPolicy = domain.getDirPasswordPolicy();
+							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
+							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
+							
+							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							
+							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
+							if (css.getHasPecBridgeManagement()) {
+								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							}
+						}
+						
+					} else if (cid.getToken(0).equals(NID_LOGS)) {
+						if (!cid.hasToken(1)) {
+							children.add(createTreeNode(CId.build(NID_LOGS, NID_VIEWER).toString(), "logsviewer", null, true, "wtadm-icon-logViewer"));
 						}
 					}
 				}
@@ -1288,6 +1293,33 @@ public class Service extends BaseService {
 		} catch(Throwable t) {
 			logger.error("Error in ManageLoggers", t);
 			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processGetLogContent(HttpServletRequest request, HttpServletResponse response) {
+		
+		boolean rawErrorResp = ServletUtils.getBooleanParameter(request, "rawErrorResp", false);
+		try {
+			Long fromByte = ServletUtils.getLongParameter(request, "fromByte", 0L);
+			if (fromByte < 0) fromByte = 0L;
+			Long bytesCount = ServletUtils.getLongParameter(request, "bytesCount", false);
+			
+			InputStream is = null;
+			try {
+				is = coreadm.getLogFileContent(fromByte, bytesCount);
+				ServletUtils.writeFileResponse(response, false, "webtop.log", null, -1, is);
+			} finally {
+				IOUtils.closeQuietly(is);
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in GetLogContent", t);
+			if (rawErrorResp) {
+				throw new WTRuntimeException(t);
+				
+			} else {
+				ServletUtils.writeErrorHandlingJs(response, t.getMessage());
+			}
 		}
 	}
 	

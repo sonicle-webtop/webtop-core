@@ -40,6 +40,10 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	
 	_waitCount: 0,
 	
+	waiting: function() {
+		return this._waitCount > 0;
+	},
+	
 	/**
 	 * Signals to apply the loading mask.
 	 * Every time this method will be called, a counter will be incremented.
@@ -49,7 +53,7 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	wait: function(msg) {
 		var me = this, cmp = me.ownerCt || me;
 		me._waitCount++;		
-		if(me._waitCount === 1) {
+		if (me._waitCount === 1) {
 			cmp.setLoading(msg || WT.res('waiting'));
 			//cmp.mask(msg || WT.res('waiting'));
 		}
@@ -61,7 +65,7 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	 */
 	waitUpdate: function(msg) {
 		var me = this, cmp = me.ownerCt || me;
-		if (me._waitCount >= 1) {
+		if (me._waitCount > 0) {
 			cmp.setLoading(msg || WT.res('waiting'));
 		}
 	},

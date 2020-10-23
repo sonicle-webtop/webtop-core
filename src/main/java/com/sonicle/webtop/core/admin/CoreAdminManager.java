@@ -81,6 +81,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.vfs.IVfsManager;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -1033,6 +1034,17 @@ public class CoreAdminManager extends BaseManager {
 		} finally {
 			DbUtils.closeQuietly(con);
 		}
+	}
+	
+	public InputStream getLogFileContent(final long from, final long count) throws WTException, IOException {
+		RunContext.ensureIsSysAdmin();
+		
+		String logBaseName = WebTopProps.getLogFileBasename(wta.getProperties());
+		if (StringUtils.isBlank(logBaseName)) throw new WTException();
+		String logFilename = logBaseName + ".log";
+		InputStream is = LogbackHelper.getLogFileStream(logFilename, from, count);
+		if (is == null) throw new WTException("File '{}' not configured or accessible. Maybe console appender is active.", logFilename);
+		return is;
 	}
 	
 	public Map<String, LoggerEntry> listLoggers() throws WTException {

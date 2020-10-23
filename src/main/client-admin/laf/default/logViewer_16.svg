@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="main">
+    <clipPath id="clip_mask">
+      <path d="M6.4274,14.0639l1.8544,-1.8394c-0.668,-1.6637,-0.3012,-3.584,1.0036,-4.897c0.8554,-0.8608,1.9927,-1.3349,3.2023,-1.3349c1.207,0,2.3411,0.4723,3.1933,1.33c0.1138,0.1145,0.2199,0.2339,0.3189,0.3572V0H0v16h6.3994C5.8901,15.4555,5.8986,14.5963,6.4274,14.0639z" fill-rule="evenodd"/>
+    </clipPath>
+    <g id="icon" clip-path="url(#clip_mask)">
+      <path d="M12.9,14.5H2.1c-0.3314,0,-0.6,-0.2686,-0.6,-0.6V1.1c0,-0.3314,0.2686,-0.6,0.6,-0.6c0,0,6.55,0,7.0167,0s0.7328,0.1495,0.9248,0.3414s2.717,2.717,3.0336,3.0336c0.3166,0.3166,0.425,0.575,0.425,1.0416S13.5,13.9,13.5,13.9C13.5,14.2314,13.2314,14.5,12.9,14.5z" fill-rule="evenodd" fill="#FFFFFF" stroke="#6D6E71" stroke-width="1" stroke-miterlimit="1"/>
+      <path d="M13.2,5H9.9614c-0.0574,0,-0.1125,-0.0097,-0.1639,-0.0275C9.399,4.8674,9,4.473,9,4V1h1v2.9646c0.0116,0.0122,0.0296,0.0263,0.0454,0.0354H13.2V5z" fill="#6D6E71"/>
+      <line x1="3.5" y1="3.5" x2="7.5" y2="3.5" fill="none" stroke="#3E79B4" stroke-width="1" stroke-linecap="round" stroke-miterlimit="1"/>
+      <line x1="3.5" y1="5.5" x2="7.5" y2="5.5" fill="none" stroke="#3E79B4" stroke-width="1" stroke-linecap="round" stroke-miterlimit="1"/>
+      <line x1="3.5" y1="7.5" x2="11.5" y2="7.5" fill="none" stroke="#3E79B4" stroke-width="1" stroke-linecap="round" stroke-miterlimit="1"/>
+      <line x1="3.5" y1="9.5" x2="11.5" y2="9.5" fill="none" stroke="#3E79B4" stroke-width="1" stroke-linecap="round" stroke-miterlimit="1"/>
+      <line x1="3.5" y1="11.5" x2="11.5" y2="11.5" fill="none" stroke="#3E79B4" stroke-width="1" stroke-linecap="round" stroke-miterlimit="1"/>
+    </g>
+    <g id="overlay">
+      <path d="M14.9717,8.0274c-1.373,-1.3817,-3.6012,-1.3795,-4.9769,0.0049c-1.1858,1.1934,-1.3501,3.0238,-0.4937,4.3914l-2.3642,2.3449c-0.1531,0.1541,-0.1531,0.4039,0,0.5579l0.5544,0.5579c0.1531,0.1541,0.4013,0.1541,0.5544,0l2.3658,-2.3465c1.3581,0.8559,3.1719,0.6889,4.3554,-0.5021C16.3425,11.6515,16.3447,9.4091,14.9717,8.0274zM14.108,12.1913c-0.9067,0.9125,-2.3767,0.9125,-3.2834,0c-0.9067,-0.9124,-0.9067,-2.3918,0,-3.3043c0.9067,-0.9125,2.3767,-0.9125,3.2834,0C15.0147,9.7995,15.0147,11.2789,14.108,12.1913z" fill-rule="evenodd" fill="#3E79B4"/>
+    </g>
+  </g>
+</svg>

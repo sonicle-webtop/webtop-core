@@ -157,7 +157,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseActivatorWiz', {
 								xtype: 'souploadbutton',
 								tooltip: me.mys.res('licenseActivatorWiz.btn-load.tip'),
 								ui: 'default-toolbar',
-								iconCls: 'fa fa-upload',
+								iconCls: 'wt-icon-file-upload',
 								uploaderConfig: WTF.uploader(me.mys.ID, 'LicenseWizUploadFile', {
 									mimeTypes: [
 										{title: 'License', extensions: 'lic,l4j'}
@@ -265,7 +265,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseActivatorWiz', {
 									xtype: 'button',
 									tooltip: me.mys.res('licenseActivatorWiz.btn-save.tip'),
 									ui: 'default-toolbar',
-									iconCls: 'fa fa-download',
+									iconCls: 'wt-icon-file-download',
 									handler: function() {
 										Sonicle.URLMgr.downloadFile(WTF.processBinUrl(me.mys.ID, 'LicenseWizSaveToFile', {
 											domainId: vm.get('data.domainId'),
@@ -321,7 +321,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseActivatorWiz', {
 									xtype: 'souploadbutton',
 									tooltip: me.mys.res('licenseActivatorWiz.btn-load.tip'),
 									ui: 'default-toolbar',
-									iconCls: 'fa fa-upload',
+									iconCls: 'wt-icon-file-upload',
 									uploaderConfig: WTF.uploader(me.mys.ID, 'LicenseWizUploadFile', {
 										mimeTypes: [
 											{title: 'License', extensions: 'lic,l4j'}

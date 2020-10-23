@@ -151,8 +151,8 @@
 .wt-icon-item-disable-xs { background-image: url('item-disable_16.png') !important; }
 .wt-icon-item-disabled-xs { background-image: url('item-disabled_16.png') !important; }
 .wt-icon-item-hide-xs { background-image: url('item-hide_16.png') !important; }
-.wt-icon-file-upload-xs { background-image: url('file-upload_16.png') !important; }
-.wt-icon-file-download-xs { background-image: url('file-download_16.png') !important; }
+.wt-icon-file-download { background-image: url('file-download_16.svg') !important; background-size: contain; }
+.wt-icon-file-upload { background-image: url('file-upload_16.svg') !important; background-size: contain; }
 .wt-icon-permission-denied { background-image: url('permission-denied_16.svg') !important; background-size: contain; }
 .wt-icon-permission-allowed { background-image: url('permission-allowed_16.svg') !important; background-size: contain; }
 .wt-icon-permission-denied-gray { background-image: url('permission-denied-gray_16.svg') !important; background-size: contain; }

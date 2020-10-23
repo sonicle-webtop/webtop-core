@@ -37,5 +37,9 @@ Ext.define('Sonicle.webtop.core.admin.model.AdminNode', {
 	fields: [
 		WTF.roField('_type', 'string'),
 		WTF.roField('_domainId', 'string')
-	]
+	],
+	
+	getTokenizedId: function() {
+		return this.getId().split('|');
+	}
 });

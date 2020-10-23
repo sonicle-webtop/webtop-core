@@ -76,7 +76,7 @@ Ext.define('Sonicle.webtop.core.ux.UploadBar', {
 	 * @cfg {String} buttonIconCls
 	 * Upload button icon class.
 	 */
-	buttonIconCls: 'wt-icon-file-upload-xs',
+	buttonIconCls: 'wt-icon-file-upload',
 	
 	/**
 	 * @cfg {String} dropElement

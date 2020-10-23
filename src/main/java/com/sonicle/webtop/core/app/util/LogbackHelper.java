@@ -38,6 +38,7 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
@@ -45,20 +46,25 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.webtop.core.model.LoggerEntry;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -69,6 +75,7 @@ import org.apache.commons.configuration2.builder.fluent.XMLBuilderParameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.util.IOUtils;
 import org.joda.time.DateTimeZone;
@@ -185,7 +192,7 @@ public class LogbackHelper {
 	public static Map<String, Logger> getLoggers(boolean effective) {
 		LoggerContext loggerContext = (LoggerContext)LoggerFactory.getILoggerFactory();
 		
-		if (effective) {
+		if (effective) { // Only include loggers which explicit levels configured
 			return loggerContext.getLoggerList().stream()
 					.filter(item -> item.getLevel() != null)
 					.collect(Collectors.toMap(item -> item.getName(), item -> item, (ov, nv) -> nv, LinkedHashMap::new));
@@ -209,6 +216,52 @@ public class LogbackHelper {
 			}
 		}
 		return appendersMap;
+	}
+	
+	public static Set<File> getLogFiles() {
+		HashSet<File> files = new HashSet<>();
+		for (Appender<?> appender : getAppenders().values()) {
+			if (appender instanceof FileAppender) {
+				String path = ((FileAppender<?>) appender).getFile();
+				 files.add(new File(path));
+			}
+		}
+		return files;
+	}
+	
+	public static File getLogFile(final String fileName) {
+		Set<File> files = getLogFiles();
+		for (File file : files) {
+			if (file.getName().equals(fileName)) return file;
+		}
+		return null;
+	}
+	
+	public static InputStream getLogFileStream(final String fileName, final long from, final long count) throws IOException {
+		if (fileName.contains(File.pathSeparator) || fileName.contains("/")) {
+			//log.warn("Cannot retrieve log files with path separators in their name");
+			return null;
+		}
+		File file = getLogFile(fileName);
+		if (file == null || !file.exists()) {
+			//log.warn("Log file does not exist: {}", fileName);
+			return null;
+		}
+		
+		long fromByte = from;
+		long bytesCount = count;
+		if (count < 0) {
+			bytesCount = Math.abs(count);
+			fromByte = Math.max(0, file.length() - bytesCount);
+		}
+		
+		InputStream input = new BufferedInputStream(new FileInputStream(file));
+		if (fromByte == 0 && bytesCount >= file.length()) {
+			return input;
+		} else {
+			input.skip(fromByte);
+			return new BoundedInputStream(input, bytesCount);
+		}
 	}
 	
 	public static Map<String, LoggerNode> readIncludedLoggers(File includedFile) throws IOException {

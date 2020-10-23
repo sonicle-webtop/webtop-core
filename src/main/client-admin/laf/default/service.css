@@ -14,7 +14,10 @@
 .wtadm-icon-maintenance-on { background-image: url('maintenance-on_16.svg') !important; background-size: contain; }
 .wtadm-icon-maintenance-off { background-image: url('maintenance-off_16.svg') !important; background-size: contain; }
 .wtadm-icon-settings { background-image: url('settings_16.svg') !important; background-size: contain; }
-.wtadm-icon-loggers { background-image: url('loggers_16.svg') !important; background-size: contain; }
+.wtadm-icon-logging { background-image: url('logging_16.svg') !important; background-size: contain; }
+.wtadm-icon-loggers { background-image: url('logging_16.svg') !important; background-size: contain; }
+.wtadm-icon-logViewer { background-image: url('logViewer_16.svg') !important; background-size: contain; }
+
 .wtadm-icon-dbUpgrader { background-image: url('dbUpgrader_16.svg') !important; background-size: contain; }
 .wtadm-icon-domains { background-image: url('domains_16.svg') !important; background-size: contain; }
 .wtadm-icon-domain { background-image: url('domain_16.svg') !important; background-size: contain; }

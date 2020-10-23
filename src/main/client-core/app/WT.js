@@ -295,6 +295,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		return Ext.String.startsWith(key, '${') && Ext.String.endsWith(key, '}');
 	},
 	
+	
+	
+	
+	parseResTpl: function(s) {
+		var res = Ext.isString(s) && Ext.String.startsWith(s, '{') && Ext.String.endsWith(s, '}');
+		return {result: res, key: res ? s.substring(1, s.length-2) : undefined};
+	},
+	
 	/**
 	 * Returns the localized string associated to the key.
 	 * If id and key are both filled, any other arguments will be used in
@@ -765,6 +773,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * 
 	 * This object may contain any of the following properties:
 	 * 
+	 * @param {POST|GET} [opts.method] Sets the method, defaults to `POST`.
 	 * @param {Object} [opts.timeout] The number of milliseconds to wait for a response. Defaults to {@link Ext.Ajax#timeout}.
 	 * @param {Object} [opts.params] Extra request params.
 	 * @param {Object} [opts.jsonData] Data attached to the request sent as payload.
@@ -772,32 +781,42 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Boolean} opts.callback.success
 	 * @param {Object} opts.callback.json
 	 * @param {Object} opts.callback.opts
+	 * @param {Function} [opts.rawCallback] The raw callback function to call.
 	 * @param {Object} [opts.scope] The scope (this) for the supplied callback.
 	 */
 	ajaxReq: function(svc, act, opts) {
 		opts = opts || {};
 		var me = this,
 				fn = opts.callback, 
+				rfn = opts.rawCallback,
 				scope = opts.scope, 
 				sfn = opts.success, 
 				ffn = opts.failure,
 				hdrs = {};
 		
 		var obj = {
-			method: 'POST',
+			method: opts.method || 'POST',
 			url: WTF.requestBaseUrl(),
 			params: Ext.applyIf({
 				service: svc,
 				action: act
 			}, opts.params || {}),
 			success: function(resp, opts) {
-				var json = Ext.decode(resp.responseText);
-				if(sfn) Ext.callback(sfn, scope || me, [resp, opts]);
-				Ext.callback(fn, scope || me, [json['success'], json, json['metaData'], opts]);
+				if (Ext.isFunction(rfn)) {
+					Ext.callback(rfn, scope || me, [true, resp, opts]);
+				} else {
+					var json = Ext.decode(resp.responseText);
+					if (sfn) Ext.callback(sfn, scope || me, [resp, opts]);
+					Ext.callback(fn, scope || me, [json['success'], json, json['metaData'], opts]);
+				}
 			},
 			failure: function(resp, opts) {
-				if(ffn) Ext.callback(ffn, scope || me, [resp, opts]);
-				Ext.callback(fn, scope || me, [false, {}, null, opts]);
+				if (Ext.isFunction(rfn)) {
+					Ext.callback(rfn, scope || me, [false, resp, opts]);
+				} else {
+					if (ffn) Ext.callback(ffn, scope || me, [resp, opts]);
+					Ext.callback(fn, scope || me, [false, {}, null, opts]);
+				}
 			},
 			scope: me
 		};

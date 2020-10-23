@@ -44,12 +44,13 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainLauncherLinks',
 		'Sonicle.webtop.core.admin.view.PecBridge',
 		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
-		'Sonicle.webtop.core.admin.view.DomainLicenses',
-		'Sonicle.webtop.core.admin.view.DbUpgrader',
-		'Sonicle.webtop.core.admin.view.Loggers'
+		'Sonicle.webtop.core.admin.view.DomainLicenses'
 	],
 	uses: [
-		'Sonicle.webtop.core.admin.view.License'
+		'Sonicle.webtop.core.admin.view.License',
+		'Sonicle.webtop.core.admin.view.DbUpgrader',
+		'Sonicle.webtop.core.admin.view.Loggers',
+		'Sonicle.webtop.core.admin.view.LogViewer'
 	],
 	
 	init: function() {
@@ -109,7 +110,24 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 					}
 				},
 				hideHeaders: true,
-				columns: [{
+				columns: [
+					{
+						xtype: 'treecolumn',
+						dataIndex: '_type',
+						renderer: function(val, meta, rec) {
+							if (val === 'domain') {
+								return rec.get('text');
+								
+							} else {
+								return me.res('node.' + val + '.lbl');
+							}
+						},
+						flex: 1
+					}
+				],
+				
+				/*
+				columns2: [{
 					xtype: 'treecolumn',
 					dataIndex: '_type',
 					flex: 1,
@@ -125,31 +143,33 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						}
 					}
 				}],
+				*/
+				
 				listeners: {
 					itemclick: function(s, rec, itm, i, e) {
 						var type = rec.get('_type');
 						if (type === 'settings') {
-							if (!Ext.isEmpty(rec.get('_domainId'))) {
-								me.showDomainSettingsUI(rec.parentNode, rec);
-							} else {
-								me.showSettingsUI(rec);
-							}
-						} else if (type === 'groups') {
+							me.showSettingsUI(rec);
+						} else if (type === 'dsettings') {
+							me.showDomainSettingsUI(rec.parentNode, rec);
+						} else if (type === 'dgroups') {
 							me.showDomainGroupsUI(rec.parentNode, rec);
-						} else if (type === 'users') {
+						} else if (type === 'dusers') {
 							me.showDomainUsersUI(rec.parentNode, rec);
-						} else if (type === 'roles') {
+						} else if (type === 'droles') {
 							me.showDomainRolesUI(rec.parentNode, rec);
-						} else if (type === 'launcherlinks') {
-							me.showDomainLauncherLinksUI(rec.parentNode, rec);
-						} else if (type === 'pecbridge') {
-							me.showPecBridgeUI(rec.parentNode, rec);
-						} else if (type === 'licenses') {
+						} else if (type === 'dlicenses') {
 							me.showDomainLicensesUI(rec.parentNode, rec);
+						} else if (type === 'dlauncherlinks') {
+							me.showDomainLauncherLinksUI(rec.parentNode, rec);
+						} else if (type === 'dpecbridge') {
+							me.showPecBridgeUI(rec.parentNode, rec);
 						} else if (type === 'dbupgrader') {
 							me.showDbUpgraderUI(rec);
-						} else if (type === 'loggers') {
+						} else if (type === 'logging') {
 							me.showLoggersUI(rec);
+						} else if (type === 'logsviewer') {
+							me.showLogViewerUI(rec);
 						}
 					},
 					itemdblclick: function(s, rec, itm, i, e) {
@@ -295,6 +315,19 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.Loggers', {
+				mys: me,
+				itemId: itemId,
+				closable: true
+			});
+		});
+	},
+	
+	showLogViewerUI: function(node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.LogViewer', {
 				mys: me,
 				itemId: itemId,
 				closable: true
