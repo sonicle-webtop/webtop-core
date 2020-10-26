@@ -1040,7 +1040,7 @@ public class CoreAdminManager extends BaseManager {
 		RunContext.ensureIsSysAdmin();
 		
 		String logFileBasename = LogbackHelper.getLogFileBasename(wta.getProperties(), WebTopApp.getWebappName());
-		if (StringUtils.isBlank(logFileBasename)) throw new WTException();
+		if (StringUtils.isBlank(logFileBasename)) throw new WTException("Log file basename not configured");
 		String logFilename = logFileBasename + ".log";
 		InputStream is = LogbackHelper.getLogFileStream(logFilename, from, count);
 		if (is == null) throw new WTException("File '{}' not configured or accessible. Maybe console appender is active.", logFilename);

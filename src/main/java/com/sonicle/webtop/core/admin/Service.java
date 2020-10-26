@@ -1313,10 +1313,13 @@ public class Service extends BaseService {
 			}
 			
 		} catch(Throwable t) {
-			logger.error("Error in GetLogContent", t);
+			if (t instanceof WTException) {
+				logger.warn("Cannot read log file", t);
+			} else {
+				logger.error("Error in GetLogContent", t);
+			}
 			if (rawErrorResp) {
 				throw new WTRuntimeException(t);
-				
 			} else {
 				ServletUtils.writeErrorHandlingJs(response, t.getMessage());
 			}
