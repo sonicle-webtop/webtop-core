@@ -38,15 +38,6 @@ Ext.define('Sonicle.webtop.core.sdk.model.SharingRights', {
 	identifier: 'negativestring',
 	idProperty: 'roleUid',
 	fields: [
-		/*
-		WTF.field('_fk', 'string', true, {
-			reference: {
-				parent: 'Sonicle.webtop.core.sdk.model.Sharing',
-				inverse: 'rights'
-			}
-		}),
-		*/
-		WTF.fkField('string'),
 		WTF.field('roleUid', 'string', false),
 		WTF.field('rootManage', 'boolean', false, {defaultValue: false}),
 		WTF.field('folderRead', 'boolean', false, {defaultValue: false}),

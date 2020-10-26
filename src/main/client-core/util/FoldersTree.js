@@ -73,13 +73,23 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 				return '#'+rec.get('_color');
 			},
 			renderer: function(val, meta, rec) {
-				var isPers = rec.isPersonalNode();
+				var isPers = rec.isPersonalNode(),
+					countHtml = function(count) {
+						if (Ext.isNumber(count) && count > 0) {
+							return '<span style="font-size:0.8em;opacity:0.4;"'
+								+ Sonicle.Utils.generateTooltipAttrs(opts.countTooltip ? Ext.String.format(opts.countTooltip, count) : null)
+								+ '>&nbsp;+' + count + '</span>';
+						} else {
+							return '';
+						}
+					};
 				meta.customElbowCls = 'wt-hidden';
 				if (rec.isFolderRoot()) {
 					meta.tdCls += ' wt-bold';
 					meta.iconCls = 'wt-hidden';
 					meta.customCheckboxCls = rec.get('checked') ? 'wt-tree-toggle-on' : 'wt-tree-toggle-off';
-					return '<span style="opacity:0.7;">' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>';
+					return '<span style="opacity:0.7;">' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>' + (opts.countField ? countHtml(rec.get(opts.countField)) : '');
+					
 				} else if (rec.isFolder()) {
 					if (isPers && rec.get('_default')) {
 						val += '<span style="font-size:0.8em;opacity:0.4;">&nbsp;(';

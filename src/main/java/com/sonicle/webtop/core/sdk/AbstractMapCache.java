@@ -109,6 +109,16 @@ public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
 		if (!map.isEmpty()) {
 			return Collections.unmodifiableCollection(values);
 		} else {
+			return Collections.emptyList();
+		}
+	}
+	
+	@Override
+	public Set<Map.Entry<K,V>> entrySet() {
+		final Set<Map.Entry<K,V>> entries = map.entrySet();
+		if (!map.isEmpty()) {
+			return Collections.unmodifiableSet(entries);
+		} else {
 			return Collections.emptySet();
 		}
 	}

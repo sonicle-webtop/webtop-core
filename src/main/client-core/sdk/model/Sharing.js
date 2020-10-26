@@ -42,8 +42,12 @@ Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
-		WTF.roField('level', 'int')
+		WTF.roField('level', 'int'),
+		WTF.roField('rootName', 'string'),
+		WTF.roField('pathName', 'string')
 	]
+	
+	// Associations are not inherited, use this in child models!
 	/*
 	hasMany: [
 		WTF.hasMany('rights', 'Sonicle.webtop.core.sdk.model.SharingRights')

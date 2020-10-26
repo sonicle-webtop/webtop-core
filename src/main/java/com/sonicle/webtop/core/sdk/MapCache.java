@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core.sdk;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,4 +52,5 @@ public interface MapCache<K, V> {
 	public int size();
 	public Set<K> keys();
 	public Collection<V> values();
+	public Set<Map.Entry<K,V>> entrySet();
 }

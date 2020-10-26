@@ -295,12 +295,14 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		return Ext.String.startsWith(key, '${') && Ext.String.endsWith(key, '}');
 	},
 	
-	
-	
-	
+	/**
+	 * Tries to parse passed string into a i18n resource template string.
+	 * @param {String} s The string being parsed.
+	 * @returns {Object} Result object with `result` and `key` properties;
+	 */
 	parseResTpl: function(s) {
 		var res = Ext.isString(s) && Ext.String.startsWith(s, '{') && Ext.String.endsWith(s, '}');
-		return {result: res, key: res ? s.substring(1, s.length-2) : undefined};
+		return {result: res, key: res ? s.substring(1, s.length-1) : undefined};
 	},
 	
 	/**
