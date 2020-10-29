@@ -38,7 +38,7 @@ import com.sonicle.webtop.core.sdk.BaseServiceProduct;
  *
  * @author gbulfon
  */
-public class AuditProduct extends BaseServiceProduct {
+public final class AuditProduct extends BaseServiceProduct {
 	public static final String PRODUCT_ID = "SNCL-WT-CORE-AUDIT";
 	public static final String PRODUCT_NAME = "Audit";
 	public static final String PUBLIC_KEY = 
@@ -50,10 +50,9 @@ public class AuditProduct extends BaseServiceProduct {
 		"7c46671f148c3b5b45919ec0b5db5ea8e19a5fcca4e105171ed68023f838\n" +
 		"394fa0c54fe3dd70ac0d03RSA4102413SHA512withRSA588acfd5fb4c60e\n" +
 		"16de7585674878abb7cb38511a07ec76f8d9542be987005230203010001";
-	public static final String LICENSE_SERVER = null;
 	
-	public AuditProduct(String domainInternetName) {
-		super(domainInternetName);
+	public AuditProduct(String domainId) {
+		super(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
 	}
 	
 	@Override
@@ -69,10 +68,5 @@ public class AuditProduct extends BaseServiceProduct {
 	@Override
 	public String getPublicKey() {
 		return PUBLIC_KEY;
-	}
-	
-	@Override
-	public String getLicenseServer() {
-		return LICENSE_SERVER;
 	}
 }

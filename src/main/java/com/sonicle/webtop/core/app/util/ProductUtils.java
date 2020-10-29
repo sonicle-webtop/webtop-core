@@ -47,18 +47,18 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class ProductUtils {
 	
-	public static AbstractProduct getProduct(String className) {
-		return getProduct(className, WebTopManager.INTERNETNAME_LOCAL);
+	public static AbstractProduct getProduct(final String className) {
+		return getProduct(className, WebTopManager.SYSADMIN_DOMAINID);
 	}
 	
-	public static BaseServiceProduct getProduct(String className, String internetName) {
+	public static BaseServiceProduct getProduct(final String className, final String domainId) {
 		Class clazz = ClassHelper.loadClass(className, null);
 		if (clazz == null) return null;
 		
 		try {
 			BaseServiceProduct product = null;
 			if (ClassHelper.isInheritingFromParent(clazz, BaseServiceProduct.class)) {
-				product = (BaseServiceProduct)clazz.getDeclaredConstructor(String.class).newInstance(internetName);
+				product = (BaseServiceProduct)clazz.getDeclaredConstructor(String.class).newInstance(domainId);
 			}/* else if (ClassHelper.isInheritingFromParent(clazz, AbstractProduct.class)) {
 				product = (AbstractProduct)clazz.getDeclaredConstructor().newInstance();
 			}*/ else {
@@ -71,9 +71,13 @@ public class ProductUtils {
 		}
 	}
 	
-	public static BaseServiceProduct getProduct(String domainInternetName, ProductId productId) {
+	public static BaseServiceProduct getProduct(final String serviceId, final String productCode, final String domainId) {
+		return getProduct(ProductId.build(serviceId, productCode), domainId);
+	}
+	
+	public static BaseServiceProduct getProduct(final ProductId productId, final String domainId) {
 		ServiceManifest.Product manifestProduct = WT.getManifestProduct(productId.getServiceId(), productId.getProductCode());
 		if (manifestProduct == null) return null;
-		return ProductUtils.getProduct(manifestProduct.className, domainInternetName);
+		return ProductUtils.getProduct(manifestProduct.className, domainId);
 	}
 }

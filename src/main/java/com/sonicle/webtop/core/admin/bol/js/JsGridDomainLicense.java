@@ -73,8 +73,7 @@ public class JsGridDomainLicense {
 		serviceId = license.getProductId().getServiceId();
 		productCode = license.getProductId().getProductCode();
 		
-		String internetName = WT.getDomainInternetName(license.getDomainId());
-		AbstractProduct prod = ProductUtils.getProduct(internetName, license.getProductId());
+		AbstractProduct prod = ProductUtils.getProduct(license.getProductId(), license.getDomainId());
 		if (prod != null) productName = prod.getProductName();
 		ProductLicense prodLic = prod != null ? new ProductLicense(prod) : null;
 		

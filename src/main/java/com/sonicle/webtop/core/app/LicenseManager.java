@@ -82,7 +82,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,6 +134,7 @@ public class LicenseManager {
 					.build();
 			jobDetail.getJobDataMap().put("this", this);
 			scheduler.scheduleJob(jobDetail, TriggerBuilder.newTrigger()
+					//.withSchedule(org.quartz.SimpleScheduleBuilder.repeatMinutelyForever(5))
 					.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(0, 0))
 					.build()
 			);
@@ -154,7 +154,7 @@ public class LicenseManager {
 					.build();
 			jobDetail.getJobDataMap().put("this", this);
 			scheduler.scheduleJob(jobDetail, TriggerBuilder.newTrigger()
-					//.withSchedule(SimpleScheduleBuilder.repeatMinutelyForever(1))
+					//.withSchedule(org.quartz.SimpleScheduleBuilder.repeatMinutelyForever(1))
 					.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(hour, minute))
 					.build()
 			);
@@ -190,23 +190,21 @@ public class LicenseManager {
 	public ProductData getProductLicenseData(final BaseServiceProduct product) {
 		Check.notNull(product, "product");
 		
-		String key = productLicenseCacheKey(product.getInternetName(), product.SERVICE_ID, product.getProductCode());
+		String key = productLicenseCacheKey(product.getDomainId(), product.SERVICE_ID, product.getProductCode());
 		ProductData data = productLicenseCache.computeIfAbsent(key, k -> {
 			LicenseDAO licDao = LicenseDAO.getInstance();
 			Connection con = null;
 			
 			try {
-				if (WebTopManager.INTERNETNAME_LOCAL.equals(product.getInternetName())) return new ProductData(null, null, false);
-				String domainId = findDomainId(product.getInternetName());
-				if (domainId == null) throw new WTException("Unable to lookup domainId for '{}'", product.getInternetName());
+				if (WebTopManager.SYSADMIN_DOMAINID.equals(product.getDomainId())) return new ProductData(null, null, false);
 				
 				con = wta.getConnectionManager().getConnection();
-				OLicense olic = licDao.select(con, domainId, product.getProductId().getServiceId(), product.getProductId().getProductCode());
+				OLicense olic = licDao.select(con, product.getDomainId(), product.getProductId().getServiceId(), product.getProductId().getProductCode());
 				if (olic != null) {
 					ProductLicense plicNew = new ProductLicense(product);
 					plicNew.setLicenseString(olic.getString());
 					plicNew.setActivatedLicenseString(olic.getActivatedString());
-					
+
 					LicenseInfo li = plicNew.validate(true);
 					/*
 					LicenseInfo ali = plicNew.validate(false);
@@ -216,14 +214,25 @@ public class LicenseManager {
 						leasedUsers = lleaDao.selectUsersByDomainServiceProduct(con, domainId, product.getProductId().getServiceId(), product.getProductId().getProductCode(), li.getQuantity());
 					}
 					*/
-					
+
 					// Provided quantity can be a true value only if license validates correctly!
 					Integer maxLease = li.isValid() ? li.getQuantity() : null;
 					return new ProductData(plicNew, maxLease, olic.getAutoLease());
-					
+
 				} else {
-					if (LOGGER.isTraceEnabled()) LOGGER.trace("License missing, returning dummy! [{}]", key);
-					return new ProductData(null, null, false);
+					
+					if (!StringUtils.isBlank(product.getBuiltInLicenseString())) {
+						ProductLicense plicNew = new ProductLicense(product);
+						plicNew.setLicenseString(product.getBuiltInLicenseString());
+						plicNew.setCustomHardwareId(product.getBuiltInHardwareId());
+						
+						LicenseInfo li = plicNew.validate(true);
+						return new ProductData(plicNew, null, false);
+						
+					} else {
+						if (LOGGER.isTraceEnabled()) LOGGER.trace("License missing, returning dummy! [{}]", key);
+						return new ProductData(null, null, false);
+					}	
 				}
 
 			} catch(Throwable t) {
@@ -242,11 +251,23 @@ public class LicenseManager {
 		
 		// Do license checks
 		LicenseInfo li = plic.validate(true);
+		if (!li.isValid()) return false; // Reject if license is not in status VALID
+		if (li.isActivationRequired()) {
+			LicenseInfo ali = plic.validate(false);
+			if (!ali.isValid()) return false; // Reject if activated license is not in status VALID
+			if (!ali.isActivationCompleted()) return false; // Reject if activated license is not in status ACTIVATED
+			if (li.getLicenseID() != ali.getLicenseID()) return false; // Reject if license IDs mismatch
+		}
+		
+		/*
+		// Do license checks
+		LicenseInfo li = plic.validate(true);
 		LicenseInfo ali = plic.validate(false);
 		if (!li.isValid()) return false; // Reject if license is not in status VALID
 		if (!ali.isValid()) return false; // Reject if activated license is not in status VALID
 		if (!ali.isActivationCompleted()) return false; // Reject if activated license is not in status ACTIVATED
 		if (li.getLicenseID() != ali.getLicenseID()) return false; // Reject if license IDs mismatch
+		*/
 		
 		return true;
 	}
@@ -255,7 +276,7 @@ public class LicenseManager {
 		Check.notNull(product, "product");
 		Check.notNull(product, "userId");
 		
-		String key = licenseLeaseCacheKey(product.getInternetName(), product.SERVICE_ID, product.getProductCode(), userId);
+		String key = licenseLeaseCacheKey(product.getDomainId(), product.SERVICE_ID, product.getProductCode(), userId);
 		Integer result = licenseLeaseCache.computeIfAbsent(key, k -> {
 			ProductData pData = getProductLicenseData(product);
 			// Do product checks (0)
@@ -272,10 +293,7 @@ public class LicenseManager {
 			// Do lease checks (1, -2, -3)
 			if (li.getQuantity() == null) return 1; // Success: quantity is unbounded
 			try {
-				String domainId = findDomainId(product.getInternetName());
-				if (domainId == null) throw new WTException("Unable to lookup domainId for '{}'", product.getInternetName());
-				
-				return internalCheckAndAssignLicenseLease(domainId, product.getProductId(), pData, userId, ServiceLicenseLease.LeaseOrigin.AUTO, li.getQuantity());
+				return internalCheckAndAssignLicenseLease(product.getDomainId(), product.getProductId(), pData, userId, ServiceLicenseLease.LeaseOrigin.AUTO, li.getQuantity());
 			
 			} catch(Throwable t) {
 				LOGGER.error("Error retrieving registered license [{}]", t, key);
@@ -301,12 +319,11 @@ public class LicenseManager {
 				String domainId = entry.getKey();
 				
 				try {
-					String internetName = findInternetName(domainId);
 					for (String productId : entry.getValue()) {
 						ProductId prodId = new ProductId(productId);
 						
 						try {
-							ProductData pdata = findProductLicenseData(internetName, prodId);
+							ProductData pdata = findProductLicenseData(domainId, prodId);
 							if (pdata.license != null) {
 								final String server = pdata.license.getLicenseServer();
 								if (cfails.getOrDefault(server, 0) >= 2) continue;
@@ -389,8 +406,7 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			String internetName = findInternetName(license.getDomainId());
-			BaseServiceProduct product = ProductUtils.getProduct(internetName, license.getProductId());
+			BaseServiceProduct product = ProductUtils.getProduct(license.getProductId(), license.getDomainId());
 			if (product == null) throw new WTException("Unknown product [{}]", license.getProductId());
 			
 			ProductLicense tplProductLicense = new ProductLicense(product);
@@ -398,7 +414,7 @@ public class LicenseManager {
 			LicenseInfo li = tplProductLicense.validate(true);
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			
-			//ProductLicense tplProductLicense = findProductLicense(internetName, license.getProductId());
+			//ProductLicense tplProductLicense = findProductLicense(license.getDomainId(), license.getProductId());
 			//if (!tplProductLicense.getLicenseInfo().isValid()) throw new WTException("License provided for '{}' is not valid", license.getProductId().getProductCode());
 			
 			OLicense olic = AppManagerUtils.createOLicense(license);
@@ -407,7 +423,7 @@ public class LicenseManager {
 			con = wta.getConnectionManager().getConnection();
 			if (licDao.insert(con, olic) == 1) {
 				// Cleanup cached dummy ProductLicense
-				forgetProductLicense(internetName, license.getProductId());
+				forgetProductLicense(license.getDomainId(), license.getProductId());
 			}
 			if (autoActivate) activateLicense(product, null);
 			
@@ -419,39 +435,35 @@ public class LicenseManager {
 	}
 	
 	public void changeLicense(final String domainId, final ProductId productId, final String newString, final String activatedString, final boolean force) throws WTException {
-		String internetName = findInternetName(domainId);
-		ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
 		
 		boolean ret = internalChangeLicense(domainId, productId, tplProductLicense, newString, activatedString, force);
-		if (ret) forgetProductLicense(internetName, productId);
+		if (ret) forgetProductLicense(domainId, productId);
 	}
 	
 	public void changeLicense(final BaseServiceProduct product, final String newString, final String activatedString, final boolean force) throws WTException {
-		String domainId = findDomainId(product.getInternetName());
 		ProductLicense tplProductLicense = getProductLicense(product);
 		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		boolean ret = internalChangeLicense(domainId, product.getProductId(), tplProductLicense, newString, activatedString, force);
-		if (ret) forgetProductLicense(product.getInternetName(), product.getProductId());
+		boolean ret = internalChangeLicense(product.getDomainId(), product.getProductId(), tplProductLicense, newString, activatedString, force);
+		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
 	}
 	
 	public void modifyLicense(final BaseServiceProduct product, final String modificationKey, final String modifiedLicenseString) throws WTException {
 		//TODO: not supported yet! Verify implementation!
-		String domainId = findDomainId(product.getInternetName());
 		ProductLicense tplProductLicense = getProductLicense(product);
 		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		boolean ret = internalModifyLicense(domainId, product.getProductId(), tplProductLicense, modificationKey, modifiedLicenseString);
-		if (ret) forgetProductLicense(product.getInternetName(), product.getProductId());
+		boolean ret = internalModifyLicense(product.getDomainId(), product.getProductId(), tplProductLicense, modificationKey, modifiedLicenseString);
+		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
 	}
 	
 	public void modifyLicense(final String domainId, final ProductId productId, final String modificationKey, final String modifiedLicenseString) throws WTException {
 		//TODO: not supported yet! Verify implementation!
-		String internetName = findInternetName(domainId);
-		ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
 		
 		boolean ret = internalModifyLicense(domainId, productId, tplProductLicense, modificationKey, modifiedLicenseString);
-		if (ret) forgetProductLicense(internetName, productId);
+		if (ret) forgetProductLicense(domainId, productId);
 	}
 	
 	public void updateLicenseAutoLease(final String domainId, final ProductId productId, final boolean autoLease) throws WTException {
@@ -459,10 +471,9 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			String internetName = findInternetName(domainId);
 			con = wta.getConnectionManager().getConnection();
 			licDao.updateAutoLease(con, domainId, productId.getServiceId(), productId.getProductCode(), autoLease);
-			forgetProductLicense(internetName, productId);
+			forgetProductLicense(domainId, productId);
 			
 		} catch(Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -476,8 +487,7 @@ public class LicenseManager {
 		Connection con = null;
 		
 		try {
-			String internetName = findInternetName(domainId);
-			ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+			ProductLicense tplProductLicense = findProductLicense(domainId, productId);
 			LicenseInfo li = tplProductLicense.validate(true);
 			if (li.isInvalid()) throw new WTLicenseValidationException(li);
 			if (!force) {
@@ -487,7 +497,7 @@ public class LicenseManager {
 			
 			con = wta.getConnectionManager().getConnection();
 			licDao.delete(con, domainId, productId.getServiceId(), productId.getProductCode());
-			forgetProductLicense(internetName, productId);
+			forgetProductLicense(domainId, productId);
 			
 		} catch(Throwable t) {
 			throw ExceptionUtils.wrapThrowable(t);
@@ -497,79 +507,70 @@ public class LicenseManager {
 	}
 	
 	public void activateLicense(final BaseServiceProduct product, final String activatedString) throws WTException {
-		String domainId = findDomainId(product.getInternetName());
 		ProductLicense tplProductLicense = getProductLicense(product);
 		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		boolean ret = internalActivateLicense(domainId, product.getProductId(), tplProductLicense, activatedString);
-		if (ret) forgetProductLicense(product.getInternetName(), product.getProductId());
+		boolean ret = internalActivateLicense(product.getDomainId(), product.getProductId(), tplProductLicense, activatedString);
+		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
 	}
 	
 	public void activateLicense(final String domainId, final ProductId productId, final String activatedString) throws WTException {
-		String internetName = findInternetName(domainId);
-		ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
 		
 		boolean ret = internalActivateLicense(domainId, productId, tplProductLicense, activatedString);
-		if (ret) forgetProductLicense(internetName, productId);
+		if (ret) forgetProductLicense(domainId, productId);
 	}
 	
 	public void deactivateLicense(final BaseServiceProduct product, final boolean offline) throws WTException {
-		String domainId = findDomainId(product.getInternetName());
 		ProductLicense tplProductLicense = getProductLicense(product);
 		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		boolean ret = internalDeactivateLicense(domainId, product.getProductId(), tplProductLicense, offline);
-		if (ret) forgetProductLicense(product.getInternetName(), product.getProductId());
+		boolean ret = internalDeactivateLicense(product.getDomainId(), product.getProductId(), tplProductLicense, offline);
+		if (ret) forgetProductLicense(product.getDomainId(), product.getProductId());
 	}
 	
 	public void deactivateLicense(final String domainId, final ProductId productId, final boolean offline) throws WTException {
-		String internetName = findInternetName(domainId);
-		ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+		ProductLicense tplProductLicense = findProductLicense(domainId, productId);
 		
 		boolean ret = internalDeactivateLicense(domainId, productId, tplProductLicense, offline);
-		if (ret) forgetProductLicense(internetName, productId);
+		if (ret) forgetProductLicense(domainId, productId);
 	}
 	
 	public void assignLicenseLease(final BaseServiceProduct product, final Collection<String> userIds) throws WTException {
-		String domainId = findDomainId(product.getInternetName());
 		ProductData plData = getProductLicenseData(product);
 		if (plData == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		boolean ret = internalAssignLicenseLease(domainId, product.getProductId(), plData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
-		if (ret) forgetLicenseLease(product.getInternetName(), product.getProductId(), userIds);
+		boolean ret = internalAssignLicenseLease(product.getDomainId(), product.getProductId(), plData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
+		if (ret) forgetLicenseLease(product.getDomainId(), product.getProductId(), userIds);
 	}
 	
 	public void assignLicenseLease(final String domainId, final ProductId productId, final Collection<String> userIds) throws WTException {
-		String internetName = findInternetName(domainId);
-		ProductData plData = findProductLicenseData(internetName, productId);
+		ProductData plData = findProductLicenseData(domainId, productId);
 		
 		boolean ret = internalAssignLicenseLease(domainId, productId, plData, userIds, ServiceLicenseLease.LeaseOrigin.STATIC);
-		if (ret) forgetLicenseLease(internetName, productId, userIds);
+		if (ret) forgetLicenseLease(domainId, productId, userIds);
 	}
 	
 	public void revokeLicenseLease(final BaseServiceProduct product, final Collection<String> userIds) throws WTException {
-		String domainId = findDomainId(product.getInternetName());
 		ProductData plData = getProductLicenseData(product);
 		if (plData == null) throw new WTException("Unknown product [{}]", product.getProductId());
 		
-		internalRevokeLicenseLease(domainId, product.getProductId(), plData, userIds);
-		forgetLicenseLease(product.getInternetName(), product.getProductId(), userIds);
+		internalRevokeLicenseLease(product.getDomainId(), product.getProductId(), plData, userIds);
+		forgetLicenseLease(product.getDomainId(), product.getProductId(), userIds);
 	}
 	
 	public void revokeLicenseLease(final String domainId, final ProductId productId, final Collection<String> userIds) throws WTException {
-		String internetName = findInternetName(domainId);
-		ProductData plData = findProductLicenseData(internetName, productId);
+		ProductData plData = findProductLicenseData(domainId, productId);
 		
 		//LOGGER.debug("Revoking license '{}' for user '{}'...", productId, new UserProfileId(domainId, userId));
 		internalRevokeLicenseLease(domainId, productId, plData, userIds);
-		forgetLicenseLease(internetName, productId, userIds);
+		forgetLicenseLease(domainId, productId, userIds);
 	}
 	
 	public void revokeLicenseLease(final UserProfileId profileId) throws WTException {
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
 		
-		String internetName = findInternetName(profileId.getDomainId());
 		LOGGER.debug("Revoking all licenses for profile '{}'...", profileId);
 		List<OLicenseLease> leases = null;
 		try {
@@ -577,11 +578,11 @@ public class LicenseManager {
 			leases = lleaDao.selectByDomainUser(con, profileId.getDomainId(), profileId.getUserId());
 			for (OLicenseLease lease : leases) {
 				ProductId productId = ProductId.build(lease.getServiceId(), lease.getProductCode());
-				ProductLicense tplProductLicense = findProductLicense(internetName, productId);
+				ProductLicense tplProductLicense = findProductLicense(profileId.getDomainId(), productId);
 				
 				LOGGER.debug("[{}] Revoking license '{}'...", profileId, productId);
 				//doRevokeLicenseLease(con, profileId.getDomainId(), productId, tplProductLicense, profileId.getUserId(), lease.getActivationString());
-				forgetLicenseLease(internetName, productId, Arrays.asList(profileId.getUserId()));
+				forgetLicenseLease(profileId.getDomainId(), productId, Arrays.asList(profileId.getUserId()));
 			}
 		
 		} catch(Throwable t) {
@@ -591,16 +592,16 @@ public class LicenseManager {
 		}
 	}
 	
-	private ProductLicense findProductLicense(String internetName, ProductId productId) throws WTException {
-		BaseServiceProduct product = ProductUtils.getProduct(internetName, productId);
+	private ProductLicense findProductLicense(String domainId, ProductId productId) throws WTException {
+		BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
 		if (product == null) throw new WTException("Unknown product [{}]", productId);
 		ProductLicense tplProductLicense = getProductLicense(product);
 		if (tplProductLicense == null) throw new WTException("Unknown product [{}]", productId);
 		return tplProductLicense;
 	}
 	
-	private ProductData findProductLicenseData(String internetName, ProductId productId) throws WTException {
-		BaseServiceProduct product = ProductUtils.getProduct(internetName, productId);
+	private ProductData findProductLicenseData(String domainId, ProductId productId) throws WTException {
+		BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
 		if (product == null) throw new WTException("Unknown product [{}]", productId);
 		ProductData plData = getProductLicenseData(product);
 		if (plData == null) throw new WTException("Unknown product [{}]", productId);
@@ -776,7 +777,8 @@ public class LicenseManager {
 					afterUpdateThrow = new WTLicenseActivationException(li);
 					
 				} else if (ValidationStatus.MISMATCH_HARDWARE_ID.equals(li.getValidationStatus()) && li.isActivationCompleted()) {
-					// If internetName is changed we can have this situation, we
+					// If domainInternetName (for products that are bounded to 
+					// it) is changed we can have this situation, we
 					// can erase activation data locally for this license and 
 					// only after throw the exception!
 					afterUpdateThrow = new WTLicenseValidationException(li);
@@ -907,16 +909,15 @@ public class LicenseManager {
 				String domainId = entry.getKey();
 				
 				try {
-					String internetName = findInternetName(domainId);
 					for (String productId : entry.getValue()) {
 						ProductId prodId = new ProductId(productId);
 
 						try {
-							ProductData pdata = findProductLicenseData(internetName, prodId);
+							ProductData pdata = findProductLicenseData(domainId, prodId);
 							if (pdata.license != null && pdata.maxLease != null) {
 								int currentLease = lleaDao.countByDomainServiceProduct(con, domainId, prodId.getServiceId(), prodId.getProductCode());
 								
-								final String leaseLTKey = internetName + "|" + prodId.toString();
+								final String leaseLTKey = domainId + "|" + prodId.toString();
 								// Skip if value is not changed
 								if (lastTrackedLeaseValue.getOrDefault(leaseLTKey, -1) == currentLease) continue;
 								// Skip if failure counts have reached threshold
@@ -961,12 +962,11 @@ public class LicenseManager {
 				String domainId = entry.getKey();
 				
 				try {
-					String internetName = findInternetName(domainId);
 					for (String productId : entry.getValue()) {
 						ProductId prodId = new ProductId(productId);
 
 						try {
-							ProductData pdata = findProductLicenseData(internetName, prodId);
+							ProductData pdata = findProductLicenseData(domainId, prodId);
 							if (pdata.license != null && pdata.maxLease != null) {
 								OLicense olic = licDao.lock(con, domainId, prodId.getServiceId(), prodId.getProductCode());
 								if (olic == null) throw new WTException("Unable to lookup license '{}'", prodId.getProductCode());
@@ -1019,39 +1019,23 @@ public class LicenseManager {
 		return tgt;
 	}
 	
-	private String findDomainId(String internetName) throws WTException {
-		try {
-			return wta.getWebTopManager().domainInternetNameToDomainId(internetName);
-		} catch(Throwable t) {
-			throw new WTException("Unable to lookup domainId for '{}'", internetName);
-		}
+	private String productLicenseCacheKey(String domainId, String service, String productCode) {
+		return domainId + "|" + service + "|" + productCode;
 	}
 	
-	private String findInternetName(String domainId) throws WTException {
-		try {
-			return wta.getWebTopManager().domainIdToDomainInternetName(domainId);
-		} catch(Throwable t) {
-			throw new WTException("Unable to lookup internetName for '{}'", domainId);
-		}
+	private String licenseLeaseCacheKey(String domainId, String service, String productCode, String user) {
+		return domainId + "|" + service + "|" + productCode + "|" + user;
 	}
 	
-	private String productLicenseCacheKey(String internetName, String service, String productCode) {
-		return internetName + "|" + service + "|" + productCode;
-	}
-	
-	private String licenseLeaseCacheKey(String internetName, String service, String productCode, String user) {
-		return internetName + "|" + service + "|" + productCode + "|" + user;
-	}
-	
-	private void forgetProductLicense(String internetName, ProductId product) {
-		String key = productLicenseCacheKey(internetName, product.getServiceId(), product.getProductCode());
+	private void forgetProductLicense(String domainId, ProductId product) {
+		String key = productLicenseCacheKey(domainId, product.getServiceId(), product.getProductCode());
 		productLicenseCache.remove(key);
 		licenseLeaseCache.entrySet().removeIf(e -> StringUtils.startsWith(e.getKey(), key));
 	}
 	
-	private void forgetLicenseLease(String internetName, ProductId product, Collection<String> users) {
+	private void forgetLicenseLease(String domainId, ProductId product, Collection<String> users) {
 		for (String user : users) {
-			licenseLeaseCache.remove(licenseLeaseCacheKey(internetName, product.getServiceId(), product.getProductCode(), user));
+			licenseLeaseCache.remove(licenseLeaseCacheKey(domainId, product.getServiceId(), product.getProductCode(), user));
 		}
 	}
 	

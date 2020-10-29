@@ -185,14 +185,13 @@ public class CoreManager extends BaseManager {
 		this.wta = wta;
 		
 		if (targetProfileId != null && !RunContext.isSysAdmin()) {
-			String internetName = WT.getDomainInternetName(targetProfileId.getDomainId());
-			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(internetName);
+			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(targetProfileId.getDomainId());
 			cfieldsLicensed = WT.isLicensed(CUSTOM_FIELD_PRODUCT, targetProfileId.getUserId()) > 0;
 		} else {
 			CUSTOM_FIELD_PRODUCT = null;
 			cfieldsLicensed = false;
 		}
-		
+			
 		if(!fastInit) {
 			//initAllowedServices();
 		}

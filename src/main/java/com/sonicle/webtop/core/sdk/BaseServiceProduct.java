@@ -44,16 +44,18 @@ import org.apache.commons.lang3.StringUtils;
  */
 public abstract class BaseServiceProduct extends AbstractProduct {
 	public final String SERVICE_ID;
-	protected final String internetName;
+	protected final String domainId;
+	protected final HardwareIDSource hwIdSource;
 	
-	public BaseServiceProduct(String internetName) {
-		super(StringUtils.replace(internetName, ".", "-"));
+	public BaseServiceProduct(String domainId, HardwareIDSource hwIdSource) {
+		super(createHardwareIdString(domainId, hwIdSource));
 		SERVICE_ID = WT.findServiceId(this.getClass());
-		this.internetName = internetName;
+		this.domainId = domainId;
+		this.hwIdSource = hwIdSource;
 	}
 	
-	public String getInternetName() {
-		return internetName;
+	public String getDomainId() {
+		return domainId;
 	}
 	
 	public ProductId getProductId() {
@@ -73,5 +75,33 @@ public abstract class BaseServiceProduct extends AbstractProduct {
 	@Override
 	public String getInternalHiddenString() {
 		return null;
+	}
+	
+	@Override
+	public String getLicenseServer() {
+		return null;
+	}
+
+	@Override
+	public String getBuiltInLicenseString() {
+		return null;
+	}
+	
+	public String getBuiltInHardwareId() {
+		return createHardwareIdString(domainId, HardwareIDSource.DOMAIN_ID);
+	}
+	
+	private static String createHardwareIdString(String domainId, HardwareIDSource hwIdSource) {
+		String s = null;
+		if (HardwareIDSource.DOMAIN_ID.equals(hwIdSource)) {
+			s = domainId;
+		} else if (HardwareIDSource.DOMAIN_INTERNET_NAME.equals(hwIdSource)) {
+			s = WT.getDomainInternetName(domainId);
+		}
+		return StringUtils.replace(s, ".", "-");
+	}
+	
+	protected static enum HardwareIDSource {
+		NONE, DOMAIN_ID, DOMAIN_INTERNET_NAME
 	}
 }

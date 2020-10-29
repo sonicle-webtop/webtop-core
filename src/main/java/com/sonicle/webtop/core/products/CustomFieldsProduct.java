@@ -38,7 +38,7 @@ import com.sonicle.webtop.core.sdk.BaseServiceProduct;
  *
  * @author malbinola
  */
-public class CustomFieldsProduct extends BaseServiceProduct {
+public final class CustomFieldsProduct extends BaseServiceProduct {
 	public static final String PRODUCT_ID = "SNCL-WT-CORE-CFIELDS";
 	public static final String PRODUCT_NAME = "Custom Fields";
 	public static final String PUBLIC_KEY = 
@@ -50,10 +50,9 @@ public class CustomFieldsProduct extends BaseServiceProduct {
 		"7f74c833fbda547f25ba1406c0a0b89e31251cb71a51b5998744dd52845d\n" +
 		"b91cd8993bda3a14309603RSA4102413SHA512withRSAf25637fba4b5cde\n" +
 		"d6dbfbb9c37a3a9c88a3972b5c1bd6c2519b7fd606cc1b4ad0203010001";
-	public static final String LICENSE_SERVER = null;
 	
-	public CustomFieldsProduct(String domainInternetName) {
-		super(domainInternetName);
+	public CustomFieldsProduct(String domainId) {
+		super(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
 	}
 	
 	@Override
@@ -69,10 +68,5 @@ public class CustomFieldsProduct extends BaseServiceProduct {
 	@Override
 	public String getPublicKey() {
 		return PUBLIC_KEY;
-	}
-
-	@Override
-	public String getLicenseServer() {
-		return LICENSE_SERVER;
 	}
 }

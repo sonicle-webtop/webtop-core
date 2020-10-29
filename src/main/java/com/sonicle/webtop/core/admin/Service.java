@@ -610,6 +610,7 @@ public class Service extends BaseService {
 					items.add(new JsServiceProductLkp(sid, WT.lookupResource(sid, up.getLocale(), BaseService.RESOURCE_SERVICE_NAME), product.code, product.name));
 				}
 			}
+			Collections.sort(items, (JsServiceProductLkp js1, JsServiceProductLkp js2) -> js1.productCode.compareTo(js2.productCode));
 			new JsonResult(items).printTo(out);
 			
 		} catch(Throwable t) {
@@ -707,8 +708,7 @@ public class Service extends BaseService {
 				String type = ServletUtils.getStringParameter(request, "type", true);
 				
 				ProductId prodId = new ProductId(productId);
-				String internetName = WT.getDomainInternetName(domainId);
-				ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(internetName, prodId));
+				ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(prodId, domainId));
 				if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
 				
 				if ("activation".equals(type)) {
@@ -813,8 +813,7 @@ public class Service extends BaseService {
 			String type = ServletUtils.getStringParameter(request, "type", true);
 
 			ProductId prodId = new ProductId(productId);
-			String internetName = WT.getDomainInternetName(domainId);
-			ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(internetName, prodId));
+			ProductLicense prodLic = WT.findProductLicense(ProductUtils.getProduct(prodId, domainId));
 			if (prodLic == null) throw new WTException("Unknown product [{}]", productId);
 			
 			String s = null;

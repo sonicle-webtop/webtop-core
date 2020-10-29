@@ -74,7 +74,7 @@ public abstract class BaseManager {
 		// we have no logged user. So check it!
 		//TODO: evaluate whether to create a dedicated dummy user for this (eg. wt-public@domain, ...)
 		if (!RunContext.isSysAdmin() && targetProfileId != null) {
-			AUDIT_PRODUCT = new AuditProduct(WT.getDomainInternetName(targetProfileId.getDomainId()));
+			AUDIT_PRODUCT = new AuditProduct(targetProfileId.getDomainId());
 			boolean enabled = false;
 			if (WT.isLicensed(AUDIT_PRODUCT)) {
 				enabled = new CoreServiceSettings(CoreManifest.ID, targetProfile.getDomainId()).isAuditEnabled(); 
