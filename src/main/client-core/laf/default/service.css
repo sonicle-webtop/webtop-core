@@ -175,7 +175,45 @@
 .wt-icon-priority4-high { background-image: url('priority4-high_16.svg') !important; background-size: contain; }
 .wt-icon-priority4-critical { background-image: url('priority4-critical_16.svg') !important; background-size: contain; }
 
-/* Formatting buttons */
+/* HTMLEditor tools */
+.wt-icon-htmled-forecolor { background-image: url('htmleditor/color-fore_16.svg') !important; background-position: center top; background-size: auto; }
+.wt-icon-htmled-backcolor { background-image: url('htmleditor/color-back_16.svg') !important; background-position: center top; background-size: auto; }
+.wt-icon-htmled-removeColor { background-image: url('htmleditor/color-remove_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-bold { background-image: url('htmleditor/bold_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-italic { background-image: url('htmleditor/italic_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-underline { background-image: url('htmleditor/underline_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-strikethrough { background-image: url('htmleditor/strikethrough_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-formattools { background-image: url('htmleditor/format-tools_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-subscript { background-image: url('htmleditor/subscript_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-superscript { background-image: url('htmleditor/superscript_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-blockquote { background-image: url('htmleditor/quote_24.svg') !important; background-size: contain; }
+.wt-icon-htmled-code { background-image: url('htmleditor/code_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-pre { background-image: url('htmleditor/pre_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-indent { background-image: url('htmleditor/indent_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-outdent { background-image: url('htmleditor/outdent_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-clearformat { background-image: url('htmleditor/clearformat_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-alignCenter { background-image: url('htmleditor/align-center_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-alignJustify { background-image: url('htmleditor/align-justify_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-alignLeft { background-image: url('htmleditor/align-left_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-alignRight { background-image: url('htmleditor/align-right_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-bulletList { background-image: url('htmleditor/list-bullets_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-numberList { background-image: url('htmleditor/list-numbers_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-emoticons { background-image: url('htmleditor/emoticons_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-symbols { background-image: url('htmleditor/symbols_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-link { background-image: url('htmleditor/link_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-image { background-image: url('htmleditor/image_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-insertImageUrl { background-image: url('htmleditor/image-link_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-insertImageFile { background-image: url('htmleditor/image-upload_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-table { background-image: url('htmleditor/table_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-devtools { background-image: url('htmleditor/devtools_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-sourceCode { background-image: url('htmleditor/source-code_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-codeSample { background-image: url('htmleditor/code-sample_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-publicImage { background-image: url('htmleditor/publicimage_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-template { background-image: url('htmleditor/template_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-addTemplate { background-image: url('htmleditor/template-add_16.svg') !important; background-size: contain; }
+.wt-icon-htmled-variable { background-image: url('htmleditor/variable_16.svg') !important; background-size: contain; }
+
+/* Formatting buttons (deprecate when transition done) */
 .wt-icon-format-bold-xs { background-image: url('format-bold_16.png') !important; }
 .wt-icon-format-italic-xs { background-image: url('format-italic_16.png') !important; }
 .wt-icon-format-underline-xs { background-image: url('format-underline_16.png') !important; }

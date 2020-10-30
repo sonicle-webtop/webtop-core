@@ -45,43 +45,42 @@ Ext.define('Sonicle.webtop.core.mixin.Waitable', {
 	},
 	
 	/**
-	 * Signals to apply the loading mask.
-	 * Every time this method will be called, a counter will be incremented.
-	 * Mask will be effectively added only on the first call (when counter=1).
+	 * Shows a loading-mask with message.
+	 * Depending on the value of update parameter, this will increment an 
+	 * internal counter in order to make sure that when calling {@link #unwait}, 
+	 * the loading-mask is removed after the same number of calls. 
+	 * When update is `true`, the current only loading-mask's message is updated 
+	 * and counter is not incremented. When `false` (default behaviour) the 
+	 * counter is incremented but message is effectively applied only at the 
+	 * first call time. Same situation with update set to `true` and no mask 
+	 * displayed yet.
 	 * @param {String} [msg] The message to show within the indicator.
+	 * @param {Boolean} [update=false] Whether to update current message.
 	 */
-	wait: function(msg) {
+	wait: function(msg, update) {
 		var me = this, cmp = me.ownerCt || me;
-		me._waitCount++;		
-		if (me._waitCount === 1) {
+		if (me._waitCount === 0) {
 			cmp.setLoading(msg || WT.res('waiting'));
-			//cmp.mask(msg || WT.res('waiting'));
+			me._waitCount++;
+		} else if ((update === true) && me._waitCount > 0) {
+			cmp.setLoading(msg || WT.res('waiting'));
+		} else {
+			me._waitCount++;
 		}
 	},
 	
 	/**
-	 * Updates (if displayed) the message of the loading indicator.
-	 * @param {String} [msg] The message to show within the indicator.
-	 */
-	waitUpdate: function(msg) {
-		var me = this, cmp = me.ownerCt || me;
-		if (me._waitCount > 0) {
-			cmp.setLoading(msg || WT.res('waiting'));
-		}
-	},
-	
-	/**
-	 * Signals to remove the loading mask.
-	 * Every time this method will be called, a counter will be decremented.
-	 * Mask will be effectively removed only when the counter is equal to 0.
+	 * Hides the loading-mask, if visible
+	 * Every time this method will be called, an internal counter is decremented,
+	 * hiding loading-mask effectively only after the same number of calls to 
+	 * {@link #wait} with update `false`.
 	 */
 	unwait: function(force) {
 		var me = this, cmp = me.ownerCt || me;
 		me._waitCount--;
-		if ((me._waitCount === 0) || (force === true)) {
-			me._waitCount = 0;
+		if (me._waitCount === 0 || (force === true)) {
 			cmp.setLoading(false);
-			//cmp.unmask();
+			me._waitCount = 0;
 		}
 	}
 });

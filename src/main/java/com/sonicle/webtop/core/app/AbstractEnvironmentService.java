@@ -42,6 +42,7 @@ import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadListener;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceUploadStreamListener;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import com.sonicle.webtop.core.app.servlet.js.BlobInfoPayload;
 import com.sonicle.webtop.core.io.output.AbstractReport;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import java.io.File;
@@ -55,11 +56,13 @@ import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -287,6 +290,16 @@ public abstract class AbstractEnvironmentService<E extends AbstractEnvironment> 
 	
 	public WebTopSession.UploadedFile addAsUploadedFile(String tag, String filename, String mediaType, UploadedFileStreamWriter writer) throws IOException, WTException {
 		return addAsUploadedFile(SERVICE_ID, tag, filename, mediaType, writer);
+	}
+	
+	public WebTopSession.UploadedFile addAsUploadedFile(String tag, BlobInfoPayload payload) throws IOException, WTException {
+		Base64InputStream b64is = null;
+		try {
+			b64is = new Base64InputStream(IOUtils.toInputStream(payload.base64, Charsets.UTF_8));
+			return addAsUploadedFile(SERVICE_ID, tag, payload.filename, payload.mediaType, b64is);
+		} finally {
+			IOUtils.closeQuietly(b64is);
+		}
 	}
 	
 	public WebTopSession.UploadedFile addAsUploadedFile(String serviceId, String tag, String filename, String mediaType, InputStream is) throws IOException, WTException {

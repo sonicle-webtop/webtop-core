@@ -466,6 +466,27 @@ public class CoreSettings {
 	public static final String LAUNCHER_LINKS = "launcher.links";
 	
 	/**
+	 * [domain+system]
+	 * [string]
+	 * List of comma-separated Font names to show in select.
+	 */
+	public static final String EDITOR_FONTS = "editor.fonts";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * List of comma-separated Font sizes to show in select.
+	 */
+	public static final String EDITOR_FONTSIZES = "editor.fontsizes";
+	
+	/**
+	 * [domain+system]
+	 * [enum] (clean|merge|prompt)
+	 * Sets the paste import mode of PowerPaste plugin.
+	 */
+	public static final String EDITOR_PASTE_IMPORTMODE = "editor.paste.importmode";
+	
+	/**
 	 * [domain+system+user][default]
 	 * [string]
 	 * 
@@ -771,7 +792,18 @@ public class CoreSettings {
 	 */
 	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
 	
-	public static final String EDITOR_FONTS = "editor.fonts";
+	/**
+	 * [user]
+	 * [boolean]
+	 * Activates new HTMLEditor based on TinyMCE 5.x.x (temporary until full transition)
+	 */
+	public static final String NEWHTMLEDITOR = "test.newhtmleditor";
+	
+	public static enum EditorPasteImportMode {
+		@SerializedName("clean") CLEAN,
+		@SerializedName("merge") MERGE,
+		@SerializedName("prompt") PROMPT;
+	}
 	
 	public static enum ViewportHeaderScale {
 		@SerializedName("small") SMALL,

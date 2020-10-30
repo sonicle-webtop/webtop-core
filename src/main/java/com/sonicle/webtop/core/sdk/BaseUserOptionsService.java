@@ -33,7 +33,9 @@
  */
 package com.sonicle.webtop.core.sdk;
 
+import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.webtop.core.app.AbstractPlatformService;
+import com.sonicle.webtop.core.app.WebTopApp;
 import java.io.PrintWriter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,6 +74,18 @@ public abstract class BaseUserOptionsService extends AbstractPlatformService {
 	
 	public String getTargetUserId() {
 		return targetProfileId.getUserId();
+	}
+	
+	public void processGetAboutInfo(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		WebTopApp wta = WebTopApp.getInstance();
+		
+		try {
+			String data = wta.getServiceManager().getAboutInfo(SERVICE_ID);
+			new JsonResult(data).printTo(out);
+			
+		} catch(Throwable t) {
+			new JsonResult(t).printTo(out);
+		}
 	}
 	
 	public abstract void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out);

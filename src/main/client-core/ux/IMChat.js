@@ -155,7 +155,8 @@ Ext.define('Sonicle.webtop.core.ux.IMChatXX', {
 					}
 				},
 				uploadprogress: function(s, file, percent) {
-					me.waitUpdate(Ext.String.format('{0}: {1}%', file.name, percent));
+					me.wait(Ext.String.format('{0}: {1}%', file.name, percent), true);
+					//me.waitUpdate(Ext.String.format('{0}: {1}%', file.name, percent));
 				}
 			}
 		}, '-', {

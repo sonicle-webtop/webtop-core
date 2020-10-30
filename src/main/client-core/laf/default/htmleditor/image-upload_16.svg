@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <g id="main">
+    <clipPath id="clip_mask">
+      <path d="M6,11.5c0,-3.0327,2.4673,-5.5,5.5,-5.5c1.8588,0,3.5039,0.9278,4.5,2.3436V0H0v16h8.3436C6.9278,15.0039,6,13.3588,6,11.5z"/>
+    </clipPath>
+    <g id="icon" clip-path="url(#clip_mask)">
+      <path d="M13.9,14.5H1.1c-0.33,0,-0.6,-0.27,-0.6,-0.6V1.1c0,-0.33,0.27,-0.6,0.6,-0.6h12.8c0.33,0,0.6,0.27,0.6,0.6v12.8C14.5,14.23,14.23,14.5,13.9,14.5z" fill="#FFFFFF" stroke="#6D6E71" stroke-width="1" stroke-miterlimit="1"/>
+      <circle cx="9.833" cy="4.15" r="2.15" fill="#EAB765"/>
+      <path d="M8.552,8.473c0.727,0.553,1.528,1.076,2.481,1.369l-0.275,0.51C6.656,9.199,5.872,3.722,2,8.292V13h10.991v-1.341H13V9.908v-0.762v-0.104C11.592,7.921,10.232,7.057,8.552,8.473z" fill="#4EA17E"/>
+    </g>
+    <g id="overlay">
+      <path d="M8.318,14.682c1.7574,1.7574,4.6066,1.7574,6.364,0c1.7574,-1.7574,1.7574,-4.6066,0,-6.364s-4.6066,-1.7574,-6.364,0C6.5607,10.0754,6.5607,12.9246,8.318,14.682zM9.5,11.6l1.6,-1.6H9.5V9h4v1h-1.6l1.6,1.6v1.6l-1.5,-1.5v2.8h-1v-2.8l-1.5,1.5V11.6z" fill-rule="evenodd" fill="#8C53A1"/>
+    </g>
+  </g>
+</svg>

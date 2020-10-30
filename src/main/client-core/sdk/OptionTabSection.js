@@ -38,6 +38,9 @@ Ext.define('Sonicle.webtop.core.sdk.OptionTabSection', {
 	requires: [
 		'Sonicle.form.Separator'
 	],
+	mixins: [
+		'WTA.mixin.Waitable'
+	],
 	
 	tabConfig: {
 		textAlign: 'left',

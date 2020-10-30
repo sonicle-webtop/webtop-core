@@ -290,6 +290,18 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return LauncherLink.List.toJson(links);
 	}
 	
+	public String getEditorFonts() {
+		return getString(EDITOR_FONTS, "Arial,Comic Sans MS,Courier New,Georgia,Helvetica,Tahoma,Times New Roman,Verdana,Webdings,Wingdings");
+	}
+	
+	public String getEditorFontSizes() {
+		return getString(EDITOR_FONTSIZES, "8px,10px,12px,14px,16px,18px,24px,36px,48px");
+	}
+	
+	public EditorPasteImportMode getEditorPasteImportMode() {
+		return getEnum(DEFAULT_PREFIX + EDITOR_PASTE_IMPORTMODE, EditorPasteImportMode.PROMPT, EditorPasteImportMode.class);
+	}
+	
 	public ServicesOrder getServicesOrder() {
 		ServicesOrder value = getObject(SERVICES_ORDER, null, ServicesOrder.class);
 		return (value != null) ? value : getDefaultServicesOrder();
@@ -433,8 +445,12 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getLong(DEFAULT_PREFIX + IM_UPLOAD_MAXFILESIZE, (long)10485760); // 10MB
 	}
 	
-	public String getEditorFonts() {
-		return getString(EDITOR_FONTS,"Arial, Font, Comic Sans MS, Courier New, Helvetica, Tahoma, Times New Roman, Verdana");
+	/**
+	 * Returns new HTMLEditor activation flag.
+	 * (temporary until full transition)
+	 */
+	public boolean getUseNewHTMLEditor() {
+		return getBoolean(DEFAULT_PREFIX + NEWHTMLEDITOR, true);
 	}
 	
 	public static class ServicesOrder extends ArrayList<String> {

@@ -99,7 +99,9 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerServiceHooks;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -109,6 +111,7 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 /**
@@ -717,6 +720,19 @@ public class ServiceManager {
 		}
 		logger.debug("Need to show whatsnew? {} [{}]", show, serviceId);
 		return show;
+	}
+	
+	public String getAboutInfo(String serviceId) throws IOException {
+		String resourceName = LangUtils.packageToPath(serviceId) + "/" + "meta/about.md";
+		InputStream is = null;
+		
+		try {
+			is = LangUtils.findClassLoader(getClass()).getResourceAsStream(resourceName);
+			if (is == null) throw new IOException();
+			return IOUtils.toString(is, StandardCharsets.UTF_8);
+		} finally {
+			IOUtils.closeQuietly(is);
+		}
 	}
 	
 	/**

@@ -67,6 +67,7 @@ import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.app.sdk.msg.BaseDataChangedSM;
 import com.sonicle.webtop.core.app.sdk.msg.LicenseUsageFailSM;
 import com.sonicle.webtop.core.app.sdk.msg.MessageBoxSM;
+import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
 import com.sonicle.webtop.core.msg.IMChatRoomRemoved;
@@ -121,9 +122,11 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.products.PowerPasteProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -273,6 +276,9 @@ public class Service extends BaseService implements EventListener {
 		UserProfile profile = getEnv().getProfile();
 		ServiceVars co = new ServiceVars();
 		
+		// New HTMLEditor activation flag: temporary until full transition!!!
+		co.put("useNewHTMLEditor", us.getUseNewHTMLEditor());
+		
 		boolean domainPasswordPolicy = false;
 		boolean dirCapPasswordWrite = false;
 		try {
@@ -308,6 +314,10 @@ public class Service extends BaseService implements EventListener {
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
+		co.put("wtEditorFonts", ss.getEditorFonts());
+		co.put("wtEditorFontSizes", ss.getEditorFontSizes());
+		co.put("wtEditorPP", PowerPasteProduct.exists() && WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, PowerPasteProduct.PRODUCT_ID, profile.getDomainId())));
+		co.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
@@ -332,7 +342,6 @@ public class Service extends BaseService implements EventListener {
 		co.put("domainId", profile.getDomainId());
 		co.put("userId", profile.getUserId());
 		co.put("userDisplayName", profile.getDisplayName());
-		co.put("editorFonts", ss.getEditorFonts());
 		co.put("theme", us.getTheme());
 		co.put("laf", us.getLookAndFeel());
 		co.put("layout", us.getLayout());

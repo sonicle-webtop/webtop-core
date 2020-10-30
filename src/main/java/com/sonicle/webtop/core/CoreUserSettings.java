@@ -376,6 +376,15 @@ public class CoreUserSettings extends BaseUserSettings {
 		return setBoolean(IM_SOUND_ON_MESSAGE_SENT, value);
 	}
 	
+	/**
+	 * Returns new HTMLEditor activation flag.
+	 * (temporary until full transition)
+	 */
+	public boolean getUseNewHTMLEditor() {
+		final Boolean value = getBoolean(NEWHTMLEDITOR, null);
+		return (value != null) ? value : ss.getUseNewHTMLEditor();
+	}
+	
 	public static String getWhatsnewVersion(SettingsManager setm, UserProfileId profileId, String serviceId) {
 		return setm.getUserSetting(profileId, serviceId, WHATSNEW_VERSION);
 	}

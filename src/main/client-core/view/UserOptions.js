@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	alternateClassName: 'WTA.view.UserOptions',
 	extend: 'WTA.sdk.UserOptionsView',
 	requires: [
+		'Sonicle.panel.Markdown',
 		'WTA.model.Simple',
 		'WTA.store.HeaderScale',
 		'WTA.store.DesktopNotification',
@@ -1133,6 +1134,32 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 					]
 				}
 			]
+		}, {
+			xtype: 'wtopttabsection',
+			title: WT.res('opts.about.tit'),
+			layout: 'fit',
+			items: [
+				{
+					xtype: 'somarkdownpanel'
+				}
+			],
+			listeners: {
+				activate: function(s) {
+					var md = s.getComponent(0);
+					if (!md.markdownHash) {
+						s.wait();
+						WT.ajaxReq(WT.ID, 'GetAboutInfo', {
+							params: {
+								optionsProfile: me.profileId
+							},
+							callback: function(success, json) {
+								s.unwait();
+								if (success) md.setMarkdown(json.data);
+							}
+						});
+					}
+				}
+			}
 		});
 		vm.bind('{record.otpDelivery}', me.onOTPDeliveryChanged, me);
 		vm.bind('{record.otpDeviceIsTrusted}', me.onOTPDeviceIsTrusted, me);

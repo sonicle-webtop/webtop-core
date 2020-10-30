@@ -435,46 +435,6 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Displays a message prompting for input.
-	 * @param {String} msg The message to display.
-	 * @param {Object} [opts] An object containing prompt configuration.
-	 * 
-	 * This object may contain any of the following properties:
-	 * 
-	 * @param {String} opts.title A custom title.
-	 * @param {Function} [opts.fn] A callback function which is called after a choice.
-	 * @param {String} opts.fn.buttonId The ID of the button pressed.
-	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
-	 * @param {String} opts.fn.cfg The config object passed during creation.
-	 * @param {Object} [opts.scope=window] The scope (this reference) in which the callback is executed.
-	 * @param {Boolean/Number} [opts.multiline=false] The scope (this reference) in which the callback is executed.
-	 * @param {String} [opts.value=''] Default value of the text input element
-	 * 
-	 * @returns {Ext.window.MessageBox} The newly created message box instance.
-	 */
-	prompt: function(msg, opts) {
-		opts = opts || {};
-		var exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
-				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
-				autoDestroyFn = function() { this.destroy(); },
-				mbox;
-		
-		if (exists) {
-			return null;
-		} else {
-			var mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
-			return mbox.prompt(
-				opts.title || WT.res('prompt'),
-				msg,
-				Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
-				opts.scope,
-				opts.multiline,
-				opts.value
-			);
-		}
-	},
-	
-	/**
 	 * Displays an information message.
 	 * @param {String} msg The message to display.
 	 * @param {Object} [opts] An object containing message configuration.
@@ -602,6 +562,62 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
 				scope: opts.scope || mbox
 			}, opts.config || {}));
+		}
+	},
+	
+	/**
+	 * Displays a message prompting for input.
+	 * @param {String} msg The message to display.
+	 * @param {Object} [opts] An object containing prompt configuration.
+	 * 
+	 * This object may contain any of the following properties:
+	 * 
+	 * @param {String} opts.title A custom title.
+	 * @param {Function} [opts.fn] A callback function which is called after a choice.
+	 * @param {String} opts.fn.buttonId The ID of the button pressed.
+	 * @param {String} opts.fn.value Value of the input field if either `prompt` or `multiline` is true.
+	 * @param {String} opts.fn.cfg The config object passed during creation.
+	 * @param {Object} [opts.scope=window] The scope (this reference) in which the callback is executed.
+	 * @param {Boolean/Number} [opts.multiline=false] True to create a multiline textbox using the defaultTextHeight.
+	 * @param {String} [opts.value=''] Default value of the text input element.
+	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
+	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
+	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * 
+	 * @returns {Ext.window.MessageBox} The newly created message box instance.
+	 */
+	prompt: function(msg, opts) {
+		opts = opts || {};
+		var xclass = Ext.isString(opts.instClass) ? opts.instClass : 'Ext.window.MessageBox',
+				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
+				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
+				autoDestroyFn = function() { this.destroy(); },
+				obj, mbox;
+		
+		if (exists) {
+			return null;
+		} else {
+			mbox = Ext.create(xclass, Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
+			obj = {
+				title: opts.title || WT.res('prompt'),
+				message: msg,
+				buttons: Ext.Msg.OKCANCEL,
+				callback: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
+				scope: opts.scope,
+				value: opts.value
+			};
+			if (Ext.isString(opts.instClass)) {
+				Ext.apply(obj, {
+					icon: null
+				});
+			} else {
+				Ext.apply(obj, {
+					prompt: true,
+					minWidth: Ext.Msg.minPromptWidth,
+					multiline: opts.multiline
+				});
+			}
+			return mbox.show(Ext.apply(obj, opts.config || {}));
 		}
 	},
 	
@@ -991,5 +1007,37 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	getLaf: function() {
 		return WT.getVar('laf');
+	},
+	
+	/**
+	 * Returns available font list in the form 'name=family'.
+	 * Value is taken from core variable 'wtEditorFonts'.
+	 * @returns {String[]} The fonts.
+	 */
+	getEditorFonts: function() {
+		var fonts = WT.getVar('wtEditorFonts');
+		if (Ext.isString(fonts)) {
+			return Ext.Array.map(fonts.split(','), function(value) {
+				var name = value.trim(), // Trims it to make sure there aren't unwanted whitespaces!
+					ff = Sonicle.CssUtils.findFontFamily(name) || Sonicle.CssUtils.toFontFamily(name);
+				return name + '=' + ff;
+			});
+		}
+		return null;
+	},
+	
+	/**
+	 * Returns available font sizes list.
+	 * Value is taken from core variable 'wtEditorFontSizes'.
+	 * @returns {String[]} The font sizes.
+	 */
+	getEditorFontSizes: function() {
+		var sizes = WT.getVar('wtEditorFontSizes');
+		if (Ext.isString(sizes)) {
+			return Ext.Array.map(sizes.split(','), function(value) {
+				return value.trim();
+			});
+		}
+		return null;
 	}
 });

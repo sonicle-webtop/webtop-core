@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.ux.field.HTMLEditor', {
     extend: 'Sonicle.form.field.HTMLEditor',
-	alias: ['widget.wthtmleditor'],
+	alias: ['widget.wthtmleditor_old'],
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -42,7 +42,7 @@ Ext.define('Sonicle.webtop.core.ux.field.HTMLEditor', {
 			me.buttonTips[key].title = WT.res('editor.act-' + key + '.tit');
 			me.buttonTips[key].text = WT.res('editor.act-' + key + '.tip');
 		});
-		cfg.fontFamilies = cfg.fontFamilies || WT.getVar("editorFonts").split(',');
+		cfg.fontFamilies = cfg.fontFamilies || WT.getVar("wtEditorFonts").split(',');
 		cfg.colors = WT.getColorPalette('html');
 		cfg.tilesPerRow = 8;
 		me.callParent([cfg]);

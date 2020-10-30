@@ -805,7 +805,9 @@ public class WebTopSession {
 		}
 		Locale locale = getLocale();
 		
-		fillAppReferences(js, locale, theme, false);
+		// New HTMLEditor activation flag: temporary until full transition!!!
+		boolean useNewHTMLEditor = cus.getUseNewHTMLEditor();
+		fillAppReferences(js, locale, theme, false, useNewHTMLEditor);
 		js.layoutClassName = StringUtils.capitalize(layout);
 		
 		List<String> privateSids = getPrivateServices(true);
@@ -934,7 +936,7 @@ public class WebTopSession {
 			theme += "-touch";
 		}
 
-		fillAppReferences(js, locale, theme, false);
+		fillAppReferences(js, locale, theme, false, false);
 		
 		// Include Core references
 		//js.appManifest.name = coreManifest.getJsPackageName();
@@ -989,17 +991,17 @@ public class WebTopSession {
 		return is;
 	}
 	
-	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+	private void fillAppReferences(JsWTS js, Locale locale, String theme, boolean rtl, boolean useNewHTMLEditor) {
 		js.appManifest.name = "Sonicle.webtop.core.app.App";
 		js.appManifest.id = "5ae25afe-182c-466c-a6ad-0a3af0ee74b5";
 		js.appManifest.theme = theme;
 		js.themeName = theme;
 		js.platformName = wta.getPlatformName();
 		js.fileTypes = wta.getFileTypes().toString();
-		fillExtJsReferences(js, locale, theme, rtl);
+		fillExtJsReferences(js, locale, theme, rtl, useNewHTMLEditor);
 	}
 	
-	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl) {
+	private void fillExtJsReferences(JsWTS js, Locale locale, String theme, boolean rtl, boolean useNewHTMLEditor) {
 		js.appManifest.framework = "ext";
 		js.appManifest.toolkit = "classic";
 		
@@ -1019,7 +1021,11 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/screenfull/3.3.2/" + "screenfull.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/atmosphere/2.3.9/" + "atmosphere.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
-		js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
+		if (useNewHTMLEditor) {
+			js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.5.1/" + "tinymce.min.js");
+		} else {
+			js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.min.js");
+		}
 		js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.full.min.js"); // Remember to update paths in Factory.js
 		js.appManifest.addJs(VENDOR_PATH + "/rrule/2.1.0/" + "rrule.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/markjs/8.11.1/" + "mark.min.js");
@@ -1027,14 +1033,18 @@ public class WebTopSession {
 		js.appManifest.addJs(VENDOR_PATH + "/jsdifflib/1.1.0/" + "jsdifflib.min.js");
 		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "_languageData.js");
 		js.appManifest.addJs(VENDOR_PATH + "/guess-language/" + "guessLanguage.js");
+		js.appManifest.addJs(VENDOR_PATH + "/showdown/1.9.1/" + "showdown.min.js");
+		js.appManifest.addCss(VENDOR_PATH + "/github-markdown/4.0.0/" + "github-markdown.min.css");
 		
 		// Uncomment these lines to load debug versions of the libraries ----->
 		//js.appManifest.addJs(VENDOR_PATH + "/jsxc/3.4.0/" + "jsxc.dep.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/5.5.1/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/tinymce/4.3.12/" + "tinymce.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "moxie.js");
 		//js.appManifest.addJs(VENDOR_PATH + "/plupload/2.3.6/" + "plupload.dev.js");
 		// <-------------------------------------------------------------------
 		//js.appManifest.addJs(VENDOR_PATH + "/ckeditor/" + "ckeditor.js");
+		//js.appManifest.addJs(VENDOR_PATH + "/cke5/20.0.0/" + "ckeditor.js");
 		
 		// Include ExtJs references
 		final String EXTJS_PATH = "resources/client/extjs/";
