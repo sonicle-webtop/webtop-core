@@ -21,6 +21,7 @@
 .wt-theme-text-tit { color: #157fcc; }
 .wt-theme-text-sub { color: #888; }
 .wt-theme-text-lnk { color: #0078d7; }
+.wt-theme-text-small20 { font-size:0.8em; }
 
 /*
  * Background color for header (regular, lighten/darken, alternative)
