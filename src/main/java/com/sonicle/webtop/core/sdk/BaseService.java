@@ -141,26 +141,25 @@ public abstract class BaseService extends AbstractEnvironmentService<PrivateEnvi
 	}
 	
 	public void processManageAutosave(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		ArrayList<String[]> items = null;
 		CoreManager core = WT.getCoreManager();
 		String cid = getEnv().getClientTrackingID();
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			String cntx = ServletUtils.getStringParameter(request, "context", true);	
+			String cntx = ServletUtils.getStringParameter(request, "context", true);
 			String key = ServletUtils.getStringParameter(request, "key", true);
-			if (crud.equals(Crud.READ)) {
-			} else if (crud.equals(Crud.UPDATE)) {
-				String value = ServletUtils.getStringParameter(request, "value", true);
+			if (crud.equals(Crud.UPDATE)) {
+				String value = ServletUtils.getPayload(request);
 				core.updateMyAutosaveData(cid, SERVICE_ID, cntx, key, value);
 				new JsonResult().printTo(out);
+				
 			} else if (crud.equals(Crud.DELETE)) {
 				core.deleteMyAutosaveData(cid, SERVICE_ID, cntx, key);
 				new JsonResult().printTo(out);
 			}
-		} catch(Exception ex) {
-			WebTopApp.logger.error("Error executing action AutoSave", ex);
-			new JsonResult(false, "Error").printTo(out); //TODO: error message
+		} catch (Throwable t) {
+			WebTopApp.logger.error("Error in ManageAutosave", t);
+			new JsonResult(t).printTo(out);
 		}	
 	}
 	
