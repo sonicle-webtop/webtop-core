@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.StampedLock;
 
 /**
  *
@@ -46,10 +47,11 @@ import java.util.Set;
  * @param <V>
  */
 public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
+	private final StampedLock lock = new StampedLock();
 	protected final Map<K, V> map;
 	
-	protected abstract void internalInitCache();
-	protected abstract void internalMissKey(K key);
+	protected abstract void internalInitCache(final Map<K, V> mapObject);
+	protected abstract void internalMissKey(final Map<K, V> mapObject, final K key);
 	
 	public AbstractMapCache() {
 		map = createCache();
@@ -59,67 +61,129 @@ public abstract class AbstractMapCache<K, V> implements MapCache<K, V> {
 		return new HashMap<>();
 	}
 	
-	public final synchronized void init() {
-		clear();
-		internalInitCache();
+	protected long checkContains(long stamp, K key) {
+		if (map.containsKey(key)) return stamp;
+		
+		long newStamp = lock.tryConvertToWriteLock(stamp);
+		if (newStamp == 0L) {
+			lock.unlockRead(stamp);
+			newStamp = lock.writeLock();
+		}
+		
+		try {
+			internalMissKey(map, key);
+		} catch (Throwable t) {
+			// Do nothing...
+		} finally {
+			return newStamp;
+		}
+	}
+	
+	public final void init() {
+		long stamp = lock.writeLock();
+		try {
+			map.clear();
+			internalInitCache(map);
+		} finally {
+			lock.unlockWrite(stamp);
+		}
 	}
 	
 	@Override
-	public synchronized void clear() {
-		map.clear();
-	}
-
-	@Override
-	public synchronized V get(K key) {
-		if (!map.containsKey(key)) {
-			internalMissKey(key);
+	public void clear() {
+		long stamp = lock.writeLock();
+		try {
+			map.clear();
+		} finally {
+			lock.unlockWrite(stamp);
 		}
-		return map.get(key);
 	}
-
+	
 	@Override
-	public synchronized V put(K key, V value) {
-		map.put(key, value);
-		return value;
+	public V get(K key) {
+		long stamp = lock.readLock();
+		try {
+			stamp = checkContains(stamp, key);
+			return map.get(key);
+			
+		} finally {
+			lock.unlock(stamp);
+		}
 	}
-
+	
+	@Override
+	public V put(K key, V value) {
+		long stamp = lock.writeLock();
+		try {
+			map.put(key, value);
+			return value;
+		} finally {
+			lock.unlockWrite(stamp);
+		}
+	}
+	
 	@Override
 	public synchronized V remove(K key) {
-		return map.remove(key);
+		long stamp = lock.writeLock();
+		try {
+			return map.remove(key);
+		} finally {
+			lock.unlockWrite(stamp);
+		}
 	}
 	
 	@Override
 	public int size() {
-		return map.size();
+		long stamp = lock.readLock();
+		try {
+			return map.size();
+		} finally {
+			lock.unlockRead(stamp);
+		}
 	}
 	
 	@Override
 	public Set<K> keys() {
-		final Set<K> keys = map.keySet();
-		if (!keys.isEmpty()) {
-			return Collections.unmodifiableSet(keys);
-		} else {
-			return Collections.emptySet();
+		long stamp = lock.readLock();
+		try {
+			final Set<K> keys = map.keySet();
+			if (!keys.isEmpty()) {
+				return Collections.unmodifiableSet(keys);
+			} else {
+				return Collections.emptySet();
+			}
+		} finally {
+			lock.unlockRead(stamp);
 		}
 	}
 	
 	@Override
 	public Collection<V> values() {
-		final Collection<V> values = map.values();
-		if (!map.isEmpty()) {
-			return Collections.unmodifiableCollection(values);
-		} else {
-			return Collections.emptyList();
+		long stamp = lock.readLock();
+		try {
+			final Collection<V> values = map.values();
+			if (!map.isEmpty()) {
+				return Collections.unmodifiableCollection(values);
+			} else {
+				return Collections.emptyList();
+			}
+		} finally {
+			lock.unlockRead(stamp);
 		}
 	}
 	
 	@Override
 	public Set<Map.Entry<K,V>> entrySet() {
-		final Set<Map.Entry<K,V>> entries = map.entrySet();
-		if (!map.isEmpty()) {
-			return Collections.unmodifiableSet(entries);
-		} else {
-			return Collections.emptySet();
+		long stamp = lock.readLock();
+		try {
+			final Set<Map.Entry<K,V>> entries = map.entrySet();
+			if (!map.isEmpty()) {
+				return Collections.unmodifiableSet(entries);
+			} else {
+				return Collections.emptySet();
+			}
+		} finally {
+			lock.unlockRead(stamp);
 		}
 	}
 }

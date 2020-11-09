@@ -41,6 +41,7 @@ import com.sonicle.security.DomainAccount;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.dal.UserDAO;
@@ -64,7 +65,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public final class UserProfile {
-	private static final Logger logger = WT.getLogger(UserProfile.class);
+	private static final Logger LOGGER = WT.getLogger(UserProfile.class);
 	private final CoreManager core;
 	private final Principal principal;
 	private OUser user;
@@ -74,15 +75,15 @@ public final class UserProfile {
 		this.principal = principal;
 		
 		try {
-			logger.debug("Initializing UserProfile");
+			LOGGER.debug("[{}] Initializing UserProfile...", principal.getUserId());
 			loadDetails();
+			LOGGER.debug("[{}] UserProfile loaded", principal.getUserId());
 		} catch(Throwable t) {
-			logger.error("Unable to initialize UserProfile", t);
-			//throw new Exception("Unable to initialize UserProfile", t);
+			LOGGER.error("Error creating UserProfile", t);
 		}
 	}
 	
-	private void loadDetails() throws Exception {
+	private void loadDetails() throws WTException {
 		Connection con = null;
 		
 		try {
@@ -91,11 +92,11 @@ public final class UserProfile {
 			
 			// Retrieves corresponding user using principal details
 			user = udao.selectByDomainUser(con, principal.getDomainId(), principal.getUserId());
-			if(user == null) throw new WTException("Unable to find a user for principal [{0}, {1}]", principal.getDomainId(), principal.getUserId());
+			if (user == null) throw new WTException("Unable to find a user for principal [{0}, {1}]", principal.getDomainId(), principal.getUserId());
 			
 			// If necessary, compute secret key and updates it
-			if(StringUtils.isEmpty(user.getSecret())) {
-				logger.debug("Building new secret key");
+			if (StringUtils.isEmpty(user.getSecret())) {
+				LOGGER.debug("Building new secret key");
 				String secret = "0123456789101112";
 				try {
 					secret = generateSecretKey();
@@ -104,8 +105,8 @@ public final class UserProfile {
 				udao.updateSecretByDomainUser(con, user.getDomainId(), user.getUserId(), secret);
 			}
 			
-		} catch(Exception ex) {
-			throw ex;
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
 		} finally {
 			DbUtils.closeQuietly(con);
 		}

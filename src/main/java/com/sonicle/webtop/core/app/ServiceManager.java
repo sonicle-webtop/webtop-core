@@ -832,9 +832,10 @@ public class ServiceManager {
 	
 	private BaseController instantiateController(ServiceDescriptor descriptor) {
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] Controller: instantiating class '{}'", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName());
 			return (BaseController)descriptor.getControllerClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("Controller: instantiation failure [{}]", descriptor.getManifest().getControllerClassName(), t);
+			logger.error("[{}] Controller: instantiation of '{}' throws errors", descriptor.getManifest().getId(), descriptor.getManifest().getControllerClassName(), t);
 			return null;
 		}
 	}
@@ -849,14 +850,15 @@ public class ServiceManager {
 	
 	public BaseManager instantiateServiceManager(String serviceId, boolean fastInit, UserProfileId targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasManager()) return null;
+		if (!descr.hasManager()) return null;
 		
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] Manager: instantiating class '{}'", serviceId, descr.getManifest().getManagerClassName());
 			Class clazz = descr.getManagerClass();
 			Constructor<BaseManager> constructor = clazz.getConstructor(boolean.class, UserProfileId.class);
 			return constructor.newInstance(fastInit, targetProfileId);
 		} catch(Throwable t) {
-			logger.error("Manager: instantiation failure [{}]", descr.getManifest().getManagerClassName(), t);
+			logger.error("[{}] Manager: instantiation of '{}' throws errors", serviceId, descr.getManifest().getManagerClassName(), t);
 			return null;
 		}
 	}
@@ -878,38 +880,39 @@ public class ServiceManager {
 	
 	public BaseService instantiatePrivateService(String serviceId, PrivateEnvironment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasPrivateService()) throw new RuntimeException("Service has no default class");
+		if (!descr.hasPrivateService()) throw new WTRuntimeException("Service '{}' has no default class", serviceId);
 		
 		// Creates service instance
 		BaseService instance = null;
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] PrivateService: instantiating class '{}'", serviceId, descr.getManifest().getPrivateServiceClassName());
 			instance = (BaseService)descr.getPrivateServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("PrivateService: instantiation failure [{}]", t, descr.getManifest().getPrivateServiceClassName());
+			logger.error("[{}] PrivateService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPrivateServiceClassName(), t);
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
 		long start = 0, end = 0;
-		logger.trace("PrivateService: calling initialize() [{}]", serviceId);
+		if (logger.isTraceEnabled()) logger.trace("[{}] PrivateService: calling initialize()", serviceId);
 		try {
 			LoggerUtils.setContextDC(serviceId);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("PrivateService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] PrivateService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PrivateService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PrivateService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS));
 		
 		return instance;
 	}
 	
 	public void privateServiceCallReady(BaseService instance) {
-		logger.trace("PrivateService: calling ready() [{}]", instance.SERVICE_ID);
+		logger.trace("[{}] PrivateService: calling ready()", instance.SERVICE_ID);
 		boolean success = false;
 		StopWatch stopWatch = new StopWatch();
 		try {
@@ -921,15 +924,15 @@ public class ServiceManager {
 			
 		} catch (Throwable t) {
 			stopWatch.stop();
-			logger.error("PrivateService: ready() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] PrivateService: ready() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (success && logger.isTraceEnabled()) logger.trace("PrivateService: ready() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (success && logger.isTraceEnabled()) logger.trace("[{}] PrivateService: ready() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS));
 	}
 	
 	public void privateServiceCallCleanup(BaseService instance) {
-		logger.trace("PrivateService: calling cleanup() [{}]", instance.SERVICE_ID);
+		logger.trace("[{}] PrivateService: calling cleanup()", instance.SERVICE_ID);
 		boolean success = false;
 		StopWatch stopWatch = new StopWatch();
 		try {
@@ -941,22 +944,23 @@ public class ServiceManager {
 			
 		} catch (Throwable t) {
 			stopWatch.stop();
-			logger.error("PrivateService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] PrivateService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (success && logger.isTraceEnabled()) logger.trace("PrivateService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (success && logger.isTraceEnabled()) logger.trace("[{}]PrivateService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(stopWatch.getNanoTime(), TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	public BaseUserOptionsService instantiateUserOptionsService(UserProfile sessionProfile, String sessionId, String serviceId, UserProfileId targetProfileId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasUserOptionsService()) throw new RuntimeException("Service has no userOptions service class");
+		if (!descr.hasUserOptionsService()) throw new WTRuntimeException("Service '{}' has no userOptions service class", serviceId);
 		
 		BaseUserOptionsService instance = null;
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] UserOptions: instantiating class '{}'", serviceId, descr.getManifest().getUserOptionsServiceClassName());
 			instance = (BaseUserOptionsService)descr.getUserOptionsServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("UserOptions: instantiation failure [{}]", t, descr.getManifest().getUserOptionsServiceClassName());
+			logger.error("[{}] UserOptions: instantiation of '{}' throws errors", serviceId, descr.getManifest().getUserOptionsServiceClassName(), t);
 			return null;
 		}
 		instance.configure(sessionProfile, targetProfileId);
@@ -965,54 +969,55 @@ public class ServiceManager {
 	
 	public BasePublicService instantiatePublicService(String serviceId, PublicEnvironment environment) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasPublicService()) throw new WTRuntimeException("Service [{}] has no public class", serviceId);
+		if (!descr.hasPublicService()) throw new WTRuntimeException("Service '{}' has no public class", serviceId);
 		
 		BasePublicService instance = null;
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] PublicService: instantiating class '{}'", serviceId, descr.getManifest().getPublicServiceClassName());
 			instance = (BasePublicService)descr.getPublicServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("PublicService: instantiation failure [{}]", t, descr.getManifest().getPublicServiceClassName());
+			logger.error("[{}] PublicService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getPublicServiceClassName(), t);
 			return null;
 		}
 		instance.configure(environment);
 		
 		// Calls initialization method
 		long start = 0, end = 0;
-		logger.trace("PublicService: calling initialize() [{}]", serviceId);
+		if (logger.isTraceEnabled()) logger.trace("[{}] PublicService: calling initialize()", serviceId);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("PublicService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] PublicService: initialize() throws errors [{}]", serviceId, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PublicService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PublicService: initialize() took {} ms", serviceId, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), serviceId);
 		
 		return instance;
 	}
 	
 	public void cleanupPublicService(BasePublicService instance) {
 		long start = 0, end = 0;
-		logger.trace("PublicService: calling cleanup() [{}]", instance.SERVICE_ID);
+		logger.trace("[{}] PublicService: calling cleanup()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.cleanup();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("PublicService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] PublicService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("PublicService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] PublicService: cleanup() took {} ms [{}]", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private boolean createJobService(String serviceId) {
 		synchronized(jobServices) {
-			if(jobServices.containsKey(serviceId)) throw new RuntimeException("Cannot add job service twice");
+			if (jobServices.containsKey(serviceId)) throw new WTRuntimeException("Cannot add job service twice");
 			BaseJobService inst = instantiateJobService(serviceId);
 			if(inst != null) {
 				jobServices.put(serviceId, inst);
@@ -1025,13 +1030,14 @@ public class ServiceManager {
 	
 	private BaseJobService instantiateJobService(String serviceId) {
 		ServiceDescriptor descr = getDescriptor(serviceId);
-		if(!descr.hasJobService()) throw new RuntimeException("Service has no job class");
+		if (!descr.hasJobService()) throw new WTRuntimeException("Service '{}' has no job class", serviceId);
 		
 		BaseJobService instance = null;
 		try {
+			if (logger.isTraceEnabled()) logger.trace("[{}] JobService: instantiating class '{}'", serviceId, descr.getManifest().getJobServiceClassName());
 			instance = (BaseJobService)descr.getJobServiceClass().newInstance();
 		} catch(Throwable t) {
-			logger.error("JobService: instantiation failure [{}]", t, descr.getManifest().getJobServiceClassName());
+			logger.error("[{}] JobService: instantiation of '{}' throws errors", serviceId, descr.getManifest().getJobServiceClassName(), t);
 			return null;
 		}
 		instance.configure(wta.getAdminSubject());
@@ -1040,34 +1046,34 @@ public class ServiceManager {
 	
 	private void initializeJobService(BaseJobService instance) {
 		long start = 0, end = 0;
-		logger.trace("JobService: calling initialize() [{}]", instance.SERVICE_ID);
+		logger.trace("[{}] JobService: calling initialize()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.SERVICE_ID);
 			start = System.nanoTime();
 			instance.initialize();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("JobService: initialize() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] JobService: initialize() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("JobService: initialize() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] JobService: initialize() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	private void cleanupJobService(BaseJobService instance) {
 		long start = 0, end = 0;
-		logger.trace("JobService: calling cleanup() [{}]", instance.SERVICE_ID);
+		logger.trace("[{}] JobService: calling cleanup()", instance.SERVICE_ID);
 		try {
 			LoggerUtils.setContextDC(instance.getManifest().getId());
 			start = System.nanoTime();
 			instance.cleanup();
 			end = System.nanoTime();
 		} catch(Throwable t) {
-			logger.error("JobService: cleanup() throws errors [{}]", t, instance.getClass().getCanonicalName());
+			logger.error("[{}] JobService: cleanup() throws errors [{}]", instance.SERVICE_ID, instance.getClass().getCanonicalName(), t);
 		} finally {
 			LoggerUtils.clearContextServiceDC();
 		}
-		if (logger.isTraceEnabled() && (end != 0)) logger.trace("JobService: cleanup() took {} ms [{}]", TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
+		if (logger.isTraceEnabled() && (end != 0)) logger.trace("[{}] JobService: cleanup() took {} ms", instance.SERVICE_ID, TimeUnit.MILLISECONDS.convert(end-start, TimeUnit.NANOSECONDS), instance.SERVICE_ID);
 	}
 	
 	
