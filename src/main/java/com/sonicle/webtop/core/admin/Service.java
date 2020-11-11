@@ -785,7 +785,7 @@ public class Service extends BaseService {
 			
 		} else if (cause instanceof WTLicenseValidationException) {
 			if (!activation && ValidationStatus.MISMATCH_HARDWARE_ID.equals(((WTLicenseValidationException)cause).getValidationStatus())) {
-				return new JsonResult(cause, Arrays.asList("{license.err.mismatchhwid.deactivation}"));
+				return new JsonResult(cause, Arrays.asList("{license.err.hwidmismatch.deactivation}"));
 			} else {
 				return new JsonResult(cause, Arrays.asList("{license.err.validation}", ((WTLicenseValidationException)cause).getValidationStatus().name()));
 			}

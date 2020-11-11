@@ -34,7 +34,9 @@ package com.sonicle.webtop.core.app;
 
 import com.license4j.ValidationStatus;
 import com.rits.cloning.Cloner;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -169,7 +171,9 @@ public class LicenseManager {
 	 */
 	public void cleanup() {
 		try {
-			scheduler.deleteJobs(Arrays.asList(dailyCleanupJobKey, dailyCheckJobKey));
+			if (!scheduler.isShutdown()) {
+				scheduler.deleteJobs(Arrays.asList(dailyCleanupJobKey, dailyCheckJobKey));
+			}
 		} catch (SchedulerException ex) {
 			LOGGER.warn("Unable to delete jobs", ex);
 		}
@@ -203,6 +207,7 @@ public class LicenseManager {
 				if (olic != null) {
 					ProductLicense plicNew = new ProductLicense(product);
 					plicNew.setLicenseString(olic.getString());
+					plicNew.setActivationCustomHardwareId(LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true)));
 					plicNew.setActivatedLicenseString(olic.getActivatedString());
 
 					LicenseInfo li = plicNew.validate(true);

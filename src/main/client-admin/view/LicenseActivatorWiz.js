@@ -453,7 +453,7 @@ Ext.define('Sonicle.webtop.core.admin.view.LicenseActivatorWiz', {
 						} else if (obj.message && SoS.contains(obj.key, 'notfound')) {
 							WT.warn(obj.message);
 							newSuccess = true;
-						} else if (obj.message && SoS.contains(obj.key, 'mismatchhwid')) {
+						} else if (obj.message && SoS.contains(obj.key, 'hwidmismatch')) {
 							WT.warn(obj.message);
 							newSuccess = true;
 						} else {

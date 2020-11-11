@@ -33,7 +33,9 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.l4j.AbstractProduct;
+import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.commons.time.DateTimeUtils;
@@ -86,6 +88,7 @@ public class JsGridDomainLicense {
 		
 		if (prodLic != null) {
 			prodLic.setLicenseString(license.getLicenseString());
+			prodLic.setActivationCustomHardwareId(LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true)));
 			prodLic.setActivatedLicenseString(license.getActivatedLicenseString());
 			
 			LicenseInfo li = prodLic.validate(true);
