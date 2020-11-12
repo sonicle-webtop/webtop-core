@@ -487,7 +487,7 @@ public final class WebTopManager {
 		Map<String, OGroup> groups = grpDao.selectByDomainIn(con, domain.getDomainId(), BUILT_IN_GROUPS);
 		
 		// Prepare built-in groups
-		logger.debug("Checking built-in groups... [{}]", domain.getDomainId());
+		logger.debug("[{}] Checking built-in groups...", domain.getDomainId());
 		if (!groups.containsKey(GROUPID_ADMINS)) {
 			OGroup ogroup = doGroupInsert(con, domain.getDomainId(), GROUPID_ADMINS, "Admins");
 			addToGroupUidCache(new GroupUid(ogroup.getDomainId(), ogroup.getUserId(), ogroup.getUserUid()));
@@ -505,7 +505,7 @@ public final class WebTopManager {
 		}
 		
 		// Prepare built-in admin(for domain) user
-		logger.debug("Checking built-in domain admin... [{}]", domain.getDomainId());
+		logger.debug("[{}] Checking built-in domain admin...", domain.getDomainId());
 		if (!usrDao.existByDomainUser(con, domain.getDomainId(), DOMAINADMIN_USERID)) {
 			UserEntity ue = new UserEntity();
 			ue.setDomainId(domain.getDomainId());
@@ -2526,13 +2526,13 @@ public final class WebTopManager {
 					logger.debug("[DomainInfoCache] Working on '{}'", domainId);
 					String pubName = domainIdToPublicName(domainId);
 					hmPublicNameToDomainId.put(pubName, domainId);
-					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", pubName, domainId);
+					logger.trace("[DomainInfoCache] {} -> {}", pubName, domainId);
 					
 					hmDomainInternetNameToDomainId.put(odomain.getInternetName(), domainId);
-					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", odomain.getInternetName(), domainId);
+					logger.trace("[DomainInfoCache] {} -> {}", odomain.getInternetName(), domainId);
 					
 					hmDomainIdToDomainInternetName.put(domainId, odomain.getInternetName());
-					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", domainId, odomain.getInternetName());
+					logger.trace("[DomainInfoCache] {} -> {}", domainId, odomain.getInternetName());
 					
 					String pubInternetName = odomain.getInternetName();
 					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
@@ -2542,10 +2542,10 @@ public final class WebTopManager {
 					}
 					
 					String oldPubInternetName = hmPublicInternetNameToDomainId.put(pubInternetName, domainId);
-					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
+					logger.trace("[DomainInfoCache] {} -> {}", pubInternetName, domainId);
 					
 					hmDomainIdToPublicInternetName.put(domainId, pubInternetName);
-					if (logger.isDebugEnabled()) logger.debug("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
+					logger.trace("[DomainInfoCache] {} -> {}", domainId, pubInternetName);
 					
 					if (oldPubInternetName != null) {
 						logger.warn("[DomainInfoCache] publicInternetName -> domainId : duplicated association for {}", pubInternetName);
