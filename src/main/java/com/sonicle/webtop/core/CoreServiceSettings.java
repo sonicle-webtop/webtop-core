@@ -62,6 +62,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getInteger(AJAX_SPECIALTIMEOUT, 30000);
     }
 	
+    public int getAjaxLongTimeout() {
+        return getInteger(AJAX_LONGTIMEOUT, 300000);
+    }
+	
 	public Boolean getDocumentServerEnabled() {
 		return getBoolean(DOCUMENT_SERVER_ENABLED, false);
 	}	

@@ -81,9 +81,16 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [int]
-	 * Defines a special milliseconds timout for selected ajax calls which may be longer than default 30 seconds
+	 * Defines a special milliseconds timeout for selected ajax calls which may be longer than default 30 seconds
 	 */
 	public static final String AJAX_SPECIALTIMEOUT = "ajax.specialtimeout";
+	
+	/**
+	 * [domain+system]
+	 * [int]
+	 * Defines a long milliseconds timeout for selected ajax calls which are usually longer than default 30 seconds
+	 */
+	public static final String AJAX_LONGTIMEOUT = "ajax.longtimeout";
 	
 	/**
 	 * [domain+system]
