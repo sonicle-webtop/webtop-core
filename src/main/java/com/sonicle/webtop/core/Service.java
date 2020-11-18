@@ -350,6 +350,7 @@ public class Service extends BaseService implements EventListener {
 		co.put("desktopNotification", us.getDesktopNotification());
 		
 		co.put("ajaxSpecialTimeout", ss.getAjaxSpecialTimeout());
+		co.put("ajaxLongTimeout", ss.getAjaxLongTimeout());
 		co.put("language", us.getLanguageTag());
 		co.put("timezone", us.getTimezone());
 		co.put("startDay", us.getStartDay());
