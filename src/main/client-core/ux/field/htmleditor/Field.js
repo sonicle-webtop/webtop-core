@@ -67,6 +67,7 @@ Ext.define('Sonicle.webtop.core.ux.field.htmleditor.Field', {
 		
 		cfg.language = Sonicle.Object.getValue(me.self.LANG_MAP, WT.getLanguageCode(), 'en');
 		cfg.pluginPowerPaste = WT.getVar('wtEditorPP');
+		cfg.pluginAdvCodeEditor = WT.getVar('wtEditorACE');
 		cfg.pasteWordMode = cfg.pasteHtmlMode = WT.getVar('wtEditorPasteMode');
 		
 		cfg.toolTexts = Ext.merge({

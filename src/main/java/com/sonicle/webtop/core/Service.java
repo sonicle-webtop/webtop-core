@@ -122,11 +122,10 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
-import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
-import com.sonicle.webtop.core.products.PowerPasteProduct;
+import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
 import com.sonicle.webtop.core.sdk.UserProfile;
@@ -316,8 +315,12 @@ public class Service extends BaseService implements EventListener {
 		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
 		co.put("wtEditorFonts", ss.getEditorFonts());
 		co.put("wtEditorFontSizes", ss.getEditorFontSizes());
-		co.put("wtEditorPP", PowerPasteProduct.exists() && WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, PowerPasteProduct.PRODUCT_ID, profile.getDomainId())));
+		
 		co.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
+		if (TMCEPremiumProduct.installed()) {
+			co.put("wtEditorPP", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+			co.put("wtEditorACE", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
+		}
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
@@ -329,7 +332,7 @@ public class Service extends BaseService implements EventListener {
 			logger.error("Unable to prepare Tags data", t);
 		}
 		
-		for(AppLocale apploc : WT.getInstalledLocales()) {
+		for (AppLocale apploc : WT.getInstalledLocales()) {
 			String patterns=lookupResource(apploc.getLocale(),CoreLocaleKey.DETECT_ATTACH_PATTERNS);
 			if (patterns!=null && !patterns.equals(CoreLocaleKey.DETECT_ATTACH_PATTERNS))
 				co.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);

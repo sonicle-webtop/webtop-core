@@ -87,7 +87,7 @@ public abstract class BaseServiceProduct extends AbstractProduct {
 		return null;
 	}
 	
-	public String getBuiltInHardwareId() {
+	public final String getBuiltInHardwareId() {
 		return createHardwareIdString(domainId, HardwareIDSource.DOMAIN_ID);
 	}
 	

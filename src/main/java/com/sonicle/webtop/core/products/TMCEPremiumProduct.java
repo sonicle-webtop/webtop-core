@@ -34,27 +34,30 @@ package com.sonicle.webtop.core.products;
 
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author malbinola
  */
-public final class PowerPasteProduct extends BaseServiceProduct {
-	public static final String PRODUCT_ID = "SNCL-WT-CORE-POWERPASTE";
-	public static final String PRODUCT_NAME = "PowerPaste";
+public class TMCEPremiumProduct extends BaseServiceProduct {
+	public static final String PRODUCT_ID = "SNCL-WT-CORE-TMCEPREMIUM";
+	public static final String PRODUCT_NAME = "TinyMCE Premium";
 	public static final String PUBLIC_KEY = 
 		"30819f300d06092a864886f70d010101050003818d003081893032301006\n" +
 		"072a8648ce3d02002EC311215SHA512withECDSA106052b81040006031e0\n" +
-		"0044a8b1c638925f4a6d23c8b7684a529f675ca94f69ae8821457617d61G\n" +
-		"02818100b35d13a688f12957ab2c1368543210dfccb0d8abe12e965d2ef6\n" +
-		"925d94aad8cf76fd6acd83fd92e50ff06153ad2bd664b03591e0cd39ca72\n" +
-		"9b5ed73c7b18392655a6a7191400bd893c9bd4053faaabeccc3f7ea8fcfc\n" +
-		"88e7aed8be9e1f1d55b903RSA4102413SHA512withRSA8fc60de9fc2d2b6\n" +
-		"e8912bb4a1bc375945638fdfd6a89d510a7e3b1aef5b58f450203010001";
-	private static String builtInLicenseString = null;
-	private static Boolean exists = null;
+		"00428bcd0226f07a5182b63b209b6f99b4b977b4c56a1e38c09b74a2efaG\n" +
+		"028181009e855474fdac660bfddde39ef432ce168c4a36d148db4b8fe36f\n" +
+		"e18d595b0dbea278c500fcb08784a82b8051a7534baf19b0ffd8f063ce99\n" +
+		"a224c85b25b8ca5222b334ec66d8e798926c22567e05389b48ff25532bfc\n" +
+		"b59a322aba9609a65b0803RSA4102413SHA512withRSAa045212276cf9ec\n" +
+		"7d55018f0dd09467a7d5f730096d2409762bee07b7f7d43190203010001";
+	private static String BUILTIN_LICENSE_STRING = null;
+	private static Boolean INSTALLED = null;
 	
-	public PowerPasteProduct(String domainId) {
+	public TMCEPremiumProduct(String domainId) {
 		super(domainId, HardwareIDSource.DOMAIN_INTERNET_NAME);
 	}
 	
@@ -75,30 +78,25 @@ public final class PowerPasteProduct extends BaseServiceProduct {
 	
 	@Override
 	public String getBuiltInLicenseString() {
-		check();
-		return builtInLicenseString;
+		return BUILTIN_LICENSE_STRING;
 	}
 	
-	public static boolean exists() {
-		check();
-		return exists;
+	public static boolean installed() {
+		return INSTALLED;
 	}
 	
-	private static synchronized void check() {
-		if (exists == null) {
+	static {
+		try {
+			Class clazz = Class.forName("com.sonicle.webtop.core.products.TMCEPremiumPlugins");
 			try {
-				Class clazz = Class.forName("com.sonicle.webtop.core.products.PowerPaste");
-				try {
-					Field field = clazz.getField("BUILTIN_LICENSE_STRING_SONICLE2");
-					String value = (String)field.get(null);
-					builtInLicenseString = value;
-				} catch (Throwable t1) {
-					System.out.println(t1);
+				String value = (String)clazz.getField("BUILTIN_LICENSE_STRING").get(null);
+				if (!StringUtils.isBlank(value)) {
+					BUILTIN_LICENSE_STRING = new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
 				}
-				exists = true;
-			} catch (Throwable t) {
-				exists = false;
-			}
+			} catch (Throwable t1) {}
+			INSTALLED = true;
+		} catch (Throwable t) {
+			INSTALLED = false;
 		}
 	}
 }
