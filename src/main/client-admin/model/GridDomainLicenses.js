@@ -40,20 +40,26 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 	idProperty: 'id',
 	fields: [
 		WTF.field('id', 'string', false),
+		WTF.roField('builtIn', 'boolean'),
 		WTF.roField('serviceId', 'string'),
 		WTF.roField('productCode', 'string'),
 		WTF.roField('productName', 'string'),
-		WTF.roField('valid', 'boolean'),
-		WTF.roField('activated', 'boolean'),
-		WTF.roField('expired', 'boolean'),
+		WTF.roField('status', 'int'),
+		//WTF.roField('valid', 'boolean'),
+		//WTF.roField('activated', 'boolean'),
+		//WTF.roField('expired', 'boolean'),
 		WTF.roField('expiry', 'date', false, {dateFormat: 'Y-m-d'}),
-		WTF.roField('expireSoon', 'boolean'),
+		//WTF.roField('expireSoon', 'boolean'),
 		WTF.roField('maxLease', 'int'),
 		WTF.roField('hwId', 'string'),
 		WTF.roField('regTo', 'string'),
 		WTF.field('autoLease', 'boolean', false),
 		WTF.field('leasesCount', 'int', false, {persist: false})
 	],
+	
+	isBuiltIn: function() {
+		return this.get('builtIn') === true;
+	},
 	
 	updateLeaseCount: function() {
 		this.set('leasesCount', this.leases().getCount());
@@ -63,6 +69,27 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 		return this.get('maxLease') === -1;
 	},
 	
+	isValid: function() {
+		return (this.get('status') & 1) === 1;
+	},
+		
+	isActivated: function() {
+		return (this.get('status') & 2) === 2;
+	},
+	
+	isActivationPening: function() {
+		return (this.get('status') & 4) === 4;
+	},
+	
+	isExpired: function() {
+		return (this.get('status') & 8) === 8;
+	},
+	
+	isExpireSoon: function() {
+		return (this.get('status') & 16) === 16;
+	},
+	
+	/*
 	getStatus: function() {
 		var me = this;
 		if (me.get('activated') !== true) {
@@ -75,6 +102,7 @@ Ext.define('Sonicle.webtop.core.admin.model.GridDomainLicenses', {
 			return 'valid';
 		}
 	},
+	*/
 	
 	hasMany: [
 		WTF.hasMany('leases', 'Sonicle.webtop.core.admin.model.GridLicenseLease')

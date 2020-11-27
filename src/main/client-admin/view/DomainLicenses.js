@@ -114,6 +114,40 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					flex: 1
 				}, {
 					xtype: 'soiconcolumn',
+					dataIndex: 'status',
+					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					getIconCls: function(v, rec) {
+						if (rec.isValid()) {
+							if (rec.isExpireSoon()) {
+								return 'wt-icon-ok-warn';
+							} else {
+								return 'wt-icon-ok';
+							}
+						} else if (rec.isActivationPening()) {
+							return 'wt-icon-ok-yellow';
+						} else { // invalid...
+							return 'wt-icon-critical';
+						}
+					},
+					getTip: function(v, rec) {
+						var s = 'invalid';
+						if (rec.isValid()) {
+							if (rec.isExpireSoon()) {
+								s = 'valid-warn';
+							} else {
+								s = 'valid';
+							}
+						} else if (rec.isActivationPening()) {
+							s = 'pending';
+						} else if (rec.isExpired()) {
+							s = 'expired';
+						}
+						return me.mys.res('domainLicenses.gp.status.'+s+'.tip');
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
+				}, /*{
+					xtype: 'soiconcolumn',
 					dataIndex: 'valid',
 					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
 					getIconCls: function(v, rec) {
@@ -134,7 +168,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					},
 					iconSize: WTU.imgSizeToPx('xs'),
 					width: 40
-				}, {
+				},*/ {
 					xtype: 'datecolumn',
 					dataIndex: 'expiry',
 					format: WT.getShortDateFmt(),
@@ -142,7 +176,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					//emptyCellText: '\u221e',
 					usingDefaultRenderer: true, // Necessary for renderer usage below
 					renderer : function(v, meta, rec) {
-						if (rec.get('expired')) meta.tdCls = 'wt-theme-text-error';
+						if (rec.isExpired()) meta.tdCls = 'wt-theme-text-error';
+						//if (rec.get('expired')) meta.tdCls = 'wt-theme-text-error';
 						return Ext.isEmpty(v) ? '<span style="font-size:larger;">&#8734;</span>' : this.defaultRenderer(v);
 					},
 					align: 'center',
@@ -171,10 +206,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					},
 					getTip: function(v, rec) {
 						if (rec.isLeaseUnbounded()) return '';
-						
 						return {title: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.tit'), text: me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip.txt')};
-						
-						return Sonicle.String.htmlEncodeLineBreaks(me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip'));
+						//return Sonicle.String.htmlEncodeLineBreaks(me.mys.res('domainLicenses.gp.autoLease.'+v+'.tip'));
 					},
 					handler: function(w, ridx, cidx, e, rec) {
 						if (rec.isLeaseUnbounded()) return;
@@ -197,17 +230,21 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 						{
 							buildDetails: function(values) {
 								var s = '';
-								if (!Ext.isEmpty(values['hwId'])) {
-									if (s.length !== 0) s += ' | ';
-									s += values['hwId'];
-								}
-								if (values['maxLease'] > -1) {
-									if (s.length !== 0) s += ' | ';
-									s += Ext.String.format(me.mys.res('domainLicenses.gp.details.users'), values['maxLease']);
-								}
-								if (!Ext.isEmpty(values['regTo'])) {
-									if (s.length !== 0) s += ' | ';
-									s += Ext.String.format(me.mys.res('domainLicenses.gp.details.regto'), values['regTo']);
+								if (values['builtIn'] === true) {
+									s += '<span class="wt-theme-text-greyed" style="font-size:0.8em;">' + me.mys.res('domainLicenses.gp.details.builtin') + '</span>' ;
+								} else {
+									if (!Ext.isEmpty(values['hwId'])) {
+										if (s.length !== 0) s += ' | ';
+										s += values['hwId'];
+									}
+									if (values['maxLease'] > -1) {
+										if (s.length !== 0) s += ' | ';
+										s += Ext.String.format(me.mys.res('domainLicenses.gp.details.users'), values['maxLease']);
+									}
+									if (!Ext.isEmpty(values['regTo'])) {
+										if (s.length !== 0) s += ' | ';
+										s += Ext.String.format(me.mys.res('domainLicenses.gp.details.regto'), values['regTo']);
+									}
 								}
 								return s;
 							}
@@ -225,6 +262,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								me.assignLicenseLeaseUI(rec);
 							},
 							isDisabled: function(s, ridx, cidx, itm, rec) {
+								if (rec.isBuiltIn()) return true;
 								if (!rec.isLeaseUnbounded()) {
 									return rec.get('leasesCount') >= rec.get('maxLease');
 								}
@@ -238,10 +276,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								me.activateLicenseUI(rec);
 							},
 							isDisabled: function(s, ridx, cidx, itm, rec) {
-								return rec.get('activated') === true;
+								if (rec.isBuiltIn()) return true;
+								return rec.isActivated();
+								//return rec.get('activated') === true;
 							},
 							getClass: function(v, meta, rec) {
-								return rec.get('activated') === true ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								return rec.isActivated() ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								//return rec.get('activated') === true ? Ext.baseCSSPrefix + 'hidden-display' : '';
 							}
 						}, {
 							glyph: 'xf09c@FontAwesome',
@@ -251,10 +292,13 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 								me.deactivateLicenseUI(rec);
 							},
 							isDisabled: function(s, ridx, cidx, itm, rec) {
-								return rec.get('activated') === false;
+								if (rec.isBuiltIn()) return true;
+								return !rec.isActivated();
+								//return rec.get('activated') === false;
 							},
 							getClass: function(v, meta, rec) {
-								return rec.get('activated') === false ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								return !rec.isActivated() ? Ext.baseCSSPrefix + 'hidden-display' : '';
+								//return rec.get('activated') === false ? Ext.baseCSSPrefix + 'hidden-display' : '';
 							}
 						}, {
 							glyph: 'xf044@FontAwesome',
@@ -262,6 +306,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.changeLicenseUI(rec);
+							},
+							isDisabled: function(s, ridx, cidx, itm, rec) {
+								return rec.isBuiltIn();
 							}
 						}, {
 							glyph: 'xf014@FontAwesome',
@@ -269,6 +316,9 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							handler: function(g, ridx) {
 								var rec = g.getStore().getAt(ridx);
 								me.deleteLicenseUI(rec);
+							},
+							isDisabled: function(s, ridx, cidx, itm, rec) {
+								return rec.isBuiltIn();
 							}
 						}
 					]
@@ -383,7 +433,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 			var me = this,
 					gp = me.lref('gp'), vw;
 			
-			if (rec.get('activated') === true) {
+			if (rec.isActivated()) {
 				WT.warn(me.mys.res('domainLicenses.warn.activeonchange'));
 				
 			} else {
@@ -408,7 +458,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 		deleteLicenseUI: function(rec) {
 			var me = this;
 			
-			if (rec.get('activated') === true) {
+			if (rec.isActivated()) {
 				WT.warn(me.mys.res('domainLicenses.warn.activeondelete'));
 			} else {
 				WT.confirm(me.mys.res('domainLicenses.confirm.delete'), function(bid) {

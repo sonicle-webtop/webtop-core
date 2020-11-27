@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.admin;
 
 import com.license4j.ActivationStatus;
 import com.license4j.ValidationStatus;
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.l4j.HardwareID;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ServletUtils;
@@ -627,8 +629,9 @@ public class Service extends BaseService {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.READ)) {
 				List<JsGridDomainLicense> items = new ArrayList<>();
+				String machineHardwareId = LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true));
 				for (ServiceLicense license : coreadm.listLicenses(domainId)) {
-					items.add(new JsGridDomainLicense(license, up.getTimeZone()));
+					items.add(new JsGridDomainLicense(license, up.getTimeZone(), machineHardwareId));
 				}
 				new JsonResult(items, items.size()).printTo(out);
 				

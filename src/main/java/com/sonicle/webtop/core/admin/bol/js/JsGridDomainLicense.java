@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.admin.bol.js;
 
+import com.sonicle.commons.FlagUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.l4j.AbstractProduct;
 import com.sonicle.commons.l4j.HardwareID;
@@ -43,6 +44,7 @@ import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import java.util.ArrayList;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -55,14 +57,16 @@ import org.jooq.tools.StringUtils;
  */
 public class JsGridDomainLicense {
 	public String id;
+	public boolean builtIn;
 	public String serviceId;
 	public String productCode;
 	public String productName;
-	public boolean valid;
-	public boolean activated;
-	public boolean expired;
+	public int status;
+	//public boolean valid;
+	//public boolean activated;
+	//public boolean expired;
 	public String expiry;
-	public boolean expireSoon;
+	//public boolean expireSoon;
 	public String hwId;
 	public String regTo;
 	public Boolean autoLease;
@@ -70,27 +74,72 @@ public class JsGridDomainLicense {
 	public Integer leasesCount;
 	public ArrayList<Lease> leases;
 	
-	public JsGridDomainLicense(ServiceLicense license, DateTimeZone profileTz) {
+	public static final int STATUS_VALID = 1;
+	public static final int STATUS_ACTIVATED = 2;
+	public static final int STATUS_PENDING_ACTIVATION = 4;
+	public static final int STATUS_EXPIRED = 8;
+	public static final int STATUS_EXPIRE_SOON = 16;
+	
+	public JsGridDomainLicense(ServiceLicense license, DateTimeZone profileTz, String machineHardwareId) {
 		id = license.getProductId().toString();
+		builtIn = license.getBuiltIn();
 		serviceId = license.getProductId().getServiceId();
 		productCode = license.getProductId().getProductCode();
 		
-		AbstractProduct prod = ProductUtils.getProduct(license.getProductId(), license.getDomainId());
+		BaseServiceProduct prod = ProductUtils.getProduct(license.getProductId(), license.getDomainId());
 		if (prod != null) productName = prod.getProductName();
 		ProductLicense prodLic = prod != null ? new ProductLicense(prod) : null;
 		
-		valid = false;
-		activated = false;
-		expired = false;
+		status = 0;
+		//valid = false;
+		//activated = false;
+		//expired = false;
 		expiry = null;
-		expireSoon = false;
+		//expireSoon = false;
 		maxLease = -1;
 		
-		if (prodLic != null) {
+		if (prod != null && prodLic != null) {
+			if (license.getBuiltIn()) prodLic.setCustomHardwareId(prod.getBuiltInHardwareId());
 			prodLic.setLicenseString(license.getLicenseString());
-			prodLic.setActivationCustomHardwareId(LangUtils.joinStrings("!", HardwareID.getHardwareIDFromHostName(), HardwareID.getHardwareIDFromEthernetAddress(true)));
+			prodLic.setActivationCustomHardwareId(machineHardwareId);
 			prodLic.setActivatedLicenseString(license.getActivatedLicenseString());
 			
+			LicenseInfo li = prodLic.validate(true);
+			LicenseInfo ali = prodLic.validate(false);
+			
+			///////////////////////////
+			//valid = (li.getLicenseID() == ali.getLicenseID()) && ali.isValid();
+			//activated = ali.isActivationCompleted();
+			//expired = li.isExpired();
+			//expireSoon = li.isExpiringSoon();
+			///////////////////////////
+			
+			if (li.isActivationRequired()) {
+				if (ali.isActivationCompleted()) {
+					status = FlagUtils.set(status, STATUS_ACTIVATED);
+				} else {
+					status = FlagUtils.set(status, STATUS_PENDING_ACTIVATION);
+				}
+				if (li.isValid() && ali.isValid() && ali.isActivationCompleted() && li.getLicenseID() == ali.getLicenseID()) {
+					if (li.isValid()) status = FlagUtils.set(status, STATUS_VALID);
+				}
+			} else {
+				if (li.isValid()) status = FlagUtils.set(status, STATUS_VALID);
+			}
+			if (li.isExpired()) {
+				status = FlagUtils.set(status, STATUS_EXPIRED);
+			}
+			if (li.isExpiringSoon()) {
+				status = FlagUtils.set(status, STATUS_EXPIRE_SOON);
+			}
+			
+			LocalDate expiryDate = li.getExpirationDate();
+			if (expiryDate != null) expiry = DateTimeUtils.createYmdFormatter(profileTz).print(expiryDate);
+			hwId = li.getHardwareID();
+			regTo = buildRegTo(li);
+			if (li.getQuantity() != null) maxLease = li.getQuantity();
+			
+			/*
 			LicenseInfo li = prodLic.validate(true);
 			LicenseInfo ali = prodLic.validate(false);
 			
@@ -105,6 +154,7 @@ public class JsGridDomainLicense {
 				regTo = buildRegTo(li);
 			}
 			if (li.getQuantity() != null) maxLease = li.getQuantity();
+			*/
 		}
 		
 		autoLease = license.getAutoLease();

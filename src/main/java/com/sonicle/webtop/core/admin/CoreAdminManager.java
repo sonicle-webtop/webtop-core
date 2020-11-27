@@ -387,7 +387,7 @@ public class CoreAdminManager extends BaseManager {
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
 		
-		return licMgr.listLicenses(domainId);
+		return licMgr.listLicenses(domainId, true);
 	}
 	
 	public ServiceLicense getLicense(String domainId, ProductId productId) throws WTException {

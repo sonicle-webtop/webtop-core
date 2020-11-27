@@ -40,6 +40,7 @@ import com.sonicle.webtop.core.model.License;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
+import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -76,8 +77,25 @@ public class AppManagerUtils {
 		return tgt;
 	}
 	
+	static ServiceLicense createBuiltInServiceLicense(String domainId, BaseServiceProduct product) {
+		ServiceLicense tgt = new ServiceLicense();
+		tgt.setBuiltIn(true);
+		tgt.setDomainId(domainId);
+		tgt.setProductId(product.getProductId());
+		tgt.setLicenseString(product.getBuiltInLicenseString());
+		tgt.setRevisionTimestamp(null);
+		tgt.setActivatedLicenseString(null);
+		tgt.setActivationTimestamp(null);
+		tgt.setActivationHwId(null);
+		tgt.setExpirationDate(null);
+		tgt.setQuantity(null);
+		tgt.setAutoLease(false);
+		return tgt;
+	}
+	
 	static <T extends ServiceLicense> T fillServiceLicense(T tgt, OLicense src) {
 		if ((tgt != null) && (src != null)) {
+			tgt.setBuiltIn(false);
 			tgt.setDomainId(src.getDomainId());
 			tgt.setProductId(ProductId.build(src.getServiceId(), src.getProductCode()));
 			tgt.setLicenseString(src.getString());

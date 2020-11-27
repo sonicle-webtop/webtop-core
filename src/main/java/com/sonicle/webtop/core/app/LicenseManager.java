@@ -58,6 +58,7 @@ import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
 import com.sonicle.webtop.core.model.ServiceLicenseLease.LeaseOrigin;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
+import com.sonicle.webtop.core.sdk.ServiceManifest;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -370,7 +372,7 @@ public class LicenseManager {
 		}
 	}
 	
-	public List<ServiceLicense> listLicenses(String domainId) throws WTException {
+	public List<ServiceLicense> listLicenses(String domainId, boolean includeBuiltIn) throws WTException {
 		LicenseDAO licDao = LicenseDAO.getInstance();
 		LicenseLeaseDAO lleaDao = LicenseLeaseDAO.getInstance();
 		Connection con = null;
@@ -379,10 +381,27 @@ public class LicenseManager {
 			con = wta.getConnectionManager().getConnection();
 			
 			ArrayList<ServiceLicense> items = new ArrayList<>();
+			HashSet<String> realIds = new HashSet<>();
 			for (VLicense vlic : licDao.viewByDomain(con, domainId)) {
+				realIds.add(ProductId.build(vlic.getServiceId(), vlic.getProductCode()).toString());
 				List<OLicenseLease> oleases = lleaDao.selectByDomainServiceProduct(con, domainId, vlic.getServiceId(), vlic.getProductCode());
 				items.add(AppManagerUtils.createServiceLicense(vlic, oleases));
 			}
+			
+			if (includeBuiltIn) {
+				for (String sid: wta.getServiceManager().listRegisteredServices()) {
+					ServiceManifest manifest = WT.getManifest(sid);
+					for (ServiceManifest.Product smProduct : manifest.getProducts()) {
+						ProductId productId = ProductId.build(sid, smProduct.code);
+						if (realIds.contains(productId.toString())) continue;
+						BaseServiceProduct product = ProductUtils.getProduct(productId, domainId);
+						if (product != null && StringUtils.isBlank(product.getBuiltInLicenseString())) continue;
+
+						items.add(AppManagerUtils.createBuiltInServiceLicense(domainId, product));
+					}
+				}
+			}
+			
 			return items;
 			
 		} catch(Throwable t) {
