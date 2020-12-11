@@ -179,6 +179,8 @@ public class CoreManager extends BaseManager {
 	public final CustomFieldsProduct CUSTOM_FIELD_PRODUCT;
 	private final boolean cfieldsLicensed;
 	private static final int MAX_CFIELDS_FREE = 6*2/4; // -> 3
+	private boolean webtopRcptProviderEnabled = true;
+	private boolean autoRcptProviderEnabled = true;
 	
 	public CoreManager(WebTopApp wta, boolean fastInit, UserProfileId targetProfileId) {
 		super(fastInit, targetProfileId);
@@ -187,6 +189,11 @@ public class CoreManager extends BaseManager {
 		if (targetProfileId != null && !RunContext.isSysAdmin()) {
 			CUSTOM_FIELD_PRODUCT = new CustomFieldsProduct(targetProfileId.getDomainId());
 			cfieldsLicensed = WT.isLicensed(CUSTOM_FIELD_PRODUCT, targetProfileId.getUserId()) > 0;
+			
+			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, targetProfileId.getDomainId());
+			webtopRcptProviderEnabled = css.getRecipientWebTopProviderEnabled();
+			autoRcptProviderEnabled = css.getRecipientAutoProviderEnabled();
+			
 		} else {
 			CUSTOM_FIELD_PRODUCT = null;
 			cfieldsLicensed = false;
@@ -2903,13 +2910,13 @@ public class CoreManager extends BaseManager {
 	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, String queryText, int max, boolean builtInProvidersAtTheEnd) throws WTException {
 		final ArrayList<String> ids = new ArrayList<>();
 		if (!builtInProvidersAtTheEnd) {
-			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+			if (autoRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			if (webtopRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
 		ids.addAll(listRecipientProviderSourceIds());
 		if (builtInProvidersAtTheEnd) {
-			ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
-			ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
+			if (autoRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_AUTO_SOURCE_ID);
+			if (webtopRcptProviderEnabled) ids.add(RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID);
 		}
 		return listProviderRecipients(fieldType, ids, queryText, max);
 	}
@@ -2924,15 +2931,12 @@ public class CoreManager extends BaseManager {
 	 * @throws WTException 
 	 */
 	public List<Recipient> listProviderRecipients(RecipientFieldType fieldType, Collection<String> sourceIds, String queryText, int max) throws WTException {
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
 		ArrayList<Recipient> items = new ArrayList<>();
-		boolean autoProviderEnabled = css.getRecipientAutoProviderEnabled();
 		
 		int remaining = max;
 		for (String soId : sourceIds) {
 			List<Recipient> recipients = null;
-			if (StringUtils.equals(soId, RECIPIENT_PROVIDER_AUTO_SOURCE_ID)) {
-				if (!autoProviderEnabled) continue;
+			if (RECIPIENT_PROVIDER_AUTO_SOURCE_ID.equals(soId)) {
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					recipients = new ArrayList<>();
 					//TODO: Find a way to handle other RecipientFieldTypes
@@ -2944,7 +2948,7 @@ public class CoreManager extends BaseManager {
 						}
 					}
 				}
-			} else if (StringUtils.equals(soId, RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID)) {
+			} else if (RECIPIENT_PROVIDER_WEBTOP_SOURCE_ID.equals(soId)) {
 				if (!fieldType.equals(RecipientFieldType.LIST)) {
 					recipients = new ArrayList<>();
 					//TODO: Find a way to handle other RecipientFieldTypes

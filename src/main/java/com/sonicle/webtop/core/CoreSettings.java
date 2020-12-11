@@ -402,7 +402,14 @@ public class CoreSettings {
 	/**
 	 * [domain+system]
 	 * [boolean]
-	 * Specifies whether to include auto-recipients in recipients lookups.
+	 * Specifies whether to include webtop users in default (no sources specified) recipients lookups.
+	 */
+	public static final String RECIPIENT_WEBTOP_PROVIDER_ENABLED = "recipient.provider.webtop.enabled";
+	
+	/**
+	 * [domain+system]
+	 * [boolean]
+	 * Specifies whether to include auto-recipients in default (no sources specified) recipients lookups.
 	 */
 	public static final String RECIPIENT_AUTO_PROVIDER_ENABLED = "recipient.provider.auto.enabled";
 	

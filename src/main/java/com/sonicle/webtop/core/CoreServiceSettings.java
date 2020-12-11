@@ -199,6 +199,10 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getInteger(OTP_TRUST_DEVICE_DURATION, 0);
 	}
 	
+	public boolean getRecipientWebTopProviderEnabled() {
+		return getBoolean(RECIPIENT_WEBTOP_PROVIDER_ENABLED, true);
+	}
+	
 	public boolean getRecipientAutoProviderEnabled() {
 		return getBoolean(RECIPIENT_AUTO_PROVIDER_ENABLED, true);
 	}
