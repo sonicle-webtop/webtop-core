@@ -99,6 +99,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				bind: '{record.displayName}',
 				fieldLabel: WT.res('opts.main.fld-displayName.lbl'),
 				width: 380,
+				needLogin: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -397,6 +398,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-title.lbl'),
 				width: 250,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -411,6 +413,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-firstName.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -425,6 +428,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				width: 300,
 				fieldLabel: WT.res('opts.upi.fld-lastName.lbl'),
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -439,6 +443,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-nickname.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -458,6 +463,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-gender.lbl'),
 				width: 250,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -472,6 +478,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				width: 400,
 				fieldLabel: WT.res('opts.upi.fld-email.lbl'),
+				needLogin: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -486,6 +493,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-mobile.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -500,6 +508,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-telephone.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -514,6 +523,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-fax.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -528,6 +538,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-pager.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -542,6 +553,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-address.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -556,6 +568,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-city.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -570,6 +583,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-postalCode.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -584,6 +598,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-state.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -598,6 +613,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-country.lbl'),
 				width: 300,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -612,6 +628,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-company.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -626,6 +643,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-function.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -640,6 +658,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom1.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -654,6 +673,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom2.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
@@ -668,6 +688,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				},
 				fieldLabel: WT.res('opts.upi.fld-custom3.lbl'),
 				width: 400,
+				needReload: true,
 				listeners: {
 					blur: {
 						fn: me.onBlurAutoSave,
