@@ -1409,7 +1409,7 @@ public class Service extends BaseService implements EventListener {
 					new JsonResult(true).printTo(out);
 					
 				} else if (operation.equals("activate")) {
-					int code = ServletUtils.getIntParameter(request, "code", true);
+					String code = ServletUtils.getStringParameter(request, "code", true);
 
 					OTPManager.Config config = (OTPManager.Config)wts.getProperty(SERVICE_ID, WTSPROP_OTP_SETUP);
 					boolean enabled = corem.otpActivate(config, code);

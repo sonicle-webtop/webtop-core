@@ -65,8 +65,8 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 		var me = this,
 				ic = me.getInitialConfig();
 		
-		if(!Ext.isEmpty(ic.profileId)) me.getVM().set('profileId', ic.profileId);
-		if(!Ext.isEmpty(ic.address)) me.getVM().set('address', ic.address);
+		if (!Ext.isEmpty(ic.profileId)) me.getVM().set('profileId', ic.profileId);
+		if (!Ext.isEmpty(ic.address)) me.getVM().set('address', ic.address);
 		me.callParent(arguments);
 		me.on('beforenavigate', me.onBeforeNavigate);
 	},
@@ -76,84 +76,97 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 	},
 	
 	createPages: function(path) {
-		return [{
-			itemId: 'step1',
-			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step1.tit'),
-				cls: 'x-window-header-title-default'
+		return [
+			{
+				itemId: 'step1',
+				xtype: 'wtwizardpage',
+				items: [
+					{
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step1.tit'),
+						cls: 'x-window-header-title-default'
+					}, {
+						xtype: 'sospacer'
+					}, {
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step1.txt')
+					}, {
+						xtype: 'sospacer'
+					}, {
+						xtype: 'wtform',
+						items: [
+							{
+								xtype: 'textfield',
+								bind: '{address}',
+								allowBlank: false,
+								width: 350,
+								fieldLabel: WT.res('otp.setup.email.fld-address.lbl')
+							}
+						]
+					}
+				]
 			}, {
-				xtype: 'sospacer'
+				itemId: 'step2',
+				xtype: 'wtwizardpage',
+				items: [
+					{
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step2.tit'),
+						cls: 'x-window-header-title-default'
+					}, {
+						xtype: 'sospacer'
+					}, {
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step2.txt')
+					}, {
+						xtype: 'sospacer'
+					}, {
+						xtype: 'wtform',
+						defaults: {
+							labelWidth: 120
+						},
+						items: [
+							{
+								xtype: 'textfield',
+								bind: '{code}',
+								allowBlank: false,
+								width: 250,
+								fieldLabel: WT.res('otp.setup.email.fld-code.lbl')
+							}
+						]
+					}
+				]
 			}, {
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step1.txt')
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'wtform',
-				items: [{
-					xtype: 'textfield',
-					bind: '{address}',
-					allowBlank: false,
-					width: 350,
-					fieldLabel: WT.res('otp.setup.email.fld-address.lbl')
-				}]
-			}]
-		}, {
-			itemId: 'step2',
-			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step2.tit'),
-				cls: 'x-window-header-title-default'
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step2.txt')
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'wtform',
-				defaults: {
-					labelWidth: 120
-				},
-				items: [{
-					xtype: 'textfield',
-					bind: '{code}',
-					allowBlank: false,
-					width: 250,
-					fieldLabel: WT.res('otp.setup.email.fld-code.lbl')
-				}]
-			}]
-		}, {
-			itemId: 'end',
-			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step3.tit'),
-				cls: 'x-window-header-title-default'
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'label',
-				html: WT.res('otp.setup.email.step3.txt')
-			}]
-		}];
+				itemId: 'end',
+				xtype: 'wtwizardpage',
+				items: [
+					{
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step3.tit'),
+						cls: 'x-window-header-title-default'
+					}, {
+						xtype: 'sospacer'
+					}, {
+						xtype: 'label',
+						html: WT.res('otp.setup.email.step3.txt')
+					}
+				]
+			}
+		];
 	},
 	
 	onBeforeNavigate: function(s, dir, np, pp) {
-		if(dir === -1) return;
+		if (dir === -1) return;
 		var me = this,
 				ret = true,
 				ppcmp = me.getPageCmp(pp),
 				vm = me.getVM();
 		
-		if(pp === 'step1') {
+		if (pp === 'step1') {
 			ret = ppcmp.down('wtform').isValid();
-			if(!ret) return false;
+			if (!ret) return false;
 			
+			me.wait();
 			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'configure',
@@ -162,16 +175,21 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 					address: vm.get('address')
 				},
 				callback: function(success, json) {
-					if(success) me.onNavigate(np);
-					else WT.error(json.message);
+					me.unwait();
+					if (success) {
+						me.onNavigate(np);
+					} else {
+						WT.error(json.message);
+					}
 				}
 			});
 			return false;
 			
-		} else if(pp === 'step2') {
+		} else if (pp === 'step2') {
 			ret = ppcmp.down('wtform').isValid();
-			if(!ret) return false;
+			if (!ret) return false;
 			
+			me.wait();
 			WT.ajaxReq(WT.ID, 'ManageOTP', {
 				params: {
 					operation: 'activate',
@@ -179,8 +197,12 @@ Ext.define('Sonicle.webtop.core.view.OTPSetupEmail', {
 					code: vm.get('code')
 				},
 				callback: function(success, json) {
-					if(success) me.onNavigate(np);
-					else WT.error(json.message);
+					me.unwait();
+					if (success) {
+						me.onNavigate(np);
+					} else {
+						WT.error(json.message);
+					}
 				}
 			});
 			return false;

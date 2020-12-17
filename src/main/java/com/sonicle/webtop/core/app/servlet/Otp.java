@@ -103,11 +103,11 @@ public class Otp extends AbstractServlet {
 				if (tries == null) throw new NoMoreTriesException();
 				tries++;
 				
-				int userCode = ServletUtils.getIntParameter(request, "wtcode", 0);
+				String userCode = ServletUtils.getStringParameter(request, "wtcode", null);
 				if (otpm.checkCode(pid, config, userCode)) {
 					if (css.getOTPDeviceTrustEnabled()) {
-						boolean trust = ServletUtils.getBooleanParameter(request, "wttrust", false);
-						if (trust) {
+						boolean trustThis = ServletUtils.getBooleanParameter(request, "wttrust", false);
+						if (trustThis) {
 							String userAgent = ServletUtils.getUserAgent(request);
 							JsTrustedDevice js = otpm.trustThisDevice(pid, userAgent);
 							otpm.writeTrustedDeviceCookie(pid, response, new TrustedDeviceCookie(js));

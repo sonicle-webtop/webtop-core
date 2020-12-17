@@ -76,6 +76,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.glxn.qrgen.javase.QRCode;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 /**
@@ -153,8 +154,8 @@ public class OTPManager {
 		UserProfile.Data ud = wta.getWebTopManager().userData(pid);
 		
 		InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);
-		if (to == null) throw new WTException("Invalid destination address [{0}]", emailAddress);
-		OTPKey otp = sa.generateCredentials(ud.getEmail().getAddress());
+		if (to == null) throw new WTException("Invalid destination address [{}]", emailAddress);
+		OTPKey otp = sa.generateCredentials();
 		sendCodeEmail(pid, ud.getLocale(), to, otp.getVerificationCode());
 		
 		return new EmailConfig(otp, emailAddress);
@@ -167,16 +168,18 @@ public class OTPManager {
 		return new GoogleAuthConfig(otp, qrcode);
 	}
 	
-	public boolean activate(UserProfileId pid, Config config, int code) throws WTException {
+	public boolean activate(UserProfileId pid, Config config, String code) throws WTException {
 		CoreUserSettings cus = new CoreUserSettings(pid);
 		
-		if(config instanceof EmailConfig) {
-			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
+		if (config instanceof EmailConfig) {
+			SonicleAuth provider = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			long interval = css.getOTPProviderSonicleAuthKVI();
 			
-			if(te.check(code, config.otp.getVerificationCode(), Long.valueOf(config.otp.getKey()), interval)) {
+			if (provider.check(code, config.otp.getVerificationCode(), config.otp.getVerificationCodeTimestamp(), interval)) {
 				cus.setOTPEmailAddress(((EmailConfig)config).emailAddress);
+				///////////////////////////////////////////cus.setOTPSecret(config.otp.getSecretKey());
+				cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPDelivery(OtpDeliveryMode.EMAIL);
 				cus.setOTPEnabled(true);
 				return true;
@@ -184,10 +187,10 @@ public class OTPManager {
 				return false;
 			}
 		} else if(config instanceof GoogleAuthConfig) {
-			GoogleAuth ga = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
+			GoogleAuth provider = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
 			
-			if(ga.check(code, config.otp.getKey())) {
-				cus.setOTPSecret(config.otp.getKey());
+			if (provider.check(code, config.otp.getSecretKey())) {
+				cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPDelivery(OtpDeliveryMode.GOOGLEAUTH);
 				cus.setOTPEnabled(true);
 				return true;
@@ -200,13 +203,13 @@ public class OTPManager {
 	
 	private byte[] generateGoogleAuthQRCode(UserProfileId pid, OTPKey otp, int size) throws WTException {
 		ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
-		if(domain == null) throw new WTException("Domain not found [{0}]", pid.getDomainId());
+		if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
 		
 		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getInternetName()));
 		InternetAddress ia = InternetAddressUtils.toInternetAddress(pid.getUserId(), domain.getInternetName(), null);
-		if(ia == null) throw new WTException("Unable to build account address");
+		if (ia == null) throw new WTException("Unable to build account address");
 		
-		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getKey(), ia.getAddress());
+		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getSecretKey(), ia.getAddress());
 		logger.debug("Generating OPT QRCode for {}", uri);
 		return QRCode.from(uri).withSize(size, size).stream().toByteArray();
 	}
@@ -219,8 +222,8 @@ public class OTPManager {
 			
 			String emailAddress = getEmailAddress(pid);
 			InternetAddress to = InternetAddressUtils.toInternetAddress(emailAddress);
-			if (to == null) throw new WTException("Invalid destination address [{0}]", emailAddress);
-			OTPKey otp = te.generateCredentials(ud.getEmail().getAddress());
+			if (to == null) throw new WTException("Invalid destination address [{}]", emailAddress);
+			OTPKey otp = te.generateCredentials();
 			sendCodeEmail(pid, ud.getLocale(), to, otp.getVerificationCode());
 			
 			return new Config(EnumUtils.toSerializedName(OtpDeliveryMode.EMAIL), otp);
@@ -229,16 +232,16 @@ public class OTPManager {
 		}
 	}
 	
-	public boolean checkCode(UserProfileId pid, Config data, int code) {
+	public boolean checkCode(UserProfileId pid, Config data, String code) {
 		OtpDeliveryMode deliveryMode = getDeliveryMode(pid);
 		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
-			SonicleAuth te = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
+			SonicleAuth provider = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			long interval = css.getOTPProviderSonicleAuthKVI();
-			return te.check(code, data.otp.getVerificationCode(), Long.valueOf(data.otp.getKey()), interval);
+			return provider.check(code, data.otp.getVerificationCode(), data.otp.getVerificationCodeTimestamp(), interval);
 		} else {
-			GoogleAuth ga = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
-			return ga.check(code, getSecret(pid));
+			GoogleAuth provider = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
+			return provider.check(code, getSecret(pid));
 		}
 	}
 	
@@ -275,15 +278,15 @@ public class OTPManager {
 	}
 	
 	public boolean isThisDeviceTrusted(UserProfileId pid, TrustedDeviceCookie tdc) {
-		if(tdc == null) return false;
+		if (tdc == null) return false;
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		
 		// Checks (if enabled) cookie duration
 		int duration = css.getOTPDeviceTrustDuration();
-		if(duration > 0) {
+		if (duration > 0) {
 			long now = new Date().getTime();
 			long expires = tdc.timestamp + TimeUnit.DAYS.toMillis(duration);
-			if(now > expires) {
+			if (now > expires) {
 				logger.trace("Device cookie expired [{}days, {} > {}]", duration, now, expires);
 				return false;
 			}
@@ -291,27 +294,27 @@ public class OTPManager {
 		
 		// Checks if device is registered
 		JsTrustedDevice td = getTrustedDevice(pid, tdc.deviceId);
-		if(td == null) {
+		if (td == null) {
 			logger.trace("Device ID not registered before [{}]", tdc.deviceId);
 			return false;
 		}
 		
 		// Checks account match
-		if(!td.account.equals(tdc.account)) {
+		if (!td.account.equals(tdc.account)) {
 			logger.trace("Device ID not bound to the right account [{} != {}]", tdc.account, td.account);
 			return false;
 		}
 		return true;
 	}
 	
-	public boolean isTrusted(UserProfileId pid, String remoteIP) {
+	public boolean isTrusted(UserProfileId pid, String remoteIp) {
 		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 		String addresses = css.getOTPTrustedAddresses();
-		if(addresses != null) {
+		if (addresses != null) {
 			String[] cidrs = SettingsManager.asArray(addresses);
 			try {
-				boolean inRange = IPUtils.isIPInRange(cidrs, remoteIP);
-				if(inRange) return true;
+				boolean inRange = IPUtils.isIPInRange(cidrs, remoteIp);
+				if (inRange) return true;
 			} catch(Exception ex) {
 				logger.error("Problem performing IP range check", ex);
 			}
@@ -326,22 +329,31 @@ public class OTPManager {
 	
 	public TrustedDeviceCookie readTrustedDeviceCookie(UserProfileId pid, HttpServletRequest request) {
 		String secret = getSecret(pid);
+		if (StringUtils.isBlank(secret)) {
+			logger.warn("Missing OTP secret for user '{}'", pid.toString());
+			return null;
+		}
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		return ServletUtils.getEncryptedCookie(secret, request, name, TrustedDeviceCookie.class);
 	}
 	
-	public void writeTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response, TrustedDeviceCookie tdc) {
+	public boolean writeTrustedDeviceCookie(UserProfileId pid, HttpServletResponse response, TrustedDeviceCookie tdc) {
 		String secret = getSecret(pid);
+		if (StringUtils.isBlank(secret)) {
+			logger.warn("Missing OTP secret for user '{}'", pid.toString());
+			return false;
+		}
 		String name = MessageFormat.format("TD_{0}", Principal.buildHashedName(pid.getDomainId(), pid.getUserId()));
 		int duration = 60*60*24*365*2; // 2 years
 		ServletUtils.setEncryptedCookie(secret, response, name, tdc, TrustedDeviceCookie.class, duration);
+		return true;
 	}
 	
-	private void sendCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, int code) throws WTException {
+	private void sendCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String code) throws WTException {
 		try {
 			String bodyHeader = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER);
 			String subject = NotificationHelper.buildSubject(locale, CoreManifest.ID, bodyHeader);
-			String html = TplHelper.buildOtpCodeVerificationEmail(locale, String.valueOf(code));
+			String html = TplHelper.buildOtpCodeVerificationEmail(locale, code);
 			
 			InternetAddress from = WT.getNoReplyAddress(pid.getDomainId());
 			if (from == null) throw new WTException("Error building sender address");

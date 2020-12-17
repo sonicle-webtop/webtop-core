@@ -1943,7 +1943,7 @@ public class CoreManager extends BaseManager {
 		return otp.configureGoogleAuth(getTargetProfileId(), qrCodeSize);
 	}
 	
-	public boolean otpActivate(OTPManager.Config config, int code) throws WTException {
+	public boolean otpActivate(OTPManager.Config config, String code) throws WTException {
 		//TODO: controllo accessi
 		ensureUser();
 		OTPManager otp = getOTPManager();
@@ -1963,7 +1963,7 @@ public class CoreManager extends BaseManager {
 		return otp.prepareCheckCode(getTargetProfileId());
 	}
 	
-	public boolean otpVerifyCode(OTPManager.Config params, int code) throws WTException {
+	public boolean otpVerifyCode(OTPManager.Config params, String code) throws WTException {
 		ensureCallerService(SERVICE_ID, "otpVerifyCode");
 		OTPManager otp = getOTPManager();
 		return otp.checkCode(getTargetProfileId(), params, code);
