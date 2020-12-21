@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.util.NotificationHelper;
@@ -47,11 +48,27 @@ import java.util.Locale;
  */
 public class TplHelper {
 	
-	public static String buildOtpCodeVerificationEmail(Locale locale, String verificationCode) throws IOException, TemplateException {
+	public static String buildOtpCodeEmail(Locale locale, String verificationCode) throws IOException, TemplateException {
 		String source = NotificationHelper.buildSource(locale, CoreManifest.ID);
 		String bodyMessage = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_MESSAGE);
 		bodyMessage = MessageFormat.format(bodyMessage, verificationCode);
 		return NotificationHelper.buildDefaultBodyTplForNoReplay(locale, source, null, bodyMessage);
+	}
+	
+	public static String buildOtpCodeBody(Locale locale, String verificationCode, int minutes) throws IOException, TemplateException {
+		MapItem i18n = new MapItem();
+		i18n.put("code", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.code"));
+		i18n.put("here", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.here"), minutes));
+		i18n.put("warn", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.warn"));
+		
+		MapItem otp = new MapItem();
+		otp.put("code", verificationCode);
+		
+		MapItem vars = new MapItem();
+		vars.put("i18n", i18n);
+		vars.put("otp", otp);
+
+		return WT.buildTemplate(CoreManifest.ID, "tpl/email/otpCode-body.html", vars);
 	}
 	
 	public static String buildDeviceSyncCheckEmail(Locale locale) throws IOException, TemplateException {

@@ -1,5 +1,5 @@
 <br>
-<table cellspacing="0" cellpadding="8" border="0" summary="" style="width:100%;font-family:Arial,Sans-serif;border:1px Solid #ccc;border-width:1px 1px 1px 1px;background-color:#fff;">
+<table cellspacing="0" cellpadding="8" border="0" summary="" style="width:100%;font-family:Arial,Sans-serif;border:1px Solid #ccc;border-width:1px 1px 1px 1px;border-radius:2px;background-color:#fff;">
     <tbody>
         <tr>
             <td>
@@ -18,7 +18,7 @@
                     </#if>
                     <h3 style="padding:0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:16px;font-weight:bold;color:#222">${notification.bodyHeader}</h3>
                     <#if notification.bodyMessage??>
-                    <p style="padding: 0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:14px;color:#222;">${notification.bodyMessage}</p>
+                    <p style="padding: 0 0 6px 0;margin:0;font-family:Arial,Sans-serif;font-size:12px;color:#222;">${notification.bodyMessage}</p>
                     </#if>
                     <#if notification.customBody??>
                     ${notification.customBody}
@@ -27,7 +27,7 @@
             </td>
         </tr>
         <tr>
-            <td style="background-color:#f6f6f6;color:#888;border-top:1px Solid #ccc;font-family:Arial,Sans-serif;font-size:11px;padding:8px 8px 0 8px;">
+            <td style="background-color:#f6f6f6;color:#888;border-top:1px Solid #ccc;font-family:Arial,Sans-serif;font-size:10px;padding:8px 8px 0 8px;">
                 <p style="margin:0 0 8px 0;">${notification.footerHeader}</p>
                 <p style="margin:0 0 8px 0;">${notification.footerMessage}</p>
             </td>

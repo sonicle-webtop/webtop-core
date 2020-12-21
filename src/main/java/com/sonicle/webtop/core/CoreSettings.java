@@ -310,8 +310,8 @@ public class CoreSettings {
 	
 	/**
 	 * [system]
-	 * [long]
-	 * Overrides default provider key validation interval (KVI).
+	 * [integer]
+	 * Overrides default provider key validation interval (KVI) in seconds.
 	 */
 	public static final String OTP_PROVIDER_SONICLEAUTH_KVI = "otp.provider.sonicleauth.kvi";
 	

@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.TplHelper;
+import com.sonicle.webtop.core.app.util.EmailNotification;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
@@ -60,7 +61,6 @@ import com.sonicle.webtop.core.bol.js.TrustedDeviceCookie;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
-import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -174,11 +174,10 @@ public class OTPManager {
 		if (config instanceof EmailConfig) {
 			SonicleAuth provider = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
-			long interval = css.getOTPProviderSonicleAuthKVI();
+			int interval = css.getOTPProviderSonicleAuthKVI();
 			
 			if (provider.check(code, config.otp.getVerificationCode(), config.otp.getVerificationCodeTimestamp(), interval)) {
 				cus.setOTPEmailAddress(((EmailConfig)config).emailAddress);
-				///////////////////////////////////////////cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPSecret(config.otp.getSecretKey());
 				cus.setOTPDelivery(OtpDeliveryMode.EMAIL);
 				cus.setOTPEnabled(true);
@@ -237,7 +236,7 @@ public class OTPManager {
 		if (OtpDeliveryMode.EMAIL.equals(deliveryMode)) {
 			CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
 			SonicleAuth provider = (SonicleAuth)OTPProviderFactory.getInstance("SonicleAuth");
-			long interval = css.getOTPProviderSonicleAuthKVI();
+			int interval = css.getOTPProviderSonicleAuthKVI();
 			return provider.check(code, data.otp.getVerificationCode(), data.otp.getVerificationCodeTimestamp(), interval);
 		} else {
 			GoogleAuth provider = (GoogleAuth)OTPProviderFactory.getInstance("GoogleAuth");
@@ -350,10 +349,17 @@ public class OTPManager {
 	}
 	
 	private void sendCodeEmail(UserProfileId pid, Locale locale, InternetAddress to, String code) throws WTException {
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, pid.getDomainId());
+		
 		try {
-			String bodyHeader = WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER);
-			String subject = NotificationHelper.buildSubject(locale, CoreManifest.ID, bodyHeader);
-			String html = TplHelper.buildOtpCodeVerificationEmail(locale, code);
+			int interval = css.getOTPProviderSonicleAuthKVI();
+			int minutes = (int)Math.floor(interval/60);
+			
+			String subject = EmailNotification.buildSubject(locale, CoreManifest.ID, WT.lookupResource(CoreManifest.ID, locale, CoreLocaleKey.TPL_EMAIL_OTPCODEVERIFICATION_BODY_HEADER));
+			String customBodyHtml = TplHelper.buildOtpCodeBody(locale, code, minutes);
+			String html = new EmailNotification.NoReplyBuilder()
+					.withCustomBody(null, customBodyHtml)
+					.build(locale, EmailNotification.buildSource(locale, CoreManifest.ID)).write();
 			
 			InternetAddress from = WT.getNoReplyAddress(pid.getDomainId());
 			if (from == null) throw new WTException("Error building sender address");

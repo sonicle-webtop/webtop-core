@@ -51,6 +51,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class NotificationHelper {
 	
+	/**
+	 * @deprecated use {@link EmailNotification#buildSource()} instead.
+	 */
+	@Deprecated
 	public static String buildSource(Locale locale, String serviceId) {
 		if(serviceId.equals(CoreManifest.ID)) {
 			return WT.getPlatformName();
@@ -60,10 +64,18 @@ public class NotificationHelper {
 		}
 	}
 	
+	/**
+	 * @deprecated use {@link EmailNotification#buildSubject()} instead.
+	 */
+	@Deprecated
 	public static String buildSubject(Locale locale, String serviceId, String title) {
 		return buildSubject(locale, serviceId, title, null);
 	}
 	
+	/**
+	 * @deprecated use {@link EmailNotification#buildSubject()} instead.
+	 */
+	@Deprecated
 	public static String buildSubject(Locale locale, String serviceId, String title, String reference) {
 		String source = buildSource(locale, serviceId);
 		if(StringUtils.isBlank(reference)) {

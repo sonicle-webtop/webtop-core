@@ -183,8 +183,8 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getBoolean(PASSWORD_FORCECHANGE_IFPOLICYUNMET, false);
 	}
 	
-	public long getOTPProviderSonicleAuthKVI() {
-		return getLong(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
+	public int getOTPProviderSonicleAuthKVI() {
+		return getInteger(OTP_PROVIDER_SONICLEAUTH_KVI, SonicleAuth.DEFAULT_KEY_VALIDATION_INTERVAL);
 	}
 	
 	public String getOTPTrustedAddresses() {
