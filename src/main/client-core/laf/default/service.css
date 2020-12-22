@@ -108,10 +108,12 @@
 .wt-icon-warn { background-image: url('warn_16.svg') !important; background-size: contain; }
 .wt-icon-critical { background-image: url('critical_16.svg') !important; background-size: contain; }
 .wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
+.wt-icon-add { background-image: url('add_16.svg') !important; background-size: contain; }
 .wt-icon-add-xs { background-image: url('add_16.png') !important; }
 .wt-icon-edit-xs { background-image: url('edit_16.png') !important; }
 .wt-icon-remove-xs { background-image: url('remove_16.png') !important; }
 .wt-icon-delete { background-image: url('delete_16.svg') !important; background-size: contain; }
+.wt-icon-restore { background-image: url('restore_16.svg') !important; background-size: contain; }
 .wt-icon-restore-xs { background-image: url('restore_16.png') !important; }
 .wt-icon-block-xs { background-image: url('block_16.png') !important; }
 .wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
@@ -137,9 +139,13 @@
 .wt-icon-sms-xs { background-image: url('sms_16.svg') !important; }
 .wt-icon-refresh { background-image: url('refresh_16.svg') !important; background-size: contain; }
 .wt-icon-cleanup { background-image: url('cleanup_16.svg') !important; background-size: contain; }
+.wt-icon-save { background-image: url('save_16.svg') !important; background-size: contain; }
 .wt-icon-save-xs { background-image: url('save_16.png') !important; }
+.wt-icon-saveClose { background-image: url('saveClose_16.svg') !important; background-size: contain; }
 .wt-icon-saveClose-xs { background-image: url('save-close_16.png') !important; }
+.wt-icon-saveAll { background-image: url('saveAll_16.svg') !important; background-size: contain; }
 .wt-icon-save-all-xs { background-image: url('save_all_16.png') !important; }
+.wt-icon-save-new { background-image: url('save-new_16.svg') !important; background-size: contain; }
 .wt-icon-save-new-xs { background-image: url('save-new_16.png') !important; }
 .wt-icon-select-all-xs { background-image: url('select-all_16.png') !important; }
 .wt-icon-select-none-xs { background-image: url('select-none_16.png') !important; }
