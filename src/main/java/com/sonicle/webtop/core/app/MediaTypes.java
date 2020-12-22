@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class MediaTypes {
-	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(LicenseManager.class);
+	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(MediaTypes.class);
 	private final StampedLock lock = new StampedLock();
 	private final HashMap<String, String> extToMediaType = new LinkedHashMap<>();
 	
