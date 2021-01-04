@@ -44,12 +44,13 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 				return '#'+rec.get('_color');
 			},
 			renderer: function(val, meta, rec) {
+				var isPers = rec.isPersonalNode();
 				meta.customElbowCls = 'wt-hidden';
 				if (rec.isFolderRoot()) {
 					meta.tdCls += ' wt-bold';
-					return '<span style="opacity:0.7;">' + val + '</span>';
+					return '<span style="opacity:0.7;">' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>';
 				} else if (rec.isFolder()) {
-					if (rec.isPersonalNode() && rec.get('_default')) {
+					if (isPers && rec.get('_default')) {
 						val += '<span style="font-size:0.8em;opacity:0.4;">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
