@@ -186,7 +186,14 @@ public class WTRealm extends AuthorizingRealm {
 			String authUsername = impersonate ? "admin" : directory.sanitizeUsername(opts, username);
 			Principal authPrincipal = new Principal(authAd, impersonate, authAd.getDomainId(), authUsername, password);
 			logger.debug("Authenticating principal [{}, {}]", authPrincipal.getDomainId(), authPrincipal.getUserId());
-			AuthUser userEntry = directory.authenticate(opts, authPrincipal);
+			
+			AuthUser userEntry = null;
+			try {
+				userEntry = directory.authenticate(opts, authPrincipal);
+			} catch(DirectoryException ex1) {
+				logger.trace("Unable to authenticate principal: {}", authPrincipal.toString(), ex1);
+				throw new AuthenticationException(ex1);
+			}
 			
 			// Authentication phase passed succesfully, now build the right principal!
 			Principal principal = null;
@@ -208,8 +215,8 @@ public class WTRealm extends AuthorizingRealm {
 			
 			if (autoCreate) principal.pushDirectoryEntry(userEntry);
 			return principal;
-			
-		} catch(URISyntaxException | WTException | DirectoryException ex) {
+		
+		} catch(URISyntaxException | WTException ex) {
 			logger.error("Authentication error", ex);
 			throw new AuthenticationException(ex);
 		}	
