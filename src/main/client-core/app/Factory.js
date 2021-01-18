@@ -35,7 +35,8 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	singleton: true,
 	alternateClassName: ['WTA.Factory', 'WTF'],
 	requires: [
-		'Sonicle.String'
+		'Sonicle.String',
+		'Sonicle.Data'
 	],
 	
 	/**
@@ -565,12 +566,15 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 */
 	calcField: function(name, type, depends, convert, cfg) {
 		cfg = cfg || {};
+		var convFn = function(v, rec) {
+			return convert.apply(this, Ext.Array.push([v, rec], Sonicle.Data.modelMultiGet(rec, depends)));
+		};
 		return Ext.apply({
 			name: name,
 			type: type,
 			persist: false,
 			depends: depends,
-			convert: convert
+			convert: convFn
 		}, cfg);
 	},
 	
@@ -661,12 +665,19 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {String} cfg.id The service ID.
 	 * @param {String} cfg.key The resource key.
 	 * @param {Boolean} cfg.keepcase True to not apply lowercase transform to value
+	 * @param {String} [cfg.emptyText] 
+	 * @param {String} [cfg.emptyCls] The CSS class to apply when value is empty
 	 * @returns {Function} The renderer function
 	 */
 	resColRenderer: function(cfg) {
 		cfg = cfg || {};
-		return function(value) {
-			return WT.res(cfg.id, cfg.key + '.' + ((cfg.keepcase === true) ? String(value) : Ext.util.Format.lowercase(value)));
+		return function(value, meta) {
+			if (value === null && Ext.isString(cfg.emptyText)) {
+				if (Ext.isString(cfg.emptyCls)) meta.tdCls = cfg.emptyCls;
+				return cfg.emptyText;
+			} else {
+				return WT.res(cfg.id, cfg.key + '.' + ((cfg.keepcase === true) ? String(value) : Ext.util.Format.lowercase(value)));
+			}
 		};
 	},
 	
@@ -1025,7 +1036,7 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {String} modelProp ViewModel's property in which the model is stored
 	 * @param {String} fieldName Model's field name
 	 * @param {Mixed} equalsTo Value to match
-	 * @param {Boolean} [not=false] True to apply NOT operator
+	 * @param {Boolean} [not=false] True to negate tests applying NOT operator
 	 * @returns {Object} Formula configuration object
 	 */
 	foIsEqual: function(modelProp, fieldName, equalsTo, not) {
@@ -1034,6 +1045,26 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
 				return (not === true) ? (val !== equalsTo) : (val === equalsTo);
+			}
+		};
+	},
+	
+	/**
+	 * 
+	 * @param {String} modelProp ViewModel's property in which the model is stored
+	 * @param {String} fieldName Model's field name
+	 * @param {Mixed[]|Mixed} values Allowed values list
+	 * @param {Boolean} [not=false] True to negate tests applying NOT operator
+	 * @returns {Object} Formula configuration object
+	 */
+	foIsIn: function(modelProp, fieldName, values, not) {
+		if (arguments.length === 3) not = false;
+		values = Ext.Array.from(values);
+		return {
+			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
+			get: function(val) {
+				var iof = values.indexOf(val);
+				return not === true ? iof === -1 : iof > -1;
 			}
 		};
 	},

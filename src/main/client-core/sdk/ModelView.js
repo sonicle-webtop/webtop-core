@@ -109,13 +109,6 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	/**
 	 * @private
-	 * @property {String} mode
-	 * Form operative mode.
-	 */
-	mode: null,
-	
-	/**
-	 * @private
 	 * @property {Object} opts
 	 * Options passed during a begin call.
 	 */
@@ -151,7 +144,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	viewModel: {
 		data: {
 			_fieldTitle: '',
-			_modeTitle: ''
+			_modeTitle: '',
+			_mode: null
 		}
 	},
 	
@@ -273,14 +267,19 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 */
 	setMode: function(value) {
 		var me = this,
-				om = me.mode;
+				vm = me.getVM(),
+				old = vm.get('_mode');
 		
-		if(!me.validModeRe.test(value)) return;
-		me.mode = value;
-		if(me.isMode(me.MODE_VIEW)) {
+		if (!me.validModeRe.test(value)) return;
+		vm.set('_mode', value);
+		if (value === me.MODE_VIEW) {
 			me.promptConfirm = false;
 		}
-		if(me.mode !== om) me.onModeChange(value, om);
+		if (value !== old) me.onModeChange(value, old);
+	},
+	
+	getMode: function() {
+		return this.getVM().get('_mode');
 	},
 	
 	/**
@@ -289,7 +288,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	 * @returns {Boolean} True if specified mode is currently active, False otherwise.
 	 */
 	isMode: function(mode) {
-		return (this.mode === mode);
+		return this.getMode() === mode;
 	},
 	
 	loadView: function() {
@@ -362,8 +361,8 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	
 	onModeChange: function(nm, om) {
 		var me = this;
-		if(me.getModeTitle() === true) {
-			me.getVM().set('_modeTitle', me.formatModeTitle(me.mode));
+		if (me.getModeTitle() === true) {
+			me.getVM().set('_modeTitle', me.formatModeTitle(me.getMode()));
 		}
 		me.fireEvent('modechange', me, nm, om);
 	},

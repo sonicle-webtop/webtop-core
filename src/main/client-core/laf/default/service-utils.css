@@ -1,0 +1,29 @@
+
+.wt-pointer-default { cursor: default !important; }
+.wt-pointer-link { cursor: pointer !important; }
+.wt-selectable {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+.wt-text-bold { font-weight: bold; }
+.wt-bold { font-weight: bold; }
+.wt-text-italic { font-style: italic; }
+.wt-italic { font-style: italic; }
+.wt-text-underlined { text-decoration: underline; }
+.wt-underlined { text-decoration: underline; }
+.wt-text-striked { text-decoration: line-through; }
+.wt-striked { text-decoration: line-through; }
+.wt-text-centered { text-align: center; }
+.wt-centered { text-align: center; }
+.wt-text-smaller10 { font-size:0.9em; }
+.wt-text-smaller20 { font-size:0.8em; }
+.wt-text-bigger20 { font-size:1.2em; }
+.wt-text-lighter30 { opacity:0.7; }
+.wt-text-lighter50 { opacity:0.5; }
+.wt-text-ellipsis { text-overflow: ellipsis; overflow: hidden; }
+
+.wt-no-opacity { opacity: 1 !important; }
+.wt-hidden { display: none; }
+.wt-v-middle { vertical-align: middle; }

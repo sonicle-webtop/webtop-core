@@ -1,3 +1,5 @@
+@import url("service-utils.css");
+
 /*
 	The purpose of this CSS file is to contain all platform 
 	specific styles (eg. wt-* classes) and default overrides 
@@ -375,39 +377,6 @@
 }
 
 /* ----- Some useful classes ----- */
-.wt-hidden {
-	display: none;
-}
-.wt-v-middle {
-	vertical-align: middle;
-}
-.wt-centered {
-	text-align: center;
-}
-.wt-bold {
-	font-weight: bold;
-}
-.wt-italic {
-	font-style: italic;
-}
-.wt-underlined {
-	text-decoration: underline;
-}
-.wt-striked {
-	text-decoration: line-through;
-}
-.wt-pointer-default {
-	cursor: default !important;
-}
-.wt-selectable {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-}
-.wt-no-opacity {
-	opacity: 1 !important;
-}
 .wt-color-success {
 	color: #3f9c35 !important;
 }
