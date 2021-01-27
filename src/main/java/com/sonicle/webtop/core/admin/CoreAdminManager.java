@@ -35,6 +35,8 @@ package com.sonicle.webtop.core.admin;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.qbuilders.conditions.Condition;
+import com.sonicle.commons.web.json.extjs.SortParam;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.LicenseManager;
 import com.sonicle.webtop.core.app.LogbackPropertyDefiner;
@@ -47,7 +49,9 @@ import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.app.util.LogbackHelper;
+import com.sonicle.webtop.core.bol.ODomainAccessLog;
 import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.bol.ODomainAccessLogDetail;
 import com.sonicle.webtop.core.bol.OGroup;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.config.bol.OPecBridgeFetcher;
@@ -67,9 +71,18 @@ import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.config.dal.PecBridgeFetcherDAO;
 import com.sonicle.webtop.core.config.dal.PecBridgeRelayDAO;
+import com.sonicle.webtop.core.dal.BaseDAO;
+import com.sonicle.webtop.core.dal.DomainAccessLogDAO;
 import com.sonicle.webtop.core.dal.DAOIntegrityViolationException;
+import com.sonicle.webtop.core.dal.DomainAccessLogPredicateVisitor;
 import com.sonicle.webtop.core.dal.UpgradeStatementDAO;
+import static com.sonicle.webtop.core.jooq.core.Tables.VW_AUTH_DETAILS;
+import com.sonicle.webtop.core.model.DomainAccessLog;
+import com.sonicle.webtop.core.model.DomainAccessLogDetail;
+import com.sonicle.webtop.core.model.DomainAccessLogQuery;
 import com.sonicle.webtop.core.model.License;
+import com.sonicle.webtop.core.model.ListDomainAccessLogDetailResult;
+import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.PublicImage;
@@ -93,6 +106,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
+import org.jooq.Field;
+import org.jooq.SortField;
 import org.slf4j.Logger;
 
 /**
@@ -1137,6 +1152,95 @@ public class CoreAdminManager extends BaseManager {
 			throw new WTException(ex, "DB error");
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ListDomainAccessLogResult listAccessLog(String domainId, Integer page, Integer limit, SortParam sortBy, Condition<DomainAccessLogQuery> conditionPredicate, Boolean returnFullCount) throws WTException {
+		DomainAccessLogDAO domainAccLogDao = DomainAccessLogDAO.getInstance();
+		Connection con = null;
+		
+		RunContext.ensureIsSysAdmin();
+		
+		try {
+			org.jooq.Condition condition = BaseDAO.createCondition(conditionPredicate, new DomainAccessLogPredicateVisitor()
+					.withIgnoreCase(true)
+					.withForceStringLikeComparison(true)
+			);
+			
+			Integer offset = ManagerUtils.toOffset(page, limit);			
+			con = WT.getConnection(SERVICE_ID);
+			
+			Integer fullCount = null;
+			if (returnFullCount) fullCount = domainAccLogDao.countByDomainIdCondition(con, domainId, condition);
+			
+			ArrayList<DomainAccessLog> items = new ArrayList<>();
+			SortField<?> sField = toAccessLogSort(sortBy);
+			
+			for (ODomainAccessLog oAccLog : domainAccLogDao.getByDomainIdCondition(con, domainId, sField, limit, offset, condition)) {
+				items.add(ManagerUtils.createDomainAccessLog(oAccLog));
+			}
+			
+			return new ListDomainAccessLogResult(items, fullCount);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public ListDomainAccessLogDetailResult listAccessLogDetail(String sessionId, String domainId, String userId, Boolean returnFullCount) throws WTException {
+		DomainAccessLogDAO domainAccLogDao = DomainAccessLogDAO.getInstance();
+		Connection con = null;
+		
+		RunContext.ensureIsSysAdmin();
+		
+		try {			
+			con = WT.getConnection(SERVICE_ID);
+			
+			Integer fullCount = null;
+			if (returnFullCount) fullCount = domainAccLogDao.countDetailBySessionId(con, sessionId, domainId, userId);
+			
+			ArrayList<DomainAccessLogDetail> items = new ArrayList<>();
+			for (ODomainAccessLogDetail logDetail : domainAccLogDao.getDetailBySessionId(con, sessionId, domainId, userId)) {
+				items.add(ManagerUtils.createDomainAccessLogDetail(logDetail));
+			}
+			
+			return new ListDomainAccessLogDetailResult(items, fullCount);
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public SortField<?> toAccessLogSort(SortParam sortBy) {
+		Field<?> field = null;
+		
+		switch (sortBy.property) {
+			case "sessionId":
+				field = VW_AUTH_DETAILS.SESSION_ID;
+				break;
+			case "userId":
+				field = VW_AUTH_DETAILS.USER_ID;
+				break;
+			case "date":
+				field = VW_AUTH_DETAILS.DATE;
+				break;
+			case "minutes":
+				field = VW_AUTH_DETAILS.MINUTES;
+				break;
+			case "authenticated":
+				field = VW_AUTH_DETAILS.AUTHENTICATED;
+				break;
+			case "loginErrors":
+				field = VW_AUTH_DETAILS.LOGIN_ERRORS;
+				break;
+		}
+		
+		if (SortParam.Direction.ASC.equals(sortBy.direction)) {
+			return field.asc();
+		} else {
+			return field.desc();
 		}
 	}
 	

@@ -150,6 +150,8 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						var type = rec.get('_type');
 						if (type === 'settings') {
 							me.showSettingsUI(rec);
+						} else if (type === 'daccesslog') {
++							me.showDomainAccessLogUI(rec.parentNode, rec);
 						} else if (type === 'dsettings') {
 							me.showDomainSettingsUI(rec.parentNode, rec);
 						} else if (type === 'dgroups') {
@@ -429,6 +431,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		
 		me.showTab(itemId, function() {
 			return Ext.create('Sonicle.webtop.core.admin.view.DomainLicenses', {
+				mys: me,
+				itemId: itemId,
+				domainId: node.get('_domainId'),
+				closable: true
+			});
+		});
+	},
+	
+	showDomainAccessLogUI: function(domNode, node) {
+		var me = this,
+				itemId = WTU.forItemId(node.getId());
+		
+		me.showTab(itemId, function() {
+			return Ext.create('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),

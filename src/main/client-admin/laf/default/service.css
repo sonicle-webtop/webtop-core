@@ -17,6 +17,8 @@
 .wtadm-icon-logging { background-image: url('logging_16.svg') !important; background-size: contain; }
 .wtadm-icon-loggers { background-image: url('logging_16.svg') !important; background-size: contain; }
 .wtadm-icon-logViewer { background-image: url('logViewer_16.svg') !important; background-size: contain; }
+.wtadm-icon-accesslog { background-image: url('accessLog_16.svg') !important; background-size: contain; }
+.wtadm-icon-audit { background-image: url('audit_16.svg') !important; background-size: contain; }
 
 .wtadm-icon-dbUpgrader { background-image: url('dbUpgrader_16.svg') !important; background-size: contain; }
 .wtadm-icon-domains { background-image: url('domains_16.svg') !important; background-size: contain; }
@@ -46,3 +48,5 @@
 .wtadm-icon-stmtStatus-skipped { background-image: url('stmtStatus-skipped_16.svg') !important; background-size: contain; }
 
 .wtadm-gpusers-row-disabled { color: #E60D35; }
+.wtadm-domainAccessLog-warning { background-color: #FFFFE0; }
+.wtadm-domainAccessLog-danger { background-color: #FFCCCB; }

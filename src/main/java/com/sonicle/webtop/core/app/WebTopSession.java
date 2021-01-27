@@ -441,7 +441,11 @@ public class WebTopSession {
 		if (passwordChangeNeeded && !principal.isImpersonated()) setProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN, true);
 		
 		boolean otpEnabled = wta.getOTPManager().isEnabled(profile.getId());
-		if (!otpEnabled || principal.isImpersonated()) setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
+		if (!otpEnabled || principal.isImpersonated()) {
+			setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_VERIFIED, true);
+		} else {
+			setProperty(CoreManifest.ID, Otp.WTSPROP_OTP_PENDING, true);
+		}
 		
 		initLevel = 1;
 	}
