@@ -170,7 +170,7 @@
 .wt-icon-traffic-light-green-xs { background-image: url('traffic-light-green_16.png') !important; }
 .wt-icon-traffic-light-orange-xs { background-image: url('traffic-light-orange_16.png') !important; }
 .wt-icon-traffic-light-red-xs { background-image: url('traffic-light-red_16.png') !important; }
-.wt-icon-browser-authorize { background-image: url('browser-authorize_16.svg') !important; background-size: contain; }
+.wt-icon-browser-checkPermission { background-image: url('browser-checkperms_16.svg') !important; background-size: contain; }
 .wt-icon-emoji { background-image: url('emoji_16.svg') !important; background-size: contain; }
 .wt-icon-clipboard-paste { background-image: url('clipboard-paste_16.svg') !important; background-size: contain; }
 .wt-icon-viewOptions { background-image: url('viewOptions_16.svg') !important; background-size: contain; }

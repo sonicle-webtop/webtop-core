@@ -216,7 +216,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		*/
 		Sonicle.PageActivityMonitor.start();
 		Sonicle.DesktopNotificationMgr.on('requestpermission', function() {
-			WT.msg(WT.res('info.browser.permission.notification'));
+			WT.info(WT.res('info.browser.permission.notification'));
 		});
 		
 		me.hideLoadingLayer();

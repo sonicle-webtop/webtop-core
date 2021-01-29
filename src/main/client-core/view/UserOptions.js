@@ -232,10 +232,17 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 						}
 					}), {
 						xtype: 'button',
-						tooltip: WT.res('opts.main.btn-notificationAuthorize.tip'),
-						iconCls: 'wt-icon-browser-authorize',
+						tooltip: WT.res('opts.main.btn-desktopNotificationCheck.tip'),
+						iconCls: 'wt-icon-browser-checkPermission',
 						handler: function() {
-							NtfMgr.ensureAuthorization();
+							var plevel = NtfMgr.permissionLevel();
+							if (plevel === NtfMgr.PERM_DENIED) {
+								WT.warn(WT.res('info.browser.permission.notification.denied'));
+							} else if (plevel === NtfMgr.PERM_GRANTED) {
+								WT.info(WT.res('info.browser.permission.notification.granted'));
+							} else {
+								NtfMgr.ensureAuthorization();
+							}
 						}
 					}
 				]
