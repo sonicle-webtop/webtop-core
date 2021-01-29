@@ -35,7 +35,11 @@ package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.SessionContext;
+import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -49,11 +53,17 @@ import org.apache.shiro.web.util.WebUtils;
  */
 public class Logout extends AbstractServlet {
 	public static final String URL = "/logout"; // Shiro.ini must reflect this URI!
+	public static final String WTSPROP_LOGOUT_DONE = "LOGOUTDONE";
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ServletUtils.setCacheControlPrivate(response);
 		LoggerUtils.setContextDC(RunContext.getRunProfileId());
+		
+		WebTopSession webtopSession = SessionContext.getCurrent();
+		webtopSession.setProperty(CoreManifest.ID, WTSPROP_LOGOUT_DONE, true);
+		request.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_IP, ServletUtils.getClientIP(request));
+		
 		RunContext.getSubject().logout();
 		WebUtils.issueRedirect(request, response, "/");
 		//ServletUtils.redirectRequest(request, response, "/");

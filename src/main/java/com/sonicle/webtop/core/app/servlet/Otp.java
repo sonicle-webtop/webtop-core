@@ -35,10 +35,13 @@ package com.sonicle.webtop.core.app.servlet;
 
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.app.AbstractServlet;
+import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
@@ -72,6 +75,7 @@ public class Otp extends AbstractServlet {
 	public static final String WTSPROP_OTP_CONFIG = "OTPCONFIG";
 	public static final String WTSPROP_OTP_TRIES = "OTPTRIES";
 	public static final String WTSPROP_OTP_VERIFIED = "OTPVERIFIED";
+	public static final String WTSPROP_OTP_PENDING = "OTPPENDING";
 	
 	@Override
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -122,18 +126,37 @@ public class Otp extends AbstractServlet {
 					wts.setProperty(CoreManifest.ID, WTSPROP_OTP_TRIES, tries); // Save for later...
 					String failureMessage = wta.lookupResource(locale, CoreLocaleKey.TPL_OTP_ERROR_FAILURE, true);
 					writePage(wta, css, locale, deliveryMode, failureMessage, response);
+					writeOTPLog(wta, wts, request, false);
 				}
 			}
 			
 		} catch(NoMoreTriesException ex) {
 			if (wts != null) wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED);
+			writeOTPLog(wta, wts, request, false);
 			ServletUtils.forwardRequest(request, response, Logout.URL);
 		} catch(SkipException ex) {
-			if (wts != null) wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
+			if (wts != null) {
+				wts.setProperty(CoreManifest.ID, WTSPROP_OTP_VERIFIED, true);
+				wts.clearProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
+				writeOTPLog(wta, wts, request, true);
+			}
 			ServletUtils.forwardRequest(request, response, UIPrivate.URL);
 		} catch(Exception ex) {
 			logger.error("Error", ex);
 			//TODO: pagina di errore
+		}
+	}
+	
+	private void writeOTPLog(WebTopApp wta, WebTopSession wts, HttpServletRequest request, Boolean OTPSuccess) {
+		AuditLogManager auditLogMgr = wta.getAuditLogManager();
+		UserProfileId pid = wts.getUserProfile().getId();
+		String logStatus = OTPSuccess ? "OTP_SUCCESS" : "OTP_FAILURE";
+		
+		if (auditLogMgr != null) {
+			MapItem authData = new MapItem()
+					.add("ip", ServletUtils.getClientIP(request));
+
+			auditLogMgr.write(pid, wts.getId(), CoreManifest.ID, "AUTH", logStatus, null, JsonResult.GSON.toJson(authData));
 		}
 	}
 	

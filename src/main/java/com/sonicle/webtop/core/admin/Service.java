@@ -46,8 +46,10 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.PayloadAsList;
+import com.sonicle.commons.web.json.bean.QueryObj;
 import com.sonicle.commons.web.json.extjs.ExtTreeNode;
 import com.sonicle.commons.web.json.extjs.ResultMeta;
+import com.sonicle.commons.web.json.extjs.SortParam;
 import com.sonicle.security.auth.DirectoryManager;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.DirectoryCapability;
@@ -55,6 +57,8 @@ import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreServiceSettings;
 import com.sonicle.webtop.core.CoreSettings.LauncherLink;
+import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLog;
+import com.sonicle.webtop.core.admin.bol.js.JsDomainAccessLogDetail;
 import com.sonicle.webtop.core.admin.bol.js.JsDomainLauncherLink;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
@@ -102,6 +106,11 @@ import com.sonicle.webtop.core.bol.model.RoleWithSource;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
 import com.sonicle.webtop.core.bol.model.UserEntity;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
+import com.sonicle.webtop.core.model.DomainAccessLog;
+import com.sonicle.webtop.core.model.DomainAccessLogDetail;
+import com.sonicle.webtop.core.model.DomainAccessLogQuery;
+import com.sonicle.webtop.core.model.ListDomainAccessLogDetailResult;
+import com.sonicle.webtop.core.model.ListDomainAccessLogResult;
 import com.sonicle.webtop.core.model.LoggerEntry;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
@@ -129,6 +138,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.util.FileUtils;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -270,6 +280,8 @@ public class Service extends BaseService {
 	private static final String NID_DBUPGRADER = "dbupgrader";
 	private static final String NID_LOGS = "logs";
 	private static final String NID_VIEWER = "viewer";
+	private static final String NID_AUDIT = "audit";
+	private static final String NID_ACCESSLOG = "accesslog";
 	
 	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
@@ -285,7 +297,7 @@ public class Service extends BaseService {
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, boolean dirPasswordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, Boolean dirPasswordPolicy, Boolean dirCapPasswordWrite, Boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, id);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), null, true);
 		node.setIconClass(iconClass);
@@ -324,6 +336,11 @@ public class Service extends BaseService {
 								children.add(createDomainNode(nodeId, domain, dirScheme, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 							
+						} else if (cid.hasToken(2)) {
+							if (cid.getToken(2).equals(NID_AUDIT)) {
+								// domain|NethServer|audit
+								children.add(createDomainChildNode(nodeId, NID_ACCESSLOG, "daccesslog", "wtadm-icon-accesslog", cid.getToken(1), null, null, null));
+							}
 						} else { // Single Domain node
 							String domainId = cid.getToken(1);
 							ODomain domain = core.getDomain(domainId);
@@ -343,8 +360,9 @@ public class Service extends BaseService {
 							if (css.getHasPecBridgeManagement()) {
 								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
 							}
+							
+							children.add(createTreeNode(CId.build(nodeId, NID_AUDIT).toString(), "daudit", null, false, "wtadm-icon-audit"));
 						}
-						
 					} else if (cid.getToken(0).equals(NID_LOGS)) {
 						if (!cid.hasToken(1)) {
 							children.add(createTreeNode(CId.build(NID_LOGS, NID_VIEWER).toString(), "logsviewer", null, true, "wtadm-icon-logViewer"));
@@ -1340,6 +1358,59 @@ public class Service extends BaseService {
 		} catch(Exception ex) {
 			logger.error("Error in SetMaintenanceFlag", ex);
 			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageDomainAccessLog(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsDomainAccessLog> items = new ArrayList<>();
+		
+		try {
+			UserProfile up = getEnv().getProfile();
+			DateTimeZone utz = up.getTimeZone();
+			
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			Integer page = ServletUtils.getIntParameter(request, "page", true);
+			Integer limit = ServletUtils.getIntParameter(request, "limit", 50);
+			ListDomainAccessLogResult result = null;
+			SortParam.List sortParams = ServletUtils.getObjectParameter(request, "sort", null, SortParam.List.class);
+			QueryObj queryObj = ServletUtils.getObjectParameter(request, "query", new QueryObj(), QueryObj.class);
+			
+			if (crud.equals(Crud.READ)) {
+				result = coreadm.listAccessLog(domainId, page, limit, sortParams.get(0), DomainAccessLogQuery.toCondition(queryObj, utz), true);
+				for (DomainAccessLog domainAccLog : result.items) {
+					items.add(new JsDomainAccessLog(domainAccLog));
+				}
+			}
+			
+			new JsonResult(items, result.fullCount).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageDomainAccessLog", t);
+			new JsonResult(t).printTo(out);
+		}
+	}
+	
+	public void processManageDomainAccessLogDetail(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		ArrayList<JsDomainAccessLogDetail> items = new ArrayList<>();
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			String sessionId = ServletUtils.getStringParameter(request, "sessionId", true);
+			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+			String userId = ServletUtils.getStringParameter(request, "userId", true);
+			ListDomainAccessLogDetailResult result = null;
+			
+			if (crud.equals(Crud.READ)) {
+				result = coreadm.listAccessLogDetail(sessionId, domainId, userId, true);
+				for (DomainAccessLogDetail domainAccLogDetail : result.items) {
+					items.add(new JsDomainAccessLogDetail(domainAccLogDetail));
+				}
+			}
+			
+			new JsonResult(items, result.fullCount).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageDomainAccessLog", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

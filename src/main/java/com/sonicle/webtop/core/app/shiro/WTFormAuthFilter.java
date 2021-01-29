@@ -33,6 +33,8 @@
 package com.sonicle.webtop.core.app.shiro;
 
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.security.Principal;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.PushEndpoint;
@@ -104,7 +106,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			}
 		}
 		
-		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN");
+		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_SUCCESS");
 		return super.onLoginSuccess(token, subject, request, response);
 	}
 
@@ -174,7 +176,11 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
 			String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
 			UserProfileId pid = new UserProfileId(domainId, userId);
-			wta.getAuditLogManager().write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, null);
+			
+			MapItem authData = new MapItem()
+					.add("ip", ServletUtils.getClientIP(request));
+			
+			wta.getAuditLogManager().write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(authData));
 		}
 	}
 	
