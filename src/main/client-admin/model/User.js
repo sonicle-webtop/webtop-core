@@ -35,7 +35,7 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.Equality',
+		'Sonicle.data.validator.MatchField',
 		'Sonicle.data.validator.Username',
 		'Sonicle.data.validator.Password',
 		'Sonicle.webtop.core.admin.model.AssignedGroup',
@@ -118,15 +118,15 @@ Ext.define('Sonicle.webtop.core.admin.model.VUserPassword2', {
 		var me = this;
 		me.vtors = {};
 		me.callParent([cfg]);
-		me.vtors['equa'] = Ext.create('Sonicle.data.validator.Equality', {
-			equalField: 'password'
+		me.vtors['equa'] = Ext.create('Sonicle.data.validator.MatchField', {
+			matchField: 'password'
 		});
 	},
 	
 	validate: function(v, rec) {
 		var me = this;
 		if (rec.validatePassword) {
-			me.vtors['equa'].setFieldLabel(rec.passwordFieldLabel);
+			me.vtors['equa'].setMatchFieldLabel(rec.passwordFieldLabel);
 			return me.vtors['equa'].validate(v, rec);
 		}
 		return true;

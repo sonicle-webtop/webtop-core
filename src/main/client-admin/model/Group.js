@@ -35,7 +35,6 @@ Ext.define('Sonicle.webtop.core.admin.model.Group', {
 	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.data.writer.Json',
-		'Sonicle.data.validator.Equality',
 		'Sonicle.data.validator.Username',
 		'Sonicle.webtop.core.admin.model.AssignedUser',
 		'Sonicle.webtop.core.admin.model.AssignedRole',
