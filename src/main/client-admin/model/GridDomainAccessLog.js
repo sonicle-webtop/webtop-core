@@ -30,9 +30,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-
-Ext.define('Sonicle.webtop.core.admin.model.DomainAccessLog', {
+Ext.define('Sonicle.webtop.core.admin.model.GridDomainAccessLog', {
 	extend: 'Ext.data.Model',
+	requires: [
+		'Sonicle.webtop.core.admin.model.DomainAccessLogDetail'
+	],
 	
 	identifier: 'negativestring',
 	idProperty: 'sessionId',
@@ -44,5 +46,14 @@ Ext.define('Sonicle.webtop.core.admin.model.DomainAccessLog', {
 		WTF.roField('authenticated', 'boolean'),
 		WTF.roField('failure', 'boolean'),
 		WTF.roField('loginErrors', 'int')
-	]
+	],
+	
+	getStatus: function() {
+		var me = this;
+		if (me.get('failure') === true) {
+			return me.get('authenticated') === true ? 'warn' : 'critical';
+		} else {
+			return 'ok';
+		}
+	}
 });

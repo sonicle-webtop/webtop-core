@@ -105,9 +105,10 @@
 .wt-icon-platform-mac { background-image: url('platform-mac_16.svg') !important; background-size: contain; }
 .wt-icon-ok { background-image: url('ok_16.svg') !important; background-size: contain; }
 .wt-icon-ok-xs { background-image: url('ok_16.png') !important; }
-.wt-icon-ok-warn { background-image: url('ok-warn_16.svg') !important; background-size: contain; }
+.wt-icon-okwarn { background-image: url('okwarn_16.svg') !important; background-size: contain; }
 .wt-icon-ok-yellow { background-image: url('ok-yellow_16.svg') !important; background-size: contain; }
 .wt-icon-warn { background-image: url('warn_16.svg') !important; background-size: contain; }
+.wt-icon-warn-red { background-image: url('warn-red_16.svg') !important; background-size: contain; }
 .wt-icon-critical { background-image: url('critical_16.svg') !important; background-size: contain; }
 .wt-icon-cancel-xs { background-image: url('cancel_16.png') !important; }
 .wt-icon-add { background-image: url('add_16.svg') !important; background-size: contain; }

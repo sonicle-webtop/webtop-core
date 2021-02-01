@@ -30,13 +30,11 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
-
 Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 	extend: 'WTA.sdk.DockableView',
 	requires: [
 		'Sonicle.data.BufferedStore',
-		'Sonicle.webtop.core.admin.model.DomainAccessLog',
-		'Sonicle.webtop.core.admin.model.DomainAccessLogDetail',
+		'Sonicle.webtop.core.admin.model.GridDomainAccessLog',
 		'WTA.ux.field.Search'
 	],
 	
@@ -51,7 +49,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 		var me = this;
 		me.callParent([cfg]);
 		
-		if(!cfg.title) {
+		if (!cfg.title) {
 			me.setBind({
 				title: Ext.String.format('[{0}] ', cfg.domainId || '') + '{_viewTitle}'
 			});
@@ -70,7 +68,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 			store: {
 				type: 'buffered',
 				autoLoad: true,
-				model: 'Sonicle.webtop.core.admin.model.DomainAccessLog',
+				model: 'Sonicle.webtop.core.admin.model.GridDomainAccessLog',
 				proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainAccessLog', null, {
 					extraParams: {
 						domainId: me.domainId
@@ -88,73 +86,83 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 				trailingBufferZone: 50
 			},
 			viewConfig: {
-				getRowClass: function(record, rowIndex, rowParam, store) {
-					if (record.data.failure) {
-						return record.data.authenticated ? 'wtadm-domainAccessLog-warning' : 'wtadm-domainAccessLog-danger';
-					}
-				},
 				enableTextSelection: true
 			},
-			columns: [{
-				xtype: 'rownumberer',
-				width: '80 px'
-			}, {
-				dataIndex: 'sessionId',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.sessionId.lbl'),
-				flex: 3
-			}, {
-				dataIndex: 'userId',
-				align: 'center',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.userId.lbl'),
-				flex: 2,
-				renderer: function(value) {
-					return '?' === value ? '-' : value;
+			columns: [
+				{
+					xtype: 'rownumberer'
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'failure',
+					getIconCls: function(v, rec) {
+						var sta = rec.getStatus();
+						return sta === 'ok' ? 'wt-icon-ok' : (sta === 'warn' ? 'wt-icon-warn' : 'wt-icon-warn-red');
+					},
+					getTip: function(v, rec) {
+						var sta = rec.getStatus();
+						return me.mys.res('domainAccessLog.gp.status.'+sta+'.tip');
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					header: WTF.headerWithGlyphIcon('fa fa-check-square-o'),
+					width: 40
+				}, {
+					dataIndex: 'sessionId',
+					sortable: true,
+					groupable: false,
+					header: me.res('domainAccessLog.gp.sessionId.lbl'),
+					flex: 3
+				}, {
+					dataIndex: 'userId',
+					sortable: true,
+					groupable: false,
+					align: 'center',
+					renderer: function(value) {
+						return '?' === value ? '-' : value;
+					},
+					header: me.res('domainAccessLog.gp.userId.lbl'),
+					flex: 2
+				}, {
+					xtype: 'datecolumn',
+					dataIndex: 'date',
+					format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
+					sortable: true,
+					groupable: false,
+					align: 'center',
+					header: me.res('domainAccessLog.gp.date.lbl'),
+					flex: 2
+				}, {
+					dataIndex: 'minutes',
+					emptyCellText: '-',
+					sortable: true,
+					groupable: false,
+					align: 'center',
+					header: me.res('domainAccessLog.gp.minutes.lbl'),
+					flex: 2
+				}, {
+					xtype: 'booleancolumn',
+					dataIndex: 'authenticated',
+					trueText: WT.res('word.yes'),
+					falseText: WT.res('word.no'),
+					align: 'center',
+					sortable: true,
+					groupable: false,
+					header: me.res('domainAccessLog.gp.authenticated.lbl'),
+					flex: 2
+				}, {
+					align: 'center',
+					dataIndex: 'loginErrors',
+					sortable: true,
+					groupable: false,
+					header: me.res('domainAccessLog.gp.loginErrors.lbl'),
+					flex: 2
 				}
-			}, {
-				xtype: 'datecolumn',
-				format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
-				align: 'center',
-				dataIndex: 'date',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.date.lbl'),
-				flex: 2
-			}, {
-				dataIndex: 'minutes',
-				align: 'center',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.minutes.lbl'),
-				emptyCellText: '-',
-				flex: 2
-			}, {
-				xtype: 'booleancolumn',
-				trueText: me.res('domainAccessLog.yes.lbl'),
-				falseText: me.res('domainAccessLog.no.lbl'),
-				align: 'center',
-				dataIndex: 'authenticated',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.authenticated.lbl'),
-				flex: 2
-			}, {
-				align: 'center',
-				dataIndex: 'loginErrors',
-				sortable: true,
-				groupable: false,
-				header: me.res('domainAccessLog.loginErrors.lbl'),
-				flex: 2
-			}],
+			],
 			plugins: [
 				{
 					ptype: 'rowwidget',
 					widget: {
 						xtype: 'grid',
-						title: me.mys.res('domainAccessLogDetail.tit'),
+						title: me.mys.res('domainAccessLog.gp.details.tit'),
 						bind: {
 							store: {
 								autoLoad: true,
@@ -179,104 +187,98 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								}
 							}
 						},
-						columns: [{
-							xtype: 'datecolumn',
-							format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
-							dataIndex: 'timestamp',
-							align: 'center',
-							sortable: false,
-							groupable: false,
-							header: me.res('domainAccessLogDetail.date.lbl'),
-							emptyCellText: '-',
-							flex: 2
-						}, {
-							dataIndex: 'action',
-							align: 'center',
-							sortable: false,
-							groupable: false,
-							header: me.res('domainAccessLogDetail.action.lbl'),
-							emptyCellText: '-',
-							renderer: WTF.resColRenderer({
-								id: me.mys.ID,
-								key: 'domainAccessLogDetail.action',
-								keepcase: true
-							}),
-							flex: 2
-						}, {
-							dataIndex: 'ipAddress',
-							align: 'center',
-							sortable: false,
-							groupable: false,
-							header: me.res('domainAccessLogDetail.ipAddress.lbl'),
-							emptyCellText: '-',
-							flex: 2
-						}]
+						columns: [
+							{
+								xtype: 'datecolumn',
+								dataIndex: 'timestamp',
+								sortable: false,
+								groupable: false,
+								align: 'center',
+								format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
+								header: me.res('domainAccessLog.gp.details.date.lbl'),
+								flex: 2
+							}, {
+								dataIndex: 'action',
+								sortable: false,
+								groupable: false,
+								align: 'center',
+								emptyCellText: '-',
+								header: me.res('domainAccessLog.gp.details.action.lbl'),
+								renderer: WTF.resColRenderer({
+									id: me.mys.ID,
+									key: 'domainAccessLog.gp.details.action',
+									keepcase: true
+								}),
+								flex: 2
+							}, {
+								dataIndex: 'ipAddress',
+								sortable: false,
+								groupable: false,
+								align: 'center',
+								emptyCellText: '-',
+								header: me.res('domainAccessLog.gp.details.ipAddress.lbl'),
+								flex: 2
+							}
+						]
 					}
 				}
 			],
 			tbar: [
+				'->',
 				{
-					xtype: 'toolbar',
-					referenceHolder: true,
-					flex: 1,
-					items: [
-						'->',
+					xtype: 'wtsearchfield',
+					reference: 'fldsearch',
+					highlightKeywords: ['session', 'user'],
+					fields: [
 						{
-							xtype: 'wtsearchfield',
-							reference: 'fldsearch',
-							highlightKeywords: ['sessionId', 'userId'],
-							fields: [
-								{
-									name: 'session',
-									type: 'string',
-									label: me.res('domainAccesslLog.src-field.session.lbl')
-								}, {
-									name: 'user',
-									type: 'string',
-									label: me.res('domainAccesslLog.src-field.user.lbl')
-								}, {
-									name: 'dateFrom',
-									type: 'date',
-									labelAlign: 'left',
-									label: me.res('domainAccesslLog.src-field.dateFrom.lbl')
-								}, {
-									name: 'dateTo',
-									type: 'date',
-									labelAlign: 'left',
-									label: me.res('domainAccesslLog.src-field.dateTo.lbl')
-								}, {
-									name: 'minDuration',
-									type: 'number',
-									label: me.res('domainAccesslLog.src-field.minDuration.lbl')
-								}, {
-									name: 'maxDuration',
-									type: 'number',
-									label: me.res('domainAccesslLog.src-field.maxDuration.lbl')
-								}, {
-									name: 'authenticated',
-									type: 'boolean',
-									boolKeyword: 'is',
-									label: me.res('domainAccesslLog.src-field.authenticated.lbl')
-								}, {
-									name: 'failure',
-									type: 'boolean',
-									boolKeyword: 'is',
-									label: me.res('domainAccesslLog.src-field.failure.lbl')
-								}
-							],
-							tooltip: me.res('domainAccessLog.src-field.tip'),
-							searchTooltip: me.res('domainAccessLog.src-field.tip'),
-							emptyText: me.res('domainAccessLog.src-field.emp'),
-							listeners: {
-								query: function(s, value, qObj) {
-									me.queryDomainAccessLog(qObj);
-								}
-							}
-						},
-						'->',
-						me.getAct('refresh')
-					]
-				}
+							name: 'session',
+							type: 'string',
+							label: me.res('domainAccessLog.fldsearch.session.lbl')
+						}, {
+							name: 'user',
+							type: 'string',
+							label: me.res('domainAccessLog.fldsearch.user.lbl')
+						}, {
+							name: 'dateFrom',
+							type: 'date',
+							labelAlign: 'left',
+							label: me.res('domainAccessLog.fldsearch.dateFrom.lbl')
+						}, {
+							name: 'dateTo',
+							type: 'date',
+							labelAlign: 'left',
+							label: me.res('domainAccessLog.fldsearch.dateTo.lbl')
+						}, {
+							name: 'minDuration',
+							type: 'number',
+							label: me.res('domainAccessLog.fldsearch.minDuration.lbl')
+						}, {
+							name: 'maxDuration',
+							type: 'number',
+							label: me.res('domainAccessLog.fldsearch.maxDuration.lbl')
+						}, {
+							name: 'authenticated',
+							type: 'boolean',
+							boolKeyword: 'is',
+							label: me.res('domainAccessLog.fldsearch.authenticated.lbl')
+						}, {
+							name: 'failure',
+							type: 'boolean',
+							boolKeyword: 'is',
+							label: me.res('domainAccessLog.fldsearch.failure.lbl')
+						}
+					],
+					tooltip: me.res('domainAccessLog.fldsearch.tip'),
+					searchTooltip: me.res('domainAccessLog.fldsearch.tip'),
+					emptyText: me.res('domainAccessLog.fldsearch.emp'),
+					listeners: {
+						query: function(s, value, qObj) {
+							me.queryDomainAccessLog(qObj);
+						}
+					}
+				},
+				'->',
+				me.getAct('refresh')
 			]
 		});
 	},

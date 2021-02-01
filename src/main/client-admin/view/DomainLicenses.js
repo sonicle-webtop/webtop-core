@@ -119,7 +119,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 					getIconCls: function(v, rec) {
 						if (rec.isValid()) {
 							if (rec.isExpireSoon()) {
-								return 'wt-icon-ok-warn';
+								return 'wt-icon-okwarn';
 							} else {
 								return 'wt-icon-ok';
 							}
@@ -156,7 +156,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainLicenses', {
 							case 'valid':
 								return 'wt-icon-ok';
 							case 'valid-warn':
-								return 'wt-icon-ok-warn';
+								return 'wt-icon-okwarn';
 							case 'pending':
 								return 'wt-icon-ok-yellow';
 							default:
