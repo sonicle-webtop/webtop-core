@@ -33,8 +33,10 @@
 package com.sonicle.webtop.core.admin.bol.js;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.net.IPUtils;
 import com.sonicle.commons.web.json.bean.StringMap;
 import com.sonicle.webtop.core.model.DomainAccessLogDetail;
+import inet.ipaddr.IPAddress;
 import org.joda.time.DateTime;
 
 /**
@@ -45,6 +47,7 @@ public class JsDomainAccessLogDetail {
 	public DateTime timestamp;
 	public String action;
 	public String ipAddress;
+	public Boolean isAddressPublic;
 	
 	public JsDomainAccessLogDetail(DomainAccessLogDetail item) {
 		this.timestamp = item.getTimestamp();
@@ -52,5 +55,11 @@ public class JsDomainAccessLogDetail {
 		
 		StringMap map = LangUtils.deserialize(item.getData(), new StringMap(), StringMap.class);
 		this.ipAddress = map.get("ip");
+		this.isAddressPublic = isPublicAddress(ipAddress);
+	}
+	
+	private boolean isPublicAddress(String address) {
+		IPAddress addr = IPUtils.toIPAddress(address);
+		return addr == null ? false : !addr.isLocal() && !addr.isLoopback();
 	}
 }

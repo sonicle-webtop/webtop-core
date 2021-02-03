@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2020 Sonicle S.r.l.
+/*
+ * Copyright (C) 2021 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,17 +28,46 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2020 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2021 Sonicle S.r.l.".
  */
+package com.sonicle.webtop.core.bol.js;
 
-Ext.define('Sonicle.webtop.core.admin.model.DomainAccessLogDetail', {
-	extend: 'Ext.data.Model',
+import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
+
+/**
+ *
+ * @author malbinola
+ */
+public class JsIPGeolocation {
+	public String ip;
+	public String hostname;
+	public String type;
+	public String continentCode;
+	public String continentName;
+	public String countryCode;
+	public String countryName;
+	public String city;
+	public String zip;
+	public Double latitude;
+	public Double longitude;
+	public String countryFlag;
+	public String countryFlagEmoji;
+	public String countryFlagEmojiUnicode;
 	
-	identifier: 'negativestring',
-	idProperty: 'sessionId',
-	fields: [
-		WTF.roField('timestamp', 'date'),
-		WTF.roField('action', 'string'),
-		WTF.roField('ipAddress', 'string')
-	]
-});
+	public JsIPGeolocation(IPLookupResponse data) {
+		this.ip = data.getIp();
+		this.hostname = data.getHostname();
+		this.type = data.getType();
+		this.continentCode = data.getContinentCode();
+		this.continentName = data.getContinentName();
+		this.countryCode = data.getCountryCode();
+		this.countryName = data.getCountryName();
+		this.city = data.getCity();
+		this.zip = data.getZip();
+		this.latitude = data.getLatitude();
+		this.longitude = data.getLongitude();
+		this.countryFlag = data.getLocation().getCountryFlag();
+		this.countryFlagEmoji = data.getLocation().getCountryFlagEmoji();
+		this.countryFlagEmojiUnicode = data.getLocation().getCountryFlagEmojiUnicode();
+	}
+}

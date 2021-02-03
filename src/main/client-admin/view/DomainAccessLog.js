@@ -57,7 +57,8 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 	},
 	
 	initComponent: function() {
-		var me = this;
+		var me = this,
+				geoAvail = WT.getVar('wtGeolocationProvider');
 		me.callParent(arguments);
 		me.initActions();
 		
@@ -129,7 +130,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 					groupable: false,
 					align: 'center',
 					header: me.res('domainAccessLog.gp.date.lbl'),
-					flex: 2
+					width: 180
 				}, {
 					dataIndex: 'minutes',
 					emptyCellText: '-',
@@ -166,15 +167,12 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 						bind: {
 							store: {
 								autoLoad: true,
-								model: 'Sonicle.webtop.core.admin.model.DomainAccessLogDetail',
+								model: 'Sonicle.webtop.core.admin.model.GridDomainAccessLogDetail',
 								proxy: WTF.apiProxy(me.mys.ID, 'ManageDomainAccessLogDetail', null, {
 									extraParams: {
 										sessionId: '{record.sessionId}',
 										domainId: me.domainId,
 										userId: '{record.userId}'
-									},
-									writer: {
-										allowSingle: false // Always wraps records into an array
 									}
 								}),
 								listeners: {
@@ -196,7 +194,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								align: 'center',
 								format: WT.getShortDateFmt() + ' ' +  WT.getLongTimeFmt(),
 								header: me.res('domainAccessLog.gp.details.date.lbl'),
-								flex: 2
+								width: 180
 							}, {
 								dataIndex: 'action',
 								sortable: false,
@@ -209,7 +207,7 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 									key: 'domainAccessLog.gp.details.action',
 									keepcase: true
 								}),
-								flex: 2
+								width: 250
 							}, {
 								dataIndex: 'ipAddress',
 								sortable: false,
@@ -217,7 +215,57 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 								align: 'center',
 								emptyCellText: '-',
 								header: me.res('domainAccessLog.gp.details.ipAddress.lbl'),
-								flex: 2
+								width: 150
+							}, {
+								dataIndex: 'geoInfo',
+								renderer: function(v, meta, rec) {
+									if (v === true) {
+										return rec.genGeoCountryFlagMarkup() + '&nbsp;' + Ext.String.htmlEncode(rec.genGeoDescription());
+									} else {
+										meta.tdCls = 'wt-text-smaller20 wt-text-lighter50';
+										var key = geoAvail && rec.get('isAddressPublic') ? 'domainAccessLog.gp.details.geoInfo.avail.emp' : 'domainAccessLog.gp.details.geoInfo.unavail.emp';
+										return '(' + me.res(key) + ')';
+									}
+								},
+								header: me.res('domainAccessLog.gp.details.geoInfo.lbl'),
+								flex: 1
+							}, {
+								xtype: 'soactioncolumn',
+								items: [
+									{
+										iconCls: 'fa fa-globe',
+										tooltip: me.mys.res('domainAccessLog.gp.act-geolocateIp.tip'),
+										handler: function(g, ridx) {
+											var sto = g.getStore(),
+													rec = sto.getAt(ridx),
+													ip = rec.get('ipAddress');
+											
+											me.wait();
+											me.mys.geolocateIPs(ip, {
+												callback: function(success, data) {
+													me.unwait();
+													if (success) {
+														sto.each(function(rec1) {
+															if (rec1.get('ipAddress') === ip) rec1.setGeoData(data[0]);
+														});
+													}
+												}
+											});
+										},
+										isDisabled: function(s, ridx, cidx, itm, rec) {
+											if (!geoAvail || rec.get('geoInfo') === true) return true;
+											return !rec.get('isAddressPublic');
+										}
+									}, {
+										iconCls: 'fa fa-clipboard',
+										tooltip: me.mys.res('domainAccessLog.gp.act-copy.tip'),
+										handler: function(g, ridx) {
+											var rec = g.getStore().getAt(ridx);
+											Sonicle.ClipboardMgr.copy(rec.toString());
+											WT.toast(WT.res('toast.info.copied'));
+										}
+									}
+								]
 							}
 						]
 					}
@@ -314,5 +362,35 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 		if (opts.query !== undefined) Ext.apply(pars, {query: opts.query});
 		WTU.loadWithExtraParams(sto, pars);
 	}
+	
+	/*
+	geolocateIpAddress: function(ips, opts) {
+		opts = opts || {};
+		var me = this,
+				addrs = Ext.Array.from(ips),
+				fn = opts.callback,
+				scope = opts.scope;
+		
+		if (Ext.isEmpty(opts.apiKey)) Ext.raise('missin apikey');
+		
+		Ext.Ajax.request({
+			method: 'GET',
+			url: 'http:/'+'/api.ipstack.com/' + addrs.join(','),
+			useDefaultXhrHeader : false,
+			params: Ext.applyIf({
+				access_key: opts.apiKey,
+				output: 'json',
+				fields: 'main,location.country_flag'
+			}, opts.params || {}),
+			success: function(resp, opts) {
+				var json = Ext.decode(resp.responseText);
+				Ext.callback(fn, scope || me, [true, json, opts]);
+			},
+			failure: function(resp, opts) {
+				Ext.callback(fn, scope || me, [false, {}, opts]);
+			}
+		});
+	}
+	*/
 });
 

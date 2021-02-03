@@ -33,7 +33,7 @@
 Ext.define('Sonicle.webtop.core.admin.model.GridDomainAccessLog', {
 	extend: 'Ext.data.Model',
 	requires: [
-		'Sonicle.webtop.core.admin.model.DomainAccessLogDetail'
+		'Sonicle.webtop.core.admin.model.GridDomainAccessLogDetail'
 	],
 	
 	identifier: 'negativestring',

@@ -807,6 +807,20 @@ public class CoreSettings {
 	public static final String IM_SOUND_ON_MESSAGE_SENT = "im.sound.on.message.sent";
 	
 	/**
+	 * [domain+system]
+	 * [enum] (ipstack)
+	 * Specifies the geolocation provider, if available. 
+	 */
+	public static final String GEOLOCATION_PROVIDER = "geolocation.provider";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * Specifies ipstack provider apiKey to access service
+	 */
+	public static final String GEOLOCATION_PROVIDER_IPSTACK_APIKEY = "geolocation.ipstack.apikey";
+	
+	/**
 	 * [user]
 	 * [boolean]
 	 * Activates new HTMLEditor based on TinyMCE 5.x.x (temporary until full transition)
@@ -834,6 +848,10 @@ public class CoreSettings {
 	public static enum OtpDeliveryMode {
 		@SerializedName("email") EMAIL,
 		@SerializedName("googleauth") GOOGLEAUTH;
+	}
+	
+	public static enum GeolocationProvider {
+		@SerializedName("ipstack") IPSTACK;
 	}
 	
 	public static class LauncherLink {

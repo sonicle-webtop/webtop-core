@@ -45,6 +45,7 @@ Ext.define('Sonicle.webtop.core.model.ServiceVars', {
 		WTF.roField('wtLauncherLinks', 'string'),
 		WTF.roField('wtEditorFonts', 'string'),
 		WTF.roField('wtEditorFontSizes', 'string'),
+		WTF.roField('wtGeolocationProvider', 'string'),
 		
 		WTF.roField('domainPasswordPolicy', 'boolean'),
 		WTF.roField('profileId', 'string'),

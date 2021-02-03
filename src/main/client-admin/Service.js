@@ -43,14 +43,15 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		'Sonicle.webtop.core.admin.view.DomainRoles',
 		'Sonicle.webtop.core.admin.view.DomainLauncherLinks',
 		'Sonicle.webtop.core.admin.view.PecBridge',
-		'Sonicle.webtop.core.admin.view.PecBridgeFetcher',
-		'Sonicle.webtop.core.admin.view.DomainLicenses'
+		'Sonicle.webtop.core.admin.view.PecBridgeFetcher'
 	],
 	uses: [
-		'Sonicle.webtop.core.admin.view.License',
 		'Sonicle.webtop.core.admin.view.DbUpgrader',
-		'Sonicle.webtop.core.admin.view.Loggers',
-		'Sonicle.webtop.core.admin.view.LogViewer'
+		'Sonicle.webtop.core.admin.view.DomainAccessLog',
+		'Sonicle.webtop.core.admin.view.DomainLicenses',
+		'Sonicle.webtop.core.admin.view.License',
+		'Sonicle.webtop.core.admin.view.LogViewer',
+		'Sonicle.webtop.core.admin.view.Loggers'
 	],
 	
 	init: function() {
@@ -151,7 +152,7 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 						if (type === 'settings') {
 							me.showSettingsUI(rec);
 						} else if (type === 'daccesslog') {
-+							me.showDomainAccessLogUI(rec.parentNode, rec);
+							me.showDomainAccessLogUI(rec.parentNode, rec);
 						} else if (type === 'dsettings') {
 							me.showDomainSettingsUI(rec.parentNode, rec);
 						} else if (type === 'dgroups') {
@@ -980,6 +981,19 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 					relayId: relayId
 				}
 			});
+		});
+	},
+	
+	geolocateIPs: function(ips, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(WT.ID, 'GeolocateIP', {
+			params: {
+				ips: Ext.Array.from(ips)
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
 		});
 	},
 	

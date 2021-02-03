@@ -310,6 +310,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getEnum(DEFAULT_PREFIX + EDITOR_PASTE_IMPORTMODE, EditorPasteImportMode.PROMPT, EditorPasteImportMode.class);
 	}
 	
+	public GeolocationProvider getGeolocationProvider() {
+		return getEnum(GEOLOCATION_PROVIDER, null, GeolocationProvider.class);
+	}
+	
+	public String getIpstackGeolocationProviderApiKey() {
+		return getString(GEOLOCATION_PROVIDER_IPSTACK_APIKEY, null);
+	}
+	
 	public ServicesOrder getServicesOrder() {
 		ServicesOrder value = getObject(SERVICES_ORDER, null, ServicesOrder.class);
 		return (value != null) ? value : getDefaultServicesOrder();
