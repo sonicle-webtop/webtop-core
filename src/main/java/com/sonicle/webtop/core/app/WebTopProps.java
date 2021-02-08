@@ -62,7 +62,8 @@ public class WebTopProps {
 	public static final String PROP_ATMO_MAXPROCESSINGTHREADS = "webtop.atmosphere.maxprocessingthreads";
 	public static final String PROP_ATMO_MAXWRITETHREADS = "webtop.atmosphere.maxwritethreads";
 	public static final String PROP_TOMCAT_MANAGER_URI = "webtop.tomcat.manager.uri";
-	
+	public static final String PROP_WTDIR_SIMILARITY_LEVENTHRES = "webtop.directory.similarity.leventhres";
+	public static final String PROP_WTDIR_SIMILARITY_TOKENSIZE = "webtop.directory.similarity.tokensize";
 	
 	public static void init() {
 		Properties systemProps = System.getProperties();
@@ -128,6 +129,9 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXSCHEDULERTHREADS, properties.getProperty(PROP_ATMO_MAXSCHEDULERTHREADS), getAtmosphereMaxSchedulerThreads(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXPROCESSINGTHREADS, properties.getProperty(PROP_ATMO_MAXPROCESSINGTHREADS), getAtmosphereMaxProcessingThreads(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ATMO_MAXWRITETHREADS, properties.getProperty(PROP_ATMO_MAXWRITETHREADS), getAtmosphereMaxWriteThreads(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_TOMCAT_MANAGER_URI, properties.getProperty(PROP_TOMCAT_MANAGER_URI), getTomcatManagerUri(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_LEVENTHRES, properties.getProperty(PROP_WTDIR_SIMILARITY_LEVENTHRES), getWTDirectorySimilarityLevenThres(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_WTDIR_SIMILARITY_TOKENSIZE, properties.getProperty(PROP_WTDIR_SIMILARITY_TOKENSIZE), getWTDirectorySimilarityTokenSize(properties));
 	}
 	
 	public static void checkOldPropsUsage(Properties properties) {
@@ -236,6 +240,14 @@ public class WebTopProps {
 	
 	public static String getTomcatManagerUri(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_TOMCAT_MANAGER_URI, null);
+	}
+	
+	public static short getWTDirectorySimilarityLevenThres(Properties props) {
+		return (short)Math.max(0, PropUtils.getIntProperty(props, PROP_WTDIR_SIMILARITY_LEVENTHRES, 5));
+	}
+	
+	public static short getWTDirectorySimilarityTokenSize(Properties props) {
+		return (short)Math.max(0, PropUtils.getIntProperty(props, PROP_WTDIR_SIMILARITY_TOKENSIZE, 4));
 	}
 	
 	private static void copyOldProp(Properties props, String oldKey, String newKey) {

@@ -56,8 +56,12 @@ public class CoreLocaleKey {
 	public static final String TPL_PASSWORD_PASSWORDCONFIRM_LABEL = "tpl.password.passwordConfirm.label";
 	public static final String TPL_PASSWORD_SUBMIT_LABEL = "tpl.password.submit.label";
 	public static final String TPL_PASSWORD_ERROR_EMPTYFIELD = "tpl.password.error.emptyfield";
-	public static final String TPL_PASSWORD_ERROR_POLICY = "tpl.password.error.policy";
-	public static final String TPL_PASSWORD_ERROR_CONFITMNOTMATCH = "tpl.password.error.confirmnotmatch";
+	public static final String TPL_PASSWORD_ERROR_MINLENGTH = "tpl.password.error.minlength";
+	public static final String TPL_PASSWORD_ERROR_COMPLEXITY = "tpl.password.error.complexity";
+	public static final String TPL_PASSWORD_ERROR_CONSECUTIVEDUPLCHARS = "tpl.password.error.consecutiveduplchars";
+	public static final String TPL_PASSWORD_ERROR_USERNAMESIMILARITY = "tpl.password.error.usernamesimilarity";
+	public static final String TPL_PASSWORD_ERROR_PASSWORDSIMILARITY = "tpl.password.error.passwordsimilarity";
+	public static final String TPL_PASSWORD_ERROR_CONFIRMNOTMATCH = "tpl.password.error.confirmnotmatch";
 	public static final String TPL_PASSWORD_ERROR_MUSTBEDIFFERENT = "tpl.password.error.mustbedifferent";
 	public static final String TPL_PASSWORD_ERROR_UNEXPECTED = "tpl.password.error.unexpected";
 	

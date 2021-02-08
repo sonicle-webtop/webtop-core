@@ -60,7 +60,7 @@ import com.sonicle.webtop.core.bol.OSettingDb;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.bol.model.DomainEntity;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
@@ -181,6 +181,19 @@ public class CoreAdminManager extends BaseManager {
 			return wtmgr.getDomainEntity(domainId);
 		} catch(Exception ex) {
 			throw new WTException(ex, "Cannot get domain [{0}]", domainId);
+		}
+	}
+	
+	public DomainEntity.PasswordPolicies getDomainPasswordPolicies(String domainId) throws WTException {
+		WebTopManager wtMgr = wta.getWebTopManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		
+		try {
+			return wtMgr.getDomainPasswordPolicies(domainId);
+		} catch(Throwable t) {
+			throw new WTException(t, "Cannot get domain password policies [{}]", domainId);
 		}
 	}
 	

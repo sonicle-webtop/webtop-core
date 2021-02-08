@@ -40,8 +40,8 @@ import com.sonicle.security.auth.directory.ADDirectory;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.security.auth.directory.LdapDirectory;
 import com.sonicle.security.auth.directory.LdapNethDirectory;
-import com.sonicle.webtop.core.bol.model.DomainEntity;
-import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
+import com.sonicle.webtop.core.model.DomainEntity;
+import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import java.net.URISyntaxException;
 import org.apache.commons.lang.StringUtils;
 
@@ -71,6 +71,13 @@ public class JsDomain {
 	public String ldapUserFirstnameField;
 	public String ldapUserLastnameField;
 	public String ldapUserDisplayNameField;
+	public Short pwdMinLength;
+	public Boolean pwdComplexity;
+	public Boolean pwdAvoidConsecutiveChars;
+	public Boolean pwdAvoidOldSimilarity;
+	public Boolean pwdAvoidUsernameSimilarity;
+	public Short pwdExpiration;
+	public Boolean pwdVerifyAtLogin;
 	
 	public JsDomain() {}
 	
@@ -87,7 +94,6 @@ public class JsDomain {
 		dirPassword = o.getDirPassword();
 		dirConnSecurity = StringUtils.defaultIfBlank(EnumUtils.getName(o.getDirConnSecurity()), "null");
 		dirCaseSensitive = o.getDirCaseSensitive();
-		dirPasswordPolicy = o.getDirPasswordPolicy();
 		if (o.getDirParameters() instanceof ParamsLdapDirectory) {
 			ParamsLdapDirectory params = (ParamsLdapDirectory)o.getDirParameters();
 			ldapLoginDn = params.loginDn;
@@ -108,6 +114,13 @@ public class JsDomain {
 			ldapUserLastnameField = null;
 			ldapUserDisplayNameField = null;
 		}
+		pwdMinLength = o.getPasswordPolicies().getMinLength();
+		pwdComplexity = o.getPasswordPolicies().getComplexity();
+		pwdAvoidConsecutiveChars = o.getPasswordPolicies().getAvoidConsecutiveChars();
+		pwdAvoidOldSimilarity = o.getPasswordPolicies().getAvoidOldSimilarity();
+		pwdAvoidUsernameSimilarity = o.getPasswordPolicies().getAvoidUsernameSimilarity();
+		pwdExpiration = o.getPasswordPolicies().getExpiration();
+		pwdVerifyAtLogin = o.getPasswordPolicies().getVerifyAtLogin();
 	}
 	
 	public static DomainEntity buildDomainEntity(JsDomain js, AbstractDirectory dir) throws URISyntaxException {
@@ -122,7 +135,6 @@ public class JsDomain {
 		de.setDirPassword(js.dirPassword);
 		de.setDirConnSecurity(EnumUtils.getEnum(ConnectionSecurity.class, js.dirConnSecurity));
 		de.setDirCaseSensitive(js.dirCaseSensitive);
-		de.setDirPasswordPolicy(js.dirPasswordPolicy);
 		String scheme = de.getDirUri().getScheme();
 		if (scheme.equals(LdapDirectory.SCHEME) || scheme.equals(LdapNethDirectory.SCHEME) || scheme.equals(ADDirectory.SCHEME)) {
 			ParamsLdapDirectory params =  new ParamsLdapDirectory();
@@ -138,6 +150,16 @@ public class JsDomain {
 		} else {
 			de.setDirParameters(null);
 		}
+		de.setPasswordPolicies(new DomainEntity.PasswordPolicies(
+			js.pwdMinLength,
+			js.pwdComplexity,
+			js.pwdAvoidConsecutiveChars,
+			js.pwdAvoidOldSimilarity,
+			js.pwdAvoidUsernameSimilarity,
+			js.pwdExpiration,
+			js.pwdVerifyAtLogin
+		));
+		
 		return de;
 	}
 }

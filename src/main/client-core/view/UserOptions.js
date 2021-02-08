@@ -70,19 +70,21 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 			foIsMyProfile: function() {
 				return me.isProfileSelf();
 			},
-			foCanManagePassword: function(get) {
-				if (me.isAdminOnBehalf()) return false;
-				if (WT.isAdmin()) return true;
-				// Directory CAP is always related to the logged user and not 
-				// to the loaded profile. (keep attention to admin, its 
-				// directory has always write CAP)
-				if (!WT.getVar('domainDirCapPasswordWrite')) return false;
- 				return get('record.permPasswordManage');
- 			},
-			foCanManageUpi: function(get) {
+			foCanManagePassword: {
+				bind: {
+					permPasswordManage: '{record.permPasswordManage}',
+					dirCapPasswordWrite: '{record.dirCapPasswordWrite}'
+				},
+				get: function(get) {
+					if (me.isAdminOnBehalf()) return false;
+					if (WT.isAdmin()) return true;
+					return get['dirCapPasswordWrite'] && get['permPasswordManage'];
+				}
+			},
+			foCanManageUpi: WTF.foGetFn('record', 'permUpiManage', function(v) {
 				if (WT.isAdmin() || me.isAdminOnBehalf()) return true;
-				return get('record.permUpiManage');
-			}
+				return v;
+			})
 		}));
 		
 		me.add({
@@ -1201,8 +1203,8 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 				vct = WT.createView(me.ID, 'view.ChangePassword', {
 					viewCfg: {
 						showOldPassword: true,
-						passwordPolicy: WT.getVar('domainPasswordPolicy'),
-						profileId: me.profileId
+						profileId: me.profileId,
+						policies: Ext.JSON.decode(me.getModel().get('dirPasswordPolicies'), true)
 					}
 				});
 		vct.show();

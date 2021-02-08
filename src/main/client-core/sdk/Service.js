@@ -259,6 +259,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 */
 	handleMessage: function(msg) {
 		var lis = this.msgListeners[msg.action];
-		if(lis) Ext.callback(lis.fn, lis.scope, [msg]);
+		if(lis) Ext.callback(lis.fn, lis.scope, [msg, msg.payload]);
 	}
 });

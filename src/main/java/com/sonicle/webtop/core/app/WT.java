@@ -54,6 +54,7 @@ import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.File;
@@ -470,6 +471,11 @@ public class WT {
 		Writer writer = new StringWriter();
 		tpl.process(data, writer);
 		return writer.toString();
+	}
+	
+	public static void writeTemplate(String serviceId, String templateRelativePath, Map data, Writer out) throws IOException, TemplateException {
+		data.put("statics", BeansWrapper.getDefaultInstance().getStaticModels());
+		WT.loadTemplate(serviceId, templateRelativePath).process(data, out);
 	}
 	
 	public static void generateReportToStream(AbstractReport report, AbstractReport.OutputType outputType, OutputStream outputStream) throws JRException, WTException {

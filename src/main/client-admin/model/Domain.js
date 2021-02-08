@@ -77,7 +77,6 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 		}),
 		WTF.field('dirConnSecurity', 'string', true, {defaultValue: 'null'}),
 		WTF.field('dirCaseSensitive', 'boolean', false, {defaultValue: false}),
-		WTF.field('dirPasswordPolicy', 'boolean', false, {defaultValue: false}),
 		WTF.field('ldapLoginDn', 'string', true, {
 			validators: [{
 				type: 'sopresence',
@@ -121,6 +120,13 @@ Ext.define('Sonicle.webtop.core.admin.model.Domain', {
 				ifField: 'dirScheme',
 				ifValues: ['ldap', 'ldapneth']
 			}]
-		})
+		}),
+		WTF.field('pwdMinLength', 'int', true),
+		WTF.field('pwdComplexity', 'boolean', false, {defaultValue: false}),
+		WTF.field('pwdAvoidConsecutiveChars', 'boolean', false, {defaultValue: false}),
+		WTF.field('pwdAvoidOldSimilarity', 'boolean', false, {defaultValue: false}),
+		WTF.field('pwdAvoidUsernameSimilarity', 'boolean', false, {defaultValue: false}),
+		WTF.field('pwdExpiration', 'int', true),
+		WTF.field('pwdVerifyAtLogin', 'boolean', false, {defaultValue: false})
 	]
 });

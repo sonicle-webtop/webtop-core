@@ -43,6 +43,9 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 		'Sonicle.webtop.core.admin.ux.RoleServiceGrid',
 		'Sonicle.webtop.core.admin.ux.RolePermissionGrid'
 	],
+	mixins: [
+		'WTA.mixin.PwdPolicies'
+	],
 	
 	dockableConfig: {
 		title: '{user.tit}',
@@ -55,7 +58,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 	
 	domainId: null,
 	askForPassword: true,
-	passwordPolicy: false,
+	policies: null,
 	
 	constructor: function(cfg) {
 		var me = this;
@@ -101,6 +104,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					xtype: 'sopasswordfield',
 					reference: 'fldpassword',
 					bind: '{record.password}',
+					maxLength: 128,
 					plugins: 'sonoautocomplete',
 					fieldLabel: me.mys.res('user.fld-password.lbl'),
 					width: 300
@@ -108,6 +112,7 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 					xtype: 'sopasswordfield',
 					reference: 'fldpassword2',
 					bind: '{record.password2}',
+					maxLength: 128,
 					plugins: 'sonoautocomplete',
 					eye: false,
 					hideEmptyLabel: false,
@@ -245,7 +250,8 @@ Ext.define('Sonicle.webtop.core.admin.view.User', {
 				fldpassword.setHidden(false);
 				fldpassword2.setHidden(false);
 				mo.validatePassword = me.askForPassword;
-				mo.passwordPolicy = me.passwordPolicy;
+				mo.pwdPolicies = me.policies;
+				//mo.passwordPolicy = me.passwordPolicy;
 			} else {
 				fldpassword.setHidden(true);
 				fldpassword2.setHidden(true);

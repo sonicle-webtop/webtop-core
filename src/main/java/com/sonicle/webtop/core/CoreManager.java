@@ -39,6 +39,7 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
@@ -118,6 +119,7 @@ import com.sonicle.webtop.core.model.CausalExt;
 import com.sonicle.webtop.core.model.CustomField;
 import com.sonicle.webtop.core.model.CustomFieldEx;
 import com.sonicle.webtop.core.model.CustomPanel;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
@@ -292,14 +294,15 @@ public class CoreManager extends BaseManager {
 	 * @throws WTException 
 	 */
 	public AbstractDirectory getAuthDirectory() throws WTException {
-		// We can skip right check, an error will be returned here in getDomain()
-		ODomain domain = getDomain();
-		return (domain != null) ? wta.getWebTopManager().getAuthDirectory(domain.getDirUri()) : null;
+		UserProfileId pid = getTargetProfileId();
+		// SysAdmin can access all, others are locked on their domains
+		if (!RunContext.isSysAdmin()) ensureProfileDomain(pid.getDomainId());
+		return wta.getWebTopManager().getAuthDirectory(pid);
 	}
 	
 	public String getAuthDirectoryScheme() throws WTException {
 		AbstractDirectory dir = getAuthDirectory();
-		return (dir != null) ? dir.getScheme() : null;
+		return dir != null ? dir.getScheme() : null;
 	}
 	
 	@Deprecated
@@ -338,12 +341,19 @@ public class CoreManager extends BaseManager {
 	public ODomain getDomain(String domainId) throws WTException {
 		WebTopManager wtmgr = wta.getWebTopManager();
 		
-		if(RunContext.isSysAdmin()) {
+		if (RunContext.isSysAdmin()) {
 			return wtmgr.getDomain(domainId);
 		} else {
 			ensureUserDomain(domainId);
 			return wtmgr.getDomain(domainId);
 		}
+	}
+	
+	public DomainEntity.PasswordPolicies getDomainPasswordPolicies() throws WTException {
+		String domainId = getTargetProfileId().getDomainId();
+		// SysAdmin can access all, others are locked on their domains
+		if (!RunContext.isSysAdmin()) ensureProfileDomain(domainId);
+		return wta.getWebTopManager().getDomainPasswordPolicies(domainId);
 	}
 	
 	public List<PublicImage> listDomainPublicImages() throws WTException {

@@ -36,6 +36,7 @@ package com.sonicle.webtop.core.app.servlet;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.web.ServletUtils;
+import com.sonicle.commons.web.json.CId;
 import com.sonicle.security.auth.EntryException;
 import com.sonicle.webtop.core.CoreLocaleKey;
 import com.sonicle.webtop.core.CoreSettings;
@@ -47,9 +48,11 @@ import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SettingsManager;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.WebTopSession;
-import com.sonicle.webtop.core.bol.ODomain;
+import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
 import com.sonicle.webtop.core.bol.js.JsWTSPrivate;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
@@ -103,25 +106,27 @@ public class UIPrivate extends AbstractServlet {
 						if (Arrays.equals(password.toCharArray(), RunContext.getPrincipal().getPassword())) {
 							throw new PasswordMustBeDifferent();
 						}
-						wta.getWebTopManager().updateUserPassword(pid, null, password.toCharArray());
+						wta.getWebTopManager().updateUserPassword(pid, RunContext.getPrincipal().getPassword(), password.toCharArray());
 						((com.sonicle.security.Principal)RunContext.getPrincipal()).setPassword(password.toCharArray());
 						wts.clearProperty(CoreManifest.ID, UIPrivate.WTSPROP_PASSWORD_CHANGEUPONLOGIN);
 						writePage = false;
 					}
 				} catch (PasswordMustBeDifferent ex) {
-					logger.error("Provided password matches the current one");
-					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_MUSTBEDIFFERENT, true);
-					
+					logger.debug("Password change failure: password matches the current one");
+					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_MUSTBEDIFFERENT);
+				} catch (WTPwdPolicyException ex) {
+					logger.debug("Password change failure: password does not satisfy password policies [{}]", ex.getCode(), ex);
+					DomainEntity.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
+					failureMessage = lookupPolicyExceptionCodeMessage(wta, wts.getLocale(), ex.getCode(), policies);
 				} catch(WTException | EntryException ex) {
 					//TODO: display a centralized error page (like Throwable catch below)
 					logger.error("Unable to update password", ex);
-					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED, true);
+					failureMessage = wta.lookupResource(wts.getLocale(), CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED);
 				}
 				
 				if (writePage) {
-					ODomain odom = wta.getWebTopManager().getDomain(pid.getDomainId());
-					boolean passwordPolicyEnabled = odom.getDirPasswordPolicy();
-					writePasswordChangePage(wta, wts.getLocale(), passwordPolicyEnabled, failureMessage, response);
+					DomainEntity.PasswordPolicies policies = wta.getWebTopManager().getDomainPasswordPolicies(pid.getDomainId());
+					writePasswordChangePage(wta, wts.getLocale(), policies, pid.getUserId(), failureMessage, response);
 				} else {
 					ServletUtils.forwardRequest(request, response, UIPrivate.URL);
 				}	
@@ -132,7 +137,6 @@ public class UIPrivate extends AbstractServlet {
 				
 			} else {
 				//ServletUtils.forwardRequest(request, response, Start.URL);
-				
 				wts.initPrivateEnvironment(request);
 				writePrivatePage(wta, wts, WT.getPublicContextPath(pid.getDomainId()), response);
 			}
@@ -148,30 +152,58 @@ public class UIPrivate extends AbstractServlet {
 		}
 	}
 	
-	private void writePasswordChangePage(WebTopApp wta, Locale locale, boolean enablePasswordPolicy, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
+	private String lookupPolicyExceptionCodeMessage(WebTopApp wta, Locale locale, int code, DomainEntity.PasswordPolicies passwordPolicies) {
+		switch(code) {
+			case 1:
+				return wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_MINLENGTH, false, passwordPolicies.getMinLength());
+			case 2:
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_COMPLEXITY);
+			case 3:
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONSECUTIVEDUPLCHARS);
+			case 4:
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_USERNAMESIMILARITY);
+			case 41:
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_PASSWORDSIMILARITY);
+			default:
+				return wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_UNEXPECTED);
+		}
+	}
+	
+	private void writePasswordChangePage(WebTopApp wta, Locale locale, DomainEntity.PasswordPolicies passwordPolicies, String username, String failureMessage, HttpServletResponse response) throws IOException, TemplateException {
 		Map tplMap = new HashMap();
 		AbstractServlet.fillPageVars(tplMap, locale, null);
 		AbstractServlet.fillSystemVars(tplMap, wta, locale, false, false);
 		
-		tplMap.put("enablePasswordPolicy", enablePasswordPolicy);
+		tplMap.put("similarityLevenThres", WebTopProps.getWTDirectorySimilarityLevenThres(wta.getProperties()));
+		tplMap.put("similarityTokenSize", WebTopProps.getWTDirectorySimilarityTokenSize(wta.getProperties()));
+		tplMap.put("checkpolicy", CId.build(
+			passwordPolicies.getMinLength() != null ? passwordPolicies.getMinLength() : "",
+			passwordPolicies.getComplexity() ? "1" : "",
+			passwordPolicies.getAvoidConsecutiveChars() ? "1" : "",
+			passwordPolicies.getAvoidUsernameSimilarity() ? "1" : ""
+		));
+		tplMap.put("username", username);
 		tplMap.put("showFailure", !StringUtils.isBlank(failureMessage));
 		tplMap.put("failureMessage", failureMessage);
 		
 		Map i18n = new HashMap();
-		i18n.put("mainTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TITLE, true));
-		i18n.put("mainText", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TEXT, true));
-		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORD_LABEL, true));
-		i18n.put("passwordConfirmLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORDCONFIRM_LABEL, true));
-		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_SUBMIT_LABEL, true));
-		i18n.put("emptyFieldError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_EMPTYFIELD, true));
-		i18n.put("passwordPolicyError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_POLICY, true));
-		i18n.put("passwordConfirmNoMatchError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONFITMNOTMATCH, true));
+		i18n.put("mainTitle", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TITLE));
+		i18n.put("mainText", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_MAIN_TEXT));
+		i18n.put("passwordLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORD_LABEL));
+		i18n.put("passwordConfirmLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_PASSWORDCONFIRM_LABEL));
+		i18n.put("submitLabel", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_SUBMIT_LABEL));
+		i18n.put("emptyFieldError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_EMPTYFIELD));
+		i18n.put("passwordPolicyErrorComplexity", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_COMPLEXITY));
+		i18n.put("passwordPolicyErrorMinLength", wta.lookupAndFormatResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_MINLENGTH, false, passwordPolicies.getMinLength() != null ? passwordPolicies.getMinLength() : 8));
+		i18n.put("passwordPolicyErrorConsecutiveDuplChars", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONSECUTIVEDUPLCHARS));
+		i18n.put("passwordPolicyErrorUsernameSimilarity", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_USERNAMESIMILARITY));
+		i18n.put("passwordConfirmNoMatchError", wta.lookupResource(locale, CoreLocaleKey.TPL_PASSWORD_ERROR_CONFIRMNOTMATCH));
 		tplMap.put("i18n", i18n);
 		
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivate(response);
 		
-		WT.loadTemplate(CoreManifest.ID, "tpl/page/password.html").process(tplMap, response.getWriter());
+		WT.writeTemplate(CoreManifest.ID, "tpl/page/password.html", tplMap, response.getWriter());
 	}
 	
 	private void writePrivatePage(WebTopApp wta, WebTopSession wts, String baseUrl, HttpServletResponse response)  throws IOException, TemplateException {
@@ -199,7 +231,7 @@ public class UIPrivate extends AbstractServlet {
 		ServletUtils.setHtmlContentType(response);
 		ServletUtils.setCacheControlPrivateNoCache(response);
 		
-		WT.loadTemplate(CoreManifest.ID, "tpl/page/private.html").process(tplMap, response.getWriter());
+		WT.writeTemplate(CoreManifest.ID, "tpl/page/private.html", tplMap, response.getWriter());
 	}
 	
 	private static class MaintenanceException extends Exception {}

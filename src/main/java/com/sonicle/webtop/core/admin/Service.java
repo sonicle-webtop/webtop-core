@@ -78,11 +78,13 @@ import com.sonicle.webtop.core.bol.js.JsDomain;
 import com.sonicle.webtop.core.bol.js.JsGridDomainGroup;
 import com.sonicle.webtop.core.admin.bol.js.JsGridDomainLicense;
 import com.sonicle.webtop.core.admin.bol.js.JsGridLogger;
+import com.sonicle.webtop.core.app.WebTopProps;
 import com.sonicle.webtop.core.app.sdk.WTLicenseActivationException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseMismatchException;
 import com.sonicle.webtop.core.app.sdk.WTLicenseValidationException;
 import com.sonicle.webtop.core.app.util.ProductUtils;
+import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
 import com.sonicle.webtop.core.bol.js.JsGridDomainRole;
 import com.sonicle.webtop.core.bol.js.JsGridDomainUser;
 import com.sonicle.webtop.core.bol.js.JsGridPecBridgeFetcher;
@@ -97,7 +99,7 @@ import com.sonicle.webtop.core.bol.js.JsServiceProductLkp;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsUser;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.bol.model.DomainEntity;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
 import com.sonicle.webtop.core.bol.model.Role;
@@ -283,7 +285,7 @@ public class Service extends BaseService {
 	private static final String NID_AUDIT = "audit";
 	private static final String NID_ACCESSLOG = "accesslog";
 	
-	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean passwordPolicy, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+	private ExtTreeNode createDomainNode(String parentId, ODomain domain, String dirScheme, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, domain.getDomainId());
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), domain.getDescription(), false);
 		node.setIconClass(domain.getEnabled() ? "wtadm-icon-domain" : "wtadm-icon-domain-disabled");
@@ -291,19 +293,17 @@ public class Service extends BaseService {
 		node.put("_domainId", domain.getDomainId());
 		//node.put("_internetDomain", domain.getInternetName());
 		node.put("_dirScheme", dirScheme);
-		node.put("_passwordPolicy", passwordPolicy);
 		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
 		node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, Boolean dirPasswordPolicy, Boolean dirCapPasswordWrite, Boolean dirCapUsersWrite) {
+	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, id);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), null, true);
 		node.setIconClass(iconClass);
 		node.put("_type", type);
 		node.put("_domainId", domainId);
-		node.put("_passwordPolicy", dirPasswordPolicy);
 		node.put("_dirCapPasswordWrite", dirCapPasswordWrite);
 		node.put("_dirCapUsersWrite", dirCapUsersWrite);
 		return node;
@@ -330,38 +330,35 @@ public class Service extends BaseService {
 							for (ODomain domain : core.listDomains(false)) {
 								AbstractDirectory dir = core.getAuthDirectory(domain);
 								String dirScheme = dir.getScheme();
-								boolean passwordPolicy = domain.getDirPasswordPolicy();
 								boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 								boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
-								children.add(createDomainNode(nodeId, domain, dirScheme, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainNode(nodeId, domain, dirScheme, dirCapPasswordWrite, dirCapUsersWrite));
 							}
 							
 						} else if (cid.hasToken(2)) {
 							if (cid.getToken(2).equals(NID_AUDIT)) {
-								// domain|NethServer|audit
-								children.add(createDomainChildNode(nodeId, NID_ACCESSLOG, "daccesslog", "wtadm-icon-accesslog", cid.getToken(1), null, null, null));
+								// domain|<domain-id>|audit
+								children.add(createDomainChildNode(nodeId, NID_ACCESSLOG, "daccesslog", "wtadm-icon-accesslog", cid.getToken(1), false, false));
 							}
 						} else { // Single Domain node
 							String domainId = cid.getToken(1);
 							ODomain domain = core.getDomain(domainId);
 							AbstractDirectory dir = core.getAuthDirectory(domain);
-							boolean passwordPolicy = domain.getDirPasswordPolicy();
 							boolean dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
 							boolean dirCapUsersWrite = dir.hasCapability(DirectoryCapability.USERS_WRITE);
 							
-							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
-							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_SETTINGS, "dsettings", "wtadm-icon-settings", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_GROUPS, "dgroups", "wtadm-icon-groups", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_USERS, "dusers", "wtadm-icon-users", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_ROLES, "droles", "wtadm-icon-roles", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_LICENSES, "dlicenses", "wtadm-icon-licenses", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createDomainChildNode(nodeId, NID_LAUNCHERLINKS, "dlauncherlinks", "wtadm-icon-launcherLinks", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							
 							CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, domainId);
 							if (css.getHasPecBridgeManagement()) {
-								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, passwordPolicy, dirCapPasswordWrite, dirCapUsersWrite));
+								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							}
-							
-							children.add(createTreeNode(CId.build(nodeId, NID_AUDIT).toString(), "daudit", null, false, "wtadm-icon-audit"));
+							children.add(createDomainChildNode(nodeId, NID_AUDIT, "daudit", "wtadm-icon-audit", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 						}
 					} else if (cid.getToken(0).equals(NID_LOGS)) {
 						if (!cid.hasToken(1)) {
@@ -483,6 +480,13 @@ public class Service extends BaseService {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				coreadm.initDomainWithDefaults(domainId);
 				new JsonResult().printTo(out);
+				
+			} else if(crud.equals("policies")) {
+				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
+				short levenThres = WebTopProps.getWTDirectorySimilarityLevenThres(WT.getProperties());
+				short tokenSize = WebTopProps.getWTDirectorySimilarityTokenSize(WT.getProperties());
+				JsDomainPwdPolicies item = new JsDomainPwdPolicies(levenThres, tokenSize, coreadm.getDomainPasswordPolicies(domainId));
+				new JsonResult(item).printTo(out);
 			}
 			
 		} catch(Exception ex) {

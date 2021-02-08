@@ -33,15 +33,21 @@
 package com.sonicle.webtop.core.app;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OLicense;
 import com.sonicle.webtop.core.bol.OLicenseLease;
 import com.sonicle.webtop.core.bol.OMessageQueue;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.model.License;
+import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.model.ProductId;
 import com.sonicle.webtop.core.model.ServiceLicense;
 import com.sonicle.webtop.core.model.ServiceLicenseLease;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -64,6 +70,56 @@ public class AppManagerUtils {
 		return tgt;
 	}
 	
+	static <T extends DomainEntity> T fillDomainEntity(T tgt, ODomain src) throws URISyntaxException {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDomainId(src.getDomainId());
+			tgt.setInternetName(src.getInternetName());
+			tgt.setEnabled(src.getEnabled());
+			tgt.setDescription(src.getDescription());
+			tgt.setUserAutoCreation(src.getUserAutoCreation());
+			tgt.setDirUri(new URI(src.getDirUri()));
+			tgt.setDirAdmin(src.getDirAdmin());
+			tgt.setDirPassword(src.getDirPassword());
+			tgt.setDirConnSecurity(EnumUtils.getEnum(src.getDirConnectionSecurity(), com.sonicle.security.ConnectionSecurity.class));
+			tgt.setDirCaseSensitive(src.getDirCaseSensitive());
+			String scheme = tgt.getDirUri().getScheme();
+			if (scheme.equals(com.sonicle.security.auth.directory.LdapDirectory.SCHEME) || scheme.equals(com.sonicle.security.auth.directory.ADDirectory.SCHEME) || scheme.equals(com.sonicle.security.auth.directory.LdapNethDirectory.SCHEME)) {
+				tgt.setDirParameters(LangUtils.deserialize(src.getDirParameters(), new ParamsLdapDirectory(), ParamsLdapDirectory.class));
+			} else {
+				tgt.setDirParameters(null);
+			}
+			tgt.setPasswordPolicies(createDomainPasswordPolicies(src));
+		}
+		return tgt;
+	}
+	
+	static DomainEntity.PasswordPolicies createDomainPasswordPolicies(ODomain src) {
+		if (src != null) {
+			return new DomainEntity.PasswordPolicies(
+				src.getDirPwdPolicyMinLength(),
+				src.getDirPwdPolicyComplexity(),
+				src.getDirPwdPolicyAvoidConsecutiveChars(),
+				src.getDirPwdPolicyAvoidOldSimilarity(),
+				src.getDirPwdPolicyAvoidUsernameSimilarity(),
+				src.getDirPwdPolicyExpiration(),
+				src.getDirPwdPolicyVerifyAtLogin()
+			);
+		}
+		return null;
+	}
+	
+	static <T extends ODomain> T fillODomain(T tgt, DomainEntity.PasswordPolicies src) {
+		if ((tgt != null) && (src != null)) {
+			tgt.setDirPwdPolicyComplexity(src.getComplexity());
+			tgt.setDirPwdPolicyMinLength(src.getMinLength());
+			tgt.setDirPwdPolicyAvoidConsecutiveChars(src.getAvoidConsecutiveChars());
+			tgt.setDirPwdPolicyAvoidOldSimilarity(src.getAvoidOldSimilarity());
+			tgt.setDirPwdPolicyAvoidUsernameSimilarity(src.getAvoidUsernameSimilarity());
+			tgt.setDirPwdPolicyExpiration(src.getExpiration());
+			tgt.setDirPwdPolicyVerifyAtLogin(src.getVerifyAtLogin());
+		}
+		return tgt;
+	}
 	
 	static ServiceLicense createServiceLicense(OLicense src) {
 		if (src == null) return null;

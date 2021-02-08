@@ -44,6 +44,8 @@ public class JsUserOptions extends JsUserOptionsBase {
 	public Boolean permUpiManage; // Read-only
 	public Boolean permSyncDevicesAccess; // Read-only
 	public Boolean permWebchatAccess; // Read-only
+	public Boolean dirCapPasswordWrite; // Read-only
+	public String dirPasswordPolicies; // Read-only
 	
 	public String displayName;
 	public String theme;

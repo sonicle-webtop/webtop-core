@@ -67,6 +67,7 @@ import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.app.sdk.WTMultiCauseWarnException;
+import com.sonicle.webtop.core.app.sdk.WTPwdPolicyException;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.AssignedGroup;
 import com.sonicle.webtop.core.bol.AssignedRole;
@@ -83,9 +84,9 @@ import com.sonicle.webtop.core.bol.OUserInfo;
 import com.sonicle.webtop.core.bol.UserId;
 import com.sonicle.webtop.core.bol.UserUid;
 import com.sonicle.webtop.core.bol.model.DirectoryUser;
-import com.sonicle.webtop.core.bol.model.DomainEntity;
+import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.bol.model.GroupEntity;
-import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
+import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.bol.model.Role;
 import com.sonicle.webtop.core.bol.model.RoleEntity;
 import com.sonicle.webtop.core.bol.model.RoleWithSource;
@@ -145,6 +146,8 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 /**
@@ -233,11 +236,6 @@ public final class WebTopManager {
 		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
 	
-	public String createSysAdminAuthDirectoryUri() throws URISyntaxException {
-		DirectoryManager dirManager = DirectoryManager.getManager();
-		return dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
-	}
-	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
 		try {
 			return getAuthDirectoryByScheme(new URI(authUri).getScheme());
@@ -253,8 +251,28 @@ public final class WebTopManager {
 	public AbstractDirectory getAuthDirectoryByScheme(String scheme) throws WTException {
 		DirectoryManager dirManager = DirectoryManager.getManager();
 		AbstractDirectory directory = dirManager.getDirectory(scheme);
-		if(directory == null) throw new WTException("Directory not supported [{0}]", scheme);
+		if (directory == null) throw new WTException("Directory not supported [{}]", scheme);
 		return directory;
+	}
+	
+	public AbstractDirectory getAuthDirectory(UserProfileId profileId) throws WTException {
+		AuthenticationDomain ad = createAuthenticationDomain(profileId);
+		return getAuthDirectory(ad.getDirUri());
+	}
+	
+	private AuthenticationDomain createAuthenticationDomain(UserProfileId profileId) throws WTException {
+		try {
+			if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) {
+				return createSysAdminAuthenticationDomain();
+
+			} else {
+				ODomain odom = getDomain(profileId.getDomainId());
+				if (odom == null) throw new WTException("Domain not found [{0}]", profileId.getDomainId());
+				return createAuthenticationDomain(odom);
+			}
+		} catch(URISyntaxException ex) {
+			throw new WTException(ex, "Invalid URI");
+		}
 	}
 	
 	public AuthenticationDomain createAuthenticationDomain(ODomain domain) throws URISyntaxException {
@@ -271,6 +289,11 @@ public final class WebTopManager {
 	
 	public AuthenticationDomain createSysAdminAuthenticationDomain() throws URISyntaxException {
 		return new AuthenticationDomain("*", null, createSysAdminAuthDirectoryUri(), false, null, null, null, null);
+	}
+	
+	public String createSysAdminAuthDirectoryUri() throws URISyntaxException {
+		DirectoryManager dirManager = DirectoryManager.getManager();
+		return dirManager.getDirectory(WebTopDirectory.SCHEME).buildUri("localhost", null, null).toString();
 	}
 	
 	public String domainIdToPublicName(String domainId) {
@@ -422,27 +445,11 @@ public final class WebTopManager {
 		}
 	}
 	
-	public Boolean getDomainDirPasswordPolicy(String domainId) throws WTException {
-		DomainDAO dao = DomainDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			if (domainId.equals("*")) return false;
-			con = wta.getConnectionManager().getConnection();
-			return dao.selectDirPasswordPolicyById(con, domainId);
-			
-		} catch(SQLException ex) {
-			throw new WTException(ex, "DB error");
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
 	private ODomain getDomain(Connection con, String domainId) throws WTException {
-		DomainDAO dao = DomainDAO.getInstance();
+		DomainDAO domDao = DomainDAO.getInstance();
 		
 		try {
-			return dao.selectById(con, domainId);
+			return domDao.selectById(con, domainId);
 			
 		} catch(DAOException ex) {
 			throw new WTException(ex, "DB error");
@@ -450,15 +457,35 @@ public final class WebTopManager {
 	}
 	
 	public DomainEntity getDomainEntity(String domainId) throws WTException {
-		
-		ODomain domain = getDomain(domainId);
+		ODomain odomain = getDomain(domainId);
 		try {
-			DomainEntity de = new DomainEntity(domain);
-			de.setDirPassword(getDirPassword(domain));
-			return de;
+			if (odomain == null) return null;
+			DomainEntity domain = AppManagerUtils.fillDomainEntity(new DomainEntity(), odomain);
+			domain.setDirPassword(decDirPassword(domain.getDirPassword()));
+			return domain;
 			
 		} catch(URISyntaxException ex) {
 			throw new WTException(ex, "Invalid directory URI");
+		}
+	}
+	
+	public DomainEntity.PasswordPolicies getDomainPasswordPolicies(String domainId) throws WTException {
+		DomainDAO domDao = DomainDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			if (Principal.xisAdminDomain(domainId)) {
+				return new DomainEntity.PasswordPolicies(null, null, null, null, null, null, null);
+				
+			} else {
+				con = wta.getConnectionManager().getConnection();
+				return AppManagerUtils.createDomainPasswordPolicies(domDao.selectPasswordPoliciesById(con, domainId));
+			}	
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
@@ -809,11 +836,13 @@ public final class WebTopManager {
 					}
 				}
 				if (updatePassword && authDir.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
+					wta.setDirectoryOptionsPasswordPolicies(ad, opts, AppManagerUtils.createDomainPasswordPolicies(domain));
 					if (password == null) {
-						password = authDir.generatePassword(opts, domain.getDirPasswordPolicy());
+						password = authDir.generatePassword(opts);
 					} else {
-						if (domain.getDirPasswordPolicy() && !authDir.validatePasswordPolicy(opts, password)) {
-							throw new WTException("Password does not satisfy directory password policy [{}]", ad.getDirUri().getScheme());
+						int ret = authDir.validatePasswordPolicy(opts, user.getUserId(), password);
+						if (ret != 0) {
+							throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}, {}]", ad.getDirUri().getScheme(), ret);
 						}
 					}
 				}
@@ -951,35 +980,27 @@ public final class WebTopManager {
 		}
 	}
 	
-	private AuthenticationDomain createAuthenticationDomain(UserProfileId profileId) throws WTException {
-		try {
-			if (Principal.xisAdmin(profileId.getDomainId(), profileId.getUserId())) {
-				return createSysAdminAuthenticationDomain();
-
-			} else {
-				ODomain odom = getDomain(profileId.getDomainId());
-				if (odom == null) throw new WTException("Domain not found [{0}]", profileId.getDomainId());
-				return createAuthenticationDomain(odom);
-			}
-		} catch(URISyntaxException ex) {
-			throw new WTException(ex, "Invalid URI");
-		}
-	}
-	
 	public void updateUserPassword(UserProfileId profileId, char[] oldPassword, char[] newPassword) throws WTException, EntryException {
 		AuthenticationDomain ad = createAuthenticationDomain(profileId);
 		
 		try {
 			AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			
 			if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) {
 				throw new WTException("Directory has no write capability");
 			}
-			Boolean passwordPolicy = getDomainDirPasswordPolicy(profileId.getDomainId());
-			if (passwordPolicy && !directory.validatePasswordPolicy(opts, newPassword)) {
-				throw new WTException("Provided password does not satisfy directory password policy");
+			
+			DirectoryOptions opts = wta.createDirectoryOptions(ad);
+			DomainEntity.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(profileId.getDomainId());
+			wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+			int ret = directory.validatePasswordPolicy(opts, profileId.getUserId(), newPassword);
+			if (ret == 0 && oldPassword != null && pwdPolicies.getAvoidOldSimilarity()) {
+				int similarityThres = 5;
+				if (StringUtils.getLevenshteinDistance(new String(oldPassword), new String(newPassword)) < similarityThres) ret = 41;
 			}
+			if (ret != 0) {
+				throw new WTPwdPolicyException(ret, "Password does not satisfy directory policy [{}]", ret);
+			}
+			
 			if (oldPassword != null) {
 				directory.updateUserPassword(opts, profileId.getDomainId(), profileId.getUserId(), oldPassword, newPassword);
 			} else {
@@ -1002,11 +1023,21 @@ public final class WebTopManager {
 		AbstractDirectory directory = getAuthDirectory(ad.getDirUri());
 		if (!directory.hasCapability(DirectoryCapability.PASSWORD_WRITE)) return false;
 		
-		Boolean passwordPolicy = getDomainDirPasswordPolicy(profileId.getDomainId());
-		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, profileId.getDomainId());
-		if (passwordPolicy && css.getPasswordForceChangeIfPolicyUnmet()) {
-			DirectoryOptions opts = wta.createDirectoryOptions(ad);
-			if (!directory.validatePasswordPolicy(opts, password)) return true;
+		DomainEntity.PasswordPolicies pwdPolicies = getDomainPasswordPolicies(profileId.getDomainId());
+		if (pwdPolicies.getVerifyAtLogin() || pwdPolicies.getExpiration() != null) {
+			if (pwdPolicies.getVerifyAtLogin()) {
+				DirectoryOptions opts = wta.createDirectoryOptions(ad);
+				wta.setDirectoryOptionsPasswordPolicies(ad, opts, pwdPolicies);
+				int ret = directory.validatePasswordPolicy(opts, profileId.getUserId(), password);
+				if (ret != 0) return true;
+			}
+			
+			if (pwdPolicies.getExpiration() != null) {
+				CoreUserSettings cus = new CoreUserSettings(profileId);
+				DateTime lastChange = cus.getPasswordLastChange();
+				// NB: No last-change timestamp means password change needed!
+				if (lastChange == null || DateTimeUtils.datesBetween(lastChange, DateTimeUtils.now().toDateTime(DateTimeZone.UTC)) > pwdPolicies.getExpiration()) return true;
+			}
 		}
 		
 		CoreUserSettings cus = new CoreUserSettings(profileId);
@@ -2364,13 +2395,11 @@ public final class WebTopManager {
 			o.setDirConnectionSecurity(null);
 			o.setDirAdmin(null);
 			o.setDirPassword(null);
-			o.setDirPasswordPolicy(domain.getDirPasswordPolicy());
 			
 		} else if (scheme.equals(LdapWebTopDirectory.SCHEME)) {
 			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
 			o.setDirAdmin(domain.getDirAdmin());
 			setDirPassword(o, domain.getDirPassword());
-			o.setDirPasswordPolicy(domain.getDirPasswordPolicy());
 			
 		} else if (scheme.equals(LdapDirectory.SCHEME)) {
 			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
@@ -2382,25 +2411,21 @@ public final class WebTopManager {
 			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
 			o.setDirAdmin(null);
 			o.setDirPassword(null);
-			o.setDirPasswordPolicy(false);
 			
 		} else if (scheme.equals(SmbDirectory.SCHEME) || scheme.equals(SftpDirectory.SCHEME)) {
 			o.setDirConnectionSecurity(null);
 			o.setDirAdmin(null);
 			o.setDirPassword(null);
-			o.setDirPasswordPolicy(false);
 			
 		} else if (scheme.equals(ADDirectory.SCHEME)) {
 			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
 			o.setDirAdmin(domain.getDirAdmin());
 			setDirPassword(o, domain.getDirPassword());
-			o.setDirPasswordPolicy(domain.getDirPasswordPolicy());
 			
 		} else if (scheme.equals(LdapNethDirectory.SCHEME)) {
 			o.setDirConnectionSecurity(EnumUtils.getName(domain.getDirConnSecurity()));
 			o.setDirAdmin(domain.getDirAdmin());
 			setDirPassword(o, domain.getDirPassword());
-			o.setDirPasswordPolicy(false);
 		}
 		o.setDirCaseSensitive(domain.getDirCaseSensitive());
 		if (domain.getDirParameters() instanceof ParamsLdapDirectory) {
@@ -2408,6 +2433,7 @@ public final class WebTopManager {
 		} else {
 			o.setDirParameters(null);
 		}
+		AppManagerUtils.fillODomain(o, domain.getPasswordPolicies());
 	}
 	
 	private OUserAssociation doInsertUserAssociation(Connection con, String userUid, String groupUid) throws WTException {
@@ -2492,12 +2518,16 @@ public final class WebTopManager {
 		return oui;
 	}
 	
-	private String getDirPassword(ODomain o) {
-		return PasswordUtils.decryptDES(o.getDirPassword(), new String(new char[]{'p','a','s','s','w','o','r','d'}));
+	private String decDirPassword(String ep) {
+		return PasswordUtils.decryptDES(ep, new String(new char[]{'p','a','s','s','w','o','r','d'}));
 	}
 	
-	private void setDirPassword(ODomain o, String password) {
-		o.setDirPassword(PasswordUtils.encryptDES(password, new String(new char[]{'p','a','s','s','w','o','r','d'})));
+	private String encDirPassword(String dp) {
+		return PasswordUtils.encryptDES(dp, new String(new char[]{'p','a','s','s','w','o','r','d'}));
+	}
+	
+	private void setDirPassword(ODomain o, String dp) {
+		o.setDirPassword(encDirPassword(dp));
 	}
 	
 	private class CacheDomainInfo extends AbstractBulkCache {

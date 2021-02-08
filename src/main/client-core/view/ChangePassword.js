@@ -37,11 +37,14 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		'Sonicle.form.field.Password',
 		'Sonicle.plugin.NoAutocomplete'
 	],
+	mixins: [
+		'WTA.mixin.PwdPolicies'
+	],
 	
 	dockableConfig: {
 		title: '{changePassword.tit@com.sonicle.webtop.core}',
 		iconCls: 'wt-icon-changePassword-xs',
-		width: 320,
+		width: 340,
 		height: 165,
 		modal: true,
 		minimizable: false
@@ -49,22 +52,24 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 	promptConfirm: false,
 	
 	showOldPassword: false,
-	passwordPolicy: false,
 	profileId: null,
+	policies: null,
 	
 	initComponent: function() {
 		var me = this;
 		
 		Ext.apply(me, {
-			buttons: [{
-				text: WT.res('act-ok.lbl'),
-				handler: me.onOkClick,
-				scope: me
-			}, {
-				text: WT.res('act-cancel.lbl'),
-				handler: me.onCancelClick,
-				scope: me
-			}]
+			buttons: [
+				{
+					text: WT.res('act-ok.lbl'),
+					handler: me.onOkClick,
+					scope: me
+				}, {
+					text: WT.res('act-cancel.lbl'),
+					handler: me.onCancelClick,
+					scope: me
+				}
+			]
 		});
 		me.callParent(arguments);
 		
@@ -72,46 +77,53 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 			region: 'center',
 			xtype: 'wtform',
 			defaults: {
-				labelWidth: 80,
+				labelWidth: 120,
 				labelAlign: 'right'
 			},
-			items: [{
-				xtype: 'sopasswordfield',
-				reference: 'fldoldpassword',
-				allowBlank: false,
-				hidden: !me.showOldPassword,
-				plugins: 'sonoautocomplete',
-				fieldLabel: WT.res('changePassword.fld-oldPassword.lbl'),
-				anchor: '100%'
-			}, {
-				xtype: 'sopasswordfield',
-				reference: 'fldnewpassword',
-				allowBlank: false,
-				vtype: me.passwordPolicy ? 'complexPassword' : 'simplePassword',
-				plugins: 'sonoautocomplete',
-				fieldLabel: WT.res('changePassword.fld-newPassword.lbl'),
-				anchor: '100%'
-			}, {
-				xtype: 'sopasswordfield',
-				reference: 'fldnewpassword2',
-				allowBlank: false,
-				plugins: 'sonoautocomplete',
-				eye: false,
-				hideEmptyLabel: false,
-				emptyText: WT.res('changePassword.fld-newPassword2.emp'),
-				anchor: '100%',
-				validator: function(v) {
-					return (me.lref('fldnewpassword').getValue() === v) ? true : WT.res('changePassword.error.newPassword2');
+			items: [
+				{
+					xtype: 'sopasswordfield',
+					reference: 'fldoldpassword',
+					allowBlank: false,
+					hidden: !me.showOldPassword,
+					plugins: 'sonoautocomplete',
+					fieldLabel: WT.res('changePassword.fld-oldPassword.lbl'),
+					anchor: '100%'
+				}, {
+					xtype: 'sopasswordfield',
+					reference: 'fldnewpassword',
+					allowBlank: false,
+					maxLength: 128,
+					validator: function(val) {
+						var username = Sonicle.String.substrBefore(me.profileId, '@'),
+								oldPwd = me.showOldPassword ? me.lref('fldoldpassword').getValue() : null;
+						return me.checkPolicies(val, me.policies, username, oldPwd);
+					},
+					plugins: 'sonoautocomplete',
+					fieldLabel: WT.res('changePassword.fld-newPassword.lbl'),
+					anchor: '100%'
+				}, {
+					xtype: 'sopasswordfield',
+					reference: 'fldnewpassword2',
+					allowBlank: false,
+					maxLength: 128,
+					plugins: 'sonoautocomplete',
+					eye: false,
+					hideEmptyLabel: false,
+					emptyText: WT.res('changePassword.fld-newPassword2.emp'),
+					anchor: '100%',
+					validator: function(v) {
+						return me.lref('fldnewpassword').getValue() === v ? true : WT.res('changePassword.error.confirmNoMatch');
+					}
 				}
-			}]
+			]
 		});
-		
 		me.on('viewshow', me.onViewShow);
 	},
 	
 	onViewShow: function() {
 		var me = this;
-		if(me.showOldPassword) {
+		if (me.showOldPassword) {
 			me.lref('fldoldpassword').focus();
 		} else {
 			me.lref('fldnewpassword').focus();
@@ -122,8 +134,8 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		var me = this,
 				op = me.lref('fldoldpassword'),
 				np = me.lref('fldnewpassword');
-		if(me.showOldPassword && !op.isValid()) return;
-		if(!np.isValid() || !me.lref('fldnewpassword2').isValid()) return;
+		if (me.showOldPassword && !op.isValid()) return;
+		if (!np.isValid() || !me.lref('fldnewpassword2').isValid()) return;
 		me.doPasswordChange(me.showOldPassword ? op.getValue() : null, np.getValue());
 	},
 	
@@ -131,16 +143,18 @@ Ext.define('Sonicle.webtop.core.view.ChangePassword', {
 		this.closeView(false);
 	},
 	
-	doPasswordChange: function(op, np) {
-		var me = this;
-		me.mys.changeUserPassword(op, np, {
-			callback: function(success) {
-				if(success) {
-					me.closeView(false);
-				} else {
-					WT.error(WT.res('changePassword.error'));
+	privates: {
+		doPasswordChange: function(op, np) {
+			var me = this;
+			me.mys.changeUserPassword(op, np, {
+				callback: function(success) {
+					if (success) {
+						me.closeView(false);
+					} else {
+						WT.error(WT.res('changePassword.error'));
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 });

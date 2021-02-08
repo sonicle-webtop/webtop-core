@@ -1,6 +1,33 @@
 @DataSource[default@com.sonicle.webtop.core]
 
 -- ----------------------------
+-- Add new policy fields
+-- ----------------------------
+ALTER TABLE "core"."domains"
+ADD COLUMN "dir_pwd_policy_min_length" int2,
+ADD COLUMN "dir_pwd_policy_complexity" bool DEFAULT false NOT NULL,
+ADD COLUMN "dir_pwd_policy_avoid_consecutive_chars" bool DEFAULT false NOT NULL,
+ADD COLUMN "dir_pwd_policy_avoid_old_similarity" bool DEFAULT false NOT NULL,
+ADD COLUMN "dir_pwd_policy_avoid_username_similarity" bool DEFAULT false NOT NULL,
+ADD COLUMN "dir_pwd_policy_expiration" int2,
+ADD COLUMN "dir_pwd_policy_verify_at_login" bool DEFAULT false NOT NULL;
+
+ALTER TABLE "core"."domains"
+ALTER COLUMN "dir_password_policy" DROP NOT NULL;
+
+-- ----------------------------
+-- Populate data according to column "dir_password_policy"
+-- ----------------------------
+UPDATE "core"."domains" SET "dir_pwd_policy_complexity" = "dir_password_policy";
+UPDATE "core"."domains" SET "dir_pwd_policy_min_length" = 8 WHERE "dir_password_policy" IS TRUE;
+
+-- ----------------------------
+-- Clear deprecated settings
+-- ----------------------------
+DELETE FROM "core"."settings" WHERE "service_id" = 'com.sonicle.webtop.core' AND "key" = 'password.forcechangeifpolicyunmet';
+DELETE FROM "core"."domain_settings" WHERE "service_id" = 'com.sonicle.webtop.core' AND "key" = 'password.forcechangeifpolicyunmet';
+
+-- ----------------------------
 -- Create views for auth logs pages
 -- ----------------------------
 CREATE VIEW "core"."vw_access_log" AS 
@@ -83,5 +110,4 @@ ORDER BY
 -- ----------------------------
 -- Clear audit_log table
 -- ----------------------------
-
 DELETE FROM core.audit_log WHERE context = 'AUTH';

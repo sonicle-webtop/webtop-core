@@ -44,6 +44,12 @@ import com.sonicle.webtop.core.app.WebTopApp;
 public final class LdapWebTopConfigBuilder extends AbstractLdapConfigBuilder {
 	private static final LdapWebTopConfigBuilder BUILDER = new LdapWebTopConfigBuilder();
 	private static final String WTA = "wta";
+	private static final String PASSWORD_POLICY_SIMILARITY_TOKENSIZE = "passwordPolicySimilarityTokenSize";
+	private static final String PASSWORD_POLICY_USERNAMESIMILARITY = "passwordPolicyUsernameSimilarity";
+	private static final String PASSWORD_POLICY_COMPLEXITY = "passwordPolicyComplexity";
+	private static final String PASSWORD_POLICY_MINLENGTH = "passwordPolicyMinLength";
+	private static final String PASSWORD_POLICY_NOCONSECUTIVECHARS = "passwordPolicyNoConsecutiveChars";
+	private static final String PASSWORD_POLICY_SIMILARITY_LEVENTHRES = "passwordPolicySimilarityLevenThres";
 	public static final String DEFAULT_HOST = "localhost";
 	public static final Integer DEFAULT_PORT = 389;
 	public static final String DEFAULT_USER_FIRSTNAME_FIELD = "givenName";
@@ -60,6 +66,54 @@ public final class LdapWebTopConfigBuilder extends AbstractLdapConfigBuilder {
 	
 	public void setWebTopApp(DirectoryOptions opts, WebTopApp wta) {
 		setParam(opts, WTA, wta);
+	}
+	
+	public Short getPasswordPolicySimilarityLevenThres(DirectoryOptions opts) {
+		return (Short)getParam(opts, PASSWORD_POLICY_SIMILARITY_LEVENTHRES);
+	}
+	
+	public void setPasswordPolicySimilarityLevenThres(DirectoryOptions opts, Short passwordPolicySimilarityLevenThres) {
+		setParam(opts, PASSWORD_POLICY_SIMILARITY_LEVENTHRES, passwordPolicySimilarityLevenThres);
+	}
+	
+	public Short getPasswordPolicySimilarityTokenSize(DirectoryOptions opts) {
+		return (Short)getParam(opts, PASSWORD_POLICY_SIMILARITY_LEVENTHRES);
+	}
+	
+	public void setPasswordPolicySimilarityTokenSize(DirectoryOptions opts, Short passwordPolicySimilarityTokenSize) {
+		setParam(opts, PASSWORD_POLICY_SIMILARITY_TOKENSIZE, passwordPolicySimilarityTokenSize);
+	}
+	
+	public Short getPasswordPolicyMinLength(DirectoryOptions opts) {
+		return (Short)getParam(opts, PASSWORD_POLICY_MINLENGTH);
+	}
+	
+	public void setPasswordPolicyMinLength(DirectoryOptions opts, Short passwordPolicyMinLength) {
+		setParam(opts, PASSWORD_POLICY_MINLENGTH, passwordPolicyMinLength);
+	}
+	
+	public Boolean getPasswordPolicyComplexity(DirectoryOptions opts) {
+		return (Boolean)getParam(opts, PASSWORD_POLICY_COMPLEXITY);
+	}
+	
+	public void setPasswordPolicyComplexity(DirectoryOptions opts, Boolean passwordPolicyComplexity) {
+		setParam(opts, PASSWORD_POLICY_COMPLEXITY, passwordPolicyComplexity);
+	}
+	
+	public Boolean getPasswordPolicyNoConsecutiveChars(DirectoryOptions opts) {
+		return (Boolean)getParam(opts, PASSWORD_POLICY_NOCONSECUTIVECHARS);
+	}
+	
+	public void setPasswordPolicyNoConsecutiveChars(DirectoryOptions opts, Boolean passwordPolicyNoConsecutiveChars) {
+		setParam(opts, PASSWORD_POLICY_NOCONSECUTIVECHARS, passwordPolicyNoConsecutiveChars);
+	}
+	
+	public Boolean getPasswordPolicyUsernameSimilarity(DirectoryOptions opts) {
+		return (Boolean)getParam(opts, PASSWORD_POLICY_USERNAMESIMILARITY);
+	}
+	
+	public void setPasswordPolicyUsernameSimilarity(DirectoryOptions opts, Boolean passwordPolicyUsernameSimilarity) {
+		setParam(opts, PASSWORD_POLICY_USERNAMESIMILARITY, passwordPolicyUsernameSimilarity);
 	}
 	
 	public void setSpecificAdminDn(DirectoryOptions opts, String adminUsername, String internetName) {

@@ -51,7 +51,9 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 	}),
 	
 	validatePassword: false,
+	pwdPolicies: null,
 	passwordPolicy: false,
+	usernameField: 'userId',
 	passwordFieldLabel: '',
 	
 	identifier: 'negativestring',
@@ -89,23 +91,20 @@ Ext.define('Sonicle.webtop.core.admin.model.User', {
 Ext.define('Sonicle.webtop.core.admin.model.VUserPassword', {
 	extend: 'Ext.data.validator.Validator',
 	alias: 'data.validator.wtadm-userpassword',
+	mixins: [
+		'WTA.mixin.PwdPolicies'
+	],
 	
 	constructor: function(cfg) {
 		var me = this;
 		me.vtors = {};
 		me.callParent([cfg]);
-		me.vtors['pass'] = Ext.create('Sonicle.data.validator.Password', {
-			complex: false
-		});
-		me.vtors['cpass'] = Ext.create('Sonicle.data.validator.Password', {
-			complex: true
-		});
 	},
 	
 	validate: function(v, rec) {
 		var me = this;
-		if (rec.validatePassword) {
-			return rec.passwordPolicy ? me.vtors['cpass'].validate(v, rec) : me.vtors['pass'].validate(v, rec);
+		if (rec.validatePassword && Ext.isObject(rec.pwdPolicies)) {
+			return me.checkPolicies(v, rec.pwdPolicies, rec.get(rec.usernameField), null);
 		}
 		return true;
 	}

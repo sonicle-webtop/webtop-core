@@ -375,7 +375,6 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 				mys: me,
 				itemId: itemId,
 				domainId: node.get('_domainId'),
-				passwordPolicy: domNode.get('_passwordPolicy'),
 				dirScheme: domNode.get('_dirScheme'),
 				dirCapPasswordWrite: domNode.get('_dirCapPasswordWrite'),
 				dirCapUsersWrite: domNode.get('_dirCapUsersWrite'),
@@ -548,6 +547,20 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		WT.ajaxReq(me.ID, 'ManageDomains', {
 			params: {
 				crud: 'init',
+				domainId: domainId
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
+	},
+	
+	getDomainPwdPolicies: function(domainId, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.ID, 'ManageDomains', {
+			params: {
+				crud: 'policies',
 				domainId: domainId
 			},
 			callback: function(success, json) {
@@ -773,14 +786,14 @@ Ext.define('Sonicle.webtop.core.admin.Service', {
 		});
 	},
 	
-	addUser: function(askForPassword, passwordPolicy, domainId, userId, firstName, lastName, displayName, opts) {
+	addUser: function(askForPassword, pwdPolicies, domainId, userId, firstName, lastName, displayName, opts) {
 		opts = opts || {};
 		var me = this,
 				vct = WT.createView(me.ID, 'view.User', {
 					viewCfg: {
 						domainId: domainId,
 						askForPassword: askForPassword,
-						passwordPolicy: passwordPolicy
+						policies: pwdPolicies
 					}
 				});
 		

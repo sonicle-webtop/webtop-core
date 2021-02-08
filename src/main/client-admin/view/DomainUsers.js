@@ -41,10 +41,14 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	],
 	
 	domainId: null,
-	passwordPolicy: false,
 	dirScheme: null,
 	dirCapPasswordWrite: false,
 	dirCapUsersWrite: false,
+	
+	/**
+	 * @private
+	 * @property {Object} pwdPolicies 
+	 */
 	
 	dockableConfig: {
 		title: '{domainUsers.tit}',
@@ -99,33 +103,35 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				type: 'rowmodel',
 				mode : 'MULTI'
 			},
-			columns: [{
-				xtype: 'rownumberer'	
-			}, {
-				dataIndex: 'userId',
-				header: me.mys.res('domainUsers.gp.userId.lbl'),
-				flex: 1
-			}, {
-				dataIndex: 'displayName',
-				header: me.mys.res('domainUsers.gp.displayName.lbl'),
-				flex: 2
-			}, {
-				xtype: 'soiconcolumn',
-				dataIndex: 'exist',
-				header: WTF.headerWithGlyphIcon('fa fa-user'),
-				getIconCls: function(v,rec) {
-					return v ? 'wt-icon-ok-xs' : '';
-				},
-				getTip: function(v) {
-					return v ? me.mys.res('domainUsers.gp.exist.tip', WT.getPlatformName()) : null;
-				},
-				iconSize: WTU.imgSizeToPx('xs'),
-				width: 40
-			}, {
-				dataIndex: 'dirDisplayName',
-				header: me.mys.res('domainUsers.gp.dirDisplayName.lbl'),
-				flex: 2
-			}],
+			columns: [
+				{
+					xtype: 'rownumberer'	
+				}, {
+					dataIndex: 'userId',
+					header: me.mys.res('domainUsers.gp.userId.lbl'),
+					flex: 1
+				}, {
+					dataIndex: 'displayName',
+					header: me.mys.res('domainUsers.gp.displayName.lbl'),
+					flex: 2
+				}, {
+					xtype: 'soiconcolumn',
+					dataIndex: 'exist',
+					header: WTF.headerWithGlyphIcon('fa fa-user'),
+					getIconCls: function(v,rec) {
+						return v ? 'wt-icon-ok-xs' : '';
+					},
+					getTip: function(v) {
+						return v ? me.mys.res('domainUsers.gp.exist.tip', WT.getPlatformName()) : null;
+					},
+					iconSize: WTU.imgSizeToPx('xs'),
+					width: 40
+				}, {
+					dataIndex: 'dirDisplayName',
+					header: me.mys.res('domainUsers.gp.dirDisplayName.lbl'),
+					flex: 2
+				}
+			],
 			tbar: [
 				me.addAct('add', {
 					text: WT.res('act-add.lbl'),
@@ -313,10 +319,19 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				fn = copy ? rec.get('dirFirstName') : null,
 				ln = copy ? rec.get('dirLastName') : null,
 				dn = copy ? rec.get('dirDisplayName') : null;
-		me.mys.addUser(!copy, me.passwordPolicy, me.domainId, usi, fn, ln, dn, {
-			callback: function(success) {
-				if(success) {
-					me.lref('gp').getStore().load();
+		
+		me.mys.getDomainPwdPolicies(me.domainId, {
+			callback: function(success, data) {
+				if (success) {
+					me.mys.addUser(!copy, data, me.domainId, usi, fn, ln, dn, {
+						callback: function(success2) {
+							if (success2) {
+								me.lref('gp').getStore().load();
+							}
+						}
+					});
+				} else {
+					WT.error('Password policies not loaded');
 				}
 			}
 		});
@@ -357,15 +372,16 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 	},
 	
 	changePasswordUI: function(rec) {
-		var me = this,
-				vct = WT.createView(me.mys.ID, 'view.ChangePassword', {
-					viewCfg: {
-						showOldPassword: false,
-						passwordPolicy: me.passwordPolicy,
-						profileId: rec.get('profileId')
-					}
-				});
-		vct.show();
+		var me = this;
+		me.mys.getDomainPwdPolicies(me.domainId, {
+			callback: function(success, data) {
+				if (success) {
+					me.showChangePassword(data, rec.get('profileId'));
+				} else {
+					WT.error('Password policies not loaded');
+				}
+			}
+		});
 	},
 	
 	updateUserStatusUI: function(rec, enabled) {
@@ -499,6 +515,18 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainUsers', {
 				if (rec.get('exist')) i++;
 			});
 			return i;
+		},
+		
+		showChangePassword: function(policies, profileId) {
+			var me = this,
+				vct = WT.createView(me.mys.ID, 'view.ChangePassword', {
+					viewCfg: {
+						showOldPassword: false,
+						policies: policies,
+						profileId: profileId
+					}
+				});
+			vct.show();
 		}
 	}
 });

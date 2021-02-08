@@ -288,21 +288,6 @@ public class Service extends BaseService implements EventListener {
 		// New HTMLEditor activation flag: temporary until full transition!!!
 		co.put("useNewHTMLEditor", us.getUseNewHTMLEditor());
 		
-		boolean domainPasswordPolicy = false;
-		boolean dirCapPasswordWrite = false;
-		try {
-			if (profile.getDomainId().equals(WebTopManager.SYSADMIN_DOMAINID)) {
-				dirCapPasswordWrite = true;
-			} else {
-				ODomain domain = coreMgr.getDomain();
-				if (domain != null) {
-					domainPasswordPolicy = domain.getDirPasswordPolicy();
-					AbstractDirectory dir = coreMgr.getAuthDirectory(domain);
-					dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
-				}
-			}
-		} catch(WTException ex) {}
-		
 		boolean docServerEnabled = getDocumentServerEnabled();
 		co.put("docServerEnabled", docServerEnabled);
 		if (docServerEnabled) {
@@ -348,8 +333,6 @@ public class Service extends BaseService implements EventListener {
 				co.put("editorAttachPatterns-"+apploc.getId().substring(0,2), patterns);
 		}
 		
-		co.put("domainPasswordPolicy", domainPasswordPolicy);
-		co.put("domainDirCapPasswordWrite", dirCapPasswordWrite);
 		co.put("domainInternetName", WT.getDomainInternetName(profile.getDomainId()));
 		co.put("profileId", profile.getStringId());
 		co.put("domainId", profile.getDomainId());

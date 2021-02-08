@@ -543,13 +543,6 @@ public class CoreSettings {
 	public static final String VIEWPORT_HEADER_SCALE = "viewport.header.scale";
 	
 	/**
-	 * [system+domain]
-	 * [boolean]
-	 * Forces the user to change the password upon first login.
-	 */
-	public static final String PASSWORD_FORCECHANGE_IFPOLICYUNMET = "password.forcechangeifpolicyunmet";
-	
-	/**
 	 * [user]
 	 * [boolean]
 	 * Forces the user to change the password upon first login.

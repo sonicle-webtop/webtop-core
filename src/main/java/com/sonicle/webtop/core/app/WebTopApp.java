@@ -65,7 +65,7 @@ import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopConfigBuilder;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
 import com.sonicle.webtop.core.bol.ODomain;
-import com.sonicle.webtop.core.bol.model.ParamsLdapDirectory;
+import com.sonicle.webtop.core.model.ParamsLdapDirectory;
 import com.sonicle.webtop.core.io.FileResource;
 import com.sonicle.webtop.core.io.JarFileResource;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -73,6 +73,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.shiro.WTRealm;
+import com.sonicle.webtop.core.model.DomainEntity.PasswordPolicies;
 import com.sonicle.webtop.core.util.ICalendarUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Configuration;
@@ -1375,6 +1376,31 @@ public final class WebTopApp {
 				sftp.setIsCaseSensitive(opts, ad.getDirCaseSensitive());
 				sftp.setHost(opts, authUri.getHost());
 				sftp.setPort(opts, authUri.getPort());
+				break;
+		}
+		return opts;
+	}
+	
+	public DirectoryOptions setDirectoryOptionsPasswordPolicies(AuthenticationDomain ad, DirectoryOptions opts, PasswordPolicies policies) {
+		URI authUri = ad.getDirUri();
+		switch(authUri.getScheme()) {
+			case WebTopDirectory.SCHEME:
+				WebTopConfigBuilder wtBuilder = new WebTopConfigBuilder();
+				wtBuilder.setPasswordPolicySimilarityLevenThres(opts, WebTopProps.getWTDirectorySimilarityLevenThres(this.properties));
+				wtBuilder.setPasswordPolicySimilarityTokenSize(opts, WebTopProps.getWTDirectorySimilarityTokenSize(this.properties));
+				wtBuilder.setPasswordPolicyComplexity(opts, policies.getComplexity());
+				wtBuilder.setPasswordPolicyMinLength(opts, policies.getMinLength());
+				wtBuilder.setPasswordPolicyNoConsecutiveChars(opts, policies.getAvoidConsecutiveChars());
+				wtBuilder.setPasswordPolicyUsernameSimilarity(opts, policies.getAvoidUsernameSimilarity());
+				break;
+			case LdapWebTopDirectory.SCHEME:
+				LdapWebTopConfigBuilder lwtBuilder = new LdapWebTopConfigBuilder();
+				lwtBuilder.setPasswordPolicySimilarityLevenThres(opts, WebTopProps.getWTDirectorySimilarityLevenThres(this.properties));
+				lwtBuilder.setPasswordPolicySimilarityTokenSize(opts, WebTopProps.getWTDirectorySimilarityTokenSize(this.properties));
+				lwtBuilder.setPasswordPolicyComplexity(opts, policies.getComplexity());
+				lwtBuilder.setPasswordPolicyMinLength(opts, policies.getMinLength());
+				lwtBuilder.setPasswordPolicyNoConsecutiveChars(opts, policies.getAvoidConsecutiveChars());
+				lwtBuilder.setPasswordPolicyUsernameSimilarity(opts, policies.getAvoidUsernameSimilarity());
 				break;
 		}
 		return opts;

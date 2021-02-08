@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app.auth;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.security.auth.DirectoryException;
 import com.sonicle.security.auth.directory.DirectoryOptions;
 import com.sonicle.security.auth.directory.AbstractLdapDirectory;
@@ -44,6 +45,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.ldaptive.LdapAttribute;
 
 /**
@@ -52,11 +54,12 @@ import org.ldaptive.LdapAttribute;
  */
 public final class LdapWebTopDirectory extends AbstractLdapDirectory {
 	public static final String SCHEME = "ldapwebtop";
-	public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
+	//public static final Pattern PATTERN_PASSWORD_LENGTH = Pattern.compile("^[\\s\\S]{8,128}$");
 	public static final Pattern PATTERN_PASSWORD_UALPHA = Pattern.compile(".*[A-Z].*");
 	public static final Pattern PATTERN_PASSWORD_LALPHA = Pattern.compile(".*[a-z].*");
 	public static final Pattern PATTERN_PASSWORD_NUMBERS = Pattern.compile(".*[0-9].*");
 	public static final Pattern PATTERN_PASSWORD_SPECIAL = Pattern.compile(".*[^a-zA-Z0-9].*");
+	public static final Pattern PATTERN_PASSWORD_NOCONSECUTIVECHARS = Pattern.compile("^.*(.)\\1.*$");
 	
 	static final Collection<DirectoryCapability> CAPABILITIES = Collections.unmodifiableCollection(
 		EnumSet.of(
@@ -89,16 +92,42 @@ public final class LdapWebTopDirectory extends AbstractLdapDirectory {
 	}
 	
 	@Override
-	public boolean validatePasswordPolicy(DirectoryOptions opts, char[] password) {
-		int count = 0;
-		final String cs = new String(password);
-		if(PATTERN_PASSWORD_LENGTH.matcher(cs).matches()) {
-			if(PATTERN_PASSWORD_UALPHA.matcher(cs).matches()) count++;
-			if(PATTERN_PASSWORD_LALPHA.matcher(cs).matches()) count++;
-			if(PATTERN_PASSWORD_NUMBERS.matcher(cs).matches()) count++;
-			if(PATTERN_PASSWORD_SPECIAL.matcher(cs).matches()) count++;
+	public int validatePasswordPolicy(DirectoryOptions opts, String username, char[] password) {
+		LdapWebTopConfigBuilder builder = getConfigBuilder();
+		final String s = new String(password);
+		
+		Short minLength = builder.getPasswordPolicyMinLength(opts);
+		if (minLength != null && minLength > 0) {
+			if (s.length() < minLength) return 1;
 		}
-		return count >= 3;
+		
+		boolean complexity = LangUtils.value(builder.getPasswordPolicyComplexity(opts), false);
+		if (complexity) {
+			int count = 0;
+			if (PATTERN_PASSWORD_UALPHA.matcher(s).matches()) count++;
+			if (PATTERN_PASSWORD_LALPHA.matcher(s).matches()) count++;
+			if (PATTERN_PASSWORD_NUMBERS.matcher(s).matches()) count++;
+			if (PATTERN_PASSWORD_SPECIAL.matcher(s).matches()) count++;
+			if (count < 3) return 2;
+		}
+		
+		boolean noConsChars = LangUtils.value(builder.getPasswordPolicyNoConsecutiveChars(opts), false);
+		if (noConsChars) {
+			if (PATTERN_PASSWORD_NOCONSECUTIVECHARS.matcher(s).matches()) {
+				return 3;
+			}
+		}
+		
+		short similarityLevenThres = LangUtils.value(builder.getPasswordPolicySimilarityLevenThres(opts), (short)5);
+		short similarityTokenSize = LangUtils.value(builder.getPasswordPolicySimilarityTokenSize(opts), (short)4);
+		boolean usernameSimilarity = LangUtils.value(builder.getPasswordPolicyUsernameSimilarity(opts), false);
+		if (usernameSimilarity) {
+			if (username == null 
+					|| LangUtils.containsSimilarTokens(s, username, similarityTokenSize) 
+					|| StringUtils.getLevenshteinDistance(s, username) < similarityLevenThres) return 4;
+		}
+		
+		return 0;
 	}
 	
 	@Override

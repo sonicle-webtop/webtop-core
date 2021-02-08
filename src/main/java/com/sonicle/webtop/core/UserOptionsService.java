@@ -34,6 +34,7 @@
 package com.sonicle.webtop.core;
 
 import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.json.JsonResult;
@@ -41,11 +42,16 @@ import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.CompositeId;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
+import com.sonicle.security.auth.directory.AbstractDirectory;
+import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopProps;
+import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.OUser;
+import com.sonicle.webtop.core.bol.js.JsDomainPwdPolicies;
 import com.sonicle.webtop.core.bol.js.JsGridSync;
 import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.bol.js.JsTrustedDevice;
@@ -73,7 +79,7 @@ import org.slf4j.Logger;
  * @author malbinola
  */
 public class UserOptionsService extends BaseUserOptionsService {
-	public static final Logger logger = WT.getLogger(UserOptionsService.class);
+	public static final Logger LOGGER = WT.getLogger(UserOptionsService.class);
 	
 	@Override
 	public void processUserOptions(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
@@ -82,13 +88,13 @@ public class UserOptionsService extends BaseUserOptionsService {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			
-			CoreManager core = WT.getCoreManager(getTargetProfileId());
+			CoreManager coreMgr = WT.getCoreManager(getTargetProfileId());
 			//CoreServiceSettings ss = new CoreServiceSettings(CoreManifest.ID, getTargetDomainId());
 			CoreUserSettings us = new CoreUserSettings(getTargetProfileId());
 			
-			OUser user = core.getUser();
+			OUser user = coreMgr.getUser();
 			if (user == null) throw new WTException("Unable to find a user [{0}, {1}]", getTargetDomainId(), getTargetUserId());
-			UserProfile.PersonalInfo upi = core.getUserPersonalInfo();
+			UserProfile.PersonalInfo upi = coreMgr.getUserPersonalInfo();
 			
 			if (crud.equals(Crud.READ)) {
 				JsUserOptions jso = new JsUserOptions(getTargetProfileId().toString());
@@ -97,6 +103,20 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.permSyncDevicesAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "DEVICES_SYNC");
 				jso.permWebchatAccess = RunContext.isPermitted(true, getTargetProfileId(), CoreManifest.ID, "WEBCHAT");
 				
+				jso.dirCapPasswordWrite = false;
+				jso.dirPasswordPolicies = null;
+				try {
+					AbstractDirectory dir = coreMgr.getAuthDirectory();
+					jso.dirCapPasswordWrite = dir.hasCapability(DirectoryCapability.PASSWORD_WRITE);
+					if (jso.dirCapPasswordWrite) {
+						short levenThres = WebTopProps.getWTDirectorySimilarityLevenThres(WT.getProperties());
+						short tokenSize = WebTopProps.getWTDirectorySimilarityTokenSize(WT.getProperties());
+						jso.dirPasswordPolicies = LangUtils.serialize(new JsDomainPwdPolicies(levenThres, tokenSize, coreMgr.getDomainPasswordPolicies()), JsDomainPwdPolicies.class);
+					}
+				} catch(WTException ex) {
+					LOGGER.error("Unable to get directory capabilities and policies", ex);
+				}
+				
 				// main
 				jso.displayName = user.getDisplayName();
 				jso.theme = us.getTheme();
@@ -104,7 +124,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.laf = us.getLookAndFeel();
 				jso.headerScale = EnumUtils.toSerializedName(us.getViewportHeaderScale());
 				jso.passwordForceChange = us.getPasswordForceChange();
-				jso.startupService = sanitizeStartupService(core, us.getStartupService());
+				jso.startupService = sanitizeStartupService(coreMgr, us.getStartupService());
 				jso.desktopNotification = EnumUtils.toSerializedName(us.getDesktopNotification());
 				
 				// i18n
@@ -139,7 +159,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				jso.upiCustom3 = upi.getCustom03();
 				
 				// OTP
-				OTPManager otpm = core.getOTPManager();
+				OTPManager otpm = coreMgr.getOTPManager();
 				jso.otpEnabled = otpm.isEnabled(getTargetProfileId());
 				jso.otpDelivery = EnumUtils.toSerializedName(otpm.getDeliveryMode(getTargetProfileId()));
 				jso.otpEmailAddress = otpm.getEmailAddress(getTargetProfileId());
@@ -185,7 +205,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 				// main
 				if (pl.map.has("displayName")) {
 					upCacheNeedsUpdate = true;
-					core.updateUserDisplayName(pl.data.displayName);
+					coreMgr.updateUserDisplayName(pl.data.displayName);
 				}
 				if (pl.map.has("theme")) us.setTheme(pl.data.theme);
 				if (pl.map.has("layout")) us.setLayout(pl.data.layout);
@@ -233,7 +253,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 					if (pl.map.has("upiCustom1")) upi.setCustom01(pl.data.upiCustom1);
 					if (pl.map.has("upiCustom2")) upi.setCustom02(pl.data.upiCustom2);
 					if (pl.map.has("upiCustom3")) upi.setCustom03(pl.data.upiCustom3);
-					core.updateUserPersonalInfo(upi);
+					coreMgr.updateUserPersonalInfo(upi);
 				}
 				
 				// sync
@@ -254,13 +274,13 @@ public class UserOptionsService extends BaseUserOptionsService {
 				if (pl.map.has("imSoundOnMessageReceived"))  us.setIMSoundOnMessageReceived(pl.data.imSoundOnMessageReceived);
 				if (pl.map.has("imSoundOnMessageSent"))  us.setIMSoundOnMessageSent(pl.data.imSoundOnMessageSent);
 				
-				if (upCacheNeedsUpdate) core.cleanUserProfileCache();
+				if (upCacheNeedsUpdate) coreMgr.cleanUserProfileCache();
 				
 				new JsonResult().printTo(out);
 			}
 			
 		} catch (Exception ex) {
-			logger.error("Error executing action UserOptions", ex);
+			LOGGER.error("Error executing action UserOptions", ex);
 			new JsonResult(false, "Error").printTo(out);
 		} finally {
 			DbUtils.closeQuietly(con);
@@ -283,7 +303,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 			new JsonResult(items).printTo(out);
 			
 		} catch(Exception ex) {
-			logger.error("Error in LookupStartupServices", ex);
+			LOGGER.error("Error in LookupStartupServices", ex);
 		}
 	}
 	
@@ -317,7 +337,7 @@ public class UserOptionsService extends BaseUserOptionsService {
 			}
 			
 		} catch (Throwable t) {
-			logger.error("Error in ManageSyncDevices", t);
+			LOGGER.error("Error in ManageSyncDevices", t);
 			new JsonResult(false, "Error in ManageSyncDevices").printTo(out);
 		}
 	}
