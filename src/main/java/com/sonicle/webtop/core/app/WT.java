@@ -487,7 +487,7 @@ public class WT {
 		try {
 			return getWTA().getWebTopManager().domainIdToDomainInternetName(domainId);
 		} catch(Throwable t) {
-			logger.warn("Unable to get internet-name for domain [{}]", t, domainId);
+			logger.warn("Unable to get internet-name for domain [{}]", domainId, t);
 			return null;
 		}
 	}

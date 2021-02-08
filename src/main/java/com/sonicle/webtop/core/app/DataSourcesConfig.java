@@ -90,7 +90,7 @@ public class DataSourcesConfig {
 				try {
 					sources.put(sourceName, parseDataSource(elSource));
 				} catch(ConfigurationException ex) {
-					logger.warn("Error parsing dataSource definition [{}]", ex, elSource.toString());
+					logger.warn("Error parsing dataSource definition [{}]", elSource.toString(), ex);
 				}
 			}
 			
