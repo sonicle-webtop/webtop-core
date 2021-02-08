@@ -290,6 +290,30 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		this.fireEvent('modelsave', this, success, model, op, pass);
 	},
 	
+	eraseModel: function(opts) {
+		opts = opts || {};
+		var me = this,
+				model = me.getModel();
+		
+		if (model && !model.phantom) {
+			if (me.fireEvent('beforemodelerase', me, model, opts.pass) !== false) {
+				model.erase({
+					callback: function(rec, op, success) {
+						me.onModelErase(success, model, op, opts.pass);
+						Ext.callback(opts.callback, opts.scope || me, [success, model]);
+					},
+					scope: me
+				});
+				return true;
+			}
+		}
+		return false;
+	},
+	
+	onModelErase: function(success, model, op, pass) {
+		this.fireEvent('modelerase', this, success, model, op, pass);
+	},
+	
 	privates: {
 		_builtInFormulas: function(modelProperty) {
 			return {
