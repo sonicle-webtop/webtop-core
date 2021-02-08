@@ -298,7 +298,7 @@ public class Service extends BaseService {
 		return node;
 	}
 	
-	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, boolean dirCapPasswordWrite, boolean dirCapUsersWrite) {
+	private ExtTreeNode createDomainChildNode(String parentId, String id, String type, String iconClass, String domainId, Boolean dirCapPasswordWrite, Boolean dirCapUsersWrite) {
 		CompositeId cid = new CompositeId(parentId, id);
 		ExtTreeNode node = new ExtTreeNode(cid.toString(), null, true);
 		node.setIconClass(iconClass);
@@ -338,7 +338,7 @@ public class Service extends BaseService {
 						} else if (cid.hasToken(2)) {
 							if (cid.getToken(2).equals(NID_AUDIT)) {
 								// domain|<domain-id>|audit
-								children.add(createDomainChildNode(nodeId, NID_ACCESSLOG, "daccesslog", "wtadm-icon-accesslog", cid.getToken(1), false, false));
+								children.add(createDomainChildNode(nodeId, NID_ACCESSLOG, "daccesslog", "wtadm-icon-accesslog", cid.getToken(1), null, null));
 							}
 						} else { // Single Domain node
 							String domainId = cid.getToken(1);
@@ -358,7 +358,7 @@ public class Service extends BaseService {
 							if (css.getHasPecBridgeManagement()) {
 								children.add(createDomainChildNode(nodeId, NID_PECBRIDGE, "dpecbridge", "wtadm-icon-pecBridge", domainId, dirCapPasswordWrite, dirCapUsersWrite));
 							}
-							children.add(createDomainChildNode(nodeId, NID_AUDIT, "daudit", "wtadm-icon-audit", domainId, dirCapPasswordWrite, dirCapUsersWrite));
+							children.add(createTreeNode(CId.build(nodeId, NID_AUDIT).toString(), "daudit", null, false, "wtadm-icon-audit"));
 						}
 					} else if (cid.getToken(0).equals(NID_LOGS)) {
 						if (!cid.hasToken(1)) {
