@@ -301,7 +301,15 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 		});
 	},
 	
-	saveView: function(closeAfter) {
+	/**
+	 * Persists view's data, saving the underlyning model.
+	 * @param {Boolean} [closeAfter] `true` to close view after successful operation.
+	 * @param {Object} opts An object containing configuration.
+	 * @param {Function} [opts.callback] The callback function to {@link WTA.mixin.HasModel#saveModel} opts.
+	 * @param {Object} [opts.scope] The scope (this) for the supplied callback
+	 */
+	saveView: function(closeAfter, opts) {
+		opts = opts || {};
 		var me = this,
 				mo = me.getModel(), ok;
 		if (me.fireEvent('beforeviewsave', me, mo) !== false) {
@@ -309,7 +317,9 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 			ok = me.saveModel({
 				pass: {
 					closeAfter: closeAfter
-				}
+				},
+				callback: opts.callback,
+				scope: opts.scope
 			});
 			if (!ok) {
 				me.unwait();

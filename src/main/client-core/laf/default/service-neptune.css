@@ -35,7 +35,9 @@
 .wt-theme-header-text { color: #fff; }
 .wt-theme-header-text-alt { color: #157fcc; }
 
-
+.wt-theme-btn-pressed .x-btn-glyph {
+	color: #157fcc !important;
+}
 
 
 

@@ -257,8 +257,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	
 	/**
 	 * Saves configured model.
-	 * @param {Object} opts 
-	 * @param {Object} opts.pass Custom parameters to pass to events callbacks
+	 * @param {Object} opts An object containing configuration.
+	 * @param {Object} [opts.pass] Custom parameters to pass to events callbacks
 	 * @param {Function} [opts.callback] The callback function to call
 	 * @param {Object} [opts.scope] The scope (this) for the supplied callback
 	 * @returns {Boolean} 'true' if the async operation started, 'false' otherwise
