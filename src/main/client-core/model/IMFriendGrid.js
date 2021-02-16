@@ -45,8 +45,8 @@ Ext.define('Sonicle.webtop.core.model.IMFriendGrid', {
 		WTF.field('presenceStatus', 'string', false),
 		WTF.field('statusMessage', 'string', true),
 		WTF.field('dChatId', 'string', true),
-		WTF.calcField('online', 'int', ['presenceStatus'], function(v,rec) {
-			return WTA.ux.IMPanel.isStatusOnline(rec.get('presenceStatus'), false) ? 1 : 2;
+		WTF.calcField('online', 'string', ['presenceStatus'], function(v,rec) {
+			return WTA.ux.IMPanel.isStatusOnline(rec.get('presenceStatus'), false) ? '1' : '2';
 		})
 	]
 });

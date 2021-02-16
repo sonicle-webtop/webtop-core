@@ -665,16 +665,17 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {String} cfg.id The service ID.
 	 * @param {String} cfg.key The resource key.
 	 * @param {Boolean} cfg.keepcase True to not apply lowercase transform to value
-	 * @param {String} [cfg.emptyText] 
+	 * @param {String} [cfg.emptyText] Static text in case of empty values
+	 * @param {Function} [cfg.getEmptyText] Function for creating dynamic empty text
 	 * @param {String} [cfg.emptyCls] The CSS class to apply when value is empty
 	 * @returns {Function} The renderer function
 	 */
 	resColRenderer: function(cfg) {
 		cfg = cfg || {};
-		return function(value, meta) {
-			if (value === null && Ext.isString(cfg.emptyText)) {
+		return function(value, meta, rec) {
+			if (value === null && (Ext.isString(cfg.emptyText) || Ext.isFunction(cfg.getEmptyText))) {
 				if (Ext.isString(cfg.emptyCls)) meta.tdCls = cfg.emptyCls;
-				return cfg.emptyText;
+				return Ext.isString(cfg.emptyText) ? cfg.emptyText : Ext.callback(cfg.getEmptyText, this, [value, meta, rec]);
 			} else {
 				return WT.res(cfg.id, cfg.key + '.' + ((cfg.keepcase === true) ? String(value) : Ext.util.Format.lowercase(value)));
 			}
