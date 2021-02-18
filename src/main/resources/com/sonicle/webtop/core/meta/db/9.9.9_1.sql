@@ -111,3 +111,9 @@ ORDER BY
 -- Clear audit_log table
 -- ----------------------------
 DELETE FROM core.audit_log WHERE context = 'AUTH';
+
+-- ----------------------------
+-- Add default meeting configuration
+-- ----------------------------
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.provider', 'jitsi');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.jitsi.config', '{"url":"https://meet.jit.si/","name":"Jitsi Meet","auth":"none"}');
