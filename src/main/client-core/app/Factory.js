@@ -658,6 +658,22 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		}, cfg);
 	},
 	
+	copyTrigger: function(cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			type: 'socopy',
+			weight: -1
+		}, cfg);
+	},
+	
+	openTrigger: function(cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			type: 'soopen',
+			weight: -1
+		}, cfg);
+	},
+	
 	/**
 	 * Configures a renderer for looking-up columns value from a resource.
 	 * Resource key will be the result of the following concatenation: '{key}.{value}'
@@ -1111,14 +1127,17 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 	 * @param {String} modelProp ViewModel's property in which the model is stored.
 	 * @param {String} fieldName Model's field name.
 	 * @param {Function} getFn A function to produce the desired value.
+	 * @param {Mixed...} [args] The arguments to append to getFn (after value argument, the 1st one).
 	 * @returns {Mixed} A value computed by the function.
 	 */
 	foGetFn: function(modelProp, fieldName, getFn) {
 		if (!Ext.isFunction(getFn)) getFn = function(v) {return v;};
+		var moreArgs = arguments.length > 3 ? Ext.Array.slice(arguments, 3) : [];
 		return {
 			bind: {bindTo: '{'+Sonicle.String.join('.', modelProp, fieldName)+'}'},
 			get: function(val) {
-				return getFn(val);
+				return getFn.apply(this, [val].concat(moreArgs));
+				//return getFn(val);
 			}
 		};
 	},

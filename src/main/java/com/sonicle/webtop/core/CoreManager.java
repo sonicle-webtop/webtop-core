@@ -33,9 +33,11 @@
  */
 package com.sonicle.webtop.core;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
@@ -125,6 +127,7 @@ import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
+import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
@@ -150,10 +153,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -1598,8 +1603,48 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-
+	public Meeting createMeeting() throws WTException {
+		return createMeeting(null);
+	}
 	
+	public Meeting createMeeting(final Locale locale) throws WTException {
+		RunContext.ensureIsPermitted(false, SERVICE_ID, "MEETING", "CREATE");
+		
+		Locale targetLocale = locale == null ? getLocale() : locale;
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());	
+		Meeting.Provider provider = css.getMeetingProvider();
+		
+		try {
+			if (Meeting.Provider.JITSI.equals(provider)) {
+				CoreSettings.MeetingJitsiConfig config = (CoreSettings.MeetingJitsiConfig)css.getMeetingProviderConfig(provider);
+				if (config.url == null) throw new WTException("Invalid configuration for '{}' meeting provider. [url is missing]", provider);
+				
+				String meetingId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, Arrays.copyOfRange(NanoIdUtils.DEFAULT_ALPHABET, 2, 63), NanoIdUtils.DEFAULT_SIZE);
+				Meeting.Builder builder = new Meeting.Builder();
+				builder.withProvider(provider);
+				builder.withId(meetingId);
+				
+				URIBuilder linkBuilder = new URIBuilder(config.url);
+				URIUtils.appendPath(linkBuilder, meetingId);
+				URI linkUri = linkBuilder.build();
+				builder.withLink(linkUri);
+				
+				builder.withShareEmbedTexts(new Meeting.ShareEmbedTexts(
+					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.info"),
+					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.subject"),
+					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.unscheduled.description"),
+					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.scheduled.description")
+				));
+				
+				return builder.build();
+				
+			} else {
+				throw new WTException("Meeting provider not supported [{}]", css.getString(CoreSettings.MEETING_PROVIDER, null));
+			}
+		} catch (URISyntaxException ex) {
+			throw new WTException(ex);
+		}
+	}
 	
 	private CustomPanel doCustomPanelGet(Connection con, String domainId, String serviceId, String customPanelId) {
 		CustomPanelDAO cupDao = CustomPanelDAO.getInstance();

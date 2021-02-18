@@ -40,15 +40,13 @@
 .wt-icon-sharing { background-image: url('sharing_16.svg') !important; background-size: contain; }
 .wt-icon-notification { background-image: url('notification_16.svg') !important; background-size: contain; }
 .wt-icon-notification-remove-xs { background-image: url('notification-remove_16.png') !important; }
-.wt-icon-im-chat-hot { background-image: url('im-chat-hot_16.svg') !important; background-size: contain; }
 .wt-icon-im-chat { background-image: url('im-chat_16.svg') !important; background-size: contain; }
-.wt-icon-im-chat-xs { background-image: url('im-chat_16.png') !important; }
-.wt-icon-im-chat-m { background-image: url('im-chat_32.png') !important; }
-.wt-icon-im-chat-hot-xs { background-image: url('im-chat-hot_16.png') !important; }
-.wt-icon-im-ichat-xs { background-image: url('im-ichat_16.png') !important; }
-.wt-icon-im-ichat-hot-xs { background-image: url('im-ichat-hot_16.png') !important; }
-.wt-icon-im-gchat-xs { background-image: url('im-gchat_16.png') !important; }
-.wt-icon-im-gchat-hot-xs { background-image: url('im-gchat-hot_16.png') !important; }
+.wt-icon-im-chat-hot { background-image: url('im-chat-hot_16.svg') !important; background-size: contain; }
+.wt-icon-im-ichat { background-image: url('im-ichat_16.svg') !important; background-size: contain; }
+.wt-icon-im-ichat-hot { background-image: url('im-ichat-hot_16.svg') !important; background-size: contain; }
+.wt-icon-im-gchat { background-image: url('im-gchat_16.svg') !important; background-size: contain; }
+.wt-icon-im-gchat-hot { background-image: url('im-gchat-hot_16.svg') !important; background-size: contain; }
+.wt-icon-im-newGchat { background-image: url('im-gchat-new_16.svg') !important; background-size: contain; }
 .wt-icon-im-status-online { background-image: url('im-status-online_16.svg') !important; background-size: contain; }
 .wt-icon-im-status-away { background-image: url('im-status-away_16.svg') !important; background-size: contain; }
 .wt-icon-im-status-dnd { background-image: url('im-status-dnd_16.svg') !important; background-size: contain; }
@@ -73,7 +71,9 @@
 .wt-icon-customField-datetime { background-image: url('customfield-datetime_16.svg') !important; background-size: contain; }
 .wt-icon-customField-combobox { background-image: url('customfield-combobox_16.svg') !important; background-size: contain; }
 .wt-icon-customField-checkbox { background-image: url('customfield-checkbox_16.svg') !important; background-size: contain; }
-.wt-icon-customField-radios { background-image: url('customfield-radios.svg') !important; background-size: contain; }
+.wt-icon-customField-radios { background-image: url('customfield-radios_16.svg') !important; background-size: contain; }
+.wt-icon-meeting { background-image: url('meeting_16.svg') !important; background-size: contain; }
+.wt-icon-newMeeting { background-image: url('meeting-new_16.svg') !important; background-size: contain; }
 
 .wt-menu-userdetails-main {
 	padding: 5px 0 0 5px;
@@ -121,16 +121,15 @@
 .wt-icon-block-xs { background-image: url('block_16.png') !important; }
 .wt-icon-lock-xs { background-image: url('lock_16.png') !important; }
 .wt-icon-unlock-xs { background-image: url('unlock_16.png') !important; }
-.wt-icon-search-xs { background-image: url('search_16.png') !important; }
+.wt-icon-search { background-image: url('search_16.svg') !important; background-size: contain; }
 .wt-icon-search-adv { background-image: url('search-adv_32.svg') !important; background-size: contain; }
 .wt-icon-search-multi { background-image: url('search-multi_16.svg') !important; background-size: contain; }
-.wt-icon-history-xs { background-image: url('history_16.png') !important; }
+.wt-icon-history { background-image: url('history_16.svg') !important; background-size: contain; }
 .wt-icon-info-xs { background-image: url('info_16.png') !important; }
 .wt-icon-snooze { background-image: url('snooze_16.svg') !important; background-size: contain; }
 .wt-icon-public { background-image: url('public_16.svg') !important; background-size: contain; }
 .wt-icon-share { background-image: url('share_16.svg') !important; background-size: contain; }
 .wt-icon-attach { background-image: url('attach_16.svg') !important; background-size: contain; }
-.wt-icon-attach-xs { background-image: url('attach_16.png') !important; }
 .wt-icon-panel-bottom-xs { background-image: url('panel-bottom_16.png') !important; }
 .wt-icon-panel-left-xs { background-image: url('panel-left_16.png') !important; }
 .wt-icon-panel-right-xs { background-image: url('panel-right_16.png') !important; }

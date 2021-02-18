@@ -882,14 +882,15 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * Shows a pop-up notification (aka toast).
 	 * @param {String} text Text.
 	 * @param {Object} [opts] An object containing message configuration.
-	 * @param {Object} [toastCfg] Custom toast config.
-	 * 
 	 * This object may contain any of the following properties:
 	 * 
 	 * @param {Boolean/Number} [opts.autoClose=true] The number of milliseconds before autoclose or `true` to autoclose toast after 3 sec.
 	 * @param {Number/String} [opts.width] The width of this component. A numeric value will be interpreted as the number of pixels; a string value will be treated as a CSS value with units.
 	 * @param {Boolean} [opts.closable=false] True to display the 'close' tool button and allow the user to close the window.
-	 * @params {Object[]} [buttons] Convenience config. Short for 'Bottom Bar'. Button xtype and flex will be applied automatically.
+	 * @params {Object[]} [opts.buttons] Convenience config. Short for 'Bottom Bar'. Button xtype and flex will be applied automatically.
+	 * 
+	 * @param {Object} [toastCfg] Custom toast config.
+	 * 
 	 * @returns {Ext.window.Toast}
 	 */
 	toast: function(text, opts, toastCfg) {
@@ -1015,15 +1016,10 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String[]} The fonts.
 	 */
 	getEditorFonts: function() {
-		var fonts = WT.getVar('wtEditorFonts');
-		if (Ext.isString(fonts)) {
-			return Ext.Array.map(fonts.split(','), function(value) {
-				var name = value.trim(), // Trims it to make sure there aren't unwanted whitespaces!
-					ff = Sonicle.CssUtils.findFontFamily(name) || Sonicle.CssUtils.toFontFamily(name);
-				return name + '=' + ff;
-			});
-		}
-		return null;
+		return Sonicle.String.parseArray(WT.getVar('wtEditorFonts'), null, function(name) {
+			var ff = Sonicle.CssUtils.findFontFamily(name) || Sonicle.CssUtils.toFontFamily(name);
+			return name + '=' + ff;
+		});
 	},
 	
 	/**
@@ -1032,12 +1028,41 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @returns {String[]} The font sizes.
 	 */
 	getEditorFontSizes: function() {
-		var sizes = WT.getVar('wtEditorFontSizes');
-		if (Ext.isString(sizes)) {
-			return Ext.Array.map(sizes.split(','), function(value) {
-				return value.trim();
-			});
+		return Sonicle.String.parseArray(WT.getVar('wtEditorFontSizes'), null);
+	},
+	
+	/**
+	 * Checks if passed URL looks like a popular meeting URL.
+	 * @param {String} url The link URL to check.
+	 * @returns {Boolean}
+	 */
+	/*
+	isPopularMeetingUrl: function(url) {
+		var arr = Sonicle.String.parseKVArray(WT.getVar('wtPopMeetingProviders'), null),
+			sWith = function(popUrl) {
+				return Sonicle.String.startsWith(url, popUrl, true);
+			}, i;
+		if (Ext.isArray(arr)) {
+			for (i=0; i<arr.length; i++) {
+				if (sWith(arr[i][1])) return true;
+			}
 		}
-		return null;
+		return false;
+	},
+	*/
+	
+	/**
+	 * Checks if passed URL looks like a meeting URL: like those of popular 
+	 * online services or that configured as local meeting provider.
+	 * @param {String} url The link URL to check.
+	 * @returns {Boolean}
+	 */
+	isMeetingUrl: function(url) {
+		var me = this,
+				re = me.reMeetingProvUrls;
+		if (re === undefined) {
+			me.reMeetingProvUrls = re = me.getMeetingProvidersURLsRegExp();
+		}
+		return re ? re.test(url) : false;
 	}
 });

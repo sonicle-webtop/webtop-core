@@ -225,6 +225,18 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			menu: toolMnuItms,
 			hidden: toolsCount===0
 		}/*, '-'*/);
+		if (!WT.plTags.phone && !Ext.isEmpty(WT.getMeetingProvider()) && WT.isPermitted(WT.ID, 'MEETING', 'CREATE')) {
+			menuTbItms.push({
+				xtype: 'button',
+				reference: 'meetingbtn',
+				iconCls: 'wt-icon-newMeeting',
+				tooltip: WT.res('act-newMeeting.lbl'),
+				handler: function() {
+					var svc = WT.getApp().getService(WT.ID);
+					svc.showNewMeetingUI();
+				}
+			});
+		}
 		if (WT.getVar('imEnabled') === true) {
 			menuTbItms.push({
 				xtype: 'wtimbutton',

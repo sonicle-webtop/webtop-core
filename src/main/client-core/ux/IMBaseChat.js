@@ -256,6 +256,34 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 		};
 	},
 	
+	createMeetingButton: function() {
+		var me = this;
+		return {
+			xtype: 'button',
+			disabled: Ext.isEmpty(WT.getMeetingProvider()) || !WT.isPermitted(WT.ID, 'MEETING', 'CREATE'),
+			iconCls: 'wt-icon-newMeeting',
+			tooltip: WT.res('act-newMeeting.lbl'),
+			handler: function() {
+				me.wait();
+				me.getMeetingLink({
+					callback: function(success, data) {
+						me.unwait();
+						if (success) {
+							var fld = me.messageFld(),
+									value = fld.getValue();
+							if (Ext.isEmpty(value)) {
+								fld.setValue(Ext.String.format(data.embedTexts.info, data.link));
+							} else {
+								fld.setValue(value+data.link);
+							}
+							fld.focus(false, 50);
+						}
+					}
+				});
+			}
+		};
+	},
+	
 	createAudioCallButton: function() {
 		var me = this;
 		return {
@@ -408,6 +436,19 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 			}
 		},
 		
+		getMeetingLink: function(opts) {
+			opts = opts || {};
+			var me = this;	
+			WT.ajaxReq(WT.ID, 'ManageMeeting', {
+				params: {
+					crud: 'create'
+				},
+				callback: function(success, json) {
+					Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+				}
+			});
+		},
+		
 		makeRtcCall: function(friendFullId, video) {
 			var rtcJid = WTA.RTCManager.buildRtcJid(friendFullId);
 			WTA.RTCManager.startCall(rtcJid.split('/')[0], rtcJid, video);
@@ -429,9 +470,9 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 	
 	statics: {
 		buildIconCls: function(group, hot) {
-			var ico = group ? 'im-gchat' : 'im-ichat';
+			var ico = group ? 'wt-icon-im-gchat' : 'wt-icon-im-ichat';
 			if (hot) ico += '-hot';
-			return WTF.cssIconCls(WT.XID, ico, 'xs');
+			return ico;
 		}
 	}
 });

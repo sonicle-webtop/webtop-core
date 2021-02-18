@@ -104,6 +104,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 	
 	onRequiresLoaded: function() {
 		var me = this,
+				XArr = Ext.Array,
 				sids = me.getServices(),
 				cdesc, vp, vpc;
 		
@@ -124,14 +125,25 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 			me.getDescriptor(sids[i]).getInstance();
 		}
 		
+		// Initializes services...
+		var newActs = [];
 		Ext.iterate(sids, function(sid) {
 			var desc = me.getDescriptor(sid);
 			if (desc.initService()) {
 				var svc = desc.getInstance();
 				vpc.addServiceButton(desc);
-				if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
+				// Collect newActions (if any)
+				if (svc.hasNewActions()) XArr.push(newActs, svc.getNewActions());
+				//if (svc.hasNewActions()) vpc.addNewActions(svc.getNewActions());
 			}
 		});
+		
+		XArr.sort(newActs, function(e1, e2) {
+			var o1 = e1.initialConfig.order,
+				o2 = e2.initialConfig.order;
+			return Sonicle.Number.compare(Ext.isNumber(o1) ? o1 : 0, Ext.isNumber(o2) ? o2 : 0);
+		});
+		vpc.addNewActions(newActs);
 		
 		var llinks = Ext.JSON.decode(WT.getVar('wtLauncherLinks'), true);
 		if (Ext.isArray(llinks)) {

@@ -128,7 +128,7 @@ Ext.define('Sonicle.webtop.core.ux.IMChatXX', {
 		tbarItms.push({
 			xtype: 'souploadbutton',
 			tooltip: WT.res('wtimchat.btn-attach.tip'),
-			iconCls: 'wt-icon-attach-xs',
+			iconCls: 'wt-icon-attach',
 			uploaderConfig: WTF.uploader(WT.ID, 'UploadWebChatFile', {
 				extraParams: {
 					chatId: me.chatId
@@ -162,14 +162,14 @@ Ext.define('Sonicle.webtop.core.ux.IMChatXX', {
 		}, '-', {
 			xtype: 'button',
 			tooltip: WT.res('wtimchat.gpchatsearch.tit'),
-			iconCls: 'wt-icon-search-xs',
+			iconCls: 'wt-icon-search',
 			handler: function() {
 				me.lref('gpchatsearch').toggleCollapse();
 			}
 		}, {
 			xtype: 'splitbutton',
 			tooltip: WT.res('wtimchat.btn-history.tip'),
-			iconCls: 'wt-icon-history-xs',
+			iconCls: 'wt-icon-history',
 			menu: {
 				xtype: 'datemenu',
 				pickerCfg: {
@@ -651,9 +651,9 @@ Ext.define('Sonicle.webtop.core.ux.IMChatXX', {
 	
 	statics: {
 		buildIconCls: function(group, hot) {
-			var ico = group ? 'im-gchat' : 'im-ichat';
+			var ico = group ? 'wt-icon-im-gchat' : 'wt-icon-im-ichat';
 			if (hot) ico += '-hot';
-			return WTF.cssIconCls(WT.XID, ico, 'xs');
+			return ico;
 		}
 	}
 });

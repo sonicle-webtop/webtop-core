@@ -432,6 +432,41 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	},
 	
 	/**
+	 * Returns the configured meeting provider.
+	 * @returns {String} Meeting provider ID.
+	 */
+	getMeetingProvider: function() {
+		return WT.getVar('wtMeetingProvider');
+	},
+	
+	/**
+	 * Returns the config object for the configured provider.
+	 * @returns {Object}
+	 */
+	getMeetingConfig: function() {
+		return Ext.JSON.decode(WT.getVar('wtMeetingConfig'), true) || {};
+	},
+	
+	/**
+	 * Returns a RegExp suitable to test if an URL refers to a meeting URL.
+	 * @returns {RegExp} The regex or null in case of no URLs configured.
+	 */
+	getMeetingProvidersURLsRegExp: function() {
+		var SoS = Sonicle.String,
+				arr = SoS.parseKVArray(WT.getVar('wtPopMeetingProviders'), null),
+				url = this.getMeetingConfig().url,
+				i, urls = [];
+		if (!Ext.isEmpty(url)) urls.push(SoS.regexQuote(url));
+		if (Ext.isArray(arr)) {
+			for (i=0; i<arr.length; i++) {
+				url = arr[i][1];
+				if (!Ext.isEmpty(url)) urls.push(SoS.regexQuote(url));
+			}
+		}
+		return arr.length > 0 ? new RegExp('^(?:' + SoS.join('|', urls) + ')', 'i') : null;
+	},
+	
+	/**
 	 * Returns the layout in use.
 	 * Value is taken from core variable 'layout'.
 	 * @returns {String} The layout value.

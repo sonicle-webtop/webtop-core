@@ -101,12 +101,14 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 							}
 						}
 					},
-					columns: [{
-						xtype: 'wtchatmessagecolumn',
-						dataIndex: 'id',
-						dateFormat: WT.getShortDateFmt(),
-						flex: 1
-					}]
+					columns: [
+						{
+							xtype: 'wtchatmessagecolumn',
+							dataIndex: 'id',
+							dateFormat: WT.getShortDateFmt(),
+							flex: 1
+						}
+					]
 			}]
 		}, {
 			region: 'east',
@@ -160,27 +162,29 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 					}
 				]
 			}],
-			dockedItems: [{
-				xtype: 'textfield',
-				dock: 'top',
-				reference: 'fldchatsearch',
-				hideFieldLabel: true,
-				emptyText: WT.res('textfield.search.emp'),
-				triggers: {
-					clear: {
-						type: 'soclear'
-					}
-				},
-				listeners: {
-					change: {
-						fn: function(s) {
-							this.searchChat(s.getValue());
-						},
-						scope: me,
-						options: {buffer: 300}
+			dockedItems: [
+				{
+					xtype: 'textfield',
+					dock: 'top',
+					reference: 'fldchatsearch',
+					hideFieldLabel: true,
+					emptyText: WT.res('textfield.search.emp'),
+					triggers: {
+						clear: {
+							type: 'soclear'
+						}
+					},
+					listeners: {
+						change: {
+							fn: function(s) {
+								this.searchChat(s.getValue());
+							},
+							scope: me,
+							options: {buffer: 300}
+						}
 					}
 				}
-			}],
+			],
 			listeners: {
 				beforeexpand: function() {
 					me.lref('pnlemojis').collapse();
@@ -240,8 +244,9 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 					disabled: true
 				},
 				'-',
-				me.createAudioCallButton(),
-				me.createVideoCallButton()
+				//me.createAudioCallButton(),
+				//me.createVideoCallButton(),
+				me.createMeetingButton()
 			);
 		}
 		
@@ -252,14 +257,14 @@ Ext.define('Sonicle.webtop.core.ux.IMBigChat', {
 			{
 				xtype: 'button',
 				tooltip: WT.res('wtimchat.gpchatsearch.tit'),
-				iconCls: 'wt-icon-search-xs',
+				iconCls: 'wt-icon-search',
 				handler: function() {
 					me.lref('gpchatsearch').toggleCollapse();
 				}
 			}, {
 				xtype: 'splitbutton',
 				tooltip: WT.res('wtimchat.btn-history.tip'),
-				iconCls: 'wt-icon-history-xs',
+				iconCls: 'wt-icon-history',
 				menu: {
 					xtype: 'datemenu',
 					pickerCfg: {

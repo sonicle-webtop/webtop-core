@@ -155,7 +155,7 @@ Ext.define('Sonicle.webtop.core.view.IMQuickChat', {
 		applyHotMarker: function(cmp, hot) {
 			var me = this;
 			if (cmp) cmp.setHotMarker(hot);
-			me.setIconCls(hot ? WTF.cssIconCls(WT.XID, 'im-chat-hot') : null);
+			me.setIconCls(hot ? 'wt-icon-im-chat-hot' : null);
 			if (!hot) me.mys.clearIMNewMsgNotification(me.chatId);
 		}
 	}

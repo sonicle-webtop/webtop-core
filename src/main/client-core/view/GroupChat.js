@@ -43,7 +43,7 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 	
 	dockableConfig: {
 		title: '{groupChat.tit}',
-		iconCls: 'wt-icon-im-gchat-xs',
+		iconCls: 'wt-icon-im-newGchat',
 		width: 430,
 		height: 250
 	},
@@ -60,33 +60,35 @@ Ext.define('Sonicle.webtop.core.view.GroupChat', {
 				type: 'vbox',
 				align: 'stretch'
 			},
-			items: [{
-				xtype: 'wtform',
-				layout: 'anchor',
-				modelValidation: true,
-				items: [{
-					xtype: 'textfield',
-					reference: 'fldname',
-					bind: '{record.name}',
-					fieldLabel: me.mys.res('groupChat.fld-name.lbl'),
-					anchor: '100%'
-				}]
-			}, {
-				xtype: 'wtchatmembergrid',
-				sid: me.mys.ID,
-				title: me.mys.res('groupChat.gpmember.tit'),
-				bind: {
-					store: '{record.members}'
-				},
-				listeners: {
-					pick: function(s, vals, recs) {
-						me.getModel().members().add({
-							friendId: vals[0]
-						});
-					}
-				},
-				flex: 1
-			}]
+			items: [
+				{
+					xtype: 'wtform',
+					layout: 'anchor',
+					modelValidation: true,
+					items: [{
+						xtype: 'textfield',
+						reference: 'fldname',
+						bind: '{record.name}',
+						fieldLabel: me.mys.res('groupChat.fld-name.lbl'),
+						anchor: '100%'
+					}]
+				}, {
+					xtype: 'wtchatmembergrid',
+					sid: me.mys.ID,
+					title: me.mys.res('groupChat.gpmember.tit'),
+					bind: {
+						store: '{record.members}'
+					},
+					listeners: {
+						pick: function(s, vals, recs) {
+							me.getModel().members().add({
+								friendId: vals[0]
+							});
+						}
+					},
+					flex: 1
+				}
+			]
 		});
 		me.on('viewload', me.onViewLoad);
 	},

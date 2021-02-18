@@ -105,6 +105,7 @@ import com.sonicle.webtop.core.bol.js.JsInternetAddress;
 import com.sonicle.webtop.core.bol.js.JsPublicImage;
 import com.sonicle.webtop.core.bol.js.JsReminderInApp;
 import com.sonicle.webtop.core.bol.js.JsRoleLkp;
+import com.sonicle.webtop.core.bol.js.JsSVMeetingProviderConfig;
 import com.sonicle.webtop.core.bol.js.JsServicePermissionLkp;
 import com.sonicle.webtop.core.bol.js.JsTagGrid;
 import com.sonicle.webtop.core.bol.model.UserOptionsServiceData;
@@ -126,6 +127,7 @@ import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
 import com.sonicle.webtop.core.model.MasterData;
+import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
@@ -308,6 +310,8 @@ public class Service extends BaseService implements EventListener {
 		//co.put("wtForcePasswordChange", ss.getOTPEnabled());
 		co.put("wtOtpEnabled", ss.getOTPEnabled());
 		co.put("wtLauncherLinks", ss.getLauncherLinksAsString());
+		
+		// HTMLEditor configuration
 		co.put("wtEditorFonts", ss.getEditorFonts());
 		co.put("wtEditorFontSizes", ss.getEditorFontSizes());
 		co.put("wtEditorPasteMode", EnumUtils.toSerializedName(ss.getEditorPasteImportMode()));
@@ -316,6 +320,18 @@ public class Service extends BaseService implements EventListener {
 			co.put("wtEditorACE", WT.isLicensed(ProductUtils.getProduct(SERVICE_ID, TMCEPremiumProduct.PRODUCT_ID, profile.getDomainId())));
 		}
 		co.put("wtGeolocationProvider", EnumUtils.toSerializedName(ss.getGeolocationProvider()));
+		
+		co.put("wtPopMeetingProviders", ss.getPopularMeetingProviders());
+		Meeting.Provider meetingProvider = null;
+		String meetingConfig = null;
+		if (RunContext.isPermitted(true, SERVICE_ID, "MEETING", "CREATE")) {
+			meetingProvider = ss.getMeetingProvider();
+			if (Meeting.Provider.JITSI.equals(meetingProvider)) {
+				meetingConfig = JsSVMeetingProviderConfig.toJson(new JsSVMeetingProviderConfig((CoreSettings.MeetingJitsiConfig)ss.getMeetingProviderConfig(meetingProvider)));
+			}
+		}
+		co.put("wtMeetingProvider", EnumUtils.toSerializedName(meetingProvider));
+		co.put("wtMeetingConfig", meetingConfig);
 		
 		try {
 			JsTagGrid.List items = new JsTagGrid.List();
@@ -895,6 +911,20 @@ public class Service extends BaseService implements EventListener {
 		} catch(Exception ex) {
 			logger.error("Error in ManageCausals", ex);
 			new JsonResult(ex).printTo(out);
+		}
+	}
+	
+	public void processManageMeeting(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
+		
+		try {
+			String crud = ServletUtils.getStringParameter(request, "crud", true);
+			if (crud.equals(Crud.CREATE)) {
+				new JsonResult(coreMgr.createMeeting()).printTo(out);
+			}
+			
+		} catch(Throwable t) {
+			logger.error("Error in ManageMeeting", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	

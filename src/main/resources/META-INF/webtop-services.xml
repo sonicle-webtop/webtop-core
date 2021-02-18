@@ -88,6 +88,11 @@
 			-->
 			<permission group="WEBCHAT" actions="ACCESS" />
 			<!--
+			MEETING - meeting generation
+			- CREATE ability to create new meetings through configured provider
+			-->
+			<permission group="MEETING" actions="CREATE" />
+			<!--
 			AUDIT - show audit interface
 			- ACCESS ability to use audit interface
 			-->

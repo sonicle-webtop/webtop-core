@@ -93,6 +93,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 		delete cfg.text;
 		delete cfg.tooltip;
 		delete cfg.iconCls;
+		delete cfg.ignoreSize;
 		delete cfg.glyph;
 		delete cfg.handler;
 		delete cfg.scope;

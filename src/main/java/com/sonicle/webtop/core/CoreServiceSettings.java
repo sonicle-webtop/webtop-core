@@ -9,17 +9,22 @@ package com.sonicle.webtop.core;
 
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
+import com.sonicle.commons.RegexUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.security.otp.provider.SonicleAuth;
 import static com.sonicle.webtop.core.CoreSettings.*;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.SettingsManager;
+import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.sdk.BaseServiceSettings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalTime;
 
 /**
@@ -300,6 +305,61 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	
 	public String getEditorFontSizes() {
 		return getString(EDITOR_FONTSIZES, "8px,10px,12px,14px,16px,18px,24px,36px,48px");
+	}
+	
+	public String getPopularMeetingProviders() {
+		//https://www.dgicommunications.com/video-conferencing-software/
+		return getString(POPULAR_MEETING_PROVIDERS, "Google Meet=https://meet.google.com/,Microsoft Teams=https://teams.microsoft.com/l/meetup-join/,Zoom=https://*.zoom.us/j/,Jitsi Meet=https://meet.jit.si/");
+	}
+	
+	public Meeting.Provider getMeetingProvider() {
+		return getEnum(MEETING_PROVIDER, null, Meeting.Provider.class);
+	}
+	
+	public Object getMeetingProviderConfig(Meeting.Provider provider) {
+		if (Meeting.Provider.JITSI.equals(provider)) {
+			MeetingJitsiConfig config = getObject(MEETING_JITSI_CONFIG, new MeetingJitsiConfig(), MeetingJitsiConfig.class);
+			if (StringUtils.isBlank(config.name)) config.name = "Jitsi Meet";
+			return config;
+		}
+		return null;
+	}
+	
+	public Map<String, String> getMeetingProviders() {
+		Map<String, String> meetingProviders = LangUtils.parseStringAsKeyValueMap(getPopularMeetingProviders(), 1, 0);
+		
+		String url = null, name = null;
+		Meeting.Provider meetingProvider = getMeetingProvider();
+		if (Meeting.Provider.JITSI.equals(meetingProvider)) {
+			MeetingJitsiConfig config = (MeetingJitsiConfig)getMeetingProviderConfig(meetingProvider);
+			url = config.url;
+			name = config.name;
+		}
+		if (!StringUtils.isEmpty(url) && !meetingProviders.containsKey(url)) {
+			meetingProviders.put(url, name);
+		}
+		return meetingProviders;
+	}
+	
+	public Pattern getMeetingProvidersURLsPattern() {
+		Map<String, String> popMeetingProviders = LangUtils.parseStringAsKeyValueMap(getPopularMeetingProviders(), 1, 0);
+		ArrayList<String> urls = new ArrayList<>(popMeetingProviders.size()+1);
+		
+		String myurl = null;
+		Meeting.Provider meetingProvider = getMeetingProvider();
+		if (Meeting.Provider.JITSI.equals(meetingProvider)) {
+			myurl = ((MeetingJitsiConfig)getMeetingProviderConfig(meetingProvider)).url;
+		}
+		if (!StringUtils.isEmpty(myurl)) urls.add(RegexUtils.escapeRegexSpecialChars(myurl));
+		for (String url : popMeetingProviders.keySet()) {
+			if (!StringUtils.isEmpty(url)) {
+				String escaped = RegexUtils.escapeRegexSpecialChars(url);
+				// Make domain wildcards working: escaped wildcard text needs to
+				// be replaced with the right regex token able to match any subdomains
+				urls.add(StringUtils.replace(escaped, "\\*\\.", "(?:[\\w\\d-]+\\.)?"));
+			}
+		}
+		return urls.size() > 0 ? Pattern.compile("(?:" + StringUtils.join(urls, "|") + ")", Pattern.CASE_INSENSITIVE) : null;
 	}
 	
 	public EditorPasteImportMode getEditorPasteImportMode() {

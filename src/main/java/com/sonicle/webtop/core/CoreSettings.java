@@ -814,11 +814,60 @@ public class CoreSettings {
 	public static final String GEOLOCATION_PROVIDER_IPSTACK_APIKEY = "geolocation.ipstack.apikey";
 	
 	/**
+	 * [domain+system]
+	 * [string[]]
+	 * Comma-separated entries in the form of "name=url" (service name and its
+	 * conference base URL), representing popular meeting services available online.
+	 * Domain wildcards are supported by adding "*." as subdomain placeholder.
+	 */
+	public static final String POPULAR_MEETING_PROVIDERS = "meeting.popular.providers";
+	
+	/**
 	 * [user]
 	 * [boolean]
 	 * Activates new HTMLEditor based on TinyMCE 5.x.x (temporary until full transition)
 	 */
 	public static final String NEWHTMLEDITOR = "test.newhtmleditor";
+	
+	/**
+	 * [domain+system]
+	 * [enum]
+	 * Meeting provider
+	 */
+	public static final String MEETING_PROVIDER = "meeting.provider";
+	
+	/**
+	 * [domain+system]
+	 * [object]
+	 * Defines Jitsi configuration
+	 * {
+	 *   name: 'WebTop Meet', // Optional name
+     *   url: 'https://meet.jit.si/', // Service URL
+	 *   auth: 'none' // Authentication mode (none|jwt) TODO: to be implemented!
+	 * }
+	 */
+	public static final String MEETING_JITSI_CONFIG = "meeting.jitsi.config";
+	
+	public static class MeetingJitsiConfig {
+		public String name;
+		public String url;
+		public Auth auth;
+		
+		public static MeetingJitsiConfig fromJson(String value) {
+			if (value == null) return null;
+			return JsonResult.GSON.fromJson(value, MeetingJitsiConfig.class);
+		}
+
+		public static String toJson(MeetingJitsiConfig value) {
+			if (value == null) return null;
+			return JsonResult.GSON.toJson(value, MeetingJitsiConfig.class);
+		}
+		
+		public static enum Auth {
+			@SerializedName("none") NONE,
+			@SerializedName("jwt") JWT;
+		}
+	}
 	
 	public static enum EditorPasteImportMode {
 		@SerializedName("clean") CLEAN,

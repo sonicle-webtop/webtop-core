@@ -47,7 +47,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 		'Sonicle.webtop.core.view.Causals',
 		'Sonicle.webtop.core.view.SMS',
 		'Sonicle.webtop.core.view.CustomPanels',
-		'Sonicle.webtop.core.view.CustomFields'
+		'Sonicle.webtop.core.view.CustomFields',
+		'Sonicle.webtop.core.view.Meeting'
 	],
 	
 	vwrem: null,
@@ -292,6 +293,16 @@ Ext.define('Sonicle.webtop.core.Service', {
 				}
 			});
 		}
+		
+		if (!Ext.isEmpty(WT.getMeetingProvider()) && me.isPermitted('MEETING', 'CREATE')) {
+			me.addAct('new', 'newMeeting', {
+				ignoreSize: true,
+				handler: function() {
+					me.showNewMeetingUI();
+				}
+				//order: 99
+			});
+		}
 	},
 	
 	notifyMyAutosave: function(pl) {
@@ -400,6 +411,14 @@ Ext.define('Sonicle.webtop.core.Service', {
 		}).showView();
 	},
 	
+	showNewMeetingUI: function() {
+		if (this.isPermitted('MEETING', 'CREATE')) {
+			WT.createView(this.ID, 'view.Meeting', {
+				swapReturn: true
+			}).showView();
+		}
+	},
+	
 	showReminder: function(data) {
 		var me = this,
 				vw = WT.createView(me.ID, 'view.Reminder', {
@@ -473,7 +492,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			WT.showBadgeNotification(me.ID, {
 				tag: tag,
 				title: title,
-				iconCls: me.cssIconCls('im-chat', 'm'),
+				iconCls: 'wt-icon-im-chat',
 				body: body,
 				data: data
 			}, {callbackService: (opts.callbackService === undefined) ? true : opts.callbackService});

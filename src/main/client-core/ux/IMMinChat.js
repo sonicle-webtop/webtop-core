@@ -97,7 +97,7 @@ Ext.define('Sonicle.webtop.core.ux.IMMinChat', {
 			}),
 			'->'
 		);
-
+		/*
 		if (!me.isGroupChat) {
 			arr.push(
 				Ext.apply(me.createAudioCallButton(), {
@@ -108,61 +108,18 @@ Ext.define('Sonicle.webtop.core.ux.IMMinChat', {
 				})
 			);
 		}
-		arr.push(' ');
+		*/
+		arr.push(
+			Ext.apply(me.createMeetingButton(), {
+				ui: 'default-toolbar'
+			})
+		);
 		
+		arr.push(' ');
 		return {
 			xtype: 'toolbar',
 			ui: 'footer',
 			items: arr
-		};
-		
-		return {
-			xtype: 'toolbar',
-			ui: 'footer',
-			items: [' ',
-				{
-					xtype: 'button',
-					ui: 'default-toolbar',
-					iconCls: 'wt-icon-emoji',
-					tooltip: WT.res('wtimchat.btn-emoji.tip'),
-					arrowVisible: false,
-					menu: {
-						xtype: 'soemojimenu',
-						alignOffset: [0, -35],
-						hideOnClick: false,
-						pickerConfig: {
-							header: false,
-							tabPosition: 'bottom',
-							recentsText: WT.res('soemojipicker.recents.tip'),
-							peopleText: WT.res('soemojipicker.people.tip'),
-							natureText: WT.res('soemojipicker.nature.tip'),
-							foodsText: WT.res('soemojipicker.foods.tip'),
-							activityText: WT.res('soemojipicker.activity.tip'),
-							placesText: WT.res('soemojipicker.places.tip'),
-							objectsText: WT.res('soemojipicker.objects.tip'),
-							symbolsText: WT.res('soemojipicker.symbols.tip'),
-							flagsText: WT.res('soemojipicker.flags.tip')
-						},
-						listeners: {
-							select: function(s, emoji) {
-								var fld = me.messageFld();
-								fld.setValue(fld.getValue()+emoji);
-							}
-						}
-					}
-				},
-				Ext.apply(me.createUploadBtn(me.uploadTargetId), {
-					ui: 'default-toolbar'
-				}),
-				'->',
-				Ext.apply(me.createAudioCallButton(), {
-					ui: 'default-toolbar'
-				}),
-				Ext.apply(me.createVideoCallButton(), {
-					ui: 'default-toolbar'
-				}),
-				' '
-			]
 		};
 	}
 });

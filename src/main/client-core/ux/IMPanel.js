@@ -108,36 +108,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 	initComponent: function() {
 		var me = this;
 		
-		me.addAct('openChat', {
-			text: WT.res('act-open.lbl'),
-			handler: function() {
-				var rec = me.gpChats().getSelection()[0];
-				if (rec) me.fireChatDblClickFromRec(rec);
-			}
-		});
-		me.addAct('openFriendChat', {
-			text: WT.res('wtimpanel.act-openFriendChat.lbl'),
-			handler: function() {
-				var gp = me.gpFriends(), rec = gp.getSelection()[0];
-				if (rec) me.onFriendDblClick(gp, rec);
-			}
-		});
-		me.addAct('deleteChat', {
-			text: WT.res('act-delete.lbl'),
-			iconCls: WTF.cssIconCls(WT.XID, 'remove', 'xs'),
-			handler: function() {
-				var rec = me.gpChats().getSelection()[0];
-				if (rec) me.removeChatFromRec(rec);
-			}
-		});
-		me.addAct('addGroupChat', {
-			text: WT.res('wtimpanel.act-addGroupChat.lbl'),
-			//iconCls: WTF.cssIconCls(WT.XID, 'remove', 'xs'),
-			handler: function() {
-				me.fireEvent('addgroupchatclick', me);
-			}
-		});
-		
 		Ext.apply(me, {
 			tbar: [{
 				xtype: 'tbtext',
@@ -165,88 +135,117 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			reference: 'tab',
 			activeTab: 'chats',
 			border: false,
-			items: [{
-				xtype: 'gridpanel',
-				itemId: 'chats',
-				reference: 'gpchats',
-				title: WT.res('wtimpanel.chats.tit'),
-				border: false,
-				viewConfig: {
-					markDirty: false,
-					deferEmptyText: false,
-					emptyText: WT.res('wtimpanel.gpchats.emp')
-				},
-				store: {
-					autoLoad: true,
-					autoSync: true,
-					model: 'Sonicle.webtop.core.model.IMChatGrid',
-					proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChats'),
-					sorters: ['name'],
+			items: [
+				{
+					xtype: 'gridpanel',
+					itemId: 'chats',
+					reference: 'gpchats',
+					title: WT.res('wtimpanel.chats.tit'),
+					border: false,
+					viewConfig: {
+						markDirty: false,
+						deferEmptyText: false,
+						emptyText: WT.res('wtimpanel.gpchats.emp')
+					},
+					store: {
+						autoLoad: true,
+						autoSync: true,
+						model: 'Sonicle.webtop.core.model.IMChatGrid',
+						proxy: WTF.apiProxy(WT.ID, 'ManageGridIMChats'),
+						sorters: ['name'],
+						listeners: {
+							load: function(s) {
+								if (s.getCount() === 0) me.lookupReference('tab').setActiveTab('friends');
+							}
+						}
+					},
+					columns: [
+						{
+							xtype: 'soiconcolumn',
+							dataIndex: 'id',
+							hideText: false,
+							getIconCls: function(val, rec) {
+								var cls;
+								if (me.self.isGroupChat(val)) {
+									cls = 'wt-icon-im-gchat';
+								} else {
+									cls = 'wt-icon-im-ichat';
+								}
+								if (rec.get('hot') === true) cls += '-hot';
+								return cls;
+							},
+							getTip: function(val, rec) {
+								var s;
+								if (me.self.isGroupChat(val)) {
+									s = WT.res('wtimpanel.gpchats.type.group');
+								} else {
+									s = WT.res('wtimpanel.gpchats.type.instant');
+								}
+								if (rec.get('hot') === true) s += '(' + WT.res(WT.ID, 'wtimpanel.gpchats.hot.true') + ')';
+								return s;
+							},
+							getText: function(val, rec) {
+								return rec.get('name');
+							},
+							iconSize: WTU.imgSizeToPx('xs'),
+							flex: 1
+						}, {
+							xtype: 'soactioncolumn',
+							items: [
+								{
+									glyph: 'xf08e@FontAwesome',
+									tooltip: WT.res('act-open.lbl'),
+									handler: function(g, ridx) {
+										var rec = g.getStore().getAt(ridx);
+										me.fireChatDblClickFromRec(rec);
+									}
+								}, {
+									glyph: 'xf014@FontAwesome',
+									tooltip: WT.res('act-remove.lbl'),
+									handler: function(g, ridx) {
+										var rec = g.getStore().getAt(ridx);
+										me.removeChatUI(rec);
+									}
+								}
+							]
+						}
+					],
+					dockedItems: [
+						{
+							xtype: 'textfield',
+							dock: 'top',
+							hideFieldLabel: true,
+							emptyText: WT.res('wtimpanel.gpchats.search.emp'),
+							triggers: {
+								clear: {
+									type: 'soclear'
+								}
+							},
+							listeners: {
+								change: {
+									fn: me.onChatsSearchChange,
+									scope: me,
+									options: {buffer: 300}
+								}
+							}
+						}
+					],
+					bbar: [
+						'->',
+						me.addAct('addGroupChat', {
+							text: null,
+							tooltip: WT.res('wtimpanel.act-addGroupChat.lbl'),
+							iconCls: 'wt-icon-im-newGchat',
+							handler: function() {
+								me.fireEvent('addgroupchatclick', me);
+							}
+						})
+					],
 					listeners: {
-						load: function(s) {
-							if (s.getCount() === 0) me.lookupReference('tab').setActiveTab('friends');
+						rowdblclick: function(s, rec) {
+							me.fireChatDblClickFromRec(rec);
 						}
 					}
-				},
-				columns: [{
-					xtype: 'soiconcolumn',
-					dataIndex: 'id',
-					getIconCls: function (v) {
-						return WTF.cssIconCls(WT.XID, me.self.isGroupChat(v) ? 'im-gchat' : 'im-ichat', 'xs');
-					},
-					getTip: function(v) {
-						if (me.self.isGroupChat(v)) {
-							return WT.res('wtimpanel.gpchats.type.group');
-						} else {
-							return WT.res('wtimpanel.gpchats.type.instant');
-						}
-					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					header: '',
-					width: 30
-				}, {
-					dataIndex: 'name',
-					flex: 1
-				}, {
-					xtype: 'soiconcolumn',
-					dataIndex: 'hot',
-					getIconCls: function(v,rec) {
-						return v ? WTF.cssIconCls(WT.XID, 'im-chat-hot', 'xs') : null;
-					},
-					getTip: function(v,rec) {
-						return v ? WT.res(WT.ID, 'wtimpanel.gpchats.hot.true') : null;
-					},
-					iconSize: WTU.imgSizeToPx('xs'),
-					header: '',
-					width: 30
-				}],
-				dockedItems: [{
-					xtype: 'textfield',
-					dock: 'top',
-					hideFieldLabel: true,
-					emptyText: WT.res('wtimpanel.gpchats.search.emp'),
-					triggers: {
-						clear: {
-							type: 'soclear'
-						}
-					},
-					listeners: {
-						change: {
-							fn: me.onChatsSearchChange,
-							scope: me,
-							options: {buffer: 300}
-						}
-					}
-				}],
-				listeners: {
-					rowdblclick: function(s, rec) {
-						me.fireChatDblClickFromRec(rec);
-					},
-					rowcontextmenu: function(s, rec, el, rowIdx, e) {
-						e.stopEvent();
-						me.cxmChat().showAt(e.getXY());
-					}
-				}
 			}, {
 				xtype: 'gridpanel',
 				itemId: 'friends',
@@ -263,30 +262,44 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 					groupDir: 'ASC',
 					sorters: ['nick']
 				},
-				columns: [{
-					xtype: 'soiconcolumn',
-					dataIndex: 'presenceStatus',
-					sortable: false,
-					menuDisabled: true,
-					stopSelection: true,
-					getIconCls: function (v, rec) {
-						return WTF.cssIconCls(WT.XID, 'im-pstatus-'+v);
-					},
-					getTip: function(v, rec) {
-						return WT.res('im.pstatus.'+v);
-					},
-					width: 30
-				}, {
-					dataIndex: 'nick',
-					renderer: function(val, meta, rec, rIdx, colIdx, sto) {
-						var html = '', sta = rec.get('status');
-						html += Ext.String.htmlEncode(val);
-						html += '<br>';
-						html += '<span style="font-size:0.9em;color:grey;">' + (Ext.isEmpty(sta) ? '&nbsp;' : Ext.String.htmlEncode(sta)) + '</span>';
-						return html; 
-					},
-					flex: 1
-				}],
+				columns: [
+					{
+						xtype: 'soiconcolumn',
+						dataIndex: 'presenceStatus',
+						sortable: false,
+						menuDisabled: true,
+						stopSelection: true,
+						getIconCls: function (v, rec) {
+							return WTF.cssIconCls(WT.XID, 'im-pstatus-'+v);
+						},
+						getTip: function(v, rec) {
+							return WT.res('im.pstatus.'+v);
+						},
+						width: 30
+					}, {
+						dataIndex: 'nick',
+						renderer: function(val, meta, rec, rIdx, colIdx, sto) {
+							var html = '', sta = rec.get('status');
+							html += Ext.String.htmlEncode(val);
+							html += '<br>';
+							html += '<span style="font-size:0.9em;color:grey;">' + (Ext.isEmpty(sta) ? '&nbsp;' : Ext.String.htmlEncode(sta)) + '</span>';
+							return html; 
+						},
+						flex: 1
+					}, {
+						xtype: 'soactioncolumn',
+						items: [
+							{
+								glyph: 'xf08e@FontAwesome',
+								tooltip: WT.res('wtimpanel.act-openFriendChat.lbl'),
+								handler: function(g, ridx) {
+									var rec = g.getStore().getAt(ridx);
+									me.onFriendDblClick(g, rec);
+								}
+							}
+						]
+					}
+				],
 				features: [{
 					ftype: 'grouping',
 					startCollapsed: true,
@@ -299,34 +312,32 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						}
 					]
 				}],
-				dockedItems: [{
-					xtype: 'textfield',
-					dock: 'top',
-					hideFieldLabel: true,
-					emptyText: WT.res('wtimpanel.gpfriends.search.emp'),
-					triggers: {
-						clear: {
-							type: 'soclear'
-						}
-					},
-					listeners: {
-						change: {
-							fn: me.onFriendsSearchChange,
-							scope: me,
-							options: {buffer: 300}
+				dockedItems: [
+					{
+						xtype: 'textfield',
+						dock: 'top',
+						hideFieldLabel: true,
+						emptyText: WT.res('wtimpanel.gpfriends.search.emp'),
+						triggers: {
+							clear: {
+								type: 'soclear'
+							}
+						},
+						listeners: {
+							change: {
+								fn: me.onFriendsSearchChange,
+								scope: me,
+								options: {buffer: 300}
+							}
 						}
 					}
-				}],
+				],
 				listeners: {
 					afterrender: function(s) {
 						Ext.defer(me.expandOnlineGroup, 200, me, [me.gpFriends()]);
 					},
 					rowdblclick: function(s, rec) {
 						me.onFriendDblClick(s, rec);
-					},
-					rowcontextmenu: function(s, rec, el, rowIdx, e) {
-						e.stopEvent();
-						me.cxmFriend().showAt(e.getXY());
 					}
 				}
 			}]
@@ -343,29 +354,6 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			btn.menu.setPresenceStatus(nv);
 			me.fireEvent('presencestatuschange', me, nv, ov);
 		}
-	},
-	
-	cxmChat: function() {
-		var me = this;
-		return me.getRef('cxmChat') || me.addRef('cxmChat', Ext.create({
-			xtype: 'menu',
-			items: [
-				me.getAct('openChat'),
-				me.getAct('deleteChat'),
-				'-',
-				me.getAct('addGroupChat')
-			]
-		}));
-	},
-	
-	cxmFriend: function() {
-		var me = this;
-		return me.getRef('cxmFriend') || me.addRef('cxmFriend', Ext.create({
-			xtype: 'menu',
-			items: [
-				me.getAct('openFriendChat')
-			]
-		}));
 	},
 	
 	loadChats: function() {
@@ -530,7 +518,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 			this.fireEvent('chatdblclick', this, rec.get('id'), rec.get('name'));
 		},
 		
-		removeChatFromRec: function(rec) {
+		removeChatUI: function(rec) {
 			WT.confirm(WT.res('wtimpanel.confirm.chat.delete'), function(bid) {
 				if (bid === 'yes') rec.drop();
 			}, this);

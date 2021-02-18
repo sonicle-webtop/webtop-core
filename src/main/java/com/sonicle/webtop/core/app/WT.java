@@ -50,7 +50,6 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.app.servlet.PublicRequest;
 import com.sonicle.webtop.core.app.servlet.ResourceRequest;
-import com.sonicle.commons.l4j.ProductLicense.LicenseInfo;
 import com.sonicle.webtop.core.sdk.BaseServiceProduct;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import com.sonicle.webtop.core.util.RRuleStringify;
@@ -462,11 +461,12 @@ public class WT {
 		return getWTA().loadTemplate(path);
 	}
 	
-	public static String buildTemplate(String template, Object data) throws IOException, TemplateException {
+	public static String buildTemplate(String template, Map data) throws IOException, TemplateException {
 		return buildTemplate(CoreManifest.ID, template, data);
 	}
 	
-	public static String buildTemplate(String serviceId, String templateRelativePath, Object data) throws IOException, TemplateException {
+	public static String buildTemplate(String serviceId, String templateRelativePath, Map data) throws IOException, TemplateException {
+		data.put("statics", BeansWrapper.getDefaultInstance().getStaticModels());
 		Template tpl = WT.loadTemplate(serviceId, templateRelativePath);
 		Writer writer = new StringWriter();
 		tpl.process(data, writer);
