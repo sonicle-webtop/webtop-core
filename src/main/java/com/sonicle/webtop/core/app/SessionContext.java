@@ -70,6 +70,10 @@ public class SessionContext {
 		return (subject == null) ? null : (Session)subject.getSession(createIfNotAvail);
 	}
 	
+	public static String getWebTopDeviceID(HttpSession session) {
+		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_DEVICEID);
+	}
+	
 	public static String getWebTopClientID(HttpSession session) {
 		return (session == null) ? null : (String)session.getAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID);
 	}

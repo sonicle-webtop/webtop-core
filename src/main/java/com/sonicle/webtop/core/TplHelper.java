@@ -33,14 +33,24 @@
  */
 package com.sonicle.webtop.core;
 
+import com.sonicle.commons.LangUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.MapItem;
+import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.util.NotificationHelper;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Locale;
+import net.sf.uadetector.ReadableUserAgent;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
 
 /**
  *
@@ -58,7 +68,7 @@ public class TplHelper {
 	public static String buildOtpCodeBody(Locale locale, String verificationCode, int minutes) throws IOException, TemplateException {
 		MapItem i18n = new MapItem();
 		i18n.put("code", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.code"));
-		i18n.put("here", MessageFormat.format(WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.here"), minutes));
+		i18n.put("here", WT.lookupFormattedResource(CoreManifest.ID, locale, "tpl.email.otpCode.here", minutes));
 		i18n.put("warn", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.otpCode.warn"));
 		
 		MapItem otp = new MapItem();
@@ -67,8 +77,43 @@ public class TplHelper {
 		MapItem vars = new MapItem();
 		vars.put("i18n", i18n);
 		vars.put("otp", otp);
-
+		
 		return WT.buildTemplate(CoreManifest.ID, "tpl/email/otpCode-body.html", vars);
+	}
+	
+	public static String buildNewDeviceNoticeBody(String account, DateTime timestamp, ReadableUserAgent userAgent, String ipAddress, IPLookupResponse ipLookup, Locale locale, DateTimeZone timezone, String dateFormat, String timeFormat) throws IOException, TemplateException {
+		DateTimeFormatter fmt = DateTimeUtils.createFormatter(dateFormat + " " + timeFormat, timezone);
+		
+		String location = null;
+		String locationUrl = null;
+		if (ipLookup != null) {
+			location = StringUtils.join(Arrays.asList(ipLookup.getCity(), ipLookup.getCountryName(), ipLookup.getContinentCode()), ", ");
+			if (ipLookup.getLatitude() != null && ipLookup.getLongitude() != null) {
+				locationUrl = LangUtils.formatMessage("https://www.google.com/maps/?q={},{}", ipLookup.getLatitude(), ipLookup.getLongitude());
+			}
+		}
+		
+		MapItem i18n = new MapItem()
+			.add("title", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.title"))
+			.add("message", WT.lookupFormattedResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.message", WT.getPlatformName()))
+			.add("time", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.time"))
+			.add("device", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.device"))
+			.add("ipAddress", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.ipAddress"))
+			.add("location", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location"))
+			.add("locationMap", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.locationMap"))
+			.add("action1", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action1"))
+			.add("action2", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action2"));
+		
+		MapItem access = new MapItem()
+			.add("account", account)
+			.add("time", fmt.print(timestamp))
+			.add("timezone", timezone.toString())
+			.add("device", userAgent.getOperatingSystem().getName() + " (" + userAgent.getName() + ")")
+			.add("ipAddress", ipAddress)
+			.add("location", location)
+			.add("locationUrl", locationUrl);
+		
+		return WT.buildTemplate(CoreManifest.ID, "tpl/email/newDeviceNotice-body.html", new MapItem().add("i18n", i18n).add("access", access));
 	}
 	
 	public static String buildDeviceSyncCheckEmail(Locale locale) throws IOException, TemplateException {

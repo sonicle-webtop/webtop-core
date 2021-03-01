@@ -223,22 +223,6 @@ public class WebTopSession {
 	}
 	
 	/**
-	 * Convenience method to get client's parsed user-agent info.
-	 * @return A readable ReadableUserAgent object. 
-	 */
-	public ReadableUserAgent getClientUserAgent() {
-		synchronized(lock0) {
-			if (readableUserAgent == null) {
-				String plainUa = getClientPlainUserAgent();
-				if (!StringUtils.isBlank(plainUa)) {
-					readableUserAgent = WebTopApp.getUserAgentInfo(plainUa);
-				}
-			}
-			return readableUserAgent;
-		}
-	}
-	
-	/**
 	 * Convenience method to get the referer-uri.
 	 * @return The referer-uri
 	 */
@@ -799,7 +783,10 @@ public class WebTopSession {
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
 		CoreUserSettings cus = new CoreUserSettings(CoreManifest.ID, profile.getId());
 		String theme = cus.getTheme(), layout = cus.getLayout(), lookAndFeel = cus.getLookAndFeel();
-		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		
+		ReadableUserAgent readableUa = WebTopApp.getUserAgentInfo(getClientPlainUserAgent());
+		ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
+		if (readableUa != null) deviceCategory = readableUa.getDeviceCategory().getCategory();
 		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
 			if (theme.equals("crisp") || theme.equals("neptune")) {
 				theme += "-touch";
@@ -933,9 +920,11 @@ public class WebTopSession {
 		Locale locale = getLocale();
 		ServiceManager svcm = wta.getServiceManager();
 		ServiceManifest coreManifest = svcm.getManifest(CoreManifest.ID);
-
 		String theme = "crisp";
-		ReadableDeviceCategory.Category deviceCategory = getClientUserAgent().getDeviceCategory().getCategory();
+		
+		ReadableUserAgent readableUa = WebTopApp.getUserAgentInfo(getClientPlainUserAgent());
+		ReadableDeviceCategory.Category deviceCategory = ReadableDeviceCategory.Category.UNKNOWN;
+		if (readableUa != null) deviceCategory = readableUa.getDeviceCategory().getCategory();
 		if (ReadableDeviceCategory.Category.SMARTPHONE.equals(deviceCategory) || ReadableDeviceCategory.Category.TABLET.equals(deviceCategory)) {
 			theme += "-touch";
 		}

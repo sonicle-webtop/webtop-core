@@ -302,6 +302,43 @@ public class CoreSettings {
 	public static final String LOGIN_HIDE_WEBAPPNAME = "login.webappname.hide";
 	
 	/**
+	 * [system+domain]
+	 * [boolean]
+	 * Indicates wether remote-device reporting is active: an email notice will be
+	 * sent to a set of recipients if, after a successful login, the device is 
+	 * not already marked as known-device.
+	 */
+	public static final String SECURITY_KNOWNDEVICEVERIFICATION_ENABLED = "security.knowndeviceverification.enabled";
+	
+	/**
+	 * [system+domain]
+	 * [string[]]
+	 * Comma-separated email addresses to use as CCN recipients for sending
+	 * a copy of unknown-device notice, mainly addressed to the involved user. 
+	 */
+	public static final String SECURITY_KNOWNDEVICEVERIFICATION_RECIPIENTS = "security.knowndeviceverification.recipients";
+	
+	/**
+	 * [system+domain]
+	 * [string[]]
+	 * Comma-separated network addresses that will be considered trusted. Remote
+	 * IP addresses belonging to this networks, will be treated as safe clients 
+	 * and so no report will be sent. Networks are specified in CIDR format.
+	 * Es: "192.168.0.0/24" or "192.168.0.0/24,192.168.1.1/32"
+	 */
+	public static final String SECURITY_KNOWNDEVICEVERIFICATION_NETWHITELIST = "security.knowndeviceverification.netwhitelist";
+	
+	/**
+	 * [system+domain]
+	 * [boolean]
+	 * Indicates wether remote-device reporting's learning mode is active. 
+	 * Useful only when SECURITY_KNOWNDEVICEVERIFICATION_ENABLED is false, this 
+	 * enables a learning period in which device registration is enabled, 
+	 * helping to build an initial set of known-devices.
+	 */
+	public static final String SECURITY_KNOWNDEVICEVERIFICATION_LEARNING = "security.knowndeviceverification.learning";
+	
+	/**
 	 * [user+domain+system]
 	 * [boolean]
 	 * 2FA enabled status

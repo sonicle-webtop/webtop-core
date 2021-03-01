@@ -40,10 +40,15 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
+import com.sonicle.commons.cache.AbstractPassiveExpiringMap;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DomainAccount;
@@ -63,6 +68,7 @@ import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.security.auth.directory.SftpDirectory;
 import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
@@ -126,12 +132,14 @@ import com.sun.mail.imap.ACL;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.Rights;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -140,12 +148,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.mail.Folder;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -187,7 +199,9 @@ public final class WebTopManager {
 	public static final String GROUPID_PEC_ACCOUNTS = "pec-accounts";
 	
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
+	private final KeyedReentrantLocks lockSecretGet = new KeyedReentrantLocks<String>();
 	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
+	private final IPLookupProviderConfigCache ipLookupProviderCache = new IPLookupProviderConfigCache(1, TimeUnit.MINUTES);
 	
 	private final Object lock1 = new Object();
 	private final HashMap<UserProfileId, String> cacheUserToUserUid = new HashMap<>();
@@ -199,6 +213,27 @@ public final class WebTopManager {
 	private final HashMap<UserProfileId, UserProfile.PersonalInfo> cacheUserToPersonalInfo = new HashMap<>();
 	private final HashMap<UserProfileId, UserProfile.Data> cacheUserToData = new HashMap<>();
 	private final Object lock3 = new Object();
+	
+	/**
+	 * Creates UserProfileId for SysAdmin.
+	 * @return UserProfileId
+	 */
+	public static UserProfileId sysAdminProfileId() {
+		return new UserProfileId(SYSADMIN_DOMAINID, SYSADMIN_USERID);
+	}
+	
+	/**
+	 * Checks if passed profileId is the SysAdmin.
+	 * @param profileId The profileId to check.
+	 * @return True if passed profileId is the SysAdmin.
+	 */
+	public static boolean isSysAdmin(UserProfileId profileId) {
+		return SYSADMIN_DOMAINID.equals(profileId.getDomainId()) && SYSADMIN_USERID.equals(profileId.getUserId());
+	}
+	
+	public static String generateSecretKey() {
+		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
+	}
 	
 	/**
 	 * Private constructor.
@@ -230,10 +265,6 @@ public final class WebTopManager {
 	
 	public void cleanUserProfileCache(UserProfileId pid) {
 		removeFromUserCache(pid);
-	}
-	
-	public static String generateSecretKey() {
-		return StringUtils.defaultIfBlank(IdentifierUtils.generateSecretKey(), "0123456789101112");
 	}
 	
 	public AbstractDirectory getAuthDirectory(String authUri) throws WTException {
@@ -366,6 +397,35 @@ public final class WebTopManager {
 				if (iOfNDot == -1) break; 
 			}
 			return null;
+		}
+	}
+	
+	public List<IPLookupResponse> lookupIPInfo(final String domainId, final Collection<String> ipAddresses) throws IOException {
+		HttpClient httpCli = null;
+		try {
+			IPLookupProviderConfig config = ipLookupProviderCache.get(domainId);
+			if (config.provider == null) return null;
+			// Do not check provider here, ipstack it's the only one supported for now!
+			
+			httpCli = HttpClientBuilder.create().build();
+			//https://ipregistry.co/
+			URI uri = new URIBuilder("http://api.ipstack.com/" + StringUtils.join(ipAddresses, ","))
+				.addParameter("access_key", config.apiKey)
+				.addParameter("output", "json")
+				.addParameter("fields", "main,location.country_flag")
+				.build();
+			
+			String json = HttpClientUtils.getStringContent(httpCli, uri);
+			if (ipAddresses.size() > 1) {
+				return JsonResult.GSON.fromJson(json, IPLookupResponse.List.class);
+			} else {
+				return Arrays.asList(JsonResult.GSON.fromJson(json, IPLookupResponse.class));
+			}
+			
+		} catch (URISyntaxException ex) {
+			throw new IllegalArgumentException(ex);
+		} finally {
+			HttpClientUtils.closeQuietly(httpCli);
 		}
 	}
 	
@@ -804,6 +864,33 @@ public final class WebTopManager {
 			
 		} catch(DAOException ex) {
 			throw new WTException(ex, "DB error");
+		}
+	}
+	
+	public String getUserSecret(UserProfileId profileId) throws WTException {
+		UserDAO useDao = UserDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			try (KeyedReentrantLocks.KeyedLock lock = lockSecretGet.acquire(profileId.toString())) {
+				con = wta.getConnectionManager().getConnection();
+				OUser ouser = useDao.selectSecretByProfile(con, profileId.getDomainId(), profileId.getUserId());
+				if (ouser == null) throw new WTException("User not found [{}]", profileId);
+
+				String secret = ouser.getSecret();
+				if (StringUtils.isBlank(secret)) {
+					secret = generateSecretKey();				
+					if (useDao.updateSecretByProfile(con, profileId.getDomainId(), profileId.getUserId(), secret) != 1) {
+						throw new WTException("Unable to set generated secret [{}]", profileId);
+					}
+				}
+				return secret;
+			}
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
 		}
 	}
 	
@@ -2781,6 +2868,34 @@ public final class WebTopManager {
 				String uid = cacheGroupToGroupUid.remove(pid);
 				cacheGroupUidToGroup.remove(uid);
 			}
+		}
+	}
+	
+	private class IPLookupProviderConfigCache extends AbstractPassiveExpiringMap<String, IPLookupProviderConfig> {
+		
+		public IPLookupProviderConfigCache(final long timeToLive, final TimeUnit timeUnit) {
+			super(timeToLive, timeUnit, true);
+		}
+		
+		@Override
+		protected IPLookupProviderConfig internalGetValue(String key) {
+			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, key);
+			CoreSettings.GeolocationProvider provider = css.getGeolocationProvider();
+			String apiKey = null;
+			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
+				apiKey = css.getIpstackGeolocationProviderApiKey();
+			}
+			return new IPLookupProviderConfig(EnumUtils.toSerializedName(provider), apiKey);
+		}	
+	}
+	
+	private class IPLookupProviderConfig {
+		public final String provider;
+		public final String apiKey;
+		
+		public IPLookupProviderConfig(String provider, String apiKey) {
+			this.provider = provider;
+			this.apiKey = apiKey;
 		}
 	}
 	

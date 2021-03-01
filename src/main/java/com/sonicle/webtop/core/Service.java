@@ -37,9 +37,7 @@ import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
 import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
-import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.Crud;
 import com.sonicle.commons.web.ParameterException;
@@ -51,8 +49,6 @@ import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.commons.web.json.Payload;
 import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.Principal;
-import com.sonicle.security.auth.directory.AbstractDirectory;
-import com.sonicle.security.auth.directory.DirectoryCapability;
 import com.sonicle.webtop.core.CoreSettings.OtpDeliveryMode;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
 import com.sonicle.webtop.core.app.CoreAdminManifest;
@@ -61,7 +57,6 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.CorePrivateEnvironment;
 import com.sonicle.webtop.core.app.OTPManager;
 import com.sonicle.webtop.core.app.WT;
-import com.sonicle.webtop.core.app.WebTopManager;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.app.provider.RecipientsProviderBase;
 import com.sonicle.webtop.core.app.sdk.BaseEvent;
@@ -69,7 +64,6 @@ import com.sonicle.webtop.core.app.sdk.EventListener;
 import com.sonicle.webtop.core.app.sdk.WTIntegrityException;
 import com.sonicle.webtop.core.app.sdk.msg.BaseDataChangedSM;
 import com.sonicle.webtop.core.app.sdk.msg.LicenseUsageFailSM;
-import com.sonicle.webtop.core.app.sdk.msg.MessageBoxSM;
 import com.sonicle.webtop.core.app.util.ProductUtils;
 import com.sonicle.webtop.core.msg.IMChatRoomAdded;
 import com.sonicle.webtop.core.msg.IMChatRoomMessageReceived;
@@ -178,17 +172,11 @@ import com.sonicle.webtop.core.xmpp.XMPPHelper;
 import com.sonicle.webtop.core.xmpp.packet.OutOfBandData;
 import com.sonicle.webtop.vfs.IVfsManager;
 import com.sonicle.webtop.vfs.model.SharingLink;
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -500,43 +488,16 @@ public class Service extends BaseService implements EventListener {
 		try {
 			ArrayList<String> ips = ServletUtils.getStringParameters(request, "ips");
 			
-			CoreSettings.GeolocationProvider provider = ss.getGeolocationProvider();
-			if (provider == null) throw new WTException("Geolocation provider not configured");
-			
 			ArrayList<JsIPGeolocation> items = new ArrayList<>();
-			for (IPLookupResponse resp : ipstackLookup(ips)) {
-				items.add(new JsIPGeolocation(resp));
+			for (String ip : ips) {
+				IPLookupResponse resp = coreMgr.getIPGeolocationData(ip);
+				if (resp != null) items.add(new JsIPGeolocation(resp));
 			}
 			new JsonResult(items, items.size()).printTo(out);
 			
 		} catch (Throwable t) {
 			logger.error("Error in GeolocateIP", t);
 			new JsonResult(t).printTo(out);
-		}
-	}
-	
-	private List<IPLookupResponse> ipstackLookup(Collection<String> ipAddresses) throws IOException {
-		HttpClient httpCli = null;
-		try {
-			httpCli = HttpClientBuilder.create().build();
-			//https://ipregistry.co/
-			URI uri = new URIBuilder("http://api.ipstack.com/" + StringUtils.join(ipAddresses, ","))
-				.addParameter("access_key", "17f9e8bac8ae277f87d7732f8847fb6a")
-				.addParameter("output", "json")
-				.addParameter("fields", "main,location.country_flag")
-				.build();
-			
-			String json = HttpClientUtils.getStringContent(httpCli, uri);
-			if (ipAddresses.size() > 1) {
-				return JsonResult.GSON.fromJson(json, IPLookupResponse.List.class);
-			} else {
-				return Arrays.asList(JsonResult.GSON.fromJson(json, IPLookupResponse.class));
-			}
-			
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
-		} finally {
-			HttpClientUtils.closeQuietly(httpCli);
 		}
 	}
 	

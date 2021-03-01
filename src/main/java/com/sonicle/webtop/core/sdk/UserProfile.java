@@ -102,7 +102,7 @@ public final class UserProfile {
 					secret = generateSecretKey();
 				} catch(NoSuchAlgorithmException ex) { /* Do nothing... */ }
 				user.setSecret(secret);
-				udao.updateSecretByDomainUser(con, user.getDomainId(), user.getUserId(), secret);
+				udao.updateSecretByProfile(con, user.getDomainId(), user.getUserId(), secret);
 			}
 			
 		} catch(Throwable t) {

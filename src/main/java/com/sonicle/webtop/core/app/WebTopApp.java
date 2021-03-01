@@ -264,8 +264,8 @@ public final class WebTopApp {
 		ThreadState threadState = new SubjectThreadState(adminSubject);
 		try {
 			threadState.bind();
-			internalInit();
 			instance = this;
+			internalInit();
 		} finally {
 			threadState.clear();
 			isStartingUp = false;

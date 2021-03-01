@@ -33,16 +33,52 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.EnumUtils;
+import com.sonicle.commons.InternetAddressUtils;
+import com.sonicle.commons.cache.AbstractPassiveExpiringMap;
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.http.HttpClientUtils;
+import com.sonicle.commons.net.IPUtils;
+import com.sonicle.commons.time.DateTimeUtils;
+import com.sonicle.commons.web.json.JsonResult;
+import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
+import com.sonicle.webtop.core.CoreServiceSettings;
+import com.sonicle.webtop.core.CoreSettings;
+import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
+import com.sonicle.webtop.core.app.util.EmailNotification;
+import com.sonicle.webtop.core.app.util.ExceptionUtils;
 import com.sonicle.webtop.core.bol.OAuditLog;
+import com.sonicle.webtop.core.bol.OIPGeoCache;
+import com.sonicle.webtop.core.dal.AuditKnownDeviceDAO;
 import com.sonicle.webtop.core.dal.AuditLogDAO;
 import com.sonicle.webtop.core.dal.BaseDAO;
 import com.sonicle.webtop.core.dal.DAOException;
+import com.sonicle.webtop.core.dal.IPGeoCacheDao;
+import com.sonicle.webtop.core.sdk.UserProfile;
 import com.sonicle.webtop.core.sdk.UserProfileId;
+import com.sonicle.webtop.core.sdk.WTException;
+import freemarker.template.TemplateException;
+import inet.ipaddr.IPAddress;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import net.sf.uadetector.ReadableUserAgent;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 
 /**
@@ -67,6 +103,10 @@ public class AuditLogManager {
 	}
 	
 	private WebTopApp wta = null;
+	private final IPLookupProviderConfigCache ipLookupProviderCache = new IPLookupProviderConfigCache(30, TimeUnit.SECONDS);
+	private final PassiveExpiringMap<String, IPLookupResponse> ipLookupRespCache = new PassiveExpiringMap(10, TimeUnit.MINUTES);
+	private final KeyedReentrantLocks lockKnownDevice = new KeyedReentrantLocks<String>();
+	private final KeyedReentrantLocks ipLookupRespLock = new KeyedReentrantLocks<String>();
 	
 	/**
 	 * Private constructor.
@@ -140,6 +180,284 @@ public class AuditLogManager {
 			return false;
 		} finally {
 			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean isKnownDeviceVerificationEnabled(final UserProfileId profileId) {
+		return isKnownDeviceVerificationEnabled(profileId.getDomainId());
+	}
+	
+	public boolean isKnownDeviceVerificationEnabled(final String domainId) {
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+		return css.getSecurityKnownDeviceVerificationEnabled();
+	}
+	
+	public List<String> getKnownDeviceVerificationNetWhiletist(final UserProfileId profileId) {
+		return getKnownDeviceVerificationNetWhiletist(profileId.getDomainId());
+	}
+	
+	public List<String> getKnownDeviceVerificationNetWhiletist(final String domainId) {
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+		return css.getSecurityKnownDeviceVerificationNetWhiletist();
+	}
+	
+	public void sendDeviceVerificationNotice(final UserProfileId profileId, final boolean profileIsImpersonated, final String deviceId, final String userAgent, final IPAddress remoteIpAddress) throws WTException {
+		if (!initialized) return;
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+		
+		try {
+			UserProfile.Data ud = WT.getUserData(profileId);
+			if (ud == null) throw new WTException("User-data not found [{}]", profileId);
+			
+			String remoteIp = remoteIpAddress.toAddressString().toString();
+			ReadableUserAgent rua = WebTopApp.getUserAgentInfo(userAgent);
+			IPLookupResponse ipData = null;
+			if (IPUtils.isPublicAddress(remoteIpAddress)) {
+				ipData = getIPGeolocationData(profileId.getDomainId(), remoteIp);
+			}
+			
+			String subject = EmailNotification.buildSubject(ud.getLocale(), CoreManifest.ID, WT.lookupResource(CoreManifest.ID, ud.getLocale(), "tpl.email.newDevice.subject"));
+			String customBodyHtml = TplHelper.buildNewDeviceNoticeBody(ud.getProfileEmailAddress(), DateTimeUtils.now(), rua, remoteIp, ipData, ud.getLocale(), ud.getTimeZone(), ud.getShortDateFormat(), ud.getShortTimeFormat());
+			String html = new EmailNotification.NoReplyBuilder()
+					.withCustomBody(null, customBodyHtml)
+					.build(ud.getLocale(), EmailNotification.buildSource(ud.getLocale(), CoreManifest.ID)).write();
+			
+			InternetAddress from = WT.getNoReplyAddress(profileId.getDomainId());
+			if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
+			
+			ArrayList<InternetAddress> ccns = new ArrayList<>();
+			// Do not include additional recipients (defined in settings) when 
+			// the target profile is sysAdmin or during impersonation. This helps
+			// to keep connections private during some *special* activities.
+			if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
+				//TODO: evaluate how to treat domain admin when will be implemented!
+				for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
+					InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
+					if (ia != null) ccns.add(ia);
+				}
+			}
+			
+			WT.sendEmail(WT.getGlobalMailSession(profileId), true, from, Arrays.asList(ud.getPersonalEmail()), null, ccns, subject, html, null);
+			
+		} catch(IOException | TemplateException ex) {
+			logger.error("Unable to build email template", ex);
+		} catch(MessagingException ex) {
+			logger.error("Unable to send email", ex);
+		}
+	}
+	
+	public void addKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
+		if (!initialized) return;
+		
+		AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			con = WT.getCoreConnection();
+			akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
+			
+		} catch(Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	public boolean testAndSaveKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
+		if (!initialized) return false;
+		
+		final String key = profileId.toString() + deviceId;
+		try (KeyedReentrantLocks.KeyedLock lock = lockKnownDevice.tryAcquire(key, 60 * 1000)) {
+			if (lock == null) return false;
+			
+			AuditKnownDeviceDAO akdDao = AuditKnownDeviceDAO.getInstance();
+			Connection con = null;
+			
+			try {
+				con = WT.getCoreConnection();
+				int ret = akdDao.updateLastSeenByProfileDevice(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
+				if (ret == 0) { // Device is not present yet: adds it...
+					akdDao.insert(con, profileId.getDomainId(), profileId.getUserId(), deviceId, BaseDAO.createRevisionTimestamp());
+				}
+				return ret == 1;
+				
+			} catch(Throwable t) {
+				throw ExceptionUtils.wrapThrowable(t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}	
+		}	
+	}
+	
+	/*
+	public boolean testAndSaveKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
+		if (!initialized) return false;
+		
+		final String key = profileId.toString() + deviceId;
+		try (KeyedReentrantLocks.KeyedLock lock = lockKnownDevice.tryAcquire(key, 60 * 1000)) {
+			if (lock == null) return false;
+			//boolean isKnown = knownDeviceExists(profileId, deviceId);
+			//if (!isKnown) addKnownDevice(profileId, deviceId);
+			//return isKnown;
+			int count = 
+			int ret = updateDeviceLastSeen(profileId, deviceId);
+			if (ret == 0) addKnownDevice(profileId, deviceId);
+			return ret == 1;
+		}
+	}
+	*/
+	
+	public IPLookupResponse getIPGeolocationData(final String domainId, final String ipAddress) {
+		try (KeyedReentrantLocks.KeyedLock lock = ipLookupRespLock.tryAcquire(ipAddress, 60 * 1000)) {
+			if (lock == null) return null;
+			if (ipLookupRespCache.containsKey(ipAddress)) {
+				return ipLookupRespCache.get(ipAddress);
+			} else {
+				OIPGeoCache oigr = ipGeoResultGet(ipAddress);
+				IPLookupResponse resp = null;
+				if (oigr == null) {
+					// Lookup info from provider
+					resp = lookupSingleIPInfo(domainId, ipAddress);
+					if (resp != null) {
+						// Persists data for later use
+						OIPGeoCache noigr = new OIPGeoCache();
+						noigr.setIpAddress(ipAddress);
+						if (setIPGeoResultData(noigr, CoreSettings.GeolocationProvider.IPSTACK, resp)) {
+							ipGeoResultInsert(noigr);
+						}
+					}
+				} else {
+					// Extract data from saved result
+					resp = getIPGeoResultData(oigr);
+				}
+				
+				// Adds lookup result in cache
+				if (resp != null) ipLookupRespCache.put(ipAddress, resp);
+				return resp;
+			}
+		}
+	}
+	
+	public List<IPLookupResponse> lookupIPInfo(final String domainId, final Collection<String> ipAddresses) throws IOException {
+		HttpClient httpCli = null;
+		try {
+			IPLookupProviderConfig config = ipLookupProviderCache.get(domainId);
+			if (config.provider == null) return null;
+			// Do not check provider here, ipstack it's the only one supported for now!
+			
+			httpCli = HttpClientBuilder.create().build();
+			//https://ipregistry.co/
+			//https://rapidapi.com/blog/ip-geolocation-api/
+			URI uri = new URIBuilder("http://api.ipstack.com/" + StringUtils.join(ipAddresses, ","))
+				.addParameter("access_key", config.apiKey)
+				.addParameter("output", "json")
+				.addParameter("fields", "main,location.country_flag")
+				.build();
+			
+			String json = HttpClientUtils.getStringContent(httpCli, uri);
+			if (ipAddresses.size() > 1) {
+				return JsonResult.GSON.fromJson(json, IPLookupResponse.List.class);
+			} else {
+				return Arrays.asList(JsonResult.GSON.fromJson(json, IPLookupResponse.class));
+			}
+			
+		} catch (URISyntaxException ex) {
+			throw new IllegalArgumentException(ex);
+		} finally {
+			HttpClientUtils.closeQuietly(httpCli);
+		}
+	}
+	
+	private IPLookupResponse lookupSingleIPInfo(String domainId, String ipAddress) {
+		List<IPLookupResponse> values = null;
+		try {
+			values = lookupIPInfo(domainId, Arrays.asList(ipAddress));
+		} catch(IOException ex) {}
+		return (values != null && !values.isEmpty()) ? values.get(0) : null;
+	}
+	
+	private OIPGeoCache ipGeoResultGet(String ipAddress) {
+		IPGeoCacheDao igrDao = IPGeoCacheDao.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return igrDao.selectLastByIP(con, ipAddress);
+			
+		} catch(Throwable t) {
+			logger.error("DB error", t);
+			return null;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean ipGeoResultInsert(OIPGeoCache oigr) {
+		IPGeoCacheDao igrDao = IPGeoCacheDao.getInstance();
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection();
+			return igrDao.insert(con, oigr, BaseDAO.createRevisionTimestamp()) == 1;
+			
+		} catch(Throwable t) {
+			logger.error("DB error", t);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean setIPGeoResultData(OIPGeoCache result, CoreSettings.GeolocationProvider provider, IPLookupResponse response) {
+		try {
+			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
+				result.setData(JsonResult.GSON_WONULLS.toJson(response));
+				result.setProvider(EnumUtils.toSerializedName(provider));
+				return true;
+			}
+		} catch(Throwable t) {
+			logger.error("Unable to encode IP geo provider data [{}]", EnumUtils.toSerializedName(provider), t);
+		}
+		return false;
+	}
+	
+	private IPLookupResponse getIPGeoResultData(OIPGeoCache result) {
+		CoreSettings.GeolocationProvider provider = EnumUtils.forSerializedName(result.getProvider(), CoreSettings.GeolocationProvider.class);
+		try {
+			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
+				return JsonResult.GSON.fromJson(result.getData(), IPLookupResponse.class);
+			}
+		} catch(Throwable t) {
+			logger.error("Unable to decode IP geo provider data [{}]", EnumUtils.toSerializedName(provider), t);
+		}
+		return null;
+	}
+	
+	private class IPLookupProviderConfigCache extends AbstractPassiveExpiringMap<String, IPLookupProviderConfig> {
+		
+		public IPLookupProviderConfigCache(final long timeToLive, final TimeUnit timeUnit) {
+			super(timeToLive, timeUnit, true);
+		}
+		
+		@Override
+		protected IPLookupProviderConfig internalGetValue(String key) {
+			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, key);
+			CoreSettings.GeolocationProvider provider = css.getGeolocationProvider();
+			String apiKey = null;
+			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
+				apiKey = css.getIpstackGeolocationProviderApiKey();
+			}
+			return new IPLookupProviderConfig(EnumUtils.toSerializedName(provider), apiKey);
+		}	
+	}
+	
+	private class IPLookupProviderConfig {
+		public final String provider;
+		public final String apiKey;
+		
+		public IPLookupProviderConfig(String provider, String apiKey) {
+			this.provider = provider;
+			this.apiKey = apiKey;
 		}
 	}
 }

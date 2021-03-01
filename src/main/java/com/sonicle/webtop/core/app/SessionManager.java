@@ -89,6 +89,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 	public static final String ATTRIBUTE_REQUEST_DUMPED = "webtop.REQUEST_DUMPED";
 	public static final String ATTRIBUTE_CONTEXT_NAME = "webtop.ContextName";
 	public static final String ATTRIBUTE_CSRF_TOKEN = "webtop.CSRF";
+	public static final String ATTRIBUTE_WEBTOP_DEVICEID = "webtop.deviceId";
 	public static final String ATTRIBUTE_WEBTOP_CLIENTID = "webtop.clientId";
 	public static final String ATTRIBUTE_CLIENT_IP = "webtop.clientIp";
 	public static final String ATTRIBUTE_CLIENT_URL = "webtop.clientUrl";

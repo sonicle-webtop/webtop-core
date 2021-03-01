@@ -32,28 +32,39 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import com.sonicle.commons.concurrent.KeyedReentrantLocks;
+import com.sonicle.commons.net.IPUtils;
+import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.ServletUtils;
 import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import com.sonicle.security.Principal;
+import com.sonicle.webtop.core.app.AuditLogManager;
 import com.sonicle.webtop.core.app.CoreManifest;
 import com.sonicle.webtop.core.app.PushEndpoint;
+import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.SessionManager;
+import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.app.WebTopApp;
 import com.sonicle.webtop.core.app.WebTopSession;
 import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.servlet.Login;
 import com.sonicle.webtop.core.app.servlet.PrivateRequest;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
+import com.sonicle.webtop.core.app.shiro.filter.DeviceCookie;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
+import inet.ipaddr.IPAddress;
 import java.io.IOException;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -72,44 +83,59 @@ import org.slf4j.LoggerFactory;
  * @author malbinola
  */
 public class WTFormAuthFilter extends FormAuthenticationFilter {
-	private static final Logger logger = (Logger) LoggerFactory.getLogger(WTFormAuthFilter.class);
+	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(WTFormAuthFilter.class);
+	public static final String COOKIE_DEVICEID = "DID";
 	public static final String COOKIE_WEBTOP_CLIENTID = "CID";
+	
+	private final KeyedReentrantLocks lockSessionId = new KeyedReentrantLocks<String>();
 	
 	@Override
 	protected boolean onLoginSuccess(AuthenticationToken token, Subject subject, ServletRequest request, ServletResponse response) throws Exception {
+		final HttpServletRequest httpRequest = (HttpServletRequest) request;
+		final HttpServletResponse httpResponse = (HttpServletResponse) response;
+		
+		WTRealm wtRealm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
+		if (wtRealm == null) {
+			LOGGER.error("Realm not available [{}]", WTRealm.NAME);
+			setFailureAttribute(request, new AuthenticationException("Realm not available"));
+			return true;
+		}
+		
+		try {
+			wtRealm.checkUser((Principal)subject.getPrincipal());
+		} catch(WTException ex) {
+			LOGGER.error("User check error", ex);
+			writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, "LOGIN_FAILURE");
+			setFailureAttribute(request, new AuthenticationException(ex));
+			return true;
+		}
+		
+		UserProfileId profileId = new UserProfileId(((UsernamePasswordDomainToken)token).getDomain(), ((UsernamePasswordDomainToken)token).getUsername());
 		WebTopSession webtopSession = SessionContext.getCurrent();
 		if (webtopSession != null) {
-			String clientId = ServletUtils.getCookie((HttpServletRequest)request, COOKIE_WEBTOP_CLIENTID);
-			if (StringUtils.isBlank(clientId)) {
-				clientId = IdentifierUtils.getUUIDTimeBased();
-				ServletUtils.setCookie((HttpServletResponse)response, COOKIE_WEBTOP_CLIENTID, clientId, 60*60*24*365*10);
+			try (KeyedReentrantLocks.KeyedLock lock = lockSessionId.tryAcquire(webtopSession.getId(), 60 * 1000)) {
+				if (lock != null) {
+					initDeviceId(profileId, httpRequest, httpResponse, webtopSession.getSession());
+				}
 			}
-			webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, clientId);
+			
+			// Legacy ClientID, in future this will be replaced by DeviceID!
+			prepareClientId(httpRequest, httpResponse, webtopSession.getSession());
 			
 			String location = ServletUtils.getStringParameter(request, "location", null);
 			if (location != null) {
 				String url = ServletHelper.sanitizeBaseUrl(location);
 				webtopSession.getSession().setAttribute(SessionManager.ATTRIBUTE_CLIENT_URL, url);
-				logger.trace("[{}] Location: {}", webtopSession.getId(), url);
+				LOGGER.trace("[{}] Location: {}", webtopSession.getId(), url);
 			}
+			
+			doKnownDeviceVerification(profileId, httpRequest, webtopSession.getSession());
 		}
 		
-		WTRealm wtRealm = (WTRealm)ShiroUtils.getRealmByName(WTRealm.NAME);
-		if (wtRealm != null) {
-			try {
-				wtRealm.checkUser((Principal)subject.getPrincipal());
-			} catch(WTException ex) {
-				logger.error("User check error", ex);
-				writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_FAILURE");
-				setFailureAttribute(request, new AuthenticationException(ex));
-				return true;
-			}
-		}
-		
-		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_SUCCESS");
+		writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, "LOGIN_SUCCESS");
 		return super.onLoginSuccess(token, subject, request, response);
 	}
-
+	
 	@Override
 	protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
 		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_FAILURE");
@@ -170,17 +196,105 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		//request.setAttribute(getFailureKeyAttribute(), message);
 	}
 	
+	private void doKnownDeviceVerification(UserProfileId profileId, HttpServletRequest request, HttpSession session) {
+		String remoteIp = SessionContext.getClientRemoteIP(session);
+		IPAddress ip = IPUtils.toIPAddress(remoteIp);
+		
+		boolean impersonating = RunContext.isImpersonated();
+		AuditLogManager audMgr = WebTopApp.getInstance().getAuditLogManager();
+
+		WT.runPrivileged(() -> {
+			boolean enabled = audMgr.isKnownDeviceVerificationEnabled(profileId);
+			if (enabled) {
+				String deviceId = SessionContext.getWebTopDeviceID(session);
+				String ua = SessionContext.getClientPlainUserAgent(session);
+
+				try {
+					if (LOGGER.isDebugEnabled()) LOGGER.debug("Checking known device... [{}, {}] ", profileId, deviceId);
+					if (!audMgr.testAndSaveKnownDevice(profileId, deviceId)) {
+						if (enabled) {
+							if (LOGGER.isDebugEnabled()) LOGGER.debug("Verifying whitelist... [{}, {}] ", profileId, deviceId);
+							List<String> nets = audMgr.getKnownDeviceVerificationNetWhiletist(profileId);
+							if (nets.isEmpty() || !IPUtils.isAddressInRange(ip, nets.toArray(new String[nets.size()]))) {
+								if (LOGGER.isDebugEnabled()) LOGGER.debug("Sending notice... [{}, {}] ", profileId, deviceId);
+								audMgr.sendDeviceVerificationNotice(profileId, impersonating, deviceId, ua, ip);
+							} else {
+								if (LOGGER.isDebugEnabled()) LOGGER.debug("Address '{}' whitelisted. Skipping... [{}, {}]", remoteIp, profileId, deviceId);
+							}
+						}
+					}
+				} catch(Throwable t) {
+					LOGGER.error("Error checking known-device [{}, {}, {}]", profileId, deviceId, remoteIp, t);
+				}
+			}
+		});
+	}
+	
 	private void writeAuthLog(UsernamePasswordDomainToken token, HttpServletRequest request, String action) {
-		WebTopApp wta = WebTopApp.getInstance();
-		if(wta != null) {
-			String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
-			String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
-			UserProfileId pid = new UserProfileId(domainId, userId);
-			
-			MapItem authData = new MapItem()
-					.add("ip", ServletUtils.getClientIP(request));
-			
-			wta.getAuditLogManager().write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(authData));
+		String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
+		String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
+		UserProfileId pid = new UserProfileId(domainId, userId);
+
+		MapItem authData = new MapItem()
+				.add("ip", ServletUtils.getClientIP(request));
+
+		WebTopApp.getInstance().getAuditLogManager()
+				.write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(authData));
+	}
+	
+	private void prepareClientId(HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+		String clientId = ServletUtils.getCookie(request, COOKIE_WEBTOP_CLIENTID);
+		if (StringUtils.isBlank(clientId)) {
+			clientId = IdentifierUtils.getUUIDTimeBased();
+			ServletUtils.setCookie(response, COOKIE_WEBTOP_CLIENTID, clientId, 60*60*24*365*10);
+		}
+		session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_CLIENTID, clientId);
+	}
+	
+	private void initDeviceId(UserProfileId profileId, HttpServletRequest request, HttpServletResponse response, HttpSession session) {
+		String deviceId = SessionContext.getWebTopDeviceID(session);
+		if (StringUtils.isBlank(deviceId)) {
+			String secret = getUserSecret(profileId);
+			if (!StringUtils.isBlank(secret)) {
+				DeviceCookie cookie = readDeviceCookie(secret, request);
+				if (cookie == null) {
+					cookie = createDeviceCookie(SessionContext.getClientPlainUserAgent(session));
+					writeDeviceCookie(secret, cookie, response);
+				}
+				session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_DEVICEID, cookie.getDeviceId());
+			}
+		}
+	}
+	
+	private DeviceCookie readDeviceCookie(String secret, HttpServletRequest request) {
+		return ServletUtils.getEncryptedCookie(secret, request, COOKIE_DEVICEID, DeviceCookie.class);
+	}
+	
+	private void writeDeviceCookie(String secret, DeviceCookie cookie, HttpServletResponse response) {
+		int duration = 60*60*24*365*2; // 2 years
+		ServletUtils.setEncryptedCookie(secret, response, COOKIE_DEVICEID, cookie, DeviceCookie.class, duration);
+	}
+	
+	private String buildDeviceId(String uuid, String userAgentHeader) {
+		String md5UA = DigestUtils.md5Hex(StringUtils.defaultIfBlank(userAgentHeader, "useragent/missing"));
+		return DigestUtils.sha1Hex(uuid + "|" + md5UA);
+	}
+	
+	private DeviceCookie createDeviceCookie(String userAgentHeader) {
+		String uuid = IdentifierUtils.getUUIDTimeBased();
+		String deviceId = buildDeviceId(uuid, userAgentHeader);
+		long timestamp = DateTimeUtils.now().getMillis();
+		return new DeviceCookie(uuid, deviceId, timestamp);
+	}
+	
+	private String getUserSecret(UserProfileId profileId) {
+		try {
+			return WebTopApp.getInstance().getWebTopManager()
+					.getUserSecret(profileId);
+
+		} catch (Throwable t) {
+			LOGGER.error("[DeviceId] Unable to get secret for '{}'", profileId, t);
+			return null;
 		}
 	}
 	

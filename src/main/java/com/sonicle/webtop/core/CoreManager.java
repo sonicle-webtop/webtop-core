@@ -41,6 +41,7 @@ import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.beans.VirtualAddress;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.web.json.CompositeId;
+import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.Principal;
 import com.sonicle.security.auth.directory.AbstractDirectory;
 import com.sonicle.webtop.core.app.RunContext;
@@ -262,6 +263,10 @@ public class CoreManager extends BaseManager {
 	
 	public final int getCustomFieldsMaxNo() {
 		return cfieldsLicensed ? -1 : MAX_CFIELDS_FREE;
+	}
+	
+	public IPLookupResponse getIPGeolocationData(final String ipAddress) {
+		return wta.getAuditLogManager().getIPGeolocationData(getTargetProfileId().getDomainId(), ipAddress);
 	}
 	
 	public List<JsSimple> listThemes() throws WTException {

@@ -156,6 +156,22 @@ public class CoreServiceSettings extends BaseServiceSettings {
         return getString(XMPP_BOSH_URL, null);
     }
 	
+	public boolean getSecurityKnownDeviceVerificationEnabled() {
+		return getBoolean(SECURITY_KNOWNDEVICEVERIFICATION_ENABLED, true);
+	}
+	
+	public boolean getSecurityKnownDeviceVerificationLearning() {
+		return getBoolean(SECURITY_KNOWNDEVICEVERIFICATION_LEARNING, false);
+	}
+	
+	public List<String> getSecurityKnownDeviceVerificationRecipients() {
+		return LangUtils.parseStringAsList(getString(SECURITY_KNOWNDEVICEVERIFICATION_RECIPIENTS, null), String.class);
+	}
+	
+	public List<String> getSecurityKnownDeviceVerificationNetWhiletist() {
+		return LangUtils.parseStringAsList(getString(SECURITY_KNOWNDEVICEVERIFICATION_NETWHITELIST, null), String.class);
+	}
+	
 	public boolean getOTPEnabled() {
 		return getBoolean(OTP_ENABLED, false);
 	}

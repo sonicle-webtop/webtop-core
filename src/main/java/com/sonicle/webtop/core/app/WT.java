@@ -162,7 +162,12 @@ public class WT {
 	}
 	
 	public static InternetAddress getNoReplyAddress(String domainId) {
-		return buildDomainInternetAddress(domainId, "webtop-noreply", null);
+		if (WebTopManager.SYSADMIN_DOMAINID.equals(domainId)) {
+			//TODO: analyze wether to add setting to real internetNamr for sysAdmin domain *
+			return InternetAddressUtils.toInternetAddress("webtop-noreply", null);
+		} else {
+			return buildDomainInternetAddress(domainId, "webtop-noreply", null);
+		}
 	}
 	
 	public static InternetAddress getNotificationAddress(String domainId) {

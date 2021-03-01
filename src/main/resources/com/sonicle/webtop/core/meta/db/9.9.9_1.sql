@@ -113,6 +113,40 @@ ORDER BY
 DELETE FROM core.audit_log WHERE context = 'AUTH';
 
 -- ----------------------------
+-- New table: audit_known_devices
+-- ----------------------------
+CREATE SEQUENCE "core"."seq_audit_known_devices";
+
+CREATE TABLE "core"."audit_known_devices" (
+"audit_known_device_id" int8 DEFAULT nextval('"core".seq_audit_known_devices') NOT NULL,
+"domain_id" varchar(20) NOT NULL,
+"user_id" varchar(100) NOT NULL,
+"device_id" varchar(40) NOT NULL,
+"first_seen" timestamptz NOT NULL,
+"last_seen" timestamptz NOT NULL
+)
+WITH (OIDS=FALSE)
+;
+
+ALTER TABLE "core"."audit_known_devices" ADD PRIMARY KEY ("audit_known_device_id");
+CREATE INDEX "audit_known_devices_ak1" ON "core"."audit_known_devices" ("domain_id", "user_id", "device_id");
+
+-- ----------------------------
+-- New table: ip_geo_cache
+-- ----------------------------
+CREATE TABLE "core"."ip_geo_cache" (
+"ip_address" varchar(45) NOT NULL,
+"timestamp" timestamptz(6) NOT NULL,
+"provider" varchar(255) NOT NULL,
+"data" text
+)
+WITH (OIDS=FALSE)
+;
+
+ALTER TABLE "core"."ip_geo_cache" ADD PRIMARY KEY ("ip_address", "timestamp");
+CREATE INDEX "ip_geo_cache_ak1" ON "core"."ip_geo_cache" ("timestamp");
+
+-- ----------------------------
 -- Add default meeting configuration
 -- ----------------------------
 INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.provider', 'jitsi');

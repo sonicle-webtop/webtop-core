@@ -1402,16 +1402,15 @@ public class Service extends BaseService {
 			String sessionId = ServletUtils.getStringParameter(request, "sessionId", true);
 			String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 			String userId = ServletUtils.getStringParameter(request, "userId", true);
-			ListDomainAccessLogDetailResult result = null;
 			
 			if (crud.equals(Crud.READ)) {
-				result = coreadm.listAccessLogDetail(sessionId, domainId, userId, true);
+				ListDomainAccessLogDetailResult result = coreadm.listAccessLogDetail(sessionId, domainId, userId, true);
 				for (DomainAccessLogDetail domainAccLogDetail : result.items) {
 					items.add(new JsDomainAccessLogDetail(domainAccLogDetail));
 				}
+				new JsonResult(items, result.fullCount).printTo(out);
 			}
 			
-			new JsonResult(items, result.fullCount).printTo(out);
 		} catch(Throwable t) {
 			logger.error("Error in ManageDomainAccessLog", t);
 			new JsonResult(t).printTo(out);

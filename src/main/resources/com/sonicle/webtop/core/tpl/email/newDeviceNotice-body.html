@@ -1,0 +1,49 @@
+<#assign LangUtils=statics['com.sonicle.commons.LangUtils']>
+<div style="font-size:13px;color:#222;">
+    <div style="padding: 0 0 15px 0;border-bottom:thin solid #dadce0;text-align:center;word-break:break-word;">
+        <p style="margin:0;margin-bottom:15px;font-size:1.8em;">${LangUtils.encodeForHTMLContent(i18n.title)}</p>
+        <p style="margin:0;font-size:1.2em;">${LangUtils.encodeForHTMLContent(access.account)}</p>
+    </div>
+    <div style="padding: 15px 0 0 0;text-align:center;">
+        <p style="margin:0;margin-bottom:15px;">${LangUtils.encodeForHTMLContent(i18n.message)}</p>
+        <table style="font-size:inherit;color:inherit;margin-left:auto;margin-right:auto;" cellpadding="0" cellspacing="0" border="0" summary="">
+            <tr>
+                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                    <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.time)}</i></div>
+                </td>
+                <td style="padding-bottom:10px;" valign="top">
+                    ${LangUtils.encodeForHTMLContent(access.time)} <span style="color:#888">${LangUtils.encodeForHTMLContent(access.timezone)}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                    <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.device)}</i></div>
+                </td>
+                <td style="padding-bottom:10px;" valign="top">
+                    ${LangUtils.encodeForHTMLContent(access.device)}
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                    <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.ipAddress)}</i></div>
+                </td>
+                <td style="padding-bottom:10px;" valign="top">
+                    ${LangUtils.encodeForHTMLContent(access.ipAddress)}
+                </td>
+            </tr>
+            <#if access.location??>
+            <tr>
+                <td style="padding:0 1em 10px 0;color:#888;white-space:nowrap" valign="top">
+                    <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.location)}</i></div>
+                </td>
+                <td style="padding-bottom:10px;" valign="top">
+                    <span>${LangUtils.encodeForHTMLContent(access.location)}</span>
+                    <span dir="ltr">&nbsp;(<a href="${access.locationUrl}" style="color:#20c;white-space:nowrap" target="_blank" itemprop="map">${LangUtils.encodeForHTMLContent(i18n.locationMap)}</a>)</span>
+                </td>
+            </tr>
+            </#if>
+        </table>
+        <p style="margin:0;margin-top:10px;"><span style="font-weight:bold">${LangUtils.encodeForHTMLContent(i18n.action1)}</span></p>
+        <p style="margin:0;margin-top:5px;">${LangUtils.encodeForHTMLContent(i18n.action2)}</p>
+    </div>
+</div>
