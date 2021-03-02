@@ -569,16 +569,16 @@ public class WT {
 		return getWTA().getGlobalMailSession(domainId);
 	}
 	
-	public static boolean writeAuditLog(final String serviceId, final String context, final String action, final String reference, final String data) {
+	public static void writeAuditLog(final String serviceId, final String context, final String action, final String reference, final String data) {
 		AuditLogManager logMgr = getWTA().getAuditLogManager();
-		if (logMgr == null) return false;
-		return logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, reference, data);
+		if (logMgr == null) return;
+		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, reference, data);
 	}
 	
-	public static boolean writeAuditLog(final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
+	public static void writeAuditLog(final String serviceId, final String context, final String action, final Collection<AuditReferenceDataEntry> entries) {
 		AuditLogManager logMgr = getWTA().getAuditLogManager();
-		if (logMgr == null) return false;
-		return logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
+		if (logMgr == null) return;
+		logMgr.write(RunContext.getRunProfileId(), SessionContext.getCurrentId(), serviceId, context, action, entries);
 	}
 	
 	public static void notify(UserProfileId profileId, ServiceMessage message) {

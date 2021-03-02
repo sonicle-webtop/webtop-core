@@ -125,62 +125,81 @@ public class AuditLogManager {
 		logger.info("Cleaned up");
 	}
 	
-	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
-		if (!initialized || RunContext.isImpersonated()) return false;
+	public void write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
+		boolean impersonated=RunContext.isImpersonated();
 		
-		AuditLogDAO dao = AuditLogDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
+		WT.runPrivileged(() -> {
 			
-			OAuditLog item = new OAuditLog();
-			item.setTimestamp(BaseDAO.createRevisionTimestamp());
-			item.setDomainId(profileId.getDomain());
-			item.setUserId(profileId.getUserId());
-			item.setServiceId(serviceId);
-			item.setContext(context);
-			item.setAction(action);
-			item.setReferenceId(referenceId);
-			item.setSessionId(sessionId);
-			item.setData(data);
-			
-			return dao.insert(con, item) == 1;
-			
-		} catch(SQLException | DAOException ex) {
-			logger.error("DB error", ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+			if (!initialized || 
+				(
+					RunContext.isImpersonated() && 
+					!(new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId())).isAuditImpersonate()
+				)
+			) return;
+
+			AuditLogDAO dao = AuditLogDAO.getInstance();
+			Connection con = null;
+
+			try {
+				con = WT.getCoreConnection();
+
+				OAuditLog item = new OAuditLog();
+				item.setTimestamp(BaseDAO.createRevisionTimestamp());
+				item.setDomainId(profileId.getDomain());
+				item.setUserId((impersonated?WebTopManager.SYSADMIN_USERID + "!":"") + profileId.getUserId());
+				item.setServiceId(serviceId);
+				item.setContext(context);
+				item.setAction(action);
+				item.setReferenceId(referenceId);
+				item.setSessionId(sessionId);
+				item.setData(data);
+
+				dao.insert(con, item);
+
+			} catch(SQLException | DAOException ex) {
+				logger.error("DB error", ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		});
+
 	}
 	
-	public boolean write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
-		if (!initialized || RunContext.isImpersonated()) return false;
+	public void write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
+		boolean impersonated=RunContext.isImpersonated();
 		
-		AuditLogDAO dao = AuditLogDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = WT.getCoreConnection();
+		WT.runPrivileged(() -> {
 			
-			OAuditLog baseItem = new OAuditLog();
-			baseItem.setTimestamp(BaseDAO.createRevisionTimestamp());
-			baseItem.setDomainId(profileId.getDomain());
-			baseItem.setUserId(profileId.getUserId());
-			baseItem.setServiceId(serviceId);
-			baseItem.setContext(context);
-			baseItem.setAction(action);
-			baseItem.setSessionId(sessionId);
-			
-			return dao.batchInsert(con, baseItem, entries).length == entries.size();
-			
-		} catch(SQLException | DAOException ex) {
-			logger.error("DB error", ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+			if (!initialized || 
+				(
+					impersonated && 
+					!(new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId())).isAuditImpersonate()
+				)
+			) return;
+
+			AuditLogDAO dao = AuditLogDAO.getInstance();
+			Connection con = null;
+
+			try {
+				con = WT.getCoreConnection();
+
+				OAuditLog baseItem = new OAuditLog();
+				baseItem.setTimestamp(BaseDAO.createRevisionTimestamp());
+				baseItem.setDomainId(profileId.getDomain());
+				baseItem.setUserId((impersonated?WebTopManager.SYSADMIN_USERID + "!":"") + profileId.getUserId());
+				baseItem.setServiceId(serviceId);
+				baseItem.setContext(context);
+				baseItem.setAction(action);
+				baseItem.setSessionId(sessionId);
+
+				dao.batchInsert(con, baseItem, entries);
+
+			} catch(SQLException | DAOException ex) {
+				logger.error("DB error", ex);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		});
 	}
 	
 	public boolean isKnownDeviceVerificationEnabled(final UserProfileId profileId) {
