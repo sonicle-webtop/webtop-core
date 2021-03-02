@@ -259,6 +259,13 @@ public class CoreSettings {
 	public static final String AUDIT_ENABLED = "audit.enabled";
 	
 	/**
+	 * [domain+system][*]
+	 * [string]
+	 * Activate impersonate audit log
+	 */
+	public static final String AUDIT_IMPERSONATE = "audit.impersonate";
+	
+	/**
 	 * [system]
 	 * [string]
 	 * Defines system default language locale
