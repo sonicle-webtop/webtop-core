@@ -287,6 +287,10 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainAccessLog', {
 							type: 'string',
 							label: me.res('domainAccessLog.fldsearch.user.lbl')
 						}, {
+							name: 'ip',
+							type: 'string',
+							label: me.res('domainAccessLog.fldsearch.ip.lbl')
+						}, {
 							name: 'dateFrom',
 							type: 'date',
 							labelAlign: 'left',
