@@ -256,23 +256,27 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		if (StringUtils.isBlank(deviceId)) {
 			String secret = getUserSecret(profileId);
 			if (!StringUtils.isBlank(secret)) {
-				DeviceCookie cookie = readDeviceCookie(secret, request);
+				DeviceCookie cookie = readDeviceCookie(profileId, secret, request);
 				if (cookie == null) {
 					cookie = createDeviceCookie(SessionContext.getClientPlainUserAgent(session));
-					writeDeviceCookie(secret, cookie, response);
+					writeDeviceCookie(profileId, secret, cookie, response);
 				}
 				session.setAttribute(SessionManager.ATTRIBUTE_WEBTOP_DEVICEID, cookie.getDeviceId());
 			}
 		}
 	}
 	
-	private DeviceCookie readDeviceCookie(String secret, HttpServletRequest request) {
-		return ServletUtils.getEncryptedCookie(secret, request, COOKIE_DEVICEID, DeviceCookie.class);
+	private DeviceCookie readDeviceCookie(UserProfileId profileId, String secret, HttpServletRequest request) {
+		return ServletUtils.getEncryptedCookie(secret, request, buildDeviceCookieName(profileId), DeviceCookie.class);
 	}
 	
-	private void writeDeviceCookie(String secret, DeviceCookie cookie, HttpServletResponse response) {
+	private void writeDeviceCookie(UserProfileId profileId, String secret, DeviceCookie cookie, HttpServletResponse response) {
 		int duration = 60*60*24*365*2; // 2 years
-		ServletUtils.setEncryptedCookie(secret, response, COOKIE_DEVICEID, cookie, DeviceCookie.class, duration);
+		ServletUtils.setEncryptedCookie(secret, response, buildDeviceCookieName(profileId), cookie, DeviceCookie.class, duration);
+	}
+	
+	private String buildDeviceCookieName(UserProfileId profileId) {
+		return COOKIE_DEVICEID + "-" +DigestUtils.md5Hex(profileId.toString());
 	}
 	
 	private String buildDeviceId(String uuid, String userAgentHeader) {
