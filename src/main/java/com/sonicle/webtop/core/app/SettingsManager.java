@@ -58,10 +58,13 @@ import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.ISettingManager;
 import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
 import java.sql.Connection;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -118,6 +121,13 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		domainSettingsCache.cleanUp();
 		userSettingsCache.cleanUp();
 		LOGGER.info("Cleaned up");
+	}
+	
+	public void estimatedCacheSize() {
+		//TODO: remove this debug !!!
+		LOGGER.info("Settings Cache: {}", settingsCache.estimatedSize());
+		LOGGER.info("DomainSettings Cache: {}", domainSettingsCache.estimatedSize());
+		LOGGER.info("UserSettings Cache: {}", userSettingsCache.estimatedSize());
 	}
 	
 	/**
@@ -456,14 +466,14 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	
 	private String getSetting(String serviceId, String key) {
 		if (cacheSettings) {
-			if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up Setting... [{}, {}]", serviceId, key);
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[SettingsCache] Looking-up... [{}, {}]", serviceId, key);
 			return settingsCache.get(serviceId + "|" + key).orElse(null);
 			
 		} else {
 			Connection con = null;
 			
 			try {
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("Getting Setting... [{}, {}]", serviceId, key);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up Setting... [{}, {}]", serviceId, key);
 				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 				return doSettingGet(con, serviceId, key);
 				
@@ -478,14 +488,14 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	
 	private String getSetting(String domainId, String serviceId, String key) {
 		if (cacheSettings) {
-			if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up DomainSetting... [{}, {}, {}]", domainId, serviceId, key);
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[DomainSettingsCache] Looking-up... [{}, {}, {}]", domainId, serviceId, key);
 			return domainSettingsCache.get(domainId + "|" + serviceId + "|" + key).orElse(null);
 			
 		} else {
 			Connection con = null;
 			
 			try {
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("Getting DomainSetting... [{}, {}, {}]", domainId, serviceId, key);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up DomainSetting... [{}, {}, {}]", domainId, serviceId, key);
 				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 				return doDomainSettingGet(con, domainId, serviceId, key);
 				
@@ -500,14 +510,14 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	
 	private String getSetting(String domainId, String userId, String serviceId, String key) {
 		if (cacheUserSettings) {
-			if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up UserSetting from Cache... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
+			if (LOGGER.isTraceEnabled()) LOGGER.trace("[UserSettingsCache] Looking-up... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
 			return userSettingsCache.get(domainId + "|" + userId + "|" + serviceId + "|" + key).orElse(null);
 			
 		} else {
 			Connection con = null;
 			
 			try {
-				if (LOGGER.isTraceEnabled()) LOGGER.trace("Getting UserSetting... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
+				if (LOGGER.isTraceEnabled()) LOGGER.trace("Looking-up UserSetting... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
 				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
 				return doUserSettingGet(con, domainId, userId, serviceId, key);
 				
