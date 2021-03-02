@@ -34,8 +34,9 @@
 
 package com.sonicle.webtop.core.app;
 
-import com.sonicle.webtop.core.sdk.UserProfile;
+import com.sonicle.commons.cache.AbstractPassiveExpiringMap;
 import com.sonicle.commons.db.DbUtils;
+import com.sonicle.commons.web.json.CId;
 import com.sonicle.webtop.core.bol.DomainSettingRow;
 import com.sonicle.webtop.core.sdk.interfaces.IServiceSettingReader;
 import com.sonicle.webtop.core.bol.ODomainSetting;
@@ -45,6 +46,7 @@ import com.sonicle.webtop.core.bol.OUserSetting;
 import com.sonicle.webtop.core.bol.SettingRow;
 import com.sonicle.webtop.core.bol.model.DomainSetting;
 import com.sonicle.webtop.core.bol.model.SystemSetting;
+import com.sonicle.webtop.core.dal.DAOException;
 import com.sonicle.webtop.core.dal.DomainSettingDAO;
 import com.sonicle.webtop.core.dal.SettingDAO;
 import com.sonicle.webtop.core.dal.SettingDbDAO;
@@ -56,6 +58,8 @@ import com.sonicle.webtop.core.sdk.interfaces.IUserSettingManager;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -81,7 +85,16 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		return setm;
 	}
 	
+	public static String[] asArray(String value) {
+		return StringUtils.split(value, ",");
+	}
+	
 	private WebTopApp wta = null;
+	private AtomicBoolean useSettingsCaching = new AtomicBoolean(true);
+	private AtomicBoolean useUserSettingsCaching = new AtomicBoolean(false);
+	private final SettingsCache cacheSettings = new SettingsCache(1, TimeUnit.MINUTES);
+	private final DomainSettingsCache cacheDomainSettings = new DomainSettingsCache(1, TimeUnit.MINUTES);
+	private final UserSettingsCache cacheUserSettings = new UserSettingsCache(1, TimeUnit.MINUTES);
 	
 	/**
 	 * Private constructor.
@@ -101,153 +114,6 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	}
 	
 	/**
-	 * Gets the setting (system) value indicated by the specified key.
-	 * Returns a null value if the key is not found.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return The string value of the setting.
-	 */
-	private String getSetting(String serviceId, String key) {
-		SettingDAO dao = SettingDAO.getInstance();
-		Connection con = null;
-		OSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = dao.selectByServiceKey(con, serviceId, key);
-			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to read setting [{}, {}]", serviceId, key, ex);
-			throw new RuntimeException(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-
-	/**
-	 * Gets the setting (domain) value indicated by the specified key.
-	 * Returns a null value if the key is not found.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return The string value of the setting.
-	 */
-	private String getSetting(String domainId, String serviceId, String key) {
-		DomainSettingDAO dao = DomainSettingDAO.getInstance();
-		Connection con = null;
-		ODomainSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = dao.selectByDomainServiceKey(con, domainId, serviceId, key);
-			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to read setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
-			throw new RuntimeException(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Gets the setting (user) value indicated by the specified key.
-	 * Returns a null value if the key is not found.
-	 * @param domainId The domain ID.
-	 * @param userId The user ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return The string value of the setting.
-	 */
-	private String getSetting(String domainId, String userId, String serviceId, String key) {
-		UserSettingDAO dao = UserSettingDAO.getInstance();
-		Connection con = null;
-		OUserSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = dao.selectByDomainUserServiceKey(con, domainId, userId, serviceId, key);
-			return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to read user setting [{}, {}, {}, {}]", domainId, userId, serviceId, key, ex);
-			throw new RuntimeException(ex);
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Deletes the setting (domain) value indicated by the specified key.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	private boolean deleteSetting(String serviceId, String key) {
-		SettingDAO dao = SettingDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			int ret = dao.deleteByServiceKey(con, serviceId, key);
-			return (ret > 0);
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to delete setting (system) [{}, {}]", serviceId, key, ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Deletes the setting (domain) value indicated by the specified key.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	private boolean deleteSetting(String domainId, String serviceId, String key) {
-		DomainSettingDAO dao = DomainSettingDAO.getInstance();
-		Connection con = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			int ret = dao.deleteByDomainServiceKey(con, domainId, serviceId, key);
-			return (ret > 0);
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to delete setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
-	}
-	
-	/**
-	 * Deletes the setting (system) value indicated by the specified key.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	public boolean deleteServiceSetting(String serviceId, String key) {
-		return deleteSetting(serviceId, key);
-	}
-	
-	/**
-	 * Deletes the setting (domain) value indicated by the specified key.
-	 * @param domainId The domain ID.
-	 * @param serviceId The service ID.
-	 * @param key The name of the setting.
-	 * @return True if setting was succesfully deleted, otherwise false.
-	 */
-	public boolean deleteServiceSetting(String domainId, String serviceId, String key) {
-		return deleteSetting(domainId, serviceId, key);
-	}
-	
-	/**
 	 * Gets the setting value indicated by the specified key.
 	 * Returns a null value if the key is not found.
 	 * @param serviceId The service ID.
@@ -255,7 +121,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @return The string value of the setting.
 	 */
 	@Override
-	public String getServiceSetting(String serviceId, String key) {
+	public String getServiceSetting(final String serviceId, final String key) {
 		return getSetting(serviceId, key);
 	}
 	
@@ -270,9 +136,9 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @return The string value of the setting.
 	 */
 	@Override
-	public String getServiceSetting(String domainId, String serviceId, String key) {
+	public String getServiceSetting(final String domainId, final String serviceId, final String key) {
 		String value = getSetting(domainId, serviceId, key);
-		if(value != null) return value;
+		if (value != null) return value;
 		return getSetting(serviceId, key);
 	}
 	
@@ -285,27 +151,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	@Override
 	public boolean setServiceSetting(String serviceId, String key, Object value) {
-		SettingDAO dao = SettingDAO.getInstance();
-		Connection con = null;
-		OSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = new OSetting();
-			item.setServiceId(serviceId);
-			item.setKey(key);
-			item.setValue(valueToString(value));
-			
-			int ret = dao.update(con, item);
-			if(ret == 0) ret = dao.insert(con, item);
-			return true;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to write setting [{}, {}]", serviceId, key, ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+		return setSetting(serviceId, key, value);
 	}
 	
 	/**
@@ -318,28 +164,28 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 */
 	@Override
 	public boolean setServiceSetting(String domainId, String serviceId, String key, Object value) {
-		DomainSettingDAO dao = DomainSettingDAO.getInstance();
-		Connection con = null;
-		ODomainSetting item = null;
-		
-		try {
-			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
-			item = new ODomainSetting();
-			item.setDomainId(domainId);
-			item.setServiceId(serviceId);
-			item.setKey(key);
-			item.setValue(valueToString(value));
-			
-			int ret = dao.update(con, item);
-			if(ret == 0) ret = dao.insert(con, item);
-			return true;
-
-		} catch (Exception ex) {
-			WebTopApp.logger.error("Unable to write setting (domain) [{}, {}, {}]", domainId, serviceId, key, ex);
-			return false;
-		} finally {
-			DbUtils.closeQuietly(con);
-		}
+		return setSetting(domainId, serviceId, key, value);
+	}
+	
+	/**
+	 * Deletes the setting (system) value targeted by the specified key.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	public boolean deleteServiceSetting(final String serviceId, final String key) {
+		return deleteSetting(serviceId, key);
+	}
+	
+	/**
+	 * Deletes the setting (domain) value targeted by the specified key.
+	 * @param domainId The domain ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return True if setting was succesfully deleted, otherwise false.
+	 */
+	public boolean deleteServiceSetting(final String domainId, final String serviceId, final String key) {
+		return deleteSetting(domainId, serviceId, key);
 	}
 	
 	/**
@@ -357,7 +203,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	@Override
 	public String getUserSetting(String domainId, String userId, String serviceId, String key) {
 		String value = getSetting(domainId, userId, serviceId, key);
-		if(value != null) return value;
+		if (value != null) return value;
 		return getServiceSetting(domainId, serviceId, key);
 	}
 	
@@ -612,11 +458,291 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 	}
 	
+	private String getSetting(String serviceId, String key) {
+		if (useSettingsCaching.get()) {
+			logger.trace("Looking-up Setting from Cache... [{}, {}]", serviceId, key);
+			return cacheSettings.get(serviceId + "|" + key);
+			
+		} else {
+			Connection con = null;
+			
+			try {
+				logger.trace("Reading Setting from DB... [{}, {}]", serviceId, key);
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doSettingGet(con, serviceId, key);
+				
+			} catch(Throwable t) {
+				logger.error("Unable to read Setting [{}, {}]", serviceId, key, t);
+				throw new RuntimeException(t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+	}
+	
+	private String getSetting(String domainId, String serviceId, String key) {
+		if (useSettingsCaching.get()) {
+			logger.trace("Looking-up DomainSetting from Cache... [{}, {}, {}]", domainId, serviceId, key);
+			return cacheDomainSettings.get(domainId + "|" + serviceId + "|" + key);
+			
+		} else {
+			Connection con = null;
+			
+			try {
+				logger.trace("Reading DomainSetting from DB... [{}, {}, {}]", domainId, serviceId, key);
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doDomainSettingGet(con, domainId, serviceId, key);
+				
+			} catch(Throwable t) {
+				logger.error("Unable to read DomainSetting [{}, {}, {}]", domainId, serviceId, key, t);
+				throw new RuntimeException(t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+	}
+	
+	private String getSetting(String domainId, String userId, String serviceId, String key) {
+		if (useUserSettingsCaching.get()) {
+			logger.trace("Looking-up UserSetting from Cache... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
+			return cacheUserSettings.get(domainId + "|" + userId + "|" + serviceId + "|" + key);
+			
+		} else {
+			Connection con = null;
+			
+			try {
+				logger.trace("Reading UserSetting from DB... [{}, {}, {}, {}]", domainId, userId, serviceId, key);
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doUserSettingGet(con, domainId, userId, serviceId, key);
+				
+			} catch(Throwable t) {
+				logger.error("Unable to read UserSetting [{}, {}, {}, {}]", domainId, userId, serviceId, key, t);
+				throw new RuntimeException(t);
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+	}
+	
+	private boolean setSetting(String serviceId, String key, Object value) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			boolean ret = doSettingUpsert(con, serviceId, key, value);
+			//TODO: evaluate wether to lock by full-key these both actions
+			if (useSettingsCaching.get()) {
+				cacheSettings.remove(serviceId + "|" + key);
+			}
+			return ret;
+			
+		} catch(Throwable t) {
+			logger.error("Unable to set Setting [{}, {}]", serviceId, key, t);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean setSetting(String domainId, String serviceId, String key, Object value) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			boolean ret = doDomainSettingUpsert(con, domainId, serviceId, key, value);
+			//TODO: evaluate wether to lock by full-key these both actions
+			if (useSettingsCaching.get()) {
+				cacheSettings.remove(domainId + "|" + serviceId + "|" + key);
+			}
+			return ret;
+			
+		} catch(Throwable t) {
+			logger.error("Unable to set DomainSetting [{}, {}, {}]", domainId, serviceId, key, t);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean deleteSetting(String serviceId, String key) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			boolean ret = doSettingDelete(con, serviceId, key) > 0;
+			//TODO: evaluate wether to lock by full-key these both actions
+			if (useSettingsCaching.get()) {
+				cacheSettings.remove(serviceId + "|" + key);
+			}
+			return ret;
+
+		} catch(Throwable t) {
+			logger.error("Unable to delete Setting [{}, {}]", serviceId, key, t);
+			throw new RuntimeException(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
+	private boolean deleteSetting(String domainId, String serviceId, String key) {
+		Connection con = null;
+		
+		try {
+			con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+			boolean ret = doDomainSettingDelete(con, domainId, serviceId, key) > 0;
+			//TODO: evaluate wether to lock by full-key these both actions
+			if (useSettingsCaching.get()) {
+				cacheDomainSettings.remove(domainId + "|" + serviceId + "|" + key);
+			}
+			return ret;
+
+		} catch(Throwable t) {
+			logger.error("Unable to delete DomainSetting [{}, {}, {}]", domainId, serviceId, key, t);
+			throw new RuntimeException(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	private String valueToString(Object value) {
 		return (value == null) ? null : String.valueOf(value);
 	}
 	
-	public static String[] asArray(String value) {
-		return StringUtils.split(value, ",");
+	private String doSettingGet(Connection con, String serviceId, String key) throws DAOException {
+		SettingDAO setDao = SettingDAO.getInstance();
+		
+		OSetting item = setDao.selectByServiceKey(con, serviceId, key);
+		return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
+	}
+	
+	private boolean doSettingUpsert(Connection con, String serviceId, String key, Object value) throws DAOException {
+		SettingDAO setDao = SettingDAO.getInstance();
+		
+		OSetting item = new OSetting();
+		item.setServiceId(serviceId);
+		item.setKey(key);
+		item.setValue(valueToString(value));
+		
+		int ret = setDao.update(con, item);
+		if (ret == 0) ret = setDao.insert(con, item);
+		return ret > 0;
+	}
+	
+	private int doSettingDelete(Connection con, String serviceId, String key) throws DAOException {
+		SettingDAO setDao = SettingDAO.getInstance();
+		return setDao.deleteByServiceKey(con, serviceId, key);
+	}
+	
+	private String doDomainSettingGet(Connection con, String domainId, String serviceId, String key) throws DAOException {
+		DomainSettingDAO setDao = DomainSettingDAO.getInstance();
+		
+		ODomainSetting item = setDao.selectByDomainServiceKey(con, domainId, serviceId, key);
+		return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
+	}
+	
+	private boolean doDomainSettingUpsert(Connection con, String domainId, String serviceId, String key, Object value) throws DAOException {
+		DomainSettingDAO setDao = DomainSettingDAO.getInstance();
+		
+		ODomainSetting item = new ODomainSetting();
+		item.setDomainId(domainId);
+		item.setServiceId(serviceId);
+		item.setKey(key);
+		item.setValue(valueToString(value));
+		
+		int ret = setDao.update(con, item);
+		if (ret == 0) ret = setDao.insert(con, item);
+		return ret > 0;
+	}
+	
+	private int doDomainSettingDelete(Connection con, String domainId, String serviceId, String key) throws DAOException {
+		DomainSettingDAO setDao = DomainSettingDAO.getInstance();
+		return setDao.deleteByDomainServiceKey(con, domainId, serviceId, key);
+	}
+	
+	private String doUserSettingGet(Connection con, String domainId, String userId, String serviceId, String key) throws DAOException {
+		UserSettingDAO setDao = UserSettingDAO.getInstance();
+		
+		OUserSetting item = setDao.selectByDomainUserServiceKey(con, domainId, userId, serviceId, key);
+		return (item != null) ? StringUtils.defaultString(item.getValue()) : null;
+	}
+	
+	private int doUserSettingDelete(Connection con, String domainId, String userId, String serviceId, String key) throws DAOException {
+		UserSettingDAO setDao = UserSettingDAO.getInstance();
+		return setDao.deleteByDomainServiceUserKey(con, domainId, userId, serviceId, key);
+	}
+	
+	private class SettingsCache extends AbstractPassiveExpiringMap<String, String> {
+		
+		public SettingsCache(final long timeToLive, final TimeUnit timeUnit) {
+			super(timeToLive, timeUnit, true);
+		}
+		
+		@Override
+		protected String internalGetValue(String key) {
+			CId cid = new CId(key, 2);
+			Connection con = null;
+			
+			try {
+				logger.trace("[SettingsCache] Reading Setting from DB... [{}, {}]", cid.getToken(0), cid.getToken(1));
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doSettingGet(con, cid.getToken(0), cid.getToken(1));
+				
+			} catch(Throwable t) {
+				logger.error("[SettingsCache] Unable to read Setting [{}, {}]", cid.getToken(0), cid.getToken(1), t);
+				return null;
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+	}
+	
+	private class DomainSettingsCache extends AbstractPassiveExpiringMap<String, String> {
+		
+		public DomainSettingsCache(final long timeToLive, final TimeUnit timeUnit) {
+			super(timeToLive, timeUnit, true);
+		}
+		
+		@Override
+		protected String internalGetValue(String key) {
+			CId cid = new CId(key, 3);
+			Connection con = null;
+			
+			try {
+				logger.trace("[DomainSettingsCache] Reading DomainSetting from DB... [{}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2));
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doDomainSettingGet(con, cid.getToken(0), cid.getToken(1), cid.getToken(2));
+				
+			} catch(Throwable t) {
+				logger.error("[DomainSettingsCache] Unable to read DomainSetting [{}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2), t);
+				return null;
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
+	}
+	
+	private class UserSettingsCache extends AbstractPassiveExpiringMap<String, String> {
+		
+		public UserSettingsCache(final long timeToLive, final TimeUnit timeUnit) {
+			super(timeToLive, timeUnit, true);
+		}
+		
+		@Override
+		protected String internalGetValue(String key) {
+			CId cid = new CId(key, 4);
+			Connection con = null;
+			
+			try {
+				logger.trace("[UserSettingsCache] Reading UserSetting from DB... [{}, {}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2), cid.getToken(3));
+				con = wta.getConnectionManager().getConnection(CoreManifest.ID);
+				return doUserSettingGet(con, cid.getToken(0), cid.getToken(1), cid.getToken(2), cid.getToken(3));
+				
+			} catch(Throwable t) {
+				logger.error("[UserSettingsCache] Unable to read UserSetting [{}, {}, {}, {}]", cid.getToken(0), cid.getToken(1), cid.getToken(2), cid.getToken(3), t);
+				return null;
+			} finally {
+				DbUtils.closeQuietly(con);
+			}
+		}
 	}
 }
