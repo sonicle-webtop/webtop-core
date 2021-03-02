@@ -66,14 +66,6 @@ public abstract class BaseUserSettings extends BaseSettings {
 		this.profileId = profileId;
 	}
 	
-	public List<UserProfileId> getProfilesThatHave(String key, Object value) {
-		ArrayList<UserProfileId> profiles = new ArrayList<>();
-		for(OUserSetting setting : setm.getUserSettings(serviceId, key, value)) {
-			profiles.add(new UserProfileId(setting.getDomainId(), setting.getUserId()));
-		}
-		return profiles;
-	}
-	
 	@Override
 	public String getSetting(String key) {
 		return setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key);

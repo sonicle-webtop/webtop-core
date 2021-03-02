@@ -1191,7 +1191,7 @@ public final class WebTopManager {
 		
 		// Performs some actions after the remove operation
 		List<Throwable> errors = wta.getServiceManager().invokeOnUserRemoved(pid);
-		wta.getSettingsManager().clearUserSettings(pid.getDomainId(), pid.getUserId());
+		wta.getSettingsManager().deleteUserSettings(pid);
 		
 		// Update cache
 		removeFromUserUidCache(pid);
