@@ -86,10 +86,11 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 					}
 				}
 			},
-			tbar: [{
+			tbar: [
+				{
 					xtype: 'splitbutton',
-					text: me.mys.res('domainSettings.act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
+					text: WT.res('act-add.lbl'),
+					iconCls: 'wt-icon-add',
 					handler: function(s) {
 						s.maybeShowMenu();
 					},
@@ -115,10 +116,38 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 					disabled: true,
 					handler: function() {
 						var rec = me.lref('gp').getSelection()[0];
-						if(rec) me.deleteSettingUI(rec);
+						if (rec) me.deleteSettingUI(rec);
 					}
 				}),
 				'->',
+				{
+					xtype: 'splitbutton',
+					iconCls: 'wt-icon-cleanup',
+					tooltip: {title: me.mys.res('act-cleanupCache.lbl'), text: me.mys.res('domainSettings.cleanupCache.tip')},
+					menu: [
+						{
+							text: me.res('domainSettings.cleanupUsersCache.txt'),
+							handler: function() {
+								me.wait();
+								me.cleanupCache(true, {
+									callback: function(success) {
+										me.unwait();
+										if (success) WT.toast(me.res('toast.info.cacheCleared'));
+									}
+								});
+							}
+						}
+					],
+					handler: function() {
+						me.wait();
+						me.cleanupCache(false, {
+							callback: function(success) {
+								me.unwait();
+								if (success) WT.toast(me.res('toast.info.cacheCleared'));
+							}
+						});
+					}
+				},
 				me.addAct('refresh', {
 					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
@@ -161,5 +190,20 @@ Ext.define('Sonicle.webtop.core.admin.view.DomainSettings', {
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
 			if (bid === 'yes') sto.remove(rec);
 		}, me);
+	},
+	
+	cleanupCache: function(users, opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.mys.ID, 'ManageDomainSettings', {
+			params: {
+				crud: 'cleanup',
+				domainId: me.domainId,
+				users: users === true
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
 	}
 });

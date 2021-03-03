@@ -609,10 +609,6 @@ public final class WebTopApp {
 	}
 	
 	private void onWebappVersionCheck() {
-		try {
-			this.getSettingsManager().estimatedCacheSize();
-		} catch(Throwable t) {}
-		
 		logger.debug("onWebappVersionCheck...");
 		if (tomcat == null) return;
 		

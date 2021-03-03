@@ -123,26 +123,84 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		LOGGER.info("Cleaned up");
 	}
 	
-	public void estimatedCacheSize() {
-		//TODO: remove this debug !!!
-		LOGGER.info("Settings Cache: {}", settingsCache.estimatedSize());
-		LOGGER.info("DomainSettings Cache: {}", domainSettingsCache.estimatedSize());
-		LOGGER.info("UserSettings Cache: {}", userSettingsCache.estimatedSize());
-	}
-	
 	/**
-	 * Empties Settings and DomainSettings cache.
+	 * Empties the whole Settings cache.
 	 */
 	public void clearSettingsCache() {
+		LOGGER.trace("[SettingsCache] Cleaning-up...");
 		settingsCache.cleanUp();
-		domainSettingsCache.cleanUp();
+		LOGGER.trace("[SettingsCache] Clean-up done");
 	}
 	
 	/**
-	 * Empties UserSettings cache.
+	 * Empties the whole DomainSettings cache.
+	 */
+	public void clearDomainSettingsCache() {
+		clearDomainSettingsCache(null);
+	}
+	
+	/**
+	 * Empties the DomainSettings cache by domain ID.
+	 * @param domainId The domain ID whose keys will be cleared.
+	 */
+	public void clearDomainSettingsCache(String domainId) {
+		if (domainId == null) {
+			LOGGER.trace("[DomainSettingsCache] Cleaning-up... [*]");
+			domainSettingsCache.cleanUp();
+			LOGGER.trace("[DomainSettingsCache] Clean-up done");
+			
+		} else {
+			String keyStartsWith = domainId + "|";
+			LOGGER.trace("[DomainSettingsCache] Cleaning-up... [{}*]", keyStartsWith);
+			List<String> keysToRemove = domainSettingsCache.asMap().keySet().stream()
+					.filter(key -> StringUtils.startsWith(key, keyStartsWith))
+					.collect(Collectors.toList());
+			LOGGER.trace("[DomainSettingsCache] Removing {} keys [{}*]", keysToRemove.size(), keyStartsWith);
+			if (!keysToRemove.isEmpty()) domainSettingsCache.invalidateAll(keysToRemove);
+			LOGGER.trace("[DomainSettingsCache] Clean-up done [{}*]", keyStartsWith);
+		}
+	}
+	
+	/**
+	 * Empties the whole UserSettings cache.
 	 */
 	public void clearUserSettingsCache() {
-		userSettingsCache.cleanUp();
+		clearUserSettingsCache(null, null);
+	}
+	
+	/**
+	 * Empties UserSettings cache by domain ID and user ID.
+	 * @param domainId The domain ID whose keys will be cleared.
+	 * @param userId The user ID whose keys will be cleared. If not null the above domain ID needs a valid value.
+	 */
+	public void clearUserSettingsCache(String domainId, String userId) {
+		if (domainId == null && userId == null) {
+			LOGGER.trace("[UserSettingsCache] Cleaning-up... [*]");
+			userSettingsCache.cleanUp();
+			LOGGER.trace("[UserSettingsCache] Clean-up done [*]");
+			
+		} else if (domainId != null) {
+			String keyStartsWith = (userId != null) ? (domainId + "|" + userId + "|") : (domainId + "|");
+			LOGGER.trace("[UserSettingsCache] Cleaning-up... [{}*]", keyStartsWith);
+			List<String> keysToRemove = userSettingsCache.asMap().keySet().stream()
+					.filter(key -> StringUtils.startsWith(key, keyStartsWith))
+					.collect(Collectors.toList());
+			LOGGER.trace("[UserSettingsCache] Removing {} keys [{}*]", keysToRemove.size(), keyStartsWith);
+			if (!keysToRemove.isEmpty()) userSettingsCache.invalidateAll(keysToRemove);
+			LOGGER.trace("[UserSettingsCache] Clean-up done [{}*]", keyStartsWith);
+		}
+		if (LOGGER.isTraceEnabled()) LOGGER.trace("[UserSettingsCache] Clean-up done");
+	}
+	
+	/**
+	 * Prints Cache statistic info into log.
+	 */
+	public void dumpCacheStats() {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("[SettingsCache] keys: {}", settingsCache.estimatedSize());
+			LOGGER.debug("[DomainSettingsCache] keys: {}", domainSettingsCache.estimatedSize());
+			LOGGER.debug("[UserSettingsCache] keys: {}", userSettingsCache.estimatedSize());
+		}
 	}
 	
 	/**
@@ -399,11 +457,7 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 		}
 		
 		if (ret && cacheUserSettings) {
-			String keyStartsWith = domainId + "|" + userId + "|";
-			List<String> profileKeys = userSettingsCache.asMap().keySet().stream()
-					.filter(key -> StringUtils.startsWith(key, keyStartsWith))
-					.collect(Collectors.toList());
-			userSettingsCache.invalidateAll(profileKeys);
+			clearUserSettingsCache(domainId, userId);
 		}
 		return ret;
 	}

@@ -382,12 +382,45 @@ public class CoreAdminManager extends BaseManager {
 		}
 	}
 	
+	public void cleanupSettingsCache() throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
+		
+		RunContext.ensureIsWebTopAdmin();
+		setMgr.clearSettingsCache();
+		setMgr.dumpCacheStats();
+	}
+	
+	public void cleanupDomainSettingsCache() throws WTException {
+		cleanupDomainSettingsCache(null);
+	}
+	
+	public void cleanupDomainSettingsCache(final String domainId) throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		setMgr.clearDomainSettingsCache(domainId);
+		setMgr.dumpCacheStats();
+	}
+	
+	public void cleanupUserSettingsCache(final String domainId) throws WTException {
+		cleanupUserSettingsCache(domainId, null);
+	}
+	
+	public void cleanupUserSettingsCache(final String domainId, final String userId) throws WTException {
+		SettingsManager setMgr = wta.getSettingsManager();
+		
+		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
+		RunContext.ensureIsWebTopAdmin();
+		setMgr.clearUserSettingsCache(domainId, userId);
+		setMgr.dumpCacheStats();
+	}
+	
 	public void refreshDomainCache() throws WTException {
 		WebTopManager wtMgr = wta.getWebTopManager();
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
-		
 		wtMgr.initDomainCache();
 	}
 	
@@ -396,7 +429,6 @@ public class CoreAdminManager extends BaseManager {
 		
 		//TODO: permettere la chiamata per l'admin di dominio (admin@dominio)
 		RunContext.ensureIsWebTopAdmin();
-		
 		licMgr.cleanupLicenseCache();
 	}
 	

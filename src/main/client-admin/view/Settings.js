@@ -70,10 +70,11 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 					}
 				}
 			},
-			tbar: [{
+			tbar: [
+				{
 					xtype: 'splitbutton',
-					text: me.mys.res('settings.act-add.lbl'),
-					iconCls: 'wt-icon-add-xs',
+					text: WT.res('act-add.lbl'),
+					iconCls: 'wt-icon-add',
 					handler: function(s) {
 						s.maybeShowMenu();
 					},
@@ -103,6 +104,20 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 					}
 				}),
 				'->',
+				me.addAct('cleanup', {
+					text: null,
+					tooltip: {title: me.mys.res('act-cleanupCache.lbl'), text: me.mys.res('settings.cleanupCache.tip')},
+					iconCls: 'wt-icon-cleanup',
+					handler: function() {
+						me.wait();
+						me.cleanupCache({
+							callback: function(success) {
+								me.unwait();
+								if (success) WT.toast(me.res('toast.info.cacheCleared'));
+							}
+						});
+					}
+				}),
 				me.addAct('refresh', {
 					text: null,
 					tooltip: WT.res('act-refresh.lbl'),
@@ -144,5 +159,18 @@ Ext.define('Sonicle.webtop.core.admin.view.Settings', {
 		WT.confirm(WT.res('confirm.delete'), function(bid) {
 			if (bid === 'yes') sto.remove(rec);
 		}, me);
+	},
+	
+	cleanupCache: function(opts) {
+		opts = opts || {};
+		var me = this;
+		WT.ajaxReq(me.mys.ID, 'ManageSystemSettings', {
+			params: {
+				crud: 'cleanup'
+			},
+			callback: function(success, json) {
+				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
+			}
+		});
 	}
 });

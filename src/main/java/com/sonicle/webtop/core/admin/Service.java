@@ -377,16 +377,16 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				List<SystemSetting> items = coreadm.listSystemSettings(false);
 				new JsonResult(items, items.size()).printTo(out);
 				
-			} else if(crud.equals(Crud.CREATE)) {
+			} else if (crud.equals(Crud.CREATE)) {
 				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
 				SystemSetting setting = pl.data.get(0);
 				
 				if (!coreadm.updateSystemSetting(setting.serviceId, setting.key, setting.value)) {
-					throw new WTException("Cannot insert setting [{0}, {1}]", setting.serviceId, setting.key);
+					throw new WTException("Cannot insert setting [{}, {}]", setting.serviceId, setting.key);
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
 					if (CoreManifest.ID.equals(setting.serviceId) && "public.url".equals(setting.key)) {
@@ -402,7 +402,7 @@ public class Service extends BaseService {
 				}
 				new JsonResult(setting).printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+			} else if (crud.equals(Crud.UPDATE)) {
 				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
 				SystemSetting setting = pl.data.get(0);
 				
@@ -418,35 +418,38 @@ public class Service extends BaseService {
 						coreadm.refreshDomainCache();
 					}
 				}
-				if(!StringUtils.equals(key, setting.key)) {
+				if (!StringUtils.equals(key, setting.key)) {
 					coreadm.deleteSystemSetting(sid, key);
 				}
-				
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.DELETE)) {
+			} else if (crud.equals(Crud.DELETE)) {
 				PayloadAsList<SystemSetting.List> pl = ServletUtils.getPayloadAsList(request, SystemSetting.List.class);
 				SystemSetting setting = pl.data.get(0);
 				
 				final CompositeId ci = new CompositeId(2).parse(setting.id);
 				final String sid = ci.getToken(0);
 				final String key = ci.getToken(1);
-
+				
 				if (!coreadm.deleteSystemSetting(sid, key)) {
-					throw new WTException("Cannot delete setting [{0}, {1}]", sid, key);
+					throw new WTException("Cannot delete setting [{}, {}]", sid, key);
 				} else {
 					//FIXME: Evaluate to create new field in Domain data for public.url
 					if (CoreManifest.ID.equals(sid) && "public.url".equals(key)) {
 						coreadm.refreshDomainCache();
 					}
 				}
+				new JsonResult().printTo(out);
 				
+			} else if ("cleanup".equals(crud)) {
+				coreadm.cleanupSettingsCache();
+				coreadm.cleanupDomainSettingsCache("*");
 				new JsonResult().printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageSettings", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageSystemSettings", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
@@ -454,34 +457,34 @@ public class Service extends BaseService {
 		
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
-			if(crud.equals(Crud.READ)) {
+			if (crud.equals(Crud.READ)) {
 				String id = ServletUtils.getStringParameter(request, "id", null);
 				DomainEntity domain = coreadm.getDomain(id);
 				new JsonResult(new JsDomain(domain)).printTo(out);
 				
-			} else if(crud.equals(Crud.CREATE)) {
+			} else if (crud.equals(Crud.CREATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
 				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
 				coreadm.addDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.UPDATE)) {
+			} else if (crud.equals(Crud.UPDATE)) {
 				Payload<MapItem, JsDomain> pl = ServletUtils.getPayload(request, JsDomain.class);
 				AbstractDirectory dir = DirectoryManager.getManager().getDirectory(pl.data.dirScheme);
 				coreadm.updateDomain(JsDomain.buildDomainEntity(pl.data, dir));
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals(Crud.DELETE)) {
+			} else if (crud.equals(Crud.DELETE)) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				coreadm.deleteDomain(domainId);
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals("init")) {
+			} else if (crud.equals("init")) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				coreadm.initDomainWithDefaults(domainId);
 				new JsonResult().printTo(out);
 				
-			} else if(crud.equals("policies")) {
+			} else if (crud.equals("policies")) {
 				String domainId = ServletUtils.getStringParameter(request, "domainId", true);
 				short levenThres = WebTopProps.getWTDirectorySimilarityLevenThres(WT.getProperties());
 				short tokenSize = WebTopProps.getWTDirectorySimilarityTokenSize(WT.getProperties());
@@ -489,9 +492,9 @@ public class Service extends BaseService {
 				new JsonResult(item).printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageDomains", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageDomains", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
@@ -538,7 +541,6 @@ public class Service extends BaseService {
 				if (!StringUtils.equals(key, setting.key)) {
 					coreadm.deleteDomainSetting(domainId, sid, key);
 				}
-					
 				new JsonResult().printTo(out);
 				
 			} else if (crud.equals(Crud.DELETE)) {
@@ -557,13 +559,21 @@ public class Service extends BaseService {
 						coreadm.refreshDomainCache();
 					}
 				}
+				new JsonResult().printTo(out);
 				
+			} else if ("cleanup".equals(crud)) {
+				boolean users = ServletUtils.getBooleanParameter(request, "users", false);
+				if (users) {
+					coreadm.cleanupUserSettingsCache(domainId);
+				} else {
+					coreadm.cleanupDomainSettingsCache(domainId);
+				}
 				new JsonResult().printTo(out);
 			}
 			
-		} catch(Exception ex) {
-			logger.error("Error in ManageSettings", ex);
-			new JsonResult(ex).printTo(out);
+		} catch(Throwable t) {
+			logger.error("Error in ManageSettings", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
