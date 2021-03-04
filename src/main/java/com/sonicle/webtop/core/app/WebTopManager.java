@@ -40,15 +40,11 @@ import com.sonicle.commons.LangUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.URIUtils;
 import com.sonicle.commons.cache.AbstractBulkCache;
-import com.sonicle.commons.cache.AbstractPassiveExpiringMap;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
-import com.sonicle.commons.http.HttpClientUtils;
 import com.sonicle.commons.l4j.ProductLicense;
 import com.sonicle.commons.time.DateTimeUtils;
 import com.sonicle.commons.web.json.CompositeId;
-import com.sonicle.commons.web.json.JsonResult;
-import com.sonicle.commons.web.json.ipstack.IPLookupResponse;
 import com.sonicle.security.AuthenticationDomain;
 import com.sonicle.security.ConnectionSecurity;
 import com.sonicle.security.DomainAccount;
@@ -68,7 +64,6 @@ import com.sonicle.security.auth.directory.LdapNethDirectory;
 import com.sonicle.security.auth.directory.SftpDirectory;
 import com.sonicle.security.auth.directory.SmbDirectory;
 import com.sonicle.webtop.core.CoreServiceSettings;
-import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.app.auth.LdapWebTopDirectory;
 import com.sonicle.webtop.core.app.auth.WebTopDirectory;
@@ -132,14 +127,12 @@ import com.sun.mail.imap.ACL;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.Rights;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -148,16 +141,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.mail.Folder;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
@@ -201,7 +190,6 @@ public final class WebTopManager {
 	private final CacheDomainInfo domainCache = new CacheDomainInfo();
 	private final KeyedReentrantLocks lockSecretGet = new KeyedReentrantLocks<String>();
 	private final Map<String, ProductLicense> productLicenseCache = new ConcurrentHashMap<>();
-	private final IPLookupProviderConfigCache ipLookupProviderCache = new IPLookupProviderConfigCache(1, TimeUnit.MINUTES);
 	
 	private final Object lock1 = new Object();
 	private final HashMap<UserProfileId, String> cacheUserToUserUid = new HashMap<>();
@@ -397,35 +385,6 @@ public final class WebTopManager {
 				if (iOfNDot == -1) break; 
 			}
 			return null;
-		}
-	}
-	
-	public List<IPLookupResponse> lookupIPInfo(final String domainId, final Collection<String> ipAddresses) throws IOException {
-		HttpClient httpCli = null;
-		try {
-			IPLookupProviderConfig config = ipLookupProviderCache.get(domainId);
-			if (config.provider == null) return null;
-			// Do not check provider here, ipstack it's the only one supported for now!
-			
-			httpCli = HttpClientBuilder.create().build();
-			//https://ipregistry.co/
-			URI uri = new URIBuilder("http://api.ipstack.com/" + StringUtils.join(ipAddresses, ","))
-				.addParameter("access_key", config.apiKey)
-				.addParameter("output", "json")
-				.addParameter("fields", "main,location.country_flag")
-				.build();
-			
-			String json = HttpClientUtils.getStringContent(httpCli, uri);
-			if (ipAddresses.size() > 1) {
-				return JsonResult.GSON.fromJson(json, IPLookupResponse.List.class);
-			} else {
-				return Arrays.asList(JsonResult.GSON.fromJson(json, IPLookupResponse.class));
-			}
-			
-		} catch (URISyntaxException ex) {
-			throw new IllegalArgumentException(ex);
-		} finally {
-			HttpClientUtils.closeQuietly(httpCli);
 		}
 	}
 	
@@ -2868,34 +2827,6 @@ public final class WebTopManager {
 				String uid = cacheGroupToGroupUid.remove(pid);
 				cacheGroupUidToGroup.remove(uid);
 			}
-		}
-	}
-	
-	private class IPLookupProviderConfigCache extends AbstractPassiveExpiringMap<String, IPLookupProviderConfig> {
-		
-		public IPLookupProviderConfigCache(final long timeToLive, final TimeUnit timeUnit) {
-			super(timeToLive, timeUnit, true);
-		}
-		
-		@Override
-		protected IPLookupProviderConfig internalGetValue(String key) {
-			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, key);
-			CoreSettings.GeolocationProvider provider = css.getGeolocationProvider();
-			String apiKey = null;
-			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
-				apiKey = css.getIpstackGeolocationProviderApiKey();
-			}
-			return new IPLookupProviderConfig(EnumUtils.toSerializedName(provider), apiKey);
-		}	
-	}
-	
-	private class IPLookupProviderConfig {
-		public final String provider;
-		public final String apiKey;
-		
-		public IPLookupProviderConfig(String provider, String apiKey) {
-			this.provider = provider;
-			this.apiKey = apiKey;
 		}
 	}
 	
