@@ -41,8 +41,11 @@ Ext.define('Sonicle.webtop.core.store.DateFmtShort', {
 		['dd-MM-yyyy', 'dd-mm-yyyy'],
 		['dd.MM.yyyy', 'dd.mm.yyyy'],
 		['yyyy-MM-dd', 'yyyy-mm-dd'],
+		['yyyy.MM.dd', 'yyyy.mm.dd'],
 		['MM/dd/yyyy', 'mm/dd/yyyy'],
 		['MM-dd-yyyy', 'mm-dd-yyyy'],
-		['MM.dd.yyyy', 'mm.dd.yyyy']
+		['MM.dd.yyyy', 'mm.dd.yyyy'],
+		['dd. MM. yyyy.', 'dd. mm. yyyy.'],
+		['d/M/yy', 'd/m/yy']
 	]
 });
