@@ -40,6 +40,10 @@ Ext.define('Sonicle.webtop.core.store.DateFmtLong', {
 		['dd MMM yyyy', 'dd mmm yyyy'],
 		['dd MMMM yyyy', 'dd mmmm yyyy'],
 		['MMM dd, yyyy', 'mmm dd, yyyy'],
-		['MMMM dd, yyyy', 'mmmm dd, yyyy']
+		['MMMM dd, yyyy', 'mmmm dd, yyyy'],
+		['yyyy. MMM dd.', 'yyyy. mmm dd.'],
+		['yyyy. MMMM dd.', 'yyyy. mmmm dd.'],
+		['dd. MMM yyyy.', 'dd. mmm yyyy.'],
+		['dd. MMMM yyyy.', 'dd. mmmm yyyy.']
 	]
 });
