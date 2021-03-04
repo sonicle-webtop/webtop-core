@@ -33,9 +33,10 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.InternetAddressUtils;
-import com.sonicle.commons.cache.AbstractPassiveExpiringMap;
 import com.sonicle.commons.concurrent.KeyedReentrantLocks;
 import com.sonicle.commons.db.DbUtils;
 import com.sonicle.commons.http.HttpClientUtils;
@@ -74,7 +75,6 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import net.sf.uadetector.ReadableUserAgent;
-import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
@@ -103,10 +103,11 @@ public class AuditLogManager {
 	}
 	
 	private WebTopApp wta = null;
-	private final IPLookupProviderConfigCache ipLookupProviderCache = new IPLookupProviderConfigCache(30, TimeUnit.SECONDS);
-	private final PassiveExpiringMap<String, IPLookupResponse> ipLookupRespCache = new PassiveExpiringMap(10, TimeUnit.MINUTES);
+	private final Cache<String, IPLookupResponse> ipLookupRespCache = Caffeine.newBuilder()
+			.expireAfterWrite(10, TimeUnit.MINUTES)
+			.maximumSize(100)
+			.build();
 	private final KeyedReentrantLocks lockKnownDevice = new KeyedReentrantLocks<String>();
-	private final KeyedReentrantLocks ipLookupRespLock = new KeyedReentrantLocks<String>();
 	
 	/**
 	 * Private constructor.
@@ -308,59 +309,14 @@ public class AuditLogManager {
 		}	
 	}
 	
-	/*
-	public boolean testAndSaveKnownDevice(final UserProfileId profileId, final String deviceId) throws WTException {
-		if (!initialized) return false;
-		
-		final String key = profileId.toString() + deviceId;
-		try (KeyedReentrantLocks.KeyedLock lock = lockKnownDevice.tryAcquire(key, 60 * 1000)) {
-			if (lock == null) return false;
-			//boolean isKnown = knownDeviceExists(profileId, deviceId);
-			//if (!isKnown) addKnownDevice(profileId, deviceId);
-			//return isKnown;
-			int count = 
-			int ret = updateDeviceLastSeen(profileId, deviceId);
-			if (ret == 0) addKnownDevice(profileId, deviceId);
-			return ret == 1;
-		}
-	}
-	*/
-	
 	public IPLookupResponse getIPGeolocationData(final String domainId, final String ipAddress) {
-		try (KeyedReentrantLocks.KeyedLock lock = ipLookupRespLock.tryAcquire(ipAddress, 60 * 1000)) {
-			if (lock == null) return null;
-			if (ipLookupRespCache.containsKey(ipAddress)) {
-				return ipLookupRespCache.get(ipAddress);
-			} else {
-				OIPGeoCache oigr = ipGeoResultGet(ipAddress);
-				IPLookupResponse resp = null;
-				if (oigr == null) {
-					// Lookup info from provider
-					resp = lookupSingleIPInfo(domainId, ipAddress);
-					if (resp != null) {
-						// Persists data for later use
-						OIPGeoCache noigr = new OIPGeoCache();
-						noigr.setIpAddress(ipAddress);
-						if (setIPGeoResultData(noigr, CoreSettings.GeolocationProvider.IPSTACK, resp)) {
-							ipGeoResultInsert(noigr);
-						}
-					}
-				} else {
-					// Extract data from saved result
-					resp = getIPGeoResultData(oigr);
-				}
-				
-				// Adds lookup result in cache
-				if (resp != null) ipLookupRespCache.put(ipAddress, resp);
-				return resp;
-			}
-		}
+		return ipLookupRespCache.get(ipAddress, k -> doLoadIPLookupResponse(domainId, k));
 	}
 	
 	public List<IPLookupResponse> lookupIPInfo(final String domainId, final Collection<String> ipAddresses) throws IOException {
 		HttpClient httpCli = null;
 		try {
-			IPLookupProviderConfig config = ipLookupProviderCache.get(domainId);
+			IPLookupProviderConfig config = getIPLookupProviderConfig(domainId);
 			if (config.provider == null) return null;
 			// Do not check provider here, ipstack it's the only one supported for now!
 			
@@ -387,6 +343,27 @@ public class AuditLogManager {
 		}
 	}
 	
+	private IPLookupResponse doLoadIPLookupResponse(String domainId, String ipAddress) {
+		OIPGeoCache oigr = ipGeoCacheGet(ipAddress);
+		IPLookupResponse resp = null;
+		if (oigr == null) {
+			// Lookup info from provider
+			resp = lookupSingleIPInfo(domainId, ipAddress);
+			if (resp != null) {
+				// Persists data for later use
+				OIPGeoCache noigr = new OIPGeoCache();
+				noigr.setIpAddress(ipAddress);
+				if (setIPGeoResultData(noigr, CoreSettings.GeolocationProvider.IPSTACK, resp)) {
+					ipGeoCacheInsert(noigr);
+				}
+			}
+		} else {
+			// Extract data from saved result
+			resp = getIPGeoResultData(oigr);
+		}
+		return resp;
+	}
+	
 	private IPLookupResponse lookupSingleIPInfo(String domainId, String ipAddress) {
 		List<IPLookupResponse> values = null;
 		try {
@@ -395,7 +372,7 @@ public class AuditLogManager {
 		return (values != null && !values.isEmpty()) ? values.get(0) : null;
 	}
 	
-	private OIPGeoCache ipGeoResultGet(String ipAddress) {
+	private OIPGeoCache ipGeoCacheGet(String ipAddress) {
 		IPGeoCacheDao igrDao = IPGeoCacheDao.getInstance();
 		Connection con = null;
 		
@@ -411,7 +388,7 @@ public class AuditLogManager {
 		}
 	}
 	
-	private boolean ipGeoResultInsert(OIPGeoCache oigr) {
+	private boolean ipGeoCacheInsert(OIPGeoCache oigr) {
 		IPGeoCacheDao igrDao = IPGeoCacheDao.getInstance();
 		Connection con = null;
 		
@@ -452,22 +429,14 @@ public class AuditLogManager {
 		return null;
 	}
 	
-	private class IPLookupProviderConfigCache extends AbstractPassiveExpiringMap<String, IPLookupProviderConfig> {
-		
-		public IPLookupProviderConfigCache(final long timeToLive, final TimeUnit timeUnit) {
-			super(timeToLive, timeUnit, true);
-		}
-		
-		@Override
-		protected IPLookupProviderConfig internalGetValue(String key) {
-			CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, key);
-			CoreSettings.GeolocationProvider provider = css.getGeolocationProvider();
-			String apiKey = null;
+	private IPLookupProviderConfig getIPLookupProviderConfig(String domainId) {
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
+		CoreSettings.GeolocationProvider provider = css.getGeolocationProvider();
+		String apiKey = null;
 			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
 				apiKey = css.getIpstackGeolocationProviderApiKey();
 			}
 			return new IPLookupProviderConfig(EnumUtils.toSerializedName(provider), apiKey);
-		}	
 	}
 	
 	private class IPLookupProviderConfig {
