@@ -125,6 +125,9 @@ import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.model.UILayout;
+import com.sonicle.webtop.core.model.UILookAndFeel;
+import com.sonicle.webtop.core.model.UITheme;
 import com.sonicle.webtop.core.products.TMCEPremiumProduct;
 import com.sonicle.webtop.core.util.AppLocale;
 import com.sonicle.webtop.core.sdk.BaseService;
@@ -472,15 +475,17 @@ public class Service extends BaseService implements EventListener {
 	}
 	
 	public void processLookupThemes(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = null;
 		
 		try {
-			items = coreMgr.listThemes();
+			List<JsSimple> items = new ArrayList<>();
+			for (UITheme theme : coreMgr.listUIThemes().values()) {
+				items.add(new JsSimple(theme.getId(), theme.getName()));
+			}
 			new JsonResult("themes", items, items.size()).printTo(out);
 
-		} catch (Exception ex) {
-			logger.error("Error in LookupThemes", ex);
-			new JsonResult(false, "Unable to lookup themes").printTo(out);
+		} catch (Throwable t) {
+			logger.error("Error in LookupThemes", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
@@ -502,28 +507,32 @@ public class Service extends BaseService implements EventListener {
 	}
 	
 	public void processLookupLayouts(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = null;
 		
 		try {
-			items = coreMgr.listLayouts();
+			List<JsSimple> items = new ArrayList<>();
+			for (UILayout lay : coreMgr.listUILayouts()) {
+				items.add(new JsSimple(lay.getId(), lay.getName()));
+			}
 			new JsonResult("layouts", items, items.size()).printTo(out);
 
-		} catch (Exception ex) {
-			logger.error("Error in LookupLayouts", ex);
-			new JsonResult(false, "Unable to lookup layouts").printTo(out);
+		} catch (Throwable t) {
+			logger.error("Error in LookupLayouts", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
 	public void processLookupLAFs(HttpServletRequest request, HttpServletResponse response, PrintWriter out) {
-		List<JsSimple> items = null;
 		
 		try {
-			items = coreMgr.listLAFs();
+			List<JsSimple> items = new ArrayList<>();
+			for (UILookAndFeel laf : coreMgr.listUILookAndFeels().values()) {
+				items.add(new JsSimple(laf.getId(), laf.getName()));
+			}
 			new JsonResult("lafs", items, items.size()).printTo(out);
 
-		} catch (Exception ex) {
-			logger.error("Error in LookupLAFs", ex);
-			new JsonResult(false, "Unable to lookup look&feels").printTo(out);
+		} catch (Throwable t) {
+			logger.error("Error in LookupLAFs", t);
+			new JsonResult(t).printTo(out);
 		}
 	}
 	
