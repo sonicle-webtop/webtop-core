@@ -53,6 +53,7 @@ import com.sonicle.webtop.core.app.servlet.Login;
 import com.sonicle.webtop.core.app.servlet.PrivateRequest;
 import com.sonicle.webtop.core.app.servlet.ServletHelper;
 import com.sonicle.webtop.core.app.shiro.filter.DeviceCookie;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import inet.ipaddr.IPAddress;
@@ -105,7 +106,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			wtRealm.checkUser((Principal)subject.getPrincipal());
 		} catch(WTException ex) {
 			LOGGER.error("User check error", ex);
-			writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, "LOGIN_FAILURE");
+			writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, LogbackHelper.Level.ERROR, "LOGIN_FAILURE");
 			setFailureAttribute(request, new AuthenticationException(ex));
 			return true;
 		}
@@ -132,13 +133,13 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 			doKnownDeviceVerification(profileId, httpRequest, webtopSession.getSession());
 		}
 		
-		writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, "LOGIN_SUCCESS");
+		writeAuthLog((UsernamePasswordDomainToken)token, httpRequest, LogbackHelper.Level.INFO, "LOGIN_SUCCESS");
 		return super.onLoginSuccess(token, subject, request, response);
 	}
 	
 	@Override
 	protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
-		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, "LOGIN_FAILURE");
+		writeAuthLog((UsernamePasswordDomainToken)token, (HttpServletRequest)request, LogbackHelper.Level.ERROR, "LOGIN_FAILURE");
 		return super.onLoginFailure(token, e, request, response);
 	}
 
@@ -230,16 +231,16 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		});
 	}
 	
-	private void writeAuthLog(UsernamePasswordDomainToken token, HttpServletRequest request, String action) {
+	private void writeAuthLog(UsernamePasswordDomainToken token, HttpServletRequest request, LogbackHelper.Level level, String action) {
 		String domainId = StringUtils.defaultIfBlank(token.getDomain(), "?");
 		String userId = StringUtils.defaultIfBlank(token.getUsername(), "?");
 		UserProfileId pid = new UserProfileId(domainId, userId);
-
-		MapItem authData = new MapItem()
-				.add("ip", ServletUtils.getClientIP(request));
-
+		String sessionId = SessionContext.getCurrentId();
+		String clientIp = ServletUtils.getClientIP(request);
+		
+		AuditLogManager.logAuth(level, clientIp, sessionId, pid, action);
 		WebTopApp.getInstance().getAuditLogManager()
-				.write(pid, request.getRequestedSessionId(), CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(authData));
+				.write(pid, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
 	}
 	
 	private void prepareClientId(HttpServletRequest request, HttpServletResponse response, HttpSession session) {

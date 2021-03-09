@@ -42,6 +42,7 @@ import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.OptionHelper;
+import com.google.gson.annotations.SerializedName;
 import com.sonicle.commons.EnumUtils;
 import com.sonicle.commons.PathUtils;
 import com.sonicle.commons.PropUtils;
@@ -395,5 +396,13 @@ public class LogbackHelper {
 			this.name = Check.notNull(name, "name");
 			this.level = level != null ? level : LoggerEntry.Level.OFF;
 		}
-	}	
+	}
+	
+	public static enum Level {
+		@SerializedName("TRACE") TRACE,
+		@SerializedName("DEBUG") DEBUG,
+		@SerializedName("INFO") INFO,
+		@SerializedName("WARN") WARN,
+		@SerializedName("ERROR") ERROR
+	}
 }

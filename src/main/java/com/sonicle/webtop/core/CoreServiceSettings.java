@@ -63,6 +63,14 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		return getString(DAVSERVER_BASE_URL, null);
 	}
 	
+	public Map<String, String> getThemesExtra() {
+		return LangUtils.parseStringAsKeyValueMap(getString(THEMES_EXTRA, null), 0, 1);
+	}
+	
+	public Map<String, String> getLAFsExtra() {
+		return LangUtils.parseStringAsKeyValueMap(getString(LAFS_EXTRA, null), 0, 1);
+	}
+	
     public int getAjaxSpecialTimeout() {
         return getInteger(AJAX_SPECIALTIMEOUT, 30000);
     }

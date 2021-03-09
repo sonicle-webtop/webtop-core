@@ -83,7 +83,6 @@ import com.sonicle.webtop.core.bol.OUser;
 import com.sonicle.webtop.core.bol.VCustomField;
 import com.sonicle.webtop.core.bol.VCustomPanel;
 import com.sonicle.webtop.core.bol.events.TagChangedEvent;
-import com.sonicle.webtop.core.bol.js.JsSimple;
 import com.sonicle.webtop.core.model.ServicePermission;
 import com.sonicle.webtop.core.model.ServiceSharePermission;
 import com.sonicle.webtop.core.model.SharePermsElements;
@@ -126,12 +125,15 @@ import com.sonicle.webtop.core.model.DomainEntity;
 import com.sonicle.webtop.core.model.IMChat;
 import com.sonicle.webtop.core.model.IMMessage;
 import com.sonicle.webtop.core.model.ListTagsOpt;
+import com.sonicle.webtop.core.model.UILookAndFeel;
 import com.sonicle.webtop.core.model.MasterData;
 import com.sonicle.webtop.core.model.MasterDataLookup;
 import com.sonicle.webtop.core.model.Meeting;
 import com.sonicle.webtop.core.model.PublicImage;
 import com.sonicle.webtop.core.model.RecipientFieldType;
 import com.sonicle.webtop.core.model.Tag;
+import com.sonicle.webtop.core.model.UILayout;
+import com.sonicle.webtop.core.model.UITheme;
 import com.sonicle.webtop.core.products.CustomFieldsProduct;
 import com.sonicle.webtop.core.sdk.BaseManager;
 import com.sonicle.webtop.core.sdk.EventManager;
@@ -269,33 +271,59 @@ public class CoreManager extends BaseManager {
 		return wta.getAuditLogManager().getIPGeolocationData(getTargetProfileId().getDomainId(), ipAddress);
 	}
 	
-	public List<JsSimple> listThemes() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		//TODO: gestire i temi dinamicamente
-		items.add(new JsSimple("crisp", "Crisp"));
-		//items.add(new JsSimple("crisp-touch", "Crisp Touch"));
-		//items.add(new JsSimple("triton", "Triton"));
-		items.add(new JsSimple("neptune", "Neptune"));
-		//items.add(new JsSimple("neptune-touch", "Neptune Touch"));
-		items.add(new JsSimple("neptune", "Neptune"));
-		//items.add(new JsSimple("aria", "Aria"));
-		items.add(new JsSimple("classic", "Classic"));
-		items.add(new JsSimple("gray", "Gray"));
-		return items;
+	public Map<String, UITheme> listUIThemes() throws WTException {
+		LinkedHashMap<String, UITheme> themes = new LinkedHashMap<>();
+		
+		// Add built-in themes
+		themes.put("crisp", new UITheme("crisp", "Crisp", true));
+		//themes.put("triton", new UITheme("triton", "Triton", false));
+		themes.put("neptune", new UITheme("neptune", "Neptune", true));
+		//themes.put("aria", new UITheme("aria", "Aria", false));
+		themes.put("classic", new UITheme("classic", "Classic", false));
+		themes.put("gray", new UITheme("gray", "Gray", false));
+		
+		// Then load extra ones...
+		//TODO: maybe improve this with dynamic discovery using such sort of file descriptor
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
+		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
+			final String themeId = entry.getKey();
+			if (!themes.containsKey(themeId) && !StringUtils.isBlank(themeId)) {
+				final String themeName = StringUtils.defaultIfBlank(entry.getValue(), themeId);
+				themes.put(themeId, new UITheme(themeId, themeName, false));
+			} else {
+				logger.debug("Ignoring extra-theme: invalid ID or already in use [{}]", themeId);
+			}
+		}
+		return themes;
 	}
 	
-	public List<JsSimple> listLayouts() throws WTException {
+	public List<UILayout> listUILayouts() throws WTException {
 		return Arrays.asList(
-			new JsSimple("default", lookupResource(getLocale(), "layout.default")),
-			new JsSimple("compact", lookupResource(getLocale(), "layout.compact"))
+			new UILayout("default", lookupResource(getLocale(), "layout.default")),
+			new UILayout("compact", lookupResource(getLocale(), "layout.compact"))
 		);
 	}
 	
-	public List<JsSimple> listLAFs() throws WTException {
-		ArrayList<JsSimple> items = new ArrayList<>();
-		//TODO: gestire i look&feel (lafs) dinamicamente
-		items.add(new JsSimple("default", WT.getPlatformName()));
-		return items;
+	public Map<String, UILookAndFeel> listUILookAndFeels() throws WTException {
+		LinkedHashMap<String, UILookAndFeel> lafs = new LinkedHashMap<>();
+		
+		// Add built-in LAFs
+		lafs.put("default", new UILookAndFeel("default", WT.getPlatformName()));
+		
+		// Then load extra ones...
+		//TODO: maybe improve this with dynamic discovery using such sort of file descriptor
+		CoreServiceSettings css = new CoreServiceSettings(CoreManifest.ID, getTargetProfileId().getDomainId());
+		for (Map.Entry<String, String> entry : css.getThemesExtra().entrySet()) {
+			final String lafId = entry.getKey();
+			if (!lafs.containsKey(lafId) && !StringUtils.isBlank(lafId)) {
+				final String lafName = StringUtils.defaultIfBlank(entry.getValue(), lafId);
+				lafs.put(lafId, new UILookAndFeel(lafId, lafName));
+			} else {
+				logger.debug("Ignoring extra-laf: invalid ID or already in use [{}]", lafId);
+			}
+		}
+		
+		return lafs;
 	}
 	
 	/**

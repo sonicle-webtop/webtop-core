@@ -60,6 +60,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.sdk.WTException;
 import com.sonicle.webtop.core.sdk.WTRuntimeException;
 import com.sonicle.webtop.core.app.servlet.Otp;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.msg.AutosaveSM;
 import com.sonicle.webtop.core.util.IdentifierUtils;
 import com.sonicle.webtop.core.util.LoggerUtils;
@@ -469,9 +470,12 @@ public class WebTopSession {
 		privateCoreEnv = new CorePrivateEnvironment(wta, this);
 		privateEnv = new PrivateEnvironment(this);
 		
-		MapItem authData = new MapItem()
-				.add("ip", SessionContext.getClientRemoteIP(session));
-		wta.getAuditLogManager().write(profile.getId(), getId(), CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(authData));
+		UserProfileId profileId = profile.getId();
+		String sessionId = getId();
+		String clientIp = SessionContext.getClientRemoteIP(session);
+		AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, "AUTHENTICATED");
+		wta.getAuditLogManager().write(profileId, sessionId, CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
+		
 		sesm.registerWebTopSession(this);
 		allowedServices = listAllowedPrivateServices(svcm);
 		

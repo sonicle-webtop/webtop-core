@@ -48,10 +48,11 @@ import org.apache.commons.lang3.StringUtils;
 public class WebTopProps {
 	public static final String WEBTOP_PROPERTIES_FILE = "webtop.properties";
 	public static final String PROP_ETC_DIR = "webtop.etc.dir";
-	public static final String PROP_LOG_TARGET = "webtop.log.target";
 	public static final String PROP_LOG_DIR = "webtop.log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "webtop.log.file.basename";
-	public static final String PROP_LOG_FILE_POLICY = "webtop.log.file.policy";
+	public static final String PROP_LOG_MAIN_TARGET = "webtop.log.target";
+	public static final String PROP_LOG_MAIN_FILE_POLICY = "webtop.log.file.policy";
+	public static final String PROP_LOG_AUTH_TARGET = "webtop.log.auth.target";
 	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
 	public static final String PROP_JS_DEBUG = "webtop.js.debug";
 	public static final String PROP_SOEXT_DEV_MODE = "webtop.soext.devmode";
@@ -116,10 +117,11 @@ public class WebTopProps {
 	
 	public static void print(Properties properties) {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_ETC_DIR, properties.getProperty(PROP_ETC_DIR), getEtcDir(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_TARGET, properties.getProperty(PROP_LOG_TARGET), getLogTarget(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_DIR, properties.getProperty(PROP_LOG_DIR), getLogDir(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_BASENAME, properties.getProperty(PROP_LOG_FILE_BASENAME), getLogFileBasename(properties));
-		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_FILE_POLICY, properties.getProperty(PROP_LOG_FILE_POLICY), getLogFilePolicy(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_TARGET, properties.getProperty(PROP_LOG_MAIN_TARGET), getLogMainTarget(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_FILE_POLICY, properties.getProperty(PROP_LOG_MAIN_FILE_POLICY), getLogMainFilePolicy(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_AUTH_TARGET, properties.getProperty(PROP_LOG_AUTH_TARGET), getLogAuthTarget(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
@@ -182,10 +184,6 @@ public class WebTopProps {
 	}
 	*/
 	
-	public static String getLogTarget(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_LOG_TARGET, "console");
-	}
-	
 	public static String getLogDir(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_LOG_DIR, "/var/log");
 	}
@@ -194,8 +192,16 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, PROP_LOG_FILE_BASENAME, "webtop");
 	}
 	
-	public static String getLogFilePolicy(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_LOG_FILE_POLICY, "rolling");
+	public static String getLogMainTarget(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_MAIN_TARGET, "console");
+	}
+	
+	public static String getLogMainFilePolicy(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_MAIN_FILE_POLICY, "rolling");
+	}
+	
+	public static String getLogAuthTarget(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_AUTH_TARGET, "none");
 	}
 	
 	public static String getEtcDir(Properties props) {

@@ -51,6 +51,7 @@ import com.sonicle.webtop.core.sdk.UserProfileId;
 import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.SessionContext;
 import com.sonicle.webtop.core.app.WT;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -147,17 +148,15 @@ public class Otp extends AbstractServlet {
 		}
 	}
 	
-	private void writeOTPLog(WebTopApp wta, WebTopSession wts, HttpServletRequest request, Boolean OTPSuccess) {
-		AuditLogManager auditLogMgr = wta.getAuditLogManager();
-		UserProfileId pid = wts.getUserProfile().getId();
-		String logStatus = OTPSuccess ? "OTP_SUCCESS" : "OTP_FAILURE";
+	private void writeOTPLog(WebTopApp wta, WebTopSession wts, HttpServletRequest request, boolean otpSuccess) {
+		UserProfileId profileId = wts.getUserProfile().getId();
+		String sessionId = wts.getId();
+		String clientIp = ServletUtils.getClientIP(request);
+		String action = otpSuccess ? "OTP_SUCCESS" : "OTP_FAILURE";
+		LogbackHelper.Level level = otpSuccess ? LogbackHelper.Level.INFO : LogbackHelper.Level.ERROR;
 		
-		if (auditLogMgr != null) {
-			MapItem authData = new MapItem()
-					.add("ip", ServletUtils.getClientIP(request));
-
-			auditLogMgr.write(pid, wts.getId(), CoreManifest.ID, "AUTH", logStatus, null, JsonResult.GSON.toJson(authData));
-		}
+		AuditLogManager.logAuth(level, clientIp, sessionId, profileId, action);
+		wta.getAuditLogManager().write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
 	}
 	
 	private boolean skipOTP(WebTopApp wta, UserProfileId pid, HttpServletRequest request) {

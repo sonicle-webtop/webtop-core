@@ -80,6 +80,22 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [string[]]
+	 * Comma-separated entries in the form of "id=name" (theme id and its name), 
+	 * representing additional themes to be made available in WebTop.
+	 */
+	public static final String THEMES_EXTRA = "themes.extra";
+	
+	/**
+	 * [domain+system]
+	 * [string[]]
+	 * Comma-separated entries in the form of "id=name" (look&feel id and its name), 
+	 * representing additional look&feel to be made available in WebTop.
+	 */
+	public static final String LAFS_EXTRA = "lafs.extra";
+	
+	/**
+	 * [domain+system]
 	 * [int]
 	 * Defines a special milliseconds timeout for selected ajax calls which may be longer than default 30 seconds
 	 */

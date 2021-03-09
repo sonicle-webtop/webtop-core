@@ -38,8 +38,12 @@ import com.sonicle.webtop.core.app.RunContext;
 import com.sonicle.webtop.core.app.WT;
 import com.sonicle.webtop.core.bol.ODomain;
 import com.sonicle.webtop.core.bol.js.JsSimple;
+import com.sonicle.webtop.core.model.UILayout;
+import com.sonicle.webtop.core.model.UILookAndFeel;
+import com.sonicle.webtop.core.model.UITheme;
 import com.sonicle.webtop.core.sdk.BaseRestApiEndpoint;
 import com.sonicle.webtop.core.sdk.WTException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -63,8 +67,12 @@ public class RestApiEndpoint extends BaseRestApiEndpoint {
 	@Path("/themes")
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response themesList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listThemes();
+		CoreManager coreMgr = getManager();
+		
+		List<JsSimple> items = new ArrayList<>();
+		for (UITheme theme : coreMgr.listUIThemes().values()) {
+			items.add(new JsSimple(theme.getId(), theme.getName()));
+		}
 		return ok(items);
 	}
 	
@@ -72,8 +80,12 @@ public class RestApiEndpoint extends BaseRestApiEndpoint {
 	@Path("/layouts")
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response layoutsList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listLayouts();
+		CoreManager coreMgr = getManager();
+		
+		List<JsSimple> items = new ArrayList<>();
+		for (UILayout layout : coreMgr.listUILayouts()) {
+			items.add(new JsSimple(layout.getId(), layout.getName()));
+		}
 		return ok(items);
 	}
 	
@@ -81,8 +93,12 @@ public class RestApiEndpoint extends BaseRestApiEndpoint {
 	@Path("/lafs")
 	@Produces({MediaType.APPLICATION_JSON})
 	public Response lafsList() throws WTException {
-		CoreManager core = getManager();
-		List<JsSimple> items = core.listLAFs();
+		CoreManager coreMgr = getManager();
+		
+		List<JsSimple> items = new ArrayList<>();
+		for (UILookAndFeel laf : coreMgr.listUILookAndFeels().values()) {
+			items.add(new JsSimple(laf.getId(), laf.getName()));
+		}
 		return ok(items);
 	}
 	
