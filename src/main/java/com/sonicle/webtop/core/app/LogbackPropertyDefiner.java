@@ -43,10 +43,11 @@ import org.slf4j.helpers.MessageFormatter;
  */
 public class LogbackPropertyDefiner extends PropertyDefinerBase {
 	private static final Properties properties = new Properties();
-	public static final String PROP_LOG_TARGET = "log.target";
 	public static final String PROP_LOG_DIR = "log.dir";
 	public static final String PROP_LOG_FILE_BASENAME = "log.file.basename";
-	public static final String PROP_LOG_FILE_POLICY = "log.file.policy";
+	public static final String PROP_LOG_MAIN_TARGET = "log.main.target";
+	public static final String PROP_LOG_MAIN_FILE_POLICY = "log.main.file.policy";
+	public static final String PROP_LOG_AUTH_TARGET = "log.auth.target";
 	public static final String PROP_OVERRIDE_DIR = "override.dir";
 	public static final String OVERRIDE_FILENAME = "logback-override.xml";
 	

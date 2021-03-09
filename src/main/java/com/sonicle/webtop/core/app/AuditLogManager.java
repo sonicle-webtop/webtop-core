@@ -49,6 +49,7 @@ import com.sonicle.webtop.core.TplHelper;
 import com.sonicle.webtop.core.app.sdk.AuditReferenceDataEntry;
 import com.sonicle.webtop.core.app.util.EmailNotification;
 import com.sonicle.webtop.core.app.util.ExceptionUtils;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.OAuditLog;
 import com.sonicle.webtop.core.bol.OIPGeoCache;
 import com.sonicle.webtop.core.dal.AuditKnownDeviceDAO;
@@ -80,6 +81,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -87,6 +89,7 @@ import org.slf4j.Logger;
  */
 public class AuditLogManager {
 	private static final Logger logger = WT.getLogger(AuditLogManager.class);
+	private static final Logger AUTH_LOGGER = (Logger)LoggerFactory.getLogger("com.sonicle.webtop.AuthLog");
 	private static boolean initialized = false;
 	
 	/**
@@ -100,6 +103,21 @@ public class AuditLogManager {
 		initialized = true;
 		logger.info("Initialized");
 		return logm;
+	}
+	
+	public static void logAuth(LogbackHelper.Level level, String clientIp, String sessionId, UserProfileId profileId, String action) {
+		final String pattern = "[core] {}: client={}, profile={}, action={}";
+		if (LogbackHelper.Level.TRACE.equals(level)) {
+			AUTH_LOGGER.trace(pattern, sessionId, clientIp, profileId, action);
+		} else if (LogbackHelper.Level.DEBUG.equals(level)) {
+			AUTH_LOGGER.debug(pattern, sessionId, clientIp, profileId, action);
+		} else if (LogbackHelper.Level.INFO.equals(level)) {
+			AUTH_LOGGER.info(pattern, sessionId, clientIp, profileId, action);
+		} else if (LogbackHelper.Level.WARN.equals(level)) {
+			AUTH_LOGGER.warn(pattern, sessionId, clientIp, profileId, action);
+		} else if (LogbackHelper.Level.ERROR.equals(level)) {
+			AUTH_LOGGER.error(pattern, sessionId, clientIp, profileId, action);
+		}
 	}
 	
 	private WebTopApp wta = null;

@@ -70,27 +70,30 @@ public class ContextLoader {
 		ClassLoader classLoader = Loader.getClassLoaderOfObject(this);
 		
 		// Preparing logback props
-		String logTarget = WebTopProps.getLogTarget(properties);
 		String logDir = WebTopProps.getLogDir(properties);
 		logDir = expandLogDirVariables(logDir, webappFullName);
 		String logFileBasename = LogbackHelper.getLogFileBasename(properties, webappFullName);
 		//String logFileBasename = PropUtils.isDefined(properties, WebTopProps.PROP_LOG_FILE_BASENAME) ? WebTopProps.getLogFileBasename(properties) : null;
 		if (StringUtils.isBlank(logFileBasename)) logFileBasename = webappFullName;
-		String logFilePolicy = WebTopProps.getLogFilePolicy(properties);
+		String logMainTarget = WebTopProps.getLogMainTarget(properties);
+		String logMainFilePolicy = WebTopProps.getLogMainFilePolicy(properties);
+		String logAuthTarget = WebTopProps.getLogAuthTarget(properties);
 		String etcDir = WebTopProps.getEtcDir(properties);
 		String overrideDir = StringUtils.isBlank(etcDir) ? null : PathUtils.concatPaths(etcDir, ContextUtils.stripWebappVersion(webappFullName));
 		
-		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_TARGET, logTarget);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_DIR, logDir);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, logFileBasename);
-		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, logFilePolicy);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_MAIN_TARGET, logMainTarget);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY, logMainFilePolicy);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET, logAuthTarget);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, overrideDir);
 		
 		// Dump PropertyDefiner props
-		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_TARGET));
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_DIR));
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME));
-		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_FILE_POLICY));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_MAIN_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_MAIN_TARGET));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET));
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_OVERRIDE_DIR));
 		
 		// Locate logback configuration file:

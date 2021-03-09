@@ -41,6 +41,7 @@ import com.sonicle.commons.web.json.JsonResult;
 import com.sonicle.commons.web.json.MapItem;
 import static com.sonicle.webtop.core.app.servlet.Logout.WTSPROP_LOGOUT_DONE;
 import static com.sonicle.webtop.core.app.servlet.Otp.WTSPROP_OTP_PENDING;
+import com.sonicle.webtop.core.app.util.LogbackHelper;
 import com.sonicle.webtop.core.bol.OMessageQueue;
 import com.sonicle.webtop.core.dal.MessageQueueDAO;
 import com.sonicle.webtop.core.sdk.ServiceMessage;
@@ -170,19 +171,17 @@ public class SessionManager implements PushConnection.MessageStorage {
 			if (profileId != null) {
 				AuditLogManager auditLogMgr = wta.getAuditLogManager();
 				if (auditLogMgr != null) {
-					MapItem authData = new MapItem()
-							.add("ip", SessionContext.getClientRemoteIP(session));
-					
 					Boolean otpPending = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_OTP_PENDING);
 					Boolean logoutDone = webtopSession.hasProperty(CoreManifest.ID, WTSPROP_LOGOUT_DONE);
-					String logStatus;
-					
+					String action;
 					if (otpPending) {
-						logStatus = "OTP_ABANDONED";
+						action = "OTP_ABANDONED";
 					} else {
-						logStatus = logoutDone ? "LOGOUT" : "SESSION_EXPIRED";
+						action = logoutDone ? "LOGOUT" : "SESSION_EXPIRED";
 					}
-					auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", logStatus, null, JsonResult.GSON.toJson(authData));
+					String clientIp = SessionContext.getClientRemoteIP(session);
+					AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
+					auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
 				}
 			}
 		}
