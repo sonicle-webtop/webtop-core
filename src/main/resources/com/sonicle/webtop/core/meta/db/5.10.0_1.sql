@@ -110,7 +110,9 @@ ORDER BY
 -- ----------------------------
 -- Clear audit_log table
 -- ----------------------------
+CREATE TABLE core.audit_log_bck AS SELECT * FROM core.audit_log WHERE context = 'AUTH';
 DELETE FROM core.audit_log WHERE context = 'AUTH';
+
 
 -- ----------------------------
 -- New table: audit_known_devices

@@ -1,3 +1,21 @@
+$	5.10.0
+	%	Version 5.10.0
+	*	<h1>Jitsi Meet integration</h1>
+		<p>It is now possible to integrate the Jitsi Meet open source meeting system,
+		to have accesso to new features to create and partecipate to online meetings.</p>
+		<img src="5.10.0_meeting.png"/>
+	*	<h1>Security notifications</h1>
+		<p>The system notifies the user with an email anytime that the account
+		is accessed through a new device or browser, adding possible gelocalization
+		informations, to let the user easily identify unrecognized accesses
+		and have a chance to quickly change password.</p>
+		<img src="5.10.0_securitynotification.png"/>
+	*	<h1>Access control</h1>
+		<p>System administrators have a new panel where they can see every
+		access to each account, have a quick view of possible repeated accesses
+		and verify geolocalization data, enforcing more security control and
+		having a chance to take actions in time.</p>
+		<img src="5.10.0_adminaccesslog.png"/>
 $	5.3.0
 	%	Versione 5.3.0
 	*	<h1>Audio/Video calls</h1>
