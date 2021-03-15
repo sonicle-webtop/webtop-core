@@ -36,6 +36,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 		'Sonicle.webtop.core.ux.panel.Fields'
 	],
 	
+	defaultFocus: 'what',
 	startDay: 1,
 	dateFormat: 'Y-m-d',
 	timeFormat: 'H:i',
@@ -45,7 +46,6 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 	
 	createCustomPrompt: function() {
 		var me = this;
-		me.defaultFocus = 'what';
 		return {
 			xtype: 'wtfieldspanel',
 			referenceHolder: true,

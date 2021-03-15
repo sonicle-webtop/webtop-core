@@ -940,7 +940,11 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 				return val;
 			},
 			set: function(val) {
-				this.get(modelProp).set(fieldName, val);
+				if (modelProp) {
+					this.get(modelProp).set(fieldName, val);
+				} else {
+					this.set(fieldName, val);
+				}
 			}
 		};
 	},
