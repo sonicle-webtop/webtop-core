@@ -902,15 +902,18 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
-	 * [object]
-	 * Defines Jitsi configuration
-	 * {
-	 *   name: 'WebTop Meet', // Optional name
-     *   url: 'https://meet.jit.si/', // Service URL
-	 *   auth: 'none' // Authentication mode (none|jwt) TODO: to be implemented!
-	 * }
+	 * [string]
+	 * For provider 'jitsi', optional name to be used within the application (eg. "WebTop Meet").
 	 */
-	public static final String MEETING_JITSI_CONFIG = "meeting.jitsi.config";
+	public static final String MEETING_JITSI_NAME = "meeting.jitsi.name";
+	
+	/**
+	 * [domain+system]
+	 * [string]
+	 * For provider 'jitsi', service URL at which the meeting service is served.
+	 * Used for building meeting links, eg. "https://meet.jit.si/".
+	 */
+	public static final String MEETING_JITSI_URL = "meeting.jitsi.url";
 	
 	public static class MeetingJitsiConfig {
 		public String name;
