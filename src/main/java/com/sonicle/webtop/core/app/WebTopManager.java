@@ -2596,21 +2596,23 @@ public final class WebTopManager {
 				HashMap<String, String> hmDomainIdToDomainInternetName = new HashMap<>();
 				HashMap<String, String> hmPublicInternetNameToDomainId = new HashMap<>();
 				HashMap<String, String> hmDomainIdToPublicInternetName = new HashMap<>();
-				for (ODomain odomain : domDao.selectEnabled(con)) {
-					final String domainId = odomain.getDomainId();
+				
+				for (Map.Entry<String, String> entry : domDao.selectEnabledInternetNames(con).entrySet()) {
+					final String domainId = entry.getKey();
+					final String internetName = entry.getValue();
 					
 					logger.debug("[DomainInfoCache] Working on '{}'", domainId);
 					String pubName = domainIdToPublicName(domainId);
 					hmPublicNameToDomainId.put(pubName, domainId);
 					logger.trace("[DomainInfoCache] {} -> {}", pubName, domainId);
 					
-					hmDomainInternetNameToDomainId.put(odomain.getInternetName(), domainId);
-					logger.trace("[DomainInfoCache] {} -> {}", odomain.getInternetName(), domainId);
+					hmDomainInternetNameToDomainId.put(internetName, domainId);
+					logger.trace("[DomainInfoCache] {} -> {}", internetName, domainId);
 					
-					hmDomainIdToDomainInternetName.put(domainId, odomain.getInternetName());
-					logger.trace("[DomainInfoCache] {} -> {}", domainId, odomain.getInternetName());
+					hmDomainIdToDomainInternetName.put(domainId, internetName);
+					logger.trace("[DomainInfoCache] {} -> {}", domainId, internetName);
 					
-					String pubInternetName = odomain.getInternetName();
+					String pubInternetName = entry.getValue();
 					CoreServiceSettings dss = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, domainId);
 					URI publicUri = URIUtils.createURIQuietly(dss.getPublicBaseUrl());
 					if (publicUri != null && !StringUtils.isBlank(publicUri.getHost())) {
