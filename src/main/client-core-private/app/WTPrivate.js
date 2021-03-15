@@ -455,12 +455,17 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 		var SoS = Sonicle.String,
 				arr = SoS.parseKVArray(WT.getVar('wtPopMeetingProviders'), null),
 				url = this.getMeetingConfig().url,
-				i, urls = [];
+				i, urls = [], esc;
 		if (!Ext.isEmpty(url)) urls.push(SoS.regexQuote(url));
 		if (Ext.isArray(arr)) {
 			for (i=0; i<arr.length; i++) {
 				url = arr[i][1];
-				if (!Ext.isEmpty(url)) urls.push(SoS.regexQuote(url));
+				if (!Ext.isEmpty(url)) {
+					esc = SoS.regexQuote(url);
+					// Make domain wildcards working: escaped wildcard text needs to
+					// be replaced with the right regex token able to match any subdomains
+					urls.push(esc.replace('\\*\\.', '(?:[\\w\\d-]+\\.)?'));
+				}
 			}
 		}
 		return arr.length > 0 ? new RegExp('^(?:' + SoS.join('|', urls) + ')', 'i') : null;
