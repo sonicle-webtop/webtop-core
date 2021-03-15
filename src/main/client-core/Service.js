@@ -299,8 +299,8 @@ Ext.define('Sonicle.webtop.core.Service', {
 				ignoreSize: true,
 				handler: function() {
 					me.showNewMeetingUI();
-				}
-				//order: 99
+				},
+				order: 99
 			});
 		}
 	},

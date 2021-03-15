@@ -201,11 +201,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 	}
 	
 	public boolean hasAuditEnabled() {		
-		return getSetting(AUDIT_ENABLED)!=null;
+		return getSetting(AUDIT_ENABLED) != null;
 	}
 	
-	public boolean isAuditImpersonate() {
-		return getBoolean(AUDIT_IMPERSONATE, false);
+	public boolean isAuditLogImpersonated() {
+		return getBoolean(AUDIT_LOGIMPERSONATED, false);
 	}
 	
 	public Boolean getWhatsnewEnabled() {

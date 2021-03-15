@@ -145,17 +145,12 @@ public class AuditLogManager {
 	}
 	
 	public void write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, String referenceId, String data) {
-		boolean impersonated=RunContext.isImpersonated();
+		if (!initialized) return;
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+		boolean impersonated = RunContext.isImpersonated();
 		
+		if (impersonated && !css.isAuditLogImpersonated()) return;
 		WT.runPrivileged(() -> {
-			
-			if (!initialized || 
-				(
-					RunContext.isImpersonated() && 
-					!(new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId())).isAuditImpersonate()
-				)
-			) return;
-
 			AuditLogDAO dao = AuditLogDAO.getInstance();
 			Connection con = null;
 
@@ -181,21 +176,15 @@ public class AuditLogManager {
 				DbUtils.closeQuietly(con);
 			}
 		});
-
 	}
 	
 	public void write(UserProfileId profileId, String sessionId, String serviceId, String context, String action, Collection<AuditReferenceDataEntry> entries) {
-		boolean impersonated=RunContext.isImpersonated();
+		if (!initialized) return;
+		CoreServiceSettings css = new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId());
+		boolean impersonated = RunContext.isImpersonated();
 		
+		if (impersonated && !css.isAuditLogImpersonated()) return;
 		WT.runPrivileged(() -> {
-			
-			if (!initialized || 
-				(
-					impersonated && 
-					!(new CoreServiceSettings(wta.getSettingsManager(), CoreManifest.ID, profileId.getDomainId())).isAuditImpersonate()
-				)
-			) return;
-
 			AuditLogDAO dao = AuditLogDAO.getInstance();
 			Connection con = null;
 

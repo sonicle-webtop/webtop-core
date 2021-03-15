@@ -229,7 +229,7 @@ Ext.define('Sonicle.webtop.core.view.main.Abstract', {
 			menuTbItms.push({
 				xtype: 'button',
 				reference: 'meetingbtn',
-				iconCls: 'wt-icon-newMeeting',
+				iconCls: 'wt-icon-meeting',
 				tooltip: WT.res('act-newMeeting.lbl'),
 				handler: function() {
 					var svc = WT.getApp().getService(WT.ID);

@@ -269,17 +269,21 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system][*]
-	 * [string]
-	 * Activate audit log
+	 * [boolean]
+	 * Activates activity auditing globally.
+	 * Setting this key to 'false' specifically for a service ID, 
+	 * it will disable audit logging only for actions related to that service.
 	 */
 	public static final String AUDIT_ENABLED = "audit.enabled";
 	
 	/**
-	 * [domain+system][*]
-	 * [string]
-	 * Activate impersonate audit log
+	 * [domain+system]
+	 * [boolean]
+	 * Specifies whether to enable auditing for activities coming from an 
+	 * impersonated session. If 'false' no entries will be produced during 
+	 * impersonation of a user.
 	 */
-	public static final String AUDIT_IMPERSONATE = "audit.impersonate";
+	public static final String AUDIT_LOGIMPERSONATED = "audit.logimpersonated";
 	
 	/**
 	 * [system]
