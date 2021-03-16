@@ -152,4 +152,5 @@ CREATE INDEX "ip_geo_cache_ak1" ON "core"."ip_geo_cache" ("timestamp");
 -- Add default meeting configuration
 -- ----------------------------
 INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.provider', 'jitsi');
-INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.jitsi.config', '{"url":"https://meet.jit.si/","name":"Jitsi Meet","auth":"none"}');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.jitsi.name', 'Jitsi Meet');
+INSERT INTO "core"."settings" ("service_id", "key", "value") VALUES ('com.sonicle.webtop.core', 'meeting.jitsi.url', 'https://meet.jit.si/');

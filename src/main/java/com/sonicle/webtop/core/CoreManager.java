@@ -1662,11 +1662,12 @@ public class CoreManager extends BaseManager {
 				URI linkUri = linkBuilder.build();
 				builder.withLink(linkUri);
 				
+				String dollarJitsi = StringUtils.defaultIfBlank(config.name, "Jitsi");
 				builder.withShareEmbedTexts(new Meeting.ShareEmbedTexts(
-					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.info"),
-					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.subject"),
-					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.unscheduled.description"),
-					WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.scheduled.description")
+					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.info"), "$jitsi", dollarJitsi),
+					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.subject"), "$jitsi", dollarJitsi),
+					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.unscheduled.description"), "$jitsi", dollarJitsi),
+					StringUtils.replace(WT.lookupResource(SERVICE_ID, targetLocale, "meeting.jitsi.share.scheduled.description"), "$jitsi", dollarJitsi)	
 				));
 				
 				return builder.build();
