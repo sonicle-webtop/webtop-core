@@ -80,6 +80,8 @@ public class ContextLoader {
 		String logAuthTarget = WebTopProps.getLogAuthTarget(properties);
 		String etcDir = WebTopProps.getEtcDir(properties);
 		String overrideDir = StringUtils.isBlank(etcDir) ? null : PathUtils.concatPaths(etcDir, ContextUtils.stripWebappVersion(webappFullName));
+		String syslogHost = WebTopProps.getLogSyslogHost(properties);
+		int syslogPort = WebTopProps.getLogSyslogPort(properties);
 		
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_DIR, logDir);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, logFileBasename);
@@ -87,6 +89,8 @@ public class ContextLoader {
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY, logMainFilePolicy);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET, logAuthTarget);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, overrideDir);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_SYSLOG_HOST, syslogHost);
+		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_SYSLOG_PORT, String.valueOf(syslogPort));
 		
 		// Dump PropertyDefiner props
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_DIR));
@@ -95,6 +99,8 @@ public class ContextLoader {
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_MAIN_FILE_POLICY));
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_LOG_AUTH_TARGET));
 		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_OVERRIDE_DIR, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_OVERRIDE_DIR));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_SYSLOG_HOST, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_SYSLOG_HOST));
+		LogbackHelper.printToSystemOut("[{}] Logback: using {} = {}", webappFullName, LogbackPropertyDefiner.PROP_SYSLOG_PORT, LogbackPropertyDefiner.getPropertyValue(LogbackPropertyDefiner.PROP_SYSLOG_PORT));
 		
 		// Locate logback configuration file:
 		// 1 - look into custom webappsConfig directory (see findURLOfCustomConfigurationFile)

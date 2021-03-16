@@ -50,6 +50,8 @@ public class LogbackPropertyDefiner extends PropertyDefinerBase {
 	public static final String PROP_LOG_AUTH_TARGET = "log.auth.target";
 	public static final String PROP_OVERRIDE_DIR = "override.dir";
 	public static final String OVERRIDE_FILENAME = "logback-override.xml";
+	public static final String PROP_SYSLOG_HOST = "syslog.host";
+	public static final String PROP_SYSLOG_PORT = "syslog.port";
 	
 	public static void setPropertyValue(boolean doNotSetBlankValues, String key, String value) {
 		if (!doNotSetBlankValues || !StringUtils.isBlank(value)) {

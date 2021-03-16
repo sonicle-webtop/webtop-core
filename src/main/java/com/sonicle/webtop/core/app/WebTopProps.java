@@ -53,6 +53,8 @@ public class WebTopProps {
 	public static final String PROP_LOG_MAIN_TARGET = "webtop.log.target";
 	public static final String PROP_LOG_MAIN_FILE_POLICY = "webtop.log.file.policy";
 	public static final String PROP_LOG_AUTH_TARGET = "webtop.log.auth.target";
+	public static final String PROP_LOG_SYSLOG_HOST = "webtop.log.syslog.host";
+	public static final String PROP_LOG_SYSLOG_PORT = "webtop.log.syslog.port";
 	public static final String PROP_EXTJS_DEBUG = "webtop.extjs.debug";
 	public static final String PROP_JS_DEBUG = "webtop.js.debug";
 	public static final String PROP_SOEXT_DEV_MODE = "webtop.soext.devmode";
@@ -122,6 +124,8 @@ public class WebTopProps {
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_TARGET, properties.getProperty(PROP_LOG_MAIN_TARGET), getLogMainTarget(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_MAIN_FILE_POLICY, properties.getProperty(PROP_LOG_MAIN_FILE_POLICY), getLogMainFilePolicy(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_AUTH_TARGET, properties.getProperty(PROP_LOG_AUTH_TARGET), getLogAuthTarget(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_SYSLOG_HOST, properties.getProperty(PROP_LOG_SYSLOG_HOST), getLogSyslogHost(properties));
+		WebTopApp.logger.info("{} = {} [{}]", PROP_LOG_SYSLOG_PORT, properties.getProperty(PROP_LOG_SYSLOG_PORT), getLogSyslogPort(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_EXTJS_DEBUG, properties.getProperty(PROP_EXTJS_DEBUG), getExtJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_JS_DEBUG, properties.getProperty(PROP_JS_DEBUG), getJsDebug(properties));
 		WebTopApp.logger.info("{} = {} [{}]", PROP_SOEXT_DEV_MODE, properties.getProperty(PROP_SOEXT_DEV_MODE), getSoExtJsExtensionsDevMode(properties));
@@ -184,6 +188,10 @@ public class WebTopProps {
 	}
 	*/
 	
+	public static String getEtcDir(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_ETC_DIR, null);
+	}
+	
 	public static String getLogDir(Properties props) {
 		return PropUtils.getStringProperty(props, PROP_LOG_DIR, "/var/log");
 	}
@@ -204,8 +212,12 @@ public class WebTopProps {
 		return PropUtils.getStringProperty(props, PROP_LOG_AUTH_TARGET, "none");
 	}
 	
-	public static String getEtcDir(Properties props) {
-		return PropUtils.getStringProperty(props, PROP_ETC_DIR, null);
+	public static String getLogSyslogHost(Properties props) {
+		return PropUtils.getStringProperty(props, PROP_LOG_SYSLOG_HOST, "localhost");
+	}
+	
+	public static int getLogSyslogPort(Properties props) {
+		return PropUtils.getIntProperty(props, PROP_LOG_SYSLOG_PORT, 514);
 	}
 	
 	public static boolean getExtJsDebug(Properties props) {
