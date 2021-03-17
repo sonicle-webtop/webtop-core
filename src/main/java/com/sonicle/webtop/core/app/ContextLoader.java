@@ -80,8 +80,8 @@ public class ContextLoader {
 		String logAuthTarget = WebTopProps.getLogAuthTarget(properties);
 		String etcDir = WebTopProps.getEtcDir(properties);
 		String overrideDir = StringUtils.isBlank(etcDir) ? null : PathUtils.concatPaths(etcDir, ContextUtils.stripWebappVersion(webappFullName));
-		String syslogHost = WebTopProps.getLogSyslogHost(properties);
-		int syslogPort = WebTopProps.getLogSyslogPort(properties);
+		String syslogHost = WebTopProps.getLogbackSyslogHost(properties);
+		int syslogPort = WebTopProps.getLogbackSyslogPort(properties);
 		
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_DIR, logDir);
 		LogbackPropertyDefiner.setPropertyValue(true, LogbackPropertyDefiner.PROP_LOG_FILE_BASENAME, logFileBasename);
