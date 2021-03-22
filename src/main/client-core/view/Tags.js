@@ -165,7 +165,7 @@ Ext.define('Sonicle.webtop.core.view.Tags', {
 			},
 			viewConfig: {
 				deferEmptyText: false,
-				emptyText: me.mys.res('grid.emp')
+				emptyText: WT.res('grid.emp')
 			},
 			selModel: {
 				type: me.enableSelection ? 'checkboxmodel' : 'rowmodel'
