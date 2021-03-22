@@ -1653,6 +1653,10 @@ public class CoreManager extends BaseManager {
 				if (config.url == null) throw new WTException("Invalid configuration for '{}' meeting provider. [url is missing]", provider);
 				
 				String meetingId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, Arrays.copyOfRange(NanoIdUtils.DEFAULT_ALPHABET, 2, 63), NanoIdUtils.DEFAULT_SIZE);
+				if (config.prependUsernameToMeetingId) {
+					meetingId = StringUtils.replace(getTargetProfileId().getUserId(), ".", "_") + "_" + meetingId;
+				}
+				
 				Meeting.Builder builder = new Meeting.Builder();
 				builder.withProvider(provider);
 				builder.withId(meetingId);

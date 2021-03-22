@@ -909,6 +909,14 @@ public class CoreSettings {
 	
 	/**
 	 * [domain+system]
+	 * [boolean]
+	 * For provider 'jitsi', specifies whether to prepend user's username to 
+	 * generated meeting ID.
+	 */
+	public static final String MEETING_JITSI_MEETINGID_PREPENDUSERNAME = "meeting.jitsi.meetingid.prependusername";
+	
+	/**
+	 * [domain+system]
 	 * [string]
 	 * For provider 'jitsi', service URL at which the meeting service is served.
 	 * Used for building meeting links, eg. "https://meet.jit.si/".
@@ -918,6 +926,7 @@ public class CoreSettings {
 	public static class MeetingJitsiConfig {
 		public String name;
 		public String url;
+		public Boolean prependUsernameToMeetingId;
 		public Auth auth;
 		
 		public static MeetingJitsiConfig fromJson(String value) {

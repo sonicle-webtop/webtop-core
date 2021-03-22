@@ -349,6 +349,7 @@ public class CoreServiceSettings extends BaseServiceSettings {
 			MeetingJitsiConfig config = new MeetingJitsiConfig();
 			config.name = getString(MEETING_JITSI_NAME, "Jitsi Meet");
 			config.url = getString(MEETING_JITSI_URL, null);
+			config.prependUsernameToMeetingId = getBoolean(MEETING_JITSI_MEETINGID_PREPENDUSERNAME, false);
 			config.auth = MeetingJitsiConfig.Auth.NONE;
 			return config;
 		}
