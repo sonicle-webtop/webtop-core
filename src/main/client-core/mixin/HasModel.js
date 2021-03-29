@@ -177,7 +177,9 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		var me = this,
 				model = me.getModel(),
 				dirty = Ext.isBoolean(opts.dirty) ? opts.dirty : false,
+				data = opts.data || {},
 				data, vm, linkName, idFieldName, id;
+		me.dataWasModel = data.isModel === true;
 		
 		if (model) { // Model already linked
 			me.fireEvent('beforemodelload', me, opts.pass);
@@ -190,7 +192,6 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			});
 			
 		} else { // Model is not linked
-			data = opts.data || {};
 			vm = me.getViewModel();
 			linkName = me.getModelProperty();
 			idFieldName = me.getModelIdFieldName();
@@ -210,15 +211,17 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				// where model is quickly loaded/destroyed this call can arrive 
 				// later after the model has been already dropped.
 				if (mo1) {
+					success = true;
 					proxy = mo1.getProxy();
 					reader = proxy.getReader();
-					if (proxy.type === 'memory') {
-						success = true;
-						mo1.set(opts.data || {}, {dirty: dirty});
-					} else {
-						success = (mo1.phantom) ? true : reader.getSuccess(reader.rawData || {});
-						if (success) {
-							if (dirty) mo1.dirty = true;
+					if (!me.dataWasModel) {
+						if (proxy.type === 'memory') {
+							mo1.set(data, {dirty: dirty});
+						} else {
+							if (!mo1.phantom) success = reader.getSuccess(reader.rawData || {});
+							if (success) {
+								if (dirty) mo1.dirty = true;
+							}
 						}
 					}
 					me.onModelLoad(success, mo1, undefined, opts.pass);
@@ -228,7 +231,10 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 			
 			// Apply linking...
 			me.fireEvent('beforemodelload', me, opts.pass);
-			if(Ext.isEmpty(id)) { // New instance
+			if (me.dataWasModel) { // Load a model already instanced
+				vm.set(linkName, data);
+				
+			} else if (Ext.isEmpty(id)) { // New instance
 				// Defines a viewmodel link, creating an empty (phantom) model
 				vm.linkTo(linkName, {
 					type: me.getModelName(),
@@ -242,7 +248,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 				model.setAssociated(data); // Using our custom Sonicle.data.Model!
 				
 			} else { // Load an instance (an id is required)
-				if(!id) Ext.Error.raise('A value for modelIdFieldName ['+idFieldName+'] needs to be defined in passed data');
+				if (!id) Ext.Error.raise('A value for modelIdFieldName ['+idFieldName+'] needs to be defined in passed data');
 				vm.linkTo(linkName, {
 					type: me.getModelName(),
 					id: id

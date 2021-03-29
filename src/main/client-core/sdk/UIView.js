@@ -190,6 +190,10 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			/*
 			if(me.useWG) ct.on('hide', me.onCtWndHide, me);
 			*/
+		} else if (ct.isXType('panel')) {
+			me.on('show', me.onCtShow, me);
+			me.on('beforeclose', me.onCtBeforeClose, me);
+			me.on('close', me.onCtClose, me);
 		}
 		me.ctInited = true;
 	},
@@ -204,6 +208,10 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 			ct.un('beforeclose', me.onCtBeforeClose, me);
 			ct.un('close', me.onCtClose, me);
 			ct.un('hide', me.onCtHide, me);
+		} else if (ct.isXType('panel')) {
+			me.un('show', me.onCtShow, me);
+			me.un('beforeclose', me.onCtBeforeClose, me);
+			me.un('close', me.onCtClose, me);
 		}
 		me.ctInited = false;
 	},
@@ -351,17 +359,31 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	 * @param {Boolean} [prompt] Allow to override prompt confirm behaviour.
 	 */
 	closeView: function(prompt) {
-		var me = this;
+		var me = this,
+				ct = me.ownerCt;
 		if (prompt !== undefined) me.promptConfirm = prompt;
-		if (me.ctInited) me.ownerCt.close();
+		if (me.ctInited) {
+			if (ct.isXType('window')) {
+				ct.close();
+			} else if (ct.isXType('panel')) {
+				me.close();
+			}
+		}
 	},
 	
 	/**
 	 * Hides this view. no 'prompt' will be shown
 	 */
 	hideView: function() {
-		var me = this;
-		if (me.ctInited) me.ownerCt.hide();
+		var me = this,
+				ct = me.ownerCt;
+		if (me.ctInited) {
+			if (ct.isXType('window')) {
+				ct.hide();
+			} else if (ct.isXType('panel')) {
+				// Not available for panels
+			}
+		}
 	},
 	
 	/**
@@ -407,6 +429,8 @@ Ext.define('Sonicle.webtop.core.sdk.UIView', {
 					ct.show(null, cb, scope || me);
 				}
 				return ct;
+			} else if (ct.isXType('tabpanel')) {
+				
 			}
 		}
 	},

@@ -56,10 +56,16 @@ Ext.define('Sonicle.webtop.core.ux.grid.TileList', {
 	 */
 	labelField: 'label',
 	
+	/**
+	 * @cfg {Boolean} linkifyValue
+	 * Set to `true` to add link Class to value.
+	 */
 	linkifyValue: false,
 	
+	clipboardIconCls: 'fa fa-clone',
+	
 	clipboardTooltipText: 'Copy to clipboard',
-	labelTexts: {},
+	labelTexts: undefined,
 	
 	initComponent: function() {
 		var me = this;
@@ -70,41 +76,53 @@ Ext.define('Sonicle.webtop.core.ux.grid.TileList', {
 	
 	_createColumns: function() {
 		var me = this;
-		return [{
-			xtype: 'templatecolumn',
-			tpl: [
-				'<div class="wt-cell-caption wt-theme-text-sub" style="padding-bottom:3px">{[this.getLabel(values)]}</div>',
-				'<span class="{[this.getValueCls()]}">{[this.getValue(values)]}</span>',
-				{
-					getLabel: function(values) {
-						return Ext.isEmpty(me.labelField) ? '' : this.value(me.labelTexts[values[me.labelField]]);
-					},
-					getValueCls: function() {
-						return me.linkifyValue ? 'wt-theme-text-lnk' : '';
-					},
-					getValue: function(values) {
-						return Ext.isEmpty(me.valueField) ? '' : this.value(values[me.valueField]);
-					},
-					value: function(s) {
-						return !Ext.isEmpty(s) ? Ext.String.htmlEncode(s) : '';
+		return [
+			{
+				xtype: 'templatecolumn',
+				tpl: [
+					'<div class="wt-cell-caption wt-theme-text-sub" style="padding-bottom:3px">{[this.getLabel(values)]}</div>',
+					'<span class="{[this.getValueCls()]}">{[this.getValue(values)]}</span>',
+					{
+						getLabel: function(values) {
+							var lbl = !Ext.isEmpty(me.labelField) ? values[me.labelField] : null;
+							if (me.labelTexts === undefined) {
+								return this.value(lbl);
+							} else {
+								return lbl ? this.value(me.labelTexts[lbl]) : null;
+							}
+							//return Ext.isEmpty(me.labelField) ? '' : this.value(me.labelTexts[values[me.labelField]]);
+						},
+						getValueCls: function() {
+							return me.linkifyValue ? 'wt-theme-text-lnk' : '';
+						},
+						getValue: function(values) {
+							return Ext.isEmpty(me.valueField) ? '' : this.value(values[me.valueField]);
+						},
+						value: function(s) {
+							return !Ext.isEmpty(s) ? Ext.String.htmlEncode(s) : '';
+						}
 					}
-				}
-			],
-			flex: 1
-		}, {
-			xtype: 'actioncolumn',
-			align: 'center',
-			hidden: WT.plTags.mobile,
-			items: [{
-				iconCls: 'fa fa-files-o',
-				tooltip: me.clipboardTooltipText,
-				handler: function(g, ridx) {
-					var rec = g.getStore().getAt(ridx);
-					Sonicle.ClipboardMgr.copy(rec.get(me.valueField));
-				}
-			}],
-			width: 30
-		}];
+				],
+				flex: 1
+			}, {
+				xtype: 'actioncolumn',
+				align: 'center',
+				hidden: WT.plTags.mobile,
+				items: [
+					{
+						iconCls: me.clipboardIconCls,
+						tooltip: me.clipboardTooltipText,
+						handler: function(g, ridx) {
+							var rec = g.getStore().getAt(ridx),
+									value = rec.get(me.valueField);
+							Sonicle.ClipboardMgr.copy(value);
+							me.fireEvent('cellvaluecopy', me, value, rec.get(me.labelField));
+						}
+					}
+				],
+				width: 30
+			}
+		];
 	},
 	
 	_onCellClick: function(s, td, cidx, rec) {
