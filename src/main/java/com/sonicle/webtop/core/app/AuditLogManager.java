@@ -253,18 +253,28 @@ public class AuditLogManager {
 			if (from == null) throw new WTException("Error getting no-reply address for '{}'", profileId.getDomainId());
 			
 			ArrayList<InternetAddress> ccns = new ArrayList<>();
+			ArrayList<InternetAddress> tos = new ArrayList<>();
 			// Do not include additional recipients (defined in settings) when 
 			// the target profile is sysAdmin or during impersonation. This helps
 			// to keep connections private during some *special* activities.
 			if (!WebTopManager.isSysAdmin(profileId) && !profileIsImpersonated) {
+				tos.add(ud.getPersonalEmail());
 				//TODO: evaluate how to treat domain admin when will be implemented!
 				for (String email : css.getSecurityKnownDeviceVerificationRecipients()) {
 					InternetAddress ia = InternetAddressUtils.toInternetAddress(email);
 					if (ia != null) ccns.add(ia);
 				}
+			} else {
+				if (profileIsImpersonated) {
+					UserProfile.Data aud = WT.getUserData(WebTopManager.sysAdminProfileId());
+					if (aud == null) throw new WTException("User-data not found [{}]", WebTopManager.sysAdminProfileId());
+					tos.add(aud.getPersonalEmail());
+				} else {
+					tos.add(ud.getPersonalEmail());
+				}
 			}
 			
-			WT.sendEmail(WT.getGlobalMailSession(profileId), true, from, Arrays.asList(ud.getPersonalEmail()), null, ccns, subject, html, null);
+			WT.sendEmail(WT.getGlobalMailSession(profileId), true, from, tos, null, ccns, subject, html, null);
 			
 		} catch(IOException | TemplateException ex) {
 			logger.error("Unable to build email template", ex);
