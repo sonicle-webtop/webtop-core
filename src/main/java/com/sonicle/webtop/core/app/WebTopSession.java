@@ -524,11 +524,13 @@ public class WebTopSession {
 		initLevel = 2;
 		
 		// Retrieve and push any auto-save data
-		String cid = getClientTrackingID();
-		boolean mine = core.hasMyAutosaveData(cid);
-		List<OAutosave> odata = core.listOfflineOthersAutosaveData(cid);
-		boolean others = (odata == null) ? false : odata.size() > 0;
-		if (mine || others) this.notify(new AutosaveSM(mine,others));
+		if (!RunContext.isImpersonated()) {
+			String cid = getClientTrackingID();
+			boolean mine = core.hasMyAutosaveData(cid);
+			List<OAutosave> odata = core.listOfflineOthersAutosaveData(cid);
+			boolean others = (odata == null) ? false : odata.size() > 0;
+			if (mine || others) this.notify(new AutosaveSM(mine,others));
+		}
 		
 		// Call ready() method for each instantiated service
 		synchronized (privateServices) {
