@@ -32,10 +32,14 @@
  */
 package com.sonicle.webtop.core.app.shiro;
 
+import java.io.IOException;
 import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.web.servlet.ShiroFilter;
 
 /**
@@ -76,4 +80,14 @@ public class WTShiroFilter extends ShiroFilter {
 		return RunContext.buildWebSubject(securityManager, request, response, profileId);
 	}
 	*/
+
+	@Override
+	protected void doFilterInternal(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws ServletException, IOException {
+		HttpServletRequest request = (HttpServletRequest) servletRequest;
+		if (StringUtils.isBlank(request.getCharacterEncoding()))
+			request.setCharacterEncoding("UTF-8");
+		super.doFilterInternal(servletRequest, servletResponse, chain);
+	}
+	
+	
 }
