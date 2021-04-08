@@ -101,15 +101,15 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.jar.JarFile;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeUtility;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -1104,7 +1104,7 @@ public final class WebTopApp {
 		return session;
 	}
 	
-	public void sendEmail(javax.mail.Session session, boolean rich, 
+	public void sendEmail(jakarta.mail.Session session, boolean rich, 
 			String from, String[] to, String[] cc, String[] bcc, 
 			String subject, String body) throws MessagingException {
 		
@@ -1141,7 +1141,7 @@ public final class WebTopApp {
 		
 	}
 	
-	public void sendEmail(javax.mail.Session session, boolean rich, 
+	public void sendEmail(jakarta.mail.Session session, boolean rich, 
 			InternetAddress from, InternetAddress[] to, InternetAddress[] cc, InternetAddress[] bcc, 
 				String subject, String body, MimeBodyPart[] parts) throws MessagingException {
 		
@@ -1199,7 +1199,7 @@ public final class WebTopApp {
         Transport.send(msg);
 	}
 	
-	public void sendEmail(javax.mail.Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
+	public void sendEmail(jakarta.mail.Session session, boolean rich, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, String body, Collection<MimeBodyPart> parts) throws MessagingException {
 		MimeMultipart mp = new MimeMultipart("mixed");
 		body = StringUtils.defaultString(body);
 		
@@ -1231,7 +1231,7 @@ public final class WebTopApp {
 		sendEmail(session, from, to, cc, bcc, subject, mp);
 	}
 	
-	public void sendEmail(javax.mail.Session session, String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String subject, MimeMultipart part) throws MessagingException {
+	public void sendEmail(jakarta.mail.Session session, String from, Collection<String> to, Collection<String> cc, Collection<String> bcc, String subject, MimeMultipart part) throws MessagingException {
 		InternetAddress iaFrom = InternetAddressUtils.toInternetAddress(from);
 		ArrayList<InternetAddress> iaTo = null;
 		ArrayList<InternetAddress> iaCc = null;
@@ -1253,7 +1253,7 @@ public final class WebTopApp {
 		sendEmail(session, iaFrom, iaTo, iaCc, iaBcc, subject, part);
 	}
 	
-	public void sendEmail(javax.mail.Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
+	public void sendEmail(jakarta.mail.Session session, InternetAddress from, Collection<InternetAddress> to, Collection<InternetAddress> cc, Collection<InternetAddress> bcc, String subject, MimeMultipart part) throws MessagingException {
 		
 		try {
 			subject = MimeUtility.encodeText(subject);

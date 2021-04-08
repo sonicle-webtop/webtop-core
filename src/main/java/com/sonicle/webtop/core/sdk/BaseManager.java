@@ -45,7 +45,7 @@ import com.sonicle.webtop.core.products.AuditProduct;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Locale;
-import javax.mail.Session;
+import jakarta.mail.Session;
 import org.apache.commons.lang3.StringUtils;
 import sun.reflect.Reflection;
 

@@ -53,7 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.InternetAddress;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerRemindersHooks;

@@ -78,8 +78,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.mail.Authenticator;
-import javax.mail.PasswordAuthentication;
+import jakarta.mail.Authenticator;
+import jakarta.mail.PasswordAuthentication;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import net.sf.uadetector.ReadableDeviceCategory;
@@ -118,7 +118,7 @@ public class WebTopSession {
 	private final LinkedHashMap<String, BasePublicService> publicServices = new LinkedHashMap<>();
 	private final HashMap<String, UploadedFile> uploads = new HashMap<>();
 	private final Object lock1 = new Object();
-	private javax.mail.Session mailSession = null;
+	private jakarta.mail.Session mailSession = null;
 	
 	public WebTopSession(HttpSession session) {
 		this(WebTopApp.getInstance(), session);
@@ -629,7 +629,7 @@ public class WebTopSession {
 		}
 	}
 	
-	public javax.mail.Session getMailSession() {
+	public jakarta.mail.Session getMailSession() {
 		synchronized(lock1) {
 			UserProfileId pid = getProfileId();
 			if (pid != null && mailSession == null) {
@@ -667,7 +667,7 @@ public class WebTopSession {
 
 					};
 				}
-				mailSession = javax.mail.Session.getInstance(props, authenticator);
+				mailSession = jakarta.mail.Session.getInstance(props, authenticator);
 			}
 		}
 		return mailSession;

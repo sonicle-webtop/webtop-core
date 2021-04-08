@@ -160,7 +160,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TimeZone;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
