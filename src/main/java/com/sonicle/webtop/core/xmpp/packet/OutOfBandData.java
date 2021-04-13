@@ -33,9 +33,13 @@
  */
 package com.sonicle.webtop.core.xmpp.packet;
 
+import java.io.IOException;
 import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.packet.XmlEnvironment;
+import org.jivesoftware.smack.parsing.SmackParsingException;
 import org.jivesoftware.smack.provider.ExtensionElementProvider;
-import org.xmlpull.v1.XmlPullParser;
+import org.jivesoftware.smack.xml.XmlPullParser;
+import org.jivesoftware.smack.xml.XmlPullParserException;
 
 /**
  *
@@ -92,7 +96,7 @@ public class OutOfBandData implements ExtensionElement {
 	}
 
 	@Override
-	public CharSequence toXML() {
+	public CharSequence toXML(XmlEnvironment xe) {
 		/**
 		 * <x xmlns='jabber:x:oob'>
 		 *	<url type='image/png' length='2034782'>http://www.sonicle.com/media/filename_or_hash</url>
@@ -112,15 +116,15 @@ public class OutOfBandData implements ExtensionElement {
 	public static final class Provider extends ExtensionElementProvider<OutOfBandData> {
 
 		@Override
-		public OutOfBandData parse(XmlPullParser parser, int initialDepth) throws Exception {
+		public OutOfBandData parse(XmlPullParser parser, int initialDepth, XmlEnvironment xmlEnvironment) throws XmlPullParserException, IOException, SmackParsingException {
 			String url = null, mime = null;
 			long length = -1;
 			boolean encrypted = false;
 			boolean in_url = false, done = false;
 			
 			while (!done) {
-				int eventType = parser.next();
-				if (eventType == XmlPullParser.START_TAG) {
+				XmlPullParser.Event eventType = parser.next();
+				if (eventType == XmlPullParser.Event.START_ELEMENT) {
 					if ("url".equals(parser.getName())) {
 						in_url = true;
 						mime = parser.getAttributeValue(null, "type");
@@ -132,12 +136,12 @@ public class OutOfBandData implements ExtensionElement {
 						encrypted = Boolean.parseBoolean(_encrypted);
 					}
 					
-				} else if (eventType == XmlPullParser.END_TAG) {
+				} else if (eventType == XmlPullParser.Event.END_ELEMENT) {
 					if ("url".equals(parser.getName())) {
 						done = true;
 					}
 					
-				} else if (eventType == XmlPullParser.TEXT && in_url) {
+				} else if (eventType == XmlPullParser.Event.TEXT_CHARACTERS && in_url) {
 					url = parser.getText();
 				}
 			}

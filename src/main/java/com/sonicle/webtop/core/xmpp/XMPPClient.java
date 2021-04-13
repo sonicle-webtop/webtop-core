@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
@@ -59,7 +60,7 @@ import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.XMPPError;
+import org.jivesoftware.smack.packet.StanzaError;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
@@ -72,6 +73,7 @@ import org.jivesoftware.smackx.iqlast.packet.LastActivity;
 import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.InvitationListener;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.Occupant;
@@ -80,8 +82,9 @@ import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 import org.jivesoftware.smackx.muc.packet.MUCUser;
-import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
+import org.jivesoftware.smackx.xdata.form.FillableForm;
+import org.jivesoftware.smackx.xdata.form.Form;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Seconds;
@@ -160,7 +163,7 @@ public class XMPPClient {
 	
 	public XMPPClient(XMPPTCPConnectionConfiguration.Builder builder, String mucSubdomain, String nickname, XMPPClientListener listener, ConversationHistory history) {
 		builder.setSendPresence(false);
-		
+		builder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
 		this.config = builder.build();
 		this.mucSubDomain = mucSubdomain;
 		this.userJid = JidCreate.entityFullFrom(XMPPHelper.asLocalpart(config.getUsername()), config.getXMPPServiceDomain(), config.getResource());
@@ -348,9 +351,9 @@ public class XMPPClient {
 					
 					muc.create(XMPPHelper.asResourcepart(name));
 					Form form = muc.getConfigurationForm();
-					Form answerForm = form.createAnswerForm();
-					configureMucForm(answerForm, chatJid, name, myJid);
-					muc.sendConfigurationForm(answerForm);
+					FillableForm fillableForm = form.getFillableForm();
+					configureMucForm(fillableForm, chatJid, name, myJid);
+					muc.sendConfigurationForm(fillableForm);
 					muc.changeSubject(name);
 					muc.join(userNickname);
 					chatObj = doAddGroupChat(false, true, chatJid, myJid, name, null, muc);
@@ -764,38 +767,62 @@ public class XMPPClient {
 		}
 	}
 	
-	private void configureMucForm(Form answerForm, EntityBareJid chatJid, String chatName, EntityBareJid ownerJid) {
+	private void configureMucForm(FillableForm fillableForm, EntityBareJid chatJid, String chatName, EntityBareJid ownerJid) {
+		// Is still useful is this new version?
 		// Apply defaults for all form fields
-		for(FormField field : answerForm.getFields()) {
-			if (field.getType() == FormField.Type.hidden || StringUtils.isBlank(field.getVariable())) {
+		/*
+		for (FormField field : fillableForm.getDataForm().getFields()) {
+			if (field.getType() == FormField.Type.hidden || StringUtils.isBlank(field.getFieldName())) {
 				continue;
 			}
-			answerForm.setDefaultAnswer(field.getVariable());
+			fillableForm.setDefaultAnswer(field.getFieldName());
 		}
+		*/
+		
+		/*
+		public void setDefaultAnswer(String variable) {
+			if (!isSubmitType()) {
+				throw new IllegalStateException("Cannot set an answer if the form is not of type " +
+				"\"submit\"");
+			}
+			FormField field = getField(variable);
+			if (field != null) {
+				// Clear the old values
+				field.resetValues();
+				// Set the default value
+				for (String value : field.getValues()) {
+					field.addValue(value);
+				}
+			}
+			else {
+				throw new IllegalArgumentException("Couldn't find a field for the specified variable.");
+			}
+		}
+		*/
 		
 		// Natural-Language Room Name
-		answerForm.setAnswer(MUC_ROOMCONFIG_ROOMNAME, chatName);
+		fillableForm.setAnswer(MUC_ROOMCONFIG_ROOMNAME, chatName);
 		// Short Description of Room
-		answerForm.setAnswer(MUC_ROOMCONFIG_ROOMDESC, "");
+		fillableForm.setAnswer(MUC_ROOMCONFIG_ROOMDESC, "");
 		// Enable Public Logging?
-		if (answerForm.hasField(MUC_ROOMCONFIG_ENABLELOGGING)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_ENABLELOGGING, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_ENABLELOGGING)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_ENABLELOGGING, false);
 		}
 		// Allow Occupants to Change Subject?
-		if (answerForm.hasField(MUC_ROOMCONFIG_CHANGESUBJECT)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_CHANGESUBJECT, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_CHANGESUBJECT)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_CHANGESUBJECT, false);
 		}
 		// Allow Occupants to Invite Others?
-		if (answerForm.hasField(MUC_ROOMCONFIG_ALLOWINVITES)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_ALLOWINVITES, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_ALLOWINVITES)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_ALLOWINVITES, false);
 		}
 		// Who Can Send Private Messages? (anyone, participants, moderators, none)
-		if (answerForm.hasField(MUC_ROOMCONFIG_ALLOWPM)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_ALLOWPM, XMPPHelper.asFormListSingleType("none"));
+		if (fillableForm.hasField(MUC_ROOMCONFIG_ALLOWPM)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_ALLOWPM, XMPPHelper.asFormListSingleType("none"));
 		}
 		// Maximum Number of Occupants (10, 20, 30, 50, 100, none)
-		if (answerForm.hasField(MUC_ROOMCONFIG_MAXUSERS)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_MAXUSERS, XMPPHelper.asFormListSingleType("50"));
+		if (fillableForm.hasField(MUC_ROOMCONFIG_MAXUSERS)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_MAXUSERS, XMPPHelper.asFormListSingleType("50"));
 		}
 		// Roles for which Presence is Broadcasted (moderator, participant, visitor)
 		/*
@@ -804,49 +831,49 @@ public class XMPPClient {
 		}
 		*/
 		// Roles and Affiliations that May Retrieve Member List (moderator, participant, visitor)
-		if (answerForm.hasField(MUC_ROOMCONFIG_GETMEMBERLIST)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_GETMEMBERLIST, XMPPHelper.asFormListMultiType("participant"));
+		if (fillableForm.hasField(MUC_ROOMCONFIG_GETMEMBERLIST)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_GETMEMBERLIST, XMPPHelper.asFormListMultiType("participant"));
 		}
 		// Make Room Publicly Searchable?
-		if (answerForm.hasField(MUC_ROOMCONFIG_PUBLICROOM)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_PUBLICROOM, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_PUBLICROOM)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_PUBLICROOM, false);
 		}
 		// Make Room Persistent?
-		if (answerForm.hasField(MUC_ROOMCONFIG_PERSISTENTROOM)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_PERSISTENTROOM, true);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_PERSISTENTROOM)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_PERSISTENTROOM, true);
 		}
 		// Make Room Moderated?
-		if (answerForm.hasField(MUC_ROOMCONFIG_MODERATEDROOM)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_MODERATEDROOM, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_MODERATEDROOM)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_MODERATEDROOM, false);
 		}
 		// Make Room Members Only?
-		if (answerForm.hasField(MUC_ROOMCONFIG_MEMBERSONLY)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_MEMBERSONLY, true);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_MEMBERSONLY)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_MEMBERSONLY, true);
 		}
 		// Password Required for Entry?
-		if (answerForm.hasField(MUC_ROOMCONFIG_PASSWORDPROTECTEDROOM)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_PASSWORDPROTECTEDROOM, false);
+		if (fillableForm.hasField(MUC_ROOMCONFIG_PASSWORDPROTECTEDROOM)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_PASSWORDPROTECTEDROOM, false);
 		}
 		// Who May Discover Real JIDs? (moderators, anyone)
-		if (answerForm.hasField(MUC_ROOMCONFIG_WHOIS)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_WHOIS, XMPPHelper.asFormListSingleType("anyone"));
+		if (fillableForm.hasField(MUC_ROOMCONFIG_WHOIS)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_WHOIS, XMPPHelper.asFormListSingleType("anyone"));
 		}
 		// Maximum Number of History Messages Returned by Room
-		if (answerForm.hasField(MUC_ROOMCONFIG_MAXHISTORYFETCH)) {
-			answerForm.setAnswer(MUC_ROOMCONFIG_MAXHISTORYFETCH, "50");
+		if (fillableForm.hasField(MUC_ROOMCONFIG_MAXHISTORYFETCH)) {
+			fillableForm.setAnswer(MUC_ROOMCONFIG_MAXHISTORYFETCH, "50");
 		}
 		// Additional Room Admins
 		// Room Owners
-		if (answerForm.hasField(MUC_ROOMCONFIG_ROOMOWNERS)) {
+		if (fillableForm.hasField(MUC_ROOMCONFIG_ROOMOWNERS)) {
 			Set<EntityBareJid> owners = new HashSet<>();
 			owners.add(ownerJid);
-			answerForm.setAnswer(MUC_ROOMCONFIG_ROOMOWNERS, JidUtil.toStringList(owners));
+			fillableForm.setAnswer(MUC_ROOMCONFIG_ROOMOWNERS, JidUtil.toStringList(owners));
 		}
 		
 		if (logger.isTraceEnabled()) {
 			logger.trace("Dumping MUC configuration...");
-			for(FormField field : answerForm.getFields()) {
-				logger.trace("{}: {}", field.getVariable(), field.getValues());
+			for(FormField field : fillableForm.getDataForm().getFields()) {
+				logger.trace("{}: {}", field.getFieldName(), field.getValues());
 			}
 		}
 	}
@@ -854,13 +881,14 @@ public class XMPPClient {
 	private boolean joinMuc(final MultiUserChat muc, final DateTime lastSeenActivity) {
 		try {
 			logger.debug("Joining group chat [{}, {}]", muc.getRoom().toString(), lastSeenActivity);
-			DiscussionHistory mucHistory = new DiscussionHistory();
+			MucEnterConfiguration.Builder builder = muc.getEnterConfigurationBuilder(userNickname)
+					.withPassword(null);
 			if (lastSeenActivity != null) {
 				DateTime now = new DateTime(DateTimeZone.UTC);
 				Seconds seconds = Seconds.secondsBetween(lastSeenActivity.withZone(DateTimeZone.UTC), now);
-				mucHistory.setSeconds(Math.abs(seconds.getSeconds()));
+				builder = builder.requestHistorySince(Math.abs(seconds.getSeconds()));
 			}
-			muc.join(userNickname, null, mucHistory, SmackConfiguration.getDefaultReplyTimeout());
+			muc.join(builder.build());
 			return true;
 
 		} catch(SmackException | XMPPException | InterruptedException ex) {
@@ -982,7 +1010,7 @@ public class XMPPClient {
 		try {
 			return mucManager.getRoomInfo(chatJid);
 		} catch(XMPPException.XMPPErrorException ex) {
-			if (ex.getXMPPError().getCondition() == XMPPError.Condition.item_not_found) {
+			if (ex.getStanzaError().getCondition() == StanzaError.Condition.item_not_found) {
 				return null;
 			} else {
 				throw ex;
@@ -996,7 +1024,7 @@ public class XMPPClient {
 		final MultiUserChatManager muChatMgr = getMUChatManager();
 		muChatMgr.removeInvitationListener(mucInvitationListener);
 		final ChatManager chatMgr = getChatManager();
-		chatMgr.removeListener(icIncomingMessageListener);
+		chatMgr.removeIncomingListener(icIncomingMessageListener);
 		final Roster roster = getRoster();
 		roster.removeRosterListener(rosterListener);
 	}
