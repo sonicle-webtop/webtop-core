@@ -35,10 +35,12 @@ SELECT
     FROM 
       core.audit_log 
     WHERE 
-      (audit_log.session_id) :: TEXT = (vw_access_log.session_id) :: TEXT 
-      AND (audit_log.domain_id) :: TEXT = (vw_access_log.domain_id) :: TEXT 
-      AND (audit_log.user_id) :: TEXT = (vw_access_log.user_id) :: TEXT 
+      (audit_log.domain_id) :: TEXT = (vw_access_log.domain_id) :: TEXT 
+      AND (audit_log.service_id) :: TEXT = 'com.sonicle.webtop.core' :: TEXT 
+      AND (audit_log.context) :: TEXT = 'AUTH' :: TEXT 
       AND (audit_log.ACTION) :: TEXT = 'LOGIN_FAILURE' :: TEXT
+      AND (audit_log.session_id) :: TEXT = (vw_access_log.session_id) :: TEXT 
+      AND (audit_log.user_id) :: TEXT = (vw_access_log.user_id) :: TEXT 
   ) :: INTEGER AS login_errors, 
   vw_access_log.DATA 
 FROM 
