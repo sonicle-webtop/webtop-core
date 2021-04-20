@@ -104,7 +104,7 @@ public class DataSourcesConfig {
 		if (dsEl.containsKey("[@dataSourceClassName]")) { // Jdbc 4 configs
 			config.setDataSourceClassName(dsEl.getString("[@dataSourceClassName]"));
 			config.addDataSourceProperty("serverName", dsEl.getString("[@serverName]"));
-			if (dsEl.containsKey("[@port]")) config.addDataSourceProperty("port", dsEl.getInt("[@port]"));
+			if (dsEl.containsKey("[@portNumber]")) config.addDataSourceProperty("portNumber", dsEl.getInt("[@portNumber]"));
 			config.addDataSourceProperty("databaseName", dsEl.getString("[@databaseName]"));
 			
 		} else if (dsEl.containsKey("[@driverClassName]")) { // Jdbc 3 configs
