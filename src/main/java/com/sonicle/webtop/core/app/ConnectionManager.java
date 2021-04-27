@@ -39,12 +39,12 @@ import com.sonicle.webtop.core.sdk.interfaces.IConnectionProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.File;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.StampedLock;
 import javax.sql.DataSource;
 import net.sf.qualitycheck.Check;
 import org.apache.commons.lang3.StringUtils;
@@ -76,9 +76,10 @@ public class ConnectionManager implements IConnectionProvider {
 	public static final String CONFIG_NAME = "data-sources.xml";
 	public static final String DEFAULT_CONFIG_RESOURCE_PATH = "/META-INF/" + CONFIG_NAME;
 	public static final String DEFAULT_DATASOURCE = "default";
-	private boolean shutdown = false;
+	private boolean shuttingDown = false;
 	private WebTopApp wta = null;
 	private DataSourcesConfig config = null;
+	private final StampedLock lock = new StampedLock();
 	private final HashMap<String, HikariDataSource> pools = new HashMap<>();
 	
 	/**
@@ -95,12 +96,19 @@ public class ConnectionManager implements IConnectionProvider {
 	 * Performs cleanup process.
 	 */
 	void cleanup() {
-		synchronized(pools) {
-			shutdown = true;
-			for(HikariDataSource pool: pools.values()) {
-				pool.close();
+		long stamp = lock.writeLock();
+		try {
+			shuttingDown = true;
+			for (Map.Entry<String, HikariDataSource> entry : pools.entrySet()) {
+				try {
+					entry.getValue().close();
+				} catch(Throwable t) {
+					logger.error("Unable to close pool [{}]", entry.getKey(), t);
+				}
 			}
 			pools.clear();
+		} finally {
+			lock.unlockWrite(stamp);
 		}
 		wta = null;
 		logger.info("Cleaned up");
@@ -119,7 +127,7 @@ public class ConnectionManager implements IConnectionProvider {
 			path = wta.getContextResourcePath(DEFAULT_CONFIG_RESOURCE_PATH);
 			file = new File(path);
 		}
-		if (file == null) throw new WTRuntimeException("Configuration file not found [{0}]", path);
+		if (file == null) throw new WTRuntimeException("Configuration file not found [{}]", path);
 		
 		config = new DataSourcesConfig();
 		try {
@@ -145,19 +153,273 @@ public class ConnectionManager implements IConnectionProvider {
 		// Setup core sources
 		logger.debug("Setting-up core dataSources...");
 		HikariConfigMap coreSources = config.getSources(CoreManifest.ID);
-		if(!coreSources.containsKey(DEFAULT_DATASOURCE)) {
+		if (!coreSources.containsKey(DEFAULT_DATASOURCE)) {
 			throw new RuntimeException("No core default dataSource defined");
 		}
-		for(Entry<String, HikariConfig> entry : coreSources.entrySet()) {
+		for (Entry<String, HikariConfig> entry : coreSources.entrySet()) {
 			registerDataSource(CoreManifest.ID, entry.getKey(), entry.getValue());
 		}
 	}
 	
-	public final void registerDataSource(String namespace, String dataSourceName, HikariConfig config) {
-		logger.debug("Registering data source [{}] into namespace [{}]", dataSourceName, namespace);
-		addPool(poolName(namespace, dataSourceName), config);
+	public final void registerDataSource(final String namespace, final String dataSourceName, final HikariConfig config) {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.writeLock();
+		try {	
+			logger.debug("Registering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
+			internalAddPool(poolName, config);
+			logger.debug("DataSource '{}' successfully added", dataSourceName);
+		} finally {
+			lock.unlockWrite(stamp);
+		}
 	}
 	
+	public final void unregisterDataSource(final String namespace, final String dataSourceName) {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.writeLock();
+		try {	
+			logger.debug("Unregistering dataSource '{}' into namespace '{}' [{}]", dataSourceName, namespace);
+			internalRemovePool(poolName);
+			logger.debug("DataSource '{}' successfully removed", dataSourceName);
+		} finally {
+			lock.unlockWrite(stamp);
+		}
+	}
+	
+	public DataSourcesConfig getConfiguration() {
+		return config;
+	}
+	
+	/**
+	 * Builds a valid connection pool name.
+	 * @param namespace The pool namespace (eg. the service ID).
+	 * @param dataSourceName The data source name (eg. default)
+	 * @return Concatenated name
+	 */
+	public String poolName(final String namespace, final String dataSourceName) {
+		return Check.notNull(namespace, "namespace") + "." + Check.notNull(dataSourceName, "dataSourceName");
+	}
+	
+	/**
+	 * Returns the default Core DataSource.
+	 * @return DataSource object.
+	 */
+	public DataSource getDataSource() {
+		return getDataSource(CoreManifest.ID, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns the default DataSource from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @return DataSource object.
+	 */
+	public DataSource getDataSource(final String namespace) {
+		return getDataSource(namespace, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns a DataSource from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return DataSource object.
+	 */
+	public DataSource getDataSource(final String namespace, final String dataSourceName) {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.readLock();
+		try {
+			return internalGetPool(poolName);
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	/**
+	 * Return the default Core connection.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	@Override
+	public Connection getConnection() throws SQLException {
+		return getConnection(CoreManifest.ID);
+	}
+	
+	/**
+	 * Return the default Core connection.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(final boolean autoCommit) throws SQLException {
+		return getConnection(CoreManifest.ID, autoCommit);
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	@Override
+	public Connection getConnection(final String namespace) throws SQLException {
+		return getConnection(namespace, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(final String namespace, final boolean autoCommit) throws SQLException {
+		return getConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	@Override
+	public Connection getConnection(final String namespace, final String dataSourceName) throws SQLException {
+		return getConnection(namespace, dataSourceName, true);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace.
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.readLock();
+		try {
+			return internalGetPoolConnection(poolName, autoCommit);
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(final String namespace) throws SQLException {
+		return getFallbackConnection(namespace, DEFAULT_DATASOURCE);
+	}
+	
+	/**
+	 * Returns the default connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(final String namespace, final boolean autoCommit) throws SQLException {
+		return getFallbackConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(final String namespace, final String dataSourceName) throws SQLException {
+		return getFallbackConnection(namespace, dataSourceName, true);
+	}
+	
+	/**
+	 * Returns a connection from desired namespace (with fallback).
+	 * @param namespace The pool namespace.
+	 * @param dataSourceName The dataSource name.
+	 * @param autoCommit False to disable auto-commit mode; defaults to True.
+	 * @return A ready Connection object.
+	 * @throws SQLException 
+	 */
+	public Connection getFallbackConnection(final String namespace, final String dataSourceName, final boolean autoCommit) throws SQLException {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.readLock();
+		try {
+			if (!internalIsRegistered(poolName)) poolName = poolName(CoreManifest.ID, DEFAULT_DATASOURCE);
+			return internalGetPoolConnection(poolName, autoCommit);
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	public boolean isRegistered(final String namespace, final String dataSourceName) {
+		if (shuttingDown) throw new WTRuntimeException("Manager is coming down");
+		String poolName = poolName(namespace, dataSourceName);
+		
+		long stamp = lock.readLock();
+		try {
+			return internalIsRegistered(poolName);
+		} finally {
+			lock.unlockRead(stamp);
+		}
+	}
+	
+	private boolean internalIsRegistered(String poolName) {
+		return pools.containsKey(poolName);
+	}
+	
+	private void internalAddPool(String poolName, HikariConfig config) {
+		if (pools.containsKey(poolName)) throw new WTRuntimeException("Pool for already defined. [{}]", poolName);
+		config.setPoolName(poolName); // Make sure name is poolName!
+		pools.put(poolName, new HikariDataSource(config));
+	}
+	
+	private HikariDataSource internalGetPool(String poolName) {
+		if (!pools.containsKey(poolName)) throw new WTRuntimeException("Pool not found. [{}]", poolName);
+		return pools.get(poolName);
+	}
+	
+	private Connection internalGetPoolConnection(String poolName, boolean autoCommit) throws SQLException {
+		Connection con = internalGetPool(poolName).getConnection();
+		con.setAutoCommit(autoCommit);
+		return con;
+	}
+	
+	private void internalRemovePool(String poolName) {
+		HikariDataSource pool = pools.remove(poolName);
+		if (pool == null) throw new WTRuntimeException("Pool not found. [{}]", poolName);
+		pool.close();
+	}
+	
+	/*
+	private void addPool(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {
+		synchronized(pools) {
+			if(pools.containsKey(name)) throw new RuntimeException();
+			HikariConfig config = new HikariConfig();
+			config.setDriverClassName(driverClassName);
+			config.setJdbcUrl(jdbcUrl);
+			if(username != null) config.setUsername(username);
+			if(password != null) config.setPassword(password);
+			config.setMaximumPoolSize(5);
+			config.setMaximumPoolSize(20);
+			
+			pools.put(name, new HikariDataSource(config));
+		}
+	}
+	*/
 	/*
 	public void registerJdbc3DataSource(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {
 		HikariConfig config = new HikariConfig();
@@ -183,226 +445,6 @@ public class ConnectionManager implements IConnectionProvider {
 		logger.debug("Registering jdbc4 data source [{}]", poolName);
 		logger.trace("[{}, {}, {}, {}, {}]", dataSourceClassName, serverName, serverPort, databaseName, user);
 		addPool(poolName, config);
-	}
-	*/
-	
-	public DataSourcesConfig getConfiguration() {
-		return config;
-	}
-	
-	/**
-	 * Builds a valid connection pool name.
-	 * @param namespace The pool namespace (eg. the service ID).
-	 * @param dataSourceName The data source name (eg. default)
-	 * @return Concatenated name
-	 */
-	public String poolName(String namespace, String dataSourceName) {
-		return namespace + "." + dataSourceName;
-	}
-	
-	/**
-	 * Returns the default Core DataSource.
-	 * @return DataSource object.
-	 * @throws SQLException 
-	 */
-	public DataSource getDataSource() throws SQLException {
-		return getDataSource(CoreManifest.ID, DEFAULT_DATASOURCE);
-	}
-	
-	/**
-	 * Returns the default DataSource from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @return DataSource object.
-	 * @throws SQLException 
-	 */
-	public DataSource getDataSource(String namespace) throws SQLException {
-		return getDataSource(namespace, DEFAULT_DATASOURCE);
-	}
-	
-	/**
-	 * Returns a DataSource from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @param dataSourceName The dataSource name.
-	 * @return DataSource object.
-	 * @throws SQLException 
-	 */
-	public DataSource getDataSource(String namespace, String dataSourceName) throws SQLException {
-		return getPool(poolName(namespace, dataSourceName));
-	}
-	
-	/**
-	 * Return the default Core connection.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	@Override
-	public Connection getConnection() throws SQLException {
-		return getConnection(CoreManifest.ID);
-	}
-	
-	/**
-	 * Return the default Core connection.
-	 * @param autoCommit False to disable auto-commit mode; defaults to True.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getConnection(boolean autoCommit) throws SQLException {
-		return getConnection(CoreManifest.ID, autoCommit);
-	}
-	
-	/**
-	 * Returns the default connection from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	@Override
-	public Connection getConnection(String namespace) throws SQLException {
-		return getConnection(namespace, DEFAULT_DATASOURCE);
-	}
-	
-	/**
-	 * Returns the default connection from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @param autoCommit False to disable auto-commit mode; defaults to True.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getConnection(String namespace, boolean autoCommit) throws SQLException {
-		return getConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
-	}
-	
-	/**
-	 * Returns a connection from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @param dataSourceName The dataSource name.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	@Override
-	public Connection getConnection(String namespace, String dataSourceName) throws SQLException {
-		return getConnection(namespace, dataSourceName, true);
-	}
-	
-	/**
-	 * Returns a connection from desired namespace.
-	 * @param namespace The pool namespace.
-	 * @param dataSourceName The dataSource name.
-	 * @param autoCommit False to disable auto-commit mode; defaults to True.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getConnection(String namespace, String dataSourceName, boolean autoCommit) throws SQLException {
-		Check.notNull(namespace);
-		Check.notNull(dataSourceName);
-		String poolName = poolName(namespace, dataSourceName);
-		Connection con = getPool(poolName).getConnection();
-		con.setAutoCommit(autoCommit);
-		return con;
-	}
-	
-	/**
-	 * Returns the default connection from desired namespace (with fallback).
-	 * @param namespace The pool namespace.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getFallbackConnection(String namespace) throws SQLException {
-		return getFallbackConnection(namespace, DEFAULT_DATASOURCE);
-	}
-	
-	/**
-	 * Returns the default connection from desired namespace (with fallback).
-	 * @param namespace The pool namespace.
-	 * @param autoCommit False to disable auto-commit mode; defaults to True.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getFallbackConnection(String namespace, boolean autoCommit) throws SQLException {
-		return getFallbackConnection(namespace, DEFAULT_DATASOURCE, autoCommit);
-	}
-	
-	/**
-	 * Returns a connection from desired namespace (with fallback).
-	 * @param namespace The pool namespace.
-	 * @param dataSourceName The dataSource name.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getFallbackConnection(String namespace, String dataSourceName) throws SQLException {
-		return getFallbackConnection(namespace, dataSourceName, true);
-	}
-	
-	/**
-	 * Returns a connection from desired namespace (with fallback).
-	 * @param namespace The pool namespace.
-	 * @param dataSourceName The dataSource name.
-	 * @param autoCommit False to disable auto-commit mode; defaults to True.
-	 * @return A ready Connection object.
-	 * @throws SQLException 
-	 */
-	public Connection getFallbackConnection(String namespace, String dataSourceName, boolean autoCommit) throws SQLException {
-		Check.notNull(namespace);
-		Check.notNull(dataSourceName);
-		String poolName = poolName(namespace, dataSourceName);
-		if (isRegistered(namespace, dataSourceName)) {
-			return getConnection(namespace, dataSourceName, autoCommit);
-		} else {
-			return getConnection(autoCommit);
-		}
-	}
-	
-	private void addPool(String poolName, HikariConfig config) {
-		synchronized(pools) {
-			if(shutdown) throw new RuntimeException("Manager is shutting down");
-			if(pools.containsKey(poolName)) throw new RuntimeException(MessageFormat.format("Pool for [{0}] is already defined.", poolName));
-			config.setPoolName(poolName);
-			pools.put(poolName, new HikariDataSource(config));
-		}
-	}
-	
-	private HikariDataSource getPool(String name) {
-		synchronized(pools) {
-			if(shutdown) throw new RuntimeException("Manager is shutting down");
-			if(!pools.containsKey(name)) throw new RuntimeException(MessageFormat.format("Pool [{0}] not found", name));
-			return pools.get(name);
-		}
-	}
-	
-	public boolean isRegistered(String namespace, String dataSourceName) {
-		return isRegistered(poolName(namespace, dataSourceName));
-	}
-	
-	private boolean isRegistered(String poolName) {
-		synchronized(pools) {
-			if(shutdown) throw new RuntimeException("Manager is shutting down");
-			return pools.containsKey(poolName);
-		}
-	}
-	
-	/*
-	public boolean isRegistered(String poolName) {
-		synchronized(pools) {
-			if(shutdown) throw new RuntimeException("Manager is shutting down");
-			return pools.containsKey(poolName);
-		}
-	}
-	*/
-	
-	/*
-	private void addPool(String name, String driverClassName, String jdbcUrl, String username, String password) throws SQLException {
-		synchronized(pools) {
-			if(pools.containsKey(name)) throw new RuntimeException();
-			HikariConfig config = new HikariConfig();
-			config.setDriverClassName(driverClassName);
-			config.setJdbcUrl(jdbcUrl);
-			if(username != null) config.setUsername(username);
-			if(password != null) config.setPassword(password);
-			config.setMaximumPoolSize(5);
-			config.setMaximumPoolSize(20);
-			
-			pools.put(name, new HikariDataSource(config));
-		}
 	}
 	*/
 }

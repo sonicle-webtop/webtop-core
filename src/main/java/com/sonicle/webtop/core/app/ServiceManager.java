@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.sdk.interfaces.IControllerInitHooks;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
 import com.sonicle.webtop.core.dal.DAOException;
@@ -1176,32 +1177,52 @@ public class ServiceManager {
 		String serviceId = manifest.getId();
 		String xid = manifest.getXId();
 		
-		logger.info("Registering service [{}]", serviceId);
+		logger.info("[{}] Registering service...", serviceId);
 		synchronized(lock1) {
-			if(descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
-			if(xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
+			if (descriptors.containsKey(serviceId)) throw new WTRuntimeException("Service ID is already registered [{0}]", serviceId);	
+			if (xidToServiceId.containsKey(xid)) throw new WTRuntimeException("Service XID (short ID) is already bound to a service [{0} -> {1}]", xid, xidToServiceId.get(xid));
 			
 			desc = new ServiceDescriptor(manifest);
 			logger.info("[private:{}, public:{}, job:{}, userOptions:{}]", desc.hasPrivateService(), desc.hasPublicService(), desc.hasJobService(), desc.hasUserOptionsService());
 			
-			// Register service's dataSources
+			// Register dataSources
 			try {
+				// Add data-sources from file
 				DataSourcesConfig config = conMgr.getConfiguration();
 				DataSourcesConfig.HikariConfigMap sources = config.getSources(serviceId);
-				if(sources != null) {
-					logger.debug("Registering {} dataSources", sources.size());
-					// If service provides its own sources, register them...
-					for(Entry<String, HikariConfig> entry : sources.entrySet()) {
-						if(!conMgr.isRegistered(serviceId, entry.getKey())) {
-							conMgr.registerDataSource(serviceId, entry.getKey(), entry.getValue());
+				logger.debug("[{}] Found {} dataSources", serviceId, (sources != null) ? sources.size() : 0);
+				if (sources != null) {
+					if (!serviceId.equals(CoreManifest.ID)) {
+						// If service provides its own sources, register them...
+						for (Entry<String, HikariConfig> entry : sources.entrySet()) {
+							try {
+								conMgr.registerDataSource(serviceId, entry.getKey(), entry.getValue());
+								logger.debug("[{}] {} OK", serviceId, entry.getKey());
+							} catch(Throwable t1) {
+								logger.warn("[{}] {} Fail", serviceId, entry.getKey(), t1);
+							}
 						}
 					}
-				} else {
-					logger.debug("No custom dataSources defined");
 				}
 				
-			} catch(Exception ex) {
-				throw new WTRuntimeException(ex, "Error registering service dataSources");
+				// Add data-sources from hook
+				if (desc.doesControllerImplements(IControllerInitHooks.class)) {
+					BaseController instance = getController(serviceId);
+					IControllerInitHooks iface = (IControllerInitHooks)instance;
+					logger.debug("[{}] Calling 'initDataSources'...", serviceId);
+					try {
+						LoggerUtils.setContextDC(instance.SERVICE_ID);
+						iface.initDataSources(new IControllerInitHooks.ConnectionManagerWrapper(instance.SERVICE_ID, conMgr));
+						
+					} catch(Throwable t) {
+						logger.error("[{}] initDataSources() throws errors", serviceId, t);
+					} finally {
+						LoggerUtils.clearContextServiceDC();
+					}
+				}
+				
+			} catch(Throwable t) {
+				throw new WTRuntimeException(t, "Error registering dataSources");
 			}
 			
 			// Upgrade check
