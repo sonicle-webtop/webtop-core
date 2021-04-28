@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Sonicle S.r.l.
+ * Copyright (C) 2021 Sonicle S.r.l.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License version 3 as published by
@@ -28,19 +28,35 @@
  * version 3, these Appropriate Legal Notices must retain the display of the
  * Sonicle logo and Sonicle copyright notice. If the display of the logo is not
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
- * display the words "Copyright (C) 2019 Sonicle S.r.l.".
+ * display the words "Copyright (C) 2021 Sonicle S.r.l.".
  */
 package com.sonicle.webtop.core.app.sdk.interfaces;
 
-import com.sonicle.webtop.core.sdk.ServiceVersion;
-import com.sonicle.webtop.core.sdk.UserProfileId;
-import com.sonicle.webtop.core.sdk.WTException;
+import com.sonicle.webtop.core.app.ConnectionManager;
+import com.zaxxer.hikari.HikariConfig;
 
 /**
  *
  * @author malbinola
  */
-public interface IControllerServiceHooks {
-	public void initProfile(ServiceVersion current, UserProfileId profileId) throws WTException;
-	public void upgradeProfile(ServiceVersion current, UserProfileId profileId, ServiceVersion profileLastSeen) throws WTException;
+public interface IControllerInitHooks {
+	public void initDataSources(ConnectionManagerWrapper conMgr);
+	
+	public static class ConnectionManagerWrapper {
+		private final String serviceId;
+		private final ConnectionManager conMgr;
+		
+		public ConnectionManagerWrapper(String serviceId, ConnectionManager conMgr) {
+			this.serviceId = serviceId;
+			this.conMgr = conMgr;
+		}
+		
+		public void registerDataSource(final String dataSourceName, final HikariConfig config) {
+			conMgr.registerDataSource(serviceId, dataSourceName, config);
+		}
+		
+		public void unregisterDataSource(final String dataSourceName) {
+			conMgr.unregisterDataSource(serviceId, dataSourceName);
+		}
+	}
 }

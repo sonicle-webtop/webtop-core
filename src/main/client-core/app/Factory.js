@@ -648,6 +648,28 @@ Ext.define('Sonicle.webtop.core.app.Factory', {
 		}, cfg);
 	},
 	
+	/**
+	 * Builds a config object for a {@link Ext.form.field.ComboBox} form field.
+	 * This renders a classic combobox with a drop-down list for hints, any text can be typed within.
+	 * @param {String} valueField See {@link Ext.form.field.ComboBox#valueField}
+	 * @param {String} displayField See {@link Ext.form.field.ComboBox#displayField}
+	 * @param {type} [cfg] Custom config to apply.
+	 * @returns {Object} The field config
+	 */
+	hintCombo: function(valueField, displayField, cfg) {
+		cfg = cfg || {};
+		return Ext.apply({
+			xtype: 'combo',
+			editable: true,
+			typeAhead: false,
+			forceSelection: false,
+			triggerAction: 'all',
+			valueField: valueField,
+			displayField: displayField,
+			submitEmptyText: false
+		}, cfg);	
+	},
+	
 	clearTrigger: function(cfg) {
 		cfg = cfg || {};
 		return Ext.apply({
