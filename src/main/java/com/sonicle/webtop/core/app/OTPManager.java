@@ -201,11 +201,27 @@ public class OTPManager {
 	}
 	
 	private byte[] generateGoogleAuthQRCode(UserProfileId pid, OTPKey otp, int size) throws WTException {
-		ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
-		if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
+		String internetName;
+		String userId=pid.getUserId();
 		
-		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), domain.getInternetName()));
-		InternetAddress ia = InternetAddressUtils.toInternetAddress(pid.getUserId(), domain.getInternetName(), null);
+		if (Principal.xisAdminDomain(pid.getDomainId())) {
+			//admin user takes personal email
+			String address=WT.getUserData(pid).getPersonalEmailAddress();
+			if (!StringUtils.isEmpty(address)) {
+				int ix=address.indexOf("@");
+				internetName=address.substring(ix+1);
+				userId=address.substring(0,ix);
+			}
+			else throw new WTException("Email not present for admin user");
+		} else {
+			//normal user composes email from user id and internet domain
+			ODomain domain = wta.getWebTopManager().getDomain(pid.getDomainId());
+			if (domain == null) throw new WTException("Domain not found [{}]", pid.getDomainId());
+			internetName=domain.getInternetName();
+		}
+		
+		String issuer = URIUtils.encodeQuietly(MessageFormat.format("{0} ({1})", WT.getPlatformName(), internetName));
+		InternetAddress ia = InternetAddressUtils.toInternetAddress(userId, internetName, null);
 		if (ia == null) throw new WTException("Unable to build account address");
 		
 		String uri = GoogleAuthOTPKey.buildAuthenticatorURI(issuer, otp.getSecretKey(), ia.getAddress());
