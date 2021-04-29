@@ -37,8 +37,7 @@
                     <div><i style="font-style:normal">${LangUtils.encodeForHTMLContent(i18n.location)}</i></div>
                 </td>
                 <td style="padding-bottom:10px;" valign="top">
-                    <span>${LangUtils.encodeForHTMLContent(access.location)}</span>
-                    <span dir="ltr">&nbsp;(<a href="${access.locationUrl}" style="color:#20c;white-space:nowrap" target="_blank" itemprop="map">${LangUtils.encodeForHTMLContent(i18n.locationMap)}</a>)</span>
+                    ${LangUtils.encodeForHTMLContent(access.location)}
                 </td>
             </tr>
             </#if>
