@@ -278,7 +278,7 @@ Ext.define('Sonicle.webtop.core.app.PushManager', {
 					req = me.applyBaseTransportCfg({
 						shared: false,
 						url: me.getUrl(),
-						logLevel: 'debug',
+						logLevel: me.getEventsDebug() ? 'debug' : 'info',
 						contentType: 'application/json; charset=UTF-8',
 						suspend: true, // Suspend the request, always reconnect if the connection gets closed.
 						enableProtocol: true,
