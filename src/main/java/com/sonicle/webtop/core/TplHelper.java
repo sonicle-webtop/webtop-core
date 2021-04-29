@@ -85,12 +85,8 @@ public class TplHelper {
 		DateTimeFormatter fmt = DateTimeUtils.createFormatter(dateFormat + " " + timeFormat, timezone);
 		
 		String location = null;
-		String locationUrl = null;
 		if (ipLookup != null) {
-			location = StringUtils.join(Arrays.asList(ipLookup.getCity(), ipLookup.getCountryName(), ipLookup.getContinentCode()), ", ");
-			if (ipLookup.getLatitude() != null && ipLookup.getLongitude() != null) {
-				locationUrl = LangUtils.formatMessage("https://www.google.com/maps/?q={},{}", ipLookup.getLatitude(), ipLookup.getLongitude());
-			}
+			location = StringUtils.join(Arrays.asList(ipLookup.getCountryName(), ipLookup.getContinentCode()), ", ");
 		}
 		
 		MapItem i18n = new MapItem()
@@ -100,7 +96,6 @@ public class TplHelper {
 			.add("device", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.device"))
 			.add("ipAddress", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.ipAddress"))
 			.add("location", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.location"))
-			.add("locationMap", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.locationMap"))
 			.add("action1", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action1"))
 			.add("action2", WT.lookupResource(CoreManifest.ID, locale, "tpl.email.newDevice.body.action2"));
 		
@@ -110,8 +105,7 @@ public class TplHelper {
 			.add("timezone", timezone.toString())
 			.add("device", userAgent.getOperatingSystem().getName() + " (" + userAgent.getName() + ")")
 			.add("ipAddress", ipAddress)
-			.add("location", location)
-			.add("locationUrl", locationUrl);
+			.add("location", location);
 		
 		return WT.buildTemplate(CoreManifest.ID, "tpl/email/newDeviceNotice-body.html", new MapItem().add("i18n", i18n).add("access", access));
 	}
