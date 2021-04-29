@@ -1636,11 +1636,11 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
-	public Meeting createMeeting() throws WTException {
-		return createMeeting(null);
+	public Meeting createMeeting(final String roomName) throws WTException {
+		return createMeeting(roomName, null);
 	}
 	
-	public Meeting createMeeting(final Locale locale) throws WTException {
+	public Meeting createMeeting(final String roomName, final Locale locale) throws WTException {
 		RunContext.ensureIsPermitted(false, SERVICE_ID, "MEETING", "CREATE");
 		
 		Locale targetLocale = locale == null ? getLocale() : locale;
@@ -1660,9 +1660,13 @@ public class CoreManager extends BaseManager {
 				Meeting.Builder builder = new Meeting.Builder();
 				builder.withProvider(provider);
 				builder.withId(meetingId);
+				builder.withRoomName(roomName);
 				
 				URIBuilder linkBuilder = new URIBuilder(config.url);
 				URIUtils.appendPath(linkBuilder, meetingId);
+				if (!StringUtils.isBlank(roomName)) {
+					linkBuilder.setFragment("config.callDisplayName=\"" + roomName + "\"");
+				}
 				URI linkUri = linkBuilder.build();
 				builder.withLink(linkUri);
 				

@@ -889,7 +889,8 @@ public class Service extends BaseService implements EventListener {
 		try {
 			String crud = ServletUtils.getStringParameter(request, "crud", true);
 			if (crud.equals(Crud.CREATE)) {
-				new JsonResult(coreMgr.createMeeting()).printTo(out);
+				String roomName = ServletUtils.getStringParameter(request, "room", false);
+				new JsonResult(coreMgr.createMeeting(roomName)).printTo(out);
 			}
 			
 		} catch(Throwable t) {

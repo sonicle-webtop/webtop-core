@@ -33,9 +33,12 @@
 Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 	extend: 'WTA.ux.window.CustomPromptMsgBox',
 	requires: [
+		'Sonicle.Utils',
 		'Sonicle.webtop.core.ux.panel.Fields'
 	],
 	
+	hideWhat: false,
+	hideDateTime: false,
 	defaultFocus: 'what',
 	startDay: 1,
 	dateFormat: 'Y-m-d',
@@ -43,6 +46,15 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 	whatText: '',
 	whenText: '',
 	nowTooltip: '',
+	
+	constructor: function(cfg) {
+		var me = this,
+			icfg = Sonicle.Utils.getConstructorConfigs(me, cfg, [
+				{hideWhat: true, hideDateTime: true}
+			]);
+		if (icfg.hideWhat === true && icfg.hideDateTime === false) cfg.defaultFocus = 'date';
+		me.callParent([cfg]);
+	},
 	
 	createCustomPrompt: function() {
 		var me = this;
@@ -57,6 +69,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 					xtype: 'textfield',
 					itemId: 'what',
 					reference: 'what',
+					hidden: me.hideWhat,
 					enableKeyEvents: true,
 					listeners: {
 						keydown: me.onPromptKey,
@@ -66,6 +79,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 					anchor: '100%'
 				}, {
 					xtype: 'fieldcontainer',
+					hidden: me.hideDateTime,
 					layout: 'hbox',
 					items: [
 						{
@@ -109,6 +123,7 @@ Ext.define('Sonicle.webtop.core.ux.MeetingBox', {
 				},
 				WTF.localCombo('id', 'desc', {
 					reference: 'timezone',
+					hidden: me.hideDateTime,
 					store: {
 						type: 'wttimezone',
 						autoLoad: true

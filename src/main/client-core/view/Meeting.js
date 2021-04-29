@@ -51,6 +51,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 	viewModel: {
 		data: {
 			data: {
+				roomName: null,
 				link: null,
 				shareInfo: null,
 				shareSubj: null,
@@ -60,6 +61,13 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 		}
 	},
 	
+	/**
+	 * @cfg {Object} [data]
+	 * An object containing initial data values.
+	 * 
+	 * @cfg {String} [data.roomName] Value for `roomName` field.
+	*/
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent([cfg]);
@@ -68,8 +76,10 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 	
 	initComponent: function() {
 		var me = this,
+				ic = me.getInitialConfig(),
 				vm = me.getVM();
 		
+		if (ic.data) vm.set('data', ic.data);
 		WTU.applyFormulas(vm, {
 			foHasLink: WTF.foIsEmpty(null, 'data.link', true),
 			foIsMeetingLocation: WTF.foGetFn(null, 'data.link', function(val) {
@@ -167,7 +177,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 	onViewShow: function() {
 		var me = this;
 		me.wait();
-		me.getMeetingLink({
+		me.self.getMeetingLink(me.getVM().get('data.roomName'), {
 			callback: function(success, data) {
 				me.unwait();
 				if (success) {
@@ -178,19 +188,6 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 					vm.set('data.shareUnschedDesc', data.embedTexts.unschedDescription);
 					vm.set('data.shareSchedDesc', data.embedTexts.schedDescription);
 				}
-			}
-		});
-	},
-	
-	getMeetingLink: function(opts) {
-		opts = opts || {};
-		var me = this;	
-		WT.ajaxReq(me.mys.ID, 'ManageMeeting', {
-			params: {
-				crud: 'create'
-			},
-			callback: function(success, json) {
-				Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 			}
 		});
 	},
@@ -215,10 +212,11 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 		
 		if (mapi) {
 			Sonicle.webtop.core.view.Meeting.promptForInfo({
+				hideWhat: true,
 				callback: function(ok, values) {
 					if (ok) {
 						var sdate = Ext.isDate(values[1]) ? Ext.Date.format(values[1], WT.getShortDateTimeFmt()) + ' ('+values[2]+')' : null,
-								subj = !Ext.isEmpty(values[0]) ? values[0] : fmt(subject, name),
+								subj = fmt(subject, name),
 								desc = sdate ? fmt(schedDesc, name, sdate, meetingUrl) : fmt(unschedDesc, name, meetingUrl),
 								format = mapi.getComposeFormat();
 						
@@ -240,7 +238,7 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 		var me = this,
 			vm = me.getVM(),
 			meetingUrl = vm.get('data.link'),
-			unschedSubj = vm.get('data.shareUnschedSubj'),
+			unschedSubj = vm.get('data.shareSubj'),
 			unschedDesc = vm.get('data.shareUnschedDesc'),
 			name = WT.getVar('userDisplayName'),
 			capi = WT.getServiceApi('com.sonicle.webtop.calendar'),
@@ -248,12 +246,13 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 		
 		if (capi) {
 			Sonicle.webtop.core.view.Meeting.promptForInfo({
+				hideWhat: true,
 				callback: function(ok, values) {
 					if (ok) {
 						var SoD = Sonicle.Date,
 								schedAt = SoD.idate(values[1], true);
 						capi.addEvent(Sonicle.Utils.applyIfDefined({
-								title: !Ext.isEmpty(values[0]) ? values[0] : fmt(unschedSubj, name),
+								title: fmt(unschedSubj, name),
 								location: meetingUrl,
 								description: fmt(unschedDesc, name, meetingUrl)
 							}, {
@@ -291,23 +290,43 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 		
 		promptForInfo: function(opts) {
 			opts = opts || {};
-			var me = this;
+			var me = this,
+				hideWhat = opts.hideWhat === true,
+				hideDateTime = opts.hideDateTime === true,
+				whatAsRoomName = opts.whatAsRoomName === true;
+				
 			WT.prompt(WT.res('meeting.promptForInfo.txt'), {
 				title: WT.res('meeting.promptForInfo.tit'),
 				instClass: 'Sonicle.webtop.core.ux.MeetingBox',
 				instConfig: {
+					hideWhat: hideWhat,
+					hideDateTime: hideDateTime,
 					startDay: WT.getStartDay(),
 					dateFormat: WT.getShortDateFmt(),
 					timeFormat: WT.getShortTimeFmt(),
-					whatText: WT.res('meetingBox.whatText'),
+					whatText: WT.res(whatAsRoomName ? 'meetingBox.whatText.roomName' : 'meetingBox.whatText'),
 					whenText: WT.res('meetingBox.whenText'),
 					nowTooltip: WT.res('meetingBox.nowTooltip')
 				},
 				config: {
-					value: [null, null, WT.getTimezone()]
+					value: [whatAsRoomName ? WT.getVar('userDisplayName') : null, null, WT.getTimezone()]
 				},
 				fn: function(bid, value, cfg) {
 					Ext.callback(opts.callback, opts.scope || me, [bid === 'ok', value]);
+				}
+			});
+		},
+		
+		getMeetingLink: function(roomName, opts) {
+			opts = opts || {};
+			var me = this;	
+			WT.ajaxReq(WT.ID, 'ManageMeeting', {
+				params: {
+					crud: 'create',
+					room: roomName
+				},
+				callback: function(success, json) {
+					Ext.callback(opts.callback, opts.scope || me, [success, json.data, json]);
 				}
 			});
 		}

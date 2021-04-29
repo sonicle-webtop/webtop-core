@@ -412,10 +412,24 @@ Ext.define('Sonicle.webtop.core.Service', {
 	},
 	
 	showNewMeetingUI: function() {
-		if (this.isPermitted('MEETING', 'CREATE')) {
-			WT.createView(this.ID, 'view.Meeting', {
-				swapReturn: true
-			}).showView();
+		var me = this;
+		if (me.isPermitted('MEETING', 'CREATE')) {
+			Sonicle.webtop.core.view.Meeting.promptForInfo({
+				whatAsRoomName: true,
+				hideDateTime: true,
+				callback: function(ok, values) {
+					if (ok) {
+						WT.createView(me.ID, 'view.Meeting', {
+							swapReturn: true,
+							viewCfg: {
+								data: {
+									roomName: values[0]
+								}
+							}
+						}).showView();
+					}
+				}
+			});			
 		}
 	},
 	
