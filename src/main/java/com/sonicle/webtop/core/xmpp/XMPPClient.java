@@ -163,7 +163,7 @@ public class XMPPClient {
 	
 	public XMPPClient(XMPPTCPConnectionConfiguration.Builder builder, String mucSubdomain, String nickname, XMPPClientListener listener, ConversationHistory history) {
 		builder.setSendPresence(false);
-		builder.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
+		builder.setSecurityMode(ConnectionConfiguration.SecurityMode.ifpossible);
 		this.config = builder.build();
 		this.mucSubDomain = mucSubdomain;
 		this.userJid = JidCreate.entityFullFrom(XMPPHelper.asLocalpart(config.getUsername()), config.getXMPPServiceDomain(), config.getResource());
