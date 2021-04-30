@@ -60,6 +60,8 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.provider.UriParser;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +107,7 @@ public class DocEditorManager extends AbstractAppManager {
 		logger.info("Cleaned up");
 	}
 	
-	public DocumentConfig registerDocumentHandler(String sessionId, BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException {
+	public DocumentConfig registerDocumentHandler(String sessionId, BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException, FileSystemException {
 		lock.lock();
 		try {
 			internalCleanupExpired(System.currentTimeMillis());
@@ -132,7 +134,7 @@ public class DocEditorManager extends AbstractAppManager {
 			logger.debug("Document callback URL: {}", callbackUrl);
 			logger.debug("JWT: {}", token);
 			
-			return new DocumentConfig(editingId, token, documentType, filename, ext, key, url, callbackUrl, docHandler.isWriteSupported());
+			return new DocumentConfig(editingId, token, documentType, UriParser.decode(filename), ext, key, url, callbackUrl, docHandler.isWriteSupported());
 		
 		} catch(URISyntaxException ex) {
 			logger.error("Unable to build URL", ex);

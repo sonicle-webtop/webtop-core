@@ -86,6 +86,7 @@ import net.sf.uadetector.ReadableDeviceCategory;
 import net.sf.uadetector.ReadableUserAgent;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
@@ -1305,7 +1306,7 @@ public class WebTopSession {
 		}
 	}
 	
-	public DocEditorManager.DocumentConfig prepareDocumentEditing(BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException {
+	public DocEditorManager.DocumentConfig prepareDocumentEditing(BaseDocEditorDocumentHandler docHandler, String filename, long lastModifiedTime) throws WTException, FileSystemException {
 		return wta.getDocEditorManager().registerDocumentHandler(getId(), docHandler, filename, lastModifiedTime);
 	}
 	
