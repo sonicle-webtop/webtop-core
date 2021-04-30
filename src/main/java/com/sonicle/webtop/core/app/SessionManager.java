@@ -306,13 +306,14 @@ public class SessionManager implements PushConnection.MessageStorage {
 			public void run() {
 				try {
 					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
+					if (stamp == 0) throw new InterruptedException("tryReadLock timeouts");
 					try {
 						internalPush(sessionId, messages, important);
 					} finally {
 						lock.unlockRead(stamp);
 					}
 				} catch(InterruptedException ex) {
-					LOGGER.error("Unable to acquire readLock [{}]", ex, sessionId);
+					LOGGER.error("Unable to acquire readLock [{}]", sessionId, ex);
 					if (important) {
 						LOGGER.warn("Cannot detect the user for session '{}', {} messages lost!", sessionId, messages.size());
 					}
@@ -328,13 +329,14 @@ public class SessionManager implements PushConnection.MessageStorage {
 			public void run() {
 				try {
 					long stamp = lock.tryReadLock(10, TimeUnit.SECONDS);
+					if (stamp == 0) throw new InterruptedException("tryReadLock timeouts");
 					try {
 						internalPush(profileId, messages, important);
 					} finally {
 						lock.unlockRead(stamp);
 					}
 				} catch (InterruptedException ex) {
-					LOGGER.error("Unable to acquire readLock [{}]", ex, profileId);
+					LOGGER.error("Unable to acquire readLock [{}]", profileId, ex);
 					if (important) {
 						persistMessages(profileId, messages);
 					}
