@@ -307,7 +307,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						'{groupValue:this.formatValue} ({children.length})',
 						{
 							formatValue: function(v) {
-								return WT.res('wtimpanel.gpfriends.group.' + ((v === 1) ? 'online' : 'offline'));
+								return WT.res('wtimpanel.gpfriends.group.' + ((v === "1") ? 'online' : 'offline'));
 							}
 						}
 					]
