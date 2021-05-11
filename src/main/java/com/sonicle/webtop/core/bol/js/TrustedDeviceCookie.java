@@ -59,11 +59,11 @@ public class TrustedDeviceCookie {
 	
 	public static TrustedDeviceCookie fromJson(String value) {
 		if(value == null) return null;
-		return JsonResult.gson.fromJson(value, TrustedDeviceCookie.class);
+		return JsonResult.gson().fromJson(value, TrustedDeviceCookie.class);
 	}
 	
 	public static String toJson(TrustedDeviceCookie value) {
 		if(value == null) return null;
-		return JsonResult.gson.toJson(value, TrustedDeviceCookie.class).replace("\"", "");
+		return JsonResult.gson().toJson(value, TrustedDeviceCookie.class).replace("\"", "");
 	}
 }

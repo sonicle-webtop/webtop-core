@@ -64,10 +64,10 @@ public class DeviceCookie {
 	}
 	
 	public static DeviceCookie fromJson(String value) {
-		return JsonResult.GSON.fromJson(value, DeviceCookie.class);
+		return JsonResult.gson().fromJson(value, DeviceCookie.class);
 	}
 
 	public static String toJson(DeviceCookie value) {
-		return JsonResult.GSON.toJson(value, DeviceCookie.class);
+		return JsonResult.gson().toJson(value, DeviceCookie.class);
 	}
 }

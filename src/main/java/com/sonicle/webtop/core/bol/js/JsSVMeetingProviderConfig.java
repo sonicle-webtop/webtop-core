@@ -50,6 +50,6 @@ public class JsSVMeetingProviderConfig {
 
 	public static String toJson(JsSVMeetingProviderConfig value) {
 		if (value == null) return null;
-		return JsonResult.GSON.toJson(value, JsSVMeetingProviderConfig.class);
+		return JsonResult.gson().toJson(value, JsSVMeetingProviderConfig.class);
 	}
 }

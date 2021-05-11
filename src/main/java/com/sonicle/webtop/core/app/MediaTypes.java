@@ -124,7 +124,7 @@ public class MediaTypes {
 	public String toString() {
 		long stamp = lock.readLock();
 		try {
-			return JsonResult.GSON_WONULLS.toJson(extToMediaType);
+			return JsonResult.gson(false).toJson(extToMediaType);
 		} finally {
 			lock.unlock(stamp);
 		}

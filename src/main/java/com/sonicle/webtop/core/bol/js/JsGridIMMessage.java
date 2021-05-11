@@ -125,6 +125,6 @@ public class JsGridIMMessage {
 		mi.add("mime", oob.getMime());
 		mi.add("ext", FilenameUtils.getExtension(filename));
 		mi.add("size", oob.getLength());
-		return JsonResult.GSON.toJson(mi);
+		return JsonResult.gson().toJson(mi);
 	}
 }

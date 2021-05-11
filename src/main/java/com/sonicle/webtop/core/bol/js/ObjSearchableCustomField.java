@@ -44,7 +44,7 @@ public class ObjSearchableCustomField {
 	public static class List extends ArrayList<ObjCustomFieldDefs.Field> {
 
 		public static String toJson(ObjSearchableCustomField.List value) {
-			return JsonResult.GSON.toJson(value, ObjSearchableCustomField.List.class);
+			return JsonResult.gson().toJson(value, ObjSearchableCustomField.List.class);
 		}
 	}
 }

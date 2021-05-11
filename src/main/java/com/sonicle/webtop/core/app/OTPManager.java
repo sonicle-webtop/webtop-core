@@ -263,7 +263,7 @@ public class OTPManager {
 	public void registerTrustedDevice(UserProfileId pid, JsTrustedDevice td) {
 		SettingsManager sm = wta.getSettingsManager();
 		String key = CoreSettings.OTP_TRUSTED_DEVICE + "@" + td.deviceId;
-		sm.setUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key, JsonResult.gson.toJson(td));
+		sm.setUserSetting(pid.getDomainId(), pid.getUserId(), CoreManifest.ID, key, JsonResult.gson().toJson(td));
 	}
 	
 	public boolean removeTrustedDevice(UserProfileId pid, String deviceId) {

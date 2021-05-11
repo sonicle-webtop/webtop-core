@@ -240,7 +240,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 		
 		AuditLogManager.logAuth(level, clientIp, sessionId, pid, action);
 		WebTopApp.getInstance().getAuditLogManager()
-				.write(pid, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
+				.write(pid, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 	}
 	
 	private void prepareClientId(HttpServletRequest request, HttpServletResponse response, HttpSession session) {

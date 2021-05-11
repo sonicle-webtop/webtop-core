@@ -109,7 +109,7 @@ class PushConnection {
 	}
 	
 	private String preparePayload(Collection<ServiceMessage> messages) {
-		return StringUtils.replace(JsonResult.gson.toJson(messages), "|", "\\u007c");
+		return StringUtils.replace(JsonResult.gson().toJson(messages), "|", "\\u007c");
 	}
 	
 	private Broadcaster getBroadcaster(BroadcasterFactory factory) {

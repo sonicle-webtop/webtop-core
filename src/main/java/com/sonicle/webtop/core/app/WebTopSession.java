@@ -475,7 +475,7 @@ public class WebTopSession {
 		String sessionId = getId();
 		String clientIp = SessionContext.getClientRemoteIP(session);
 		AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, "AUTHENTICATED");
-		wta.getAuditLogManager().write(profileId, sessionId, CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
+		wta.getAuditLogManager().write(profileId, sessionId, CoreManifest.ID, "AUTH", "AUTHENTICATED", null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 		
 		sesm.registerWebTopSession(this);
 		allowedServices = listAllowedPrivateServices(svcm);

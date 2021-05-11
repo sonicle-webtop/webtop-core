@@ -60,7 +60,7 @@ public abstract class BaseRestApiEndpoint extends AbstractPlatformService {
 	}
 	
 	protected Response respOk(Object data) {
-		return Response.ok(JsonResult.GSON.toJson(data)).build();
+		return Response.ok(JsonResult.gson().toJson(data)).build();
 	}
 	
 	protected Response respStatus(Response.Status status) {

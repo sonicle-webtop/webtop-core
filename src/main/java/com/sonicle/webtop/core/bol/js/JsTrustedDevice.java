@@ -59,7 +59,7 @@ public class JsTrustedDevice {
 	
 	public static JsTrustedDevice fromJson(String value) {
 		if(value == null) return null;
-		return JsonResult.gson.fromJson(value, JsTrustedDevice.class);
+		return JsonResult.gson().fromJson(value, JsTrustedDevice.class);
 	}
 	
 	public static ArrayList<JsTrustedDevice> asList(List<OUserSetting> items) {
@@ -73,6 +73,6 @@ public class JsTrustedDevice {
 	}
 	
 	public String getISOTimestamp() {
-		return JsonResult.gson.toJson(new Date(this.timestamp)).replace("\"", "");
+		return JsonResult.gson().toJson(new Date(this.timestamp)).replace("\"", "");
 	}
 }

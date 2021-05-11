@@ -105,7 +105,7 @@ public class FileTypes {
 	@Override
 	public String toString() {
 		synchronized(extToFileType) {
-			return JsonResult.GSON_WONULLS.toJson(extToFileType);
+			return JsonResult.gson(false).toJson(extToFileType);
 		}
 	}
 }

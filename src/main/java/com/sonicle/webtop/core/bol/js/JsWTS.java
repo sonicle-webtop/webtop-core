@@ -58,7 +58,7 @@ public abstract class JsWTS {
 	public ArrayList<JsWTS.XLocale> locales = new ArrayList<>();
 	
 	public String toJson() {
-		return JsonResult.GSON.toJson(this);
+		return JsonResult.gson().toJson(this);
 	}
 	
 	public abstract Manifest createManifestInstance();

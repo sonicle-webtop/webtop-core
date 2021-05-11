@@ -181,7 +181,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 					}
 					String clientIp = SessionContext.getClientRemoteIP(session);
 					AuditLogManager.logAuth(LogbackHelper.Level.DEBUG, clientIp, sessionId, profileId, action);
-					auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.GSON.toJson(new MapItem().add("ip", clientIp)));
+					auditLogMgr.write(profileId, sessionId, CoreManifest.ID, "AUTH", action, null, JsonResult.gson().toJson(new MapItem().add("ip", clientIp)));
 				}
 			}
 		}
@@ -392,7 +392,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 					for (OMessageQueue message : queued) {
 						try {
 							clazz = Class.forName(message.getMessageType());
-							messages.add((ServiceMessage)JsonResult.gson.fromJson(message.getMessageRaw(), clazz));
+							messages.add((ServiceMessage)JsonResult.gson().fromJson(message.getMessageRaw(), clazz));
 						} catch(Throwable t1) {
 							LOGGER.warn("Unable to unserialize message '{}' for '{}'", message.getMessageType(), profileId, t1);
 						}
@@ -419,7 +419,7 @@ public class SessionManager implements PushConnection.MessageStorage {
 			con = WT.getCoreConnection();
 			ArrayList<OMessageQueue> omqs = new ArrayList<>(messages.size());
 			for (ServiceMessage message : messages) {
-				omqs.add(AppManagerUtils.fillOMessageQueue(new OMessageQueue(), profileId, message.getClass().getName(), JsonResult.gson.toJson(message)));
+				omqs.add(AppManagerUtils.fillOMessageQueue(new OMessageQueue(), profileId, message.getClass().getName(), JsonResult.gson().toJson(message)));
 			}
 			mqDao.batchInsert(con, omqs);
 			

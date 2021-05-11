@@ -562,11 +562,11 @@ public class CoreServiceSettings extends BaseServiceSettings {
 		}
 		
 		public static ServicesOrder fromJson(String value) {
-			return JsonResult.gson.fromJson(value, ServicesOrder.class);
+			return JsonResult.gson().fromJson(value, ServicesOrder.class);
 		}
 		
 		public static String toJson(ServicesOrder value) {
-			return JsonResult.gson.toJson(value, ServicesOrder.class);
+			return JsonResult.gson().toJson(value, ServicesOrder.class);
 		}
 	}
 	

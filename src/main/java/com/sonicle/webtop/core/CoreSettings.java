@@ -931,12 +931,12 @@ public class CoreSettings {
 		
 		public static MeetingJitsiConfig fromJson(String value) {
 			if (value == null) return null;
-			return JsonResult.GSON.fromJson(value, MeetingJitsiConfig.class);
+			return JsonResult.gson().fromJson(value, MeetingJitsiConfig.class);
 		}
 
 		public static String toJson(MeetingJitsiConfig value) {
 			if (value == null) return null;
-			return JsonResult.GSON.toJson(value, MeetingJitsiConfig.class);
+			return JsonResult.gson().toJson(value, MeetingJitsiConfig.class);
 		}
 		
 		public static enum Auth {
@@ -980,11 +980,11 @@ public class CoreSettings {
 		
 		public static class List extends ArrayList<LauncherLink> {
 			public static LauncherLink.List fromJson(String value) {
-				return JsonResult.gson.fromJson(value, LauncherLink.List.class);
+				return JsonResult.gson().fromJson(value, LauncherLink.List.class);
 			}
 
 			public static String toJson(LauncherLink.List value) {
-				return JsonResult.gson.toJson(value, LauncherLink.List.class);
+				return JsonResult.gson().toJson(value, LauncherLink.List.class);
 			}
 		}
 	}

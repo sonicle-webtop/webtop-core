@@ -348,9 +348,9 @@ public class AuditLogManager {
 			
 			String json = HttpClientUtils.getStringContent(httpCli, uri);
 			if (ipAddresses.size() > 1) {
-				return JsonResult.GSON.fromJson(json, IPLookupResponse.List.class);
+				return JsonResult.gson().fromJson(json, IPLookupResponse.List.class);
 			} else {
-				return Arrays.asList(JsonResult.GSON.fromJson(json, IPLookupResponse.class));
+				return Arrays.asList(JsonResult.gson().fromJson(json, IPLookupResponse.class));
 			}
 			
 		} catch (URISyntaxException ex) {
@@ -424,7 +424,7 @@ public class AuditLogManager {
 	private boolean setIPGeoResultData(OIPGeoCache result, CoreSettings.GeolocationProvider provider, IPLookupResponse response) {
 		try {
 			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
-				result.setData(JsonResult.GSON_WONULLS.toJson(response));
+				result.setData(JsonResult.gson(false).toJson(response));
 				result.setProvider(EnumUtils.toSerializedName(provider));
 				return true;
 			}
@@ -438,7 +438,7 @@ public class AuditLogManager {
 		CoreSettings.GeolocationProvider provider = EnumUtils.forSerializedName(result.getProvider(), CoreSettings.GeolocationProvider.class);
 		try {
 			if (CoreSettings.GeolocationProvider.IPSTACK.equals(provider)) {
-				return JsonResult.GSON.fromJson(result.getData(), IPLookupResponse.class);
+				return JsonResult.gson().fromJson(result.getData(), IPLookupResponse.class);
 			}
 		} catch(Throwable t) {
 			logger.error("Unable to decode IP geo provider data [{}]", EnumUtils.toSerializedName(provider), t);

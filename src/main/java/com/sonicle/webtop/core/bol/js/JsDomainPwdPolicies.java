@@ -59,6 +59,6 @@ public class JsDomainPwdPolicies {
 	}
 
 	public static String toJson(JsDomainPwdPolicies value) {
-		return JsonResult.GSON.toJson(value, JsDomainPwdPolicies.class);
+		return JsonResult.gson().toJson(value, JsDomainPwdPolicies.class);
 	}
 }

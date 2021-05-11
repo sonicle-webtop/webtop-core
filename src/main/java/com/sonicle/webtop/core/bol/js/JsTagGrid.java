@@ -69,11 +69,11 @@ public class JsTagGrid {
 	
 	public static class List extends ArrayList<JsTagGrid> {
 		public static JsTagGrid.List fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsTagGrid.List.class);
+			return JsonResult.gson().fromJson(value, JsTagGrid.List.class);
 		}
 
 		public static String toJson(JsTagGrid.List value) {
-			return JsonResult.gson.toJson(value, JsTagGrid.List.class);
+			return JsonResult.gson().toJson(value, JsTagGrid.List.class);
 		}
 	}
 }

@@ -166,11 +166,11 @@ public abstract class BaseUserSettings extends BaseSettings {
 		}
 		
 		public static HiddenFolders fromJson(String value) {
-			return JsonResult.gson.fromJson(value, HiddenFolders.class);
+			return JsonResult.gson().fromJson(value, HiddenFolders.class);
 		}
 		
 		public static String toJson(HiddenFolders value) {
-			return JsonResult.gson.toJson(value, HiddenFolders.class);
+			return JsonResult.gson().toJson(value, HiddenFolders.class);
 		}
 	}
 	

@@ -59,11 +59,11 @@ public class JsDomainLauncherLink {
 	
 	public static class List extends ArrayList<JsDomainLauncherLink> {
 		public static JsDomainLauncherLink fromJson(String value) {
-			return JsonResult.gson.fromJson(value, JsDomainLauncherLink.class);
+			return JsonResult.gson().fromJson(value, JsDomainLauncherLink.class);
 		}
 
 		public static String toJson(LauncherLink.List value) {
-			return JsonResult.gson.toJson(value, JsDomainLauncherLink.class);
+			return JsonResult.gson().toJson(value, JsDomainLauncherLink.class);
 		}
 	}
 }

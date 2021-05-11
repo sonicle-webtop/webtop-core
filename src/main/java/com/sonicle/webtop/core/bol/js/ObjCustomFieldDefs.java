@@ -60,7 +60,7 @@ public class ObjCustomFieldDefs {
 	}
 	
 	public static String toJson(ObjCustomFieldDefs value) {
-		return JsonResult.gson.toJson(value, ObjCustomFieldDefs.class);
+		return JsonResult.gson().toJson(value, ObjCustomFieldDefs.class);
 	}
 	
 	public static class Panel {
@@ -105,7 +105,7 @@ public class ObjCustomFieldDefs {
 	public static class FieldsList extends ArrayList<Field> {
 
 		public static String toJson(FieldsList value) {
-			return JsonResult.GSON.toJson(value, FieldsList.class);
+			return JsonResult.gson().toJson(value, FieldsList.class);
 		}
 	}
 }
