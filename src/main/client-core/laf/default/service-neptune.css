@@ -14,7 +14,9 @@
  * Text color for body (regular, title/header)
  */
 .wt-theme-text { color: #000; }
-.wt-theme-text-greyed { color: #808080; }
+.wt-theme-text-lighter1 { color: #4D4D4D; } /* Conventionally dark grey */
+.wt-theme-text-lighter2 { color: #808080; } /* Conventionally light grey */
+.wt-theme-text-greyed { color: #808080; } /* Deprecated by text-lighter */
 .wt-theme-text-ok { color: #4da07d; } /* Conventionally green */
 .wt-theme-text-warn { color: #e9b665; } /* Conventionally yellow */
 .wt-theme-text-error { color: #cc4b31; } /* Conventionally red */
