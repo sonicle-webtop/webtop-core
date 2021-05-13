@@ -252,6 +252,7 @@ public class ServiceManager {
 		}
 		
 		createController(CoreManifest.ID);
+		handleInit(coreDesc);
 
 		// Register discovered services
 		for (ServiceManifest manifest : manifests.values()) {
@@ -271,6 +272,7 @@ public class ServiceManager {
 			
 			// Inits classes
 			createController(sid);
+			handleInit(desc);
 		}
 		
 		// Handle post db-scripts
@@ -1205,22 +1207,6 @@ public class ServiceManager {
 					}
 				}
 				
-				// Add data-sources from hook
-				if (desc.doesControllerImplements(IControllerInitHooks.class)) {
-					BaseController instance = getController(serviceId);
-					IControllerInitHooks iface = (IControllerInitHooks)instance;
-					logger.debug("[{}] Calling 'initDataSources'...", serviceId);
-					try {
-						LoggerUtils.setContextDC(instance.SERVICE_ID);
-						iface.initDataSources(new IControllerInitHooks.ConnectionManagerWrapper(instance.SERVICE_ID, conMgr));
-						
-					} catch(Throwable t) {
-						logger.error("[{}] initDataSources() throws errors", serviceId, t);
-					} finally {
-						LoggerUtils.clearContextServiceDC();
-					}
-				}
-				
 			} catch(Throwable t) {
 				throw new WTRuntimeException(t, "Error registering dataSources");
 			}
@@ -1249,6 +1235,27 @@ public class ServiceManager {
 			WT.registerManifest(serviceId, manifest);
 			
 			return desc;
+		}
+	}
+	
+	private void handleInit(ServiceDescriptor desc) {
+		if (desc.doesControllerImplements(IControllerInitHooks.class)) {
+			String serviceId = desc.getManifest().getId();
+			BaseController instance = getController(serviceId);
+			IControllerInitHooks iface = (IControllerInitHooks)instance;
+			
+			// Add data-sources from hook
+			ConnectionManager conMgr = wta.getConnectionManager();
+			logger.debug("[{}] Calling 'initDataSources'...", serviceId);
+			try {
+				LoggerUtils.setContextDC(instance.SERVICE_ID);
+				iface.initDataSources(new IControllerInitHooks.ConnectionManagerWrapper(instance.SERVICE_ID, conMgr));
+
+			} catch(Throwable t) {
+				logger.error("[{}] initDataSources() throws errors", serviceId, t);
+			} finally {
+				LoggerUtils.clearContextServiceDC();
+			}
 		}
 	}
 	
