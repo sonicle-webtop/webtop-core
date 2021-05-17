@@ -274,7 +274,7 @@ Ext.define('Sonicle.webtop.core.ux.IMBaseChat', {
 							if (Ext.isEmpty(value)) {
 								fld.setValue(Ext.String.format(data.embedTexts.info, data.link));
 							} else {
-								fld.setValue(value+data.link);
+								fld.setValue(value+' '+data.link);
 							}
 							fld.focus(false, 50);
 						}
