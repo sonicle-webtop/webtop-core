@@ -143,7 +143,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 				if (Ext.String.startsWith(key, prefix)) XSM.clear(key);
 			});
 		} else {
-			Ext.warn('Clearing is not supported on current state provider');
+			Ext.log.warn("Clearing is not supported on current state provider");
 		}
 	},
 	

@@ -42,7 +42,8 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		TOOL_REF_NAME: 'toolcmp',
 		MAIN_REF_NAME: 'maincmp',
 		ACTION_GROUP_NEW: 'new',
-		ACTION_GROUP_TOOLBOX: 'toolbox'
+		ACTION_GROUP_TOOLBOX: 'toolbox',
+		PUSHMSG_PREFIX: 'pmsg-'
 	},
 	
 	/**
@@ -50,13 +51,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * A object carring user's permission.
 	 */
 	perms: null,
-	
-	/**
-	 * @private
-	 * @property {Object} msgListeners
-	 * A map that holds message listeners defined by service.
-	 */
-	msgListeners: null,
 	
 	/**
 	 * @private
@@ -76,7 +70,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		
 		me.perms = cfg.permsData;
 		delete cfg.permsData;
-		me.msgListeners = {};
 		
 		// Creates options using configured model
 		try {
@@ -199,29 +192,6 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	},
 	
 	/**
-	 * Shorthand for {@link WTA.sdk.Service#addMessageListener}.
-	 * @param {String} action The action name
-	 * @param {Function} callback The function for this action
-	 * @param {Object} scope The scope for this callback
-	 */
-	onMessage: function(action, fn, scope) {
-		this.addMessageListener(action, fn, scope);
-	},
-	
-	/*
-	 * Maps a message action to a specific callback function.
-	 * @param {String} action The action name
-	 * @param {Function} callback The function for this action
-	 * @param {Object} scope The scope for this callback
-	 */
-	addMessageListener: function(action, fn, scope) {
-		this.msgListeners[action] = {
-			fn: fn,
-			scope: scope || this
-		};
-	},
-	
-	/**
 	 * Performs cleanup of uploaded file that have specified tag value.
 	 * @param {String} tag Reference value
 	 */
@@ -233,32 +203,80 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 		});
 	},
 	
-	/*
-	 * Get the mapped function for a websocket action name
-	 * The passed function will be called with a config object
-	 * rapresenting the complete websocket message:
-	 * 
-	 *   {
-	 *     service: [service-id],
-	 *     action: [action-name],
-	 *     ...[sepcific action data]...
-	 *   }
-	 *   
-	 * @param {String} action the action name
-	 * @return {Function} callback function for this action
+	/**
+	 * @deprecated use {@link #onPushMessage} instead
+	 * Shorthand for {@link #addPushMessageListener}.
+	 * @inheritdoc WTA.sdk.Service#addPushMessageListener
 	 */
-	//getMessageAction: function(action) {
-	//	return this.wsactions[action];
-	//},
+	onMessage: function(action, fn, scope, options) {
+		Ext.log.warn(Ext.String.format("[WT.{0}] Method \'onMessage\' is deprecated. Use \'onPushMessage\' instead.", Sonicle.String.substrAfterLast(this.ID, '.')));
+		return this.addPushMessageListener(action, fn, scope, options);
+	},
 	
 	/**
-	 * @private
-	 * Callback for messages arriving from the server.
-	 * It finds the mapped action function and calls it.
-	 * @param {Object} msg The message data.
+	 * Shorthand for {@link #addPushMessageListener}.
+	 * @inheritdoc WTA.sdk.Service#addPushMessageListener
 	 */
-	handleMessage: function(msg) {
-		var lis = this.msgListeners[msg.action];
-		if(lis) Ext.callback(lis.fn, lis.scope, [msg, msg.payload]);
+	onPushMessage: function(action, fn, scope, options) {
+		return this.addPushMessageListener(action, fn, scope, options);
+	},
+	
+	/**
+	 * Shorthand for {@link #removePushMessageListener}.
+	 * @inheritdoc WTA.sdk.Service#removePushMessageListener
+	 */
+	unPushMessage: function(action, fn, scope) {
+		this.removePushMessageListener(action, fn, scope);
+	},
+	
+	/**
+	 * Appends an handler to this object that listen for push-messages.
+	 * @param {String} action The push action name.
+	 * @param {Function/String} [fn] The method the event invokes or the *name* of the method within the specified `scope`.
+	 * @param {Object} [scope] The scope (`this` reference) in which the handler function is executed.
+	 * @param {Object} [options] An object containing handler configuration.
+	 */
+	addPushMessageListener: function(action, fn, scope, options) {
+		return this.addListener(WTA.sdk.Service.PUSHMSG_PREFIX + action, fn, scope, options);
+		//this.addListener('msg-' + action, fn, scope, options);
+	},
+	
+	/**
+	 * Removes an handler that was listening for push-messages.
+	 * @param {String} action The push action name.
+	 * @param {Function} fn The handler function originally specified.
+	 * @param {type} scope  The scope originally specified for the handler.
+	 */
+	removePushMessageListener: function(action, fn, scope) {
+		this.removeListener(WTA.sdk.Service.PUSHMSG_PREFIX + action, fn, scope);
+		//this.removeListener('msg-' + action, fn, scope);
+	},
+	
+	/**
+	 * Builds the event name for push messages: the name is built prefixing the
+	 * action of the push message with 'msg-', making it a classic event name
+	 * that can be used with observable objects.
+	 * Free feel to override this to implement custom naming logic.
+	 * @param {Object} msg The message object:
+	 * @param {Object} msg.service Service ID.
+	 * @param {Object} msg.action Message action.
+	 * @param {Object} msg.payload Message payload.
+	 * @returns {String} Event name.
+	 */
+	buildPushMessageEventName: function(msg) {
+		return WTA.sdk.Service.PUSHMSG_PREFIX + msg.action;
+		//return 'msg-' + msg.action;
+	},
+	
+	/**
+	 * 
+	 * Framework callback for notifying messages arriving from server.
+	 * @param {Object} msg The message object:
+	 * @param {Object} msg.service Service ID.
+	 * @param {Object} msg.action Message action.
+	 * @param {Object} msg.payload Message payload.
+	 */
+	handlePushMessage: function(msg) {
+		this.fireEventArgs(this.buildPushMessageEventName(msg), [msg, msg.payload]);
 	}
 });

@@ -129,7 +129,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}]
 		}));
 		
-		me.onMessage('showMsg', function(msg) {
+		me.onPushMessage('showMsg', function(msg) {
 			var pl = msg.payload;
 			if ('error' === pl.type) {
 				WT.error(pl.message, {title: pl.title});
@@ -140,12 +140,12 @@ Ext.define('Sonicle.webtop.core.Service', {
 			}
 		});
 		
-		me.onMessage('tagChanged', function(msg) {
+		me.onPushMessage('tagChanged', function(msg) {
 			//var pl = msg.payload;
 			me.tagsStore.reload();
 		});
 		
-		me.onMessage('reminderNotify', function(msg) {
+		me.onPushMessage('reminderNotify', function(msg) {
 			var pl = msg.payload;
 			me.showReminder(pl);
 			WT.showDesktopNotification(pl.serviceId, {
@@ -153,7 +153,7 @@ Ext.define('Sonicle.webtop.core.Service', {
 			});
 		});
 		
-		me.onMessage('autosaveNotify', function(msg) {
+		me.onPushMessage('autosaveNotify', function(msg) {
 			var me = this, pl = msg.payload;
 			if (pl.mine) {
 				me.notifyMyAutosave(pl);
@@ -163,31 +163,31 @@ Ext.define('Sonicle.webtop.core.Service', {
 		});
 		
 		if (WT.getVar('imEnabled')) {
-			me.onMessage('imFriendsUpdated', function(msg) {
+			me.onPushMessage('imFriendsUpdated', function(msg) {
 				me.getVPController().getIMPanel().loadFriends();
 			});
-			me.onMessage('imFriendPresenceUpdated', function(msg) {
+			me.onPushMessage('imFriendPresenceUpdated', function(msg) {
 				var pl = msg.payload;
 				me.getVPController().getIMPanel().updateFriendPresence(pl.id, pl.presenceStatus, pl.statusMessage);
 				me.setChatRoomFriendPresenceUI(pl.chatId, pl.friendFullId, pl.presenceStatus);
 			});
-			me.onMessage('imChatRoomAdded', function(msg) {
+			me.onPushMessage('imChatRoomAdded', function(msg) {
 				var pl = msg.payload;
 				me.getVPController().getIMPanel().loadChats();
 				if (!pl.self) me.showIMChatAddedNotification(pl.chatId, pl.chatName, pl.ownerId, pl.ownerNick);
 			});
-			me.onMessage('imChatRoomRemoved', function(msg) {
+			me.onPushMessage('imChatRoomRemoved', function(msg) {
 				me.getVPController().getIMPanel().loadChats();
 			});
-			me.onMessage('imChatRoomClosed', function(msg) {
+			me.onPushMessage('imChatRoomClosed', function(msg) {
 				var pl = msg.payload;
 				me.showIMChatClosedNotification(pl.chatId, pl.chatName, pl.ownerId, pl.ownerNick);
 			});
-			me.onMessage('imChatRoomUpdated', function(msg) {
+			me.onPushMessage('imChatRoomUpdated', function(msg) {
 				var pl = msg.payload;
 				me.getVPController().getIMPanel().updateChatName(pl.chatId, pl.chatName);
 			});
-			me.onMessage('imChatRoomMessageReceived', function(msg) {
+			me.onPushMessage('imChatRoomMessageReceived', function(msg) {
 				var pl = msg.payload,
 					ts = Ext.Date.parse(pl.ts, 'Y-m-d H:i:s', true);
 				me.newChatRoomMessageUI(pl.chatId, pl.chatName, pl.fromId, pl.fromNick, ts, pl.uid, pl.action, pl.text, pl.data);

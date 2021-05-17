@@ -170,7 +170,7 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				Ext.each(messages, function(msg) {
 					if (msg && msg.service) {
 						var svc = me.getService(msg.service);
-						if(svc) svc.handleMessage(msg);
+						if(svc) svc.handlePushMessage(msg);
 					}
 				});
 			},
