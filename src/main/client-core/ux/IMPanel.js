@@ -125,7 +125,20 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 						scope: me
 					}
 				}
-			}]
+			}/*
+			 * 
+			 *  TODO : check and re-enable group chat
+					
+			,'-',
+			me.addAct('addGroupChat', {
+				text: null,
+				tooltip: WT.res('wtimpanel.act-addGroupChat.lbl'),
+				iconCls: 'wt-icon-im-newGchat',
+				handler: function() {
+					me.fireEvent('addgroupchatclick', me);
+				}
+			})*/
+]
 		});
 		
 		me.callParent(arguments);
@@ -230,7 +243,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 							}
 						}
 					],
-					bbar: [
+/*					bbar: [
 						'->',
 						me.addAct('addGroupChat', {
 							text: null,
@@ -240,7 +253,7 @@ Ext.define('Sonicle.webtop.core.ux.IMPanel', {
 								me.fireEvent('addgroupchatclick', me);
 							}
 						})
-					],
+					],*/
 					listeners: {
 						rowdblclick: function(s, rec) {
 							me.fireChatDblClickFromRec(rec);
