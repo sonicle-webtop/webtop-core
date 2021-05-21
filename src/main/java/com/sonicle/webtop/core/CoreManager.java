@@ -1135,6 +1135,28 @@ public class CoreManager extends BaseManager {
 		}
 	}
 	
+	public Map<String, String> listTagNamesById() throws WTException {
+		return listTagNamesById(ListTagsOpt.ALL);
+	}
+	
+	public Map<String, String> listTagNamesById(final EnumSet<ListTagsOpt> options) throws WTException {
+		TagDAO tagDao = TagDAO.getInstance();
+		Connection con = null;
+		
+		try {
+			String targetDomainId = getTargetProfileId().getDomainId();
+			ensureProfileDomain(targetDomainId);
+			
+			con = WT.getConnection(SERVICE_ID);
+			return tagDao.mapNamesByDomainOwners(con, targetDomainId, tagOptionsToUserIds(options));
+			
+		} catch (Throwable t) {
+			throw ExceptionUtils.wrapThrowable(t);
+		} finally {
+			DbUtils.closeQuietly(con);
+		}
+	}
+	
 	private Collection<String> tagOptionsToUserIds(EnumSet<ListTagsOpt> options) {
 		ArrayList<String> owners = new ArrayList<>();
 		if (options.contains(ListTagsOpt.SHARED)) {
