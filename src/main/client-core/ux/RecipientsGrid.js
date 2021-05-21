@@ -63,31 +63,35 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 
 	/**
 	 * @cfg {Object} fields
-	 * The default field names on the underlying store
+	 * The default field names on the underlying store.
 	 */
 	fields: { recipientType: 'recipientType', email: 'email' },
 	
 	/**
-	 * @autoLast {Boolean} automatic contacts suggested last in list
+	 * @cfg {Boolean} [autoLast=false]
+	 * Set to `true` to put automatic suggested contacts last in list.
 	 */
 	autoLast: false,
 	
-	
 	/**
-	 * showContactLink {Boolean} show contact link column
+	 * @cfg {Boolean} [showContactLink=false]
+	 * Set to `true` to put to enable recipient/contact link.
 	 */
 	showContactLink: false,
-
 	
-	rcb: null,
-
+	/**
+	 * @cfg {String} contactLinkField
+	 * Specified the field where to read/write the ID of the linked recipient/contact.
+	 * Only used if {@link #showContactLink} is `true`.
+	 */
+	contactLinkField: null,
 	
 	/**
 	 * @cfg {String} suggestionContext
 	 * Suggestion context.
 	 */
 	
-	//messageId: null,
+	rcb: null,
 	
 	initComponent: function() {
 		var me = this;
@@ -106,10 +110,10 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 				autoEncode: true,
 				listeners: {
 					completeEdit: function(rec) {
-						rec.set("recipientContactId",me.rcb.getSelectedId());
+						if (!Ext.isEmpty(me.contactLinkField)) rec.set(me.contactLinkField, me.rcb.getIdValue());
 					},
 					startEdit: function(rec) {
-						me.rcb.setSelectedData(rec.get("recipientContactId"),rec.get("recipient"));
+						if (!Ext.isEmpty(me.contactLinkField)) me.rcb.setIdValue(rec.get(me.contactLinkField));
 					}
 				}
 			},
@@ -224,10 +228,4 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
         }
         
     }
-
-	
-/*	setValue: function(v) {
-		console.log("RecipientsGrid: setValue v="+v);
-		this.messageId=v;
-	}*/
 });

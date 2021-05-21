@@ -67,8 +67,13 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		/**
 		 * @autoLast {Boolean} automatic contacts suggested last in list
 		 */
-		autoLast: false
+		autoLast: false,
+		
+		idValue: null
 	},
+	
+	publishes: ['idValue'],
+	twoWayBindable: ['idValue'],
 	
 	escapeDisplayed: true,
 	typeAhead: false,
@@ -83,16 +88,12 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 	valueField: 'description',
 	displayField: 'description',
 	sourceField: 'sourceLabel',
-	selectedId: null,
-	selectedValue: null,
 	
 	initComponent: function() {
 		var me = this;
 		me.doApplyConfig();
 		me.callParent(arguments);
-		me.on('specialkey', me._onSpecialKey);
-		me.on('select', me._onSelect);
-		me.on('change', me._onChange);
+		me.on('specialkey', me.onSpecialKey);
 	},
 	
 	doApplyConfig: function() {
@@ -121,47 +122,14 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		}
 	},
 	
-	onBlur: function(e) {
-		var me = this;
-		me.callParent(arguments);
-		// This avoids binding notify firing problems when typing into field
-		// and bluring out rapidly; checkChange method forces internal updates!
-		if(me.store && !me.store.isLoaded()) me.checkChange();
-	},
-	
-	/*
-    onDownArrow: function(e) {
-		// Disable list opening on down arrow
-		if (e.altKey) this.callParent(arguments);
-    },
-	*/
-   
-   getSelectedId: function() {
-		return this.selectedId;
-   },
-   
-   getSelectedValue: function() {
-		return this.selectedValue;
-   },
-   
-   clearSelectedData: function() {
-	   this.selectedId=null;
-	   this.selectedValue=null;
-   },
-	
-   setSelectedData: function(id,value) {
-	   this.selectedId=id;
-	   this.selectedValue=value;
-   },
-	
-	_onSpecialKey: function(s,e) {
-		if(s.isExpanded) {
-			if(e.shiftKey && (e.getKey() === e.DELETE)) {
+	onSpecialKey: function(s, e) {
+		// Add support to SHIFT+CANC for deleting items when expanded
+		if (s.isExpanded) {
+			if (e.shiftKey && (e.getKey() === e.DELETE)) {
 				var pick = s.getPicker(),
 						nav = pick.getNavigationModel(),
 						rec = nav.getRecord();
-
-				if(rec && rec.get("source")===this.self.SOURCE_AUTO) {
+				if (rec && this.self.SOURCE_AUTO === rec.get('source')) {
 					rec.drop();
 					s.getStore().sync();
 				}
@@ -169,21 +137,30 @@ Ext.define('Sonicle.webtop.core.ux.field.RecipientSuggestCombo', {
 		}
 	},
 	
-	_onSelect: function(s,r,e) {
-		var me=this;
-		if (me.selectedId && r.get(me.valueField)===me.selectedValue) {
-			//do not change anything if id is not empty and values are same
-		} else {
-			me.selectedId=r.get("recipientId");
-			me.selectedValue=r.get(me.valueField);
+	onChange: function(newVal, oldVal) {
+		var me = this,
+				sto = me.getStore();
+		if (sto && !Ext.isEmpty(me.getIdValue()) && newVal !== oldVal && newVal !== me.initialValue2) {
+			if (!me.forceSelection && me.queryMode !== 'local') {
+				me.setIdValue(null);
+			}
 		}
+		me.callParent(arguments);
 	},
 	
-	_onChange: function(s,nv,ov,e) {
-		var me=this;
-		if (me.selectedId && nv!=me.selectedValue && nv!==ov) {
-			me.clearSelectedData();
-		} 
+	updateValue: function() {
+		var me = this, sel;
+		me.callParent(arguments);
+		// This usually occurs after the user picks element: we need to update the related ID.
+		sel = me.getSelectedRecord();
+		me.setIdValue(sel ? sel.get('recipientId') : null);
+	},
+	
+	setValue: function(value) {
+		var me = this;
+		// Dump initial value
+		if (me.initialValue2 === undefined) me.initialValue2 = value;
+		me.callParent(arguments);
 	},
 	
 	statics: {
