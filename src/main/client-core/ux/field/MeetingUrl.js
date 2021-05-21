@@ -59,7 +59,7 @@ Ext.define('Sonicle.webtop.core.ux.field.MeetingUrl', {
 			{
 				xtype: 'displayfield',
 				value: me.linkText,
-				fieldCls: 'wt-text-ellipsis',
+				cls: 'wt-text-ellipsis',
 				margin: '0 5 0 0'
 			}, {
 				xtype: 'button',
