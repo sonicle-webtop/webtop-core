@@ -64,6 +64,12 @@ Ext.define('Sonicle.webtop.core.sdk.Service', {
 	 * Fires after the Service has been activated.
 	 */
 	
+	/**
+	 * @event beforeunload
+	 * Fires before unloading the entire application window.
+	 * Returning `false` from an event listener can halt the unloading process.
+	 */
+	
 	constructor: function(cfg) {
 		var me = this;
 		me.callParent(arguments);

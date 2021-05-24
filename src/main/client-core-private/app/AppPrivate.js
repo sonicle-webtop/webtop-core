@@ -243,6 +243,19 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 		//TODO: evaluate if bounding this to platform' views instead
 		//if (vpc && vpc.countServiceViews() > 0) prompt = true;
 		if (Ext.ComponentQuery.query('wtviewwindow').length > 0) prompt = true;
+		if (prompt === false) {
+			Ext.iterate(me.getServices(), function(sid) {
+				var desc = me.getDescriptor(sid), inst;
+				if (desc) {
+					inst = desc.getInstance();
+					if (inst && inst.fireEvent('beforeunload') === false) {
+						prompt = true;
+						return false;
+					} 
+				}
+			});
+		}
+		
 		if (prompt) {
 			if (e) e.returnValue = msg;
 			if (window.event) window.event.returnValue = msg;
