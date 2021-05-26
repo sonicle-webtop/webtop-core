@@ -517,6 +517,16 @@ public class WT {
 		}
 	}
 	
+	public static InternetAddress getUserPersonalEmail(UserProfileId profileId) {
+		UserProfile.Data ud = getUserData(profileId);
+		return ud != null ? ud.getPersonalEmail() : null;
+	}
+	
+	public static InternetAddress getUserProfileEmail(UserProfileId profileId) {
+		UserProfile.Data ud = getUserData(profileId);
+		return ud != null ? ud.getProfileEmail(): null;
+	}
+	
 	public static UserProfile.Data getUserData(UserProfileId profileId) {
 		if (profileId == null) return null;
 		try {
