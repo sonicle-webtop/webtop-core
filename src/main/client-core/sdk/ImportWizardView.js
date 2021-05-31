@@ -71,7 +71,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	},
 	
 	onViewClose: function(s) {
-		this.mys.cleanupUploadedFiles(s.getId());
+		this.mys.cleanupUploadedFiles(s.getUId());
 	},
 	
 	initPages: function() {
@@ -116,47 +116,51 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		return {
 			itemId: 'upload',
 			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.upload.tit'))
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'wtform',
-				defaults: {
-					labelWidth: 120
-				},
-				items: [{
-					xtype: 'souploadfield',
-					reference: 'fldfile',
-					bind: '{file}',
-					responseValueProperty: 'uploadId',
-					buttonConfig: {
-						uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
-							extraParams: {tag: me.getId()},
-							mimeTypes: [
-								{title: pfs.label, extensions: pfs.extensions}
-							],
-							listeners: {
-								uploadstarted: function() {
-									me.wait();
-								},
-								uploadcomplete: function() {
-									me.unwait();
-								},
-								uploaderror: function(s, file, cause) {
-									me.unwait();
-									WTA.ux.UploadBar.handleUploadError(s, file, cause);
-								}
-							}
-						})
+			items: [
+				{
+					xtype: 'label',
+					html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.upload.tit'))
+				}, {
+					xtype: 'sospacer'
+				}, {
+					xtype: 'wtform',
+					defaults: {
+						labelWidth: 120
 					},
-					width: 400,
-					buttonText: WT.res('importwiz.upload.fld-file.button.lbl'),
-					fieldLabel: WT.res('importwiz.upload.fld-file.lbl'),
-					allowBlank: false
-				}]
-			}]
+					items: [
+						{
+							xtype: 'souploadfield',
+							reference: 'fldfile',
+							bind: '{file}',
+							responseValueProperty: 'uploadId',
+							buttonConfig: {
+								uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
+									extraParams: {tag: me.getUId()},
+									mimeTypes: [
+										{title: pfs.label, extensions: pfs.extensions}
+									],
+									listeners: {
+										uploadstarted: function() {
+											me.wait();
+										},
+										uploadcomplete: function() {
+											me.unwait();
+										},
+										uploaderror: function(s, file, cause) {
+											me.unwait();
+											WTA.ux.UploadBar.handleUploadError(s, file, cause);
+										}
+									}
+								})
+							},
+							width: 400,
+							buttonText: WT.res('importwiz.upload.fld-file.button.lbl'),
+							fieldLabel: WT.res('importwiz.upload.fld-file.lbl'),
+							allowBlank: false
+						}
+					]
+				}
+			]
 		};
 	},
 	
@@ -165,60 +169,64 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		return {
 			itemId: 'mappings',
 			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mappings.tit'))
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'gridpanel',
-				reference: 'gp',
-				store: {
-					model: 'Sonicle.webtop.core.model.ImportMapping',
-					proxy: WTF.proxy(me.mys.ID, me.getAct(), 'mappings', {
-						extraParams: {op: 'mappings'}
-					}),
-					listeners: {
-						beforeload: function(s,op) {
-							WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
-						}
-					}
-				},
-				columns: [{
-					dataIndex: 'target',
-					header: WT.res('importwiz.mappings.gp.target.lbl'),
-					editor: {
-						readOnly: true
-					},
-					flex: 1
+			items: [
+				{
+					xtype: 'label',
+					html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mappings.tit'))
 				}, {
-					dataIndex: 'source',
-					editor: Ext.create(WTF.localCombo('id', 'id', {
-						allowBlank: false,
-						store: {
-							autoLoad: false,
-							model: 'WTA.ux.data.ValueModel',
-							proxy: WTF.proxy(me.mys.ID, me.getAct(), 'columns', {
-								extraParams: {op: 'columns'}
-							}),
-							listeners: {
-								beforeload: function(s,op) {
-									WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
-								}
+					xtype: 'sospacer'
+				}, {
+					xtype: 'gridpanel',
+					reference: 'gp',
+					store: {
+						model: 'Sonicle.webtop.core.model.ImportMapping',
+						proxy: WTF.proxy(me.mys.ID, me.getAct(), 'mappings', {
+							extraParams: {op: 'mappings'}
+						}),
+						listeners: {
+							beforeload: function(s,op) {
+								WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
 							}
 						}
-					})),
-					header: WT.res('importwiz.mappings.gp.source.lbl'),
-					flex: 1
-				}],
-				selModel: 'cellmodel',
-				plugins: {
-					ptype: 'cellediting',
-					clicksToEdit: 1
-				},
-				border: true,
-				anchor: '100% -50'
-			}]
+					},
+					columns: [
+						{
+							dataIndex: 'target',
+							header: WT.res('importwiz.mappings.gp.target.lbl'),
+							editor: {
+								readOnly: true
+							},
+							flex: 1
+						}, {
+							dataIndex: 'source',
+							editor: Ext.create(WTF.localCombo('id', 'id', {
+								allowBlank: false,
+								store: {
+									autoLoad: false,
+									model: 'WTA.ux.data.ValueModel',
+									proxy: WTF.proxy(me.mys.ID, me.getAct(), 'columns', {
+										extraParams: {op: 'columns'}
+									}),
+									listeners: {
+										beforeload: function(s,op) {
+											WTU.applyExtraParams(op.getProxy(), me.buildMappingsParams(path));
+										}
+									}
+								}
+							})),
+							header: WT.res('importwiz.mappings.gp.source.lbl'),
+							flex: 1
+						}
+					],
+					selModel: 'cellmodel',
+					plugins: {
+						ptype: 'cellediting',
+						clicksToEdit: 1
+					},
+					border: true,
+					anchor: '100% -50'
+				}
+			]
 		};
 	},
 	
@@ -237,33 +245,39 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 		return {
 			itemId: 'mode',
 			xtype: 'wtwizardpage',
-			items: [{
-				xtype: 'label',
-				html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mode.tit'))
-			}, {
-				xtype: 'sospacer'
-			}, {
-				xtype: 'wtform',
-				items: [{
-					xtype: 'fieldset',
-					title: WT.res('importwiz.mode.fld-importmode.lbl'),
-					padding: '10px',
-					items: [{
-						xtype: 'radiogroup',
-						bind: {
-							value: '{modegroup}'
-						},
-						columns: 1,
-						items: items
-					}]
-				}]
-			}]
+			items: [
+				{
+					xtype: 'label',
+					html: Sonicle.String.htmlLineBreaks(WT.res('importwiz.mode.tit'))
+				}, {
+					xtype: 'sospacer'
+				}, {
+					xtype: 'wtform',
+					items: [
+						{
+							xtype: 'fieldset',
+							title: WT.res('importwiz.mode.fld-importmode.lbl'),
+							padding: '10px',
+							items: [
+								{
+									xtype: 'radiogroup',
+									bind: {
+										value: '{modegroup}'
+									},
+									columns: 1,
+									items: items
+								}
+							]
+						}
+					]
+				}
+			]
 		};
 	},
 	
 	createPages: function(path) {
 		var me = this;
-		if(path === 'txt') {
+		if (path === 'txt') {
 			me.getVM().set('delimiter', 'comma');
 			me.getVM().set('lineseparator', 'crlf');
 			me.getVM().set('textqualifier', null);
@@ -525,7 +539,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	
 	buildMappingsParams: function(path) {
 		var vm = this.getVM();
-		if(path === 'txt') {
+		if (path === 'txt') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
@@ -537,7 +551,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				firstDataRow: vm.get('firstdatarow'),
 				lastDataRow: vm.get('lastdatarow')
 			};
-		} else if(path === 'xls') {
+		} else if (path === 'xls') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
@@ -552,9 +566,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	
 	buildDoParams: function(path) {
 		var vm = this.getVM();
-		if(path === 'txt') {
+		if (path === 'txt') {
 			return {
-				path: path,
 				uploadId: vm.get('file'),
 				encoding: vm.get('encoding'),
 				delimiter: vm.get('delimiter'),
@@ -566,9 +579,8 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				mappings: vm.get('mappings'),
 				importMode: vm.get('importmode')
 			};
-		} else if(path === 'xls') {
+		} else if (path === 'xls') {
 			return {
-				path: path,
 				uploadId: vm.get('file'),
 				binary: vm.get('binary'),
 				headersRow: vm.get('headersrow'),
@@ -584,7 +596,9 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	doOperationParams: function() {
 		var me = this,
 				path = me.getVM().get('path');
-		return me.buildDoParams(path);
+		return me.opParams(Ext.apply(me.buildDoParams(path), {
+			path: path
+		}));
 	},
 	
 	isExcelBinary: function(fileFld) {

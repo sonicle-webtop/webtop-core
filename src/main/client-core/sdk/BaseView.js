@@ -72,6 +72,14 @@ Ext.define('Sonicle.webtop.core.sdk.BaseView', {
 	},
 	
 	/**
+	 * Returns a unique ID that identifies this view univocally, also across browser tabs.
+	 * @returns {String}
+	 */
+	getUId: function() {
+		return WT.uiid(this.getId());
+	},
+	
+	/**
 	 * Returns the localized string associated to the key.
 	 * Values arguments will be used to replace tokens in source string.
 	 * @param {String} key The resource key.

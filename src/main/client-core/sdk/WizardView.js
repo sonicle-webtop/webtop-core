@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.view.WizardView', {
 	alternateClassName: 'WTA.sdk.WizardView',
-	extend: 'WTA.sdk.DockableView',
+	extend: 'WTA.sdk.UIView',
 	requires: [
 		'Sonicle.webtop.core.sdk.WizardPage',
 		'Sonicle.form.Spacer'
@@ -234,14 +234,14 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		me.callParent(arguments);
 		
 		me.isMultiPath = false;
-		if(!Ext.isArray(me.pages)) {
+		if (!Ext.isArray(me.pages)) {
 			Ext.iterate(me.pages, function(k,v) {
 				if(!Ext.isArray(v)) Ext.Error.raise('Invalid pages definition object');
 			});
 			me.isMultiPath = true;
 		}
 		
-		if(me.isMultiPath) {
+		if (me.isMultiPath) {
 			me.addPathPage();
 		} else {
 			me.addPages();
@@ -395,10 +395,10 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				prev = me.getActivePage(),
 				next = me.computeNext(dir);
 		
-		if(me.isPathSelection(prev)) {
+		if (me.isPathSelection(prev)) {
 			me.addPages();
 		} else {
-			if(me.fireEvent('beforenavigate', me, dir, next, prev) !== false) {
+			if (me.fireEvent('beforenavigate', me, dir, next, prev) !== false) {
 				me.onNavigate(next);
 				me.fireEvent('navigate', me, dir, next, prev);
 			}
@@ -409,7 +409,7 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 		var me = this;
 		me.activatePage(page);
 		me.updateButtons(page);
-		if(!me.isPathSelection() && me.getUseTrail()) me.updateTrail();
+		if (!me.isPathSelection() && me.getUseTrail()) me.updateTrail();
 	},
 	
 	updateButtons: function(page) {
@@ -421,29 +421,29 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				hasPrev = me.hasNext(-1, page),
 				hasNext = me.hasNext(1, page);
 		
-		if(me.isPathSelection()) {
+		if (me.isPathSelection()) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(false);
-		} else if(me.getDisableNavAtEnd() && !hasNext) {
+		} else if (me.getDisableNavAtEnd() && !hasNext) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(true);
-		} else if(me.getDisableNavOnSuccess() && me.doSuccess) {
+		} else if (me.getDisableNavOnSuccess() && me.doSuccess) {
 			btnBack.setDisabled(true);
 			btnForw.setDisabled(true);
 		} else {
 			btnBack.setDisabled(!hasPrev);
 			btnForw.setDisabled(!hasNext);
 		}
-		if(me.getShowDoButton()) {
-			if(me.isPathSelection(page)) {
+		if (me.getShowDoButton()) {
+			if (me.isPathSelection(page)) {
 				btnDo.setDisabled(true);
-			} else if(me.getLockDoButton() && (me.doCount > 0)) {
+			} else if (me.getLockDoButton() && (me.doCount > 0)) {
 				btnDo.setDisabled(true);
 			} else {
 				btnDo.setDisabled(hasNext);
 			}
 		}
-		if(!hasNext) btnCancel.setText(WT.res('wizard.btn-close.lbl'));
+		if (!hasNext) btnCancel.setText(WT.res('wizard.btn-close.lbl'));
 	},
 	
 	updateTrail: function() {
@@ -464,13 +464,13 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	onDoClick: function() {
 		var me = this,
 				page = me.getPageCmp('end'),
-				params = {op: 'do'},
+				params = me.opParams({op: 'do'}),
 				obj;
 		
 		me.doCount++;
-		if(Ext.isFunction(me.doOperationParams)) {
+		if (Ext.isFunction(me.doOperationParams)) {
 			obj = me.doOperationParams.call(me, []);
-			if(Ext.isObject(obj)) params = Ext.apply(params, obj);
+			if (Ext.isObject(obj)) params = Ext.apply(params, obj);
 		}
 		
 		me.wait();
@@ -481,8 +481,10 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 				me.unwait();
 				me.doSuccess = success;
 				me.updateButtons('end');
-				page.lookupReference('log').setValue(json ? json.data.log : null);
-				if(success) {
+				if (json && json.data && !Ext.isEmpty(json.data.log)) {
+					page.lookupReference('log').setValue(json.data.log);
+				}
+				if (success) {
 					me.getVM().set('result', json.data.result);
 					me.fireEvent('dosuccess', me, json.data.result);
 				} else {
@@ -495,16 +497,24 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	canCloseView: function() {
 		var me = this;
 		// Returns false to stop view closing and to display a confirm message.
-		if(me.isPathSelection()) return true;
-		if(me.hasNext(1)) return false;
+		if (me.isPathSelection()) return true;
+		if (me.hasNext(1)) return false;
 		return true;
 	},
 	
-	resDoButtonText: function() {
-		return WT.resTpl(WT.ID, this.getDoButtonText());
-	},
-	
-	resEndPageTitleText: function() {
-		return WT.resTpl(WT.ID, this.getEndPageTitleText());
+	privates: {
+		opParams: function(params) {
+			return Ext.apply(params || {}, {
+				oid: this.getUId()
+			});
+		},
+		
+		resDoButtonText: function() {
+			return WT.resTpl(WT.ID, this.getDoButtonText());
+		},
+
+		resEndPageTitleText: function() {
+			return WT.resTpl(WT.ID, this.getEndPageTitleText());
+		}
 	}
 });
