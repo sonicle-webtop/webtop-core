@@ -146,10 +146,10 @@ public class SessionManager implements PushConnection.MessageStorage {
 			try {
 				onlineSessions.remove(sessionId);
 				PushConnection pushCon = pushConnections.remove(sessionId);
-				if (pushCon != null) pushCon.ready();
+				if (pushCon != null) pushCon.cleanup();
 				if (profileId != null) {
 					if (profileSidsCache.containsKey(profileId)) {
-						// List at key may have not been prepared. Incase of 
+						// List at key may have not been prepared. In case of 
 						// active OPT configuration session is effectively 
 						// only after code validation.
 						profileSidsCache.get(profileId).remove(sessionId);

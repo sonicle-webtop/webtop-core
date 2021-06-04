@@ -38,7 +38,6 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.Loader;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.sonicle.commons.PathUtils;
-import com.sonicle.commons.PropUtils;
 import com.sonicle.commons.web.ContextUtils;
 import com.sonicle.webtop.core.app.servlet.RestApi;
 import com.sonicle.webtop.core.app.shiro.filter.JWTSignatureVerifier;
@@ -49,6 +48,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRegistration.Dynamic;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.ApplicationConfig;
+import org.atmosphere.cpr.BroadcasterLifeCyclePolicy.ATMOSPHERE_RESOURCE_POLICY;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +142,7 @@ public class ContextLoader {
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_SHARABLE_THREAD_POOLS, "true");
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_MESSAGE_PROCESSING_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxProcessingThreads(properties)));
 			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_ASYNC_WRITE_THREADPOOL_MAXSIZE, String.valueOf(WebTopProps.getAtmosphereMaxWriteThreads(properties)));
-			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, "BroadcasterLifeCyclePolicy.EMPTY");
+			atmosphereServlet.setInitParameter(ApplicationConfig.BROADCASTER_LIFECYCLE_POLICY, ATMOSPHERE_RESOURCE_POLICY.EMPTY_DESTROY.name());
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.JSR356AsyncSupport");
 			//atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_COMET_SUPPORT, "org.atmosphere.container.Tomcat7CometSupport");
 			atmosphereServlet.setInitParameter(ApplicationConfig.PROPERTY_SESSION_SUPPORT, "true");

@@ -33,6 +33,7 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.webtop.core.app.atmosphere.UUIDBroadcasterCache;
 import java.io.IOException;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +46,7 @@ import org.atmosphere.config.service.Ready;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
+import org.atmosphere.cpr.Broadcaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +81,12 @@ public class PushEndpoint {
 	public void onReady(final AtmosphereResource resource) {
 		if (LOGGER.isTraceEnabled()) LOGGER.trace("onReady [{}, {}]", sessionId, resource.uuid());
 		
+		Broadcaster broadcaster = resource.getBroadcaster();
+		if (broadcaster != null) {
+			UUIDBroadcasterCache cache = (UUIDBroadcasterCache)broadcaster.getBroadcasterConfig().getBroadcasterCache();
+			if (cache != null) cache.updateResourceReadyState(broadcaster.getID(), resource.uuid(), true);
+		}
+		
 		String guessedSessionId = getSessionId(resource);
 		if (StringUtils.equals(guessedSessionId, sessionId)) {
 			invokeOnReady(sessionId, resource);
@@ -90,6 +98,13 @@ public class PushEndpoint {
 	@Disconnect
 	public void onDisconnect(final AtmosphereResourceEvent event) {
 		if (LOGGER.isTraceEnabled()) LOGGER.trace("onDisconnect [{}, {}]", sessionId, event.getResource().uuid());
+		
+		final AtmosphereResource resource = event.getResource();
+		Broadcaster broadcaster = resource.getBroadcaster();
+		if (broadcaster != null) {
+			UUIDBroadcasterCache cache = (UUIDBroadcasterCache)broadcaster.getBroadcasterConfig().getBroadcasterCache();
+			if (cache != null) cache.updateResourceReadyState(broadcaster.getID(), resource.uuid(), false);
+		}
 	}
 	
 	@Post
