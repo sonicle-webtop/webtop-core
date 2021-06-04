@@ -64,8 +64,16 @@ class PushConnection {
 	}
 	
 	public void cleanup() {
-		Broadcaster bc = getBroadcaster(Universe.broadcasterFactory());
+		// Retrieve dedicated broadcaster and clean-up its resources
+		Broadcaster bc = getBroadcaster(Universe.broadcasterFactory(), false);
 		if (bc != null) bc.destroy();
+		
+		// This is needed to cleanup any UUIDBroadcasterCache instance held by 
+		// BroadcasterConfig objects wrapped into AtmosphereHandlerWrapper classes.
+		// See: https://github.com/Atmosphere/atmosphere/blob/atmosphere-2.4.x/modules/cpr/src/main/java/org/atmosphere/cpr/AtmosphereFramework.java
+		//      https://github.com/Atmosphere/atmosphere/blob/atmosphere-2.4.x/modules/cpr/src/main/java/org/atmosphere/cpr/BroadcasterConfig.java
+		// You can see this clean-up in VisualVM, after this call cache object will disappear from live objects!
+		Universe.framework().removeAtmosphereHandler(broadcasterPath);
 	}
 	
 	public void ready() {
@@ -104,7 +112,7 @@ class PushConnection {
 	
 	private void writeOnBroadcast(Collection<ServiceMessage> messages) {
 		if (!messages.isEmpty()) {
-			getBroadcaster(Universe.broadcasterFactory()).broadcast(preparePayload(messages));
+			getBroadcaster(Universe.broadcasterFactory(), true).broadcast(preparePayload(messages));
 		}
 	}
 	
@@ -112,8 +120,8 @@ class PushConnection {
 		return StringUtils.replace(JsonResult.gson().toJson(messages), "|", "\\u007c");
 	}
 	
-	private Broadcaster getBroadcaster(BroadcasterFactory factory) {
-		return factory.lookup(broadcasterPath, true);
+	private Broadcaster getBroadcaster(BroadcasterFactory factory, boolean createIfNull) {
+		return factory.lookup(broadcasterPath, createIfNull);
 	}
 	
 	interface MessageStorage {
