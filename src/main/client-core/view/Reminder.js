@@ -70,7 +70,9 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 					labelWidth: 70,
 					width: 190,
 					value: 5
-				}), ' ', {
+				}),
+				' ',
+				{
 					xtype: 'button',
 					text: WT.res('reminder.btn-snooze.lbl'),
 					iconCls: 'wt-icon-snooze',
@@ -78,7 +80,9 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 						var sm = me.lref('gpreminders').getSelectionModel();
 						if (sm.hasSelection()) me.snoozeReminder(sm.getSelection());
 					}
-				}, '->', {
+				},
+				'->',
+				{
 					xtype: 'button',
 					text: WT.res('reminder.btn-ignore.lbl'),
 					handler: function() {
@@ -125,7 +129,12 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 							header: WT.res('reminder.gpreminders.date.lbl'),
 							flex: 1	
 						}
-					]
+					],
+					listeners: {
+						rowdblclick: function(s, rec) {
+							me.openReminderUI(rec);
+						}
+					}
 				}
 			]
 		});
@@ -139,7 +148,7 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				rec;
 		
 		Ext.iterate(data, function(obj) {
-			rec = sto.add(Ext.create('WTA.model.ReminderAlert', obj));
+			rec = sto.add(sto.createModel(obj));
 			if (rec) gp.getSelectionModel().select(rec, true, false);
 		});
 	},
@@ -173,6 +182,13 @@ Ext.define('Sonicle.webtop.core.view.Reminder', {
 				sto = me.getViewModel().getStore('reminders');
 		sto.remove(rec);
 		if (sto.getCount()===0) me.closeView();
+	},
+	
+	openReminderUI: function(rec) {
+		var sapi = WT.getServiceApi(rec.get('serviceId'));
+		if (sapi && Ext.isFunction(sapi.openReminder)) {
+			sapi.openReminder(rec.get('type'), rec.get('instanceId'));
+		}
 	},
 	
 	statics: {
