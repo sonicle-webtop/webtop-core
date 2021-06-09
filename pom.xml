@@ -23,11 +23,15 @@
 	<repositories>
 		<repository>
 			<id>jr-ce-releases</id>
-			<url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>
+			<url>https://jaspersoft.jfrog.io/artifactory/jr-ce-releases/</url>
+			<!-- Deprecated URL -->
+			<!--<url>https://jaspersoft.jfrog.io/jaspersoft/jr-ce-releases</url>-->
 		</repository>
 		<repository>
 			<id>jr-ce-3rd-party</id>
-			<url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/</url>
+			<url>https://jaspersoft.jfrog.io/artifactory/third-party-ce-artifacts/</url>
+			<!-- Deprecated URL -->
+			<!--<url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/</url>-->
 		</repository>
 		<repository>
 			<id>52north-releases</id>
@@ -358,42 +362,6 @@
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports</artifactId>
 			<version>6.15.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.lowagie</groupId>
-					<artifactId>itext</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.lowagie</groupId>
-			<artifactId>itext</artifactId>
-			<version>2.1.7.js4</version>
-			<!-- Evaluate if exclusion of bc* libs is necessary -->
-			<!--
-			<exclusions>
-				<exclusion>
-					<groupId>bouncycastle</groupId>
-					<artifactId>bcprov-jdk14</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>bouncycastle</groupId>
-					<artifactId>bcmail-jdk14</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.bouncycastle</groupId>
-					<artifactId>bcprov-jdk14</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.bouncycastle</groupId>
-					<artifactId>bcmail-jdk14</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.bouncycastle</groupId>
-					<artifactId>bctsp-jdk14</artifactId>
-				</exclusion>
-			</exclusions>
-			-->
 		</dependency>
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
