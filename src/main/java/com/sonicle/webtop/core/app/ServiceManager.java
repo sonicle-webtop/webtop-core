@@ -1249,7 +1249,7 @@ public class ServiceManager {
 			logger.debug("[{}] Calling 'initDataSources'...", serviceId);
 			try {
 				LoggerUtils.setContextDC(instance.SERVICE_ID);
-				iface.initDataSources(new IControllerInitHooks.ConnectionManagerWrapper(instance.SERVICE_ID, conMgr));
+				iface.initDataSources(new IControllerInitHooks.Context(this, conMgr, instance.SERVICE_ID));
 
 			} catch(Throwable t) {
 				logger.error("[{}] initDataSources() throws errors", serviceId, t);

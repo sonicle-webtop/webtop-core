@@ -32,7 +32,10 @@
  */
 package com.sonicle.webtop.core.app.sdk.interfaces;
 
+import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.app.ConnectionManager;
+import com.sonicle.webtop.core.app.RunContext;
+import com.sonicle.webtop.core.app.ServiceManager;
 import com.zaxxer.hikari.HikariConfig;
 
 /**
@@ -40,15 +43,21 @@ import com.zaxxer.hikari.HikariConfig;
  * @author malbinola
  */
 public interface IControllerInitHooks {
-	public void initDataSources(ConnectionManagerWrapper conMgr);
+	public void initDataSources(IControllerInitHooks.Context context);
 	
-	public static class ConnectionManagerWrapper {
-		private final String serviceId;
+	public static class Context {
+		private final ServiceManager svcMgr;
 		private final ConnectionManager conMgr;
+		private final String serviceId;
 		
-		public ConnectionManagerWrapper(String serviceId, ConnectionManager conMgr) {
-			this.serviceId = serviceId;
+		public Context(ServiceManager svcMgr, ConnectionManager conMgr, String serviceId) {
+			this.svcMgr = svcMgr;
 			this.conMgr = conMgr;
+			this.serviceId = serviceId;
+		}
+		
+		public CoreManager getCoreManager() {
+			return svcMgr.instantiateCoreManager(true, RunContext.getRunProfileId());
 		}
 		
 		public void registerDataSource(final String dataSourceName, final HikariConfig config) {

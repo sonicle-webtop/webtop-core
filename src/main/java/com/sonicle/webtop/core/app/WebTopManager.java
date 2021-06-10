@@ -715,7 +715,7 @@ public final class WebTopManager {
 	}
 	
 	public List<PublicImage> listDomainPublicImages(String domainId) throws WTException {
-		String path = WT.getDomainImagesPath(domainId);
+		String path = wta.getImagesPath(domainId);
 		String baseUrl = WT.getPublicImagesUrl(domainId);
 		File dir = new File(path);
 		ArrayList<PublicImage> items = new ArrayList<>();
