@@ -739,6 +739,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Ext.event.Event} evt The raw event object.
 	 * @param {Ext.menu.Menu} menu The menu component.
 	 * @param {Object} data Useful data to pass (data will be saved into menu.menuData property).
+	 * @returns {Ext.menu.Menu}
 	 */
 	showContextMenu: function(evt, menu, data) {
 		var me = this;
@@ -752,6 +753,7 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			me.contextMenu = null;
 		}, me, {single: true});
 		menu.showAt(evt.getXY());
+		return menu;
 	},
 	
 	/**

@@ -100,7 +100,10 @@
 .wt-menu-tools { background-image: url('toolbox_16.png') !important; }
 .x-btn-over .wt-menu-logout { background-image: url('logout_16.png') !important; width: 16px; }
 
-/* Platform ICONS */
+/* Symbol ICONS */
+.wt-icon-sym-hierarchy { background-image: url('sym-hierarchy_16.svg') !important; background-size: contain; }
+
+/* Base ICONS */
 .wt-icon-platform-win { background-image: url('platform-win_16.svg') !important; background-size: contain; }
 .wt-icon-platform-mac { background-image: url('platform-mac_16.svg') !important; background-size: contain; }
 .wt-icon-ok { background-image: url('ok_16.svg') !important; background-size: contain; }
