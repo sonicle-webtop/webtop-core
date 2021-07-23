@@ -290,13 +290,28 @@ public final class SettingsManager implements IServiceSettingReader, IServiceSet
 	 * @param key The name of the setting.
 	 * @return The string value of the setting.
 	 */
-	@Override
-	public String getUserSetting(final String domainId, final String userId, final String serviceId, final String key) {
+	public String getUserSetting(final String domainId, final String userId, final String serviceId, final String key, boolean priorityPath) {
 		String value = getSetting(domainId, userId, serviceId, key);
-		if (value != null) return value;
+		if (value != null || !priorityPath) return value;
 		return getServiceSetting(domainId, serviceId, key);
 	}
 	
+	/**
+	 * Gets the setting value indicated by the specified key using priority path:
+	 *  1 - UserSetting by domain/service/user/key
+	 *  2 - ServiceSetting by domain/service/key
+	 *  3 - ServiceSetting by service/key
+	 * Returns a null value if the key is not found.
+	 * @param domainId The domain ID.
+	 * @param userId The user ID.
+	 * @param serviceId The service ID.
+	 * @param key The name of the setting.
+	 * @return The string value of the setting.
+	 */
+	@Override
+	public String getUserSetting(final String domainId, final String userId, final String serviceId, final String key) {
+		return getUserSetting(domainId, userId, serviceId, key, true);
+	}
 	/**
 	 * Gets the setting value indicated by the specified key.
 	 * Returns a null value if the key is not found.
