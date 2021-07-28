@@ -276,7 +276,7 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 		
 		if (model) {
 			me.fireEvent('beforemodelvalidate', me, model, opts.pass);
-			if (model.isValid()) {
+			if (model.getValidation(true).isValid()) {
 				if (me.fireEvent('beforemodelsave', me, model, opts.pass) !== false) {
 					model.save({
 						callback: function(rec, op, success) {

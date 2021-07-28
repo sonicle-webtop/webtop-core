@@ -881,6 +881,22 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
+	 * Handles an error by displaying the passed message in case of unsuccessful operation.
+	 * @param {Boolean} success Specified whether the operation was successful or not.
+	 * @param {Object|String} json A JSON object in which look for `message` property or a direct message String.
+	 */
+	handleError: function(success, json) {
+		if (!success) {
+			var msg = Ext.isString(json) ? json : (json ? json.message : null);
+			if (!Ext.isEmpty(msg)) {
+				WT.error(msg);
+			} else {
+				if (console && console.warn) console.warn('Method handleError called with NO message');
+			}
+		}
+	},
+	
+	/**
 	 * Shows a pop-up notification (aka toast).
 	 * @param {String} text Text.
 	 * @param {Object} [opts] An object containing message configuration.
