@@ -100,9 +100,6 @@
 .wt-menu-tools { background-image: url('toolbox_16.png') !important; }
 .x-btn-over .wt-menu-logout { background-image: url('logout_16.png') !important; width: 16px; }
 
-/* Symbol ICONS */
-.wt-icon-sym-hierarchy { background-image: url('sym-hierarchy_16.svg') !important; background-size: contain; }
-
 /* Base ICONS */
 .wt-icon-platform-win { background-image: url('platform-win_16.svg') !important; background-size: contain; }
 .wt-icon-platform-mac { background-image: url('platform-mac_16.svg') !important; background-size: contain; }
@@ -278,8 +275,8 @@
 .wt-ftype-document { background-image: url('ftypes/document_16.svg') !important; background-size: contain; }
 .wt-ftype-document-pdf { background-image: url('ftypes/document-pdf_16.svg') !important; background-size: contain; }
 .wt-ftype-document-presentation { background-image: url('ftypes/document-presentation_16.svg') !important; background-size: contain; }
-.wt-ftype-document-spreadsheet { background-image: url('ftypes/document-spreadsheet_16.svg') !important; background-size: contain; }
-.wt-ftype-document-text { background-image: url('ftypes/document-text_16.svg') !important; background-size: contain; }
+.wt-ftype-document-spreadsheet { background-image: url('ftypes/document-excel_16.svg') !important; background-size: contain; }
+.wt-ftype-document-text { background-image: url('ftypes/document-word_16.svg') !important; background-size: contain; }
 .wt-ftype-ebook { background-image: url('ftypes/ebook_16.svg') !important; background-size: contain; }
 .wt-ftype-file { background-image: url('ftypes/file_16.svg') !important; background-size: contain; }
 .wt-ftype-folder { background-image: url('ftypes/folder_16.svg') !important; background-size: contain; }
