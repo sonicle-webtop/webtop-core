@@ -10,8 +10,10 @@
 /* ActionColumn: adds some extra spacing between action column icons */
 .x-action-col-icon {
 	margin-left: 4px;
-	margin-right: 4px;
 	color: #a9a9a9;
+}
+.x-action-col-icon:first-child {
+    margin-left: 0px;
 }
 
 /* ActionColumn: adds hover color */
