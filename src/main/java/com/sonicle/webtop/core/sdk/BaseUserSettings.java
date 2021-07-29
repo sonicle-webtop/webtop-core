@@ -81,6 +81,10 @@ public abstract class BaseUserSettings extends BaseSettings {
 		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key), defaultValue);
 	}
 	
+	public String getString(String key, String defaultValue, boolean priorityPath) {
+		return LangUtils.value(setm.getUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, priorityPath), defaultValue);
+	}
+
 	@Override
 	public boolean setString(String key, String value) {
 		return setm.setUserSetting(profileId.getDomainId(), profileId.getUserId(), serviceId, key, value);
