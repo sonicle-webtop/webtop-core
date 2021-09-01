@@ -40,6 +40,15 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	},
 	
 	/**
+	 * Sets the prefix to prepend to the generated resource string: prefix will 
+	 * be separated from the rest of the resource key using a dot `.`.
+	 * @param {String} prefix
+	 */
+	setActionsResPrefix: function(prefix) {
+		this.actionsResPrefix = prefix;
+	},
+	
+	/**
 	 * Gets an action and wraps it into the specified component.
 	 * Group can be specified setting name as: 'name@group'.
 	 * If not provided, 'default' group is used.
@@ -148,7 +157,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	 */
 	_buildText: function(id, name) {
 		id = id || this._guessSvcId();
-		return WT.res(id, Ext.String.format('act-{0}.lbl', name));
+		return WT.res(id, Sonicle.String.join('.', this.actionsResPrefix, Ext.String.format('act-{0}.lbl', name)));
 	},
 	
 	/**
@@ -157,7 +166,7 @@ Ext.define('Sonicle.webtop.core.mixin.ActHolder', {
 	 */
 	_buildTip: function(id, name) {
 		id = id || this._guessSvcId();
-		return WT.res(id, Ext.String.format('act-{0}.tip', name));
+		return WT.res(id, Sonicle.String.join('.', this.actionsResPrefix, Ext.String.format('act-{0}.tip', name)));
 	},
 	
 	/**
