@@ -78,24 +78,11 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	},
 	
 	/**
-	 * Returns passed value if it isn't empty (@link Ext#isEmpty), ifValue otherwise.
-	 * @param {Mixed} value The value
-	 * @param {Mixed} ifEmpty The fallback value
-	 * @returns {Mixed} Returned value
+	 * @deprecated Use {@link Sonicle.String#deflt} instead
 	 */
 	deflt: function(value, ifEmpty) {
+		Ext.log.warn("[WT.core] 'WTU.deflt' is deprecated, please use 'Sonicle.String.deflt' instead.");
 		return (Ext.isEmpty(value)) ? ifEmpty : value;
-	},
-	
-	/**
-	 * Return the true value if bool is true, otherwise the false value.
-	 * @param {Boolean} bool The boolean condition
-	 * @param {Mixed} trueVal The true value
-	 * @param {Mixed} falseVal The false value
-	 * @returns {Mixed} A value according to condition
-	 */
-	iif: function(bool, trueVal, falseVal) {
-		return (bool === true) ? trueVal : falseVal;
 	},
 	
 	/**
@@ -107,9 +94,12 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 		return Ext.isArray(obj) ? obj[0] : obj;
 	},
 	
+	/**
+	 * @deprecated Use {@link Sonicle.Utils#toJSONArray} instead
+	 */
 	arrayAsParam: function(arr) {
-		arr = Ext.isArray(arr) ? arr : [arr];
-		return Ext.JSON.encode(arr);
+		Ext.log.warn("[WT.core] 'WTU.arrayAsParam' is deprecated, please use 'Sonicle.Utils.toJSONArray' instead.");
+		return Sonicle.Utils.toJSONArray(arr);
 	},
 	
 	/**
@@ -209,14 +199,9 @@ Ext.define('Sonicle.webtop.core.app.Util', {
 	
 	/*
 	 * @deprecated Use {@link Sonicle.String#humanReadableSize} instead
-	 * Converts passed value in bytes in a human readable format.(eg. like '10 KB' or '100 MB')
-	 * @param {int} bytes The value in bytes
-	 * @param {Boolean} [opts.si] Whether to use the SI multiple (1000) or binary one (1024)
-	 * @param {Boolean} [opts.siUnits] Whether to use the SI units labels or binary ones
-	 * @param {String} [unitSeparator] Separator to use between value and unit
-	 * @return {String} The formatted string
 	 */
 	humanReadableSize: function(bytes, opts) {
+		Ext.log.warn("[WT.core] 'WTU.humanReadableSize' is deprecated, please use 'Sonicle.String.humanReadableSize' instead.");
 		return Sonicle.String.humanReadableSize(bytes, opts);
 	},
 	

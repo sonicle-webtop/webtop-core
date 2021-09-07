@@ -35,6 +35,7 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	alternateClassName: 'WTA.view.UserOptions',
 	extend: 'WTA.sdk.UserOptionsView',
 	requires: [
+		'Sonicle.String',
 		'Sonicle.panel.Markdown',
 		'WTA.model.Simple',
 		'WTA.store.HeaderScale',
@@ -1212,13 +1213,13 @@ Ext.define('Sonicle.webtop.core.view.UserOptions', {
 	
 	onOTPDeliveryChanged: function(val) {
 		var tab = this.lref('delivery');
-		tab.getLayout().setActiveItem(WTU.deflt(val, 'none'));
+		tab.getLayout().setActiveItem(Sonicle.String.deflt(val, 'none'));
 	},
 	
 	onOTPDeviceIsTrusted: function(val) {
 		var me = this,
 				tab = me.lref('thisdevice'), tit;
-		tab.getLayout().setActiveItem(WTU.iif(val, 'trusted', 'nottrusted'));
+		tab.getLayout().setActiveItem(val === true ? 'trusted' : 'nottrusted');
 		if(val === true) {
 			tit = Ext.String.format(WT.res('opts.otp.thisdevice.trusted.tit'), me.getModel().get('otpDeviceTrustedOn'));
 			tab.getComponent('trusted').getComponent(0).setTitle(tit);

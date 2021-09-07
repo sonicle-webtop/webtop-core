@@ -37,6 +37,9 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 		'Sonicle.mixin.RefHolder',
 		'WTA.mixin.ActHolder'
 	],
+	requires: [
+		'Sonicle.String'
+	],
 	
 	/**
 	 * @property {String} ID
@@ -156,7 +159,7 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	 */
 	getVar: function(key, ifEmpty) {
 		var v = this.vars.get(key);
-		return (arguments.length === 2) ? WTU.deflt(v, ifEmpty) : v;
+		return (arguments.length === 2) ? Sonicle.String.deflt(v, ifEmpty) : v;
 	},
 	
 	/**
