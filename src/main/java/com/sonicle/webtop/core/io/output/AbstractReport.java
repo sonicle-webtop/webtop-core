@@ -34,12 +34,21 @@
 package com.sonicle.webtop.core.io.output;
 
 import com.sonicle.commons.LangUtils;
+import com.sonicle.webtop.core.sdk.WTRuntimeException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JRRenderable;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.renderers.BatikRenderer;
+import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -110,6 +119,45 @@ public abstract class AbstractReport {
 		params.put("WT_DATE_FORMAT_LONG", config.getDateFormatLong());
 		params.put("WT_TIME_FORMAT_SHORT", config.getTimeFormatShort());
 		params.put("WT_TIME_FORMAT_LONG", config.getTimeFormatLong());
+	}
+	
+	protected void addTextStreamAsParam(String paramName, ClassLoader classLoader, String textResourceName, Charset charset) {
+		try {
+			params.put(paramName, readStringResource(classLoader, textResourceName, charset));
+		} catch (IOException ex) {
+			throw new WTRuntimeException("Unable to read stream [{}]", textResourceName, ex);
+		}
+	}
+	
+	protected void addSvgStreamAsParam(String paramName, ClassLoader classLoader, String textResourceName, Charset charset) {
+		try {
+			params.put(paramName, (JRRenderable)BatikRenderer.getInstanceFromText(readStringResource(classLoader, textResourceName, charset)));
+		} catch (IOException | JRException ex) {
+			throw new WTRuntimeException("Unable to read stream [{}]", textResourceName, ex);
+		}
+	}
+	
+	protected void addImageStreamAsParam(String paramName, ClassLoader classLoader, String imageResourceName) {
+		InputStream is = null;
+		try {
+			is = classLoader.getResourceAsStream(imageResourceName);
+			params.put(paramName, ImageIO.read(is));
+		} catch (IOException ex) {
+			throw new WTRuntimeException("Unable to read stream", ex);
+		} finally {
+			IOUtils.closeQuietly(is);
+		}
+	}
+	
+	protected String readStringResource(ClassLoader classLoader, String textResourceName, Charset charset) throws IOException {
+		InputStream is = null;
+		try {
+			is = classLoader.getResourceAsStream(textResourceName);
+			if (is == null) throw new IOException("InputStream is null");
+			return IOUtils.toString(is, charset);
+		} finally {
+			IOUtils.closeQuietly(is);
+		}
 	}
 	
 	public static enum OutputType {
