@@ -1082,5 +1082,32 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 			me.reMeetingProvUrls = re = me.getMeetingProvidersURLsRegExp();
 		}
 		return re ? re.test(url) : false;
+	},
+	
+	/**
+	 * Clears the saved State of the passed component. This will ask the user for
+	 * two confirmations: one before the operation (skippable using `silent` parameter) 
+	 * and the second after clearing state when page needs a reload. 
+	 * @param {Ext.Component} comp The component that implements {@link Ext.state.Stateful Stateful mixin}.
+	 * @param {Boolean} silent Set to `true` to NOT ask for initial confirmation.
+	 */
+	clearState: function(comp, silent) {
+		var me = this,
+				stateId = comp && Ext.isFunction(comp.getStateId) ? comp.getStateId() : null;
+		if (!Ext.isEmpty(comp)) {
+			var doClearState = function() {
+				Ext.state.Manager.clear(stateId);
+				WT.confirm(me.res('confirm.stateClear.needReload'), function(bid) {
+					if (bid === 'yes') WT.reload();
+				});
+			};
+			if (silent) {
+				doClearState();
+			} else {
+				WT.confirm(me.res('confirm.component.stateClear'), function(bid) {
+					if (bid === 'yes') doClearState();
+				});
+			}
+		}
 	}
 });
