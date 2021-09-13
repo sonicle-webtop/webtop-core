@@ -33,6 +33,9 @@
 Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 	singleton: true,
 	alternateClassName: ['WTA.util.FoldersTree'],
+	requires: [
+		'Sonicle.tree.Utils'
+	],
 	
 	coloredBoxTreeRenderer: function(opts) {
 		opts = opts || {};
@@ -92,13 +95,14 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 					return '<span style="opacity:0.7;">' + (isPers && opts.personalRootText ? opts.personalRootText : val) + '</span>' + (opts.countField ? countHtml(rec.get(opts.countField)) : '');
 					
 				} else if (rec.isFolder()) {
-					if (isPers && rec.get('_default')) {
+					if (!isPers) {
+						var rr = WTA.util.FoldersTree.toRightsObj(rec.get('_erights'));
+						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-theme-text-greyed';
+					}
+					if (rec.get('_default') === true) {
 						val += '<span style="font-size:0.8em;opacity:0.4;">&nbsp;(';
 						val += (opts.defaultText || 'default');
 						val += ')</span>';
-					} else {
-						var rr = WTA.util.FoldersTree.toRightsObj(rec.get('_erights'));
-						if (!rr.CREATE && !rr.UPDATE && !rr.DELETE) meta.tdCls += ' wt-theme-text-greyed';
 					}
 					return val;
 				}
@@ -111,8 +115,8 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 	},
 	
 	getFolderRootByProfile: function(tree, profileId) {
-		return this.findNodeBy(tree, function(node) {
-			return node.isFolderRoot() && node.hasProfile(profileId);
+		return Sonicle.tree.Utils.findNodeBy(tree, function(node) {
+			return node.isFolderRoot() && node.getProfileId() === profileId;
 		});
 	},
 	
@@ -121,12 +125,6 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 				rootNode = me.getMyFolderRoot(tree),
 				node = me.findDefaultFolder(rootNode);
 		return (node) ? node : me.getBuiltInFolder(rootNode);
-	},
-	
-	getBuiltInFolder: function(rootNode) {
-		return rootNode.findChildBy(function(n) {
-			return (n.get('_builtIn') === true);
-		});
 	},
 	
 	findDefaultFolder: function(rootNode) {
@@ -159,6 +157,11 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 		sto.sync();
 	},
 	
+	/**
+	 * Creates an object expliciting rights extracted from String.
+	 * @param {String} rights The rights String.
+	 * @returns {Object} Object with CREATE, READ, UPDATE, DELETE, MANAGE booleans.
+	 */
 	toRightsObj: function(rights) {
 		var iof = function(s,v) { return s ? s.indexOf(v) !== -1 : false; },
 				obj = {};
@@ -171,24 +174,94 @@ Ext.define('Sonicle.webtop.core.app.util.FoldersTree', {
 	},
 	
 	/**
-	 * Finds the first matching node in the tree by a function.
-	 * If the function returns `true` it is considered a match.
-	 * @param {type} tree
-	 * @param {Function} fn The function to be called. It will be passed the following parameters:
-	 *  @param {Ext.data.Model} fn.record The record to test for filtering. Access field values
-	 *  @param {Object} fn.id The ID of the Record passed.
-	 * @param {Object} [scope] The scope (this reference) in which the function is executed. Defaults to the Store.
-	 * @return {Ext.data.NodeInterface} The matched node or null
+	 * Set specified folder as the new default.
+	 * NB: Node {@link Ext.data.NodeInterface model} must provide `isDefaultFolder()` and `setIsDefaultFolder` methods.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @param {String} targetFoNodeId The Node ID (look carefully, NOT the Folder ID).
 	 */
-	findNodeBy: function(tree, fn, scope) {
+	setFolderAsDefault: function(tree, targetFoNodeId) {
 		var sto = tree.getStore(),
-				result;
-		Ext.Object.eachValue(sto.byIdMap, function(node) {
-			if (fn.call(scope || sto, node, node.getId()) === true) {
-				result = node;
-				return false;
-			}
+				newDeflt = sto.getNodeById(targetFoNodeId),
+				oldDeflt = Sonicle.tree.Utils.findNodeBy(tree, function(node) {
+					return node.isDefaultFolder() === true;
+				}),
+				newDeflt;
+		
+		if (newDeflt) {
+			if (oldDeflt) oldDeflt.setIsDefaultFolder(false);
+			newDeflt.setIsDefaultFolder(true);
+		}
+	},
+	
+	/**
+	 * Returns the folder Node with specified folder ID.
+	 * NB: Node {@link Ext.data.NodeInterface model} must provide `getFolderId()` method.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @param {String} folderId Desired folder ID.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getFolderById: function(tree, folderId) {
+		return Sonicle.tree.Utils.findNodeBy(tree, function(node) {
+			return node.getFolderId() === folderId;
 		});
-		return result;
+	},
+	
+	/**
+	 * Returns the folder Node which is marked as default folder.
+	 * NB: Node {@link Ext.data.NodeInterface model} must provide `isDefaultFolder()` method.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getDefaultFolder: function(tree) {
+		return Sonicle.tree.Utils.findNodeBy(tree, function(node) {
+			return node.isDefaultFolder() === true;
+		});
+	},
+	
+	/**
+	 * Returns the folder Node which is marked as built-in folder.
+	 * NB: Node {@link Ext.data.NodeInterface model} must provide `isBuiltInFolder()` method.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getBuiltInFolder: function(tree) {
+		var rootNode = this.getMyFolderRoot(tree);
+		return rootNode.findChildBy(function(n) {
+			return (n.isBuiltInFolder() === true);
+		});
+	},
+	
+	/**
+	 * Wrapper method that returns default folder Node or built-in one instead.
+	 * NB: Node {@link Ext.data.NodeInterface model} must provide some methods.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getDefaultOrBuiltInFolder: function(tree) {
+		var node = this.getDefaultFolder(tree);
+		return node ? node : this.getBuiltInFolder(tree);
+	},
+	
+	/**
+	 * Wrapper method that returns the folder underlined by the passed folderId 
+	 * or the result of {@link #getDefaultOrBuiltInFolder} if not found. Null is
+	 * returned if the candidate folder does NOT have elements creation rights.
+	 * @param {Ext.tree.Panel} tree Tree component on which operate.
+	 * @param {String} folderId 
+	 * @returns {Ext.data.NodeInterface}
+	 */
+	getFolderForAdd: function(tree, folderId) {
+		var me = this,
+				node, er;
+		if (!Ext.isEmpty(folderId)) {
+			node = me.getFolderById(tree, folderId);
+		} else {
+			node = me.getDefaultOrBuiltInFolder(tree);
+		}
+		if (node) {
+			er = me.toRightsObj(node.get('_erights'));
+			if (er.CREATE) return node;
+		}
+		return null;
 	}
 });
