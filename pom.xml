@@ -374,6 +374,12 @@
 			<version>6.15.0</version>
 		</dependency>
 		<dependency>
+			<!-- Needed by Jasper for dealing with SVGs -->
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-bridge</artifactId>
+            <version>1.14</version>
+        </dependency>
+		<dependency>
 			<groupId>org.igniterealtime.smack</groupId>
 			<artifactId>smack-java8</artifactId>
 			<version>${smack.version}</version>
