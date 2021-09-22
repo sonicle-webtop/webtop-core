@@ -14,9 +14,9 @@
 	</parent>
 	
 	<properties>
-		<webtop.service.i18n.languages>en,it,es,de,hr,hu</webtop.service.i18n.languages>
+		<webtop.service.i18n.languages>en,it,es,fr,de,hr,hu</webtop.service.i18n.languages>
 		<webtop.service.i18n.tx.push.languages>it</webtop.service.i18n.tx.push.languages>
-		<webtop.service.i18n.tx.pull.languages>es,de,hr,hu</webtop.service.i18n.tx.pull.languages>
+		<webtop.service.i18n.tx.pull.languages>es,fr,de,hr,hu</webtop.service.i18n.tx.pull.languages>
 		<webtop.service.restApi.oas>openapi-v1.json</webtop.service.restApi.oas>
 	</properties>
 	
