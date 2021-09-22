@@ -302,7 +302,7 @@ Ext.define('Sonicle.webtop.core.sdk.ModelView', {
 	},
 	
 	/**
-	 * Persists view's data, saving the underlyning model.
+	 * Persists view's data, saving the underlying model.
 	 * @param {Boolean} [closeAfter] `true` to close view after successful operation.
 	 * @param {Object} opts An object containing configuration.
 	 * @param {Function} [opts.callback] The callback function to {@link WTA.mixin.HasModel#saveModel} opts.
