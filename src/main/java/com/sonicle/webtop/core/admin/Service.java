@@ -1391,13 +1391,14 @@ public class Service extends BaseService {
 			QueryObj queryObj = ServletUtils.getObjectParameter(request, "query", new QueryObj(), QueryObj.class);
 			
 			if (crud.equals(Crud.READ)) {
-				result = coreadm.listAccessLog(domainId, page, limit, sortParams.get(0), DomainAccessLogQuery.toCondition(queryObj, utz), true);
+				result = coreadm.listAccessLog(domainId, page, limit, sortParams.get(0), DomainAccessLogQuery.createCondition(queryObj, utz), true);
 				for (DomainAccessLog domainAccLog : result.items) {
 					items.add(new JsDomainAccessLog(domainAccLog));
 				}
 			}
 			
 			new JsonResult(items, result.fullCount).printTo(out);
+			
 		} catch(Throwable t) {
 			logger.error("Error in ManageDomainAccessLog", t);
 			new JsonResult(t).printTo(out);
