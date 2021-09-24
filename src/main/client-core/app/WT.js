@@ -588,7 +588,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 */
 	prompt: function(msg, opts) {
 		opts = opts || {};
-		var xclass = Ext.isString(opts.instClass) ? opts.instClass : 'Ext.window.MessageBox',
+		var hasXclass = Ext.isString(opts.instClass),
+				xclass = hasXclass ? opts.instClass : 'Ext.window.MessageBox',
 				exists = Ext.isString(opts.itemId) ? (Ext.ComponentQuery.query('messagebox#'+opts.itemId).length > 0) : false,
 				// Component is destroyed only if X button is pressed, so define a sequenced function in order to properly clear the MessageBox!
 				autoDestroyFn = function() { this.destroy(); },
@@ -617,6 +618,24 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 					multiline: opts.multiline
 				});
 			}
+			
+			if (!hasXclass && mbox.textField) {
+				mbox.textField.vtype = opts.vtype;
+				if (opts.allowBlank === false) {
+					var isValid = !Ext.isEmpty(opts.value);
+					mbox.textField.allowBlank = opts.allowBlank;
+					if (mbox.msgButtons.ok) mbox.msgButtons.ok.setDisabled(!isValid);
+					if (mbox.msgButtons.yes) mbox.msgButtons.yes.setDisabled(!isValid);
+				}
+                if (opts.vtype) {
+					mbox.textField.on('validitychange', function (e, isValid, o) {
+						if (mbox.msgButtons.ok) mbox.msgButtons.ok.setDisabled(!isValid);
+						if (mbox.msgButtons.yes) mbox.msgButtons.yes.setDisabled(!isValid);
+					});
+					mbox.textField.isValid();
+                }
+			}
+			
 			return mbox.show(Ext.apply(obj, opts.config || {}));
 		}
 	},
