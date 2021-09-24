@@ -165,8 +165,8 @@ Ext.define('Sonicle.webtop.core.mixin.HasModel', {
 	
 	/**
 	 * Loads configured model.
-	 * @param {Object} opts 
-	 * @param {Object} opts.data Initial data (typically )
+	 * @param {Object} opts An object containing configuration.
+	 * @param {Object/Ext.data.Model} opts.data Initial data to apply or a Model object to use as source.
 	 * @param {Boolean} [opts.dirty=false] The value of dirty flag to keep after loading.
 	 * @param {Object} [opts.pass] Custom parameters to pass to events callbacks
 	 * @param {Function} [opts.callback] The callback function to call
