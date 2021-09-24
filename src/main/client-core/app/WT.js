@@ -583,6 +583,8 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	 * @param {Object} [opts.config] A custom {@link Ext.MessageBox#show} config.
 	 * @param {String} [opts.instClass] The full classname of the type of instance to create. Defaults to `Ext.window.MessageBox`.
 	 * @param {Object} [opts.instConfig] A custom {@link Ext.window.MessageBox} instance config.
+	 * @param {String} [opts.vtype] Pass validation to a standard text field prompt and enable validation and buttons enable/disable automation.
+	 * @param {Boolean} [opts.allowBlank] Pass allowBlank config to a standard text field prompt, influencing buttons enable/disable automation.
 	 * 
 	 * @returns {Ext.window.MessageBox} The newly created message box instance.
 	 */
