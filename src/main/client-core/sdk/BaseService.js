@@ -258,31 +258,29 @@ Ext.define('Sonicle.webtop.core.sdk.BaseService', {
 	
 	//private
 	privateInit: function() {
-		var me=this;
-		me.onMessage('autosaveRestore',me.privateAutosaveRestore,me);
+		var me = this;
+		me.onPushMessage('autosaveRestore', me._onAutosaveRestore, me);
 	},
 	
-	privateAutosaveRestore: function(msg) {
-		var me=this,
-			pl=msg.payload,
-			ret=me.autosaveRestore(pl.value);
-	
-		if (ret===true) {
-			WT.ajaxReq(WT.ID, "RemoveAutosave", {
-				params: {
-					webtopClientId: pl.webtopClientId,
-					serviceId: pl.serviceId,
-					context: pl.context,
-					key: pl.key
-				},
-				callback: function(success,json) {
-					if (!success) {
-						WT.error(json.text);
+	privates: {
+		_onAutosaveRestore: function(msg) {
+			var me = this,
+				pl = msg.payload,
+				ret = me.autosaveRestore(pl.value);
+
+			if (ret === true) {
+				WT.ajaxReq(WT.ID, 'RemoveAutosave', {
+					params: {
+						webtopClientId: pl.webtopClientId,
+						serviceId: pl.serviceId,
+						context: pl.context,
+						key: pl.key
+					},
+					callback: function(success, json) {
+						WT.handleError(success, json);
 					}
-				}
-			});
+				});
+			}
 		}
-		
 	}
-	
 });
