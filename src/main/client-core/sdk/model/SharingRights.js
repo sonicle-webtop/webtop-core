@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.model.SharingRights', {
 	alternateClassName: 'WTA.sdk.model.SharingRights',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negativestring',
 	idProperty: 'roleUid',

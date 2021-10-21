@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.CausalLkp', {
 	alternateClassName: 'WTA.model.CausalLkp',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [

@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.ActivityLkp', {
 	alternateClassName: 'WTA.model.ActivityLkp',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [

@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.SyncDevice', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	proxy: WTF.apiProxy(WT.ID, 'ManageSyncDevices'),
 	
 	identifier: 'negative',

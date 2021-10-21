@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.CustomField', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.data.writer.Json',
 		'Sonicle.webtop.core.model.CustomFieldProp',

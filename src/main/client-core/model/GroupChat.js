@@ -32,7 +32,7 @@
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.GroupChat', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.webtop.core.model.GroupChatMember'
 	],

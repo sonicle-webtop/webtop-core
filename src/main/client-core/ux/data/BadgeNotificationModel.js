@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.ux.data.BadgeNotificationModel', {
 	alternateClassName: 'WTA.ux.data.BadgeNotificationModel',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negativestring',
 	idProperty: 'tag',

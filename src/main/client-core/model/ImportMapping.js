@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.ImportMapping', {
 	alternateClassName: 'WTA.model.ImportMapping',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'target',
 	fields: [

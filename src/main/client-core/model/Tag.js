@@ -31,7 +31,7 @@
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.Tag', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negativestring',
 	idProperty: 'id',

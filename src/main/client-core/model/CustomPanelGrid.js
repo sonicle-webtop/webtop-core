@@ -31,7 +31,7 @@
  * display the words "Copyright (C) 2020 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.model.CustomPanelGrid', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [

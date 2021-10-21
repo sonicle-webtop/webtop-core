@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.ReminderAlert', {
 	alternateClassName: 'WTA.model.ReminderAlert',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	fields: [
 		WTF.roField('serviceId', 'string'),

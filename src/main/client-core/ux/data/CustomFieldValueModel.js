@@ -31,7 +31,7 @@
  * display the words "Copyright (C) 2019 Sonicle S.r.l.".
  */
 Ext.define('Sonicle.webtop.core.ux.data.CustomFieldValueModel', {
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negativestring',
 	idProperty: 'id',

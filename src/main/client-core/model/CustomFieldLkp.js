@@ -32,7 +32,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.CustomFieldLkp', {
 	alternateClassName: 'WTA.model.CustomFieldLkp',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [

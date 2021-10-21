@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.sdk.model.Sharing', {
 	alternateClassName: 'WTA.sdk.model.Sharing',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	requires: [
 		'Sonicle.webtop.core.sdk.model.SharingRights'
 	],

@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.RoleLkp', {
 	alternateClassName: 'WTA.model.RoleLkp',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	idProperty: 'id',
 	fields: [

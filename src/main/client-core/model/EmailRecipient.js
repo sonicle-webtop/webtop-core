@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.EmailRecipient', {
 	alternateClassName: 'WTA.model.EmailRecipient',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	identifier: 'negative',
 	fields: [

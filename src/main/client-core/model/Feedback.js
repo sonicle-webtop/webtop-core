@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.Feedback', {
 	alternateClassName: 'WTA.model.Feedback',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	fields: [
 		WTF.field('serviceId', 'string', false),

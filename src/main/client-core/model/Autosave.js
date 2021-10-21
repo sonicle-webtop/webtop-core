@@ -33,7 +33,7 @@
  */
 Ext.define('Sonicle.webtop.core.model.Autosave', {
 	alternateClassName: 'WTA.model.Autosave',
-	extend: 'WTA.model.Base',
+	extend: 'WTA.ux.data.BaseModel',
 	
 	autosaveDirty: false,
     
