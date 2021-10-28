@@ -41,6 +41,7 @@ import com.sonicle.webtop.core.CoreManager;
 import com.sonicle.webtop.core.CoreSettings;
 import com.sonicle.webtop.core.CoreUserSettings;
 import com.sonicle.webtop.core.admin.CoreAdminManager;
+import com.sonicle.webtop.core.app.ServiceDescriptor.OpenApiDefinition;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerInitHooks;
 import com.sonicle.webtop.core.app.sdk.interfaces.IControllerUserEvents;
 import com.sonicle.webtop.core.bol.OUpgradeStatement;
@@ -421,6 +422,11 @@ public class ServiceManager {
 	public List<ServicePermission> getDeclaredPermissions(String serviceId) {
 		ServiceManifest manifest = getManifest(serviceId);
 		return (manifest == null) ? null : manifest.getDeclaredPermissions();
+	}
+	
+	public List<OpenApiDefinition> getOpenApiDefinitions(String serviceId) {
+		ServiceDescriptor descr = getDescriptor(serviceId);
+		return (descr == null) ? null : descr.getOpenApiDefinitions();
 	}
 	
 	/**

@@ -71,7 +71,7 @@ import org.slf4j.Logger;
  *
  * @author malbinola
  */
-class ServiceDescriptor {
+public class ServiceDescriptor {
 	private static final Logger logger = WT.getLogger(ServiceDescriptor.class);
 	private ServiceManifest manifest = null;
 	private Class controllerClass = null;
@@ -96,6 +96,7 @@ class ServiceDescriptor {
 		userOptionsServiceClass = ClassHelper.loadClass(true, manifest.getUserOptionsServiceClassName(), BaseUserOptionsService.class, "UserOptionsService");
 		
 		for (ServiceManifest.RestApiEndpoint rae : manifest.getApiEndpoints()) {
+			// Deprecated
 			final Class clazz = ClassHelper.loadClass(false, rae.className, BaseRestApiEndpoint.class, "RestApiEndpoint");
 			if (clazz != null) {
 				restApiEndpointClasses.add(new ApiEndpointClass(clazz, sanitizeApiEndpointPath(manifest.getId(), rae.path)));
@@ -277,7 +278,7 @@ class ServiceDescriptor {
 		
 		return new Info()
 				.title(title + " Rest API")
-				.version("v1")
+				.version(apiDefinition.context)
 				.contact(contact);
 	}
 	

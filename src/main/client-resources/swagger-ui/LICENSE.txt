@@ -1,0 +1,13 @@
+
+Third Party Content
+-------------------------------------------------------------------------------
+The following third party software is distributed with this software and is 
+provided under other licenses and/or has source available from other locations.
+
+Name: Swagger UI
+License: Apache License 2.0
+Location: https://github.com/swagger-api/swagger-ui
+
+Name: Swagger UI Themes
+License: MIT License
+Location: https://github.com/ostranme/swagger-ui-themes

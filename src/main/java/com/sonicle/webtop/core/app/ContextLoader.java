@@ -189,7 +189,7 @@ public class ContextLoader {
 			docEditorServlet.setLoadOnStartup(1);
 			docEditorServlet.addMapping(com.sonicle.webtop.core.app.servlet.DocEditor.URL + "/*");
 			
-			// Adds RestApiServlets dynamically
+			// Adds RestAPIs Servlets dynamically
 			ServiceManager svcMgr = wta.getServiceManager();
 			for (String serviceId : svcMgr.listRegisteredServices()) {
 				ServiceDescriptor desc = svcMgr.getDescriptor(serviceId);
@@ -199,7 +199,15 @@ public class ContextLoader {
 				}
 			}
 			
-		} catch(Throwable t) {
+			// Adds RestAPIs documentation Servlet (using Swagger UI)
+			Dynamic restApiDocsServlet = servletContext.addServlet("RestApiDocsServlet", com.sonicle.webtop.core.app.servlet.RestApiDocs.class);
+			restApiDocsServlet.setInitParameter("resourcePath", "/client/com.sonicle.webtop.core/resources/swagger-ui/3.52.5/");
+			restApiDocsServlet.setInitParameter("uriPath", "/");
+			restApiDocsServlet.setLoadOnStartup(2);
+			restApiDocsServlet.setAsyncSupported(true);
+			restApiDocsServlet.addMapping(com.sonicle.webtop.core.app.servlet.RestApiDocs.URL + "/*");
+			
+		} catch (Throwable t) {
 			servletContext.removeAttribute(WEBTOPAPP_ATTRIBUTE_KEY);
 			logger.error("Error initializing WTA [{}]", webappFullName, t);
 		}
@@ -210,9 +218,19 @@ public class ContextLoader {
 		String name = serviceId + "@RestApiServlet";
 		String path = com.sonicle.webtop.core.app.servlet.RestApi.URL + "/" + serviceId + "/*";
 		
+		// https://github.com/swagger-api/swagger-core/wiki/Swagger-2.X---Integration-and-Configuration#openapiresource
+		
 		logger.debug("Adding RestApi servlet [{}] -> [{}]", name, path);
+		// Inject the OpenApiContext related to this service: this context will 
+		// be retrieved using the OpenApiContext.OPENAPI_CONTEXT_ID_KEY init param below.
+		// OpenApiContext is responsible for reading the OpenApi spec that, with 
+		// this class, can be tweaked/customized from us before real usage.
+		//OpenApiContextLocator.getInstance().putOpenApiContext(serviceId, new ServiceOpenApiContext(serviceId));
+		
+		// Now add the dedicated servlet resposible for managins service's api
 		Dynamic servlet = servletContext.addServlet(name, com.sonicle.webtop.core.app.servlet.RestApi.class);
-		servlet.setInitParameter("javax.ws.rs.Application", "com.sonicle.webtop.core.app.JaxRsServiceApplication");
+		//servlet.setInitParameter(OpenApiContext.OPENAPI_CONTEXT_ID_KEY, serviceId);
+		servlet.setInitParameter("javax.ws.rs.Application", com.sonicle.webtop.core.app.ServiceApiJaxRsResourceApplication.class.getName());
 		servlet.setInitParameter("com.sun.jersey.config.feature.DisableWADL", "true");
 		servlet.setInitParameter(RestApi.INIT_PARAM_WEBTOP_SERVICE_ID, serviceId);
 		servlet.setLoadOnStartup(2);
