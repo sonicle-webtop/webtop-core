@@ -145,7 +145,7 @@ public class WTFormAuthFilter extends FormAuthenticationFilter {
 
 	@Override
 	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-		String ctxRequestUrl = ServletUtils.getContextRequestURI((HttpServletRequest)request);
+		String ctxRequestUrl = ServletUtils.getContextRelativeRequestURIString((HttpServletRequest)request);
 		if (StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL)
 				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, PrivateRequest.URL_LEGACY) // for compatibility purpose only!
 				|| StringUtils.startsWithIgnoreCase(ctxRequestUrl, PushEndpoint.URL)) {
