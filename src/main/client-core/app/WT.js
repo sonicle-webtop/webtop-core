@@ -755,43 +755,27 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 	},
 	
 	/**
-	 * Displays specified contextmenu in a centralized way.
-	 * Any previous visible menu will be hide automatically.
-	 * @param {Ext.event.Event} evt The raw event object.
-	 * @param {Ext.menu.Menu} menu The menu component.
-	 * @param {Object} data Useful data to pass (data will be saved into menu.menuData property).
-	 * @returns {Ext.menu.Menu}
+	 * @deprecated Use {@link Sonicle.Utils#showContextMenu} instead
 	 */
 	showContextMenu: function(evt, menu, data) {
-		var me = this;
-		evt.stopEvent();
-		me.hideContextMenu();
-		if (!menu || !menu.isXType('menu')) return;
-		menu.menuData = data || {};
-		me.contextMenu = menu;
-		menu.on('hide', function(s) {
-			s.menuData = {};
-			me.contextMenu = null;
-		}, me, {single: true});
-		menu.showAt(evt.getXY());
-		return menu;
+		Ext.log.warn('WT.showContextMenu is deprecated. Use Sonicle.Utils.showContextMenu instead.');
+		return Sonicle.Utils.showContextMenu(evt, menu, data);
 	},
 	
 	/**
-	 * Hides currently visible context menu.
+	 * @deprecated Use {@link Sonicle.Utils#hideContextMenu} instead
 	 */
 	hideContextMenu: function() {
-		var cxm = this.contextMenu;
-		if (cxm) cxm.hide();
+		Ext.log.warn('WT.hideContextMenu is deprecated. Use Sonicle.Utils.hideContextMenu instead.');
+		return Sonicle.Utils.hideContextMenu();
 	},
 	
 	/**
-	 * Returns context menu data previously saved into menu.menuData property.
-	 * @returns {Object} The data object.
+	 * @deprecated Use {@link Sonicle.Utils#getContextMenuData} instead
 	 */
 	getContextMenuData: function() {
-		var cxm = this.contextMenu;
-		return (cxm) ? cxm.menuData : null;
+		Ext.log.warn('WT.getContextMenuData is deprecated. Use Sonicle.Utils.getContextMenuData instead.');
+		return Sonicle.Utils.getContextMenuData();
 	},
 	
 	/**

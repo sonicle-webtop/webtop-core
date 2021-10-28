@@ -74,10 +74,3 @@ Ext.override(Ext.menu.Menu, {
 		return cmp;
 	}
 });
-
-Ext.override(Ext.menu.Item, {
-	onClick: function(e) {
-		e.menuData = WT.getContextMenuData();
-		return this.callParent([e]);
-	}
-});
