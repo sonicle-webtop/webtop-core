@@ -54,6 +54,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.RecipientCellEditor', {
 				event.stopEvent();
 				view.ownerGrid.setActionableMode(false);
 				editing.startEditDown(event);
+				
 			} else if (key === event.TAB) {
 				event.stopEvent();
 				view.ownerGrid.setActionableMode(false);
@@ -62,6 +63,7 @@ Ext.define('Sonicle.webtop.core.ux.grid.RecipientCellEditor', {
 				} else {
 					editing.startEditDown(event);
 				}
+				
 			} else if (key === event.UP) {
 				event.stopEvent();
 				if (!field.isExpanded) {
@@ -72,20 +74,24 @@ Ext.define('Sonicle.webtop.core.ux.grid.RecipientCellEditor', {
 		}
 	},
 	
-	completeEdit: function(remainVisible) {	
-		var me=this,
-			rec=me.editingPlugin.getActiveRecord(),
-			ce=me.callParent(arguments);
-		if (!me.context.cancel) {
-			me.editingPlugin.fireCompleteEditEvent(rec);
-		}
-		return ce;
+	startEdit: function(boundEl, value, doFocus) {
+		var me = this,
+				plu = me.editingPlugin,
+				rec = plu.context.record;
+		
+		me.callParent(arguments);
+		plu.fireStartEditEvent(rec);
 	},
 	
-	startEdit: function(boundEl, value, doFocus) {
-		var me=this,
-			rec=me.editingPlugin.context.record;
-		me.callParent(arguments);
-		me.editingPlugin.fireStartEditEvent(rec);
+	completeEdit: function(remainVisible) {
+		var me = this,
+				plu = me.editingPlugin,
+				rec = plu.getActiveRecord(),
+				ret = me.callParent(arguments);
+		
+		if (!me.context.cancel) {
+			plu.fireCompleteEditEvent(rec);
+		}
+		return ret;
 	}
 });

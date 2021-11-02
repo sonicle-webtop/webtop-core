@@ -31,6 +31,9 @@
  * reasonably feasible for technical reasons, the Appropriate Legal Notices must
  * display the words "Copyright (C) 2014 Sonicle S.r.l.".
  */
+/**
+ * @deprecated Use Sonicle.webtop.core.ux.grid.Recipients instead.
+ */
 Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	alternateClassName: 'WTA.ux.RegipientsGrid',
 	extend: 'Ext.grid.Panel',
@@ -38,7 +41,9 @@ Ext.define('Sonicle.webtop.core.ux.RecipientsGrid', {
 	requires: [
 		'WTA.ux.grid.RecipientCellEditor',
 		'WTA.ux.grid.plugin.RecipientCellEditing',
-		'WTA.ux.field.RecipientSuggestCombo',
+		'WTA.ux.field.RecipientSuggestCombo'
+	],
+	uses: [
 		'Sonicle.webtop.core.model.Simple',
 		'Sonicle.webtop.core.store.RcptType'
 	],

@@ -107,7 +107,12 @@ Ext.define('Sonicle.webtop.core.ux.grid.plugin.RecipientCellEditing', {
 				} else {
 					me.completeEdit();
 					if (Ext.isEmpty(pos.record.get(me.getGridColDataIndex(grid, 1)))) {
-						if (!stopExitFocus) me.view.grid.fireExitFocus();
+						if (!stopExitFocus) {
+							// Method fireExitFocus is deprecated
+							if (Ext.isFunction(me.view.grid.fireExitFocus)) me.view.grid.fireExitFocus();
+							//--------
+							me.view.grid.fireEvent('rcpteditblur', me.view.grid);
+						}
 					} else {
 						grid.addRecipient(pos.record.get(me.getGridColDataIndex(grid, 0)), '');
 						nav.setPosition(pos.rowIdx+1, 1, event, true, true);
@@ -179,12 +184,35 @@ Ext.define('Sonicle.webtop.core.ux.grid.plugin.RecipientCellEditing', {
 		return editor;
 	},
 	
+	activateCell: function(position, skipBeforeCheck, doFocus) {
+		var me = this, ret;
+		if ((ret = me.callParent(arguments))) {
+			me.fireEvent('rcpteditstart', me, me.getActiveRecord(), me.getActiveEditor());
+			if (position) me.view.getSelectionModel().select({row: position.rowIdx});
+		}
+		return ret;
+	},
+	
+	onEditComplete: function(ed, value, startValue) {
+		var me = this,
+				rec = me.context.record;
+		
+		me.callParent(arguments);
+		me.fireEvent('rcpteditcomplete', me, rec, ed);
+	},
+	
+	/**
+	 * @deprecated Move to new Sonicle.webtop.core.ux.grid.Recipients
+	 */
     fireCompleteEditEvent: function(rec) {
         var me=this;
-	
+		
 		if (rec) me.fireEvent('completeEdit',rec);
-    },
+	},
 	
+	/**
+	 * @deprecated Move to new Sonicle.webtop.core.ux.grid.Recipients
+	 */
     fireStartEditEvent: function(rec) {
         var me=this;
 	
