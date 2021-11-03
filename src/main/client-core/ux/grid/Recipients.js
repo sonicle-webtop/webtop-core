@@ -234,16 +234,16 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	focus: function(selectText, delay, callback, scope) {
 		var me = this,
 				ret = me.callParent(arguments),
-				sto;
+				sto, rec;
 		if (selectText === true) {
 			sto = me.getStore();
-			if (sto) {
+			if (sto && (rec = sto.last())) {
 				if (delay) {
 					Ext.defer(function() {
-						me.startEdit(sto.last());
+						me.startEdit(rec);
 					}, Ext.isNumber(delay) ? delay+5 : 10+5);
 				} else {
-					me.startEdit(sto.last());
+					me.startEdit(rec);
 				}
 			}
 		}
@@ -252,11 +252,15 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	
 	/**
 	 * Adds a new recipient.
-	 * @param {to|bc|bcc} type Recipient type to use as {@link #recipientTypeField}.
+	 * @param {to|bc|bcc} [type] Recipient type to use as {@link #recipientTypeField}.
 	 * @param {Mixed} value Value to use as {@link #recipientValueField}, typically conform to choosen {@link #targetRecipientFieldType}.
 	 * @returns {Record} The added record.
 	 */
 	addRecipient: function(type, value) {
+		if (arguments.length === 1) {
+			value = type;
+			type = 'to';
+		}
 		var me = this,
 				sto = me.getStore(),
 				data = {},
@@ -297,16 +301,18 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 			rtypeField = me.recipientTypeField,
 			valueField = me.recipientValueField,
 			sto = me.getStore(),
-			thresIdx = sto.getCount() -1,
 			lines = (s || '').split(/\r\n|\r|\n/g),
 			idx = -1,
+			thresIdx = -1,
 			rtype = 'to',
 			line, i;
 	
 		if (sto && from && from.isModel) {
 			idx = sto.indexOf(from);
+			thresIdx = sto.getCount()-1;
 		} else if (sto && Ext.isNumber(from) && from < sto.getCount()) {
 			idx = from;
+			thresIdx = sto.getCount()-1;
 		}
 		
 		if (idx !== -1 && sto) {
