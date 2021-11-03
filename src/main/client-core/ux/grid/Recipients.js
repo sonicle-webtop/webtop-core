@@ -224,6 +224,33 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	},
 	
 	/**
+	 * Try to focus this component.
+	 * @param {boolean} selectText Set to `true` to also select the last item in this list and start editing it.
+	 * @param {Boolean/Number} [delay] Delay the focus this number of milliseconds (true for 10 milliseconds).
+	 * @param {Function} [callback] Only needed if the `delay` parameter is used. A function to call upon focus.
+	 * @param {Function} [scope] Only needed if the `delay` parameter is used. The scope (`this` reference) in which to execute the callback.
+	 * @returns {Ext.Component} The focused Component, `this` Component.
+	 */
+	focus: function(selectText, delay, callback, scope) {
+		var me = this,
+				ret = me.callParent(arguments),
+				sto;
+		if (selectText === true) {
+			sto = me.getStore();
+			if (sto) {
+				if (delay) {
+					Ext.defer(function() {
+						me.startEdit(sto.last());
+					}, Ext.isNumber(delay) ? delay+5 : 10+5);
+				} else {
+					me.startEdit(sto.last());
+				}
+			}
+		}
+		return ret;
+	},
+	
+	/**
 	 * Adds a new recipient.
 	 * @param {to|bc|bcc} type Recipient type to use as {@link #recipientTypeField}.
 	 * @param {Mixed} value Value to use as {@link #recipientValueField}, typically conform to choosen {@link #targetRecipientFieldType}.
