@@ -322,7 +322,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 		}
 			
         me.endEdit();
-		sto.suspendEvents();
+		// Suspends commented out due the following internal error:
+		//  Uncaught TypeError: Cannot read properties of null (reading 'view')
+		//  at constructor.onSelectChange (ext-all-debug.js:270588)
+		//sto.suspendEvents();
         for (i = 0; i<lines.length; ++i) {
             line = lines[i].trim();
             if (line.length > 0) {
@@ -334,8 +337,8 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 				idx++;
             }
         }
-		sto.resumeEvents();
-		me.getView().refresh();
+		//sto.resumeEvents();
+		//me.getView().refresh();
 	},
 	
 	/**
