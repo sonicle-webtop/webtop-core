@@ -37,6 +37,9 @@ Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
 	mixinConfig: {
 		id: 'panelutil'
 	},
+	uses: [
+		'Sonicle.Utils'
+	],
 	
 	/**
 	 * Generates an `id` concatenating {@link Ext.Component#getId component's id}
@@ -67,22 +70,17 @@ Ext.define('Sonicle.webtop.core.mixin.PanelUtil', {
 	},
 	
 	/**
-	 * Convenience method for getting a reference to a container.
-	 * @param {Ext.container.Container} cmp The component on which calling {@link Ext.container.Container#lookupReference}
-	 * @param {String} path Reference path to follow
-	 * @returns {Ext.container.Container}
+	 * Convenience method for getting a reference to a component.
+	 * @param {Ext.container.Container} [container] The root hierarchy container in which start lookup, or `this` component if missing.
+	 * @param {String} path A single reference or a reference path in dotted-notation.
+	 * @returns {Ext.Component} The referenced component or `null` if it is not found.
 	 */
-	lref: function(cmp, path) {
+	lref: function(container, path) {
 		if(arguments.length === 1) {
-			path = cmp;
-			cmp = this;
+			path = container;
+			container = this;
 		}
-		var i, keys = path.split('.');
-		for(i=0; i<keys.length; i++) {
-			cmp = cmp.lookupReference(keys[i]);
-			if(!cmp) break;
-		}
-		return cmp;
+		return Sonicle.Utils.lookupReference(container, path);
 	},
 	
 	/**
