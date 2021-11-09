@@ -263,13 +263,10 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 		}
 		var me = this,
 				sto = me.getStore(),
-				data = {},
 				ret;
 		
 		if (sto) {
-			data[me.recipientTypeField] = type;
-			data[me.recipientValueField] = value;
-			ret = sto.add(sto.createModel(data))[0];
+			ret = sto.add(sto.createModel(Sonicle.Object.applyPairs({}, [me.recipientTypeField, me.recipientValueField], [type, value])))[0];
 		}
 		return ret;
 	},
@@ -292,9 +289,23 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 	},
 	
 	/**
-	 * 
+	 * Checks if targeted record has empty recipient data or not.
+	 * @param {Ext.data.Model|Number} record The record to check or its index.
+	 * @returns {Boolean} Returns `true` if found record is empty, `false` otherwise.
+	 */
+	isRecipientEmpty: function(record) {
+		var me = this,
+				sto = me.getStore();
+		if (Ext.isNumber(record) && sto) record = sto.getAt(record);
+		return (record && record.isModel) ? Ext.isEmpty(record.get(me.recipientValueField)) : false;
+	},
+	
+	/**
+	 * Paste recipients adding them to the collection.
 	 * @param {String} s The pasted text.
-	 * @param {Ext.data.Model|Number} [from] The initial record in which paste data; or its index. Otherwise the operation will starts after last item.
+	 * @param {Ext.data.Model|Number} from The record or the index of the record to use as start point.
+	 * If record does not have any value it will be overwritten, otherwise new 
+	 * recipients will be added just after that record.
 	 */
 	pasteRecipients: function(s, from) {
 		var me = this,
@@ -302,43 +313,45 @@ Ext.define('Sonicle.webtop.core.ux.grid.Recipients', {
 			valueField = me.recipientValueField,
 			sto = me.getStore(),
 			lines = (s || '').split(/\r\n|\r|\n/g),
-			idx = -1,
-			thresIdx = -1,
 			rtype = 'to',
+			startAtIdx = false,
+			idx = -1,
+			data = [],
 			line, i;
-	
+		
+		me.endEdit();
 		if (sto && from && from.isModel) {
 			idx = sto.indexOf(from);
-			thresIdx = sto.getCount()-1;
-		} else if (sto && Ext.isNumber(from) && from < sto.getCount()) {
+			if (idx !== -1) {
+				rtype = from.get(rtypeField);
+				startAtIdx = me.isRecipientEmpty(from);
+			}
+		} else if (sto && Ext.isNumber(from) && from > -1 && from < sto.getCount()) {
 			idx = from;
-			thresIdx = sto.getCount()-1;
+			from = sto.getAt(idx);
+			if (from) {
+				rtype = from.get(rtypeField);
+				startAtIdx = me.isRecipientEmpty(from);
+			}
 		}
 		
-		if (idx !== -1 && sto) {
-			rtype = sto.getAt(idx).get(rtypeField);
-		} else {
-			idx = 0;
-		}
+		if (sto) {
+			for (i = 0; i<lines.length; ++i) {
+				line = lines[i].trim();
+				if (!Ext.isEmpty(line)) {
+					data.push(Sonicle.Object.applyPairs({}, [rtypeField, valueField], [rtype, line]));
+				}
+			}
 			
-        me.endEdit();
-		// Suspends commented out due the following internal error:
-		//  Uncaught TypeError: Cannot read properties of null (reading 'view')
-		//  at constructor.onSelectChange (ext-all-debug.js:270588)
-		//sto.suspendEvents();
-        for (i = 0; i<lines.length; ++i) {
-            line = lines[i].trim();
-            if (line.length > 0) {
-				if (idx <= thresIdx) {
-					sto.getAt(idx).set(Sonicle.Object.applyPairs({}, [rtypeField, valueField], [rtype, line]));
-				} else {
-                    me.addRecipient(rtype, line);
-                }
-				idx++;
-            }
-        }
-		//sto.resumeEvents();
-		//me.getView().refresh();
+			// Suspends commented out due the following internal error:
+			//  Uncaught TypeError: Cannot read properties of null (reading 'view')
+			//  at constructor.onSelectChange (ext-all-debug.js:270588)
+			//sto.suspendEvents();
+			sto.insert(startAtIdx ? idx : idx+1, data);
+			if (startAtIdx) sto.removeAt(idx + data.length);
+			//sto.resumeEvents();
+			//me.getView().refresh();
+		}	
 	},
 	
 	/**
