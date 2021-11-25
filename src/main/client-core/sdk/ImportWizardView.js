@@ -135,7 +135,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 							responseValueProperty: 'uploadId',
 							buttonConfig: {
 								uploaderConfig: WTF.uploader(me.mys.ID, 'ImportWizard', {
-									extraParams: {tag: me.getUId()},
+									extraParams: me.opParams({tag: me.getUId()}),
 									mimeTypes: [
 										{title: pfs.label, extensions: pfs.extensions}
 									],
@@ -181,7 +181,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 					store: {
 						model: 'Sonicle.webtop.core.model.ImportMapping',
 						proxy: WTF.proxy(me.mys.ID, me.getAct(), 'mappings', {
-							extraParams: {op: 'mappings'}
+							extraParams: me.opParams({op: 'mappings'})
 						}),
 						listeners: {
 							beforeload: function(s,op) {
@@ -205,7 +205,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 									autoLoad: false,
 									model: 'WTA.ux.data.ValueModel',
 									proxy: WTF.proxy(me.mys.ID, me.getAct(), 'columns', {
-										extraParams: {op: 'columns'}
+										extraParams: me.opParams({op: 'columns'})
 									}),
 									listeners: {
 										beforeload: function(s,op) {
@@ -435,7 +435,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 								store: {
 									model: 'WTA.ux.data.ValueModel',
 									proxy: WTF.proxy(me.mys.ID, me.getAct(), 'sheets', {
-										extraParams: {op: 'sheets'}
+										extraParams: me.opParams({op: 'sheets'})
 									}),
 									listeners: {
 										beforeload: function(s,op) {
@@ -525,7 +525,7 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	
 	buildSheetsParams: function(path) {
 		var vm = this.getVM();
-		if(path === 'xls') {
+		if (path === 'xls') {
 			return {
 				path: path,
 				uploadId: vm.get('file'),
