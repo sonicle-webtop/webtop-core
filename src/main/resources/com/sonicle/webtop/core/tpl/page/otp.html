@@ -9,7 +9,7 @@
         
         <title>${title}</title>
         <#if baseUrl??><base href="${baseUrl}" target="_blank"></#if>
-        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/${version.toString()}/resources/images/wt.ico" />
+        <link rel="shortcut icon" type="image/x-icon" href="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/wt.ico" />
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -20,7 +20,7 @@
         
         <!-- Bootstrap -->
         <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/bootstrap/3.3.7/css/bootstrap.min.css" />
-        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/${version.toString()}/resources/css/login.css" />
+        <link rel="stylesheet" property="stylesheet" type="text/css" href="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/css/login.css" />
         <script src="resources/com.sonicle.webtop.core/0.0.0/resources/vendor/jquery/3.3.1/jquery.min.js"></script>
         
         <script type="text/javascript">
@@ -63,7 +63,7 @@
                         <h3 class="text-center">${helpTitle}</h3>
                         <form name="login" method="post">
                             <div class="box">
-                                <img class="delivery img-responsive" src="resources/com.sonicle.webtop.core/${version.toString()}/resources/images/otp-${deliveryMode}.png">
+                                <img class="delivery img-responsive" src="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/otp-${deliveryMode}.png">
                                 <h4>${deliveryTitle}</h4>
                                 <h5>${deliveryInfo}</h5>
                                 <#if showFailure>
@@ -92,8 +92,8 @@
                 </div>
                 <div class="row">
                     <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
-                        <img class="powered img-responsive" src="resources/com.sonicle.webtop.core/${version.toString()}/resources/images/poweredby.png">
-                        <h5 class="powered text-center"><small>v.${version.getMajor()}.${version.getMinor()}</small></h5>
+                        <img class="powered img-responsive" src="resources/com.sonicle.webtop.core/${coreVersion.toString()}/resources/images/poweredby.png">
+                        <h5 class="powered text-center"><small>${versionString}</small></h5>
                     </div>
                 </div>
             </div>
