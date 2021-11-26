@@ -33,11 +33,13 @@
  */
 package com.sonicle.webtop.core.app;
 
+import com.sonicle.commons.LangUtils;
 import com.sonicle.webtop.core.sdk.ServiceVersion;
 import com.sonicle.webtop.core.util.LoggerUtils;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.jar.Manifest;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -105,7 +107,17 @@ public abstract class AbstractServlet extends HttpServlet {
 		String title = WT.getPlatformName() + " " + version.getMajor();
 		if (!StringUtils.isBlank(userTitle)) title += " [" + userTitle + "]";
 		vars.put("title", title);
-		vars.put("version", version);
+		vars.put("coreVersion", version);		
+		vars.put("versionString", buildVersion(version));
 		vars.put("baseUrl", baseUrl);
+	}
+	
+	private static String buildVersion(ServiceVersion coreVersion) {
+		String implVersion = null;
+		Manifest appManifest = WebTopApp.getInstance().getAppManifest();
+		if (appManifest != null) {
+			implVersion = appManifest.getMainAttributes().getValue("Implementation-Version");
+		}
+		return !StringUtils.isBlank(implVersion) ? implVersion : ("core v." + coreVersion.getMajor() + "." + coreVersion.getMinor());
 	}
 }

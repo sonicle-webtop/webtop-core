@@ -110,6 +110,7 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
+import java.util.jar.Manifest;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -641,6 +642,14 @@ public final class WebTopApp {
 	
 	private CoreServiceSettings getCoreServiceSettings() {
 		return new CoreServiceSettings(setMgr, CoreManifest.ID, WebTopManager.SYSADMIN_DOMAINID);
+	}
+	
+	public Manifest getAppManifest() {
+		try {
+			return ContextUtils.getManifest(servletContext);
+		} catch (IOException ex) {
+			return null;
+		}
 	}
 	
 	public String getAppServerInfo() {
