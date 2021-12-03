@@ -161,10 +161,8 @@ Ext.define('Sonicle.webtop.core.view.WizardView', {
 	viewModel: {
 		data: {
 			tag: null,
-			/**
-			 * Save here resulting data after wizard completion
-			 */
-			result: null
+			path: null,
+			result: null //Save here resulting data after wizard completion
 		}
 	},
 	

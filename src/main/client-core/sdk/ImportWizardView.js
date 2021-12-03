@@ -55,6 +55,23 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	showDoButton: true,
 	endPageTitleText: '{importwiz.end.tit}',
 	
+	viewModel: {
+		data: {
+			file: null,
+			binary: null, // for xls
+			sheet: null, // for xls
+			encoding: null, // for txt
+			delimiter: null, // for txt
+			lineseparator: null,
+			textqualifier: null, // for txt
+			headersrow: null, 
+			firstdatarow: null,
+			lastdatarow: null,
+			mappings: null,
+			importmode: 'append'
+		}
+	},
+	
 	initComponent: function() {
 		var me = this,
 				vm = me.getVM();
@@ -276,16 +293,16 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 	},
 	
 	createPages: function(path) {
-		var me = this;
+		var me = this,
+				vm = me.getVM();
 		if (path === 'txt') {
-			me.getVM().set('delimiter', 'comma');
-			me.getVM().set('lineseparator', 'crlf');
-			me.getVM().set('textqualifier', null);
-			me.getVM().set('encoding', 'UTF-8');
-			me.getVM().set('headersrow', 1);
-			me.getVM().set('firstdatarow', 2);
-			me.getVM().set('lastdatarow', null);
-			me.getVM().set('importmode', 'append');
+			vm.set('encoding', 'UTF-8');
+			vm.set('delimiter', 'comma');
+			vm.set('lineseparator', 'crlf');
+			vm.set('textqualifier', null);
+			vm.set('headersrow', 1);
+			vm.set('firstdatarow', 2);
+			vm.set('lastdatarow', null);
 			
 			return [
 				me.createUploadPage(path),
@@ -400,12 +417,11 @@ Ext.define('Sonicle.webtop.core.sdk.ImportWizardView', {
 				}
 			];
 		} else if(path === 'xls') {
-			me.getVM().set('binary', false);
-			me.getVM().set('sheet', null);
-			me.getVM().set('headersrow', 1);
-			me.getVM().set('firstdatarow', 2);
-			me.getVM().set('lastdatarow', null);
-			me.getVM().set('importmode', 'append');
+			vm.set('binary', false);
+			vm.set('sheet', null);
+			vm.set('headersrow', 1);
+			vm.set('firstdatarow', 2);
+			vm.set('lastdatarow', null);
 			
 			return [
 				me.createUploadPage(path),
