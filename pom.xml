@@ -1077,10 +1077,10 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd}/sencha</executable>
+									<executable>${sencha.cmd}/${sencha.cmd.exec}</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<!--<argument>-debug</argument>-->
+										<argument>${sencha.cmd.exec.args}</argument>
 										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>config</argument>
 										<argument>-prop</argument>
@@ -1123,10 +1123,10 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd}/sencha</executable>
+									<executable>${sencha.cmd}/${sencha.cmd.exec}</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<!--<argument>-debug</argument>-->
+										<argument>${sencha.cmd.exec.args}</argument>
 										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>config</argument>
 										<argument>-prop</argument>
@@ -1169,10 +1169,10 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${sencha.cmd}/sencha</executable>
+									<executable>${sencha.cmd}/${sencha.cmd.exec}</executable>
 									<workingDirectory>${project.basedir}/src/main</workingDirectory>
 									<arguments>
-										<!--<argument>-debug</argument>-->
+										<argument>${sencha.cmd.exec.args}</argument>
 										<argument>--sdk-path=${sencha.workspace}/ext</argument>
 										<argument>config</argument>
 										<argument>-prop</argument>
