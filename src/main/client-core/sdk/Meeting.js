@@ -206,7 +206,7 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 		});
 	},
 	
-	shareByCopy() {
+	shareByCopy: function() {
 		var me = this,
 			vm = me.getVM();
 		Sonicle.ClipboardMgr.copy(Ext.String.format(vm.get('data.shareInfo'), vm.get('data.link')));
@@ -236,7 +236,7 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 		}
 	},
 	
-	shareByEvent() {
+	shareByEvent: function() {
 		var me = this,
 			vm = me.getVM(),
 			name = WT.getVar('userDisplayName'),
