@@ -248,7 +248,12 @@ Ext.define('Sonicle.webtop.core.sdk.Meeting', {
 				title: fmt(vm.get('data.shareEventTitle'), name),
 				location: vm.get('data.link'),
 				description: fmt(vm.get('data.shareEventDescription'), name, vm.get('data.link'))
-			}, {dirty: true});
+			}, {
+				dirty: true,
+				callback: function(success) {
+					if (success) capi.reloadEvents();
+				}
+			});
 		}
 	}
 });

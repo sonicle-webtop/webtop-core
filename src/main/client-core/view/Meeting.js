@@ -259,7 +259,12 @@ Ext.define('Sonicle.webtop.core.view.Meeting', {
 								startDate: schedAt,
 								endDate: SoD.add(schedAt, {minutes: 30}),
 								timezone: values[2]
-						}), {dirty: true});
+						}), {
+							dirty: true,
+							callback: function(success) {
+								if (success) capi.reloadEvents();
+							}
+						});
 					}
 				}
 			});
