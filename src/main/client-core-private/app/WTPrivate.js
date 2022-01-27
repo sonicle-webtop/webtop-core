@@ -78,9 +78,9 @@ Ext.define('Sonicle.webtop.core.app.WTPrivate', {
 	*/
 	
 	paletteDefault: [ // 11 columns (from material colors 100 -> 900)
-		// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey
+		// Red | Pink | Purple | Indigo | Blue | Green | Light Green| Yellow | Orange | Brown | Grey (+ white)
 		// (each column dark->light bottom-up)
-		'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2','D7CCC8', 'F5F5F5',
+		'FFCDD2', 'F8BBD0', 'E1BEE7', 'C5CAE9', 'BBDEFB', 'C8E6C9', 'DCEDC8', 'FFF9C4', 'FFE0B2', 'D7CCC8', 'FFFFFF'/*'F5F5F5'*/,
 		'EF9A9A', 'F48FB1', 'CE93D8', '9FA8DA', '90CAF9', 'A5D6A7', 'C5E1A5', 'FFF59D', 'FFCC80', 'BCAAA4', 'EEEEEE',
 		'E57373', 'F06292', 'BA68C8', '7986CB', '64B5F6', '81C784', 'AED581', 'FFF176', 'FFB74D', 'A1887F', 'E0E0E0',
 		'EF5350', 'EC407A', 'AB47BC', '5C6BC0', '42A5F5', '66BB6A', '9CCC65', 'FFEE58', 'FFA726', '8D6E63', 'BDBDBD',
