@@ -33,6 +33,11 @@
 Ext.define('Sonicle.webtop.core.sdk.UIView', {
 	alternateClassName: 'WTA.sdk.UIView',
 	extend: 'WTA.sdk.BaseView',
+	requires: [
+		'Sonicle.Data',
+		'Sonicle.String',
+		'Sonicle.VMUtils'
+	],
 	
 	config: {
 		dockableConfig: {
