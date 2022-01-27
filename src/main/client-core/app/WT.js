@@ -553,15 +553,20 @@ Ext.define('Sonicle.webtop.core.app.WT', {
 		if (exists) {
 			return null;
 		} else {
-			mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
-			return mbox.show(Ext.apply({
-				title: opts.title || WT.res('error'),
-				message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
-				buttons: opts.buttons || Ext.MessageBox.OK,
-				icon: Ext.MessageBox.ERROR,
-				fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
-				scope: opts.scope || mbox
-			}, opts.config || {}));
+			if (Ext.isEmpty(txt)) {
+				WT.getApp().logStackTrace('[W] WT.error() called with NO message.', 3);
+				
+			} else {
+				mbox = Ext.create('Ext.window.MessageBox', Ext.apply({itemId: opts.itemId, closeAction: 'destroy'}, opts.instConfig || {}));
+				return mbox.show(Ext.apply({
+					title: opts.title || WT.res('error'),
+					message: (opts.keepLineBreaks === true) ? txt : Sonicle.String.htmlLineBreaks(txt),
+					buttons: opts.buttons || Ext.MessageBox.OK,
+					icon: Ext.MessageBox.ERROR,
+					fn: Ext.isFunction(opts.fn) ? Ext.Function.createSequence(opts.fn, autoDestroyFn, mbox) : Ext.Function.bind(autoDestroyFn, mbox),
+					scope: opts.scope || mbox
+				}, opts.config || {}));
+			}
 		}
 	},
 	

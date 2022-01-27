@@ -416,5 +416,10 @@ Ext.define('Sonicle.webtop.core.app.AppPrivate', {
 				message: msg
 			}
 		});
+	},
+	
+	logStackTrace: function(msg, traceback) {
+		if (console && Ext.isFunction(console.warn)) console.warn(msg);
+		this.log(msg + '\n' + Sonicle.Utils.stackTraceToString(traceback), 'warn');
 	}
 });
